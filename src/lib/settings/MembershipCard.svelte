@@ -1,0 +1,264 @@
+<script lang="ts">
+	import UserRound from '@lucide/svelte/icons/user-round';
+	import Users from '@lucide/svelte/icons/users';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import Info from '@lucide/svelte/icons/info';
+	import Globe from '@lucide/svelte/icons/globe';
+	import { browser } from '$app/environment';
+	import Badge from './Badge.svelte';
+	import CardHead from './CardHead.svelte';
+	import MemberRow from './MemberRow.svelte';
+	import SeatMeter from './SeatMeter.svelte';
+	import type { CeremonyKind } from './data';
+	import type { AccountMember } from './types';
+	import { workspaces } from '$lib/stores/workspaces.svelte';
+	import { billing } from '$lib/stores/billing.svelte';
+	import { customDomains } from '$lib/stores/customDomains.svelte';
+	import { auth } from '$lib/stores/auth.svelte';
+	import {
+		seatLimitFor,
+		isInvitable,
+		membershipTitle,
+		addMemberLabel,
+		seatsFullNote,
+		personalNote
+	} from './plan-display';
+
+	interface Props {
+		launch: (k: CeremonyKind) => void;
+	}
+
+	let { launch }: Props = $props();
+
+	const type = $derived(workspaces.workspace?.type ?? null);
+	const isPersonal = $derived(type === 'personal');
+	const Icon = $derived(isPersonal ? UserRound : Users);
+	const callerAccountId = $derived(auth.accountId);
+	const canManage = $derived(workspaces.canManage(callerAccountId));
+	const seatsTotal = $derived(seatLimitFor(type, billing.subscription?.seats ?? null));
+	const title = $derived(membershipTitle(type));
+	const addLabel = $derived(addMemberLabel(type));
+
+	function initials(name: string): string {
+		const parts = name.trim().split(/\s+/);
+		return (
+			(parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')
+		).toUpperCase() || 'TH';
+	}
+
+	const palette: Array<{ bg: string; fg: string }> = [
+		{ bg: 'var(--pine-700)', fg: '#EEF2EA' },
+		{ bg: 'var(--pine-100)', fg: 'var(--pine-700)' },
+		{ bg: 'var(--info-100)', fg: 'var(--info-700)' },
+		{ bg: 'var(--paper-200)', fg: 'var(--ink-700)' }
+	];
+	function colorFor(seed: string): { bg: string; fg: string } {
+		let h = 0;
+		for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+		return palette[h % palette.length] ?? palette[0]!;
+	}
+
+	const people = $derived(
+		workspaces.members.map<AccountMember>((wm) => {
+			const c = colorFor(wm.accountId);
+			return {
+				name: wm.fullName || wm.email,
+				addr: wm.email,
+				init: initials(wm.fullName || wm.email),
+				bg: c.bg,
+				fg: c.fg,
+				role: wm.role[0]!.toUpperCase() + wm.role.slice(1)
+			};
+		})
+	);
+
+	const pending = $derived(
+		workspaces.invites.map<AccountMember>((inv) => {
+			const c = colorFor(inv.id);
+			return {
+				name: inv.email,
+				addr: inv.email,
+				init: initials(inv.email.split('@')[0] ?? inv.email),
+				bg: c.bg,
+				fg: c.fg,
+				role: inv.role[0]!.toUpperCase() + inv.role.slice(1),
+				pending: true
+			};
+		})
+	);
+
+	const seatsUsed = $derived(people.length + pending.length);
+	const seatNoun = $derived(type === 'business' ? 'paid seats used' : 'included seats used');
+	const invitable = $derived(
+		isInvitable(type) && (type === 'business' || seatsTotal === null || seatsUsed < seatsTotal)
+	);
+	const verifiedDomainCount = $derived(
+		customDomains.items.filter((d) => d.status === 'verified').length
+	);
+	const domainGated = $derived(invitable && verifiedDomainCount === 0);
+
+	let busyId = $state<string | null>(null);
+
+	function inviteUrlForRow(addr: string): string | null {
+		if (!browser) return null;
+		const w = workspaces.invites.find((i) => i.email === addr);
+		if (!w) return null;
+		const base = window.location.origin.replace(/\/$/, '');
+		return `${base}/invite/${w.id}`;
+	}
+
+	function lookupMemberByEmail(addr: string) {
+		return workspaces.members.find((wm) => wm.email === addr) ?? null;
+	}
+
+	function lookupInviteByEmail(addr: string) {
+		return workspaces.invites.find((wm) => wm.email === addr) ?? null;
+	}
+
+	async function handleAction(
+		p: AccountMember,
+		action: { kind: 'promote' | 'demote' | 'remove' | 'revoke' | 'copy-link' }
+	) {
+		const inv = lookupInviteByEmail(p.addr);
+		if (inv && (action.kind === 'revoke' || action.kind === 'copy-link')) {
+			if (action.kind === 'revoke') {
+				busyId = inv.id;
+				try {
+					await workspaces.revokeInvite(inv.id);
+				} finally {
+					busyId = null;
+				}
+			}
+			return;
+		}
+		const member = lookupMemberByEmail(p.addr);
+		if (!member) return;
+		busyId = member.accountId;
+		try {
+			if (action.kind === 'remove') {
+				await workspaces.removeMember(member.accountId);
+			} else if (action.kind === 'promote') {
+				await workspaces.changeRole(member.accountId, 'admin');
+			} else if (action.kind === 'demote') {
+				await workspaces.changeRole(member.accountId, 'member');
+			}
+		} finally {
+			busyId = null;
+		}
+	}
+
+	function rowProps(p: AccountMember) {
+		const isPending = !!p.pending;
+		const inv = isPending ? lookupInviteByEmail(p.addr) : null;
+		const member = !isPending ? lookupMemberByEmail(p.addr) : null;
+		const isSelf = member?.accountId === callerAccountId;
+		const isOwner = member?.role === 'owner';
+		return {
+			canRevoke: isPending && canManage,
+			inviteUrl: inv ? inviteUrlForRow(p.addr) : null,
+			canPromote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'member',
+			canDemote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'admin',
+			canRemove: !isPending && !isOwner && canManage && !isSelf,
+			busy:
+				(member && busyId === member.accountId) || (inv && busyId === inv.id) ? true : false
+		};
+	}
+</script>
+
+<div class="scard">
+	<CardHead icon={Icon} {title}>
+		{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
+	</CardHead>
+
+	{#if !isPersonal}
+		<div class="seat-bar">
+			{#if seatsTotal != null}
+				<SeatMeter used={Math.min(seatsUsed, seatsTotal)} total={seatsTotal} />
+				<span class="seat-text">
+					<b>{seatsUsed}</b> of <b>{seatsTotal}</b>
+					{seatNoun}{pending.length ? ` · ${pending.length} pending` : ''}
+				</span>
+			{:else}
+				<span class="seat-text">
+					<b>{people.length}</b> active seats{pending.length
+						? ' · ' + pending.length + ' invited'
+						: ''}
+				</span>
+			{/if}
+		</div>
+	{/if}
+
+	{#each people as p (p.addr)}
+		{@const rp = rowProps(p)}
+		<MemberRow
+			m={p}
+			canPromote={rp.canPromote}
+			canDemote={rp.canDemote}
+			canRemove={rp.canRemove}
+			canRevoke={rp.canRevoke}
+			inviteUrl={rp.inviteUrl}
+			busy={rp.busy}
+			onAction={(a) => handleAction(p, a)}
+		/>
+	{/each}
+	{#each pending as p (p.addr)}
+		{@const rp = rowProps(p)}
+		<MemberRow
+			m={p}
+			canPromote={rp.canPromote}
+			canDemote={rp.canDemote}
+			canRemove={rp.canRemove}
+			canRevoke={rp.canRevoke}
+			inviteUrl={rp.inviteUrl}
+			busy={rp.busy}
+			onAction={(a) => handleAction(p, a)}
+		/>
+	{/each}
+
+	<div class="mbr-foot">
+		{#if isPersonal}
+			<span class="mbr-note">{personalNote()}</span>
+		{:else if invitable && !domainGated}
+			<button
+				type="button"
+				class="btn btn-secondary btn-sm"
+				onclick={() => launch('member')}
+			>
+				<UserPlus size={14} />{addLabel}
+			</button>
+			{#if seatsTotal != null}
+				{#if type === 'business' && seatsUsed >= seatsTotal}
+					<span class="mbr-note">Inviting another member adds a prorated seat to your subscription.</span>
+				{:else if seatsTotal - seatsUsed > 0}
+					<span class="mbr-note">
+						{seatsTotal - seatsUsed} of {seatsTotal} seats available
+					</span>
+				{/if}
+			{/if}
+		{:else if domainGated && canManage}
+			<button type="button" class="btn btn-secondary btn-sm" disabled>
+				<UserPlus size={14} />{addLabel}
+			</button>
+			<div class="seat-full">
+				<Info size={15} />
+				<span>Add and verify a custom domain to invite members.</span>
+			</div>
+			<button
+				type="button"
+				class="btn btn-secondary btn-sm"
+				onclick={() => launch('domain')}
+			>
+				<Globe size={14} />Add a domain
+			</button>
+		{:else if domainGated}
+			<div class="seat-full">
+				<Info size={15} />
+				<span>An admin must add and verify a custom domain before members can be invited.</span>
+			</div>
+		{:else}
+			<div class="seat-full">
+				<Info size={15} /><span>{seatsFullNote(type, seatsTotal)}</span>
+			</div>
+		{/if}
+	</div>
+</div>

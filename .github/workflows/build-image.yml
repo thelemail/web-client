@@ -1,0 +1,78 @@
+name: build-image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PUBLIC_API_BASE_URL: https://api.thelemail.com
+  PUBLIC_SUBMISSION_BASE_URL: https://submission.thelemail.com
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      tags: ${{ steps.meta.outputs.tags }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Base64-encode the dirsign armored pubkey
+        run: |
+          B64=$(printf '%s' '${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}' | base64 -w0)
+          echo "PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED_B64=$B64" >> "$GITHUB_ENV"
+
+      - name: Base64-encode the tlog policy
+        run: |
+          B64=$(printf '%s' '${{ vars.PUBLIC_TLOG_POLICY }}' | base64 -w0)
+          echo "PUBLIC_TLOG_POLICY_B64=$B64" >> "$GITHUB_ENV"
+
+      - id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
+            PUBLIC_SUBMISSION_BASE_URL=${{ env.PUBLIC_SUBMISSION_BASE_URL }}
+            PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED_B64=${{ env.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED_B64 }}
+            PUBLIC_TLOG_POLICY_B64=${{ env.PUBLIC_TLOG_POLICY_B64 }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false

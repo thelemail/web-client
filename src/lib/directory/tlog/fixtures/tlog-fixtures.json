@@ -1,0 +1,257 @@
+{
+  "nowUnix": 1784559180,
+  "cases": [
+    {
+      "name": "ok-dev",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "ok-witnessed",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n— witness1.example.org ynpeEwAAAABqXjYQisXgunuzMeGsJrHvXFd1MxHRpwsqyyyjOY2XbMhsefSDNIrpvqiwEsvexbcW+1KfhlIIQs0kPufPrAIeveC0BQ==\n— witness2.example.org L9xqfgAAAABqXjYQLXVPnmpLfyCbQTNfNN1s6Omtxp2+ONO4EKYNIG0XdV+agSP/5nwmAW/UrP8a5Lq5BvLYCJXyMHRiRRz1PEF9Ag==\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": [
+          "witness1.example.org+ca7a5e13+BJmafJkUufEecDFtHm9Xxcow35DcXWWQmCjBkCuAmM+J",
+          "witness2.example.org+2fdc6a7e+BN4wS7S25802DS/WlcNPCOKcGLH6UKpkgQTsnF4ZQuuj",
+          "witness3.example.org+a47b3c09+BPYOIBJgqf/px2kAdc8kT7F9kYEGFjRDVRze5MWaBF3Y"
+        ],
+        "witnessThreshold": 2,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "ok-second-address",
+      "address": "zoe@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000001\",\"address\":\"zoe@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":1}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra mHHfl2iKf1Vjc8RXW6M+Zonn4K4033HgPxqx+pGCZEaN2eb25oZTXwlfyJg5+bkF8yIXq1WKAkaxI2jvln7S2nZU3ZcNIGPrYB2q5ThCow8=\nindex 2\nlcXjJoGDMOw00MyYoqf8HeNxRbqG5FFmxe1uzcavRX0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "witness-threshold-unmet",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n— witness1.example.org ynpeEwAAAABqXjYQisXgunuzMeGsJrHvXFd1MxHRpwsqyyyjOY2XbMhsefSDNIrpvqiwEsvexbcW+1KfhlIIQs0kPufPrAIeveC0BQ==\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": [
+          "witness1.example.org+ca7a5e13+BJmafJkUufEecDFtHm9Xxcow35DcXWWQmCjBkCuAmM+J",
+          "witness2.example.org+2fdc6a7e+BN4wS7S25802DS/WlcNPCOKcGLH6UKpkgQTsnF4ZQuuj",
+          "witness3.example.org+a47b3c09+BPYOIBJgqf/px2kAdc8kT7F9kYEGFjRDVRze5MWaBF3Y"
+        ],
+        "witnessThreshold": 2,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_witness_policy_unmet"
+    },
+    {
+      "name": "stale-cosignatures",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n— witness1.example.org ynpeEwAAAABqWkHMGwheHZQRLpxe10dUctWgwGJnzfFHAdrTon+2FZU8GDlXHTjvV7McUbRrDHU4ADJ8nnN7K150VxW+UOI2nff8Cg==\n— witness2.example.org L9xqfgAAAABqWkHMuShcRvlce5myjMrZQ5NG3DwQrpt4uI3AmVWcP1opJFW9qTZb63MR27pNe8Y+9xJltXvTWjtRLbd1cdcpq+52CQ==\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": [
+          "witness1.example.org+ca7a5e13+BJmafJkUufEecDFtHm9Xxcow35DcXWWQmCjBkCuAmM+J",
+          "witness2.example.org+2fdc6a7e+BN4wS7S25802DS/WlcNPCOKcGLH6UKpkgQTsnF4ZQuuj",
+          "witness3.example.org+a47b3c09+BPYOIBJgqf/px2kAdc8kT7F9kYEGFjRDVRze5MWaBF3Y"
+        ],
+        "witnessThreshold": 2,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_checkpoint_stale"
+    },
+    {
+      "name": "wrong-origin-policy",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "other.example.org/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_checkpoint_unverified"
+    },
+    {
+      "name": "tampered-index",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 2\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_inclusion_invalid"
+    },
+    {
+      "name": "tampered-path",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nvquTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_inclusion_invalid"
+    },
+    {
+      "name": "tampered-statement",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"eve1@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_inclusion_invalid"
+    },
+    {
+      "name": "vrf-tampered-gamma",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BRuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_vrf_invalid"
+    },
+    {
+      "name": "vrf-tampered-c",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz75x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_vrf_invalid"
+    },
+    {
+      "name": "vrf-tampered-s",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e8MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_vrf_invalid"
+    },
+    {
+      "name": "wrong-address",
+      "address": "zoe@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex 1\nv6uTNRcrMyJdg4k3i5uQCIrtCQQHzlDbIv/mdFi0AXw=\n6biCHkE0e5hw6fiald4ifuZQLk8z4klKfoQKucJAhS0=\n\ntest.thelemail.com/keys\n3\nocQpI9WWVQX33xz7Xs37ZOnOeFTsUC5v/j5AyzZ8Cys=\n\n— test.thelemail.com/keys xMWQW6cXCmQ3FJJ9ICk3ZVeyMHAmRpX4IfNePY73/7NMmZ2Myq9VN11F1WMvSp3DF5IRiVMs84WKZmqos0OySuP13wk=\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_vrf_invalid"
+    },
+    {
+      "name": "truncated-proof",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "c2sp.org/tlog-proof@v1\nextra BBuqKSmNhmR9xfQjDG59g3AwEiW+DoP/prDLX0R6WGZxZbdoKJQiz79x1oK1LOmEsqUoXFl2n5e9MVA6LU36O8Ng02vDK/fVe20ZwiwhBgk=\nindex",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_proof_malformed"
+    },
+    {
+      "name": "garbage-proof",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "not a proof at all\n",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_proof_malformed"
+    },
+    {
+      "name": "missing-proof",
+      "address": "vlad@thelemail.com",
+      "statement": "{\"accountId\":\"8f9d2c1e-0000-4000-8000-000000000002\",\"address\":\"vlad@thelemail.com\",\"issuedAt\":\"2026-07-20T13:53:00Z\",\"keyAlgorithm\":\"openpgp-curve25519-v6\",\"keyFingerprint\":\"abababababababababababababababababababab\",\"signingKeyFingerprint\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd\",\"version\":2}",
+      "tlogProof": "",
+      "policy": {
+        "origin": "test.thelemail.com/keys",
+        "logVerifierKey": "test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu",
+        "vrfPublicKey": "POZtU7tjDrcfuSbA+SDHXrI3JWoB0FgWiTEtMPpi3wQ=",
+        "witnessVerifierKeys": null,
+        "witnessThreshold": 0,
+        "maxCosignatureAgeSeconds": 86400
+      },
+      "expect": "tlog_proof_missing"
+    }
+  ]
+}

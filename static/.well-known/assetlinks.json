@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.thelemail.mail",
+      "sha256_cert_fingerprints": [
+        "1A:75:82:13:A6:CF:27:02:97:84:01:E3:61:FB:F5:43:71:9B:68:FB:F4:5E:BC:CD:14:7A:05:9F:97:C0:8F:FC"
+      ]
+    }
+  }
+]

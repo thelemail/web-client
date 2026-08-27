@@ -1,0 +1,14 @@
+node_modules
+.svelte-kit
+build
+dist
+.env
+.env.*
+.git
+.github
+.vscode
+*.md
+README*
+LICENSE*
+.idea
+.playwright-mcp
