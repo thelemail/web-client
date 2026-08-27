@@ -122,12 +122,14 @@
 	>
 		<div class="tmsg-collapsed">
 			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={bimi.logoUrl(e.bimiDomain)} imgBg="#fff" />
-			<span class="tc-name">{name}</span>
-			<span class="tc-snip">{e.body[0] ?? ''}</span>
-			<span class="tc-meta">
+			<span class="tc-name">
+				<span class="tc-nm">{name}</span>
 				{#if e.trust}
 					<TrustMark trust={e.trust} variant="static" />
 				{/if}
+			</span>
+			<span class="tc-snip">{e.body[0] ?? ''}</span>
+			<span class="tc-meta">
 				{#if chips.length > 0}
 					<Paperclip size={13} />
 				{/if}
@@ -152,7 +154,7 @@
 			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={42} src={bimi.logoUrl(e.bimiDomain)} imgBg="#fff" />
 			<div class="who">
 				<div class="nm">
-					{name}
+					<span class="nm-t">{name}</span>
 					{#if e.trust}
 						<TrustMark
 							trust={e.trust}

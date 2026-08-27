@@ -59,6 +59,7 @@
 			return;
 		}
 		void trust;
+		void tech;
 		place();
 	});
 
@@ -103,7 +104,7 @@
 		}}
 	>
 		<Mark size={variant === 'chip' ? 12 : 13} />
-		{#if variant === 'chip'}<span>{trust.label}</span>{/if}
+		{#if variant === 'chip'}<span class="tmark-label">{trust.label}</span>{/if}
 	</button>
 {/if}
 
@@ -202,6 +203,25 @@
 		border-radius: var(--radius-pill);
 	}
 
+	.tmark :global(svg) {
+		flex: 0 0 auto;
+	}
+
+	@media (min-width: 641px) {
+		@container letterhead (max-width: 470px) {
+			.tmark[data-variant='chip'] {
+				width: 18px;
+				height: 18px;
+				padding: 0;
+				border-radius: 50%;
+			}
+
+			.tmark-label {
+				display: none;
+			}
+		}
+	}
+
 	.tmark[data-tier='verified'] {
 		background: var(--success-700);
 		color: var(--paper-0);
@@ -250,6 +270,9 @@
 		z-index: 81;
 		width: 320px;
 		max-width: calc(100vw - 24px);
+		max-height: calc(100vh - 24px);
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		background: var(--surface);
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-lg);
