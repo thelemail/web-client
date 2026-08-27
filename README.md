@@ -100,7 +100,12 @@ gh attestation verify oci://ghcr.io/thelemail/web-client@sha256:... \
 ```
 
 `https://app.thelemail.com/.well-known/thelemail-build.json` names the commit the live site is
-built from, and `deployments.jsonl` records every rollout as a commit and a digest.
+built from. Every rollout is also recorded against its commit in this repository's deployments,
+which are public:
+
+```bash
+gh api repos/thelemail/web-client/deployments --jq '.[] | {sha, created_at, payload}'
+```
 
 The browser security policy lives in two places. `svelte.config.js` builds the Content-Security-Policy
 from the origins declared in `.github/build-config.env`, and `Caddyfile` carries the response headers

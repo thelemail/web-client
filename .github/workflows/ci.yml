@@ -4,8 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-    paths-ignore:
-      - deployments.jsonl
   workflow_call:
 
 permissions:
