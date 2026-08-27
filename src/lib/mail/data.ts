@@ -1,3 +1,4 @@
+import type { MessageTrust } from './trust';
 import type { AuthState, MessagePreviewAuth, MessagePreviewRecipient } from './preview';
 import type { AttachmentChip } from './attachments';
 import { initialsFor } from './initials';
@@ -70,7 +71,7 @@ export interface ThreadEntry {
 	epoch: number;
 	auth?: AuthState;
 	authDetail?: MessagePreviewAuth;
-	security?: 'verified' | 'first_contact' | 'mismatch' | 'unknown';
+	trust?: MessageTrust;
 	me?: boolean;
 	body: string[];
 	srcDoc?: string;

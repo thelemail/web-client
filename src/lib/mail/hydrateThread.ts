@@ -6,8 +6,10 @@ import {
 	bimiDomainFromPreview
 } from '$lib/mail/preview';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
-import { verifySender } from '$lib/mail/senderVerify';
+import { directoryTrust, externalKeyState } from '$lib/mail/senderVerify';
+import { deriveTrust, type TrustFacts } from '$lib/mail/trust';
 import { renderBody, type RenderResult } from '$lib/mail/render';
+import type { SignatureVerdict } from '$lib/keystore/protocol';
 import { renderDetail } from '$lib/mail/bodySource';
 import { initialsFor } from '$lib/mail/initials';
 import { initialChips } from '$lib/mail/attachments';
@@ -56,10 +58,24 @@ async function hydrateEntry(
 			? preview.sender.address.toLowerCase() === auth.email.toLowerCase()
 			: false;
 
+		const senderAddress = preview.sender.address;
+		const directory =
+			item.source === 'internal' && !me && senderAddress
+				? await directoryTrust(accountId, senderAddress)
+				: null;
+
 		let bodyLines: string[] = [preview.snippet || '(empty)'];
 		let render: RenderResult | null = null;
+		let signature: SignatureVerdict | undefined;
 		try {
-			render = await renderDetail(accountId, item, { stripTracking });
+			const rendered = await renderDetail(accountId, item, {
+				stripTracking,
+				verificationKeysArmored: directory?.publicKeyArmored
+					? [directory.publicKeyArmored]
+					: undefined
+			});
+			render = rendered.render;
+			signature = rendered.signature;
 		} catch (err) {
 			if (err instanceof DecryptionError) {
 				bodyLines = ['(Could not decrypt this message.)'];
@@ -77,10 +93,24 @@ async function hydrateEntry(
 			srcDoc = (await renderBody({ text: bodyLines.join('\n\n') })).srcDoc;
 		}
 
-		let security: ThreadEntry['security'];
-		if (item.source === 'internal' && !me && preview.sender.address) {
-			security = await verifySender(accountId, preview.sender.address);
-		}
+		const e2e = item.source === 'internal' || item.encrypted === true;
+		const externalKey =
+			item.source !== 'internal' && !me && e2e && senderAddress
+				? await externalKeyState(senderAddress)
+				: null;
+
+		const facts: TrustFacts = {
+			channel: item.source,
+			senderAddress,
+			e2e,
+			signature,
+			directory,
+			externalKey,
+			domainAuth: authSummaryFromPreview(preview),
+			domainAuthState: authStateFromPreview(preview),
+			nowMillis: Date.now()
+		};
+		const trust = me ? undefined : deriveTrust(facts);
 
 		const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 		return {
@@ -94,9 +124,9 @@ async function hydrateEntry(
 			bg: me ? 'var(--pine-700)' : 'var(--pine-100)',
 			fg: me ? '#EEF2EA' : 'var(--pine-700)',
 			epoch: stored.getTime(),
-			auth: authStateFromPreview(preview),
-			authDetail: authSummaryFromPreview(preview),
-			security,
+			auth: facts.domainAuthState,
+			authDetail: facts.domainAuth,
+			trust,
 			me,
 			body: bodyLines,
 			srcDoc,
