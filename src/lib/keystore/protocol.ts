@@ -33,11 +33,20 @@ export interface DecryptArgs extends AccountScopedArgs {
 	ciphertextArmored?: string;
 	ciphertextBinary?: Uint8Array;
 	binary?: boolean;
+	verificationKeysArmored?: string[];
+}
+
+export type SignatureState = 'valid' | 'invalid' | 'none' | 'unknown_key';
+
+export interface SignatureVerdict {
+	state: SignatureState;
+	keyFingerprintHex?: string;
+	signedAtMillis?: number;
 }
 
 export type DecryptResponse =
-	| { ok: true; plaintext: string }
-	| { ok: true; plaintextBinary: Uint8Array }
+	| { ok: true; plaintext: string; signature?: SignatureVerdict }
+	| { ok: true; plaintextBinary: Uint8Array; signature?: SignatureVerdict }
 	| { ok: false; code: 'locked' | 'invalid_ciphertext' | 'unknown' };
 
 export type GetPublicKeyArgs = AccountScopedArgs;

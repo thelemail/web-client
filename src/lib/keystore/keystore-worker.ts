@@ -58,6 +58,7 @@ import type {
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
 	GetPublicKeyResponse,
+	SignatureVerdict,
 	ReformatKeyWithUidsArgs,
 	ReformatKeyWithUidsResponse,
 	CommitReformattedKeyArgs,
@@ -1079,6 +1080,48 @@ async function handleEncryptToKeys(args: EncryptToKeysArgs): Promise<EncryptToKe
 	}
 }
 
+interface PgpVerification {
+	keyID: { toHex(): string };
+	verified: Promise<true>;
+	signature: Promise<openpgp.Signature>;
+}
+
+async function verdictFor(
+	signatures: PgpVerification[],
+	keys: openpgp.PublicKey[]
+): Promise<SignatureVerdict> {
+	if (signatures.length === 0) return { state: 'none' };
+	let sawUnknownKey = false;
+	for (const sig of signatures) {
+		const keyID = sig.keyID.toHex().toLowerCase();
+		const match = keys.find((k) =>
+			k.getKeys().some((sub) => sub.getKeyID().toHex().toLowerCase() === keyID)
+		);
+		if (!match) {
+			sawUnknownKey = true;
+			continue;
+		}
+		try {
+			await sig.verified;
+		} catch {
+			return { state: 'invalid', keyFingerprintHex: match.getFingerprint().toLowerCase() };
+		}
+		let signedAtMillis: number | undefined;
+		try {
+			const parsed = await sig.signature;
+			signedAtMillis = parsed.packets[0]?.created?.getTime();
+		} catch {
+			signedAtMillis = undefined;
+		}
+		return {
+			state: 'valid',
+			keyFingerprintHex: match.getFingerprint().toLowerCase(),
+			signedAtMillis
+		};
+	}
+	return sawUnknownKey ? { state: 'unknown_key' } : { state: 'none' };
+}
+
 async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 	const v = vaults.get(args.accountId);
 	if (!v) {
@@ -1087,29 +1130,53 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 	if (!args.ciphertextArmored && !args.ciphertextBinary) {
 		return { ok: false, code: 'invalid_ciphertext' };
 	}
+	let verificationKeys: openpgp.PublicKey[] = [];
+	if (args.verificationKeysArmored?.length) {
+		try {
+			verificationKeys = (await Promise.all(
+				args.verificationKeysArmored.map((armoredKey) => openpgp.readKey({ armoredKey }))
+			)) as openpgp.PublicKey[];
+		} catch (err) {
+			console.warn('keystore: decrypt invalid verification key', err);
+			verificationKeys = [];
+		}
+	}
+	const wanted = args.verificationKeysArmored?.length ? true : false;
 	try {
 		const message = args.ciphertextArmored
 			? await openpgp.readMessage({ armoredMessage: args.ciphertextArmored })
 			: await openpgp.readMessage({ binaryMessage: args.ciphertextBinary as Uint8Array });
 		if (args.binary) {
-			const { data } = await openpgp.decrypt({
+			const { data, signatures } = await openpgp.decrypt({
 				message,
 				decryptionKeys: v.privateKey,
+				verificationKeys: verificationKeys.length ? verificationKeys : undefined,
+				expectSigned: false,
 				format: 'binary'
 			});
 			if (!(data instanceof Uint8Array)) {
 				return { ok: false, code: 'invalid_ciphertext' };
 			}
-			return { ok: true, plaintextBinary: data };
+			return {
+				ok: true,
+				plaintextBinary: data,
+				signature: wanted ? await verdictFor(signatures, verificationKeys) : undefined
+			};
 		}
-		const { data } = await openpgp.decrypt({
+		const { data, signatures } = await openpgp.decrypt({
 			message,
-			decryptionKeys: v.privateKey
+			decryptionKeys: v.privateKey,
+			verificationKeys: verificationKeys.length ? verificationKeys : undefined,
+			expectSigned: false
 		});
 		if (typeof data !== 'string') {
 			return { ok: false, code: 'invalid_ciphertext' };
 		}
-		return { ok: true, plaintext: data };
+		return {
+			ok: true,
+			plaintext: data,
+			signature: wanted ? await verdictFor(signatures, verificationKeys) : undefined
+		};
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
 		if (/armor|message|read|decrypt/i.test(msg)) {

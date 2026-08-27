@@ -1,6 +1,14 @@
 import { keystore } from '$lib/keystore/keystore-client';
+import type { SignatureVerdict } from '$lib/keystore/protocol';
 import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
+
+export type { SignatureVerdict } from '$lib/keystore/protocol';
+
+export interface DecryptedText {
+	plaintext: string;
+	signature?: SignatureVerdict;
+}
 
 export class DecryptionError extends Error {
 	code: 'locked' | 'invalid_ciphertext' | 'unknown';
@@ -46,15 +54,24 @@ export function decryptPreviewRaw(accountId: string, encryptedPreviewB64: string
 	return decryptBinary(accountId, encryptedPreviewB64);
 }
 
-export async function unwrapPgpMime(accountId: string, mime: string): Promise<string> {
-	let current = mime;
+export async function unwrapPgpMime(
+	accountId: string,
+	mime: DecryptedText,
+	verificationKeysArmored?: string[]
+): Promise<DecryptedText> {
+	let current = mime.plaintext;
+	let signature = mime.signature;
 	for (let depth = 0; depth < 3; depth++) {
-		if (!isPgpEncryptedMime(current)) return current;
+		if (!isPgpEncryptedMime(current)) return { plaintext: current, signature };
 		const armor = extractPgpArmor(current);
 		if (!armor) {
 			throw new DecryptionError('invalid_ciphertext', 'missing PGP payload');
 		}
-		const res = await keystore.decrypt({ accountId, ciphertextArmored: armor });
+		const res = await keystore.decrypt({
+			accountId,
+			ciphertextArmored: armor,
+			verificationKeysArmored
+		});
 		if (!res.ok) {
 			throw new DecryptionError(res.code);
 		}
@@ -62,25 +79,34 @@ export async function unwrapPgpMime(accountId: string, mime: string): Promise<st
 			throw new DecryptionError('invalid_ciphertext', 'expected text plaintext');
 		}
 		current = res.plaintext;
+		if (res.signature && res.signature.state !== 'none') signature = res.signature;
 	}
 	if (isPgpEncryptedMime(current)) {
 		throw new DecryptionError('invalid_ciphertext', 'nesting too deep');
 	}
-	return current;
+	return { plaintext: current, signature };
 }
 
-export async function decryptBodyFromUrl(accountId: string, url: string): Promise<string> {
+export async function decryptBodyFromUrl(
+	accountId: string,
+	url: string,
+	verificationKeysArmored?: string[]
+): Promise<DecryptedText> {
 	const resp = await fetch(url);
 	if (!resp.ok) {
 		throw new DecryptionError('unknown', `fetch body ${resp.status}`);
 	}
 	const buf = new Uint8Array(await resp.arrayBuffer());
-	const res = await keystore.decrypt({ accountId, ciphertextBinary: buf });
+	const res = await keystore.decrypt({
+		accountId,
+		ciphertextBinary: buf,
+		verificationKeysArmored
+	});
 	if (!res.ok) {
 		throw new DecryptionError(res.code);
 	}
 	if (!('plaintext' in res)) {
 		throw new DecryptionError('invalid_ciphertext', 'expected text plaintext for body');
 	}
-	return res.plaintext;
+	return { plaintext: res.plaintext, signature: res.signature };
 }

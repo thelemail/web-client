@@ -22,9 +22,7 @@ beforeEach(() => {
 describe('loadOriginalHeaders', () => {
 	it('fetches the message, decrypts its body and returns the header block', async () => {
 		fetchDetail.mockResolvedValue(detail('https://blob.example/one'));
-		decrypt.mockResolvedValue(
-			'Received: from mx.example.com\r\n\tby thelemail\r\nFrom: a@example.com\r\nSubject: hi\r\n\r\nbody text'
-		);
+		decrypt.mockResolvedValue({ plaintext: 'Received: from mx.example.com\r\n\tby thelemail\r\nFrom: a@example.com\r\nSubject: hi\r\n\r\nbody text' });
 		const headers = await loadOriginalHeaders('acc-1', 'm1');
 		expect(headers).toBe(
 			'Received: from mx.example.com\r\n\tby thelemail\r\nFrom: a@example.com\r\nSubject: hi'
@@ -36,7 +34,7 @@ describe('loadOriginalHeaders', () => {
 		fetchDetail
 			.mockResolvedValueOnce(detail('https://blob.example/one'))
 			.mockResolvedValueOnce(detail('https://blob.example/two'));
-		decrypt.mockResolvedValue('From: a@example.com\n\nbody');
+		decrypt.mockResolvedValue({ plaintext: 'From: a@example.com\n\nbody' });
 		await loadOriginalHeaders('acc-1', 'm1');
 		await loadOriginalHeaders('acc-1', 'm1');
 		expect(fetchDetail).toHaveBeenCalledTimes(2);
@@ -48,9 +46,7 @@ describe('loadOriginalHeaders', () => {
 
 	it('keeps the outer headers of a PGP/MIME message', async () => {
 		fetchDetail.mockResolvedValue(detail('https://blob.example/pgp'));
-		decrypt.mockResolvedValue(
-			'From: a@example.com\nContent-Type: multipart/encrypted;\n boundary="b1"\n\n--b1\nContent-Type: application/pgp-encrypted\n\nVersion: 1\n'
-		);
+		decrypt.mockResolvedValue({ plaintext: 'From: a@example.com\nContent-Type: multipart/encrypted;\n boundary="b1"\n\n--b1\nContent-Type: application/pgp-encrypted\n\nVersion: 1\n' });
 		expect(await loadOriginalHeaders('acc-1', 'm1')).toBe(
 			'From: a@example.com\nContent-Type: multipart/encrypted;\n boundary="b1"'
 		);
@@ -58,7 +54,7 @@ describe('loadOriginalHeaders', () => {
 
 	it('returns an empty block when the payload carries no headers', async () => {
 		fetchDetail.mockResolvedValue(detail('https://blob.example/raw'));
-		decrypt.mockResolvedValue('just a body');
+		decrypt.mockResolvedValue({ plaintext: 'just a body' });
 		expect(await loadOriginalHeaders('acc-1', 'm1')).toBe('');
 	});
 

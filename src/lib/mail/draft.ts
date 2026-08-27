@@ -73,8 +73,8 @@ export async function buildDraftEnvelope(accountId: string, doc: DraftDoc): Prom
 }
 
 export async function loadDraftDoc(accountId: string, detail: DraftDetail): Promise<DraftDoc> {
-	const json = await decryptBodyFromUrl(accountId, detail.body.url);
-	return JSON.parse(json) as DraftDoc;
+	const { plaintext } = await decryptBodyFromUrl(accountId, detail.body.url);
+	return JSON.parse(plaintext) as DraftDoc;
 }
 
 export async function restoreAttachmentFile(
