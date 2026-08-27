@@ -344,16 +344,6 @@
 .mail-app .letterhead .prov { margin-left: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .mail-app .letterhead .when { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; }
 
-.mail-app .vchip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 560; letter-spacing: .01em; white-space: nowrap; padding: 3px 9px 3px 7px; border-radius: var(--radius-pill); border: 1px solid transparent; cursor: help; }
-.mail-app .vchip svg { flex: 0 0 auto; }
-.mail-app .vchip.ok { background: var(--success-100); color: var(--success-700); border-color: color-mix(in oklab, var(--success-500) 22%, transparent); }
-.mail-app .vchip.fc { background: var(--warning-100); color: var(--warning-700); border-color: color-mix(in oklab, var(--warning-500) 22%, transparent); }
-.mail-app .vchip.bad { background: var(--danger-100); color: var(--danger-700); border-color: color-mix(in oklab, var(--danger-500) 22%, transparent); }
-
-.mail-app .vbadge { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: var(--success-100); color: var(--success-700); vertical-align: middle; margin-left: 6px; cursor: help; }
-.mail-app .vbadge.fail { background: var(--danger-100); color: var(--danger-700); }
-.mail-app .vbadge.fc { background: var(--warning-100); color: var(--warning-700); }
-
 .mail-app .sealbar { display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface), var(--paper-50)); padding: 14px 18px; margin: 0 0 26px; box-shadow: var(--shadow-xs); }
 .mail-app .waxseal { width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; color: #fff; position: relative; background: radial-gradient(circle at 34% 30%, var(--brass-500), var(--brass-700)); box-shadow: inset 0 1px 2px rgba(255, 255, 255, .4), inset 0 -2px 4px rgba(0, 0, 0, .25), 0 1px 2px rgba(0, 0, 0, .15); }
 .mail-app .waxseal::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1px dashed rgba(255, 255, 255, .45); }

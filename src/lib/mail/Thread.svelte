@@ -6,9 +6,10 @@
 
 	interface Props {
 		m: Message;
+		onConfirmKeyChange?: (address: string) => void | Promise<void>;
 	}
 
-	let { m }: Props = $props();
+	let { m, onConfirmKeyChange }: Props = $props();
 
 	const entries = $derived(m.thread ?? []);
 	const lastIdx = $derived(entries.length - 1);
@@ -51,7 +52,12 @@
 	</div>
 	<div class="thread">
 		{#each entries as e, i (e.id ?? `${m.id}-${e.epoch}`)}
-			<ThreadMessage {e} isOpen={open.has(i)} onToggle={() => toggle(i)} />
+			<ThreadMessage
+				{e}
+				isOpen={open.has(i)}
+				onToggle={() => toggle(i)}
+				{onConfirmKeyChange}
+			/>
 		{/each}
 	</div>
 </div>

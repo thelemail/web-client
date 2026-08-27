@@ -1,7 +1,4 @@
 <script lang="ts">
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Shield from '@lucide/svelte/icons/shield';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Download from '@lucide/svelte/icons/download';
@@ -9,8 +6,8 @@
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import Avatar from './Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
+	import TrustMark from './TrustMark.svelte';
 	import { formatWhenLong, type ThreadEntry } from './data';
-	import { authBadgeTitle } from './preview';
 	import {
 		decryptAttachmentHeader,
 		downloadAttachment,
@@ -24,9 +21,10 @@
 		e: ThreadEntry;
 		isOpen: boolean;
 		onToggle: () => void;
+		onConfirmKeyChange?: (address: string) => void | Promise<void>;
 	}
 
-	let { e, isOpen, onToggle }: Props = $props();
+	let { e, isOpen, onToggle, onConfirmKeyChange }: Props = $props();
 
 	let showQuoted = $state(false);
 	$effect(() => {
@@ -127,6 +125,9 @@
 			<span class="tc-name">{name}</span>
 			<span class="tc-snip">{e.body[0] ?? ''}</span>
 			<span class="tc-meta">
+				{#if e.trust}
+					<TrustMark trust={e.trust} variant="static" />
+				{/if}
 				{#if chips.length > 0}
 					<Paperclip size={13} />
 				{/if}
@@ -152,26 +153,13 @@
 			<div class="who">
 				<div class="nm">
 					{name}
-					{#if e.security === 'verified'}
-						<span class="vbadge" title="Verified sender">
-							<ShieldCheck size={13} />
-						</span>
-					{:else if e.security === 'first_contact'}
-						<span class="vbadge fc" title="First message from this sender">
-							<Shield size={13} />
-						</span>
-					{:else if e.security === 'mismatch'}
-						<span class="vbadge fail" title="Sender identity could not be verified">
-							<ShieldAlert size={13} />
-						</span>
-					{:else if e.auth === 'pass'}
-						<span class="vbadge" title={authBadgeTitle(e.auth, e.authDetail)}>
-							<ShieldCheck size={13} />
-						</span>
-					{:else if e.auth === 'fail'}
-						<span class="vbadge fail" title={authBadgeTitle(e.auth, e.authDetail)}>
-							<ShieldAlert size={13} />
-						</span>
+					{#if e.trust}
+						<TrustMark
+							trust={e.trust}
+							onConfirmKeyChange={onConfirmKeyChange && e.fromAddr
+								? () => onConfirmKeyChange(e.fromAddr)
+								: undefined}
+						/>
 					{/if}
 				</div>
 				<div class="det">
