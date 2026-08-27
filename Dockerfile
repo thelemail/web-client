@@ -27,15 +27,12 @@ ENV PUBLIC_SUBMISSION_BASE_URL=${PUBLIC_SUBMISSION_BASE_URL}
 ARG CSP_BLOB_ORIGIN=""
 ENV CSP_BLOB_ORIGIN=${CSP_BLOB_ORIGIN}
 
-ARG PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED_B64=""
-ARG PUBLIC_TLOG_POLICY_B64=""
-
-RUN if [ -n "$PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED_B64" ]; then \
-      export PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED="$(echo "$PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED_B64" | base64 -d)"; \
-    fi; \
-    if [ -n "$PUBLIC_TLOG_POLICY_B64" ]; then \
-      export PUBLIC_TLOG_POLICY="$(echo "$PUBLIC_TLOG_POLICY_B64" | base64 -d)"; \
-    fi; \
+RUN set -eu; \
+    test -s trust-roots/directory-signing-key.asc || { echo "trust-roots/directory-signing-key.asc is missing or empty" >&2; exit 1; }; \
+    test -s trust-roots/tlog-policy.json || { echo "trust-roots/tlog-policy.json is missing or empty" >&2; exit 1; }; \
+    export PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED="$(cat trust-roots/directory-signing-key.asc)"; \
+    export PUBLIC_TLOG_POLICY="$(cat trust-roots/tlog-policy.json)"; \
+    node scripts/check-trust-roots.mjs; \
     pnpm build && pnpm verify:bundle
 
 ARG GIT_COMMIT=""

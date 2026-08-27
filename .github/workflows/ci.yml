@@ -33,25 +33,31 @@ jobs:
 
       - run: corepack install
 
+      - name: Load the trust roots
+        run: |
+          set -euo pipefail
+          {
+            echo 'PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED<<TRUSTROOT_EOF'
+            cat trust-roots/directory-signing-key.asc
+            echo 'TRUSTROOT_EOF'
+            echo 'PUBLIC_TLOG_POLICY<<TRUSTROOT_EOF'
+            cat trust-roots/tlog-policy.json
+            echo 'TRUSTROOT_EOF'
+          } >> "$GITHUB_ENV"
+
       - name: Install dependencies
-        env:
-          PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: ${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}
-          PUBLIC_TLOG_POLICY: ${{ vars.PUBLIC_TLOG_POLICY }}
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Check the trust roots
+        run: node scripts/check-trust-roots.mjs
+
       - name: Typecheck
-        env:
-          PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: ${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}
-          PUBLIC_TLOG_POLICY: ${{ vars.PUBLIC_TLOG_POLICY }}
         run: pnpm check
 
       - name: Test
         run: pnpm test
 
       - name: Build
-        env:
-          PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: ${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}
-          PUBLIC_TLOG_POLICY: ${{ vars.PUBLIC_TLOG_POLICY }}
         run: pnpm build
 
       - name: Check that the bundle contacts no third party

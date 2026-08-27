@@ -1,0 +1,9 @@
+{
+  "logVerifierKey": "thelemail.com/keys+76ead63c+ASduViYkPgYHzuTuDnuTdEkjR/DIprnavuFA3vom4YZT",
+  "maxCosignatureAgeSeconds": 86400,
+  "mode": "monitor",
+  "origin": "thelemail.com/keys",
+  "vrfPublicKey": "AFye6B/Tm9oZVs25OmoSyDWn16PFdnIhG2vpOJGSzEE=",
+  "witnessThreshold": 0,
+  "witnessVerifierKeys": []
+}
