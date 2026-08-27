@@ -1,0 +1,58 @@
+name: record-deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: Source commit that was deployed
+        required: true
+        type: string
+      digest:
+        description: Image digest that was deployed
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: record-deployment
+  cancel-in-progress: false
+
+jobs:
+  record:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - name: Append the deployment
+        env:
+          COMMIT: ${{ inputs.commit }}
+          DIGEST: ${{ inputs.digest }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$COMMIT" | grep -Eq '^[0-9a-f]{40}$'
+          printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          git cat-file -e "${COMMIT}^{commit}"
+          jq -cn --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                 --arg commit "$COMMIT" \
+                 --arg digest "$DIGEST" \
+                 '{deployedAt: $at, commit: $commit, image: "ghcr.io/thelemail/web-client", digest: $digest}' \
+            >> deployments.jsonl
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployments.jsonl
+          if git diff --cached --quiet; then
+            echo "nothing to record"
+            exit 0
+          fi
+          git commit -m "Record deployment of ${COMMIT} as ${DIGEST}"
+          for _ in 1 2 3; do
+            if git push origin main; then
+              exit 0
+            fi
+            git pull --rebase origin main
+          done
+          exit 1

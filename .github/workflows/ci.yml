@@ -1,0 +1,66 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - deployments.jsonl
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Load the build configuration
+        run: cat .github/build-config.env >> "$GITHUB_ENV"
+
+      - run: corepack enable
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: corepack install
+
+      - name: Install dependencies
+        env:
+          PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: ${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}
+          PUBLIC_TLOG_POLICY: ${{ vars.PUBLIC_TLOG_POLICY }}
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Typecheck
+        env:
+          PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: ${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}
+          PUBLIC_TLOG_POLICY: ${{ vars.PUBLIC_TLOG_POLICY }}
+        run: pnpm check
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        env:
+          PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: ${{ vars.PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED }}
+          PUBLIC_TLOG_POLICY: ${{ vars.PUBLIC_TLOG_POLICY }}
+        run: pnpm build
+
+      - name: Check that the bundle contacts no third party
+        run: pnpm verify:bundle
+
+      - name: Validate the Caddyfile
+        run: |
+          docker run --rm -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 \
+            caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile

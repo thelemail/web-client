@@ -18,13 +18,15 @@ This repository is the browser client. Findings that are in scope here include:
 - Weaknesses in key generation, key derivation, or vault wrapping
 - Failures in directory key verification or transparency log proof checking that would let a substituted key be accepted
 - Cross-site scripting, particularly in the rendering of received mail
+- Any bypass of the client's Content Security Policy, or any path that causes script to load or execute from an origin other than the application's own
+- A published image whose build provenance does not match the commit it claims, or any other break in the chain from the running site back to this source
 - Authentication and session handling flaws, including the OPAQUE exchange as implemented on the client
 
 Server-side issues belong to the backend rather than this repository, but report them to the same address and we will route them.
 
 ## Out of scope
 
-- Missing security headers with no demonstrated impact
+- Reports that a particular header is absent, without a working proof of concept that its absence is exploitable here
 - Automated scanner output without a working proof of concept
 - Denial of service through volume alone
 - Social engineering, and physical attacks

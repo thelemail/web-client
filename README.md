@@ -42,7 +42,7 @@ Key lookups are verified against a signed directory and, where a transparency lo
 
 ## Development
 
-Requires Node 24 and pnpm.
+Requires Node 24 and pnpm. `.nvmrc` and the `packageManager` field pin the exact versions CI and the image use.
 
 ```bash
 pnpm install
@@ -69,6 +69,7 @@ All configuration is build-time. Changing any of these requires a rebuild.
 | `PUBLIC_SUBMISSION_BASE_URL` | Base URL of the mail submission service |
 | `PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED` | Armored OpenPGP public key of the directory signer. Required; the app refuses to start without it |
 | `PUBLIC_TLOG_POLICY` | JSON transparency log policy (origin, verifier key, VRF key, witness threshold, `monitor` or `enforce`). Optional; log verification is skipped when unset |
+| `CSP_BLOB_ORIGIN` | Origin of the object storage the API issues presigned URLs for. Required; it has to be in the Content-Security-Policy or message bodies and attachments will not load. Accepts a space-separated list |
 
 Two build details that are not obvious from the source:
 
@@ -78,6 +79,33 @@ Two build details that are not obvious from the source:
 ## Docker
 
 `Dockerfile` builds the static bundle and serves it from Caddy on port 80. The `PUBLIC_*` values are passed as build arguments.
+
+## Releases
+
+Production only ever runs a signed release, built from a `v*` tag. A push to `main` runs the tests
+and publishes no image.
+
+The published container image is signed with Sigstore and carries build provenance and an SBOM, so
+it can be traced back to the commit it was built from:
+
+```bash
+cosign verify \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github\.com/thelemail/web-client/\.github/workflows/build-image\.yml@refs/tags/v.+$' \
+  ghcr.io/thelemail/web-client@sha256:...
+
+gh attestation verify oci://ghcr.io/thelemail/web-client@sha256:... \
+  --repo thelemail/web-client \
+  --signer-workflow thelemail/web-client/.github/workflows/build-image.yml
+```
+
+`https://app.thelemail.com/.well-known/thelemail-build.json` names the commit the live site is
+built from, and `deployments.jsonl` records every rollout as a commit and a digest.
+
+The browser security policy lives in two places. `svelte.config.js` builds the Content-Security-Policy
+from the origins declared in `.github/build-config.env`, and `Caddyfile` carries the response headers
+the policy cannot express. `scripts/check-build-origins.mjs` runs during the image build and fails it
+if the bundle would load anything from a third party.
 
 ## Security
 

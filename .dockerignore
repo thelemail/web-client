@@ -7,8 +7,5 @@ dist
 .git
 .github
 .vscode
-*.md
-README*
-LICENSE*
 .idea
 .playwright-mcp
