@@ -55,6 +55,9 @@ export interface MessageListItem {
 	totalAttachmentBytes: number;
 	encryptedPreview: string;
 	previewKeyFingerprint?: string;
+	encrypted?: boolean;
+	signatureStatus?: SignatureStatus;
+	signerKeyFingerprint?: string;
 	schemaVersion: number;
 	mailboxState: MailboxState;
 	starred: boolean;
@@ -96,6 +99,9 @@ export interface MessageDetail {
 	storedAt: string;
 	encryptedPreview: string;
 	previewKeyFingerprint?: string;
+	encrypted?: boolean;
+	signatureStatus?: SignatureStatus;
+	signerKeyFingerprint?: string;
 	schemaVersion: number;
 	body: PresignedPointer;
 	attachments: AttachmentDetail[];
@@ -418,6 +424,8 @@ export interface SubmitMessageResponse {
 	scheduledAt?: string | null;
 	scheduledSendId?: string | null;
 }
+
+export type SignatureStatus = 'unsigned' | 'verified' | 'unverified' | 'unknown_key' | 'encrypted';
 
 export interface ExternalKeyTrust {
 	address: string;

@@ -1,33 +1,49 @@
 import { getMessage } from '$lib/api/messages';
 import type { MessageDetail } from '$lib/api/types';
 import { decryptBodyFromUrl, unwrapPgpMime } from './decrypt';
-import { getCachedRender, putCachedRender, renderBody, type RenderResult } from './render';
+import { getCachedRender, putCachedRender, renderBody, type CachedRender } from './render';
 
-export interface LoadedBody {
+export interface LoadedBody extends CachedRender {
 	detail: MessageDetail;
-	render: RenderResult;
+}
+
+export interface RenderDetailOptions {
+	stripTracking: boolean;
+	verificationKeysArmored?: string[];
 }
 
 export async function renderDetail(
 	accountId: string,
 	detail: MessageDetail,
-	opts: { stripTracking: boolean }
-): Promise<RenderResult> {
-	const key = `${accountId}:${detail.id}|${opts.stripTracking ? 's' : '0'}`;
+	opts: RenderDetailOptions
+): Promise<CachedRender> {
+	const key = `${accountId}:${detail.id}|${opts.stripTracking ? 's' : '0'}|${
+		opts.verificationKeysArmored?.length ? 'v' : '0'
+	}`;
 	const cached = getCachedRender(key);
 	if (cached) return cached;
-	const mime = await unwrapPgpMime(accountId, await decryptBodyFromUrl(accountId, detail.body.url));
+	const outer = await decryptBodyFromUrl(
+		accountId,
+		detail.body.url,
+		opts.verificationKeysArmored
+	);
+	const { plaintext: mime, signature } = await unwrapPgpMime(
+		accountId,
+		outer,
+		opts.verificationKeysArmored
+	);
 	const render = await renderBody({ mime, stripTracking: opts.stripTracking });
-	putCachedRender(key, render);
-	return render;
+	const entry: CachedRender = { render, signature };
+	putCachedRender(key, entry);
+	return entry;
 }
 
 export async function loadMessageBody(
 	accountId: string,
 	messageId: string,
-	opts: { stripTracking: boolean }
+	opts: RenderDetailOptions
 ): Promise<LoadedBody> {
 	const detail = await getMessage(messageId);
-	const render = await renderDetail(accountId, detail, opts);
-	return { detail, render };
+	const { render, signature } = await renderDetail(accountId, detail, opts);
+	return { detail, render, signature };
 }

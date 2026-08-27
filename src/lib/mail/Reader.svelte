@@ -4,10 +4,8 @@
 	import Forward from '@lucide/svelte/icons/forward';
 	import Archive from '@lucide/svelte/icons/archive';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Shield from '@lucide/svelte/icons/shield';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Download from '@lucide/svelte/icons/download';
@@ -47,8 +45,9 @@
 		type AttachmentChip
 	} from '$lib/mail/attachments';
 	import { hydrateThread } from './hydrateThread';
+	import TrustMark from './TrustMark.svelte';
+	import { acceptSenderKeyChange } from './senderVerify';
 	import { loadMessageBody } from './bodySource';
-	import { authBadgeTitle } from './preview';
 	import type { RenderResult, CalendarEvent } from '$lib/mail/render';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import {
@@ -285,7 +284,7 @@
 	type ThreadMeta = {
 		id: string;
 		entries: Message['thread'];
-		security?: NonNullable<Message['thread']>[number]['security'];
+		trust?: NonNullable<Message['thread']>[number]['trust'];
 		rsvpStatus?: Message['rsvpStatus'];
 		rsvpEventUid?: string;
 		externalMessageId?: string;
@@ -301,9 +300,16 @@
 		replyMode = replyMode === next ? null : next;
 	}
 
-	const readerSecurity = $derived(
-		threadMeta && m && threadMeta.id === m.id ? threadMeta.security : undefined
+	const readerTrust = $derived(
+		threadMeta && m && threadMeta.id === m.id ? threadMeta.trust : undefined
 	);
+
+	async function confirmKeyChange(address: string) {
+		const accountId = auth.accountId;
+		if (!accountId) return;
+		await acceptSenderKeyChange(accountId, address);
+		threadRefreshTick += 1;
+	}
 
 	const enriched = $derived.by<Message | null>(() => {
 		if (!m) return null;
@@ -349,7 +355,7 @@
 				threadMeta = {
 					id: current.id,
 					entries: hydrated.entries,
-					security: seedEntry?.security,
+					trust: seedEntry?.trust,
 					rsvpStatus: hydrated.rsvpStatus,
 					rsvpEventUid: hydrated.rsvpEventUid,
 					externalMessageId: hydrated.externalMessageId,
@@ -817,7 +823,7 @@
 				{/if}
 
 				{#if enriched?.thread && enriched.thread.length > 1}
-					<Thread m={enriched} />
+					<Thread m={enriched} onConfirmKeyChange={confirmKeyChange} />
 				{:else}
 					<div class="letterhead">
 						<Avatar
@@ -837,26 +843,12 @@
 						</div>
 						<div class="prov">
 							<div class="when">{formatWhenLong(new Date(m.epoch))}</div>
-							{#if readerSecurity === 'verified'}
-								<span class="vchip ok" title="Verified sender">
-									<ShieldCheck size={12} />Verified sender
-								</span>
-							{:else if readerSecurity === 'first_contact'}
-								<span class="vchip fc" title="First message from this sender">
-									<Shield size={12} />First contact
-								</span>
-							{:else if readerSecurity === 'mismatch'}
-								<span class="vchip bad" title="Sender identity could not be verified">
-									<ShieldAlert size={12} />Identity mismatch
-								</span>
-							{:else if m.auth === 'pass'}
-								<span class="vchip ok" title={authBadgeTitle(m.auth, m.authDetail)}>
-									<ShieldCheck size={12} />Domain authenticated
-								</span>
-							{:else if m.auth === 'fail'}
-								<span class="vchip bad" title={authBadgeTitle(m.auth, m.authDetail)}>
-									<ShieldAlert size={12} />Authentication failed
-								</span>
+							{#if readerTrust}
+								<TrustMark
+									trust={readerTrust}
+									variant="chip"
+									onConfirmKeyChange={() => confirmKeyChange(m.fromAddr)}
+								/>
 							{/if}
 						</div>
 					</div>

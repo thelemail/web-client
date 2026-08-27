@@ -1,7 +1,4 @@
 <script lang="ts">
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Shield from '@lucide/svelte/icons/shield';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Download from '@lucide/svelte/icons/download';
@@ -9,8 +6,8 @@
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import Avatar from './Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
+	import TrustMark from './TrustMark.svelte';
 	import { formatWhenLong, type ThreadEntry } from './data';
-	import { authBadgeTitle } from './preview';
 	import {
 		decryptAttachmentHeader,
 		downloadAttachment,
@@ -24,9 +21,10 @@
 		e: ThreadEntry;
 		isOpen: boolean;
 		onToggle: () => void;
+		onConfirmKeyChange?: (address: string) => void | Promise<void>;
 	}
 
-	let { e, isOpen, onToggle }: Props = $props();
+	let { e, isOpen, onToggle, onConfirmKeyChange }: Props = $props();
 
 	let showQuoted = $state(false);
 	$effect(() => {
@@ -124,7 +122,12 @@
 	>
 		<div class="tmsg-collapsed">
 			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={bimi.logoUrl(e.bimiDomain)} imgBg="#fff" />
-			<span class="tc-name">{name}</span>
+			<span class="tc-name">
+				<span class="tc-nm">{name}</span>
+				{#if e.trust}
+					<TrustMark trust={e.trust} variant="static" />
+				{/if}
+			</span>
 			<span class="tc-snip">{e.body[0] ?? ''}</span>
 			<span class="tc-meta">
 				{#if chips.length > 0}
@@ -151,28 +154,7 @@
 			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={42} src={bimi.logoUrl(e.bimiDomain)} imgBg="#fff" />
 			<div class="who">
 				<div class="nm">
-					{name}
-					{#if e.security === 'verified'}
-						<span class="vbadge" title="Verified sender">
-							<ShieldCheck size={13} />
-						</span>
-					{:else if e.security === 'first_contact'}
-						<span class="vbadge fc" title="First message from this sender">
-							<Shield size={13} />
-						</span>
-					{:else if e.security === 'mismatch'}
-						<span class="vbadge fail" title="Sender identity could not be verified">
-							<ShieldAlert size={13} />
-						</span>
-					{:else if e.auth === 'pass'}
-						<span class="vbadge" title={authBadgeTitle(e.auth, e.authDetail)}>
-							<ShieldCheck size={13} />
-						</span>
-					{:else if e.auth === 'fail'}
-						<span class="vbadge fail" title={authBadgeTitle(e.auth, e.authDetail)}>
-							<ShieldAlert size={13} />
-						</span>
-					{/if}
+					<span class="nm-t">{name}</span>
 				</div>
 				<div class="det">
 					<span class="em">{e.fromAddr}</span>
@@ -182,7 +164,18 @@
 					{/if}
 				</div>
 			</div>
-			<div class="when">{when}</div>
+			<div class="prov">
+				<div class="when">{when}</div>
+				{#if e.trust}
+					<TrustMark
+						trust={e.trust}
+						variant="chip"
+						onConfirmKeyChange={onConfirmKeyChange && e.fromAddr
+							? () => onConfirmKeyChange(e.fromAddr)
+							: undefined}
+					/>
+				{/if}
+			</div>
 		</div>
 		<div class="tmsg-body">
 			<div class="email-sheet flush">

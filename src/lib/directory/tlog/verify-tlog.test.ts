@@ -41,10 +41,15 @@ describe('verifyTlogProof fixtures', () => {
 		it(c.name, async () => {
 			const store = memoryStore();
 			if (c.expect === 'ok') {
-				await expect(run(c, store)).resolves.toBeUndefined();
+				const details = await run(c, store);
+				expect(details.origin).toBe(c.policy.origin);
+				expect(details.treeSize).toBeGreaterThan(0);
+				expect(details.leafIndex).toBeGreaterThanOrEqual(0);
+				expect(details.witnessThreshold).toBe(c.policy.witnessThreshold);
+				expect(details.validWitnessCount).toBeGreaterThanOrEqual(c.policy.witnessThreshold);
 				const state = await store.get(c.policy.origin);
 				expect(state).not.toBeNull();
-				expect(state!.treeSize).toBeGreaterThan(0);
+				expect(state!.treeSize).toBe(details.treeSize);
 			} else {
 				const err = await run(c, store).then(
 					() => null,
@@ -62,8 +67,10 @@ describe('verifyTlogProof monotonicity', () => {
 
 	it('accepts repeated verification at the same tree size', async () => {
 		const store = memoryStore();
-		await run(okDev, store);
-		await expect(run(okDev, store)).resolves.toBeUndefined();
+		const first = await run(okDev, store);
+		const second = await run(okDev, store);
+		expect(second.treeSize).toBe(first.treeSize);
+		expect(second.leafIndex).toBe(first.leafIndex);
 	});
 
 	it('rejects a checkpoint smaller than the stored tree size', async () => {

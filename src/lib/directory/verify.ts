@@ -5,10 +5,14 @@ import {
 	DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED
 } from './signing-key';
 import { getSeen, upsertSeen } from './seen-idb';
-import { DirectoryVerificationError } from './errors';
+import {
+	DirectoryVerificationError,
+	type DirectoryVerificationCode,
+	type DirectoryVerificationDetails
+} from './errors';
 import { TLOG_POLICY } from './tlog/policy';
 import { tlogStateStore } from './tlog/state-idb';
-import { verifyTlogProof } from './tlog/verify-tlog';
+import { verifyTlogProof, type TlogProofDetails } from './tlog/verify-tlog';
 
 export { DirectoryVerificationError } from './errors';
 export type { DirectoryVerificationCode, DirectoryVerificationDetails } from './errors';
@@ -68,6 +72,23 @@ async function fingerprintOf(armoredPublicKey: string): Promise<string> {
 	return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+export type TlogOutcome =
+	| ({ state: 'verified' } & TlogProofDetails)
+	| { state: 'not_configured' }
+	| {
+			state: 'failed';
+			code: DirectoryVerificationCode;
+			details: DirectoryVerificationDetails;
+	  };
+
+export interface DirectoryVerificationResult {
+	statement: DirectoryStatement;
+	publicKeyArmored: string;
+	verifiedAt: Date;
+	firstContact: boolean;
+	tlog: TlogOutcome;
+}
+
 export interface VerifyOptions {
 	acceptKeyChange?: boolean;
 }
@@ -76,7 +97,7 @@ export async function verifyDirectoryLookup(
 	lookup: LookupInputForVerification,
 	requestedAddressNormalised: string,
 	opts: VerifyOptions = {}
-): Promise<{ statement: DirectoryStatement; verifiedAt: Date; firstContact: boolean }> {
+): Promise<DirectoryVerificationResult> {
 	const { directoryStatement: stmt, directorySignature, publicKeyArmored } = lookup;
 
 	if (
@@ -190,21 +211,27 @@ export async function verifyDirectoryLookup(
 		);
 	}
 
+	let tlog: TlogOutcome = { state: 'not_configured' };
 	if (TLOG_POLICY) {
 		try {
-			await verifyTlogProof(
+			const details = await verifyTlogProof(
 				lookup.tlogProof,
 				canon,
 				requestedAddressNormalised.toLowerCase(),
 				TLOG_POLICY,
 				{ nowMillis: Date.now(), store: tlogStateStore }
 			);
+			tlog = { state: 'verified', ...details };
 		} catch (e) {
 			if (TLOG_POLICY.mode === 'enforce') throw e;
 			if (e instanceof DirectoryVerificationError) {
-				console.warn('tlog verification failed', e.code, e.message, e.details);
+				tlog = { state: 'failed', code: e.code, details: e.details };
 			} else {
-				console.warn('tlog verification failed', e);
+				tlog = {
+					state: 'failed',
+					code: 'tlog_proof_malformed',
+					details: { logOrigin: TLOG_POLICY.origin }
+				};
 			}
 		}
 	}
@@ -251,5 +278,11 @@ export async function verifyDirectoryLookup(
 
 	void hexToBytes;
 
-	return { statement: stmt, verifiedAt: new Date(now), firstContact: seen == null };
+	return {
+		statement: stmt,
+		publicKeyArmored,
+		verifiedAt: new Date(now),
+		firstContact: seen == null,
+		tlog
+	};
 }

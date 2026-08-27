@@ -15,6 +15,15 @@ export interface VerifyTlogOptions {
 	store: TlogStateStore;
 }
 
+export interface TlogProofDetails {
+	origin: string;
+	treeSize: number;
+	leafIndex: number;
+	validWitnessCount: number;
+	witnessThreshold: number;
+	cosignatureTimestamp?: number;
+}
+
 const FORWARD_SKEW_SECONDS = 300;
 
 export async function verifyTlogProof(
@@ -23,7 +32,7 @@ export async function verifyTlogProof(
 	addressNormalised: string,
 	policy: TlogPolicy,
 	opts: VerifyTlogOptions
-): Promise<void> {
+): Promise<TlogProofDetails> {
 	if (!tlogProof) {
 		throw new DirectoryVerificationError('tlog_proof_missing', 'lookup response has no tlogProof', {
 			logOrigin: policy.origin
@@ -165,4 +174,13 @@ export async function verifyTlogProof(
 		rootHashB64: bytesToBase64(checkpoint.rootHash),
 		updatedAt: opts.nowMillis
 	});
+
+	return {
+		origin: policy.origin,
+		treeSize: checkpoint.treeSize,
+		leafIndex: Number(bundle.index),
+		validWitnessCount: witnessTimestamps.length,
+		witnessThreshold: policy.witnessThreshold,
+		cosignatureTimestamp: witnessTimestamps.length ? Math.max(...witnessTimestamps) : undefined
+	};
 }
