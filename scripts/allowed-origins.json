@@ -1,0 +1,13 @@
+{
+  "inert": [
+    "https://svelte.dev",
+    "http://www.w3.org",
+    "https://www.w3.org",
+    "https://openpgpjs.org",
+    "https://simplewebauthn.dev",
+    "https://prosemirror.net",
+    "https://tailwindcss.com",
+    "https://github.com",
+    "https://thelemail.com"
+  ]
+}
