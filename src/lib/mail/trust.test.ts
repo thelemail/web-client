@@ -97,6 +97,41 @@ describe('deriveTrust', () => {
 		}
 	});
 
+	it('does not invent a key change when the address has no key on record', () => {
+		const trust = deriveTrust(
+			internal({ senderAddress: 'no-reply@thelemail.com', directory: { ...directory(), ok: false, missing: true, statement: undefined }, signature: undefined })
+		);
+		const row = trust.checks.find((c) => c.id === 'keychange');
+		expect(row?.state).toBe('absent');
+		expect(row?.label).toBe('No key on record for this address');
+		expect(trust.checks.some((c) => c.state === 'fail')).toBe(false);
+	});
+
+	it('does not claim end-to-end encryption for a sender it cannot verify', () => {
+		const trust = deriveTrust(
+			internal({ senderAddress: 'no-reply@thelemail.com', directory: { ...directory(), ok: false, missing: true, statement: undefined }, signature: undefined })
+		);
+		expect(trust.tier).toBe('none');
+		expect(trust.headline).toBe('Encrypted, but the sender is not verified');
+		expect(trust.checks.find((c) => c.id === 'e2e')?.label).toBe('Stored encrypted to your key');
+	});
+
+	it('treats an unreachable directory as unknown, not as a failure', () => {
+		const trust = deriveTrust(internal({ directory: null, signature: undefined }));
+		expect(trust.tier).toBe('none');
+		expect(trust.checks.some((c) => c.state === 'fail')).toBe(false);
+	});
+
+	it('never shows a green tier above a failed check', () => {
+		const trust = deriveTrust(
+			internal({
+				directory: directory({ tlog: { state: 'failed', code: 'tlog_inclusion_invalid', details: {} } })
+			})
+		);
+		expect(trust.checks.some((c) => c.state === 'fail')).toBe(true);
+		expect(['verified', 'encrypted', 'authenticated']).not.toContain(trust.tier);
+	});
+
 	it('says what happened rather than negating the good case', () => {
 		const changed = deriveTrust(
 			internal({
@@ -259,7 +294,7 @@ describe('deriveTrust', () => {
 		expect(trust.headline).toBe('The transparency log went backwards');
 	});
 
-	it('marks a monitor-mode transparency failure without blocking the message', () => {
+	it('keeps a monitor-mode transparency outage gray and non-blocking', () => {
 		const trust = deriveTrust(
 			internal({
 				directory: directory({
@@ -272,6 +307,18 @@ describe('deriveTrust', () => {
 			})
 		);
 		expect(trust.tier).toBe('encrypted');
+		expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('absent');
+	});
+
+	it('blocks a transparency failure that looks like key substitution', () => {
+		const trust = deriveTrust(
+			internal({
+				directory: directory({
+					tlog: { state: 'failed', code: 'tlog_tree_rolled_back', details: { treeSize: 900 } }
+				})
+			})
+		);
+		expect(trust.tier).toBe('failed');
 		expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('fail');
 	});
 

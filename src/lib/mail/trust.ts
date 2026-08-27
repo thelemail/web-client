@@ -50,6 +50,18 @@ export interface TrustFacts {
 	nowMillis: number;
 }
 
+const BLOCKING_TLOG_CODES = new Set([
+	'tlog_tree_rolled_back',
+	'tlog_inclusion_invalid',
+	'tlog_vrf_invalid',
+	'tlog_checkpoint_unverified'
+]);
+
+function tlogAttack(dir?: DirectoryTrust | null): boolean {
+	const tlog = dir?.tlog;
+	return tlog?.state === 'failed' && BLOCKING_TLOG_CODES.has(tlog.code);
+}
+
 const BLOCKING_DIRECTORY_CODES = new Set([
 	'version_rolled_back',
 	'tlog_tree_rolled_back',
@@ -209,15 +221,25 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 	const witnessCount = tlog?.state === 'verified' ? tlog.validWitnessCount : 0;
 	const witnessNeed = tlog?.state === 'verified' ? tlog.witnessThreshold : 0;
 
+	const unverifiedSender = !dir || dir.missing;
 	const encryption: TrustCheck = facts.e2e
-		? {
-				id: 'e2e',
-				state: 'pass',
-				label: 'Encrypted end to end',
-				explain:
-					'The message was encrypted to your key before it left the sender. Thelemail stores only the ciphertext and cannot read it.',
-				rows: []
-			}
+		? unverifiedSender
+			? {
+					id: 'e2e',
+					state: 'pass',
+					label: 'Stored encrypted to your key',
+					explain:
+						'Thelemail holds only ciphertext for this message and cannot read it at rest. Without a verified sender key, this device cannot tell whether it was already encrypted before it arrived.',
+					rows: []
+				}
+			: {
+					id: 'e2e',
+					state: 'pass',
+					label: 'Encrypted end to end',
+					explain:
+						'The message was encrypted to your key before it left the sender. Thelemail stores only the ciphertext and cannot read it.',
+					rows: []
+				}
 		: {
 				id: 'e2e',
 				state: 'absent',
@@ -249,9 +271,13 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 				: {
 						id: 'signature',
 						state: 'absent',
-						label: 'Signature was not checked',
+						label: !dir || dir.missing
+							? 'No signature to check'
+							: 'Signature was not checked',
 						explain:
-							'No signature could be checked on this message, either because it carries none or because the sender key was unavailable.',
+							!dir || dir.missing
+								? 'There is no published key for this address, so any signature on the message could not be checked against anything.'
+								: 'No signature could be checked on this message, either because it carries none or because the sender key was unavailable.',
 						rows: signatureRows(facts.signature)
 					};
 
@@ -268,9 +294,11 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			: {
 					id: 'binding',
 					state: 'absent',
-					label: 'Address and key were not tied together',
+					label: 'Sender identity is not cryptographically verified',
 					explain:
-						'Tying an address to a key needs both a valid signature and a verified directory record. One of the two was missing here.',
+						!dir || dir.missing
+							? 'Tying an address to a key needs a key published for that address. This one publishes none, so the sender in the header is not backed by any cryptography.'
+							: 'Tying an address to a key needs both a valid signature and a verified directory record. One of the two was missing here.',
 					rows: keyRows(dir)
 				};
 
@@ -285,14 +313,23 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 					rows: logRows(dir)
 				}
 			: tlog?.state === 'failed'
-				? {
-						id: 'tlog',
-						state: 'fail',
-						label: 'Transparency log check did not pass',
-						explain:
-							'The transparency log proof for this key did not verify. That can mean a stale checkpoint, or that the key was never published.',
-						rows: logRows(dir)
-					}
+				? tlogAttack(dir)
+					? {
+							id: 'tlog',
+							state: 'fail',
+							label: 'The transparency log does not vouch for this key',
+							explain:
+								'The log proof did not verify against the checkpoint this device trusts. A log that cannot show this key, or that shows a different history to you than to everyone else, is what a targeted key substitution looks like.',
+							rows: logRows(dir)
+						}
+					: {
+							id: 'tlog',
+							state: 'absent',
+							label: 'Transparency log could not be checked right now',
+							explain:
+								'The proof was missing or the checkpoint was too old to use. Nothing here says the key is wrong, only that the log could not confirm it on this attempt.',
+							rows: logRows(dir)
+						}
 				: {
 						id: 'tlog',
 						state: 'absent',
@@ -320,7 +357,16 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 				rows: witnessRows(dir)
 			};
 
-	const continuity: TrustCheck = dir?.ok
+	const continuity: TrustCheck = !dir || dir.missing
+		? {
+				id: 'keychange',
+				state: 'absent',
+				label: 'No key on record for this address',
+				explain:
+					'This address publishes no key in the Thelemail directory, so there is nothing to compare against and no key change to detect.',
+				rows: []
+			}
+		: dir.ok
 		? dir.firstContact
 			? {
 					id: 'keychange',
@@ -486,9 +532,31 @@ function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 	];
 }
 
+const GREEN_TIERS = new Set<TrustTier>(['verified', 'encrypted', 'authenticated']);
+
+function clamp(trust: MessageTrust): MessageTrust {
+	if (!GREEN_TIERS.has(trust.tier)) return trust;
+	if (!trust.checks.some((c) => c.state === 'fail')) return trust;
+	return { ...trust, tier: 'failed', label: 'Verification failed' };
+}
+
 export function deriveTrust(facts: TrustFacts): MessageTrust {
+	return clamp(derive(facts));
+}
+
+function derive(facts: TrustFacts): MessageTrust {
 	const base = { address: facts.senderAddress };
 	const dir = facts.directory;
+
+	if (tlogAttack(dir)) {
+		return {
+			...base,
+			tier: 'failed',
+			label: 'Verification failed',
+			headline: 'The transparency log does not vouch for this key',
+			checks: internalChecks(facts)
+		};
+	}
 
 	if (facts.signature?.state === 'invalid') {
 		return {
@@ -571,6 +639,19 @@ export function deriveTrust(facts: TrustFacts): MessageTrust {
 			footnote: dir?.verifiedAtMillis
 				? `Verified on this device · ${relativeTime(dir.verifiedAtMillis, facts.nowMillis)}`
 				: undefined
+		};
+	}
+
+	if (facts.e2e && facts.channel === 'internal' && (!dir || dir.missing)) {
+		return {
+			...base,
+			tier: 'none',
+			label: 'Unverified sender',
+			headline: 'Encrypted, but the sender is not verified',
+			checks: internalChecks(facts),
+			footnote: dir?.missing
+				? 'This address publishes no key, so nothing here proves who sent it.'
+				: 'The directory could not be reached, so the sender was not checked.'
 		};
 	}
 

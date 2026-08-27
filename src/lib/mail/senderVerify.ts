@@ -1,7 +1,7 @@
 import { lookupAccount } from '$lib/api/accounts';
 import { acceptExternalKey, lookupExternalKey } from '$lib/api/externalKeys';
 import { getMyWorkspace } from '$lib/api/workspaces';
-import type { ExternalKeyTrust } from '$lib/api/types';
+import { ApiCallError, type ExternalKeyTrust } from '$lib/api/types';
 import {
 	verifyDirectoryLookup,
 	DirectoryVerificationError,
@@ -15,6 +15,7 @@ import type {
 
 export interface DirectoryTrust {
 	ok: boolean;
+	missing?: boolean;
 	statement?: DirectoryStatement;
 	publicKeyArmored?: string;
 	firstContact: boolean;
@@ -78,15 +79,26 @@ export async function directoryTrust(
 			tlog: res.tlog
 		};
 	} catch (e) {
-		if (!(e instanceof DirectoryVerificationError)) return null;
-		value = {
-			ok: false,
-			firstContact: false,
-			sameWorkspace: false,
-			tlog: { state: 'not_configured' },
-			code: e.code,
-			details: e.details
-		};
+		if (e instanceof ApiCallError && e.status === 404) {
+			value = {
+				ok: false,
+				missing: true,
+				firstContact: false,
+				sameWorkspace: false,
+				tlog: { state: 'not_configured' }
+			};
+		} else if (e instanceof DirectoryVerificationError) {
+			value = {
+				ok: false,
+				firstContact: false,
+				sameWorkspace: false,
+				tlog: { state: 'not_configured' },
+				code: e.code,
+				details: e.details
+			};
+		} else {
+			return null;
+		}
 	}
 	directoryCache.set(key, { value, at: Date.now() });
 	return value;
