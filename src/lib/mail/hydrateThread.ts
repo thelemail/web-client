@@ -124,8 +124,6 @@ async function hydrateEntry(
 			bg: me ? 'var(--pine-700)' : 'var(--pine-100)',
 			fg: me ? '#EEF2EA' : 'var(--pine-700)',
 			epoch: stored.getTime(),
-			auth: facts.domainAuthState,
-			authDetail: facts.domainAuth,
 			trust,
 			me,
 			body: bodyLines,

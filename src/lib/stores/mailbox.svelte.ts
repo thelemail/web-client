@@ -13,7 +13,7 @@ import {
 	type RouteFolder
 } from '$lib/mail/data';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
-import { authStateFromPreview, authSummaryFromPreview, bimiDomainFromPreview } from '$lib/mail/preview';
+import { bimiDomainFromPreview } from '$lib/mail/preview';
 import { initialsFor } from '$lib/mail/initials';
 import type { MailboxCounts, MessageListItem, ThreadListItem } from '$lib/api/types';
 import { DEFAULT_QUERY, type Query } from '$lib/mail/url';
@@ -175,8 +175,6 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		unread: !item.read,
 		starred: item.starred,
 		snoozedUntil: item.snoozedUntil ?? null,
-		auth: authStateFromPreview(preview),
-		authDetail: authSummaryFromPreview(preview),
 		prev: preview.snippet,
 		body: [],
 		threadCount: item.threadCount && item.threadCount > 1 ? item.threadCount : undefined,

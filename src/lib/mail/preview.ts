@@ -55,13 +55,3 @@ export function authStateFromPreview(preview: MessagePreview): AuthState | undef
 	if (dmarc === 'fail') return 'fail';
 	return undefined;
 }
-
-export function authBadgeTitle(state: AuthState, detail?: MessagePreviewAuth): string {
-	const head = state === 'pass' ? 'Authenticated' : 'Failed authentication';
-	const parts = [
-		detail?.spf ? `SPF: ${detail.spf}` : '',
-		detail?.dkim ? `DKIM: ${detail.dkim}` : '',
-		detail?.dmarc ? `DMARC: ${detail.dmarc}` : ''
-	].filter(Boolean);
-	return parts.length ? `${head} — ${parts.join(' · ')}` : head;
-}

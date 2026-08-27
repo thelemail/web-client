@@ -1,5 +1,5 @@
 import type { MessageTrust } from './trust';
-import type { AuthState, MessagePreviewAuth, MessagePreviewRecipient } from './preview';
+import type { MessagePreviewRecipient } from './preview';
 import type { AttachmentChip } from './attachments';
 import { initialsFor } from './initials';
 import { locale } from './locale.svelte';
@@ -69,8 +69,6 @@ export interface ThreadEntry {
 	bg: string;
 	fg: string;
 	epoch: number;
-	auth?: AuthState;
-	authDetail?: MessagePreviewAuth;
 	trust?: MessageTrust;
 	me?: boolean;
 	body: string[];
@@ -100,8 +98,6 @@ export interface Message {
 	labels: LabelId[];
 	unread: boolean;
 	starred: boolean;
-	auth?: AuthState;
-	authDetail?: MessagePreviewAuth;
 	spam?: boolean;
 	snoozedUntil?: string | null;
 	prev: string;
