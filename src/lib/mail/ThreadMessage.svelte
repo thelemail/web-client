@@ -155,14 +155,6 @@
 			<div class="who">
 				<div class="nm">
 					<span class="nm-t">{name}</span>
-					{#if e.trust}
-						<TrustMark
-							trust={e.trust}
-							onConfirmKeyChange={onConfirmKeyChange && e.fromAddr
-								? () => onConfirmKeyChange(e.fromAddr)
-								: undefined}
-						/>
-					{/if}
 				</div>
 				<div class="det">
 					<span class="em">{e.fromAddr}</span>
@@ -172,7 +164,18 @@
 					{/if}
 				</div>
 			</div>
-			<div class="when">{when}</div>
+			<div class="prov">
+				<div class="when">{when}</div>
+				{#if e.trust}
+					<TrustMark
+						trust={e.trust}
+						variant="chip"
+						onConfirmKeyChange={onConfirmKeyChange && e.fromAddr
+							? () => onConfirmKeyChange(e.fromAddr)
+							: undefined}
+					/>
+				{/if}
+			</div>
 		</div>
 		<div class="tmsg-body">
 			<div class="email-sheet flush">

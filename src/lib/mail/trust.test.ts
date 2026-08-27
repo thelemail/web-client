@@ -66,6 +66,67 @@ describe('deriveTrust', () => {
 		expect(trust.checks.find((c) => c.id === 'signature')?.state).toBe('pass');
 	});
 
+	it('never pairs a glyph with a negated claim', () => {
+		const all = [
+			deriveTrust(internal()),
+			deriveTrust(gmail()),
+			deriveTrust(gmail({ domainAuth: undefined, domainAuthState: undefined })),
+			deriveTrust(gmail({ e2e: true, externalKey: { status: 'pinned' } })),
+			deriveTrust(internal({ signature: { state: 'invalid' } })),
+			deriveTrust(
+				internal({
+					directory: directory({
+						ok: false,
+						statement: undefined,
+						code: 'version_rolled_back',
+						details: { previousVersion: 5, currentVersion: 3 }
+					})
+				})
+			)
+		];
+		for (const trust of all) {
+			for (const check of trust.checks) {
+				if (check.state === 'pass') {
+					expect(check.label).not.toMatch(/^(No|Not)\b/i);
+					expect(check.label).not.toMatch(/\bnot\b/i);
+				}
+				expect(check.explain.length).toBeGreaterThan(0);
+				expect(check.label).not.toContain('—');
+				expect(check.explain).not.toContain('—');
+			}
+		}
+	});
+
+	it('says what happened rather than negating the good case', () => {
+		const changed = deriveTrust(
+			internal({
+				directory: directory({
+					ok: false,
+					statement: undefined,
+					code: 'fingerprint_changed',
+					details: { previousVersion: 3, currentVersion: 4 }
+				})
+			})
+		);
+		const row = changed.checks.find((c) => c.id === 'keychange');
+		expect(row?.state).toBe('fail');
+		expect(row?.label).toBe('The key changed since you last saw this sender');
+
+		const steady = deriveTrust(internal()).checks.find((c) => c.id === 'keychange');
+		expect(steady?.state).toBe('pass');
+		expect(steady?.label).toBe('Same key as the last message from this sender');
+	});
+
+	it('attaches evidence to the check it belongs to', () => {
+		const trust = deriveTrust(internal());
+		const labels = (id: string) =>
+			trust.checks.find((c) => c.id === id)?.rows.map((r) => r.label) ?? [];
+		expect(labels('signature')).toContain('Signing key');
+		expect(labels('binding')).toContain('Sender key');
+		expect(labels('tlog')).toContain('Tree size');
+		expect(labels('witnesses')).toContain('Required');
+	});
+
 	it('awards the shield once the witness threshold is met', () => {
 		const trust = deriveTrust(
 			internal({
@@ -85,6 +146,9 @@ describe('deriveTrust', () => {
 		expect(trust.tier).toBe('verified');
 		expect(trust.headline).toBe('Encrypted and verified');
 		expect(trust.checks.every((c) => c.state === 'pass')).toBe(true);
+		expect(trust.checks.find((c) => c.id === 'witnesses')?.label).toBe(
+			'Checkpoint confirmed by 2 of 2 independent witnesses'
+		);
 		expect(trust.footnote).toBe('Verified on this device · just now');
 	});
 
@@ -106,14 +170,8 @@ describe('deriveTrust', () => {
 		expect(trust.tier).toBe('authenticated');
 		expect(trust.headline).toBe('Sender domain authenticated');
 		expect(trust.footnote).toBe('Protected in transit where supported');
-		expect(trust.checks.map((c) => c.state)).toEqual([
-			'pass',
-			'pass',
-			'absent',
-			'absent',
-			'absent'
-		]);
-		expect(trust.checks[1].label).toBe('Message claims to come from gmail.com');
+		expect(trust.checks.map((c) => c.state)).toEqual(['pass', 'absent', 'absent', 'absent']);
+		expect(trust.checks[0].label).toBe('Sent by a server allowed to speak for gmail.com');
 	});
 
 	it('is gray, not yellow, when domain authentication is simply absent', () => {
@@ -217,13 +275,4 @@ describe('deriveTrust', () => {
 		expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('fail');
 	});
 
-	it('carries technical rows for the details panel', () => {
-		const rows = deriveTrust(internal()).technical;
-		const labels = rows.map((r) => r.label);
-		expect(labels).toContain('Sender key');
-		expect(labels).toContain('Directory signing key');
-		expect(labels).toContain('Tree size');
-		expect(labels).toContain('Leaf index');
-		expect(rows.find((r) => r.label === 'Sender key')?.value).toContain(' · ');
-	});
 });

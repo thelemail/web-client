@@ -17,6 +17,8 @@ export interface TrustCheck {
 	id: string;
 	label: string;
 	state: CheckState;
+	explain: string;
+	rows: TrustTechnicalRow[];
 }
 
 export interface TrustTechnicalRow {
@@ -30,7 +32,6 @@ export interface MessageTrust {
 	label: string;
 	checks: TrustCheck[];
 	footnote?: string;
-	technical: TrustTechnicalRow[];
 	action?: 'confirm_key_change';
 	address?: string;
 }
@@ -91,92 +92,46 @@ function relativeTime(fromMillis: number, nowMillis: number): string {
 	return `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
-function tlogRows(facts: TrustFacts): TrustTechnicalRow[] {
-	const tlog = facts.directory?.tlog;
-	if (!tlog) return [];
-	if (tlog.state === 'verified') {
-		const rows: TrustTechnicalRow[] = [
-			{ label: 'Log origin', value: tlog.origin },
-			{ label: 'Tree size', value: String(tlog.treeSize) },
-			{ label: 'Leaf index', value: String(tlog.leafIndex) },
-			{
-				label: 'Witnesses',
-				value: tlog.witnessThreshold
-					? `${tlog.validWitnessCount} of ${tlog.witnessThreshold} required`
-					: `${tlog.validWitnessCount}, none required yet`
-			}
-		];
-		if (tlog.cosignatureTimestamp) {
-			rows.push({
-				label: 'Checkpoint cosigned',
-				value: new Date(tlog.cosignatureTimestamp * 1000).toISOString()
-			});
-		}
-		return rows;
-	}
-	if (tlog.state === 'failed') {
-		const rows: TrustTechnicalRow[] = [{ label: 'Transparency log', value: tlog.code }];
-		if (tlog.details.logOrigin) rows.push({ label: 'Log origin', value: tlog.details.logOrigin });
-		if (tlog.details.treeSize !== undefined) {
-			rows.push({ label: 'Tree size', value: String(tlog.details.treeSize) });
-		}
-		if (tlog.details.validWitnessCount !== undefined) {
-			rows.push({
-				label: 'Witnesses',
-				value: `${tlog.details.validWitnessCount} of ${tlog.details.witnessThreshold ?? 0} required`
-			});
-		}
-		return rows;
-	}
-	return [{ label: 'Transparency log', value: 'not configured on this client' }];
-}
-
-function directoryRows(facts: TrustFacts): TrustTechnicalRow[] {
-	const dir = facts.directory;
+function keyRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	if (!dir) return [];
 	const rows: TrustTechnicalRow[] = [];
 	if (dir.statement) {
-		rows.push({
-			label: 'Sender key',
-			value: formatFingerprintHex(dir.statement.keyFingerprint)
-		});
+		rows.push({ label: 'Sender key', value: formatFingerprintHex(dir.statement.keyFingerprint) });
 		rows.push({
 			label: 'Directory record',
 			value: formatVerifiedAt(Date.parse(dir.statement.issuedAt), dir.statement.version)
 		});
 		rows.push({
-			label: 'Directory signing key',
+			label: 'Signed by',
 			value: formatFingerprintHex(dir.statement.signingKeyFingerprint)
 		});
-	}
-	if (dir.details?.previousFingerprint) {
-		rows.push({
-			label: 'Previously pinned',
-			value: formatFingerprintHex(dir.details.previousFingerprint)
-		});
-	}
-	if (dir.details?.currentFingerprint) {
-		rows.push({
-			label: 'Now',
-			value: formatFingerprintHex(dir.details.currentFingerprint)
-		});
-	}
-	if (dir.details?.previousVersion !== undefined) {
-		rows.push({ label: 'Version seen', value: `v${dir.details.previousVersion}` });
-	}
-	if (dir.details?.currentVersion !== undefined) {
-		rows.push({ label: 'Version served', value: `v${dir.details.currentVersion}` });
-	}
-	if (dir.code) {
-		rows.push({ label: 'Finding', value: dir.code });
 	}
 	return rows;
 }
 
-function signatureRows(facts: TrustFacts): TrustTechnicalRow[] {
-	const sig = facts.signature;
+function changeRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
+	if (!dir?.details) return [];
+	const d = dir.details;
+	const rows: TrustTechnicalRow[] = [];
+	if (d.previousFingerprint) {
+		rows.push({ label: 'Key you saw', value: formatFingerprintHex(d.previousFingerprint) });
+	}
+	if (d.currentFingerprint) {
+		rows.push({ label: 'Key served now', value: formatFingerprintHex(d.currentFingerprint) });
+	}
+	if (d.previousVersion !== undefined) {
+		rows.push({ label: 'Version you saw', value: `v${d.previousVersion}` });
+	}
+	if (d.currentVersion !== undefined) {
+		rows.push({ label: 'Version served now', value: `v${d.currentVersion}` });
+	}
+	if (dir.code) rows.push({ label: 'Finding', value: dir.code });
+	return rows;
+}
+
+function signatureRows(sig?: SignatureVerdict): TrustTechnicalRow[] {
 	if (!sig || sig.state === 'none') return [];
-	const rows: TrustTechnicalRow[] = [{ label: 'Signature', value: sig.state }];
+	const rows: TrustTechnicalRow[] = [{ label: 'Result', value: sig.state }];
 	if (sig.keyFingerprintHex) {
 		rows.push({ label: 'Signing key', value: formatFingerprintHex(sig.keyFingerprintHex) });
 	}
@@ -186,23 +141,59 @@ function signatureRows(facts: TrustFacts): TrustTechnicalRow[] {
 	return rows;
 }
 
-function domainRows(facts: TrustFacts): TrustTechnicalRow[] {
-	const auth = facts.domainAuth;
+function logRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
+	const tlog = dir?.tlog;
+	if (!tlog) return [];
+	if (tlog.state === 'verified') {
+		return [
+			{ label: 'Log', value: tlog.origin },
+			{ label: 'Tree size', value: String(tlog.treeSize) },
+			{ label: 'Leaf index', value: String(tlog.leafIndex) }
+		];
+	}
+	if (tlog.state === 'failed') {
+		const rows: TrustTechnicalRow[] = [{ label: 'Finding', value: tlog.code }];
+		if (tlog.details.logOrigin) rows.push({ label: 'Log', value: tlog.details.logOrigin });
+		if (tlog.details.treeSize !== undefined) {
+			rows.push({ label: 'Tree size', value: String(tlog.details.treeSize) });
+		}
+		return rows;
+	}
+	return [];
+}
+
+function witnessRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
+	const tlog = dir?.tlog;
+	if (!tlog) return [];
+	if (tlog.state === 'verified') {
+		const rows: TrustTechnicalRow[] = [
+			{ label: 'Confirmed by', value: String(tlog.validWitnessCount) },
+			{ label: 'Required', value: String(tlog.witnessThreshold) }
+		];
+		if (tlog.cosignatureTimestamp) {
+			rows.push({
+				label: 'Last cosigned',
+				value: new Date(tlog.cosignatureTimestamp * 1000).toISOString()
+			});
+		}
+		return rows;
+	}
+	if (tlog.state === 'failed' && tlog.details.validWitnessCount !== undefined) {
+		return [
+			{ label: 'Confirmed by', value: String(tlog.details.validWitnessCount) },
+			{ label: 'Required', value: String(tlog.details.witnessThreshold ?? 0) }
+		];
+	}
+	return [];
+}
+
+function domainRows(auth?: MessagePreviewAuth): TrustTechnicalRow[] {
 	if (!auth) return [];
 	const rows: TrustTechnicalRow[] = [];
 	if (auth.spf) rows.push({ label: 'SPF', value: auth.spf });
 	if (auth.dkim) rows.push({ label: 'DKIM', value: auth.dkim });
 	if (auth.dmarc) rows.push({ label: 'DMARC', value: auth.dmarc });
 	return rows;
-}
-
-function technicalFor(facts: TrustFacts): TrustTechnicalRow[] {
-	return [
-		...directoryRows(facts),
-		...signatureRows(facts),
-		...tlogRows(facts),
-		...domainRows(facts)
-	];
 }
 
 function witnessesMet(facts: TrustFacts): boolean {
@@ -215,82 +206,288 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 	const dir = facts.directory;
 	const tlog = dir?.tlog;
 	const sig = facts.signature?.state;
-	return [
-		{ id: 'e2e', label: 'Message is end-to-end encrypted', state: facts.e2e ? 'pass' : 'absent' },
-		{
-			id: 'signature',
-			label: 'Message signature is valid',
-			state: sig === 'valid' ? 'pass' : sig === 'invalid' ? 'fail' : 'absent'
-		},
-		{
-			id: 'binding',
-			label: 'Sender address matches the signing key',
-			state: sig === 'valid' && dir?.ok ? 'pass' : 'absent'
-		},
-		{
-			id: 'tlog',
-			label: 'Key is recorded in the transparency log',
-			state:
-				tlog?.state === 'verified' ? 'pass' : tlog?.state === 'failed' ? 'fail' : 'absent'
-		},
-		{
-			id: 'witnesses',
-			label: 'Checkpoint confirmed by independent witnesses',
-			state: witnessesMet(facts) ? 'pass' : 'absent'
-		},
-		{
-			id: 'keychange',
-			label: 'No unexpected key change was detected',
-			state: dir?.ok ? 'pass' : 'fail'
-		}
-	];
+	const witnessCount = tlog?.state === 'verified' ? tlog.validWitnessCount : 0;
+	const witnessNeed = tlog?.state === 'verified' ? tlog.witnessThreshold : 0;
+
+	const encryption: TrustCheck = facts.e2e
+		? {
+				id: 'e2e',
+				state: 'pass',
+				label: 'Encrypted end to end',
+				explain:
+					'The message was encrypted to your key before it left the sender. Thelemail stores only the ciphertext and cannot read it.',
+				rows: []
+			}
+		: {
+				id: 'e2e',
+				state: 'absent',
+				label: 'Not encrypted end to end',
+				explain:
+					'This message arrived as ordinary mail, so it was readable by the servers that carried it.',
+				rows: []
+			};
+
+	const signature: TrustCheck =
+		sig === 'valid'
+			? {
+					id: 'signature',
+					state: 'pass',
+					label: 'Signature is valid',
+					explain:
+						'This device checked the signature on the message against the key the directory publishes for the sender, and it matched.',
+					rows: signatureRows(facts.signature)
+				}
+			: sig === 'invalid'
+				? {
+						id: 'signature',
+						state: 'fail',
+						label: 'Signature does not match the sender key',
+						explain:
+							'The message carries a signature, but it does not verify against the key the directory publishes for this sender. Treat the contents as unattributed.',
+						rows: signatureRows(facts.signature)
+					}
+				: {
+						id: 'signature',
+						state: 'absent',
+						label: 'Signature was not checked',
+						explain:
+							'No signature could be checked on this message, either because it carries none or because the sender key was unavailable.',
+						rows: signatureRows(facts.signature)
+					};
+
+	const binding: TrustCheck =
+		sig === 'valid' && dir?.ok
+			? {
+					id: 'binding',
+					state: 'pass',
+					label: 'Sender address matches the signing key',
+					explain:
+						'The key that signed this message is the one the directory publishes for this exact address, so the address and the key belong together.',
+					rows: keyRows(dir)
+				}
+			: {
+					id: 'binding',
+					state: 'absent',
+					label: 'Address and key were not tied together',
+					explain:
+						'Tying an address to a key needs both a valid signature and a verified directory record. One of the two was missing here.',
+					rows: keyRows(dir)
+				};
+
+	const transparency: TrustCheck =
+		tlog?.state === 'verified'
+			? {
+					id: 'tlog',
+					state: 'pass',
+					label: 'Key is published in the transparency log',
+					explain:
+						'The sender key appears in a public append-only log, so a key swapped in just for you would be visible to anyone watching the log.',
+					rows: logRows(dir)
+				}
+			: tlog?.state === 'failed'
+				? {
+						id: 'tlog',
+						state: 'fail',
+						label: 'Transparency log check did not pass',
+						explain:
+							'The transparency log proof for this key did not verify. That can mean a stale checkpoint, or that the key was never published.',
+						rows: logRows(dir)
+					}
+				: {
+						id: 'tlog',
+						state: 'absent',
+						label: 'Transparency log is not configured here',
+						explain:
+							'This client has no transparency log policy loaded, so the key was not checked against the public log.',
+						rows: logRows(dir)
+					};
+
+	const witnesses: TrustCheck = witnessesMet(facts)
+		? {
+				id: 'witnesses',
+				state: 'pass',
+				label: `Checkpoint confirmed by ${witnessCount} of ${witnessNeed} independent witnesses`,
+				explain:
+					'Independent witnesses cosigned the log checkpoint, so the log cannot show a different history to you than it shows to everyone else.',
+				rows: witnessRows(dir)
+			}
+		: {
+				id: 'witnesses',
+				state: 'absent',
+				label: 'No independent witnesses are watching this log yet',
+				explain:
+					'Witnesses are third parties that cosign the log checkpoint. None are enrolled yet, so the log is trusted on its own signature alone.',
+				rows: witnessRows(dir)
+			};
+
+	const continuity: TrustCheck = dir?.ok
+		? dir.firstContact
+			? {
+					id: 'keychange',
+					state: 'absent',
+					label: 'First message you have had from this sender',
+					explain:
+						'This device has not seen this sender before, so there is no earlier key to compare against. The key is pinned now and future messages are checked against it.',
+					rows: keyRows(dir)
+				}
+			: {
+					id: 'keychange',
+					state: 'pass',
+					label: 'Same key as the last message from this sender',
+					explain:
+						'The key matches the one this device pinned the last time you heard from this address, so nobody has stepped in since.',
+					rows: keyRows(dir)
+				}
+		: dir?.code === 'version_rolled_back'
+			? {
+					id: 'keychange',
+					state: 'fail',
+					label: 'The directory served an older record than you already saw',
+					explain:
+						'A directory record can only move forward. Being handed an older version means the record was rolled back, which is what an attacker would do to reinstate a retired key.',
+					rows: changeRows(dir)
+				}
+			: {
+					id: 'keychange',
+					state: 'fail',
+					label: 'The key changed since you last saw this sender',
+					explain:
+						'The address now publishes a different key. That is normal after a reinstall or a new device, and it is also what it looks like when somebody stands in for the sender.',
+					rows: changeRows(dir)
+				};
+
+	return [encryption, signature, binding, transparency, witnesses, continuity];
 }
 
 function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 	const domain = domainOf(facts.senderAddress);
-	const passed = facts.domainAuthState === 'pass';
+	const state = facts.domainAuthState;
+	const rows = domainRows(facts.domainAuth);
+
+	const auth: TrustCheck =
+		state === 'pass'
+			? {
+					id: 'domain',
+					state: 'pass',
+					label: `Sent by a server allowed to speak for ${domain}`,
+					explain: `The message carries a DKIM signature that lines up with ${domain}, and the domain's DMARC policy says that is how its mail should look.`,
+					rows
+				}
+			: state === 'fail'
+				? {
+						id: 'domain',
+						state: 'fail',
+						label: `Sending server could not prove it speaks for ${domain}`,
+						explain: `Domain authentication failed, so the address in the From line may not be the real sender. This is what forged mail looks like.`,
+						rows
+					}
+				: {
+						id: 'domain',
+						state: 'absent',
+						label: `${domain} published no way to check its mail`,
+						explain: `The domain has no usable SPF, DKIM or DMARC record, so there is nothing to check the sending server against. Nothing failed here.`,
+						rows
+					};
+
 	return [
+		auth,
 		{
-			id: 'domain',
-			label: 'Message passed domain authentication',
-			state: passed ? 'pass' : facts.domainAuthState === 'fail' ? 'fail' : 'absent'
+			id: 'e2e',
+			state: 'absent',
+			label: 'Not encrypted end to end',
+			explain:
+				'Ordinary mail is readable by every server that carries it. It was almost certainly encrypted in transit, which protects it on the wire but not at rest on those servers.',
+			rows: []
 		},
-		{
-			id: 'claim',
-			label: `Message claims to come from ${domain}`,
-			state: passed ? 'pass' : 'absent'
-		},
-		{ id: 'e2e', label: 'Not end-to-end encrypted', state: 'absent' },
 		{
 			id: 'identity',
-			label: 'Individual sender identity not cryptographically verified',
-			state: 'absent'
+			state: 'absent',
+			label: 'The person behind the address is not verified',
+			explain:
+				'Domain authentication vouches for the domain, not the individual. Anyone with an account at this domain can send as themselves.',
+			rows: []
 		},
-		{ id: 'tlog', label: 'Key transparency not available', state: 'absent' }
+		{
+			id: 'tlog',
+			state: 'absent',
+			label: 'No key transparency for this domain',
+			explain:
+				'Key transparency only covers addresses published in the Thelemail directory. There is no public log to check this sender against.',
+			rows: []
+		}
 	];
 }
 
 function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
-	const pinned = facts.externalKey?.status === 'pinned';
+	const key = facts.externalKey;
+	const rows: TrustTechnicalRow[] = [];
+	if (key?.fingerprint) {
+		rows.push({ label: 'Key', value: formatFingerprintHex(key.fingerprint) });
+	}
+	if (key?.source) rows.push({ label: 'Found via', value: key.source });
+	if (key?.firstSeenAtMillis) {
+		rows.push({ label: 'First seen', value: new Date(key.firstSeenAtMillis).toISOString() });
+	}
+
+	const continuity: TrustCheck =
+		key?.status === 'pinned'
+			? {
+					id: 'pinned',
+					state: 'pass',
+					label: 'Same key this device used before',
+					explain:
+						'The key matches the one pinned on this device the last time you exchanged mail with this address.',
+					rows
+				}
+			: key?.status === 'changed'
+				? {
+						id: 'pinned',
+						state: 'fail',
+						label: 'The key changed since this device last used it',
+						explain:
+							'A different key is now published for this address. Confirm it with the sender over another channel before trusting it.',
+						rows
+					}
+				: {
+						id: 'pinned',
+						state: 'absent',
+						label: 'First time this device has used this key',
+						explain:
+							'There is no earlier key to compare against. The key is pinned now, and a later change will be flagged.',
+						rows
+					};
+
 	return [
-		{ id: 'e2e', label: "Message encrypted to this recipient's key", state: 'pass' },
 		{
-			id: 'pinned',
-			label: 'Key matches the one previously used on this device',
-			state: pinned ? 'pass' : 'absent'
+			id: 'e2e',
+			state: 'pass',
+			label: 'Encrypted end to end',
+			explain:
+				'The message was encrypted to a key held by this recipient, so the servers that carried it only ever saw ciphertext.',
+			rows: []
 		},
-		{ id: 'tlog', label: 'Key is not covered by Thelemail transparency', state: 'absent' },
+		continuity,
+		{
+			id: 'tlog',
+			state: 'absent',
+			label: 'Key is not covered by Thelemail transparency',
+			explain:
+				'This key came from outside the Thelemail directory, so it is not published in the transparency log and cannot be monitored there.',
+			rows: []
+		},
 		{
 			id: 'witnesses',
-			label: 'Independent witnesses cannot confirm this key',
-			state: 'absent'
+			state: 'absent',
+			label: 'No independent witnesses can confirm this key',
+			explain:
+				'Witnesses cosign the Thelemail log. A key discovered outside that log has nothing for them to confirm.',
+			rows: []
 		}
 	];
 }
 
 export function deriveTrust(facts: TrustFacts): MessageTrust {
-	const technical = technicalFor(facts);
-	const base = { technical, address: facts.senderAddress };
+	const base = { address: facts.senderAddress };
 	const dir = facts.directory;
 
 	if (facts.signature?.state === 'invalid') {

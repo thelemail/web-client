@@ -10,7 +10,8 @@
 	import X from '@lucide/svelte/icons/x';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { portal } from '$lib/actions/portal';
-	import type { MessageTrust, TrustTier } from './trust';
+	import TrustCheckDialog from './TrustCheckDialog.svelte';
+	import type { MessageTrust, TrustCheck, TrustTier } from './trust';
 
 	interface Props {
 		trust: MessageTrust;
@@ -32,7 +33,7 @@
 	const Mark = $derived(MARKS[trust.tier]);
 
 	let open = $state(false);
-	let tech = $state(false);
+	let detail = $state<TrustCheck | null>(null);
 	let busy = $state(false);
 	let anchor: HTMLButtonElement | undefined = $state();
 	let panel: HTMLDivElement | undefined = $state();
@@ -55,11 +56,10 @@
 	$effect(() => {
 		if (!open) {
 			pos = { left: -9999, top: -9999, ready: false };
-			tech = false;
+			detail = null;
 			return;
 		}
 		void trust;
-		void tech;
 		place();
 	});
 
@@ -129,16 +129,19 @@
 		<ul class="tpop-checks">
 			{#each trust.checks as check (check.id)}
 				<li data-state={check.state}>
-					<span class="tpop-glyph">
-						{#if check.state === 'pass'}
-							<Check size={13} />
-						{:else if check.state === 'fail'}
-							<X size={13} />
-						{:else}
-							<Minus size={13} />
-						{/if}
-					</span>
-					<span>{check.label}</span>
+					<button class="tpop-row" onclick={() => (detail = check)}>
+						<span class="tpop-glyph">
+							{#if check.state === 'pass'}
+								<Check size={13} />
+							{:else if check.state === 'fail'}
+								<X size={13} />
+							{:else}
+								<Minus size={13} />
+							{/if}
+						</span>
+						<span class="tpop-txt">{check.label}</span>
+						<ChevronRight size={13} class="tpop-chev" />
+					</button>
 				</li>
 			{/each}
 		</ul>
@@ -150,23 +153,11 @@
 				{busy ? 'Confirming…' : 'Trust the new key'}
 			</button>
 		{/if}
-		{#if trust.technical.length > 0}
-			<button class="tpop-more" aria-expanded={tech} onclick={() => (tech = !tech)}>
-				<ChevronRight size={13} class={tech ? 'rot' : ''} />
-				View technical details
-			</button>
-			{#if tech}
-				<dl class="tpop-tech">
-					{#each trust.technical as row, i (row.label + i)}
-						<div>
-							<dt>{row.label}</dt>
-							<dd>{row.value}</dd>
-						</div>
-					{/each}
-				</dl>
-			{/if}
-		{/if}
 	</div>
+{/if}
+
+{#if detail}
+	<TrustCheckDialog check={detail} onClose={() => (detail = null)} />
 {/if}
 
 <style>
@@ -208,7 +199,7 @@
 	}
 
 	@media (min-width: 641px) {
-		@container letterhead (max-width: 470px) {
+		@container msghead (max-width: 470px) {
 			.tmark[data-variant='chip'] {
 				width: 18px;
 				height: 18px;
@@ -339,13 +330,6 @@
 		gap: 6px;
 	}
 
-	.tpop-checks li {
-		display: flex;
-		align-items: flex-start;
-		gap: 7px;
-		font-size: 12.5px;
-		line-height: 1.35;
-	}
 	.tpop-checks li[data-state='pass'] {
 		color: var(--fg);
 	}
@@ -356,18 +340,44 @@
 		color: var(--danger-700);
 	}
 
-	.tpop-glyph {
+	.tpop-row {
+		display: flex;
+		align-items: flex-start;
+		gap: 7px;
+		width: 100%;
+		padding: 4px 6px;
+		margin: 0 -6px;
+		border: none;
+		border-radius: var(--radius-sm);
+		background: none;
+		color: inherit;
+		font: inherit;
+		font-size: 12.5px;
+		line-height: 1.35;
+		text-align: left;
+		cursor: pointer;
+	}
+	.tpop-row:hover,
+	.tpop-row:focus-visible {
+		background: var(--surface-muted);
+		outline: none;
+	}
+
+	.tpop-txt {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.tpop-row :global(.tpop-chev) {
 		flex: 0 0 auto;
 		margin-top: 1px;
-	}
-	li[data-state='pass'] .tpop-glyph {
-		color: var(--success-700);
-	}
-	li[data-state='absent'] .tpop-glyph {
 		color: var(--fg-faint);
+		opacity: 0;
+		transition: opacity var(--dur-fast) var(--ease);
 	}
-	li[data-state='fail'] .tpop-glyph {
-		color: var(--danger-700);
+	.tpop-row:hover :global(.tpop-chev),
+	.tpop-row:focus-visible :global(.tpop-chev) {
+		opacity: 1;
 	}
 
 	.tpop-foot {
@@ -395,53 +405,4 @@
 		cursor: default;
 	}
 
-	.tpop-more {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-		margin-top: 12px;
-		padding: 0;
-		border: none;
-		background: none;
-		color: var(--fg-muted);
-		font-size: 11.5px;
-		font-weight: 540;
-		cursor: pointer;
-	}
-	.tpop-more:hover {
-		color: var(--fg-strong);
-	}
-	.tpop-more :global(svg) {
-		transition: transform var(--dur-fast) var(--ease);
-	}
-	.tpop-more :global(svg.rot) {
-		transform: rotate(90deg);
-	}
-
-	.tpop-tech {
-		margin: 9px 0 0;
-		padding: 9px 0 0;
-		border-top: 1px solid var(--border);
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-	}
-	.tpop-tech div {
-		display: grid;
-		grid-template-columns: 108px 1fr;
-		gap: 10px;
-		align-items: baseline;
-	}
-	.tpop-tech dt {
-		font-size: 11px;
-		color: var(--fg-faint);
-	}
-	.tpop-tech dd {
-		margin: 0;
-		font-family: var(--font-mono);
-		font-size: 10.5px;
-		line-height: 1.45;
-		color: var(--fg);
-		word-break: break-word;
-	}
 </style>
