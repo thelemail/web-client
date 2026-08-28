@@ -13,7 +13,6 @@ export interface RenderInput {
 
 export interface RenderResult {
 	srcDoc: string;
-	remoteImagesBlocked: number;
 	attachments: ParsedAttachment[];
 	calendarEvents: CalendarEvent[];
 	contentHtml?: string;
@@ -92,7 +91,6 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 
 	let body: string;
 	let wrapPlain = false;
-	let blocked = 0;
 	let quotedSrcDoc: string | undefined;
 	let forwarded = false;
 	let contentHtml: string | undefined;
@@ -102,14 +100,13 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 			inlineImages,
 			stripTracking: input.stripTracking
 		});
-		contentHtml = sanitized.html;
-		const split = splitQuotedHtml(sanitized.html);
+		contentHtml = sanitized;
+		const split = splitQuotedHtml(sanitized);
 		body = split.mainHtml;
 		if (split.kind === 'quoted' && split.quotedHtml) {
 			quotedSrcDoc = buildSrcDoc(split.quotedHtml, false);
 		}
 		if (split.kind === 'forwarded') forwarded = true;
-		blocked = sanitized.remoteImagesBlocked;
 	} else if (hasText) {
 		const split = splitQuotedText(text!);
 		if (split.kind === 'quoted' && split.quotedHtml) {
@@ -128,7 +125,6 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 	const srcDoc = buildSrcDoc(body, wrapPlain);
 	const result: RenderResult = {
 		srcDoc,
-		remoteImagesBlocked: blocked,
 		attachments,
 		calendarEvents
 	};

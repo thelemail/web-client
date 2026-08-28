@@ -20,7 +20,6 @@ describe('renderBody', () => {
 			html: '<p>hi</p><img src="https://tracker.example.com/p.gif">'
 		});
 		expect(res.srcDoc).not.toContain('tracker.example.com');
-		expect(res.remoteImagesBlocked).toBe(1);
 	});
 
 	it('linkifies URLs in plain text and escapes HTML special chars', async () => {

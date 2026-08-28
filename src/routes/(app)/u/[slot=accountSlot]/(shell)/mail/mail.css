@@ -360,17 +360,6 @@
 .mail-app .sealbar.fail .waxseal { background: radial-gradient(circle at 34% 30%, var(--danger-500), var(--danger-700)); }
 .mail-app .sealbar.fail .txt .h { color: var(--danger-700); }
 
-.mail-app .img-banner { display: flex; align-items: center; gap: 9px; margin: 0 0 18px; padding: 9px 12px; background: var(--paper-50); border: 1px solid var(--border); border-radius: var(--radius-control); color: var(--ink-500); }
-.mail-app .img-banner > svg { flex: 0 0 auto; color: var(--ink-400); }
-.mail-app .img-banner .ib-h { font-size: 12.5px; font-weight: 560; color: var(--fg-strong); white-space: nowrap; }
-.mail-app .img-banner .ib-d { font-size: 12.5px; color: var(--fg-muted); flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mail-app .ib-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 550; white-space: nowrap; border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink-700); border-radius: var(--radius-control); padding: 5px 10px; cursor: pointer; flex: 0 0 auto; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
-.mail-app .ib-btn svg { width: 14px; height: 14px; }
-.mail-app .ib-btn:hover { background: var(--paper-100); }
-.mail-app .ib-btn .mono { font-family: var(--font-mono); font-size: 11px; color: inherit; }
-.mail-app .ib-btn.primary { background: var(--pine-700); color: var(--primary-fg); border-color: transparent; }
-.mail-app .ib-btn.primary:hover { background: var(--pine-600); }
-
 .mail-app .email-sheet { padding-top: 0; }
 .mail-app .email-frame { display: block; width: 100%; border: none; background: transparent; height: 60px; }
 
@@ -887,9 +876,6 @@
 [data-theme='dark'] .mail-app .se-x:hover { background: rgba(255, 255, 255, 0.08); }
 [data-theme='dark'] :is(.mail-scrim, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(255, 255, 255, 0.1); }
 
-[data-theme='dark'] .mail-app .ib-btn.primary { background: var(--primary); }
-[data-theme='dark'] .mail-app .ib-btn.primary:hover { background: var(--primary-hover); }
-
 .mail-app .sysalerts { flex: 0 0 auto; display: flex; flex-direction: column; position: relative; z-index: 60; }
 .mail-app .sysalert { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 7px 18px; font-size: 13.5px; line-height: 1.45; border-bottom: 1px solid var(--border); }
 .mail-app .sysalert .sa-ic { display: flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: 50%; flex: 0 0 auto; background: color-mix(in oklch, var(--surface) 72%, transparent); }
@@ -974,8 +960,6 @@
 	.mail-app .reader-h h1 { font-size: 23px; }
 	.mail-app .rb-btn .rb-t { display: none; }
 	.mail-app .rb-btn { padding: 8px 11px; }
-	.mail-app .img-banner { flex-wrap: wrap; }
-	.mail-app .img-banner .ib-d { display: none; }
 	.mail-app .letterhead { flex-wrap: wrap; gap: 10px; }
 	.mail-app .letterhead .prov { margin-left: 46px; align-items: flex-start; flex-direction: row; gap: 10px; flex-wrap: wrap; }
 	.mail-app .sealbar { flex-wrap: wrap; padding: 12px 14px; gap: 12px; }
