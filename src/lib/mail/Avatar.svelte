@@ -48,6 +48,12 @@
 
 <style>
 	.av {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		font-weight: 600;
+		letter-spacing: 0.01em;
 		overflow: hidden;
 	}
 	.av img {

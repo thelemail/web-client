@@ -26,7 +26,6 @@
 	import { twofactor } from '$lib/stores/twofactor.svelte';
 	import { unread } from '$lib/stores/unread.svelte';
 	import { initialsFor } from './initials';
-	import { avatarPaletteFor } from './avatar-palette';
 	import { portal } from '$lib/actions/portal';
 
 	const themeIcons = { light: Sun, dark: Moon, auto: Monitor } as const;
@@ -64,6 +63,19 @@
 	function domainFromEmail(em: string): string {
 		const at = em.lastIndexOf('@');
 		return at >= 0 ? em.slice(at + 1) : em;
+	}
+
+	function avatarPaletteFor(accountId: string): { bg: string; fg: string } {
+		let h = 0;
+		for (let i = 0; i < accountId.length; i++) h = (h * 31 + accountId.charCodeAt(i)) >>> 0;
+		const palette: Array<{ bg: string; fg: string }> = [
+			{ bg: 'var(--pine-700)', fg: '#EEF2EA' },
+			{ bg: 'var(--brass-700, #8a6a2e)', fg: '#FBF8EE' },
+			{ bg: '#6b4f8a', fg: '#F4EEF8' },
+			{ bg: '#2d6a6a', fg: '#E9F4F4' },
+			{ bg: '#8a4f4f', fg: '#F8EEEE' }
+		];
+		return palette[h % palette.length];
 	}
 
 	const switcherAccounts = $derived<AccountEntry[]>(

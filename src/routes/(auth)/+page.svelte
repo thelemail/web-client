@@ -6,7 +6,6 @@
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Avatar from '$lib/mail/Avatar.svelte';
 	import { initialsFor } from '$lib/mail/initials';
-	import { avatarPaletteFor } from '$lib/mail/avatar-palette';
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
@@ -31,7 +30,6 @@
 					name: name && name !== rec.email ? name : null,
 					initials: initialsFor(name || null, rec.email),
 					avatarUrl: current ? auth.avatarUrl : null,
-					palette: avatarPaletteFor(rec.accountId),
 					unlocked: auth.vaultUnlockedFor(rec.accountId)
 				};
 			})
@@ -69,8 +67,9 @@
 					initials={row.initials}
 					src={row.avatarUrl}
 					size={38}
-					bg={row.palette.bg}
-					fg={row.palette.fg}
+					bg={row.unlocked ? 'var(--pine-700)' : 'var(--pine-100)'}
+					fg={row.unlocked ? '#EEF2EA' : 'var(--pine-700)'}
+					imgBg="#fff"
 				/>
 				<span class="ap-tx">
 					{#if row.name}
