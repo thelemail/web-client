@@ -10,7 +10,8 @@ import {
 	folderFromServer,
 	type LabelId,
 	type Message,
-	type RouteFolder
+	type RouteFolder,
+	type SortId
 } from '$lib/mail/data';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { bimiDomainFromPreview } from '$lib/mail/preview';
@@ -406,6 +407,16 @@ class MailboxStore {
 		return out;
 	}
 
+	#reconcileFirstPage(current: Message[], page: Message[], sort: SortId): Message[] {
+		if (page.length === 0) return page;
+		const ids = new Set(page.map((m) => m.id));
+		const cutoff = page[page.length - 1].epoch;
+		const beyond = current.filter(
+			(m) => !ids.has(m.id) && (sort === 'oldest' ? m.epoch > cutoff : m.epoch < cutoff)
+		);
+		return [...page, ...beyond];
+	}
+
 	async #loadStream(query: Query, more: boolean, force = false): Promise<void> {
 		if (!auth.canEnterApp) return;
 		const accountId = auth.accountId;
@@ -415,7 +426,7 @@ class MailboxStore {
 		if (!threadOpts && !listOpts) return;
 
 		const key = streamKey(query);
-		const pendingKey = key + (more ? '|+' : '');
+		const pendingKey = key + (more ? '|+' : '') + (force ? '|f' : '');
 		const existingPending = this.#pending.get(pendingKey);
 		if (existingPending) return existingPending;
 
@@ -460,10 +471,9 @@ class MailboxStore {
 				}
 				if (this.#accountId !== accountId) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
-				const merged = this.#mergeMessages(
-					more ? current.items : decrypted,
-					more ? decrypted : []
-				);
+				const merged = more
+					? this.#mergeMessages(current.items, decrypted)
+					: this.#reconcileFirstPage(current.items, decrypted, query.sort);
 				this.#setStream(key, {
 					...current,
 					items: merged,
