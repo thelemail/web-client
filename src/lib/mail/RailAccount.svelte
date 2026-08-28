@@ -185,13 +185,13 @@
 	async function openSettings() {
 		open = false;
 		const slot = page.params.slot ?? '0';
-		await goto(`/u/${slot}/settings`);
+		await goto(`/u/${slot}/settings/profile`);
 	}
 
 	async function openSettingsSection(id: string) {
 		open = false;
 		const slot = page.params.slot ?? '0';
-		await goto(`/u/${slot}/settings#${id}`);
+		await goto(`/u/${slot}/settings/${id}`);
 	}
 
 	async function signInAnother(e: MouseEvent) {

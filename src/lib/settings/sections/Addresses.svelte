@@ -73,7 +73,6 @@
 </script>
 
 <SecHead
-	tag="02 — Addresses"
 	title="Addresses"
 	desc="The identities you send and receive as. Promoting one to primary makes it your default From and your sign-in email."
 />

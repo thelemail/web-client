@@ -11,7 +11,6 @@
 </script>
 
 <SecHead
-	tag="06 — Notifications"
 	title="Notifications"
 	desc="What reaches you, how much it reveals, and when it stays quiet."
 />

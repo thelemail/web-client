@@ -16,7 +16,6 @@
 </script>
 
 <SecHead
-	tag="04 — Reading & behaviour"
 	title="Reading & behaviour"
 	desc="When mail is marked read, what a swipe does, and how read receipts are handled."
 />

@@ -39,7 +39,6 @@
 </script>
 
 <SecHead
-	tag="03 — Composing & sending"
 	title="Composing & sending"
 	desc="How new messages start, the safety nets before they leave, and when mail is encrypted to the recipient."
 />
