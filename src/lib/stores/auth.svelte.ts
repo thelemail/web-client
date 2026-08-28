@@ -27,6 +27,7 @@ import { billing } from './billing.svelte';
 import { twofactor } from './twofactor.svelte';
 import { bimi } from './bimi.svelte';
 import { contacts } from './contacts.svelte';
+import { realtime } from '$lib/realtime/realtime.svelte';
 
 function broadcastAccountToStores(accountId: string | null): void {
 	mailbox.setAccount(accountId);
@@ -296,6 +297,7 @@ class AuthStore {
 
 	wake(): void {
 		void this.ensureFreshToken(this.#currentId);
+		realtime.wake();
 	}
 
 	async loadProfile(accountId?: string): Promise<boolean> {
