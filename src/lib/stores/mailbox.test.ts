@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const listMessages = vi.fn();
+const listThreads = vi.fn();
 const decryptPreview = vi.fn();
 const getMessage = vi.fn();
 
 vi.mock('$lib/api/messages', () => ({
 	listMessages: (...a: unknown[]) => listMessages(...a),
-	listThreads: vi.fn(),
+	listThreads: (...a: unknown[]) => listThreads(...a),
 	getMailboxCounts: vi.fn(async () => ({ inbox: 0, starred: 0, spam: 0, snoozed: 0 })),
 	getMessage: (...a: unknown[]) => getMessage(...a)
 }));
@@ -196,6 +197,115 @@ function detail(id: string, overrides: Partial<Record<string, unknown>> = {}) {
 		...overrides
 	};
 }
+
+describe('mailbox.applyRealtime in the inbox', () => {
+	const MAILBOX_QUERY: Query = {
+		folder: 'inbox',
+		labels: [],
+		unread: false,
+		attach: false,
+		sort: 'newest'
+	};
+
+	function received(id: string, storedAt: string, threadRootId?: string) {
+		return { ...row(id, storedAt), direction: 'received' as const, read: false, threadRootId };
+	}
+
+	function thread(latest: ReturnType<typeof received>, messageCount: number) {
+		return {
+			threadKey: latest.threadRootId ?? latest.id,
+			latest,
+			messageCount,
+			unreadCount: 1,
+			hasAttachments: false,
+			starred: false
+		};
+	}
+
+	beforeEach(() => {
+		listMessages.mockReset();
+		listThreads.mockReset();
+		decryptPreview.mockReset();
+		getMessage.mockReset();
+		decryptPreview.mockImplementation(async (_accountId: string, b64: string) => {
+			const id = b64.replace('enc-', '');
+			return previewFor(id);
+		});
+		authState.canEnterApp = true;
+		authState.accountId = 'acc-1';
+		mailbox.setAccount(null);
+		mailbox.setAccount('acc-1');
+	});
+
+	it('does not open a row for a message the account just sent', async () => {
+		listThreads.mockResolvedValueOnce({
+			items: [thread(received('inb', '2026-08-19T12:00:00Z'), 1)],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(MAILBOX_QUERY);
+		mailbox.setAutoFlush(MAILBOX_QUERY, true);
+
+		getMessage.mockResolvedValueOnce(detail('outbound', { storedAt: '2026-08-20T12:00:00Z' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'outbound', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.streamFor(MAILBOX_QUERY).msgs.map((m) => m.id)).toEqual(['inb']);
+		expect(mailbox.pendingFor(MAILBOX_QUERY)).toBe(0);
+	});
+
+	it('keeps a sent reply out of the buffer when auto-flush is off', async () => {
+		listThreads.mockResolvedValueOnce({
+			items: [thread(received('inb', '2026-08-19T12:00:00Z'), 1)],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(MAILBOX_QUERY);
+
+		getMessage.mockResolvedValueOnce(detail('outbound', { storedAt: '2026-08-20T12:00:00Z' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'outbound', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.pendingFor(MAILBOX_QUERY)).toBe(0);
+		mailbox.flushPending(MAILBOX_QUERY);
+		expect(mailbox.streamFor(MAILBOX_QUERY).msgs.map((m) => m.id)).toEqual(['inb']);
+	});
+
+	it('refreshes the thread row when the reply belongs to a loaded conversation', async () => {
+		listThreads.mockResolvedValueOnce({
+			items: [thread(received('root', '2026-08-19T12:00:00Z', 'root'), 2)],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(MAILBOX_QUERY);
+		expect(mailbox.streamFor(MAILBOX_QUERY).msgs[0].threadCount).toBe(2);
+
+		getMessage.mockResolvedValueOnce(
+			detail('reply', { storedAt: '2026-08-20T12:00:00Z', threadRootId: 'root', threadCount: 3 })
+		);
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'reply', rev: 1 });
+		await flushAsync();
+
+		const snap = mailbox.streamFor(MAILBOX_QUERY);
+		expect(snap.msgs.map((m) => m.id)).toEqual(['reply']);
+		expect(snap.msgs[0].threadCount).toBe(3);
+	});
+
+	it('still delivers the sent copy to the sent stream', async () => {
+		listMessages.mockResolvedValueOnce({ items: [], nextCursor: null });
+		await mailbox.ensureLoaded(SENT_QUERY);
+		mailbox.setAutoFlush(SENT_QUERY, true);
+		listThreads.mockResolvedValueOnce({
+			items: [thread(received('inb', '2026-08-19T12:00:00Z'), 1)],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(MAILBOX_QUERY);
+
+		getMessage.mockResolvedValueOnce(detail('outbound', { storedAt: '2026-08-20T12:00:00Z' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'outbound', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.streamFor(SENT_QUERY).msgs.map((m) => m.id)).toEqual(['outbound']);
+		expect(mailbox.streamFor(MAILBOX_QUERY).msgs.map((m) => m.id)).toEqual(['inb']);
+	});
+});
 
 describe('mailbox.applyRealtime', () => {
 	beforeEach(() => {

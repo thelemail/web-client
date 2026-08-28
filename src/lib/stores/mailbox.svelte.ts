@@ -369,6 +369,7 @@ class MailboxStore {
 				readAt: detail.readAt,
 				snoozedUntil: detail.snoozedUntil,
 				threadRootId: detail.threadRootId,
+				threadCount: detail.threadCount,
 				rsvpStatus: detail.rsvpStatus,
 				labels: detail.labels
 			};
@@ -518,6 +519,7 @@ class MailboxStore {
 				map.set(key, { ...stream, items });
 				continue;
 			}
+			if (stream.query.folder === 'inbox' && msg.direction === 'sent') continue;
 			if (stream.query.sort === 'oldest') {
 				if (!stream.exhausted) continue;
 				map.set(key, { ...stream, items: [...stream.items, msg] });
