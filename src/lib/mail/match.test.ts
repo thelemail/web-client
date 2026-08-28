@@ -58,15 +58,15 @@ describe('queryMatches', () => {
 	});
 
 	it('labels use any-of intersection semantics', () => {
-		const q = query({ folder: 'inbox', labels: ['work', 'family'] });
-		expect(queryMatches(q, msg({ labels: ['work'] }))).toBe(true);
+		const q = query({ folder: 'inbox', labels: ['domains', 'family'] });
+		expect(queryMatches(q, msg({ labels: ['domains'] }))).toBe(true);
 		expect(queryMatches(q, msg({ labels: ['family'] }))).toBe(true);
-		expect(queryMatches(q, msg({ labels: ['other'] }))).toBe(false);
+		expect(queryMatches(q, msg({ labels: ['security'] }))).toBe(false);
 		expect(queryMatches(q, msg({ labels: [] }))).toBe(false);
 	});
 
 	it('no labels filter matches regardless of message labels', () => {
 		const q = query({ folder: 'inbox', labels: [] });
-		expect(queryMatches(q, msg({ labels: ['whatever'] }))).toBe(true);
+		expect(queryMatches(q, msg({ labels: ['security'] }))).toBe(true);
 	});
 });
