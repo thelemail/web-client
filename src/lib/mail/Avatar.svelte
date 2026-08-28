@@ -36,7 +36,7 @@
 	style:font-size={Math.round(size * 0.4) + 'px'}
 	style:background={showImage && imgBg ? imgBg : bg}
 	style:color={fg}
-	style:border-radius={showImage ? Math.max(4, Math.round(size * 0.22)) + 'px' : null}
+	style:border-radius="var(--radius-avatar)"
 	style:padding={showImage ? '1px' : null}
 >
 	{#if showImage}

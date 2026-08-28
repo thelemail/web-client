@@ -324,7 +324,7 @@
 .auth .invite .iav {
 	width: 38px;
 	height: 38px;
-	border-radius: 50%;
+	border-radius: var(--radius-avatar);
 	flex: 0 0 auto;
 	display: flex;
 	align-items: center;
@@ -807,7 +807,7 @@
 .auth .addrcard .av {
 	width: 36px;
 	height: 36px;
-	border-radius: 50%;
+	border-radius: var(--radius-avatar);
 	background: var(--pine-100);
 	color: var(--pine-700);
 	display: flex;

@@ -155,7 +155,7 @@
 	.sk-meta .sk-av {
 		width: 46px;
 		height: 46px;
-		border-radius: 50%;
+		border-radius: var(--radius-avatar);
 		flex: 0 0 auto;
 	}
 	.sk-meta-tx {
