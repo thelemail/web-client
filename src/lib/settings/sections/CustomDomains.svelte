@@ -1,34 +1,39 @@
 <script lang="ts">
 	import Globe2 from '@lucide/svelte/icons/globe-2';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Plus from '@lucide/svelte/icons/plus';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { page } from '$app/state';
 
 	import Card from '$lib/settings/Card.svelte';
 	import Badge from '$lib/settings/Badge.svelte';
 	import CopyBtn from '$lib/settings/CopyBtn.svelte';
 	import DnsChip from '$lib/settings/DnsChip.svelte';
-	import AddRow from '$lib/settings/AddRow.svelte';
 	import SecHead from '$lib/settings/SecHead.svelte';
-	import type { CeremonyKind } from '$lib/settings/data';
 	import {
-		customDomains as store
-	} from '$lib/stores/customDomains.svelte';
+		DOMAIN_STEPS,
+		STEP_LABELS,
+		inboundLive,
+		resumeStep,
+		statusKind,
+		statusLabel,
+		stepComplete,
+		type DomainStep
+	} from '$lib/settings/domains/steps';
+	import { customDomains as store } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import type {
-		CustomDomain,
-		CustomDomainStatus,
-		DNSRecordStatus
-	} from '$lib/api/customDomains';
+	import type { CustomDomain, DNSRecordStatus } from '$lib/api/customDomains';
 
-	interface Props {
-		launch: (k: CeremonyKind) => void;
-	}
+	const POLL_MS = 60000;
 
-	let { launch }: Props = $props();
+	const slot = $derived(page.params.slot ?? '0');
+	const base = $derived(`/u/${slot}/settings/domains`);
+	const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
 
 	const open = new SvelteSet<string>();
 	const busy = new SvelteSet<string>();
@@ -78,23 +83,6 @@
 		}
 	}
 
-	function statusKind(s: CustomDomainStatus): 'ok' | 'warn' | 'info' | 'neutral' {
-		switch (s) {
-			case 'verified':
-				return 'ok';
-			case 'pending':
-				return 'info';
-			case 'failed':
-				return 'warn';
-			default:
-				return 'neutral';
-		}
-	}
-
-	function statusLabel(s: CustomDomainStatus): string {
-		return s.charAt(0).toUpperCase() + s.slice(1);
-	}
-
 	function chipKind(s: DNSRecordStatus): 'ok' | 'warn' | 'fail' | 'pending' {
 		switch (s) {
 			case 'ok':
@@ -120,6 +108,8 @@
 				return 'SPF';
 			case 'dmarc':
 				return 'DMARC';
+			case 'wkd':
+				return 'Key discovery (WKD)';
 			default:
 				return kind;
 		}
@@ -139,6 +129,19 @@
 	const empty = $derived(!store.loading && store.items.length === 0);
 	const items = $derived(store.items);
 	const manage = $derived(canManage());
+	const anyInSetup = $derived(items.some((d) => !inboundLive(d)));
+
+	function setupHref(d: CustomDomain, step?: DomainStep): string {
+		return `${base}/${d.id}?step=${step ?? resumeStep(d)}`;
+	}
+
+	$effect(() => {
+		if (!anyInSetup) return;
+		const ws = workspaces.workspace?.id;
+		if (!ws) return;
+		const t = setInterval(() => void store.load(ws), POLL_MS);
+		return () => clearInterval(t);
+	});
 </script>
 
 <SecHead
@@ -174,6 +177,15 @@
 							{/if}
 						</span>
 						<span class="cd-name mono">{d.domain}</span>
+						<span class="cd-ladder dw-ladder" aria-hidden="true">
+							{#each LADDER as s (s)}
+								<span
+									class="dw-pip"
+									class:on={stepComplete(d, s)}
+									class:fail={d.status === 'failed' && s === 'routing' && !stepComplete(d, s)}
+								></span>
+							{/each}
+						</span>
 						<span class="cd-badge"><Badge kind={statusKind(d.status)} dot>{statusLabel(d.status)}</Badge></span>
 						<span class="cd-meta">checked {formatTime(d.lastCheckedAt)}</span>
 					</button>
@@ -218,7 +230,19 @@
 									</tbody>
 								</table>
 							{/if}
+							<div class="cd-steps">
+								{#each LADDER as s (s)}
+									<a class="cd-step" class:done={stepComplete(d, s)} href={setupHref(d, s)}>
+										{STEP_LABELS[s]}
+									</a>
+								{/each}
+							</div>
 							<div class="cd-actions">
+								{#if !inboundLive(d)}
+									<a class="btn btn-primary" href={setupHref(d)}>
+										Continue setup<ArrowRight size={15} />
+									</a>
+								{/if}
 								<button
 									type="button"
 									class="btn btn-secondary"
@@ -244,7 +268,9 @@
 		</div>
 	{/if}
 
-	<AddRow label="Add a domain" onClick={() => launch('domain')} />
+	<div class="cd-add">
+		<a class="btn btn-secondary" href={`${base}/new`}><Plus size={15} />Add a domain</a>
+	</div>
 
 	{#if store.error}
 		<div class="cd-err">
@@ -266,7 +292,7 @@
 	}
 	.cd-head {
 		display: grid;
-		grid-template-columns: 18px 1fr auto auto;
+		grid-template-columns: 18px 1fr auto auto auto;
 		gap: 10px;
 		align-items: center;
 		width: 100%;
@@ -336,6 +362,31 @@
 		display: flex;
 		gap: 8px;
 		justify-content: flex-end;
+		align-items: center;
+	}
+	.cd-steps {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin: 0 0 12px;
+	}
+	.cd-step {
+		font-size: 12px;
+		padding: 3px 9px;
+		border: 1px solid var(--border-strong, rgba(0, 0, 0, 0.12));
+		border-radius: 999px;
+		color: var(--ink-2, rgba(0, 0, 0, 0.6));
+		text-decoration: none;
+	}
+	.cd-step.done {
+		border-color: transparent;
+		background: var(--success-100, rgba(60, 140, 90, 0.1));
+		color: var(--success-700, #2f6b46);
+	}
+	.cd-add {
+		display: flex;
+		justify-content: flex-start;
+		padding: 12px 14px 0;
 	}
 	.cd-empty {
 		padding: 14px;

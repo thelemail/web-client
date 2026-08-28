@@ -19,6 +19,7 @@
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
+	import { ownershipProven } from '$lib/settings/domains/steps';
 	import { seatLimitFor } from '../plan-display';
 
 	interface Props {
@@ -34,8 +35,8 @@
 	const seatsUsed = $derived(workspaces.members.length + workspaces.invites.length);
 	const seatsLeft = $derived(seatsTotal != null ? seatsTotal - seatsUsed : null);
 
-	const verifiedDomains = $derived(customDomains.items.filter((d) => d.status === 'verified'));
-	const domainNames = $derived(verifiedDomains.map((d) => d.domain));
+	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
+	const domainNames = $derived(ownedDomains.map((d) => d.domain));
 
 	const steps = $derived(['Person', fam ? 'Invite' : 'Seat & invite']);
 	let step = $state(0);
@@ -51,17 +52,17 @@
 	let sentToEmail = $state<string | null>(null);
 
 	$effect(() => {
-		if (verifiedDomains.length === 0) {
+		if (ownedDomains.length === 0) {
 			customDomainId = '';
 			return;
 		}
-		if (!verifiedDomains.some((d) => d.id === customDomainId)) {
-			customDomainId = verifiedDomains[0].id;
+		if (!ownedDomains.some((d) => d.id === customDomainId)) {
+			customDomainId = ownedDomains[0].id;
 		}
 	});
 
 	const selectedDomain = $derived(
-		verifiedDomains.find((d) => d.id === customDomainId) ?? null
+		ownedDomains.find((d) => d.id === customDomainId) ?? null
 	);
 	const selectedDomainName = $derived(selectedDomain?.domain ?? '');
 
@@ -87,11 +88,11 @@
 	);
 	const addrConflict = $derived(memberConflict || inviteConflict);
 
-	const hasDomain = $derived(verifiedDomains.length > 0 && customDomainId !== '');
+	const hasDomain = $derived(ownedDomains.length > 0 && customDomainId !== '');
 	const ready = $derived(nameOk && localOk && emailOk && hasDomain && !addrConflict);
 
 	function selectDomainByName(name: string) {
-		const match = verifiedDomains.find((d) => d.domain === name);
+		const match = ownedDomains.find((d) => d.domain === name);
 		if (match) customDomainId = match.id;
 	}
 
@@ -159,19 +160,19 @@
 						disabled={!hasDomain}
 					/>
 					<span class="ac-at">@</span>
-					{#if verifiedDomains.length > 1}
+					{#if ownedDomains.length > 1}
 						<Select
 							value={selectedDomainName}
 							options={domainNames}
 							onChange={(v) => selectDomainByName(v)}
 						/>
-					{:else if verifiedDomains.length === 1}
+					{:else if ownedDomains.length === 1}
 						<span class="ac-fixed mono">{selectedDomainName}</span>
 					{:else}
 						<span class="ac-fixed mono">—</span>
 					{/if}
 				</div>
-				{#if verifiedDomains.length === 0}
+				{#if ownedDomains.length === 0}
 					<div class="field-hint bad">
 						<CircleAlert size={13} />Add and verify a custom domain in Custom domains
 						before inviting members.

@@ -7,6 +7,7 @@
 	import Select from '../Select.svelte';
 	import type { CeremonyKind } from '../data';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
+	import { ownershipProven } from '$lib/settings/domains/steps';
 	import { addresses } from '$lib/stores/addresses.svelte';
 
 	interface Props {
@@ -23,20 +24,20 @@
 	let submitting = $state(false);
 	let submitError = $state<string | null>(null);
 
-	const verifiedDomains = $derived(customDomains.items.filter((d) => d.status === 'verified'));
+	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
 	let userPickedDomainId = $state<string | null>(null);
 
 	const selectedDomain = $derived(
-		verifiedDomains.find((d) => d.id === userPickedDomainId) ?? verifiedDomains[0] ?? null
+		ownedDomains.find((d) => d.id === userPickedDomainId) ?? ownedDomains[0] ?? null
 	);
-	const domainOptions = $derived(verifiedDomains.map((d) => d.domain));
+	const domainOptions = $derived(ownedDomains.map((d) => d.domain));
 	const selectedDomainName = $derived(selectedDomain?.domain ?? '');
 
 	const localOk = $derived(/^[a-z0-9]([a-z0-9._+-]*[a-z0-9])?$/i.test(local.trim()));
 	const full = $derived((local.trim() || 'name') + '@' + (selectedDomainName || 'example.com'));
 
 	function pickDomain(name: string) {
-		const d = verifiedDomains.find((d) => d.domain === name);
+		const d = ownedDomains.find((d) => d.domain === name);
 		if (d) userPickedDomainId = d.id;
 	}
 
@@ -77,7 +78,7 @@
 					Compose From.
 				</p>
 			</div>
-			{#if verifiedDomains.length === 0}
+			{#if ownedDomains.length === 0}
 				<div class="inline-warn">
 					<CircleAlert size={15} />
 					<span

@@ -920,3 +920,53 @@
 	.settings-app .bill-row { column-gap: 10px; }
 	.settings-app .scard-h h3 { white-space: normal; }
 }
+
+.settings-app .dw-rail { display: flex; align-items: center; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--paper-50); margin-bottom: 18px; gap: 0; }
+.settings-app .dw-step { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; background: none; border: 0; padding: 0; font: inherit; text-align: left; cursor: pointer; }
+.settings-app .dw-step:last-child { flex: 0 0 auto; }
+.settings-app .dw-step:disabled { cursor: default; }
+.settings-app .dw-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--paper-200); color: var(--ink-500); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; font-family: var(--font-mono); transition: background var(--dur), color var(--dur); }
+.settings-app .dw-step.on .dw-dot { background: var(--pine-700); color: #fff; }
+.settings-app .dw-step.done .dw-dot { background: var(--success-500); color: #fff; }
+.settings-app .dw-dot svg { width: 13px; height: 13px; }
+.settings-app .dw-lbl { font-size: 11.5px; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+.settings-app .dw-step.on .dw-lbl { color: var(--fg-strong); font-weight: 600; }
+.settings-app .dw-line { flex: 1; height: 1px; min-width: 14px; background: var(--border-strong); margin: 0 4px; }
+.settings-app .dw-step.done .dw-line { background: var(--success-500); }
+@media (max-width: 620px) { .settings-app .dw-lbl { display: none; } .settings-app .dw-line { min-width: 8px; } }
+
+.settings-app .dw-pane { display: flex; flex-direction: column; gap: 14px; padding: 18px; }
+.settings-app .dw-lede { font-size: 13px; color: var(--fg-muted); line-height: 1.6; margin: 0; }
+.settings-app .dw-lede b { color: var(--fg-strong); font-weight: 600; }
+.settings-app .dw-recs { display: flex; flex-direction: column; gap: 9px; }
+.settings-app .dw-rec { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }
+.settings-app .dw-rec-head { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--paper-50); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.settings-app .dw-rec-type { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-sm); padding: 2px 7px; }
+.settings-app .dw-rec-kind { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--ink-500); }
+.settings-app .dw-rec-meta { font-size: 11.5px; color: var(--fg-muted); flex: 1; min-width: 0; }
+.settings-app .dw-rec-meta code { font-family: var(--font-mono); color: var(--ink-700); background: var(--paper-100); border-radius: var(--radius-xs); padding: 1px 5px; word-break: break-all; }
+.settings-app .dw-rec-val { padding: 10px 12px; display: flex; align-items: flex-start; gap: 9px; }
+.settings-app .dw-rec-val code { flex: 1; font-family: var(--font-mono); font-size: 12px; line-height: 1.55; color: var(--ink-800); word-break: break-all; }
+.settings-app .dw-opt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-faint); }
+
+.settings-app .dw-note { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: var(--radius-control); font-size: 12.5px; line-height: 1.5; background: var(--paper-100); color: var(--fg-muted); }
+.settings-app .dw-note svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 1px; }
+.settings-app .dw-note.warn { background: var(--warning-100); color: var(--warning-700); }
+.settings-app .dw-note.bad { background: var(--danger-100); color: var(--danger-700); }
+.settings-app .dw-note b { font-weight: 600; }
+
+.settings-app .dw-foot { display: flex; align-items: center; gap: 9px; padding: 14px 18px; border-top: 1px solid var(--border); background: var(--paper-50); }
+.settings-app .dw-foot .dw-spacer { flex: 1; }
+
+.settings-app .dw-addrs { display: flex; flex-direction: column; gap: 7px; }
+.settings-app .dw-addr { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); font-size: 13px; }
+.settings-app .dw-addr .mono { font-family: var(--font-mono); font-size: 12.5px; }
+.settings-app .dw-addr-form { display: flex; align-items: stretch; gap: 8px; }
+.settings-app .dw-addr-form .tin { flex: 1; min-width: 0; }
+.settings-app .dw-at { display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+
+.settings-app .dw-ladder { display: flex; align-items: center; gap: 5px; }
+.settings-app .dw-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--paper-300, var(--paper-200)); }
+.settings-app .dw-pip.on { background: var(--success-500); }
+.settings-app .dw-pip.fail { background: var(--warning-700); }
+.settings-app .dw-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }

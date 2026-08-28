@@ -1,7 +1,8 @@
 import { apiFetch } from './client';
 
-export type CustomDomainStatus = 'pending' | 'verified' | 'failed' | 'disabled';
-export type DNSRecordKind = 'ownership' | 'mx' | 'dkim' | 'spf' | 'dmarc';
+export type CustomDomainStatus = 'pending' | 'owned' | 'ready' | 'active' | 'failed';
+export type DNSRecordKind = 'ownership' | 'mx' | 'dkim' | 'spf' | 'dmarc' | 'wkd';
+export type DNSRecordPhase = 'ownership' | 'sending' | 'routing';
 export type DNSRecordStatus = 'ok' | 'missing' | 'mismatch';
 export type RequiredDNSRecordType = 'TXT' | 'MX' | 'CNAME';
 
@@ -10,11 +11,13 @@ export interface CustomDomain {
 	workspaceId: string;
 	domain: string;
 	status: CustomDomainStatus;
+	addressCount: number;
 	ownershipVerifiedAt?: string | null;
 	mxVerifiedAt?: string | null;
 	dkimVerifiedAt?: string | null;
 	spfVerifiedAt?: string | null;
 	dmarcVerifiedAt?: string | null;
+	wkdVerifiedAt?: string | null;
 	lastCheckedAt?: string | null;
 	lastError?: string | null;
 	createdAt: string;
@@ -23,6 +26,7 @@ export interface CustomDomain {
 
 export interface RequiredDNSRecord {
 	kind: DNSRecordKind;
+	phase: DNSRecordPhase;
 	type: RequiredDNSRecordType;
 	host: string;
 	value: string;

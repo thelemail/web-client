@@ -8,18 +8,17 @@
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
+	import { ownershipProven } from '$lib/settings/domains/steps';
 
 	const NONE_VALUE = '';
 
 	let error = $state<string | null>(null);
 	let busy = $state(false);
 
-	const verifiedDomainIds = $derived(
-		customDomains.items.filter((d) => d.status === 'verified').map((d) => d.id)
-	);
+	const ownedDomainIds = $derived(customDomains.items.filter(ownershipProven).map((d) => d.id));
 	const eligibleAddresses = $derived(
 		addresses.items.filter(
-			(a) => a.customDomainId && verifiedDomainIds.includes(a.customDomainId)
+			(a) => a.customDomainId && ownedDomainIds.includes(a.customDomainId)
 		)
 	);
 

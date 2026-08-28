@@ -6,7 +6,6 @@ import {
 } from '$lib/settings/data';
 import { putAccountSettingsSection } from '$lib/api/accountSettings';
 import { accountSettings } from './accountSettings.svelte';
-import { customDomains } from './customDomains.svelte';
 import { workspaces } from './workspaces.svelte';
 import { twofactor } from './twofactor.svelte';
 import { auth } from './auth.svelte';
@@ -31,7 +30,6 @@ const CEREMONY_MESSAGES: Record<CeremonyKind, string> = {
 	twofa: 'Two-factor updated',
 	keys: 'Key rotated',
 	delete: 'Account scheduled for deletion',
-	domain: 'Domain added',
 	address: 'Address added',
 	member: ''
 };
@@ -212,9 +210,6 @@ class SettingsDraftStore {
 		if (kind === 'twofa') {
 			twofactor.invalidate();
 			void twofactor.load();
-		}
-		if (kind === 'domain') {
-			void customDomains.load(workspaces.workspace?.id ?? null);
 		}
 		let msg = CEREMONY_MESSAGES[kind];
 		if (kind === 'member') {

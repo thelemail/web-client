@@ -74,7 +74,9 @@
 							: ''} no longer resolve. Mail may be rejected or marked as spam.
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}/domains`}>Verify DNS<ArrowRight size={13} /></a>
+				<a class="sa-act" href={`${settingsBase}/domains/${failedDomains[0].id}`}>
+					Verify DNS<ArrowRight size={13} />
+				</a>
 			</div>
 		{/if}
 		{#if storageAlmostFull}
