@@ -23,7 +23,6 @@ class UnreadStore {
 				const counts = await getMailboxCounts(accountId);
 				this.set(accountId, counts);
 			} catch {
-				// leave the last known count in place
 			} finally {
 				this.#pending.delete(accountId);
 			}

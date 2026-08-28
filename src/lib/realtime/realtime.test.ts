@@ -11,7 +11,7 @@ const connInstances: Array<{
 	start: ReturnType<typeof vi.fn>;
 	stop: ReturnType<typeof vi.fn>;
 	kick: ReturnType<typeof vi.fn>;
-	opts: { onHint: (h: unknown) => void; onState?: (s: string) => void };
+	opts: { onHint: (h: unknown) => void; onState?: (s: string, downMs: number) => void };
 }> = [];
 vi.mock('./connection', () => ({
 	RealtimeConnection: class {
@@ -19,8 +19,12 @@ vi.mock('./connection', () => ({
 		start = vi.fn();
 		stop = vi.fn();
 		kick = vi.fn();
-		opts: { onHint: (h: unknown) => void; onState?: (s: string) => void };
-		constructor(opts: { accountId: string; onHint: (h: unknown) => void; onState?: (s: string) => void }) {
+		opts: { onHint: (h: unknown) => void; onState?: (s: string, downMs: number) => void };
+		constructor(opts: {
+			accountId: string;
+			onHint: (h: unknown) => void;
+			onState?: (s: string, downMs: number) => void;
+		}) {
 			this.accountId = opts.accountId;
 			this.opts = opts;
 			connCtor(opts.accountId);
@@ -65,6 +69,45 @@ vi.mock('$lib/keystore/keystore-client', () => ({
 	}
 }));
 
+const authState = vi.hoisted(() => ({ accountId: null as string | null }));
+vi.mock('$lib/stores/auth.svelte', () => ({
+	auth: {
+		get accountId() {
+			return authState.accountId;
+		}
+	}
+}));
+
+const refreshLoaded = vi.fn();
+const refreshCounts = vi.fn();
+vi.mock('$lib/stores/mailbox.svelte', () => ({
+	mailbox: {
+		refreshLoaded: (...a: unknown[]) => refreshLoaded(...a),
+		refreshCounts: (...a: unknown[]) => refreshCounts(...a)
+	}
+}));
+
+const unreadRefresh = vi.fn();
+vi.mock('$lib/stores/unread.svelte', () => ({
+	unread: {
+		refresh: (...a: unknown[]) => unreadRefresh(...a)
+	}
+}));
+
+const draftsRefresh = vi.fn();
+vi.mock('$lib/stores/drafts.svelte', () => ({
+	drafts: {
+		refresh: (...a: unknown[]) => draftsRefresh(...a)
+	}
+}));
+
+const scheduledRefresh = vi.fn();
+vi.mock('$lib/stores/scheduled.svelte', () => ({
+	scheduled: {
+		refresh: (...a: unknown[]) => scheduledRefresh(...a)
+	}
+}));
+
 import { realtime } from './realtime.svelte';
 
 describe('realtime store', () => {
@@ -77,6 +120,7 @@ describe('realtime store', () => {
 		connInstances.length = 0;
 		keystoreState.accounts = [];
 		leaderState.isLeader = true;
+		authState.accountId = null;
 	});
 
 	it('opens one connection per unlocked account on sync', async () => {
@@ -141,7 +185,7 @@ describe('realtime store', () => {
 		await vi.waitFor(() => expect(connInstances).toHaveLength(1));
 
 		expect(realtime.stateFor('acc-1')).toBe('idle');
-		connInstances[0].opts.onState?.('open');
+		connInstances[0].opts.onState?.('open', 0);
 		expect(realtime.stateFor('acc-1')).toBe('open');
 	});
 
@@ -179,5 +223,126 @@ describe('realtime store', () => {
 		expect(leaderStop).toHaveBeenCalledTimes(1);
 		expect(connInstances[0].stop).toHaveBeenCalledTimes(1);
 		expect(channelClose).toHaveBeenCalledTimes(1);
+	});
+
+	describe('resync on reconnect', () => {
+		it('a quick reconnect of the active account only refreshes counts', async () => {
+			authState.accountId = 'acc-1';
+			keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+			realtime.start();
+			await vi.waitFor(() => expect(connInstances).toHaveLength(1));
+
+			connInstances[0].opts.onState?.('open', 5_000);
+
+			expect(refreshCounts).toHaveBeenCalledTimes(1);
+			expect(refreshLoaded).not.toHaveBeenCalled();
+			expect(draftsRefresh).not.toHaveBeenCalled();
+			expect(scheduledRefresh).not.toHaveBeenCalled();
+		});
+
+		it('a stale reconnect of the active account fully refreshes', async () => {
+			authState.accountId = 'acc-1';
+			keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+			realtime.start();
+			await vi.waitFor(() => expect(connInstances).toHaveLength(1));
+
+			connInstances[0].opts.onState?.('open', 90_000);
+
+			expect(refreshLoaded).toHaveBeenCalledTimes(1);
+			expect(draftsRefresh).toHaveBeenCalledTimes(1);
+			expect(scheduledRefresh).toHaveBeenCalledTimes(1);
+			expect(refreshCounts).toHaveBeenCalledTimes(1);
+			expect(unreadRefresh).not.toHaveBeenCalled();
+		});
+
+		it('the very first connect does not trigger a resync', async () => {
+			authState.accountId = 'acc-1';
+			keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+			realtime.start();
+			await vi.waitFor(() => expect(connInstances).toHaveLength(1));
+
+			connInstances[0].opts.onState?.('open', 0);
+
+			expect(refreshCounts).not.toHaveBeenCalled();
+			expect(refreshLoaded).not.toHaveBeenCalled();
+		});
+
+		it('a reconnect on a background account only refreshes its unread count', async () => {
+			authState.accountId = 'acc-1';
+			keystoreState.accounts = [
+				{ accountId: 'acc-1', unlocked: true },
+				{ accountId: 'acc-2', unlocked: true }
+			];
+			realtime.start();
+			await vi.waitFor(() => expect(connInstances).toHaveLength(2));
+
+			const bg = connInstances.find((c) => c.accountId === 'acc-2')!;
+			bg.opts.onState?.('open', 90_000);
+
+			expect(unreadRefresh).toHaveBeenCalledWith('acc-2');
+			expect(refreshLoaded).not.toHaveBeenCalled();
+			expect(refreshCounts).not.toHaveBeenCalled();
+		});
+
+		it('a non-open state transition does not trigger a resync', async () => {
+			authState.accountId = 'acc-1';
+			keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+			realtime.start();
+			await vi.waitFor(() => expect(connInstances).toHaveLength(1));
+
+			connInstances[0].opts.onState?.('reconnecting', 90_000);
+
+			expect(refreshLoaded).not.toHaveBeenCalled();
+			expect(refreshCounts).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('wake() staleness', () => {
+		it('resyncs every connection after a long hidden period', async () => {
+			vi.useFakeTimers();
+			try {
+				authState.accountId = 'acc-1';
+				keystoreState.accounts = [
+					{ accountId: 'acc-1', unlocked: true },
+					{ accountId: 'acc-2', unlocked: true }
+				];
+				realtime.start();
+				await vi.waitFor(() => expect(connInstances).toHaveLength(2));
+
+				refreshLoaded.mockClear();
+				refreshCounts.mockClear();
+				unreadRefresh.mockClear();
+
+				await vi.advanceTimersByTimeAsync(90_000);
+				realtime.wake();
+
+				expect(refreshLoaded).toHaveBeenCalledTimes(1);
+				expect(refreshCounts).toHaveBeenCalledTimes(1);
+				expect(unreadRefresh).toHaveBeenCalledWith('acc-2');
+			} finally {
+				vi.useRealTimers();
+			}
+		});
+
+		it('does not resync after a short hidden period', async () => {
+			vi.useFakeTimers();
+			try {
+				authState.accountId = 'acc-1';
+				keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+				realtime.start();
+				await vi.waitFor(() => expect(connInstances).toHaveLength(1));
+
+				refreshLoaded.mockClear();
+				refreshCounts.mockClear();
+
+				await vi.advanceTimersByTimeAsync(5_000);
+				realtime.wake();
+
+				expect(refreshLoaded).not.toHaveBeenCalled();
+				expect(refreshCounts).not.toHaveBeenCalled();
+			} finally {
+				vi.useRealTimers();
+			}
+		});
 	});
 });

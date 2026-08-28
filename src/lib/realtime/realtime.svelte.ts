@@ -1,4 +1,9 @@
 import { keystore } from '$lib/keystore/keystore-client';
+import { auth } from '$lib/stores/auth.svelte';
+import { mailbox } from '$lib/stores/mailbox.svelte';
+import { unread } from '$lib/stores/unread.svelte';
+import { drafts } from '$lib/stores/drafts.svelte';
+import { scheduled } from '$lib/stores/scheduled.svelte';
 import { applyHint } from './dispatch';
 import { RealtimeConnection } from './connection';
 import { electLeader, type LeaderHandle } from './leader';
@@ -6,6 +11,7 @@ import { openRealtimeChannel, type RealtimeChannel } from './channel';
 import type { ConnectionState, RealtimeHint } from './types';
 
 const LEADER_LOCK_NAME = 'thelemail:realtime-leader';
+const STALE_MS = 60_000;
 
 class RealtimeStore {
 	#connections = new Map<string, RealtimeConnection>();
@@ -14,10 +20,12 @@ class RealtimeStore {
 	#leaderHandle: LeaderHandle | null = null;
 	#channel: RealtimeChannel | null = null;
 	#started = false;
+	#lastWakeAt = Date.now();
 
 	start(): () => void {
 		if (this.#started) return () => this.stop();
 		this.#started = true;
+		this.#lastWakeAt = Date.now();
 
 		this.#leaderHandle = electLeader(LEADER_LOCK_NAME, () => {
 			this.#channel = openRealtimeChannel((msg) => {
@@ -82,7 +90,7 @@ class RealtimeStore {
 			const conn = new RealtimeConnection({
 				accountId: id,
 				onHint: (hint) => this.#onHint(hint),
-				onState: (state) => this.#setState(id, state)
+				onState: (state, downMs) => this.#onConnState(id, state, downMs)
 			});
 			this.#connections.set(id, conn);
 			conn.start();
@@ -90,7 +98,15 @@ class RealtimeStore {
 	}
 
 	wake(): void {
+		const now = Date.now();
+		const hiddenMs = now - this.#lastWakeAt;
+		this.#lastWakeAt = now;
 		for (const conn of this.#connections.values()) conn.kick();
+		if (hiddenMs >= STALE_MS) {
+			for (const accountId of this.#connections.keys()) {
+				this.#resync(accountId, true);
+			}
+		}
 	}
 
 	stateFor(accountId: string): ConnectionState {
@@ -104,6 +120,26 @@ class RealtimeStore {
 	#onHint(hint: RealtimeHint): void {
 		applyHint(hint);
 		this.#channel?.post({ type: 'hint', hint });
+	}
+
+	#onConnState(id: string, state: ConnectionState, downMs: number): void {
+		this.#setState(id, state);
+		if (state === 'open' && downMs > 0) {
+			this.#resync(id, downMs >= STALE_MS);
+		}
+	}
+
+	#resync(accountId: string, full: boolean): void {
+		if (accountId !== auth.accountId) {
+			void unread.refresh(accountId);
+			return;
+		}
+		if (full) {
+			void mailbox.refreshLoaded();
+			void drafts.refresh();
+			void scheduled.refresh();
+		}
+		void mailbox.refreshCounts();
 	}
 
 	#setState(id: string, state: ConnectionState): void {
