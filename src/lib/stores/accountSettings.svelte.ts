@@ -135,6 +135,11 @@ class AccountSettingsStore {
 		if (this.#accountId === acct) this.hydrated = true;
 	}
 
+	async refresh(): Promise<void> {
+		this.hydrated = false;
+		await this.hydrate();
+	}
+
 	setReadingOpenMessage(value: OpenMessageSettings): void {
 		this.readingOpenMessage = { ...value };
 	}

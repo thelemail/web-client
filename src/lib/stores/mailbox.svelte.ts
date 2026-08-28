@@ -21,6 +21,7 @@ import type { MailboxCounts, MessageListItem, ThreadListItem } from '$lib/api/ty
 import { DEFAULT_QUERY, type Query } from '$lib/mail/url';
 import type { RealtimeHint } from '$lib/realtime/types';
 import { auth } from './auth.svelte';
+import { unread } from './unread.svelte';
 import { decodeWords } from 'postal-mime';
 
 interface Stream {
@@ -256,6 +257,7 @@ class MailboxStore {
 				const next = await getMailboxCounts();
 				if (this.#accountId !== accountId) return;
 				this.#counts = next;
+				unread.set(accountId, next);
 			} catch {
 			} finally {
 				this.#countsPending = null;
