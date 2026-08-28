@@ -115,6 +115,7 @@ export interface MessageDetail {
 	inReplyTo?: string | null;
 	references?: string[];
 	threadRootId?: string | null;
+	threadCount?: number | null;
 	rsvpStatus?: RsvpStatus | null;
 	rsvpEventUid?: string | null;
 	labels?: string[];
