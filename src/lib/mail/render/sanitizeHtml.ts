@@ -8,11 +8,6 @@ export interface SanitizeOptions {
 	stripTracking?: boolean;
 }
 
-export interface SanitizeResult {
-	html: string;
-	remoteImagesBlocked: number;
-}
-
 const ALLOWED_URI_REGEXP = /^(?:(?:https?|mailto|tel|cid|data):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
 
 const FORBID_TAGS = [
@@ -36,40 +31,25 @@ function bytesToBase64(bytes: Uint8Array): string {
 	return btoa(bin);
 }
 
-function scrubCss(css: string): { css: string; blocked: number } {
-	let blocked = 0;
-	let out = css.replace(/@import[^;]*;?/gi, () => {
-		blocked++;
-		return '';
-	});
-	out = out.replace(/@font-face\s*\{[^}]*\}/gi, () => {
-		blocked++;
-		return '';
-	});
+function scrubCss(css: string): string {
+	let out = css.replace(/@import[^;]*;?/gi, '');
+	out = out.replace(/@font-face\s*\{[^}]*\}/gi, '');
 	out = out.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (_, _q, url) => {
 		const trimmed = String(url).trim();
 		if (/^(?:cid|data):/i.test(trimmed)) return `url(${trimmed})`;
-		blocked++;
 		return 'url(about:blank)';
 	});
-	return { css: out, blocked };
+	return out;
 }
 
-function scrubStyleTags(html: string): { html: string; blocked: number } {
-	let blocked = 0;
-	const out = html.replace(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi, (_, attrs: string, body: string) => {
-		const r = scrubCss(body);
-		blocked += r.blocked;
-		return `<style${attrs}>${r.css}</style>`;
+function scrubStyleTags(html: string): string {
+	return html.replace(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi, (_, attrs: string, body: string) => {
+		return `<style${attrs}>${scrubCss(body)}</style>`;
 	});
-	return { html: out, blocked };
 }
 
-export function sanitizeHtml(raw: string, opts: SanitizeOptions): SanitizeResult {
-	let blocked = 0;
-
+export function sanitizeHtml(raw: string, opts: SanitizeOptions): string {
 	const pre = scrubStyleTags(raw);
-	blocked += pre.blocked;
 
 	const cidMap = new Map<string, string>();
 	for (const [cid, img] of Object.entries(opts.inlineImages)) {
@@ -89,14 +69,12 @@ export function sanitizeHtml(raw: string, opts: SanitizeOptions): SanitizeResult
 					data.attrValue = resolved;
 				} else {
 					data.keepAttr = false;
-					blocked++;
 				}
 				return;
 			}
 			if (/^data:image\//i.test(v)) return;
 			if (/^https?:/i.test(v)) {
 				data.keepAttr = false;
-				blocked++;
 				return;
 			}
 			data.keepAttr = false;
@@ -112,9 +90,7 @@ export function sanitizeHtml(raw: string, opts: SanitizeOptions): SanitizeResult
 		}
 
 		if (name === 'style') {
-			const r = scrubCss(data.attrValue);
-			data.attrValue = r.css;
-			blocked += r.blocked;
+			data.attrValue = scrubCss(data.attrValue);
 		}
 	};
 
@@ -134,7 +110,7 @@ export function sanitizeHtml(raw: string, opts: SanitizeOptions): SanitizeResult
 	DOMPurify.addHook('afterSanitizeAttributes', onAfterAttributes);
 	let clean: string;
 	try {
-		clean = DOMPurify.sanitize(pre.html, {
+		clean = DOMPurify.sanitize(pre, {
 			FORCE_BODY: true,
 			FORBID_TAGS,
 			FORBID_ATTR,
@@ -146,5 +122,5 @@ export function sanitizeHtml(raw: string, opts: SanitizeOptions): SanitizeResult
 		DOMPurify.removeHook('afterSanitizeAttributes', onAfterAttributes);
 	}
 
-	return { html: clean, remoteImagesBlocked: blocked };
+	return clean;
 }

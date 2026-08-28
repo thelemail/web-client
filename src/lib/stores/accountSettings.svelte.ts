@@ -13,7 +13,6 @@ export const MARK_READ_DELAYS: Record<string, number | null> = {
 
 export interface OpenMessageSettings {
 	markRead: string;
-	images: string;
 	swipe: string;
 }
 
@@ -28,7 +27,6 @@ export interface AppearanceSettings {
 
 const DEFAULTS: OpenMessageSettings = {
 	markRead: 'After 2 seconds',
-	images: 'ask',
 	swipe: 'Archive'
 };
 
@@ -90,9 +88,6 @@ class AccountSettingsStore {
 			if (v && typeof v === 'object') {
 				const next: OpenMessageSettings = { ...DEFAULTS };
 				if (typeof v.markRead === 'string') next.markRead = v.markRead;
-				if (v.images === 'ask' || v.images === 'contacts' || v.images === 'always') {
-					next.images = v.images;
-				}
 				if (typeof v.swipe === 'string') next.swipe = v.swipe;
 				this.readingOpenMessage = next;
 			}

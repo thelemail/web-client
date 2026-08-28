@@ -65,7 +65,6 @@ export interface SettingsState {
 
 	density: 'comfortable' | 'compact';
 	markRead: string;
-	images: 'ask' | 'contacts' | 'always';
 	swipe: string;
 	requestReceipts: boolean;
 	sendReceipts: string;
@@ -119,7 +118,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 
 	density: 'comfortable',
 	markRead: 'After 2 seconds',
-	images: 'ask',
 	swipe: 'Archive',
 	requestReceipts: false,
 	sendReceipts: 'Always ask me',

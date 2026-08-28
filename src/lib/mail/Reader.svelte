@@ -34,7 +34,6 @@
 	import SnoozePicker from './SnoozePicker.svelte';
 	import AlarmClockOff from '@lucide/svelte/icons/alarm-clock-off';
 	import EventCard from './EventCard.svelte';
-	import ImagesBanner from './ImagesBanner.svelte';
 	import { untrack } from 'svelte';
 	import { DecryptionError } from '$lib/mail/decrypt';
 	import { auth } from '$lib/stores/auth.svelte';
@@ -524,16 +523,6 @@
 		void openedMessageId;
 		showQuoted = false;
 	});
-
-	let imagesDismissed = $state(false);
-	$effect(() => {
-		void openedMessageId;
-		imagesDismissed = false;
-	});
-	const remoteImagesBlocked = $derived(
-		bodyState?.status === 'ready' ? bodyState.render.remoteImagesBlocked : 0
-	);
-	const showImagesBanner = $derived(remoteImagesBlocked > 0 && !imagesDismissed);
 </script>
 
 <svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
@@ -870,14 +859,6 @@
 						</div>
 					</div>
 
-					{#if showImagesBanner}
-						<ImagesBanner
-							sender={m.fromAddr}
-							count={remoteImagesBlocked}
-							onShow={() => (imagesDismissed = true)}
-							onAlways={() => (imagesDismissed = true)}
-						/>
-					{/if}
 					<div class="email-sheet">
 						<EmailBody srcDoc={bodySrcDoc} />
 					</div>

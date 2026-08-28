@@ -52,7 +52,7 @@
 	const OPEN_MESSAGE_SECTION = 'reading_open_message';
 	const PRIVACY_SECTION = 'privacy';
 	const LOCALIZATION_SECTION = 'localization';
-	const OPEN_MESSAGE_KEYS = ['markRead', 'images', 'swipe'] as const satisfies ReadonlyArray<
+	const OPEN_MESSAGE_KEYS = ['markRead', 'swipe'] as const satisfies ReadonlyArray<
 		keyof SettingsState
 	>;
 	const PRIVACY_KEYS = ['stripTrack'] as const satisfies ReadonlyArray<keyof SettingsState>;
@@ -159,7 +159,7 @@
 		}
 		flushing = true;
 		const openMessageBody = dirtyOpenMessage
-			? { markRead: s.markRead, images: s.images, swipe: s.swipe }
+			? { markRead: s.markRead, swipe: s.swipe }
 			: null;
 		const privacyBody = dirtyPrivacy ? { stripTrackingParams: s.stripTrack } : null;
 		const localizationBody = dirtyLocalization
@@ -294,9 +294,6 @@
 		await accountSettings.hydrate();
 		const v = accountSettings.readingOpenMessage;
 		s.markRead = v.markRead;
-		if (v.images === 'ask' || v.images === 'contacts' || v.images === 'always') {
-			s.images = v.images;
-		}
 		s.swipe = v.swipe;
 		const p = accountSettings.privacy;
 		s.stripTrack = p.stripTrackingParams;
