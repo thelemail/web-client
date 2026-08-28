@@ -408,7 +408,7 @@
 	img.pf-av {
 		width: 64px;
 		height: 64px;
-		border-radius: 50%;
+		border-radius: var(--radius-avatar);
 		object-fit: cover;
 	}
 	.pf-avwrap {

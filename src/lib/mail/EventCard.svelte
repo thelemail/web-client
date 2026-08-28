@@ -297,7 +297,7 @@
 		justify-content: center;
 		width: 26px;
 		height: 26px;
-		border-radius: 50%;
+		border-radius: var(--radius-avatar);
 		background: var(--paper-200, #e0d6bf);
 		color: var(--ink-700, #43473a);
 		font-size: 11.5px;
@@ -314,7 +314,7 @@
 		justify-content: center;
 		width: 26px;
 		height: 26px;
-		border-radius: 50%;
+		border-radius: var(--radius-avatar);
 		background: var(--paper-200, #e0d6bf);
 		color: var(--ink-700, #43473a);
 		font-size: 11px;
