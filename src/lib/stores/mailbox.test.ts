@@ -2,12 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const listMessages = vi.fn();
 const decryptPreview = vi.fn();
+const getMessage = vi.fn();
 
 vi.mock('$lib/api/messages', () => ({
 	listMessages: (...a: unknown[]) => listMessages(...a),
 	listThreads: vi.fn(),
 	getMailboxCounts: vi.fn(async () => ({ inbox: 0, starred: 0, spam: 0, snoozed: 0 })),
-	getMessage: vi.fn()
+	getMessage: (...a: unknown[]) => getMessage(...a)
 }));
 
 vi.mock('$lib/mail/decrypt', () => ({
@@ -27,6 +28,7 @@ vi.mock('./auth.svelte', () => ({
 }));
 
 import { mailbox } from './mailbox.svelte';
+import { DecryptionError } from '$lib/mail/decrypt';
 import type { Query } from '$lib/mail/url';
 
 const SENT_QUERY: Query = {
@@ -54,6 +56,10 @@ function row(id: string, storedAt: string) {
 		read: true,
 		labels: []
 	};
+}
+
+function flushAsync(): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 function previewFor(id: string) {
@@ -161,5 +167,178 @@ describe('mailbox pagination reconciliation on forced refresh', () => {
 
 		resolveNormal({ items: [row('stale', '2026-08-19T12:00:00Z')], nextCursor: null });
 		await normal;
+	});
+});
+
+const INBOX_QUERY: Query = {
+	folder: 'sent',
+	labels: [],
+	unread: false,
+	attach: false,
+	sort: 'newest'
+};
+
+function detail(id: string, overrides: Partial<Record<string, unknown>> = {}) {
+	return {
+		id,
+		ownerAccountId: 'acc-1',
+		direction: 'sent' as const,
+		source: 'internal' as const,
+		storedAt: '2026-08-20T12:00:00Z',
+		encryptedPreview: `enc-${id}`,
+		schemaVersion: 1,
+		body: { url: 'https://example.com/body', expiresAt: '2026-08-20T13:00:00Z' },
+		attachments: [],
+		mailboxState: 'inbox' as const,
+		starred: false,
+		read: false,
+		labels: [],
+		...overrides
+	};
+}
+
+describe('mailbox.applyRealtime', () => {
+	beforeEach(() => {
+		listMessages.mockReset();
+		decryptPreview.mockReset();
+		getMessage.mockReset();
+		decryptPreview.mockImplementation(async (_accountId: string, b64: string) => {
+			const id = b64.replace('enc-', '');
+			return previewFor(id);
+		});
+		authState.canEnterApp = true;
+		authState.accountId = 'acc-1';
+		mailbox.setAccount(null);
+		mailbox.setAccount('acc-1');
+	});
+
+	it('prepends a brand new message into a loaded newest-sort stream when auto-flush is on', async () => {
+		listMessages.mockResolvedValueOnce({ items: [row('old', '2026-08-19T12:00:00Z')], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+		mailbox.setAutoFlush(INBOX_QUERY, true);
+
+		getMessage.mockResolvedValueOnce(detail('new1'));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'new1', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.streamFor(INBOX_QUERY).msgs.map((m) => m.id)).toEqual(['new1', 'old']);
+	});
+
+	it('buffers a brand new message instead of injecting it when auto-flush is off', async () => {
+		listMessages.mockResolvedValueOnce({ items: [row('old', '2026-08-19T12:00:00Z')], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+
+		getMessage.mockResolvedValueOnce(detail('new1'));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'new1', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.streamFor(INBOX_QUERY).msgs.map((m) => m.id)).toEqual(['old']);
+		expect(mailbox.pendingFor(INBOX_QUERY)).toBe(1);
+
+		mailbox.flushPending(INBOX_QUERY);
+		expect(mailbox.streamFor(INBOX_QUERY).msgs.map((m) => m.id)).toEqual(['new1', 'old']);
+		expect(mailbox.pendingFor(INBOX_QUERY)).toBe(0);
+	});
+
+	it('updates an existing row in place without buffering', async () => {
+		listMessages.mockResolvedValueOnce({ items: [row('m1', '2026-08-19T12:00:00Z')], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+
+		getMessage.mockResolvedValueOnce(detail('m1', { starred: true }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.updated', id: 'm1', rev: 1 });
+		await flushAsync();
+
+		const snap = mailbox.streamFor(INBOX_QUERY);
+		expect(snap.msgs.map((m) => m.id)).toEqual(['m1']);
+		expect(snap.msgs[0].starred).toBe(true);
+		expect(mailbox.pendingFor(INBOX_QUERY)).toBe(0);
+	});
+
+	it('removes a message on message.deleted from every loaded stream and the pin', async () => {
+		listMessages.mockResolvedValueOnce({ items: [row('m1', '2026-08-19T12:00:00Z')], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.deleted', id: 'm1' });
+
+		expect(mailbox.streamFor(INBOX_QUERY).msgs.map((m) => m.id)).toEqual([]);
+		expect(getMessage).not.toHaveBeenCalled();
+	});
+
+	it('ignores a stale rev that does not exceed the last seen rev', async () => {
+		listMessages.mockResolvedValueOnce({ items: [], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+		mailbox.setAutoFlush(INBOX_QUERY, true);
+
+		getMessage.mockResolvedValue(detail('m1'));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.updated', id: 'm1', rev: 5 });
+		await flushAsync();
+		expect(getMessage).toHaveBeenCalledTimes(1);
+
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.updated', id: 'm1', rev: 5 });
+		await Promise.resolve();
+		expect(getMessage).toHaveBeenCalledTimes(1);
+
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.updated', id: 'm1', rev: 6 });
+		await flushAsync();
+		expect(getMessage).toHaveBeenCalledTimes(2);
+	});
+
+	it('ignores a hint for a foreign account', async () => {
+		listMessages.mockResolvedValueOnce({ items: [], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+
+		mailbox.applyRealtime({ accountId: 'acc-999', kind: 'message.created', id: 'new1', rev: 1 });
+		await Promise.resolve();
+
+		expect(getMessage).not.toHaveBeenCalled();
+	});
+
+	it('does not insert a fallback row when the vault is locked', async () => {
+		listMessages.mockResolvedValueOnce({ items: [], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+		mailbox.setAutoFlush(INBOX_QUERY, true);
+
+		getMessage.mockResolvedValueOnce(detail('locked1'));
+		decryptPreview.mockImplementationOnce(async () => {
+			throw new DecryptionError('locked');
+		});
+
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'locked1', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.streamFor(INBOX_QUERY).msgs).toEqual([]);
+		expect(mailbox.pendingFor(INBOX_QUERY)).toBe(0);
+	});
+});
+
+describe('mailbox.loadedQueries / refreshLoaded', () => {
+	beforeEach(() => {
+		listMessages.mockReset();
+		decryptPreview.mockReset();
+		getMessage.mockReset();
+		decryptPreview.mockImplementation(async (_accountId: string, b64: string) => {
+			const id = b64.replace('enc-', '');
+			return previewFor(id);
+		});
+		authState.canEnterApp = true;
+		authState.accountId = 'acc-1';
+		mailbox.setAccount(null);
+		mailbox.setAccount('acc-1');
+	});
+
+	it('reports the queries of every loaded stream and refreshes them all', async () => {
+		const UNREAD_SENT: Query = { ...SENT_QUERY, unread: true };
+		listMessages.mockResolvedValueOnce({ items: [row('a', '2026-08-25T12:00:00Z')], nextCursor: null });
+		await mailbox.ensureLoaded(SENT_QUERY);
+		listMessages.mockResolvedValueOnce({ items: [row('b', '2026-08-25T12:00:00Z')], nextCursor: null });
+		await mailbox.ensureLoaded(UNREAD_SENT);
+
+		expect(mailbox.loadedQueries()).toHaveLength(2);
+
+		listMessages.mockResolvedValue({ items: [row('c', '2026-08-20T12:00:00Z')], nextCursor: null });
+		await mailbox.refreshLoaded();
+
+		expect(mailbox.streamFor(SENT_QUERY).msgs.map((m) => m.id)).toEqual(['c']);
+		expect(mailbox.streamFor(UNREAD_SENT).msgs.map((m) => m.id)).toEqual(['c']);
 	});
 });
