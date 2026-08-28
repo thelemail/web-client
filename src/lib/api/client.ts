@@ -1,4 +1,5 @@
 import { PUBLIC_API_BASE_URL, PUBLIC_SUBMISSION_BASE_URL } from '$env/static/public';
+import { deviceId } from '$lib/realtime/device';
 import { ApiCallError, type ErrorEnvelope } from './types';
 
 export interface AuthRouter {
@@ -77,6 +78,7 @@ async function doFetch<T>(path: string, opts: FetchOptions, retried: boolean): P
 	if (accountId) {
 		headers['X-Account-Id'] = accountId;
 	}
+	headers['X-Device-Id'] = deviceId();
 	if (!opts.skipAuth && authRouter) {
 		await authRouter.ensureFreshToken?.(accountId);
 		const token = authRouter.getAccessToken(accountId);
