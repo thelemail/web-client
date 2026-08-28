@@ -1033,7 +1033,3 @@
 	.mail-app .fld svg path { transition: none; }
 }
 
-.mail-app .settings-h { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; padding: 0 12px 0 15px; border-bottom: 1px solid var(--border); background: var(--bg); }
-.mail-app .settings-h .settings-t { font-size: 17px; font-weight: 580; letter-spacing: var(--track-tight); color: var(--fg-strong); }
-.mail-app .settings-h .grow { flex: 1; }
-.mail-app .settings-search { width: min(300px, 34vw); }

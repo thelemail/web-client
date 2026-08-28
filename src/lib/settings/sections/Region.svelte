@@ -16,7 +16,6 @@
 </script>
 
 <SecHead
-	tag="06 — Localization & region"
 	title="Localization & region"
 	desc="How dates and times are written across your mailbox."
 />

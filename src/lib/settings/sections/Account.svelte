@@ -80,7 +80,7 @@
 			const origin = window.location.origin;
 			const slot = page.params.slot;
 			const { url } = await createBillingPortalSession({
-				returnUrl: `${origin}/u/${slot}/settings`
+				returnUrl: `${origin}/u/${slot}/settings/account`
 			});
 			window.location.assign(url);
 		} catch (err) {
@@ -95,7 +95,6 @@
 </script>
 
 <SecHead
-	tag="08 — Account & plan"
 	title="Account & plan"
 	desc="Your subscription, the people on it, and your right to take everything and leave."
 />

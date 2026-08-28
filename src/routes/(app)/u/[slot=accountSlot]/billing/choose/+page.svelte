@@ -205,7 +205,7 @@
 							method from the billing portal to keep your mailbox active.
 						</p>
 						<div class="actions" style="margin-top:24px">
-							<a class="btn btn-primary btn-block" href={`/u/${slot}/settings`}>
+							<a class="btn btn-primary btn-block" href={`/u/${slot}/settings/account`}>
 								Go to Settings &rarr; Manage billing
 							</a>
 						</div>

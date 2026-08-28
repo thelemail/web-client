@@ -46,7 +46,7 @@
 						Without a recovery phrase, a forgotten password means your mail is lost for good.
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}?ceremony=recovery#security`}>
+				<a class="sa-act" href={`${settingsBase}/security?ceremony=recovery`}>
 					Set up recovery<ArrowRight size={13} />
 				</a>
 			</div>
@@ -60,7 +60,7 @@
 						Your last payment didn't go through. Sending pauses when the grace period ends.
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}#account`}>Update payment<ArrowRight size={13} /></a>
+				<a class="sa-act" href={`${settingsBase}/account`}>Update payment<ArrowRight size={13} /></a>
 			</div>
 		{/if}
 		{#if failedDomains.length > 0}
@@ -74,7 +74,7 @@
 							: ''} no longer resolve. Mail may be rejected or marked as spam.
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}#domains`}>Verify DNS<ArrowRight size={13} /></a>
+				<a class="sa-act" href={`${settingsBase}/domains`}>Verify DNS<ArrowRight size={13} /></a>
 			</div>
 		{/if}
 		{#if storageAlmostFull}
@@ -88,7 +88,7 @@
 						mailbox is full.
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}#account`}>Manage storage<ArrowRight size={13} /></a>
+				<a class="sa-act" href={`${settingsBase}/account`}>Manage storage<ArrowRight size={13} /></a>
 			</div>
 		{/if}
 	</div>

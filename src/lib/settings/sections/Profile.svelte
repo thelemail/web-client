@@ -260,7 +260,6 @@
 </script>
 
 <SecHead
-	tag="01 — Profile"
 	title="Profile"
 	desc="Your name and signature, and the address you send from by default. Your domain, your identity."
 />

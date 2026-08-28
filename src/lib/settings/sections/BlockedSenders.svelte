@@ -100,7 +100,6 @@
 </script>
 
 <SecHead
-	tag="Blocked senders"
 	title="Blocked senders"
 	desc="Mail from a blocked address lands in Spam and raises no notification. The server keeps only a keyed hash of the address, so it cannot read your block list; the label shown here is decrypted in this browser."
 />

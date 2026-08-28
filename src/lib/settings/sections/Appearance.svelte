@@ -16,7 +16,6 @@
 </script>
 
 <SecHead
-	tag="07 — Appearance"
 	title="Appearance"
 	desc="The reading room. Calm parchment by day, the inkwell by night — tuned for comfort and access."
 />

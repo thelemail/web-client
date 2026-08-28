@@ -311,7 +311,6 @@
 </script>
 
 <SecHead
-	tag="05 — Security & privacy"
 	title="Security & privacy"
 	desc="Specific, honest controls. We name the mechanism and tell you what we do and don’t do. The marked steps change key material — treat them with care."
 />

@@ -87,7 +87,6 @@
 </script>
 
 <SecHead
-	tag="06 — Import"
 	title="Import"
 	desc="Bring existing mail into Thelemail from .eml files. Each message is parsed and encrypted to your key in this browser before it is uploaded — the server only ever stores ciphertext. Imported mail lands in your inbox, marked read, at its original date."
 />

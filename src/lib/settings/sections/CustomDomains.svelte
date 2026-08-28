@@ -142,7 +142,6 @@
 </script>
 
 <SecHead
-	tag="Custom domains"
 	title="Domains you own"
 	desc="Add domains you own. The Ownership TXT proves DNS control — without it, anyone whose DNS happens to point at Thelemail could be claimed by another user. Keep the Ownership record published for as long as you use the domain."
 />

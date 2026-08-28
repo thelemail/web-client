@@ -217,12 +217,12 @@
 			<a class="mitem" href={`/u/${slot}/mail/inbox`} onclick={(e) => { e.preventDefault(); go(`/u/${slot}/mail/inbox`); }}>
 				<Mail size={17} />Go to Mail
 			</a>
-			<button class="mitem" onclick={() => go(`/u/${slot}/settings#profile`)}><User size={17} />Account &amp; profile</button>
-			<button class="mitem" onclick={() => go(`/u/${slot}/settings#security`)}>
+			<button class="mitem" onclick={() => go(`/u/${slot}/settings/profile`)}><User size={17} />Account &amp; profile</button>
+			<button class="mitem" onclick={() => go(`/u/${slot}/settings/security`)}>
 				<ShieldCheck size={17} />Security{#if twofactor.status}<span class="rt">{twofactor.enabled ? '2FA on' : '2FA off'}</span>{/if}
 			</button>
-			<button class="mitem" onclick={() => go(`/u/${slot}/settings#addresses`)}><AtSign size={17} />Aliases &amp; identities</button>
-			<button class="mitem" onclick={() => go(`/u/${slot}/settings`)}><Settings size={17} />Settings</button>
+			<button class="mitem" onclick={() => go(`/u/${slot}/settings/addresses`)}><AtSign size={17} />Aliases &amp; identities</button>
+			<button class="mitem" onclick={() => go(`/u/${slot}/settings/profile`)}><Settings size={17} />Settings</button>
 			<div class="msep"></div>
 			<button class="mitem" onclick={() => theme.cycle()}>
 				<ThemeIcon size={17} />Appearance<span class="rt">{theme.label}</span>
