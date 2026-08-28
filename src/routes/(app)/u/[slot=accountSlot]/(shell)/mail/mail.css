@@ -1022,6 +1022,10 @@
 .mail-app .snz-strip .snz-x { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: none; background: none; border-radius: 50%; color: var(--ink-400); cursor: pointer; }
 .mail-app .snz-strip .snz-x:hover { background: var(--paper-100); color: var(--pine-700); }
 
+.mail-app .new-strip { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 9px 18px; font-size: 12.5px; font-weight: 600; color: var(--pine-50); background: var(--pine-600); border: none; border-bottom: 1px solid var(--border); cursor: pointer; }
+.mail-app .new-strip:hover { background: var(--pine-700); }
+.mail-app .new-strip svg { flex: 0 0 auto; }
+
 .cfd-scrim .sch-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
 .cfd-scrim .sch-opt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font-family: inherit; font-size: 13.5px; color: var(--fg); background: var(--paper-50); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast); }
 .cfd-scrim .sch-opt svg { width: 16px; height: 16px; color: var(--fg-muted); flex: 0 0 auto; }

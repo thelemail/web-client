@@ -64,6 +64,9 @@
 		onLoadMore?: () => void;
 		returnedCount?: number;
 		onDismissReturned?: () => void;
+		pendingCount?: number;
+		onFlushPending?: () => void;
+		onAtTopChange?: (atTop: boolean) => void;
 	}
 
 	let {
@@ -93,7 +96,10 @@
 		loadMoreError = null,
 		onLoadMore = () => {},
 		returnedCount = 0,
-		onDismissReturned
+		onDismissReturned,
+		pendingCount = 0,
+		onFlushPending,
+		onAtTopChange
 	}: Props = $props();
 
 	const anyChecked = $derived(checked.size > 0);
@@ -202,6 +208,14 @@
 		);
 		observer.observe(sentinelEl);
 		return () => observer?.disconnect();
+	});
+
+	$effect(() => {
+		if (!scrollEl || !onAtTopChange) return;
+		const check = () => onAtTopChange(scrollEl!.scrollTop <= 4);
+		check();
+		scrollEl.addEventListener('scroll', check, { passive: true });
+		return () => scrollEl?.removeEventListener('scroll', check);
 	});
 </script>
 
@@ -387,6 +401,12 @@
 		</div>
 	{/if}
 	<div class="scroll" bind:this={scrollEl}>
+		{#if pendingCount > 0}
+			<button type="button" class="new-strip" onclick={onFlushPending}>
+				<ArrowUp size={14} />
+				<span>{pendingCount} new message{pendingCount > 1 ? 's' : ''}</span>
+			</button>
+		{/if}
 		{#if returnedCount > 0}
 			<div class="snz-strip">
 				<AlarmClock size={15} />

@@ -13,6 +13,7 @@
 	import {
 		FOLDERS,
 		LABELS,
+		countActiveFilters,
 		folderFromServer,
 		formatWhenLong,
 		type LabelId,
@@ -177,6 +178,36 @@
 		const nowMs = Date.now();
 		return list.filter((m) => returnedFromSnooze(m, nowMs)).length;
 	});
+
+	const pendingCount = $derived(mailbox.pendingFor(query));
+
+	let atTop = $state(true);
+	let tabVisible = $state(true);
+
+	$effect(() => {
+		if (typeof document === 'undefined') return;
+		const onVis = () => (tabVisible = document.visibilityState === 'visible');
+		onVis();
+		document.addEventListener('visibilitychange', onVis);
+		return () => document.removeEventListener('visibilitychange', onVis);
+	});
+
+	const autoFlush = $derived(
+		sort === 'newest' &&
+			countActiveFilters(filters) === 0 &&
+			messageId === null &&
+			atTop &&
+			tabVisible
+	);
+
+	$effect(() => {
+		mailbox.setAutoFlush(query, autoFlush);
+		return () => mailbox.setAutoFlush(query, false);
+	});
+
+	const titleUnread = $derived(
+		mailbox.counts.inbox > 99 ? '99+' : String(mailbox.counts.inbox)
+	);
 
 	const allChecked = $derived(list.length > 0 && list.every((m) => checked.has(m.id)));
 
@@ -698,7 +729,7 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — {folderLabel}</title>
+	<title>{mailbox.counts.inbox > 0 ? `(${titleUnread}) ` : ''}Thelemail — {folderLabel}</title>
 </svelte:head>
 
 <svelte:document onkeydown={handleKey} />
@@ -759,6 +790,9 @@
 			onLoadMore={handleLoadMore}
 			{returnedCount}
 			onDismissReturned={() => (returnedDismissed = true)}
+			{pendingCount}
+			onFlushPending={() => mailbox.flushPending(query)}
+			onAtTopChange={(v) => (atTop = v)}
 		/>
 		{#if messageId && !selected && deepLinkMissing}
 			<section class="reader reader-missing">
