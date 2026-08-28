@@ -35,6 +35,18 @@ describe('queryMatches', () => {
 		expect(queryMatches(query({ folder: 'inbox' }), msg({ folder: 'archive' }))).toBe(false);
 	});
 
+	it('inbox query also matches a message folder-derived as sent', () => {
+		const q = query({ folder: 'inbox' });
+		expect(queryMatches(q, msg({ folder: 'sent', direction: 'sent' }))).toBe(true);
+		expect(queryMatches(q, msg({ folder: 'archive', direction: 'sent' }))).toBe(false);
+	});
+
+	it('sent query does not match a message folder-derived as inbox', () => {
+		const q = query({ folder: 'sent' });
+		expect(queryMatches(q, msg({ folder: 'inbox', direction: 'received' }))).toBe(false);
+		expect(queryMatches(q, msg({ folder: 'sent', direction: 'sent' }))).toBe(true);
+	});
+
 	it('starred pseudo-folder requires starred and excludes trash/spam', () => {
 		const q = query({ folder: 'starred' });
 		expect(queryMatches(q, msg({ folder: 'inbox', starred: true }))).toBe(true);
