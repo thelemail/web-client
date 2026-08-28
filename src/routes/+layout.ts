@@ -32,6 +32,8 @@ export const load = async () => {
 		}
 	}
 
+	auth.adoptPreferredAccount();
+
 	if (auth.vaultUnlocked && !auth.isAuthenticated) {
 		await auth.tryRefresh();
 	}

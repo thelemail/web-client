@@ -214,6 +214,13 @@ class AuthStore {
 		});
 	}
 
+	adoptPreferredAccount(): void {
+		const ranked = [...accounts.list].sort((a, b) => b.lastActiveAt - a.lastActiveAt);
+		const preferred =
+			ranked.find((r) => this.#profiles.get(r.accountId)?.vaultUnlocked) ?? ranked[0];
+		if (preferred) this.#currentId = preferred.accountId;
+	}
+
 	activate(accountId: string): void {
 		this.#currentId = accountId;
 		broadcastAccountToStores(accountId);
@@ -324,6 +331,10 @@ class AuthStore {
 			deletion: me.deletion ?? null,
 			lifecycle: me.lifecycle ?? null
 		}));
+	}
+
+	vaultUnlockedFor(accountId: string): boolean {
+		return this.#profiles.get(accountId)?.vaultUnlocked ?? false;
 	}
 
 	deletionFor(accountId: string): DeletionStatus | null {
