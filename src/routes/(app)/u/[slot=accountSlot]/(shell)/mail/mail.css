@@ -77,6 +77,8 @@
 .mail-app .acct-btn { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 6px 8px; border: 1px solid transparent; border-radius: var(--radius-control); background: none; cursor: pointer; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
 .mail-app .acct-btn:hover { background: var(--paper-100); }
 .mail-app .acct-btn .av { flex: 0 0 auto; }
+.mail-app .av-wrap { position: relative; flex: 0 0 auto; display: flex; }
+.mail-app .acct-dot { position: absolute; top: -1px; right: -1px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger-500); border: 2px solid var(--bg-raised); }
 .mail-app .acct-tx { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; }
 .mail-app .acct-nm { font-size: 12.5px; font-weight: 550; color: var(--fg-strong); line-height: 1.25; letter-spacing: var(--track-snug); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .acct-em { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -121,6 +123,7 @@
 .mail-app .acct-row .ar-org { font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .acct-row .ar-cur { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-pill); padding: 3px 9px; }
 .mail-app .acct-row .ar-cur svg { width: 13px; height: 13px; }
+.mail-app .acct-row .ar-unread { margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--pine-50); background: var(--pine-600); border-radius: var(--radius-pill); padding: 2px 7px; font-variant-numeric: tabular-nums; }
 .mail-app .acct-row .ar-go { display: inline-flex; margin-left: auto; flex: 0 0 auto; color: var(--ink-400); }
 .mail-app .acct-row .ar-go svg { width: 15px; height: 15px; }
 .mail-app .acct-row:hover .ar-go { color: var(--pine-600); }

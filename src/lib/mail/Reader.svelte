@@ -294,6 +294,23 @@
 	let threadRefreshTick = $state(0);
 	let threadSeenTick = 0;
 
+	const currentThreadRootId = $derived(m?.threadRootId ?? m?.id ?? null);
+	const seenThreadTicks = new Map<string, number>();
+
+	$effect(() => {
+		const rootId = currentThreadRootId;
+		if (!rootId) return;
+		const tick = mailbox.threadTick(rootId);
+		const seen = seenThreadTicks.get(rootId);
+		if (seen === undefined) {
+			seenThreadTicks.set(rootId, tick);
+			return;
+		}
+		if (seen === tick) return;
+		seenThreadTicks.set(rootId, tick);
+		threadRefreshTick += 1;
+	});
+
 	let replyMode = $state<ReplyMode | null>(null);
 
 	function toggleReplyMode(next: ReplyMode) {
