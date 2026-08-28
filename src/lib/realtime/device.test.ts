@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { deviceId, localDeviceIds, noteLocalDevice, forgetLocalDevice } from './device';
+import { deviceId } from './device';
 
 describe('device id', () => {
 	beforeEach(() => {
@@ -24,15 +24,4 @@ describe('device id', () => {
 		expect(b).not.toBe(a);
 	});
 
-	it('registers itself as a local device', () => {
-		const id = deviceId();
-		expect(localDeviceIds().has(id)).toBe(true);
-	});
-
-	it('tracks noted and forgotten devices', () => {
-		noteLocalDevice('tab-x');
-		expect(localDeviceIds().has('tab-x')).toBe(true);
-		forgetLocalDevice('tab-x');
-		expect(localDeviceIds().has('tab-x')).toBe(false);
-	});
 });

@@ -2,9 +2,7 @@ import type { ConnectionState, RealtimeHint } from './types';
 
 export type ChannelMessage =
 	| { type: 'hint'; hint: RealtimeHint }
-	| { type: 'state'; accountId: string; state: ConnectionState }
-	| { type: 'device'; deviceId: string }
-	| { type: 'bye'; deviceId: string };
+	| { type: 'state'; accountId: string; state: ConnectionState };
 
 export interface RealtimeChannel {
 	post(msg: ChannelMessage): void;
