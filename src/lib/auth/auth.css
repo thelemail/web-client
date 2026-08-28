@@ -1833,3 +1833,113 @@
 		font-size: 20px;
 	}
 }
+
+.auth .acctpick {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.auth .apick-row {
+	display: flex;
+	align-items: center;
+	gap: 13px;
+	width: 100%;
+	text-align: left;
+	padding: 11px 13px;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--radius-control);
+	background: var(--paper-50);
+	box-shadow: var(--shadow-xs);
+	cursor: pointer;
+	transition:
+		background var(--dur),
+		border-color var(--dur);
+}
+.auth .apick-row:hover:not(:disabled) {
+	background: var(--pine-50);
+	border-color: var(--pine-300);
+}
+.auth .apick-row:focus-visible {
+	outline: 2px solid var(--pine-600);
+	outline-offset: 2px;
+}
+.auth .apick-row:disabled {
+	cursor: default;
+	opacity: 0.6;
+}
+.auth .apick-row .ap-tx {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+	flex: 1;
+	line-height: 1.4;
+}
+.auth .apick-row .ap-nm {
+	font-size: 13.5px;
+	font-weight: 600;
+	color: var(--fg-strong);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.auth .apick-row .ap-em {
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	color: var(--ink-600);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.auth .apick-row .ap-em:first-child {
+	font-size: 13px;
+	color: var(--fg-strong);
+}
+.auth .apick-row .ap-state {
+	font-size: 10.5px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--pine-700);
+	margin-top: 2px;
+}
+.auth .apick-row .ap-state.ap-locked {
+	color: var(--ink-500);
+}
+.auth .apick-row .ap-go {
+	flex: 0 0 auto;
+	display: inline-flex;
+	color: var(--fg-faint);
+}
+.auth .apick-more {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: 18px;
+	padding-top: 14px;
+	border-top: 1px solid var(--border);
+}
+.auth .apick-link {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 4px;
+	border-radius: var(--radius-control);
+	font-size: 13.5px;
+	font-weight: 600;
+	color: var(--pine-700);
+	transition: background var(--dur);
+}
+.auth .apick-link:hover {
+	background: var(--pine-50);
+}
+.auth .apick-link svg {
+	flex: 0 0 auto;
+}
+.auth .apick-note {
+	margin-top: 14px;
+	font-size: 12px;
+	color: var(--fg-faint);
+	line-height: 1.6;
+}
