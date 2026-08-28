@@ -309,6 +309,51 @@ describe('mailbox.applyRealtime', () => {
 		expect(mailbox.streamFor(INBOX_QUERY).msgs).toEqual([]);
 		expect(mailbox.pendingFor(INBOX_QUERY)).toBe(0);
 	});
+
+	it('bumps the thread tick for a hinted thread_id', async () => {
+		listMessages.mockResolvedValueOnce({ items: [], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX_QUERY);
+
+		expect(mailbox.threadTick('t1')).toBe(0);
+
+		getMessage.mockResolvedValueOnce(detail('m1'));
+		mailbox.applyRealtime({
+			accountId: 'acc-1',
+			kind: 'message.updated',
+			id: 'm1',
+			thread_id: 't1',
+			rev: 1
+		});
+		await flushAsync();
+
+		expect(mailbox.threadTick('t1')).toBe(1);
+
+		getMessage.mockResolvedValueOnce(detail('m1', { starred: true }));
+		mailbox.applyRealtime({
+			accountId: 'acc-1',
+			kind: 'message.updated',
+			id: 'm1',
+			thread_id: 't1',
+			rev: 2
+		});
+		await flushAsync();
+
+		expect(mailbox.threadTick('t1')).toBe(2);
+		expect(mailbox.threadTick('other-thread')).toBe(0);
+	});
+
+	it('does not bump the thread tick for a hint from a foreign account', async () => {
+		mailbox.applyRealtime({
+			accountId: 'acc-999',
+			kind: 'message.updated',
+			id: 'm1',
+			thread_id: 't1',
+			rev: 1
+		});
+		await Promise.resolve();
+
+		expect(mailbox.threadTick('t1')).toBe(0);
+	});
 });
 
 describe('mailbox.loadedQueries / refreshLoaded', () => {

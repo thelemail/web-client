@@ -228,6 +228,7 @@ class MailboxStore {
 	#revs = new Map<string, number>();
 	#pendingNew = $state(new Map<string, Message[]>());
 	#autoFlush = new Set<string>();
+	#threadTicks = $state(new Map<string, number>());
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -241,6 +242,7 @@ class MailboxStore {
 		this.#revs.clear();
 		this.#pendingNew = new Map();
 		this.#autoFlush.clear();
+		this.#threadTicks = new Map();
 	}
 
 	get counts(): MailboxCounts {
@@ -445,9 +447,18 @@ class MailboxStore {
 		}
 	}
 
+	threadTick(threadRootId: string): number {
+		return this.#threadTicks.get(threadRootId) ?? 0;
+	}
+
 	applyRealtime(hint: RealtimeHint): void {
 		if (hint.accountId !== this.#accountId) return;
 		if (!auth.canEnterApp) return;
+		if (hint.thread_id) {
+			const map = new Map(this.#threadTicks);
+			map.set(hint.thread_id, (map.get(hint.thread_id) ?? 0) + 1);
+			this.#threadTicks = map;
+		}
 		if (!hint.id) return;
 		if (hint.kind === 'message.deleted') {
 			this.#removeMessage(hint.id);

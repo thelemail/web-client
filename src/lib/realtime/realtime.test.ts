@@ -149,6 +149,19 @@ describe('realtime store', () => {
 		expect(connInstances[0].stop).toHaveBeenCalledTimes(1);
 	});
 
+	it('seeds unread counts for background accounts on connect, not the active one', async () => {
+		authState.accountId = 'acc-1';
+		keystoreState.accounts = [
+			{ accountId: 'acc-1', unlocked: true },
+			{ accountId: 'acc-2', unlocked: true }
+		];
+		realtime.start();
+		await vi.waitFor(() => expect(connInstances).toHaveLength(2));
+
+		expect(unreadRefresh).toHaveBeenCalledWith('acc-2');
+		expect(unreadRefresh).not.toHaveBeenCalledWith('acc-1');
+	});
+
 	it('does not open a duplicate connection for an already-connected account', async () => {
 		keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
 		realtime.start();

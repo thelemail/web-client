@@ -94,6 +94,7 @@ class RealtimeStore {
 			});
 			this.#connections.set(id, conn);
 			conn.start();
+			if (id !== auth.accountId) void unread.refresh(id);
 		}
 	}
 
