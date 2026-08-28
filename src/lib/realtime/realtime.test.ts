@@ -39,11 +39,11 @@ const leaderStop = vi.fn();
 vi.mock('./leader', () => ({
 	electLeader: (name: string, onLead: () => () => void) => {
 		electLeaderSpy(name);
-		const cleanup = onLead();
+		const cleanup = leaderState.isLeader ? onLead() : null;
 		return {
 			stop: () => {
 				leaderStop();
-				cleanup();
+				cleanup?.();
 			},
 			get isLeader() {
 				return leaderState.isLeader;
@@ -212,6 +212,22 @@ describe('realtime store', () => {
 
 		expect(applyHint).toHaveBeenCalledWith(hint);
 		expect(channelPost).toHaveBeenCalledWith({ type: 'hint', hint });
+	});
+
+	it('opens the broadcast channel even when not the leader, so followers can receive relayed hints', async () => {
+		const { openRealtimeChannel } = await import('./channel');
+		leaderState.isLeader = false;
+		keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+		realtime.start();
+
+		expect(openRealtimeChannel).toHaveBeenCalledTimes(1);
+		expect(connCtor).not.toHaveBeenCalled();
+
+		const onMessage = vi.mocked(openRealtimeChannel).mock.calls[0][0];
+		const hint = { accountId: 'acc-1', kind: 'message.created' as const, id: 'm1' };
+		onMessage({ type: 'hint', hint });
+
+		expect(applyHint).toHaveBeenCalledWith(hint);
 	});
 
 	it('applies a hint received from the broadcast channel', async () => {

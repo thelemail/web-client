@@ -27,14 +27,13 @@ class RealtimeStore {
 		this.#started = true;
 		this.#lastWakeAt = Date.now();
 
+		this.#channel = openRealtimeChannel((msg) => {
+			if (msg.type === 'hint') applyHint(msg.hint);
+		});
+
 		this.#leaderHandle = electLeader(LEADER_LOCK_NAME, () => {
-			this.#channel = openRealtimeChannel((msg) => {
-				if (msg.type === 'hint') applyHint(msg.hint);
-			});
 			void this.sync();
 			return () => {
-				this.#channel?.close();
-				this.#channel = null;
 				for (const conn of this.#connections.values()) conn.stop();
 				this.#connections.clear();
 				this.#states = new Map();
@@ -64,6 +63,8 @@ class RealtimeStore {
 		this.#unsubKeystore = null;
 		this.#leaderHandle?.stop();
 		this.#leaderHandle = null;
+		this.#channel?.close();
+		this.#channel = null;
 	}
 
 	async sync(): Promise<void> {
