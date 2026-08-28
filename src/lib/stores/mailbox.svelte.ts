@@ -10,14 +10,18 @@ import {
 	folderFromServer,
 	type LabelId,
 	type Message,
-	type RouteFolder
+	type RouteFolder,
+	type SortId
 } from '$lib/mail/data';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { bimiDomainFromPreview } from '$lib/mail/preview';
 import { initialsFor } from '$lib/mail/initials';
+import { queryMatches } from '$lib/mail/match';
 import type { MailboxCounts, MessageListItem, ThreadListItem } from '$lib/api/types';
 import { DEFAULT_QUERY, type Query } from '$lib/mail/url';
+import type { RealtimeHint } from '$lib/realtime/types';
 import { auth } from './auth.svelte';
+import { unread } from './unread.svelte';
 import { decodeWords } from 'postal-mime';
 
 interface Stream {
@@ -221,6 +225,11 @@ class MailboxStore {
 	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0 });
 	#countsPending: Promise<void> | null = null;
 
+	#revs = new Map<string, number>();
+	#pendingNew = $state(new Map<string, Message[]>());
+	#autoFlush = new Set<string>();
+	#threadTicks = $state(new Map<string, number>());
+
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
 		this.#accountId = accountId;
@@ -230,6 +239,10 @@ class MailboxStore {
 		this.#deepLinkPending.clear();
 		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0 };
 		this.#countsPending = null;
+		this.#revs.clear();
+		this.#pendingNew = new Map();
+		this.#autoFlush.clear();
+		this.#threadTicks = new Map();
 	}
 
 	get counts(): MailboxCounts {
@@ -246,6 +259,7 @@ class MailboxStore {
 				const next = await getMailboxCounts();
 				if (this.#accountId !== accountId) return;
 				this.#counts = next;
+				unread.set(accountId, next);
 			} catch {
 			} finally {
 				this.#countsPending = null;
@@ -333,6 +347,46 @@ class MailboxStore {
 		return null;
 	}
 
+	async #fetchDecrypted(id: string, accountId: string): Promise<{ msg: Message; locked: boolean } | null> {
+		try {
+			const detail = await getMessage(id);
+			const adapted: MessageListItem = {
+				id: detail.id,
+				ownerAccountId: detail.ownerAccountId,
+				direction: detail.direction,
+				source: detail.source,
+				storedAt: detail.storedAt,
+				bodySizeBytes: 0,
+				attachmentCount: detail.attachments.length,
+				totalAttachmentBytes: 0,
+				encryptedPreview: detail.encryptedPreview,
+				previewKeyFingerprint: detail.previewKeyFingerprint,
+				schemaVersion: detail.schemaVersion,
+				mailboxState: detail.mailboxState,
+				starred: detail.starred,
+				starredAt: detail.starredAt,
+				read: detail.read,
+				readAt: detail.readAt,
+				snoozedUntil: detail.snoozedUntil,
+				threadRootId: detail.threadRootId,
+				rsvpStatus: detail.rsvpStatus,
+				labels: detail.labels
+			};
+			let msg: Message;
+			let locked = false;
+			try {
+				msg = await decryptItem(accountId, adapted);
+			} catch (err) {
+				const code = err instanceof DecryptionError ? err.code : 'unknown';
+				locked = code === 'locked';
+				msg = fallbackRow(adapted, code);
+			}
+			return { msg, locked };
+		} catch {
+			return null;
+		}
+	}
+
 	async ensureMessage(id: string): Promise<Message | null> {
 		if (!auth.canEnterApp) return null;
 		const accountId = auth.accountId;
@@ -343,47 +397,146 @@ class MailboxStore {
 		if (pending) return pending;
 		const run = (async () => {
 			try {
-				const detail = await getMessage(id);
-				const adapted: MessageListItem = {
-					id: detail.id,
-					ownerAccountId: detail.ownerAccountId,
-					direction: detail.direction,
-					source: detail.source,
-					storedAt: detail.storedAt,
-					bodySizeBytes: 0,
-					attachmentCount: detail.attachments.length,
-					totalAttachmentBytes: 0,
-					encryptedPreview: detail.encryptedPreview,
-					previewKeyFingerprint: detail.previewKeyFingerprint,
-					schemaVersion: detail.schemaVersion,
-					mailboxState: detail.mailboxState,
-					starred: detail.starred,
-					starredAt: detail.starredAt,
-					read: detail.read,
-					readAt: detail.readAt,
-					snoozedUntil: detail.snoozedUntil,
-					threadRootId: detail.threadRootId,
-					rsvpStatus: detail.rsvpStatus,
-					labels: detail.labels
-				};
-				let msg: Message;
-				try {
-					msg = await decryptItem(accountId, adapted);
-				} catch (err) {
-					const code = err instanceof DecryptionError ? err.code : 'unknown';
-					msg = fallbackRow(adapted, code);
-				}
+				const result = await this.#fetchDecrypted(id, accountId);
+				if (!result) return null;
 				if (this.#accountId !== accountId) return null;
-				this.pin(msg);
-				return msg;
-			} catch {
-				return null;
+				this.pin(result.msg);
+				return result.msg;
 			} finally {
 				this.#deepLinkPending.delete(id);
 			}
 		})();
 		this.#deepLinkPending.set(id, run);
 		return run;
+	}
+
+	loadedQueries(): Query[] {
+		return [...this.#streams.values()].map((s) => s.query);
+	}
+
+	async refreshLoaded(): Promise<void> {
+		await this.refresh(this.loadedQueries());
+	}
+
+	pendingFor(query: Query): number {
+		return this.#pendingNew.get(streamKey(query))?.length ?? 0;
+	}
+
+	flushPending(query: Query): void {
+		const key = streamKey(query);
+		const buffered = this.#pendingNew.get(key);
+		if (!buffered || buffered.length === 0) return;
+		const stream = this.#streams.get(key);
+		if (stream) {
+			const bufferedIds = new Set(buffered.map((m) => m.id));
+			const items = [...buffered, ...stream.items.filter((m) => !bufferedIds.has(m.id))];
+			this.#setStream(key, { ...stream, items });
+		}
+		const map = new Map(this.#pendingNew);
+		map.delete(key);
+		this.#pendingNew = map;
+	}
+
+	setAutoFlush(query: Query, on: boolean): void {
+		const key = streamKey(query);
+		if (on) {
+			this.#autoFlush.add(key);
+			this.flushPending(query);
+		} else {
+			this.#autoFlush.delete(key);
+		}
+	}
+
+	threadTick(threadRootId: string): number {
+		return this.#threadTicks.get(threadRootId) ?? 0;
+	}
+
+	applyRealtime(hint: RealtimeHint): void {
+		if (hint.accountId !== this.#accountId) return;
+		if (!auth.canEnterApp) return;
+		if (hint.thread_id) {
+			const map = new Map(this.#threadTicks);
+			map.set(hint.thread_id, (map.get(hint.thread_id) ?? 0) + 1);
+			this.#threadTicks = map;
+		}
+		if (!hint.id) return;
+		if (hint.kind === 'message.deleted') {
+			this.#removeMessage(hint.id);
+			return;
+		}
+		if (hint.kind !== 'message.created' && hint.kind !== 'message.updated') return;
+		if (hint.rev !== undefined) {
+			const prev = this.#revs.get(hint.id) ?? -1;
+			if (prev >= hint.rev) return;
+			this.#revs.set(hint.id, hint.rev);
+		}
+		const accountId = this.#accountId;
+		if (!accountId) return;
+		void (async () => {
+			const result = await this.#fetchDecrypted(hint.id!, accountId);
+			if (!result) return;
+			if (this.#accountId !== accountId) return;
+			if (result.locked) return;
+			this.#placeMessage(result.msg);
+		})();
+	}
+
+	#removeMessage(id: string): void {
+		const map = new Map(this.#streams);
+		let changed = false;
+		for (const [key, stream] of map) {
+			const idx = stream.items.findIndex((m) => m.id === id);
+			if (idx < 0) continue;
+			const items = stream.items.slice();
+			items.splice(idx, 1);
+			map.set(key, { ...stream, items });
+			changed = true;
+		}
+		if (changed) this.#streams = map;
+		if (this.pinned?.id === id) this.pinned = null;
+	}
+
+	#placeMessage(msg: Message): void {
+		const map = new Map(this.#streams);
+		const pendingMap = new Map(this.#pendingNew);
+		let pendingChanged = false;
+		for (const [key, stream] of map) {
+			const existingIdx = stream.items.findIndex(
+				(m) => m.id === msg.id || (!!msg.threadRootId && m.threadRootId === msg.threadRootId)
+			);
+			if (!queryMatches(stream.query, msg)) {
+				if (existingIdx >= 0) {
+					const items = stream.items.slice();
+					items.splice(existingIdx, 1);
+					map.set(key, { ...stream, items });
+				}
+				continue;
+			}
+			if (existingIdx >= 0) {
+				const items = stream.items.slice();
+				items[existingIdx] = msg;
+				map.set(key, { ...stream, items });
+				continue;
+			}
+			if (stream.query.sort === 'oldest') {
+				if (!stream.exhausted) continue;
+				map.set(key, { ...stream, items: [...stream.items, msg] });
+				continue;
+			}
+			if (this.#autoFlush.has(key)) {
+				map.set(key, { ...stream, items: [msg, ...stream.items] });
+			} else {
+				const buffered = pendingMap.get(key) ?? [];
+				pendingMap.set(
+					key,
+					[msg, ...buffered.filter((b) => b.id !== msg.id)]
+				);
+				pendingChanged = true;
+			}
+		}
+		this.#streams = map;
+		if (pendingChanged) this.#pendingNew = pendingMap;
+		if (this.pinned?.id === msg.id) this.pinned = msg;
 	}
 
 	#setStream(key: string, next: Stream) {
@@ -406,6 +559,16 @@ class MailboxStore {
 		return out;
 	}
 
+	#reconcileFirstPage(current: Message[], page: Message[], sort: SortId): Message[] {
+		if (page.length === 0) return page;
+		const ids = new Set(page.map((m) => m.id));
+		const cutoff = page[page.length - 1].epoch;
+		const beyond = current.filter(
+			(m) => !ids.has(m.id) && (sort === 'oldest' ? m.epoch > cutoff : m.epoch < cutoff)
+		);
+		return [...page, ...beyond];
+	}
+
 	async #loadStream(query: Query, more: boolean, force = false): Promise<void> {
 		if (!auth.canEnterApp) return;
 		const accountId = auth.accountId;
@@ -415,7 +578,7 @@ class MailboxStore {
 		if (!threadOpts && !listOpts) return;
 
 		const key = streamKey(query);
-		const pendingKey = key + (more ? '|+' : '');
+		const pendingKey = key + (more ? '|+' : '') + (force ? '|f' : '');
 		const existingPending = this.#pending.get(pendingKey);
 		if (existingPending) return existingPending;
 
@@ -460,10 +623,9 @@ class MailboxStore {
 				}
 				if (this.#accountId !== accountId) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
-				const merged = this.#mergeMessages(
-					more ? current.items : decrypted,
-					more ? decrypted : []
-				);
+				const merged = more
+					? this.#mergeMessages(current.items, decrypted)
+					: this.#reconcileFirstPage(current.items, decrypted, query.sort);
 				this.#setStream(key, {
 					...current,
 					items: merged,

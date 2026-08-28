@@ -80,8 +80,8 @@ export function listThreads(opts: ListThreadsOptions = {}): Promise<ThreadListRe
 	return apiFetch<ThreadListResponse>(qs ? `/v1/threads?${qs}` : '/v1/threads');
 }
 
-export function getMailboxCounts(): Promise<MailboxCounts> {
-	return apiFetch<MailboxCounts>('/v1/messages/counts');
+export function getMailboxCounts(accountId?: string): Promise<MailboxCounts> {
+	return apiFetch<MailboxCounts>('/v1/messages/counts', { accountId });
 }
 
 export function getMessage(messageId: string): Promise<MessageDetail> {

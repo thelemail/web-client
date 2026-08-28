@@ -24,6 +24,7 @@
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { theme } from '$lib/stores/theme.svelte';
 	import { twofactor } from '$lib/stores/twofactor.svelte';
+	import { unread } from '$lib/stores/unread.svelte';
 
 	interface AccountEntry {
 		id: string;
@@ -88,6 +89,14 @@
 	);
 	const activeAccount = $derived(switcherAccounts.find((a) => a.id === auth.accountId) ?? null);
 
+	function unreadCountFor(accountId: string): number {
+		return unread.countsFor(accountId)?.inbox ?? 0;
+	}
+
+	const hasBackgroundUnread = $derived(
+		switcherAccounts.some((a) => a.id !== auth.accountId && unreadCountFor(a.id) > 0)
+	);
+
 	function toggleMenu() {
 		open = !open;
 		if (open) {
@@ -147,7 +156,10 @@
 
 <div class="usr" bind:this={menuRef}>
 	<button class="usr-btn" onclick={toggleMenu}>
-		<Avatar {initials} src={auth.avatarUrl} size={30} bg="var(--pine-700)" fg="#EEF2EA" />
+		<span class="av-wrap">
+			<Avatar {initials} src={auth.avatarUrl} size={30} bg="var(--pine-700)" fg="#EEF2EA" />
+			{#if hasBackgroundUnread}<span class="acct-dot" aria-hidden="true"></span>{/if}
+		</span>
 		<span class="uchev"><ChevronDown size={15} /></span>
 	</button>
 
@@ -169,6 +181,11 @@
 					{#if isCur}
 						<span class="ar-cur"><Check size={13} />Current</span>
 					{:else}
+						{#if unreadCountFor(a.id) > 0}
+							<span class="ar-unread"
+								>{unreadCountFor(a.id) > 99 ? '99+' : unreadCountFor(a.id)}</span
+							>
+						{/if}
 						<span class="ar-go"><ArrowRight size={15} /></span>
 					{/if}
 				</button>
