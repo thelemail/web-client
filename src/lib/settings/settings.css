@@ -539,9 +539,13 @@
 .cer-scrim .cer-ack.danger { background: var(--danger-100); border-color: transparent; color: var(--danger-700); }
 .cer-scrim .cer-ack.danger input { accent-color: var(--danger-700); }
 
+.settings-app .field,
 .cer-scrim .field { display: flex; flex-direction: column; gap: 7px; }
+.settings-app .field label,
+.settings-app .field .field-lbl,
 .cer-scrim .field label,
 .cer-scrim .field .field-lbl { font-size: 12.5px; font-weight: 600; color: var(--fg-strong); }
+.settings-app .field .tin,
 .cer-scrim .field .tin { width: 100%; }
 .cer-scrim .otp { letter-spacing: .5em; text-align: center; font-size: 18px; }
 
@@ -703,20 +707,32 @@
 .settings-app .dns-recmeta .copy-btn { margin-left: auto; }
 .settings-app .dns-valbox { margin-top: 7px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; word-break: break-all; }
 
+.settings-app .alias-compose,
 .cer-scrim .alias-compose { display: flex; align-items: center; gap: 8px; }
+.settings-app .alias-compose .tin,
 .cer-scrim .alias-compose .tin { flex: 1; min-width: 0; }
+.settings-app .alias-compose .sel,
 .cer-scrim .alias-compose .sel { flex: 0 0 auto; }
+.settings-app .ac-at,
 .cer-scrim .ac-at { font-family: var(--font-mono); color: var(--fg-muted); font-size: 14px; }
 .cer-scrim .ac-fixed { font-family: var(--font-mono); font-size: 13px; color: var(--ink-600); background: var(--paper-100); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 9px 12px; white-space: nowrap; }
 
+.settings-app .input-prefix,
 .cer-scrim .input-prefix { position: relative; display: flex; align-items: center; }
+.settings-app .input-prefix .ip-ic,
 .cer-scrim .input-prefix .ip-ic { position: absolute; left: 11px; color: var(--ink-400); display: flex; pointer-events: none; }
+.settings-app .input-prefix .tin,
 .cer-scrim .input-prefix .tin { padding-left: 34px; }
 
+.settings-app .field-hint,
 .cer-scrim .field-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-muted); line-height: 1.5; }
+.settings-app .field-hint svg,
 .cer-scrim .field-hint svg { width: 13px; height: 13px; flex: 0 0 auto; color: var(--ink-400); }
+.settings-app .field-hint .mono,
 .cer-scrim .field-hint .mono { font-family: var(--font-mono); color: var(--ink-700); }
+.settings-app .field-hint.bad,
 .cer-scrim .field-hint.bad { color: var(--danger-700); }
+.settings-app .field-hint.bad svg,
 .cer-scrim .field-hint.bad svg { color: var(--danger-700); }
 
 .cer-scrim .seat-callout { display: flex; align-items: flex-start; gap: 11px; padding: 13px 15px; border-radius: var(--radius-control); background: var(--paper-100); border: 1px solid var(--border-strong); font-size: 12.5px; line-height: 1.5; color: var(--fg); }
@@ -961,12 +977,13 @@
 .settings-app .dw-addrs { display: flex; flex-direction: column; gap: 7px; }
 .settings-app .dw-addr { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); font-size: 13px; }
 .settings-app .dw-addr .mono { font-family: var(--font-mono); font-size: 12.5px; }
-.settings-app .dw-addr-form { display: flex; align-items: stretch; gap: 8px; }
-.settings-app .dw-addr-form .tin { flex: 1; min-width: 0; }
-.settings-app .dw-at { display: flex; align-items: center; font-family: var(--font-mono); font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+.settings-app .dw-addr-form { display: flex; flex-direction: column; gap: 14px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--paper-50); }
+.settings-app .dw-addr-form .dw-addr-acts { display: flex; justify-content: flex-end; }
+.settings-app .dw-ac-domain { font-family: var(--font-mono); font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
 
 .settings-app .dw-ladder { display: flex; align-items: center; gap: 5px; }
 .settings-app .dw-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--paper-300, var(--paper-200)); }
 .settings-app .dw-pip.on { background: var(--success-500); }
 .settings-app .dw-pip.fail { background: var(--warning-700); }
 .settings-app .dw-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.settings-app .dw-note.ok { background: var(--success-100); color: var(--success-700); }

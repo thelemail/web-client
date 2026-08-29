@@ -12,12 +12,10 @@
 
 	import Card from '$lib/settings/Card.svelte';
 	import Badge from '$lib/settings/Badge.svelte';
-	import CopyBtn from '$lib/settings/CopyBtn.svelte';
-	import DnsChip from '$lib/settings/DnsChip.svelte';
 	import SecHead from '$lib/settings/SecHead.svelte';
+	import RecordList from '$lib/settings/domains/RecordList.svelte';
 	import {
 		DOMAIN_STEPS,
-		STEP_LABELS,
 		inboundLive,
 		resumeStep,
 		statusKind,
@@ -27,7 +25,7 @@
 	} from '$lib/settings/domains/steps';
 	import { customDomains as store } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import type { CustomDomain, DNSRecordStatus } from '$lib/api/customDomains';
+	import type { CustomDomain } from '$lib/api/customDomains';
 
 	const POLL_MS = 60000;
 
@@ -80,38 +78,6 @@
 			open.delete(id);
 		} finally {
 			busy.delete(id);
-		}
-	}
-
-	function chipKind(s: DNSRecordStatus): 'ok' | 'warn' | 'fail' | 'pending' {
-		switch (s) {
-			case 'ok':
-				return 'ok';
-			case 'missing':
-				return 'pending';
-			case 'mismatch':
-				return 'fail';
-			default:
-				return 'pending';
-		}
-	}
-
-	function recordLabel(kind: string): string {
-		switch (kind) {
-			case 'ownership':
-				return 'Ownership verification';
-			case 'mx':
-				return 'Inbound mail (MX)';
-			case 'dkim':
-				return 'DKIM signing';
-			case 'spf':
-				return 'SPF';
-			case 'dmarc':
-				return 'DMARC';
-			case 'wkd':
-				return 'Key discovery (WKD)';
-			default:
-				return kind;
 		}
 	}
 
@@ -199,47 +165,11 @@
 							{#if records.length === 0}
 								<div class="cd-empty subtle">Loading DNS records…</div>
 							{:else}
-								<table class="cd-tbl">
-									<thead>
-										<tr>
-											<th>Record</th>
-											<th>Type</th>
-											<th>Host</th>
-											<th>Value</th>
-											<th>State</th>
-										</tr>
-									</thead>
-									<tbody>
-										{#each records as r (r.kind + r.host)}
-											<tr>
-												<td>
-													{recordLabel(r.kind)}
-													{#if !r.required}
-														<span class="cd-opt">optional</span>
-													{/if}
-												</td>
-												<td class="mono">{r.type}</td>
-												<td class="mono cd-trunc"><code>{r.host}</code></td>
-												<td class="cd-val">
-													<code>{r.value}</code>
-													<CopyBtn text={r.value} small />
-												</td>
-												<td><DnsChip kind={chipKind(r.status)} /></td>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
+								<RecordList {records} />
 							{/if}
-							<div class="cd-steps">
-								{#each LADDER as s (s)}
-									<a class="cd-step" class:done={stepComplete(d, s)} href={setupHref(d, s)}>
-										{STEP_LABELS[s]}
-									</a>
-								{/each}
-							</div>
 							<div class="cd-actions">
 								{#if !inboundLive(d)}
-									<a class="btn btn-primary" href={setupHref(d)}>
+									<a class="btn btn-secondary" href={setupHref(d)}>
 										Continue setup<ArrowRight size={15} />
 									</a>
 								{/if}
@@ -268,8 +198,8 @@
 		</div>
 	{/if}
 
-	<div class="cd-add">
-		<a class="btn btn-secondary" href={`${base}/new`}><Plus size={15} />Add a domain</a>
+	<div class="cd-foot">
+		<a class="btn btn-primary" href={`${base}/new`}><Plus size={15} />Add a domain</a>
 	</div>
 
 	{#if store.error}
@@ -315,78 +245,21 @@
 		color: var(--ink-2, rgba(0, 0, 0, 0.5));
 	}
 	.cd-body {
-		padding: 4px 14px 14px;
+		padding: 14px;
 		border-top: 1px solid var(--line, rgba(0, 0, 0, 0.06));
-	}
-	.cd-tbl {
-		width: 100%;
-		border-collapse: collapse;
-		margin: 10px 0 12px;
-		font-size: 13px;
-	}
-	.cd-tbl th,
-	.cd-tbl td {
-		text-align: left;
-		padding: 8px 8px;
-		border-bottom: 1px solid var(--line, rgba(0, 0, 0, 0.06));
-		vertical-align: top;
-	}
-	.cd-tbl th {
-		font-weight: 500;
-		color: var(--ink-2, rgba(0, 0, 0, 0.55));
-		font-size: 12px;
-	}
-	.cd-trunc {
-		max-width: 260px;
-		overflow-wrap: anywhere;
-	}
-	.cd-val {
-		display: flex;
-		align-items: flex-start;
-		gap: 8px;
-		max-width: 360px;
-		overflow-wrap: anywhere;
-	}
-	.cd-val code {
-		flex: 1;
-		font-size: 12px;
-	}
-	.cd-opt {
-		margin-left: 6px;
-		font-size: 11px;
-		color: var(--ink-2, rgba(0, 0, 0, 0.5));
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
 	}
 	.cd-actions {
 		display: flex;
 		gap: 8px;
 		justify-content: flex-end;
 		align-items: center;
+		margin-top: 14px;
 	}
-	.cd-steps {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-		margin: 0 0 12px;
-	}
-	.cd-step {
-		font-size: 12px;
-		padding: 3px 9px;
-		border: 1px solid var(--border-strong, rgba(0, 0, 0, 0.12));
-		border-radius: 999px;
-		color: var(--ink-2, rgba(0, 0, 0, 0.6));
-		text-decoration: none;
-	}
-	.cd-step.done {
-		border-color: transparent;
-		background: var(--success-100, rgba(60, 140, 90, 0.1));
-		color: var(--success-700, #2f6b46);
-	}
-	.cd-add {
+	.cd-foot {
 		display: flex;
 		justify-content: flex-start;
-		padding: 12px 14px 0;
+		padding: 14px 18px;
+		border-top: 1px solid var(--border);
 	}
 	.cd-empty {
 		padding: 14px;

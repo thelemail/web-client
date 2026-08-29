@@ -33,16 +33,16 @@
 		domain: CustomDomain;
 		records: RequiredDNSRecord[];
 		step: DomainStep;
+		listHref: string;
 		onStep: (s: DomainStep) => void;
 	}
 
-	let { domain, records, step, onStep }: Props = $props();
+	let { domain, records, step, listHref, onStep }: Props = $props();
 
 	const POLL_DELAYS_MS = [2000, 3000, 5000, 10000, 15000, 30000];
 	const HEARTBEAT_MS = 60000;
 
 	let checking = $state(false);
-	let checked = $state(false);
 	let error = $state<string | null>(null);
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let attempts = 0;
@@ -54,9 +54,6 @@
 
 	const phase = $derived(STEP_PHASE[step]);
 	const phaseRecords = $derived(phase ? records.filter((r) => r.phase === phase) : []);
-	const phaseSettled = $derived(
-		phaseRecords.length > 0 && phaseRecords.every((r) => !r.required || r.status === 'ok')
-	);
 	const manage = $derived(workspaces.canManage());
 	const domainAddresses = $derived(addresses.items.filter((a) => a.customDomainId === domain.id));
 	const localOk = $derived(/^[a-z0-9]([a-z0-9._+-]*[a-z0-9])?$/i.test(local.trim()));
@@ -79,7 +76,6 @@
 			error = err instanceof Error ? err.message : 'Could not check DNS';
 		} finally {
 			checking = false;
-			checked = true;
 		}
 	}
 
@@ -109,7 +105,6 @@
 		const s = step;
 		stop();
 		attempts = 0;
-		checked = false;
 		if (!STEP_PHASE[s]) return;
 
 		let cancelled = false;
@@ -154,7 +149,7 @@
 			</p>
 			<RecordList records={phaseRecords} />
 			{#if ownershipProven(domain)}
-				<div class="dw-note">
+				<div class="dw-note ok">
 					<CircleCheck size={15} /><span>Ownership confirmed. Nothing else to do here.</span>
 				</div>
 			{:else}
@@ -173,10 +168,18 @@
 			</p>
 			<RecordList records={phaseRecords} />
 			{#if canSend(domain)}
-				<div class="dw-note">
+				<div class="dw-note ok">
 					<CircleCheck size={15} /><span
 						>Sending is set up. You can now create addresses on this domain.</span
 					>
+				</div>
+			{:else}
+				<div class="dw-note">
+					<Clock size={15} />
+					<span>
+						DNS usually propagates within a few minutes, sometimes a few hours. You can close this
+						page. We keep checking, and the domain moves on by itself.
+					</span>
 				</div>
 			{/if}
 		{:else if step === 'recipients'}
@@ -200,27 +203,49 @@
 				</div>
 			{/if}
 			<div class="dw-addr-form">
-				<input
-					class="tin mono"
-					bind:value={local}
-					placeholder="you"
-					autocomplete="off"
-					aria-label="Local part"
-				/>
-				<span class="dw-at">@{domain.domain}</span>
-				<input class="tin" bind:value={displayName} placeholder="Display name" autocomplete="off" />
-				<button
-					type="button"
-					class="btn btn-secondary"
-					disabled={!localOk || addingAddress || !manage}
-					onclick={addAddress}
-				>
-					<Plus size={14} />{addingAddress ? 'Adding…' : 'Add'}
-				</button>
+				<div class="field">
+					<label for="dw-local">Address</label>
+					<div class="alias-compose">
+						<input
+							id="dw-local"
+							class="tin mono"
+							bind:value={local}
+							placeholder="hello"
+							autocomplete="off"
+						/>
+						<span class="dw-ac-domain">@{domain.domain}</span>
+					</div>
+					{#if local.length > 0 && !localOk}
+						<div class="field-hint bad">
+							<CircleAlert size={13} />Use letters, numbers, dots, plus, underscore, or hyphens.
+						</div>
+					{/if}
+				</div>
+				<div class="field">
+					<label for="dw-display">Display name</label>
+					<input
+						id="dw-display"
+						class="tin"
+						bind:value={displayName}
+						maxlength="120"
+						placeholder="e.g. Acme Lab"
+						autocomplete="off"
+					/>
+				</div>
+				{#if addressError}
+					<div class="field-hint bad"><CircleAlert size={13} />{addressError}</div>
+				{/if}
+				<div class="dw-addr-acts">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						disabled={!localOk || addingAddress || !manage}
+						onclick={addAddress}
+					>
+						<Plus size={14} />{addingAddress ? 'Adding…' : 'Add address'}
+					</button>
+				</div>
 			</div>
-			{#if addressError}
-				<div class="dw-note bad"><CircleAlert size={15} /><span>{addressError}</span></div>
-			{/if}
 			<div class="dw-note">
 				<Info size={15} />
 				<span>
@@ -247,7 +272,17 @@
 			{/if}
 			<RecordList records={phaseRecords} />
 			{#if domain.mxVerifiedAt}
-				<div class="dw-note"><CircleCheck size={15} /><span>Mail is routing to Thelemail.</span></div>
+				<div class="dw-note ok">
+					<CircleCheck size={15} /><span>Mail is routing to Thelemail.</span>
+				</div>
+			{:else}
+				<div class="dw-note">
+					<Clock size={15} />
+					<span>
+						DNS usually propagates within a few minutes, sometimes a few hours. You can close this
+						page. We keep checking, and the domain moves on by itself.
+					</span>
+				</div>
 			{/if}
 		{:else}
 			<p class="dw-lede">
@@ -265,12 +300,6 @@
 		{:else if domain.lastError && step !== 'done'}
 			<div class="dw-note warn"><CircleAlert size={15} /><span>{domain.lastError}</span></div>
 		{/if}
-		{#if phase && checked && !phaseSettled && !checking}
-			<div class="dw-note">
-				<Clock size={15} />
-				<span>Not visible in DNS yet. We keep checking in the background.</span>
-			</div>
-		{/if}
 	</div>
 
 	<div class="dw-foot">
@@ -285,7 +314,9 @@
 				<RefreshCw size={14} />{checking ? 'Checking…' : 'Check now'}
 			</button>
 		{/if}
-		{#if step !== 'done'}
+		{#if step === 'done'}
+			<a class="btn btn-primary" href={listHref}>All domains<ArrowRight size={15} /></a>
+		{:else}
 			<button type="button" class="btn btn-primary" onclick={() => onStep(nextStep(step))}>
 				Continue<ArrowRight size={15} />
 			</button>

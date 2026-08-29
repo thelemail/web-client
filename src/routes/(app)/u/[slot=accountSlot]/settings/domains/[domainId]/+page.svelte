@@ -61,7 +61,7 @@
 {:else if !domain}
 	<div class="dw-note"><span>Loading domain…</span></div>
 {:else}
-	<DomainWizard {domain} {records} {step} onStep={select} />
+	<DomainWizard {domain} {records} {step} listHref={base} onStep={select} />
 {/if}
 
 <style>
