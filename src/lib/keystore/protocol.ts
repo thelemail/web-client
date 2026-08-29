@@ -1,3 +1,5 @@
+import type { DecryptedAttachmentHeader } from '$lib/mail/attframe';
+
 export interface AccountStatus {
 	accountId: string;
 	email: string;
@@ -49,6 +51,31 @@ export type DecryptResponse =
 	| { ok: true; plaintext: string; signature?: SignatureVerdict }
 	| { ok: true; plaintextBinary: Uint8Array; signature?: SignatureVerdict }
 	| { ok: false; code: 'locked' | 'invalid_ciphertext' | 'no_matching_key' | 'unknown' };
+
+export type AttachmentFailureCode =
+	| 'locked'
+	| 'invalid_ciphertext'
+	| 'no_matching_key'
+	| 'network'
+	| 'unknown';
+
+export interface AttachmentHeaderArgs extends AccountScopedArgs {
+	url: string;
+	keyFingerprintHex?: string;
+}
+
+export type AttachmentHeaderResponse =
+	| { ok: true; header: DecryptedAttachmentHeader }
+	| { ok: false; code: AttachmentFailureCode };
+
+export interface AttachmentBytesArgs extends AccountScopedArgs {
+	url: string;
+	keyFingerprintHex?: string;
+}
+
+export type AttachmentBytesResponse =
+	| { ok: true; header: DecryptedAttachmentHeader; payload: Blob }
+	| { ok: false; code: AttachmentFailureCode };
 
 export interface GetPublicKeyArgs extends AccountScopedArgs {
 	aliasId?: string;

@@ -355,7 +355,7 @@
 		for (const a of detail.attachments ?? []) {
 			if (a.isInline) continue;
 			try {
-				files.push(await restoreAttachmentFile(accountId, { url: a.pointer.url }));
+				files.push(await restoreAttachmentFile(accountId, a.pointer));
 			} catch {
 				failed = true;
 			}

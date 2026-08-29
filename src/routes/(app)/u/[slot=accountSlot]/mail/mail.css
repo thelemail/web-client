@@ -375,6 +375,18 @@
 .mail-app .att-card .sz { font-size: 10.5px; color: var(--fg-faint); font-family: var(--font-mono); margin-top: 1px; }
 .mail-app .att-card .dl { margin-left: auto; color: var(--ink-500); background: none; border: none; display: flex; padding: 7px; border-radius: var(--radius-sm); }
 .mail-app .att-card .dl:hover { background: var(--paper-100); color: var(--ink-700); }
+.mail-app .att-card .dl:disabled { opacity: .45; cursor: default; }
+.mail-app .att-card .dl:disabled:hover { background: none; color: var(--ink-500); }
+.mail-app .att-card .dl.busy svg { animation: att-spin 1s linear infinite; }
+.mail-app .att-card.err { border-color: var(--danger-100); background: var(--danger-50, #fff2f0); }
+.mail-app .att-card.err .nm { color: var(--danger-700); font-weight: 500; }
+.mail-app .att-card.err .ic { color: var(--danger-500); border-color: var(--danger-100); }
+.mail-app .att-card.err .dl { color: var(--danger-600, #8E2F26); }
+.mail-app .att-card .nm-skel, .mail-app .att-card .sz-skel { border-radius: 3px; background: var(--paper-100); animation: att-pulse 1.4s var(--ease) infinite; }
+.mail-app .att-card .nm-skel { width: 124px; height: 11px; }
+.mail-app .att-card .sz-skel { width: 52px; height: 9px; margin-top: 5px; }
+@keyframes att-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes att-spin { to { transform: rotate(360deg); } }
 
 .mail-app .cal-card { display: flex; gap: 13px; margin: 0 0 14px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--paper-0), var(--paper-50)); box-shadow: var(--shadow-xs); }
 .mail-app .cal-ic { width: 38px; height: 38px; border-radius: var(--radius-md); background: var(--brass-100); color: var(--brass-700); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }

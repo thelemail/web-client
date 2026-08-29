@@ -1,5 +1,9 @@
 import { browser } from '$app/environment';
 import type {
+	AttachmentBytesArgs,
+	AttachmentBytesResponse,
+	AttachmentHeaderArgs,
+	AttachmentHeaderResponse,
 	Broadcast,
 	ClearArgs,
 	DecryptArgs,
@@ -93,9 +97,18 @@ import type {
 
 const KEYSTORE_SINGLETON = Symbol.for('thelemail.keystore.singleton');
 
+const persistentListeners = new Set<(b: Broadcast) => void>();
+
+const ATTACHMENT_HEADER_TIMEOUT_MS = 30_000;
+const ATTACHMENT_BYTES_TIMEOUT_MS = 180_000;
+
+const WORKER_UNAVAILABLE = 'keystore worker unavailable';
+
 interface PendingRequest {
+	cmd: string;
 	resolve: (v: unknown) => void;
 	reject: (e: Error) => void;
+	timer?: ReturnType<typeof setTimeout>;
 }
 
 interface KeystoreSingleton {
@@ -106,6 +119,21 @@ interface KeystoreSingleton {
 
 interface GlobalShape {
 	[KEYSTORE_SINGLETON]?: KeystoreSingleton;
+}
+
+function settle(pending: Map<string, PendingRequest>, id: string): PendingRequest | undefined {
+	const p = pending.get(id);
+	if (!p) return undefined;
+	pending.delete(id);
+	if (p.timer !== undefined) clearTimeout(p.timer);
+	return p;
+}
+
+function teardown(singleton: KeystoreSingleton, reason: string) {
+	const g = globalThis as GlobalShape;
+	if (g[KEYSTORE_SINGLETON] === singleton) delete g[KEYSTORE_SINGLETON];
+	const entries = [...singleton.pending.keys()];
+	for (const id of entries) settle(singleton.pending, id)?.reject(new Error(reason));
 }
 
 function getSingleton(): KeystoreSingleton {
@@ -121,15 +149,14 @@ function getSingleton(): KeystoreSingleton {
 	});
 	const port = worker.port;
 	const pending = new Map<string, PendingRequest>();
-	const listeners = new Set<(b: Broadcast) => void>();
+	const listeners = persistentListeners;
 
 	port.onmessage = (ev: MessageEvent) => {
 		const data = ev.data;
 		if (!data || typeof data !== 'object') return;
 		if (data.type === 'response') {
-			const p = pending.get(data.id);
+			const p = settle(pending, data.id);
 			if (!p) return;
-			pending.delete(data.id);
 			if (data.error) {
 				p.reject(new Error(data.error));
 			} else {
@@ -149,15 +176,23 @@ function getSingleton(): KeystoreSingleton {
 	port.start();
 
 	const singleton: KeystoreSingleton = { port, pending, listeners };
+	worker.onerror = () => teardown(singleton, WORKER_UNAVAILABLE);
+	port.onmessageerror = () => teardown(singleton, WORKER_UNAVAILABLE);
 	g[KEYSTORE_SINGLETON] = singleton;
 	return singleton;
 }
 
-function call<T>(cmd: string, args?: unknown): Promise<T> {
+function call<T>(cmd: string, args?: unknown, timeoutMs?: number): Promise<T> {
 	const s = getSingleton();
 	const id = crypto.randomUUID();
 	return new Promise<T>((resolve, reject) => {
-		s.pending.set(id, { resolve: resolve as (v: unknown) => void, reject });
+		const entry: PendingRequest = { cmd, resolve: resolve as (v: unknown) => void, reject };
+		if (timeoutMs !== undefined) {
+			entry.timer = setTimeout(() => {
+				settle(s.pending, id)?.reject(new Error(`keystore ${cmd} timed out`));
+			}, timeoutMs);
+		}
+		s.pending.set(id, entry);
 		s.port.postMessage({ id, cmd, args });
 	});
 }
@@ -252,6 +287,10 @@ export const keystore = {
 		call<RestoreResponse>('tryRestoreFromPersistent', args),
 	disablePersistent: (args: DisablePersistentArgs) => call<void>('disablePersistent', args),
 	decrypt: (args: DecryptArgs) => call<DecryptResponse>('decrypt', args),
+	attachmentHeader: (args: AttachmentHeaderArgs) =>
+		call<AttachmentHeaderResponse>('attachmentHeader', args, ATTACHMENT_HEADER_TIMEOUT_MS),
+	attachmentBytes: (args: AttachmentBytesArgs) =>
+		call<AttachmentBytesResponse>('attachmentBytes', args, ATTACHMENT_BYTES_TIMEOUT_MS),
 	loadAliasKeys: (args: LoadAliasKeysArgs) => call<LoadAliasKeysResponse>('loadAliasKeys', args),
 	unloadAliasKeys: (args: UnloadAliasKeysArgs) => call<void>('unloadAliasKeys', args),
 	createAliasKey: (args: CreateAliasKeyArgs) => call<CreateAliasKeyResponse>('createAliasKey', args),

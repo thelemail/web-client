@@ -1,20 +1,13 @@
 <script lang="ts">
 	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import Download from '@lucide/svelte/icons/download';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import Avatar from './Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import TrustMark from './TrustMark.svelte';
 	import { formatWhenLong, type ThreadEntry } from './data';
-	import {
-		decryptAttachmentHeader,
-		downloadAttachment,
-		type AttachmentChip
-	} from './attachments';
-	import type { DecryptedAttachmentHeader } from './attframe';
-	import { auth } from '$lib/stores/auth.svelte';
+	import AttachmentList from './AttachmentList.svelte';
+	import { getMessage } from '$lib/api/messages';
 	import { bimi } from '$lib/stores/bimi.svelte';
 
 	interface Props {
@@ -47,63 +40,12 @@
 			.join(', ')
 	);
 
-	type ChipResult =
-		| { state: 'ready'; header: DecryptedAttachmentHeader }
-		| { state: 'error'; error: string };
-	let hydrated = $state<Record<string, ChipResult>>({});
-	const requested = new Set<string>();
+	const chips = $derived(e.attachments ?? []);
 
-	const chips = $derived(
-		(e.attachments ?? []).map((c): AttachmentChip => {
-			const h = hydrated[c.id];
-			if (!h) return c;
-			return h.state === 'ready'
-				? { ...c, state: 'ready', header: h.header }
-				: { ...c, state: 'error', error: h.error };
-		})
-	);
-
-	$effect(() => {
-		if (!isOpen) return;
-		const pending = (e.attachments ?? []).filter((c) => !requested.has(c.id));
-		if (pending.length === 0) return;
-		const accountId = auth.accountId;
-		for (const chip of pending) {
-			requested.add(chip.id);
-			void (async () => {
-				try {
-					if (!accountId) throw new Error('locked');
-					const header = await decryptAttachmentHeader(accountId, chip.pointer);
-					hydrated = { ...hydrated, [chip.id]: { state: 'ready', header } };
-				} catch (err) {
-					const msg = err instanceof Error ? err.message : 'decrypt failed';
-					hydrated = { ...hydrated, [chip.id]: { state: 'error', error: msg } };
-				}
-			})();
-		}
-	});
-
-	function chipTitle(chip: AttachmentChip): string {
-		if (chip.header) return chip.header.filename;
-		if (chip.state === 'error') return 'Failed to decrypt';
-		return 'Decrypting…';
-	}
-
-	function chipSize(chip: AttachmentChip): string {
-		const n = chip.header?.plaintextSize ?? chip.pointer.sizeBytes;
-		if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
-		if (n >= 1024) return (n / 1024).toFixed(1) + ' KB';
-		return n + ' B';
-	}
-
-	async function onDownload(chip: AttachmentChip) {
-		try {
-			const accountId = auth.accountId;
-			if (!accountId) throw new Error('locked');
-			await downloadAttachment(accountId, chip.pointer, chip.header);
-		} catch (err) {
-			console.warn('attachment download failed', err);
-		}
+	async function refreshPointer(attachmentId: string) {
+		if (!e.id) return null;
+		const detail = await getMessage(e.id);
+		return detail.attachments?.find((a) => a.id === attachmentId)?.pointer ?? null;
 	}
 </script>
 
@@ -208,33 +150,7 @@
 				</div>
 			{/if}
 
-			{#if chips.length > 0}
-				<div class="att-row">
-					<div class="att-h">
-						<Paperclip size={14} />{chips.length} attachment{chips.length > 1 ? 's' : ''}
-					</div>
-					<div class="att-list">
-						{#each chips as a (a.id)}
-							<div class="att-card" class:err={a.state === 'error'}>
-								<div class="ic"><FileText size={19} /></div>
-								<div class="info">
-									<div class="nm">{chipTitle(a)}</div>
-									<div class="sz">{chipSize(a)}</div>
-								</div>
-								<button
-									type="button"
-									class="dl"
-									title={a.state === 'ready' ? 'Download' : 'Decrypting…'}
-									disabled={a.state !== 'ready'}
-									onclick={() => onDownload(a)}
-								>
-									<Download size={16} />
-								</button>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
+			<AttachmentList {chips} refresh={refreshPointer} />
 		</div>
 	</div>
 {/if}
