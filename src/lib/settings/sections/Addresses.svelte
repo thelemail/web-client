@@ -106,8 +106,13 @@
 />
 
 <div class="scard">
-	<CardHead icon={AtSign} title="Addresses">
-		{#snippet right()}<span class="card-meta">{addresses.personal.length} addresses</span>{/snippet}
+	<CardHead icon={AtSign} title="Your addresses">
+		{#snippet right()}
+			<span class="card-meta">
+				{addresses.personal.length}
+				{addresses.personal.length === 1 ? 'address' : 'addresses'}
+			</span>
+		{/snippet}
 	</CardHead>
 	{#if addresses.loading && addresses.items.length === 0}
 		<div class="alias-row"><div class="alias-info"><div class="alias-addr">Loading…</div></div></div>
@@ -190,7 +195,10 @@
 
 <div class="scard">
 	<CardHead icon={Users} title="Shared addresses">
-		{#snippet right()}<span class="card-meta">{sharedList.length || addresses.shared.length}</span>{/snippet}
+		{#snippet right()}
+			{@const n = manage ? sharedList.length : addresses.shared.length}
+			<span class="card-meta">{n} {n === 1 ? 'address' : 'addresses'}</span>
+		{/snippet}
 	</CardHead>
 	{#if manage}
 		{#if sharedList.length === 0}
