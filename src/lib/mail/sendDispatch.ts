@@ -51,6 +51,7 @@ export interface DispatchInput {
 	attachments?: ComposeAttachment[];
 	fromEmail?: string;
 	fromName?: string;
+	fromAliasId?: string;
 	scheduledAt?: string;
 }
 
@@ -82,6 +83,7 @@ function toComposeInput(input: DispatchInput): ComposeInput {
 		attachments: input.attachments,
 		fromEmail: input.fromEmail,
 		fromName: input.fromName,
+		fromAliasId: input.fromAliasId,
 		scheduledAt: input.scheduledAt
 	};
 }
@@ -121,6 +123,7 @@ async function sendMixed(
 		attachments: input.attachments,
 		fromEmail: input.fromEmail,
 		fromName: input.fromName,
+		fromAliasId: input.fromAliasId,
 		scheduledAt: input.scheduledAt,
 		sentMessageId: sent.messageId
 	});
@@ -161,6 +164,7 @@ export async function dispatchSend(
 			attachments: input.attachments,
 			fromEmail: input.fromEmail,
 			fromName: input.fromName,
+			fromAliasId: input.fromAliasId,
 			scheduledAt: input.scheduledAt
 		});
 		return;

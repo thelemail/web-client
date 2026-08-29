@@ -547,6 +547,7 @@
 					attachments: attachments.length > 0 ? attachments : undefined,
 					fromEmail: ident.email,
 					fromName: ident.name,
+					fromAliasId: ident.aliasId,
 					scheduledAt: when ?? undefined
 				},
 				{ acceptKeyChange }

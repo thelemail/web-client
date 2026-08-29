@@ -552,7 +552,8 @@
 					references: headers.references,
 					attachments: attachments.length > 0 ? attachments : undefined,
 					fromEmail: ident.email,
-					fromName: ident.name
+					fromName: ident.name,
+					fromAliasId: ident.aliasId
 				},
 				{ acceptKeyChange }
 			);
