@@ -2375,16 +2375,6 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 			case 'createAliasKey':
 				respond(port, msg.id, await handleCreateAliasKey(msg.args as CreateAliasKeyArgs));
 				break;
-			case 'loadAliasKeys':
-				respond(port, msg.id, await handleLoadAliasKeys(msg.args as LoadAliasKeysArgs));
-				break;
-			case 'unloadAliasKeys':
-				handleUnloadAliasKeys(msg.args as UnloadAliasKeysArgs);
-				respond(port, msg.id, undefined);
-				break;
-			case 'createAliasKey':
-				respond(port, msg.id, await handleCreateAliasKey(msg.args as CreateAliasKeyArgs));
-				break;
 			case 'getPublicKey':
 				respond(port, msg.id, await handleGetPublicKey(msg.args as GetPublicKeyArgs));
 				break;

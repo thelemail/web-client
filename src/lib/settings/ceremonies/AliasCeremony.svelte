@@ -131,7 +131,7 @@
 		const grants: SharedAliasMemberGrant[] = created.grants.map((g) => ({
 			accountId: g.accountId,
 			memberKeyFingerprint: hexToB64(g.memberKeyFingerprintHex),
-			wrappedPrivateKey: g.wrappedPrivateKeyArmored
+			wrappedPrivateKey: textToB64(g.wrappedPrivateKeyArmored)
 		}));
 
 		progress = 'Saving';
@@ -166,6 +166,13 @@
 			name: name.trim() || undefined
 		});
 		await addresses.load();
+	}
+
+	function textToB64(text: string): string {
+		const bytes = new TextEncoder().encode(text);
+		let bin = '';
+		for (const b of bytes) bin += String.fromCharCode(b);
+		return btoa(bin);
 	}
 
 	function hexToB64(hex: string): string {
@@ -220,7 +227,9 @@
 					sent to it reaches all of them.
 				</p>
 			</div>
-			{#if ownedDomains.length === 0}
+			{#if customDomains.loading && customDomains.items.length === 0}
+				<div class="field-hint">Loading your domains…</div>
+			{:else if ownedDomains.length === 0}
 				<div class="inline-warn">
 					<CircleAlert size={15} />
 					<span
