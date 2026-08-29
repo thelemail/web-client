@@ -271,7 +271,12 @@
 		| { id: string; status: 'ready'; render: RenderResult; attachments: AttachmentChip[] }
 		| { id: string; status: 'error'; error: string };
 
+	const BODY_MAX_ATTEMPTS = 3;
+	const BODY_RETRY_BASE_MS = 800;
+
 	let bodyState = $state<BodyState | null>(null);
+	let bodyRetryTick = $state(0);
+	let bodyAttempts = 0;
 	const openedMessageId = $derived(m?.id ?? null);
 
 	type ThreadMeta = {
@@ -397,13 +402,18 @@
 
 	$effect(() => {
 		const current = m;
+		void bodyRetryTick;
 		if (!current) {
 			bodyState = null;
+			bodyAttempts = 0;
 			return;
 		}
-		if (bodyState?.id === current.id && bodyState.status !== 'error') {
+		const previous = untrack(() => bodyState);
+		if (previous?.id === current.id && previous.status !== 'error') {
 			return;
 		}
+		const attempt = previous?.id === current.id ? bodyAttempts + 1 : 1;
+		bodyAttempts = attempt;
 		bodyState = { id: current.id, status: 'loading' };
 		void (async () => {
 			try {
@@ -425,6 +435,14 @@
 							? err.message
 							: 'failed';
 				bodyState = { id: current.id, status: 'error', error: msgText };
+				if (attempt < BODY_MAX_ATTEMPTS) {
+					setTimeout(
+						() => {
+							if (untrack(() => bodyState)?.id === current.id) bodyRetryTick += 1;
+						},
+						BODY_RETRY_BASE_MS * 2 ** (attempt - 1)
+					);
+				}
 			}
 		})();
 	});
@@ -458,6 +476,9 @@
 	);
 	const attachmentChips = $derived<AttachmentChip[]>(
 		bodyState?.status === 'ready' ? bodyState.attachments : []
+	);
+	const isThreadView = $derived(
+		Math.max(enriched?.thread?.length ?? 0, m?.threadCount ?? 0) > 1
 	);
 
 	async function refreshPointer(attachmentId: string) {
@@ -846,7 +867,9 @@
 						<EventCard {ev} message={enriched ?? m} />
 					{/each}
 
-					<AttachmentList chips={attachmentChips} refresh={refreshPointer} />
+					{#if !isThreadView}
+						<AttachmentList chips={attachmentChips} refresh={refreshPointer} />
+					{/if}
 				{/if}
 
 				{#if replyMode}
