@@ -52,6 +52,23 @@
 	background: var(--danger-500);
 }
 
+.auth .lc-state-badge {
+	margin-bottom: 18px;
+}
+
+.auth .lc-back {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 20px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--pine-700);
+}
+.auth .lc-back:hover {
+	text-decoration: underline;
+}
+
 .lc-mark {
 	width: 52px;
 	height: 52px;

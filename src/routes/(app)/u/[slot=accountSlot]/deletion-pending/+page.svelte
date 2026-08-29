@@ -1,7 +1,6 @@
 <script lang="ts">
-	import '$lib/auth/auth.css';
 	import { goto } from '$app/navigation';
-	import wordmark from '$lib/assets/logo-wordmark.svg';
+	import AuthShell from '$lib/auth/AuthShell.svelte';
 	import { cancelDeletion } from '$lib/api/deletion';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
@@ -66,47 +65,40 @@
 	<title>Thelemail — Deletion scheduled</title>
 </svelte:head>
 
-<div class="auth" data-motif="ledger">
-	<header class="topchrome">
-		<a href="/"><img class="wm" src={wordmark} alt="Thelemail" /></a>
-		<span class="grow"></span>
-		<button class="ghostlink" onclick={signOut}>Sign out</button>
-	</header>
-	<div class="stagebody">
-		<div class="card">
-			<div class="card-surface screen-fade">
-				<div class="welcome">
-					<span class="pending-icon"><CalendarClock size={44} strokeWidth={1.5} /></span>
-					<h1>Deletion scheduled</h1>
-					<p>
-						This account was scheduled for deletion on <b>{requestedLabel}</b>. Everything it holds
-						— every mailbox, alias, and message — will be permanently erased on
-						<b>{purgeLabel}</b>{daysLeft > 0 ? ` (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)` : ''}.
+<AuthShell>
+	<div class="card">
+		<div class="card-surface screen-fade">
+			<div class="welcome">
+				<span class="pending-icon"><CalendarClock size={44} strokeWidth={1.5} /></span>
+				<h1>Deletion scheduled</h1>
+				<p>
+					This account was scheduled for deletion on <b>{requestedLabel}</b>. Everything it holds
+					— every mailbox, alias, and message — will be permanently erased on
+					<b>{purgeLabel}</b>{daysLeft > 0 ? ` (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)` : ''}.
+				</p>
+				<p>
+					Until then the account is deactivated: mail still arrives, but nothing can be read or
+					sent. Changed your mind? You can keep the account and everything in it.
+				</p>
+				{#if cancelError}
+					<p class="billing-notice billing-notice-error">
+						<CircleAlert size={15} strokeWidth={1.75} />
+						<span>{cancelError}</span>
 					</p>
-					<p>
-						Until then the account is deactivated: mail still arrives, but nothing can be read or
-						sent. Changed your mind? You can keep the account and everything in it.
-					</p>
-					{#if cancelError}
-						<p class="billing-notice billing-notice-error">
-							<CircleAlert size={15} strokeWidth={1.75} />
-							<span>{cancelError}</span>
-						</p>
-					{/if}
-					<div class="actions" style="margin-top:24px">
-						<button class="btn btn-primary btn-block" disabled={busy} onclick={keepAccount}>
-							<Undo2 size={17} strokeWidth={1.75} />
-							{busy ? 'Restoring your account…' : 'Cancel deletion and keep my account'}
-						</button>
-						<button class="btn btn-secondary btn-block" disabled={busy} onclick={signOut}>
-							<LogOut size={17} strokeWidth={1.75} />Sign out
-						</button>
-					</div>
+				{/if}
+				<div class="actions" style="margin-top:24px">
+					<button class="btn btn-primary btn-block" disabled={busy} onclick={keepAccount}>
+						<Undo2 size={17} strokeWidth={1.75} />
+						{busy ? 'Restoring your account…' : 'Cancel deletion and keep my account'}
+					</button>
+					<button class="btn btn-secondary btn-block" disabled={busy} onclick={signOut}>
+						<LogOut size={17} strokeWidth={1.75} />Sign out
+					</button>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>
+</AuthShell>
 
 <style>
 	.pending-icon {

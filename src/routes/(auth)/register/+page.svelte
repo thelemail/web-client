@@ -34,7 +34,7 @@
 	let handle = $state('');
 	let pw = $state('');
 	let confirm = $state('');
-	let sel = $state<PlanSelection>({ product: 'family', tier: null, seats: 3 });
+	let sel = $state<PlanSelection>({ product: 'personal', tier: null, seats: 3 });
 
 	let submitting = $state(false);
 	let submitError = $state<string | null>(null);
@@ -367,7 +367,15 @@
 		</p>
 	</div>
 {:else if step === 2}
-	<PlanStep bind:sel labels={REG_LABELS} onBack={() => (step = 1)} onNext={() => (step = 3)} />
+	<PlanStep
+		bind:sel
+		labels={REG_LABELS}
+		trialProduct="personal"
+		onStartTrial={startTrial}
+		busy={submitting}
+		onBack={() => (step = 1)}
+		onNext={() => (step = 3)}
+	/>
 {:else if step === 3}
 	<PaymentStep
 		{handle}

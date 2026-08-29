@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import Stepper from '$lib/auth/Stepper.svelte';
 	import {
 		PRODUCTS,
@@ -30,7 +31,10 @@
 		heading = 'Choose your plan',
 		ctaVerb = 'Continue to payment',
 		busy = false,
-		busyLabel = 'Preparing secure checkout…'
+		busyLabel = 'Preparing secure checkout…',
+		trialProduct = null,
+		onStartTrial = null,
+		footer = null
 	}: {
 		sel: PlanSelection;
 		labels?: string[];
@@ -42,6 +46,9 @@
 		ctaVerb?: string;
 		busy?: boolean;
 		busyLabel?: string;
+		trialProduct?: ProductId | null;
+		onStartTrial?: (() => void) | null;
+		footer?: Snippet | null;
 	} = $props();
 
 	const ICONS = { personal: UserRound, family: UsersRound, business: BriefcaseBusiness };
@@ -49,6 +56,7 @@
 	const product = $derived(findPlan(sel).product);
 	const tier = $derived(findPlan(sel).tier);
 	const total = $derived(planTotal(sel));
+	const trialName = $derived(PRODUCTS.find((p) => p.id === trialProduct)?.name ?? '');
 
 	function pickProduct(id: ProductId) {
 		sel = { ...sel, product: id, tier: null };
@@ -84,7 +92,9 @@
 				class:cur={p.id === product.id}
 				onclick={() => pickProduct(p.id)}
 			>
-				{#if p.badge}
+				{#if p.id === trialProduct}
+					<span class="mostbadge trial">30-day free trial</span>
+				{:else if p.badge}
 					<span class="mostbadge">{p.badge}</span>
 				{/if}
 				<span class="pt-top">
@@ -99,6 +109,23 @@
 			</button>
 		{/each}
 	</div>
+
+	{#if trialProduct}
+		<p class="trialnote">
+			{#if product.id === trialProduct}
+				<span>{product.name} comes with a 30-day free trial, no card required.</span>
+				{#if onStartTrial}
+					<button type="button" class="linklike" disabled={busy} onclick={onStartTrial}>
+						Start the trial instead
+					</button>
+				{/if}
+			{:else}
+				<span>
+					The 30-day free trial runs on {trialName}. {product.name} starts on a paid plan.
+				</span>
+			{/if}
+		</p>
+	{/if}
 
 	{#if product.perMailbox}
 		<div class="seats">
@@ -195,4 +222,7 @@
 		Yearly billing. Prices include VAT where applicable. Cancel anytime &mdash; your archive stays
 		exportable.
 	</p>
+	{#if footer}
+		{@render footer()}
+	{/if}
 </div>
