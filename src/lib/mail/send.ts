@@ -63,6 +63,7 @@ export type SendErrorPayload =
 			previousPinned: string;
 			previousVerifiedAt: string;
 			currentFingerprint: string;
+			shared: boolean;
 	  }
 	| {
 			kind: 'external-key-change';
@@ -217,7 +218,11 @@ function directoryPayload(
 	};
 }
 
-function tofuPayload(e: DirectoryVerificationError, address: string): SendErrorPayload | null {
+function tofuPayload(
+	e: DirectoryVerificationError,
+	address: string,
+	shared = false
+): SendErrorPayload | null {
 	const d = e.details;
 	if (
 		!d.previousFingerprint ||
@@ -232,7 +237,8 @@ function tofuPayload(e: DirectoryVerificationError, address: string): SendErrorP
 		address,
 		previousPinned: formatFingerprintHex(d.previousFingerprint),
 		previousVerifiedAt: formatVerifiedAt(d.previousVerifiedAtMillis, d.previousVersion),
-		currentFingerprint: formatFingerprintHex(d.currentFingerprint)
+		currentFingerprint: formatFingerprintHex(d.currentFingerprint),
+		shared
 	};
 }
 
@@ -256,7 +262,7 @@ async function resolveRecipient(
 	} catch (e) {
 		if (e instanceof DirectoryVerificationError) {
 			if (e.code === 'fingerprint_changed') {
-				const payload = tofuPayload(e, normalised);
+				const payload = tofuPayload(e, normalised, lookup.shared === true);
 				throw new SendError(
 					'tofu',
 					`Recipient key has changed since you last verified them.`,

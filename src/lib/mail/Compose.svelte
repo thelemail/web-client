@@ -984,6 +984,7 @@
 			previousPinned={err.payload.previousPinned}
 			previousVerifiedAt={err.payload.previousVerifiedAt}
 			currentFingerprint={err.payload.currentFingerprint}
+			shared={err.payload.shared}
 			onSendAnyway={trustAndSend}
 			onCancel={clearErr}
 		/>

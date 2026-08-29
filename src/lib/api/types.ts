@@ -959,6 +959,7 @@ export interface AccountLookupResponse {
 	email: string;
 	fullName: string;
 	workspaceId?: string;
+	shared?: boolean;
 	publicKeyArmored: string;
 	directoryStatement: DirectoryStatementWire;
 	directorySignature: string;
