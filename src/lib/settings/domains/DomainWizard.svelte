@@ -2,6 +2,7 @@
 	import { untrack } from 'svelte';
 
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Check from '@lucide/svelte/icons/check';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -16,6 +17,8 @@
 	import RecordList from './RecordList.svelte';
 	import WizardRail from './WizardRail.svelte';
 	import {
+		DOMAIN_STEPS,
+		STEP_LABELS,
 		STEP_PHASE,
 		canSend,
 		nextStep,
@@ -51,6 +54,8 @@
 	let displayName = $state('');
 	let addingAddress = $state(false);
 	let addressError = $state<string | null>(null);
+
+	const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
 
 	const phase = $derived(STEP_PHASE[step]);
 	const phaseRecords = $derived(phase ? records.filter((r) => r.phase === phase) : []);
@@ -137,7 +142,7 @@
 		{:else if step === 'routing'}
 			<TriangleAlert size={16} /><h3>Point mail at Thelemail</h3>
 		{:else}
-			<CircleCheck size={16} /><h3>{domain.domain} is live</h3>
+			<CircleCheck size={16} /><h3>Setup complete</h3>
 		{/if}
 	{/snippet}
 
@@ -150,7 +155,7 @@
 			<RecordList records={phaseRecords} />
 			{#if ownershipProven(domain)}
 				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>Ownership confirmed. Nothing else to do here.</span>
+					<CircleCheck size={15} /><span>Ownership confirmed.</span>
 				</div>
 			{:else}
 				<div class="dw-note">
@@ -169,9 +174,7 @@
 			<RecordList records={phaseRecords} />
 			{#if canSend(domain)}
 				<div class="dw-note ok">
-					<CircleCheck size={15} /><span
-						>Sending is set up. You can now create addresses on this domain.</span
-					>
+					<CircleCheck size={15} /><span>Sending records confirmed.</span>
 				</div>
 			{:else}
 				<div class="dw-note">
@@ -273,7 +276,7 @@
 			<RecordList records={phaseRecords} />
 			{#if domain.mxVerifiedAt}
 				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>Mail is routing to Thelemail.</span>
+					<CircleCheck size={15} /><span>Mail is routing here.</span>
 				</div>
 			{:else}
 				<div class="dw-note">
@@ -285,13 +288,24 @@
 				</div>
 			{/if}
 		{:else}
-			<p class="dw-lede">
-				<b>{domain.domain}</b> is verified end to end. Mail addressed to it arrives here, and mail
-				sent from it is signed. We keep watching the records and will flag it if anything changes.
-			</p>
-			<div class="dw-note">
-				<Info size={15} />
-				<span>{domain.addressCount} address{domain.addressCount === 1 ? '' : 'es'} on this domain.</span>
+			<div class="dw-done">
+				<span class="dw-done-ic"><CircleCheck size={34} strokeWidth={1.6} /></span>
+				<h4 class="dw-done-title">{domain.domain} is live</h4>
+				<p class="dw-done-desc">
+					Mail addressed to it arrives here, and mail sent from it is signed. We keep watching the
+					records and will flag it if anything changes.
+				</p>
+				<div class="dw-done-stats">
+					{#each LADDER as s (s)}
+						<span class="dw-done-stat"><Check size={13} strokeWidth={2.5} />{STEP_LABELS[s]}</span>
+					{/each}
+					<span class="dw-done-stat">
+						<Check size={13} strokeWidth={2.5} />{domain.addressCount} address{domain.addressCount ===
+						1
+							? ''
+							: 'es'}
+					</span>
+				</div>
 			</div>
 		{/if}
 
