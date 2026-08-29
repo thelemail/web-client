@@ -23,6 +23,7 @@ export interface DecryptedAttachment {
 export type PointerRefresh = (attachmentId: string) => Promise<PresignedPointer | null>;
 
 const HEADER_CONCURRENCY = 2;
+const HEADER_CACHE_MAX = 500;
 
 const headerCache = new Map<string, DecryptedAttachmentHeader>();
 const inFlight = new Map<string, Promise<DecryptedAttachmentHeader>>();
@@ -45,6 +46,16 @@ async function gate<T>(run: () => Promise<T>): Promise<T> {
 
 function cacheKey(accountId: string, attachmentId: string): string {
 	return `${accountId}:${attachmentId}`;
+}
+
+function cacheHeader(key: string, header: DecryptedAttachmentHeader): void {
+	headerCache.delete(key);
+	headerCache.set(key, header);
+	while (headerCache.size > HEADER_CACHE_MAX) {
+		const oldest = headerCache.keys().next().value;
+		if (oldest === undefined) break;
+		headerCache.delete(oldest);
+	}
 }
 
 async function withFreshPointer<T>(
@@ -86,7 +97,7 @@ export async function loadAttachmentHeader(
 				return res.ok ? { ok: true, value: res.header } : { ok: false, code: res.code };
 			}
 		);
-		headerCache.set(key, header);
+		cacheHeader(key, header);
 		return header;
 	}).finally(() => inFlight.delete(key));
 
@@ -110,7 +121,7 @@ async function attachmentBytes(
 			? { ok: true, value: { header: res.header, blob: res.payload } }
 			: { ok: false, code: res.code };
 	});
-	headerCache.set(cacheKey(accountId, chip.id), dec.header);
+	cacheHeader(cacheKey(accountId, chip.id), dec.header);
 	return dec;
 }
 
