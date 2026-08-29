@@ -3,7 +3,12 @@ import { decryptBodyFromUrl } from './decrypt';
 import { decryptAttachmentFull } from './attachments';
 import { snippetSource } from './quote';
 import type { MessagePreview } from './preview';
-import type { AttachmentDescriptor, DraftDetail, DraftRequest } from '$lib/api/types';
+import type {
+	AttachmentDescriptor,
+	DraftDetail,
+	DraftRequest,
+	PresignedPointer
+} from '$lib/api/types';
 
 export const DRAFT_SCHEMA_VERSION = 1;
 
@@ -79,14 +84,10 @@ export async function loadDraftDoc(accountId: string, detail: DraftDetail): Prom
 
 export async function restoreAttachmentFile(
 	accountId: string,
-	pointer: { url: string }
+	pointer: PresignedPointer
 ): Promise<File> {
 	const dec = await decryptAttachmentFull(accountId, pointer);
-	const ab = dec.bytes.buffer.slice(
-		dec.bytes.byteOffset,
-		dec.bytes.byteOffset + dec.bytes.byteLength
-	) as ArrayBuffer;
-	return new File([ab], dec.header.filename || 'attachment', {
+	return new File([dec.blob], dec.header.filename || 'attachment', {
 		type: dec.header.contentType || 'application/octet-stream'
 	});
 }

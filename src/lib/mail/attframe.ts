@@ -65,16 +65,20 @@ export function parseHeader(b: Uint8Array): DecryptedAttachmentHeader {
 	return parseHeaderInternal(b).header;
 }
 
-function parseHeaderInternal(b: Uint8Array): { header: DecryptedAttachmentHeader; headerEnd: number } {
-	if (b.byteLength < 9) throw new Error('attframe: truncated');
-	for (let i = 0; i < 4; i++) {
+export function parseHeaderPrefix(
+	b: Uint8Array
+): { header: DecryptedAttachmentHeader; headerEnd: number } | null {
+	for (let i = 0; i < 4 && i < b.byteLength; i++) {
 		if (b[i] !== MAGIC[i]) throw new Error('attframe: bad magic');
 	}
-	if (b[4] !== VERSION) throw new Error(`attframe: unsupported version ${b[4]}`);
+	if (b.byteLength >= 5 && b[4] !== VERSION) {
+		throw new Error(`attframe: unsupported version ${b[4]}`);
+	}
+	if (b.byteLength < 9) return null;
 	const hl = new DataView(b.buffer, b.byteOffset + 5, 4).getUint32(0, false);
 	if (hl === 0 || hl > MAX_HEADER_BYTES) throw new Error(`attframe: bad header length ${hl}`);
 	const headerEnd = 9 + hl;
-	if (b.byteLength < headerEnd) throw new Error('attframe: truncated header');
+	if (b.byteLength < headerEnd) return null;
 	const json = new TextDecoder('utf-8', { fatal: true }).decode(b.subarray(9, headerEnd));
 	const parsed = JSON.parse(json) as AttHeader;
 	if (parsed.v !== 1) throw new Error(`attframe: unsupported version field ${parsed.v}`);
@@ -92,4 +96,10 @@ function parseHeaderInternal(b: Uint8Array): { header: DecryptedAttachmentHeader
 		},
 		headerEnd
 	};
+}
+
+function parseHeaderInternal(b: Uint8Array): { header: DecryptedAttachmentHeader; headerEnd: number } {
+	const parsed = parseHeaderPrefix(b);
+	if (!parsed) throw new Error('attframe: truncated header');
+	return parsed;
 }

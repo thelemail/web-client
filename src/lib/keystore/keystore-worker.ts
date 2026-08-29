@@ -39,7 +39,14 @@ import {
 	unwrapMasterKey,
 	wrapMasterKey
 } from './opaque-params';
+import { MAX_HEADER_BYTES, parseHeaderPrefix } from '$lib/mail/attframe';
+import type { DecryptedAttachmentHeader } from '$lib/mail/attframe';
 import type {
+	AttachmentBytesArgs,
+	AttachmentBytesResponse,
+	AttachmentFailureCode,
+	AttachmentHeaderArgs,
+	AttachmentHeaderResponse,
 	Broadcast,
 	ClearArgs,
 	CommitPasswordChangeArgs,
@@ -1296,6 +1303,20 @@ async function verdictFor(
 	return sawUnknownKey ? { state: 'unknown_key' } : { state: 'none' };
 }
 
+function decryptionKeysFor(
+	v: VaultState,
+	keyFingerprintHex?: string
+): openpgp.PrivateKey | openpgp.PrivateKey[] {
+	if (!v.aliasKeys.size) return v.privateKey;
+	const hint = keyFingerprintHex?.toLowerCase();
+	const hinted = hint ? v.aliasKeys.get(hint) : undefined;
+	if (hinted) return hinted.privateKey;
+	if (!hint || hint !== fingerprintHexOf(v.privateKey)) {
+		return [v.privateKey, ...[...v.aliasKeys.values()].map((e) => e.privateKey)];
+	}
+	return v.privateKey;
+}
+
 async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 	const v = vaults.get(args.accountId);
 	if (!v) {
@@ -1316,16 +1337,7 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		}
 	}
 	const wanted = args.verificationKeysArmored?.length ? true : false;
-	let decryptionKeys: openpgp.PrivateKey | openpgp.PrivateKey[] = v.privateKey;
-	if (v.aliasKeys.size) {
-		const hint = args.keyFingerprintHex?.toLowerCase();
-		const hinted = hint ? v.aliasKeys.get(hint) : undefined;
-		if (hinted) {
-			decryptionKeys = hinted.privateKey;
-		} else if (!hint || hint !== fingerprintHexOf(v.privateKey)) {
-			decryptionKeys = [v.privateKey, ...[...v.aliasKeys.values()].map((e) => e.privateKey)];
-		}
-	}
+	const decryptionKeys = decryptionKeysFor(v, args.keyFingerprintHex);
 	try {
 		const message = args.ciphertextArmored
 			? await openpgp.readMessage({ armoredMessage: args.ciphertextArmored })
@@ -1371,6 +1383,208 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		}
 		console.warn('keystore: decrypt failed', err);
 		return { ok: false, code: 'unknown' };
+	}
+}
+
+const ATTACHMENT_HEADER_TIMEOUT_MS = 25_000;
+const HEADER_PEEK_CIPHERTEXT_LIMIT = 512 * 1024;
+const ATTACHMENT_BYTES_TIMEOUT_MS = 170_000;
+
+function attachmentFailure(err: unknown): AttachmentFailureCode {
+	const msg = err instanceof Error ? err.message : String(err);
+	if (/no decryption key|session key decryption failed/i.test(msg)) return 'no_matching_key';
+	if (/attframe|armor|message|read|decrypt|modification detected/i.test(msg)) {
+		return 'invalid_ciphertext';
+	}
+	console.warn('keystore: attachment failed', err);
+	return 'unknown';
+}
+
+class AttachmentNetworkError extends Error {}
+
+async function openAttachmentStream(
+	url: string,
+	signal: AbortSignal
+): Promise<ReadableStream<Uint8Array>> {
+	let resp: Response;
+	try {
+		resp = await fetch(url, { signal });
+	} catch (err) {
+		throw new AttachmentNetworkError(err instanceof Error ? err.message : 'fetch failed');
+	}
+	if (!resp.ok) throw new AttachmentNetworkError(`fetch ${resp.status}`);
+	if (!resp.body) throw new AttachmentNetworkError('empty response body');
+	return resp.body;
+}
+
+function truncateStream(
+	src: ReadableStream<Uint8Array>,
+	limit: number
+): ReadableStream<Uint8Array> {
+	let sent = 0;
+	return src.pipeThrough(
+		new TransformStream<Uint8Array, Uint8Array>({
+			transform(chunk, controller) {
+				if (sent >= limit) return;
+				const room = limit - sent;
+				controller.enqueue(chunk.byteLength <= room ? chunk : chunk.subarray(0, room));
+				sent += Math.min(room, chunk.byteLength);
+				if (sent >= limit) controller.terminate();
+			}
+		})
+	);
+}
+
+async function decryptAttachmentStream(
+	v: VaultState,
+	url: string,
+	keyFingerprintHex: string | undefined,
+	signal: AbortSignal,
+	allowUnauthenticated: boolean,
+	ciphertextLimit?: number
+): Promise<ReadableStreamDefaultReader<Uint8Array>> {
+	const fetched = await openAttachmentStream(url, signal);
+	const body = ciphertextLimit ? truncateStream(fetched, ciphertextLimit) : fetched;
+	const message = await openpgp.readMessage({ binaryMessage: body });
+	const { data } = await openpgp.decrypt({
+		message,
+		decryptionKeys: decryptionKeysFor(v, keyFingerprintHex),
+		expectSigned: false,
+		format: 'binary',
+		config: allowUnauthenticated ? { allowUnauthenticatedStream: true } : undefined
+	});
+	if (data instanceof Uint8Array) {
+		return new ReadableStream<Uint8Array>({
+			start(controller) {
+				controller.enqueue(data);
+				controller.close();
+			}
+		}).getReader();
+	}
+	return (data as ReadableStream<Uint8Array>).getReader();
+}
+
+function concatChunks(chunks: Uint8Array[], total: number): Uint8Array {
+	const out = new Uint8Array(total);
+	let off = 0;
+	for (const c of chunks) {
+		out.set(c, off);
+		off += c.byteLength;
+	}
+	return out;
+}
+
+async function peekAttachmentHeader(
+	v: VaultState,
+	args: AttachmentHeaderArgs,
+	ciphertextLimit?: number
+): Promise<DecryptedAttachmentHeader> {
+	const abort = new AbortController();
+	const timer = setTimeout(() => abort.abort(), ATTACHMENT_HEADER_TIMEOUT_MS);
+	let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+	try {
+		reader = await decryptAttachmentStream(
+			v,
+			args.url,
+			args.keyFingerprintHex,
+			abort.signal,
+			true,
+			ciphertextLimit
+		);
+		const chunks: Uint8Array[] = [];
+		let total = 0;
+		const limit = MAX_HEADER_BYTES + 9;
+		for (;;) {
+			const { value, done } = await reader.read();
+			if (value) {
+				chunks.push(value);
+				total += value.byteLength;
+				const parsed = parseHeaderPrefix(concatChunks(chunks, total));
+				if (parsed) return parsed.header;
+			}
+			if (done) throw new Error('attframe: truncated header');
+			if (total > limit) throw new Error('attframe: header exceeds limit');
+		}
+	} finally {
+		clearTimeout(timer);
+		void reader?.cancel().catch(() => {});
+		abort.abort();
+	}
+}
+
+async function handleAttachmentHeader(
+	args: AttachmentHeaderArgs
+): Promise<AttachmentHeaderResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+	try {
+		return { ok: true, header: await peekAttachmentHeader(v, args, HEADER_PEEK_CIPHERTEXT_LIMIT) };
+	} catch (err) {
+		if (err instanceof AttachmentNetworkError) return { ok: false, code: 'network' };
+	}
+	try {
+		return { ok: true, header: await peekAttachmentHeader(v, args) };
+	} catch (err) {
+		if (err instanceof AttachmentNetworkError) return { ok: false, code: 'network' };
+		return { ok: false, code: attachmentFailure(err) };
+	}
+}
+
+async function handleAttachmentBytes(args: AttachmentBytesArgs): Promise<AttachmentBytesResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+
+	const abort = new AbortController();
+	const timer = setTimeout(() => abort.abort(), ATTACHMENT_BYTES_TIMEOUT_MS);
+	try {
+		const reader = await decryptAttachmentStream(
+			v,
+			args.url,
+			args.keyFingerprintHex,
+			abort.signal,
+			false
+		);
+		const chunks: BlobPart[] = [];
+		const lead: Uint8Array[] = [];
+		let leadTotal = 0;
+		let header: { header: DecryptedAttachmentHeader; headerEnd: number } | null = null;
+		for (;;) {
+			const { value, done } = await reader.read();
+			if (value) {
+				chunks.push(value as BlobPart);
+				if (!header) {
+					lead.push(value);
+					leadTotal += value.byteLength;
+					header = parseHeaderPrefix(concatChunks(lead, leadTotal));
+					if (header) lead.length = 0;
+					else if (leadTotal > MAX_HEADER_BYTES + 9) {
+						throw new Error('attframe: header exceeds limit');
+					}
+				}
+			}
+			if (done) break;
+		}
+		if (!header) throw new Error('attframe: truncated header');
+		const framed = new Blob(chunks);
+		const payload = framed.slice(
+			header.headerEnd,
+			framed.size,
+			header.header.contentType || 'application/octet-stream'
+		);
+		if (payload.size !== header.header.plaintextSize) {
+			throw new Error(
+				`attframe: payload size mismatch: header=${header.header.plaintextSize} got=${payload.size}`
+			);
+		}
+		return { ok: true, header: header.header, payload };
+	} catch (err) {
+		if (err instanceof AttachmentNetworkError || abort.signal.aborted) {
+			return { ok: false, code: 'network' };
+		}
+		return { ok: false, code: attachmentFailure(err) };
+	} finally {
+		clearTimeout(timer);
+		abort.abort();
 	}
 }
 
@@ -2359,6 +2573,12 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 			case 'disablePersistent':
 				await handleDisablePersistent(msg.args as DisablePersistentArgs);
 				respond(port, msg.id, undefined);
+				break;
+			case 'attachmentHeader':
+				respond(port, msg.id, await handleAttachmentHeader(msg.args as AttachmentHeaderArgs));
+				break;
+			case 'attachmentBytes':
+				respond(port, msg.id, await handleAttachmentBytes(msg.args as AttachmentBytesArgs));
 				break;
 			case 'decrypt':
 				respond(port, msg.id, await handleDecrypt(msg.args as DecryptArgs));

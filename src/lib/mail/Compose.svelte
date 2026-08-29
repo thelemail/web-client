@@ -322,7 +322,7 @@
 				const ptr = detail.attachments[i]?.pointer;
 				if (!ptr) continue;
 				try {
-					const file = await restoreAttachmentFile(accountId, { url: ptr.url });
+					const file = await restoreAttachmentFile(accountId, ptr);
 					const att: ComposeAttachment = {
 						id: crypto.randomUUID(),
 						file,

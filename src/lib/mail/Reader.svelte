@@ -6,9 +6,6 @@
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import Download from '@lucide/svelte/icons/download';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MailOpen from '@lucide/svelte/icons/mail-open';
 	import Inbox from '@lucide/svelte/icons/inbox';
@@ -37,12 +34,9 @@
 	import { untrack } from 'svelte';
 	import { DecryptionError } from '$lib/mail/decrypt';
 	import { auth } from '$lib/stores/auth.svelte';
-	import {
-		decryptAttachmentHeader,
-		downloadAttachment,
-		initialChips,
-		type AttachmentChip
-	} from '$lib/mail/attachments';
+	import { getMessage } from '$lib/api/messages';
+	import { initialChips, type AttachmentChip } from '$lib/mail/attachments';
+	import AttachmentList from '$lib/mail/AttachmentList.svelte';
 	import { hydrateThread } from './hydrateThread';
 	import TrustMark from './TrustMark.svelte';
 	import { acceptSenderKeyChange } from './senderVerify';
@@ -277,7 +271,12 @@
 		| { id: string; status: 'ready'; render: RenderResult; attachments: AttachmentChip[] }
 		| { id: string; status: 'error'; error: string };
 
+	const BODY_MAX_ATTEMPTS = 3;
+	const BODY_RETRY_BASE_MS = 800;
+
 	let bodyState = $state<BodyState | null>(null);
+	let bodyRetryTick = $state(0);
+	let bodyAttempts = 0;
 	const openedMessageId = $derived(m?.id ?? null);
 
 	type ThreadMeta = {
@@ -403,13 +402,18 @@
 
 	$effect(() => {
 		const current = m;
+		void bodyRetryTick;
 		if (!current) {
 			bodyState = null;
+			bodyAttempts = 0;
 			return;
 		}
-		if (bodyState?.id === current.id && bodyState.status !== 'error') {
+		const previous = untrack(() => bodyState);
+		if (previous?.id === current.id && previous.status !== 'error') {
 			return;
 		}
+		const attempt = previous?.id === current.id ? bodyAttempts + 1 : 1;
+		bodyAttempts = attempt;
 		bodyState = { id: current.id, status: 'loading' };
 		void (async () => {
 			try {
@@ -422,29 +426,6 @@
 				const chips = initialChips(detail.attachments ?? []);
 				if (bodyState?.id !== current.id) return;
 				bodyState = { id: current.id, status: 'ready', render, attachments: chips };
-				for (const chip of chips) {
-					void (async () => {
-						try {
-							const header = await decryptAttachmentHeader(accountId, chip.pointer);
-							if (bodyState?.status !== 'ready' || bodyState.id !== current.id) return;
-							bodyState = {
-								...bodyState,
-								attachments: bodyState.attachments.map((c) =>
-									c.id === chip.id ? { ...c, state: 'ready', header } : c
-								)
-							};
-						} catch (err) {
-							if (bodyState?.status !== 'ready' || bodyState.id !== current.id) return;
-							const msgText = err instanceof Error ? err.message : 'decrypt failed';
-							bodyState = {
-								...bodyState,
-								attachments: bodyState.attachments.map((c) =>
-									c.id === chip.id ? { ...c, state: 'error', error: msgText } : c
-								)
-							};
-						}
-					})();
-				}
 			} catch (err) {
 				if (bodyState?.id !== current.id) return;
 				const msgText =
@@ -454,6 +435,14 @@
 							? err.message
 							: 'failed';
 				bodyState = { id: current.id, status: 'error', error: msgText };
+				if (attempt < BODY_MAX_ATTEMPTS) {
+					setTimeout(
+						() => {
+							if (untrack(() => bodyState)?.id === current.id) bodyRetryTick += 1;
+						},
+						BODY_RETRY_BASE_MS * 2 ** (attempt - 1)
+					);
+				}
 			}
 		})();
 	});
@@ -488,28 +477,15 @@
 	const attachmentChips = $derived<AttachmentChip[]>(
 		bodyState?.status === 'ready' ? bodyState.attachments : []
 	);
+	const isThreadView = $derived(
+		Math.max(enriched?.thread?.length ?? 0, m?.threadCount ?? 0) > 1
+	);
 
-	function formatChipSize(chip: AttachmentChip): string {
-		const n = chip.header?.plaintextSize ?? chip.pointer.sizeBytes;
-		if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
-		if (n >= 1024) return (n / 1024).toFixed(1) + ' KB';
-		return n + ' B';
-	}
-
-	function chipTitle(chip: AttachmentChip): string {
-		if (chip.header) return chip.header.filename;
-		if (chip.state === 'error') return 'Failed to decrypt';
-		return 'Decrypting…';
-	}
-
-	async function onDownload(chip: AttachmentChip) {
-		try {
-			const accountId = auth.accountId;
-			if (!accountId) throw new Error('locked');
-			await downloadAttachment(accountId, chip.pointer, chip.header);
-		} catch (err) {
-			console.warn('attachment download failed', err);
-		}
+	async function refreshPointer(attachmentId: string) {
+		const id = m?.id;
+		if (!id) return null;
+		const detail = await getMessage(id);
+		return detail.attachments?.find((a) => a.id === attachmentId)?.pointer ?? null;
 	}
 	function formatEventRange(ev: CalendarEvent): string {
 		const start = ev.start?.display ?? '';
@@ -891,36 +867,9 @@
 						<EventCard {ev} message={enriched ?? m} />
 					{/each}
 
-				{/if}
-
-				{#if attachmentChips.length > 0}
-					<div class="att-row">
-						<div class="att-h">
-							<Paperclip size={14} />{attachmentChips.length} attachment{attachmentChips.length > 1
-								? 's'
-								: ''}
-						</div>
-						<div class="att-list">
-							{#each attachmentChips as a (a.id)}
-								<div class="att-card" class:err={a.state === 'error'}>
-									<div class="ic"><FileText size={19} /></div>
-									<div class="info">
-										<div class="nm">{chipTitle(a)}</div>
-										<div class="sz">{formatChipSize(a)}</div>
-									</div>
-									<button
-										type="button"
-										class="dl"
-										title={a.state === 'ready' ? 'Download' : 'Decrypting…'}
-										disabled={a.state !== 'ready'}
-										onclick={() => onDownload(a)}
-									>
-										<Download size={16} />
-									</button>
-								</div>
-							{/each}
-						</div>
-					</div>
+					{#if !isThreadView}
+						<AttachmentList chips={attachmentChips} refresh={refreshPointer} />
+					{/if}
 				{/if}
 
 				{#if replyMode}
