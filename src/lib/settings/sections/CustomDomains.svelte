@@ -3,6 +3,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
@@ -31,13 +32,32 @@
 
 	const busy = new SvelteSet<string>();
 
-	async function remove(id: string) {
+	let menuFor = $state<string | null>(null);
+	let confirmFor = $state<string | null>(null);
+
+	function openMenu(id: string) {
+		menuFor = menuFor === id ? null : id;
+	}
+
+	function dismiss(e: Event) {
+		if (menuFor === null) return;
+		const t = e.target;
+		if (t instanceof Element && t.closest('.cd-menu-wrap')) return;
+		menuFor = null;
+	}
+
+	function startRemove(id: string) {
+		menuFor = null;
+		confirmFor = id;
+	}
+
+	async function confirmRemove(id: string) {
 		const ws = workspaces.workspace?.id;
 		if (!ws) return;
-		if (!confirm('Remove this domain? Mail addressed to it will stop being accepted.')) return;
 		busy.add(id);
 		try {
 			await store.remove(ws, id);
+			confirmFor = null;
 		} finally {
 			busy.delete(id);
 		}
@@ -71,6 +91,11 @@
 		return () => clearInterval(t);
 	});
 </script>
+
+<svelte:window
+	onpointerdown={dismiss}
+	onkeydown={(e) => e.key === 'Escape' && (menuFor = null)}
+/>
 
 <SecHead
 	title="Domains you own"
@@ -121,20 +146,55 @@
 							{/if}
 						</span>
 						<span class="cd-acts">
-							<button
-								type="button"
-								class="btn btn-ghost danger btn-sm"
-								disabled={!manage || isBusy}
-								onclick={() => remove(d.id)}
-							>
-								<Trash2 size={14} />Remove
-							</button>
-							{#if live}
-								<a class="btn btn-secondary" href={setupHref(d)}>Review setup</a>
+							{#if confirmFor === d.id}
+								<span class="cd-confirm">Remove {d.domain}? Mail to it stops arriving.</span>
+								<button
+									type="button"
+									class="btn btn-secondary btn-sm"
+									disabled={isBusy}
+									onclick={() => (confirmFor = null)}>Cancel</button
+								>
+								<button
+									type="button"
+									class="btn btn-danger btn-sm"
+									disabled={isBusy}
+									onclick={() => confirmRemove(d.id)}
+								>
+									{isBusy ? 'Removing…' : 'Remove'}
+								</button>
 							{:else}
-								<a class="btn btn-primary" href={setupHref(d)}>
-									Continue setup<ArrowRight size={15} />
-								</a>
+								{#if live}
+									<a class="btn btn-secondary" href={setupHref(d)}>Review setup</a>
+								{:else}
+									<a class="btn btn-primary" href={setupHref(d)}>
+										Continue setup<ArrowRight size={15} />
+									</a>
+								{/if}
+								{#if manage}
+									<span class="cd-menu-wrap">
+										<button
+											type="button"
+											class="cd-menu-btn"
+											aria-label="Domain actions"
+											aria-expanded={menuFor === d.id}
+											disabled={isBusy}
+											onclick={() => openMenu(d.id)}
+										>
+											<EllipsisVertical size={16} strokeWidth={1.75} />
+										</button>
+										{#if menuFor === d.id}
+											<div class="cd-menu" role="menu">
+												<button
+													type="button"
+													class="cd-menu-item danger"
+													onclick={() => startRemove(d.id)}
+												>
+													<Trash2 size={14} strokeWidth={1.75} />Remove domain
+												</button>
+											</div>
+										{/if}
+									</span>
+								{/if}
 							{/if}
 						</span>
 					</div>
@@ -227,6 +287,71 @@
 		align-items: center;
 		gap: 8px;
 		margin-left: auto;
+	}
+	.cd-menu-wrap {
+		position: relative;
+		display: inline-flex;
+	}
+	.cd-menu-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+		border-radius: var(--radius-control);
+		background: transparent;
+		border: 1px solid transparent;
+		color: var(--ink-600);
+		cursor: pointer;
+	}
+	.cd-menu-btn:hover {
+		background: var(--paper-200);
+	}
+	.cd-menu {
+		position: absolute;
+		right: 0;
+		top: 34px;
+		z-index: 40;
+		display: flex;
+		flex-direction: column;
+		min-width: 180px;
+		padding: 4px;
+		background: var(--surface);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-lg);
+	}
+	.cd-menu-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 10px;
+		font-family: inherit;
+		font-size: 13px;
+		text-align: left;
+		background: transparent;
+		border: none;
+		border-radius: var(--radius-control);
+		color: var(--ink-700);
+		cursor: pointer;
+	}
+	.cd-menu-item:hover {
+		background: var(--paper-200);
+	}
+	.cd-menu-item.danger {
+		color: var(--danger-700);
+	}
+	.cd-confirm {
+		font-size: 12.5px;
+		color: var(--fg-strong);
+	}
+	.btn-danger {
+		background: var(--danger-700);
+		color: #fff;
+		border: 1px solid var(--danger-700);
+	}
+	.btn-danger:disabled {
+		opacity: 0.6;
 	}
 	.cd-empty {
 		padding: 18px;

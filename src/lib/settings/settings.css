@@ -961,9 +961,10 @@
 .settings-app .dw-rec-kind { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--ink-500); }
 .settings-app .dw-rec-meta { font-size: 11.5px; color: var(--fg-muted); flex: 1; min-width: 0; }
 .settings-app .dw-rec-meta code { font-family: var(--font-mono); color: var(--ink-700); background: var(--paper-100); border-radius: var(--radius-xs); padding: 1px 5px; word-break: break-all; }
-.settings-app .dw-rec-val { padding: 10px 12px; display: flex; align-items: flex-start; gap: 9px; }
+.settings-app .dw-rec-why { margin: 0; padding: 9px 12px 0; font-size: 12px; line-height: 1.55; color: var(--fg-muted); }
+.settings-app .dw-rec-val { padding: 9px 12px 10px; display: flex; align-items: flex-start; gap: 9px; }
 .settings-app .dw-rec-val code { flex: 1; font-family: var(--font-mono); font-size: 12px; line-height: 1.55; color: var(--ink-800); word-break: break-all; }
-.settings-app .dw-opt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-faint); }
+.settings-app .dw-opt { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-faint); background: var(--paper-100); border-radius: var(--radius-sm); padding: 2px 6px; flex: 0 0 auto; }
 
 .settings-app .dw-note { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: var(--radius-control); font-size: 12.5px; line-height: 1.5; background: var(--paper-100); color: var(--fg-muted); }
 .settings-app .dw-note svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 1px; }
