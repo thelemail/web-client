@@ -5,6 +5,7 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
+	import { SignatureBlock } from './signatureBlock';
 
 	interface Props {
 		html?: string;
@@ -57,7 +58,8 @@
 					autolink: true,
 					HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' }
 				}),
-				Placeholder.configure({ placeholder: initialPlaceholder })
+				Placeholder.configure({ placeholder: initialPlaceholder }),
+				SignatureBlock
 			],
 			content: initialHtml || '',
 			editable: initialEditable,

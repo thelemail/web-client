@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import X from '@lucide/svelte/icons/x';
 	import Minus from '@lucide/svelte/icons/minus';
@@ -68,15 +70,20 @@
 		kind: 'Default'
 	});
 	const identityOptions = $derived.by<SendIdentity[]>(() => {
-		const fromStore: SendIdentity[] = addresses.items.map((a) => ({
-			name: auth.fullName ?? a.email,
-			email: a.email,
-			init: initialsFor(auth.fullName, a.email),
-			bg: 'var(--pine-700)',
-			fg: '#EEF2EA',
-			org: '',
-			kind: a.isPrimary ? 'Default' : 'Identity'
-		}));
+		const fromStore: SendIdentity[] = addresses.items.map((a) => {
+			const label = a.shared ? (a.name ?? a.email) : (a.name ?? auth.fullName ?? a.email);
+			return {
+				name: label,
+				email: a.email,
+				init: initialsFor(label, a.email),
+				bg: a.shared ? 'var(--info-700)' : 'var(--pine-700)',
+				fg: '#EEF2EA',
+				org: '',
+				kind: a.shared ? 'Alias' : a.isPrimary ? 'Default' : 'Identity',
+				addressId: a.id,
+				aliasId: a.sharedAliasId ?? undefined
+			};
+		});
 		if (fromStore.length === 0) return [userIdentity];
 		return fromStore;
 	});
@@ -119,13 +126,25 @@
 		if (isDraftEdit) return;
 		if (!editor) return;
 		if (!currentAddress) return;
+		if (seededSignature) return;
+		applySignatureSeed(editor, currentAddress.id, currentSignature?.bodyHtml ?? '');
+		seededSignature = true;
+	});
+
+	function pickIdentity(i: number) {
+		identIdx = i;
+		fromOpen = false;
+		if (isDraftEdit || !editor) return;
+		const addr = addresses.getByEmail(identityOptions[i]?.email ?? '');
+		if (!addr) return;
+		const sig = signatures.getForAddress(addr.id);
 		if (!seededSignature) {
-			applySignatureSeed(editor, currentAddress.id, currentSignature?.bodyHtml ?? '');
+			applySignatureSeed(editor, addr.id, sig?.bodyHtml ?? '');
 			seededSignature = true;
 			return;
 		}
-		swapSignatureForAddress(editor, currentAddress.id, currentSignature?.bodyHtml ?? '');
-	});
+		swapSignatureForAddress(editor, addr.id, sig?.bodyHtml ?? '');
+	}
 
 	let attachments = $state<ComposeAttachment[]>([]);
 	let fileInput: HTMLInputElement | undefined = $state();
@@ -526,6 +545,7 @@
 					attachments: attachments.length > 0 ? attachments : undefined,
 					fromEmail: ident.email,
 					fromName: ident.name,
+					fromAliasId: ident.aliasId,
 					scheduledAt: when ?? undefined
 				},
 				{ acceptKeyChange }
@@ -700,15 +720,14 @@
 									role="menuitemradio"
 									aria-checked={i === identIdx}
 									onclick={() => {
-										identIdx = i;
-										fromOpen = false;
+										pickIdentity(i);
 									}}
 								>
 									<Avatar initials={id.init} size={30} bg={id.bg} fg={id.fg} />
 									<span class="fm-tx">
 										<span class="fm-top">
 											<b>{id.name}</b>
-											<span class="fm-kind">{id.kind}</span>
+											<span class="fm-kind">{id.kind === 'Alias' ? 'Shared' : id.kind}</span>
 										</span>
 										<span class="fm-em">{id.email}</span>
 										{#if id.org}<span class="fm-org">{id.org}</span>{/if}
@@ -717,8 +736,15 @@
 								</button>
 							{/each}
 							<div class="fm-sep"></div>
-							<button type="button" class="fm-add">
-								<AtSign size={16} />Manage identities &amp; aliases
+							<button
+								type="button"
+								class="fm-add"
+								onclick={() => {
+									fromOpen = false;
+									void goto(`/u/${page.params.slot ?? '0'}/settings/addresses`);
+								}}
+							>
+								<AtSign size={16} />Manage addresses
 							</button>
 						</div>
 					{/if}
@@ -956,6 +982,7 @@
 			previousPinned={err.payload.previousPinned}
 			previousVerifiedAt={err.payload.previousVerifiedAt}
 			currentFingerprint={err.payload.currentFingerprint}
+			shared={err.payload.shared}
 			onSendAnyway={trustAndSend}
 			onCancel={clearErr}
 		/>

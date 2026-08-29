@@ -49,6 +49,11 @@ import type {
 	CompleteRecoveryUnlockArgs,
 	CompleteRecoveryUnlockResponse,
 	DecryptArgs,
+	LoadAliasKeysArgs,
+	LoadAliasKeysResponse,
+	UnloadAliasKeysArgs,
+	CreateAliasKeyArgs,
+	CreateAliasKeyResponse,
 	DecryptResponse,
 	DisablePersistentArgs,
 	EncryptArgs,
@@ -143,6 +148,17 @@ interface VaultState {
 	privateKey: openpgp.PrivateKey;
 	keyPassword: string;
 	wrapKey?: CryptoKey;
+	aliasKeys: Map<string, AliasKeyEntry>;
+	aliasCurrent: Map<string, string>;
+}
+
+interface AliasKeyEntry {
+	aliasId: string;
+	addressId: string;
+	email: string;
+	keyVersion: number;
+	fingerprintHex: string;
+	privateKey: openpgp.PrivateKey;
 }
 
 interface PendingLogin {
@@ -352,7 +368,9 @@ async function handleCompleteLoginUnlock(
 			keySalt: args.keySalt,
 			armoredEncryptedPrivateKey: armored,
 			privateKey: unlocked,
-			keyPassword: passphrase
+			keyPassword: passphrase,
+			aliasKeys: new Map(),
+			aliasCurrent: new Map()
 		};
 		vaults.set(args.accountId, v);
 
@@ -841,7 +859,9 @@ async function handleTryRestoreFromPersistent(
 				armoredEncryptedPrivateKey: rec.armoredEncryptedPrivateKey,
 				privateKey: unlocked,
 				keyPassword,
-				wrapKey
+				wrapKey,
+				aliasKeys: new Map(),
+				aliasCurrent: new Map()
 			};
 			vaults.set(rec.accountId, v);
 			broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
@@ -872,7 +892,9 @@ async function handleTryRestoreFromPersistent(
 			armoredEncryptedPrivateKey: rec.armoredEncryptedPrivateKey,
 			privateKey,
 			keyPassword,
-			wrapKey
+			wrapKey,
+			aliasKeys: new Map(),
+			aliasCurrent: new Map()
 		};
 		vaults.set(rec.accountId, v);
 		broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
@@ -891,12 +913,156 @@ function hexToBytes(hex: string): Uint8Array {
 	return out;
 }
 
+function fingerprintHexOf(key: openpgp.Key): string {
+	const fp = key.getFingerprint();
+	if (typeof fp === 'string') return fp.toLowerCase();
+	return [...new Uint8Array(fp as ArrayLike<number>)]
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+}
+
+function aliasSigningKey(v: VaultState, aliasId: string | undefined): openpgp.PrivateKey | null {
+	if (!aliasId) return v.privateKey;
+	const fp = v.aliasCurrent.get(aliasId);
+	if (!fp) return null;
+	return v.aliasKeys.get(fp)?.privateKey ?? null;
+}
+
+function recomputeAliasCurrent(v: VaultState) {
+	v.aliasCurrent.clear();
+	const best = new Map<string, AliasKeyEntry>();
+	for (const entry of v.aliasKeys.values()) {
+		const cur = best.get(entry.aliasId);
+		if (!cur || entry.keyVersion > cur.keyVersion) best.set(entry.aliasId, entry);
+	}
+	for (const [aliasId, entry] of best) v.aliasCurrent.set(aliasId, entry.fingerprintHex);
+}
+
+async function handleLoadAliasKeys(args: LoadAliasKeysArgs): Promise<LoadAliasKeysResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) {
+		return { ok: false, code: 'locked' };
+	}
+	const loaded: string[] = [];
+	const failed: { aliasId: string; keyVersion: number }[] = [];
+	for (const g of args.grants) {
+		const want = g.aliasKeyFingerprintHex.toLowerCase();
+		if (v.aliasKeys.has(want)) {
+			loaded.push(want);
+			continue;
+		}
+		try {
+			const message = await openpgp.readMessage({ armoredMessage: g.wrappedPrivateKeyArmored });
+			const { data } = await openpgp.decrypt({
+				message,
+				decryptionKeys: v.privateKey,
+				expectSigned: false
+			});
+			if (typeof data !== 'string') {
+				failed.push({ aliasId: g.aliasId, keyVersion: g.keyVersion });
+				continue;
+			}
+			const privateKey = await openpgp.readPrivateKey({ armoredKey: data });
+			const got = fingerprintHexOf(privateKey);
+			if (got !== want) {
+				failed.push({ aliasId: g.aliasId, keyVersion: g.keyVersion });
+				continue;
+			}
+			v.aliasKeys.set(got, {
+				aliasId: g.aliasId,
+				addressId: g.addressId,
+				email: g.email,
+				keyVersion: g.keyVersion,
+				fingerprintHex: got,
+				privateKey
+			});
+			loaded.push(got);
+		} catch (err) {
+			console.warn('keystore: alias key unwrap failed', err);
+			failed.push({ aliasId: g.aliasId, keyVersion: g.keyVersion });
+		}
+	}
+	recomputeAliasCurrent(v);
+	broadcast({
+		type: 'aliasKeysChanged',
+		accountId: args.accountId,
+		fingerprints: [...v.aliasKeys.keys()]
+	});
+	return { ok: true, loaded, failed };
+}
+
+function handleUnloadAliasKeys(args: UnloadAliasKeysArgs): void {
+	const v = vaults.get(args.accountId);
+	if (!v) return;
+	v.aliasKeys.clear();
+	v.aliasCurrent.clear();
+	broadcast({ type: 'aliasKeysChanged', accountId: args.accountId, fingerprints: [] });
+}
+
+async function handleCreateAliasKey(args: CreateAliasKeyArgs): Promise<CreateAliasKeyResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) {
+		return { ok: false, code: 'locked' };
+	}
+	if (!args.recipients.length) {
+		return { ok: false, code: 'no_recipients' };
+	}
+	let recipientKeys: { accountId: string; key: openpgp.Key }[];
+	try {
+		recipientKeys = await Promise.all(
+			args.recipients.map(async (r) => ({
+				accountId: r.accountId,
+				key: await openpgp.readKey({ armoredKey: r.publicKeyArmored })
+			}))
+		);
+	} catch (err) {
+		console.warn('keystore: alias key invalid recipient', err);
+		return { ok: false, code: 'invalid_recipient_key' };
+	}
+	try {
+		const generated = await openpgp.generateKey({
+			type: 'curve25519',
+			userIDs: [{ name: args.displayName, email: args.email }],
+			format: 'object'
+		});
+		const armoredPrivate = generated.privateKey.armor();
+		const grants = [];
+		for (const r of recipientKeys) {
+			const message = await openpgp.createMessage({ text: armoredPrivate });
+			const wrapped = await openpgp.encrypt({
+				message,
+				encryptionKeys: r.key,
+				signingKeys: v.privateKey,
+				format: 'armored'
+			});
+			grants.push({
+				accountId: r.accountId,
+				wrappedPrivateKeyArmored: wrapped as string,
+				memberKeyFingerprintHex: fingerprintHexOf(r.key)
+			});
+		}
+		return {
+			ok: true,
+			publicKeyArmored: generated.publicKey.armor(),
+			keyFingerprintHex: fingerprintHexOf(generated.privateKey),
+			grants
+		};
+	} catch (err) {
+		console.warn('keystore: alias key generation failed', err);
+		return { ok: false, code: 'unknown' };
+	}
+}
+
 async function handleGetPublicKey(args: GetPublicKeyArgs): Promise<GetPublicKeyResponse> {
 	const v = vaults.get(args.accountId);
 	if (!v) {
 		return { ok: false, code: 'locked' };
 	}
-	const pub = v.privateKey.toPublic();
+	const signing = aliasSigningKey(v, args.aliasId);
+	if (!signing) {
+		return { ok: false, code: 'locked' };
+	}
+	const pub = signing.toPublic();
 	const fp = pub.getFingerprint();
 	const fingerprint = typeof fp === 'string' ? hexToBytes(fp) : new Uint8Array(fp as ArrayLike<number>);
 	return {
@@ -1034,10 +1200,14 @@ async function handleEncrypt(args: EncryptArgs): Promise<EncryptResponse> {
 	try {
 		const message = await openpgp.createMessage({ binary: args.plaintext });
 		const signWith = args.signWithVaultKey ?? true;
+		const signingKey = aliasSigningKey(v, args.aliasId);
+		if (signWith && !signingKey) {
+			return { ok: false, code: 'locked' };
+		}
 		const ciphertext = await openpgp.encrypt({
 			message,
 			encryptionKeys: recipientKey,
-			signingKeys: signWith ? v.privateKey : undefined,
+			signingKeys: signWith ? (signingKey as openpgp.PrivateKey) : undefined,
 			format: 'binary'
 		});
 		return { ok: true, ciphertext: ciphertext as Uint8Array };
@@ -1067,10 +1237,14 @@ async function handleEncryptToKeys(args: EncryptToKeysArgs): Promise<EncryptToKe
 	try {
 		const message = await openpgp.createMessage({ binary: args.plaintext });
 		const signWith = args.signWithVaultKey ?? true;
+		const signingKey = aliasSigningKey(v, args.aliasId);
+		if (signWith && !signingKey) {
+			return { ok: false, code: 'locked' };
+		}
 		const armored = await openpgp.encrypt({
 			message,
 			encryptionKeys: recipientKeys,
-			signingKeys: signWith ? v.privateKey : undefined,
+			signingKeys: signWith ? (signingKey as openpgp.PrivateKey) : undefined,
 			format: 'armored'
 		});
 		return { ok: true, armored: armored as string };
@@ -1142,6 +1316,16 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		}
 	}
 	const wanted = args.verificationKeysArmored?.length ? true : false;
+	let decryptionKeys: openpgp.PrivateKey | openpgp.PrivateKey[] = v.privateKey;
+	if (v.aliasKeys.size) {
+		const hint = args.keyFingerprintHex?.toLowerCase();
+		const hinted = hint ? v.aliasKeys.get(hint) : undefined;
+		if (hinted) {
+			decryptionKeys = hinted.privateKey;
+		} else if (!hint || hint !== fingerprintHexOf(v.privateKey)) {
+			decryptionKeys = [v.privateKey, ...[...v.aliasKeys.values()].map((e) => e.privateKey)];
+		}
+	}
 	try {
 		const message = args.ciphertextArmored
 			? await openpgp.readMessage({ armoredMessage: args.ciphertextArmored })
@@ -1149,7 +1333,7 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		if (args.binary) {
 			const { data, signatures } = await openpgp.decrypt({
 				message,
-				decryptionKeys: v.privateKey,
+				decryptionKeys,
 				verificationKeys: verificationKeys.length ? verificationKeys : undefined,
 				expectSigned: false,
 				format: 'binary'
@@ -1165,7 +1349,7 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		}
 		const { data, signatures } = await openpgp.decrypt({
 			message,
-			decryptionKeys: v.privateKey,
+			decryptionKeys,
 			verificationKeys: verificationKeys.length ? verificationKeys : undefined,
 			expectSigned: false
 		});
@@ -1179,6 +1363,9 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		};
 	} catch (err) {
 		const msg = err instanceof Error ? err.message : String(err);
+		if (/no decryption key|session key decryption failed/i.test(msg)) {
+			return { ok: false, code: 'no_matching_key' };
+		}
 		if (/armor|message|read|decrypt/i.test(msg)) {
 			return { ok: false, code: 'invalid_ciphertext' };
 		}
@@ -1385,7 +1572,9 @@ async function handleOpaqueFinalizeRegister(
 			masterKey: op.amk,
 			armoredEncryptedPrivateKey: op.armoredEncryptedPrivateKey,
 			privateKey: op.privateKeyObj,
-			keyPassword: await derivePgpPassphrase(op.amk as Uint8Array)
+			keyPassword: await derivePgpPassphrase(op.amk as Uint8Array),
+			aliasKeys: new Map(),
+			aliasCurrent: new Map()
 		};
 		vaults.set(args.accountId, v);
 
@@ -1483,7 +1672,9 @@ async function handleOpaqueCompleteLoginUnlock(
 			masterKey: amk,
 			armoredEncryptedPrivateKey: args.encryptedPrivateKey,
 			privateKey: unlocked,
-			keyPassword: pgpPassphrase
+			keyPassword: pgpPassphrase,
+			aliasKeys: new Map(),
+			aliasCurrent: new Map()
 		};
 		vaults.set(args.accountId, v);
 
@@ -2171,6 +2362,16 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'decrypt':
 				respond(port, msg.id, await handleDecrypt(msg.args as DecryptArgs));
+				break;
+			case 'loadAliasKeys':
+				respond(port, msg.id, await handleLoadAliasKeys(msg.args as LoadAliasKeysArgs));
+				break;
+			case 'unloadAliasKeys':
+				handleUnloadAliasKeys(msg.args as UnloadAliasKeysArgs);
+				respond(port, msg.id, undefined);
+				break;
+			case 'createAliasKey':
+				respond(port, msg.id, await handleCreateAliasKey(msg.args as CreateAliasKeyArgs));
 				break;
 			case 'getPublicKey':
 				respond(port, msg.id, await handleGetPublicKey(msg.args as GetPublicKeyArgs));

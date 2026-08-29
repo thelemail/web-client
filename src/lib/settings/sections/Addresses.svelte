@@ -11,9 +11,14 @@
 	import AddRow from '../AddRow.svelte';
 	import CatchAllCard from './CatchAllCard.svelte';
 	import type { CeremonyKind, SettingsState } from '../data';
+	import Users from '@lucide/svelte/icons/users';
 	import { addresses } from '$lib/stores/addresses.svelte';
+	import { aliases } from '$lib/stores/aliases.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { canManageWorkspace } from '../permissions';
+	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
+	import type { SharedAlias } from '$lib/api/aliases';
 
 	interface Props {
 		s: SettingsState;
@@ -28,6 +33,29 @@
 	let renameError = $state<string | null>(null);
 
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
+	const manage = $derived(canManageWorkspace());
+	const sharedList = $derived<SharedAlias[]>(manage ? aliases.items : []);
+	let managing = $state<SharedAlias | null>(null);
+
+	function memberSummary(a: SharedAlias): string {
+		const mine = a.members.some((m) => m.accountId === auth.accountId);
+		const others = a.members.length - (mine ? 1 : 0);
+		if (mine && others === 0) return 'Only you';
+		if (mine) return others === 1 ? 'You and 1 other' : `You and ${others} others`;
+		return a.members.length === 1 ? '1 person' : `${a.members.length} people`;
+	}
+
+	async function removeShared(a: SharedAlias) {
+		const ws = workspaces.workspace?.id;
+		if (!ws) return;
+		if (!confirm(`Remove ${a.email}? Mail to it will stop being accepted.`)) return;
+		try {
+			await aliases.remove(ws, a.id);
+			await addresses.load();
+		} catch (err) {
+			console.warn('remove shared alias failed', err);
+		}
+	}
 
 	async function promote(id: string) {
 		try {
@@ -74,19 +102,24 @@
 
 <SecHead
 	title="Addresses"
-	desc="The identities you send and receive as. Promoting one to primary makes it your default From and your sign-in email."
+	desc="The addresses you send and receive as. Promoting one to primary makes it your default From and your sign-in email."
 />
 
 <div class="scard">
-	<CardHead icon={AtSign} title="Addresses">
-		{#snippet right()}<span class="card-meta">{addresses.items.length} identities</span>{/snippet}
+	<CardHead icon={AtSign} title="Your addresses">
+		{#snippet right()}
+			<span class="card-meta">
+				{addresses.personal.length}
+				{addresses.personal.length === 1 ? 'address' : 'addresses'}
+			</span>
+		{/snippet}
 	</CardHead>
 	{#if addresses.loading && addresses.items.length === 0}
 		<div class="alias-row"><div class="alias-info"><div class="alias-addr">Loading…</div></div></div>
-	{:else if addresses.items.length === 0}
+	{:else if addresses.personal.length === 0}
 		<div class="alias-row"><div class="alias-info"><div class="alias-addr">No addresses yet.</div></div></div>
 	{/if}
-	{#each addresses.items as a (a.id)}
+	{#each addresses.personal as a (a.id)}
 		<div class="alias-row">
 			{#if a.isPrimary}
 				<span class="alias-star" title="Primary identity"><Star size={16} /></span>
@@ -150,14 +183,85 @@
 			{/if}
 		</div>
 	{/each}
-	<AddRow label="Add an address" onClick={() => launch('address')} />
+	{#if !manage}
+		<div class="alias-row">
+			<div class="alias-info"><div class="alias-addr">New addresses are set up by a workspace admin.</div></div>
+		</div>
+	{/if}
 	{#if addresses.error}
 		<div class="alias-row"><div class="alias-info"><div class="alias-addr err">{addresses.error}</div></div></div>
 	{/if}
 </div>
 
+<div class="scard">
+	<CardHead icon={Users} title="Shared addresses">
+		{#snippet right()}
+			{@const n = manage ? sharedList.length : addresses.shared.length}
+			<span class="card-meta">{n} {n === 1 ? 'address' : 'addresses'}</span>
+		{/snippet}
+	</CardHead>
+	{#if manage}
+		{#if sharedList.length === 0}
+			<div class="alias-row">
+				<div class="alias-info">
+					<div class="alias-addr">
+						None yet. A shared address reaches everyone on it, and each person can write from it.
+					</div>
+				</div>
+			</div>
+		{/if}
+		{#each sharedList as a (a.id)}
+			<div class="alias-row">
+				<span class="alias-star"><Users size={16} /></span>
+				<div class="alias-info">
+					<div class="alias-name">
+						{a.name}
+						<Badge kind="pine">Shared</Badge>
+						{#if a.rotationRequired}<Badge kind="warn">Needs a new key</Badge>{/if}
+					</div>
+					<div class="alias-addr">{a.email} · {memberSummary(a)}</div>
+				</div>
+				<button type="button" class="rowmenu" title="Manage people" onclick={() => (managing = a)}>
+					<Users size={16} />
+				</button>
+				<button type="button" class="rowmenu" title="Remove" onclick={() => removeShared(a)}>
+					<Trash2 size={16} />
+				</button>
+			</div>
+		{/each}
+		<AddRow label="Add an address" onClick={() => launch('alias')} />
+	{:else}
+		{#if addresses.shared.length === 0}
+			<div class="alias-row">
+				<div class="alias-info"><div class="alias-addr">You are not on any shared addresses.</div></div>
+			</div>
+		{/if}
+		{#each addresses.shared as a (a.id)}
+			<div class="alias-row">
+				<span class="alias-star"><Users size={16} /></span>
+				<div class="alias-info">
+					<div class="alias-name">{a.name ?? a.email}<Badge kind="pine">Shared</Badge></div>
+					<div class="alias-addr">{a.email}</div>
+				</div>
+			</div>
+		{/each}
+	{/if}
+	{#if aliases.error}
+		<div class="alias-row"><div class="alias-info"><div class="alias-addr err">{aliases.error}</div></div></div>
+	{/if}
+</div>
+
 {#if showCatchAll}
 	<CatchAllCard />
+{/if}
+
+{#if managing}
+	<AliasCeremony
+		mode="members"
+		alias={managing}
+		onClose={() => (managing = null)}
+		onComplete={() => {}}
+	/>
 {/if}
 
 <style>

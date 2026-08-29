@@ -161,6 +161,8 @@ export interface SendIdentity {
 	fg: string;
 	org: string;
 	kind: IdentityKind;
+	addressId?: string;
+	aliasId?: string;
 }
 
 export interface Contact {

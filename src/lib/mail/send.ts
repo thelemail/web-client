@@ -36,6 +36,7 @@ export interface ComposeInput {
 	attachments?: ComposeAttachment[];
 	fromEmail?: string;
 	fromName?: string;
+	fromAliasId?: string;
 	scheduledAt?: string;
 }
 
@@ -62,6 +63,7 @@ export type SendErrorPayload =
 			previousPinned: string;
 			previousVerifiedAt: string;
 			currentFingerprint: string;
+			shared: boolean;
 	  }
 	| {
 			kind: 'external-key-change';
@@ -132,26 +134,41 @@ const cachedSenderKeys = new Map<string, KeyMaterial>();
 
 if (typeof window !== 'undefined') {
 	keystore.subscribe((msg) => {
-		if (msg.type === 'locked' || msg.type === 'cleared' || msg.type === 'persistentDisabled') {
-			cachedSenderKeys.delete(msg.accountId);
-		} else if (msg.type === 'clearedAll') {
+		if (msg.type === 'clearedAll') {
 			cachedSenderKeys.clear();
+			return;
+		}
+		if (
+			msg.type === 'locked' ||
+			msg.type === 'cleared' ||
+			msg.type === 'persistentDisabled' ||
+			msg.type === 'aliasKeysChanged'
+		) {
+			for (const key of [...cachedSenderKeys.keys()]) {
+				if (key.startsWith(`${msg.accountId}:`)) cachedSenderKeys.delete(key);
+			}
 		}
 	});
 }
 
-export async function senderKey(accountId: string): Promise<KeyMaterial> {
-	const existing = cachedSenderKeys.get(accountId);
+export async function senderKey(accountId: string, aliasId?: string): Promise<KeyMaterial> {
+	const cacheKey = `${accountId}:${aliasId ?? ''}`;
+	const existing = cachedSenderKeys.get(cacheKey);
 	if (existing) return existing;
-	const r = await keystore.getPublicKey({ accountId });
+	const r = await keystore.getPublicKey({ accountId, aliasId });
 	if (!r.ok) {
-		throw new SendError('locked', 'Vault is locked; sign in to send.');
+		throw new SendError(
+			'locked',
+			aliasId
+				? 'This address just changed its key. Reload to pick up the new one.'
+				: 'Vault is locked; sign in to send.'
+		);
 	}
 	const km: KeyMaterial = {
 		publicKeyArmored: r.publicKeyArmored,
 		fingerprintB64: bytesToB64(r.fingerprint)
 	};
-	cachedSenderKeys.set(accountId, km);
+	cachedSenderKeys.set(cacheKey, km);
 	return km;
 }
 
@@ -201,7 +218,11 @@ function directoryPayload(
 	};
 }
 
-function tofuPayload(e: DirectoryVerificationError, address: string): SendErrorPayload | null {
+function tofuPayload(
+	e: DirectoryVerificationError,
+	address: string,
+	shared = false
+): SendErrorPayload | null {
 	const d = e.details;
 	if (
 		!d.previousFingerprint ||
@@ -216,7 +237,8 @@ function tofuPayload(e: DirectoryVerificationError, address: string): SendErrorP
 		address,
 		previousPinned: formatFingerprintHex(d.previousFingerprint),
 		previousVerifiedAt: formatVerifiedAt(d.previousVerifiedAtMillis, d.previousVersion),
-		currentFingerprint: formatFingerprintHex(d.currentFingerprint)
+		currentFingerprint: formatFingerprintHex(d.currentFingerprint),
+		shared
 	};
 }
 
@@ -240,7 +262,7 @@ async function resolveRecipient(
 	} catch (e) {
 		if (e instanceof DirectoryVerificationError) {
 			if (e.code === 'fingerprint_changed') {
-				const payload = tofuPayload(e, normalised);
+				const payload = tofuPayload(e, normalised, lookup.shared === true);
 				throw new SendError(
 					'tofu',
 					`Recipient key has changed since you last verified them.`,
@@ -686,7 +708,7 @@ export async function sendInternalMessage(
 	const fromAddress = input.fromEmail ?? auth.email ?? 'me@thelemail.local';
 	const fromName = input.fromName ?? auth.fullName ?? fromAddress;
 
-	const sender = await senderKey(accountId);
+	const sender = await senderKey(accountId, input.fromAliasId);
 
 	const allParties = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])];
 	const deliverable = opts.deliverOnly

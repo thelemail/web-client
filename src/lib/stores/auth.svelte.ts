@@ -21,6 +21,8 @@ import { signatures } from './signatures.svelte';
 import { customDomains } from './customDomains.svelte';
 import { accountSettings } from './accountSettings.svelte';
 import { workspaces } from './workspaces.svelte';
+import { aliases } from './aliases.svelte';
+import { aliasKeys } from './aliasKeys.svelte';
 import { composeStore } from './compose.svelte';
 import { preferences } from './preferences.svelte';
 import { billing } from './billing.svelte';
@@ -39,6 +41,8 @@ function broadcastAccountToStores(accountId: string | null): void {
 	customDomains.setAccount(accountId);
 	accountSettings.setAccount(accountId);
 	workspaces.setAccount(accountId);
+	aliases.setAccount(accountId);
+	aliasKeys.setAccount(accountId);
 	billing.setAccount(accountId);
 	composeStore.setAccount(accountId);
 	preferences.setAccount(accountId);

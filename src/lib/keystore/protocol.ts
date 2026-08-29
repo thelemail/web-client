@@ -34,6 +34,7 @@ export interface DecryptArgs extends AccountScopedArgs {
 	ciphertextBinary?: Uint8Array;
 	binary?: boolean;
 	verificationKeysArmored?: string[];
+	keyFingerprintHex?: string;
 }
 
 export type SignatureState = 'valid' | 'invalid' | 'none' | 'unknown_key';
@@ -47,9 +48,11 @@ export interface SignatureVerdict {
 export type DecryptResponse =
 	| { ok: true; plaintext: string; signature?: SignatureVerdict }
 	| { ok: true; plaintextBinary: Uint8Array; signature?: SignatureVerdict }
-	| { ok: false; code: 'locked' | 'invalid_ciphertext' | 'unknown' };
+	| { ok: false; code: 'locked' | 'invalid_ciphertext' | 'no_matching_key' | 'unknown' };
 
-export type GetPublicKeyArgs = AccountScopedArgs;
+export interface GetPublicKeyArgs extends AccountScopedArgs {
+	aliasId?: string;
+}
 
 export type GetPublicKeyResponse =
 	| { ok: true; publicKeyArmored: string; fingerprint: Uint8Array }
@@ -76,6 +79,7 @@ export interface EncryptArgs extends AccountScopedArgs {
 	recipientPublicKeyArmored: string;
 	plaintext: Uint8Array;
 	signWithVaultKey?: boolean;
+	aliasId?: string;
 }
 
 export type EncryptResponse =
@@ -86,6 +90,7 @@ export interface EncryptToKeysArgs extends AccountScopedArgs {
 	recipientPublicKeysArmored: string[];
 	plaintext: Uint8Array;
 	signWithVaultKey?: boolean;
+	aliasId?: string;
 }
 
 export type EncryptToKeysResponse =
@@ -295,12 +300,19 @@ export interface PersistentDisabledBroadcast {
 	accountId: string;
 }
 
+export interface AliasKeysChangedBroadcast {
+	type: 'aliasKeysChanged';
+	accountId: string;
+	fingerprints: string[];
+}
+
 export type Broadcast =
 	| VaultChangedBroadcast
 	| LockedBroadcast
 	| ClearedBroadcast
 	| ClearedAllBroadcast
-	| PersistentDisabledBroadcast;
+	| PersistentDisabledBroadcast
+	| AliasKeysChangedBroadcast;
 
 export interface OpaqueStartRegistrationArgs {
 	email: string;
@@ -502,3 +514,50 @@ export interface OpaquePasswordChangeCommitArgs extends AccountScopedArgs {
 export type OpaquePasswordChangeCommitResponse =
 	| { ok: true; persisted: boolean }
 	| { ok: false; code: 'locked' | 'no_pending_operation' };
+
+export interface AliasKeyGrantInput {
+	aliasId: string;
+	addressId: string;
+	email: string;
+	name: string;
+	keyVersion: number;
+	aliasKeyFingerprintHex: string;
+	wrappedPrivateKeyArmored: string;
+	isCurrent: boolean;
+}
+
+export interface LoadAliasKeysArgs extends AccountScopedArgs {
+	grants: AliasKeyGrantInput[];
+}
+
+export type LoadAliasKeysResponse =
+	| { ok: true; loaded: string[]; failed: { aliasId: string; keyVersion: number }[] }
+	| { ok: false; code: 'locked' };
+
+export type UnloadAliasKeysArgs = AccountScopedArgs;
+
+export interface CreateAliasKeyRecipient {
+	accountId: string;
+	publicKeyArmored: string;
+}
+
+export interface CreateAliasKeyArgs extends AccountScopedArgs {
+	email: string;
+	displayName: string;
+	recipients: CreateAliasKeyRecipient[];
+}
+
+export interface CreatedAliasKeyGrant {
+	accountId: string;
+	wrappedPrivateKeyArmored: string;
+	memberKeyFingerprintHex: string;
+}
+
+export type CreateAliasKeyResponse =
+	| {
+			ok: true;
+			publicKeyArmored: string;
+			keyFingerprintHex: string;
+			grants: CreatedAliasKeyGrant[];
+	  }
+	| { ok: false; code: 'locked' | 'invalid_recipient_key' | 'no_recipients' | 'unknown' };

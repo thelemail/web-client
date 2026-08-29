@@ -43,6 +43,7 @@ export interface ExternalComposeInput {
 	attachments?: ComposeAttachment[];
 	fromEmail?: string;
 	fromName?: string;
+	fromAliasId?: string;
 	sentMessageId?: string;
 	scheduledAt?: string;
 }
@@ -204,7 +205,7 @@ export async function sendExternalMessage(
 
 	const fromAddress = input.fromEmail ?? auth.email ?? 'me@thelemail.local';
 	const fromName = input.fromName ?? auth.fullName ?? fromAddress;
-	const sender = input.sentMessageId ? null : await senderKey(accountId);
+	const sender = input.sentMessageId ? null : await senderKey(accountId, input.fromAliasId);
 
 	const { keyed, keyless } = await resolveExternalKeys(allRecipients);
 

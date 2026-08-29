@@ -111,12 +111,18 @@
 		signatureAppendOnReply = append;
 	});
 
+	const ownIdentities = $derived(addresses.personal);
+
 	const replyOptions = $derived([
 		{ id: SAME_AS_SENDING_VALUE, label: REPLY_SAME_LABEL },
-		...identities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
+		...ownIdentities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
 	]);
 
 	const sendingOptions = $derived(
+		ownIdentities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
+	);
+
+	const signatureOptions = $derived(
 		identities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
 	);
 
@@ -170,7 +176,7 @@
 
 	async function onSendingChange(addrId: string) {
 		const target = addresses.getById(addrId);
-		if (!target || target.isPrimary) return;
+		if (!target || target.isPrimary || target.shared) return;
 		try {
 			await addresses.setPrimary(addrId);
 		} catch (err) {
@@ -353,13 +359,13 @@
 		{#snippet right()}
 			<span class="sig-picker">
 				<span class="sig-picker-lbl">For</span>
-				{#if sendingOptions.length > 0}
+				{#if signatureOptions.length > 0}
 					<Select
 						narrow
 						value={sigIdentity ? identityLabel(sigIdentity.name, sigIdentity.email) : ''}
-						options={sendingOptions.map((o) => o.label)}
+						options={signatureOptions.map((o) => o.label)}
 						onChange={(label) => {
-							const opt = sendingOptions.find((o) => o.label === label);
+							const opt = signatureOptions.find((o) => o.label === label);
 							if (opt) sigForAddressId = opt.id;
 						}}
 						ariaLabel="Signature identity"
@@ -372,6 +378,7 @@
 		{#if sigIdentity}
 			<div class="sig-idnote">
 				<UserRound size={13} />Editing the signature for <b>{sigIdentity.name || sigIdentity.email}</b>
+				{#if sigIdentity.shared}<Badge kind="pine">Shared</Badge>{/if}
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
@@ -380,8 +387,12 @@
 				onChange={onSignatureChange}
 			/>
 			<div class="sig-hint">
-				<Info size={13} />Each address keeps its own signature. This one is sent when you write from
-				<b>{sigIdentity.email}</b>.
+				{#if sigIdentity.shared}
+					<Info size={13} />Everyone who writes from <b>{sigIdentity.email}</b> sends this signature.
+				{:else}
+					<Info size={13} />Each address keeps its own signature. This one is sent when you write from
+					<b>{sigIdentity.email}</b>.
+				{/if}
 			</div>
 			<Row
 				t="Append on replies and forwards"

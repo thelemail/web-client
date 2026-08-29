@@ -14,6 +14,7 @@
 		previousPinned?: string;
 		previousVerifiedAt?: string;
 		currentFingerprint?: string;
+		shared?: boolean;
 		onSendAnyway: () => void;
 		onCancel: () => void;
 	}
@@ -23,6 +24,7 @@
 		previousPinned = '3E81 9A04 C2F7 5B16 88D0 · 7A23 1E69 4C0B F582 90AD',
 		previousVerifiedAt = '14 Feb 2026 · v6',
 		currentFingerprint = 'F70B 4A29 D183 6C95 22E1 · 8B40 3F7C 19A5 0D6E C214',
+		shared = false,
 		onSendAnyway,
 		onCancel
 	}: Props = $props();
@@ -55,9 +57,16 @@
 			{recipient.name || recipient.email}'s key has changed since you last wrote to them.
 		</h2>
 		<p class="tofu-lede">
-			The directory's record verified correctly — but the key is different from the one this device
-			pinned the last time you sent to them. That's normal after a reinstall or a new device. It can
-			also mean someone is standing in for them.
+			{#if shared}
+				The directory's record verified correctly — but the key is different from the one this
+				device pinned the last time you sent to it. A shared address gets a new key whenever the
+				people on it change, so this is expected after someone joins or leaves. It can also mean
+				someone is standing in for it.
+			{:else}
+				The directory's record verified correctly — but the key is different from the one this
+				device pinned the last time you sent to them. That's normal after a reinstall or a new
+				device. It can also mean someone is standing in for them.
+			{/if}
 		</p>
 
 		<div class="tofu-fp">

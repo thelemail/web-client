@@ -1,14 +1,13 @@
 import { browser } from '$app/environment';
 import {
 	listMyAddresses,
-	addMyAddress,
 	updateMyAddress,
 	setPrimaryAddress,
 	removeAddress,
 	type AccountAddress,
-	type AddAddressInput,
 	type UpdateAddressInput
 } from '$lib/api/addresses';
+import { listMySharedAliases } from '$lib/api/aliases';
 import { syncAddressUids } from '$lib/keys/uid-sync';
 
 class AddressesStore {
@@ -18,6 +17,8 @@ class AddressesStore {
 	#accountId: string | null = null;
 
 	primary = $derived(this.items.find((a) => a.isPrimary) ?? this.items[0] ?? null);
+	personal = $derived(this.items.filter((a) => !a.shared));
+	shared = $derived(this.items.filter((a) => a.shared));
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -31,9 +32,26 @@ class AddressesStore {
 		this.loading = true;
 		this.error = null;
 		try {
-			const { addresses } = await listMyAddresses();
+			const [{ addresses }, shared] = await Promise.all([
+				listMyAddresses(),
+				listMySharedAliases().catch(() => ({ sharedAliases: [] }))
+			]);
 			if (this.#accountId !== acct) return;
-			this.items = addresses;
+			this.items = [
+				...addresses,
+				...shared.sharedAliases.map((a) => ({
+					id: a.addressId,
+					email: a.email,
+					localPart: a.localPart,
+					customDomainId: a.customDomainId ?? null,
+					name: a.name,
+					isPrimary: false,
+					shared: true,
+					sharedAliasId: a.id,
+					createdAt: a.createdAt,
+					updatedAt: a.updatedAt
+				}))
+			];
 		} catch (err) {
 			if (this.#accountId !== acct) return;
 			this.error = err instanceof Error ? err.message : 'failed to load addresses';
@@ -41,13 +59,6 @@ class AddressesStore {
 		} finally {
 			if (this.#accountId === acct) this.loading = false;
 		}
-	}
-
-	async add(input: AddAddressInput): Promise<AccountAddress> {
-		const created = await addMyAddress(input);
-		this.items = [...this.items, created];
-		this.#syncUids();
-		return created;
 	}
 
 	async update(id: string, input: UpdateAddressInput): Promise<AccountAddress> {
@@ -73,7 +84,7 @@ class AddressesStore {
 		if (!this.#accountId) return;
 		void syncAddressUids(
 			this.#accountId,
-			this.items.map((a) => a.email)
+			this.items.filter((a) => !a.shared).map((a) => a.email)
 		);
 	}
 
