@@ -40,7 +40,6 @@ export type CeremonyKind =
 	| 'twofa'
 	| 'keys'
 	| 'delete'
-	| 'domain'
 	| 'address'
 	| 'member';
 

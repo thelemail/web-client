@@ -5,6 +5,7 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Globe from '@lucide/svelte/icons/globe';
 	import { browser } from '$app/environment';
+	import { page } from '$app/state';
 	import Badge from './Badge.svelte';
 	import CardHead from './CardHead.svelte';
 	import MemberRow from './MemberRow.svelte';
@@ -14,6 +15,7 @@
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
+	import { ownershipProven } from '$lib/settings/domains/steps';
 	import { auth } from '$lib/stores/auth.svelte';
 	import {
 		seatLimitFor,
@@ -30,6 +32,7 @@
 
 	let { launch }: Props = $props();
 
+	const slot = $derived(page.params.slot ?? '0');
 	const type = $derived(workspaces.workspace?.type ?? null);
 	const isPersonal = $derived(type === 'personal');
 	const Icon = $derived(isPersonal ? UserRound : Users);
@@ -92,10 +95,8 @@
 	const invitable = $derived(
 		isInvitable(type) && (type === 'business' || seatsTotal === null || seatsUsed < seatsTotal)
 	);
-	const verifiedDomainCount = $derived(
-		customDomains.items.filter((d) => d.status === 'verified').length
-	);
-	const domainGated = $derived(invitable && verifiedDomainCount === 0);
+	const ownedDomainCount = $derived(customDomains.items.filter(ownershipProven).length);
+	const domainGated = $derived(invitable && ownedDomainCount === 0);
 
 	let busyId = $state<string | null>(null);
 
@@ -241,19 +242,15 @@
 			</button>
 			<div class="seat-full">
 				<Info size={15} />
-				<span>Add and verify a custom domain to invite members.</span>
+				<span>Add a domain and prove you own it to invite members.</span>
 			</div>
-			<button
-				type="button"
-				class="btn btn-secondary btn-sm"
-				onclick={() => launch('domain')}
-			>
+			<a class="btn btn-secondary btn-sm" href={`/u/${slot}/settings/domains/new`}>
 				<Globe size={14} />Add a domain
-			</button>
+			</a>
 		{:else if domainGated}
 			<div class="seat-full">
 				<Info size={15} />
-				<span>An admin must add and verify a custom domain before members can be invited.</span>
+				<span>An admin must add a domain and prove ownership before members can be invited.</span>
 			</div>
 		{:else}
 			<div class="seat-full">

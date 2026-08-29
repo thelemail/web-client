@@ -4,7 +4,6 @@
 	import TwoFactorCeremony from './TwoFactorCeremony.svelte';
 	import KeysCeremony from './KeysCeremony.svelte';
 	import DeleteCeremony from './DeleteCeremony.svelte';
-	import AddDomainCeremony from './AddDomainCeremony.svelte';
 	import AddAddressCeremony from './AddAddressCeremony.svelte';
 	import AddMemberCeremony from './AddMemberCeremony.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
@@ -29,8 +28,6 @@
 	<KeysCeremony {onClose} {onComplete} />
 {:else if active === 'delete'}
 	<DeleteCeremony {onClose} {onComplete} />
-{:else if active === 'domain'}
-	<AddDomainCeremony {onClose} {onComplete} />
 {:else if active === 'address'}
 	<AddAddressCeremony {onClose} {onComplete} />
 {:else if active === 'member'}

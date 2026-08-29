@@ -34,7 +34,11 @@
 	};
 
 	const slot = $derived(page.params.slot ?? '0');
-	const current = $derived(page.url.pathname.split('/').filter(Boolean).at(-1) ?? '');
+	const current = $derived.by(() => {
+		const parts = page.url.pathname.split('/').filter(Boolean);
+		const i = parts.indexOf('settings');
+		return (i === -1 ? parts.at(-1) : parts[i + 1]) ?? '';
+	});
 	const accountEmail = $derived(auth.email ?? '');
 	const accountDomain = $derived(accountEmail.includes('@') ? accountEmail.split('@')[1] : '');
 	const workspaceName = $derived(workspaces.workspace?.name ?? '');

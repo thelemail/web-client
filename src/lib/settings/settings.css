@@ -539,9 +539,13 @@
 .cer-scrim .cer-ack.danger { background: var(--danger-100); border-color: transparent; color: var(--danger-700); }
 .cer-scrim .cer-ack.danger input { accent-color: var(--danger-700); }
 
+.settings-app .field,
 .cer-scrim .field { display: flex; flex-direction: column; gap: 7px; }
+.settings-app .field label,
+.settings-app .field .field-lbl,
 .cer-scrim .field label,
 .cer-scrim .field .field-lbl { font-size: 12.5px; font-weight: 600; color: var(--fg-strong); }
+.settings-app .field .tin,
 .cer-scrim .field .tin { width: 100%; }
 .cer-scrim .otp { letter-spacing: .5em; text-align: center; font-size: 18px; }
 
@@ -703,20 +707,32 @@
 .settings-app .dns-recmeta .copy-btn { margin-left: auto; }
 .settings-app .dns-valbox { margin-top: 7px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; word-break: break-all; }
 
+.settings-app .alias-compose,
 .cer-scrim .alias-compose { display: flex; align-items: center; gap: 8px; }
+.settings-app .alias-compose .tin,
 .cer-scrim .alias-compose .tin { flex: 1; min-width: 0; }
+.settings-app .alias-compose .sel,
 .cer-scrim .alias-compose .sel { flex: 0 0 auto; }
+.settings-app .ac-at,
 .cer-scrim .ac-at { font-family: var(--font-mono); color: var(--fg-muted); font-size: 14px; }
 .cer-scrim .ac-fixed { font-family: var(--font-mono); font-size: 13px; color: var(--ink-600); background: var(--paper-100); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 9px 12px; white-space: nowrap; }
 
+.settings-app .input-prefix,
 .cer-scrim .input-prefix { position: relative; display: flex; align-items: center; }
+.settings-app .input-prefix .ip-ic,
 .cer-scrim .input-prefix .ip-ic { position: absolute; left: 11px; color: var(--ink-400); display: flex; pointer-events: none; }
+.settings-app .input-prefix .tin,
 .cer-scrim .input-prefix .tin { padding-left: 34px; }
 
+.settings-app .field-hint,
 .cer-scrim .field-hint { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--fg-muted); line-height: 1.5; }
+.settings-app .field-hint svg,
 .cer-scrim .field-hint svg { width: 13px; height: 13px; flex: 0 0 auto; color: var(--ink-400); }
+.settings-app .field-hint .mono,
 .cer-scrim .field-hint .mono { font-family: var(--font-mono); color: var(--ink-700); }
+.settings-app .field-hint.bad,
 .cer-scrim .field-hint.bad { color: var(--danger-700); }
+.settings-app .field-hint.bad svg,
 .cer-scrim .field-hint.bad svg { color: var(--danger-700); }
 
 .cer-scrim .seat-callout { display: flex; align-items: flex-start; gap: 11px; padding: 13px 15px; border-radius: var(--radius-control); background: var(--paper-100); border: 1px solid var(--border-strong); font-size: 12.5px; line-height: 1.5; color: var(--fg); }
@@ -920,3 +936,63 @@
 	.settings-app .bill-row { column-gap: 10px; }
 	.settings-app .scard-h h3 { white-space: normal; }
 }
+
+.settings-app .dw-rail { display: flex; align-items: center; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--paper-50); margin-bottom: 18px; gap: 0; }
+.settings-app .dw-step { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; background: none; border: 0; padding: 0; font: inherit; text-align: left; cursor: pointer; }
+.settings-app .dw-step:last-child { flex: 0 0 auto; }
+.settings-app .dw-step:disabled { cursor: default; }
+.settings-app .dw-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--paper-200); color: var(--ink-500); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; font-family: var(--font-mono); transition: background var(--dur), color var(--dur); }
+.settings-app .dw-step.on .dw-dot { background: var(--pine-700); color: #fff; }
+.settings-app .dw-step.done .dw-dot { background: var(--success-500); color: #fff; }
+.settings-app .dw-dot svg { width: 13px; height: 13px; }
+.settings-app .dw-lbl { font-size: 11.5px; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
+.settings-app .dw-step.on .dw-lbl { color: var(--fg-strong); font-weight: 600; }
+.settings-app .dw-line { flex: 1; height: 1px; min-width: 14px; background: var(--border-strong); margin: 0 4px; }
+.settings-app .dw-step.done .dw-line { background: var(--success-500); }
+@media (max-width: 620px) { .settings-app .dw-lbl { display: none; } .settings-app .dw-line { min-width: 8px; } }
+
+.settings-app .dw-pane { display: flex; flex-direction: column; gap: 14px; padding: 18px; }
+.settings-app .dw-lede { font-size: 13px; color: var(--fg-muted); line-height: 1.6; margin: 0; }
+.settings-app .dw-lede b { color: var(--fg-strong); font-weight: 600; }
+.settings-app .dw-recs { display: flex; flex-direction: column; gap: 9px; }
+.settings-app .dw-rec { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }
+.settings-app .dw-rec-head { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--paper-50); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.settings-app .dw-rec-type { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-sm); padding: 2px 7px; }
+.settings-app .dw-rec-kind { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--ink-500); }
+.settings-app .dw-rec-meta { font-size: 11.5px; color: var(--fg-muted); flex: 1; min-width: 0; }
+.settings-app .dw-rec-meta code { font-family: var(--font-mono); color: var(--ink-700); background: var(--paper-100); border-radius: var(--radius-xs); padding: 1px 5px; word-break: break-all; }
+.settings-app .dw-rec-why { margin: 0; padding: 9px 12px 0; font-size: 12px; line-height: 1.55; color: var(--fg-muted); }
+.settings-app .dw-rec-val { padding: 9px 12px 10px; display: flex; align-items: flex-start; gap: 9px; }
+.settings-app .dw-rec-val code { flex: 1; font-family: var(--font-mono); font-size: 12px; line-height: 1.55; color: var(--ink-800); word-break: break-all; }
+.settings-app .dw-opt { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--fg-faint); background: var(--paper-100); border-radius: var(--radius-sm); padding: 2px 6px; flex: 0 0 auto; }
+
+.settings-app .dw-note { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: var(--radius-control); font-size: 12.5px; line-height: 1.5; background: var(--paper-100); color: var(--fg-muted); }
+.settings-app .dw-note svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 1px; }
+.settings-app .dw-note.warn { background: var(--warning-100); color: var(--warning-700); }
+.settings-app .dw-note.bad { background: var(--danger-100); color: var(--danger-700); }
+.settings-app .dw-note b { font-weight: 600; }
+
+.settings-app .dw-foot { display: flex; align-items: center; gap: 9px; padding: 14px 18px; border-top: 1px solid var(--border); background: var(--paper-50); }
+.settings-app .dw-foot .dw-spacer { flex: 1; }
+
+.settings-app .dw-addrs { display: flex; flex-direction: column; gap: 7px; }
+.settings-app .dw-addr { display: flex; align-items: center; gap: 9px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); font-size: 13px; }
+.settings-app .dw-addr .mono { font-family: var(--font-mono); font-size: 12.5px; }
+.settings-app .dw-addr-form { display: flex; flex-direction: column; gap: 14px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--paper-50); }
+.settings-app .dw-addr-form .dw-addr-acts { display: flex; justify-content: flex-end; }
+.settings-app .dw-ac-domain { font-family: var(--font-mono); font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+
+.settings-app .dw-ladder { display: flex; align-items: center; gap: 5px; }
+.settings-app .dw-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--paper-300, var(--paper-200)); }
+.settings-app .dw-pip.on { background: var(--success-500); }
+.settings-app .dw-pip.fail { background: var(--warning-700); }
+.settings-app .dw-link { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.settings-app .dw-note.ok { background: var(--success-100); color: var(--success-700); }
+
+.settings-app .dw-done { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 12px 0 6px; }
+.settings-app .dw-done-ic { width: 62px; height: 62px; border-radius: 50%; background: var(--success-100); color: var(--success-700); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+.settings-app .dw-done-title { font-family: var(--font-sans); font-feature-settings: normal; font-size: 21px; font-weight: 500; color: var(--fg-strong); margin: 0 0 8px; }
+.settings-app .dw-done-desc { font-size: 13.5px; color: var(--fg-muted); line-height: 1.6; margin: 0; max-width: 52ch; }
+.settings-app .dw-done-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; }
+.settings-app .dw-done-stat { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: var(--radius-pill); background: var(--success-100); color: var(--success-700); font-size: 11.5px; font-weight: 600; }
+.settings-app .dw-done-stat svg { width: 13px; height: 13px; flex: 0 0 auto; }
