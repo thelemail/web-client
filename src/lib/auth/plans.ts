@@ -134,9 +134,27 @@ export const PRODUCTS: PlanProduct[] = [
 ];
 
 export function findPlan(sel: PlanSelection): { product: PlanProduct; tier: PlanTier | null } {
-	const product = PRODUCTS.find((p) => p.id === sel.product) ?? PRODUCTS[1];
+	const product = PRODUCTS.find((p) => p.id === sel.product) ?? PRODUCTS[0];
 	const tier = product.tiers.find((t) => t.id === sel.tier) ?? null;
 	return { product, tier };
+}
+
+export function selectionForCode(planCode: string, seats: number): PlanSelection | null {
+	const tierId = planCode.replace(/_/g, '-');
+	for (const product of PRODUCTS) {
+		if (product.tiers.some((t) => t.id === tierId)) {
+			return { product: product.id, tier: tierId, seats };
+		}
+	}
+	return null;
+}
+
+export function planLabelFor(planCode: string, seats: number): string {
+	const sel = selectionForCode(planCode, seats);
+	if (!sel) return planCode.replace(/_/g, ' ');
+	const { tier } = findPlan(sel);
+	if (!tier) return planCode.replace(/_/g, ' ');
+	return `${tier.name} · ${eur(planTotal(sel))} / year`;
 }
 
 export function planTotal(sel: PlanSelection): number {

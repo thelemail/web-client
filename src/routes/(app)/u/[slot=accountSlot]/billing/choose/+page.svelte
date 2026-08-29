@@ -1,11 +1,10 @@
 <script lang="ts">
-	import '$lib/auth/auth.css';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import wordmark from '$lib/assets/logo-wordmark.svg';
+	import AuthShell from '$lib/auth/AuthShell.svelte';
 	import PlanStep from '$lib/auth/PlanStep.svelte';
-	import { findPlan, type PlanSelection } from '$lib/auth/plans';
+	import { findPlan, planLabelFor, selectionForCode, type PlanSelection } from '$lib/auth/plans';
 	import { changePlan, createCheckoutSession, type PlanCode } from '$lib/api/billing';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
@@ -16,7 +15,7 @@
 
 	let { data } = $props();
 
-	let sel = $state<PlanSelection>({ product: 'family', tier: null, seats: 3 });
+	let sel = $state<PlanSelection>({ product: 'personal', tier: null, seats: 3 });
 	let busy = $state(false);
 	let checkoutError = $state<string | null>(null);
 	let canceledNotice = $state(page.url.searchParams.get('canceled') === '1');
@@ -28,15 +27,6 @@
 	const alreadyActive = $derived(sub?.status === 'active');
 	const paymentProblem = $derived(sub?.status === 'past_due');
 
-	function selectionFor(planCode: PlanCode, seats: number): PlanSelection | null {
-		const tierId = planCode.replace(/_/g, '-');
-		for (const productId of ['personal', 'family', 'business'] as const) {
-			const { tier } = findPlan({ product: productId, tier: tierId, seats });
-			if (tier) return { product: productId, tier: tierId, seats };
-		}
-		return null;
-	}
-
 	onMount(() => {
 		void (async () => {
 			const fresh = await billing.refresh();
@@ -44,7 +34,7 @@
 				await workspaces.load(auth.accountId);
 			}
 			if (fresh?.status === 'active' && fresh.planCode) {
-				const current = selectionFor(fresh.planCode, Math.max(fresh.seats ?? 3, 3));
+				const current = selectionForCode(fresh.planCode, Math.max(fresh.seats ?? 3, 3));
 				if (current) {
 					sel = current;
 					return;
@@ -142,139 +132,122 @@
 	<title>Thelemail — Choose a plan</title>
 </svelte:head>
 
-<div class="auth" data-motif="ledger">
-	<header class="topchrome">
-		<a href="/"><img class="wm" src={wordmark} alt="Thelemail" /></a>
-		<span class="grow"></span>
-		<button class="ghostlink" onclick={signOut}>Sign out</button>
-	</header>
-	<div class="stagebody">
-		<div class="card">
-			{#if switched}
-				<div class="card-surface screen-fade">
-					<div class="welcome">
-						<span class="switch-check"><CircleCheck size={44} strokeWidth={1.5} /></span>
-						<h1>Plan updated</h1>
-						<p>
-							You&rsquo;re now on
-							{#if sub?.planCode}<b>{sub.planCode.replace('_', ' ')}</b>{:else}your new plan{/if}.
-							The difference is prorated on your next invoice.
-						</p>
-						<div class="actions" style="margin-top:24px">
-							<a class="btn btn-primary btn-block" href={`/u/${slot}/mail/inbox`}>
-								<Mail size={17} strokeWidth={1.75} />Open your mailbox
-							</a>
-						</div>
-					</div>
-				</div>
-			{:else if alreadyActive && !isOwner}
-				<div class="card-surface screen-fade">
-					<div class="welcome">
-						<h1>You&rsquo;re all set</h1>
-						<p>This workspace has an active plan. Only the workspace owner can change it.</p>
-						<div class="actions" style="margin-top:24px">
-							<a class="btn btn-primary btn-block" href={`/u/${slot}/mail/inbox`}>
-								<Mail size={17} strokeWidth={1.75} />Open your mailbox
-							</a>
-						</div>
-					</div>
-				</div>
-			{:else if alreadyActive}
-				{#if checkoutError}
-					<p class="billing-notice billing-notice-error">
-						<CircleAlert size={15} strokeWidth={1.75} />
-						<span>{checkoutError}</span>
+{#snippet signOutFoot()}
+	<p class="switch">
+		Signed in as {auth.email ?? 'this account'}.
+		<button type="button" class="linklike" onclick={signOut}>Sign out</button>
+	</p>
+{/snippet}
+
+<AuthShell>
+	<div class="card">
+		{#if switched}
+			<div class="card-surface screen-fade">
+				<div class="welcome">
+					<span class="switch-check"><CircleCheck size={44} strokeWidth={1.5} /></span>
+					<h1>Plan updated</h1>
+					<p>
+						You&rsquo;re now on
+						{#if sub?.planCode}<b>{planLabelFor(sub.planCode, sub.seats ?? 1)}</b>{:else}your new plan{/if}.
+						The difference is prorated on your next invoice.
 					</p>
-				{/if}
-				<PlanStep
-					bind:sel
-					showStepper={false}
-					eyebrow="Billing"
-					heading="Change your plan"
-					ctaVerb="Switch plan"
-					busyLabel="Switching your plan…"
-					{busy}
-					onNext={switchPlan}
-				/>
-			{:else if paymentProblem}
-				<div class="card-surface screen-fade">
-					<div class="welcome">
-						<h1>Payment problem</h1>
-						<p>
-							The last payment for this workspace didn&rsquo;t go through. Update your payment
-							method from the billing portal to keep your mailbox active.
-						</p>
-						<div class="actions" style="margin-top:24px">
-							<a class="btn btn-primary btn-block" href={`/u/${slot}/settings/account`}>
-								Go to Settings &rarr; Manage billing
-							</a>
-						</div>
+					<div class="actions" style="margin-top:24px">
+						<a class="btn btn-primary btn-block" href={`/u/${slot}/mail/inbox`}>
+							<Mail size={17} strokeWidth={1.75} />Open your mailbox
+						</a>
 					</div>
 				</div>
-			{:else if !isOwner && workspaces.workspace}
-				<div class="card-surface screen-fade">
-					<div class="welcome">
-						<h1>Almost there</h1>
-						<p>
-							This workspace doesn&rsquo;t have an active plan yet. Your workspace owner needs to
-							choose a plan before mail is available.
-						</p>
+				{@render signOutFoot()}
+			</div>
+		{:else if alreadyActive && !isOwner}
+			<div class="card-surface screen-fade">
+				<div class="welcome">
+					<h1>You&rsquo;re all set</h1>
+					<p>This workspace has an active plan. Only the workspace owner can change it.</p>
+					<div class="actions" style="margin-top:24px">
+						<a class="btn btn-primary btn-block" href={`/u/${slot}/mail/inbox`}>
+							<Mail size={17} strokeWidth={1.75} />Open your mailbox
+						</a>
 					</div>
 				</div>
-			{:else}
-				{#if canceledNotice}
-					<p class="billing-notice">
-						<CircleCheck size={15} strokeWidth={1.75} />
-						<span>Checkout was cancelled &mdash; nothing was charged. Pick a plan when you&rsquo;re ready.</span>
-					</p>
-				{/if}
-				{#if checkoutError}
-					<p class="billing-notice billing-notice-error">
-						<CircleAlert size={15} strokeWidth={1.75} />
-						<span>{checkoutError}</span>
-					</p>
-				{/if}
-				<PlanStep
-					bind:sel
-					showStepper={false}
-					eyebrow="Activate your mailbox"
-					heading="Choose your plan"
-					ctaVerb="Continue to secure checkout"
-					{busy}
-					onNext={startCheckout}
-				/>
+				{@render signOutFoot()}
+			</div>
+		{:else if alreadyActive}
+			{#if checkoutError}
+				<p class="billing-notice billing-notice-error">
+					<CircleAlert size={15} strokeWidth={1.75} />
+					<span>{checkoutError}</span>
+				</p>
 			{/if}
-		</div>
+			<PlanStep
+				bind:sel
+				showStepper={false}
+				eyebrow="Billing"
+				heading="Change your plan"
+				ctaVerb="Switch plan"
+				busyLabel="Switching your plan…"
+				{busy}
+				onNext={switchPlan}
+				footer={signOutFoot}
+			/>
+		{:else if paymentProblem}
+			<div class="card-surface screen-fade">
+				<div class="welcome">
+					<h1>Payment problem</h1>
+					<p>
+						The last payment for this workspace didn&rsquo;t go through. Update your payment
+						method from the billing portal to keep your mailbox active.
+					</p>
+					<div class="actions" style="margin-top:24px">
+						<a class="btn btn-primary btn-block" href={`/u/${slot}/settings/account`}>
+							Go to Settings &rarr; Manage billing
+						</a>
+					</div>
+				</div>
+				{@render signOutFoot()}
+			</div>
+		{:else if !isOwner && workspaces.workspace}
+			<div class="card-surface screen-fade">
+				<div class="welcome">
+					<h1>Almost there</h1>
+					<p>
+						This workspace doesn&rsquo;t have an active plan yet. Your workspace owner needs to
+						choose a plan before mail is available.
+					</p>
+				</div>
+				{@render signOutFoot()}
+			</div>
+		{:else}
+			{#if canceledNotice}
+				<p class="billing-notice">
+					<CircleCheck size={15} strokeWidth={1.75} />
+					<span>Checkout was cancelled &mdash; nothing was charged. Pick a plan when you&rsquo;re ready.</span>
+				</p>
+			{/if}
+			{#if checkoutError}
+				<p class="billing-notice billing-notice-error">
+					<CircleAlert size={15} strokeWidth={1.75} />
+					<span>{checkoutError}</span>
+				</p>
+			{/if}
+			<PlanStep
+				bind:sel
+				showStepper={false}
+				eyebrow="Activate your mailbox"
+				heading="Choose your plan"
+				ctaVerb="Continue to secure checkout"
+				{busy}
+				onNext={startCheckout}
+				footer={signOutFoot}
+			/>
+		{/if}
 	</div>
-</div>
+</AuthShell>
 
 <style>
-	.billing-notice {
-		display: flex;
-		align-items: flex-start;
-		gap: 8px;
-		margin: 0 0 16px;
-		padding: 12px 16px;
-		border: 1px solid var(--line-strong, rgba(0, 0, 0, 0.12));
-		border-radius: var(--radius-md, 8px);
-		background: var(--paper-50, #f7f3e9);
-		font-size: var(--text-sm, 13px);
-		color: var(--ink-700, #3a4032);
-	}
-	.billing-notice :global(svg) {
-		flex-shrink: 0;
-		margin-top: 1px;
-		color: var(--pine-700, #234132);
-	}
-	.billing-notice-error {
-		border-color: var(--danger-500, #b5453a);
-	}
-	.billing-notice-error :global(svg) {
-		color: var(--danger-500, #b5453a);
-	}
 	.switch-check {
 		display: inline-flex;
 		margin-bottom: 8px;
-		color: var(--success-500, #3f8c57);
+		color: var(--success-500);
 	}
 </style>
