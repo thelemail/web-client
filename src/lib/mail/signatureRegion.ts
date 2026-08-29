@@ -25,8 +25,6 @@ export function swapSignatureForAddress(
 	const region = nodes.length ? nodes[nodes.length - 1] : null;
 
 	if (!region) {
-		// The seed was never applied, or the writer deleted it. Append rather
-		// than replace so nothing they typed is lost.
 		if (!bodyHtml || !bodyHtml.trim()) return;
 		const caret = editor.state.selection.from;
 		editor.commands.setContent(`${html}${wrap(bodyHtml)}`, { emitUpdate: true });

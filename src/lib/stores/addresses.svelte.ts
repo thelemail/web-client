@@ -32,9 +32,6 @@ class AddressesStore {
 		this.loading = true;
 		this.error = null;
 		try {
-			// /v1/me/addresses keeps its original contract — the caller's own
-			// addresses only — so older clients are unaffected by shared aliases.
-			// The shared ones come from their own endpoint and are merged here.
 			const [{ addresses }, shared] = await Promise.all([
 				listMyAddresses(),
 				listMySharedAliases().catch(() => ({ sharedAliases: [] }))
@@ -85,9 +82,6 @@ class AddressesStore {
 
 	#syncUids(): void {
 		if (!this.#accountId) return;
-		// Only the caller's own addresses become UIDs on their key. A shared
-		// alias publishes its own key, and adding it here would let the
-		// directory serve a personal key for a shared address.
 		void syncAddressUids(
 			this.#accountId,
 			this.items.filter((a) => !a.shared).map((a) => a.email)

@@ -1316,8 +1316,6 @@ async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
 		}
 	}
 	const wanted = args.verificationKeysArmored?.length ? true : false;
-	// A shared alias message is sealed to the alias key, not the account key.
-	// The hint tells us which one; without it, let openpgp pick by key id.
 	let decryptionKeys: openpgp.PrivateKey | openpgp.PrivateKey[] = v.privateKey;
 	if (v.aliasKeys.size) {
 		const hint = args.keyFingerprintHex?.toLowerCase();

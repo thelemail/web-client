@@ -158,8 +158,6 @@
 	});
 	const identityOptions = $derived.by<SendIdentity[]>(() => {
 		const fromStore: SendIdentity[] = addresses.items.map((a) => {
-			// A shared address must go out under its own name, never under the
-			// name of whichever member happens to be sending.
 			const label = a.shared ? (a.name ?? a.email) : (a.name ?? auth.fullName ?? a.email);
 			return {
 				name: label,

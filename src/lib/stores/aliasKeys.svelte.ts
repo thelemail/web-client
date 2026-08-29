@@ -48,8 +48,6 @@ class AliasKeysStore {
 		});
 	}
 
-	// Resolves even on failure: a mailbox must never wedge waiting for keys it
-	// may not need.
 	ready(accountId: string): Promise<void> {
 		if (this.#accountId !== accountId) {
 			this.#accountId = accountId;

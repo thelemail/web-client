@@ -111,8 +111,6 @@
 		signatureAppendOnReply = append;
 	});
 
-	// A shared address belongs to the alias, not to this account, so it can be
-	// neither the sign-in identity nor a personal reply default.
 	const ownIdentities = $derived(addresses.personal);
 
 	const replyOptions = $derived([
@@ -124,7 +122,6 @@
 		ownIdentities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
 	);
 
-	// Signatures do cover shared addresses: each one carries its own.
 	const signatureOptions = $derived(
 		identities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
 	);

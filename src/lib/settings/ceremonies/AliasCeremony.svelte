@@ -100,9 +100,6 @@
 		if (d) userPickedDomainId = d.id;
 	}
 
-	// Every member's key is checked against the signed directory before the
-	// alias key is wrapped to it. Skipping this would let a substituted key
-	// read everything sent to the address.
 	async function resolveRecipients(emails: { accountId: string; email: string }[]) {
 		const out = [];
 		for (const m of emails) {

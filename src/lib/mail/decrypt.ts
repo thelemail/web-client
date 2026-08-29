@@ -20,9 +20,6 @@ export class DecryptionError extends Error {
 	}
 }
 
-// Mail addressed to a shared alias is sealed to the alias key, which arrives
-// separately from the message. Wait for the grant set, and if a key still does
-// not match, refresh once: an admin may have re-keyed while this tab was open.
 async function withAliasKeys<T>(
 	accountId: string,
 	run: () => Promise<T>,
