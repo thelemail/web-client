@@ -7,6 +7,7 @@ import {
 	type AccountAddress,
 	type UpdateAddressInput
 } from '$lib/api/addresses';
+import { listMySharedAliases } from '$lib/api/aliases';
 import { syncAddressUids } from '$lib/keys/uid-sync';
 
 class AddressesStore {
@@ -31,9 +32,29 @@ class AddressesStore {
 		this.loading = true;
 		this.error = null;
 		try {
-			const { addresses } = await listMyAddresses();
+			// /v1/me/addresses keeps its original contract — the caller's own
+			// addresses only — so older clients are unaffected by shared aliases.
+			// The shared ones come from their own endpoint and are merged here.
+			const [{ addresses }, shared] = await Promise.all([
+				listMyAddresses(),
+				listMySharedAliases().catch(() => ({ sharedAliases: [] }))
+			]);
 			if (this.#accountId !== acct) return;
-			this.items = addresses;
+			this.items = [
+				...addresses,
+				...shared.sharedAliases.map((a) => ({
+					id: a.addressId,
+					email: a.email,
+					localPart: a.localPart,
+					customDomainId: a.customDomainId ?? null,
+					name: a.name,
+					isPrimary: false,
+					shared: true,
+					sharedAliasId: a.id,
+					createdAt: a.createdAt,
+					updatedAt: a.updatedAt
+				}))
+			];
 		} catch (err) {
 			if (this.#accountId !== acct) return;
 			this.error = err instanceof Error ? err.message : 'failed to load addresses';
