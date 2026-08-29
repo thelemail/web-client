@@ -176,7 +176,7 @@
 	<CardHead icon={CircleAlert} title="Delete account" />
 	<Row
 		t="Delete this account permanently"
-		d="Deactivates the account now and erases every mailbox, alias, and message after a 30-day grace period. Once purged, encrypted data is gone for good. Export first."
+		d="Deactivates the account now and erases every mailbox, address, and message after a 30-day grace period. Once purged, encrypted data is gone for good. Export first."
 	>
 		<button type="button" class="btn btn-danger btn-sm" onclick={() => launch('delete')}>
 			<Trash2 size={14} />Delete account…

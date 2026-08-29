@@ -7,14 +7,10 @@ export interface AccountAddress {
 	customDomainId?: string | null;
 	name?: string | null;
 	isPrimary: boolean;
+	shared?: boolean;
+	sharedAliasId?: string | null;
 	createdAt: string;
 	updatedAt: string;
-}
-
-export interface AddAddressInput {
-	customDomainId: string;
-	localPart: string;
-	name?: string;
 }
 
 export interface UpdateAddressInput {
@@ -23,10 +19,6 @@ export interface UpdateAddressInput {
 
 export function listMyAddresses(): Promise<{ addresses: AccountAddress[] }> {
 	return apiFetch('/v1/me/addresses');
-}
-
-export function addMyAddress(input: AddAddressInput): Promise<AccountAddress> {
-	return apiFetch('/v1/me/addresses', { method: 'POST', body: input });
 }
 
 export function updateMyAddress(id: string, input: UpdateAddressInput): Promise<AccountAddress> {

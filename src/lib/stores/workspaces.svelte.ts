@@ -24,7 +24,7 @@ class WorkspaceStore {
 	invites = $state<WorkspaceInvite[]>([]);
 	loading = $state(false);
 	error = $state<string | null>(null);
-	#accountId: string | null = null;
+	#accountId = $state<string | null>(null);
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -33,10 +33,12 @@ class WorkspaceStore {
 	}
 
 	currentMember = $derived.by(() => {
-		const me = this.workspace?.id;
-		if (!me) return null;
-		return this.members.find((m) => m.workspaceId === me) ?? null;
+		const caller = this.#accountId;
+		if (!caller || !this.workspace) return null;
+		return this.members.find((m) => m.accountId === caller) ?? null;
 	});
+
+	myRole = $derived(this.currentMember?.role ?? null);
 
 	isOwner(callerAccountId: string | null): boolean {
 		if (!callerAccountId || !this.workspace) return false;

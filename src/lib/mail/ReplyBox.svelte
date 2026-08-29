@@ -157,15 +157,22 @@
 		kind: 'Default'
 	});
 	const identityOptions = $derived.by<SendIdentity[]>(() => {
-		const fromStore: SendIdentity[] = addresses.items.map((a) => ({
-			name: auth.fullName ?? a.email,
-			email: a.email,
-			init: initialsFor(auth.fullName, a.email),
-			bg: 'var(--pine-700)',
-			fg: '#EEF2EA',
-			org: '',
-			kind: a.isPrimary ? 'Default' : 'Identity'
-		}));
+		const fromStore: SendIdentity[] = addresses.items.map((a) => {
+			// A shared address must go out under its own name, never under the
+			// name of whichever member happens to be sending.
+			const label = a.shared ? (a.name ?? a.email) : (a.name ?? auth.fullName ?? a.email);
+			return {
+				name: label,
+				email: a.email,
+				init: initialsFor(label, a.email),
+				bg: a.shared ? 'var(--info-700)' : 'var(--pine-700)',
+				fg: '#EEF2EA',
+				org: '',
+				kind: a.shared ? 'Alias' : a.isPrimary ? 'Default' : 'Identity',
+				addressId: a.id,
+				aliasId: a.sharedAliasId ?? undefined
+			};
+		});
 		if (fromStore.length === 0) return [userIdentity];
 		return fromStore;
 	});

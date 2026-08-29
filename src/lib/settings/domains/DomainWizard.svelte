@@ -30,6 +30,8 @@
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
+	import { canManageWorkspace } from '../permissions';
+	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { CustomDomain, RequiredDNSRecord } from '$lib/api/customDomains';
 
 	interface Props {
@@ -50,8 +52,6 @@
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let attempts = 0;
 
-	let local = $state('');
-	let displayName = $state('');
 	let addingAddress = $state(false);
 	let addressError = $state<string | null>(null);
 
@@ -59,9 +59,9 @@
 
 	const phase = $derived(STEP_PHASE[step]);
 	const phaseRecords = $derived(phase ? records.filter((r) => r.phase === phase) : []);
-	const manage = $derived(workspaces.canManage());
+	const manage = $derived(canManageWorkspace());
+	let addingAlias = $state(false);
 	const domainAddresses = $derived(addresses.items.filter((a) => a.customDomainId === domain.id));
-	const localOk = $derived(/^[a-z0-9]([a-z0-9._+-]*[a-z0-9])?$/i.test(local.trim()));
 
 	function stop() {
 		if (timer !== undefined) {
@@ -81,28 +81,6 @@
 			error = err instanceof Error ? err.message : 'Could not check DNS';
 		} finally {
 			checking = false;
-		}
-	}
-
-	async function addAddress() {
-		if (!localOk || addingAddress) return;
-		addingAddress = true;
-		addressError = null;
-		try {
-			const trimmed = displayName.trim();
-			await addresses.add({
-				customDomainId: domain.id,
-				localPart: local.trim().toLowerCase(),
-				name: trimmed === '' ? undefined : trimmed
-			});
-			local = '';
-			displayName = '';
-			const ws = workspaces.workspace?.id;
-			if (ws) await customDomains.fetchDetail(ws, domain.id);
-		} catch (err) {
-			addressError = err instanceof Error ? err.message : 'Could not add address';
-		} finally {
-			addingAddress = false;
 		}
 	}
 
@@ -205,49 +183,15 @@
 					<TriangleAlert size={15} /><span>No addresses on this domain yet.</span>
 				</div>
 			{/if}
-			<div class="dw-addr-form">
-				<div class="field">
-					<label for="dw-local">Address</label>
-					<div class="alias-compose">
-						<input
-							id="dw-local"
-							class="tin mono"
-							bind:value={local}
-							placeholder="hello"
-							autocomplete="off"
-						/>
-						<span class="dw-ac-domain">@{domain.domain}</span>
-					</div>
-					{#if local.length > 0 && !localOk}
-						<div class="field-hint bad">
-							<CircleAlert size={13} />Use letters, numbers, dots, plus, underscore, or hyphens.
-						</div>
-					{/if}
-				</div>
-				<div class="field">
-					<label for="dw-display">Display name</label>
-					<input
-						id="dw-display"
-						class="tin"
-						bind:value={displayName}
-						maxlength="120"
-						placeholder="e.g. Acme Lab"
-						autocomplete="off"
-					/>
-				</div>
-				{#if addressError}
-					<div class="field-hint bad"><CircleAlert size={13} />{addressError}</div>
-				{/if}
-				<div class="dw-addr-acts">
-					<button
-						type="button"
-						class="btn btn-secondary"
-						disabled={!localOk || addingAddress || !manage}
-						onclick={addAddress}
-					>
-						<Plus size={14} />{addingAddress ? 'Adding…' : 'Add address'}
-					</button>
-				</div>
+			<div class="dw-addr-acts">
+				<button
+					type="button"
+					class="btn btn-secondary"
+					disabled={!manage}
+					onclick={() => (addingAlias = true)}
+				>
+					<Plus size={14} />Add an address
+				</button>
 			</div>
 			<div class="dw-note">
 				<Info size={15} />
@@ -337,3 +281,16 @@
 		{/if}
 	</div>
 </Card>
+{#if addingAlias}
+	<AliasCeremony
+		mode="create"
+		presetDomainId={domain.id}
+		onClose={() => (addingAlias = false)}
+		onComplete={() => {
+			const ws = workspaces.workspace?.id;
+			if (ws) void customDomains.fetchDetail(ws, domain.id);
+		}}
+	/>
+{/if}
+
+

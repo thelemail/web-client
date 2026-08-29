@@ -44,7 +44,7 @@ export const PRODUCTS: PlanProduct[] = [
 					['Mailboxes', '1'],
 					['Storage', '15 GB'],
 					['Custom domains', '1'],
-					['Aliases', 'Unlimited']
+					['Addresses on your domain', 'Unlimited']
 				]
 			},
 			{
@@ -56,7 +56,7 @@ export const PRODUCTS: PlanProduct[] = [
 					['Mailboxes', '1'],
 					['Storage', '50 GB'],
 					['Custom domains', '3'],
-					['Aliases', 'Unlimited']
+					['Addresses on your domain', 'Unlimited']
 				]
 			}
 		]
@@ -77,7 +77,7 @@ export const PRODUCTS: PlanProduct[] = [
 					['Mailboxes', 'Up to 6'],
 					['Storage per mailbox', '10 GB'],
 					['Custom domains', '2'],
-					['Aliases', 'Unlimited']
+					['Addresses on your domain', 'Unlimited']
 				]
 			},
 			{
@@ -89,7 +89,7 @@ export const PRODUCTS: PlanProduct[] = [
 					['Mailboxes', 'Up to 6'],
 					['Storage per mailbox', '30 GB'],
 					['Custom domains', '4'],
-					['Aliases', 'Unlimited']
+					['Addresses on your domain', 'Unlimited']
 				]
 			}
 		]
@@ -109,7 +109,7 @@ export const PRODUCTS: PlanProduct[] = [
 				rows: [
 					['Storage per mailbox', '25 GB'],
 					['Custom domains', 'Up to 5'],
-					['Aliases', 'Unlimited'],
+					['Addresses on your domain', 'Unlimited'],
 					['Roles & org settings', 'Included'],
 					['Audit logs', '90-day retention'],
 					['Priority support', 'Included']
@@ -123,7 +123,7 @@ export const PRODUCTS: PlanProduct[] = [
 				rows: [
 					['Storage per mailbox', '100 GB'],
 					['Custom domains', 'Up to 10'],
-					['Aliases', 'Unlimited'],
+					['Addresses on your domain', 'Unlimited'],
 					['Roles & org settings', 'Included'],
 					['Audit logs', '1-year retention'],
 					['Priority support', 'Same business day']

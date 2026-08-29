@@ -1,4 +1,5 @@
 import { keystore } from '$lib/keystore/keystore-client';
+import { aliasKeys } from '$lib/stores/aliasKeys.svelte';
 import type { SignatureVerdict } from '$lib/keystore/protocol';
 import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
@@ -19,6 +20,25 @@ export class DecryptionError extends Error {
 	}
 }
 
+// Mail addressed to a shared alias is sealed to the alias key, which arrives
+// separately from the message. Wait for the grant set, and if a key still does
+// not match, refresh once: an admin may have re-keyed while this tab was open.
+async function withAliasKeys<T>(
+	accountId: string,
+	run: () => Promise<T>,
+	fingerprintHint?: string
+): Promise<T> {
+	await aliasKeys.ready(accountId);
+	try {
+		return await run();
+	} catch (err) {
+		if (!(err instanceof DecryptionError) || err.code !== 'no_matching_key') throw err;
+		await aliasKeys.refresh(accountId);
+		void fingerprintHint;
+		return run();
+	}
+}
+
 function base64ToBytes(b64: string): Uint8Array {
 	const s = atob(b64);
 	const out = new Uint8Array(s.length);
@@ -26,16 +46,26 @@ function base64ToBytes(b64: string): Uint8Array {
 	return out;
 }
 
-async function decryptBinary(accountId: string, b64: string): Promise<string> {
+async function decryptBinary(
+	accountId: string,
+	b64: string,
+	keyFingerprintHex?: string
+): Promise<string> {
 	const bytes = base64ToBytes(b64);
-	const res = await keystore.decrypt({ accountId, ciphertextBinary: bytes });
-	if (!res.ok) {
-		throw new DecryptionError(res.code);
-	}
-	if (!('plaintext' in res)) {
-		throw new DecryptionError('invalid_ciphertext', 'expected text plaintext');
-	}
-	return res.plaintext;
+	return withAliasKeys(accountId, async () => {
+		const res = await keystore.decrypt({
+			accountId,
+			ciphertextBinary: bytes,
+			keyFingerprintHex
+		});
+		if (!res.ok) {
+			throw new DecryptionError(res.code);
+		}
+		if (!('plaintext' in res)) {
+			throw new DecryptionError('invalid_ciphertext', 'expected text plaintext');
+		}
+		return res.plaintext;
+	});
 }
 
 export async function decryptPreview(
@@ -59,6 +89,7 @@ export async function unwrapPgpMime(
 	mime: DecryptedText,
 	verificationKeysArmored?: string[]
 ): Promise<DecryptedText> {
+	await aliasKeys.ready(accountId);
 	let current = mime.plaintext;
 	let signature = mime.signature;
 	for (let depth = 0; depth < 3; depth++) {
@@ -97,16 +128,18 @@ export async function decryptBodyFromUrl(
 		throw new DecryptionError('unknown', `fetch body ${resp.status}`);
 	}
 	const buf = new Uint8Array(await resp.arrayBuffer());
-	const res = await keystore.decrypt({
-		accountId,
-		ciphertextBinary: buf,
-		verificationKeysArmored
+	return withAliasKeys(accountId, async () => {
+		const res = await keystore.decrypt({
+			accountId,
+			ciphertextBinary: buf,
+			verificationKeysArmored
+		});
+		if (!res.ok) {
+			throw new DecryptionError(res.code);
+		}
+		if (!('plaintext' in res)) {
+			throw new DecryptionError('invalid_ciphertext', 'expected text plaintext for body');
+		}
+		return { plaintext: res.plaintext, signature: res.signature };
 	});
-	if (!res.ok) {
-		throw new DecryptionError(res.code);
-	}
-	if (!('plaintext' in res)) {
-		throw new DecryptionError('invalid_ciphertext', 'expected text plaintext for body');
-	}
-	return { plaintext: res.plaintext, signature: res.signature };
 }

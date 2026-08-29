@@ -30,7 +30,7 @@ const CEREMONY_MESSAGES: Record<CeremonyKind, string> = {
 	twofa: 'Two-factor updated',
 	keys: 'Key rotated',
 	delete: 'Account scheduled for deletion',
-	address: 'Address added',
+	alias: 'Address saved',
 	member: ''
 };
 

@@ -1,4 +1,5 @@
 import { keystore } from '$lib/keystore/keystore-client';
+import { aliasKeys } from '$lib/stores/aliasKeys.svelte';
 import { parse as parseAttFrame, type DecryptedAttachmentHeader } from './attframe';
 import type { AttachmentDetail } from '$lib/api/types';
 
@@ -27,6 +28,7 @@ export async function decryptAttachmentFull(
 	pointer: { url: string }
 ): Promise<DecryptedAttachment> {
 	const cipher = await fetchBytes(pointer.url);
+	await aliasKeys.ready(accountId);
 	const res = await keystore.decrypt({ accountId, ciphertextBinary: cipher, binary: true });
 	if (!('ok' in res) || !res.ok) {
 		throw new Error(`decrypt failed: ${'code' in res ? res.code : 'unknown'}`);

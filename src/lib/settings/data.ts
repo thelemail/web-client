@@ -40,7 +40,7 @@ export type CeremonyKind =
 	| 'twofa'
 	| 'keys'
 	| 'delete'
-	| 'address'
+	| 'alias'
 	| 'member';
 
 export interface SettingsState {

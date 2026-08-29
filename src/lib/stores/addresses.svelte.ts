@@ -1,12 +1,10 @@
 import { browser } from '$app/environment';
 import {
 	listMyAddresses,
-	addMyAddress,
 	updateMyAddress,
 	setPrimaryAddress,
 	removeAddress,
 	type AccountAddress,
-	type AddAddressInput,
 	type UpdateAddressInput
 } from '$lib/api/addresses';
 import { syncAddressUids } from '$lib/keys/uid-sync';
@@ -18,6 +16,8 @@ class AddressesStore {
 	#accountId: string | null = null;
 
 	primary = $derived(this.items.find((a) => a.isPrimary) ?? this.items[0] ?? null);
+	personal = $derived(this.items.filter((a) => !a.shared));
+	shared = $derived(this.items.filter((a) => a.shared));
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -43,13 +43,6 @@ class AddressesStore {
 		}
 	}
 
-	async add(input: AddAddressInput): Promise<AccountAddress> {
-		const created = await addMyAddress(input);
-		this.items = [...this.items, created];
-		this.#syncUids();
-		return created;
-	}
-
 	async update(id: string, input: UpdateAddressInput): Promise<AccountAddress> {
 		const updated = await updateMyAddress(id, input);
 		this.items = this.items.map((a) => (a.id === updated.id ? updated : a));
@@ -71,9 +64,12 @@ class AddressesStore {
 
 	#syncUids(): void {
 		if (!this.#accountId) return;
+		// Only the caller's own addresses become UIDs on their key. A shared
+		// alias publishes its own key, and adding it here would let the
+		// directory serve a personal key for a shared address.
 		void syncAddressUids(
 			this.#accountId,
-			this.items.map((a) => a.email)
+			this.items.filter((a) => !a.shared).map((a) => a.email)
 		);
 	}
 
