@@ -3,6 +3,11 @@ import type {
 	Broadcast,
 	ClearArgs,
 	DecryptArgs,
+	LoadAliasKeysArgs,
+	LoadAliasKeysResponse,
+	UnloadAliasKeysArgs,
+	CreateAliasKeyArgs,
+	CreateAliasKeyResponse,
 	DecryptResponse,
 	CompleteLoginUnlockArgs,
 	CompleteLoginUnlockResponse,
@@ -135,7 +140,8 @@ function getSingleton(): KeystoreSingleton {
 			data.type === 'locked' ||
 			data.type === 'cleared' ||
 			data.type === 'clearedAll' ||
-			data.type === 'persistentDisabled'
+			data.type === 'persistentDisabled' ||
+			data.type === 'aliasKeysChanged'
 		) {
 			for (const cb of listeners) cb(data as Broadcast);
 		}
@@ -162,6 +168,7 @@ function broadcastAccountId(b: Broadcast): string | null {
 		case 'locked':
 		case 'cleared':
 		case 'persistentDisabled':
+		case 'aliasKeysChanged':
 			return b.accountId;
 		case 'clearedAll':
 			return null;
@@ -245,6 +252,9 @@ export const keystore = {
 		call<RestoreResponse>('tryRestoreFromPersistent', args),
 	disablePersistent: (args: DisablePersistentArgs) => call<void>('disablePersistent', args),
 	decrypt: (args: DecryptArgs) => call<DecryptResponse>('decrypt', args),
+	loadAliasKeys: (args: LoadAliasKeysArgs) => call<LoadAliasKeysResponse>('loadAliasKeys', args),
+	unloadAliasKeys: (args: UnloadAliasKeysArgs) => call<void>('unloadAliasKeys', args),
+	createAliasKey: (args: CreateAliasKeyArgs) => call<CreateAliasKeyResponse>('createAliasKey', args),
 	getPublicKey: (args: GetPublicKeyArgs) => call<GetPublicKeyResponse>('getPublicKey', args),
 	reformatKeyWithUids: (args: ReformatKeyWithUidsArgs) =>
 		call<ReformatKeyWithUidsResponse>('reformatKeyWithUids', args),

@@ -11,7 +11,7 @@ export interface DecryptedText {
 }
 
 export class DecryptionError extends Error {
-	code: 'locked' | 'invalid_ciphertext' | 'unknown';
+	code: 'locked' | 'invalid_ciphertext' | 'no_matching_key' | 'unknown';
 	constructor(code: DecryptionError['code'], message?: string) {
 		super(message ?? code);
 		this.code = code;
