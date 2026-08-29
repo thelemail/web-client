@@ -5,12 +5,12 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { page } from '$app/state';
 
 	import Card from '$lib/settings/Card.svelte';
 	import Badge from '$lib/settings/Badge.svelte';
 	import SecHead from '$lib/settings/SecHead.svelte';
+	import RemoveDomainDialog from '$lib/settings/domains/RemoveDomainDialog.svelte';
 	import {
 		DOMAIN_STEPS,
 		STEP_LABELS,
@@ -21,6 +21,7 @@
 		stepComplete
 	} from '$lib/settings/domains/steps';
 	import { customDomains as store } from '$lib/stores/customDomains.svelte';
+	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import type { CustomDomain } from '$lib/api/customDomains';
 
@@ -30,10 +31,10 @@
 	const base = $derived(`/u/${slot}/settings/domains`);
 	const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
 
-	const busy = new SvelteSet<string>();
-
 	let menuFor = $state<string | null>(null);
-	let confirmFor = $state<string | null>(null);
+	let removeId = $state<string | null>(null);
+
+	const removeTarget = $derived(store.items.find((d) => d.id === removeId) ?? null);
 
 	function openMenu(id: string) {
 		menuFor = menuFor === id ? null : id;
@@ -48,19 +49,7 @@
 
 	function startRemove(id: string) {
 		menuFor = null;
-		confirmFor = id;
-	}
-
-	async function confirmRemove(id: string) {
-		const ws = workspaces.workspace?.id;
-		if (!ws) return;
-		busy.add(id);
-		try {
-			await store.remove(ws, id);
-			confirmFor = null;
-		} finally {
-			busy.delete(id);
-		}
+		removeId = id;
 	}
 
 	function formatTime(s: string | null | undefined): string {
@@ -115,7 +104,6 @@
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
-				{@const isBusy = busy.has(d.id)}
 				{@const live = inboundLive(d)}
 				{@const left = remaining(d)}
 				<div class="cd-row" class:live>
@@ -146,55 +134,36 @@
 							{/if}
 						</span>
 						<span class="cd-acts">
-							{#if confirmFor === d.id}
-								<span class="cd-confirm">Remove {d.domain}? Mail to it stops arriving.</span>
-								<button
-									type="button"
-									class="btn btn-secondary btn-sm"
-									disabled={isBusy}
-									onclick={() => (confirmFor = null)}>Cancel</button
-								>
-								<button
-									type="button"
-									class="btn btn-danger btn-sm"
-									disabled={isBusy}
-									onclick={() => confirmRemove(d.id)}
-								>
-									{isBusy ? 'Removing…' : 'Remove'}
-								</button>
+							{#if live}
+								<a class="btn btn-secondary" href={setupHref(d)}>Review setup</a>
 							{:else}
-								{#if live}
-									<a class="btn btn-secondary" href={setupHref(d)}>Review setup</a>
-								{:else}
-									<a class="btn btn-primary" href={setupHref(d)}>
-										Continue setup<ArrowRight size={15} />
-									</a>
-								{/if}
-								{#if manage}
-									<span class="cd-menu-wrap">
-										<button
-											type="button"
-											class="cd-menu-btn"
-											aria-label="Domain actions"
-											aria-expanded={menuFor === d.id}
-											disabled={isBusy}
-											onclick={() => openMenu(d.id)}
-										>
-											<EllipsisVertical size={16} strokeWidth={1.75} />
-										</button>
-										{#if menuFor === d.id}
-											<div class="cd-menu" role="menu">
-												<button
-													type="button"
-													class="cd-menu-item danger"
-													onclick={() => startRemove(d.id)}
-												>
-													<Trash2 size={14} strokeWidth={1.75} />Remove domain
-												</button>
-											</div>
-										{/if}
-									</span>
-								{/if}
+								<a class="btn btn-primary" href={setupHref(d)}>
+									Continue setup<ArrowRight size={15} />
+								</a>
+							{/if}
+							{#if manage}
+								<span class="cd-menu-wrap">
+									<button
+										type="button"
+										class="cd-menu-btn"
+										aria-label="Domain actions"
+										aria-expanded={menuFor === d.id}
+										onclick={() => openMenu(d.id)}
+									>
+										<EllipsisVertical size={16} strokeWidth={1.75} />
+									</button>
+									{#if menuFor === d.id}
+										<div class="cd-menu" role="menu">
+											<button
+												type="button"
+												class="cd-menu-item danger"
+												onclick={() => startRemove(d.id)}
+											>
+												<Trash2 size={14} strokeWidth={1.75} />Remove domain
+											</button>
+										</div>
+									{/if}
+								</span>
 							{/if}
 						</span>
 					</div>
@@ -213,6 +182,14 @@
 		</div>
 	{/if}
 </Card>
+
+{#if removeTarget}
+	<RemoveDomainDialog
+		domain={removeTarget}
+		onClose={() => (removeId = null)}
+		onRemoved={(name) => settingsDraft.flash(`${name} removed`)}
+	/>
+{/if}
 
 <style>
 	.cd-list {
@@ -341,18 +318,7 @@
 	.cd-menu-item.danger {
 		color: var(--danger-700);
 	}
-	.cd-confirm {
-		font-size: 12.5px;
-		color: var(--fg-strong);
-	}
-	.btn-danger {
-		background: var(--danger-700);
-		color: #fff;
-		border: 1px solid var(--danger-700);
-	}
-	.btn-danger:disabled {
-		opacity: 0.6;
-	}
+
 	.cd-empty {
 		padding: 18px;
 		text-align: center;
