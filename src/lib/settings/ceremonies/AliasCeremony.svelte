@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Users from '@lucide/svelte/icons/users';
 	import Plus from '@lucide/svelte/icons/plus';
+	import Check from '@lucide/svelte/icons/check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -18,6 +19,10 @@
 	import { verifyDirectoryLookup, DirectoryVerificationError } from '$lib/directory/verify';
 	import { createWorkspaceAlias } from '$lib/api/aliases';
 	import type { SharedAlias, SharedAliasMemberGrant } from '$lib/api/aliases';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { RadioGroup, RadioGroupItem } from '$lib/components/ui/radio-group';
+	import { Label } from '$lib/components/ui/label';
+	import Avatar from '$lib/mail/Avatar.svelte';
 
 	interface Props {
 		mode?: 'create' | 'members';
@@ -72,6 +77,12 @@
 	const adding = $derived(picked.filter((id) => !before.includes(id)));
 	const removing = $derived(before.filter((id) => !picked.includes(id)));
 	const changed = $derived(mode === 'create' || adding.length > 0 || removing.length > 0);
+
+	function initialsOf(fullName: string, email: string): string {
+		const src = (fullName || email).trim();
+		const parts = src.split(/[\s@.]+/).filter(Boolean);
+		return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || src.slice(0, 2).toUpperCase();
+	}
 
 	function nameOf(accountId: string): string {
 		const m = members.find((x) => x.accountId === accountId);
@@ -270,23 +281,31 @@
 				</div>
 				<div class="field">
 					<span class="lbl">Who uses it</span>
-					<label class="opt-row">
-						<input type="radio" name="alias-kind" checked={!shared} onchange={() => (shared = false)} />
-						<span>
-							<b>One person</b>
-							<span class="opt-desc">Mail arrives in their mailbox and only they can write from it.</span>
-						</span>
-					</label>
-					<label class="opt-row">
-						<input type="radio" name="alias-kind" checked={shared} onchange={() => (shared = true)} />
-						<span>
-							<b>Shared</b>
-							<span class="opt-desc"
-								>Everyone you pick receives a copy and can write from it. The address gets its own
-								encryption key.</span
-							>
-						</span>
-					</label>
+					<RadioGroup
+						class="choice-set"
+						value={shared ? 'shared' : 'single'}
+						onValueChange={(v) => (shared = v === 'shared')}
+					>
+						<Label class="choice" for="alias-kind-single" data-on={!shared}>
+							<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
+							<span class="choice-tx">
+								<span class="choice-t">One person</span>
+								<span class="choice-d">
+									Mail arrives in their mailbox and only they can write from it.
+								</span>
+							</span>
+						</Label>
+						<Label class="choice" for="alias-kind-shared" data-on={shared}>
+							<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
+							<span class="choice-tx">
+								<span class="choice-t">Shared</span>
+								<span class="choice-d">
+									Everyone you pick receives a copy and can write from it. The address gets its own
+									encryption key.
+								</span>
+							</span>
+						</Label>
+					</RadioGroup>
 				</div>
 				<div class="identity-preview">
 					<span class="ip-label">Preview</span>
@@ -309,22 +328,42 @@
 					{/if}
 				</p>
 			</div>
-			<div class="member-pick">
-				{#each members as m (m.accountId)}
-					<label class="opt-row">
-						<input
-							type={shared ? 'checkbox' : 'radio'}
-							name="alias-member"
-							checked={picked.includes(m.accountId)}
-							onchange={() => (shared ? toggle(m.accountId) : (picked = [m.accountId]))}
-						/>
-						<span>
-							<b>{m.fullName || m.email}</b>
-							<span class="opt-desc">{m.email}</span>
-						</span>
-					</label>
-				{/each}
-			</div>
+			{#if shared}
+				<div class="choice-set">
+					{#each members as m (m.accountId)}
+						<Label class="choice" for={`am-${m.accountId}`} data-on={picked.includes(m.accountId)}>
+							<Checkbox
+								id={`am-${m.accountId}`}
+								class="choice-mark"
+								checked={picked.includes(m.accountId)}
+								onCheckedChange={() => toggle(m.accountId)}
+							/>
+							<Avatar initials={initialsOf(m.fullName, m.email)} size={28} />
+							<span class="choice-tx">
+								<span class="choice-t">{m.fullName || m.email}</span>
+								<span class="choice-d">{m.email}</span>
+							</span>
+						</Label>
+					{/each}
+				</div>
+			{:else}
+				<RadioGroup
+					class="choice-set"
+					value={picked[0] ?? ''}
+					onValueChange={(v) => (picked = v ? [v] : [])}
+				>
+					{#each members as m (m.accountId)}
+						<Label class="choice" for={`am-${m.accountId}`} data-on={picked.includes(m.accountId)}>
+							<RadioGroupItem id={`am-${m.accountId}`} value={m.accountId} class="choice-mark" />
+							<Avatar initials={initialsOf(m.fullName, m.email)} size={28} />
+							<span class="choice-tx">
+								<span class="choice-t">{m.fullName || m.email}</span>
+								<span class="choice-d">{m.email}</span>
+							</span>
+						</Label>
+					{/each}
+				</RadioGroup>
+			{/if}
 
 			{#if shared && changed && mode === 'members'}
 				<div class="inline-warn">
@@ -374,7 +413,8 @@
 		{:else if step === peopleStep}
 			<button type="button" class="btn btn-ghost" onclick={onClose}>Cancel</button>
 			<button type="button" class="btn btn-primary" disabled={!canSubmit || submitting} onclick={submit}>
-				<Plus size={15} />{submitting ? 'Saving…' : mode === 'members' ? 'Save people' : 'Add address'}
+				{#if mode === 'members'}<Check size={15} />{:else}<Plus size={15} />{/if}
+				{submitting ? 'Saving…' : mode === 'members' ? 'Save people' : 'Add address'}
 			</button>
 		{:else}
 			<button
