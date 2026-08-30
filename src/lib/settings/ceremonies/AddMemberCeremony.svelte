@@ -102,14 +102,16 @@
 		submitError = null;
 		try {
 			const inviteRole = (fam ? 'member' : role.toLowerCase()) as 'admin' | 'member';
+			const deliverTo = email.trim();
 			const result = await workspaces.invite({
 				customDomainId,
 				localPart: local.trim().toLowerCase(),
-				role: inviteRole
+				role: inviteRole,
+				deliverTo: deliverTo || undefined
 			});
 			const base = browser ? window.location.origin.replace(/\/$/, '') : '';
 			inviteLink = `${base}/invite/${result.token}`;
-			sentToEmail = email.trim() || null;
+			sentToEmail = result.invite.deliverTo ?? null;
 			step = 1;
 		} catch (err) {
 			submitError = err instanceof Error ? err.message : 'Could not create invitation';

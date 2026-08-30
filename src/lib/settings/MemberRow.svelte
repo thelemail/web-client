@@ -12,7 +12,7 @@
 		| { kind: 'demote' }
 		| { kind: 'remove' }
 		| { kind: 'revoke' }
-		| { kind: 'copy-link' };
+		| { kind: 'resend' };
 
 	interface Props {
 		m: AccountMember;
@@ -20,7 +20,7 @@
 		canDemote?: boolean;
 		canRemove?: boolean;
 		canRevoke?: boolean;
-		inviteUrl?: string | null;
+		canResend?: boolean;
 		busy?: boolean;
 		onAction?: (a: MemberRowAction) => void | Promise<void>;
 	}
@@ -31,7 +31,7 @@
 		canDemote = false,
 		canRemove = false,
 		canRevoke = false,
-		inviteUrl = null,
+		canResend = false,
 		busy = false,
 		onAction
 	}: Props = $props();
@@ -42,17 +42,18 @@
 
 	const hasActions = $derived(
 		Boolean(onAction) &&
-			(canPromote || canDemote || canRemove || canRevoke || Boolean(inviteUrl))
+			(canPromote || canDemote || canRemove || canRevoke || canResend)
 	);
 
 	function toggleMenu() {
 		menuOpen = !menuOpen;
 	}
 
-	async function copyLink() {
-		if (!inviteUrl) return;
+	async function resend() {
+		if (!canResend || !onAction) return;
+		menuOpen = false;
 		try {
-			await navigator.clipboard.writeText(inviteUrl);
+			await onAction({ kind: 'resend' });
 			copied = true;
 			setTimeout(() => (copied = false), 1500);
 		} catch {
@@ -121,12 +122,12 @@
 				</button>
 				{#if menuOpen}
 					<div class="mbr-menu" role="menu">
-						{#if inviteUrl}
-							<button type="button" class="mbr-menu-item" onclick={copyLink}>
+						{#if canResend}
+							<button type="button" class="mbr-menu-item" onclick={resend}>
 								{#if copied}
-									<Check size={14} strokeWidth={1.75} />Copied
+									<Check size={14} strokeWidth={1.75} />New link copied
 								{:else}
-									<Copy size={14} strokeWidth={1.75} />Copy invitation link
+									<Copy size={14} strokeWidth={1.75} />Send a new invitation link
 								{/if}
 							</button>
 						{/if}
