@@ -18,6 +18,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Avatar from '$lib/mail/Avatar.svelte';
 	import { initialsFor } from '$lib/mail/initials';
+	import { paletteFor } from '$lib/mail/avatarPalette';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { auth } from '$lib/stores/auth.svelte';
@@ -60,22 +61,9 @@
 		return at >= 0 ? em.slice(at + 1) : em;
 	}
 
-	function avatarPaletteFor(accountId: string): { bg: string; fg: string } {
-		let h = 0;
-		for (let i = 0; i < accountId.length; i++) h = (h * 31 + accountId.charCodeAt(i)) >>> 0;
-		const palette = [
-			{ bg: 'var(--pine-700)', fg: '#EEF2EA' },
-			{ bg: 'var(--brass-700, #8a6a2e)', fg: '#FBF8EE' },
-			{ bg: '#6b4f8a', fg: '#F4EEF8' },
-			{ bg: '#2d6a6a', fg: '#E9F4F4' },
-			{ bg: '#8a4f4f', fg: '#F8EEEE' }
-		];
-		return palette[h % palette.length];
-	}
-
 	const switcherAccounts = $derived<AccountEntry[]>(
 		accounts.list.map((rec) => {
-			const pal = avatarPaletteFor(rec.accountId);
+			const pal = paletteFor(rec.accountId);
 			return {
 				id: rec.accountId,
 				name: rec.accountId === auth.accountId ? displayName : rec.email,

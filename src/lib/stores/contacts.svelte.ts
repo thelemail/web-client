@@ -2,26 +2,13 @@ import { browser } from '$app/environment';
 import { listMessages } from '$lib/api/messages';
 import { decryptPreview } from '$lib/mail/decrypt';
 import { initialsFor } from '$lib/mail/initials';
+import { paletteFor } from '$lib/mail/avatarPalette';
 import type { Contact } from '$lib/mail/data';
 import type { MessageListItem } from '$lib/api/types';
 import { auth } from './auth.svelte';
 import { addresses } from './addresses.svelte';
 
 const PAGE_SIZE = 100;
-
-const PALETTE: ReadonlyArray<{ bg: string; fg: string }> = [
-	{ bg: 'var(--brass-100)', fg: 'var(--brass-700)' },
-	{ bg: 'var(--pine-100)', fg: 'var(--pine-700)' },
-	{ bg: 'var(--info-100)', fg: 'var(--info-700)' },
-	{ bg: '#ECE3FF', fg: '#6D28D9' },
-	{ bg: 'var(--paper-200)', fg: 'var(--ink-700)' }
-];
-
-function paletteFor(seed: string): { bg: string; fg: string } {
-	let h = 0;
-	for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-	return PALETTE[h % PALETTE.length];
-}
 
 interface Correspondent {
 	name: string;

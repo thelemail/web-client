@@ -13,6 +13,7 @@
 	import type { CeremonyKind } from './data';
 	import type { AccountMember } from './types';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
+	import { paletteFor } from '$lib/mail/avatarPalette';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { ownershipProven } from '$lib/settings/domains/steps';
@@ -49,21 +50,9 @@
 		).toUpperCase() || 'TH';
 	}
 
-	const palette: Array<{ bg: string; fg: string }> = [
-		{ bg: 'var(--pine-700)', fg: '#EEF2EA' },
-		{ bg: 'var(--pine-100)', fg: 'var(--pine-700)' },
-		{ bg: 'var(--info-100)', fg: 'var(--info-700)' },
-		{ bg: 'var(--paper-200)', fg: 'var(--ink-700)' }
-	];
-	function colorFor(seed: string): { bg: string; fg: string } {
-		let h = 0;
-		for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-		return palette[h % palette.length] ?? palette[0]!;
-	}
-
 	const people = $derived(
 		workspaces.members.map<AccountMember>((wm) => {
-			const c = colorFor(wm.accountId);
+			const c = paletteFor(wm.accountId);
 			return {
 				name: wm.fullName || wm.email,
 				addr: wm.email,
@@ -77,7 +66,7 @@
 
 	const pending = $derived(
 		workspaces.invites.map<AccountMember>((inv) => {
-			const c = colorFor(inv.id);
+			const c = paletteFor(inv.id);
 			return {
 				name: inv.email,
 				addr: inv.email,
