@@ -6,6 +6,8 @@
 	import LockOpen from '@lucide/svelte/icons/lock-open';
 	import { chipsFromInput, type Contact, type RecipientChip } from './data';
 	import { insideMailbox } from './address';
+	import Avatar from './Avatar.svelte';
+	import { personAvatars } from '$lib/stores/personAvatars.svelte';
 
 	export type RecipientEncStatus = 'internal' | 'encrypted' | 'cleartext' | 'checking' | null;
 
@@ -137,7 +139,14 @@
 		{#each chips as c, i (i)}
 			<span class="rchip" class:bad={!c.valid} title={c.email}>
 				{#if c.valid}
-					<span class="rdot" style:background={c.bg} style:color={c.fg}>{c.init}</span>
+					<Avatar
+						initials={c.init}
+						bg={c.bg}
+						fg={c.fg}
+						size={18}
+						src={personAvatars.avatarUrl(c.email)}
+						fit="cover"
+					/>
 				{:else}
 					<CircleAlert size={13} />
 				{/if}
@@ -190,7 +199,14 @@
 						}}
 						onmouseenter={() => (hi = i)}
 					>
-						<span class="rdot lg" style:background={c.bg} style:color={c.fg}>{c.init}</span>
+						<Avatar
+							initials={c.init}
+							bg={c.bg}
+							fg={c.fg}
+							size={28}
+							src={personAvatars.avatarUrl(c.email)}
+							fit="cover"
+						/>
 						<span class="ac-tx"><b>{c.name}</b><span>{c.email}</span></span>
 					</button>
 				{/each}

@@ -8,7 +8,7 @@
 	import { formatWhenLong, type ThreadEntry } from './data';
 	import AttachmentList from './AttachmentList.svelte';
 	import { getMessage } from '$lib/api/messages';
-	import { bimi } from '$lib/stores/bimi.svelte';
+	import { senderImage } from './senderImage';
 
 	interface Props {
 		e: ThreadEntry;
@@ -18,6 +18,8 @@
 	}
 
 	let { e, isOpen, onToggle, onConfirmKeyChange }: Props = $props();
+
+	const img = $derived(senderImage(e.fromAddr, e.bimiDomain));
 
 	let showQuoted = $state(false);
 	$effect(() => {
@@ -63,7 +65,7 @@
 		}}
 	>
 		<div class="tmsg-collapsed">
-			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={bimi.logoUrl(e.bimiDomain)} imgBg="#fff" />
+			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={img.src} fit={img.fit} imgBg={img.imgBg} />
 			<span class="tc-name">
 				<span class="tc-nm">{name}</span>
 				{#if e.trust}
@@ -93,7 +95,7 @@
 				}
 			}}
 		>
-			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={42} src={bimi.logoUrl(e.bimiDomain)} imgBg="#fff" />
+			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={42} src={img.src} fit={img.fit} imgBg={img.imgBg} />
 			<div class="who">
 				<div class="nm">
 					<span class="nm-t">{name}</span>

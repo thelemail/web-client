@@ -273,11 +273,15 @@
 <div class="scard">
 	<div class="profile">
 		<div class="pf-avwrap">
-			{#if auth.avatarUrl}
-				<img class="pf-av av" src={auth.avatarUrl} alt="Avatar" />
-			{:else}
-				<Avatar {initials} size={64} bg="var(--pine-700)" fg="#EEF2EA" class="pf-av" />
-			{/if}
+			<Avatar
+				{initials}
+				src={auth.avatarUrl}
+				fit="cover"
+				size={64}
+				bg="var(--pine-700)"
+				fg="#EEF2EA"
+				class="pf-av"
+			/>
 			<button
 				type="button"
 				class="pf-avedit"
@@ -413,13 +417,6 @@
 <style>
 	.hidden-input {
 		display: none;
-	}
-	.pf-av.av,
-	img.pf-av {
-		width: 64px;
-		height: 64px;
-		border-radius: var(--radius-avatar);
-		object-fit: cover;
 	}
 	.pf-avwrap {
 		position: relative;

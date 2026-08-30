@@ -56,7 +56,7 @@
 	import type { ReportOutcome } from './report';
 	import { accountSettings } from '$lib/stores/accountSettings.svelte';
 	import { mailbox } from '$lib/stores/mailbox.svelte';
-	import { bimi } from '$lib/stores/bimi.svelte';
+	import { senderImage } from './senderImage';
 
 	interface Props {
 		m: Message | null;
@@ -103,6 +103,8 @@
 		onReplySentArchive,
 		onBack
 	}: Props = $props();
+
+	const img = $derived(senderImage(m?.fromAddr, m?.bimiDomain));
 
 	let moreOpen = $state(false);
 	let moreRef: HTMLDivElement | undefined = $state();
@@ -813,8 +815,9 @@
 							bg={m.bg}
 							fg={m.fg}
 							size={34}
-							src={bimi.logoUrl(m.bimiDomain)}
-							imgBg="#fff"
+							src={img.src}
+							fit={img.fit}
+							imgBg={img.imgBg}
 						/>
 						<div class="who">
 							<div class="nm">{m.from}</div>

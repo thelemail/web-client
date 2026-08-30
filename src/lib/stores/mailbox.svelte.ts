@@ -15,6 +15,7 @@ import {
 } from '$lib/mail/data';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { bimiDomainFromPreview } from '$lib/mail/preview';
+import { paletteFor } from '$lib/mail/avatarPalette';
 import { initialsFor } from '$lib/mail/initials';
 import { queryMatches } from '$lib/mail/match';
 import type { MailboxCounts, MessageListItem, ThreadListItem } from '$lib/api/types';
@@ -159,6 +160,7 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 	const storedAt = new Date(item.storedAt);
 	const fromDisplay = preview.sender.display || preview.sender.address || 'Unknown';
 	const init = initialsFor(fromDisplay, preview.sender.address);
+	const pal = paletteFor(preview.sender.address.toLowerCase());
 	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 	const labels = (item.labels ?? []) as LabelId[];
 	return {
@@ -171,8 +173,8 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 		recipients: preview.recipients,
 		init,
-		bg: 'var(--pine-100)',
-		fg: 'var(--pine-700)',
+		bg: pal.bg,
+		fg: pal.fg,
 		epoch: storedAt.getTime(),
 		subj: decodeWords(preview.subject || '') || '(no subject)',
 		labels,

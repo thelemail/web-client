@@ -18,7 +18,7 @@
 		type Message
 	} from './data';
 	import type { MailActionCaps } from './actions';
-	import { bimi } from '$lib/stores/bimi.svelte';
+	import { senderImage } from './senderImage';
 
 	interface Props {
 		m: Message;
@@ -51,6 +51,8 @@
 		onDelete,
 		onToggleRead
 	}: Props = $props();
+
+	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
 
 	const labelChips = $derived(
 		(m.labels ?? []).slice(0, 2).map((id) => ({ id, label: LABELS[id] })).filter((x) => !!x.label)
@@ -110,8 +112,9 @@
 			fg={m.fg}
 			class="seal"
 			size={22}
-			src={bimi.logoUrl(m.bimiDomain)}
-			imgBg="#fff"
+			src={img.src}
+			fit={img.fit}
+			imgBg={img.imgBg}
 		/>
 		<button
 			class="row-ck"

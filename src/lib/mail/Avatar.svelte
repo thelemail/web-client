@@ -5,6 +5,7 @@
 		bg?: string;
 		fg?: string;
 		src?: string | null;
+		fit?: 'contain' | 'cover';
 		imgBg?: string;
 		class?: string;
 	}
@@ -15,6 +16,7 @@
 		bg = 'var(--pine-100)',
 		fg = 'var(--pine-700)',
 		src = null,
+		fit = 'contain',
 		imgBg,
 		class: className = ''
 	}: Props = $props();
@@ -37,10 +39,10 @@
 	style:background={showImage && imgBg ? imgBg : bg}
 	style:color={fg}
 	style:border-radius="var(--radius-avatar)"
-	style:padding={showImage ? '1px' : null}
+	style:padding={showImage && fit === 'contain' ? '1px' : null}
 >
 	{#if showImage}
-		<img {src} alt="" onerror={() => (failed = true)} />
+		<img {src} alt="" style:object-fit={fit} onerror={() => (failed = true)} />
 	{:else}
 		{initials}
 	{/if}
@@ -59,7 +61,6 @@
 	.av img {
 		width: 100%;
 		height: 100%;
-		object-fit: contain;
 		border-radius: inherit;
 		display: block;
 	}
