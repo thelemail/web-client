@@ -100,12 +100,8 @@
 
 	let busyId = $state<string | null>(null);
 
-	function inviteUrlForRow(addr: string): string | null {
-		if (!browser) return null;
-		const w = workspaces.invites.find((i) => i.email === addr);
-		if (!w) return null;
-		const base = window.location.origin.replace(/\/$/, '');
-		return `${base}/invite/${w.id}`;
+	function inviteLinkFor(token: string): string {
+		return `${window.location.origin.replace(/\/$/, '')}/invite/${token}`;
 	}
 
 	function lookupMemberByEmail(addr: string) {
@@ -118,17 +114,20 @@
 
 	async function handleAction(
 		p: AccountMember,
-		action: { kind: 'promote' | 'demote' | 'remove' | 'revoke' | 'copy-link' }
+		action: { kind: 'promote' | 'demote' | 'remove' | 'revoke' | 'resend' }
 	) {
 		const inv = lookupInviteByEmail(p.addr);
-		if (inv && (action.kind === 'revoke' || action.kind === 'copy-link')) {
-			if (action.kind === 'revoke') {
-				busyId = inv.id;
-				try {
+		if (inv && (action.kind === 'revoke' || action.kind === 'resend')) {
+			busyId = inv.id;
+			try {
+				if (action.kind === 'revoke') {
 					await workspaces.revokeInvite(inv.id);
-				} finally {
-					busyId = null;
+				} else {
+					const result = await workspaces.resendInvite(inv.id);
+					await navigator.clipboard.writeText(inviteLinkFor(result.token));
 				}
+			} finally {
+				busyId = null;
 			}
 			return;
 		}
@@ -156,7 +155,7 @@
 		const isOwner = member?.role === 'owner';
 		return {
 			canRevoke: isPending && canManage,
-			inviteUrl: inv ? inviteUrlForRow(p.addr) : null,
+			canResend: Boolean(inv) && browser,
 			canPromote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'member',
 			canDemote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'admin',
 			canRemove: !isPending && !isOwner && canManage && !isSelf,
@@ -197,7 +196,7 @@
 			canDemote={rp.canDemote}
 			canRemove={rp.canRemove}
 			canRevoke={rp.canRevoke}
-			inviteUrl={rp.inviteUrl}
+			canResend={rp.canResend}
 			busy={rp.busy}
 			onAction={(a) => handleAction(p, a)}
 		/>
@@ -210,7 +209,7 @@
 			canDemote={rp.canDemote}
 			canRemove={rp.canRemove}
 			canRevoke={rp.canRevoke}
-			inviteUrl={rp.inviteUrl}
+			canResend={rp.canResend}
 			busy={rp.busy}
 			onAction={(a) => handleAction(p, a)}
 		/>

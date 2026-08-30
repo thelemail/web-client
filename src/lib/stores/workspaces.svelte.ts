@@ -5,6 +5,7 @@ import {
 	listWorkspaceInvites,
 	createWorkspaceInvite,
 	deleteWorkspaceInvite,
+	resendWorkspaceInvite,
 	removeWorkspaceMember,
 	updateWorkspaceMember,
 	changeMyWorkspaceType,
@@ -106,6 +107,12 @@ class WorkspaceStore {
 		if (!this.canManage(callerAccountId)) return false;
 		if (this.workspace?.type === 'personal') return false;
 		return verifiedDomainCount > 0;
+	}
+
+	async resendInvite(inviteId: string): Promise<CreateWorkspaceInviteResult> {
+		const result = await resendWorkspaceInvite(inviteId);
+		this.invites = this.invites.map((i) => (i.id === inviteId ? result.invite : i));
+		return result;
 	}
 
 	async revokeInvite(inviteId: string): Promise<void> {

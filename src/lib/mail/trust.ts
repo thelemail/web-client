@@ -1,9 +1,11 @@
 import type { SignatureVerdict } from '$lib/keystore/protocol';
 import type { DirectoryTrust, ExternalKeyState } from './senderVerify';
 import type { AuthState, MessagePreviewAuth } from './preview';
+import type { OfficialFacts } from './officialSender';
 import { formatFingerprintHex, formatVerifiedAt } from '$lib/directory/format';
 
 export type TrustTier =
+	| 'official'
 	| 'verified'
 	| 'encrypted'
 	| 'authenticated'
@@ -47,6 +49,7 @@ export interface TrustFacts {
 	externalKey?: ExternalKeyState | null;
 	domainAuth?: MessagePreviewAuth;
 	domainAuthState?: AuthState;
+	official?: OfficialFacts;
 	nowMillis: number;
 }
 
@@ -532,7 +535,7 @@ function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 	];
 }
 
-const GREEN_TIERS = new Set<TrustTier>(['verified', 'encrypted', 'authenticated']);
+const GREEN_TIERS = new Set<TrustTier>(['official', 'verified', 'encrypted', 'authenticated']);
 
 function clamp(trust: MessageTrust): MessageTrust {
 	if (!GREEN_TIERS.has(trust.tier)) return trust;
@@ -544,9 +547,81 @@ export function deriveTrust(facts: TrustFacts): MessageTrust {
 	return clamp(derive(facts));
 }
 
+function officialChecks(facts: TrustFacts): TrustCheck[] {
+	const o = facts.official;
+	const fp = facts.signature?.keyFingerprintHex;
+	return [
+		{
+			id: 'official',
+			state: o?.signedByOfficial ? 'pass' : 'fail',
+			label: o?.signedByOfficial ? 'Signed by Thelemail' : 'Not signed by Thelemail',
+			explain:
+				'This message carries a signature from the Thelemail key built into this app. Nobody else can produce it, including the Thelemail servers.',
+			rows: fp ? [{ label: 'Signing key', value: formatFingerprintHex(fp) }] : []
+		},
+		{
+			id: 'binding',
+			state: o?.headerBound ? 'pass' : 'fail',
+			label: o?.headerBound
+				? 'The signature covers the sender and subject shown'
+				: 'The signature does not cover the sender shown',
+			explain:
+				'The signature covers the sender address and subject you see above, not only the text, so neither can be swapped after signing.',
+			rows: []
+		},
+		{
+			id: 'channel',
+			state: o?.channelOk ? 'pass' : 'fail',
+			label: o?.channelOk
+				? 'Delivered inside Thelemail'
+				: 'This arrived from outside Thelemail',
+			explain:
+				'Thelemail sends its own notices straight into your mailbox. Anything claiming to be from Thelemail that arrived over ordinary mail is not from Thelemail.',
+			rows: []
+		},
+		{
+			id: 'e2e',
+			state: facts.e2e ? 'pass' : 'absent',
+			label: 'Encrypted to your key before it was stored',
+			explain: 'Thelemail holds only ciphertext for this message and cannot read it at rest.',
+			rows: []
+		},
+		{
+			id: 'tlog',
+			state: facts.directory?.tlog?.state === 'verified' ? 'pass' : 'absent',
+			label: 'Published in the transparency log',
+			explain:
+				'The same key is published in the public Thelemail log, so its history can be audited independently of this app.',
+			rows: logRows(facts.directory)
+		}
+	];
+}
+
 function derive(facts: TrustFacts): MessageTrust {
 	const base = { address: facts.senderAddress };
 	const dir = facts.directory;
+
+	if (facts.official?.claimed) {
+		const o = facts.official;
+		if (!o.signedByOfficial || !o.headerBound || !o.channelOk) {
+			return {
+				...base,
+				tier: 'failed',
+				label: 'Not from Thelemail',
+				headline: 'This message is not from Thelemail',
+				checks: officialChecks(facts),
+				footnote:
+					'It uses a Thelemail address in the From line, but it is not signed by the Thelemail key this app carries. Do not act on it.'
+			};
+		}
+		return {
+			...base,
+			tier: 'official',
+			label: 'Official',
+			headline: 'Sent by Thelemail',
+			checks: officialChecks(facts)
+		};
+	}
 
 	if (tlogAttack(dir)) {
 		return {

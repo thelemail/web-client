@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import BadgeCheck from '@lucide/svelte/icons/badge-check';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Lock from '@lucide/svelte/icons/lock';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
@@ -22,6 +23,7 @@
 	let { trust, variant = 'icon', onConfirmKeyChange }: Props = $props();
 
 	const MARKS = {
+		official: BadgeCheck,
 		verified: ShieldCheck,
 		encrypted: Lock,
 		authenticated: CircleCheck,
@@ -213,6 +215,11 @@
 		}
 	}
 
+	.tmark[data-tier='official'] {
+		background: var(--brass-100);
+		color: var(--brass-700);
+		border-color: color-mix(in oklab, var(--brass-600) 42%, transparent);
+	}
 	.tmark[data-tier='verified'] {
 		background: var(--success-700);
 		color: var(--paper-0);
@@ -287,6 +294,10 @@
 		height: 24px;
 		border-radius: 50%;
 		flex: 0 0 auto;
+	}
+	.tpop[data-tier='official'] .tpop-mark {
+		background: var(--brass-700);
+		color: var(--paper-0);
 	}
 	.tpop[data-tier='verified'] .tpop-mark {
 		background: var(--success-700);

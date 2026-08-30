@@ -32,6 +32,9 @@ export interface WorkspaceInvite {
 	role: InvitableRole;
 	createdAt: string;
 	expiresAt: string;
+	deliverTo?: string;
+	lastSentAt?: string;
+	resendCount?: number;
 }
 
 export interface UpdateWorkspaceInput {
@@ -47,6 +50,7 @@ export interface CreateWorkspaceInviteInput {
 	customDomainId: string;
 	localPart: string;
 	role: InvitableRole;
+	deliverTo?: string;
 }
 
 export interface CreateWorkspaceInviteResult {
@@ -133,6 +137,10 @@ export function createWorkspaceInvite(
 	input: CreateWorkspaceInviteInput
 ): Promise<CreateWorkspaceInviteResult> {
 	return apiFetch(`/v1/workspaces/${workspaceId}/invites`, { method: 'POST', body: input });
+}
+
+export function resendWorkspaceInvite(inviteId: string): Promise<CreateWorkspaceInviteResult> {
+	return apiFetch(`/v1/workspace-invites/${inviteId}/resend`, { method: 'POST' });
 }
 
 export function deleteWorkspaceInvite(inviteId: string): Promise<void> {

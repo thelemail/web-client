@@ -6,6 +6,7 @@ import type { RenderResult } from './renderBody';
 export interface CachedRender {
 	render: RenderResult;
 	signature?: SignatureVerdict;
+	mime?: string;
 }
 
 const MAX_ENTRIES = 32;

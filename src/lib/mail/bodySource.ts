@@ -33,7 +33,7 @@ export async function renderDetail(
 		opts.verificationKeysArmored
 	);
 	const render = await renderBody({ mime, stripTracking: opts.stripTracking });
-	const entry: CachedRender = { render, signature };
+	const entry: CachedRender = { render, signature, mime };
 	putCachedRender(key, entry);
 	return entry;
 }
