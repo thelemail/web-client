@@ -28,6 +28,13 @@ import { preferences } from './preferences.svelte';
 import { billing } from './billing.svelte';
 import { twofactor } from './twofactor.svelte';
 import { bimi } from './bimi.svelte';
+import {
+	cachedAvatarUrl,
+	cacheAccountAvatar,
+	forgetAccountAvatar,
+	forgetAllAvatars,
+	hydrateAvatarCache
+} from '$lib/avatarCache.svelte';
 import { personAvatars } from './personAvatars.svelte';
 import { contacts } from './contacts.svelte';
 import { realtime } from '$lib/realtime/realtime.svelte';
@@ -178,6 +185,7 @@ class AuthStore {
 		if (!browser) return;
 		this.subscribeOnce();
 		await accounts.load();
+		await hydrateAvatarCache();
 		const s = await keystore.status();
 		this.syncFromKeystoreStatus(s);
 		if (!this.#currentId) {
@@ -337,6 +345,26 @@ class AuthStore {
 			deletion: me.deletion ?? null,
 			lifecycle: me.lifecycle ?? null
 		}));
+		void cacheAccountAvatar(id, me.avatarUrl ?? null);
+	}
+
+	avatarUrlFor(accountId: string): string | null {
+		return this.#profiles.get(accountId)?.avatarUrl ?? cachedAvatarUrl(accountId);
+	}
+
+	fullNameFor(accountId: string): string | null {
+		return this.#profiles.get(accountId)?.fullName ?? null;
+	}
+
+	async loadSignedInProfiles(): Promise<void> {
+		await Promise.all(
+			accounts.list
+				.filter((rec) => this.#tokens.has(rec.accountId))
+				.map(async (rec) => {
+					await this.ensureFreshToken(rec.accountId);
+					await this.loadProfile(rec.accountId);
+				})
+		);
 	}
 
 	vaultUnlockedFor(accountId: string): boolean {
@@ -358,6 +386,7 @@ class AuthStore {
 		}
 		this.#dropToken(accountId);
 		await keystore.clear({ accountId });
+		await forgetAccountAvatar(accountId);
 		await accounts.remove(accountId);
 		const m = new Map(this.#profiles);
 		m.delete(accountId);
@@ -380,6 +409,7 @@ class AuthStore {
 		}
 		this.#tokens = new Map();
 		await keystore.clearAll();
+		await forgetAllAvatars();
 		await accounts.clear();
 		this.#profiles = new Map();
 		this.#currentId = null;

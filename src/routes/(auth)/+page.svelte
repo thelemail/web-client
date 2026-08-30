@@ -21,15 +21,14 @@
 		[...accounts.list]
 			.sort((a, b) => b.lastActiveAt - a.lastActiveAt)
 			.map((rec) => {
-				const current = rec.accountId === auth.accountId;
-				const name = current ? (auth.fullName?.trim() ?? '') : '';
+				const name = auth.fullNameFor(rec.accountId)?.trim() ?? '';
 				return {
 					id: rec.accountId,
 					slot: rec.slot,
 					email: rec.email,
 					name: name && name !== rec.email ? name : null,
 					initials: initialsFor(name || null, rec.email),
-					avatarUrl: current ? auth.avatarUrl : null,
+					avatarUrl: auth.avatarUrlFor(rec.accountId),
 					unlocked: auth.vaultUnlockedFor(rec.accountId)
 				};
 			})
@@ -66,10 +65,10 @@
 				<Avatar
 					initials={row.initials}
 					src={row.avatarUrl}
+					fit="cover"
 					size={38}
 					bg={row.unlocked ? 'var(--pine-700)' : 'var(--pine-100)'}
 					fg={row.unlocked ? '#EEF2EA' : 'var(--pine-700)'}
-					imgBg="#fff"
 				/>
 				<span class="ap-tx">
 					{#if row.name}

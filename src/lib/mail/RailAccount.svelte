@@ -69,16 +69,14 @@
 	const switcherAccounts = $derived<AccountEntry[]>(
 		accounts.list.map((rec) => {
 			const pal = paletteFor(rec.accountId);
+			const name = auth.fullNameFor(rec.accountId) ?? rec.email;
 			return {
 				id: rec.accountId,
-				name: rec.accountId === auth.accountId ? displayName : rec.email,
+				name,
 				email: rec.email,
 				org: '',
 				domain: domainFromEmail(rec.email),
-				init: initialsFor(
-					rec.accountId === auth.accountId ? auth.fullName : null,
-					rec.email
-				),
+				init: initialsFor(auth.fullNameFor(rec.accountId), rec.email),
 				bg: pal.bg,
 				fg: pal.fg
 			};
@@ -119,6 +117,7 @@
 
 	function openSwitchView() {
 		view = 'switch';
+		void auth.loadSignedInProfiles();
 	}
 
 	function backToMain() {
@@ -200,7 +199,7 @@
 <div class="rail-acct" bind:this={menuRef}>
 	<button class="acct-btn" onclick={toggleMenu} aria-expanded={open}>
 		<span class="av-wrap">
-			<Avatar {initials} src={auth.avatarUrl} size={28} bg="var(--pine-700)" fg="#EEF2EA" />
+			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-700)" fg="#EEF2EA" />
 			{#if hasBackgroundUnread}<span class="acct-dot" aria-hidden="true"></span>{/if}
 		</span>
 		<span class="acct-tx">
@@ -225,7 +224,8 @@
 					>
 						<Avatar
 							initials={a.init}
-							src={isCur ? auth.avatarUrl : null}
+							src={auth.avatarUrlFor(a.id)}
+							fit="cover"
 							size={38}
 							bg={a.bg}
 							fg={a.fg}
@@ -267,7 +267,7 @@
 		{:else if open}
 			<div class="menu">
 				<div class="mhead">
-					<Avatar {initials} src={auth.avatarUrl} size={44} bg="var(--pine-700)" fg="#EEF2EA" />
+					<Avatar {initials} src={auth.avatarUrl} fit="cover" size={44} bg="var(--pine-700)" fg="#EEF2EA" />
 					<div class="mh-tx">
 						<div class="nm" title={displayName}>{displayName}</div>
 						<div class="em" title={displayEmail}>{displayEmail}</div>

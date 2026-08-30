@@ -61,15 +61,20 @@
 		return at >= 0 ? em.slice(at + 1) : em;
 	}
 
+	function openSwitchView() {
+		view = 'switch';
+		void auth.loadSignedInProfiles();
+	}
+
 	const switcherAccounts = $derived<AccountEntry[]>(
 		accounts.list.map((rec) => {
 			const pal = paletteFor(rec.accountId);
 			return {
 				id: rec.accountId,
-				name: rec.accountId === auth.accountId ? displayName : rec.email,
+				name: auth.fullNameFor(rec.accountId) ?? rec.email,
 				email: rec.email,
 				domain: domainFromEmail(rec.email),
-				init: initialsFor(rec.accountId === auth.accountId ? auth.fullName : null, rec.email),
+				init: initialsFor(auth.fullNameFor(rec.accountId), rec.email),
 				bg: pal.bg,
 				fg: pal.fg
 			};
@@ -145,7 +150,7 @@
 <div class="usr" bind:this={menuRef}>
 	<button class="usr-btn" onclick={toggleMenu}>
 		<span class="av-wrap">
-			<Avatar {initials} src={auth.avatarUrl} size={30} bg="var(--pine-700)" fg="#EEF2EA" />
+			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={30} bg="var(--pine-700)" fg="#EEF2EA" />
 			{#if hasBackgroundUnread}<span class="acct-dot" aria-hidden="true"></span>{/if}
 		</span>
 		<span class="uchev"><ChevronDown size={15} /></span>
@@ -160,7 +165,14 @@
 			{#each switcherAccounts as a (a.id)}
 				{@const isCur = activeAccount?.id === a.id}
 				<button type="button" class="acct-row" class:cur={isCur} onclick={() => doSwitch(a)}>
-					<Avatar initials={a.init} src={isCur ? auth.avatarUrl : null} size={38} bg={a.bg} fg={a.fg} />
+					<Avatar
+						initials={a.init}
+						src={auth.avatarUrlFor(a.id)}
+						fit="cover"
+						size={38}
+						bg={a.bg}
+						fg={a.fg}
+					/>
 					<span class="ar-tx">
 						<span class="ar-nm">{a.name}</span>
 						<span class="ar-em">{a.email}</span>
@@ -190,14 +202,14 @@
 	{:else if open}
 		<div class="menu">
 			<div class="mhead">
-				<Avatar {initials} src={auth.avatarUrl} size={44} bg="var(--pine-700)" fg="#EEF2EA" />
+				<Avatar {initials} src={auth.avatarUrl} fit="cover" size={44} bg="var(--pine-700)" fg="#EEF2EA" />
 				<div class="mh-tx">
 					<div class="nm" title={displayName}>{displayName}</div>
 					<div class="em" title={displayEmail}>{displayEmail}</div>
 				</div>
 			</div>
 			<div class="msep"></div>
-			<button class="mitem" onclick={() => (view = 'switch')}>
+			<button class="mitem" onclick={openSwitchView}>
 				<ArrowLeftRight size={17} />Switch account
 				<span class="mi-chev"><ChevronRight size={15} /></span>
 			</button>
