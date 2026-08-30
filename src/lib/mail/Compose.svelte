@@ -704,7 +704,14 @@
 						class:open={fromOpen}
 						onclick={() => (fromOpen = !fromOpen)}
 					>
-						<Avatar initials={ident.init} size={22} bg={ident.bg} fg={ident.fg} />
+						<Avatar
+							initials={ident.init}
+							src={ident.kind === 'Alias' ? null : auth.avatarUrl}
+							fit="cover"
+							size={22}
+							bg={ident.bg}
+							fg={ident.fg}
+						/>
 						<span class="ft-name">{ident.name}</span>
 						<span class="ft-email">&lt;{ident.email}&gt;</span>
 						<ChevronDown size={15} />
@@ -723,7 +730,14 @@
 										pickIdentity(i);
 									}}
 								>
-									<Avatar initials={id.init} size={30} bg={id.bg} fg={id.fg} />
+									<Avatar
+										initials={id.init}
+										src={id.kind === 'Alias' ? null : auth.avatarUrl}
+										fit="cover"
+										size={30}
+										bg={id.bg}
+										fg={id.fg}
+									/>
 									<span class="fm-tx">
 										<span class="fm-top">
 											<b>{id.name}</b>

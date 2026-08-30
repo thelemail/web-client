@@ -616,7 +616,14 @@
 					class:open={fromOpen}
 					onclick={() => (fromOpen = !fromOpen)}
 				>
-					<Avatar initials={ident.init} size={20} bg={ident.bg} fg={ident.fg} />
+					<Avatar
+						initials={ident.init}
+						src={ident.kind === 'Alias' ? null : auth.avatarUrl}
+						fit="cover"
+						size={20}
+						bg={ident.bg}
+						fg={ident.fg}
+					/>
 					<span class="ft-email">{ident.email}</span>
 					<ChevronDown size={14} />
 				</button>
@@ -632,7 +639,14 @@
 								aria-checked={i === identIdx}
 								onclick={() => pickIdentity(i)}
 							>
-								<Avatar initials={id.init} size={30} bg={id.bg} fg={id.fg} />
+								<Avatar
+									initials={id.init}
+									src={id.kind === 'Alias' ? null : auth.avatarUrl}
+									fit="cover"
+									size={30}
+									bg={id.bg}
+									fg={id.fg}
+								/>
 								<span class="fm-tx">
 									<span class="fm-top">
 										<b>{id.name}</b>
