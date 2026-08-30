@@ -14,6 +14,7 @@ import { renderBody, type RenderResult } from '$lib/mail/render';
 import type { SignatureVerdict } from '$lib/keystore/protocol';
 import { renderDetail } from '$lib/mail/bodySource';
 import { initialsFor } from '$lib/mail/initials';
+import { paletteFor } from '$lib/mail/avatarPalette';
 import { initialChips } from '$lib/mail/attachments';
 import { type ThreadEntry, type Message } from '$lib/mail/data';
 import { auth } from '$lib/stores/auth.svelte';
@@ -55,6 +56,7 @@ async function hydrateEntry(
 		const preview = await decryptPreview(accountId, item.encryptedPreview);
 		const fromDisplay = preview.sender.display || preview.sender.address || 'Unknown';
 		const init = initialsFor(fromDisplay, preview.sender.address);
+		const pal = paletteFor(preview.sender.address.toLowerCase());
 		const stored = new Date(item.storedAt);
 		const me = auth.email
 			? preview.sender.address.toLowerCase() === auth.email.toLowerCase()
@@ -129,8 +131,8 @@ async function hydrateEntry(
 			to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 			recipients: preview.recipients,
 			init,
-			bg: me ? 'var(--pine-700)' : 'var(--pine-100)',
-			fg: me ? '#EEF2EA' : 'var(--pine-700)',
+			bg: me ? 'var(--pine-700)' : pal.bg,
+			fg: me ? '#EEF2EA' : pal.fg,
 			epoch: stored.getTime(),
 			trust,
 			me,
