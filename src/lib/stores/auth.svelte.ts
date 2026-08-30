@@ -28,6 +28,7 @@ import { preferences } from './preferences.svelte';
 import { billing } from './billing.svelte';
 import { twofactor } from './twofactor.svelte';
 import { bimi } from './bimi.svelte';
+import { personAvatars } from './personAvatars.svelte';
 import { contacts } from './contacts.svelte';
 import { realtime } from '$lib/realtime/realtime.svelte';
 
@@ -48,6 +49,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	preferences.setAccount(accountId);
 	twofactor.setAccount(accountId);
 	bimi.setAccount(accountId);
+	personAvatars.setAccount(accountId);
 }
 
 const REFRESH_SKEW_MS = 60_000;

@@ -966,6 +966,15 @@ export interface AccountLookupResponse {
 	tlogProof?: string;
 }
 
+export interface AddressAvatar {
+	address: string;
+	avatarUrl: string;
+}
+
+export interface ResolveAvatarsResponse {
+	avatars: AddressAvatar[];
+}
+
 export interface AccountSettingsResponse {
 	sections: Record<string, Record<string, unknown>>;
 }
