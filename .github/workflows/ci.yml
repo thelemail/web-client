@@ -43,6 +43,9 @@ jobs:
             echo 'PUBLIC_TLOG_POLICY<<TRUSTROOT_EOF'
             cat trust-roots/tlog-policy.json
             echo 'TRUSTROOT_EOF'
+            echo 'PUBLIC_OFFICIAL_SENDER_POLICY<<TRUSTROOT_EOF'
+            cat trust-roots/official-sender.json
+            echo 'TRUSTROOT_EOF'
           } >> "$GITHUB_ENV"
 
       - name: Install dependencies

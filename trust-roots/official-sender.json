@@ -1,0 +1,12 @@
+{
+  "addresses": [
+    "no-reply@thel.email"
+  ],
+  "keys": [
+    "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapPnBBsAAAAgZNYk8v5Pf4wNiR6y7+/LmHB94AfUisb4wbp4DEG27UvClwYf\nGwgAAAA4BYJqk+cEAgsHAhUIAhYAApsDAh4BIqEGb1xSN3oX2It3DLbvvjmIC217\nBQ/09LiNQB4yD0wmi2oAAAAAYdMQokHnGYbZzmkYsxDpSM9bljyeYtLl1aO7g/uQ\nDtKN1pRytsR3g8mwt+5aEHO8r7Rimh+PzgWslBYspgWjqXS8EIa1l2DmfHFZHki1\nGJR4IgrNH1RoZWxlbWFpbCA8bm8tcmVwbHlAdGhlbC5lbWFpbD7CiwYTGwgAAAAs\nBYJqk+cEAhkBIqEGb1xSN3oX2It3DLbvvjmIC217BQ/09LiNQB4yD0wmi2oAAAAA\nkkcQVD0j4NckswGpvMq7zUkrowvgtMFhz/OLxo3VjgWCZfrDc9mkYF13wCK/SpFW\nx4D3QdELvg8lH0OMlcMl5VpObdVTWapq5Rn2rtjn9LOZLQHOKgZqk+cEGQAAACA8\n6T2DR9wZPG4jgnjtdfJVLqUkaMckSE2VlvRDwKDeXsKLBhgbCAAAACwFgmqT5wQC\nmwwioQZvXFI3ehfYi3cMtu++OYgLbXsFD/T0uI1AHjIPTCaLagAAAADsLRCgQEb0\nBvWibCJO9Hm2+IyJacp8vJWcus1JAyLSDJ6PLjQMPVCTAUOX+zfL8BgiZFJV+Zpq\n+jVTd/Z4zKZj4i0+cdZsYwH+DrdqWDjGZJQPBw==\n=CdeO\n-----END PGP PUBLIC KEY BLOCK-----"
+  ],
+  "displayName": "Thelemail",
+  "fingerprints": [
+    "6f5c52377a17d88b770cb6efbe39880b6d7b050ff4f4b88d401e320f4c268b6a"
+  ]
+}

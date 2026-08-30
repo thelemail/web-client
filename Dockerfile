@@ -30,8 +30,10 @@ ENV CSP_BLOB_ORIGIN=${CSP_BLOB_ORIGIN}
 RUN set -eu; \
     test -s trust-roots/directory-signing-key.asc || { echo "trust-roots/directory-signing-key.asc is missing or empty" >&2; exit 1; }; \
     test -s trust-roots/tlog-policy.json || { echo "trust-roots/tlog-policy.json is missing or empty" >&2; exit 1; }; \
+    test -s trust-roots/official-sender.json || { echo "trust-roots/official-sender.json is missing or empty" >&2; exit 1; }; \
     export PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED="$(cat trust-roots/directory-signing-key.asc)"; \
     export PUBLIC_TLOG_POLICY="$(cat trust-roots/tlog-policy.json)"; \
+    export PUBLIC_OFFICIAL_SENDER_POLICY="$(cat trust-roots/official-sender.json)"; \
     node scripts/check-trust-roots.mjs; \
     pnpm build && pnpm verify:bundle
 

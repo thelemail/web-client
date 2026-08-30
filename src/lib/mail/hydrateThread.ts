@@ -6,6 +6,8 @@ import {
 	bimiDomainFromPreview
 } from '$lib/mail/preview';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
+import { isOfficialAddress, OFFICIAL_KEYS_ARMORED } from '$lib/directory/official';
+import { officialFacts } from './officialSender';
 import { directoryTrust, externalKeyState } from '$lib/mail/senderVerify';
 import { deriveTrust, type TrustFacts } from '$lib/mail/trust';
 import { renderBody, type RenderResult } from '$lib/mail/render';
@@ -59,6 +61,7 @@ async function hydrateEntry(
 			: false;
 
 		const senderAddress = preview.sender.address;
+		const claimsOfficial = isOfficialAddress(senderAddress);
 		const directory =
 			item.source === 'internal' && !me && senderAddress
 				? await directoryTrust(accountId, senderAddress)
@@ -67,15 +70,19 @@ async function hydrateEntry(
 		let bodyLines: string[] = [preview.snippet || '(empty)'];
 		let render: RenderResult | null = null;
 		let signature: SignatureVerdict | undefined;
+		let signedMime: string | undefined;
 		try {
 			const rendered = await renderDetail(accountId, item, {
 				stripTracking,
-				verificationKeysArmored: directory?.publicKeyArmored
-					? [directory.publicKeyArmored]
-					: undefined
+				verificationKeysArmored: claimsOfficial
+					? [...OFFICIAL_KEYS_ARMORED]
+					: directory?.publicKeyArmored
+						? [directory.publicKeyArmored]
+						: undefined
 			});
 			render = rendered.render;
 			signature = rendered.signature;
+			signedMime = rendered.mime;
 		} catch (err) {
 			if (err instanceof DecryptionError) {
 				bodyLines = ['(Could not decrypt this message.)'];
@@ -108,6 +115,7 @@ async function hydrateEntry(
 			externalKey,
 			domainAuth: authSummaryFromPreview(preview),
 			domainAuthState: authStateFromPreview(preview),
+			official: officialFacts({ senderAddress, channel: item.source, signature, signedMime }),
 			nowMillis: Date.now()
 		};
 		const trust = me ? undefined : deriveTrust(facts);
