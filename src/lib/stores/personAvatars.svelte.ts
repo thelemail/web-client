@@ -12,6 +12,7 @@ interface Entry {
 class PersonAvatarStore {
 	#entries = new SvelteMap<string, Entry>();
 	#queued = new Set<string>();
+	#inflight = new Set<string>();
 	#flushing = false;
 	#accountId: string | null = null;
 	#gen = 0;
@@ -22,6 +23,7 @@ class PersonAvatarStore {
 		this.#gen++;
 		this.#entries.clear();
 		this.#queued.clear();
+		this.#inflight.clear();
 	}
 
 	avatarUrl(address: string | undefined): string | null {
@@ -35,7 +37,7 @@ class PersonAvatarStore {
 	}
 
 	#enqueue(key: string): void {
-		if (this.#queued.has(key)) return;
+		if (this.#queued.has(key) || this.#inflight.has(key)) return;
 		this.#queued.add(key);
 		if (this.#flushing) return;
 		this.#flushing = true;
@@ -47,6 +49,7 @@ class PersonAvatarStore {
 		const pending = [...this.#queued];
 		this.#queued.clear();
 		this.#flushing = false;
+		for (const key of pending) this.#inflight.add(key);
 		for (let i = 0; i < pending.length; i += BATCH_LIMIT) {
 			const chunk = pending.slice(i, i + BATCH_LIMIT);
 			let found: Map<string, string>;
@@ -55,6 +58,8 @@ class PersonAvatarStore {
 				found = new Map(res.avatars.map((a) => [a.address.trim().toLowerCase(), a.avatarUrl]));
 			} catch {
 				continue;
+			} finally {
+				for (const key of chunk) this.#inflight.delete(key);
 			}
 			if (gen !== this.#gen) return;
 			const at = Date.now();
