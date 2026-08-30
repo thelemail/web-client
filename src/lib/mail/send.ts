@@ -51,6 +51,7 @@ export type SendErrorCode =
 	| 'encrypt'
 	| 'rate_limited'
 	| 'schedule_unsupported'
+	| 'malware_blocked'
 	| 'rejected'
 	| 'server_error'
 	| 'network'
@@ -118,6 +119,9 @@ export function sendErrorFromApi(e: unknown, fallback: string): SendError {
 		const message = e.envelope?.error?.message ?? `${fallback} (HTTP ${e.status})`;
 		if (e.status === 429) return rateLimitedSendError(e);
 		if (e.status === 401) return new SendError('locked', message);
+		if (e.envelope?.error?.code === 'content_rejected') {
+			return new SendError('malware_blocked', message);
+		}
 		if (e.status >= 500) return new SendError('server_error', message);
 		if (e.status >= 400) return new SendError('rejected', message);
 		return new SendError('unknown', message);

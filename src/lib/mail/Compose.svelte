@@ -437,6 +437,7 @@
 		'recipient_key_invalid',
 		'rate_limited',
 		'schedule_unsupported',
+		'malware_blocked',
 		'rejected',
 		'server_error',
 		'network'

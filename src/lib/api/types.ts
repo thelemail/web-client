@@ -13,6 +13,7 @@ export type ErrorCode =
 	| 'read_only'
 	| 'account_suspended'
 	| 'trial_feature_locked'
+	| 'content_rejected'
 	| 'migration_conflict';
 
 export type MessageDirection = 'sent' | 'received';
