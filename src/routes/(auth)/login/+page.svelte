@@ -68,8 +68,8 @@
 		loginError = null;
 		const password = pw;
 		try {
-			pw = '';
 			const outcome = await performLogin({ email, password, rememberMe });
+			pw = '';
 			if (outcome.status === 'twoFactorRequired') {
 				pendingTwoFactor = outcome.pending;
 				twoFaError = null;
