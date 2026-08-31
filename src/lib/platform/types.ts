@@ -27,6 +27,24 @@ export interface SearchHit {
 	threadRootId: string | null;
 }
 
+export interface MirrorRow {
+	id: string;
+	direction: 'sent' | 'received';
+	mailboxState: string;
+	subject: string;
+	senderDisplay: string;
+	senderAddress: string;
+	recipientsJson: string;
+	snippet: string;
+	displayDate: string;
+	storedAt: string;
+	read: boolean;
+	starred: boolean;
+	attachmentCount: number;
+	threadRootId: string | null;
+	labelsJson: string;
+}
+
 export interface LocalMirror {
 	open(accountId: string): Promise<void>;
 	close(accountId: string): Promise<void>;
@@ -34,6 +52,7 @@ export interface LocalMirror {
 	setToken(accountId: string, accessToken: string): Promise<void>;
 	stopWatch(accountId: string): Promise<void>;
 	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
+	list(accountId: string, mailbox: string, limit?: number): Promise<MirrorRow[]>;
 	onChanged?(cb: (accountId: string) => void): () => void;
 }
 
