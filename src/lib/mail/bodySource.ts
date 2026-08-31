@@ -29,6 +29,10 @@ export async function renderDetail(
 
 	if (cachedMime) {
 		const render = await renderBody({ mime: cachedMime, stripTracking: opts.stripTracking });
+		platform.reportError?.(
+			'body-render',
+			`cached srcDocLen=${render.srcDoc.length} mimeLen=${cachedMime.length}`
+		);
 		const entry: CachedRender = { render, mime: cachedMime };
 		putCachedRender(key, entry);
 		return entry;
@@ -45,6 +49,10 @@ export async function renderDetail(
 		opts.verificationKeysArmored
 	);
 	const render = await renderBody({ mime, stripTracking: opts.stripTracking });
+	platform.reportError?.(
+		'body-render',
+		`network srcDocLen=${render.srcDoc.length} mimeLen=${mime.length}`
+	);
 	const entry: CachedRender = { render, signature, mime };
 	putCachedRender(key, entry);
 	return entry;
@@ -68,6 +76,10 @@ export async function loadMessageBody(
 	opts: RenderDetailOptions
 ): Promise<LoadedBody> {
 	const mirrored = await fromMirror(accountId, messageId);
+	platform.reportError?.(
+		'body-source',
+		`mirrored=${mirrored ? 'yes' : 'no'} mimeLen=${mirrored?.mime?.length ?? -1}`
+	);
 	if (mirrored?.mime) {
 		const detail = detailFromMirror(mirrored);
 		const { render, signature } = await renderDetail(accountId, detail, opts, mirrored.mime);

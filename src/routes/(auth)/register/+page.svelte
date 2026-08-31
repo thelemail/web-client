@@ -349,7 +349,11 @@
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</button>
 					<button class="btn btn-primary" disabled={!passwordReady || submitting} onclick={startTrial}>
-						Start 30-day free trial<ArrowRight size={17} strokeWidth={1.75} />
+						{#if submitting}
+							Creating your mailbox…
+						{:else}
+							Start 30-day free trial<ArrowRight size={17} strokeWidth={1.75} />
+						{/if}
 					</button>
 				</div>
 				<button

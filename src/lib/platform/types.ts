@@ -110,6 +110,7 @@ export interface NativeSession {
 }
 
 export interface Platform {
+	reportError?: (kind: string, err: unknown) => void;
 	interceptFrameLinks?: boolean;
 	session?: NativeSession;
 	billing: BillingMode;

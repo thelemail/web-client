@@ -100,7 +100,7 @@
 		margin: 0;
 		font-size: 13.5px;
 		line-height: 1.55;
-		color: var(--muted);
+		color: var(--fg-muted);
 	}
 
 	.msp-actions {

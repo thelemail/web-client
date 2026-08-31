@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import X from '@lucide/svelte/icons/x';
@@ -564,6 +565,7 @@
 			onSend(when ? { scheduledAt: when } : undefined);
 		} catch (e) {
 			status = 'idle';
+			platform.reportError?.('send', e);
 			if (e instanceof SendError) {
 				err = e;
 				if (e.code === 'encrypt') attempts += 1;
