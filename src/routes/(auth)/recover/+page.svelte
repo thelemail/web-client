@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { platform } from '$platform';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import PasswordField from '$lib/auth/PasswordField.svelte';
@@ -267,6 +268,7 @@
 			resetToken = '';
 			setTimeout(() => (step = 'done'), 500);
 		} catch (err) {
+			platform.reportError?.('recover', err);
 			workError =
 				err instanceof RecoveryResetExpiredError
 					? 'This recovery session expired. Start over and enter your phrase again.'

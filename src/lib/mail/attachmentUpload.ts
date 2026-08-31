@@ -1,4 +1,5 @@
 import * as openpgp from 'openpgp';
+import { platform } from '$platform';
 import { keystore } from '$lib/keystore/keystore-client';
 import { bytesToB64, hexToBytes } from '$lib/crypto';
 import { lookupAccount } from '$lib/api/accounts';
@@ -70,24 +71,12 @@ async function sha256B64(bytes: Uint8Array): Promise<string> {
 	return bytesToB64(new Uint8Array(digest));
 }
 
-function putWithProgress(url: string, body: Uint8Array, signal: AbortSignal, onProgress: (n: number) => void): Promise<void> {
-	return new Promise((resolve, reject) => {
-		const xhr = new XMLHttpRequest();
-		xhr.open('PUT', url, true);
-		xhr.upload.onprogress = (e) => {
-			if (e.lengthComputable && e.total > 0) onProgress(e.loaded / e.total);
-		};
-		xhr.onload = () => {
-			if (xhr.status >= 200 && xhr.status < 300) resolve();
-			else reject(new Error(`PUT ${xhr.status}: ${xhr.statusText}`));
-		};
-		xhr.onerror = () => reject(new Error('network error during upload'));
-		xhr.onabort = () => reject(new DOMException('aborted', 'AbortError'));
-		signal.addEventListener('abort', () => xhr.abort(), { once: true });
-		const ab = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
-		const blob = new Blob([ab]);
-		xhr.send(blob);
-	});
+async function putWithProgress(url: string, body: Uint8Array, signal: AbortSignal, onProgress: (n: number) => void): Promise<void> {
+	const ab = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
+	const res = await platform.blobPut(url, new Blob([ab]), undefined, { signal, onProgress });
+	if (!res.ok) {
+		throw new Error(`PUT ${res.status}: ${res.statusText}`);
+	}
 }
 
 interface UploadEnv {

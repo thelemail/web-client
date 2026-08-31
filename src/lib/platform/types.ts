@@ -109,6 +109,11 @@ export interface NativeSession {
 	forget(accountId: string): Promise<void>;
 }
 
+export interface BlobPutOptions {
+	signal?: AbortSignal;
+	onProgress?: (fraction: number) => void;
+}
+
 export interface Platform {
 	reportError?: (kind: string, err: unknown) => void;
 	interceptFrameLinks?: boolean;
@@ -120,7 +125,12 @@ export interface Platform {
 	transport?: Transport;
 	openEventSource?: (url: string) => EventSourceLike;
 	blobFetch: (url: string, init?: RequestInit) => Promise<Response>;
-	blobPut: (url: string, body: Blob, contentType?: string) => Promise<Response>;
+	blobPut: (
+		url: string,
+		body: Blob,
+		contentType?: string,
+		opts?: BlobPutOptions
+	) => Promise<Response>;
 	returnOrigin: () => string;
 	openExternal: (url: string) => void;
 	saveBlob: (blob: Blob, filename: string) => Promise<void>;
