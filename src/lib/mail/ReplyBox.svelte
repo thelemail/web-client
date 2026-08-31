@@ -416,6 +416,7 @@
 		'encrypt',
 		'recipient_key_invalid',
 		'rate_limited',
+		'malware_blocked',
 		'rejected',
 		'server_error',
 		'network'

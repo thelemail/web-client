@@ -3,6 +3,7 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import WifiOff from '@lucide/svelte/icons/wifi-off';
 	import ServerCrash from '@lucide/svelte/icons/server-crash';
 	import Pencil from '@lucide/svelte/icons/pencil';
@@ -20,6 +21,7 @@
 		| 'recipient_key_invalid'
 		| 'rate_limited'
 		| 'schedule_unsupported'
+		| 'malware_blocked'
 		| 'rejected'
 		| 'server_error'
 		| 'network';
@@ -160,6 +162,15 @@
 					actionIcon: Pencil,
 					onAction: onDismiss
 				};
+			case 'malware_blocked':
+				return {
+					tone: 'warn',
+					ic: ShieldAlert,
+					title: 'This message contains malware',
+					actionLabel: 'Back to the draft',
+					actionIcon: Pencil,
+					onAction: onDismiss
+				};
 			case 'rejected':
 				return {
 					tone: 'warn',
@@ -222,6 +233,9 @@
 			{:else if code === 'schedule_unsupported'}
 				{serverText}
 				Nothing was sent and your draft is kept.
+			{:else if code === 'malware_blocked'}
+				{serverText}
+				Your draft is kept. Remove the attachment before trying again.
 			{:else if code === 'rejected'}
 				{serverText}
 				Nothing was sent and your draft is kept.

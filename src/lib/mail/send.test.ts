@@ -497,4 +497,20 @@ describe('sendErrorFromApi', () => {
 		const original = new SendError('encrypt', 'nope');
 		expect(sendErrorFromApi(original, 'Sending failed')).toBe(original);
 	});
+
+	it('gives a malware refusal its own code and keeps the attachment name', () => {
+		const envelope = {
+			error: {
+				code: 'content_rejected' as const,
+				message: 'The attachment "invoice.pdf" contains malware, so this message was not sent.'
+			}
+		};
+		const e = sendErrorFromApi(new ApiCallError(422, envelope, 'rejected'), 'Sending failed');
+		expect(e.code).toBe('malware_blocked');
+		expect(e.message).toContain('invoice.pdf');
+	});
+
+	it('leaves an ordinary 422 as a plain rejection', () => {
+		expect(sendErrorFromApi(apiError(422, 'nope'), 'Sending failed').code).toBe('rejected');
+	});
 });
