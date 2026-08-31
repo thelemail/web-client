@@ -18,6 +18,9 @@ const config = {
 		runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true)
 	},
 	kit: {
+		alias: {
+			$platform: desktop ? process.env.THELEMAIL_PLATFORM_DIR ?? 'src/lib/platform/web' : 'src/lib/platform/web'
+		},
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',

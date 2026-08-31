@@ -1,6 +1,14 @@
 import { PUBLIC_API_BASE_URL, PUBLIC_SUBMISSION_BASE_URL } from '$env/static/public';
+import { platform } from '$platform';
 import { deviceId } from '$lib/realtime/device';
+import type { Transport } from '$lib/platform/types';
 import { ApiCallError, type ErrorEnvelope } from './types';
+
+let transport: Transport = platform.transport ?? ((url, init) => fetch(url, init));
+
+export function registerTransport(t: Transport) {
+	transport = t;
+}
 
 export interface AuthRouter {
 	currentAccountId(): string | null;
@@ -87,7 +95,7 @@ async function doFetch<T>(path: string, opts: FetchOptions, retried: boolean): P
 		}
 	}
 
-	const resp = await fetch(url, init);
+	const resp = await transport(url, init);
 	if (resp.status === 204) {
 		return undefined as T;
 	}
