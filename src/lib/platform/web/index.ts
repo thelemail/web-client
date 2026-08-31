@@ -1,6 +1,7 @@
 import type { Platform } from '../types';
 
 export const platform: Platform = {
+	billing: 'native',
 	mirror: undefined,
 	keystoreChannel: undefined,
 	transport: undefined,

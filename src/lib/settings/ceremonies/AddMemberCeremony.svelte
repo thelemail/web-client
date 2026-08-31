@@ -1,5 +1,6 @@
 <script lang="ts">
 	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import { platform } from '$platform';
 	import Building2 from '@lucide/svelte/icons/building-2';
 	import Users from '@lucide/svelte/icons/users';
 	import Receipt from '@lucide/svelte/icons/receipt';
@@ -109,7 +110,7 @@
 				role: inviteRole,
 				deliverTo: deliverTo || undefined
 			});
-			const base = browser ? window.location.origin.replace(/\/$/, '') : '';
+			const base = browser ? platform.returnOrigin().replace(/\/$/, '') : '';
 			inviteLink = `${base}/invite/${result.token}`;
 			sentToEmail = result.invite.deliverTo ?? null;
 			step = 1;

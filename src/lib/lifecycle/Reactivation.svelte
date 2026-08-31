@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import mark from '$lib/assets/logo-mark.svg';
 	import Database from '@lucide/svelte/icons/database';
@@ -116,12 +117,12 @@
 				await enterMailbox();
 				return;
 			}
-			const origin = window.location.origin;
+			const origin = platform.returnOrigin();
 			if (sub?.status === 'past_due') {
 				const { url } = await createBillingPortalSession({
 					returnUrl: `${origin}/u/${slot}/billing/return`
 				});
-				window.location.assign(url);
+				platform.openExternal(url);
 				return;
 			}
 			const { url } = await createCheckoutSession({
@@ -129,7 +130,7 @@
 				successUrl: `${origin}/u/${slot}/billing/return`,
 				cancelUrl: `${origin}/u/${slot}/lifecycle/restore`
 			});
-			window.location.assign(url);
+			platform.openExternal(url);
 		} catch (err) {
 			if (err instanceof ApiCallError && err.status === 409) {
 				await enterMailbox();

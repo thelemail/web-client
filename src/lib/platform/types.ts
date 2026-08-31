@@ -34,7 +34,10 @@ export interface LocalMirror {
 	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
 }
 
+export type BillingMode = 'native' | 'handoff';
+
 export interface Platform {
+	billing: BillingMode;
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
 	transport?: Transport;

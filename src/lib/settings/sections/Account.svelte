@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import { platform } from '$platform';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import Users from '@lucide/svelte/icons/users';
@@ -77,12 +78,12 @@
 		portalBusy = true;
 		portalError = null;
 		try {
-			const origin = window.location.origin;
+			const origin = platform.returnOrigin();
 			const slot = page.params.slot;
 			const { url } = await createBillingPortalSession({
 				returnUrl: `${origin}/u/${slot}/settings/account`
 			});
-			window.location.assign(url);
+			platform.openExternal(url);
 		} catch (err) {
 			portalBusy = false;
 			portalError = err instanceof Error ? err.message : 'Could not open billing portal';
