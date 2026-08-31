@@ -9,6 +9,8 @@
 	let { srcDoc }: Props = $props();
 	let frame: HTMLIFrameElement | undefined = $state();
 
+	const writeFrameDoc = platform.writeFrameDoc === true;
+
 	function applyTheme() {
 		if (!frame) return;
 		try {
@@ -33,10 +35,8 @@
 		applyTheme();
 	});
 
-	function interceptLinks() {
+	function interceptLinks(doc: Document) {
 		if (!platform.interceptFrameLinks) return;
-		const doc = frame?.contentDocument;
-		if (!doc) return;
 		doc.addEventListener(
 			'click',
 			(ev) => {
@@ -50,6 +50,27 @@
 			true
 		);
 	}
+
+	function ready() {
+		const doc = frame?.contentDocument;
+		if (!doc) return;
+		applyTheme();
+		fit();
+		interceptLinks(doc);
+	}
+
+	$effect(() => {
+		if (!writeFrameDoc || !frame) return;
+		const doc = frame.contentDocument;
+		if (!doc) return;
+		doc.open();
+		doc.write(srcDoc);
+		doc.close();
+		ready();
+		const view = doc.defaultView;
+		view?.addEventListener('load', fit);
+		return () => view?.removeEventListener('load', fit);
+	});
 </script>
 
 {#key srcDoc}
@@ -57,12 +78,8 @@
 		bind:this={frame}
 		class="email-frame"
 		title="Message"
-		sandbox={platform.interceptFrameLinks ? "allow-same-origin" : "allow-same-origin allow-popups"}
-		srcdoc={srcDoc}
-		onload={() => {
-			applyTheme();
-			fit();
-			interceptLinks();
-		}}
+		sandbox={platform.interceptFrameLinks ? 'allow-same-origin' : 'allow-same-origin allow-popups'}
+		srcdoc={writeFrameDoc ? undefined : srcDoc}
+		onload={writeFrameDoc ? fit : ready}
 	></iframe>
 {/key}

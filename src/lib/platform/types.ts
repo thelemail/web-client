@@ -93,7 +93,7 @@ export interface LocalMirror {
 	setToken(accountId: string, accessToken: string): Promise<void>;
 	stopWatch(accountId: string): Promise<void>;
 	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
-	list(accountId: string, mailbox: string, limit?: number): Promise<MirrorRow[]>;
+	list(accountId: string, mailbox: string, direction?: string, limit?: number): Promise<MirrorRow[]>;
 	message(accountId: string, messageId: string): Promise<MirrorMessage | null>;
 	thread(accountId: string, messageId: string): Promise<MirrorMessage[]>;
 	scope(accountId: string): Promise<string | null>;
@@ -112,6 +112,7 @@ export interface NativeSession {
 export interface Platform {
 	reportError?: (kind: string, err: unknown) => void;
 	interceptFrameLinks?: boolean;
+	writeFrameDoc?: boolean;
 	session?: NativeSession;
 	billing: BillingMode;
 	mirror?: LocalMirror;

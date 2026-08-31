@@ -200,11 +200,17 @@ async function loadFromMirror(accountId: string, query: Query): Promise<Message[
 	const mailbox = serverMailboxFor(query.folder);
 	if (!mailbox) return null;
 	try {
-		const rows = await mirror.list(accountId, mailbox);
+		const rows = await mirror.list(accountId, mailbox, serverDirectionFor(query.folder));
 		return rows.map(mirrorRowToMessage);
 	} catch {
 		return null;
 	}
+}
+
+function serverDirectionFor(folder: string): string | undefined {
+	if (folder === 'inbox') return 'received';
+	if (folder === 'sent') return 'sent';
+	return undefined;
 }
 
 function serverMailboxFor(folder: string): string | null {
