@@ -38,6 +38,7 @@ import {
 import { personAvatars } from './personAvatars.svelte';
 import { contacts } from './contacts.svelte';
 import { realtime } from '$lib/realtime/realtime.svelte';
+import { platform } from '$platform';
 
 function broadcastAccountToStores(accountId: string | null): void {
 	mailbox.setAccount(accountId);
@@ -387,6 +388,13 @@ class AuthStore {
 		this.#dropToken(accountId);
 		await keystore.clear({ accountId });
 		await forgetAccountAvatar(accountId);
+		if (platform.session) {
+			try {
+				await platform.session.forget(accountId);
+			} catch (err) {
+				console.warn('session: could not clear native state', err);
+			}
+		}
 		await accounts.remove(accountId);
 		const m = new Map(this.#profiles);
 		m.delete(accountId);

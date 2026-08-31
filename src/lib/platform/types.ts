@@ -58,7 +58,14 @@ export interface LocalMirror {
 
 export type BillingMode = 'native' | 'handoff';
 
+export interface NativeSession {
+	persist(accountId: string): Promise<boolean>;
+	restore(accountId: string): Promise<boolean>;
+	forget(accountId: string): Promise<void>;
+}
+
 export interface Platform {
+	session?: NativeSession;
 	billing: BillingMode;
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
