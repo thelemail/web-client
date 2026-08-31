@@ -13,6 +13,10 @@ import { deriveTrust, type TrustFacts } from '$lib/mail/trust';
 import { renderBody, type RenderResult } from '$lib/mail/render';
 import type { SignatureVerdict } from '$lib/keystore/protocol';
 import { renderDetail } from '$lib/mail/bodySource';
+import { detailFromMirror } from '$lib/mail/mirrorDetail';
+import { platform } from '$platform';
+import type { MirrorMessage } from '$lib/platform/types';
+import type { MessagePreview } from '$lib/mail/preview';
 import { initialsFor } from '$lib/mail/initials';
 import { paletteFor } from '$lib/mail/avatarPalette';
 import { initialChips } from '$lib/mail/attachments';
@@ -50,10 +54,11 @@ async function mapLimit<T, R>(
 async function hydrateEntry(
 	accountId: string,
 	item: MessageDetail,
-	stripTracking: boolean
+	stripTracking: boolean,
+	cached?: MirrorMessage
 ): Promise<ThreadEntry | null> {
 	try {
-		const preview = await decryptPreview(accountId, item.encryptedPreview);
+		const preview = cached ? previewFromMirror(cached) : await decryptPreview(accountId, item.encryptedPreview);
 		const fromDisplay = preview.sender.display || preview.sender.address || 'Unknown';
 		const init = initialsFor(fromDisplay, preview.sender.address);
 		const pal = paletteFor(preview.sender.address.toLowerCase());
@@ -66,7 +71,7 @@ async function hydrateEntry(
 		const claimsOfficial = isOfficialAddress(senderAddress);
 		const directory =
 			item.source === 'internal' && !me && senderAddress
-				? await directoryTrust(accountId, senderAddress)
+				? await directoryTrust(accountId, senderAddress).catch(() => null)
 				: null;
 
 		let bodyLines: string[] = [preview.snippet || '(empty)'];
@@ -74,14 +79,19 @@ async function hydrateEntry(
 		let signature: SignatureVerdict | undefined;
 		let signedMime: string | undefined;
 		try {
-			const rendered = await renderDetail(accountId, item, {
-				stripTracking,
-				verificationKeysArmored: claimsOfficial
-					? [...OFFICIAL_KEYS_ARMORED]
-					: directory?.publicKeyArmored
-						? [directory.publicKeyArmored]
-						: undefined
-			});
+			const rendered = await renderDetail(
+				accountId,
+				item,
+				{
+					stripTracking,
+					verificationKeysArmored: claimsOfficial
+						? [...OFFICIAL_KEYS_ARMORED]
+						: directory?.publicKeyArmored
+							? [directory.publicKeyArmored]
+							: undefined
+				},
+				cached?.mime ?? undefined
+			);
 			render = rendered.render;
 			signature = rendered.signature;
 			signedMime = rendered.mime;
@@ -105,7 +115,7 @@ async function hydrateEntry(
 		const e2e = item.source === 'internal' || item.encrypted === true;
 		const externalKey =
 			item.source !== 'internal' && !me && e2e && senderAddress
-				? await externalKeyState(senderAddress)
+				? await externalKeyState(senderAddress).catch(() => null)
 				: null;
 
 		const facts: TrustFacts = {
@@ -150,17 +160,56 @@ async function hydrateEntry(
 	}
 }
 
+function previewFromMirror(m: MirrorMessage): MessagePreview {
+	let recipients: MessagePreview['recipients'] = [];
+	try {
+		const parsed = JSON.parse(m.recipientsJson) as string[];
+		recipients = parsed.map((address) => ({ display: '', address, kind: 'to' as const }));
+	} catch {
+		recipients = [];
+	}
+	return {
+		v: 1,
+		subject: m.subject,
+		sender: { display: m.senderDisplay, address: m.senderAddress },
+		recipients,
+		snippet: m.snippet,
+		display_date: m.displayDate
+	} as MessagePreview;
+}
+
+interface ThreadSource {
+	threadRootId?: string;
+	items: MessageDetail[];
+	cached?: Map<string, MirrorMessage>;
+}
+
+async function loadThread(accountId: string, messageId: string): Promise<ThreadSource | null> {
+	try {
+		return await getMessageThread(messageId);
+	} catch (err) {
+		const mirror = platform.mirror;
+		if (!mirror) throw err;
+		const cached = await mirror.thread(accountId, messageId).catch(() => []);
+		if (cached.length === 0) throw err;
+		return {
+			items: cached.map(detailFromMirror),
+			cached: new Map(cached.map((m) => [m.id, m]))
+		};
+	}
+}
+
 export async function hydrateThread(messageId: string): Promise<HydratedThread | null> {
 	const accountId = auth.accountId;
 	if (!accountId) return null;
-	const resp = await getMessageThread(messageId);
+	const resp = await loadThread(accountId, messageId);
 	if (!resp || !resp.items || resp.items.length === 0) return null;
 
 	const seed = resp.items.find((it) => it.id === messageId) ?? resp.items[resp.items.length - 1];
 	const stripTracking = accountSettings.privacy.stripTrackingParams;
 
 	const hydrated = await mapLimit(resp.items, HYDRATE_CONCURRENCY, (item) =>
-		hydrateEntry(accountId, item, stripTracking)
+		hydrateEntry(accountId, item, stripTracking, resp.cached?.get(item.id))
 	);
 	const entries = hydrated.filter((e): e is ThreadEntry => e !== null);
 

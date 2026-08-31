@@ -51,6 +51,41 @@ export interface MirrorRow {
 	labelsJson: string;
 }
 
+export interface MirrorAttachment {
+	id: string;
+	ordinal: number;
+	filename: string;
+	contentType: string;
+	disposition: string;
+	contentId: string | null;
+	plaintextSize: number;
+	isInline: boolean;
+}
+
+export interface MirrorMessage {
+	id: string;
+	direction: 'sent' | 'received';
+	source: string;
+	mailboxState: string;
+	storedAt: string;
+	read: boolean;
+	starred: boolean;
+	threadRootId: string | null;
+	externalMessageId: string | null;
+	inReplyTo: string | null;
+	labelsJson: string;
+	signatureStatus: string | null;
+	subject: string;
+	senderDisplay: string;
+	senderAddress: string;
+	recipientsJson: string;
+	snippet: string;
+	displayDate: string;
+	attachmentCount: number;
+	mime: string | null;
+	attachments: MirrorAttachment[];
+}
+
 export interface LocalMirror {
 	open(accountId: string): Promise<void>;
 	close(accountId: string): Promise<void>;
@@ -59,6 +94,8 @@ export interface LocalMirror {
 	stopWatch(accountId: string): Promise<void>;
 	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
 	list(accountId: string, mailbox: string, limit?: number): Promise<MirrorRow[]>;
+	message(accountId: string, messageId: string): Promise<MirrorMessage | null>;
+	thread(accountId: string, messageId: string): Promise<MirrorMessage[]>;
 	onChanged?(cb: (accountId: string) => void): () => void;
 }
 
