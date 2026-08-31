@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { theme } from '$lib/stores/theme.svelte';
+	import { platform } from '$platform';
 
 	interface Props {
 		srcDoc: string;
@@ -31,6 +32,24 @@
 		void theme.resolved;
 		applyTheme();
 	});
+
+	function interceptLinks() {
+		if (!platform.interceptFrameLinks) return;
+		const doc = frame?.contentDocument;
+		if (!doc) return;
+		doc.addEventListener(
+			'click',
+			(ev) => {
+				const target = ev.target as Element | null;
+				const anchor = target?.closest?.('a[href]');
+				if (!anchor) return;
+				ev.preventDefault();
+				const href = anchor.getAttribute('href');
+				if (href) platform.openExternal(href);
+			},
+			true
+		);
+	}
 </script>
 
 {#key srcDoc}
@@ -38,11 +57,12 @@
 		bind:this={frame}
 		class="email-frame"
 		title="Message"
-		sandbox="allow-same-origin allow-popups"
+		sandbox={platform.interceptFrameLinks ? "allow-same-origin" : "allow-same-origin allow-popups"}
 		srcdoc={srcDoc}
 		onload={() => {
 			applyTheme();
 			fit();
+			interceptLinks();
 		}}
 	></iframe>
 {/key}

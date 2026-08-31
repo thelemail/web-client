@@ -1,6 +1,7 @@
 import type { Platform } from '../types';
 
 export const platform: Platform = {
+	interceptFrameLinks: false,
 	session: undefined,
 	billing: 'native',
 	mirror: undefined,

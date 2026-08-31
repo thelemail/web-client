@@ -1,4 +1,10 @@
-export type Transport = (url: string, init: RequestInit) => Promise<Response>;
+export type TransportKind = 'api' | 'submission';
+
+export type Transport = (
+	url: string,
+	init: RequestInit,
+	kind: TransportKind
+) => Promise<Response>;
 
 export interface EventSourceLike {
 	close(): void;
@@ -65,6 +71,7 @@ export interface NativeSession {
 }
 
 export interface Platform {
+	interceptFrameLinks?: boolean;
 	session?: NativeSession;
 	billing: BillingMode;
 	mirror?: LocalMirror;

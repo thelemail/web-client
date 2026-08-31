@@ -95,7 +95,8 @@ async function doFetch<T>(path: string, opts: FetchOptions, retried: boolean): P
 		}
 	}
 
-	const resp = await transport(url, init);
+	const kind = base === PUBLIC_SUBMISSION_BASE_URL.replace(/\/$/, '') ? 'submission' : 'api';
+	const resp = await transport(url, init, kind);
 	if (resp.status === 204) {
 		return undefined as T;
 	}
