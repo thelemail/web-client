@@ -1,4 +1,5 @@
 import { auth } from '$lib/stores/auth.svelte';
+import { platform } from '$platform';
 import { bytesToB64 } from '$lib/crypto';
 import { issueStagingUrls, submitExternal } from '$lib/api/submission';
 import { lookupExternalKey } from '$lib/api/externalKeys';
@@ -118,7 +119,7 @@ async function stageCleartext(attachments: ComposeAttachment[]): Promise<StagedA
 		const blob = new Blob([
 			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
 		]);
-		const resp = await fetch(grant.putUrl, { method: 'PUT', body: blob });
+		const resp = await platform.blobPut(grant.putUrl, blob);
 		if (!resp.ok) {
 			throw new SendError('network', `staging PUT ${resp.status}: ${resp.statusText}`);
 		}

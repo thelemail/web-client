@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Camera from '@lucide/svelte/icons/camera';
+	import { platform } from '$platform';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import PenLine from '@lucide/svelte/icons/pen-line';
@@ -222,11 +223,7 @@
 		avatarBusy = true;
 		try {
 			const grant = await requestAvatarUploadUrl();
-			const put = await fetch(grant.uploadUrl, {
-				method: 'PUT',
-				body: file,
-				headers: { 'Content-Type': file.type }
-			});
+			const put = await platform.blobPut(grant.uploadUrl, file, file.type);
 			if (!put.ok) {
 				throw new Error(`upload failed (${put.status})`);
 			}

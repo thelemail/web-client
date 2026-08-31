@@ -118,6 +118,7 @@ export interface Platform {
 	transport?: Transport;
 	openEventSource?: (url: string) => EventSourceLike;
 	blobFetch: (url: string, init?: RequestInit) => Promise<Response>;
+	blobPut: (url: string, body: Blob, contentType?: string) => Promise<Response>;
 	returnOrigin: () => string;
 	openExternal: (url: string) => void;
 	saveBlob: (blob: Blob, filename: string) => Promise<void>;

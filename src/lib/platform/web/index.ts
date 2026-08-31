@@ -9,6 +9,12 @@ export const platform: Platform = {
 	transport: undefined,
 	openEventSource: undefined,
 	blobFetch: (url, init) => fetch(url, init),
+	blobPut: (url, body, contentType) =>
+		fetch(url, {
+			method: 'PUT',
+			body,
+			headers: contentType ? { 'Content-Type': contentType } : undefined
+		}),
 	returnOrigin: () => window.location.origin,
 	openExternal: (url) => window.location.assign(url),
 	saveBlob: async (blob, filename) => {

@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { platform } from '$platform';
 import {
 	listSignatures,
 	upsertSignature,
@@ -80,7 +81,7 @@ class SignaturesStore {
 		const cached = this.#imageCache.get(objectKey);
 		if (cached) return cached;
 		const grant = await getSignatureImageDownloadUrl(objectKey);
-		const resp = await fetch(grant.downloadUrl);
+		const resp = await platform.blobFetch(grant.downloadUrl);
 		if (!resp.ok) {
 			throw new Error(`failed to fetch signature image: HTTP ${resp.status}`);
 		}

@@ -43,57 +43,108 @@
 </script>
 
 {#if asking}
-	<div class="scope-scrim">
-		<div class="scope-card">
-			<h2>How much mail should this Mac keep?</h2>
+	<div class="msp-scrim" role="dialog" aria-modal="true" aria-labelledby="msp-title">
+		<div class="msp-modal">
+			<h2 id="msp-title">How much mail should this Mac keep?</h2>
 			<p>
-				Mail kept on this Mac is searchable by its full text and readable without a connection.
-				It is stored encrypted, and only this Mac can open it.
+				Mail kept on this Mac is searchable by its full text and readable without a
+				connection. It is stored encrypted, and only this Mac can open it.
 			</p>
-			<div class="scope-actions">
-				<button type="button" class="primary" disabled={busy} onclick={() => choose(90)}>
+			<div class="msp-actions">
+				<button type="button" class="msp-btn primary" disabled={busy} onclick={() => choose(90)}>
 					Last 90 days
 				</button>
-				<button type="button" disabled={busy} onclick={() => choose(null)}>All mail</button>
+				<button type="button" class="msp-btn ghost" disabled={busy} onclick={() => choose(null)}>
+					All mail
+				</button>
 			</div>
-			<p class="scope-note">You can change this later in Settings.</p>
+			<p class="msp-note">You can change this later in Settings.</p>
 		</div>
 	</div>
 {/if}
 
 <style>
-	.scope-scrim {
+	.msp-scrim {
 		position: fixed;
 		inset: 0;
-		display: grid;
-		place-items: center;
-		background: color-mix(in oklab, var(--bg-1) 70%, transparent);
-		backdrop-filter: blur(6px);
-		z-index: 60;
-	}
-	.scope-card {
-		max-width: 30rem;
-		padding: 1.75rem;
-		border-radius: var(--radius-lg, 12px);
-		background: var(--surface-1);
-		border: 1px solid var(--border-1);
-		box-shadow: var(--shadow-2, 0 12px 40px rgb(0 0 0 / 0.18));
-	}
-	.scope-card h2 {
-		margin: 0 0 0.5rem;
-		font-size: 1.15rem;
-	}
-	.scope-card p {
-		margin: 0 0 1rem;
-		color: var(--text-2);
-		line-height: 1.5;
-	}
-	.scope-actions {
+		z-index: 130;
 		display: flex;
-		gap: 0.75rem;
+		align-items: center;
+		justify-content: center;
+		padding: 24px;
+		background: rgba(20, 39, 30, 0.44);
+		backdrop-filter: blur(3px);
+		font-family: var(--font-sans);
+		color: var(--fg);
 	}
-	.scope-note {
-		margin: 1rem 0 0;
-		font-size: 0.85rem;
+
+	.msp-modal {
+		width: 466px;
+		max-width: 100%;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-top: 3px solid var(--pine-600);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-lg);
+		padding: 22px 24px 18px;
+	}
+
+	.msp-modal h2 {
+		margin: 0 0 8px;
+		font-size: 19px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	.msp-modal p {
+		margin: 0;
+		font-size: 13.5px;
+		line-height: 1.55;
+		color: var(--muted);
+	}
+
+	.msp-actions {
+		display: flex;
+		gap: 10px;
+		margin-top: 20px;
+	}
+
+	.msp-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-family: inherit;
+		font-size: 13.5px;
+		font-weight: 600;
+		border-radius: var(--radius-md);
+		padding: 9px 15px;
+		cursor: pointer;
+		border: 1px solid transparent;
+		transition: background var(--dur-fast);
+	}
+
+	.msp-btn:disabled {
+		opacity: 0.6;
+		cursor: default;
+	}
+
+	.msp-btn.primary {
+		background: var(--primary);
+		color: var(--primary-fg);
+	}
+
+	.msp-btn.ghost {
+		background: var(--surface);
+		color: var(--fg);
+		border-color: var(--border-strong);
+	}
+
+	.msp-btn.ghost:hover:not(:disabled) {
+		background: var(--paper-100);
+	}
+
+	.msp-note {
+		margin-top: 14px;
+		font-size: 12.5px;
 	}
 </style>

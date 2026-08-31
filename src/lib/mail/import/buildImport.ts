@@ -1,4 +1,5 @@
 import { keystore } from '$lib/keystore/keystore-client';
+import { platform } from '$platform';
 import { bytesToB64 } from '$lib/crypto';
 import { senderKey, buildMIME, SendError, type KeyMaterial } from '../send';
 import { build as buildAttFrame } from '../attframe';
@@ -106,7 +107,7 @@ function putCiphertext(url: string, cipher: Uint8Array): Promise<void> {
 		cipher.byteOffset,
 		cipher.byteOffset + cipher.byteLength
 	) as ArrayBuffer;
-	return fetch(url, { method: 'PUT', body: new Blob([ab]) }).then((res) => {
+	return platform.blobPut(url, new Blob([ab])).then((res) => {
 		if (!res.ok) throw new Error(`attachment PUT ${res.status}`);
 	});
 }
