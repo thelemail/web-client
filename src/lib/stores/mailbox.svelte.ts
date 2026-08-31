@@ -224,6 +224,10 @@ class MailboxStore {
 	#deepLinkPending = new Map<string, Promise<Message | null>>();
 	#accountId: string | null = null;
 
+	get accountId(): string | null {
+		return this.#accountId;
+	}
+
 	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0 });
 	#countsPending: Promise<void> | null = null;
 

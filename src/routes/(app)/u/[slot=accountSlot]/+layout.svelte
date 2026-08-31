@@ -5,6 +5,8 @@
 	import { realtime } from '$lib/realtime/realtime.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { keystore } from '$lib/keystore/keystore-client';
+	import { auth } from '$lib/stores/auth.svelte';
+	import { platform } from '$platform';
 
 	let { children, data } = $props();
 
@@ -13,6 +15,20 @@
 	});
 
 	onMount(() => realtime.start());
+
+	onMount(() => {
+		const mirror = platform.mirror;
+		if (!mirror) return;
+		void (async () => {
+			try {
+				await mirror.open(data.accountId);
+				const token = auth.getAccessToken(data.accountId);
+				if (token) await mirror.startSync(data.accountId, token);
+			} catch (err) {
+				console.warn('mirror: could not start', err);
+			}
+		})();
+	});
 
 	onMount(() => {
 		const unsubscribe = keystore.subscribe((msg) => {

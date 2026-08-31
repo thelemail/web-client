@@ -1,6 +1,7 @@
 import type { Platform } from '../types';
 
 export const platform: Platform = {
+	mirror: undefined,
 	keystoreChannel: undefined,
 	transport: undefined,
 	openEventSource: undefined,

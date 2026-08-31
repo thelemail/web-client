@@ -12,7 +12,30 @@ export interface KeystoreChannel<B = unknown> {
 	subscribe(cb: (b: B) => void): () => void;
 }
 
+export interface SearchHit {
+	id: string;
+	subject: string;
+	senderDisplay: string;
+	senderAddress: string;
+	snippet: string;
+	excerpt: string;
+	storedAt: string;
+	mailboxState: string;
+	read: boolean;
+	starred: boolean;
+	attachmentCount: number;
+	threadRootId: string | null;
+}
+
+export interface LocalMirror {
+	open(accountId: string): Promise<void>;
+	close(accountId: string): Promise<void>;
+	startSync(accountId: string, accessToken: string): Promise<void>;
+	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
+}
+
 export interface Platform {
+	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
 	transport?: Transport;
 	openEventSource?: (url: string) => EventSourceLike;
