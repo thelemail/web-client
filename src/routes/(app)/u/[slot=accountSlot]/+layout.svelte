@@ -7,6 +7,7 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { platform } from '$platform';
+	import MirrorScopePrompt from '$lib/mail/MirrorScopePrompt.svelte';
 	import { mailbox } from '$lib/stores/mailbox.svelte';
 
 	let { children, data } = $props();
@@ -62,3 +63,5 @@
 </script>
 
 {@render children()}
+
+<MirrorScopePrompt accountId={data.accountId} />

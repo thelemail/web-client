@@ -96,6 +96,8 @@ export interface LocalMirror {
 	list(accountId: string, mailbox: string, limit?: number): Promise<MirrorRow[]>;
 	message(accountId: string, messageId: string): Promise<MirrorMessage | null>;
 	thread(accountId: string, messageId: string): Promise<MirrorMessage[]>;
+	scope(accountId: string): Promise<string | null>;
+	setScope(accountId: string, dateFloor: string | null): Promise<void>;
 	onChanged?(cb: (accountId: string) => void): () => void;
 }
 

@@ -70,6 +70,7 @@ export type AttachmentHeaderResponse =
 
 export interface AttachmentBytesArgs extends AccountScopedArgs {
 	url: string;
+	attachmentId?: string;
 	keyFingerprintHex?: string;
 }
 

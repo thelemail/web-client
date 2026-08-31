@@ -115,6 +115,7 @@ async function attachmentBytes(
 		const res = await keystore.attachmentBytes({
 			accountId,
 			url: pointer.url,
+			attachmentId: chip.id,
 			keyFingerprintHex: pointer.keyFingerprint
 		});
 		return res.ok
