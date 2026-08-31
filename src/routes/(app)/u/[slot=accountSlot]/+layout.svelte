@@ -7,6 +7,7 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { platform } from '$platform';
+	import { mailbox } from '$lib/stores/mailbox.svelte';
 
 	let { children, data } = $props();
 
@@ -19,6 +20,7 @@
 	onMount(() => {
 		const mirror = platform.mirror;
 		if (!mirror) return;
+
 		void (async () => {
 			try {
 				await mirror.open(data.accountId);
@@ -28,6 +30,22 @@
 				console.warn('mirror: could not start', err);
 			}
 		})();
+
+		const pushToken = setInterval(() => {
+			const token = auth.getAccessToken(data.accountId);
+			if (token) void mirror.setToken(data.accountId, token).catch(() => {});
+		}, 60_000);
+
+		const unsubscribe = mirror.onChanged?.((accountId) => {
+			if (accountId !== data.accountId) return;
+			void mailbox.refreshLoaded();
+		});
+
+		return () => {
+			clearInterval(pushToken);
+			unsubscribe?.();
+			void mirror.stopWatch(data.accountId).catch(() => {});
+		};
 	});
 
 	onMount(() => {

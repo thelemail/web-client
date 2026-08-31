@@ -31,7 +31,10 @@ export interface LocalMirror {
 	open(accountId: string): Promise<void>;
 	close(accountId: string): Promise<void>;
 	startSync(accountId: string, accessToken: string): Promise<void>;
+	setToken(accountId: string, accessToken: string): Promise<void>;
+	stopWatch(accountId: string): Promise<void>;
 	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
+	onChanged?(cb: (accountId: string) => void): () => void;
 }
 
 export type BillingMode = 'native' | 'handoff';
