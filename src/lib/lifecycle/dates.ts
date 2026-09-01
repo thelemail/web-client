@@ -31,7 +31,7 @@ export const fmt = {
 
 export function ladderFor(now: Date, dates: LifecycleDates): LadderPosition {
 	return {
-		day: Math.max(0, daysBetween(now, dates.trialEnd)),
+		day: Math.max(0, daysBetween(now, dates.end)),
 		toSuspend: Math.max(0, daysBetween(dates.suspend, now)),
 		toDelete: Math.max(0, daysBetween(dates.remove, now))
 	};

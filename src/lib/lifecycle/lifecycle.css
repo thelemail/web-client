@@ -1231,14 +1231,6 @@
 	width: 12px;
 	height: 12px;
 }
-.mail-app .sysalert.sa-trial {
-	background: color-mix(in oklch, var(--brass-500) 14%, var(--surface));
-	border-bottom-color: color-mix(in oklch, var(--brass-500) 30%, var(--border));
-}
-.mail-app .sysalert.sa-trial .sa-ic,
-.mail-app .sysalert.sa-trial .sa-h {
-	color: var(--brass-700);
-}
 
 .mail-app.lc-ro .compose,
 .mail-app.lc-ro .fab,

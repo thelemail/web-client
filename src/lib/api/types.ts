@@ -1,3 +1,5 @@
+import type { PlanCode } from './billing';
+
 export type ErrorCode =
 	| 'invalid_request'
 	| 'invalid_credentials'
@@ -12,7 +14,7 @@ export type ErrorCode =
 	| 'workspace_transfer_required'
 	| 'read_only'
 	| 'account_suspended'
-	| 'trial_feature_locked'
+	| 'upgrade_required'
 	| 'content_rejected'
 	| 'migration_conflict';
 
@@ -477,7 +479,7 @@ export interface RegisterRequest {
 	publicKey: string;
 	encryptedPrivateKey: string;
 	keyAlgorithm: 'openpgp-curve25519-v6';
-	startTrial?: boolean;
+	plan?: PlanCode;
 	source?: string;
 }
 
@@ -913,7 +915,6 @@ export interface DeletionStatus {
 }
 
 export type LifecycleStageWire = 'active' | 'grace' | 'suspended' | 'pending_deletion';
-export type LifecycleCohort = 'trial' | 'ex_paid';
 
 export interface LifecycleWelcomeBack {
 	messagesDuringGrace?: number;
@@ -923,11 +924,9 @@ export interface LifecycleWelcomeBack {
 
 export interface LifecycleInfo {
 	stage: LifecycleStageWire;
-	cohort: LifecycleCohort;
 	day0: string;
 	suspendAt: string;
 	deletionDate: string;
-	trialEnd?: string | null;
 	expiryScreenShown: boolean;
 	welcomeBack?: LifecycleWelcomeBack | null;
 }

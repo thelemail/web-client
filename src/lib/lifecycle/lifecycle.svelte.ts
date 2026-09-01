@@ -17,11 +17,7 @@ class LifecycleStore {
 	}
 
 	get stage(): LifecycleStage {
-		const info = this.#info();
-		if (!info && billing.subscription?.status === 'trialing') {
-			return 'trial-ending';
-		}
-		return deriveStage(info);
+		return deriveStage(this.#info());
 	}
 
 	get readOnly(): boolean {
@@ -29,8 +25,7 @@ class LifecycleStore {
 	}
 
 	get showBanner(): boolean {
-		const s = this.stage;
-		return s === 'trial-ending' || s === 'grace';
+		return this.stage === 'grace';
 	}
 
 	markRestoreOrigin(origin: LifecycleStage): void {

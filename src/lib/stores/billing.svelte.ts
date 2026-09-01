@@ -28,6 +28,8 @@ class BillingStore {
 		return !sub.entitled;
 	});
 
+	isFree = $derived(this.subscription?.planCode === 'free');
+
 	async ensureLoaded(): Promise<Subscription | null> {
 		if (!browser) return null;
 		const acct = this.#accountId;

@@ -1,9 +1,6 @@
 import type { PlanCode } from '$lib/api/billing';
-import type { LifecycleCohort } from '$lib/api/types';
 
-export type LifecycleStage = 'active' | 'trial-ending' | 'expired' | 'grace' | 'suspended';
-
-export type TrialUrgency = 't7' | 't3';
+export type LifecycleStage = 'active' | 'expired' | 'grace' | 'suspended';
 
 export type ExportJobState = 'idle' | 'running' | 'ready';
 
@@ -16,7 +13,7 @@ export interface LadderPosition {
 }
 
 export interface LifecycleDates {
-	trialEnd: Date;
+	end: Date;
 	suspend: Date;
 	remove: Date;
 }
@@ -30,14 +27,12 @@ export interface LifecyclePlan {
 export interface LifecycleContext {
 	email: string;
 	domain: string;
-	cohort: LifecycleCohort | null;
 	plan: LifecyclePlan;
 	dates: LifecycleDates;
 	ladder: LadderPosition;
 	now: Date;
 	graceDays: number;
 	retentionDays: number;
-	urgency: TrialUrgency;
 	cameFromSuspended: boolean;
 }
 
