@@ -16,6 +16,8 @@
 	import { aliases } from '$lib/stores/aliases.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { billing } from '$lib/stores/billing.svelte';
+	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { canManageWorkspace } from '../permissions';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { SharedAlias } from '$lib/api/aliases';
@@ -229,7 +231,16 @@
 				</button>
 			</div>
 		{/each}
-		<AddRow label="Add an address" onClick={() => launch('alias')} />
+		{#if billing.isFree}
+			<div class="upgrade-list">
+				<UpgradeNudge
+					title="More addresses come with a paid plan"
+					desc="Paid plans add unlimited addresses on your own domain, shared with the people you choose."
+				/>
+			</div>
+		{:else}
+			<AddRow label="Add an address" onClick={() => launch('alias')} />
+		{/if}
 	{:else}
 		{#if addresses.shared.length === 0}
 			<div class="alias-row">

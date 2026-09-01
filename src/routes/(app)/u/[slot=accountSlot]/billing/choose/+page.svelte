@@ -25,7 +25,8 @@
 	const slot = $derived(data.slot);
 	const sub = $derived(billing.subscription);
 	const isOwner = $derived(workspaces.isOwner(auth.accountId));
-	const alreadyActive = $derived(sub?.status === 'active');
+	const isFree = $derived(billing.isFree);
+	const alreadyActive = $derived(sub?.status === 'active' && !isFree);
 	const paymentProblem = $derived(sub?.status === 'past_due');
 
 	onMount(() => {
@@ -99,7 +100,7 @@
 		canceledNotice = false;
 		try {
 			const fresh = await billing.refresh();
-			if (fresh?.entitled && fresh.status !== 'trialing') {
+			if (fresh?.entitled && fresh.planCode !== 'free') {
 				await goto(`/u/${slot}/mail/inbox`);
 				return;
 			}
@@ -254,8 +255,8 @@
 			<PlanStep
 				bind:sel
 				showStepper={false}
-				eyebrow="Activate your mailbox"
-				heading="Choose your plan"
+				eyebrow={isFree ? 'Upgrade' : 'Activate your mailbox'}
+				heading={isFree ? 'Upgrade your plan' : 'Choose your plan'}
 				ctaVerb="Continue to secure checkout"
 				{busy}
 				onNext={startCheckout}
