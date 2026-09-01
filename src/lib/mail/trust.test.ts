@@ -64,6 +64,9 @@ describe('deriveTrust', () => {
 		expect(trust.checks.find((c) => c.id === 'witnesses')?.state).toBe('absent');
 		expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('pass');
 		expect(trust.checks.find((c) => c.id === 'signature')?.state).toBe('pass');
+		expect(trust.checks.find((c) => c.id === 'witnesses')?.label).toBe(
+			'No independent witnesses are watching this log yet'
+		);
 	});
 
 	it('never pairs a glyph with a negated claim', () => {
@@ -308,6 +311,31 @@ describe('deriveTrust', () => {
 		);
 		expect(trust.tier).toBe('encrypted');
 		expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('absent');
+		const witnesses = trust.checks.find((c) => c.id === 'witnesses');
+		expect(witnesses?.state).toBe('absent');
+		expect(witnesses?.label).toBe('Witness quorum unavailable: 0 of 2 confirmations');
+		expect(witnesses?.explain).toContain('Independent witnesses are enrolled');
+		expect(witnesses?.rows).toEqual([
+			{ label: 'Confirmed by', value: '0' },
+			{ label: 'Required', value: '2' }
+		]);
+	});
+
+	it('reports a partial witness quorum instead of claiming no witnesses are enrolled', () => {
+		const trust = deriveTrust(
+			internal({
+				directory: directory({
+					tlog: {
+						state: 'failed',
+						code: 'tlog_witness_policy_unmet',
+						details: { validWitnessCount: 1, witnessThreshold: 2 }
+					}
+				})
+			})
+		);
+		const witnesses = trust.checks.find((c) => c.id === 'witnesses');
+		expect(witnesses?.label).toBe('Witness quorum unavailable: 1 of 2 confirmations');
+		expect(witnesses?.label).not.toContain('No independent witnesses');
 	});
 
 	it('blocks a transparency failure that looks like key substitution', () => {

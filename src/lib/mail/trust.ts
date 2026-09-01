@@ -221,8 +221,18 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 	const dir = facts.directory;
 	const tlog = dir?.tlog;
 	const sig = facts.signature?.state;
-	const witnessCount = tlog?.state === 'verified' ? tlog.validWitnessCount : 0;
-	const witnessNeed = tlog?.state === 'verified' ? tlog.witnessThreshold : 0;
+	const witnessCount =
+		tlog?.state === 'verified'
+			? tlog.validWitnessCount
+			: tlog?.state === 'failed'
+				? (tlog.details.validWitnessCount ?? 0)
+				: 0;
+	const witnessNeed =
+		tlog?.state === 'verified'
+			? tlog.witnessThreshold
+			: tlog?.state === 'failed'
+				? (tlog.details.witnessThreshold ?? 0)
+				: 0;
 
 	const unverifiedSender = !dir || dir.missing;
 	const encryption: TrustCheck = facts.e2e
@@ -351,7 +361,16 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 					'Independent witnesses cosigned the log checkpoint, so the log cannot show a different history to you than it shows to everyone else.',
 				rows: witnessRows(dir)
 			}
-		: {
+		: witnessNeed > 0
+			? {
+					id: 'witnesses',
+					state: 'absent',
+					label: `Witness quorum unavailable: ${witnessCount} of ${witnessNeed} confirmations`,
+					explain:
+						'Independent witnesses are enrolled, but this checkpoint did not carry enough valid confirmations to meet the configured quorum. This can be a temporary witness or network outage.',
+					rows: witnessRows(dir)
+				}
+			: {
 				id: 'witnesses',
 				state: 'absent',
 				label: 'No independent witnesses are watching this log yet',
