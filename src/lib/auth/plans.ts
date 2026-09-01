@@ -25,6 +25,17 @@ export interface PlanSelection {
 	seats: number;
 }
 
+export const FREE_PLAN = {
+	id: 'free',
+	name: 'Free',
+	rows: [
+		['Mailboxes', '1'],
+		['Storage', '1 GB'],
+		['Address', 'yours@thelemail.com'],
+		['Custom domains', 'None']
+	] as [string, string][]
+};
+
 export const MIN_SEATS = 3;
 export const MAX_SEATS = 50;
 
@@ -165,4 +176,11 @@ export function planTotal(sel: PlanSelection): number {
 
 export function eur(n: number): string {
 	return `€${n}`;
+}
+
+export function planFromQuery(raw: string | null | undefined): PlanSelection | null {
+	if (!raw) return null;
+	const tierId = raw.trim().toLowerCase().replace(/_/g, '-');
+	if (!tierId) return null;
+	return selectionForCode(tierId, MIN_SEATS);
 }

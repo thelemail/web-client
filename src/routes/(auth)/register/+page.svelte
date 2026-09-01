@@ -8,7 +8,7 @@
 	import Stepper from '$lib/auth/Stepper.svelte';
 	import PlanStep from '$lib/auth/PlanStep.svelte';
 	import PaymentStep from '$lib/auth/PaymentStep.svelte';
-	import { findPlan, planTotal, type PlanSelection } from '$lib/auth/plans';
+	import { findPlan, planFromQuery, planTotal, type PlanSelection } from '$lib/auth/plans';
 	import { performLogin } from '$lib/auth/perform-login';
 	import { createCheckoutSession, type PlanCode } from '$lib/api/billing';
 	import { changeMyWorkspaceType } from '$lib/api/workspaces';
@@ -26,16 +26,19 @@
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const acquisitionSource = page.url.searchParams.get('src') ?? 'register';
+	const preselected = planFromQuery(page.url.searchParams.get('plan'));
 
 	const HANDLE_RE = /^[a-z0-9]([a-z0-9._-]{1,28})[a-z0-9]$/;
-	const REG_LABELS = ['Address', 'Password', 'Plan', 'Payment'];
+	const FREE_LABELS = ['Address', 'Password'];
+	const PAID_LABELS = ['Address', 'Password', 'Plan', 'Payment'];
 
 	let step = $state<0 | 1 | 2 | 3 | 4>(0);
+	let paid = $state(preselected !== null);
 	let fullName = $state('');
 	let handle = $state('');
 	let pw = $state('');
 	let confirm = $state('');
-	let sel = $state<PlanSelection>({ product: 'personal', tier: null, seats: 3 });
+	let sel = $state<PlanSelection>(preselected ?? { product: 'personal', tier: null, seats: 3 });
 
 	let submitting = $state(false);
 	let submitError = $state<string | null>(null);
@@ -68,6 +71,17 @@
 		};
 	});
 
+	const labels = $derived(paid ? PAID_LABELS : FREE_LABELS);
+	const totalSteps = $derived(labels.length);
+	const product = $derived(findPlan(sel).product);
+	const audience = $derived(paid ? product.id : 'personal');
+
+	const heading = $derived.by(() => {
+		if (audience === 'family') return 'Set up email for your household';
+		if (audience === 'business') return 'Set up email for your team';
+		return 'Claim your address';
+	});
+
 	const nameReady = $derived(fullName.trim().length > 0 && fullName.trim().length <= 120);
 	const addressReady = $derived(status === 'available' && nameReady);
 
@@ -81,6 +95,7 @@
 	);
 
 	const planLabel = $derived.by(() => {
+		if (!paid) return null;
 		const { tier } = findPlan(sel);
 		return tier ? `${tier.name} plan · €${planTotal(sel)} / year` : null;
 	});
@@ -98,9 +113,30 @@
 		return err instanceof Error ? err.message : 'Registration failed';
 	}
 
-	async function registerAndLogin(startTrial: boolean): Promise<number | null> {
+	function choosePaid() {
+		paid = true;
+		step = 2;
+	}
+
+	function chooseFree() {
+		paid = false;
+		sel = { product: 'personal', tier: null, seats: 3 };
+		step = 1;
+	}
+
+	function continueFromPassword() {
+		if (!passwordReady) return;
+		if (!paid) {
+			void createFree();
+			return;
+		}
+		step = planCodeFor(sel) ? 3 : 2;
+	}
+
+	async function registerAndLogin(): Promise<number | null> {
 		const email = `${handle}@thelemail.com`;
 		const password = pw;
+		const plan = paid ? planCodeFor(sel) : null;
 		try {
 			const start = await keystore.opaqueStartRegistration({ email, password });
 			const init = await registrationInit({ email, registrationRequest: start.registrationRequest });
@@ -123,7 +159,7 @@
 				publicKey: finish.publicKey,
 				encryptedPrivateKey: finish.encryptedPrivateKey,
 				keyAlgorithm: finish.keyAlgorithm,
-				startTrial,
+				plan: plan ?? undefined,
 				source: acquisitionSource
 			});
 			await keystore.opaqueFinalizeRegister({ operationId: start.operationId, accountId: init.accountId });
@@ -149,11 +185,11 @@
 		}
 	}
 
-	async function startTrial() {
+	async function createFree() {
 		if (submitting || !passwordReady) return;
 		submitting = true;
 		submitError = null;
-		const slot = await registerAndLogin(true);
+		const slot = await registerAndLogin();
 		if (slot === null) return;
 		await goto(`/u/${slot}/mail/inbox`);
 	}
@@ -167,11 +203,10 @@
 		}
 		submitting = true;
 		submitError = null;
-		const slot = await registerAndLogin(false);
+		const slot = await registerAndLogin();
 		if (slot === null) return;
 
 		try {
-			const { product } = findPlan(sel);
 			if (product.id !== 'personal') {
 				await changeMyWorkspaceType({ type: product.id });
 			}
@@ -195,25 +230,50 @@
 	<title>Thelemail — Create account</title>
 </svelte:head>
 
+{#snippet freeFoot()}
+	<p class="switch">
+		Not ready to pay?
+		<button type="button" class="linklike" disabled={submitting} onclick={chooseFree}>
+			Start with the free plan
+		</button>
+	</p>
+{/snippet}
+
 {#if step === 0}
 	<div class="card-surface screen-fade">
-		<Stepper step={0} labels={REG_LABELS} />
+		<Stepper step={0} {labels} />
 		<div class="card-head">
 			{#if addMode && auth.email}
 				<p class="eyebrow">Add another account</p>
 				<h1>Create a second account</h1>
 				<p>
 					You're signed in as <strong>{auth.email}</strong>. The new account will be added alongside
-					it on this device — both stay signed in.
+					it on this device &mdash; both stay signed in.
 				</p>
 			{:else}
-				<p class="eyebrow">Step 1 of 4</p>
-				<h1>Claim your address</h1>
+				<p class="eyebrow">Step 1 of {totalSteps}</p>
+				<h1>{heading}</h1>
 			{/if}
-			<p>
-				Pick a name on <span class="mono" style="color:var(--ink-700)">thelemail.com</span>. You can
-				add your own domain later.
-			</p>
+			{#if audience === 'family'}
+				<p>
+					Start with your own address on
+					<span class="mono" style="color:var(--ink-700)">thelemail.com</span>. It becomes the
+					administrator account for the household, and you connect your family's domain from
+					Settings once the account exists.
+				</p>
+			{:else if audience === 'business'}
+				<p>
+					Start with your own address on
+					<span class="mono" style="color:var(--ink-700)">thelemail.com</span>. It becomes the
+					administrator account for the team, and you connect your company domain from Settings
+					once the account exists.
+				</p>
+			{:else}
+				<p>
+					Pick a name on <span class="mono" style="color:var(--ink-700)">thelemail.com</span>. You
+					can add your own domain later.
+				</p>
+			{/if}
 		</div>
 		<div class="form">
 			<div class="field">
@@ -296,9 +356,9 @@
 	</div>
 {:else if step === 1}
 	<div class="card-surface screen-fade">
-		<Stepper step={1} labels={REG_LABELS} />
+		<Stepper step={1} {labels} />
 		<div class="card-head">
-			<p class="eyebrow">Step 2 of 4</p>
+			<p class="eyebrow">Step 2 of {totalSteps}</p>
 			<h1>Set a password</h1>
 			<p>
 				Securing <span class="mono" style="color:var(--ink-700)">{handle}@thelemail.com</span>
@@ -317,9 +377,7 @@
 				bind:value={confirm}
 				placeholder="Re-enter password"
 				autocomplete="new-password"
-				onEnter={() => {
-					if (passwordReady) step = 2;
-				}}
+				onEnter={continueFromPassword}
 			/>
 			{#if mismatch}
 				<span class="errtext" style="margin-top:-8px">
@@ -348,44 +406,65 @@
 					>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</button>
-					<button class="btn btn-primary" disabled={!passwordReady || submitting} onclick={startTrial}>
+					<button
+						class="btn btn-primary"
+						disabled={!passwordReady || submitting}
+						onclick={continueFromPassword}
+					>
 						{#if submitting}
 							Creating your mailbox…
+						{:else if paid}
+							Continue<ArrowRight size={17} strokeWidth={1.75} />
 						{:else}
-							Start 30-day free trial<ArrowRight size={17} strokeWidth={1.75} />
+							Create my mailbox<ArrowRight size={17} strokeWidth={1.75} />
 						{/if}
 					</button>
 				</div>
-				<button
-					class="btn btn-ghost btn-block"
-					disabled={!passwordReady || submitting}
-					onclick={() => (step = 2)}
-				>
-					Choose a paid plan instead
-				</button>
+				{#if paid}
+					<button
+						class="btn btn-ghost btn-block"
+						disabled={submitting}
+						onclick={chooseFree}
+					>
+						Start with the free plan instead
+					</button>
+				{:else}
+					<button
+						class="btn btn-ghost btn-block"
+						disabled={!passwordReady || submitting}
+						onclick={choosePaid}
+					>
+						Choose a paid plan instead
+					</button>
+				{/if}
 			</div>
 		</div>
-		<p class="legal">
-			The free trial is a full mailbox for 30 days, no card required. Pick a plan whenever you like.
-			When the trial ends you keep read-only access and can export everything before anything is
-			removed.
-		</p>
+		{#if paid}
+			<p class="legal">
+				Your account is created first, then you pick up where you left off at checkout. Nothing is
+				charged until you confirm there.
+			</p>
+		{:else}
+			<p class="legal">
+				The free plan is a real mailbox on thelemail.com with 1 GB of storage, no card required.
+				Upgrade whenever you want your own domain, more storage, or more people.
+			</p>
+		{/if}
 	</div>
 {:else if step === 2}
 	<PlanStep
 		bind:sel
-		labels={REG_LABELS}
-		trialProduct="personal"
-		onStartTrial={startTrial}
+		{labels}
 		busy={submitting}
 		onBack={() => (step = 1)}
 		onNext={() => (step = 3)}
+		footer={freeFoot}
 	/>
 {:else if step === 3}
 	<PaymentStep
 		{handle}
 		{sel}
-		labels={REG_LABELS}
+		{labels}
 		{submitting}
 		error={submitError}
 		onBack={() => (step = 2)}
@@ -398,9 +477,8 @@
 			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
 			<h1>Submitted</h1>
 			<p>
-				If <b>{handle}@thelemail.com</b> is new, your mailbox is provisioned &mdash; sign in to
-				finish checkout and activate it. If the address was already taken, the existing owner has
-				been notified.
+				If <b>{handle}@thelemail.com</b> is new, your mailbox is ready &mdash; sign in to open it.
+				If the address was already taken, the existing owner has been notified.
 			</p>
 			<div class="addrcard">
 				<span class="av">{initials}</span>
