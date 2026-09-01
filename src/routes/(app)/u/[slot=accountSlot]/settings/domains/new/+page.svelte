@@ -11,6 +11,8 @@
 	import SecHead from '$lib/settings/SecHead.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
+	import { billing } from '$lib/stores/billing.svelte';
+	import UpgradeNudge from '$lib/settings/UpgradeNudge.svelte';
 	import { resumeStep } from '$lib/settings/domains/steps';
 
 	const slot = $derived(page.params.slot ?? '0');
@@ -60,6 +62,14 @@
 	desc="Setup runs in order: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last. Nothing about your current mail changes until the final step."
 />
 
+{#if billing.isFree}
+	<div class="upgrade-list">
+		<UpgradeNudge
+			title="Your own domain needs a paid plan"
+			desc="Every paid plan includes at least one custom domain with unlimited addresses on it."
+		/>
+	</div>
+{:else}
 <Card>
 	{#snippet head()}
 		<Globe size={16} />
@@ -105,3 +115,4 @@
 		</button>
 	</div>
 </Card>
+{/if}

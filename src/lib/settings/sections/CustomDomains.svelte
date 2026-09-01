@@ -23,6 +23,8 @@
 	import { customDomains as store } from '$lib/stores/customDomains.svelte';
 	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
+	import { billing } from '$lib/stores/billing.svelte';
+	import UpgradeNudge from '$lib/settings/UpgradeNudge.svelte';
 	import type { CustomDomain } from '$lib/api/customDomains';
 
 	const POLL_MS = 60000;
@@ -173,7 +175,14 @@
 	{/if}
 
 	<div class="cd-card-foot">
-		<a class="btn btn-primary" href={`${base}/new`}><Plus size={15} />Add a domain</a>
+		{#if billing.isFree}
+			<UpgradeNudge
+				title="Your own domain needs a paid plan"
+				desc="Every paid plan includes at least one custom domain with unlimited addresses on it."
+			/>
+		{:else}
+			<a class="btn btn-primary" href={`${base}/new`}><Plus size={15} />Add a domain</a>
+		{/if}
 	</div>
 
 	{#if store.error}

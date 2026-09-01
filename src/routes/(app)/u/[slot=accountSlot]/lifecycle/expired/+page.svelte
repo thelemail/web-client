@@ -7,7 +7,6 @@
 	let { data } = $props();
 	const slot = $derived(data.slot);
 	const ctx = $derived(lifecycle.context);
-	const endedLabel = $derived(ctx.cohort === 'ex_paid' ? 'Subscription ended' : 'Trial ended');
 
 	$effect(() => {
 		if (lifecycle.stage !== 'expired') void goto(`/u/${slot}/mail/inbox`);
@@ -15,9 +14,9 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — {endedLabel}</title>
+	<title>Thelemail — Subscription ended</title>
 </svelte:head>
 
-<LcShell badge={{ label: endedLabel, sev: 'warn' }}>
+<LcShell badge={{ label: 'Subscription ended', sev: 'warn' }}>
 	<ExpiryScreen {ctx} />
 </LcShell>

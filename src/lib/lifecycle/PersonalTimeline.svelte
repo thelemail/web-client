@@ -8,12 +8,11 @@
 	let { ctx, compact = false }: { ctx: LifecycleContext; compact?: boolean } = $props();
 
 	const day = $derived(ctx.ladder.day);
-	const firstNodeName = $derived(ctx.cohort === 'ex_paid' ? 'Subscription ends' : 'Trial ends');
 	const nodes = $derived([
 		{
 			day: 0,
-			dt: fmt.med(ctx.dates.trialEnd),
-			nm: firstNodeName,
+			dt: fmt.med(ctx.dates.end),
+			nm: 'Subscription ends',
 			sub: 'Sending pauses. Mailbox becomes read-only.',
 			danger: false
 		},

@@ -90,7 +90,11 @@
 						mailbox is full.
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}/account`}>Manage storage<ArrowRight size={13} /></a>
+				{#if billing.isFree}
+					<a class="sa-act solid" href={`/u/${slot}/billing/choose`}>Upgrade<ArrowRight size={13} /></a>
+				{:else}
+					<a class="sa-act" href={`${settingsBase}/account`}>Manage storage<ArrowRight size={13} /></a>
+				{/if}
 			</div>
 		{/if}
 	</div>

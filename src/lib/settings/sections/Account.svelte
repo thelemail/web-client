@@ -18,8 +18,9 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { createBillingPortalSession } from '$lib/api/billing';
-	import { PRODUCTS, eur } from '$lib/auth/plans';
-	import { planLabel } from '../plan-display';
+	import { PRODUCTS, FREE_PLAN, eur } from '$lib/auth/plans';
+	import { planLabel, freeNote } from '../plan-display';
+	import UpgradeNudge from '../UpgradeNudge.svelte';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -34,6 +35,7 @@
 	const type = $derived(ws?.type ?? null);
 	const sub = $derived(billing.subscription);
 	const isPersonal = $derived(type === 'personal');
+	const isFree = $derived(billing.isFree);
 	const isOwner = $derived(workspaces.isOwner(auth.accountId));
 	const PlanIcon = $derived(
 		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
@@ -54,7 +56,7 @@
 		return null;
 	});
 
-	const planName = $derived(tierInfo?.tier.name ?? planLabel(type));
+	const planName = $derived(isFree ? FREE_PLAN.name : (tierInfo?.tier.name ?? planLabel(type)));
 
 	const priceLine = $derived.by(() => {
 		if (!tierInfo || !sub) return null;
@@ -121,7 +123,9 @@
 					{/if}
 				</div>
 				<div class="plan-price">
-					{#if priceLine}
+					{#if isFree}
+						{freeNote()}
+					{:else if priceLine}
 						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
 					{:else if isPersonal}
 						A single mailbox just for you.
@@ -140,7 +144,11 @@
 			</div>
 			<div class="plan-acts">
 				{#if isOwner}
-					{#if sub && (sub.status === 'active' || sub.status === 'past_due')}
+					{#if isFree}
+						<button type="button" class="btn btn-primary btn-sm" onclick={choosePlan}>
+							Upgrade
+						</button>
+					{:else if sub && (sub.status === 'active' || sub.status === 'past_due')}
 						{#if sub.status === 'active'}
 							<button type="button" class="btn btn-ghost btn-sm" onclick={choosePlan}>
 								Change plan
@@ -168,7 +176,14 @@
 		{/if}
 	</div>
 
-	{#if !isPersonal}
+	{#if isFree}
+		<div class="upgrade-list">
+			<UpgradeNudge
+				title="Add people with a Family or Team plan"
+				desc="Households and teams share one plan, one domain, and admin controls for every mailbox."
+			/>
+		</div>
+	{:else if !isPersonal}
 		<MembershipCard {launch} />
 	{/if}
 {/if}

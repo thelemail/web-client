@@ -32,31 +32,21 @@ export function buildContextFromServer(input: ServerContextInput): LifecycleCont
 	const email = input.email;
 	const domain = email.includes('@') ? email.slice(email.indexOf('@') + 1) : DEFAULT_DOMAIN;
 	const info = input.info;
-	const trialing = !info && input.sub?.status === 'trialing' && input.sub.trialEnd;
 	const day0 = info ? new Date(info.day0) : now;
-	const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 86400000);
-	let dates: { trialEnd: Date; suspend: Date; remove: Date };
-	if (trialing && input.sub?.trialEnd) {
-		const trialEnd = new Date(input.sub.trialEnd);
-		dates = { trialEnd, suspend: addDays(trialEnd, 30), remove: addDays(trialEnd, 90) };
-	} else {
-		dates = {
-			trialEnd: day0,
-			suspend: info ? new Date(info.suspendAt) : day0,
-			remove: info ? new Date(info.deletionDate) : day0
-		};
-	}
+	const dates = {
+		end: day0,
+		suspend: info ? new Date(info.suspendAt) : day0,
+		remove: info ? new Date(info.deletionDate) : day0
+	};
 	return {
 		email,
 		domain,
-		cohort: info?.cohort ?? (trialing ? 'trial' : null),
 		plan: planFrom(input.sub),
 		dates,
 		ladder: ladderFor(now, dates),
 		now,
-		graceDays: Math.max(0, daysBetween(dates.suspend, dates.trialEnd)),
-		retentionDays: Math.max(0, daysBetween(dates.remove, dates.trialEnd)),
-		urgency: daysBetween(dates.trialEnd, now) <= 3 ? 't3' : 't7',
+		graceDays: Math.max(0, daysBetween(dates.suspend, dates.end)),
+		retentionDays: Math.max(0, daysBetween(dates.remove, dates.end)),
 		cameFromSuspended: input.restoreOrigin === 'suspended' || Boolean(info?.welcomeBack?.bounceFrom)
 	};
 }
@@ -66,7 +56,7 @@ export function planFrom(sub: Subscription | null): LifecyclePlan {
 	const gb = used > 0 ? Math.round(used / 2 ** 30) : DEFAULT_MAILBOX_GB;
 	return {
 		code: sub?.planCode ?? null,
-		name: sub?.planCode ? sub.planCode.replace(/_/g, ' ') : 'Personal',
+		name: sub?.planCode ? sub.planCode.replace(/_/g, ' ') : 'Free',
 		mailboxGB: gb
 	};
 }

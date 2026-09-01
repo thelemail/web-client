@@ -14,14 +14,12 @@ export function isLifecycleError(e: unknown): boolean {
 	return isReadOnlyError(e) || isSuspendedError(e);
 }
 
-export function isTrialLockedError(e: unknown): boolean {
-	return (
-		e instanceof ApiCallError && e.envelope?.error?.code === 'trial_feature_locked'
-	);
+export function isUpgradeRequiredError(e: unknown): boolean {
+	return e instanceof ApiCallError && e.envelope?.error?.code === 'upgrade_required';
 }
 
-export function trialLockedMessage(feature: string): string {
-	return `${feature} isn't part of the free trial. Upgrade to a plan to unlock it.`;
+export function upgradeRequiredMessage(feature: string): string {
+	return `${feature} is not included in the Free plan. Upgrade to unlock it.`;
 }
 
 export function readOnlyMessage(): string {

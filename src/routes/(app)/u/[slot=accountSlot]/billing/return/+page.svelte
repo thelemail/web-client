@@ -28,7 +28,7 @@
 			if (cancelled) return;
 			const sub = await billing.refresh();
 			if (cancelled) return;
-			if (sub?.entitled) {
+			if (sub?.entitled && sub.planCode !== 'free') {
 				phase = 'active';
 				void workspaces.load(auth.accountId);
 				return;

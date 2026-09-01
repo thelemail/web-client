@@ -2,6 +2,7 @@ import { apiFetch } from './client';
 import type { WorkspaceType } from './workspaces';
 
 export type PlanCode =
+	| 'free'
 	| 'personal'
 	| 'personal_plus'
 	| 'family'
@@ -11,13 +12,7 @@ export type PlanCode =
 
 export type PricingModel = 'flat' | 'per_mailbox';
 
-export type SubscriptionStatus =
-	| 'none'
-	| 'incomplete'
-	| 'trialing'
-	| 'active'
-	| 'past_due'
-	| 'canceled';
+export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceled';
 
 export interface Plan {
 	code: PlanCode;
@@ -47,7 +42,6 @@ export interface Subscription {
 	cancelAtPeriodEnd: boolean;
 	storageBytesUsed?: number;
 	storageBytesLimit?: number;
-	trialEnd?: string;
 }
 
 export interface CreateCheckoutSessionInput {

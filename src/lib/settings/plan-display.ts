@@ -1,6 +1,7 @@
 import type { WorkspaceType } from '$lib/api/workspaces';
 
-export function planLabel(type: WorkspaceType | undefined | null): string {
+export function planLabel(type: WorkspaceType | undefined | null, planCode?: string | null): string {
+	if (planCode === 'free') return 'Free';
 	switch (type) {
 		case 'personal':
 			return 'Personal';
@@ -61,4 +62,8 @@ export function seatsFullNote(
 
 export function personalNote(): string {
 	return 'Personal plans cover one person. There is no one else to manage.';
+}
+
+export function freeNote(): string {
+	return 'The Free plan covers one person with one address on thelemail.com and 1 GB of storage.';
 }

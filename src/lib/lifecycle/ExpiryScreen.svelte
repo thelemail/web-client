@@ -17,8 +17,6 @@
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
 	const slot = $derived(page.params.slot ?? '0');
-	const endedWord = $derived(ctx.cohort === 'ex_paid' ? 'subscription' : 'trial');
-	const endedLabel = $derived(ctx.cohort === 'ex_paid' ? 'Subscription ended' : 'Trial ended');
 
 	async function markShown() {
 		try {
@@ -46,8 +44,8 @@
 	<div class="card-surface screen-fade">
 		<img class="lc-mark" src={mark} alt="Thelemail" />
 		<div class="card-head">
-			<p class="eyebrow">{endedLabel}</p>
-			<h1>Your {endedWord} ended. Your mail is safe.</h1>
+			<p class="eyebrow">Subscription ended</p>
+			<h1>Your subscription ended. Your mail is safe.</h1>
 		</div>
 		<div class="lc-reassure">
 			<ShieldCheck size={16} />Nothing has been deleted. You have {ctx.retentionDays} days to decide.
