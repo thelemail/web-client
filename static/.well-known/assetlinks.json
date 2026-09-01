@@ -1,11 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.thelemail.mail",
       "sha256_cert_fingerprints": [
-        "1A:75:82:13:A6:CF:27:02:97:84:01:E3:61:FB:F5:43:71:9B:68:FB:F4:5E:BC:CD:14:7A:05:9F:97:C0:8F:FC"
+        "1A:75:82:13:A6:CF:27:02:97:84:01:E3:61:FB:F5:43:71:9B:68:FB:F4:5E:BC:CD:14:7A:05:9F:97:C0:8F:FC",
+        "10:98:23:4F:48:CA:F5:7F:B1:17:68:72:C5:4F:3F:7B:F3:5D:EE:68:FD:99:CE:A0:7D:88:A6:99:07:25:F1:C9"
       ]
     }
   }
