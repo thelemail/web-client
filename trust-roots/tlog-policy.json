@@ -4,6 +4,10 @@
   "mode": "monitor",
   "origin": "thelemail.com/keys",
   "vrfPublicKey": "AFye6B/Tm9oZVs25OmoSyDWn16PFdnIhG2vpOJGSzEE=",
-  "witnessThreshold": 0,
-  "witnessVerifierKeys": []
+  "witnessThreshold": 2,
+  "witnessVerifierKeys": [
+    "witness.navigli.sunlight.geomys.org+a3e00fe2+BNy/co4C1Hn1p+INwJrfUlgz7W55dSZReusH/GhUhJ/G",
+    "witness.stagemole.eu+67f7aea0+BEqSG3yu9YrmcM3BHvQYTxwFj3uSWakQepafafpUqklv",
+    "staging.witness.transparency.goog/ring-any-bells+2e1a8dc9+BG5JTpLc3FJtwzgh1Uv+Qelz9qeOH2bfWjS1s0s+y4rL"
+  ]
 }
