@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { platform } from '$platform';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Copy from '@lucide/svelte/icons/copy';
 	import Download from '@lucide/svelte/icons/download';
@@ -24,7 +25,7 @@
 		}
 	}
 
-	function downloadCodes() {
+	async function downloadCodes() {
 		const lines = [
 			'Thelemail two-factor backup codes',
 			'=================================',
@@ -40,18 +41,8 @@
 			''
 		];
 		const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-		const url = URL.createObjectURL(blob);
-		try {
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'thelemail-backup-codes.txt';
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-			saved = true;
-		} finally {
-			setTimeout(() => URL.revokeObjectURL(url), 10_000);
-		}
+		await platform.saveBlob(blob, 'thelemail-backup-codes.txt');
+		saved = true;
 	}
 </script>
 

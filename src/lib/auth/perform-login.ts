@@ -17,6 +17,7 @@ import { keystore } from '$lib/keystore/keystore-client';
 import { auth } from '$lib/stores/auth.svelte';
 import { accounts } from '$lib/stores/accounts.svelte';
 import { syncAddressUids } from '$lib/keys/uid-sync';
+import { platform } from '$platform';
 
 export interface PerformLoginInput {
 	email: string;
@@ -256,6 +257,13 @@ async function finishOpaqueLogin(
 			await keystore.enrollPersistent({ accountId: grant.accountId, serverHalf: grant.serverHalf });
 		} catch (err) {
 			console.warn('login: remember-me enrollment failed (non-fatal)', err);
+		}
+	}
+	if (rememberMe && platform.session) {
+		try {
+			await platform.session.persist(grant.accountId);
+		} catch (err) {
+			console.warn('login: could not persist the native session (non-fatal)', err);
 		}
 	}
 

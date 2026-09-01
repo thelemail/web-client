@@ -17,6 +17,8 @@ import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { bimiDomainFromPreview } from '$lib/mail/preview';
 import { paletteFor } from '$lib/mail/avatarPalette';
 import { initialsFor } from '$lib/mail/initials';
+import { platform } from '$platform';
+import type { MirrorRow } from '$lib/platform/types';
 import { queryMatches } from '$lib/mail/match';
 import type { MailboxCounts, MessageListItem, ThreadListItem } from '$lib/api/types';
 import { DEFAULT_QUERY, type Query } from '$lib/mail/url';
@@ -192,6 +194,80 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 	};
 }
 
+async function loadFromMirror(accountId: string, query: Query): Promise<Message[] | null> {
+	const mirror = platform.mirror;
+	if (!mirror) return null;
+	const mailbox = serverMailboxFor(query.folder);
+	if (!mailbox) return null;
+	try {
+		const rows = await mirror.list(accountId, mailbox, serverDirectionFor(query.folder));
+		return rows.map(mirrorRowToMessage);
+	} catch {
+		return null;
+	}
+}
+
+function serverDirectionFor(folder: string): string | undefined {
+	if (folder === 'inbox') return 'received';
+	if (folder === 'sent') return 'sent';
+	return undefined;
+}
+
+function serverMailboxFor(folder: string): string | null {
+	switch (folder) {
+		case 'inbox':
+		case 'sent':
+			return 'inbox';
+		case 'archive':
+			return 'archive';
+		case 'spam':
+			return 'spam';
+		case 'trash':
+			return 'trash';
+		default:
+			return null;
+	}
+}
+
+function mirrorRowToMessage(row: MirrorRow): Message {
+	const storedAt = new Date(row.storedAt);
+	const display = row.senderDisplay || row.senderAddress;
+	let recipients: string[] = [];
+	try {
+		recipients = JSON.parse(row.recipientsJson) as string[];
+	} catch {
+		recipients = [];
+	}
+	let labels: LabelId[] = [];
+	try {
+		labels = JSON.parse(row.labelsJson) as LabelId[];
+	} catch {
+		labels = [];
+	}
+	return {
+		id: row.id,
+		folder: folderFromServer(row.mailboxState as 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed', row.direction),
+		direction: row.direction,
+		from: display,
+		fromAddr: row.senderAddress,
+		to: recipients.join(', '),
+		recipients: [],
+		init: initialsFor(display, row.senderAddress),
+		bg: 'var(--surface-2)',
+		fg: 'var(--text-2)',
+		epoch: Number.isNaN(storedAt.getTime()) ? 0 : storedAt.getTime(),
+		subj: row.subject,
+		labels,
+		unread: !row.read,
+		starred: row.starred,
+		snoozedUntil: null,
+		prev: row.snippet,
+		body: [],
+		attachments: row.attachmentCount > 0 ? [] : undefined,
+		threadCount: undefined
+	} as Message;
+}
+
 function fallbackRow(item: MessageListItem, code: string): Message {
 	const storedAt = new Date(item.storedAt);
 	return {
@@ -223,6 +299,10 @@ class MailboxStore {
 	#pending = new Map<string, Promise<void>>();
 	#deepLinkPending = new Map<string, Promise<Message | null>>();
 	#accountId: string | null = null;
+
+	get accountId(): string | null {
+		return this.#accountId;
+	}
 
 	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0 });
 	#countsPending: Promise<void> | null = null;
@@ -642,6 +722,23 @@ class MailboxStore {
 			} catch (err) {
 				if (this.#accountId !== accountId) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
+
+				if (!more) {
+					const cached = await loadFromMirror(accountId, query);
+					if (cached && cached.length > 0) {
+						if (this.#accountId !== accountId) return;
+						this.#setStream(key, {
+							...current,
+							items: cached,
+							exhausted: true,
+							loading: false,
+							loadingMore: false,
+							error: null
+						});
+						return;
+					}
+				}
+
 				this.#setStream(key, {
 					...current,
 					loading: false,

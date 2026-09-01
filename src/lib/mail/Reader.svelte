@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Reply from '@lucide/svelte/icons/reply';
+	import { platform } from '$platform';
 	import ReplyAll from '@lucide/svelte/icons/reply-all';
 	import Forward from '@lucide/svelte/icons/forward';
 	import Archive from '@lucide/svelte/icons/archive';
@@ -429,6 +430,7 @@
 				if (bodyState?.id !== current.id) return;
 				bodyState = { id: current.id, status: 'ready', render, attachments: chips };
 			} catch (err) {
+				platform.reportError?.('body', err);
 				if (bodyState?.id !== current.id) return;
 				const msgText =
 					err instanceof DecryptionError

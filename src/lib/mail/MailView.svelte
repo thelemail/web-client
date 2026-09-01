@@ -9,6 +9,7 @@
 	import Reader from './Reader.svelte';
 	import Compose from './Compose.svelte';
 	import { mailSearch } from '$lib/stores/mailSearch.svelte';
+	import { platform } from '$platform';
 	import Toast from './Toast.svelte';
 	import {
 		FOLDERS,
@@ -133,7 +134,40 @@
 		);
 	}
 
-	const list = $derived(snapshot.msgs.filter(matchQ));
+	let localHits = $state<string[] | null>(null);
+
+	$effect(() => {
+		const mirror = platform.mirror;
+		const q = mailSearch.text.trim();
+		const accountId = mailbox.accountId;
+		if (!mirror || !q || !accountId) {
+			localHits = null;
+			return;
+		}
+		let cancelled = false;
+		void mirror
+			.search(accountId, q)
+			.then((hits) => {
+				if (!cancelled) localHits = hits.map((h) => h.id);
+			})
+			.catch(() => {
+				if (!cancelled) localHits = null;
+			});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	const list = $derived(
+		localHits === null
+			? snapshot.msgs.filter(matchQ)
+			: (() => {
+					const order = new Map(localHits.map((id, i) => [id, i]));
+					return snapshot.msgs
+						.filter((m) => order.has(m.id))
+						.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+				})()
+	);
 	const selected = $derived(mailbox.findMessage(messageId));
 
 	$effect(() => {

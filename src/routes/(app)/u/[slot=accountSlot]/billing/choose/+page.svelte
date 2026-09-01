@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { platform } from '$platform';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import AuthShell from '$lib/auth/AuthShell.svelte';
@@ -106,14 +107,14 @@
 			if (workspaces.workspace && workspaces.workspace.type !== product.id) {
 				await workspaces.changeType({ type: product.id });
 			}
-			const origin = window.location.origin;
+			const origin = platform.returnOrigin();
 			const { url } = await createCheckoutSession({
 				planCode,
 				seats: product.perMailbox ? sel.seats : undefined,
 				successUrl: `${origin}/u/${slot}/billing/return`,
 				cancelUrl: `${origin}/u/${slot}/billing/choose?canceled=1`
 			});
-			window.location.assign(url);
+			platform.openExternal(url);
 		} catch (err) {
 			busy = false;
 			checkoutError =
@@ -141,7 +142,27 @@
 
 <AuthShell>
 	<div class="card">
-		{#if switched}
+		{#if platform.billing === 'handoff'}
+			<div class="card-surface screen-fade">
+				<div class="welcome">
+					<h1>Choose a plan in your browser</h1>
+					<p>
+						Plans and payment are handled on the web, where your card details never pass through
+						this app. Once you have chosen a plan, come back here and your mailbox will open.
+					</p>
+					<button
+						type="button"
+						class="primary"
+						onclick={() => platform.openExternal(`${platform.returnOrigin()}/u/${slot}/billing/choose`)}
+					>
+						Open billing in browser
+					</button>
+					<button type="button" class="linklike" onclick={() => billing.refresh()}>
+						I have chosen a plan
+					</button>
+				</div>
+			</div>
+		{:else if switched}
 			<div class="card-surface screen-fade">
 				<div class="welcome">
 					<span class="switch-check"><CircleCheck size={44} strokeWidth={1.5} /></span>

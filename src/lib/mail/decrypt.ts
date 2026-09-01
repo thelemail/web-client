@@ -3,6 +3,7 @@ import { aliasKeys } from '$lib/stores/aliasKeys.svelte';
 import type { SignatureVerdict } from '$lib/keystore/protocol';
 import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
+import { platform } from '$platform';
 
 export type { SignatureVerdict } from '$lib/keystore/protocol';
 
@@ -120,7 +121,7 @@ export async function decryptBodyFromUrl(
 	url: string,
 	verificationKeysArmored?: string[]
 ): Promise<DecryptedText> {
-	const resp = await fetch(url);
+	const resp = await platform.blobFetch(url);
 	if (!resp.ok) {
 		throw new DecryptionError('unknown', `fetch body ${resp.status}`);
 	}

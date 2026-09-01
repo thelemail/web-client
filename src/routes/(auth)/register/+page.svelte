@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import PasswordField from '$lib/auth/PasswordField.svelte';
 	import PasswordStrength from '$lib/auth/PasswordStrength.svelte';
@@ -174,14 +175,14 @@
 			if (product.id !== 'personal') {
 				await changeMyWorkspaceType({ type: product.id });
 			}
-			const origin = window.location.origin;
+			const origin = platform.returnOrigin();
 			const { url } = await createCheckoutSession({
 				planCode,
 				seats: product.perMailbox ? sel.seats : undefined,
 				successUrl: `${origin}/u/${slot}/billing/return`,
 				cancelUrl: `${origin}/u/${slot}/billing/choose?canceled=1`
 			});
-			window.location.assign(url);
+			platform.openExternal(url);
 		} catch (err) {
 			submitting = false;
 			console.error('register: checkout session failed', err);
@@ -348,7 +349,11 @@
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</button>
 					<button class="btn btn-primary" disabled={!passwordReady || submitting} onclick={startTrial}>
-						Start 30-day free trial<ArrowRight size={17} strokeWidth={1.75} />
+						{#if submitting}
+							Creating your mailbox…
+						{:else}
+							Start 30-day free trial<ArrowRight size={17} strokeWidth={1.75} />
+						{/if}
 					</button>
 				</div>
 				<button

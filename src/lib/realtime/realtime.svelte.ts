@@ -9,6 +9,7 @@ import { RealtimeConnection } from './connection';
 import { electLeader, type LeaderHandle } from './leader';
 import { openRealtimeChannel, type RealtimeChannel } from './channel';
 import type { ConnectionState, RealtimeHint } from './types';
+import { platform } from '$platform';
 
 const LEADER_LOCK_NAME = 'thelemail:realtime-leader';
 const STALE_MS = 60_000;
@@ -90,6 +91,7 @@ class RealtimeStore {
 			if (this.#connections.has(id)) continue;
 			const conn = new RealtimeConnection({
 				accountId: id,
+				open: platform.openEventSource,
 				onHint: (hint) => this.#onHint(hint),
 				onState: (state, downMs) => this.#onConnState(id, state, downMs)
 			});

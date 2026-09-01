@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { platform } from '$platform';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
@@ -166,7 +167,7 @@
 		}
 	}
 
-	function downloadKit() {
+	async function downloadKit() {
 		if (!setup) return;
 		const lines = [
 			'Thelemail recovery kit',
@@ -185,18 +186,8 @@
 			''
 		];
 		const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-		const url = URL.createObjectURL(blob);
-		try {
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'thelemail-recovery-kit.txt';
-			document.body.appendChild(a);
-			a.click();
-			a.remove();
-			saved = true;
-		} finally {
-			setTimeout(() => URL.revokeObjectURL(url), 10_000);
-		}
+		await platform.saveBlob(blob, 'thelemail-recovery-kit.txt');
+		saved = true;
 	}
 
 	async function confirmAndStore() {

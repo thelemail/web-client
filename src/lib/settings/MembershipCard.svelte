@@ -1,5 +1,6 @@
 <script lang="ts">
 	import UserRound from '@lucide/svelte/icons/user-round';
+	import { platform } from '$platform';
 	import Users from '@lucide/svelte/icons/users';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Info from '@lucide/svelte/icons/info';
@@ -90,7 +91,7 @@
 	let busyId = $state<string | null>(null);
 
 	function inviteLinkFor(token: string): string {
-		return `${window.location.origin.replace(/\/$/, '')}/invite/${token}`;
+		return `${platform.returnOrigin().replace(/\/$/, '')}/invite/${token}`;
 	}
 
 	function lookupMemberByEmail(addr: string) {

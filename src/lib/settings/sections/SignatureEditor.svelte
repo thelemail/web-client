@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
+	import { platform } from '$platform';
 	import Bold from '@lucide/svelte/icons/bold';
 	import Italic from '@lucide/svelte/icons/italic';
 	import LinkIcon from '@lucide/svelte/icons/link';
@@ -166,11 +167,7 @@
 		imageBusy = true;
 		try {
 			const grant = await requestSignatureImageUploadUrl();
-			const put = await fetch(grant.uploadUrl, {
-				method: 'PUT',
-				body: file,
-				headers: { 'Content-Type': file.type }
-			});
+			const put = await platform.blobPut(grant.uploadUrl, file, file.type);
 			if (!put.ok) throw new Error(`upload failed (${put.status})`);
 			const img = await commitSignatureImage(grant.objectKey);
 			signatures.cacheImage(img.objectKey, file, img.contentType);

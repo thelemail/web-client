@@ -5,6 +5,10 @@
 	import { realtime } from '$lib/realtime/realtime.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { keystore } from '$lib/keystore/keystore-client';
+	import { auth } from '$lib/stores/auth.svelte';
+	import { platform } from '$platform';
+	import MirrorScopePrompt from '$lib/mail/MirrorScopePrompt.svelte';
+	import { mailbox } from '$lib/stores/mailbox.svelte';
 
 	let { children, data } = $props();
 
@@ -13,6 +17,37 @@
 	});
 
 	onMount(() => realtime.start());
+
+	onMount(() => {
+		const mirror = platform.mirror;
+		if (!mirror) return;
+
+		void (async () => {
+			try {
+				await mirror.open(data.accountId);
+				const token = auth.getAccessToken(data.accountId);
+				if (token) await mirror.startSync(data.accountId, token);
+			} catch (err) {
+				console.warn('mirror: could not start', err);
+			}
+		})();
+
+		const pushToken = setInterval(() => {
+			const token = auth.getAccessToken(data.accountId);
+			if (token) void mirror.setToken(data.accountId, token).catch(() => {});
+		}, 60_000);
+
+		const unsubscribe = mirror.onChanged?.((accountId) => {
+			if (accountId !== data.accountId) return;
+			void mailbox.refreshLoaded();
+		});
+
+		return () => {
+			clearInterval(pushToken);
+			unsubscribe?.();
+			void mirror.stopWatch(data.accountId).catch(() => {});
+		};
+	});
 
 	onMount(() => {
 		const unsubscribe = keystore.subscribe((msg) => {
@@ -28,3 +63,5 @@
 </script>
 
 {@render children()}
+
+<MirrorScopePrompt accountId={data.accountId} />

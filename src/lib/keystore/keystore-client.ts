@@ -1,4 +1,6 @@
 import { browser } from '$app/environment';
+import { platform } from '$platform';
+import type { KeystoreChannel } from '$lib/platform/types';
 import type {
 	AttachmentBytesArgs,
 	AttachmentBytesResponse,
@@ -183,6 +185,10 @@ function getSingleton(): KeystoreSingleton {
 }
 
 function call<T>(cmd: string, args?: unknown, timeoutMs?: number): Promise<T> {
+	const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
+	if (channel) {
+		return channel.call<T>(cmd, args, timeoutMs);
+	}
 	const s = getSingleton();
 	const id = crypto.randomUUID();
 	return new Promise<T>((resolve, reject) => {
@@ -302,6 +308,8 @@ export const keystore = {
 	encrypt: (args: EncryptArgs) => call<EncryptResponse>('encrypt', args),
 	encryptToKeys: (args: EncryptToKeysArgs) => call<EncryptToKeysResponse>('encryptToKeys', args),
 	subscribe(cb: (b: Broadcast) => void): () => void {
+		const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
+		if (channel) return channel.subscribe(cb);
 		const s = getSingleton();
 		s.listeners.add(cb);
 		return () => s.listeners.delete(cb);
@@ -311,6 +319,8 @@ export const keystore = {
 			const id = broadcastAccountId(b);
 			if (id === null || id === accountId) cb(b);
 		};
+		const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
+		if (channel) return channel.subscribe(wrapped);
 		const s = getSingleton();
 		s.listeners.add(wrapped);
 		return () => s.listeners.delete(wrapped);

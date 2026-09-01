@@ -1,6 +1,7 @@
 import { auth } from '$lib/stores/auth.svelte';
 import { accounts } from '$lib/stores/accounts.svelte';
 import { keystore } from '$lib/keystore/keystore-client';
+import { platform } from '$platform';
 
 export const ssr = false;
 export const prerender = false;
@@ -12,6 +13,16 @@ export const load = async () => {
 	if (bootstrapped) return {};
 	bootstrapped = true;
 	await auth.hydrate();
+
+	if (platform.session) {
+		for (const record of accounts.list) {
+			try {
+				await platform.session.restore(record.accountId);
+			} catch (err) {
+				console.warn('session: could not restore', err);
+			}
+		}
+	}
 
 	const status = await keystore.status();
 	for (const a of status.accounts) {

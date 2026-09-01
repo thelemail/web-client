@@ -1,3 +1,4 @@
+import { platform } from '$platform';
 import { keystore } from '$lib/keystore/keystore-client';
 import { aliasKeys } from '$lib/stores/aliasKeys.svelte';
 import type { AttachmentFailureCode } from '$lib/keystore/protocol';
@@ -115,6 +116,7 @@ async function attachmentBytes(
 		const res = await keystore.attachmentBytes({
 			accountId,
 			url: pointer.url,
+			attachmentId: chip.id,
 			keyFingerprintHex: pointer.keyFingerprint
 		});
 		return res.ok
@@ -145,17 +147,7 @@ export async function downloadAttachment(
 	refresh?: PointerRefresh
 ): Promise<DecryptedAttachmentHeader> {
 	const dec = await attachmentBytes(accountId, chip, refresh);
-	const url = URL.createObjectURL(dec.blob);
-	try {
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = dec.header.filename || 'attachment';
-		document.body.appendChild(a);
-		a.click();
-		a.remove();
-	} finally {
-		setTimeout(() => URL.revokeObjectURL(url), 10_000);
-	}
+	await platform.saveBlob(dec.blob, dec.header.filename || 'attachment');
 	return dec.header;
 }
 

@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs';
 import adapter from '@sveltejs/adapter-static';
 import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from './scripts/csp.ts';
 
-const origins = resolveOrigins(loadBuildEnv());
+const buildEnv = loadBuildEnv();
+const origins = resolveOrigins(buildEnv);
 const secure = origins.every((origin) => origin.startsWith('https://'));
+const desktop = buildEnv.PUBLIC_THELEMAIL_TARGET === 'desktop';
 
 const scriptHashes = inlineScriptHashes(readFileSync('src/app.html', 'utf8')).map(
 	(source) => `sha256-${createHash('sha256').update(source, 'utf8').digest('base64')}`
@@ -16,6 +18,9 @@ const config = {
 		runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true)
 	},
 	kit: {
+		alias: {
+			$platform: desktop ? process.env.THELEMAIL_PLATFORM_DIR ?? 'src/lib/platform/web' : 'src/lib/platform/web'
+		},
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
@@ -23,7 +28,10 @@ const config = {
 			precompress: false,
 			strict: true
 		}),
-		csp: {
+		...(desktop
+			? {}
+			: {
+					csp: {
 			mode: 'hash',
 			directives: {
 				'default-src': ['none'],
@@ -38,10 +46,11 @@ const config = {
 				'base-uri': ['none'],
 				'form-action': ['none'],
 				...(secure ? { 'upgrade-insecure-requests': true } : {})
-			}
-		},
+					}
+				}
+			}),
 		version: {
-			pollInterval: 60000
+			pollInterval: desktop ? 0 : 60000
 		}
 	}
 };
