@@ -8,7 +8,14 @@
 	import Stepper from '$lib/auth/Stepper.svelte';
 	import PlanStep from '$lib/auth/PlanStep.svelte';
 	import PaymentStep from '$lib/auth/PaymentStep.svelte';
-	import { findPlan, planFromQuery, planTotal, type PlanSelection } from '$lib/auth/plans';
+	import {
+		eur,
+		findPlan,
+		planFromQuery,
+		planTotal,
+		periodFromQuery,
+		type PlanSelection
+	} from '$lib/auth/plans';
 	import { performLogin } from '$lib/auth/perform-login';
 	import { createCheckoutSession, type PlanCode } from '$lib/api/billing';
 	import { changeMyWorkspaceType } from '$lib/api/workspaces';
@@ -26,7 +33,8 @@
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const acquisitionSource = page.url.searchParams.get('src') ?? 'register';
-	const preselected = planFromQuery(page.url.searchParams.get('plan'));
+	const preselectedPeriod = periodFromQuery(page.url.searchParams.get('billing'));
+	const preselected = planFromQuery(page.url.searchParams.get('plan'), preselectedPeriod);
 
 	const HANDLE_RE = /^[a-z0-9]([a-z0-9._-]{1,28})[a-z0-9]$/;
 	const FREE_LABELS = ['Address', 'Password'];
@@ -38,7 +46,9 @@
 	let handle = $state('');
 	let pw = $state('');
 	let confirm = $state('');
-	let sel = $state<PlanSelection>(preselected ?? { product: 'personal', tier: null, seats: 3 });
+	let sel = $state<PlanSelection>(
+		preselected ?? { product: 'personal', tier: null, seats: 3, period: preselectedPeriod }
+	);
 
 	let submitting = $state(false);
 	let submitError = $state<string | null>(null);
@@ -97,7 +107,7 @@
 	const planLabel = $derived.by(() => {
 		if (!paid) return null;
 		const { tier } = findPlan(sel);
-		return tier ? `${tier.name} plan · €${planTotal(sel)} / year` : null;
+		return tier ? `${tier.name} plan · ${eur(planTotal(sel))} / ${sel.period}` : null;
 	});
 
 	function planCodeFor(selection: PlanSelection): PlanCode | null {
@@ -120,7 +130,7 @@
 
 	function chooseFree() {
 		paid = false;
-		sel = { product: 'personal', tier: null, seats: 3 };
+		sel = { product: 'personal', tier: null, seats: 3, period: sel.period };
 		step = 1;
 	}
 
@@ -213,6 +223,7 @@
 			const origin = platform.returnOrigin();
 			const { url } = await createCheckoutSession({
 				planCode,
+				interval: sel.period,
 				seats: product.perMailbox ? sel.seats : undefined,
 				successUrl: `${origin}/u/${slot}/billing/return`,
 				cancelUrl: `${origin}/u/${slot}/billing/choose?canceled=1`

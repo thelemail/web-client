@@ -12,6 +12,8 @@ export type PlanCode =
 
 export type PricingModel = 'flat' | 'per_mailbox';
 
+export type BillingInterval = 'month' | 'year';
+
 export type SubscriptionStatus = 'none' | 'active' | 'past_due' | 'canceled';
 
 export interface Plan {
@@ -21,6 +23,7 @@ export interface Plan {
 	pricingModel: PricingModel;
 	currency: string;
 	yearlyAmountCents: number;
+	monthlyAmountCents: number;
 	minSeats: number;
 	maxSeats?: number;
 	storageBytesPerMailbox: number;
@@ -37,6 +40,7 @@ export interface Subscription {
 	status: SubscriptionStatus;
 	entitled: boolean;
 	planCode?: PlanCode;
+	interval?: BillingInterval;
 	seats?: number;
 	currentPeriodEnd?: string;
 	cancelAtPeriodEnd: boolean;
@@ -46,6 +50,7 @@ export interface Subscription {
 
 export interface CreateCheckoutSessionInput {
 	planCode: PlanCode;
+	interval?: BillingInterval;
 	seats?: number;
 	successUrl: string;
 	cancelUrl: string;
@@ -63,7 +68,11 @@ export function createCheckoutSession(input: CreateCheckoutSessionInput): Promis
 	return apiFetch('/v1/billing/checkout-session', { method: 'POST', body: input });
 }
 
-export function changePlan(input: { planCode: PlanCode; seats?: number }): Promise<Subscription> {
+export function changePlan(input: {
+	planCode: PlanCode;
+	interval?: BillingInterval;
+	seats?: number;
+}): Promise<Subscription> {
 	return apiFetch('/v1/billing/change-plan', { method: 'POST', body: input });
 }
 

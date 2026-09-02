@@ -16,7 +16,7 @@
 
 	let { data } = $props();
 
-	let sel = $state<PlanSelection>({ product: 'personal', tier: null, seats: 3 });
+	let sel = $state<PlanSelection>({ product: 'personal', tier: null, seats: 3, period: 'year' });
 	let busy = $state(false);
 	let checkoutError = $state<string | null>(null);
 	let canceledNotice = $state(page.url.searchParams.get('canceled') === '1');
@@ -36,7 +36,11 @@
 				await workspaces.load(auth.accountId);
 			}
 			if (fresh?.status === 'active' && fresh.planCode) {
-				const current = selectionForCode(fresh.planCode, Math.max(fresh.seats ?? 3, 3));
+				const current = selectionForCode(
+					fresh.planCode,
+					Math.max(fresh.seats ?? 3, 3),
+					fresh.interval ?? 'year'
+				);
 				if (current) {
 					sel = current;
 					return;
@@ -60,6 +64,7 @@
 		const code = planCodeFor(sel);
 		if (!code) return false;
 		if (code !== sub.planCode) return true;
+		if (sel.period !== (sub.interval ?? 'year')) return true;
 		const { product } = findPlan(sel);
 		return product.perMailbox ? sel.seats !== (sub.seats ?? sel.seats) : false;
 	});
@@ -78,6 +83,7 @@
 			const { product } = findPlan(sel);
 			await changePlan({
 				planCode,
+				interval: sel.period,
 				seats: product.perMailbox ? sel.seats : undefined
 			});
 			await billing.refresh();
@@ -111,6 +117,7 @@
 			const origin = platform.returnOrigin();
 			const { url } = await createCheckoutSession({
 				planCode,
+				interval: sel.period,
 				seats: product.perMailbox ? sel.seats : undefined,
 				successUrl: `${origin}/u/${slot}/billing/return`,
 				cancelUrl: `${origin}/u/${slot}/billing/choose?canceled=1`
@@ -170,7 +177,7 @@
 					<h1>Plan updated</h1>
 					<p>
 						You&rsquo;re now on
-						{#if sub?.planCode}<b>{planLabelFor(sub.planCode, sub.seats ?? 1)}</b>{:else}your new plan{/if}.
+						{#if sub?.planCode}<b>{planLabelFor(sub.planCode, sub.seats ?? 1, sub.interval ?? 'year')}</b>{:else}your new plan{/if}.
 						The difference is prorated on your next invoice.
 					</p>
 					<div class="actions" style="margin-top:24px">

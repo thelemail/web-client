@@ -17,7 +17,7 @@
 	const planLabel = $derived.by(() => {
 		const sub = billing.subscription;
 		if (!sub?.planCode) return null;
-		return planLabelFor(sub.planCode, sub.seats ?? 1);
+		return planLabelFor(sub.planCode, sub.seats ?? 1, sub.interval ?? 'year');
 	});
 
 	$effect(() => {

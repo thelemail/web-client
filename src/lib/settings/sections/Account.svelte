@@ -60,11 +60,13 @@
 
 	const priceLine = $derived.by(() => {
 		if (!tierInfo || !sub) return null;
+		const period = sub.interval ?? 'year';
+		const price = tierInfo.tier.prices[period];
 		if (tierInfo.product.perMailbox) {
 			const seats = sub.seats ?? 1;
-			return `${eur(tierInfo.tier.price)} × ${seats} mailbox${seats === 1 ? '' : 'es'} = ${eur(tierInfo.tier.price * seats)} / year`;
+			return `${eur(price)} × ${seats} mailbox${seats === 1 ? '' : 'es'} = ${eur(price * seats)} / ${period}`;
 		}
-		return `${eur(tierInfo.tier.price)} / year`;
+		return `${eur(price)} / ${period}`;
 	});
 
 	const renewalLine = $derived.by(() => {

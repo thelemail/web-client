@@ -59,11 +59,15 @@
 		<span class="os-text">
 			<span class="os-name">{tier ? tier.name : product.name} plan</span>
 			<span class="os-sub">
-				{product.perMailbox ? `${sel.seats} mailboxes · billed yearly` : 'Billed yearly'}
+				{product.perMailbox
+							? `${sel.seats} mailboxes · billed ${sel.period === 'month' ? 'monthly' : 'yearly'}`
+							: sel.period === 'month'
+								? 'Billed monthly'
+								: 'Billed yearly'}
 			</span>
 		</span>
 		<span class="os-right">
-			<span class="os-price mono">{eur(total)} / year</span>
+			<span class="os-price mono">{eur(total)} / {sel.period}</span>
 			<button type="button" class="os-change" onclick={onChangePlan}>Change</button>
 		</span>
 	</div>
@@ -124,7 +128,7 @@
 		<Lock size={14} strokeWidth={1.75} />Your account is created first, then you&rsquo;re taken to
 		checkout. Nothing is charged until you confirm there.
 	</p>
-	<p class="legal">Renews yearly; cancel anytime.</p>
+	<p class="legal">Renews {sel.period === 'month' ? 'monthly' : 'yearly'}; cancel anytime.</p>
 </div>
 
 <style>

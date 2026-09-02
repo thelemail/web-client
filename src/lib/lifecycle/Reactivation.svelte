@@ -24,6 +24,7 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import { createCheckoutSession, createBillingPortalSession } from '$lib/api/billing';
 	import { ApiCallError } from '$lib/api/types';
+	import { eur, planTotal, selectionForCode, type BillingPeriod } from '$lib/auth/plans';
 	import { fmt } from './dates';
 	import type { LifecycleContext, ReactivationPlan } from './types';
 
@@ -41,7 +42,6 @@
 			id: 'personal',
 			name: 'Personal',
 			gb: 15,
-			price: 24,
 			icon: 'user-round',
 			framing: 'A private mailbox of your own.',
 			rows: [
@@ -54,7 +54,6 @@
 			id: 'personal_plus',
 			name: 'Personal Plus',
 			gb: 50,
-			price: 48,
 			icon: 'user-round',
 			framing: 'Room for a deep archive.',
 			rows: [
@@ -67,7 +66,6 @@
 			id: 'family',
 			name: 'Family',
 			gb: 60,
-			price: 60,
 			icon: 'users-round',
 			badge: 'Your plan',
 			framing: 'The whole household, one price.',
@@ -81,7 +79,6 @@
 			id: 'business',
 			name: 'Business',
 			gb: 100,
-			price: 84,
 			icon: 'briefcase-business',
 			framing: 'For studios and teams.',
 			rows: [
@@ -107,6 +104,15 @@
 	});
 	const sel = $derived(RE_PLANS.find((p) => p.id === effectiveTier) ?? RE_PLANS[2]);
 
+	let period = $state<BillingPeriod>('year');
+	const monthly = $derived(period === 'month');
+
+	function priceOf(plan: ReactivationPlan): number {
+		const selection = selectionForCode(plan.id, 1, period);
+		return selection ? planTotal(selection) : 0;
+	}
+	const selPrice = $derived(priceOf(sel));
+
 	async function pay() {
 		if (busy) return;
 		busy = true;
@@ -127,6 +133,7 @@
 			}
 			const { url } = await createCheckoutSession({
 				planCode: sel.id,
+				interval: period,
 				successUrl: `${origin}/u/${slot}/billing/return`,
 				cancelUrl: `${origin}/u/${slot}/lifecycle/restore`
 			});
@@ -172,6 +179,28 @@
 				</span>
 			</div>
 			<div class="tiers">
+				<div class="periodtabs" role="radiogroup" aria-label="Billing period">
+					<button
+						type="button"
+						role="radio"
+						aria-checked={!monthly}
+						class="periodtab"
+						class:cur={!monthly}
+						onclick={() => (period = 'year')}
+					>
+						Annual
+					</button>
+					<button
+						type="button"
+						role="radio"
+						aria-checked={monthly}
+						class="periodtab"
+						class:cur={monthly}
+						onclick={() => (period = 'month')}
+					>
+						Monthly
+					</button>
+				</div>
 				{#each RE_PLANS as p (p.id)}
 					{@const lk = locked(p)}
 					<button
@@ -186,7 +215,10 @@
 						<span class="tc-pick" aria-hidden="true"><Check size={13} /></span>
 						<span class="tc-name">{p.name}</span>
 						<span class="tc-framing serif">{p.framing}</span>
-						<span class="tc-price"><b class="serif">€{p.price}</b><span class="tc-per mono">/ year</span></span>
+						<span class="tc-price"><b class="serif">{eur(priceOf(p))}</b><span class="tc-per mono"
+								>/ {period}</span
+							></span
+						>
 						<span class="tc-rows">
 							{#each p.rows as [k, v] (k)}
 								<span class="trow"><span class="tk">{k}</span><span class="tv mono">{v}</span></span>
@@ -210,7 +242,7 @@
 						<ArrowLeft />
 					</button>
 					<button class="btn btn-primary" onclick={() => (step = 1)}>
-						Continue — {sel.name} · €{sel.price}/year<ArrowRight />
+						Continue — {sel.name} · {eur(selPrice)}/{period}<ArrowRight />
 					</button>
 				</div>
 			</div>
@@ -231,10 +263,12 @@
 				<span class="os-ic"><SelIcon size={17} /></span>
 				<span class="os-text">
 					<span class="os-name">{sel.name} plan</span>
-					<span class="os-sub">Billed yearly · restores {stored} GB</span>
+					<span class="os-sub"
+						>Billed {monthly ? 'monthly' : 'yearly'} · restores {stored} GB</span
+					>
 				</span>
 				<span class="os-right">
-					<span class="os-price mono">€{sel.price} / year</span>
+					<span class="os-price mono">{eur(selPrice)} / {period}</span>
 					<button class="os-change" onclick={() => (step = 0)}>Change</button>
 				</span>
 			</div>
@@ -259,7 +293,7 @@
 						<ArrowLeft />
 					</button>
 					<button class="btn btn-primary" disabled={busy} onclick={pay}>
-						{#if busy}<span class="spinner"></span>Restoring…{:else}<RotateCcw />Pay €{sel.price} &amp;
+						{#if busy}<span class="spinner"></span>Restoring…{:else}<RotateCcw />Pay {eur(selPrice)} &amp;
 							restore{/if}
 					</button>
 				</div>
