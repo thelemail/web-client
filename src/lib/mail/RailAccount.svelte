@@ -14,9 +14,11 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Check from '@lucide/svelte/icons/check';
+	import X from '@lucide/svelte/icons/x';
 	import { ChevronDown, ChevronUp } from 'lucide';
 	import NavMorph from '$lib/components/NavMorph.svelte';
 	import Avatar from './Avatar.svelte';
+	import RemoveAccountDialog from './RemoveAccountDialog.svelte';
 	import logoMark from '$lib/assets/logo-mark.svg';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -47,7 +49,13 @@
 	let view = $state<'main' | 'switch'>('main');
 	let switching = $state<AccountEntry | null>(null);
 	let switchDone = $state(false);
+	let removing = $state<AccountEntry | null>(null);
 	let menuRef: HTMLDivElement | undefined = $state();
+
+	function askRemove(a: AccountEntry) {
+		open = false;
+		removing = a;
+	}
 
 	function handleDocClick(e: MouseEvent) {
 		if (menuRef && !menuRef.contains(e.target as Node)) open = false;
@@ -216,36 +224,49 @@
 				</div>
 				{#each switcherAccounts as a (a.id)}
 					{@const isCur = activeAccount?.id === a.id}
-					<button
-						type="button"
-						class="acct-row"
-						class:cur={isCur}
-						onclick={() => doSwitch(a)}
-					>
-						<Avatar
-							initials={a.init}
-							src={auth.avatarUrlFor(a.id)}
-							fit="cover"
-							size={38}
-							bg={a.bg}
-							fg={a.fg}
-						/>
-						<span class="ar-tx">
-							<span class="ar-nm">{a.name}</span>
-							<span class="ar-em">{a.email}</span>
-							<span class="ar-org">{a.org ? `${a.org} · ${a.domain}` : a.domain}</span>
-						</span>
-						{#if isCur}
-							<span class="ar-cur"><Check size={13} />Current</span>
-						{:else}
-							{#if unreadCountFor(a.id) > 0}
-								<span class="ar-unread"
-									>{unreadCountFor(a.id) > 99 ? '99+' : unreadCountFor(a.id)}</span
-								>
+					<div class="acct-item">
+						<button
+							type="button"
+							class="acct-row"
+							class:cur={isCur}
+							onclick={() => doSwitch(a)}
+						>
+							<Avatar
+								initials={a.init}
+								src={auth.avatarUrlFor(a.id)}
+								fit="cover"
+								size={38}
+								bg={a.bg}
+								fg={a.fg}
+							/>
+							<span class="ar-tx">
+								<span class="ar-nm">{a.name}</span>
+								<span class="ar-em">{a.email}</span>
+								<span class="ar-org">{a.org ? `${a.org} · ${a.domain}` : a.domain}</span>
+							</span>
+							{#if isCur}
+								<span class="ar-cur"><Check size={13} />Current</span>
+							{:else}
+								{#if unreadCountFor(a.id) > 0}
+									<span class="ar-unread"
+										>{unreadCountFor(a.id) > 99 ? '99+' : unreadCountFor(a.id)}</span
+									>
+								{/if}
+								<span class="ar-go"><ArrowRight size={15} /></span>
 							{/if}
-							<span class="ar-go"><ArrowRight size={15} /></span>
+						</button>
+						{#if !isCur}
+							<button
+								type="button"
+								class="ar-rm"
+								title="Remove from this device"
+								aria-label={`Remove ${a.email} from this device`}
+								onclick={() => askRemove(a)}
+							>
+								<X size={14} strokeWidth={2} />
+							</button>
 						{/if}
-					</button>
+					</div>
 				{/each}
 				<div class="msep"></div>
 				<a class="mitem" href="/login" onclick={signInAnother}
@@ -302,6 +323,18 @@
 			</div>
 	{/if}
 </div>
+
+{#if removing}
+	<div use:portal>
+		<RemoveAccountDialog
+			accountId={removing.id}
+			email={removing.email}
+			name={removing.name}
+			onClose={() => (removing = null)}
+			onRemoved={() => {}}
+		/>
+	</div>
+{/if}
 
 {#if switching}
 	<div class="sw-ovl" use:portal>

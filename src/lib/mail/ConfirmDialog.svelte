@@ -1,5 +1,6 @@
 <script lang="ts">
 	import X from '@lucide/svelte/icons/x';
+	import './confirm-dialog.css';
 	import type { Component, Snippet } from 'svelte';
 
 	interface Props {

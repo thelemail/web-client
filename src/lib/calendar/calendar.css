@@ -824,6 +824,41 @@
 	.acct-row:hover {
 		background: var(--paper-100);
 	}
+	.acct-item {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+	.acct-item .acct-row {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.acct-item .ar-rm {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border: none;
+		background: none;
+		border-radius: var(--radius-sm);
+		color: var(--ink-400);
+		cursor: pointer;
+		opacity: 0;
+		transition:
+			opacity var(--dur),
+			background var(--dur),
+			color var(--dur);
+	}
+	.acct-item:hover .ar-rm,
+	.acct-item:focus-within .ar-rm {
+		opacity: 1;
+	}
+	.acct-item .ar-rm:hover {
+		background: var(--danger-100);
+		color: var(--danger-700);
+	}
 	.acct-row .ar-tx {
 		flex: 1;
 		min-width: 0;

@@ -421,6 +421,15 @@ class AuthStore {
 		this.#tokens = new Map();
 		await keystore.clearAll();
 		await forgetAllAvatars();
+		if (platform.session) {
+			for (const rec of accounts.list) {
+				try {
+					await platform.session.forget(rec.accountId);
+				} catch (err) {
+					console.warn('session: could not clear native state', err);
+				}
+			}
+		}
 		await accounts.clear();
 		this.#profiles = new Map();
 		this.#currentId = null;
