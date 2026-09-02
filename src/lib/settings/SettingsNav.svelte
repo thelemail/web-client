@@ -17,6 +17,9 @@
 	import { SECTIONS } from './data';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { platform } from '$platform';
+
+	const sections = SECTIONS.filter((sec) => sec.id !== 'notify' || platform.notifications);
 
 	const icons: Record<string, typeof Settings> = {
 		'user-round': UserRound,
@@ -49,7 +52,7 @@
 		<ArrowLeft size={16} /><span class="lbl">Back to inbox</span>
 	</a>
 	<div class="nav-eyebrow">Settings</div>
-	{#each SECTIONS as sec (sec.id)}
+	{#each sections as sec (sec.id)}
 		{@const Icon = icons[sec.icon] ?? UserRound}
 		<a
 			class="snav"

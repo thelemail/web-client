@@ -27,6 +27,7 @@ export const SECTIONS: SectionMeta[] = [
 	{ id: 'security', icon: 'shield-check', label: 'Security & privacy' },
 	{ id: 'blocked', icon: 'user-x', label: 'Blocked senders' },
 	{ id: 'import', icon: 'upload', label: 'Import' },
+	{ id: 'notify', icon: 'bell', label: 'Notifications' },
 	{ id: 'region', icon: 'globe', label: 'Localization & region' },
 	{ id: 'appearance', icon: 'palette', label: 'Appearance' },
 	{ id: 'account', icon: 'credit-card', label: 'Account & plan' }
