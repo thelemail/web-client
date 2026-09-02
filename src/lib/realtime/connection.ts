@@ -14,7 +14,7 @@ export interface ConnectionOptions {
 	accountId: string;
 	onHint: (hint: RealtimeHint) => void;
 	onState?: (state: ConnectionState, downMs: number) => void;
-	open?: (url: string) => EventSourceLike;
+	open?: (url: string, accountId: string) => EventSourceLike;
 	mint?: (accountId: string) => Promise<RealtimeTicketResponse>;
 }
 
@@ -106,7 +106,7 @@ export class RealtimeConnection {
 		if (this.#lastEventId) url.searchParams.set('since', this.#lastEventId);
 
 		const open = this.#opts.open ?? defaultOpen;
-		const es = open(url.toString());
+		const es = open(url.toString(), this.#opts.accountId);
 		this.#es = es;
 
 		es.onopen = () => {

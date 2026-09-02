@@ -148,7 +148,7 @@ export interface Platform {
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
 	transport?: Transport;
-	openEventSource?: (url: string) => EventSourceLike;
+	openEventSource?: (url: string, accountId: string) => EventSourceLike;
 	blobFetch: (url: string, init?: RequestInit) => Promise<Response>;
 	blobPut: (
 		url: string,
