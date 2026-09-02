@@ -920,6 +920,39 @@
 	gap: 12px;
 	margin-bottom: 16px;
 }
+.auth .periodtabs {
+	display: flex;
+	justify-content: center;
+	gap: 8px;
+	margin-bottom: 18px;
+}
+.auth .periodtab {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--fg-muted);
+	background: transparent;
+	border: 1px solid var(--border-strong);
+	border-radius: var(--radius-pill);
+	padding: 6px 16px;
+	cursor: pointer;
+	transition:
+		border-color var(--dur),
+		background var(--dur),
+		color var(--dur);
+}
+.auth .periodtab:hover {
+	border-color: var(--pine-500);
+	color: var(--fg-strong);
+}
+.auth .periodtab.cur {
+	background: var(--pine-600);
+	border-color: var(--pine-600);
+	color: var(--paper-0);
+}
+.auth .periodtab:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
+}
 .auth .prodtab {
 	position: relative;
 	text-align: left;
@@ -1135,6 +1168,16 @@
 	font-size: 12px;
 	color: var(--fg-muted);
 	white-space: nowrap;
+}
+.auth .tiercard .tc-charge {
+	font-size: 12px;
+	color: var(--fg-muted);
+	margin-top: 5px;
+}
+.auth .tiercard .tc-saving {
+	font-size: 12px;
+	color: var(--pine-700);
+	margin-top: 3px;
 }
 .auth .tiercard .tc-total {
 	font-size: 12px;

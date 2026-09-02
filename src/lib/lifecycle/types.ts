@@ -40,7 +40,6 @@ export interface ReactivationPlan {
 	id: PlanCode;
 	name: string;
 	gb: number;
-	price: number;
 	icon: string;
 	framing: string;
 	badge?: string;

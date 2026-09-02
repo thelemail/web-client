@@ -7,8 +7,11 @@
 		MAX_SEATS,
 		findPlan,
 		planTotal,
+		annualSavingPercent,
 		eur,
+		type BillingPeriod,
 		type PlanSelection,
+		type PlanTier,
 		type ProductId
 	} from '$lib/auth/plans';
 	import UserRound from '@lucide/svelte/icons/user-round';
@@ -52,6 +55,7 @@
 	const product = $derived(findPlan(sel).product);
 	const tier = $derived(findPlan(sel).tier);
 	const total = $derived(planTotal(sel));
+	const monthly = $derived(sel.period === 'month');
 
 	function pickProduct(id: ProductId) {
 		sel = { ...sel, product: id, tier: null };
@@ -61,6 +65,24 @@
 	}
 	function setSeats(n: number) {
 		sel = { ...sel, seats: Math.min(MAX_SEATS, Math.max(MIN_SEATS, n)) };
+	}
+	function pickPeriod(period: BillingPeriod) {
+		sel = { ...sel, period };
+	}
+
+	function perMonth(t: PlanTier): number {
+		return monthly ? t.prices.month : t.prices.year / 12;
+	}
+	function chargeNote(t: PlanTier): string {
+		if (monthly) return 'Billed monthly, cancel any time';
+		return product.perMailbox
+			? `${eur(t.prices.year)} a mailbox, billed once a year`
+			: `${eur(t.prices.year)} billed once a year`;
+	}
+	function savingNote(t: PlanTier): string {
+		return product.perMailbox
+			? `Annual is ${eur(t.prices.year)} a mailbox each year and saves ${annualSavingPercent(t)}%.`
+			: `Annual is ${eur(t.prices.year)} a year and saves ${annualSavingPercent(t)}%.`;
 	}
 </script>
 
@@ -96,11 +118,34 @@
 				</span>
 				<span class="pt-from mono">
 					{p.perMailbox
-						? `from ${eur(p.tiers[0].price)} / mailbox · year`
-						: `from ${eur(p.tiers[0].price)} / year`}
+						? `from ${eur(perMonth(p.tiers[0]))} / mailbox · month`
+						: `from ${eur(perMonth(p.tiers[0]))} / month`}
 				</span>
 			</button>
 		{/each}
+	</div>
+
+	<div class="periodtabs" role="radiogroup" aria-label="Billing period">
+		<button
+			type="button"
+			role="radio"
+			aria-checked={!monthly}
+			class="periodtab"
+			class:cur={!monthly}
+			onclick={() => pickPeriod('year')}
+		>
+			Annual
+		</button>
+		<button
+			type="button"
+			role="radio"
+			aria-checked={monthly}
+			class="periodtab"
+			class:cur={monthly}
+			onclick={() => pickPeriod('month')}
+		>
+			Monthly
+		</button>
 	</div>
 
 	{#if product.perMailbox}
@@ -127,7 +172,7 @@
 					<Plus size={15} strokeWidth={1.75} />
 				</button>
 			</span>
-			<span class="seats-note">Starts at 3 — prorated when your team changes mid-year.</span>
+			<span class="seats-note">Starts at 3 — prorated when your team changes mid-term.</span>
 		</div>
 	{/if}
 
@@ -153,12 +198,16 @@
 					<span class="tc-framing serif">&nbsp;</span>
 				{/if}
 				<span class="tc-price">
-					<b class="serif">{eur(t.price)}</b>
-					<span class="tc-per mono">{product.perMailbox ? '/ mailbox · year' : '/ year'}</span>
+					<b class="serif">{eur(perMonth(t))}</b>
+					<span class="tc-per mono">{product.perMailbox ? '/ mailbox · month' : '/ month'}</span>
 				</span>
+				<span class="tc-charge mono">{chargeNote(t)}</span>
+				{#if monthly}
+					<span class="tc-saving mono">{savingNote(t)}</span>
+				{/if}
 				{#if product.perMailbox}
 					<span class="tc-total mono" class:on={seld}>
-						{sel.seats} mailboxes = {eur(t.price * sel.seats)} / year
+						{sel.seats} mailboxes = {eur(t.prices[sel.period] * sel.seats)} / {sel.period}
 					</span>
 				{/if}
 				<span class="tc-rows">
@@ -186,7 +235,7 @@
 				{#if busy}
 					<span class="spinner"></span>{busyLabel}
 				{:else if tier}
-					{ctaVerb} — {tier.name} · {eur(total)} / year
+					{ctaVerb} — {tier.name} · {eur(total)} / {sel.period}
 					<ArrowRight size={17} strokeWidth={1.75} />
 				{:else}
 					Select a plan to continue
@@ -195,8 +244,8 @@
 		</div>
 	</div>
 	<p class="legal">
-		Yearly billing. Prices include VAT where applicable. Cancel anytime &mdash; your archive stays
-		exportable.
+		{monthly ? 'Monthly billing' : 'Annual billing'}. Prices include VAT where applicable. Cancel
+		anytime &mdash; your archive stays exportable.
 	</p>
 	{#if footer}
 		{@render footer()}
