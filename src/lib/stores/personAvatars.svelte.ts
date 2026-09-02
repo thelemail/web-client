@@ -1,5 +1,10 @@
 import { SvelteMap } from 'svelte/reactivity';
 import { resolveAvatars } from '$lib/api/accounts';
+import {
+	cachePersonAvatar,
+	hydratePersonAvatars,
+	releasePersonAvatars
+} from '$lib/avatarCache.svelte';
 
 const BATCH_LIMIT = 100;
 const REFRESH_AFTER_MS = 50 * 60 * 1000;
@@ -19,11 +24,13 @@ class PersonAvatarStore {
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
+		if (this.#accountId) releasePersonAvatars(this.#accountId);
 		this.#accountId = accountId;
 		this.#gen++;
 		this.#entries.clear();
 		this.#queued.clear();
 		this.#inflight.clear();
+		if (accountId) void this.#hydrate(accountId, this.#gen);
 	}
 
 	avatarUrl(address: string | undefined): string | null {
@@ -36,6 +43,15 @@ class PersonAvatarStore {
 		return hit?.url ?? null;
 	}
 
+	async #hydrate(accountId: string, gen: number): Promise<void> {
+		const cached = await hydratePersonAvatars(accountId);
+		if (gen !== this.#gen) return;
+		for (const [address, rec] of cached) {
+			if (this.#entries.has(address)) continue;
+			this.#entries.set(address, { url: rec.url, at: rec.updatedAt });
+		}
+	}
+
 	#enqueue(key: string): void {
 		if (this.#queued.has(key) || this.#inflight.has(key)) return;
 		this.#queued.add(key);
@@ -46,6 +62,8 @@ class PersonAvatarStore {
 
 	async #flush(): Promise<void> {
 		const gen = this.#gen;
+		const accountId = this.#accountId;
+		if (!accountId) return;
 		const pending = [...this.#queued];
 		this.#queued.clear();
 		this.#flushing = false;
@@ -57,15 +75,20 @@ class PersonAvatarStore {
 				const res = await resolveAvatars(chunk);
 				found = new Map(res.avatars.map((a) => [a.address.trim().toLowerCase(), a.avatarUrl]));
 			} catch {
-				continue;
-			} finally {
 				for (const key of chunk) this.#inflight.delete(key);
+				continue;
 			}
 			if (gen !== this.#gen) return;
 			const at = Date.now();
-			for (const key of chunk) {
-				this.#entries.set(key, { url: found.get(key) ?? null, at });
-			}
+			await Promise.all(
+				chunk.map(async (key) => {
+					const source = found.get(key);
+					const url = source ? await cachePersonAvatar(accountId, key, source) : null;
+					if (gen !== this.#gen) return;
+					this.#entries.set(key, { url, at });
+					this.#inflight.delete(key);
+				})
+			);
 		}
 	}
 }
