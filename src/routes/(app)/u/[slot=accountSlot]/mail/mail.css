@@ -127,6 +127,11 @@
 .mail-app .acct-row .ar-go { display: inline-flex; margin-left: auto; flex: 0 0 auto; color: var(--ink-400); }
 .mail-app .acct-row .ar-go svg { width: 15px; height: 15px; }
 .mail-app .acct-row:hover .ar-go { color: var(--pine-600); }
+.mail-app .acct-item { display: flex; align-items: center; gap: 2px; }
+.mail-app .acct-item .acct-row { flex: 1 1 auto; min-width: 0; }
+.mail-app .acct-item .ar-rm { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-sm); color: var(--ink-400); cursor: pointer; opacity: 0; transition: opacity var(--dur), background var(--dur), color var(--dur); }
+.mail-app .acct-item:hover .ar-rm, .mail-app .acct-item:focus-within .ar-rm { opacity: 1; }
+.mail-app .acct-item .ar-rm:hover { background: var(--danger-100); color: var(--danger-700); }
 .mail-app a.mitem { text-decoration: none; cursor: pointer; }
 .mail-app .sw-note { font-size: 11.5px; line-height: 1.5; color: var(--fg-faint); padding: 8px 11px 6px; }
 
@@ -689,43 +694,6 @@
 .oh-scrim .oh-btn.primary { background: var(--primary); color: var(--primary-fg); }
 .oh-scrim .oh-btn.primary:hover { background: var(--primary-hover); }
 .oh-scrim .oh-btn.primary:disabled { opacity: .5; pointer-events: none; }
-
-.cfd-scrim { position: fixed; inset: 0; z-index: 122; background: rgba(20, 39, 30, .44); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: mail-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
-.cfd-scrim .cfd-modal { width: 486px; max-width: 100%; max-height: 90vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--pine-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 20px 22px 18px; animation: mail-dvpop var(--dur-slow) var(--ease-out); }
-.cfd-scrim .cfd-modal.danger { border-top-color: var(--danger-500); }
-.cfd-scrim .cfd-head { display: flex; align-items: flex-start; gap: 12px; }
-.cfd-scrim .cfd-ic { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--pine-100); color: var(--pine-700); flex: 0 0 auto; }
-.cfd-scrim .cfd-modal.danger .cfd-ic { background: var(--danger-100); color: var(--danger-700); }
-.cfd-scrim .cfd-tx { flex: 1 1 auto; min-width: 0; }
-.cfd-scrim .cfd-title { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 500; font-size: 19px; line-height: 1.25; color: var(--fg-strong); margin: 0; }
-.cfd-scrim .cfd-sub { font-size: 12.5px; color: var(--fg-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cfd-scrim .cfd-x { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-sm); color: var(--fg-muted); cursor: pointer; flex: 0 0 auto; }
-.cfd-scrim .cfd-x:hover { background: var(--paper-100); color: var(--ink-700); }
-.cfd-scrim .cfd-x:disabled { opacity: .4; pointer-events: none; }
-.cfd-scrim .cfd-body { flex: 1 1 auto; overflow-y: auto; margin-top: 14px; }
-.cfd-scrim .cfd-p { font-size: 13px; line-height: 1.6; color: var(--fg-muted); margin: 0 0 10px; }
-.cfd-scrim .cfd-p:last-child { margin-bottom: 0; }
-.cfd-scrim .cfd-mono { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-700); }
-.cfd-scrim .cfd-seg { display: flex; gap: 6px; margin: 4px 0 8px; }
-.cfd-scrim .cfd-segb { flex: 1 1 0; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--fg-muted); background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 9px 12px; cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast); }
-.cfd-scrim .cfd-segb:hover { background: var(--paper-100); }
-.cfd-scrim .cfd-segb.on { background: var(--danger-100); border-color: var(--danger-500); color: var(--danger-700); }
-.cfd-scrim .cfd-segb:disabled { opacity: .55; pointer-events: none; }
-.cfd-scrim .cfd-hint { font-size: 12px; line-height: 1.55; color: var(--fg-faint); margin: 0 0 12px; }
-.cfd-scrim .cfd-check { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; background: var(--paper-50); border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer; }
-.cfd-scrim .cfd-check input { margin-top: 2px; width: 15px; height: 15px; accent-color: var(--pine-600); flex: 0 0 auto; }
-.cfd-scrim .cfd-check-t { display: block; font-size: 13px; font-weight: 600; color: var(--fg-strong); }
-.cfd-scrim .cfd-check-d { display: block; font-size: 11.5px; line-height: 1.55; color: var(--fg-muted); margin-top: 3px; }
-.cfd-scrim .cfd-err { margin-top: 12px; padding: 9px 12px; font-size: 12.5px; line-height: 1.5; color: var(--danger-700); background: var(--danger-100); border-radius: var(--radius-md); }
-.cfd-scrim .cfd-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; }
-.cfd-scrim .cfd-btn { display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 13.5px; font-weight: 600; border-radius: var(--radius-md); padding: 9px 15px; cursor: pointer; border: 1px solid transparent; transition: background var(--dur-fast); }
-.cfd-scrim .cfd-btn.ghost { background: var(--surface); color: var(--fg); border-color: var(--border-strong); }
-.cfd-scrim .cfd-btn.ghost:hover { background: var(--paper-100); }
-.cfd-scrim .cfd-btn.primary { background: var(--primary); color: var(--primary-fg); }
-.cfd-scrim .cfd-btn.primary:hover { background: var(--primary-hover); }
-.cfd-scrim .cfd-btn.danger { background: var(--danger-100); color: var(--danger-700); border-color: var(--danger-500); }
-.cfd-scrim .cfd-btn.danger:hover { background: var(--danger-500); color: var(--surface); }
-.cfd-scrim .cfd-btn:disabled { opacity: .5; pointer-events: none; }
 
 .tofu-scrim { position: fixed; inset: 0; z-index: 120; background: rgba(20, 39, 30, .44); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: mail-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
 .tofu-scrim .tofu-modal { width: 484px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brass-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 26px 28px 22px; animation: mail-dvpop var(--dur-slow) var(--ease-out); }

@@ -5,6 +5,7 @@ export const platform: Platform = {
 	interceptFrameLinks: false,
 	writeFrameDoc: false,
 	session: undefined,
+	notifications: undefined,
 	billing: 'native',
 	mirror: undefined,
 	keystoreChannel: undefined,

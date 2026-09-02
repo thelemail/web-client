@@ -105,7 +105,7 @@ class AuthStore {
 	accountId = $derived<string | null>(this.#currentId);
 	email = $derived<string | null>(this.#currentProfile().email);
 	fullName = $derived<string | null>(this.#currentProfile().fullName);
-	avatarUrl = $derived<string | null>(this.#currentProfile().avatarUrl);
+	avatarUrl = $derived<string | null>(this.#currentId ? this.avatarUrlFor(this.#currentId) : null);
 	defaultReplyAddressId = $derived<string | null>(
 		this.#currentProfile().defaultReplyAddressId
 	);
@@ -350,7 +350,10 @@ class AuthStore {
 	}
 
 	avatarUrlFor(accountId: string): string | null {
-		return this.#profiles.get(accountId)?.avatarUrl ?? cachedAvatarUrl(accountId);
+		const cached = cachedAvatarUrl(accountId);
+		if (cached) return cached;
+		if (platform.transport) return null;
+		return this.#profiles.get(accountId)?.avatarUrl ?? null;
 	}
 
 	fullNameFor(accountId: string): string | null {
@@ -418,6 +421,15 @@ class AuthStore {
 		this.#tokens = new Map();
 		await keystore.clearAll();
 		await forgetAllAvatars();
+		if (platform.session) {
+			for (const rec of accounts.list) {
+				try {
+					await platform.session.forget(rec.accountId);
+				} catch (err) {
+					console.warn('session: could not clear native state', err);
+				}
+			}
+		}
 		await accounts.clear();
 		this.#profiles = new Map();
 		this.#currentId = null;

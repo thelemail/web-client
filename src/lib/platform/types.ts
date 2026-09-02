@@ -99,6 +99,30 @@ export interface LocalMirror {
 	scope(accountId: string): Promise<string | null>;
 	setScope(accountId: string, dateFloor: string | null): Promise<void>;
 	onChanged?(cb: (accountId: string) => void): () => void;
+	onTokenExpired?(cb: (accountId: string) => void): () => void;
+}
+
+export interface NotificationStatus {
+	supported: boolean;
+	bundled: boolean;
+	translocated: boolean;
+	bundlePath: string | null;
+	authorization: string;
+	alerts: boolean;
+	sound: boolean;
+	lastError: string | null;
+}
+
+export interface NotificationTarget {
+	accountId: string;
+	messageId: string;
+}
+
+export interface NativeNotifications {
+	status(): Promise<NotificationStatus>;
+	takeOpened(): Promise<NotificationTarget | null>;
+	onStatus(cb: (status: NotificationStatus) => void): () => void;
+	onOpened(cb: (target: NotificationTarget) => void): () => void;
 }
 
 export type BillingMode = 'native' | 'handoff';
@@ -119,11 +143,12 @@ export interface Platform {
 	interceptFrameLinks?: boolean;
 	writeFrameDoc?: boolean;
 	session?: NativeSession;
+	notifications?: NativeNotifications;
 	billing: BillingMode;
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
 	transport?: Transport;
-	openEventSource?: (url: string) => EventSourceLike;
+	openEventSource?: (url: string, accountId: string) => EventSourceLike;
 	blobFetch: (url: string, init?: RequestInit) => Promise<Response>;
 	blobPut: (
 		url: string,

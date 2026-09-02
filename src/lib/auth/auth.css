@@ -1937,6 +1937,51 @@
 	display: inline-flex;
 	color: var(--fg-faint);
 }
+.auth .apick-item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.auth .apick-item .apick-row {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.auth .apick-rm {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border: none;
+	background: none;
+	border-radius: var(--radius-control);
+	color: var(--ink-400);
+	cursor: pointer;
+	opacity: 0;
+	transition:
+		opacity var(--dur),
+		background var(--dur),
+		color var(--dur);
+}
+.auth .apick-item:hover .apick-rm,
+.auth .apick-item:focus-within .apick-rm,
+.auth .apick-item-locked .apick-rm {
+	opacity: 1;
+}
+.auth .apick-rm:hover {
+	background: var(--danger-100);
+	color: var(--danger-700);
+}
+.auth .apick-rm:focus-visible {
+	opacity: 1;
+	outline: 2px solid var(--pine-600);
+	outline-offset: 2px;
+}
+.auth .apick-rm:disabled {
+	opacity: 0;
+	pointer-events: none;
+}
 .auth .apick-more {
 	display: flex;
 	flex-direction: column;

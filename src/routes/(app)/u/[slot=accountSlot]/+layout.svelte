@@ -32,19 +32,29 @@
 			}
 		})();
 
-		const pushToken = setInterval(() => {
+		const pushToken = async () => {
+			await auth.ensureFreshToken(data.accountId);
 			const token = auth.getAccessToken(data.accountId);
-			if (token) void mirror.setToken(data.accountId, token).catch(() => {});
-		}, 60_000);
+			if (token) await mirror.setToken(data.accountId, token).catch(() => {});
+		};
+		const pushTimer = setInterval(() => void pushToken(), 60_000);
 
 		const unsubscribe = mirror.onChanged?.((accountId) => {
 			if (accountId !== data.accountId) return;
 			void mailbox.refreshLoaded();
 		});
 
+		const unsubscribeExpired = mirror.onTokenExpired?.((accountId) => {
+			if (accountId !== data.accountId) return;
+			void (async () => {
+				if (await auth.tryRefresh(accountId)) await pushToken();
+			})();
+		});
+
 		return () => {
-			clearInterval(pushToken);
+			clearInterval(pushTimer);
 			unsubscribe?.();
+			unsubscribeExpired?.();
 			void mirror.stopWatch(data.accountId).catch(() => {});
 		};
 	});
