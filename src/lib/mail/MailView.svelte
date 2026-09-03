@@ -38,7 +38,7 @@
 	} from '$lib/api/messages';
 	import { returnedFromSnooze } from './timePresets';
 	import type { MessageReportKind, MessageState } from '$lib/api/types';
-	import type { ReportOutcome } from './report';
+	import { submitReport, type ReportOutcome } from './report';
 	import { applyToThread, type ThreadVerb } from './threadActions';
 	import { canFetchFolder, mailbox } from '$lib/stores/mailbox.svelte';
 	import { drafts } from '$lib/stores/drafts.svelte';
@@ -416,15 +416,32 @@
 		flash('Moved to Spam');
 	}
 
+	function moveToSpam(id: string): Promise<void> {
+		return isThread(mailbox.findMessage(id))
+			? queueThreadUpdate(id, { folder: 'spam' }, 'spam', 'Could not move to Spam')
+			: queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, 'Could not move to Spam');
+	}
+
+	async function reportAndSpam(id: string): Promise<ReportOutcome> {
+		const accountId = auth.accountId;
+		if (!accountId) throw new Error('Unlock this account to report the message.');
+		const outcome = await submitReport(accountId, id, { kind: 'spam', includeHeaders: false });
+		await moveToSpam(id);
+		return outcome;
+	}
+
+	function reportOne(id: string) {
+		advancePast(id);
+		void reportAndSpam(id).then(
+			() => flash('Reported as spam', () => undoReport(id)),
+			() => flash('Could not report message')
+		);
+	}
+
 	function reported(id: string, kind: MessageReportKind, outcome: ReportOutcome) {
 		const alreadySpam = mailbox.findMessage(id)?.folder === 'spam';
 		if (!alreadySpam) advancePast(id);
-		if (outcome.duplicate) {
-			void queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, 'Could not move to Spam');
-		} else {
-			mailbox.patchMessage(id, { folder: 'spam' });
-			void mailbox.refreshCounts();
-		}
+		void moveToSpam(id);
 		const head = outcome.duplicate
 			? 'Already reported, moved to Spam'
 			: kind === 'phishing'
@@ -440,7 +457,11 @@
 		const current = mailbox.findMessage(id);
 		if (!current) return;
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
-		void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, 'Could not undo');
+		if (isThread(current)) {
+			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', 'Could not undo');
+		} else {
+			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, 'Could not undo');
+		}
 		flash('Moved back to Inbox');
 	}
 
@@ -623,6 +644,19 @@
 			else flash('Delete failed');
 			await mailbox.refresh([query]);
 			void mailbox.refreshCounts();
+			return;
+		}
+		if (action === 'spam') {
+			if (messageId !== null && ids.includes(messageId)) {
+				void goto(withSearch(basePath), { replaceState: true });
+			}
+			checked = new Set();
+			const results = await Promise.allSettled(ids.map((id) => reportAndSpam(id)));
+			const failed = results.filter((r) => r.status === 'rejected').length;
+			if (failed === 0) flash(`${ids.length} reported as spam`);
+			else if (failed < ids.length)
+				flash(`${ids.length - failed} reported as spam, ${failed} failed`);
+			else flash('Report failed');
 			return;
 		}
 		const verb: 'archive' | 'trash' = action;
@@ -812,6 +846,7 @@
 			onTrash={trashOne}
 			onRestore={restoreOne}
 			onDelete={deleteOne}
+			onSpam={reportOne}
 			onToggleRead={toggleRead}
 			onToggleAll={toggleAll}
 			onBulk={bulk}

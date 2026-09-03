@@ -497,3 +497,85 @@ describe('mailbox.loadedQueries / refreshLoaded', () => {
 		expect(mailbox.streamFor(UNREAD_SENT).msgs.map((m) => m.id)).toEqual(['c']);
 	});
 });
+
+const RECEIVED_QUERY: Query = {
+	folder: 'inbox',
+	labels: [],
+	unread: false,
+	attach: false,
+	sort: 'newest'
+};
+
+function receivedRow(id: string, storedAt: string) {
+	return { ...row(id, storedAt), direction: 'received' as const, read: false };
+}
+
+function receivedThread(latest: ReturnType<typeof receivedRow>) {
+	return {
+		threadKey: latest.id,
+		latest,
+		messageCount: 1,
+		unreadCount: 1,
+		hasAttachments: false,
+		starred: false
+	};
+}
+
+describe('optimistic patches move rows out of the streams they no longer belong to', () => {
+	beforeEach(() => {
+		listMessages.mockReset();
+		listThreads.mockReset();
+		decryptPreview.mockReset();
+		decryptPreview.mockImplementation(async (_accountId: string, b64: string) => {
+			const id = b64.replace('enc-', '');
+			return previewFor(id);
+		});
+		authState.canEnterApp = true;
+		authState.accountId = 'acc-1';
+		mailbox.setAccount(null);
+		mailbox.setAccount('acc-1');
+	});
+
+	async function loadInbox() {
+		listThreads.mockResolvedValueOnce({
+			items: [
+				receivedThread(receivedRow('a', '2026-08-20T12:00:00Z')),
+				receivedThread(receivedRow('b', '2026-08-19T12:00:00Z')),
+				receivedThread(receivedRow('c', '2026-08-18T12:00:00Z'))
+			],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(RECEIVED_QUERY);
+	}
+
+	it('removes a message the moment it is patched into spam', async () => {
+		await loadInbox();
+		mailbox.patchMessage('b', { folder: 'spam' });
+		expect(mailbox.streamFor(RECEIVED_QUERY).msgs.map((m) => m.id)).toEqual(['a', 'c']);
+	});
+
+	it('puts the message back in its old position when the patch is rolled back', async () => {
+		await loadInbox();
+		mailbox.patchMessage('b', { folder: 'spam' });
+		mailbox.patchMessage('b', { folder: 'inbox' });
+		expect(mailbox.streamFor(RECEIVED_QUERY).msgs.map((m) => m.id)).toEqual(['a', 'b', 'c']);
+	});
+
+	it('leaves a patch that does not change folder membership in place', async () => {
+		await loadInbox();
+		mailbox.patchMessage('b', { unread: true });
+		const msgs = mailbox.streamFor(RECEIVED_QUERY).msgs;
+		expect(msgs.map((m) => m.id)).toEqual(['a', 'b', 'c']);
+		expect(msgs[1].unread).toBe(true);
+	});
+
+	it('keeps the open message readable after its row is dropped', async () => {
+		await loadInbox();
+		const pinned = mailbox.streamFor(RECEIVED_QUERY).msgs[1];
+		mailbox.pin(pinned);
+		mailbox.patchMessage('b', { folder: 'spam' });
+		expect(mailbox.streamFor(RECEIVED_QUERY).msgs.map((m) => m.id)).toEqual(['a', 'c']);
+		expect(mailbox.pinned?.id).toBe('b');
+		expect(mailbox.pinned?.folder).toBe('spam');
+	});
+});

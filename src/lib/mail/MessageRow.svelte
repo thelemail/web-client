@@ -4,6 +4,7 @@
 	import Archive from '@lucide/svelte/icons/archive';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MailOpen from '@lucide/svelte/icons/mail-open';
@@ -33,6 +34,7 @@
 		onTrash: (id: string) => void;
 		onRestore?: (id: string) => void;
 		onDelete?: (id: string) => void;
+		onSpam?: (id: string) => void;
 		onToggleRead: (id: string) => void;
 	}
 
@@ -49,6 +51,7 @@
 		onTrash,
 		onRestore,
 		onDelete,
+		onSpam,
 		onToggleRead
 	}: Props = $props();
 
@@ -218,6 +221,15 @@
 					e.stopPropagation();
 					onArchive(m.id);
 				}}><Archive size={15} /></button
+			>
+		{/if}
+		{#if caps.showSpam && onSpam}
+			<button
+				title="Report spam"
+				onclick={(e) => {
+					e.stopPropagation();
+					onSpam?.(m.id);
+				}}><ShieldAlert size={15} /></button
 			>
 		{/if}
 		{#if caps.showTrash}

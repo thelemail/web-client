@@ -91,6 +91,7 @@
 .mail-app .av { border-radius: var(--radius-avatar); display: flex; align-items: center; justify-content: center; font-weight: 600; flex: 0 0 auto; letter-spacing: .01em; }
 
 .mail-app .menu { position: absolute; top: calc(100% + 10px); right: 0; width: 290px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 7px; z-index: 60; animation: mail-pop var(--dur) var(--ease-out); }
+.mail-app .menu-portal { position: fixed; top: auto; right: auto; width: 290px; max-height: calc(100vh - 24px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 7px; z-index: 110; animation: mail-pop var(--dur) var(--ease-out); font-family: var(--font-sans); color: var(--fg); }
 @keyframes mail-pop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .mail-app .menu .mhead { display: flex; align-items: center; gap: 12px; padding: 11px 11px 13px; }
 .mail-app .menu .mhead .av { width: 44px; height: 44px; font-size: 16px; }

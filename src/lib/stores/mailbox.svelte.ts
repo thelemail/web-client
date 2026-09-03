@@ -67,6 +67,15 @@ function emptyStream(query: Query): Stream {
 	};
 }
 
+function insertByEpoch(items: Message[], msg: Message, sort: SortId): Message[] {
+	const at = items.findIndex((m) =>
+		sort === 'oldest' ? m.epoch > msg.epoch : m.epoch < msg.epoch
+	);
+	const out = items.slice();
+	out.splice(at < 0 ? out.length : at, 0, msg);
+	return out;
+}
+
 function streamKey(q: Query): string {
 	const labels = q.labels.slice().sort().join(',');
 	return [
@@ -308,6 +317,7 @@ class MailboxStore {
 	#countsPending: Promise<void> | null = null;
 
 	#revs = new Map<string, number>();
+	#detached = new Map<string, Message>();
 	#pendingNew = $state(new Map<string, Message[]>());
 	#autoFlush = new Set<string>();
 	#threadTicks = $state(new Map<string, number>());
@@ -322,6 +332,7 @@ class MailboxStore {
 		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0 };
 		this.#countsPending = null;
 		this.#revs.clear();
+		this.#detached.clear();
 		this.#pendingNew = new Map();
 		this.#autoFlush.clear();
 		this.#threadTicks = new Map();
@@ -385,14 +396,32 @@ class MailboxStore {
 
 	patchMessage(id: string, patch: Partial<Message>) {
 		const map = new Map(this.#streams);
+		const detached = this.#detached.get(id);
+		let dropped: Message | null = null;
+		let restored = false;
 		for (const [key, stream] of map) {
 			const idx = stream.items.findIndex((m) => m.id === id);
-			if (idx < 0) continue;
+			if (idx < 0) {
+				if (!detached) continue;
+				const candidate = { ...detached, ...patch };
+				if (!queryMatches(stream.query, candidate)) continue;
+				map.set(key, { ...stream, items: insertByEpoch(stream.items, candidate, stream.query.sort) });
+				restored = true;
+				continue;
+			}
+			const next = { ...stream.items[idx], ...patch };
 			const items = stream.items.slice();
-			items[idx] = { ...items[idx], ...patch };
+			if (queryMatches(stream.query, next)) {
+				items[idx] = next;
+			} else {
+				items.splice(idx, 1);
+				dropped = next;
+			}
 			map.set(key, { ...stream, items });
 		}
 		this.#streams = map;
+		if (dropped) this.#detached.set(id, dropped);
+		else if (restored) this.#detached.delete(id);
 		if (this.pinned?.id === id) this.pinned = { ...this.pinned, ...patch };
 	}
 
@@ -565,6 +594,7 @@ class MailboxStore {
 	}
 
 	#removeMessage(id: string): void {
+		this.#detached.delete(id);
 		const map = new Map(this.#streams);
 		let changed = false;
 		for (const [key, stream] of map) {
@@ -580,6 +610,7 @@ class MailboxStore {
 	}
 
 	#placeMessage(msg: Message): void {
+		this.#detached.delete(msg.id);
 		const map = new Map(this.#streams);
 		const pendingMap = new Map(this.#pendingNew);
 		let pendingChanged = false;

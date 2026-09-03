@@ -30,6 +30,7 @@
 	import ReportDialog from './ReportDialog.svelte';
 	import BlockSenderDialog from './BlockSenderDialog.svelte';
 	import SnoozePicker from './SnoozePicker.svelte';
+	import AnchoredMenu from './AnchoredMenu.svelte';
 	import AlarmClockOff from '@lucide/svelte/icons/alarm-clock-off';
 	import EventCard from './EventCard.svelte';
 	import { untrack } from 'svelte';
@@ -109,6 +110,7 @@
 
 	let moreOpen = $state(false);
 	let moreRef: HTMLDivElement | undefined = $state();
+	let morePanel: HTMLDivElement | undefined = $state();
 
 	let labelPickerOpen = $state(false);
 	let labelPickerRef: HTMLDivElement | undefined = $state();
@@ -210,7 +212,10 @@
 	);
 
 	function handleDocMouseDown(e: MouseEvent) {
-		if (moreOpen && moreRef && !moreRef.contains(e.target as Node)) moreOpen = false;
+		const inMore =
+			(moreRef && moreRef.contains(e.target as Node)) ||
+			(morePanel && morePanel.contains(e.target as Node));
+		if (moreOpen && !inMore) moreOpen = false;
 		if (labelPickerOpen && labelPickerRef && !labelPickerRef.contains(e.target as Node)) {
 			labelPickerOpen = false;
 		}
@@ -585,7 +590,7 @@
 					<Ellipsis size={17} />
 				</button>
 				{#if moreOpen}
-					<div class="menu more-menu" role="menu">
+					<AnchoredMenu anchor={moreRef} bind:panel={morePanel} extraClass="more-menu">
 						{#if caps.showMarkRead && m.unread}
 							<button
 								type="button"
@@ -722,10 +727,16 @@
 								<ShieldAlert size={17} />Report phishing or spam
 							</button>
 						{/if}
-					</div>
+					</AnchoredMenu>
 				{/if}
 				{#if labelPickerOpen && m}
-					<div class="menu label-picker" role="dialog" aria-label="Edit labels" bind:this={labelPickerRef}>
+					<AnchoredMenu
+						anchor={moreRef}
+						bind:panel={labelPickerRef}
+						extraClass="label-picker"
+						role="dialog"
+						label="Edit labels"
+					>
 						<div class="menu-lbl">Labels</div>
 						{#each labelOptions as [id, l] (id)}
 							{@const on = currentLabels.includes(id)}
@@ -747,14 +758,15 @@
 						{#if labelError}
 							<div class="lp-err" role="alert">{labelError}</div>
 						{/if}
-					</div>
+					</AnchoredMenu>
 				{/if}
 				{#if movePickerOpen && m}
-					<div
-						class="menu label-picker move-picker"
+					<AnchoredMenu
+						anchor={moreRef}
+						bind:panel={movePickerRef}
+						extraClass="label-picker move-picker"
 						role="dialog"
-						aria-label="Move to folder"
-						bind:this={movePickerRef}
+						label="Move to folder"
 					>
 						<div class="menu-lbl">Move to</div>
 						{#each moveTargets as t (t.id)}
@@ -771,10 +783,14 @@
 								<span class="lp-name">{l.name}</span>
 							</button>
 						{/each}
-					</div>
+					</AnchoredMenu>
 				{/if}
 				{#if snoozePickerOpen && m}
-					<SnoozePicker onPick={snoozeUntil} onClose={() => (snoozePickerOpen = false)} />
+					<SnoozePicker
+						anchor={moreRef}
+						onPick={snoozeUntil}
+						onClose={() => (snoozePickerOpen = false)}
+					/>
 				{/if}
 			</div>
 		</div>
