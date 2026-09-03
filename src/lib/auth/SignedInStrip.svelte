@@ -27,7 +27,7 @@
 				bg="var(--pine-700)"
 				fg="#EEF2EA"
 			/>
-			<span class="si-tx">Signed in as <strong>{single.email}</strong></span>
+			<span class="si-tx" title={single.email}>Signed in as <strong>{single.email}</strong></span>
 			<a class="si-go" href="/">Open mailbox<ArrowRight size={15} strokeWidth={1.75} /></a>
 		{:else}
 			<span class="si-tx">{known.length} accounts signed in on this device</span>
