@@ -6,6 +6,7 @@ import {
 	putAccountSlot,
 	type AccountSlotRecord
 } from '$lib/keystore/idb';
+import { syncSessionHint } from './session-hint';
 
 const CHANNEL_NAME = 'thelemail:accounts';
 const MSG_REHYDRATE = 'rehydrate';
@@ -40,6 +41,7 @@ class AccountsStore {
 		const all = await getAllAccountSlots();
 		all.sort((a, b) => a.slot - b.slot);
 		this.list = all;
+		syncSessionHint(all.length > 0);
 	}
 
 	bySlot(slot: number): AccountSlotRecord | null {
@@ -94,6 +96,7 @@ class AccountsStore {
 	async clear(): Promise<void> {
 		await clearAllAccountSlots();
 		this.list = [];
+		syncSessionHint(false);
 		this.#broadcast();
 	}
 
