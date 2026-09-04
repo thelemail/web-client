@@ -49,6 +49,7 @@
 	import TwoFactorProofDialog from '../TwoFactorProofDialog.svelte';
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
 	import type { SettingsState, CeremonyKind, TwoFaSetupMethod } from '../data';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		s: SettingsState;
@@ -335,10 +336,10 @@
 				: ' Without it, a forgotten password means the mail is gone for good.'}
 		</p>
 		<div class="rh-acts">
-			<button type="button" class="btn btn-primary" onclick={() => launch('recovery')}>
+			<Button variant="primary" onclick={() => launch('recovery')}>
 				{#if recoverySet}<RefreshCw size={15} />{:else}<KeyRound size={15} />{/if}
 				{recoverySet ? 'Regenerate recovery phrase' : 'Set up recovery'}
-			</button>
+			</Button>
 		</div>
 	</div>
 	{#if !recoverySet}
@@ -395,13 +396,9 @@
 				</div>
 			</div>
 			<div class="tfa-act">
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm"
-					onclick={() => (proofAction = { kind: 'disableTotp' })}
-				>
+				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'disableTotp' })}>
 					Remove
-				</button>
+				</Button>
 			</div>
 		</div>
 	{:else}
@@ -412,13 +409,9 @@
 				<div class="tfa-d">6-digit codes from an app like Aegis or 1Password.</div>
 			</div>
 			<div class="tfa-act">
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					onclick={() => launch('twofa', { method: 'totp' })}
-				>
+				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
 					<Plus size={14} />Set up
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
@@ -436,13 +429,9 @@
 				</div>
 			</div>
 			<div class="tfa-act">
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm"
-					onclick={() => (proofAction = { kind: 'deleteKey', id: cred.id, name: cred.name })}
-				>
+				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'deleteKey', id: cred.id, name: cred.name })}>
 					Remove
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/each}
@@ -454,13 +443,9 @@
 				<div class="tfa-d">A YubiKey or any FIDO2 hardware key, via WebAuthn.</div>
 			</div>
 			<div class="tfa-act">
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					onclick={() => launch('twofa', { method: 'key' })}
-				>
+				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
 					<Plus size={14} />Set up
-				</button>
+				</Button>
 			</div>
 		</div>
 		<div class="tfa-row off">
@@ -470,13 +455,9 @@
 				<div class="tfa-d">Touch ID, Face ID, or your screen lock — a passkey kept on this device.</div>
 			</div>
 			<div class="tfa-act">
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					onclick={() => launch('twofa', { method: 'device' })}
-				>
+				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
 					<Plus size={14} />Set up
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
@@ -491,13 +472,9 @@
 				</div>
 			</div>
 			<div class="tfa-act">
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm"
-					onclick={() => (proofAction = { kind: 'regenCodes' })}
-				>
+				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'regenCodes' })}>
 					<RefreshCw size={14} />Regenerate
-				</button>
+				</Button>
 			</div>
 		</div>
 	{:else if tfStatus}
@@ -541,12 +518,7 @@
 				<div class="dv-meta">{sessionMeta(d)}</div>
 			</div>
 			<div class="dv-act">
-				{#if !d.current}<button
-						type="button"
-						class="btn btn-ghost btn-sm"
-						disabled={sessionsBusy}
-						onclick={() => signOutSession(d.id)}>Sign out</button
-					>{/if}
+				{#if !d.current}<Button variant="ghost" size="sm" disabled={sessionsBusy} onclick={() => signOutSession(d.id)}>Sign out</Button>{/if}
 			</div>
 		</div>
 	{/each}
@@ -557,14 +529,9 @@
 			</div>
 		</div>
 		<div class="ctl">
-			<button
-				type="button"
-				class="btn btn-danger btn-sm"
-				disabled={sessionsBusy}
-				onclick={signOutOtherSessions}
-			>
+			<Button variant="danger" size="sm" disabled={sessionsBusy} onclick={signOutOtherSessions}>
 				<LogOut size={14} />Revoke all
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>
@@ -598,12 +565,12 @@
 			<div class="d">Bring in contacts’ public keys, or export your own.</div>
 		</div>
 		<div class="ctl">
-			<button type="button" class="btn btn-secondary btn-sm">
+			<Button variant="secondary" size="sm">
 				<Upload size={14} />Import
-			</button>
-			<button type="button" class="btn btn-secondary btn-sm">
+			</Button>
+			<Button variant="secondary" size="sm">
 				<Download size={14} />Export public key
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>
@@ -634,14 +601,9 @@
 		{/each}
 		{#if secNextCursor}
 			<div class="log-row" style:justify-content="center">
-				<button
-					type="button"
-					class="btn btn-ghost btn-sm"
-					disabled={secLoadingMore}
-					onclick={loadMoreSecurityEvents}
-				>
+				<Button variant="ghost" size="sm" disabled={secLoadingMore} onclick={loadMoreSecurityEvents}>
 					Show more
-				</button>
+				</Button>
 			</div>
 		{/if}
 	</div>

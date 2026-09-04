@@ -10,6 +10,7 @@
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import type { CustomDomain } from '$lib/api/customDomains';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		domain: CustomDomain;
@@ -108,11 +109,11 @@
 	</div>
 
 	{#snippet footer()}
-		<button type="button" class="btn btn-ghost" disabled={busy} onclick={onClose}>
+		<Button variant="ghost" disabled={busy} onclick={onClose}>
 			Keep this domain
-		</button>
-		<button type="button" class="btn btn-danger" disabled={!canRemove} onclick={submit}>
+		</Button>
+		<Button variant="danger" disabled={!canRemove} onclick={submit}>
 			{busy ? 'Removing…' : 'Remove domain'}
-		</button>
+		</Button>
 	{/snippet}
 </CeremonyShell>

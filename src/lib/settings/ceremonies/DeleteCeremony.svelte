@@ -22,6 +22,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { twofactor } from '$lib/stores/twofactor.svelte';
 	import type { CeremonyKind } from '../data';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		onClose: () => void;
@@ -229,7 +230,7 @@
 			<div class="export-nudge">
 				<Download size={17} />
 				<div><b>Export first.</b> Take your archive with you before it’s gone.</div>
-				<button type="button" class="btn btn-secondary btn-sm">Export archive</button>
+				<Button variant="secondary" size="sm">Export archive</Button>
 			</div>
 		</div>
 	{:else if step === 1}
@@ -326,14 +327,9 @@
 					</button>
 				{/if}
 				{#if hasWebauthn}
-					<button
-						type="button"
-						class="btn btn-secondary btn-sm"
-						disabled={busy || cur.length === 0}
-						onclick={submitWithWebauthn}
-					>
+					<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
 						<Fingerprint size={14} />Use security key or passkey
-					</button>
+					</Button>
 				{/if}
 				{#if verifyError}
 					<span class="errtext"><CircleAlert size={13} /><span>{verifyError}</span></span>
@@ -350,41 +346,36 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<button type="button" class="btn btn-ghost" onclick={onClose}>Keep my account</button>
-			<button type="button" class="btn btn-danger" onclick={() => (step = 1)}>
+			<Button variant="ghost" onclick={onClose}>Keep my account</Button>
+			<Button variant="danger" onclick={() => (step = 1)}>
 				Continue<ArrowRight size={15} />
-			</button>
+			</Button>
 		{:else if step === 1}
-			<button type="button" class="btn btn-ghost" onclick={() => (step = 0)}>
+			<Button variant="ghost" onclick={() => (step = 0)}>
 				<ArrowLeft size={15} />Back
-			</button>
-			<button
-				type="button"
-				class="btn btn-danger"
-				disabled={!canContinue}
-				onclick={() => (step = 2)}
-			>
+			</Button>
+			<Button variant="danger" disabled={!canContinue} onclick={() => (step = 2)}>
 				Continue<ArrowRight size={15} />
-			</button>
+			</Button>
 		{:else if step === 2}
 			{#if workspaceBlocked}
-				<button type="button" class="btn btn-primary" onclick={onClose}>Open settings</button>
+				<Button variant="primary" onclick={onClose}>Open settings</Button>
 			{:else}
-				<button type="button" class="btn btn-ghost" disabled={busy} onclick={() => (step = 1)}>
+				<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
 					<ArrowLeft size={15} />Back
-				</button>
-				<button type="button" class="btn btn-danger" disabled={busy || !canSubmit} onclick={submit}>
+				</Button>
+				<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>
 					{#if busy}
 						Verifying…
 					{:else}
 						<Trash2 size={15} />Delete account permanently
 					{/if}
-				</button>
+				</Button>
 			{/if}
 		{:else}
-			<button type="button" class="btn btn-primary" disabled={signingOut} onclick={signOutDeleted}>
+			<Button variant="primary" disabled={signingOut} onclick={signOutDeleted}>
 				<LogOut size={15} />{signingOut ? 'Signing out…' : 'Sign out'}
-			</button>
+			</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

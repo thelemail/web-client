@@ -13,6 +13,7 @@
 	import { mailbox } from '$lib/stores/mailbox.svelte';
 	import { DEFAULT_QUERY } from '$lib/mail/url';
 	import { importBatch, type ImportItemStatus } from '$lib/mail/import/importBatch.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	let fileInput = $state<HTMLInputElement>();
 	let dragging = $state(false);
@@ -153,9 +154,9 @@
 			{/if}
 			<span class="imp-spacer"></span>
 			{#if !importBatch.running && (importBatch.done + importBatch.duplicate + importBatch.failed) > 0}
-				<button type="button" class="btn btn-ghost btn-sm" onclick={() => void importBatch.clearCompleted()}>
+				<Button variant="ghost" size="sm" onclick={() => void importBatch.clearCompleted()}>
 					Clear finished
-				</button>
+				</Button>
 			{/if}
 		</div>
 

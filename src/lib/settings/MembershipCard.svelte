@@ -27,6 +27,7 @@
 		seatsFullNote,
 		personalNote
 	} from './plan-display';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -209,13 +210,9 @@
 		{#if isPersonal}
 			<span class="mbr-note">{personalNote()}</span>
 		{:else if invitable && !domainGated}
-			<button
-				type="button"
-				class="btn btn-secondary btn-sm"
-				onclick={() => launch('member')}
-			>
+			<Button variant="secondary" size="sm" onclick={() => launch('member')}>
 				<UserPlus size={14} />{addLabel}
-			</button>
+			</Button>
 			{#if seatsTotal != null}
 				{#if type === 'business' && seatsUsed >= seatsTotal}
 					<span class="mbr-note">Inviting another member adds a prorated seat to your subscription.</span>
@@ -226,16 +223,16 @@
 				{/if}
 			{/if}
 		{:else if domainGated && canManage}
-			<button type="button" class="btn btn-secondary btn-sm" disabled>
+			<Button variant="secondary" size="sm" disabled>
 				<UserPlus size={14} />{addLabel}
-			</button>
+			</Button>
 			<div class="seat-full">
 				<Info size={15} />
 				<span>Add a domain and prove you own it to invite members.</span>
 			</div>
-			<a class="btn btn-secondary btn-sm" href={`/u/${slot}/settings/domains/new`}>
+			<Button variant="secondary" size="sm" href={`/u/${slot}/settings/domains/new`}>
 				<Globe size={14} />Add a domain
-			</a>
+			</Button>
 		{:else if domainGated}
 			<div class="seat-full">
 				<Info size={15} />

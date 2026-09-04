@@ -6,6 +6,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import CeremonyShell from './CeremonyShell.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		codes: string[];
@@ -65,19 +66,19 @@
 			{/each}
 		</div>
 		<div class="phrase-acts">
-			<button type="button" class="btn btn-secondary btn-sm" onclick={copyCodes}>
+			<Button variant="secondary" size="sm" onclick={copyCodes}>
 				<Copy size={14} />Copy
-			</button>
-			<button type="button" class="btn btn-secondary btn-sm" onclick={downloadCodes}>
+			</Button>
+			<Button variant="secondary" size="sm" onclick={downloadCodes}>
 				<Download size={14} />Download
-			</button>
+			</Button>
 			{#if saved}<span class="phrase-saved"><Check size={13} />Saved</span>{/if}
 		</div>
 	</div>
 
 	{#snippet footer()}
-		<button type="button" class="btn btn-primary" disabled={!saved} onclick={onClose}>
+		<Button variant="primary" disabled={!saved} onclick={onClose}>
 			I’ve saved them<Check size={15} />
-		</button>
+		</Button>
 	{/snippet}
 </CeremonyShell>

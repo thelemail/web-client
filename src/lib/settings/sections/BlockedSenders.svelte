@@ -8,6 +8,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { deleteBlockedSender, listBlockedSenders } from '$lib/api/blockedSenders';
 	import { blockSender, unsealAddress } from '$lib/mail/blockedSenders';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Entry {
 		id: string;
@@ -175,21 +176,16 @@
 				/>
 				{#if addError}<div class="alias-target bs-adderr">{addError}</div>{/if}
 			</div>
-			<button type="button" class="btn btn-secondary btn-sm" disabled={addBusy} onclick={() => void add()}>
+			<Button variant="secondary" size="sm" disabled={addBusy} onclick={() => void add()}>
 				Block
-			</button>
-			<button
-				type="button"
-				class="btn btn-ghost btn-sm"
-				disabled={addBusy}
-				onclick={() => {
+			</Button>
+			<Button variant="ghost" size="sm" disabled={addBusy} onclick={() => {
 					adding = false;
 					newAddress = '';
 					addError = null;
-				}}
-			>
+				}}>
 				Cancel
-			</button>
+			</Button>
 		</div>
 	{:else}
 		<button type="button" class="addrow" onclick={() => (adding = true)}>

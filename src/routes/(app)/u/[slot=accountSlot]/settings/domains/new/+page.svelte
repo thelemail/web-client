@@ -14,6 +14,7 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import UpgradeNudge from '$lib/settings/UpgradeNudge.svelte';
 	import { resumeStep } from '$lib/settings/domains/steps';
+	import { Button } from '$lib/components/ui/button';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);
@@ -108,11 +109,11 @@
 	</div>
 
 	<div class="dw-foot">
-		<a class="btn btn-ghost" href={base}><ArrowLeft size={15} />Cancel</a>
+		<Button variant="ghost" href={base}><ArrowLeft size={15} />Cancel</Button>
 		<span class="dw-spacer"></span>
-		<button type="button" class="btn btn-primary" disabled={!valid || submitting} onclick={submit}>
+		<Button variant="primary" disabled={!valid || submitting} onclick={submit}>
 			{submitting ? 'Adding…' : 'Continue'}<ArrowRight size={15} />
-		</button>
+		</Button>
 	</div>
 </Card>
 {/if}

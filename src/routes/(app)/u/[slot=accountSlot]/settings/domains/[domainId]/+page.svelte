@@ -9,6 +9,7 @@
 	import { isDomainStep, resumeStep, type DomainStep } from '$lib/settings/domains/steps';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);
@@ -54,7 +55,7 @@
 	desc="Prove ownership, set up sending, create the addresses that will receive mail, then point MX here last."
 />
 
-<p class="dw-back"><a class="btn btn-ghost" href={base}><ArrowLeft size={15} />All domains</a></p>
+<p class="dw-back"><Button variant="ghost" href={base}><ArrowLeft size={15} />All domains</Button></p>
 
 {#if loadError}
 	<div class="dw-note bad"><CircleAlert size={15} /><span>{loadError}</span></div>

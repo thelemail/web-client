@@ -23,6 +23,7 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		onClose: () => void;
@@ -298,22 +299,12 @@
 				{/if}
 			</div>
 			<div class="phrase-acts">
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					disabled={!revealed}
-					onclick={copyPhrase}
-				>
+				<Button variant="secondary" size="sm" disabled={!revealed} onclick={copyPhrase}>
 					<Copy size={14} />Copy
-				</button>
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					disabled={!revealed}
-					onclick={downloadKit}
-				>
+				</Button>
+				<Button variant="secondary" size="sm" disabled={!revealed} onclick={downloadKit}>
 					<Download size={14} />Download recovery file
-				</button>
+				</Button>
 				{#if saved}<span class="phrase-saved"><Check size={13} />Saved</span>{/if}
 			</div>
 		</div>
@@ -364,39 +355,34 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<button type="button" class="btn btn-ghost" onclick={onClose}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={!ack || generating} onclick={generate}>
+			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="primary" disabled={!ack || generating} onclick={generate}>
 				{#if generating}
 					Generating…
 				{:else}
 					Generate my phrase<ArrowRight size={15} />
 				{/if}
-			</button>
+			</Button>
 		{:else if step === 1}
-			<button type="button" class="btn btn-ghost" onclick={() => (step = 0)}>
+			<Button variant="ghost" onclick={() => (step = 0)}>
 				<ArrowLeft size={15} />Back
-			</button>
-			<button type="button" class="btn btn-primary" disabled={!revealed} onclick={() => (step = 2)}>
+			</Button>
+			<Button variant="primary" disabled={!revealed} onclick={() => (step = 2)}>
 				I’ve written it down<ArrowRight size={15} />
-			</button>
+			</Button>
 		{:else if step === 2}
-			<button type="button" class="btn btn-ghost" onclick={() => (step = 1)}>
+			<Button variant="ghost" onclick={() => (step = 1)}>
 				<ArrowLeft size={15} />Back
-			</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={!allCorrect || submitting}
-				onclick={confirmAndStore}
-			>
+			</Button>
+			<Button variant="primary" disabled={!allCorrect || submitting} onclick={confirmAndStore}>
 				{#if submitting}
 					Saving…
 				{:else}
 					Confirm &amp; finish<Check size={15} />
 				{/if}
-			</button>
+			</Button>
 		{:else}
-			<button type="button" class="btn btn-primary" onclick={finish}>Done</button>
+			<Button variant="primary" onclick={finish}>Done</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

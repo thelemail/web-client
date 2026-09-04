@@ -33,6 +33,7 @@
 	import { canManageWorkspace } from '../permissions';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { CustomDomain, RequiredDNSRecord } from '$lib/api/customDomains';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		domain: CustomDomain;
@@ -184,14 +185,9 @@
 				</div>
 			{/if}
 			<div class="dw-addr-acts">
-				<button
-					type="button"
-					class="btn btn-secondary"
-					disabled={!manage}
-					onclick={() => (addingAlias = true)}
-				>
+				<Button variant="secondary" disabled={!manage} onclick={() => (addingAlias = true)}>
 					<Plus size={14} />Add an address
-				</button>
+				</Button>
 			</div>
 			<div class="dw-note">
 				<Info size={15} />
@@ -262,22 +258,22 @@
 
 	<div class="dw-foot">
 		{#if step !== 'ownership'}
-			<button type="button" class="btn btn-ghost" onclick={() => onStep(previousStep(step))}>
+			<Button variant="ghost" onclick={() => onStep(previousStep(step))}>
 				<ArrowLeft size={15} />Back
-			</button>
+			</Button>
 		{/if}
 		<span class="dw-spacer"></span>
 		{#if phase}
-			<button type="button" class="btn btn-secondary" disabled={checking || !manage} onclick={() => void check()}>
+			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check()}>
 				<RefreshCw size={14} />{checking ? 'Checking…' : 'Check now'}
-			</button>
+			</Button>
 		{/if}
 		{#if step === 'done'}
-			<a class="btn btn-primary" href={listHref}>All domains<ArrowRight size={15} /></a>
+			<Button variant="primary" href={listHref}>All domains<ArrowRight size={15} /></Button>
 		{:else}
-			<button type="button" class="btn btn-primary" onclick={() => onStep(nextStep(step))}>
+			<Button variant="primary" onclick={() => onStep(nextStep(step))}>
 				Continue<ArrowRight size={15} />
-			</button>
+			</Button>
 		{/if}
 	</div>
 </Card>

@@ -22,6 +22,7 @@
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { ownershipProven } from '$lib/settings/domains/steps';
 	import { seatLimitFor } from '../plan-display';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		onClose: () => void;
@@ -298,24 +299,15 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<button type="button" class="btn btn-ghost" onclick={onClose} disabled={submitting}>Cancel</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={!ready || submitting}
-				onclick={submit}
-			>
+			<Button variant="ghost" onclick={onClose} disabled={submitting}>Cancel</Button>
+			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
 				{submitting ? 'Creating invitation…' : 'Add member'}<ArrowRight size={15} />
-			</button>
+			</Button>
 		{:else}
-			<button
-				type="button"
-				class="btn btn-primary"
-				onclick={() => {
+			<Button variant="primary" onclick={() => {
 					onComplete('member');
 					onClose();
-				}}>Done</button
-			>
+				}}>Done</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

@@ -23,6 +23,7 @@
 	import { RadioGroup, RadioGroupItem } from '$lib/components/ui/radio-group';
 	import { Label } from '$lib/components/ui/label';
 	import Avatar from '$lib/mail/Avatar.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		mode?: 'create' | 'members';
@@ -277,7 +278,7 @@
 					{/if}
 				</div>
 				<div class="field">
-					<span class="lbl">Who uses it</span>
+					<span class="field-lbl">Who uses it</span>
 					<RadioGroup
 						class="choice-set"
 						value={shared ? 'shared' : 'single'}
@@ -400,28 +401,19 @@
 
 	{#snippet footer()}
 		{#if mode === 'create' && step === 0}
-			<button type="button" class="btn btn-ghost" onclick={onClose}>Cancel</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={!localOk || !nameOk || !selectedDomain}
-				onclick={() => (step = 1)}>Continue</button
-			>
+			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="primary" disabled={!localOk || !nameOk || !selectedDomain} onclick={() => (step = 1)}>Continue</Button>
 		{:else if step === peopleStep}
-			<button type="button" class="btn btn-ghost" onclick={onClose}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={!canSubmit || submitting} onclick={submit}>
+			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="primary" disabled={!canSubmit || submitting} onclick={submit}>
 				{#if mode === 'members'}<Check size={15} />{:else}<Plus size={15} />{/if}
 				{submitting ? 'Saving…' : mode === 'members' ? 'Save people' : 'Add address'}
-			</button>
+			</Button>
 		{:else}
-			<button
-				type="button"
-				class="btn btn-primary"
-				onclick={() => {
+			<Button variant="primary" onclick={() => {
 					onComplete('alias');
 					onClose();
-				}}>Done</button
-			>
+				}}>Done</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>
