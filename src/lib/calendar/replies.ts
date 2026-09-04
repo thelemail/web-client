@@ -26,6 +26,10 @@ async function applyReply(
 	const replying = inv.attendees[0];
 	if (!replying) return { kind: 'ignored', reason: 'no attendee in reply' };
 	const email = replying.email.toLowerCase();
+	const current = (item.attendees ?? []).find((a) => a.email.toLowerCase() === email);
+	if (current && current.partstat === replying.partstat) {
+		return { kind: 'ignored', reason: 'already applied' };
+	}
 	const attendees = (item.attendees ?? []).map((a) =>
 		a.email.toLowerCase() === email
 			? { ...a, partstat: replying.partstat, name: a.name ?? replying.name }

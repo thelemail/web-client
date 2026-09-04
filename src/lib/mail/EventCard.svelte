@@ -31,6 +31,8 @@
 	let err = $state<string | null>(null);
 	let calendarStatus = $state<{ added: boolean; calendarName?: string; itemId?: string } | null>(null);
 	let adding = $state(false);
+	let applied = $state<string | null>(null);
+	let reply = $state<{ email: string; name?: string; partstat: string } | null>(null);
 	const slot = $derived(page.params.slot ?? '0');
 	const isReply = $derived((ev.method ?? '').toUpperCase() === 'REPLY');
 	const isCancel = $derived((ev.method ?? '').toUpperCase() === 'CANCEL');
@@ -43,7 +45,11 @@
 		void (async () => {
 			try {
 				const entry = await calendarEntry();
-				if (isReply || isCancel) await entry.observeMailEvents([ev], message.id);
+				if (isReply) reply = entry.replySummary(ev);
+				if (isReply || isCancel) {
+					const changes = await entry.observeMailEvents([ev], message.id);
+					applied = changes.find((c) => c.kind !== 'ignored')?.kind ?? null;
+				}
 				calendarStatus = await entry.statusFor(ev);
 			} catch {
 				calendarStatus = { added: false };
@@ -71,6 +77,25 @@
 		tentative: 'You replied maybe.',
 		declined: 'You declined.'
 	};
+
+	const REPLIED: Record<string, string> = {
+		accepted: 'is going',
+		tentative: 'replied maybe',
+		declined: 'declined',
+		'needs-action': 'has not answered yet'
+	};
+
+	const replyLine = $derived.by(() => {
+		const who = reply
+			? `${reply.name ?? reply.email} ${REPLIED[reply.partstat] ?? 'replied'}`
+			: 'A guest replied';
+		if (!calendarStatus?.added) return who;
+		return `${who} · noted in ${calendarStatus.calendarName ?? 'your calendar'}`;
+	});
+
+	const kicker = $derived(
+		isReply ? 'Reply to your invitation' : isCancel ? 'Event cancelled' : 'Calendar invitation'
+	);
 
 	const monthDay = $derived.by(() => {
 		if (ev.start?.iso) {
@@ -154,7 +179,7 @@
 			<span class="d">{monthDay.d}</span>
 		</div>
 		<div class="evt-info">
-			<div class="evt-kicker"><Calendar size={13} />Calendar invitation</div>
+			<div class="evt-kicker"><Calendar size={13} />{kicker}</div>
 			<div class="evt-title">{ev.summary || 'Event invite'}</div>
 			<div class="evt-meta">
 				{#if dateLabel}
@@ -192,7 +217,26 @@
 		</div>
 	{/if}
 
-	{#if !isReply && !isCancel}
+	{#if isReply}
+		<div class="evt-cal-row">
+			<span class="evt-ack">
+				<CheckCircle size={15} />
+				{replyLine}
+				{#if calendarStatus?.added}
+					<a class="evt-change" href="/u/{slot}/calendar">Open</a>
+				{/if}
+			</span>
+		</div>
+	{:else if isCancel}
+		<div class="evt-cal-row">
+			<span class="evt-ack">
+				<X size={15} />
+				{applied === 'cancel'
+					? 'The organiser cancelled this event · removed from your calendar'
+					: 'The organiser cancelled this event'}
+			</span>
+		</div>
+	{:else}
 		<div class="evt-cal-row">
 			{#if calendarStatus?.added}
 				<span class="evt-ack">
@@ -208,6 +252,7 @@
 		</div>
 	{/if}
 
+	{#if !isReply && !isCancel}
 	<div class="evt-rsvp">
 		{#if rsvp}
 			<span class="evt-ack">
@@ -230,6 +275,7 @@
 			</div>
 		{/if}
 	</div>
+	{/if}
 
 	{#if err}
 		<div class="evt-err" role="alert">{err}</div>

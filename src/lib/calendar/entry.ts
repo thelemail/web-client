@@ -3,7 +3,7 @@ import type { Message } from '$lib/mail/data';
 import { itemFromInvitation, parseInvitation } from './ics/fromMail';
 import { myAddressList } from './invite';
 import type { CalendarItem, ItemKind, Partstat } from './model';
-import { applyCalendarEvents, applyFromMessageId } from './replies';
+import { applyCalendarEvents, applyFromMessageId, type AppliedChange } from './replies';
 import { calendarStore } from './store.svelte';
 
 export interface PendingFromMail {
@@ -91,9 +91,26 @@ export async function addFromMail(
 	return saved.item;
 }
 
-export async function observeMailEvents(events: CalendarEvent[], messageId: string): Promise<void> {
+export async function observeMailEvents(
+	events: CalendarEvent[],
+	messageId: string
+): Promise<AppliedChange[]> {
 	await calendarStore.ensureLoaded();
-	await applyCalendarEvents(events, messageId);
+	return applyCalendarEvents(events, messageId);
+}
+
+export interface ReplySummary {
+	email: string;
+	name?: string;
+	partstat: Partstat;
+}
+
+export function replySummary(ev: CalendarEvent): ReplySummary | null {
+	if (!ev.rawIcs) return null;
+	const inv = parseInvitation(ev.rawIcs, myAddressList());
+	const replying = inv?.attendees[0];
+	if (!replying) return null;
+	return { email: replying.email, name: replying.name, partstat: replying.partstat };
 }
 
 export async function observeNewMessage(messageId: string): Promise<void> {

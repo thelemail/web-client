@@ -5,7 +5,9 @@ import {
 	deleteCalendar as apiDeleteCalendar,
 	deleteCalendarItem as apiDeleteItem,
 	getCalendarItem,
+	listCalendarItemRevisions,
 	putCalendarItem,
+	restoreCalendarItemRevision,
 	putCalendarItemState,
 	updateCalendar,
 	type CalendarItemRow,
@@ -18,6 +20,7 @@ import { registerCalendarRealtime } from '$lib/realtime/calendarHook';
 import type { RealtimeHint } from '$lib/realtime/types';
 import { auth } from '$lib/stores/auth.svelte';
 import { accountSettings } from '$lib/stores/accountSettings.svelte';
+import { calendarKeys } from '$lib/stores/calendarKeys.svelte';
 import { dispatchSend } from '$lib/mail/sendDispatch';
 import { onCalendarMessage, postCalendarMessage } from './channel';
 import {
@@ -59,6 +62,14 @@ export interface CalendarView {
 	canManage: boolean;
 	rotationRequired: boolean;
 	unreadable: boolean;
+}
+
+export interface RevisionView {
+	rev: number;
+	createdAt: string;
+	deleted: boolean;
+	mine: boolean;
+	item: CalendarItem | null;
 }
 
 export interface LoadedItem {
@@ -110,6 +121,7 @@ export class CalendarStore {
 	#stopChannel: (() => void) | null = null;
 	#stopRealtime: (() => void) | null = null;
 	#pendingSync: Promise<void> | null = null;
+	#loadPromise: Promise<void> | null = null;
 	#messageListeners = new Set<MessageListener>();
 	#syncCoalesced = coalesce(() => void this.syncDelta(), REALTIME_COALESCE_MS);
 
@@ -219,13 +231,25 @@ export class CalendarStore {
 		return () => this.#messageListeners.delete(listener);
 	}
 
-	async ensureLoaded(): Promise<void> {
-		if (this.loaded || this.loading) return;
+	ensureLoaded(): Promise<void> {
+		if (this.loaded) return Promise.resolve();
+		if (this.#loadPromise) return this.#loadPromise;
+		if (auth.canEnterApp && auth.accountId && auth.accountId !== this.#accountId) {
+			this.setAccount(auth.accountId);
+		}
 		const accountId = this.#accountId;
-		if (!accountId) return;
+		if (!accountId) return Promise.resolve();
+		this.#loadPromise = this.#load(accountId).finally(() => {
+			this.#loadPromise = null;
+		});
+		return this.#loadPromise;
+	}
+
+	async #load(accountId: string): Promise<void> {
 		this.loading = true;
 		this.loadError = null;
 		try {
+			await calendarKeys.ready(accountId);
 			const sync = await this.#db.sync(accountId);
 			this.#cursor = sync?.cursor ?? null;
 			this.lastSyncAt = sync?.lastSyncAt ?? null;
@@ -818,6 +842,37 @@ export class CalendarStore {
 
 	async takeTheirs(seq: number): Promise<void> {
 		await this.discardOp(seq);
+	}
+
+	async listRevisions(itemId: string): Promise<RevisionView[]> {
+		const accountId = this.#accountId;
+		const entry = this.items.get(itemId);
+		if (!accountId || !entry) return [];
+		const { revisions } = await listCalendarItemRevisions(entry.item.calendarId, itemId);
+		const out: RevisionView[] = [];
+		for (const r of revisions) {
+			let item: CalendarItem | null = null;
+			try {
+				item = parseItem(await openText(accountId, r.sealed, r.keyFingerprint));
+			} catch {
+				item = null;
+			}
+			out.push({
+				rev: r.rev,
+				createdAt: r.createdAt,
+				deleted: r.deleted,
+				mine: r.updatedById === accountId,
+				item
+			});
+		}
+		return out;
+	}
+
+	async restoreRevision(itemId: string, rev: number): Promise<void> {
+		const entry = this.items.get(itemId);
+		if (!entry) return;
+		await restoreCalendarItemRevision(entry.item.calendarId, itemId, rev, entry.rev);
+		await this.#reloadItem(entry.item.calendarId, itemId);
 	}
 
 	async #reloadItem(calendarId: string, itemId: string): Promise<void> {
