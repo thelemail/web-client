@@ -13,6 +13,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Mail from '@lucide/svelte/icons/mail';
+	import { Button } from '$lib/components/ui/button';
 
 	let { data } = $props();
 
@@ -181,9 +182,9 @@
 						The difference is prorated on your next invoice.
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<a class="btn btn-primary btn-block" href={`/u/${slot}/mail/inbox`}>
+						<Button variant="primary" size="lg" block href={`/u/${slot}/mail/inbox`}>
 							<Mail size={17} strokeWidth={1.75} />Open your mailbox
-						</a>
+						</Button>
 					</div>
 				</div>
 				{@render signOutFoot()}
@@ -194,9 +195,9 @@
 					<h1>You&rsquo;re all set</h1>
 					<p>This workspace has an active plan. Only the workspace owner can change it.</p>
 					<div class="actions" style="margin-top:24px">
-						<a class="btn btn-primary btn-block" href={`/u/${slot}/mail/inbox`}>
+						<Button variant="primary" size="lg" block href={`/u/${slot}/mail/inbox`}>
 							<Mail size={17} strokeWidth={1.75} />Open your mailbox
-						</a>
+						</Button>
 					</div>
 				</div>
 				{@render signOutFoot()}
@@ -228,9 +229,9 @@
 						method from the billing portal to keep your mailbox active.
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<a class="btn btn-primary btn-block" href={`/u/${slot}/settings/account`}>
+						<Button variant="primary" size="lg" block href={`/u/${slot}/settings/account`}>
 							Go to Settings &rarr; Manage billing
-						</a>
+						</Button>
 					</div>
 				</div>
 				{@render signOutFoot()}

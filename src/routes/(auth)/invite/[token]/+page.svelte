@@ -18,6 +18,7 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	const STR_LABELS = ['', 'weak', 'fair', 'good', 'strong'];
 
@@ -181,7 +182,7 @@
 			<p>{previewError ?? 'The invitation may have expired, been revoked, or already been used.'}</p>
 		</div>
 		<div class="actions" style="margin-top:24px">
-			<button class="btn btn-primary btn-block" onclick={() => goto('/login')}>Go to sign in</button>
+			<Button variant="primary" size="lg" block onclick={() => goto('/login')}>Go to sign in</Button>
 		</div>
 	</div>
 {:else if step === 0}
@@ -238,9 +239,9 @@
 				<span class="hint">Shown to people you correspond with.</span>
 			</div>
 			<div class="actions">
-				<button class="btn btn-primary btn-block" disabled={!nameReady} onclick={() => (step = 1)}>
+				<Button variant="primary" size="lg" block disabled={!nameReady} onclick={() => (step = 1)}>
 					Continue<ArrowRight size={17} strokeWidth={1.75} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<p class="switch">
@@ -319,21 +320,12 @@
 			</label>
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						disabled={submitting}
-						onclick={() => (step = 0)}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" disabled={submitting} onclick={() => (step = 0)}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
-					</button>
-					<button
-						class="btn btn-primary"
-						disabled={!passwordReady || !accepted || submitting}
-						onclick={submitRegistration}
-					>
+					</Button>
+					<Button variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting} onclick={submitRegistration}>
 						{submitting ? 'Setting up your vault…' : 'Create account'}
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>
@@ -353,12 +345,9 @@
 				<span class="vbadge"><Check size={13} strokeWidth={2.5} /></span>
 			</div>
 			<div class="actions" style="margin-top:24px">
-				<button
-					class="btn btn-primary btn-block"
-					onclick={() => goto(landingSlot !== null ? `/u/${landingSlot}/mail/inbox` : '/login')}
-				>
+				<Button variant="primary" size="lg" block onclick={() => goto(landingSlot !== null ? `/u/${landingSlot}/mail/inbox` : '/login')}>
 					<Mail size={17} strokeWidth={1.75} />Enter Thelemail
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

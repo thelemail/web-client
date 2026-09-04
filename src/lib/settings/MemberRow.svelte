@@ -6,6 +6,7 @@
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import type { AccountMember } from './types';
+	import { Button } from '$lib/components/ui/button';
 
 	export type MemberRowAction =
 		| { kind: 'promote' }
@@ -155,12 +156,12 @@
 				{/if}
 			{:else if mode === 'confirm-remove'}
 				<span class="mbr-confirm">Remove {m.name}?</span>
-				<button class="btn btn-secondary btn-sm" onclick={cancel} disabled={busy}>Cancel</button>
-				<button class="btn btn-danger btn-sm" onclick={confirmRemove} disabled={busy}>Remove</button>
+				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>Cancel</Button>
+				<Button variant="dangerSolid" size="sm" onclick={confirmRemove} disabled={busy}>Remove</Button>
 			{:else if mode === 'confirm-revoke'}
 				<span class="mbr-confirm">Revoke invitation for {m.addr}?</span>
-				<button class="btn btn-secondary btn-sm" onclick={cancel} disabled={busy}>Cancel</button>
-				<button class="btn btn-danger btn-sm" onclick={confirmRevoke} disabled={busy}>Revoke</button>
+				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>Cancel</Button>
+				<Button variant="dangerSolid" size="sm" onclick={confirmRevoke} disabled={busy}>Revoke</Button>
 			{/if}
 		</div>
 	{/if}
@@ -227,13 +228,5 @@
 	.mbr-confirm {
 		font-size: 13px;
 		color: var(--ink-700);
-	}
-	.btn-danger {
-		background: var(--danger-600, #b91c1c);
-		color: white;
-		border: 1px solid var(--danger-700, #991b1b);
-	}
-	.btn-danger:disabled {
-		opacity: 0.6;
 	}
 </style>

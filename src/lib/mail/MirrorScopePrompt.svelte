@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { platform } from '$platform';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		accountId: string;
@@ -51,12 +52,12 @@
 				connection. It is stored encrypted, and only this Mac can open it.
 			</p>
 			<div class="msp-actions">
-				<button type="button" class="msp-btn primary" disabled={busy} onclick={() => choose(90)}>
+				<Button variant="primary" disabled={busy} onclick={() => choose(90)}>
 					Last 90 days
-				</button>
-				<button type="button" class="msp-btn ghost" disabled={busy} onclick={() => choose(null)}>
+				</Button>
+				<Button variant="secondary" disabled={busy} onclick={() => choose(null)}>
 					All mail
-				</button>
+				</Button>
 			</div>
 			<p class="msp-note">You can change this later in Settings.</p>
 		</div>
@@ -107,40 +108,6 @@
 		display: flex;
 		gap: 10px;
 		margin-top: 20px;
-	}
-
-	.msp-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		font-family: inherit;
-		font-size: 13.5px;
-		font-weight: 600;
-		border-radius: var(--radius-md);
-		padding: 9px 15px;
-		cursor: pointer;
-		border: 1px solid transparent;
-		transition: background var(--dur-fast);
-	}
-
-	.msp-btn:disabled {
-		opacity: 0.6;
-		cursor: default;
-	}
-
-	.msp-btn.primary {
-		background: var(--primary);
-		color: var(--primary-fg);
-	}
-
-	.msp-btn.ghost {
-		background: var(--surface);
-		color: var(--fg);
-		border-color: var(--border-strong);
-	}
-
-	.msp-btn.ghost:hover:not(:disabled) {
-		background: var(--paper-100);
 	}
 
 	.msp-note {

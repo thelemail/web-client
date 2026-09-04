@@ -26,6 +26,7 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import UpgradeNudge from '$lib/settings/UpgradeNudge.svelte';
 	import type { CustomDomain } from '$lib/api/customDomains';
+	import { Button } from '$lib/components/ui/button';
 
 	const POLL_MS = 60000;
 
@@ -137,11 +138,11 @@
 						</span>
 						<span class="cd-acts">
 							{#if live}
-								<a class="btn btn-secondary" href={setupHref(d)}>Review setup</a>
+								<Button variant="secondary" href={setupHref(d)}>Review setup</Button>
 							{:else}
-								<a class="btn btn-primary" href={setupHref(d)}>
+								<Button variant="primary" href={setupHref(d)}>
 									Continue setup<ArrowRight size={15} />
-								</a>
+								</Button>
 							{/if}
 							{#if manage}
 								<span class="cd-menu-wrap">
@@ -181,7 +182,7 @@
 				desc="Every paid plan includes at least one custom domain with unlimited addresses on it."
 			/>
 		{:else}
-			<a class="btn btn-primary" href={`${base}/new`}><Plus size={15} />Add a domain</a>
+			<Button variant="primary" href={`${base}/new`}><Plus size={15} />Add a domain</Button>
 		{/if}
 	</div>
 

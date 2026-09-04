@@ -2,6 +2,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import './confirm-dialog.css';
 	import type { Component, Snippet } from 'svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		icon?: Component;
@@ -84,17 +85,16 @@
 		{/if}
 
 		<div class="cfd-actions">
-			<button type="button" class="cfd-btn ghost" disabled={busy} onclick={close}>
+			<Button variant="secondary" disabled={busy} onclick={close}>
 				{cancelLabel}
-			</button>
-			<button
-				type="button"
-				class="cfd-btn {tone === 'danger' ? 'danger' : 'primary'}"
+			</Button>
+			<Button
+				variant={tone === 'danger' ? 'danger' : 'primary'}
 				disabled={busy || disabled}
 				onclick={onConfirm}
 			>
 				{busy ? 'Working…' : confirmLabel}
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>

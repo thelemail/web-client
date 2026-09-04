@@ -21,6 +21,7 @@
 	import { PRODUCTS, FREE_PLAN, eur } from '$lib/auth/plans';
 	import { planLabel, freeNote } from '../plan-display';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -147,28 +148,23 @@
 			<div class="plan-acts">
 				{#if isOwner}
 					{#if isFree}
-						<button type="button" class="btn btn-primary btn-sm" onclick={choosePlan}>
+						<Button variant="primary" size="sm" onclick={choosePlan}>
 							Upgrade
-						</button>
+						</Button>
 					{:else if sub && (sub.status === 'active' || sub.status === 'past_due')}
 						{#if sub.status === 'active'}
-							<button type="button" class="btn btn-ghost btn-sm" onclick={choosePlan}>
+							<Button variant="ghost" size="sm" onclick={choosePlan}>
 								Change plan
-							</button>
+							</Button>
 						{/if}
-						<button
-							type="button"
-							class="btn btn-ghost btn-sm"
-							disabled={portalBusy}
-							onclick={openPortal}
-						>
+						<Button variant="ghost" size="sm" disabled={portalBusy} onclick={openPortal}>
 							<ExternalLink size={14} />
 							{portalBusy ? 'Opening…' : 'Manage billing'}
-						</button>
+						</Button>
 					{:else}
-						<button type="button" class="btn btn-primary btn-sm" onclick={choosePlan}>
+						<Button variant="primary" size="sm" onclick={choosePlan}>
 							Choose a plan
-						</button>
+						</Button>
 					{/if}
 				{/if}
 			</div>
@@ -196,9 +192,9 @@
 		t="Delete this account permanently"
 		d="Deactivates the account now and erases every mailbox, address, and message after a 30-day grace period. Once purged, encrypted data is gone for good. Export first."
 	>
-		<button type="button" class="btn btn-danger btn-sm" onclick={() => launch('delete')}>
+		<Button variant="danger" size="sm" onclick={() => launch('delete')}>
 			<Trash2 size={14} />Delete account…
-		</button>
+		</Button>
 	</Row>
 </div>
 

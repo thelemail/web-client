@@ -8,6 +8,7 @@
 	import Usb from '@lucide/svelte/icons/usb';
 	import type { TwoFactorMethod } from '$lib/api/types';
 	import { webauthnSupported } from '$lib/auth/webauthn';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		email: string;
@@ -155,9 +156,9 @@
 		{/each}
 	</div>
 	<div class="actions" style="margin-top:18px">
-		<button class="btn btn-ghost btn-block" onclick={() => (view = 'challenge')}>
+		<Button variant="ghost" size="lg" block onclick={() => (view = 'challenge')}>
 			<ArrowLeft size={17} strokeWidth={1.75} />Back to {META[method].label.toLowerCase()}
-		</button>
+		</Button>
 	</div>
 {:else}
 	{@render top?.()}
@@ -204,17 +205,13 @@
 				{/if}
 			</div>
 			<div class="actions">
-				<button
-					class="btn btn-primary btn-block"
-					disabled={code.length < 6 || busy}
-					onclick={() => verifyCode()}
-				>
+				<Button variant="primary" size="lg" block disabled={code.length < 6 || busy} onclick={() => verifyCode()}>
 					{#if busy}
 						<span class="spinner"></span>Checking&hellip;
 					{:else}
 						Verify code
 					{/if}
-				</button>
+				</Button>
 			</div>
 		{:else if method === 'key'}
 			<div class="tfa-wait">
@@ -261,17 +258,13 @@
 				{/if}
 			</div>
 			<div class="actions">
-				<button
-					class="btn btn-primary btn-block"
-					disabled={bcode.trim().length < 8 || busy}
-					onclick={verifyBackup}
-				>
+				<Button variant="primary" size="lg" block disabled={bcode.trim().length < 8 || busy} onclick={verifyBackup}>
 					{#if busy}
 						<span class="spinner"></span>Checking&hellip;
 					{:else}
 						Use backup code
 					{/if}
-				</button>
+				</Button>
 			</div>
 		{/if}
 	</div>

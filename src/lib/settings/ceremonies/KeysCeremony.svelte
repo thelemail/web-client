@@ -8,6 +8,7 @@
 	import ProgressRun from '../ProgressRun.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import type { CeremonyKind } from '../data';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		onClose: () => void;
@@ -71,19 +72,15 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<button type="button" class="btn btn-ghost" onclick={onClose}>Cancel</button>
-			<button type="button" class="btn btn-primary" onclick={() => (step = 1)}>
+			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="primary" onclick={() => (step = 1)}>
 				<RefreshCw size={15} />Rotate key
-			</button>
+			</Button>
 		{:else if step === 2}
-			<button
-				type="button"
-				class="btn btn-primary"
-				onclick={() => {
+			<Button variant="primary" onclick={() => {
 					onComplete('keys');
 					onClose();
-				}}>Done</button
-			>
+				}}>Done</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

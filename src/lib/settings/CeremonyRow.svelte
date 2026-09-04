@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		icon: Component;
@@ -34,11 +35,7 @@
 		</div>
 		<div class="cr-desc">{desc}</div>
 	</div>
-	<button
-		type="button"
-		class={'btn btn-sm ' + (tone === 'danger' ? 'btn-danger' : 'btn-secondary')}
-		onclick={onLaunch}
-	>
+	<Button variant={tone === 'danger' ? 'danger' : 'secondary'} size="sm" onclick={onLaunch}>
 		{cta}<ArrowRight size={14} />
-	</button>
+	</Button>
 </div>

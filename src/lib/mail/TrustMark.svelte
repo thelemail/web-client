@@ -374,6 +374,12 @@
 		outline: none;
 	}
 
+	.tpop-glyph {
+		flex: 0 0 auto;
+		display: flex;
+		margin-top: 1px;
+	}
+
 	.tpop-txt {
 		flex: 1 1 auto;
 		min-width: 0;

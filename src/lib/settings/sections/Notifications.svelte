@@ -8,6 +8,7 @@
 	import type { SettingsState } from '../data';
 	import type { NotificationStatus } from '$lib/platform/types';
 	import { platform } from '$platform';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		s: SettingsState;
@@ -77,17 +78,13 @@
 		<CardHead title="New mail" />
 		<Row t="macOS notifications" descSnippet={desc}>
 			<div class="ntf-actions">
-				<button type="button" class="btn btn-ghost btn-sm" onclick={check} disabled={checking}>
+				<Button variant="ghost" size="sm" onclick={check} disabled={checking}>
 					<RefreshCw />Check again
-				</button>
+				</Button>
 				{#if canOpenSystemSettings}
-					<button
-						type="button"
-						class="btn btn-secondary btn-sm"
-						onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}
-					>
+					<Button variant="secondary" size="sm" onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}>
 						<ExternalLink />Open System Settings
-					</button>
+					</Button>
 				{/if}
 			</div>
 		</Row>

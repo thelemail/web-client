@@ -30,6 +30,7 @@
 	import { ApiCallError } from '$lib/api/types';
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const acquisitionSource = page.url.searchParams.get('src') ?? 'register';
@@ -352,13 +353,9 @@
 				{/if}
 			</div>
 			<div class="actions">
-				<button
-					class="btn btn-primary btn-block"
-					disabled={!addressReady}
-					onclick={() => (step = 1)}
-				>
+				<Button variant="primary" size="lg" block disabled={!addressReady} onclick={() => (step = 1)}>
 					Continue<ArrowRight size={17} strokeWidth={1.75} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<p class="switch">
@@ -409,19 +406,10 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						disabled={submitting}
-						onclick={() => (step = 0)}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" disabled={submitting} onclick={() => (step = 0)}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
-					</button>
-					<button
-						class="btn btn-primary"
-						disabled={!passwordReady || submitting}
-						onclick={continueFromPassword}
-					>
+					</Button>
+					<Button variant="primary" size="lg" disabled={!passwordReady || submitting} onclick={continueFromPassword}>
 						{#if submitting}
 							Creating your mailbox…
 						{:else if paid}
@@ -429,24 +417,16 @@
 						{:else}
 							Create my mailbox<ArrowRight size={17} strokeWidth={1.75} />
 						{/if}
-					</button>
+					</Button>
 				</div>
 				{#if paid}
-					<button
-						class="btn btn-ghost btn-block"
-						disabled={submitting}
-						onclick={chooseFree}
-					>
+					<Button variant="ghost" size="lg" block disabled={submitting} onclick={chooseFree}>
 						Start with the free plan instead
-					</button>
+					</Button>
 				{:else}
-					<button
-						class="btn btn-ghost btn-block"
-						disabled={!passwordReady || submitting}
-						onclick={choosePaid}
-					>
+					<Button variant="ghost" size="lg" block disabled={!passwordReady || submitting} onclick={choosePaid}>
 						Choose a paid plan instead
-					</button>
+					</Button>
 				{/if}
 			</div>
 		</div>
@@ -503,12 +483,9 @@
 				</p>
 			{/if}
 			<div class="actions" style="margin-top:24px">
-				<button
-					class="btn btn-primary btn-block"
-					onclick={() => goto(addMode ? '/login?addAccount=1' : '/login')}
-				>
+				<Button variant="primary" size="lg" block onclick={() => goto(addMode ? '/login?addAccount=1' : '/login')}>
 					<Mail size={17} strokeWidth={1.75} />Sign in
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

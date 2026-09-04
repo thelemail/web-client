@@ -7,6 +7,7 @@
 	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$lib/api/types';
 	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$lib/auth/webauthn';
 	import { auth } from '$lib/stores/auth.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		title: string;
@@ -132,9 +133,9 @@
 			</button>
 		{/if}
 		{#if hasWebauthn}
-			<button type="button" class="btn btn-secondary btn-sm" disabled={busy} onclick={submitWebauthn}>
+			<Button variant="secondary" size="sm" disabled={busy} onclick={submitWebauthn}>
 				<Fingerprint size={14} />Use security key or passkey
-			</button>
+			</Button>
 		{/if}
 		{#if error}
 			<span class="errtext"><CircleAlert size={13} /><span>{error}</span></span>
@@ -142,10 +143,9 @@
 	</div>
 
 	{#snippet footer()}
-		<button type="button" class="btn btn-ghost" disabled={busy} onclick={onClose}>Cancel</button>
-		<button
-			type="button"
-			class={'btn ' + (danger ? 'btn-danger' : 'btn-primary')}
+		<Button variant="ghost" disabled={busy} onclick={onClose}>Cancel</Button>
+		<Button
+			variant={danger ? 'danger' : 'primary'}
 			disabled={busy || !codeReady}
 			onclick={submitCode}
 		>
@@ -154,6 +154,6 @@
 			{:else}
 				{confirmLabel}
 			{/if}
-		</button>
+		</Button>
 	{/snippet}
 </CeremonyShell>

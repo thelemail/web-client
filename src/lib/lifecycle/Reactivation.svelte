@@ -27,6 +27,7 @@
 	import { eur, planTotal, selectionForCode, type BillingPeriod } from '$lib/auth/plans';
 	import { fmt } from './dates';
 	import type { LifecycleContext, ReactivationPlan } from './types';
+	import { Button } from '$lib/components/ui/button';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
@@ -234,16 +235,12 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						onclick={() => goto(`/u/${slot}/mail/inbox`)}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<ArrowLeft />
-					</button>
-					<button class="btn btn-primary" onclick={() => (step = 1)}>
+					</Button>
+					<Button variant="primary" size="lg" onclick={() => (step = 1)}>
 						Continue — {sel.name} · {eur(selPrice)}/{period}<ArrowRight />
-					</button>
+					</Button>
 				</div>
 			</div>
 			<p class="legal">
@@ -284,18 +281,13 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						onclick={() => (step = 0)}
-						disabled={busy}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = 0)} disabled={busy}>
 						<ArrowLeft />
-					</button>
-					<button class="btn btn-primary" disabled={busy} onclick={pay}>
+					</Button>
+					<Button variant="primary" size="lg" disabled={busy} onclick={pay}>
 						{#if busy}<span class="spinner"></span>Restoring…{:else}<RotateCcw />Pay {eur(selPrice)} &amp;
 							restore{/if}
-					</button>
+					</Button>
 				</div>
 			</div>
 			<p class="cardnote">
@@ -345,9 +337,9 @@
 				</li>
 			</ul>
 			<div class="actions" style="margin-top:22px">
-				<button class="btn btn-primary btn-block" onclick={enterMailbox}>
+				<Button variant="primary" size="lg" block onclick={enterMailbox}>
 					<Mail />Enter your mailbox
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

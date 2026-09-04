@@ -8,6 +8,7 @@
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import LogOut from '@lucide/svelte/icons/log-out';
+	import { Button } from '$lib/components/ui/button';
 
 	let { data } = $props();
 
@@ -87,13 +88,13 @@
 					</p>
 				{/if}
 				<div class="actions" style="margin-top:24px">
-					<button class="btn btn-primary btn-block" disabled={busy} onclick={keepAccount}>
+					<Button variant="primary" size="lg" block disabled={busy} onclick={keepAccount}>
 						<Undo2 size={17} strokeWidth={1.75} />
 						{busy ? 'Restoring your account…' : 'Cancel deletion and keep my account'}
-					</button>
-					<button class="btn btn-secondary btn-block" disabled={busy} onclick={signOut}>
+					</Button>
+					<Button variant="secondary" size="lg" block disabled={busy} onclick={signOut}>
 						<LogOut size={17} strokeWidth={1.75} />Sign out
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>

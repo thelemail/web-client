@@ -9,6 +9,7 @@
 	import Apple from '@lucide/svelte/icons/apple';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import type { LifecycleContext } from './types';
+	import { Button } from '$lib/components/ui/button';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
@@ -44,9 +45,9 @@
 		<div class="lc-cta" style="margin-top:6px">
 			{#each DOWNLOADS as d (d.os)}
 				{@const Icon = d.Icon}
-				<a class="btn btn-secondary" href={d.href} target="_blank" rel="noreferrer noopener">
+				<Button variant="secondary" size="lg" href={d.href} target="_blank" rel="noreferrer noopener">
 					<Icon size={17} />{d.os}
-				</a>
+				</Button>
 			{/each}
 		</div>
 

@@ -20,6 +20,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { twofactor } from '$lib/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		onClose: () => void;
@@ -352,14 +353,14 @@
 					{/if}
 				</div>
 				{#if !confirmed}
-					<button type="button" class="btn btn-secondary" disabled={busy} onclick={registerKey}>
+					<Button variant="secondary" disabled={busy} onclick={registerKey}>
 						{#if isKey}<Pointer size={15} />{:else}<ScanFace size={15} />{/if}
 						{#if busy}
 							Waiting&hellip;
 						{:else}
 							{isKey ? 'Touch the key' : 'Use Touch ID'}
 						{/if}
-					</button>
+					</Button>
 				{/if}
 				{#if setupError}
 					<span class="errtext"><CircleAlert size={13} /><span>{setupError}</span></span>
@@ -381,12 +382,12 @@
 				{/each}
 			</div>
 			<div class="phrase-acts">
-				<button type="button" class="btn btn-secondary btn-sm" onclick={copyCodes}>
+				<Button variant="secondary" size="sm" onclick={copyCodes}>
 					<Copy size={14} />Copy
-				</button>
-				<button type="button" class="btn btn-secondary btn-sm" onclick={downloadCodes}>
+				</Button>
+				<Button variant="secondary" size="sm" onclick={downloadCodes}>
 					<Download size={14} />Download
-				</button>
+				</Button>
 				{#if saved}<span class="phrase-saved"><Check size={13} />Saved</span>{/if}
 			</div>
 		</div>
@@ -404,45 +405,35 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<button type="button" class="btn btn-ghost" onclick={onClose}>Cancel</button>
-			<button type="button" class="btn btn-primary" disabled={busy} onclick={beginSetup}>
+			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="primary" disabled={busy} onclick={beginSetup}>
 				{#if busy}
 					Preparing&hellip;
 				{:else}
 					Continue<ArrowRight size={15} />
 				{/if}
-			</button>
+			</Button>
 		{:else if step === 1}
-			<button
-				type="button"
-				class="btn btn-ghost"
-				disabled={busy}
-				onclick={() => (initialMethod ? onClose() : (step = 0))}
-			>
+			<Button variant="ghost" disabled={busy} onclick={() => (initialMethod ? onClose() : (step = 0))}>
 				{#if initialMethod}
 					Cancel
 				{:else}
 					<ArrowLeft size={15} />Back
 				{/if}
-			</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={busy || (method === 'totp' ? code.length < 6 : !confirmed)}
-				onclick={advanceFromVerify}
-			>
+			</Button>
+			<Button variant="primary" disabled={busy || (method === 'totp' ? code.length < 6 : !confirmed)} onclick={advanceFromVerify}>
 				{#if busy}
 					Verifying&hellip;
 				{:else}
 					Verify<ArrowRight size={15} />
 				{/if}
-			</button>
+			</Button>
 		{:else if step === 2}
-			<button type="button" class="btn btn-primary" disabled={!saved} onclick={() => (step = 3)}>
+			<Button variant="primary" disabled={!saved} onclick={() => (step = 3)}>
 				I’ve saved them<Check size={15} />
-			</button>
+			</Button>
 		{:else}
-			<button type="button" class="btn btn-primary" onclick={finish}>Done</button>
+			<Button variant="primary" onclick={finish}>Done</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

@@ -36,6 +36,7 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		onClose: () => void;
@@ -500,14 +501,9 @@
 				</button>
 			{/if}
 			{#if hasWebauthn}
-				<button
-					type="button"
-					class="btn btn-secondary btn-sm"
-					disabled={twoFaBusy}
-					onclick={submitTwoFaWebauthn}
-				>
+				<Button variant="secondary" size="sm" disabled={twoFaBusy} onclick={submitTwoFaWebauthn}>
 					<Fingerprint size={14} />Use security key or passkey
-				</button>
+				</Button>
 			{/if}
 			{#if twoFaError}
 				<span class="errtext"><CircleAlert size={13} /><span>{twoFaError}</span></span>
@@ -596,56 +592,41 @@
 
 	{#snippet footer()}
 		{#if phase === 'verify'}
-			<button type="button" class="btn btn-ghost" onclick={close}>Cancel</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={cur.length === 0 || verifying}
-				onclick={() => void verifyCurrent()}
-			>
+			<Button variant="ghost" onclick={close}>Cancel</Button>
+			<Button variant="primary" disabled={cur.length === 0 || verifying} onclick={() => void verifyCurrent()}>
 				{#if verifying}
 					Checking…
 				{:else}
 					Continue<ArrowRight size={15} />
 				{/if}
-			</button>
+			</Button>
 		{:else if phase === 'twofa'}
-			<button type="button" class="btn btn-ghost" disabled={twoFaBusy} onclick={restart}>
+			<Button variant="ghost" disabled={twoFaBusy} onclick={restart}>
 				Start over
-			</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={twoFaBusy || !twoFaCodeReady}
-				onclick={submitTwoFaCode}
-			>
+			</Button>
+			<Button variant="primary" disabled={twoFaBusy || !twoFaCodeReady} onclick={submitTwoFaCode}>
 				{#if twoFaBusy}
 					Verifying…
 				{:else}
 					Verify<ArrowRight size={15} />
 				{/if}
-			</button>
+			</Button>
 		{:else if phase === 'newpw'}
-			<button type="button" class="btn btn-ghost" onclick={close}>Cancel</button>
-			<button
-				type="button"
-				class="btn btn-primary"
-				disabled={!pwReady}
-				onclick={() => void changePassword()}
-			>
+			<Button variant="ghost" onclick={close}>Cancel</Button>
+			<Button variant="primary" disabled={!pwReady} onclick={() => void changePassword()}>
 				Change password<ArrowRight size={15} />
-			</button>
+			</Button>
 		{:else if phase === 'run'}
 			{#if runError}
-				<button type="button" class="btn btn-ghost" onclick={restart}>Start over</button>
+				<Button variant="ghost" onclick={restart}>Start over</Button>
 				{#if runRetryable}
-					<button type="button" class="btn btn-primary" onclick={() => void changePassword()}>
+					<Button variant="primary" onclick={() => void changePassword()}>
 						Try again
-					</button>
+					</Button>
 				{/if}
 			{/if}
 		{:else if phase === 'done'}
-			<button type="button" class="btn btn-primary" onclick={finish}>Done</button>
+			<Button variant="primary" onclick={finish}>Done</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

@@ -3,6 +3,7 @@
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Send from '@lucide/svelte/icons/send';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Recipient {
 		name: string;
@@ -97,10 +98,10 @@
 		{/if}
 
 		<div class="tofu-actions">
-			<button type="button" class="tofu-btn ghost" onclick={onCancel}>Cancel</button>
-			<button type="button" class="tofu-btn caution" onclick={onSendAnyway}>
+			<Button variant="secondary" onclick={onCancel}>Cancel</Button>
+			<Button variant="caution" onclick={onSendAnyway}>
 				<Send size={15} />Send anyway
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>
