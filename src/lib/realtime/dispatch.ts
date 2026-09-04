@@ -7,6 +7,7 @@ import { signatures } from '$lib/stores/signatures.svelte';
 import { accountSettings } from '$lib/stores/accountSettings.svelte';
 import { auth } from '$lib/stores/auth.svelte';
 import { coalesce } from './coalesce';
+import { notifyCalendarHint, notifyCalendarMessage } from './calendarHook';
 import type { RealtimeHint } from './types';
 
 const COALESCE_WINDOW_MS = 750;
@@ -42,6 +43,7 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) {
 				mailbox.applyRealtime(hint);
 				refreshCountsCoalesced();
+				if (hint.kind === 'message.created') notifyCalendarMessage(hint);
 			} else {
 				void unread.refresh(hint.accountId);
 			}
@@ -72,6 +74,10 @@ export function applyHint(hint: RealtimeHint): void {
 		case 'lifecycle':
 		case 'subscription':
 			void auth.loadProfile(hint.accountId);
+			return;
+		case 'calendar':
+		case 'calendar_item':
+			if (isActive) notifyCalendarHint(hint);
 			return;
 		default:
 			return;

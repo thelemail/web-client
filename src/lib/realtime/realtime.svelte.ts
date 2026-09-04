@@ -5,6 +5,7 @@ import { unread } from '$lib/stores/unread.svelte';
 import { drafts } from '$lib/stores/drafts.svelte';
 import { scheduled } from '$lib/stores/scheduled.svelte';
 import { applyHint } from './dispatch';
+import { notifyCalendarResync } from './calendarHook';
 import { RealtimeConnection } from './connection';
 import { electLeader, type LeaderHandle } from './leader';
 import { openRealtimeChannel, type RealtimeChannel } from './channel';
@@ -144,6 +145,7 @@ class RealtimeStore {
 			void scheduled.refresh();
 		}
 		void mailbox.refreshCounts();
+		notifyCalendarResync(full);
 	}
 
 	#setState(id: string, state: ConnectionState): void {

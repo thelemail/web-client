@@ -39,11 +39,30 @@ const APPEARANCE_DEFAULTS: AppearanceSettings = {
 	density: 'comfortable'
 };
 
+export type CalendarPrivacyDefault = 'private' | 'busy' | 'shared';
+
+export interface CalendarSettings {
+	hidden: string[];
+	defaultCalendarId: string | null;
+	defaultPrivacy: CalendarPrivacyDefault;
+	weekStartsOn: 0 | 1;
+	startHour: number;
+}
+
+const CALENDAR_DEFAULTS: CalendarSettings = {
+	hidden: [],
+	defaultCalendarId: null,
+	defaultPrivacy: 'busy',
+	weekStartsOn: 1,
+	startHour: 6
+};
+
 class AccountSettingsStore {
 	hydrated = $state(false);
 	readingOpenMessage = $state<OpenMessageSettings>({ ...DEFAULTS });
 	privacy = $state<PrivacySettings>({ ...PRIVACY_DEFAULTS });
 	appearance = $state<AppearanceSettings>({ ...APPEARANCE_DEFAULTS });
+	calendar = $state<CalendarSettings>({ ...CALENDAR_DEFAULTS });
 	#accountId: string | null = null;
 
 	setAccount(accountId: string | null): void {
@@ -53,6 +72,7 @@ class AccountSettingsStore {
 		this.readingOpenMessage = { ...DEFAULTS };
 		this.privacy = { ...PRIVACY_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
+		this.calendar = { ...CALENDAR_DEFAULTS };
 		locale.reset();
 	}
 
@@ -114,6 +134,27 @@ class AccountSettingsStore {
 				this.#applyAppearance();
 			}
 
+			const c = sections['calendar'];
+			if (c && typeof c === 'object') {
+				const next: CalendarSettings = { ...CALENDAR_DEFAULTS };
+				if (Array.isArray(c.hidden)) {
+					next.hidden = c.hidden.filter((x): x is string => typeof x === 'string');
+				}
+				if (typeof c.defaultCalendarId === 'string') next.defaultCalendarId = c.defaultCalendarId;
+				if (
+					c.defaultPrivacy === 'private' ||
+					c.defaultPrivacy === 'busy' ||
+					c.defaultPrivacy === 'shared'
+				) {
+					next.defaultPrivacy = c.defaultPrivacy;
+				}
+				if (c.weekStartsOn === 0 || c.weekStartsOn === 1) next.weekStartsOn = c.weekStartsOn;
+				if (typeof c.startHour === 'number' && c.startHour >= 0 && c.startHour <= 12) {
+					next.startHour = Math.round(c.startHour);
+				}
+				this.calendar = next;
+			}
+
 			const l = sections['localization'];
 			if (l && typeof l === 'object') {
 				const next: LocaleSettings = { ...locale.value };
@@ -125,8 +166,7 @@ class AccountSettingsStore {
 				}
 				locale.set(next);
 			}
-		} catch {
-		}
+		} catch {}
 		if (this.#accountId === acct) this.hydrated = true;
 	}
 
@@ -153,6 +193,17 @@ class AccountSettingsStore {
 		return putAccountSettingsSection('appearance', {
 			theme: next.theme,
 			density: next.density
+		});
+	}
+
+	persistCalendar(next: CalendarSettings): Promise<unknown> {
+		this.calendar = { ...next, hidden: [...next.hidden] };
+		return putAccountSettingsSection('calendar', {
+			hidden: next.hidden,
+			defaultCalendarId: next.defaultCalendarId,
+			defaultPrivacy: next.defaultPrivacy,
+			weekStartsOn: next.weekStartsOn,
+			startHour: next.startHour
 		});
 	}
 

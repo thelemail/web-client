@@ -236,7 +236,11 @@ export interface ListCalendarItemsOptions {
 export function listCalendarItems(
 	calendarId: string,
 	opts: ListCalendarItemsOptions = {}
-): Promise<{ items: CalendarItemRow[]; nextCursor?: string | null }> {
+): Promise<{
+	items: CalendarItemRow[];
+	states?: CalendarItemStateRow[];
+	nextCursor?: string | null;
+}> {
 	const params = new URLSearchParams();
 	if (opts.limit) params.set('limit', String(opts.limit));
 	if (opts.cursor) params.set('cursor', opts.cursor);
