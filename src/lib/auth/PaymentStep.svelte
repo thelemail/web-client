@@ -10,6 +10,7 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		handle,
@@ -106,21 +107,16 @@
 
 		<div class="actions">
 			<div class="btnrow">
-				<button
-					class="btn btn-secondary btn-back"
-					aria-label="Back"
-					disabled={submitting}
-					onclick={onBack}
-				>
+				<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" disabled={submitting} onclick={onBack}>
 					<ArrowLeft size={17} strokeWidth={1.75} />
-				</button>
-				<button class="btn btn-primary" disabled={submitting || !accepted} onclick={pay}>
+				</Button>
+				<Button variant="primary" size="lg" disabled={submitting || !accepted} onclick={pay}>
 					{#if submitting}
 						<span class="spinner"></span>Preparing secure checkout&hellip;
 					{:else}
 						<Lock size={17} strokeWidth={1.75} />Pay {eur(total)} &mdash; secure checkout
 					{/if}
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>

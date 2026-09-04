@@ -7,6 +7,7 @@
 	import { planLabelFor } from '$lib/auth/plans';
 	import Mail from '@lucide/svelte/icons/mail';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import { Button } from '$lib/components/ui/button';
 
 	let { data } = $props();
 
@@ -64,9 +65,9 @@
 							<b>{planLabel}</b>{/if}. Welcome to Thelemail.
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<button class="btn btn-primary btn-block" onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+						<Button variant="primary" size="lg" block onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 							<Mail size={17} strokeWidth={1.75} />Open your mailbox
-						</button>
+						</Button>
 					</div>
 				{:else if phase === 'slow'}
 					<span class="return-spinner" aria-hidden="true"></span>
@@ -76,9 +77,9 @@
 						payment provider confirms it. You can keep this page open or check back in a minute.
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<button class="btn btn-secondary btn-block" onclick={() => billing.refresh()}>
+						<Button variant="secondary" size="lg" block onclick={() => billing.refresh()}>
 							Check again
-						</button>
+						</Button>
 					</div>
 				{:else}
 					<span class="return-spinner" aria-hidden="true"></span>

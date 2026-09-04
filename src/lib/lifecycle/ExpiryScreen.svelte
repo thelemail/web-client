@@ -13,6 +13,7 @@
 	import { markExpiryScreenShown } from '$lib/api/lifecycle';
 	import { auth } from '$lib/stores/auth.svelte';
 	import type { LifecycleContext } from './types';
+	import { Button } from '$lib/components/ui/button';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
@@ -66,11 +67,11 @@
 			</li>
 		</ul>
 		<div class="lc-cta">
-			<button class="btn btn-primary" onclick={choosePlan}><Sparkles size={17} />Choose a plan</button>
-			<button class="btn btn-secondary" onclick={downloadData}>
+			<Button variant="primary" size="lg" onclick={choosePlan}><Sparkles size={17} />Choose a plan</Button>
+			<Button variant="secondary" size="lg" onclick={downloadData}>
 				<Download size={17} />Download my data
-			</button>
-			<button class="btn btn-ghost" onclick={continueReadOnly}>Continue in read-only</button>
+			</Button>
+			<Button variant="ghost" size="lg" onclick={continueReadOnly}>Continue in read-only</Button>
 		</div>
 		<p class="lc-cta-note">
 			You'll see this once. After today, a banner in your mailbox carries the same information.

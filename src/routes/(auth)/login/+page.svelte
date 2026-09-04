@@ -23,6 +23,7 @@
 	import { isWebauthnCancelled } from '$lib/auth/webauthn';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const targetSlot = $derived(page.url.searchParams.get('slot'));
@@ -179,26 +180,19 @@
 				<span class="hint">For example, the domain on your work address.</span>
 			</div>
 			<div class="actions">
-				<button
-					class="btn btn-primary btn-block"
-					disabled={!ssoDomain || busy}
-					onclick={ssoSubmit}
-				>
+				<Button variant="primary" size="lg" block disabled={!ssoDomain || busy} onclick={ssoSubmit}>
 					{#if busy}
 						<span class="spinner"></span>Redirecting&hellip;
 					{:else}
 						Continue with SSO<ArrowRight size={17} strokeWidth={1.75} />
 					{/if}
-				</button>
-				<button
-					class="btn btn-ghost btn-block"
-					onclick={() => {
+				</Button>
+				<Button variant="ghost" size="lg" block onclick={() => {
 						view = 'main';
 						busy = false;
-					}}
-				>
+					}}>
 					<ArrowLeft size={17} strokeWidth={1.75} />Back to sign in
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>
@@ -280,13 +274,13 @@
 				Remember me on this device
 			</label>
 			<div class="actions">
-				<button class="btn btn-primary btn-block" disabled={!canSignIn || busy} onclick={submit}>
+				<Button variant="primary" size="lg" block disabled={!canSignIn || busy} onclick={submit}>
 					{#if busy}
 						<span class="spinner"></span>Signing in&hellip;
 					{:else}
 						Sign in
 					{/if}
-				</button>
+				</Button>
 			</div>
 		</div>
 		<p class="switch">

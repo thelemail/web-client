@@ -23,6 +23,7 @@
 	import Minus from '@lucide/svelte/icons/minus';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import { Button } from '$lib/components/ui/button';
 
 	let {
 		sel = $bindable(),
@@ -227,11 +228,11 @@
 	<div class="actions">
 		<div class="btnrow">
 			{#if onBack}
-				<button class="btn btn-secondary btn-back" aria-label="Back" onclick={onBack}>
+				<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={onBack}>
 					<ArrowLeft size={17} strokeWidth={1.75} />
-				</button>
+				</Button>
 			{/if}
-			<button class="btn btn-primary" disabled={!tier || busy} onclick={onNext}>
+			<Button variant="primary" size="lg" disabled={!tier || busy} onclick={onNext}>
 				{#if busy}
 					<span class="spinner"></span>{busyLabel}
 				{:else if tier}
@@ -240,7 +241,7 @@
 				{:else}
 					Select a plan to continue
 				{/if}
-			</button>
+			</Button>
 		</div>
 	</div>
 	<p class="legal">

@@ -180,20 +180,6 @@
 	color: var(--fg-muted);
 	line-height: 1.4;
 }
-.auth .errtext {
-	font-size: 12px;
-	color: var(--danger-700);
-	display: flex;
-	align-items: flex-start;
-	gap: 6px;
-	line-height: 1.45;
-}
-.auth .errtext svg {
-	width: 13px;
-	height: 13px;
-	flex: 0 0 auto;
-	margin-top: 2px;
-}
 .auth .oktext {
 	font-size: 12px;
 	color: var(--success-700);
@@ -448,74 +434,6 @@
 	font-weight: 600;
 }
 
-.auth .btn {
-	font-family: var(--font-sans);
-	font-weight: 600;
-	font-size: 14.5px;
-	border-radius: var(--radius-control);
-	padding: 12px 16px;
-	border: 1px solid transparent;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 9px;
-	line-height: 1;
-	white-space: nowrap;
-	cursor: pointer;
-	color: inherit;
-	transition:
-		background var(--dur),
-		border-color var(--dur),
-		color var(--dur);
-}
-.auth .btn svg {
-	width: 17px;
-	height: 17px;
-	flex: 0 0 auto;
-}
-.auth .btn:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px var(--focus-ring);
-}
-.auth .btn-block {
-	width: 100%;
-}
-.auth .btn-primary {
-	background: var(--primary);
-	color: var(--primary-fg);
-	box-shadow: var(--shadow-xs);
-}
-.auth .btn-primary:hover {
-	background: var(--primary-hover);
-}
-.auth .btn-primary:active {
-	background: var(--primary-press);
-}
-.auth .btn-primary[disabled] {
-	background: var(--paper-100);
-	color: var(--fg-faint);
-	border-color: var(--border);
-	box-shadow: none;
-	cursor: not-allowed;
-	pointer-events: none;
-}
-.auth .btn-secondary {
-	background: var(--surface);
-	color: var(--fg);
-	border-color: var(--border-strong);
-	box-shadow: var(--shadow-xs);
-}
-.auth .btn-secondary:hover {
-	background: var(--paper-50);
-}
-.auth .btn-ghost {
-	background: transparent;
-	color: var(--ink-600);
-}
-.auth .btn-ghost:hover {
-	background: var(--paper-100);
-	color: var(--fg-strong);
-}
 .auth .spinner {
 	width: 15px;
 	height: 15px;
@@ -525,11 +443,6 @@
 	display: inline-block;
 	animation: spin 0.7s linear infinite;
 	opacity: 0.85;
-}
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
-	}
 }
 
 .auth .actions {
@@ -1530,18 +1443,6 @@
 	}
 }
 
-.auth .switch .linklike {
-	border: none;
-	background: none;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
-	color: var(--pine-700);
-	font-weight: 600;
-}
-.auth .switch .linklike:hover {
-	text-decoration: underline;
-}
 
 .auth .protorow {
 	display: flex;

@@ -13,6 +13,7 @@
 	import { cancelSubscription, resumeSubscription, changePlan } from '$lib/api/billing';
 	import { fmt } from './dates';
 	import type { LifecycleContext, RetentionOffer } from './types';
+	import { Button } from '$lib/components/ui/button';
 
 	let { ctx, offer = 'cheaper' }: { ctx: LifecycleContext; offer?: RetentionOffer } = $props();
 
@@ -120,16 +121,12 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						onclick={() => goto(`/u/${slot}/mail/inbox`)}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<ArrowLeft />
-					</button>
-					<button class="btn btn-primary" onclick={toConfirm}>
+					</Button>
+					<Button variant="primary" size="lg" onclick={toConfirm}>
 						Continue<ArrowRight />
-					</button>
+					</Button>
 				</div>
 			</div>
 			<p class="legal">
@@ -152,12 +149,12 @@
 				>
 			</div>
 			<div class="actions" style="margin-top:18px">
-				<button class="btn btn-primary btn-block" disabled={busy} onclick={acceptCheaper}>
+				<Button variant="primary" size="lg" block disabled={busy} onclick={acceptCheaper}>
 					<CircleArrowDown size={17} />Switch to Personal
-				</button>
-				<button class="btn btn-ghost btn-block" onclick={() => (bump(), (step = 2))}>
+				</Button>
+				<Button variant="ghost" size="lg" block onclick={() => (bump(), (step = 2))}>
 					No thanks, continue cancelling
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>
@@ -190,16 +187,12 @@
 			</ul>
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						onclick={() => (step = showOffer ? 1 : 0)}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = showOffer ? 1 : 0)}>
 						<ArrowLeft />
-					</button>
-					<button class="btn btn-danger" disabled={busy} onclick={confirmCancel}>
+					</Button>
+					<Button variant="dangerSolid" size="lg" disabled={busy} onclick={confirmCancel}>
 						<CircleX />Cancel my plan
-					</button>
+					</Button>
 				</div>
 			</div>
 			<p class="legal">Annual plans run to the period end, then follow the timeline above.</p>
@@ -221,16 +214,12 @@
 				>
 			</div>
 			<div class="actions" style="margin-top:22px">
-				<button class="btn btn-primary btn-block" onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+				<Button variant="primary" size="lg" block onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 					<ArrowLeft />Back to your mailbox
-				</button>
-				<button
-					class="btn btn-ghost btn-block"
-					disabled={busy}
-					onclick={() => keepPlan('Plan kept. Nothing changed.')}
-				>
+				</Button>
+				<Button variant="ghost" size="lg" block disabled={busy} onclick={() => keepPlan('Plan kept. Nothing changed.')}>
 					Actually, keep my plan
-				</button>
+				</Button>
 			</div>
 			<p class="lc-clickcount">Cancelled in {clicks} clicks · always this easy to find</p>
 		</div>

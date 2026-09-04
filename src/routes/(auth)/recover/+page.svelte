@@ -35,6 +35,7 @@
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import Mail from '@lucide/svelte/icons/mail';
+	import { Button } from '$lib/components/ui/button';
 
 	const REC_LABELS = ['Account', 'Phrase', 'Password'];
 	const REC_LABELS_2FA = ['Account', 'Phrase', '2FA', 'Password'];
@@ -320,9 +321,9 @@
 				</span>
 			</div>
 			<div class="actions">
-				<button class="btn btn-primary btn-block" disabled={!emailValid} onclick={continueAccount}>
+				<Button variant="primary" size="lg" block disabled={!emailValid} onclick={continueAccount}>
 					Continue<ArrowRight size={17} strokeWidth={1.75} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<p class="switch">Remembered it after all? <a href="/login">Back to sign in</a></p>
@@ -367,24 +368,16 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						onclick={() => (step = 'account')}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = 'account')}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
-					</button>
-					<button
-						class="btn btn-primary"
-						disabled={!allFilled || phraseStatus === 'checking'}
-						onclick={verifyPhrase}
-					>
+					</Button>
+					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
 						{#if phraseStatus === 'checking'}
 							<span class="spinner"></span>Checking the phrase&hellip;
 						{:else}
 							Unlock with phrase<ArrowRight size={17} strokeWidth={1.75} />
 						{/if}
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>
@@ -431,10 +424,10 @@
 			</div>
 		</div>
 		<div class="actions" style="margin-top:22px">
-			<button class="btn btn-secondary btn-block" onclick={() => (step = 'phrase')}>
+			<Button variant="secondary" size="lg" block onclick={() => (step = 'phrase')}>
 				<ArrowLeft size={17} strokeWidth={1.75} />I&rsquo;ll look for the phrase
-			</button>
-			<button class="btn btn-ghost btn-block" onclick={exitToLogin}>Back to sign in</button>
+			</Button>
+			<Button variant="ghost" size="lg" block onclick={exitToLogin}>Back to sign in</Button>
 		</div>
 	</div>
 {:else if step === 'twofa'}
@@ -507,16 +500,12 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<button
-						class="btn btn-secondary btn-back"
-						aria-label="Back"
-						onclick={() => (step = 'phrase')}
-					>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = 'phrase')}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
-					</button>
-					<button class="btn btn-primary" disabled={!passwordReady} onclick={startRekey}>
+					</Button>
+					<Button variant="primary" size="lg" disabled={!passwordReady} onclick={startRekey}>
 						Reset password<ArrowRight size={17} strokeWidth={1.75} />
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>
@@ -551,10 +540,10 @@
 					<span>{workError}</span>
 				</span>
 				<div class="actions" style="margin-top:18px">
-					<button class="btn btn-secondary btn-block" onclick={startOver}>
+					<Button variant="secondary" size="lg" block onclick={startOver}>
 						<RotateCcw size={15} strokeWidth={1.75} />Start over
-					</button>
-					<button class="btn btn-ghost btn-block" onclick={exitToLogin}>Back to sign in</button>
+					</Button>
+					<Button variant="ghost" size="lg" block onclick={exitToLogin}>Back to sign in</Button>
 				</div>
 			{/if}
 		</div>
@@ -581,9 +570,9 @@
 				</span>
 			</div>
 			<div class="actions" style="margin-top:24px">
-				<button class="btn btn-primary btn-block" onclick={exitToLogin}>
+				<Button variant="primary" size="lg" block onclick={exitToLogin}>
 					<Mail size={17} strokeWidth={1.75} />Sign in with your new password
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>
