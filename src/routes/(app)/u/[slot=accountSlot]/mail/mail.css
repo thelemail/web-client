@@ -594,9 +594,6 @@
 .compose-dock .dock-b { display: inline-flex; background: none; border: none; color: var(--fg-on-pine-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-xs); flex: 0 0 auto; }
 .compose-dock .dock-b:hover { background: rgba(255, 255, 255, .1); color: #fff; }
 
-.mail-toast { position: fixed; bottom: 26px; left: calc(50% + 131px); transform: translateX(-50%); background: var(--pine-900); color: var(--fg-on-pine); font-size: 13px; font-weight: 500; padding: 12px 17px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; z-index: 100; animation: mail-toastin var(--dur) var(--ease-out); font-family: var(--font-sans); }
-.mail-toast .undo { margin-left: 6px; color: var(--brass-500); font-weight: 600; background: none; border: none; cursor: pointer; }
-@keyframes mail-toastin { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
 
 .mail-app .send-veil { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 13px; padding: 32px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(2px); animation: mail-fade var(--dur); }
 .mail-app .sv-ring { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--pine-100); border-top-color: var(--pine-600); animation: mail-svspin .8s linear infinite; }
@@ -823,7 +820,6 @@
 [data-theme='dark'] .sw-ovl { background: rgba(0, 0, 0, 0.6); }
 [data-theme='dark'] .mail-scrim { background: rgba(0, 0, 0, 0.4); }
 
-[data-theme='dark'] .mail-toast,
 [data-theme='dark'] .compose-dock { border: 1px solid var(--border-dark); }
 [data-theme='dark'] .compose-dock { border-bottom: none; }
 
@@ -877,7 +873,6 @@
 	.mail-app .rail { position: fixed; left: 0; top: 0; bottom: 0; z-index: 220; transform: translateX(-105%); transition: transform var(--dur-slow) var(--ease-out); will-change: transform; }
 	.mail-app.nav-open .rail { transform: none; box-shadow: var(--shadow-lg); }
 	.mail-app .rail-scrim { display: block; position: fixed; inset: 0; z-index: 210; border: none; padding: 0; background: color-mix(in srgb, var(--ink-900) 45%, transparent); backdrop-filter: blur(2px); animation: mail-fade var(--dur); }
-	.mail-toast { left: 50%; }
 	@media (prefers-reduced-motion: reduce) {
 		.mail-app .rail { transition: none; }
 		.mail-app .rail-scrim { animation: none; }

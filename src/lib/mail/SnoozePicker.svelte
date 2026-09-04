@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Clock from '@lucide/svelte/icons/clock';
-	import AnchoredMenu from './AnchoredMenu.svelte';
+	import AnchoredMenu from '$lib/components/AnchoredMenu.svelte';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import { formatClock, formatWeekday, formatWhenLong } from './data';
 	import {

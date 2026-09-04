@@ -17,7 +17,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { ChevronDown, ChevronUp } from 'lucide';
 	import NavMorph from '$lib/components/NavMorph.svelte';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import RemoveAccountDialog from './RemoveAccountDialog.svelte';
 	import logoMark from '$lib/assets/logo-mark.svg';
 	import { goto } from '$app/navigation';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Avatar from '$lib/mail/Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import { initialsFor } from '$lib/mail/initials';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';

@@ -6,14 +6,14 @@
 	import SystemAlerts from './SystemAlerts.svelte';
 	import LifecycleBanners from '$lib/lifecycle/LifecycleBanners.svelte';
 	import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import Menu from '@lucide/svelte/icons/menu';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { mailNav } from '$lib/stores/nav.svelte';
 	import Compose from './Compose.svelte';
 	import { mailSearch } from '$lib/stores/mailSearch.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
-	import Toast from './Toast.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import { scheduled, type ScheduledRow } from '$lib/stores/scheduled.svelte';
 	import { composeStore } from '$lib/stores/compose.svelte';
 	import { drafts } from '$lib/stores/drafts.svelte';
@@ -204,7 +204,7 @@
 	{/key}
 {/if}
 {#if toast}
-	<Toast text={toast.text} />
+	<Toast text={toast.text} shift={131} />
 {/if}
 
 <style>

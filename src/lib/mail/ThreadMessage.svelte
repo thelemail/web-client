@@ -2,7 +2,7 @@
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import TrustMark from './TrustMark.svelte';
 	import { formatWhenLong, type ThreadEntry } from './data';

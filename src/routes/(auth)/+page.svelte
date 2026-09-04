@@ -5,7 +5,7 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import X from '@lucide/svelte/icons/x';
-	import Avatar from '$lib/mail/Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import RemoveAccountDialog from '$lib/mail/RemoveAccountDialog.svelte';
 	import { initialsFor } from '$lib/mail/initials';
 	import { keystore } from '$lib/keystore/keystore-client';

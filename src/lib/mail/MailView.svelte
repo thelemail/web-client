@@ -10,7 +10,7 @@
 	import Compose from './Compose.svelte';
 	import { mailSearch } from '$lib/stores/mailSearch.svelte';
 	import { platform } from '$platform';
-	import Toast from './Toast.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import {
 		FOLDERS,
 		LABELS,
@@ -911,13 +911,13 @@
 	{/key}
 {/if}
 {#if toast}
-	<Toast text={toast.text} onUndo={toast.undo} />
+	<Toast text={toast.text} onUndo={toast.undo} shift={131} />
 {/if}
 {#if snapshot.loadError}
-	<Toast text={'Error: ' + snapshot.loadError} />
+	<Toast text={'Error: ' + snapshot.loadError} shift={131} />
 {/if}
 {#if snapshot.loading}
-	<Toast text="Loading…" />
+	<Toast text="Loading…" shift={131} />
 {/if}
 
 <style>

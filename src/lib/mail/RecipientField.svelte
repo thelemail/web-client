@@ -6,7 +6,7 @@
 	import LockOpen from '@lucide/svelte/icons/lock-open';
 	import { chipsFromInput, type Contact, type RecipientChip } from './data';
 	import { insideMailbox } from './address';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import { personAvatars } from '$lib/stores/personAvatars.svelte';
 
 	export type RecipientEncStatus = 'internal' | 'encrypted' | 'cleartext' | 'checking' | null;

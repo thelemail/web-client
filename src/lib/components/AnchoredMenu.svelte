@@ -9,6 +9,7 @@
 		extraClass?: string;
 		role?: 'menu' | 'dialog';
 		label?: string;
+		portalTo?: string;
 	}
 
 	let {
@@ -17,7 +18,8 @@
 		panel = $bindable(),
 		extraClass = '',
 		role = 'menu',
-		label
+		label,
+		portalTo = '.mail-app'
 	}: Props = $props();
 
 	const GAP = 10;
@@ -50,7 +52,7 @@
 
 <div
 	class="menu menu-portal {extraClass}"
-	use:portal={'.mail-app'}
+	use:portal={portalTo}
 	bind:this={panel}
 	{role}
 	aria-label={label}

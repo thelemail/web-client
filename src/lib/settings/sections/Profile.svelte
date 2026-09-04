@@ -7,7 +7,7 @@
 	import Info from '@lucide/svelte/icons/info';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import Loader2 from '@lucide/svelte/icons/loader-2';
-	import Avatar from '$lib/mail/Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
