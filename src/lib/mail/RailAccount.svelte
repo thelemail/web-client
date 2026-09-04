@@ -14,12 +14,12 @@
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import UsersRound from '@lucide/svelte/icons/users-round';
 	import Check from '@lucide/svelte/icons/check';
-	import X from '@lucide/svelte/icons/x';
 	import { ChevronDown, ChevronUp } from 'lucide';
+	import { tick } from 'svelte';
 	import NavMorph from '$lib/components/NavMorph.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
-	import RemoveAccountDialog from './RemoveAccountDialog.svelte';
 	import logoMark from '$lib/assets/logo-mark.svg';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -50,13 +50,8 @@
 	let view = $state<'main' | 'switch'>('main');
 	let switching = $state<AccountEntry | null>(null);
 	let switchDone = $state(false);
-	let removing = $state<AccountEntry | null>(null);
 	let menuRef: HTMLDivElement | undefined = $state();
-
-	function askRemove(a: AccountEntry) {
-		open = false;
-		removing = a;
-	}
+	let listRef: HTMLDivElement | undefined = $state();
 
 	function handleDocClick(e: MouseEvent) {
 		if (menuRef && !menuRef.contains(e.target as Node)) open = false;
@@ -124,9 +119,11 @@
 		}
 	}
 
-	function openSwitchView() {
+	async function openSwitchView() {
 		view = 'switch';
 		void auth.loadSignedInProfiles();
+		await tick();
+		listRef?.querySelector('.acct-row.cur')?.scrollIntoView({ block: 'nearest' });
 	}
 
 	function backToMain() {
@@ -196,6 +193,12 @@
 		await goto(`/u/${slot}/settings/${id}`);
 	}
 
+	async function manageAccounts(e: MouseEvent) {
+		e.preventDefault();
+		open = false;
+		await goto('/');
+	}
+
 	async function signInAnother(e: MouseEvent) {
 		e.preventDefault();
 		open = false;
@@ -229,9 +232,9 @@
 					<button class="swh-bk" onclick={backToMain} title="Back"><ArrowLeft size={16} /></button>
 					<span class="swh-t">Switch account</span>
 				</div>
-				{#each switcherAccounts as a (a.id)}
-					{@const isCur = activeAccount?.id === a.id}
-					<div class="acct-item">
+				<div class="acct-list" bind:this={listRef}>
+					{#each switcherAccounts as a (a.id)}
+						{@const isCur = activeAccount?.id === a.id}
 						<button
 							type="button"
 							class="acct-row"
@@ -262,20 +265,14 @@
 								<span class="ar-go"><ArrowRight size={15} /></span>
 							{/if}
 						</button>
-						{#if !isCur}
-							<button
-								type="button"
-								class="ar-rm"
-								title="Remove from this device"
-								aria-label={`Remove ${a.email} from this device`}
-								onclick={() => askRemove(a)}
-							>
-								<X size={14} strokeWidth={2} />
-							</button>
-						{/if}
-					</div>
-				{/each}
+					{/each}
+				</div>
 				<div class="msep"></div>
+				{#if switcherAccounts.length > 1}
+					<a class="mitem" href="/" onclick={manageAccounts}
+						><UsersRound size={17} />Manage accounts</a
+					>
+				{/if}
 				<a class="mitem" href="/login" onclick={signInAnother}
 					><LogIn size={17} />Sign in to another account</a
 				>
@@ -334,18 +331,6 @@
 			</div>
 	{/if}
 </div>
-
-{#if removing}
-	<div use:portal>
-		<RemoveAccountDialog
-			accountId={removing.id}
-			email={removing.email}
-			name={removing.name}
-			onClose={() => (removing = null)}
-			onRemoved={() => {}}
-		/>
-	</div>
-{/if}
 
 {#if switching}
 	<div class="sw-ovl" use:portal>
