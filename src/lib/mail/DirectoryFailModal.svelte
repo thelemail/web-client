@@ -7,6 +7,7 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import type { DirectoryVerificationCode } from '$lib/directory/verify';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Recipient {
 		name: string;
@@ -228,19 +229,14 @@
 		{/if}
 
 		<div class="dv-actions">
-			<button type="button" class="dv-btn primary" onclick={onEditRecipient}>
+			<Button variant="primary" onclick={onEditRecipient}>
 				<Pencil size={15} />Edit recipient
-			</button>
-			<button
-				type="button"
-				class="dv-btn ghost"
-				onclick={onRetry}
-				title="The server will return the same record"
-			>
+			</Button>
+			<Button variant="ghost" onclick={onRetry} title="The server will return the same record">
 				<RefreshCw size={15} />Try again
-			</button>
+			</Button>
 			<div class="dv-spacer"></div>
-			<button type="button" class="dv-btn link" onclick={onCancel}>Back to draft</button>
+			<button type="button" class="linklike" onclick={onCancel}>Back to draft</button>
 		</div>
 	</div>
 </div>

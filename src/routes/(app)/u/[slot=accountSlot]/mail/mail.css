@@ -665,15 +665,13 @@
 .dv-scrim .dv-explainer { font-size: 12.5px; line-height: 1.6; color: var(--fg-on-pine-muted); margin-top: 9px; padding: 12px 14px; background: rgba(255, 255, 255, .045); border-radius: var(--radius-md); }
 .dv-scrim .dv-explainer i { color: #E7EDE3; font-style: italic; }
 .dv-scrim .dv-actions { display: flex; align-items: center; gap: 9px; margin-top: 20px; }
-.dv-scrim .dv-btn { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-sans); font-size: 13.5px; font-weight: 600; border-radius: var(--radius-md); padding: 10px 15px; cursor: pointer; border: 1px solid transparent; transition: background var(--dur-fast); white-space: nowrap; }
-.dv-scrim .dv-btn svg { width: 15px; height: 15px; }
-.dv-scrim .dv-btn.primary { background: #EFF3EC; color: var(--pine-900); border-color: #EFF3EC; }
-.dv-scrim .dv-btn.primary:hover { background: #fff; }
-.dv-scrim .dv-btn.ghost { background: transparent; color: var(--fg-on-pine); border-color: rgba(255, 255, 255, .2); }
-.dv-scrim .dv-btn.ghost:hover { background: rgba(255, 255, 255, .08); }
+.dv-scrim .btn.btn-primary { background: #EFF3EC; color: var(--pine-900); border-color: #EFF3EC; box-shadow: none; }
+.dv-scrim .btn.btn-primary:hover { background: #fff; }
+.dv-scrim .btn.btn-ghost { background: transparent; color: var(--fg-on-pine); border-color: rgba(255, 255, 255, .2); }
+.dv-scrim .btn.btn-ghost:hover { background: rgba(255, 255, 255, .08); }
 .dv-scrim .dv-spacer { flex: 1 1 auto; }
-.dv-scrim .dv-btn.link { background: none; border: none; color: var(--fg-on-pine-muted); font-weight: 500; padding: 10px 4px; }
-.dv-scrim .dv-btn.link:hover { color: #fff; }
+.dv-scrim .linklike { color: var(--fg-on-pine-muted); font-weight: 500; padding: 10px 4px; }
+.dv-scrim .linklike:hover { color: #fff; text-decoration: none; }
 
 .oh-scrim { position: fixed; inset: 0; z-index: 120; background: rgba(20, 39, 30, .44); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: mail-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
 .oh-scrim .oh-modal { width: 720px; max-width: 100%; max-height: 88vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--pine-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 20px 22px 18px; animation: mail-dvpop var(--dur-slow) var(--ease-out); }
@@ -688,13 +686,6 @@
 .oh-scrim .oh-note { padding: 22px 15px; text-align: center; font-size: 13px; color: var(--fg-muted); background: var(--paper-50); border: 1px solid var(--border); border-radius: var(--radius-md); }
 .oh-scrim .oh-note.err { color: var(--danger-700); }
 .oh-scrim .oh-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 14px; }
-.oh-scrim .oh-btn { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; border-radius: var(--radius-md); padding: 9px 15px; cursor: pointer; border: 1px solid transparent; transition: background var(--dur-fast); }
-.oh-scrim .oh-btn svg { width: 15px; height: 15px; }
-.oh-scrim .oh-btn.ghost { background: var(--surface); color: var(--fg); border-color: var(--border-strong); }
-.oh-scrim .oh-btn.ghost:hover { background: var(--paper-100); }
-.oh-scrim .oh-btn.primary { background: var(--primary); color: var(--primary-fg); }
-.oh-scrim .oh-btn.primary:hover { background: var(--primary-hover); }
-.oh-scrim .oh-btn.primary:disabled { opacity: .5; pointer-events: none; }
 
 .tofu-scrim { position: fixed; inset: 0; z-index: 120; background: rgba(20, 39, 30, .44); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: mail-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
 .tofu-scrim .tofu-modal { width: 484px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brass-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 26px 28px 22px; animation: mail-dvpop var(--dur-slow) var(--ease-out); }
@@ -713,12 +704,6 @@
 .tofu-scrim .tofu-what svg { width: 14px; height: 14px; }
 .tofu-scrim .tofu-explainer { font-size: 12.5px; line-height: 1.6; color: var(--fg-muted); margin-bottom: 10px; padding: 11px 13px; background: var(--paper-50); border-radius: var(--radius-md); }
 .tofu-scrim .tofu-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 8px; }
-.tofu-scrim .tofu-btn { display: inline-flex; align-items: center; gap: 7px; font-size: 13.5px; font-weight: 600; border-radius: var(--radius-md); padding: 9px 15px; cursor: pointer; border: 1px solid transparent; transition: background var(--dur-fast); white-space: nowrap; }
-.tofu-scrim .tofu-btn svg { width: 15px; height: 15px; }
-.tofu-scrim .tofu-btn.ghost { background: var(--surface); color: var(--fg); border-color: var(--border-strong); }
-.tofu-scrim .tofu-btn.ghost:hover { background: var(--paper-100); }
-.tofu-scrim .tofu-btn.caution { background: var(--brass-600); color: #fff; }
-.tofu-scrim .tofu-btn.caution:hover { background: var(--brass-700); }
 
 .mail-app .mrow .r1 .thr-ct { display: inline-flex; align-items: center; gap: 3px; height: 16px; padding: 0 6px 0 5px; border-radius: var(--radius-pill); background: var(--paper-200); color: var(--ink-600); font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; flex: 0 0 auto; align-self: center; }
 .mail-app .mrow .r1 .thr-ct svg { width: 11px; height: 11px; color: var(--ink-400); }
@@ -832,7 +817,6 @@
 [data-theme='dark'] .mail-app .mrow .row-ck.on svg { color: #10150F; }
 
 [data-theme='dark'] .mail-app .fbadge { color: #241A06; }
-[data-theme='dark'] .tofu-scrim .tofu-btn.caution { color: #241A06; }
 [data-theme='dark'] .mail-app .mrow.unread .time { color: var(--brass-500); }
 [data-theme='dark'] .mail-app .bulk .cnt { color: var(--pine-700); }
 

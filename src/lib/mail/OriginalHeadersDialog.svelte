@@ -6,6 +6,7 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import { DecryptionError } from './decrypt';
 	import { loadOriginalHeaders } from './originalHeaders';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		messageId: string;
@@ -121,19 +122,14 @@
 		{/if}
 
 		<div class="oh-actions">
-			<button type="button" class="oh-btn ghost" onclick={onClose}>Close</button>
-			<button
-				type="button"
-				class="oh-btn primary"
-				disabled={view.status !== 'ready'}
-				onclick={copy}
-			>
+			<Button variant="secondary" onclick={onClose}>Close</Button>
+			<Button variant="primary" disabled={view.status !== 'ready'} onclick={copy}>
 				{#if copied}
 					<Check size={15} />Copied
 				{:else}
 					<Copy size={15} />Copy
 				{/if}
-			</button>
+			</Button>
 		</div>
 	</div>
 </div>
