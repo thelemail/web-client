@@ -83,7 +83,8 @@
 .mail-app .acct-nm { font-size: 12.5px; font-weight: 550; color: var(--fg-strong); line-height: 1.25; letter-spacing: var(--track-snug); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .acct-em { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .acct-btn .uchev { color: var(--fg-faint); display: flex; flex: 0 0 auto; }
-.mail-app .rail-acct .menu { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; width: 272px; }
+.mail-app .rail-acct .menu { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; width: 272px; display: flex; flex-direction: column; max-height: calc(100vh - 80px); overflow-y: auto; overscroll-behavior: contain; }
+.mail-app .rail-acct .menu > *:not(.acct-list) { flex: 0 0 auto; }
 @keyframes mail-pop-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .mail-app .rail-acct .menu { animation: mail-pop-up var(--dur) var(--ease-out); }
 
@@ -128,11 +129,9 @@
 .mail-app .acct-row .ar-go { display: inline-flex; margin-left: auto; flex: 0 0 auto; color: var(--ink-400); }
 .mail-app .acct-row .ar-go svg { width: 15px; height: 15px; }
 .mail-app .acct-row:hover .ar-go { color: var(--pine-600); }
-.mail-app .acct-item { display: flex; align-items: center; gap: 2px; }
-.mail-app .acct-item .acct-row { flex: 1 1 auto; min-width: 0; }
-.mail-app .acct-item .ar-rm { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-sm); color: var(--ink-400); cursor: pointer; opacity: 0; transition: opacity var(--dur), background var(--dur), color var(--dur); }
-.mail-app .acct-item:hover .ar-rm, .mail-app .acct-item:focus-within .ar-rm { opacity: 1; }
-.mail-app .acct-item .ar-rm:hover { background: var(--danger-100); color: var(--danger-700); }
+.mail-app .acct-list { flex: 0 1 auto; min-height: 0; max-height: 304px; overflow-y: auto; overscroll-behavior: contain; }
+.mail-app .acct-list::-webkit-scrollbar { width: 6px; }
+.mail-app .acct-list::-webkit-scrollbar-thumb { background: var(--paper-200); border: none; }
 .mail-app a.mitem { text-decoration: none; cursor: pointer; }
 .mail-app .sw-note { font-size: 11.5px; line-height: 1.5; color: var(--fg-faint); padding: 8px 11px 6px; }
 
