@@ -60,8 +60,8 @@ function boundaryFor(item: CalendarItem, ctx: DescribeContext): BoundaryLine[] {
 	if (external.length) {
 		lines.push({
 			tone: 'warn',
-			text: `Sending title, time and location to ${external.length === 1 ? 'one external invitee' : `${external.length} external invitees`}.`,
-			mono: `${external.map((a) => a.email).join(', ')} · plain iTIP`
+			text: `Sending title, time and location to ${external.length === 1 ? 'one guest' : `${external.length} guests`} outside your workspace.`,
+			mono: `${external.map((a) => a.email).join(', ')} · sealed for Thelemail guests, plain iTIP elsewhere`
 		});
 		lines.push({
 			tone: 'yes',

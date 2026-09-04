@@ -140,11 +140,12 @@
 		} else {
 			const base = pre?.date ?? cal.today;
 			const nowWall = instantToWall(new Date(), timeZone);
-			const nextHour = String((Number(nowWall.slice(11, 13)) + 1) % 24).padStart(2, '0');
-			startDate = base;
-			endDate = base;
-			startTime = `${nextHour}:00`;
-			endTime = `${String((Number(nextHour) + 1) % 24).padStart(2, '0')}:00`;
+			const startWall = addMinutesWall(`${base}T${nowWall.slice(11, 13)}:00`, 60);
+			const endWall = addMinutesWall(startWall, 60);
+			startDate = startWall.slice(0, 10);
+			startTime = startWall.slice(11, 16);
+			endDate = endWall.slice(0, 10);
+			endTime = endWall.slice(11, 16);
 		}
 		if (pre?.title) title = pre.title;
 		if (pre?.notes) notes = pre.notes;
@@ -178,7 +179,7 @@
 			lines.push({
 				tone: externalCount ? 'warn' : 'yes',
 				text: externalCount
-					? `Title, time and location go by plain iTIP mail to ${externalCount} external guest${externalCount === 1 ? '' : 's'}.`
+					? `Title, time and location go by mail to ${externalCount} guest${externalCount === 1 ? '' : 's'} outside your workspace, sealed when they use Thelemail.`
 					: 'Invitations travel as encrypted mail between Thelemail members.',
 				mono: `from: ${identity.email}`
 			});
