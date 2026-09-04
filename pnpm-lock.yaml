@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@internationalized/date':
+        specifier: ^3.12.2
+        version: 3.12.2
       '@noble/curves':
         specifier: ^2.2.0
         version: 2.2.0
@@ -50,6 +53,9 @@ importers:
       hash-wasm:
         specifier: ^4.12.0
         version: 4.12.0
+      ical.js:
+        specifier: 2.2.1
+        version: 2.2.1
       iconv-lite:
         specifier: ^0.7.2
         version: 0.7.2
@@ -69,9 +75,6 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.2.8
         version: 5.2.8
-      '@internationalized/date':
-        specifier: ^3.12.2
-        version: 3.12.2
       '@lucide/svelte':
         specifier: ^1.39.0
         version: 1.39.0(svelte@5.56.0)
@@ -987,6 +990,9 @@ packages:
 
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
+
+  ical.js@2.2.1:
+    resolution: {integrity: sha512-yK/UlPbEs316igb/tjRgbFA8ZV75rCsBJp/hWOatpyaPNlgw0dGDmU+FoicOcwX4xXkeXOkYiOmCqNPFpNPkQg==}
 
   iconv-lite@0.7.2:
     resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
@@ -2329,6 +2335,8 @@ snapshots:
       - '@noble/hashes'
 
   html-escaper@2.0.2: {}
+
+  ical.js@2.2.1: {}
 
   iconv-lite@0.7.2:
     dependencies:
