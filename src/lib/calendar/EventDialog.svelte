@@ -10,6 +10,7 @@
 	import { untrack } from 'svelte';
 	import { CALENDARS } from './data';
 	import type { Draft } from './state.svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		initial: Draft;
@@ -110,11 +111,11 @@
 		</div>
 		<div class="dlg-foot">
 			{#if isEdit}
-				<button class="btn" style:color="var(--danger-700)" style:border-color="var(--danger-500)" onclick={onDelete}>Delete</button>
+				<Button variant="danger" onclick={onDelete}>Delete</Button>
 			{/if}
 			<div class="grow"></div>
-			<button class="btn" onclick={onClose}>Cancel</button>
-			<button class="btn primary" onclick={() => onSave(f)}>{isEdit ? 'Save changes' : 'Save'}</button>
+			<Button variant="secondary" onclick={onClose}>Cancel</Button>
+			<Button variant="primary" onclick={() => onSave(f)}>{isEdit ? 'Save changes' : 'Save'}</Button>
 		</div>
 	</div>
 </div>
