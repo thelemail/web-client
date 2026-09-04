@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ListTodo from '@lucide/svelte/icons/list-todo';
+	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
 	import { ScrollArea } from '$lib/components/ui/scroll-area';
 	import { cal } from '../state.svelte';
@@ -14,6 +15,14 @@
 		<span class="cnt">{cal.taskCount}</span>
 		<button
 			type="button"
+			class="icon-btn"
+			aria-label="New task"
+			onclick={() => cal.openEditor({ mode: 'create', kind: 'task' })}
+		>
+			<Plus size={16} />
+		</button>
+		<button
+			type="button"
 			class="icon-btn tk-x"
 			aria-label="Close tasks"
 			onclick={() => (cal.tasksOpen = false)}
@@ -24,6 +33,9 @@
 	<ScrollArea class="min-h-0 flex-1">
 		<div class="tkpane-scroll">
 			<CapacityBar />
+			{#if !cal.taskGroups.length}
+				<div class="tkgroup">No open tasks</div>
+			{/if}
 			{#each cal.taskGroups as group (group.name)}
 				<div class="tkgroup">{group.name}</div>
 				{#each group.rows as task (task.id)}

@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -8,11 +11,13 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Search from '@lucide/svelte/icons/search';
 	import Settings from '@lucide/svelte/icons/settings';
-	import { dev } from '$app/environment';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import ViewSwitch from './ViewSwitch.svelte';
 	import { cal } from './state.svelte';
+	import { calendarStore } from './store.svelte';
+
+	const slot = $derived(page.params.slot ?? '0');
 
 	const actions = $derived([
 		...(dev
@@ -39,8 +44,8 @@
 			key: 'sync',
 			label: 'Sync & provenance',
 			icon: RefreshCw,
-			dot: false,
-			on: false,
+			dot: calendarStore.pendingCount > 0 || calendarStore.blockedCount > 0,
+			on: calendarStore.syncing,
 			run: () => (cal.dialog = 'sync')
 		},
 		{
@@ -49,7 +54,7 @@
 			icon: Settings,
 			dot: false,
 			on: false,
-			run: () => cal.unbuilt()
+			run: () => void goto(`/u/${slot}/settings/region`)
 		}
 	]);
 </script>
@@ -65,14 +70,14 @@
 	</button>
 
 	{#if cal.isDated}
-		<Button variant="secondary" size="sm" onclick={() => cal.goTo('week')}>
+		<Button variant="secondary" size="sm" onclick={() => cal.goToday()}>
 			<CalendarClock size={15} />Today
 		</Button>
 		<div class="nav-arrows">
-			<button type="button" aria-label="Previous period" onclick={() => cal.unbuilt()}>
+			<button type="button" aria-label="Previous period" onclick={() => cal.prev()}>
 				<ChevronLeft size={19} />
 			</button>
-			<button type="button" aria-label="Next period" onclick={() => cal.unbuilt()}>
+			<button type="button" aria-label="Next period" onclick={() => cal.next()}>
 				<ChevronRight size={19} />
 			</button>
 		</div>

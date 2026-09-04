@@ -2,8 +2,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import * as Popover from '$lib/components/ui/popover';
 	import EventPopover from '../EventPopover.svelte';
-	import { describeItem } from '../describe';
-	import type { WeekBlock } from '../state.svelte';
+	import { cal, type WeekBlock } from '../state.svelte';
 
 	interface Props {
 		block: WeekBlock;
@@ -12,7 +11,7 @@
 	let { block }: Props = $props();
 
 	let open = $state(false);
-	const selection = $derived(describeItem(block.item));
+	const selection = $derived(cal.describe(block.occ));
 </script>
 
 <Popover.Root bind:open>
@@ -24,6 +23,7 @@
 				class:tiny={block.density === 'tiny'}
 				class:oneline={block.density === 'oneline'}
 				class:done={block.done}
+				class:pending={block.pending}
 				style:--c={block.color}
 				style:--top="{block.top}px"
 				style:--h="{block.height}px"

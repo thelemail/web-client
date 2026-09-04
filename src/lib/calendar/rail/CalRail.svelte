@@ -20,8 +20,12 @@
 	<div class="rail-scroll">
 		<MiniMonth />
 		<CalendarGroup title="My calendars" group="mine" addable />
-		<CalendarGroup title="Role calendars" group="role" addable />
-		<CalendarGroup title="Subscribed &amp; mirrored" group="other" />
+		<CalendarGroup
+			title="Role calendars"
+			group="role"
+			addable
+			emptyText="None yet — bind one to a shared address"
+		/>
 	</div>
 
 	<RailNav />

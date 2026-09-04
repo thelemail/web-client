@@ -1,45 +1,70 @@
 <script lang="ts">
+	import * as Popover from '$lib/components/ui/popover';
+	import EventPopover from '../EventPopover.svelte';
 	import { cal } from '../state.svelte';
 
-	const HEADINGS = [
-		{ label: 'Mon', weekend: false },
-		{ label: 'Tue', weekend: false },
-		{ label: 'Wed', weekend: false },
-		{ label: 'Thu', weekend: false },
-		{ label: 'Fri', weekend: false },
-		{ label: 'Sat', weekend: true },
-		{ label: 'Sun', weekend: true }
-	];
+	const HEADINGS = $derived(
+		cal.weekStartsOn === 1
+			? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+			: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+	);
+
+	let openKey = $state<string | null>(null);
 </script>
 
 <div class="mv">
 	<div class="mv-dow">
-		{#each HEADINGS as heading (heading.label)}
-			<div class:we={heading.weekend}>{heading.label}</div>
+		{#each HEADINGS as heading (heading)}
+			<div class:we={heading === 'Sat' || heading === 'Sun'}>{heading}</div>
 		{/each}
 	</div>
 	<div class="mv-grid">
-		{#each cal.monthCells as cell, i (i)}
-			<button
-				type="button"
+		{#each cal.monthCells as cell (cell.date)}
+			<div
 				class="mv-cell"
 				class:out={cell.outside}
 				class:we={cell.weekend}
 				class:is-today={cell.today}
-				onclick={() => cal.goTo('week')}
+				role="presentation"
+				ondblclick={() =>
+					cal.openEditor({ mode: 'create', kind: 'event', prefill: { date: cell.date } })}
 			>
-				<span class="mv-dh"><span class="mv-dnum">{cell.n}</span></span>
-				{#each cell.entries as entry, k (k)}
-					<span class="mv-mev" class:allday={entry.allDay} style:--c={entry.color}>
-						<span class="mev-dot"></span>
-						{#if entry.time}<span class="mev-tm">{entry.time}</span>{/if}
-						<span class="mev-t">{entry.title}</span>
-					</span>
+				<button
+					type="button"
+					class="mv-dh"
+					aria-label="Open {cell.date} in the week view"
+					onclick={() => cal.goToDate(cell.date, 'week')}
+				>
+					<span class="mv-dnum">{cell.n}</span>
+				</button>
+				{#each cell.entries as entry (entry.key)}
+					<Popover.Root
+						open={openKey === entry.key}
+						onOpenChange={(next) => (openKey = next ? entry.key : null)}
+					>
+						<Popover.Trigger>
+							{#snippet child({ props })}
+								<button
+									{...props}
+									class="mv-mev"
+									class:allday={entry.allDay}
+									style:--c={entry.color}
+								>
+									<span class="mev-dot"></span>
+									{#if entry.time}<span class="mev-tm">{entry.time}</span>{/if}
+									<span class="mev-t">{entry.title}</span>
+								</button>
+							{/snippet}
+						</Popover.Trigger>
+						<EventPopover selection={cal.describe(entry.occ)} onClose={() => (openKey = null)} />
+					</Popover.Root>
 				{/each}
 				{#if cell.more}
-					<span class="mv-more">{cell.more}</span>
+					<button type="button" class="mv-more" onclick={() => cal.goToDate(cell.date, 'agenda')}>
+						{cell.more}
+					</button>
 				{/if}
-			</button>
+			</div>
 		{/each}
 	</div>
 </div>

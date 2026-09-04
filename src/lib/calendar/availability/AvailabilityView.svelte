@@ -1,8 +1,6 @@
 <script lang="ts">
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import { Button } from '$lib/components/ui/button';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
-	import { cal } from '../state.svelte';
 	import { dev } from '$app/environment';
 	import PrivacyModeCards from './PrivacyModeCards.svelte';
 	import type { BoundaryLine } from '../types';
@@ -68,7 +66,6 @@
 						copies titles.
 					</div>
 				</div>
-				<Button variant="secondary" size="sm" onclick={() => cal.unbuilt()}>Add a mirror</Button>
 			</div>
 			<div class="card-b tight">
 				{#await import('../preview/availability/MirrorsTable.svelte') then mod}
