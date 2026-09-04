@@ -6,6 +6,7 @@ import { addresses } from './addresses.svelte';
 import { signatures } from './signatures.svelte';
 import { aliases } from './aliases.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
+import { calendarKeys } from './calendarKeys.svelte';
 
 let loadedFor: string | null = null;
 
@@ -16,6 +17,7 @@ export function ensureAccountData(accountId: string): void {
 		void accountSettings.hydrate();
 		void auth.loadProfile(accountId);
 		void aliasKeys.load(accountId);
+		void calendarKeys.load(accountId);
 		await workspaces.load(accountId);
 		if (loadedFor !== accountId) return;
 		const workspaceId = workspaces.workspace?.id ?? null;
