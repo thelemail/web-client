@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
@@ -33,7 +32,7 @@
 		<DropdownMenu.Item onSelect={() => cal.openCalendarDialog({ mode: 'create' })}>
 			<CalendarPlus size={16} />New calendar
 		</DropdownMenu.Item>
-		{#if dev}
+		{#if import.meta.env.DEV}
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => (cal.dialog = 'offer')}>
 				<CalendarClock size={16} />Proposal — offer times<span class="rt">P</span>

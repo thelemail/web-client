@@ -2,7 +2,6 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Users from '@lucide/svelte/icons/users';
-	import { dev } from '$app/environment';
 	import { cal } from '../state.svelte';
 </script>
 
@@ -23,7 +22,7 @@
 	>
 		<ShieldCheck size={16} />Availability &amp; mirroring
 	</button>
-	{#if dev}
+	{#if import.meta.env.DEV}
 		<button
 			type="button"
 			class="rn-item"

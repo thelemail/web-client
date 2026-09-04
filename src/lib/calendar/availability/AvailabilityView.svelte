@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
-	import { dev } from '$app/environment';
 	import PrivacyModeCards from './PrivacyModeCards.svelte';
 	import type { BoundaryLine } from '../types';
 
@@ -56,7 +55,7 @@
 			</div>
 		</div>
 
-		{#if dev}
+		{#if import.meta.env.DEV}
 		<div class="card">
 			<div class="card-h">
 				<div>

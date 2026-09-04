@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
@@ -20,7 +19,7 @@
 	const slot = $derived(page.params.slot ?? '0');
 
 	const actions = $derived([
-		...(dev
+		...(import.meta.env.DEV
 			? [
 					{
 						key: 'mail',

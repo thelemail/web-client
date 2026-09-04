@@ -1,6 +1,5 @@
 <script lang="ts">
 	import '$lib/calendar/calendar.css';
-	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import Toast from '$lib/components/Toast.svelte';
@@ -141,11 +140,11 @@
 		}
 	}}
 >
-	{#if cal.dialog === 'mail' && dev}
+	{#if cal.dialog === 'mail' && import.meta.env.DEV}
 		{#await import('$lib/calendar/preview/dialogs/MailCommitmentsDialog.svelte') then mod}
 			<mod.default />
 		{/await}
-	{:else if cal.dialog === 'offer' && dev}
+	{:else if cal.dialog === 'offer' && import.meta.env.DEV}
 		{#await import('$lib/calendar/preview/dialogs/OfferTimesDialog.svelte') then mod}
 			<mod.default />
 		{/await}
