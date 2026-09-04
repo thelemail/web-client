@@ -21,7 +21,14 @@ export type RealtimeKind =
 	| 'lifecycle.updated'
 	| 'subscription.updated'
 	| 'blocked_sender.created'
-	| 'blocked_sender.deleted';
+	| 'blocked_sender.deleted'
+	| 'calendar.created'
+	| 'calendar.updated'
+	| 'calendar.deleted'
+	| 'calendar.invalidated'
+	| 'calendar_item.created'
+	| 'calendar_item.updated'
+	| 'calendar_item.deleted';
 
 export interface WireHint {
 	kind: RealtimeKind;
