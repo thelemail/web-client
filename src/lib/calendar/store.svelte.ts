@@ -89,6 +89,7 @@ export interface SaveOptions {
 type MessageListener = (hint: RealtimeHint) => void;
 
 const REALTIME_COALESCE_MS = 750;
+const CHANGES_LAG_RESYNC_MS = 6500;
 
 function labelFor(item: CalendarItem, verb: string): string {
 	const title = item.kind === 'hold' ? 'a private hold' : item.title || 'untitled';
@@ -124,6 +125,7 @@ export class CalendarStore {
 	#loadPromise: Promise<void> | null = null;
 	#messageListeners = new Set<MessageListener>();
 	#syncCoalesced = coalesce(() => void this.syncDelta(), REALTIME_COALESCE_MS);
+	#lagTimer: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(db?: CalendarDb, api?: SyncApi) {
 		this.#db = db ?? (browser ? idbCalendarDb : memoryCalendarDb());
@@ -193,7 +195,10 @@ export class CalendarStore {
 		}
 		if (!this.#stopRealtime) {
 			this.#stopRealtime = registerCalendarRealtime({
-				onHint: () => this.#syncCoalesced(),
+				onHint: () => {
+					this.#syncCoalesced();
+					this.#scheduleLagSync();
+				},
 				onMessage: (hint) => {
 					for (const listener of this.#messageListeners) listener(hint);
 				},
@@ -224,6 +229,16 @@ export class CalendarStore {
 		this.#stopRealtime = null;
 		if (this.#replayTimer) clearTimeout(this.#replayTimer);
 		this.#replayTimer = null;
+		if (this.#lagTimer) clearTimeout(this.#lagTimer);
+		this.#lagTimer = null;
+	}
+
+	#scheduleLagSync(): void {
+		if (this.#lagTimer) clearTimeout(this.#lagTimer);
+		this.#lagTimer = setTimeout(() => {
+			this.#lagTimer = null;
+			void this.syncDelta();
+		}, CHANGES_LAG_RESYNC_MS);
 	}
 
 	onMessage(listener: MessageListener): () => void {
@@ -767,13 +782,18 @@ export class CalendarStore {
 		this.#kick();
 	}
 
+	#queued(seq: number): OutboxRecord | undefined {
+		const rec = this.queue.find((q) => q.seq === seq);
+		return rec ? ($state.snapshot(rec) as OutboxRecord) : undefined;
+	}
+
 	flush(): void {
 		this.halted = null;
 		this.#kick();
 	}
 
 	async retryOp(seq: number): Promise<void> {
-		const rec = this.queue.find((q) => q.seq === seq);
+		const rec = this.#queued(seq);
 		if (!rec) return;
 		await this.#db.updateOutbox({
 			...rec,
@@ -787,7 +807,7 @@ export class CalendarStore {
 	}
 
 	async discardOp(seq: number): Promise<void> {
-		const rec = this.queue.find((q) => q.seq === seq);
+		const rec = this.#queued(seq);
 		if (!rec) return;
 		await this.#db.removeOutbox(seq);
 		await this.#loadQueue();
@@ -797,21 +817,15 @@ export class CalendarStore {
 	}
 
 	async keepMine(seq: number): Promise<void> {
-		const rec = this.queue.find((q) => q.seq === seq);
+		const rec = this.#queued(seq);
 		const accountId = this.#accountId;
 		if (!rec || !accountId) return;
 		if (rec.op.kind === 'item.put') {
 			const server = await getCalendarItem(rec.op.calendarId, rec.op.itemId).catch(() => null);
 			const baseRev = server?.item.rev ?? rec.op.body.baseRev;
-			const local = this.items.get(rec.op.itemId);
-			let body = { ...rec.op.body, baseRev };
-			if (local && !local.unreadable) {
-				const { sealed, key } = await this.#sealItem(accountId, local.item);
-				body = { ...body, sealed, keyFingerprint: key.fingerprintB64 };
-			}
 			await this.#db.updateOutbox({
 				...rec,
-				op: { ...rec.op, body },
+				op: { ...rec.op, body: { ...rec.op.body, baseRev } },
 				status: 'queued',
 				attempts: 0,
 				lastError: undefined,

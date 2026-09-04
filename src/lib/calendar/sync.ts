@@ -126,6 +126,7 @@ export async function applyPage(
 	if (page.items.length) {
 		const existing = new Map((await db.items(accountId)).map((i) => [i.id, i]));
 		for (const change of page.items) {
+			if (existing.get(change.id)?.pending) continue;
 			result.changed = true;
 			if (change.deleted || !change.item) {
 				await db.deleteItem(accountId, change.id);
