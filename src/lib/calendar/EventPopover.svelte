@@ -58,6 +58,11 @@
 		cal.notify(`Deleted “${selection.title}”`);
 	}
 
+	function history() {
+		onClose();
+		cal.openHistory(selection.occ.item.id);
+	}
+
 	async function respond(value: Partstat) {
 		onClose();
 		await cal.setPartstat(selection.occ, value);
@@ -92,7 +97,10 @@
 		</div>
 		<div class="evpop-rows">
 			{#if selection.loc}
-				<div class="evpop-row"><MapPin size={17} /><div class="er-main">{selection.loc}</div></div>
+				<div class="evpop-row">
+					<MapPin size={17} />
+					<div class="er-main">{selection.loc}</div>
+				</div>
 			{/if}
 			{#if selection.video}
 				<div class="evpop-row">
@@ -151,7 +159,12 @@
 				<ClockArrowLeft size={17} />
 				<div class="er-main">
 					{selection.prov}
-					<div class="er-sub">{selection.provSub}</div>
+					<div class="er-sub">
+						{selection.provSub}
+						{#if selection.canEdit}
+							<button type="button" class="evpop-hist" onclick={history}>History</button>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>

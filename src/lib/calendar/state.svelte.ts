@@ -171,7 +171,10 @@ class CalendarState {
 	navOpen = $state(false);
 	tasksOpen = $state(false);
 	fullDay = $state(false);
-	dialog = $state<'mail' | 'offer' | 'sync' | 'editor' | 'calendar' | 'scope' | null>(null);
+	dialog = $state<'mail' | 'offer' | 'sync' | 'editor' | 'calendar' | 'scope' | 'history' | null>(
+		null
+	);
+	history = $state<{ itemId: string } | null>(null);
 	editor = $state<EditorRequest | null>(null);
 	calendarDialog = $state<CalendarDialogRequest | null>(null);
 	scope = $state<ScopeRequest | null>(null);
@@ -723,6 +726,11 @@ class CalendarState {
 	openCalendarDialog(request: CalendarDialogRequest) {
 		this.calendarDialog = request;
 		this.dialog = 'calendar';
+	}
+
+	openHistory(itemId: string) {
+		this.history = { itemId };
+		this.dialog = 'history';
 	}
 
 	requestScope(request: ScopeRequest) {

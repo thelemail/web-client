@@ -137,6 +137,7 @@
 			cal.editor = null;
 			cal.calendarDialog = null;
 			cal.scope = null;
+			cal.history = null;
 		}
 	}}
 >
@@ -157,6 +158,10 @@
 	{:else if cal.dialog === 'calendar' && cal.calendarDialog}
 		{#await import('$lib/calendar/dialogs/CalendarDialog.svelte') then mod}
 			<mod.default request={cal.calendarDialog} />
+		{/await}
+	{:else if cal.dialog === 'history' && cal.history}
+		{#await import('$lib/calendar/dialogs/HistoryDialog.svelte') then mod}
+			<mod.default request={cal.history} />
 		{/await}
 	{:else if cal.dialog === 'scope' && cal.scope}
 		{#await import('$lib/calendar/dialogs/RecurrenceScopeDialog.svelte') then mod}
