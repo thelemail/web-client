@@ -21,16 +21,19 @@ export class SealError extends Error {
 	}
 }
 
+export async function ownKey(accountId: string): Promise<SealKey> {
+	const own = await senderKey(accountId);
+	return {
+		publicKeyArmored: own.publicKeyArmored,
+		fingerprintB64: own.fingerprintB64,
+		fingerprintHex: b64ToHex(own.fingerprintB64)
+	};
+}
+
 export async function keyForCalendar(accountId: string, cal: CalendarRow): Promise<SealKey> {
 	switch (cal.kind) {
-		case 'personal': {
-			const own = await senderKey(accountId);
-			return {
-				publicKeyArmored: own.publicKeyArmored,
-				fingerprintB64: own.fingerprintB64,
-				fingerprintHex: b64ToHex(own.fingerprintB64)
-			};
-		}
+		case 'personal':
+			return ownKey(accountId);
 		case 'shared': {
 			await calendarKeys.ready(accountId);
 			let key = calendarKeys.publicKeyFor(cal.id);

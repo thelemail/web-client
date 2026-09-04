@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { SvelteMap } from 'svelte/reactivity';
 import {
+	createCalendar,
 	deleteCalendar as apiDeleteCalendar,
 	deleteCalendarItem as apiDeleteItem,
 	getCalendarItem,
@@ -28,6 +29,7 @@ import {
 } from './db';
 import {
 	ITEM_SCHEMA_VERSION,
+	META_SCHEMA_VERSION,
 	STATE_SCHEMA_VERSION,
 	parseItem,
 	parseMeta,
@@ -42,7 +44,7 @@ import {
 } from './model';
 import { replayOne, type OutboxMail, type OutboxOp, type ReplayApi } from './outbox';
 import { busyWindows, expandItems, itemSpan, type Occurrence } from './recur';
-import { keyForCalendar, openText, sealText, SealError, type SealKey } from './seal';
+import { keyForCalendar, openText, ownKey, sealText, SealError, type SealKey } from './seal';
 import { fullLoad, liveSyncApi, pullChanges, type SyncApi } from './sync';
 
 export interface CalendarView {
@@ -231,12 +233,14 @@ export class CalendarStore {
 				await this.#hydrate();
 				this.loaded = true;
 				this.start();
-				void this.syncDelta();
+				await this.syncDelta();
+				await this.#ensurePersonal(accountId);
 				return;
 			}
 			await this.#fullLoad();
 			this.loaded = true;
 			this.start();
+			await this.#ensurePersonal(accountId);
 		} catch (err) {
 			this.loadError = err instanceof Error ? err.message : 'Could not load the calendar';
 			this.#noteFailure(err);
@@ -298,6 +302,41 @@ export class CalendarStore {
 		this.#noteOnline();
 		await this.#hydrate();
 		postCalendarMessage({ type: 'changed', accountId });
+	}
+
+	#creatingPersonal = false;
+
+	async #ensurePersonal(accountId: string): Promise<void> {
+		if (this.#creatingPersonal || !this.online) return;
+		if (this.calendars.some((c) => c.kind === 'personal' && c.row.ownerAccountId === accountId))
+			return;
+		this.#creatingPersonal = true;
+		try {
+			await this.#createPersonalCalendar(accountId);
+		} catch (err) {
+			this.#noteFailure(err);
+		} finally {
+			this.#creatingPersonal = false;
+		}
+	}
+
+	async #createPersonalCalendar(accountId: string): Promise<void> {
+		const key = await ownKey(accountId);
+		const meta: CalendarMeta = {
+			schemaVersion: META_SCHEMA_VERSION,
+			name: 'My calendar',
+			color: '#2E5440',
+			defaultPrivacy: accountSettings.calendar.defaultPrivacy
+		};
+		const sealedMeta = await sealText(accountId, key, serializeMeta(meta));
+		const row = await createCalendar({
+			kind: 'personal',
+			sealedMeta,
+			metaKeyFingerprint: key.fingerprintB64,
+			metaSchemaVersion: META_SCHEMA_VERSION
+		});
+		if (this.#accountId !== accountId) return;
+		await this.adoptCalendar(row);
 	}
 
 	async #hydrate(): Promise<void> {

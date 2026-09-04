@@ -607,6 +607,16 @@ class CalendarState {
 		}));
 	}
 
+	get agendaBadge(): number {
+		let unseen = 0;
+		for (const occ of this.occurrencesIn(this.agendaWindow)) {
+			const cal = calendarStore.calendar(occ.item.calendarId);
+			if (!cal || cal.kind === 'personal' || occ.item.kind === 'hold') continue;
+			if (!calendarStore.myState(occ.item.id)?.ack) unseen += 1;
+		}
+		return unseen;
+	}
+
 	get taskCount() {
 		const open = calendarStore.tasks().filter((t) => !t.item.done).length;
 		return `${open} open`;
@@ -782,6 +792,7 @@ class CalendarState {
 			return `${s.blockedCount} change${s.blockedCount === 1 ? '' : 's'} need${s.blockedCount === 1 ? 's' : ''} your review before ${s.blockedCount === 1 ? 'it' : 'they'} can be sent.`;
 		}
 		const n = s.pendingCount;
+		if (!n) return 'Connected. Every change on this device has reached Thelemail.';
 		return `Connected. ${n} change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} still waiting ${n === 1 ? 'its' : 'their'} turn to send.`;
 	}
 

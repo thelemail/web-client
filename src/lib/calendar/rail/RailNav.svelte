@@ -12,7 +12,7 @@
 		class:on={cal.view === 'agenda'}
 		onclick={() => cal.goTo('agenda')}
 	>
-		<Users size={16} />Family &amp; team agenda<span class="rn-c">2</span>
+		<Users size={16} />Family &amp; team agenda{#if cal.agendaBadge}<span class="rn-c">{cal.agendaBadge}</span>{/if}
 	</button>
 	<button
 		type="button"
