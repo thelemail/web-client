@@ -17,7 +17,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import Clock from '@lucide/svelte/icons/clock';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
 	import InlineSendError, { type InlineErrorCode } from './InlineSendError.svelte';

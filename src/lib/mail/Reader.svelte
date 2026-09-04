@@ -21,7 +21,7 @@
 	import UserX from '@lucide/svelte/icons/user-x';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import ReplyBox, { type ReplyMode } from './ReplyBox.svelte';
 	import Thread from './Thread.svelte';
@@ -30,7 +30,7 @@
 	import ReportDialog from './ReportDialog.svelte';
 	import BlockSenderDialog from './BlockSenderDialog.svelte';
 	import SnoozePicker from './SnoozePicker.svelte';
-	import AnchoredMenu from './AnchoredMenu.svelte';
+	import AnchoredMenu from '$lib/components/AnchoredMenu.svelte';
 	import AlarmClockOff from '@lucide/svelte/icons/alarm-clock-off';
 	import EventCard from './EventCard.svelte';
 	import { untrack } from 'svelte';

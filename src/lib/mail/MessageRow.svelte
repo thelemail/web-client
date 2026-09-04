@@ -10,7 +10,7 @@
 	import MailOpen from '@lucide/svelte/icons/mail-open';
 	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import Calendar from '@lucide/svelte/icons/calendar';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import {
 		LABELS,
 		plainSubject,

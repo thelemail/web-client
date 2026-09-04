@@ -11,13 +11,14 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Check from '@lucide/svelte/icons/check';
 	import X from '@lucide/svelte/icons/x';
 	import { ChevronDown, ChevronUp } from 'lucide';
 	import NavMorph from '$lib/components/NavMorph.svelte';
-	import Avatar from './Avatar.svelte';
+	import Avatar from '$lib/components/Avatar.svelte';
 	import RemoveAccountDialog from './RemoveAccountDialog.svelte';
 	import logoMark from '$lib/assets/logo-mark.svg';
 	import { goto } from '$app/navigation';
@@ -177,6 +178,12 @@
 		await goto('/login');
 	}
 
+	async function openCalendar() {
+		open = false;
+		const slot = page.params.slot ?? '0';
+		await goto(`/u/${slot}/calendar`);
+	}
+
 	async function openSettings() {
 		open = false;
 		const slot = page.params.slot ?? '0';
@@ -298,6 +305,10 @@
 				<button class="mitem" onclick={openSwitchView}>
 					<ArrowLeftRight size={17} />Switch account
 					<span class="mi-chev"><ChevronRight size={15} /></span>
+				</button>
+				<div class="msep"></div>
+				<button class="mitem" onclick={openCalendar}>
+					<CalendarDays size={17} />Go to Calendar
 				</button>
 				<div class="msep"></div>
 				<button class="mitem" onclick={() => openSettingsSection('profile')}

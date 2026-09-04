@@ -1,306 +1,528 @@
 import {
-	CAL_TODAY,
+	AGENDA,
+	ALL_DAY,
+	ANSWERS,
+	BOOKING_DAYS,
 	CALENDARS,
-	EVENTS,
-	MONTH_ABBR,
-	MONTH_NAMES,
-	addDays,
-	startOfWeek,
-	ymd,
-	type CalEvent
-} from './data';
+	COUNT_WORDS,
+	DAY_NUMS,
+	DOW,
+	ITEMS,
+	MONTH_EXTRA,
+	PEOPLE,
+	SLOTS,
+	TASKS,
+	TASK_GROUPS
+} from './fixtures';
+import { count, dayLabel, minutes, shortTime } from './format';
+import { packAllDay, packDay } from './layout';
+import type {
+	AllDayItem,
+	CalendarGroup,
+	CalendarId,
+	Item,
+	PrivacyMode,
+	Rsvp,
+	View
+} from './types';
 
-export type View = 'day' | '4day' | 'week' | 'month' | 'year' | 'schedule';
-export type DraftKind = 'event' | 'task' | 'focus';
+export const HOUR_HEIGHT = 48;
+export const WEEK_FIRST_DAY = 15;
+export const WEEK_LAST_DAY = 21;
 
-export interface Rect {
-	left: number;
-	right: number;
-	top: number;
-	bottom: number;
-	width: number;
-	height: number;
-}
-
-export interface Draft {
-	kind: DraftKind;
+export interface MonthEntry {
 	title: string;
-	day: string;
-	start: string;
-	end: string;
+	time: string | null;
 	allDay: boolean;
-	cal: string;
-	loc: string;
-	video: string | null;
-	desc: string;
-	guestText: string;
-	_id?: string;
-	endDay?: string;
+	color: string;
 }
 
-export type Overlay =
-	| { type: 'popover'; ev: CalEvent; rect: Rect }
-	| { type: 'quick'; draft: Draft; rect: Rect }
-	| { type: 'dialog'; initial: Draft; isEdit: boolean }
-	| null;
-
-export const TODAY = CAL_TODAY;
-
-export const opts: {
-	hourH: number;
-	h12: boolean;
-	weekStartsMon: boolean;
-	showWeekends: boolean;
-	workShade: boolean;
-	workStart: number;
-	workEnd: number;
-	density: 'compact' | 'comfortable' | 'spacious';
-} = {
-	hourH: 50,
-	h12: false,
-	weekStartsMon: true,
-	showWeekends: true,
-	workShade: true,
-	workStart: 9,
-	workEnd: 18,
-	density: 'comfortable'
-};
-
-const hhmm = (min: number) =>
-	`${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
-
-const fallbackRect: Rect = { left: 286, right: 298, top: 96, bottom: 96, width: 12, height: 0 };
-const rectOf = (el: HTMLElement | null): Rect => {
-	if (!el) return fallbackRect;
-	const r = el.getBoundingClientRect();
-	return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height };
-};
-
-function draftFromSlot(day: Date, min: number | null, calId?: string): Draft {
-	const s = min == null ? 9 * 60 : min;
-	const e = Math.min(s + 60, 24 * 60 - 15);
-	return {
-		kind: 'event',
-		title: '',
-		day: ymd(day),
-		start: hhmm(s),
-		end: hhmm(e),
-		allDay: false,
-		cal: calId || 'personal',
-		loc: '',
-		video: null,
-		desc: '',
-		guestText: ''
-	};
+export interface MonthCell {
+	n: number;
+	outside: boolean;
+	weekend: boolean;
+	today: boolean;
+	entries: MonthEntry[];
+	more: string | null;
 }
 
-function eventToDraft(ev: CalEvent): Draft {
-	return {
-		kind: 'event',
-		title: ev.title,
-		day: ev.day,
-		start: ev.start || '09:00',
-		end: ev.end || '10:00',
-		allDay: !!ev.allDay,
-		cal: ev.cal,
-		loc: ev.loc || '',
-		video: ev.video || null,
-		desc: ev.desc || '',
-		guestText: (ev.guests || []).map((g) => g.name).join(', '),
-		_id: ev.id,
-		endDay: ev.endDay
-	};
+export interface WeekBlock {
+	id: string;
+	kind: Item['kind'];
+	color: string;
+	top: number;
+	height: number;
+	inset: number;
+	depth: number;
+	density: 'full' | 'oneline' | 'tiny';
+	done: boolean;
+	title: string;
+	when: string;
+	item: Item;
 }
 
-function draftToEvent(d: Draft, existingId?: string): CalEvent {
-	const guests = (d.guestText || '')
-		.split(',')
-		.map((s) => s.trim())
-		.filter(Boolean)
-		.map((g) => ({
-			init: (g.replace(/@.*/, '').trim().slice(0, 2) || '?').toUpperCase(),
-			name: g.replace(/@.*/, '').trim() || g,
-			email: g.includes('@') ? g : g.toLowerCase().replace(/[^a-z]+/g, '.') + '@meudon.fr',
-			bg: 'var(--pine-100)',
-			fg: 'var(--pine-700)'
-		}));
-	return {
-		id: existingId || 'u' + Math.random().toString(36).slice(2, 8),
-		cal: d.cal,
-		title: d.title.trim() || '(no title)',
-		day: d.day,
-		start: d.allDay ? null : d.start,
-		end: d.allDay ? null : d.end,
-		allDay: !!d.allDay,
-		loc: d.loc || undefined,
-		video: d.video || undefined,
-		desc: d.desc || undefined,
-		endDay: d.endDay,
-		guests: guests.length ? guests : undefined
-	};
+export interface WeekBuffer {
+	top: number;
+	height: number;
+	label: string;
+}
+
+export interface WeekDay {
+	dow: string;
+	num: number;
+	today: boolean;
+	weekend: boolean;
+	blocks: WeekBlock[];
+	buffers: WeekBuffer[];
+}
+
+function allCalendarsOn(): Record<CalendarId, boolean> {
+	const out = {} as Record<CalendarId, boolean>;
+	for (const id of Object.keys(CALENDARS) as CalendarId[]) out[id] = true;
+	return out;
 }
 
 class CalendarState {
 	view = $state<View>('week');
-	cursor = $state<Date>(new Date(TODAY));
-	events = $state<CalEvent[]>(EVENTS);
-	vis = $state<Record<string, boolean>>(
-		Object.fromEntries(CALENDARS.map((c) => [c.id, c.on]))
-	);
+	calendarOn = $state<Record<CalendarId, boolean>>(allCalendarsOn());
 	query = $state('');
-	overlay = $state<Overlay>(null);
-	rsvp = $state<Record<string, 'yes' | 'maybe' | 'no' | null>>({});
 	navOpen = $state(false);
+	tasksOpen = $state(false);
+	offline = $state(false);
+	fullDay = $state(false);
+	dialog = $state<'mail' | 'offer' | 'sync' | null>(null);
+	rsvp = $state<Rsvp | null>(null);
+	doneTasks = $state<Record<string, boolean>>({});
+	acknowledged = $state<Record<string, boolean>>({});
+	mailSelected = $state<Record<string, boolean>>({ p1: true, p2: true, p3: true });
+	mailOwner = $state<'marie' | 'you' | null>(null);
+	mailDone = $state(false);
+	offeredSlots = $state<number[]>([0, 1, 2]);
+	privacyMode = $state<PrivacyMode>('busy');
+	mirrors = $state({ work: true, school: true, gcal: true });
+	bookingDay = $state(1);
+	bookingSlot = $state<number | null>(null);
+	bookingRequest = $state(false);
 	toast = $state<string | null>(null);
 
-	private toastTimer: ReturnType<typeof setTimeout> | undefined;
+	#toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-	shown = $derived.by(() => {
-		const q = this.query.trim().toLowerCase();
-		return this.events.filter(
-			(e) => this.vis[e.cal] && (!q || (e.title + ' ' + (e.loc || '')).toLowerCase().includes(q))
-		);
-	});
+	notify(message: string) {
+		clearTimeout(this.#toastTimer);
+		this.toast = message;
+		this.#toastTimer = setTimeout(() => (this.toast = null), 3200);
+	}
 
-	eventDays = $derived.by(() => {
-		const s = new Set<string>();
-		for (const e of this.shown) {
-			s.add(e.day);
-			if (e.endDay && e.endDay !== e.day) s.add(e.endDay);
-		}
-		return s;
-	});
+	unbuilt() {
+		this.notify('Not built in this mockup');
+	}
 
-	days = $derived.by(() => {
-		const c = this.cursor;
-		if (this.view === 'day') return [new Date(c)];
-		if (this.view === '4day') return [0, 1, 2, 3].map((i) => addDays(c, i));
-		if (this.view === 'week') {
-			const s = startOfWeek(c, opts.weekStartsMon);
-			let arr = Array.from({ length: 7 }, (_, i) => addDays(s, i));
-			if (!opts.showWeekends) arr = arr.filter((d) => d.getDay() !== 0 && d.getDay() !== 6);
-			return arr;
-		}
-		return [new Date(c)];
-	});
-
-	title = $derived.by((): { main: string; sub: string } => {
-		const c = this.cursor;
-		const v = this.view;
-		if (v === 'year') return { main: String(c.getFullYear()), sub: '' };
-		if (v === 'month' || v === 'schedule')
-			return { main: MONTH_NAMES[c.getMonth()], sub: String(c.getFullYear()) };
-		const ds = this.days;
-		const first = ds[0];
-		const last = ds[ds.length - 1];
-		if (v === 'day')
-			return { main: `${MONTH_NAMES[first.getMonth()]} ${first.getDate()}`, sub: String(first.getFullYear()) };
-		if (first.getMonth() === last.getMonth())
-			return { main: MONTH_NAMES[first.getMonth()], sub: String(first.getFullYear()) };
-		if (first.getFullYear() === last.getFullYear())
-			return { main: `${MONTH_ABBR[first.getMonth()]} – ${MONTH_ABBR[last.getMonth()]}`, sub: String(first.getFullYear()) };
-		return {
-			main: `${MONTH_ABBR[first.getMonth()]} ${first.getFullYear()} – ${MONTH_ABBR[last.getMonth()]} ${last.getFullYear()}`,
-			sub: ''
-		};
-	});
-
-	setView = (v: View) => {
-		this.view = v;
-	};
-	setQuery = (q: string) => {
-		this.query = q;
-	};
-	toggleCal = (id: string) => {
-		this.vis = { ...this.vis, [id]: !this.vis[id] };
-	};
-
-	step = (dir: number) => {
-		const c = this.cursor;
-		const v = this.view;
-		if (v === 'day') this.cursor = addDays(c, dir);
-		else if (v === '4day') this.cursor = addDays(c, dir * 4);
-		else if (v === 'week' || v === 'schedule') this.cursor = addDays(c, dir * 7);
-		else if (v === 'month') this.cursor = new Date(c.getFullYear(), c.getMonth() + dir, 1);
-		else if (v === 'year') this.cursor = new Date(c.getFullYear() + dir, c.getMonth(), 1);
-	};
-	goToday = () => {
-		this.cursor = new Date(TODAY);
-	};
-	goDay = (d: Date) => {
-		this.cursor = new Date(d);
-		this.view = 'day';
-	};
-	pickDate = (d: Date) => {
-		this.cursor = new Date(d);
+	goTo(view: View) {
+		this.view = view;
+		this.dialog = null;
 		this.navOpen = false;
-	};
-	gotoMonth = (m: number) => {
-		this.cursor = new Date(this.cursor.getFullYear(), m, 1);
-		this.view = 'month';
-	};
+	}
 
-	openEvent = (ev: CalEvent, el: HTMLElement | null) => {
-		this.overlay = { type: 'popover', ev, rect: rectOf(el) };
-	};
-	openSlot = (day: Date, min: number | null, el: HTMLElement | null) => {
-		this.overlay = { type: 'quick', draft: draftFromSlot(day, min), rect: rectOf(el) };
-	};
-	openCreate = (kind: 'event' | 'quick' | 'task' | 'focus') => {
-		if (kind === 'event') {
-			this.overlay = { type: 'dialog', initial: draftFromSlot(this.cursor, null), isEdit: false };
-		} else {
-			const k: DraftKind = kind === 'quick' ? 'event' : kind;
-			this.overlay = {
-				type: 'quick',
-				draft: { ...draftFromSlot(this.cursor, null), kind: k },
-				rect: rectOf(null)
+	toggleCalendar(id: CalendarId) {
+		this.calendarOn = { ...this.calendarOn, [id]: !this.calendarOn[id] };
+	}
+
+	calendarsIn(group: CalendarGroup) {
+		return (Object.keys(CALENDARS) as CalendarId[])
+			.filter((id) => CALENDARS[id].group === group)
+			.map((id) => ({ id, ...CALENDARS[id], on: this.calendarOn[id] }));
+	}
+
+	get startHour() {
+		return this.fullDay ? 0 : 6;
+	}
+
+	get visibleItems(): Item[] {
+		return ITEMS.filter(
+			(item) => this.calendarOn[item.cal] && (!item.fromMail || this.mailDone)
+		);
+	}
+
+	get visibleAllDay(): AllDayItem[] {
+		return ALL_DAY.filter((item) => this.calendarOn[item.cal] && (!item.fromMail || this.mailDone));
+	}
+
+	get days(): WeekDay[] {
+		const offset = this.startHour * 60;
+		return DOW.map((dow, index) => {
+			const dayItems = this.visibleItems.filter((item) => item.day === index);
+			const placed = packDay(dayItems);
+			return {
+				dow,
+				num: DAY_NUMS[index],
+				today: index === 0,
+				weekend: index > 4,
+				buffers: dayItems
+					.filter((item) => item.buffer)
+					.map((item) => ({
+						label: `${item.buffer} min travel`,
+						top: ((minutes(item.start) - (item.buffer ?? 0) - offset) / 60) * HOUR_HEIGHT,
+						height: ((item.buffer ?? 0) / 60) * HOUR_HEIGHT - 2
+					})),
+				blocks: placed.map(({ item, column, columns }) => {
+					const top = ((minutes(item.start) - offset) / 60) * HOUR_HEIGHT;
+					const height = Math.max(
+						18,
+						((minutes(item.end) - minutes(item.start)) / 60) * HOUR_HEIGHT - 2
+					);
+					return {
+						id: item.id,
+						kind: item.kind,
+						color: CALENDARS[item.cal].color,
+						top,
+						height,
+						inset: Math.min(16, 44 / Math.max(1, columns - 1)) * column,
+						depth: column,
+						density: height < 40 ? 'tiny' : height < 56 ? 'oneline' : 'full',
+						done: !!this.doneTasks[item.id],
+						title: item.kind === 'hold' ? 'Busy' : item.title,
+						when: this.#whenLabel(item, height),
+						item
+					} satisfies WeekBlock;
+				})
 			};
+		});
+	}
+
+	#whenLabel(item: Item, height: number) {
+		if (item.kind === 'hold') return 'private hold';
+		if (item.kind === 'prop') return '3 times offered';
+		if (item.kind === 'task') {
+			return height < 40 ? (item.est ?? '') : `due ${item.due} · ${item.est}`;
 		}
-	};
-	closeOverlay = () => {
-		this.overlay = null;
-	};
+		return height < 40 ? item.start : `${item.start} – ${item.end}`;
+	}
 
-	patchDraft = (patch: Partial<Draft>) => {
-		const o = this.overlay;
-		if (o?.type === 'quick') this.overlay = { ...o, draft: { ...o.draft, ...patch } };
-	};
+	get allDayRows() {
+		return packAllDay(this.visibleAllDay).map((item) => ({
+			...item,
+			color: CALENDARS[item.cal].color
+		}));
+	}
 
-	editFromPopover = () => {
-		const o = this.overlay;
-		if (o?.type === 'popover') this.overlay = { type: 'dialog', initial: eventToDraft(o.ev), isEdit: true };
-	};
-	quickToDialog = () => {
-		const o = this.overlay;
-		if (o?.type === 'quick') this.overlay = { type: 'dialog', initial: o.draft, isEdit: false };
-	};
+	get hours() {
+		return Array.from({ length: 23 - this.startHour }, (_, k) => ({
+			label: `${String(this.startHour + k + 1).padStart(2, '0')}:00`,
+			top: (k + 1) * HOUR_HEIGHT
+		}));
+	}
 
-	setRsvp = (id: string, r: 'yes' | 'maybe' | 'no') => {
-		this.rsvp = { ...this.rsvp, [id]: this.rsvp[id] === r ? null : r };
-		this.flash(r === 'yes' ? 'Going' : r === 'maybe' ? 'Replied maybe' : 'Declined');
-	};
+	get gridHeight() {
+		return (24 - this.startHour) * HOUR_HEIGHT;
+	}
 
-	saveEvent = (draft: Draft) => {
-		const e = draftToEvent(draft, draft._id);
-		this.events = draft._id
-			? this.events.map((x) => (x.id === draft._id ? e : x))
-			: [...this.events, e];
-		this.flash(draft._id ? 'Event updated' : 'Event created');
-		this.closeOverlay();
-	};
-	deleteEvent = (id: string | undefined) => {
-		if (!id) return;
-		this.events = this.events.filter((x) => x.id !== id);
-		this.flash('Event deleted');
-		this.closeOverlay();
-	};
+	get nowTop() {
+		return ((10 * 60 + 24 - this.startHour * 60) / 60) * HOUR_HEIGHT;
+	}
 
-	flash = (text: string) => {
-		this.toast = text;
-		clearTimeout(this.toastTimer);
-		this.toastTimer = setTimeout(() => (this.toast = null), 2400);
-	};
+	get miniDays() {
+		return Array.from({ length: 42 }, (_, k) => {
+			const index = k + 1;
+			const outside = index > 30;
+			return {
+				n: outside ? index - 30 : index,
+				outside,
+				today: index === WEEK_FIRST_DAY,
+				inWeek: index >= WEEK_FIRST_DAY && index <= WEEK_LAST_DAY,
+				dot: !outside && (index === 17 || index === 19 || index === 25 || index === 30)
+			};
+		});
+	}
+
+	get monthCells(): MonthCell[] {
+		return Array.from({ length: 42 }, (_, k) => {
+			const index = k + 1;
+			const outside = index > 30;
+			const entries: MonthEntry[] = [];
+			if (!outside) {
+				if (index >= WEEK_FIRST_DAY && index <= WEEK_LAST_DAY) {
+					const day = index - WEEK_FIRST_DAY;
+					for (const item of this.visibleAllDay.filter((a) => a.day === day)) {
+						entries.push({
+							title: item.title,
+							time: null,
+							allDay: true,
+							color: CALENDARS[item.cal].color
+						});
+					}
+					for (const item of this.visibleItems.filter((i) => i.day === day)) {
+						entries.push({
+							title: item.kind === 'hold' ? 'Busy' : item.title,
+							time: shortTime(item.start),
+							allDay: false,
+							color: CALENDARS[item.cal].color
+						});
+					}
+				} else {
+					for (const [cal, title, time] of MONTH_EXTRA[index - 1] ?? []) {
+						if (!this.calendarOn[cal]) continue;
+						entries.push({
+							title,
+							time: time ? shortTime(time) : null,
+							allDay: !time,
+							color: CALENDARS[cal].color
+						});
+					}
+				}
+			}
+			const cap = entries.length > 2 ? 1 : 2;
+			return {
+				n: outside ? index - 30 : index,
+				outside,
+				weekend: k % 7 > 4,
+				today: index === WEEK_FIRST_DAY,
+				entries: entries.slice(0, cap),
+				more: entries.length > cap ? `+${entries.length - cap} more` : null
+			};
+		});
+	}
+
+	get agendaDays() {
+		return AGENDA.map((day) => ({
+			dow: DOW[day.day],
+			num: DAY_NUMS[day.day],
+			rows: day.rows.map((row, k) => {
+				const key = `${day.day}-${k}`;
+				const seen = this.acknowledged[key] ?? row.ack.includes('you');
+				const owner = row.owner ? PEOPLE[row.owner] : null;
+				return {
+					key,
+					color: CALENDARS[row.cal].color,
+					time: row.time,
+					title: row.title,
+					sub: row.sub,
+					owner,
+					ownerLabel: owner ? `${owner.name} owns this` : 'Needs an owner',
+					seen,
+					seenLabel: seen ? 'You have seen it' : 'Mark seen'
+				};
+			})
+		}));
+	}
+
+	get taskGroups() {
+		return TASK_GROUPS.map((name) => ({
+			name,
+			rows: TASKS.filter((task) => task.group === name && (!task.fromMail || this.mailDone)).map(
+				(task) => ({
+					...task,
+					color: CALENDARS[task.cal].color,
+					done: !!this.doneTasks[task.id]
+				})
+			)
+		})).filter((group) => group.rows.length);
+	}
+
+	get taskCount() {
+		return `${TASKS.filter((task) => !task.fromMail || this.mailDone).length} open`;
+	}
+
+	toggleTask(id: string) {
+		this.doneTasks = { ...this.doneTasks, [id]: !this.doneTasks[id] };
+	}
+
+	toggleAck(key: string, current: boolean) {
+		this.acknowledged = { ...this.acknowledged, [key]: !current };
+	}
+
+	setRsvp(value: Rsvp) {
+		this.rsvp = value;
+		if (value === 'yes') {
+			this.notify(
+				this.offline
+					? 'RSVP saved · queued until you reconnect'
+					: 'Replying yes · iTIP sent to alex@meudon.fr'
+			);
+			return;
+		}
+		this.notify(value === 'maybe' ? 'Replying maybe' : 'Replying no');
+	}
+
+	toggleOffline() {
+		const wasOffline = this.offline;
+		this.offline = !wasOffline;
+		this.dialog = null;
+		this.notify(
+			wasOffline ? 'Back online · queue drained' : 'Offline — local edits keep working'
+		);
+	}
+
+	get systemBarText() {
+		return this.offline
+			? 'Offline since 09:57. Three local changes are waiting; nothing has been lost.'
+			: 'Connected. Three changes made at 09:57 are still waiting their turn to send.';
+	}
+
+	get title() {
+		return {
+			week: '15 – 21 June',
+			month: 'June',
+			agenda: 'This week',
+			avail: 'Availability',
+			booking: 'Booking pages'
+		}[this.view];
+	}
+
+	get titleYear() {
+		return this.view === 'week' || this.view === 'month' ? '2026' : '';
+	}
+
+	get isDated() {
+		return this.view === 'week' || this.view === 'month' || this.view === 'agenda';
+	}
+
+	toggleMailProposal(key: string) {
+		this.mailSelected = { ...this.mailSelected, [key]: !this.mailSelected[key] };
+	}
+
+	get mailSelectedCount() {
+		return Object.values(this.mailSelected).filter(Boolean).length;
+	}
+
+	get mailOwnerMissing() {
+		return this.mailSelected.p2 && !this.mailOwner;
+	}
+
+	confirmMail() {
+		if (this.mailOwnerMissing) {
+			this.notify('Choose who owns the consent form first');
+			return;
+		}
+		const n = this.mailSelectedCount;
+		if (!n) return;
+		this.dialog = null;
+		this.mailDone = true;
+		this.view = 'week';
+		this.notify(`${n} commitments added · Marie owns the consent form`);
+	}
+
+	dropSlot(index: number) {
+		this.offeredSlots = this.offeredSlots.filter((i) => i !== index);
+	}
+
+	addSlot() {
+		const next = [0, 1, 2, 3].find((i) => !this.offeredSlots.includes(i));
+		if (next === undefined) {
+			this.notify('No further free slots this week');
+			return;
+		}
+		this.offeredSlots = [...this.offeredSlots, next].sort();
+	}
+
+	get slotDisclosure() {
+		const n = this.offeredSlots.length;
+		return `${count(COUNT_WORDS, n)} candidate time${n === 1 ? '' : 's'}, your name, and the sending identity.`;
+	}
+
+	get whyHeading() {
+		const n = this.offeredSlots.length;
+		return `Why ${count(COUNT_WORDS, n)} time${n === 1 ? '' : 's'}`;
+	}
+
+	get hasTightSlot() {
+		return this.offeredSlots.includes(2);
+	}
+
+	get pollColumns() {
+		return this.offeredSlots.map((i) => {
+			const when = SLOTS[i].when;
+			const time = when.match(/\d\d:\d\d/)?.[0] ?? '';
+			return { index: i, label: `${when.replace(/ June.*/, '').replace(/,.*/, '')} ${time}` };
+		});
+	}
+
+	get pollRows() {
+		return (['panurge', 'alex'] as const).map((key) => {
+			const person = PEOPLE[key];
+			return {
+				key,
+				init: person.init,
+				name: person.full,
+				external: !!person.external,
+				bg: person.bg,
+				fg: person.fg,
+				cells: this.offeredSlots.map((i) => ({ index: i, yes: ANSWERS[key][i] }))
+			};
+		});
+	}
+
+	get pollNote() {
+		const both = this.offeredSlots.filter((i) => ANSWERS.panurge[i] && ANSWERS.alex[i]);
+		if (!both.length) {
+			return 'No offered time works for both. Thelemail will suggest more rather than pick one.';
+		}
+		const when = SLOTS[both[0]].when;
+		const label = when.replace(/,.*/, '') + when.slice(when.indexOf(','));
+		const lead =
+			both.length === 1
+				? `${label} is the only time both can make.`
+				: `${both.length} of the offered times work for both.`;
+		return `${lead} Thelemail will not book it for you — it will offer to.`;
+	}
+
+	confirmOffer() {
+		this.dialog = null;
+		this.notify('Times inserted · a Proposal is holding them for you');
+	}
+
+	setPrivacyMode(mode: PrivacyMode) {
+		this.privacyMode = mode;
+		this.notify(
+			{
+				private: 'New commitments default to Private',
+				busy: 'New commitments default to Busy-only',
+				shared: 'New commitments default to Shared — fields are named before sending'
+			}[mode]
+		);
+	}
+
+	toggleMirror(key: 'work' | 'school' | 'gcal') {
+		const was = this.mirrors[key];
+		this.mirrors = { ...this.mirrors, [key]: !was };
+		if (key === 'gcal') {
+			this.notify(
+				was ? 'Mirror off · Google keeps nothing new' : 'Busy windows will leave Thelemail for Google'
+			);
+		}
+	}
+
+	toggleBookingRequest() {
+		const was = this.bookingRequest;
+		this.bookingRequest = !was;
+		this.bookingSlot = null;
+		this.notify(
+			was ? 'Visitors book directly again' : 'Visitors now request · each becomes a Proposal'
+		);
+	}
+
+	pickBookingDay(index: number) {
+		this.bookingDay = index;
+		this.bookingSlot = null;
+	}
+
+	get bookingCta() {
+		if (this.bookingSlot === null) return 'Pick a time';
+		const slot = BOOKING_DAYS[this.bookingDay].slots[this.bookingSlot];
+		return this.bookingRequest ? `Request ${slot}` : `Confirm ${slot}`;
+	}
+
+	confirmBooking() {
+		if (this.bookingSlot === null) {
+			this.notify('Pick a time first');
+			return;
+		}
+		this.notify(
+			this.bookingRequest
+				? 'Request sent · a Proposal is waiting on bookings@thelema.co'
+				: 'Booked · invitation sent as bookings@thelema.co'
+		);
+	}
 }
 
 export const cal = new CalendarState();
+export { dayLabel, minutes, shortTime };
