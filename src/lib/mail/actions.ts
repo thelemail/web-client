@@ -11,6 +11,7 @@ export interface MailActionCaps {
 	showMove: boolean;
 	showSnooze: boolean;
 	showUnsnooze: boolean;
+	showSpam: boolean;
 }
 
 export function mailActionsFor(folder: RouteFolder): MailActionCaps {
@@ -26,7 +27,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: false,
 				showMove: false,
 				showSnooze: false,
-				showUnsnooze: false
+				showUnsnooze: false,
+				showSpam: false
 			};
 		case 'archive':
 			return {
@@ -39,7 +41,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: true,
 				showMove: true,
 				showSnooze: true,
-				showUnsnooze: false
+				showUnsnooze: false,
+				showSpam: true
 			};
 		case 'spam':
 			return {
@@ -52,7 +55,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: false,
 				showMove: false,
 				showSnooze: false,
-				showUnsnooze: false
+				showUnsnooze: false,
+				showSpam: false
 			};
 		case 'drafts':
 		case 'scheduled':
@@ -66,7 +70,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: false,
 				showMove: false,
 				showSnooze: false,
-				showUnsnooze: false
+				showUnsnooze: false,
+				showSpam: false
 			};
 		case 'snoozed':
 			return {
@@ -79,7 +84,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: true,
 				showMove: false,
 				showSnooze: false,
-				showUnsnooze: true
+				showUnsnooze: true,
+				showSpam: false
 			};
 		case 'sent':
 			return {
@@ -92,7 +98,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: true,
 				showMove: true,
 				showSnooze: false,
-				showUnsnooze: false
+				showUnsnooze: false,
+				showSpam: false
 			};
 		case 'inbox':
 		case 'starred':
@@ -107,7 +114,8 @@ export function mailActionsFor(folder: RouteFolder): MailActionCaps {
 				showReply: true,
 				showMove: true,
 				showSnooze: true,
-				showUnsnooze: false
+				showUnsnooze: false,
+				showSpam: true
 			};
 	}
 }

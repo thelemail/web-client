@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Clock from '@lucide/svelte/icons/clock';
+	import AnchoredMenu from './AnchoredMenu.svelte';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import { formatClock, formatWeekday, formatWhenLong } from './data';
 	import {
@@ -12,11 +13,12 @@
 	} from './timePresets';
 
 	interface Props {
+		anchor: HTMLElement | undefined;
 		onPick: (when: Date) => void;
 		onClose: () => void;
 	}
 
-	let { onPick, onClose }: Props = $props();
+	let { anchor, onPick, onClose }: Props = $props();
 
 	const now = new Date();
 	const bounds = snoozeBounds(now);
@@ -67,11 +69,12 @@
 
 <svelte:document onmousedown={handleDocMouseDown} onkeydowncapture={handleKey} />
 
-<div
-	class="menu label-picker snooze-picker"
+<AnchoredMenu
+	{anchor}
+	bind:panel={root}
+	extraClass="label-picker snooze-picker"
 	role="dialog"
-	aria-label="Snooze until"
-	bind:this={root}
+	label="Snooze until"
 >
 	<div class="menu-lbl">Snooze until</div>
 	{#each presets as p (p.id)}
@@ -110,4 +113,4 @@
 			<CalendarClock size={17} />Pick date &amp; time
 		</button>
 	{/if}
-</div>
+</AnchoredMenu>

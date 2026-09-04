@@ -16,6 +16,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import AlarmClock from '@lucide/svelte/icons/alarm-clock';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Menu from '@lucide/svelte/icons/menu';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { mailNav } from '$lib/stores/nav.svelte';
@@ -34,7 +35,7 @@
 	} from './data';
 	import type { MailActionCaps } from './actions';
 
-	export type BulkAction = 'read' | 'archive' | 'trash' | 'restore' | 'delete';
+	export type BulkAction = 'read' | 'archive' | 'spam' | 'trash' | 'restore' | 'delete';
 
 	interface Props {
 		folderLabel: string;
@@ -52,6 +53,7 @@
 		onTrash: (id: string) => void;
 		onRestore?: (id: string) => void;
 		onDelete?: (id: string) => void;
+		onSpam?: (id: string) => void;
 		onToggleRead: (id: string) => void;
 		onToggleAll: () => void;
 		onBulk: (action: BulkAction) => void;
@@ -85,6 +87,7 @@
 		onTrash,
 		onRestore,
 		onDelete,
+		onSpam,
 		onToggleRead,
 		onToggleAll,
 		onBulk,
@@ -240,6 +243,11 @@
 			{#if caps.showArchive}
 				<button class="lh-btn" title="Archive" onclick={() => onBulk('archive')}>
 					<Archive size={16} />
+				</button>
+			{/if}
+			{#if caps.showSpam}
+				<button class="lh-btn" title="Report spam" onclick={() => onBulk('spam')}>
+					<ShieldAlert size={16} />
 				</button>
 			{/if}
 			{#if caps.showTrash}
@@ -452,6 +460,7 @@
 						{onTrash}
 						{onRestore}
 						{onDelete}
+						{onSpam}
 						{onToggleRead}
 					/>
 				{/each}
