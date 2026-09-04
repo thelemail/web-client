@@ -3,6 +3,7 @@ import { addresses } from '$lib/stores/addresses.svelte';
 import { auth } from '$lib/stores/auth.svelte';
 import { workspaces } from '$lib/stores/workspaces.svelte';
 import { describeOccurrence, type DescribeContext } from './describe';
+import { sendReply } from './invite';
 import {
 	clockLabel,
 	dateLabel,
@@ -756,6 +757,12 @@ class CalendarState {
 				label: `Replied ${partstat} to “${item.title}”`
 			});
 			await calendarStore.setMyState(item.id, { partstat }, `Replied ${partstat}`);
+			await sendReply(next, partstat, item.sourceMessageId);
+			this.notify(
+				calendarStore.online
+					? `Replying ${partstat} · reply goes to ${item.organizer?.email ?? 'the organiser'}`
+					: 'RSVP saved · queued until you reconnect'
+			);
 		} catch (err) {
 			this.notify(err instanceof Error ? err.message : 'Could not save your reply');
 		}

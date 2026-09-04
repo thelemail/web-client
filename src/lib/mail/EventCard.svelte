@@ -7,6 +7,9 @@
 	import HelpCircle from '@lucide/svelte/icons/help-circle';
 	import X from '@lucide/svelte/icons/x';
 	import CheckCircle from '@lucide/svelte/icons/check-circle';
+	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import { sendRsvp } from './calendar/rsvp';
 	import type { CalendarEvent, IcalDateTime } from './render/icalParse';
 	import { formatEventWhen, type Message, type RsvpStatus } from './data';
@@ -26,6 +29,42 @@
 
 	let sending = $state(false);
 	let err = $state<string | null>(null);
+	let calendarStatus = $state<{ added: boolean; calendarName?: string; itemId?: string } | null>(null);
+	let adding = $state(false);
+	const slot = $derived(page.params.slot ?? '0');
+	const isReply = $derived((ev.method ?? '').toUpperCase() === 'REPLY');
+	const isCancel = $derived((ev.method ?? '').toUpperCase() === 'CANCEL');
+
+	async function calendarEntry() {
+		return import('$lib/calendar/entry');
+	}
+
+	onMount(() => {
+		void (async () => {
+			try {
+				const entry = await calendarEntry();
+				if (isReply || isCancel) await entry.observeMailEvents([ev], message.id);
+				calendarStatus = await entry.statusFor(ev);
+			} catch {
+				calendarStatus = { added: false };
+			}
+		})();
+	});
+
+	async function addToCalendar() {
+		adding = true;
+		err = null;
+		try {
+			const entry = await calendarEntry();
+			const item = await entry.addFromMail(ev, message, rsvp ?? undefined);
+			calendarStatus = await entry.statusFor(ev);
+			void item;
+		} catch (e) {
+			err = e instanceof Error ? e.message : 'Could not add to the calendar.';
+		} finally {
+			adding = false;
+		}
+	}
 
 	const ACK: Record<RsvpStatus, string> = {
 		accepted: 'You’re going.',
@@ -86,6 +125,10 @@
 		err = null;
 		try {
 			await sendRsvp({ message, event: ev, status: next });
+			const entry = await calendarEntry();
+			const partstat = next === 'accepted' ? 'accepted' : next === 'tentative' ? 'tentative' : 'declined';
+			await entry.addFromMail(ev, message, partstat);
+			calendarStatus = await entry.statusFor(ev);
 		} catch (e) {
 			rsvp = prev;
 			err = e instanceof Error ? e.message : 'Failed to send RSVP.';
@@ -146,6 +189,22 @@
 			<span class="evt-who">
 				{ev.attendees.length} guest{ev.attendees.length === 1 ? '' : 's'}{#if ev.organizer} · organised by {ev.organizerName ?? ev.organizer}{/if}
 			</span>
+		</div>
+	{/if}
+
+	{#if !isReply && !isCancel}
+		<div class="evt-cal-row">
+			{#if calendarStatus?.added}
+				<span class="evt-ack">
+					<CheckCircle size={15} />
+					In your calendar{calendarStatus.calendarName ? ` · ${calendarStatus.calendarName}` : ''}
+					<a class="evt-change" href="/u/{slot}/calendar">Open</a>
+				</span>
+			{:else}
+				<button type="button" class="evt-opt add" disabled={adding} onclick={addToCalendar}>
+					<CalendarPlus size={15} />{adding ? 'Adding…' : 'Add to calendar'}
+				</button>
+			{/if}
 		</div>
 	{/if}
 
@@ -327,6 +386,16 @@
 		color: var(--fg-muted, #5a5d4e);
 	}
 
+	.evt-cal-row {
+		display: flex;
+		align-items: center;
+		gap: 11px;
+		padding: 11px 18px 0;
+	}
+	.evt-cal-row .evt-opt.add {
+		border: 1px solid var(--border-strong, #cfc4ad);
+		border-radius: 8px;
+	}
 	.evt-rsvp {
 		display: flex;
 		align-items: center;
