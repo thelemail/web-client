@@ -10,6 +10,9 @@
 	import SystemBar from '$lib/calendar/SystemBar.svelte';
 	import TasksPane from '$lib/calendar/tasks/TasksPane.svelte';
 	import TopBar from '$lib/calendar/TopBar.svelte';
+	import { takePending } from '$lib/calendar/entry';
+	import { observeNewMessage } from '$lib/calendar/entry';
+	import { startReminders } from '$lib/calendar/reminders';
 	import { cal } from '$lib/calendar/state.svelte';
 	import { calendarStore } from '$lib/calendar/store.svelte';
 	import { ensureAccountData } from '$lib/stores/accountData';
@@ -23,13 +26,36 @@
 		if (!accountId || !auth.canEnterApp) return;
 		ensureAccountData(accountId);
 		calendarStore.setAccount(accountId);
-		void calendarKeys.ready(accountId).then(() => calendarStore.ensureLoaded());
+		void calendarKeys
+			.ready(accountId)
+			.then(() => calendarStore.ensureLoaded())
+			.then(() => {
+				const pending = takePending();
+				if (pending) {
+					cal.openEditor({
+						mode: 'create',
+						kind: pending.kind,
+						prefill: {
+							title: pending.title,
+							notes: pending.notes,
+							sourceMessageId: pending.sourceMessageId,
+							threadSubject: pending.threadSubject
+						}
+					});
+				}
+			});
 	});
 
 	onMount(() => {
 		const stopClock = cal.startClock();
+		const stopReminders = startReminders((notice) => cal.notify(`${notice.title} · ${notice.body}`));
+		const stopMessages = calendarStore.onMessage((hint) => {
+			if (hint.id) void observeNewMessage(hint.id).catch(() => {});
+		});
 		return () => {
 			stopClock();
+			stopReminders();
+			stopMessages();
 			calendarStore.stop();
 		};
 	});

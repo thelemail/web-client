@@ -9,6 +9,11 @@
 	import type { NotificationStatus } from '$lib/platform/types';
 	import { platform } from '$platform';
 	import { Button } from '$lib/components/ui/button';
+	import {
+		reminderPermission,
+		requestReminderPermission,
+		type ReminderPermission
+	} from '$lib/calendar/reminders';
 
 	interface Props {
 		s: SettingsState;
@@ -63,6 +68,29 @@
 		}
 	});
 
+	let reminders = $state<ReminderPermission>('default');
+
+	onMount(() => {
+		reminders = reminderPermission();
+	});
+
+	async function enableReminders() {
+		reminders = await requestReminderPermission();
+	}
+
+	const reminderSummary = $derived.by(() => {
+		switch (reminders) {
+			case 'granted':
+				return 'Allowed. Reminders you set on events fire as browser notifications while a Thelemail tab is open, and as an in-app notice otherwise.';
+			case 'denied':
+				return 'Blocked for this site in the browser. Reminders still show inside the calendar while it is open.';
+			case 'unsupported':
+				return 'This browser does not offer notifications. Reminders show inside the calendar while it is open.';
+			default:
+				return 'Not asked yet. Reminders show inside the calendar until you allow browser notifications.';
+		}
+	});
+
 	const canOpenSystemSettings = $derived(
 		!!status && status.bundled && !status.translocated && status.authorization !== 'unbundled'
 	);
@@ -98,6 +126,15 @@
 		/>
 	</div>
 {/if}
+
+<div class="scard">
+	<CardHead title="Calendar reminders" />
+	<Row t="Reminders in this browser" d={reminderSummary}>
+		{#if reminders === 'default'}
+			<Button variant="secondary" size="sm" onclick={enableReminders}>Allow reminders</Button>
+		{/if}
+	</Row>
+</div>
 
 {#snippet desc()}
 	<span>{summary}</span>
