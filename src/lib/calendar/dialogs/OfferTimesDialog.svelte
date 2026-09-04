@@ -2,6 +2,8 @@
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import Check from '@lucide/svelte/icons/check';
 	import Eye from '@lucide/svelte/icons/eye';
+	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Info from '@lucide/svelte/icons/info';
 	import Link2 from '@lucide/svelte/icons/link-2';
 	import X from '@lucide/svelte/icons/x';
@@ -38,8 +40,8 @@
 			text: cal.slotDisclosure,
 			mono: 'from: bookings@thelema.co (alias-aware organiser)'
 		},
-		{ tone: 'no', text: 'Not your other events, their titles, guests, or how full the day is.' },
-		{ tone: 'no', text: 'No Thelemail account required to answer. One click, no login.' }
+		{ tone: 'no', icon: EyeOff, text: 'Not your other events, their titles, guests, or how full the day is.' },
+		{ tone: 'no', icon: UserPlus, text: 'No Thelemail account required to answer. One click, no login.' }
 	]);
 
 	const pollColumns = $derived(cal.pollColumns.length || 1);
@@ -109,7 +111,7 @@
 					<div class="poll-r best">
 						<div class="who">
 							<Avatar initials={row.init} size={22} bg={row.bg} fg={row.fg} />
-							{row.name}
+							<span class="pn">{row.name}</span>
 							{#if row.external}<span class="ext">external</span>{/if}
 						</div>
 						{#each row.cells as cell (cell.index)}

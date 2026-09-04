@@ -1,3 +1,5 @@
+import type { Component } from 'svelte';
+
 export type ItemKind = 'event' | 'task' | 'hold' | 'prop';
 
 export type CalendarGroup = 'mine' | 'role' | 'other';
@@ -113,6 +115,7 @@ export interface BoundaryLine {
 	tone: BoundaryTone;
 	text: string;
 	mono?: string;
+	icon?: Component;
 }
 
 export interface Selection {

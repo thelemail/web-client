@@ -1,6 +1,5 @@
 <script lang="ts">
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import Check from '@lucide/svelte/icons/check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Clock from '@lucide/svelte/icons/clock';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -77,6 +76,7 @@
 		{ tone: 'no', text: 'No invitation is sent. The school is not told anything.' },
 		{
 			tone: 'yes',
+			icon: Undo2,
 			text: 'Reversible in one step for 30 days, with the original message attached.'
 		}
 	];

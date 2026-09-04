@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
 	import KeyRound from '@lucide/svelte/icons/key-round';
@@ -28,10 +27,12 @@
 		{ tone: 'yes', text: 'Which 30-minute windows are open in the next 14 days.' },
 		{
 			tone: 'no',
+			icon: EyeOff,
 			text: 'Not what fills the rest — no titles, no guests, not even how many events there are.'
 		},
 		{
 			tone: 'yes',
+			icon: KeyRound,
 			text: 'Slots are computed from encrypted busy windows. Generating this page never decrypts content.'
 		}
 	];

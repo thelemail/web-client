@@ -25,7 +25,9 @@
 	</div>
 	{#each lines as line (line.text)}
 		<div class="bnd-l {line.tone}">
-			{#if line.tone === 'yes'}
+			{#if line.icon}
+				<line.icon size={14} />
+			{:else if line.tone === 'yes'}
 				<Check size={14} />
 			{:else if line.tone === 'warn'}
 				<TriangleAlert size={14} />

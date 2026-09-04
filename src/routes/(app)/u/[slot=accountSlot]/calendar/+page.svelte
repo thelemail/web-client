@@ -7,6 +7,8 @@
 	import { cal } from '$lib/calendar/state.svelte';
 </script>
 
+<svelte:head><title>Thelemail — Calendar</title></svelte:head>
+
 {#if cal.view === 'week'}
 	<WeekView />
 {:else if cal.view === 'month'}

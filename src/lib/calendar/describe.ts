@@ -1,3 +1,4 @@
+import X from '@lucide/svelte/icons/x';
 import { CALENDARS, PEOPLE } from './fixtures';
 import { longWhen } from './format';
 import type { AllDayItem, BoundaryLine, Item, Selection } from './types';
@@ -52,7 +53,7 @@ function boundaryFor(item: Item): BoundaryLine[] {
 			mono: 'zero-access at rest · title, notes, guests'
 		},
 		{ tone: 'no', text: 'No availability is published from this event.' },
-		{ tone: 'no', text: 'Envelope metadata for invitations is visible, as with any mail.' }
+		{ tone: 'no', icon: X, text: 'Envelope metadata for invitations is visible, as with any mail.' }
 	];
 }
 

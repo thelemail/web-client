@@ -1425,6 +1425,9 @@ button.create {
 	text-align: center;
 	cursor: pointer;
 }
+.cal-app .bd1,
+.cal-app .bd2,
+.cal-app .bd3 { display: block; }
 .cal-app .bd1 {
 	font-size: 10px;
 	font-weight: 600;
@@ -1628,7 +1631,9 @@ button.create {
 .cal-dlg.wide { width: 940px; }
 .cal-dlg-h {
 	display: flex;
+	flex-direction: row;
 	align-items: center;
+	text-align: left;
 	gap: 10px;
 	padding: 13px 52px 13px 20px;
 	border-bottom: 1px solid var(--border);
@@ -1636,6 +1641,7 @@ button.create {
 .cal-dlg-h .dt { font-size: 16px; font-weight: 600; color: var(--fg-strong); flex: 1; }
 .cal-dlg-foot {
 	display: flex;
+	flex-direction: row;
 	align-items: center;
 	gap: 10px;
 	padding: 14px 20px;
@@ -1662,6 +1668,9 @@ button.create {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
+}
+.cal-surface .sp-r > * {
+	flex: 0 0 auto;
 }
 .cal-surface .sp-eyebrow {
 	font-family: var(--font-mono);
@@ -1900,7 +1909,19 @@ button.create {
 .cal-surface .poll-r .pc { text-align: center; border-left: 1px solid var(--border); }
 .cal-surface .poll-r .pc svg { margin: 0 auto; }
 .cal-surface .poll-r .who { display: flex; align-items: center; gap: 8px; color: var(--ink-700); }
-.cal-surface .poll-r .who .ext { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); }
+.cal-surface .poll-r .who { min-width: 0; }
+.cal-surface .poll-r .who .pn {
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.cal-surface .poll-r .who .ext {
+	flex: 0 0 auto;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--fg-faint);
+}
 .cal-surface .poll .yes { color: var(--success-700); }
 .cal-surface .poll .no { color: var(--ink-300); }
 .cal-surface .poll-r.best { background: var(--pine-50); }
