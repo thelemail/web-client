@@ -8,20 +8,25 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Search from '@lucide/svelte/icons/search';
 	import Settings from '@lucide/svelte/icons/settings';
+	import { dev } from '$app/environment';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import ViewSwitch from './ViewSwitch.svelte';
 	import { cal } from './state.svelte';
 
 	const actions = $derived([
-		{
-			key: 'mail',
-			label: 'Commitments found in mail',
-			icon: Inbox,
-			dot: !cal.mailDone,
-			on: false,
-			run: () => (cal.dialog = 'mail')
-		},
+		...(dev
+			? [
+					{
+						key: 'mail',
+						label: 'Commitments found in mail',
+						icon: Inbox,
+						dot: true,
+						on: false,
+						run: () => (cal.dialog = 'mail')
+					}
+				]
+			: []),
 		{
 			key: 'tasks',
 			label: 'Tasks',

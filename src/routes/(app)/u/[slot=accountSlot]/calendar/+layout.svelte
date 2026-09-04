@@ -2,8 +2,7 @@
 	import '$lib/calendar/calendar.css';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import Toast from '$lib/components/Toast.svelte';
-	import MailCommitmentsDialog from '$lib/calendar/dialogs/MailCommitmentsDialog.svelte';
-	import OfferTimesDialog from '$lib/calendar/dialogs/OfferTimesDialog.svelte';
+	import { dev } from '$app/environment';
 	import SyncQueueDialog from '$lib/calendar/dialogs/SyncQueueDialog.svelte';
 	import CalRail from '$lib/calendar/rail/CalRail.svelte';
 	import SystemBar from '$lib/calendar/SystemBar.svelte';
@@ -48,10 +47,14 @@
 		if (!open) cal.dialog = null;
 	}}
 >
-	{#if cal.dialog === 'mail'}
-		<MailCommitmentsDialog />
-	{:else if cal.dialog === 'offer'}
-		<OfferTimesDialog />
+	{#if cal.dialog === 'mail' && dev}
+		{#await import('$lib/calendar/preview/dialogs/MailCommitmentsDialog.svelte') then mod}
+			<mod.default />
+		{/await}
+	{:else if cal.dialog === 'offer' && dev}
+		{#await import('$lib/calendar/preview/dialogs/OfferTimesDialog.svelte') then mod}
+			<mod.default />
+		{/await}
 	{:else if cal.dialog === 'sync'}
 		<SyncQueueDialog />
 	{/if}

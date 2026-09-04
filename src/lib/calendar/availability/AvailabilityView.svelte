@@ -3,9 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
 	import { cal } from '../state.svelte';
-	import MirrorsTable from './MirrorsTable.svelte';
+	import { dev } from '$app/environment';
 	import PrivacyModeCards from './PrivacyModeCards.svelte';
-	import SuggestionRules from './SuggestionRules.svelte';
 	import type { BoundaryLine } from '../types';
 
 	const LIMITS: BoundaryLine[] = [
@@ -59,6 +58,7 @@
 			</div>
 		</div>
 
+		{#if dev}
 		<div class="card">
 			<div class="card-h">
 				<div>
@@ -71,7 +71,9 @@
 				<Button variant="secondary" size="sm" onclick={() => cal.unbuilt()}>Add a mirror</Button>
 			</div>
 			<div class="card-b tight">
-				<MirrorsTable />
+				{#await import('../preview/availability/MirrorsTable.svelte') then mod}
+					<mod.default />
+				{/await}
 			</div>
 		</div>
 
@@ -83,8 +85,11 @@
 				</div>
 			</div>
 			<div class="card-b tight">
-				<SuggestionRules />
+				{#await import('../preview/availability/SuggestionRules.svelte') then mod}
+					<mod.default />
+				{/await}
 			</div>
 		</div>
+		{/if}
 	</div>
 </div>

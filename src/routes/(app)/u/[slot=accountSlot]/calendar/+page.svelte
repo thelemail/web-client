@@ -1,7 +1,7 @@
 <script lang="ts">
 	import AgendaView from '$lib/calendar/agenda/AgendaView.svelte';
+	import { dev } from '$app/environment';
 	import AvailabilityView from '$lib/calendar/availability/AvailabilityView.svelte';
-	import BookingView from '$lib/calendar/booking/BookingView.svelte';
 	import MonthView from '$lib/calendar/month/MonthView.svelte';
 	import WeekView from '$lib/calendar/week/WeekView.svelte';
 	import { cal } from '$lib/calendar/state.svelte';
@@ -17,6 +17,8 @@
 	<AgendaView />
 {:else if cal.view === 'avail'}
 	<AvailabilityView />
-{:else if cal.view === 'booking'}
-	<BookingView />
+{:else if cal.view === 'booking' && dev}
+	{#await import('$lib/calendar/preview/booking/BookingView.svelte') then mod}
+		<mod.default />
+	{/await}
 {/if}

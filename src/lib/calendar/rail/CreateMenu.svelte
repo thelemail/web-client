@@ -6,6 +6,7 @@
 	import ListTodo from '@lucide/svelte/icons/list-todo';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Plus from '@lucide/svelte/icons/plus';
+	import { dev } from '$app/environment';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { cal } from '../state.svelte';
 
@@ -27,12 +28,14 @@
 		<DropdownMenu.Item onSelect={() => cal.unbuilt()}>
 			<Lock size={16} />Hold (private busy)<span class="rt">H</span>
 		</DropdownMenu.Item>
-		<DropdownMenu.Item onSelect={() => (cal.dialog = 'offer')}>
-			<CalendarClock size={16} />Proposal — offer times<span class="rt">P</span>
-		</DropdownMenu.Item>
-		<DropdownMenu.Separator />
-		<DropdownMenu.Item onSelect={() => cal.goTo('booking')}>
-			<Globe size={16} />Booking page
-		</DropdownMenu.Item>
+		{#if dev}
+			<DropdownMenu.Item onSelect={() => (cal.dialog = 'offer')}>
+				<CalendarClock size={16} />Proposal — offer times<span class="rt">P</span>
+			</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item onSelect={() => cal.goTo('booking')}>
+				<Globe size={16} />Booking page
+			</DropdownMenu.Item>
+		{/if}
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

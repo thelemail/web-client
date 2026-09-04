@@ -12,11 +12,11 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import DisclosureBoundary from '../DisclosureBoundary.svelte';
-	import PrivacyChip from '../PrivacyChip.svelte';
+	import DisclosureBoundary from '../../DisclosureBoundary.svelte';
+	import PrivacyChip from '../../PrivacyChip.svelte';
 	import { CALENDARS, PEOPLE } from '../fixtures';
 	import { cal } from '../state.svelte';
-	import type { BoundaryLine } from '../types';
+	import type { BoundaryLine } from '../../types';
 
 	const PROPOSALS = [
 		{

@@ -4,9 +4,9 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import { Switch } from '$lib/components/ui/switch';
-	import DisclosureBoundary from '../DisclosureBoundary.svelte';
+	import DisclosureBoundary from '../../DisclosureBoundary.svelte';
 	import { cal } from '../state.svelte';
-	import type { BoundaryLine } from '../types';
+	import type { BoundaryLine } from '../../types';
 
 	const FACTS = [
 		{ title: 'Public address', body: 'thelema.co/book/consultation', mono: true },

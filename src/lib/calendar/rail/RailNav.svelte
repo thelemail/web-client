@@ -2,6 +2,7 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Users from '@lucide/svelte/icons/users';
+	import { dev } from '$app/environment';
 	import { cal } from '../state.svelte';
 </script>
 
@@ -22,12 +23,14 @@
 	>
 		<ShieldCheck size={16} />Availability &amp; mirroring
 	</button>
-	<button
-		type="button"
-		class="rn-item"
-		class:on={cal.view === 'booking'}
-		onclick={() => cal.goTo('booking')}
-	>
-		<Globe size={16} />Booking pages
-	</button>
+	{#if dev}
+		<button
+			type="button"
+			class="rn-item"
+			class:on={cal.view === 'booking'}
+			onclick={() => cal.goTo('booking')}
+		>
+			<Globe size={16} />Booking pages
+		</button>
+	{/if}
 </div>
