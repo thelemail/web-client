@@ -684,6 +684,13 @@ export class CalendarStore {
 		await this.#enqueue({ kind: 'calendar.delete', calendarId, label: `Deleted “${cal.name}”` });
 	}
 
+	async resealCalendar(calendarId: string): Promise<void> {
+		for (const entry of [...this.items.values()]) {
+			if (entry.item.calendarId !== calendarId || entry.unreadable) continue;
+			await this.saveItem(entry.item, { label: `Re-sealed “${entry.item.title || 'untitled'}”` });
+		}
+	}
+
 	async queueMail(itemId: string, mail: OutboxMail, label: string): Promise<void> {
 		await this.#enqueue({ kind: 'invite.send', itemId, mail, label });
 	}
