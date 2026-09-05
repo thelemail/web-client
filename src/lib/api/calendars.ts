@@ -86,7 +86,6 @@ export interface CalendarItemRow {
 	sealed: string;
 	keyFingerprint: string;
 	schemaVersion: number;
-	busyWindows: BusyWindow[];
 	createdById?: string | null;
 	updatedById?: string | null;
 	createdAt: string;
@@ -134,7 +133,6 @@ export interface CalendarItemRevisionRow {
 	keyFingerprint: string;
 	schemaVersion: number;
 	privacy: CalendarPrivacy;
-	busyWindows: BusyWindow[];
 	deleted: boolean;
 	updatedById?: string | null;
 	createdAt: string;

@@ -643,7 +643,6 @@ export class CalendarStore {
 			sealed,
 			keyFingerprint: key.fingerprintB64,
 			schemaVersion: ITEM_SCHEMA_VERSION,
-			busyWindows: op.body.busyWindows,
 			createdAt: item.createdAt,
 			updatedAt: now
 		};
