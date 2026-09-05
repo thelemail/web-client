@@ -101,6 +101,8 @@ export interface CalendarItemRequest {
 	keyFingerprint: string;
 	schemaVersion: number;
 	busyWindows: BusyWindow[];
+	busySignature?: string;
+	busySignerKeyFingerprint?: string;
 }
 
 export interface CalendarItemSummary {
@@ -138,11 +140,21 @@ export interface CalendarItemRevisionRow {
 	createdAt: string;
 }
 
+export interface CalendarBusyItem {
+	itemId: string;
+	rev: number;
+	privacy: CalendarPrivacy;
+	signerAccountId: string;
+	signerKeyFingerprint: string;
+	signature: string;
+	windows: BusyWindow[];
+}
+
 export interface CalendarBusyEntry {
 	calendarId: string;
 	kind: CalendarKind;
 	ownerAccountId: string;
-	windows: BusyWindow[];
+	items: CalendarBusyItem[];
 }
 
 export interface CalendarChange {
@@ -291,15 +303,23 @@ export function listCalendarItemRevisions(
 	return apiFetch(itemPath(calendarId, itemId, '/revisions'));
 }
 
+export interface RestoreCalendarItemRevisionRequest {
+	baseRev: number;
+	privacy: CalendarPrivacy;
+	busyWindows: BusyWindow[];
+	busySignature?: string;
+	busySignerKeyFingerprint?: string;
+}
+
 export function restoreCalendarItemRevision(
 	calendarId: string,
 	itemId: string,
 	rev: number,
-	baseRev: number
+	body: RestoreCalendarItemRevisionRequest
 ): Promise<CalendarItemSummary> {
 	return apiFetch(itemPath(calendarId, itemId, `/revisions/${rev}/restore`), {
 		method: 'POST',
-		body: { baseRev }
+		body
 	});
 }
 

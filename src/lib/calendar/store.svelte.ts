@@ -10,6 +10,8 @@ import {
 	restoreCalendarItemRevision,
 	putCalendarItemState,
 	updateCalendar,
+	type CalendarItemRequest,
+	type RestoreCalendarItemRevisionRequest,
 	type CalendarItemRow,
 	type CalendarItemStateRow,
 	type CalendarRow
@@ -47,6 +49,7 @@ import {
 } from './model';
 import { replayOne, type OutboxMail, type OutboxOp, type ReplayApi } from './outbox';
 import { busyWindows, expandItems, itemSpan, type Occurrence } from './recur';
+import { signBusyWindows } from './busysign';
 import { keyForCalendar, openText, ownKey, sealText, SealError, type SealKey } from './seal';
 import { fullLoad, liveSyncApi, pullChanges, type SyncApi } from './sync';
 
@@ -580,6 +583,36 @@ export class CalendarStore {
 		return { sealed, key };
 	}
 
+	async #itemPutBody(
+		accountId: string,
+		item: CalendarItem,
+		baseRev: number
+	): Promise<{ body: CalendarItemRequest; key: SealKey }> {
+		const { sealed, key } = await this.#sealItem(accountId, item);
+		const windows = busyWindows(item);
+		const body: CalendarItemRequest = {
+			baseRev,
+			privacy: item.privacy,
+			sealed,
+			keyFingerprint: key.fingerprintB64,
+			schemaVersion: ITEM_SCHEMA_VERSION,
+			busyWindows: windows
+		};
+		if (item.privacy !== 'private') {
+			const signed = await signBusyWindows(accountId, {
+				calendarId: item.calendarId,
+				itemId: item.id,
+				privacy: item.privacy,
+				rev: baseRev + 1,
+				signerAccountId: accountId,
+				windows
+			});
+			body.busySignature = signed.signature;
+			body.busySignerKeyFingerprint = signed.signerKeyFingerprint;
+		}
+		return { body, key };
+	}
+
 	async saveItem(draft: CalendarItem, opts: SaveOptions = {}): Promise<LoadedItem> {
 		const accountId = this.#accountId;
 		if (!accountId) throw new Error('No account');
@@ -591,22 +624,16 @@ export class CalendarStore {
 			createdAt: existing?.item.createdAt ?? draft.createdAt ?? now,
 			updatedAt: now
 		};
-		const { sealed, key } = await this.#sealItem(accountId, item);
 		const baseRev = existing?.rev ?? 0;
+		const { body, key } = await this.#itemPutBody(accountId, item, baseRev);
+		const sealed = body.sealed;
 		const op: OutboxOp = {
 			kind: 'item.put',
 			calendarId: item.calendarId,
 			itemId: item.id,
 			label: opts.label ?? labelFor(item, existing ? 'Edited' : 'Created'),
 			fields: opts.fields,
-			body: {
-				baseRev,
-				privacy: item.privacy,
-				sealed,
-				keyFingerprint: key.fingerprintB64,
-				schemaVersion: ITEM_SCHEMA_VERSION,
-				busyWindows: busyWindows(item)
-			}
+			body
 		};
 		const row: CalendarItemRow = {
 			id: item.id,
@@ -883,10 +910,34 @@ export class CalendarStore {
 	}
 
 	async restoreRevision(itemId: string, rev: number): Promise<void> {
+		const accountId = this.#accountId;
 		const entry = this.items.get(itemId);
-		if (!entry) return;
-		await restoreCalendarItemRevision(entry.item.calendarId, itemId, rev, entry.rev);
-		await this.#reloadItem(entry.item.calendarId, itemId);
+		if (!accountId || !entry) return;
+		const calendarId = entry.item.calendarId;
+		const { revisions } = await listCalendarItemRevisions(calendarId, itemId);
+		const target = revisions.find((r) => r.rev === rev);
+		if (!target || target.deleted) throw new Error('That revision cannot be restored');
+		const restored = parseItem(await openText(accountId, target.sealed, target.keyFingerprint));
+		const windows = busyWindows(restored);
+		const body: RestoreCalendarItemRevisionRequest = {
+			baseRev: entry.rev,
+			privacy: restored.privacy,
+			busyWindows: windows
+		};
+		if (restored.privacy !== 'private') {
+			const signed = await signBusyWindows(accountId, {
+				calendarId,
+				itemId,
+				privacy: restored.privacy,
+				rev: entry.rev + 1,
+				signerAccountId: accountId,
+				windows
+			});
+			body.busySignature = signed.signature;
+			body.busySignerKeyFingerprint = signed.signerKeyFingerprint;
+		}
+		await restoreCalendarItemRevision(calendarId, itemId, rev, body);
+		await this.#reloadItem(calendarId, itemId);
 	}
 
 	async #reloadItem(calendarId: string, itemId: string): Promise<void> {
@@ -1074,23 +1125,10 @@ export class CalendarStore {
 					});
 				}
 			}
-			const { sealed, key } = await this.#sealItem(accountId, merged);
+			const { body } = await this.#itemPutBody(accountId, merged, detail.item.rev);
 			const entry = this.items.get(rec.op.itemId);
 			if (entry) this.items.set(rec.op.itemId, { ...entry, item: merged, rev: detail.item.rev });
-			return {
-				...rec,
-				op: {
-					...rec.op,
-					body: {
-						...rec.op.body,
-						baseRev: detail.item.rev,
-						sealed,
-						keyFingerprint: key.fingerprintB64,
-						busyWindows: busyWindows(merged),
-						privacy: merged.privacy
-					}
-				}
-			};
+			return { ...rec, op: { ...rec.op, body } };
 		} catch {
 			return null;
 		}
