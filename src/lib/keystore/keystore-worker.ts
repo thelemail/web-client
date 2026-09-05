@@ -67,6 +67,8 @@ import type {
 	EncryptResponse,
 	EncryptToKeysArgs,
 	EncryptToKeysResponse,
+	SignDetachedArgs,
+	SignDetachedResponse,
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
 	GetPublicKeyResponse,
@@ -1220,6 +1222,34 @@ async function handleEncrypt(args: EncryptArgs): Promise<EncryptResponse> {
 		return { ok: true, ciphertext: ciphertext as Uint8Array };
 	} catch (err) {
 		console.warn('keystore: encrypt failed', err);
+		return { ok: false, code: 'unknown' };
+	}
+}
+
+async function handleSignDetached(args: SignDetachedArgs): Promise<SignDetachedResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) {
+		return { ok: false, code: 'locked' };
+	}
+	const signingKey = v.privateKey;
+	if (!signingKey) {
+		return { ok: false, code: 'locked' };
+	}
+	try {
+		const message = await openpgp.createMessage({ binary: args.data });
+		const signature = await openpgp.sign({
+			message,
+			signingKeys: signingKey,
+			detached: true,
+			format: 'binary'
+		});
+		return {
+			ok: true,
+			signature: signature as Uint8Array,
+			keyFingerprintHex: signingKey.getFingerprint().toLowerCase()
+		};
+	} catch (err) {
+		console.warn('keystore: signDetached failed', err);
 		return { ok: false, code: 'unknown' };
 	}
 }
@@ -2615,6 +2645,9 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'encryptToKeys':
 				respond(port, msg.id, await handleEncryptToKeys(msg.args as EncryptToKeysArgs));
+				break;
+			case 'signDetached':
+				respond(port, msg.id, await handleSignDetached(msg.args as SignDetachedArgs));
 				break;
 			default:
 				respondError(port, msg.id, `unknown command: ${msg.cmd}`);
