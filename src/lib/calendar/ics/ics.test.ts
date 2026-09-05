@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CalendarItem } from '../model';
 import { expandItem } from '../recur';
-import { parseInvitation } from './fromMail';
+import { itemFromInvitation, parseInvitation } from './fromMail';
 import { buildItemIcs, buildReplyIcs, buildVTimezone, rruleSummary, untilBefore } from './write';
 
 const item: CalendarItem = {
@@ -152,5 +152,57 @@ describe('replies and rrule helpers', () => {
 			'Repeats every week on MO, WE, 5 times'
 		);
 		expect(rruleSummary('FREQ=MONTHLY;INTERVAL=2')).toBe('Repeats every 2 months');
+	});
+});
+
+const REQUEST_ICS = [
+	'BEGIN:VCALENDAR',
+	'VERSION:2.0',
+	'METHOD:REQUEST',
+	'BEGIN:VEVENT',
+	'UID:invite-1@example.test',
+	'DTSTART:20260910T130000Z',
+	'DTEND:20260910T140000Z',
+	'SUMMARY:Interview',
+	'ORGANIZER:mailto:recruiter@example.test',
+	'ATTENDEE;PARTSTAT=NEEDS-ACTION:mailto:me@thelemail.test',
+	'END:VEVENT',
+	'END:VCALENDAR'
+].join('\r\n');
+
+const WITH_ALARM = REQUEST_ICS.replace(
+	'END:VEVENT',
+	['BEGIN:VALARM', 'TRIGGER:-PT45M', 'ACTION:DISPLAY', 'END:VALARM', 'END:VEVENT'].join('\r\n')
+);
+
+function fromIcs(raw: string, fallback: number | null) {
+	const inv = parseInvitation(raw, ['me@thelemail.test']);
+	if (!inv) throw new Error('invitation did not parse');
+	return itemFromInvitation(
+		inv,
+		{ summary: 'Interview', attendees: [], rawIcs: raw, uid: inv.uid },
+		'cal-1',
+		['me@thelemail.test'],
+		'msg-1',
+		'busy',
+		fallback
+	);
+}
+
+describe('reminders on items added from mail', () => {
+	it('applies the account default when the invitation carries no alarm', () => {
+		expect(fromIcs(REQUEST_ICS, 10).reminders).toEqual([{ minutesBefore: 10 }]);
+	});
+
+	it('leaves the item without reminders when the default is none', () => {
+		expect(fromIcs(REQUEST_ICS, null).reminders).toBeUndefined();
+	});
+
+	it('keeps the organiser alarm when the invitation carries one', () => {
+		expect(fromIcs(WITH_ALARM, 10).reminders).toEqual([{ minutesBefore: 45 }]);
+	});
+
+	it('treats a zero default as at the time rather than as no reminder', () => {
+		expect(fromIcs(REQUEST_ICS, 0).reminders).toEqual([{ minutesBefore: 0 }]);
 	});
 });
