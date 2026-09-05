@@ -2096,7 +2096,6 @@ button.create {
 	.cal-app .rail { transition: none; }
 }
 
-/* live data states */
 .cal-app .ev.pending { opacity: 0.75; border-style: dashed; }
 .cal-app .cal-empty { font-size: 12px; color: var(--fg-faint); padding: 6px 8px; }
 .cal-app .cal-notice {
@@ -2119,7 +2118,6 @@ button.create {
 .cal-app .cap-bar i.t { width: var(--boxed-pct, 0%); }
 .cal-app .cal-badge svg { display: inline-block; vertical-align: middle; }
 
-/* dialog forms */
 .cal-dlg.cal-dlg-narrow { width: 460px; }
 .cal-surface .cal-dlg-lead { padding: 18px 20px 6px; font-size: 14px; line-height: 1.5; color: var(--fg); }
 .cal-surface .cal-form { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
