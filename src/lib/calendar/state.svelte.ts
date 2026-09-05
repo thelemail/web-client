@@ -221,7 +221,12 @@ class CalendarState {
 	}
 
 	get isDated() {
-		return this.view === 'week' || this.view === 'month' || this.view === 'agenda';
+		return (
+			this.view === 'week' ||
+			this.view === 'month' ||
+			this.view === 'agenda' ||
+			this.view === 'avail'
+		);
 	}
 
 	goTo(view: View) {
@@ -242,12 +247,12 @@ class CalendarState {
 
 	prev() {
 		if (!this.isDated) return;
-		this.anchor = shiftAnchor(this.anchor, this.view as 'week' | 'month' | 'agenda', -1);
+		this.anchor = shiftAnchor(this.anchor, this.view === 'month' ? 'month' : 'week', -1);
 	}
 
 	next() {
 		if (!this.isDated) return;
-		this.anchor = shiftAnchor(this.anchor, this.view as 'week' | 'month' | 'agenda', 1);
+		this.anchor = shiftAnchor(this.anchor, this.view === 'month' ? 'month' : 'week', 1);
 	}
 
 	get weekWindow(): DayRange {

@@ -1,8 +1,29 @@
 <script lang="ts">
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
+	import AvailabilityGrid from './AvailabilityGrid.svelte';
 	import PrivacyModeCards from './PrivacyModeCards.svelte';
+	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import type { BoundaryLine } from '../types';
+
+	const GRID_BOUNDARY: BoundaryLine[] = [
+		{
+			tone: 'yes',
+			text: 'These blocks are the busy windows your workspace publishes. Titles, guests and locations are not part of them and never left anyone’s device.',
+			mono: 'server reads: start, end'
+		},
+		{
+			tone: 'no',
+			text: 'Items set to Private publish nothing. An empty row does not mean a free person.'
+		},
+		{
+			tone: 'yes',
+			text: 'Each block is signed by the account that published it. Blocks we could not check are marked.'
+		}
+	];
+
+	const alone = $derived(workspaces.members.length <= 1);
 
 	const LIMITS: BoundaryLine[] = [
 		{
@@ -23,13 +44,40 @@
 <div class="page">
 	<div class="page-inner">
 		<div class="page-h">
-			<div class="eyebrow">Availability &amp; mirroring</div>
+			<div class="eyebrow">Availability</div>
 			<h1>Say exactly what leaves.</h1>
 			<p>
 				One switch called “private” would be a lie. A calendar has to disclose something to be
 				useful, so the mode is a property of each relationship — and every row below states what the
 				other side can read.
 			</p>
+		</div>
+
+		<div class="card">
+			<div class="card-h">
+				<div>
+					<div class="ch-t">Who is busy this week</div>
+					<div class="ch-s">
+						Busy windows only, with no titles. This is what the server can see about each of you.
+					</div>
+				</div>
+			</div>
+			<div class="card-b">
+				<AvailabilityGrid />
+				{#if alone}
+					<div class="avail-solo">
+						Availability across people needs more than one person in this workspace.
+					</div>
+				{/if}
+				<div class="limits">
+					<DisclosureBoundary
+						heading="What leaves this device"
+						headingIcon={ShieldCheck}
+						lines={GRID_BOUNDARY}
+						noIcon="x"
+					/>
+				</div>
+			</div>
 		</div>
 
 		<div class="card">

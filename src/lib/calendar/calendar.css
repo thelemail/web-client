@@ -2286,3 +2286,79 @@ button.create {
 .evpop-hist:hover {
 	color: var(--pine-900);
 }
+
+.cal-app .avail { display: flex; flex-direction: column; gap: 2px; }
+.cal-app .avail-head,
+.cal-app .avail-lane {
+	display: grid;
+	grid-template-columns: 200px repeat(7, 1fr);
+	gap: 2px;
+	align-items: stretch;
+}
+.cal-app .avail-dh {
+	padding: 6px 8px;
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--fg-muted);
+	text-align: center;
+}
+.cal-app .avail-dh.is-today { color: var(--pine-700); font-weight: 600; }
+.cal-app .avail-dh.is-weekend { background: var(--surface-sunk); border-radius: var(--radius-sm); }
+.cal-app .avail-who { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 4px; }
+.cal-app .avail-nm { display: flex; flex-direction: column; min-width: 0; }
+.cal-app .avail-nm .an-t { font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-app .avail-nm .an-s { font-size: 11px; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-app .avail-day {
+	position: relative;
+	height: 30px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--surface);
+}
+.cal-app .avail-day.is-weekend { background: var(--surface-sunk); }
+.cal-app .avail-blk {
+	position: absolute;
+	top: 3px;
+	bottom: 3px;
+	border-radius: 3px;
+	background: var(--pine-600);
+}
+.cal-app .avail-blk.unverified {
+	background: repeating-linear-gradient(
+		45deg,
+		var(--warning-500) 0 4px,
+		transparent 4px 8px
+	);
+	border: 1px solid var(--warning-500);
+}
+.cal-app .avail-trust {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 4px 6px 200px;
+	font-size: 12px;
+	color: var(--warning-700, var(--fg-muted));
+}
+.cal-app .avail-note {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 4px;
+	font-size: 13px;
+	color: var(--fg-muted);
+}
+.cal-app .avail-tally {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 4px 0;
+	font-size: 12px;
+	color: var(--fg-muted);
+}
+.cal-app .avail-solo { padding: 10px 4px 0; font-size: 13px; color: var(--fg-muted); }
+@media (max-width: 900px) {
+	.cal-app .avail-head,
+	.cal-app .avail-lane { grid-template-columns: 120px repeat(7, minmax(40px, 1fr)); }
+	.cal-app .avail-trust { padding-left: 120px; }
+}

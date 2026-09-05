@@ -20,7 +20,7 @@
 		class:on={cal.view === 'avail'}
 		onclick={() => cal.goTo('avail')}
 	>
-		<ShieldCheck size={16} />Availability &amp; mirroring
+		<ShieldCheck size={16} />Availability
 	</button>
 	{#if import.meta.env.DEV}
 		<button
