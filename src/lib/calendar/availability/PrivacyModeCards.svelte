@@ -2,11 +2,11 @@
 	import Eye from '@lucide/svelte/icons/eye';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Users from '@lucide/svelte/icons/users';
+	import { accountSettings, type CalendarPrivacyDefault } from '$lib/stores/accountSettings.svelte';
 	import { cal } from '../state.svelte';
-	import type { PrivacyMode } from '../types';
 
 	const MODES: {
-		value: PrivacyMode;
+		value: CalendarPrivacyDefault;
 		label: string;
 		body: string;
 		facts: string[];
@@ -22,20 +22,35 @@
 		{
 			value: 'busy',
 			label: 'Busy-only',
-			body: 'Details stay encrypted. Selected people and booking pages receive the minimum busy window needed to schedule.',
+			body: 'Details stay encrypted. Members of your workspace see the busy window so they can find a free slot, and nothing else.',
 			facts: ['server reads: start, end', 'shared: busy window only'],
 			tone: 'var(--brass-600)'
 		},
 		{
 			value: 'shared',
 			label: 'Shared',
-			body: 'You disclose chosen fields on purpose — to members, to invitees, or to a booking page. Each field is listed before it is sent.',
+			body: 'You disclose chosen fields on purpose — to members, or to invitees. Each field is listed before it is sent.',
 			facts: ['server reads: start, end', 'shared: fields you name'],
 			tone: 'var(--info-500)'
 		}
 	];
 
 	const ICONS = { private: Lock, busy: Eye, shared: Users };
+
+	const NOTE: Record<CalendarPrivacyDefault, string> = {
+		private: 'New commitments default to Private',
+		busy: 'New commitments default to Busy-only',
+		shared: 'New commitments default to Shared — fields are named before sending'
+	};
+
+	async function choose(mode: CalendarPrivacyDefault) {
+		try {
+			await accountSettings.persistCalendar({ ...accountSettings.calendar, defaultPrivacy: mode });
+			cal.notify(NOTE[mode]);
+		} catch {
+			cal.notify('Could not save the default');
+		}
+	}
 </script>
 
 <div class="pcards">
@@ -44,8 +59,8 @@
 		<button
 			type="button"
 			class="pcard"
-			class:on={cal.privacyMode === mode.value}
-			onclick={() => cal.setPrivacyMode(mode.value)}
+			class:on={accountSettings.calendar.defaultPrivacy === mode.value}
+			onclick={() => choose(mode.value)}
 		>
 			<span class="pc-t" style:--icon-tone={mode.tone}>
 				<Icon size={16} color={mode.tone} />{mode.label}

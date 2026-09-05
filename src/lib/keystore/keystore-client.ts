@@ -24,6 +24,8 @@ import type {
 	EncryptResponse,
 	EncryptToKeysArgs,
 	EncryptToKeysResponse,
+	SignDetachedArgs,
+	SignDetachedResponse,
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
 	GetPublicKeyResponse,
@@ -307,6 +309,7 @@ export const keystore = {
 		call<CommitReformattedKeyResponse>('commitReformattedKey', args),
 	encrypt: (args: EncryptArgs) => call<EncryptResponse>('encrypt', args),
 	encryptToKeys: (args: EncryptToKeysArgs) => call<EncryptToKeysResponse>('encryptToKeys', args),
+	signDetached: (args: SignDetachedArgs) => call<SignDetachedResponse>('signDetached', args),
 	subscribe(cb: (b: Broadcast) => void): () => void {
 		const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
 		if (channel) return channel.subscribe(cb);

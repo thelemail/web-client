@@ -33,6 +33,10 @@
 	import AnchoredMenu from '$lib/components/AnchoredMenu.svelte';
 	import AlarmClockOff from '@lucide/svelte/icons/alarm-clock-off';
 	import EventCard from './EventCard.svelte';
+	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+	import ListTodo from '@lucide/svelte/icons/list-todo';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { untrack } from 'svelte';
 	import { DecryptionError } from '$lib/mail/decrypt';
 	import { auth } from '$lib/stores/auth.svelte';
@@ -480,6 +484,21 @@
 	const isForwarded = $derived(
 		bodyState?.status === 'ready' ? bodyState.render.forwarded === true : false
 	);
+	async function sendToCalendar(kind: 'event' | 'task') {
+		if (!m) return;
+		const entry = await import('$lib/calendar/entry');
+		const snippet =
+			bodyState?.status === 'ready' ? (bodyState.render.contentText ?? '').slice(0, 2000) : '';
+		entry.stashFromMail({
+			kind,
+			title: m.subj,
+			notes: snippet || undefined,
+			sourceMessageId: m.id,
+			threadSubject: m.subj
+		});
+		await goto(`/u/${page.params.slot ?? '0'}/calendar`);
+	}
+
 	const calendarEvents = $derived<CalendarEvent[]>(
 		bodyState?.status === 'ready' ? bodyState.render.calendarEvents : []
 	);
@@ -697,6 +716,29 @@
 							}}
 						>
 							<Printer size={17} />Print<span class="rt">⌘P</span>
+						</button>
+						<div class="msep"></div>
+						<button
+							type="button"
+							class="mitem"
+							role="menuitem"
+							onclick={() => {
+								moreOpen = false;
+								void sendToCalendar('event');
+							}}
+						>
+							<CalendarPlus size={17} />Create event from message
+						</button>
+						<button
+							type="button"
+							class="mitem"
+							role="menuitem"
+							onclick={() => {
+								moreOpen = false;
+								void sendToCalendar('task');
+							}}
+						>
+							<ListTodo size={17} />Create task from message
 						</button>
 						{#if canBlock || canReport}
 							<div class="msep"></div>

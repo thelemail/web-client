@@ -1,0 +1,42 @@
+[
+	{
+		"name": "no windows",
+		"statement": {
+			"calendarId": "C1A2B3C4-0000-0000-0000-000000000001",
+			"itemId": "D1A2B3C4-0000-0000-0000-000000000002",
+			"privacy": "busy",
+			"rev": 1,
+			"signerAccountId": "E1A2B3C4-0000-0000-0000-000000000003",
+			"windows": []
+		},
+		"canonical": "{\"calendarId\":\"c1a2b3c4-0000-0000-0000-000000000001\",\"itemId\":\"d1a2b3c4-0000-0000-0000-000000000002\",\"privacy\":\"busy\",\"rev\":1,\"signerAccountId\":\"e1a2b3c4-0000-0000-0000-000000000003\",\"version\":1,\"windows\":[]}"
+	},
+	{
+		"name": "one window",
+		"statement": {
+			"calendarId": "c1",
+			"itemId": "i1",
+			"privacy": "shared",
+			"rev": 42,
+			"signerAccountId": "a1",
+			"windows": [["2026-09-05T09:20:00.000Z", "2026-09-05T10:20:00.000Z"]]
+		},
+		"canonical": "{\"calendarId\":\"c1\",\"itemId\":\"i1\",\"privacy\":\"shared\",\"rev\":42,\"signerAccountId\":\"a1\",\"version\":1,\"windows\":[[1788600000000,1788603600000]]}"
+	},
+	{
+		"name": "windows are sorted",
+		"statement": {
+			"calendarId": "c1",
+			"itemId": "i1",
+			"privacy": "busy",
+			"rev": 7,
+			"signerAccountId": "a1",
+			"windows": [
+				["1970-01-01T00:00:00.200Z", "1970-01-01T00:00:00.300Z"],
+				["1970-01-01T00:00:00.100Z", "1970-01-01T00:00:00.150Z"],
+				["1970-01-01T00:00:00.100Z", "1970-01-01T00:00:00.120Z"]
+			]
+		},
+		"canonical": "{\"calendarId\":\"c1\",\"itemId\":\"i1\",\"privacy\":\"busy\",\"rev\":7,\"signerAccountId\":\"a1\",\"version\":1,\"windows\":[[100,120],[100,150],[200,300]]}"
+	}
+]

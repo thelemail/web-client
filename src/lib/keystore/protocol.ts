@@ -121,6 +121,14 @@ export interface EncryptToKeysArgs extends AccountScopedArgs {
 	aliasId?: string;
 }
 
+export interface SignDetachedArgs extends AccountScopedArgs {
+	data: Uint8Array;
+}
+
+export type SignDetachedResponse =
+	| { ok: true; signature: Uint8Array; keyFingerprintHex: string }
+	| { ok: false; code: 'locked' | 'unknown' };
+
 export type EncryptToKeysResponse =
 	| { ok: true; armored: string }
 	| { ok: false; code: 'locked' | 'invalid_recipient_key' | 'no_recipients' | 'unknown' };

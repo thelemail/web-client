@@ -181,6 +181,8 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		from: fromDisplay,
 		fromAddr: preview.sender.address,
 		bimiDomain: bimiDomainFromPreview(preview),
+		calendarMethod:
+			typeof preview.flags?.calendar === 'string' ? preview.flags.calendar : undefined,
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 		recipients: preview.recipients,
 		init,

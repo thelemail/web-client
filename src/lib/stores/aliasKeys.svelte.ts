@@ -1,24 +1,9 @@
 import { browser } from '$app/environment';
 import { listMyAliasKeys } from '$lib/api/aliases';
 import { keystore } from '$lib/keystore/keystore-client';
+import { b64ToHex, b64ToText } from '$lib/keys/encode';
 
 const REFRESH_INTERVAL_MS = 30_000;
-
-function b64ToText(b64: string): string {
-	const bin = atob(b64);
-	const bytes = new Uint8Array(bin.length);
-	for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-	return new TextDecoder().decode(bytes);
-}
-
-function b64ToHex(b64: string): string {
-	const bin = atob(b64);
-	let out = '';
-	for (let i = 0; i < bin.length; i++) {
-		out += bin.charCodeAt(i).toString(16).padStart(2, '0');
-	}
-	return out;
-}
 
 class AliasKeysStore {
 	loaded = $state(false);

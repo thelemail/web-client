@@ -1,20 +1,19 @@
 <script lang="ts">
 	import * as Popover from '$lib/components/ui/popover';
 	import EventPopover from '../EventPopover.svelte';
-	import { describeAllDay } from '../describe';
 	import { cal } from '../state.svelte';
 
-	let openId = $state<string | null>(null);
+	let openKey = $state<string | null>(null);
 </script>
 
 <div class="tg-allday">
 	<div class="tg-allday-lbl">All day</div>
 	<div class="tg-allday-track">
 		<div class="tg-allday-cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-		{#each cal.allDayRows as entry (entry.id)}
+		{#each cal.allDayRows as entry (entry.key)}
 			<Popover.Root
-				open={openId === entry.id}
-				onOpenChange={(next) => (openId = next ? entry.id : null)}
+				open={openKey === entry.key}
+				onOpenChange={(next) => (openKey = next ? entry.key : null)}
 			>
 				<Popover.Trigger>
 					{#snippet child({ props })}
@@ -32,7 +31,7 @@
 						</button>
 					{/snippet}
 				</Popover.Trigger>
-				<EventPopover selection={describeAllDay(entry)} onClose={() => (openId = null)} />
+				<EventPopover selection={cal.describe(entry.occ)} onClose={() => (openKey = null)} />
 			</Popover.Root>
 		{/each}
 	</div>

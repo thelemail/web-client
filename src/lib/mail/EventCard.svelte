@@ -7,6 +7,9 @@
 	import HelpCircle from '@lucide/svelte/icons/help-circle';
 	import X from '@lucide/svelte/icons/x';
 	import CheckCircle from '@lucide/svelte/icons/check-circle';
+	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import { sendRsvp } from './calendar/rsvp';
 	import type { CalendarEvent, IcalDateTime } from './render/icalParse';
 	import { formatEventWhen, type Message, type RsvpStatus } from './data';
@@ -26,12 +29,73 @@
 
 	let sending = $state(false);
 	let err = $state<string | null>(null);
+	let calendarStatus = $state<{ added: boolean; calendarName?: string; itemId?: string } | null>(null);
+	let adding = $state(false);
+	let applied = $state<string | null>(null);
+	let reply = $state<{ email: string; name?: string; partstat: string } | null>(null);
+	const slot = $derived(page.params.slot ?? '0');
+	const isReply = $derived((ev.method ?? '').toUpperCase() === 'REPLY');
+	const isCancel = $derived((ev.method ?? '').toUpperCase() === 'CANCEL');
+
+	async function calendarEntry() {
+		return import('$lib/calendar/entry');
+	}
+
+	onMount(() => {
+		void (async () => {
+			try {
+				const entry = await calendarEntry();
+				if (isReply) reply = entry.replySummary(ev);
+				if (isReply || isCancel) {
+					const changes = await entry.observeMailEvents([ev], message.id);
+					applied = changes.find((c) => c.kind !== 'ignored')?.kind ?? null;
+				}
+				calendarStatus = await entry.statusFor(ev);
+			} catch {
+				calendarStatus = { added: false };
+			}
+		})();
+	});
+
+	async function addToCalendar() {
+		adding = true;
+		err = null;
+		try {
+			const entry = await calendarEntry();
+			const item = await entry.addFromMail(ev, message, rsvp ?? undefined);
+			calendarStatus = await entry.statusFor(ev);
+			void item;
+		} catch (e) {
+			err = e instanceof Error ? e.message : 'Could not add to the calendar.';
+		} finally {
+			adding = false;
+		}
+	}
 
 	const ACK: Record<RsvpStatus, string> = {
 		accepted: 'You’re going.',
 		tentative: 'You replied maybe.',
 		declined: 'You declined.'
 	};
+
+	const REPLIED: Record<string, string> = {
+		accepted: 'is going',
+		tentative: 'replied maybe',
+		declined: 'declined',
+		'needs-action': 'has not answered yet'
+	};
+
+	const replyLine = $derived.by(() => {
+		const who = reply
+			? `${reply.name ?? reply.email} ${REPLIED[reply.partstat] ?? 'replied'}`
+			: 'A guest replied';
+		if (!calendarStatus?.added) return who;
+		return `${who} · noted in ${calendarStatus.calendarName ?? 'your calendar'}`;
+	});
+
+	const kicker = $derived(
+		isReply ? 'Reply to your invitation' : isCancel ? 'Event cancelled' : 'Calendar invitation'
+	);
 
 	const monthDay = $derived.by(() => {
 		if (ev.start?.iso) {
@@ -86,6 +150,10 @@
 		err = null;
 		try {
 			await sendRsvp({ message, event: ev, status: next });
+			const entry = await calendarEntry();
+			const partstat = next === 'accepted' ? 'accepted' : next === 'tentative' ? 'tentative' : 'declined';
+			await entry.addFromMail(ev, message, partstat);
+			calendarStatus = await entry.statusFor(ev);
 		} catch (e) {
 			rsvp = prev;
 			err = e instanceof Error ? e.message : 'Failed to send RSVP.';
@@ -111,7 +179,7 @@
 			<span class="d">{monthDay.d}</span>
 		</div>
 		<div class="evt-info">
-			<div class="evt-kicker"><Calendar size={13} />Calendar invitation</div>
+			<div class="evt-kicker"><Calendar size={13} />{kicker}</div>
 			<div class="evt-title">{ev.summary || 'Event invite'}</div>
 			<div class="evt-meta">
 				{#if dateLabel}
@@ -149,6 +217,42 @@
 		</div>
 	{/if}
 
+	{#if isReply}
+		<div class="evt-cal-row">
+			<span class="evt-ack">
+				<CheckCircle size={15} />
+				{replyLine}
+				{#if calendarStatus?.added}
+					<a class="evt-change" href="/u/{slot}/calendar">Open</a>
+				{/if}
+			</span>
+		</div>
+	{:else if isCancel}
+		<div class="evt-cal-row">
+			<span class="evt-ack">
+				<X size={15} />
+				{applied === 'cancel'
+					? 'The organiser cancelled this event · removed from your calendar'
+					: 'The organiser cancelled this event'}
+			</span>
+		</div>
+	{:else}
+		<div class="evt-cal-row">
+			{#if calendarStatus?.added}
+				<span class="evt-ack">
+					<CheckCircle size={15} />
+					In your calendar{calendarStatus.calendarName ? ` · ${calendarStatus.calendarName}` : ''}
+					<a class="evt-change" href="/u/{slot}/calendar">Open</a>
+				</span>
+			{:else}
+				<button type="button" class="evt-opt add" disabled={adding} onclick={addToCalendar}>
+					<CalendarPlus size={15} />{adding ? 'Adding…' : 'Add to calendar'}
+				</button>
+			{/if}
+		</div>
+	{/if}
+
+	{#if !isReply && !isCancel}
 	<div class="evt-rsvp">
 		{#if rsvp}
 			<span class="evt-ack">
@@ -171,6 +275,7 @@
 			</div>
 		{/if}
 	</div>
+	{/if}
 
 	{#if err}
 		<div class="evt-err" role="alert">{err}</div>
@@ -327,6 +432,16 @@
 		color: var(--fg-muted, #5a5d4e);
 	}
 
+	.evt-cal-row {
+		display: flex;
+		align-items: center;
+		gap: 11px;
+		padding: 11px 18px 0;
+	}
+	.evt-cal-row .evt-opt.add {
+		border: 1px solid var(--border-strong, #cfc4ad);
+		border-radius: 8px;
+	}
 	.evt-rsvp {
 		display: flex;
 		align-items: center;

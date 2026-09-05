@@ -23,6 +23,7 @@ import { accountSettings } from './accountSettings.svelte';
 import { workspaces } from './workspaces.svelte';
 import { aliases } from './aliases.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
+import { calendarKeys } from './calendarKeys.svelte';
 import { composeStore } from './compose.svelte';
 import { preferences } from './preferences.svelte';
 import { billing } from './billing.svelte';
@@ -52,6 +53,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	workspaces.setAccount(accountId);
 	aliases.setAccount(accountId);
 	aliasKeys.setAccount(accountId);
+	calendarKeys.setAccount(accountId);
 	billing.setAccount(accountId);
 	composeStore.setAccount(accountId);
 	preferences.setAccount(accountId);

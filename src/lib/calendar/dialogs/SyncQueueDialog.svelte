@@ -1,54 +1,69 @@
 <script lang="ts">
+	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import CloudOff from '@lucide/svelte/icons/cloud-off';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Send from '@lucide/svelte/icons/send';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import UserCheck from '@lucide/svelte/icons/user-check';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as Table from '$lib/components/ui/table';
+	import type { OutboxRecord } from '../db';
+	import { shortTime } from '../format';
 	import { cal } from '../state.svelte';
+	import { calendarStore } from '../store.svelte';
 
-	const QUEUE = [
-		{
-			icon: PenLine,
-			title: 'Moved “Design critique” to 15:00',
-			sub: 'local · 10:02 · rev 4 · no conflict',
-			state: 'queued',
-			blocked: false
-		},
-		{
-			icon: Send,
-			title: 'RSVP yes — Quarterly access review',
-			sub: 'iTIP REPLY to alex@meudon.fr · sends on reconnect',
-			state: 'queued',
-			blocked: false
-		},
-		{
-			icon: TriangleAlert,
-			title: 'Reschedule “Consultation — R. Panurge”',
-			sub: 'organiser is Google Calendar · needs their accept',
-			state: 'needs review',
-			blocked: true
+	function iconFor(rec: OutboxRecord) {
+		if (rec.status === 'blocked') return TriangleAlert;
+		switch (rec.op.kind) {
+			case 'item.put':
+				return PenLine;
+			case 'item.delete':
+			case 'calendar.delete':
+				return Trash2;
+			case 'state.put':
+				return UserCheck;
+			case 'invite.send':
+				return Send;
+			default:
+				return CalendarDays;
 		}
-	];
+	}
 
-	const OWNERSHIP = [
-		{ name: 'My calendar', color: '#2E5440', owner: 'Thelemail · zero-access', synced: 'local, always' },
-		{ name: 'Family', color: '#A87C3D', owner: 'Thelemail · 4 members', synced: '10:02' },
-		{
-			name: 'bookings@thelema.co',
-			color: '#4E8073',
-			owner: 'Thelemail · role calendar',
-			synced: '10:02'
-		},
-		{
-			name: 'Alex — Google',
-			color: '#7E6BA8',
-			owner: 'Google · busy only',
-			synced: '09:41 · readable by Google'
+	function subFor(rec: OutboxRecord): string {
+		const when = shortTime(new Date(rec.createdAt), cal.timeZone);
+		if (rec.status === 'blocked') return `${when} · ${rec.lastError ?? 'changed elsewhere first'}`;
+		if (rec.op.kind === 'item.put') return `local · ${when} · based on rev ${rec.op.body.baseRev}`;
+		if (rec.op.kind === 'invite.send') {
+			return `${rec.op.mail.method} to ${rec.op.mail.to.map((t) => t.address).join(', ')} · sends on reconnect`;
 		}
-	];
+		return `local · ${when}`;
+	}
+
+	function stateFor(rec: OutboxRecord): string {
+		if (rec.status === 'blocked') return 'needs review';
+		if (rec.status === 'sending') return 'sending';
+		return rec.attempts ? `retrying (${rec.attempts})` : 'queued';
+	}
+
+	const ownership = $derived(
+		calendarStore.calendars.map((c) => ({
+			id: c.id,
+			name: c.name,
+			color: c.color,
+			owner:
+				c.kind === 'personal'
+					? 'Thelemail · zero-access'
+					: c.kind === 'role'
+						? 'Thelemail · role calendar'
+						: `Thelemail · ${c.row.memberCount} member${c.row.memberCount === 1 ? '' : 's'}`,
+			synced: calendarStore.lastSyncAt
+				? shortTime(new Date(calendarStore.lastSyncAt), cal.timeZone)
+				: 'not yet'
+		}))
+	);
 </script>
 
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
@@ -58,23 +73,48 @@
 	</Dialog.Header>
 
 	<div class="cal-dlg-body">
-		<div class="sysbar" class:warn={cal.offline} class:info={!cal.offline}>
-			{#if cal.offline}<CloudOff size={16} />{:else}<RefreshCw size={16} />{/if}
+		<div class="sysbar" class:warn={cal.systemBarTone === 'warn'} class:info={cal.systemBarTone === 'info'}>
+			{#if !calendarStore.online}<CloudOff size={16} />{:else}<RefreshCw size={16} />{/if}
 			<span>{cal.systemBarText}</span>
 			<div class="grow"></div>
-			<button type="button" class="sb-a" onclick={() => cal.toggleOffline()}>
-				{cal.offline ? 'Reconnect now' : 'Simulate offline'}
-			</button>
+			<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>Send now</button>
 		</div>
 
-		{#each QUEUE as entry (entry.title)}
+		{#if !calendarStore.queue.length}
 			<div class="qrow">
-				<span class="qi"><entry.icon size={16} /></span>
+				<span class="qi"><RefreshCw size={16} /></span>
 				<div>
-					<div class="qt">{entry.title}</div>
-					<div class="qs">{entry.sub}</div>
+					<div class="qt">Nothing waiting</div>
+					<div class="qs">Every change on this device has reached Thelemail.</div>
 				</div>
-				<span class="qstate" class:blocked={entry.blocked}>{entry.state}</span>
+			</div>
+		{/if}
+
+		{#each calendarStore.queue as entry (entry.seq)}
+			{@const Icon = iconFor(entry)}
+			<div class="qrow">
+				<span class="qi"><Icon size={16} /></span>
+				<div>
+					<div class="qt">{entry.op.label}</div>
+					<div class="qs">{subFor(entry)}</div>
+					{#if entry.status === 'blocked'}
+						<div class="qactions">
+							<Button variant="secondary" size="sm" onclick={() => calendarStore.keepMine(entry.seq)}>
+								Keep mine
+							</Button>
+							<Button variant="ghost" size="sm" onclick={() => calendarStore.takeTheirs(entry.seq)}>
+								Take theirs
+							</Button>
+						</div>
+					{:else}
+						<div class="qactions">
+							<Button variant="ghost" size="sm" onclick={() => calendarStore.discardOp(entry.seq)}>
+								Discard
+							</Button>
+						</div>
+					{/if}
+				</div>
+				<span class="qstate" class:blocked={entry.status === 'blocked'}>{stateFor(entry)}</span>
 			</div>
 		{/each}
 
@@ -90,7 +130,7 @@
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
-						{#each OWNERSHIP as row (row.name)}
+						{#each ownership as row (row.id)}
 							<Table.Row>
 								<Table.Cell>
 									<span class="cal-nm2" style:--c={row.color}><i></i>{row.name}</span>
@@ -106,7 +146,7 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">Every queued change is reversible before it leaves.</span>
+		<span class="note">Every queued change can be discarded before it leaves.</span>
 		<div class="grow"></div>
 		<Button variant="primary" onclick={() => (cal.dialog = null)}>Close</Button>
 	</Dialog.Footer>

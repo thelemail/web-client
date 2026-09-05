@@ -112,6 +112,7 @@ export interface Message {
 	threadRootId?: string;
 	rsvpStatus?: RsvpStatus;
 	rsvpEventUid?: string;
+	calendarMethod?: string;
 	event?: import('./render/icalParse').CalendarEvent | null;
 	epoch: number;
 }

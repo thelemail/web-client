@@ -15,6 +15,7 @@
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { keystore } from '$lib/keystore/keystore-client';
+	import { hexToB64, textToB64 } from '$lib/keys/encode';
 	import { lookupAccount } from '$lib/api/accounts';
 	import { verifyDirectoryLookup, DirectoryVerificationError } from '$lib/directory/verify';
 	import { createWorkspaceAlias } from '$lib/api/aliases';
@@ -175,23 +176,6 @@
 			name: name.trim() || undefined
 		});
 		await addresses.load();
-	}
-
-	function textToB64(text: string): string {
-		const bytes = new TextEncoder().encode(text);
-		let bin = '';
-		for (const b of bytes) bin += String.fromCharCode(b);
-		return btoa(bin);
-	}
-
-	function hexToB64(hex: string): string {
-		const bytes = new Uint8Array(hex.length / 2);
-		for (let i = 0; i < bytes.length; i++) {
-			bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-		}
-		let bin = '';
-		for (const b of bytes) bin += String.fromCharCode(b);
-		return btoa(bin);
 	}
 
 	async function submit() {

@@ -12,7 +12,7 @@
 		class:on={cal.view === 'agenda'}
 		onclick={() => cal.goTo('agenda')}
 	>
-		<Users size={16} />Family &amp; team agenda<span class="rn-c">2</span>
+		<Users size={16} />Family &amp; team agenda{#if cal.agendaBadge}<span class="rn-c">{cal.agendaBadge}</span>{/if}
 	</button>
 	<button
 		type="button"
@@ -20,14 +20,16 @@
 		class:on={cal.view === 'avail'}
 		onclick={() => cal.goTo('avail')}
 	>
-		<ShieldCheck size={16} />Availability &amp; mirroring
+		<ShieldCheck size={16} />Availability
 	</button>
-	<button
-		type="button"
-		class="rn-item"
-		class:on={cal.view === 'booking'}
-		onclick={() => cal.goTo('booking')}
-	>
-		<Globe size={16} />Booking pages
-	</button>
+	{#if import.meta.env.DEV}
+		<button
+			type="button"
+			class="rn-item"
+			class:on={cal.view === 'booking'}
+			onclick={() => cal.goTo('booking')}
+		>
+			<Globe size={16} />Booking pages
+		</button>
+	{/if}
 </div>

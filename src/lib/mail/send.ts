@@ -683,7 +683,7 @@ export function buildPreview(
 		recipients,
 		snippet: snippetSource(input.body).slice(0, 280),
 		display_date: now.toISOString(),
-		flags: {}
+		flags: input.calendar ? { calendar: input.calendar.method } : {}
 	};
 }
 

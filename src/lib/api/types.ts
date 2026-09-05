@@ -16,7 +16,8 @@ export type ErrorCode =
 	| 'account_suspended'
 	| 'upgrade_required'
 	| 'content_rejected'
-	| 'migration_conflict';
+	| 'migration_conflict'
+	| 'stale_revision';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
