@@ -1,5 +1,6 @@
 import type { CalendarEvent } from '$lib/mail/render/icalParse';
 import type { Message } from '$lib/mail/data';
+import { accountSettings } from '$lib/stores/accountSettings.svelte';
 import { itemFromInvitation, parseInvitation } from './ics/fromMail';
 import { myAddressList } from './invite';
 import type { CalendarItem, ItemKind, Partstat } from './model';
@@ -78,7 +79,8 @@ export async function addFromMail(
 		target.id,
 		myAddressList(),
 		message.id,
-		calendarStore.defaultPrivacy(target.id)
+		calendarStore.defaultPrivacy(target.id),
+		accountSettings.calendar.defaultReminderMinutes
 	);
 	if (partstat) {
 		const mine = myAddressList();

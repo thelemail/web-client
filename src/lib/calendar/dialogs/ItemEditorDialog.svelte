@@ -5,6 +5,7 @@
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import { Button } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
+	import { accountSettings } from '$lib/stores/accountSettings.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
@@ -153,7 +154,8 @@
 		scheduled = kind !== 'task';
 		dueDate = pre?.date ?? cal.today;
 		ownerEmail = kind === 'task' ? (auth.email ?? '') : '';
-		reminders = kind === 'event' ? [10] : [];
+		const fallback = accountSettings.calendar.defaultReminderMinutes;
+		reminders = kind === 'event' && fallback !== null ? [fallback] : [];
 	});
 
 	const calendar = $derived(calendarStore.calendar(calendarId));

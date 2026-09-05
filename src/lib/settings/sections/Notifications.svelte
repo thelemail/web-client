@@ -5,9 +5,11 @@
 	import SecHead from '../SecHead.svelte';
 	import CardHead from '../CardHead.svelte';
 	import Row from '../Row.svelte';
+	import Select from '../Select.svelte';
 	import type { SettingsState } from '../data';
 	import type { NotificationStatus } from '$lib/platform/types';
 	import { platform } from '$platform';
+	import { accountSettings } from '$lib/stores/accountSettings.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import {
 		reminderPermission,
@@ -23,6 +25,33 @@
 	let { s, set }: Props = $props();
 
 	const SYSTEM_SETTINGS_URL = 'x-apple.systempreferences:com.apple.Notifications-Settings.extension';
+
+	const REMINDER_CHOICES: [number | null, string][] = [
+		[null, 'No reminder'],
+		[0, 'At the time'],
+		[5, '5 minutes before'],
+		[10, '10 minutes before'],
+		[15, '15 minutes before'],
+		[30, '30 minutes before'],
+		[60, '1 hour before'],
+		[120, '2 hours before'],
+		[1440, '1 day before']
+	];
+
+	const reminderLabels = REMINDER_CHOICES.map(([, label]) => label);
+
+	const reminderDefault = $derived(
+		REMINDER_CHOICES.find(([m]) => m === accountSettings.calendar.defaultReminderMinutes)?.[1] ??
+			REMINDER_CHOICES[0][1]
+	);
+
+	function setReminderDefault(label: string) {
+		const choice = REMINDER_CHOICES.find(([, l]) => l === label);
+		if (!choice) return;
+		void accountSettings
+			.persistCalendar({ ...accountSettings.calendar, defaultReminderMinutes: choice[0] })
+			.catch(() => {});
+	}
 
 	let status = $state<NotificationStatus | null>(null);
 	let checking = $state(false);
@@ -133,6 +162,17 @@
 		{#if reminders === 'default'}
 			<Button variant="secondary" size="sm" onclick={enableReminders}>Allow reminders</Button>
 		{/if}
+	</Row>
+	<Row
+		t="Remind me by default"
+		d="Applied to new events and to invitations that arrive without a reminder of their own."
+	>
+		<Select
+			value={reminderDefault}
+			options={reminderLabels}
+			onChange={setReminderDefault}
+			ariaLabel="Default reminder"
+		/>
 	</Row>
 </div>
 

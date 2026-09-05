@@ -157,7 +157,8 @@ export function itemFromInvitation(
 	calendarId: string,
 	myAddresses: string[],
 	sourceMessageId: string,
-	privacy: CalendarItem['privacy']
+	privacy: CalendarItem['privacy'],
+	defaultReminderMinutes: number | null
 ): CalendarItem {
 	const now = new Date().toISOString();
 	const attendees = inv.attendees.length
@@ -195,7 +196,11 @@ export function itemFromInvitation(
 		privacy,
 		sourceMessageId,
 		threadSubject: ev.summary,
-		reminders: inv.reminders.length ? inv.reminders : undefined,
+		reminders: inv.reminders.length
+			? inv.reminders
+			: defaultReminderMinutes === null
+				? undefined
+				: [{ minutesBefore: defaultReminderMinutes }],
 		uid: inv.uid,
 		sequence: inv.sequence,
 		createdAt: now,

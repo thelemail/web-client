@@ -45,14 +45,18 @@ export interface CalendarSettings {
 	hidden: string[];
 	defaultCalendarId: string | null;
 	defaultPrivacy: CalendarPrivacyDefault;
+	defaultReminderMinutes: number | null;
 	weekStartsOn: 0 | 1;
 	startHour: number;
 }
+
+const MAX_REMINDER_MINUTES = 10080;
 
 const CALENDAR_DEFAULTS: CalendarSettings = {
 	hidden: [],
 	defaultCalendarId: null,
 	defaultPrivacy: 'busy',
+	defaultReminderMinutes: 10,
 	weekStartsOn: 1,
 	startHour: 6
 };
@@ -148,6 +152,15 @@ class AccountSettingsStore {
 				) {
 					next.defaultPrivacy = c.defaultPrivacy;
 				}
+				if (c.defaultReminderMinutes === null) {
+					next.defaultReminderMinutes = null;
+				} else if (
+					typeof c.defaultReminderMinutes === 'number' &&
+					c.defaultReminderMinutes >= 0 &&
+					c.defaultReminderMinutes <= MAX_REMINDER_MINUTES
+				) {
+					next.defaultReminderMinutes = Math.round(c.defaultReminderMinutes);
+				}
 				if (c.weekStartsOn === 0 || c.weekStartsOn === 1) next.weekStartsOn = c.weekStartsOn;
 				if (typeof c.startHour === 'number' && c.startHour >= 0 && c.startHour <= 12) {
 					next.startHour = Math.round(c.startHour);
@@ -202,6 +215,7 @@ class AccountSettingsStore {
 			hidden: next.hidden,
 			defaultCalendarId: next.defaultCalendarId,
 			defaultPrivacy: next.defaultPrivacy,
+			defaultReminderMinutes: next.defaultReminderMinutes,
 			weekStartsOn: next.weekStartsOn,
 			startHour: next.startHour
 		});
