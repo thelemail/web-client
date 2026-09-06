@@ -132,7 +132,7 @@
 				</div>
 				<div class="plan-price">
 					{#if isFree}
-						{freeNote()}
+						{freeNote(type, sub?.planCode)}
 					{:else if priceLine}
 						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
 					{:else if isPersonal}

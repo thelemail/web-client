@@ -13,7 +13,7 @@ import { calendarStore } from '$lib/calendar/store.svelte';
 let loadedFor: string | null = null;
 
 export function ensureAccountData(accountId: string): void {
-	if (loadedFor === accountId) return;
+	if (loadedFor === accountId && workspaces.workspace) return;
 	loadedFor = accountId;
 	void (async () => {
 		void accountSettings.hydrate();

@@ -269,7 +269,7 @@
 				<Info size={15} />
 				<span>An admin must add a domain and prove ownership before members can be invited.</span>
 			</div>
-		{:else}
+		{:else if !hasRoom || canManage}
 			<div class="seat-full">
 				<Info size={15} /><span>{seatsFullNote(type, seatsTotal, planCode)}</span>
 			</div>
