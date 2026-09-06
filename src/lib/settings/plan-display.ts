@@ -1,6 +1,8 @@
+import type { PlanCode } from '$lib/api/billing';
 import type { WorkspaceType } from '$lib/api/workspaces';
 
 export function planLabel(type: WorkspaceType | undefined | null, planCode?: string | null): string {
+	if (planCode === 'free_family') return 'Free family';
 	if (planCode === 'free') return 'Free';
 	switch (type) {
 		case 'personal':
@@ -51,9 +53,13 @@ export function addMemberLabel(type: WorkspaceType | undefined | null): string {
 
 export function seatsFullNote(
 	type: WorkspaceType | undefined | null,
-	total: number | null
+	total: number | null,
+	planCode?: PlanCode | null
 ): string {
 	void total;
+	if (type === 'family' && planCode === 'free_family') {
+		return 'All 6 seats are in use. Remove someone before inviting anyone else.';
+	}
 	if (type === 'family') {
 		return 'All 6 included seats are in use. A larger team needs a Business plan.';
 	}
@@ -64,6 +70,9 @@ export function personalNote(): string {
 	return 'Personal plans cover one person. There is no one else to manage.';
 }
 
-export function freeNote(): string {
+export function freeNote(type?: WorkspaceType | null, planCode?: PlanCode | null): string {
+	if (planCode === 'free_family' || (type === 'family' && planCode !== 'free')) {
+		return 'Up to 6 accounts on thelemail.com, 1 GB of storage each. Free, with no custom domains.';
+	}
 	return 'The Free plan covers one person with one address on thelemail.com and 1 GB of storage.';
 }

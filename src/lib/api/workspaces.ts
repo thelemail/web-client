@@ -24,10 +24,14 @@ export interface WorkspaceMember {
 	joinedAt: string;
 }
 
+export type WorkspaceInviteKind = 'provision' | 'join';
+
 export interface WorkspaceInvite {
 	id: string;
 	workspaceId: string;
-	customDomainId: string;
+	kind: WorkspaceInviteKind;
+	customDomainId?: string;
+	inviteeAccountId?: string;
 	email: string;
 	role: InvitableRole;
 	createdAt: string;
@@ -53,20 +57,31 @@ export interface CreateWorkspaceInviteInput {
 	deliverTo?: string;
 }
 
+export interface CreateFamilyInviteInput {
+	email: string;
+	role?: InvitableRole;
+}
+
 export interface CreateWorkspaceInviteResult {
 	invite: WorkspaceInvite;
 	token: string;
 }
 
 export interface WorkspaceInvitePreview {
+	kind: WorkspaceInviteKind;
 	workspaceName: string;
 	workspaceType: WorkspaceType;
 	inviterDisplayName: string;
 	inviteeEmail: string;
-	customDomainId: string;
-	customDomainName: string;
+	customDomainId?: string;
+	customDomainName?: string;
 	role: InvitableRole;
 	expiresAt: string;
+}
+
+export interface AcceptFamilyInviteResult {
+	workspace: Workspace;
+	member: WorkspaceMember;
 }
 
 export interface AcceptWorkspaceInviteResult {
@@ -77,6 +92,21 @@ export interface AcceptWorkspaceInviteResult {
 	expiresInSeconds: number;
 	accountId: string;
 	serverHalf?: string;
+}
+
+export function createFamilyInvite(
+	workspaceId: string,
+	input: CreateFamilyInviteInput
+): Promise<CreateWorkspaceInviteResult> {
+	return apiFetch(`/v1/workspaces/${workspaceId}/family-invites`, { method: 'POST', body: input });
+}
+
+export function acceptFamilyInvite(token: string): Promise<AcceptFamilyInviteResult> {
+	return apiFetch('/v1/workspace-invites/accept', { method: 'POST', body: { token } });
+}
+
+export function leaveMyWorkspace(): Promise<Workspace> {
+	return apiFetch('/v1/me/workspace/leave', { method: 'POST' });
 }
 
 export function getMyWorkspace(): Promise<Workspace> {

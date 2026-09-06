@@ -63,7 +63,7 @@
 	desc="Setup runs in order: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last. Nothing about your current mail changes until the final step."
 />
 
-{#if billing.isFree}
+{#if !billing.canAddDomains}
 	<div class="upgrade-list">
 		<UpgradeNudge
 			title="Your own domain needs a paid plan"

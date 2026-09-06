@@ -3,6 +3,7 @@ import type { WorkspaceType } from './workspaces';
 
 export type PlanCode =
 	| 'free'
+	| 'free_family'
 	| 'personal'
 	| 'personal_plus'
 	| 'family'

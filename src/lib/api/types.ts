@@ -17,7 +17,15 @@ export type ErrorCode =
 	| 'upgrade_required'
 	| 'content_rejected'
 	| 'migration_conflict'
-	| 'stale_revision';
+	| 'stale_revision'
+	| 'invitee_not_found'
+	| 'invitee_plan_conflict'
+	| 'invitee_store_billed'
+	| 'invitee_already_in_family'
+	| 'invitee_has_custom_domain'
+	| 'invitee_domain_not_shared'
+	| 'family_full'
+	| 'invite_not_acceptable';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
