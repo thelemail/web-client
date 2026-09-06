@@ -18,7 +18,7 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { createBillingPortalSession } from '$lib/api/billing';
-	import { PRODUCTS, FREE_PLAN, eur } from '$lib/auth/plans';
+	import { PRODUCTS, eur } from '$lib/auth/plans';
 	import { planLabel, freeNote } from '../plan-display';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -37,7 +37,10 @@
 	const sub = $derived(billing.subscription);
 	const isPersonal = $derived(type === 'personal');
 	const isFree = $derived(billing.isFree);
+	const isFreeFamily = $derived(billing.isFreeFamily);
+	const isSoloFree = $derived(billing.planCode === 'free');
 	const isOwner = $derived(workspaces.isOwner(auth.accountId));
+	const slot = $derived(page.params.slot ?? '0');
 	const PlanIcon = $derived(
 		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
 	);
@@ -57,7 +60,9 @@
 		return null;
 	});
 
-	const planName = $derived(isFree ? FREE_PLAN.name : (tierInfo?.tier.name ?? planLabel(type)));
+	const planName = $derived(
+		isFree ? planLabel(type, sub?.planCode) : (tierInfo?.tier.name ?? planLabel(type))
+	);
 
 	const priceLine = $derived.by(() => {
 		if (!tierInfo || !sub) return null;
@@ -127,7 +132,7 @@
 				</div>
 				<div class="plan-price">
 					{#if isFree}
-						{freeNote()}
+						{freeNote(type, sub?.planCode)}
 					{:else if priceLine}
 						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
 					{:else if isPersonal}
@@ -161,6 +166,11 @@
 							<ExternalLink size={14} />
 							{portalBusy ? 'Opening…' : 'Manage billing'}
 						</Button>
+						{#if sub.status === 'active' && !sub.cancelAtPeriodEnd}
+							<Button variant="ghost" size="sm" href={`/u/${slot}/billing/cancel`}>
+								Cancel plan
+							</Button>
+						{/if}
 					{:else}
 						<Button variant="primary" size="sm" onclick={choosePlan}>
 							Choose a plan
@@ -174,15 +184,36 @@
 		{/if}
 	</div>
 
-	{#if isFree}
+	{#if isSoloFree}
+		{#if isOwner}
+			<div class="scard">
+				<CardHead icon={Users} title="Start a family" />
+				<Row
+					t="Bring up to five other accounts into one family"
+					d="Everyone keeps their own address, their own mail and their own keys, and you all share a calendar. It stays free."
+				>
+					<Button variant="secondary" size="sm" onclick={() => launch('family')}>
+						<Users size={14} />Start a family
+					</Button>
+				</Row>
+			</div>
+		{/if}
 		<div class="upgrade-list">
 			<UpgradeNudge
-				title="Add people with a Family or Team plan"
-				desc="Households and teams share one plan, one domain, and admin controls for every mailbox."
+				title="More storage and your own domain"
+				desc="Paid plans raise storage for every mailbox and let you send from a domain you own."
 			/>
 		</div>
 	{:else if !isPersonal}
 		<MembershipCard {launch} />
+		{#if isFreeFamily}
+			<div class="upgrade-list">
+				<UpgradeNudge
+					title="Family on your own domain"
+					desc="The paid Family plan keeps the same six seats and adds custom domains, more storage, and addresses you create yourself."
+				/>
+			</div>
+		{/if}
 	{/if}
 {/if}
 

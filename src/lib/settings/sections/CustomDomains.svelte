@@ -176,7 +176,7 @@
 	{/if}
 
 	<div class="cd-card-foot">
-		{#if billing.isFree}
+		{#if !billing.canAddDomains}
 			<UpgradeNudge
 				title="Your own domain needs a paid plan"
 				desc="Every paid plan includes at least one custom domain with unlimited addresses on it."

@@ -21,12 +21,14 @@
 	import { auth } from '$lib/stores/auth.svelte';
 	import {
 		seatLimitFor,
-		isInvitable,
 		membershipTitle,
 		addMemberLabel,
 		seatsFullNote,
 		personalNote
 	} from './plan-display';
+	import { inviteMode } from './entitlements';
+	import LeaveFamilyDialog from './LeaveFamilyDialog.svelte';
+	import RemoveMemberDialog from './RemoveMemberDialog.svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
@@ -82,14 +84,30 @@
 	);
 
 	const seatsUsed = $derived(people.length + pending.length);
-	const seatNoun = $derived(type === 'business' ? 'paid seats used' : 'included seats used');
-	const invitable = $derived(
-		isInvitable(type) && (type === 'business' || seatsTotal === null || seatsUsed < seatsTotal)
+	const planCode = $derived(billing.planCode);
+	const mode = $derived(inviteMode(type, planCode));
+	const isFreeFamily = $derived(billing.isFreeFamily);
+	const seatNoun = $derived(
+		type === 'business' ? 'paid seats used' : isFreeFamily ? 'seats used' : 'included seats used'
 	);
+	const hasRoom = $derived(type === 'business' || seatsTotal === null || seatsUsed < seatsTotal);
 	const ownedDomainCount = $derived(customDomains.items.filter(ownershipProven).length);
-	const domainGated = $derived(invitable && ownedDomainCount === 0);
+	const mayInvite = $derived(
+		mode !== 'none' &&
+			workspaces.canInvite(callerAccountId, {
+				required: mode === 'domain',
+				verifiedCount: ownedDomainCount
+			})
+	);
+	const domainGated = $derived(mode === 'domain' && hasRoom && ownedDomainCount === 0);
+	const seatsLeft = $derived(seatsTotal == null ? null : seatsTotal - seatsUsed);
+	const myMember = $derived(workspaces.members.find((m) => m.accountId === callerAccountId) ?? null);
+	const isWorkspaceOwner = $derived(myMember?.role === 'owner');
+	const canLeave = $derived(isFreeFamily && !!myMember && !isWorkspaceOwner);
 
 	let busyId = $state<string | null>(null);
+	let leaving = $state(false);
+	let removing = $state<{ accountId: string; name: string; email: string } | null>(null);
 
 	function inviteLinkFor(token: string): string {
 		return `${platform.returnOrigin().replace(/\/$/, '')}/invite/${token}`;
@@ -124,6 +142,10 @@
 		}
 		const member = lookupMemberByEmail(p.addr);
 		if (!member) return;
+		if (action.kind === 'remove' && isFreeFamily) {
+			removing = { accountId: member.accountId, name: p.name, email: p.addr };
+			return;
+		}
 		busyId = member.accountId;
 		try {
 			if (action.kind === 'remove') {
@@ -209,11 +231,20 @@
 	<div class="mbr-foot">
 		{#if isPersonal}
 			<span class="mbr-note">{personalNote()}</span>
-		{:else if invitable && !domainGated}
-			<Button variant="secondary" size="sm" onclick={() => launch('member')}>
+		{:else if mayInvite && hasRoom}
+			<Button
+				variant="secondary"
+				size="sm"
+				onclick={() => launch(mode === 'existing-account' ? 'familyInvite' : 'member')}
+			>
 				<UserPlus size={14} />{addLabel}
 			</Button>
-			{#if seatsTotal != null}
+			{#if mode === 'existing-account'}
+				<span class="mbr-note">
+					{seatsLeft} of {seatsTotal} seats free. You can invite anyone who already has a
+					thelemail.com address.
+				</span>
+			{:else if seatsTotal != null}
 				{#if type === 'business' && seatsUsed >= seatsTotal}
 					<span class="mbr-note">Inviting another member adds a prorated seat to your subscription.</span>
 				{:else if seatsTotal - seatsUsed > 0}
@@ -238,10 +269,29 @@
 				<Info size={15} />
 				<span>An admin must add a domain and prove ownership before members can be invited.</span>
 			</div>
-		{:else}
+		{:else if !hasRoom || canManage}
 			<div class="seat-full">
-				<Info size={15} /><span>{seatsFullNote(type, seatsTotal)}</span>
+				<Info size={15} /><span>{seatsFullNote(type, seatsTotal, planCode)}</span>
 			</div>
+		{/if}
+		{#if canLeave}
+			<Button variant="ghost" size="sm" onclick={() => (leaving = true)}>Leave family</Button>
 		{/if}
 	</div>
 </div>
+
+{#if leaving}
+	<LeaveFamilyDialog
+		familyName={workspaces.workspace?.name ?? 'this family'}
+		onClose={() => (leaving = false)}
+	/>
+{/if}
+
+{#if removing}
+	<RemoveMemberDialog
+		name={removing.name}
+		email={removing.email}
+		accountId={removing.accountId}
+		onClose={() => (removing = null)}
+	/>
+{/if}

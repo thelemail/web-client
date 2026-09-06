@@ -5,6 +5,13 @@ import {
 	type PlanCatalog,
 	type Subscription
 } from '$lib/api/billing';
+import {
+	allowsCustomDomains,
+	allowsMembers,
+	allowsSharedAddresses,
+	isFreeFamily,
+	isFreePlan
+} from '$lib/settings/entitlements';
 
 class BillingStore {
 	subscription = $state<Subscription | null>(null);
@@ -28,7 +35,12 @@ class BillingStore {
 		return !sub.entitled;
 	});
 
-	isFree = $derived(this.subscription?.planCode === 'free');
+	planCode = $derived(this.subscription?.planCode ?? null);
+	isFree = $derived(isFreePlan(this.planCode));
+	isFreeFamily = $derived(isFreeFamily(this.planCode));
+	canAddDomains = $derived(allowsCustomDomains(this.planCode));
+	canAddSharedAddresses = $derived(allowsSharedAddresses(this.planCode));
+	canAddMembers = $derived(allowsMembers(this.planCode));
 
 	async ensureLoaded(): Promise<Subscription | null> {
 		if (!browser) return null;

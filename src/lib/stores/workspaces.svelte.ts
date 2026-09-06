@@ -4,6 +4,8 @@ import {
 	listWorkspaceMembers,
 	listWorkspaceInvites,
 	createWorkspaceInvite,
+	createFamilyInvite,
+	leaveMyWorkspace,
 	deleteWorkspaceInvite,
 	resendWorkspaceInvite,
 	removeWorkspaceMember,
@@ -11,6 +13,7 @@ import {
 	changeMyWorkspaceType,
 	setWorkspaceCatchAll,
 	type ChangeWorkspaceTypeInput,
+	type CreateFamilyInviteInput,
 	type CreateWorkspaceInviteInput,
 	type CreateWorkspaceInviteResult,
 	type InvitableRole,
@@ -103,10 +106,31 @@ class WorkspaceStore {
 		return result;
 	}
 
-	canInvite(callerAccountId: string | null, verifiedDomainCount: number): boolean {
+	async inviteExisting(input: CreateFamilyInviteInput): Promise<CreateWorkspaceInviteResult> {
+		const id = this.workspace?.id;
+		if (!id) throw new Error('no workspace');
+		const result = await createFamilyInvite(id, input);
+		this.invites = [result.invite, ...this.invites];
+		return result;
+	}
+
+	canInvite(
+		callerAccountId: string | null,
+		domain: { required: boolean; verifiedCount: number }
+	): boolean {
 		if (!this.canManage(callerAccountId)) return false;
-		if (this.workspace?.type === 'personal') return false;
-		return verifiedDomainCount > 0;
+		const type = this.workspace?.type;
+		if (type !== 'family' && type !== 'business') return false;
+		if (!domain.required) return true;
+		return domain.verifiedCount > 0;
+	}
+
+	async leave(): Promise<Workspace> {
+		const restored = await leaveMyWorkspace();
+		this.workspace = restored;
+		this.members = [];
+		this.invites = [];
+		return restored;
 	}
 
 	async resendInvite(inviteId: string): Promise<CreateWorkspaceInviteResult> {

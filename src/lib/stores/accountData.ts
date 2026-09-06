@@ -7,11 +7,13 @@ import { signatures } from './signatures.svelte';
 import { aliases } from './aliases.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
+import { billing } from './billing.svelte';
+import { calendarStore } from '$lib/calendar/store.svelte';
 
 let loadedFor: string | null = null;
 
 export function ensureAccountData(accountId: string): void {
-	if (loadedFor === accountId) return;
+	if (loadedFor === accountId && workspaces.workspace) return;
 	loadedFor = accountId;
 	void (async () => {
 		void accountSettings.hydrate();
@@ -28,4 +30,14 @@ export function ensureAccountData(accountId: string): void {
 			void aliases.load(workspaceId);
 		}
 	})();
+}
+
+export async function reloadWorkspaceData(accountId: string): Promise<void> {
+	loadedFor = null;
+	aliases.clear();
+	customDomains.clear();
+	calendarStore.setAccount(null);
+	await billing.refresh();
+	ensureAccountData(accountId);
+	calendarStore.setAccount(accountId);
 }

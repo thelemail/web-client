@@ -231,7 +231,7 @@
 				</button>
 			</div>
 		{/each}
-		{#if billing.isFree}
+		{#if !billing.canAddSharedAddresses}
 			<div class="upgrade-list">
 				<UpgradeNudge
 					title="More addresses come with a paid plan"

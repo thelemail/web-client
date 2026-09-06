@@ -18,6 +18,7 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
+	import JoinFamilyInvite from '$lib/auth/JoinFamilyInvite.svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	const STR_LABELS = ['', 'weak', 'fair', 'good', 'strong'];
@@ -185,6 +186,8 @@
 			<Button variant="primary" size="lg" block onclick={() => goto('/login')}>Go to sign in</Button>
 		</div>
 	</div>
+{:else if invite.kind === 'join'}
+	<JoinFamilyInvite {invite} token={page.params.token ?? ''} />
 {:else if step === 0}
 	<div class="card-surface screen-fade">
 		<Stepper step={0} labels={['Account', 'Password', 'Done']} />
