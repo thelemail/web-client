@@ -42,7 +42,9 @@ export type CeremonyKind =
 	| 'keys'
 	| 'delete'
 	| 'alias'
-	| 'member';
+	| 'member'
+	| 'familyInvite'
+	| 'family';
 
 export interface SettingsState {
 	displayName: string;

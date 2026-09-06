@@ -31,7 +31,9 @@ const CEREMONY_MESSAGES: Record<CeremonyKind, string> = {
 	keys: 'Key rotated',
 	delete: 'Account scheduled for deletion',
 	alias: 'Address saved',
-	member: ''
+	member: '',
+	familyInvite: 'Invitation sent',
+	family: 'Family created'
 };
 
 function includesKey(keys: ReadonlyArray<keyof SettingsState>, key: keyof SettingsState): boolean {
@@ -214,6 +216,9 @@ class SettingsDraftStore {
 		let msg = CEREMONY_MESSAGES[kind];
 		if (kind === 'member') {
 			msg = workspaces.workspace?.type === 'business' ? 'Member added · seat created' : 'Invitation sent';
+			workspaces.loadActiveDetails(auth.accountId);
+		}
+		if (kind === 'familyInvite' || kind === 'family') {
 			workspaces.loadActiveDetails(auth.accountId);
 		}
 		this.flash(msg || 'Done');

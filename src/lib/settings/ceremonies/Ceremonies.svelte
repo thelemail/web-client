@@ -6,6 +6,8 @@
 	import DeleteCeremony from './DeleteCeremony.svelte';
 	import AliasCeremony from './AliasCeremony.svelte';
 	import AddMemberCeremony from './AddMemberCeremony.svelte';
+	import FamilyInviteCeremony from './FamilyInviteCeremony.svelte';
+	import FamilyStartCeremony from './FamilyStartCeremony.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
 
 	interface Props {
@@ -32,4 +34,8 @@
 	<AliasCeremony {onClose} {onComplete} />
 {:else if active === 'member'}
 	<AddMemberCeremony {onClose} {onComplete} />
+{:else if active === 'familyInvite'}
+	<FamilyInviteCeremony {onClose} {onComplete} />
+{:else if active === 'family'}
+	<FamilyStartCeremony {onClose} {onComplete} />
 {/if}
