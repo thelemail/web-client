@@ -143,27 +143,27 @@
 			<p>Accepting moves your account into {invite.workspaceName}. Here is what that means.</p>
 		</div>
 
-		<ul class="reqs" style="margin-top:16px">
-			<li class="req met">
-				<Inbox size={15} />
+		<ul class="terms">
+			<li>
+				<Inbox size={16} />
 				<span>You keep {invite.inviteeEmail}, every message in it, your keys and your calendars.</span>
 			</li>
-			<li class="req met">
-				<CalendarDays size={15} />
+			<li>
+				<CalendarDays size={16} />
 				<span>You get the family's shared calendar.</span>
 			</li>
-			<li class="req met">
-				<Wallet size={15} />
+			<li>
+				<Wallet size={16} />
 				<span>Your plan stays free. Nothing is charged, now or later.</span>
 			</li>
-			<li class="req">
-				<UserRound size={15} />
+			<li class="caveat">
+				<UserRound size={16} />
 				<span>
 					{inviter} cannot read your mail. They can see who is in the family and can remove you.
 				</span>
 			</li>
-			<li class="req">
-				<LogOut size={15} />
+			<li class="caveat">
+				<LogOut size={16} />
 				<span>
 					Your own workspace is dissolved, so you cannot add a domain or invite anyone while you
 					are in the family. You can leave at any time and get your workspace back.
@@ -177,7 +177,7 @@
 			</div>
 		{/if}
 
-		<div class="actions" style="margin-top:24px">
+		<div class="btnrow" style="margin-top:24px">
 			<Button variant="ghost" size="lg" onclick={() => goto(`/u/${landingSlot}/mail/inbox`)}>
 				Not now
 			</Button>
@@ -187,3 +187,34 @@
 		</div>
 	</div>
 {/if}
+
+<style>
+	.terms {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		margin: 6px 0 0;
+		padding: 18px 0 0;
+		border-top: var(--hairline);
+		list-style: none;
+	}
+	.terms li {
+		display: grid;
+		grid-template-columns: 18px 1fr;
+		gap: 10px;
+		align-items: start;
+		font-size: 13.5px;
+		line-height: 1.5;
+		color: var(--fg);
+	}
+	.terms li :global(svg) {
+		margin-top: 2px;
+		color: var(--pine-600);
+	}
+	.terms li.caveat {
+		color: var(--fg-muted);
+	}
+	.terms li.caveat :global(svg) {
+		color: var(--ink-400);
+	}
+</style>
