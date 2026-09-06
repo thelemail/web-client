@@ -61,6 +61,8 @@ describe('planFromQuery', () => {
 		expect(planFromQuery(undefined)).toBeNull();
 		expect(planFromQuery('')).toBeNull();
 		expect(planFromQuery('free')).toBeNull();
+		expect(planFromQuery('free_family')).toBeNull();
+		expect(planFromQuery('free-family')).toBeNull();
 		expect(planFromQuery('enterprise')).toBeNull();
 		expect(planFromQuery('<script>')).toBeNull();
 	});

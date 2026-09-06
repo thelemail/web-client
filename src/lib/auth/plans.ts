@@ -44,6 +44,17 @@ export const FREE_PLAN = {
 	] as [string, string][]
 };
 
+export const FREE_FAMILY_PLAN = {
+	id: 'free_family',
+	name: 'Free family',
+	rows: [
+		['Mailboxes', 'Up to 6'],
+		['Storage per mailbox', '1 GB'],
+		['Addresses', 'yours@thelemail.com'],
+		['Custom domains', 'None']
+	] as [string, string][]
+};
+
 export const MIN_SEATS = 3;
 export const MAX_SEATS = 50;
 

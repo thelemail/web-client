@@ -40,6 +40,7 @@
 	const isFreeFamily = $derived(billing.isFreeFamily);
 	const isSoloFree = $derived(billing.planCode === 'free');
 	const isOwner = $derived(workspaces.isOwner(auth.accountId));
+	const slot = $derived(page.params.slot ?? '0');
 	const PlanIcon = $derived(
 		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
 	);
@@ -165,6 +166,11 @@
 							<ExternalLink size={14} />
 							{portalBusy ? 'Opening…' : 'Manage billing'}
 						</Button>
+						{#if sub.status === 'active' && !sub.cancelAtPeriodEnd}
+							<Button variant="ghost" size="sm" href={`/u/${slot}/billing/cancel`}>
+								Cancel plan
+							</Button>
+						{/if}
 					{:else}
 						<Button variant="primary" size="sm" onclick={choosePlan}>
 							Choose a plan
