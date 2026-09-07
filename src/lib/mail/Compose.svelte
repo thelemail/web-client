@@ -42,7 +42,13 @@
 	import { pendingSendGuards, type SendGuard } from './sendGuards';
 	import SendGuardDialog from './SendGuardDialog.svelte';
 	import { accountSettings } from '$lib/stores/accountSettings.svelte';
-	import { applySignatureSeed, swapSignatureForAddress } from './signatureRegion';
+	import {
+		applySignatureSeed,
+		swapSignatureForAddress,
+		insertSignature,
+		removeSignature,
+		hasSignature
+	} from './signatureRegion';
 	import { getDraft, putDraft, deleteDraft } from '$lib/api/drafts';
 	import { buildDraftEnvelope, loadDraftDoc, restoreAttachmentFile, type DraftDoc } from './draft';
 	import { drafts, type DraftRow } from '$lib/stores/drafts.svelte';
@@ -122,18 +128,33 @@
 	let editor: Editor | null = $state(null);
 	let winRef: HTMLDivElement | undefined = $state();
 	let seededSignature = $state(false);
+	let signatureOn = $state(false);
+	let signatureChosen = $state(false);
 
 	const currentAddress = $derived(addresses.getByEmail(ident.email));
-	const currentSignature = $derived(signatures.getForAddress(currentAddress?.id ?? null));
+	const signatureBody = $derived(signatures.bodyFor(currentAddress?.id ?? null));
 
 	$effect(() => {
 		if (isDraftEdit) return;
 		if (!editor) return;
 		if (!currentAddress) return;
+		if (!signatures.loaded) return;
 		if (seededSignature) return;
-		applySignatureSeed(editor, currentAddress.id, currentSignature?.bodyHtml ?? '');
+		const body = signatures.effectiveFor(currentAddress.id, 'new');
+		if (body) {
+			applySignatureSeed(editor, body);
+			signatureOn = true;
+		}
 		seededSignature = true;
 	});
+
+	function toggleSignature(next: boolean) {
+		if (!editor) return;
+		signatureChosen = true;
+		signatureOn = next;
+		if (next) insertSignature(editor, signatureBody);
+		else removeSignature(editor);
+	}
 
 	function pickIdentity(i: number) {
 		identIdx = i;
@@ -141,13 +162,19 @@
 		if (isDraftEdit || !editor) return;
 		const addr = addresses.getByEmail(identityOptions[i]?.email ?? '');
 		if (!addr) return;
-		const sig = signatures.getForAddress(addr.id);
+		const body = signatures.bodyFor(addr.id);
 		if (!seededSignature) {
-			applySignatureSeed(editor, addr.id, sig?.bodyHtml ?? '');
+			const seed = signatures.effectiveFor(addr.id, 'new');
+			if (seed) {
+				applySignatureSeed(editor, seed);
+				signatureOn = true;
+			}
 			seededSignature = true;
 			return;
 		}
-		swapSignatureForAddress(editor, addr.id, sig?.bodyHtml ?? '');
+		const keep = signatureChosen ? signatureOn : signatures.effectiveFor(addr.id, 'new') !== null;
+		signatureOn = keep && !!body.trim();
+		swapSignatureForAddress(editor, signatureOn ? body : '');
 	}
 
 	let attachments = $state<ComposeAttachment[]>([]);
@@ -346,6 +373,11 @@
 		} finally {
 			hydrating = false;
 			draftStatus = 'saved';
+			if (editor) {
+				signatureOn = hasSignature(editor);
+				signatureChosen = true;
+			}
+			seededSignature = true;
 		}
 	}
 
@@ -893,7 +925,14 @@
 				onchange={onFileInputChange}
 			/>
 
-			<EditorToolbar {editor} />
+			<EditorToolbar
+				{editor}
+				signature={{
+					present: !!signatureBody.trim(),
+					on: signatureOn,
+					onToggle: toggleSignature
+				}}
+			/>
 
 			{#if warn && !canSend && status !== 'sending'}
 				<div class="cwarn">

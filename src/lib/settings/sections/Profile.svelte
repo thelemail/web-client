@@ -15,6 +15,7 @@
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
 	import SignatureEditor from './SignatureEditor.svelte';
+	import type { SignatureMode, SignatureDocImage } from '$lib/mail/signatureCrypto';
 	import { initialsFor } from '$lib/mail/initials';
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { signatures } from '$lib/stores/signatures.svelte';
@@ -88,27 +89,53 @@
 	);
 
 	let signatureDirty = $state(false);
+	let signatureMode = $state<SignatureMode>('rich');
+	let signatureSource = $state('');
 	let signatureBodyHtml = $state('');
-	let signatureAppendOnReply = $state(false);
+	let signatureEnabled = $state(true);
+	let signatureAppendOnReply = $state(true);
 	let initialSignatureBodyHtml = $state('');
-	let initialSignatureAppendOnReply = $state(false);
+	let initialSignatureSource = $state('');
+	let initialSignatureMode = $state<SignatureMode>('rich');
+	let initialSignatureEnabled = $state(true);
+	let initialSignatureAppendOnReply = $state(true);
+
+	const signatureLocked = $derived(
+		signatures.locked || (signatures.getForAddress(sigForAddressId)?.sealed ?? false)
+	);
 
 	$effect(() => {
 		if (!sigForAddressId) {
 			initialSignatureBodyHtml = '';
-			initialSignatureAppendOnReply = false;
+			initialSignatureSource = '';
+			initialSignatureMode = 'rich';
+			initialSignatureEnabled = true;
+			initialSignatureAppendOnReply = true;
 			signatureBodyHtml = '';
-			signatureAppendOnReply = false;
+			signatureSource = '';
+			signatureMode = 'rich';
+			signatureEnabled = true;
+			signatureAppendOnReply = true;
 			signatureDirty = false;
 			return;
 		}
 		if (signatureDirty) return;
 		const existing = signatures.getForAddress(sigForAddressId);
-		const html = existing?.bodyHtml ?? '';
-		const append = existing?.appendOnReply ?? false;
+		const doc = existing?.doc;
+		const html = doc?.bodyHtml ?? '';
+		const src = doc?.source ?? html;
+		const docMode = doc?.mode ?? 'rich';
+		const enabled = existing?.enabled ?? true;
+		const append = existing?.appendOnReply ?? true;
 		initialSignatureBodyHtml = html;
+		initialSignatureSource = src;
+		initialSignatureMode = docMode;
+		initialSignatureEnabled = enabled;
 		initialSignatureAppendOnReply = append;
 		signatureBodyHtml = html;
+		signatureSource = src;
+		signatureMode = docMode;
+		signatureEnabled = enabled;
 		signatureAppendOnReply = append;
 	});
 
@@ -161,11 +188,26 @@
 			initialDefaultReplyAddressId = updated.defaultReplyAddressId ?? SAME_AS_SENDING_VALUE;
 		}
 		if (signatureDirty && sigForAddressId) {
-			await signatures.save(sigForAddressId, {
-				bodyHtml: signatureBodyHtml,
-				appendOnReply: signatureAppendOnReply
-			});
+			if (signatureLocked) throw new Error('Unlock your vault before saving a signature.');
+			if (!signatureBodyHtml.trim() && signatures.getForAddress(sigForAddressId)) {
+				await signatures.remove(sigForAddressId);
+			} else if (signatureBodyHtml.trim()) {
+				await signatures.save(
+					sigForAddressId,
+					{
+						v: 1,
+						mode: signatureMode,
+						source: signatureSource,
+						bodyHtml: signatureBodyHtml,
+						images: collectSignatureImages(signatureBodyHtml)
+					},
+					{ enabled: signatureEnabled, appendOnReply: signatureAppendOnReply }
+				);
+			}
 			initialSignatureBodyHtml = signatureBodyHtml;
+			initialSignatureSource = signatureSource;
+			initialSignatureMode = signatureMode;
+			initialSignatureEnabled = signatureEnabled;
 			initialSignatureAppendOnReply = signatureAppendOnReply;
 			signatureDirty = false;
 		}
@@ -252,13 +294,36 @@
 	const initials = $derived(initialsFor(displayName || auth.fullName, email));
 	const ownerBadge = $derived(isWorkspaceOwner);
 
-	function onSignatureChange(payload: { bodyHtml: string; appendOnReply: boolean }) {
-		signatureBodyHtml = payload.bodyHtml;
-		signatureAppendOnReply = payload.appendOnReply;
+	function collectSignatureImages(html: string): SignatureDocImage[] {
+		if (!html || typeof DOMParser === 'undefined') return [];
+		const doc = new DOMParser().parseFromString(`<div>${html}</div>`, 'text/html');
+		const keys = new Set<string>();
+		for (const img of doc.querySelectorAll('img[data-thelemail-sig-image]')) {
+			const key = img.getAttribute('data-thelemail-sig-image');
+			if (key) keys.add(key);
+		}
+		return [...keys].map((objectKey) => ({ objectKey, contentType: 'application/octet-stream' }));
+	}
+
+	function recomputeSignatureDirty() {
 		signatureDirty =
-			payload.bodyHtml !== initialSignatureBodyHtml ||
-			payload.appendOnReply !== initialSignatureAppendOnReply;
+			signatureBodyHtml !== initialSignatureBodyHtml ||
+			signatureSource !== initialSignatureSource ||
+			signatureMode !== initialSignatureMode ||
+			signatureEnabled !== initialSignatureEnabled ||
+			signatureAppendOnReply !== initialSignatureAppendOnReply;
 		onEdit?.();
+	}
+
+	function onSignatureChange(payload: {
+		mode: SignatureMode;
+		source: string;
+		bodyHtml: string;
+	}) {
+		signatureMode = payload.mode;
+		signatureSource = payload.source;
+		signatureBodyHtml = payload.bodyHtml;
+		recomputeSignatureDirty();
 	}
 </script>
 
@@ -380,8 +445,10 @@
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
+				mode={signatureMode}
+				source={signatureSource}
 				bodyHtml={signatureBodyHtml}
-				appendOnReply={signatureAppendOnReply}
+				locked={signatureLocked}
 				onChange={onSignatureChange}
 			/>
 			<div class="sig-hint">
@@ -393,13 +460,29 @@
 				{/if}
 			</div>
 			<Row
+				t="Include by default"
+				d="New messages start with this signature. Turn it off to add it only when you want it."
+			>
+				<Toggle
+					on={signatureEnabled}
+					disabled={signatureLocked}
+					onChange={(v) => {
+						signatureEnabled = v;
+						recomputeSignatureDirty();
+					}}
+				/>
+			</Row>
+			<Row
 				t="Append on replies and forwards"
 				d="When off, the signature is only added to new messages — not replies."
 			>
 				<Toggle
 					on={signatureAppendOnReply}
-					onChange={(v) =>
-						onSignatureChange({ bodyHtml: signatureBodyHtml, appendOnReply: v })}
+					disabled={signatureLocked || !signatureEnabled}
+					onChange={(v) => {
+						signatureAppendOnReply = v;
+						recomputeSignatureDirty();
+					}}
 				/>
 			</Row>
 		{:else}

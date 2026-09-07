@@ -5,21 +5,38 @@ export interface Signature {
 	accountId: string;
 	addressId: string;
 	bodyHtml: string;
+	enabled: boolean;
+	appendOnReply: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface SignatureRecord {
+	id: string;
+	accountId: string;
+	addressId: string;
+	sealedBody?: string;
+	bodyKeyFingerprint?: string;
+	bodyHtml?: string;
+	enabled: boolean;
 	appendOnReply: boolean;
 	createdAt: string;
 	updatedAt: string;
 }
 
 export interface UpsertSignatureInput {
-	bodyHtml: string;
+	sealedBody: string;
+	bodyKeyFingerprint: string;
+	enabled: boolean;
 	appendOnReply: boolean;
 }
 
 export interface SignatureImage {
 	id: string;
 	objectKey: string;
-	contentType: string;
 	sizeBytes: number;
+	ciphertextSha256?: string;
+	keyFingerprint?: string;
 	createdAt: string;
 }
 
@@ -28,7 +45,6 @@ export interface SignatureImageUploadGrant {
 	objectKey: string;
 	expiresAt: string;
 	maxBytes: number;
-	acceptedContentTypes: string[];
 }
 
 export interface SignatureImageDownload {
@@ -36,11 +52,22 @@ export interface SignatureImageDownload {
 	expiresAt: string;
 }
 
-export function listSignatures(): Promise<{ signatures: Signature[] }> {
+export interface CommitSignatureImageInput {
+	addressId: string;
+	objectKey: string;
+	ciphertextSizeBytes: number;
+	ciphertextSha256: string;
+	keyFingerprint: string;
+}
+
+export function listSignatures(): Promise<{ signatures: SignatureRecord[] }> {
 	return apiFetch('/v1/me/signatures');
 }
 
-export function upsertSignature(addressId: string, input: UpsertSignatureInput): Promise<Signature> {
+export function upsertSignature(
+	addressId: string,
+	input: UpsertSignatureInput
+): Promise<SignatureRecord> {
 	return apiFetch(`/v1/me/addresses/${addressId}/signature`, { method: 'PUT', body: input });
 }
 
@@ -48,15 +75,23 @@ export function deleteSignature(addressId: string): Promise<void> {
 	return apiFetch(`/v1/me/addresses/${addressId}/signature`, { method: 'DELETE' });
 }
 
-export function requestSignatureImageUploadUrl(): Promise<SignatureImageUploadGrant> {
-	return apiFetch('/v1/me/signature-images/upload-url', { method: 'POST' });
+export function requestSignatureImageUploadUrl(
+	addressId: string
+): Promise<SignatureImageUploadGrant> {
+	return apiFetch('/v1/me/signature-images/upload-url', {
+		method: 'POST',
+		body: { addressId }
+	});
 }
 
-export function commitSignatureImage(objectKey: string): Promise<SignatureImage> {
-	return apiFetch('/v1/me/signature-images', { method: 'POST', body: { objectKey } });
+export function commitSignatureImage(input: CommitSignatureImageInput): Promise<SignatureImage> {
+	return apiFetch('/v1/me/signature-images', { method: 'POST', body: input });
 }
 
-export function getSignatureImageDownloadUrl(objectKey: string): Promise<SignatureImageDownload> {
-	const params = new URLSearchParams({ objectKey });
+export function getSignatureImageDownloadUrl(
+	addressId: string,
+	objectKey: string
+): Promise<SignatureImageDownload> {
+	const params = new URLSearchParams({ addressId, objectKey });
 	return apiFetch(`/v1/me/signature-images/download-url?${params.toString()}`);
 }

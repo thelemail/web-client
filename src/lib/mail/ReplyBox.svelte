@@ -62,7 +62,13 @@
 	import { contacts } from '$lib/stores/contacts.svelte';
 	import { signatures } from '$lib/stores/signatures.svelte';
 	import { accountSettings } from '$lib/stores/accountSettings.svelte';
-	import { applySignatureSeed, swapSignatureForAddress } from './signatureRegion';
+	import {
+		applySignatureSeed,
+		swapSignatureForAddress,
+		insertSignature,
+		removeSignature,
+		hasRenderableHtml
+	} from './signatureRegion';
 	import type { Editor } from '@tiptap/core';
 	import {
 		MAX_ATTACHMENT_BYTES,
@@ -212,15 +218,33 @@
 	});
 
 	let signatureSeeded = $state(false);
+	let signatureOn = $state(false);
+	let signatureChosen = $state(false);
+
+	const replyAddress = $derived(addresses.getByEmail(ident.email));
+	const signatureBody = $derived(signatures.bodyFor(replyAddress?.id ?? null));
+
 	$effect(() => {
 		if (!editor || !identInit || signatureSeeded) return;
+		if (!signatures.loaded) return;
 		const addr = addresses.getByEmail(ident.email);
 		if (addr) {
-			const sig = signatures.getForAddress(addr.id);
-			if (sig?.appendOnReply && sig.bodyHtml) applySignatureSeed(editor, addr.id, sig.bodyHtml);
+			const body = signatures.effectiveFor(addr.id, 'reply');
+			if (body) {
+				applySignatureSeed(editor, body);
+				signatureOn = true;
+			}
 		}
 		signatureSeeded = true;
 	});
+
+	function toggleSignature(next: boolean) {
+		if (!editor) return;
+		signatureChosen = true;
+		signatureOn = next;
+		if (next) insertSignature(editor, signatureBody);
+		else removeSignature(editor);
+	}
 
 	function pickIdentity(i: number) {
 		fromOpen = false;
@@ -229,12 +253,12 @@
 		const next = identityOptions[i];
 		const addr = next ? addresses.getByEmail(next.email) : null;
 		if (editor && signatureSeeded && addr) {
-			const sig = signatures.getForAddress(addr.id);
-			swapSignatureForAddress(
-				editor,
-				addr.id,
-				sig?.appendOnReply && sig.bodyHtml ? sig.bodyHtml : ''
-			);
+			const body = signatures.bodyFor(addr.id);
+			const keep = signatureChosen
+				? signatureOn
+				: signatures.effectiveFor(addr.id, 'reply') !== null;
+			signatureOn = keep && !!body.trim();
+			swapSignatureForAddress(editor, signatureOn ? body : '');
 		}
 	}
 
@@ -538,6 +562,7 @@
 				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses());
 			}
 			const bodyStr = text.trim();
+			const htmlHasContent = !!bodyStr || hasRenderableHtml(html);
 			const q = quoteRemoved ? null : quote;
 			const chip = (c: RecipientChip) => ({ display: c.name, address: c.email });
 			await dispatchSend(
@@ -547,7 +572,7 @@
 					bcc: validBcc.length ? validBcc.map(chip) : undefined,
 					subject: subject.trim(),
 					body: q ? (bodyStr ? `${bodyStr}\n\n${q.text}` : q.text) : bodyStr,
-					bodyHtml: (q ? `${bodyStr ? html : ''}${q.html}` : html) || undefined,
+					bodyHtml: (q ? `${htmlHasContent ? html : ''}${q.html}` : html) || undefined,
 					inReplyToMessageId: headers.inReplyToMessageId,
 					inReplyToHeader: headers.inReplyToHeader,
 					references: headers.references,
@@ -827,7 +852,14 @@
 		{/if}
 	{/if}
 
-	<EditorToolbar {editor} />
+	<EditorToolbar
+		{editor}
+		signature={{
+			present: !!signatureBody.trim(),
+			on: signatureOn,
+			onToggle: toggleSignature
+		}}
+	/>
 
 	{#if warn && !canSend && status !== 'sending'}
 		<div class="cwarn">
