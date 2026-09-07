@@ -13,7 +13,9 @@ const CODES: ErrorCode[] = [
 	'invitee_already_in_family',
 	'invitee_has_custom_domain',
 	'invitee_domain_not_shared',
-	'family_full'
+	'family_full',
+	'rate_limited',
+	'conflict'
 ];
 
 describe('familyInviteError', () => {
@@ -24,6 +26,12 @@ describe('familyInviteError', () => {
 			expect(msg.length).toBeGreaterThan(20);
 			expect(msg).not.toBe('Could not send the invitation. Try again.');
 		}
+	});
+
+	it('explains an invitation the server refused as a conflict', () => {
+		expect(familyInviteError(apiError('conflict'), 'anna@thelemail.com')).toContain(
+			'anna@thelemail.com'
+		);
 	});
 
 	it('names the person in the message where it helps', () => {
@@ -53,11 +61,20 @@ describe('familyInviteError', () => {
 
 describe('acceptInviteError', () => {
 	it('covers the failures the accept endpoint returns', () => {
-		for (const code of ['family_full', 'invite_not_acceptable', 'not_found'] as ErrorCode[]) {
+		for (const code of [
+			'family_full',
+			'invite_not_acceptable',
+			'not_found',
+			'rate_limited'
+		] as ErrorCode[]) {
 			const msg = acceptInviteError(apiError(code), 'Marco');
 			expect(msg).not.toBe('Could not join just now. Try again.');
 			expect(msg).not.toMatch(/undefined/);
 		}
+	});
+
+	it('names the lockout rather than a generic failure', () => {
+		expect(acceptInviteError(apiError('rate_limited'), 'Marco')).toMatch(/too many failed attempts/i);
 	});
 
 	it('copes with a nameless inviter', () => {

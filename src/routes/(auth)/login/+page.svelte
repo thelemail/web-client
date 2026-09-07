@@ -21,11 +21,20 @@
 	} from '$lib/auth/perform-login';
 	import TwoFactorChallenge from '$lib/auth/TwoFactorChallenge.svelte';
 	import { isWebauthnCancelled } from '$lib/auth/webauthn';
+	import { resolveReturnTo } from '$lib/auth/return-to';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { Button } from '$lib/components/ui/button';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
+	const returnTo = $derived(page.url.searchParams.get('redirect'));
+	const registerHref = $derived.by(() => {
+		const q = new URLSearchParams();
+		if (addMode) q.set('addAccount', '1');
+		if (returnTo) q.set('redirect', returnTo);
+		const s = q.toString();
+		return s ? `/register?${s}` : '/register';
+	});
 	const targetSlot = $derived(page.url.searchParams.get('slot'));
 	const slotAccountEmail = $derived(() => {
 		const s = targetSlot ? Number(targetSlot) : null;
@@ -55,12 +64,7 @@
 	const canSignIn = $derived(emailValid && pw.length >= 1);
 
 	async function navigateAfterLogin(slot: number) {
-		const redirectTo = page.url.searchParams.get('redirect');
-		if (redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
-			await goto(redirectTo);
-		} else {
-			await goto(`/u/${slot}/mail/inbox`);
-		}
+		await goto(resolveReturnTo(page.url.searchParams.get('redirect'), slot));
 	}
 
 	async function submit() {
@@ -284,7 +288,7 @@
 			</div>
 		</div>
 		<p class="switch">
-			New to Thelemail? <a href="/register">Create an account</a>
+			New to Thelemail? <a href={registerHref}>Create an account</a>
 		</p>
 	</div>
 {/if}

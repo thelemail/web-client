@@ -103,6 +103,8 @@ const KEYSTORE_SINGLETON = Symbol.for('thelemail.keystore.singleton');
 
 const persistentListeners = new Set<(b: Broadcast) => void>();
 
+const DEFAULT_TIMEOUT_MS = 60_000;
+const CRYPTO_TIMEOUT_MS = 180_000;
 const ATTACHMENT_HEADER_TIMEOUT_MS = 30_000;
 const ATTACHMENT_BYTES_TIMEOUT_MS = 180_000;
 
@@ -147,10 +149,15 @@ function getSingleton(): KeystoreSingleton {
 	const g = globalThis as GlobalShape;
 	if (g[KEYSTORE_SINGLETON]) return g[KEYSTORE_SINGLETON];
 
-	const worker = new SharedWorker(new URL('./keystore-worker.ts', import.meta.url), {
-		type: 'module',
-		name: 'thelemail-keystore'
-	});
+	let worker: SharedWorker;
+	try {
+		worker = new SharedWorker(new URL('./keystore-worker.ts', import.meta.url), {
+			type: 'module',
+			name: 'thelemail-keystore'
+		});
+	} catch {
+		throw new Error(WORKER_UNAVAILABLE);
+	}
 	const port = worker.port;
 	const pending = new Map<string, PendingRequest>();
 	const listeners = persistentListeners;
@@ -187,19 +194,18 @@ function getSingleton(): KeystoreSingleton {
 }
 
 function call<T>(cmd: string, args?: unknown, timeoutMs?: number): Promise<T> {
+	const deadline = timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
 	if (channel) {
-		return channel.call<T>(cmd, args, timeoutMs);
+		return channel.call<T>(cmd, args, deadline);
 	}
 	const s = getSingleton();
 	const id = crypto.randomUUID();
 	return new Promise<T>((resolve, reject) => {
 		const entry: PendingRequest = { cmd, resolve: resolve as (v: unknown) => void, reject };
-		if (timeoutMs !== undefined) {
-			entry.timer = setTimeout(() => {
-				settle(s.pending, id)?.reject(new Error(`keystore ${cmd} timed out`));
-			}, timeoutMs);
-		}
+		entry.timer = setTimeout(() => {
+			settle(s.pending, id)?.reject(new Error(`keystore ${cmd} timed out`));
+		}, deadline);
 		s.pending.set(id, entry);
 		s.port.postMessage({ id, cmd, args });
 	});
@@ -294,21 +300,23 @@ export const keystore = {
 	tryRestoreFromPersistent: (args: TryRestoreFromPersistentArgs) =>
 		call<RestoreResponse>('tryRestoreFromPersistent', args),
 	disablePersistent: (args: DisablePersistentArgs) => call<void>('disablePersistent', args),
-	decrypt: (args: DecryptArgs) => call<DecryptResponse>('decrypt', args),
+	decrypt: (args: DecryptArgs) => call<DecryptResponse>('decrypt', args, CRYPTO_TIMEOUT_MS),
 	attachmentHeader: (args: AttachmentHeaderArgs) =>
 		call<AttachmentHeaderResponse>('attachmentHeader', args, ATTACHMENT_HEADER_TIMEOUT_MS),
 	attachmentBytes: (args: AttachmentBytesArgs) =>
 		call<AttachmentBytesResponse>('attachmentBytes', args, ATTACHMENT_BYTES_TIMEOUT_MS),
 	loadAliasKeys: (args: LoadAliasKeysArgs) => call<LoadAliasKeysResponse>('loadAliasKeys', args),
 	unloadAliasKeys: (args: UnloadAliasKeysArgs) => call<void>('unloadAliasKeys', args),
-	createAliasKey: (args: CreateAliasKeyArgs) => call<CreateAliasKeyResponse>('createAliasKey', args),
+	createAliasKey: (args: CreateAliasKeyArgs) =>
+		call<CreateAliasKeyResponse>('createAliasKey', args, CRYPTO_TIMEOUT_MS),
 	getPublicKey: (args: GetPublicKeyArgs) => call<GetPublicKeyResponse>('getPublicKey', args),
 	reformatKeyWithUids: (args: ReformatKeyWithUidsArgs) =>
-		call<ReformatKeyWithUidsResponse>('reformatKeyWithUids', args),
+		call<ReformatKeyWithUidsResponse>('reformatKeyWithUids', args, CRYPTO_TIMEOUT_MS),
 	commitReformattedKey: (args: CommitReformattedKeyArgs) =>
 		call<CommitReformattedKeyResponse>('commitReformattedKey', args),
-	encrypt: (args: EncryptArgs) => call<EncryptResponse>('encrypt', args),
-	encryptToKeys: (args: EncryptToKeysArgs) => call<EncryptToKeysResponse>('encryptToKeys', args),
+	encrypt: (args: EncryptArgs) => call<EncryptResponse>('encrypt', args, CRYPTO_TIMEOUT_MS),
+	encryptToKeys: (args: EncryptToKeysArgs) =>
+		call<EncryptToKeysResponse>('encryptToKeys', args, CRYPTO_TIMEOUT_MS),
 	signDetached: (args: SignDetachedArgs) => call<SignDetachedResponse>('signDetached', args),
 	subscribe(cb: (b: Broadcast) => void): () => void {
 		const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;

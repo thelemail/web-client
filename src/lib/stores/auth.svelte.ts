@@ -188,7 +188,11 @@ class AuthStore {
 		if (!browser) return;
 		this.subscribeOnce();
 		await accounts.load();
-		await hydrateAvatarCache();
+		try {
+			await hydrateAvatarCache();
+		} catch (err) {
+			console.warn('avatars: cache unavailable', err);
+		}
 		const s = await keystore.status();
 		this.syncFromKeystoreStatus(s);
 		if (!this.#currentId) {

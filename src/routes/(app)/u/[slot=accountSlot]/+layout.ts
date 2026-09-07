@@ -13,8 +13,12 @@ export const load: LayoutLoad = async ({ parent, params, url }) => {
 	await parent();
 	const slot = Number(params.slot);
 	const record = accounts.bySlot(slot);
+	const want = encodeURIComponent(url.pathname + url.search);
 	if (!record) {
-		throw redirect(303, `/login?addAccount=1&redirect=${encodeURIComponent(url.pathname)}`);
+		if (accounts.list.length > 0) {
+			throw redirect(303, `/?redirect=${want}`);
+		}
+		throw redirect(303, `/login?redirect=${want}`);
 	}
 	const accountId = record.accountId;
 
@@ -27,15 +31,15 @@ export const load: LayoutLoad = async ({ parent, params, url }) => {
 			const known = status.accounts.some((a) => a.accountId === accountId);
 			if (!known) {
 				await accounts.remove(accountId);
-				throw redirect(303, `/login?addAccount=1&redirect=${encodeURIComponent(url.pathname)}`);
+				throw redirect(303, `/login?addAccount=1&redirect=${want}`);
 			}
-			throw redirect(303, `/login?slot=${slot}&redirect=${encodeURIComponent(url.pathname + url.search)}`);
+			throw redirect(303, `/login?slot=${slot}&redirect=${want}`);
 		}
 	}
 	if (!auth.isAuthenticated) {
 		const refreshed = await auth.tryRefresh(accountId);
 		if (!refreshed) {
-			throw redirect(303, `/login?slot=${slot}&redirect=${encodeURIComponent(url.pathname + url.search)}`);
+			throw redirect(303, `/login?slot=${slot}&redirect=${want}`);
 		}
 	}
 	if (auth.fullName === null) {

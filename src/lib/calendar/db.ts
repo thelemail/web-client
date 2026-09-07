@@ -1,6 +1,7 @@
 import type { CalendarItemRow, CalendarItemStateRow, CalendarRow } from '$lib/api/calendars';
 import type { ItemKind } from './model';
 import type { OutboxOp, OutboxStatus } from './outbox';
+import { openDatabase } from '$lib/idb-open';
 
 export interface CachedCalendar {
 	accountId: string;
@@ -76,49 +77,45 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDb(): Promise<IDBDatabase> {
 	if (dbPromise) return dbPromise;
-	dbPromise = new Promise((resolve, reject) => {
-		const req = indexedDB.open(DB_NAME, DB_VERSION);
-		req.onupgradeneeded = () => {
-			const db = req.result;
-			if (!db.objectStoreNames.contains(CALENDARS)) {
-				db.createObjectStore(CALENDARS, { keyPath: ['accountId', 'id'] }).createIndex(
-					BY_ACCOUNT,
-					'accountId'
-				);
-			}
-			if (!db.objectStoreNames.contains(ITEMS)) {
-				db.createObjectStore(ITEMS, { keyPath: ['accountId', 'id'] }).createIndex(
-					BY_ACCOUNT,
-					'accountId'
-				);
-			}
-			if (!db.objectStoreNames.contains(STATES)) {
-				db.createObjectStore(STATES, { keyPath: ['accountId', 'itemId'] }).createIndex(
-					BY_ACCOUNT,
-					'accountId'
-				);
-			}
-			if (!db.objectStoreNames.contains(SYNC)) {
-				db.createObjectStore(SYNC, { keyPath: 'accountId' });
-			}
-			if (!db.objectStoreNames.contains(OUTBOX)) {
-				db.createObjectStore(OUTBOX, { keyPath: 'seq', autoIncrement: true }).createIndex(
-					BY_ACCOUNT,
-					'accountId'
-				);
-			}
-		};
-		req.onsuccess = () => {
-			req.result.onclose = () => {
+	dbPromise = openDatabase(DB_NAME, DB_VERSION, (db) => {
+		if (!db.objectStoreNames.contains(CALENDARS)) {
+			db.createObjectStore(CALENDARS, { keyPath: ['accountId', 'id'] }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+		if (!db.objectStoreNames.contains(ITEMS)) {
+			db.createObjectStore(ITEMS, { keyPath: ['accountId', 'id'] }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+		if (!db.objectStoreNames.contains(STATES)) {
+			db.createObjectStore(STATES, { keyPath: ['accountId', 'itemId'] }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+		if (!db.objectStoreNames.contains(SYNC)) {
+			db.createObjectStore(SYNC, { keyPath: 'accountId' });
+		}
+		if (!db.objectStoreNames.contains(OUTBOX)) {
+			db.createObjectStore(OUTBOX, { keyPath: 'seq', autoIncrement: true }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+	})
+		.then((db) => {
+			db.onclose = () => {
 				dbPromise = null;
 			};
-			resolve(req.result);
-		};
-		req.onerror = () => {
+			return db;
+		})
+		.catch((err) => {
 			dbPromise = null;
-			reject(req.error);
-		};
-	});
+			throw err;
+		});
 	return dbPromise;
 }
 

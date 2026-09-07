@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { SvelteMap } from 'svelte/reactivity';
 import { platform } from '$platform';
+import { openDatabase } from '$lib/idb-open';
 
 const DB_NAME = 'thelemail-avatars';
 const DB_VERSION = 2;
@@ -38,20 +39,17 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openDb(): Promise<IDBDatabase> {
 	if (dbPromise) return dbPromise;
-	dbPromise = new Promise((resolve, reject) => {
-		const req = indexedDB.open(DB_NAME, DB_VERSION);
-		req.onupgradeneeded = () => {
-			const db = req.result;
-			if (!db.objectStoreNames.contains(ACCOUNT_STORE)) {
-				db.createObjectStore(ACCOUNT_STORE, { keyPath: 'accountId' });
-			}
-			if (!db.objectStoreNames.contains(PEOPLE_STORE)) {
-				const people = db.createObjectStore(PEOPLE_STORE, { keyPath: 'key' });
-				people.createIndex('byAccount', 'accountId', { unique: false });
-			}
-		};
-		req.onsuccess = () => resolve(req.result);
-		req.onerror = () => reject(req.error);
+	dbPromise = openDatabase(DB_NAME, DB_VERSION, (db) => {
+		if (!db.objectStoreNames.contains(ACCOUNT_STORE)) {
+			db.createObjectStore(ACCOUNT_STORE, { keyPath: 'accountId' });
+		}
+		if (!db.objectStoreNames.contains(PEOPLE_STORE)) {
+			const people = db.createObjectStore(PEOPLE_STORE, { keyPath: 'key' });
+			people.createIndex('byAccount', 'accountId', { unique: false });
+		}
+	}).catch((err) => {
+		dbPromise = null;
+		throw err;
 	});
 	return dbPromise;
 }

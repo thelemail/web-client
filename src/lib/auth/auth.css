@@ -1997,3 +1997,51 @@
 .auth .sistrip .si-go:hover {
 	text-decoration: underline;
 }
+
+.auth .stnotice {
+	width: 432px;
+	max-width: 100%;
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	margin: -8px 0 16px;
+	padding: 10px 12px;
+	font-size: 13px;
+	line-height: 1.45;
+	color: var(--fg);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--warning-700);
+	border-radius: var(--radius-panel);
+	box-shadow: var(--shadow-xs);
+}
+.auth .stnotice svg {
+	flex: 0 0 auto;
+	margin-top: 1px;
+	color: var(--warning-700);
+}
+
+.auth .errcard {
+	text-align: center;
+}
+.auth .errcard .errcode {
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	color: var(--fg-faint);
+	margin: 0 0 6px;
+}
+.auth .errcard h1 {
+	margin: 0 0 8px;
+}
+.auth .errcard .errmsg {
+	margin: 0 0 24px;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--fg-muted);
+}
+.auth .errcard .erracts {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
