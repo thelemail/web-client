@@ -57,7 +57,7 @@
 
 	const sourcePlaceholder = $derived(
 		mode === 'markdown'
-			? '**Ada Lovelace**\nAnalytical Engines — [example.com](https://example.com)'
+			? '**Ada Lovelace**\nAnalytical Engines — [thelemail.com](https://thelemail.com)'
 			: '<p><strong>Ada Lovelace</strong></p>'
 	);
 
