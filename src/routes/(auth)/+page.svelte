@@ -11,6 +11,13 @@
 	import { keystore } from '$lib/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
+	import { page } from '$app/state';
+	import { resolveReturnTo } from '$lib/auth/return-to';
+
+	const returnTo = $derived(page.url.searchParams.get('redirect'));
+	const moreQuery = $derived(
+		returnTo ? `&redirect=${encodeURIComponent(returnTo)}` : ''
+	);
 
 	let navigating = $state<string | null>(null);
 	let removing = $state<{ id: string; email: string; name: string | null } | null>(null);
@@ -42,7 +49,7 @@
 		if (remaining.length === 0) {
 			await goto('/login');
 		} else if (remaining.length === 1) {
-			await goto(`/u/${remaining[0].slot}/mail/inbox`);
+			await goto(resolveReturnTo(returnTo, remaining[0].slot));
 		}
 	}
 
@@ -50,7 +57,7 @@
 		if (navigating) return;
 		navigating = id;
 		try {
-			await goto(`/u/${slot}/mail/inbox`);
+			await goto(resolveReturnTo(returnTo, slot));
 		} finally {
 			navigating = null;
 		}
@@ -108,10 +115,10 @@
 		{/each}
 	</div>
 	<div class="apick-more">
-		<a class="apick-link" href="/login?addAccount=1">
+		<a class="apick-link" href={`/login?addAccount=1${moreQuery}`}>
 			<LogIn size={17} strokeWidth={1.75} />Sign in to another account
 		</a>
-		<a class="apick-link" href="/register?addAccount=1">
+		<a class="apick-link" href={`/register?addAccount=1${moreQuery}`}>
 			<UserPlus size={17} strokeWidth={1.75} />Create a new account
 		</a>
 	</div>

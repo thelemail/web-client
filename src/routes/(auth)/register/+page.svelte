@@ -17,6 +17,7 @@
 		type PlanSelection
 	} from '$lib/auth/plans';
 	import { performLogin } from '$lib/auth/perform-login';
+	import { resolveReturnTo } from '$lib/auth/return-to';
 	import { createCheckoutSession, type PlanCode } from '$lib/api/billing';
 	import { changeMyWorkspaceType } from '$lib/api/workspaces';
 	import brandmark from '$lib/assets/logo-mark.svg';
@@ -33,6 +34,14 @@
 	import { Button } from '$lib/components/ui/button';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
+	const signInHref = $derived.by(() => {
+		const q = new URLSearchParams();
+		if (addMode) q.set('addAccount', '1');
+		const back = page.url.searchParams.get('redirect');
+		if (back) q.set('redirect', back);
+		const s = q.toString();
+		return s ? `/login?${s}` : '/login';
+	});
 	const acquisitionSource = page.url.searchParams.get('src') ?? 'register';
 	const preselectedPeriod = periodFromQuery(page.url.searchParams.get('billing'));
 	const preselected = planFromQuery(page.url.searchParams.get('plan'), preselectedPeriod);
@@ -202,7 +211,7 @@
 		submitError = null;
 		const slot = await registerAndLogin();
 		if (slot === null) return;
-		await goto(`/u/${slot}/mail/inbox`);
+		await goto(resolveReturnTo(page.url.searchParams.get('redirect'), slot));
 	}
 
 	async function submitRegistration() {
@@ -483,7 +492,7 @@
 				</p>
 			{/if}
 			<div class="actions" style="margin-top:24px">
-				<Button variant="primary" size="lg" block onclick={() => goto(addMode ? '/login?addAccount=1' : '/login')}>
+				<Button variant="primary" size="lg" block onclick={() => goto(signInHref)}>
 					<Mail size={17} strokeWidth={1.75} />Sign in
 				</Button>
 			</div>
