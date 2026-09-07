@@ -48,6 +48,69 @@ const baseArgs = {
 	messageIdDomain: 'thelemail.com'
 };
 
+describe('buildMIME with signature images', () => {
+	const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+	function build(extra: Record<string, unknown> = {}) {
+		return decode(
+			buildMIME({
+				...baseArgs,
+				to: [{ display: '', address: 'ada@thelemail.com' }],
+				bodyHtml: '<p>hi</p><img src="cid:sig-0@thelemail.local">',
+				relatedParts: [
+					{ contentId: 'sig-0@thelemail.local', contentType: 'image/png', bytes: png }
+				],
+				...extra
+			})
+		);
+	}
+
+	it('wraps the html and the image in multipart/related', () => {
+		const mime = build();
+		expect(mime).toContain('multipart/related; type="text/html"');
+		expect(mime).toContain('Content-Type: image/png');
+		expect(mime).toContain('Content-ID: <sig-0@thelemail.local>');
+		expect(mime).toContain('Content-Disposition: inline');
+		expect(mime).toContain('Content-Transfer-Encoding: base64');
+	});
+
+	it('keeps text and the related subtree inside multipart/alternative', () => {
+		const mime = build();
+		expect(mime).toContain('multipart/alternative');
+		expect(mime.indexOf('text/plain')).toBeLessThan(mime.indexOf('multipart/related'));
+	});
+
+	it('nests the alternative inside multipart/mixed when there are attachments too', () => {
+		const mime = build({
+			attachments: [
+				{
+					filename: 'a.txt',
+					contentType: 'text/plain',
+					bytes: new TextEncoder().encode('hello')
+				}
+			]
+		});
+		expect(mime).toContain('multipart/mixed');
+		expect(mime.indexOf('multipart/mixed')).toBeLessThan(mime.indexOf('multipart/alternative'));
+		expect(mime).toContain('multipart/related');
+	});
+
+	it('emits a plain text/html part when there are no related parts', () => {
+		const mime = build({ relatedParts: [] });
+		expect(mime).not.toContain('multipart/related');
+		expect(mime).toContain('Content-Type: text/html');
+	});
+
+	it('ignores related parts with no bytes', () => {
+		const mime = build({
+			relatedParts: [
+				{ contentId: 'empty@thelemail.local', contentType: 'image/png', bytes: new Uint8Array() }
+			]
+		});
+		expect(mime).not.toContain('multipart/related');
+	});
+});
+
 describe('buildMIME', () => {
 	it('joins multiple To recipients with display-name pairs', () => {
 		const h = headerSection(
