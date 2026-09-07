@@ -151,3 +151,25 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	highContrast: false,
 	reduceMotion: false
 };
+
+export const UNRELEASED = {
+	composeFormat: false,
+	composeFont: false,
+	undoSend: false,
+	draftAutosave: false,
+	externalEncryptionPolicy: false,
+	swipeAction: false,
+	requestReceipts: false,
+	respondReceipts: false
+} as const;
+
+export function sectionIdFromPath(pathname: string): string {
+	const parts = pathname.split('/').filter(Boolean);
+	const i = parts.indexOf('settings');
+	return (i === -1 ? parts.at(-1) : parts[i + 1]) ?? '';
+}
+
+export function sectionLabelFromPath(pathname: string): string {
+	const id = sectionIdFromPath(pathname);
+	return SECTIONS.find((sec) => sec.id === id)?.label ?? 'Settings';
+}

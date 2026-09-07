@@ -87,10 +87,7 @@
 	}
 </script>
 
-<SecHead
-	title="Import"
-	desc="Bring existing mail into Thelemail from .eml files. Each message is parsed and encrypted to your key in this browser before it is uploaded — the server only ever stores ciphertext. Imported mail lands in your inbox, marked read, at its original date."
-/>
+<SecHead desc="Bring existing mail into Thelemail from .eml files. Each message is parsed and encrypted to your key in this browser before it is uploaded — the server only ever stores ciphertext. Imported mail lands in your inbox, marked read, at its original date." />
 
 <div class="scard">
 	<CardHead icon={Upload} title="Import .eml files" />

@@ -13,6 +13,7 @@ import { auth } from './auth.svelte';
 const OPEN_MESSAGE_SECTION = 'reading_open_message';
 const PRIVACY_SECTION = 'privacy';
 const LOCALIZATION_SECTION = 'localization';
+const COMPOSING_SECTION = 'composing';
 const AUTOSAVE_DELAY = 600;
 const SAVED_SETTLE_DELAY = 2200;
 const TOAST_DELAY = 2400;
@@ -23,6 +24,12 @@ const LOCALIZATION_KEYS = ['dateFmt', 'timeFmt'] as const satisfies ReadonlyArra
 	keyof SettingsState
 >;
 const APPEARANCE_KEYS = ['density'] as const satisfies ReadonlyArray<keyof SettingsState>;
+const COMPOSING_KEYS = [
+	'confirmExternal',
+	'confirmSubject',
+	'confirmUnencrypted',
+	'replyDefault'
+] as const satisfies ReadonlyArray<keyof SettingsState>;
 
 const CEREMONY_MESSAGES: Record<CeremonyKind, string> = {
 	recovery: 'Recovery set up',
@@ -54,6 +61,7 @@ class SettingsDraftStore {
 	#dirtyPrivacy = false;
 	#dirtyLocalization = false;
 	#dirtyAppearance = false;
+	#dirtyComposing = false;
 	#saveTimer: ReturnType<typeof setTimeout> | undefined;
 	#settleTimer: ReturnType<typeof setTimeout> | undefined;
 	#toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -74,6 +82,7 @@ class SettingsDraftStore {
 		this.#dirtyPrivacy = false;
 		this.#dirtyLocalization = false;
 		this.#dirtyAppearance = false;
+		this.#dirtyComposing = false;
 	}
 
 	async hydrate(): Promise<void> {
@@ -86,14 +95,22 @@ class SettingsDraftStore {
 		this.s.dateFmt = loc.dateFormat;
 		this.s.timeFmt = loc.timeFormat;
 		this.s.density = accountSettings.appearance.density;
+		const composing = accountSettings.composing;
+		this.s.confirmExternal = composing.confirmExternal;
+		this.s.confirmSubject = composing.confirmSubject;
+		this.s.confirmUnencrypted = composing.confirmUnencrypted;
+		this.s.replyDefault = composing.replyDefault;
 	}
 
 	set = <K extends keyof SettingsState>(key: K, value: SettingsState[K]): void => {
 		this.s[key] = value;
-		if (includesKey(OPEN_MESSAGE_KEYS, key)) this.#dirtyOpenMessage = true;
-		if (includesKey(PRIVACY_KEYS, key)) this.#dirtyPrivacy = true;
-		if (includesKey(LOCALIZATION_KEYS, key)) this.#dirtyLocalization = true;
-		if (includesKey(APPEARANCE_KEYS, key)) this.#dirtyAppearance = true;
+		let persisted = false;
+		if (includesKey(OPEN_MESSAGE_KEYS, key)) persisted = this.#dirtyOpenMessage = true;
+		if (includesKey(PRIVACY_KEYS, key)) persisted = this.#dirtyPrivacy = true;
+		if (includesKey(LOCALIZATION_KEYS, key)) persisted = this.#dirtyLocalization = true;
+		if (includesKey(APPEARANCE_KEYS, key)) persisted = this.#dirtyAppearance = true;
+		if (includesKey(COMPOSING_KEYS, key)) persisted = this.#dirtyComposing = true;
+		if (!persisted) return;
 		this.scheduleAutosave();
 	};
 
@@ -116,6 +133,7 @@ class SettingsDraftStore {
 			this.#dirtyPrivacy ||
 			this.#dirtyLocalization ||
 			this.#dirtyAppearance ||
+			this.#dirtyComposing ||
 			this.profileDirty
 		);
 	}
@@ -132,6 +150,14 @@ class SettingsDraftStore {
 		const privacyBody = this.#dirtyPrivacy ? { stripTrackingParams: this.s.stripTrack } : null;
 		const localizationBody = this.#dirtyLocalization
 			? { dateFormat: this.s.dateFmt, timeFormat: this.s.timeFmt }
+			: null;
+		const composingBody = this.#dirtyComposing
+			? {
+					confirmExternal: this.s.confirmExternal,
+					confirmSubject: this.s.confirmSubject,
+					confirmUnencrypted: this.s.confirmUnencrypted,
+					replyDefault: this.s.replyDefault
+				}
 			: null;
 		const appearanceDirty = this.#dirtyAppearance;
 		const profileNeedsSave = this.profileDirty;
@@ -154,6 +180,9 @@ class SettingsDraftStore {
 			if (localizationBody) {
 				tasks.push(putAccountSettingsSection(LOCALIZATION_SECTION, localizationBody));
 			}
+			if (composingBody) {
+				tasks.push(putAccountSettingsSection(COMPOSING_SECTION, composingBody));
+			}
 			if (profileNeedsSave) {
 				tasks.push(this.profileSave());
 			}
@@ -169,6 +198,10 @@ class SettingsDraftStore {
 			if (localizationBody) {
 				accountSettings.setLocalization(localizationBody);
 				this.#dirtyLocalization = false;
+			}
+			if (composingBody) {
+				accountSettings.setComposing(composingBody);
+				this.#dirtyComposing = false;
 			}
 			if (appearanceDirty) {
 				this.#dirtyAppearance = false;

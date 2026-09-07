@@ -125,10 +125,7 @@
 	);
 </script>
 
-<SecHead
-	title="Notifications"
-	desc="What reaches you while the app is in the background."
-/>
+<SecHead desc="What reaches you while the app is in the background." />
 
 {#if platform.notifications}
 	<div class="scard">

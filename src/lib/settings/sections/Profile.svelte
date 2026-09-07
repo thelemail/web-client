@@ -262,10 +262,7 @@
 	}
 </script>
 
-<SecHead
-	title="Profile"
-	desc="Your name and signature, and the address you send from by default. Your domain, your identity."
-/>
+<SecHead desc="Your name and signature, and the address you send from by default. Your domain, your identity." />
 
 <div class="scard">
 	<div class="profile">

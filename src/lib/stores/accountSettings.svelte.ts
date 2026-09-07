@@ -20,6 +20,13 @@ export interface PrivacySettings {
 	stripTrackingParams: boolean;
 }
 
+export interface ComposingSettings {
+	confirmExternal: boolean;
+	confirmSubject: boolean;
+	confirmUnencrypted: boolean;
+	replyDefault: 'reply' | 'all';
+}
+
 export interface AppearanceSettings {
 	theme: ThemePref;
 	density: 'comfortable' | 'compact';
@@ -32,6 +39,13 @@ const DEFAULTS: OpenMessageSettings = {
 
 const PRIVACY_DEFAULTS: PrivacySettings = {
 	stripTrackingParams: true
+};
+
+const COMPOSING_DEFAULTS: ComposingSettings = {
+	confirmExternal: true,
+	confirmSubject: true,
+	confirmUnencrypted: true,
+	replyDefault: 'reply'
 };
 
 const APPEARANCE_DEFAULTS: AppearanceSettings = {
@@ -65,6 +79,7 @@ class AccountSettingsStore {
 	hydrated = $state(false);
 	readingOpenMessage = $state<OpenMessageSettings>({ ...DEFAULTS });
 	privacy = $state<PrivacySettings>({ ...PRIVACY_DEFAULTS });
+	composing = $state<ComposingSettings>({ ...COMPOSING_DEFAULTS });
 	appearance = $state<AppearanceSettings>({ ...APPEARANCE_DEFAULTS });
 	calendar = $state<CalendarSettings>({ ...CALENDAR_DEFAULTS });
 	#accountId: string | null = null;
@@ -75,6 +90,7 @@ class AccountSettingsStore {
 		this.hydrated = false;
 		this.readingOpenMessage = { ...DEFAULTS };
 		this.privacy = { ...PRIVACY_DEFAULTS };
+		this.composing = { ...COMPOSING_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
 		this.calendar = { ...CALENDAR_DEFAULTS };
 		locale.reset();
@@ -123,6 +139,20 @@ class AccountSettingsStore {
 					next.stripTrackingParams = p.stripTrackingParams;
 				}
 				this.privacy = next;
+			}
+
+			const cmp = sections['composing'];
+			if (cmp && typeof cmp === 'object') {
+				const next: ComposingSettings = { ...COMPOSING_DEFAULTS };
+				if (typeof cmp.confirmExternal === 'boolean') next.confirmExternal = cmp.confirmExternal;
+				if (typeof cmp.confirmSubject === 'boolean') next.confirmSubject = cmp.confirmSubject;
+				if (typeof cmp.confirmUnencrypted === 'boolean') {
+					next.confirmUnencrypted = cmp.confirmUnencrypted;
+				}
+				if (cmp.replyDefault === 'reply' || cmp.replyDefault === 'all') {
+					next.replyDefault = cmp.replyDefault;
+				}
+				this.composing = next;
 			}
 
 			const a = sections['appearance'];
@@ -194,6 +224,10 @@ class AccountSettingsStore {
 
 	setPrivacy(value: PrivacySettings): void {
 		this.privacy = { ...value };
+	}
+
+	setComposing(value: ComposingSettings): void {
+		this.composing = { ...value };
 	}
 
 	setLocalization(value: LocaleSettings): void {

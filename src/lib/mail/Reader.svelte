@@ -322,6 +322,9 @@
 	});
 
 	let replyMode = $state<ReplyMode | null>(null);
+	const replyButtons = $derived<ReplyMode[]>(
+		accountSettings.composing.replyDefault === 'all' ? ['all', 'reply'] : ['reply', 'all']
+	);
 
 	function toggleReplyMode(next: ReplyMode) {
 		replyMode = replyMode === next ? null : next;
@@ -550,22 +553,21 @@
 				<ArrowLeft size={17} />
 			</button>
 			{#if caps.showReply}
-				<button
-					type="button"
-					class="rb-btn primary"
-					class:on={replyMode === 'reply'}
-					onclick={() => toggleReplyMode('reply')}
-				>
-					<Reply size={15} /><span class="rb-t">Reply</span>
-				</button>
-				<button
-					type="button"
-					class="rb-btn"
-					class:on={replyMode === 'all'}
-					onclick={() => toggleReplyMode('all')}
-				>
-					<ReplyAll size={15} /><span class="rb-t">Reply all</span>
-				</button>
+				{#each replyButtons as m (m)}
+					<button
+						type="button"
+						class="rb-btn"
+						class:primary={m === replyButtons[0]}
+						class:on={replyMode === m}
+						onclick={() => toggleReplyMode(m)}
+					>
+						{#if m === 'all'}
+							<ReplyAll size={15} /><span class="rb-t">Reply all</span>
+						{:else}
+							<Reply size={15} /><span class="rb-t">Reply</span>
+						{/if}
+					</button>
+				{/each}
 				<button
 					type="button"
 					class="rb-btn"

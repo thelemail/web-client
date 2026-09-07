@@ -102,10 +102,7 @@
 	}
 </script>
 
-<SecHead
-	title="Addresses"
-	desc="The addresses you send and receive as. Promoting one to primary makes it your default From and your sign-in email."
-/>
+<SecHead desc="The addresses you send and receive as. Promoting one to primary makes it your default From and your sign-in email." />
 
 <div class="scard">
 	<CardHead icon={AtSign} title="Your addresses">

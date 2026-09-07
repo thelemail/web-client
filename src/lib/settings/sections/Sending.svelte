@@ -11,7 +11,7 @@
 	import Toggle from '../Toggle.svelte';
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
-	import type { SettingsState } from '../data';
+	import { UNRELEASED, type SettingsState } from '../data';
 
 	interface Props {
 		s: SettingsState;
@@ -38,50 +38,55 @@
 	];
 </script>
 
-<SecHead
-	title="Composing & sending"
-	desc="How new messages start, the safety nets before they leave, and when mail is encrypted to the recipient."
-/>
+<SecHead desc="How new messages start and the safety nets before they leave." />
 
 <div class="scard">
 	<CardHead title="Compose defaults" />
-	<Row t="Compose format">
-		<Seg
-			value={s.composeFormat}
-			options={[
-				{ v: 'rich', l: 'Rich text', icon: 'type' },
-				{ v: 'plain', l: 'Plain text', icon: 'pilcrow' }
-			]}
-			onChange={(v) => set('composeFormat', v)}
-		/>
-	</Row>
-	<Row t="Default font" d="For rich-text composing.">
-		<Select
-			value={s.composeFont}
-			options={['Hanken Grotesk', 'Spectral', 'IBM Plex Mono', 'System sans']}
-			onChange={(v) => set('composeFont', v)}
-		/>
-	</Row>
-	<Row t="Undo send" d="A short window to recall a message after you hit send.">
-		<Seg
-			value={s.undo}
-			options={[
-				{ v: '0', l: 'Off' },
-				{ v: '5', l: '5s' },
-				{ v: '10', l: '10s' },
-				{ v: '30', l: '30s' }
-			]}
-			onChange={(v) => set('undo', v)}
-		/>
-	</Row>
-	<Row t="Auto-save drafts">
-		<Select
-			value={s.autosave}
-			options={['Every few seconds', 'Every 30 seconds', 'Every minute', 'On close only']}
-			onChange={(v) => set('autosave', v)}
-		/>
-	</Row>
-	<Row t="Primary reply button" d="Which reply action sits in front.">
+	{#if UNRELEASED.composeFormat}
+		<Row t="Compose format">
+			<Seg
+				value={s.composeFormat}
+				options={[
+					{ v: 'rich', l: 'Rich text', icon: 'type' },
+					{ v: 'plain', l: 'Plain text', icon: 'pilcrow' }
+				]}
+				onChange={(v) => set('composeFormat', v)}
+			/>
+		</Row>
+	{/if}
+	{#if UNRELEASED.composeFont}
+		<Row t="Default font" d="For rich-text composing.">
+			<Select
+				value={s.composeFont}
+				options={['Hanken Grotesk', 'Spectral', 'IBM Plex Mono', 'System sans']}
+				onChange={(v) => set('composeFont', v)}
+			/>
+		</Row>
+	{/if}
+	{#if UNRELEASED.undoSend}
+		<Row t="Undo send" d="A short window to recall a message after you hit send.">
+			<Seg
+				value={s.undo}
+				options={[
+					{ v: '0', l: 'Off' },
+					{ v: '5', l: '5s' },
+					{ v: '10', l: '10s' },
+					{ v: '30', l: '30s' }
+				]}
+				onChange={(v) => set('undo', v)}
+			/>
+		</Row>
+	{/if}
+	{#if UNRELEASED.draftAutosave}
+		<Row t="Auto-save drafts">
+			<Select
+				value={s.autosave}
+				options={['Every few seconds', 'Every 30 seconds', 'Every minute', 'On close only']}
+				onChange={(v) => set('autosave', v)}
+			/>
+		</Row>
+	{/if}
+	<Row t="Primary reply button" d="Which reply action sits in front when you open a message.">
 		<Seg
 			value={s.replyDefault}
 			options={[
@@ -95,7 +100,10 @@
 
 <div class="scard">
 	<CardHead icon={ShieldAlert} title="Before a message leaves" />
-	<Row t="Confirm external recipients" d="Ask before sending to anyone outside your domains.">
+	<Row
+		t="Confirm external recipients"
+		d="Ask before sending to anyone who is not a Thelemail account."
+	>
 		<Toggle on={s.confirmExternal} onChange={(v) => set('confirmExternal', v)} />
 	</Row>
 	<Row t="Warn on empty subject">
@@ -109,33 +117,35 @@
 	</Row>
 </div>
 
-<div class="scard encrypt-card">
-	<CardHead icon={LockKeyhole} title="Encryption to external recipients">
-		{#snippet right()}<Badge kind="pine" dot>WKD</Badge>{/snippet}
-	</CardHead>
-	<div class="encrypt-body">
-		<p>
-			When you message someone outside Thelemail, we look up their published PGP key (via
-			<code>WKD</code>). You decide what happens when one is found — encrypting automatically can
-			surprise a recipient who can’t decrypt, so this is yours to set.
-		</p>
-		<div class="enc-opts">
-			{#each encOpts as o (o.v)}
-				{@const Ic = o.icon}
-				<button
-					type="button"
-					class="enc-opt"
-					class:on={s.extEncrypt === o.v}
-					onclick={() => set('extEncrypt', o.v)}
-				>
-					<span class="eo-radio"><span></span></span>
-					<Ic size={17} />
-					<div class="eo-text">
-						<div class="eo-t">{o.t}</div>
-						<div class="eo-d">{o.d}</div>
-					</div>
-				</button>
-			{/each}
+{#if UNRELEASED.externalEncryptionPolicy}
+	<div class="scard encrypt-card">
+		<CardHead icon={LockKeyhole} title="Encryption to external recipients">
+			{#snippet right()}<Badge kind="pine" dot>WKD</Badge>{/snippet}
+		</CardHead>
+		<div class="encrypt-body">
+			<p>
+				When you message someone outside Thelemail, we look up their published PGP key (via
+				<code>WKD</code>). You decide what happens when one is found — encrypting automatically can
+				surprise a recipient who can’t decrypt, so this is yours to set.
+			</p>
+			<div class="enc-opts">
+				{#each encOpts as o (o.v)}
+					{@const Ic = o.icon}
+					<button
+						type="button"
+						class="enc-opt"
+						class:on={s.extEncrypt === o.v}
+						onclick={() => set('extEncrypt', o.v)}
+					>
+						<span class="eo-radio"><span></span></span>
+						<Ic size={17} />
+						<div class="eo-text">
+							<div class="eo-t">{o.t}</div>
+							<div class="eo-d">{o.d}</div>
+						</div>
+					</button>
+				{/each}
+			</div>
 		</div>
 	</div>
-</div>
+{/if}

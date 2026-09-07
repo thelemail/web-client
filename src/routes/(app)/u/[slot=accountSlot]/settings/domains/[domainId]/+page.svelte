@@ -6,6 +6,7 @@
 
 	import DomainWizard from '$lib/settings/domains/DomainWizard.svelte';
 	import SecHead from '$lib/settings/SecHead.svelte';
+	import { settingsPageTitle } from '$lib/settings/pageTitle.svelte';
 	import { isDomainStep, resumeStep, type DomainStep } from '$lib/settings/domains/steps';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
@@ -35,6 +36,11 @@
 	}
 
 	$effect(() => {
+		settingsPageTitle.set(domain?.domain ?? 'Domain setup');
+		return () => settingsPageTitle.set(null);
+	});
+
+	$effect(() => {
 		const ws = workspaces.workspace?.id;
 		const id = domainId;
 		if (!ws || !id || loadedFor === id) return;
@@ -50,10 +56,7 @@
 	<title>Thelemail — {domain?.domain ?? 'Domain setup'}</title>
 </svelte:head>
 
-<SecHead
-	title={domain?.domain ?? 'Domain setup'}
-	desc="Prove ownership, set up sending, create the addresses that will receive mail, then point MX here last."
-/>
+<SecHead desc="Prove ownership, set up sending, create the addresses that will receive mail, then point MX here last." />
 
 <p class="dw-back"><Button variant="ghost" href={base}><ArrowLeft size={15} />All domains</Button></p>
 
