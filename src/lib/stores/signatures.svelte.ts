@@ -35,6 +35,7 @@ export interface Signature {
 	appendOnReply: boolean;
 	sealed: boolean;
 	legacy: boolean;
+	updatedAt: string;
 }
 
 class SignaturesStore {
@@ -138,7 +139,8 @@ class SignaturesStore {
 			enabled: rec.enabled,
 			appendOnReply: rec.appendOnReply,
 			sealed: false,
-			legacy
+			legacy,
+			updatedAt: rec.updatedAt
 		};
 	}
 
@@ -153,7 +155,8 @@ class SignaturesStore {
 			enabled: rec.enabled,
 			appendOnReply: rec.appendOnReply,
 			sealed: true,
-			legacy: false
+			legacy: false,
+			updatedAt: rec.updatedAt
 		};
 	}
 

@@ -44,6 +44,7 @@
 	let editor: Editor | null = $state(null);
 	let suppress = false;
 	let imageBusy = $state(false);
+	let tearingDown = false;
 	let notice = $state<string | null>(null);
 	let pasteUndo = $state<string | null>(null);
 	let fileInputRef: HTMLInputElement | undefined = $state();
@@ -87,8 +88,12 @@
 
 	$effect(() => {
 		if (mode !== 'rich') {
-			editor?.destroy();
-			editor = null;
+			if (editor) {
+				tearingDown = true;
+				editor.destroy();
+				editor = null;
+				tearingDown = false;
+			}
 			return;
 		}
 		if (!mountEl) return;
@@ -155,6 +160,7 @@
 				}
 			},
 			onUpdate({ editor: ed }) {
+				if (tearingDown || mode !== 'rich') return;
 				suppress = true;
 				const html = ed.getHTML();
 				emit({ mode: 'rich', source: html, bodyHtml: html });
@@ -163,8 +169,10 @@
 		});
 		editor = e;
 		return () => {
+			tearingDown = true;
 			editor = null;
 			e.destroy();
+			tearingDown = false;
 		};
 	});
 

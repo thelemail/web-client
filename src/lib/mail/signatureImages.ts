@@ -121,7 +121,7 @@ export async function hostSignatureImages(
 				});
 			}
 		} catch {
-			// leave them unhosted; counted as failures below
+			return { html, hosted: 0, failed: pending.length };
 		}
 	}
 

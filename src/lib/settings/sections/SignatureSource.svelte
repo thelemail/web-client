@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { signatures } from '$lib/stores/signatures.svelte';
+	import { SIGNATURE_IMAGE_ATTR } from '$lib/mail/editor/signatureImage';
+
 	interface Props {
 		value: string;
 		placeholder: string;
@@ -13,8 +16,24 @@
 
 	$effect(() => {
 		const html = previewHtml;
-		if (!previewEl) return;
-		previewEl.innerHTML = html;
+		const el = previewEl;
+		if (!el) return;
+		el.innerHTML = html;
+		for (const img of Array.from(el.querySelectorAll<HTMLImageElement>(`img[${SIGNATURE_IMAGE_ATTR}]`))) {
+			const key = img.getAttribute(SIGNATURE_IMAGE_ATTR);
+			if (!key) continue;
+			const cached = signatures.objectUrl(key);
+			if (cached) {
+				img.src = cached;
+				continue;
+			}
+			void signatures
+				.ensureObjectUrl(key)
+				.then((url) => {
+					img.src = url;
+				})
+				.catch(() => {});
+		}
 	});
 </script>
 

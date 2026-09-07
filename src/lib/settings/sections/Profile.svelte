@@ -16,6 +16,8 @@
 	import CardHead from '../CardHead.svelte';
 	import SignatureEditor from './SignatureEditor.svelte';
 	import type { SignatureMode, SignatureDocImage } from '$lib/mail/signatureCrypto';
+	import { hostSignatureImages } from '$lib/mail/signatureImages';
+	import { hasRenderableHtml } from '$lib/mail/signatureRegion';
 	import { initialsFor } from '$lib/mail/initials';
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { signatures } from '$lib/stores/signatures.svelte';
@@ -99,6 +101,8 @@
 	let initialSignatureMode = $state<SignatureMode>('rich');
 	let initialSignatureEnabled = $state(true);
 	let initialSignatureAppendOnReply = $state(true);
+	let signatureHydratedFor = $state<string | null>(null);
+	let signatureHydratedRev = $state<string>('');
 
 	const signatureLocked = $derived(
 		signatures.locked || (signatures.getForAddress(sigForAddressId)?.sealed ?? false)
@@ -117,10 +121,16 @@
 			signatureEnabled = true;
 			signatureAppendOnReply = true;
 			signatureDirty = false;
+			signatureHydratedFor = null;
+			signatureHydratedRev = '';
 			return;
 		}
-		if (signatureDirty) return;
 		const existing = signatures.getForAddress(sigForAddressId);
+		const rev = existing?.updatedAt ?? '';
+		const addressChanged = signatureHydratedFor !== sigForAddressId;
+		if (!addressChanged && (signatureDirty || rev === signatureHydratedRev)) return;
+		signatureHydratedFor = sigForAddressId;
+		signatureHydratedRev = rev;
 		const doc = existing?.doc;
 		const html = doc?.bodyHtml ?? '';
 		const src = doc?.source ?? html;
@@ -189,6 +199,13 @@
 		}
 		if (signatureDirty && sigForAddressId) {
 			if (signatureLocked) throw new Error('Unlock your vault before saving a signature.');
+			if (signatureBodyHtml.trim()) {
+				const hostedResult = await hostSignatureImages(sigForAddressId, signatureBodyHtml);
+				if (hostedResult.html !== signatureBodyHtml) {
+					signatureBodyHtml = hostedResult.html;
+					if (signatureMode === 'html') signatureSource = hostedResult.html;
+				}
+			}
 			if (!signatureBodyHtml.trim() && signatures.getForAddress(sigForAddressId)) {
 				await signatures.remove(sigForAddressId);
 			} else if (signatureBodyHtml.trim()) {
@@ -320,9 +337,10 @@
 		source: string;
 		bodyHtml: string;
 	}) {
+		const body = hasRenderableHtml(payload.bodyHtml) ? payload.bodyHtml : '';
 		signatureMode = payload.mode;
-		signatureSource = payload.source;
-		signatureBodyHtml = payload.bodyHtml;
+		signatureSource = payload.mode === 'rich' && !body ? '' : payload.source;
+		signatureBodyHtml = body;
 		recomputeSignatureDirty();
 	}
 </script>
