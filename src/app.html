@@ -40,7 +40,7 @@
 					align-items: center;
 					justify-content: center;
 				}
-				body:has(#svroot > :not(script)) #boot {
+				body:has([data-app-ready]) #boot {
 					display: none;
 				}
 			}

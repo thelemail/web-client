@@ -20,6 +20,8 @@ export function familyInviteError(err: unknown, email: string): string {
 			return 'Your family is full. Six accounts including yours is the limit, so remove someone before inviting anyone else.';
 		case 'rate_limited':
 			return 'That is a lot of invitations at once. Try again a little later.';
+		case 'conflict':
+			return `Cannot invite ${email} right now. They may already have an invitation waiting.`;
 		default:
 			return 'Could not send the invitation. Try again.';
 	}
@@ -43,6 +45,8 @@ export function acceptInviteError(err: unknown, inviterName: string): string {
 			return 'Your account is already in a family or team. Leave that one first.';
 		case 'not_found':
 			return `This invitation is no longer valid. Ask ${who} to send a new one.`;
+		case 'rate_limited':
+			return 'Too many failed attempts on this invitation. Wait a while, then try again.';
 		default:
 			return 'Could not join just now. Try again.';
 	}
