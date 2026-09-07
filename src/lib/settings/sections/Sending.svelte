@@ -78,7 +78,7 @@
 			onChange={(v) => set('autosave', v)}
 		/>
 	</Row>
-	<Row t="Primary reply button" d="Which reply action sits in front.">
+	<Row t="Primary reply button" d="Which reply action sits in front when you open a message.">
 		<Seg
 			value={s.replyDefault}
 			options={[
@@ -92,7 +92,10 @@
 
 <div class="scard">
 	<CardHead icon={ShieldAlert} title="Before a message leaves" />
-	<Row t="Confirm external recipients" d="Ask before sending to anyone outside your domains.">
+	<Row
+		t="Confirm external recipients"
+		d="Ask before sending to anyone who is not a Thelemail account."
+	>
 		<Toggle on={s.confirmExternal} onChange={(v) => set('confirmExternal', v)} />
 	</Row>
 	<Row t="Warn on empty subject">

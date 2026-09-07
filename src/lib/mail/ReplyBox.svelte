@@ -54,6 +54,8 @@
 	import { replyThreadHeaders, type ReplyThreadIds } from './threading';
 	import { EncStatusTracker } from './encStatus.svelte';
 	import { summarizeEncryption } from './encSummary';
+	import { pendingSendGuards, type SendGuard } from './sendGuards';
+	import SendGuardDialog from './SendGuardDialog.svelte';
 	import { initialsFor } from './initials';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { addresses } from '$lib/stores/addresses.svelte';
@@ -573,8 +575,42 @@
 	}
 
 	let pendingAfter: SendAfter = 'none';
-	const runSend = () => performSend(false, 'none');
-	const sendAndArchive = () => performSend(false, 'archive');
+	let guards = $state<SendGuard[]>([]);
+	let guardedRun: (() => void) | null = null;
+
+	function guardedSend(run: () => void): void {
+		if (!canSend) {
+			run();
+			return;
+		}
+		const next = pendingSendGuards({
+			settings: accountSettings.composing,
+			statuses: allRecipients.filter((c) => c.valid).map((c) => encStatusFor(c.email)),
+			subject: mode === 'forward' ? subject : undefined
+		});
+		if (next.length === 0) {
+			run();
+			return;
+		}
+		sendOpen = false;
+		guards = next;
+		guardedRun = run;
+	}
+
+	function confirmGuards(): void {
+		const run = guardedRun;
+		guards = [];
+		guardedRun = null;
+		run?.();
+	}
+
+	function cancelGuards(): void {
+		guards = [];
+		guardedRun = null;
+	}
+
+	const runSend = () => guardedSend(() => performSend(false, 'none'));
+	const sendAndArchive = () => guardedSend(() => performSend(false, 'archive'));
 	const retrySend = () => performSend(false, pendingAfter);
 	const trustAndSend = () => performSend(true, pendingAfter);
 	async function acceptExternalAndSend() {
@@ -921,6 +957,10 @@
 		<SendingVeil />
 	{/if}
 </div>
+
+{#if guards.length > 0}
+	<SendGuardDialog {guards} onConfirm={confirmGuards} onCancel={cancelGuards} />
+{/if}
 
 {#if err && err.code === 'directory_verification_failed' && err.payload?.kind === 'directory'}
 	<DirectoryFailModal

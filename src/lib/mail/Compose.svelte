@@ -39,6 +39,9 @@
 	import type { RecipientEncStatus } from './RecipientField.svelte';
 	import { EncStatusTracker } from './encStatus.svelte';
 	import { summarizeEncryption } from './encSummary';
+	import { pendingSendGuards, type SendGuard } from './sendGuards';
+	import SendGuardDialog from './SendGuardDialog.svelte';
+	import { accountSettings } from '$lib/stores/accountSettings.svelte';
 	import { applySignatureSeed, swapSignatureForAddress } from './signatureRegion';
 	import { getDraft, putDraft, deleteDraft } from '$lib/api/drafts';
 	import { buildDraftEnvelope, loadDraftDoc, restoreAttachmentFile, type DraftDoc } from './draft';
@@ -593,9 +596,45 @@
 
 	const encSummary = $derived(summarizeEncryption(encStatuses));
 
-	const runSend = () => performSend(false, null);
+	let guards = $state<SendGuard[]>([]);
+	let guardedRun: (() => void) | null = null;
+
+	function guardedSend(run: () => void): void {
+		if (!canSend || !bodyText.trim()) {
+			run();
+			return;
+		}
+		const next = pendingSendGuards({
+			settings: accountSettings.composing,
+			statuses: encStatuses,
+			subject
+		});
+		if (next.length === 0) {
+			run();
+			return;
+		}
+		sendOpen = false;
+		scheduleOpen = false;
+		guards = next;
+		guardedRun = run;
+	}
+
+	function confirmGuards(): void {
+		const run = guardedRun;
+		guards = [];
+		guardedRun = null;
+		run?.();
+	}
+
+	function cancelGuards(): void {
+		guards = [];
+		guardedRun = null;
+	}
+
+	const runSend = () => guardedSend(() => performSend(false, null));
 	const retrySend = () => performSend(false);
-	const scheduleSend = (when: Date) => performSend(false, when.toISOString());
+	const scheduleSend = (when: Date) =>
+		guardedSend(() => performSend(false, when.toISOString()));
 	const trustAndSend = () => performSend(true);
 	async function acceptExternalAndSend() {
 		const payload = err?.payload;
@@ -958,6 +997,10 @@
 			</div>
 		</div>
 	</div>
+
+	{#if guards.length > 0}
+		<SendGuardDialog {guards} onConfirm={confirmGuards} onCancel={cancelGuards} />
+	{/if}
 
 	{#if scheduleOpen}
 		<SchedulePicker
