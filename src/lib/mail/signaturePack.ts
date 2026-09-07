@@ -1,5 +1,6 @@
 import { signatures } from '$lib/stores/signatures.svelte';
 import { unwrapSignatureSentinel } from './signatureRegion';
+import { SIGNATURE_IMAGE_ATTR } from './editor/signatureImage';
 
 export interface RelatedPart {
 	contentId: string;
@@ -20,30 +21,39 @@ export async function packBodyForSend(bodyHtml: string | undefined): Promise<Pac
 	const doc = new DOMParser().parseFromString(`<div>${stripped}</div>`, 'text/html');
 	const wrapper = doc.body.firstElementChild as HTMLElement | null;
 	if (!wrapper) return { bodyHtml: stripped, relatedParts: [] };
-	const imgs = Array.from(
-		wrapper.querySelectorAll<HTMLImageElement>('img[data-thelemail-sig-image]')
-	);
+	const imgs = Array.from(wrapper.querySelectorAll<HTMLImageElement>(`img[${SIGNATURE_IMAGE_ATTR}]`));
 	if (imgs.length === 0) {
 		return { bodyHtml: wrapper.innerHTML, relatedParts: [] };
 	}
 	const relatedParts: RelatedPart[] = [];
-	for (let i = 0; i < imgs.length; i++) {
-		const img = imgs[i];
-		const key = img.getAttribute('data-thelemail-sig-image');
-		if (!key) continue;
+	const cidByKey = new Map<string, string>();
+	const stamp = Date.now().toString(36);
+	for (const img of imgs) {
+		const key = img.getAttribute(SIGNATURE_IMAGE_ATTR);
+		if (!key) {
+			img.remove();
+			continue;
+		}
+		const known = cidByKey.get(key);
+		if (known) {
+			img.setAttribute('src', `cid:${known}`);
+			img.removeAttribute(SIGNATURE_IMAGE_ATTR);
+			continue;
+		}
 		try {
 			const fetched = await signatures.fetchImage(key);
 			const bytes = new Uint8Array(await fetched.blob.arrayBuffer());
-			const cid = `sig-${i}-${Date.now().toString(36)}@thelemail.local`;
+			const cid = `sig-${relatedParts.length}-${stamp}@thelemail.local`;
 			relatedParts.push({
 				contentId: cid,
-				contentType: fetched.contentType || img.getAttribute('data-content-type') || 'application/octet-stream',
+				contentType: fetched.contentType || 'application/octet-stream',
 				bytes
 			});
+			cidByKey.set(key, cid);
 			img.setAttribute('src', `cid:${cid}`);
-			img.removeAttribute('data-thelemail-sig-image');
-		} catch (err) {
-			img.removeAttribute('data-thelemail-sig-image');
+			img.removeAttribute(SIGNATURE_IMAGE_ATTR);
+		} catch {
+			img.remove();
 		}
 	}
 	return { bodyHtml: wrapper.innerHTML, relatedParts };

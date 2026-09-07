@@ -31,7 +31,7 @@ function bytesToBase64(bytes: Uint8Array): string {
 	return btoa(bin);
 }
 
-function scrubCss(css: string): string {
+export function scrubCss(css: string): string {
 	let out = css.replace(/@import[^;]*;?/gi, '');
 	out = out.replace(/@font-face\s*\{[^}]*\}/gi, '');
 	out = out.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (_, _q, url) => {

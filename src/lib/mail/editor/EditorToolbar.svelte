@@ -4,12 +4,21 @@
 	import ListOrdered from '@lucide/svelte/icons/list-ordered';
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import Quote from '@lucide/svelte/icons/quote';
+	import PenLine from '@lucide/svelte/icons/pen-line';
+
+	interface SignatureControl {
+		present: boolean;
+		on: boolean;
+		disabled?: boolean;
+		onToggle: (value: boolean) => void;
+	}
 
 	interface Props {
 		editor: Editor | null;
+		signature?: SignatureControl;
 	}
 
-	let { editor }: Props = $props();
+	let { editor, signature }: Props = $props();
 
 	let tick = $state(0);
 
@@ -88,6 +97,20 @@
 	<button type="button" title="Quote" class:on={active.quote} aria-pressed={active.quote} onclick={quote}>
 		<Quote size={16} />
 	</button>
+	{#if signature?.present}
+		<span class="cbar-sep"></span>
+		<button
+			type="button"
+			title={signature.on ? 'Remove signature' : 'Add signature'}
+			aria-label={signature.on ? 'Remove signature' : 'Add signature'}
+			class:on={signature.on}
+			aria-pressed={signature.on}
+			disabled={signature.disabled}
+			onclick={() => signature.onToggle(!signature.on)}
+		>
+			<PenLine size={16} />
+		</button>
+	{/if}
 </div>
 
 <style>
@@ -121,6 +144,10 @@
 	.cbar button.on {
 		background: var(--paper-200, #e0d6bf);
 		color: var(--fg-strong, #1f221b);
+	}
+	.cbar button:disabled {
+		opacity: 0.45;
+		cursor: default;
 	}
 	.cbar button :global(svg) {
 		width: 16px;

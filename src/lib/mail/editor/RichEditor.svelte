@@ -6,6 +6,7 @@
 	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import { SignatureBlock } from './signatureBlock';
+	import { SignatureImage } from './signatureImage';
 
 	interface Props {
 		html?: string;
@@ -59,7 +60,8 @@
 					HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' }
 				}),
 				Placeholder.configure({ placeholder: initialPlaceholder }),
-				SignatureBlock
+				SignatureBlock,
+				SignatureImage
 			],
 			content: initialHtml || '',
 			editable: initialEditable,
