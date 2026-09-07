@@ -1,3 +1,5 @@
+import { openDatabase } from '$lib/idb-open';
+
 const DB_NAME = 'thelemail-import';
 const DB_VERSION = 1;
 const IMPORT_FILES_STORE = 'files';
@@ -6,17 +8,14 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openImportDb(): Promise<IDBDatabase> {
 	if (dbPromise) return dbPromise;
-	dbPromise = new Promise((resolve, reject) => {
-		const req = indexedDB.open(DB_NAME, DB_VERSION);
-		req.onupgradeneeded = () => {
-			const db = req.result;
-			if (!db.objectStoreNames.contains(IMPORT_FILES_STORE)) {
-				const store = db.createObjectStore(IMPORT_FILES_STORE, { keyPath: 'id' });
-				store.createIndex('byAccount', 'accountId', { unique: false });
-			}
-		};
-		req.onsuccess = () => resolve(req.result);
-		req.onerror = () => reject(req.error);
+	dbPromise = openDatabase(DB_NAME, DB_VERSION, (db) => {
+		if (!db.objectStoreNames.contains(IMPORT_FILES_STORE)) {
+			const store = db.createObjectStore(IMPORT_FILES_STORE, { keyPath: 'id' });
+			store.createIndex('byAccount', 'accountId', { unique: false });
+		}
+	}).catch((err) => {
+		dbPromise = null;
+		throw err;
 	});
 	return dbPromise;
 }

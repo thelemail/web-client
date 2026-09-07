@@ -1,3 +1,5 @@
+import { openDatabase } from '$lib/idb-open';
+
 export interface TlogLogState {
 	origin: string;
 	treeSize: number;
@@ -18,25 +20,21 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openTlogDb(): Promise<IDBDatabase> {
 	if (dbPromise) return dbPromise;
-	dbPromise = new Promise((resolve, reject) => {
-		const req = indexedDB.open(DB_NAME, DB_VERSION);
-		req.onupgradeneeded = () => {
-			const db = req.result;
-			if (!db.objectStoreNames.contains(LOG_STATE_STORE)) {
-				db.createObjectStore(LOG_STATE_STORE, { keyPath: 'origin' });
-			}
-		};
-		req.onsuccess = () => {
-			req.result.onclose = () => {
+	dbPromise = openDatabase(DB_NAME, DB_VERSION, (db) => {
+		if (!db.objectStoreNames.contains(LOG_STATE_STORE)) {
+			db.createObjectStore(LOG_STATE_STORE, { keyPath: 'origin' });
+		}
+	})
+		.then((db) => {
+			db.onclose = () => {
 				dbPromise = null;
 			};
-			resolve(req.result);
-		};
-		req.onerror = () => {
+			return db;
+		})
+		.catch((err) => {
 			dbPromise = null;
-			reject(req.error);
-		};
-	});
+			throw err;
+		});
 	return dbPromise;
 }
 
