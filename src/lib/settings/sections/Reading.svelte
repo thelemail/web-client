@@ -5,7 +5,7 @@
 	import Select from '../Select.svelte';
 	import Toggle from '../Toggle.svelte';
 	import CardHead from '../CardHead.svelte';
-	import type { SettingsState } from '../data';
+	import { UNRELEASED, type SettingsState } from '../data';
 
 	interface Props {
 		s: SettingsState;
@@ -15,7 +15,7 @@
 	let { s, set }: Props = $props();
 </script>
 
-<SecHead desc="When mail is marked read, what a swipe does, and how read receipts are handled." />
+<SecHead desc="When mail is marked read." />
 
 <div class="scard">
 	<CardHead title="When you open a message" />
@@ -26,25 +26,29 @@
 			onChange={(v) => set('markRead', v)}
 		/>
 	</Row>
-	<Row t="Default action on swipe">
-		<Select
-			value={s.swipe}
-			options={['Archive', 'Delete', 'Mark read', 'Snooze']}
-			onChange={(v) => set('swipe', v)}
-		/>
-	</Row>
+	{#if UNRELEASED.swipeAction}
+		<Row t="Default action on swipe">
+			<Select
+				value={s.swipe}
+				options={['Archive', 'Delete', 'Mark read', 'Snooze']}
+				onChange={(v) => set('swipe', v)}
+			/>
+		</Row>
+	{/if}
 </div>
 
-<div class="scard">
-	<CardHead icon={MailCheck} title="Read receipts" />
-	<Row t="Request read receipts" d="Off by respect for the reader. We never track silently.">
-		<Toggle on={s.requestReceipts} onChange={(v) => set('requestReceipts', v)} />
-	</Row>
-	<Row t="Respond to receipt requests">
-		<Select
-			value={s.sendReceipts}
-			options={['Always ask me', 'Always send', 'Never send']}
-			onChange={(v) => set('sendReceipts', v)}
-		/>
-	</Row>
-</div>
+{#if UNRELEASED.requestReceipts || UNRELEASED.respondReceipts}
+	<div class="scard">
+		<CardHead icon={MailCheck} title="Read receipts" />
+		<Row t="Request read receipts" d="Off by respect for the reader. We never track silently.">
+			<Toggle on={s.requestReceipts} onChange={(v) => set('requestReceipts', v)} />
+		</Row>
+		<Row t="Respond to receipt requests">
+			<Select
+				value={s.sendReceipts}
+				options={['Always ask me', 'Always send', 'Never send']}
+				onChange={(v) => set('sendReceipts', v)}
+			/>
+		</Row>
+	</div>
+{/if}
