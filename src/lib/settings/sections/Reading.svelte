@@ -15,10 +15,7 @@
 	let { s, set }: Props = $props();
 </script>
 
-<SecHead
-	title="Reading & behaviour"
-	desc="When mail is marked read, what a swipe does, and how read receipts are handled."
-/>
+<SecHead desc="When mail is marked read, what a swipe does, and how read receipts are handled." />
 
 <div class="scard">
 	<CardHead title="When you open a message" />

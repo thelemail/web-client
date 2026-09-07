@@ -15,10 +15,7 @@
 	let { s, set }: Props = $props();
 </script>
 
-<SecHead
-	title="Localization & region"
-	desc="How dates and times are written across your mailbox."
-/>
+<SecHead desc="How dates and times are written across your mailbox." />
 
 <div class="scard">
 	<CardHead icon={Clock} title="Time & date" />

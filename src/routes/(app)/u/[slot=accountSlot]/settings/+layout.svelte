@@ -3,10 +3,11 @@
 	import '$lib/lifecycle/lifecycle.css';
 	import Check from '@lucide/svelte/icons/check';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { page } from '$app/state';
 	import { afterNavigate, beforeNavigate, replaceState } from '$app/navigation';
 	import SettingsNav from '$lib/settings/SettingsNav.svelte';
+	import { sectionLabelFromPath } from '$lib/settings/data';
+	import { settingsPageTitle } from '$lib/settings/pageTitle.svelte';
 	import Ceremonies from '$lib/settings/ceremonies/Ceremonies.svelte';
 	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
 	import { ensureAccountData } from '$lib/stores/accountData';
@@ -15,7 +16,9 @@
 
 	let { children, data } = $props();
 
-	const accountEmail = $derived(auth.email ?? '');
+	const sectionLabel = $derived(
+		settingsPageTitle.value ?? sectionLabelFromPath(page.url.pathname)
+	);
 
 	let scrollRef: HTMLDivElement | undefined = $state();
 
@@ -60,25 +63,13 @@
 
 		<div class="set-col">
 			<header class="set-head">
-				<div class="ht">
-					<h1>Settings</h1>
-					<div class="sub">
-						<span>Personal preferences for</span>
-						<span class="mono">{accountEmail}</span>
-						<span class="sub-dot"></span>
-						<span>only affects your mailbox</span>
-					</div>
-				</div>
-				<div class="save-wrap">
-					<div class="autosave {settingsDraft.saveState}" aria-live="polite">
-						{#if settingsDraft.saveState === 'saving'}
-							<span class="as-spin"></span><span class="as-tx">Saving…</span>
-						{:else if settingsDraft.saveState === 'saved'}
-							<Check size={14} /><span class="as-tx">Saved</span>
-						{:else}
-							<RefreshCw size={13} /><span class="as-tx">Changes save automatically</span>
-						{/if}
-					</div>
+				<h1>{sectionLabel}</h1>
+				<div class="autosave {settingsDraft.saveState}" aria-live="polite">
+					{#if settingsDraft.saveState === 'saving'}
+						<span class="as-spin"></span><span class="as-tx">Saving…</span>
+					{:else if settingsDraft.saveState === 'saved'}
+						<Check size={14} /><span class="as-tx">Saved</span>
+					{/if}
 				</div>
 			</header>
 

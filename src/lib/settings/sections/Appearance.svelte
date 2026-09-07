@@ -15,10 +15,7 @@
 	let { s, set }: Props = $props();
 </script>
 
-<SecHead
-	title="Appearance"
-	desc="The reading room. Calm parchment by day, the inkwell by night — tuned for comfort and access."
-/>
+<SecHead desc="The reading room. Calm parchment by day, the inkwell by night — tuned for comfort and access." />
 
 <div class="scard">
 	<CardHead title="Theme" />

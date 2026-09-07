@@ -311,10 +311,7 @@
 	}
 </script>
 
-<SecHead
-	title="Security & privacy"
-	desc="Specific, honest controls. We name the mechanism and tell you what we do and don’t do. The marked steps change key material — treat them with care."
-/>
+<SecHead desc="Specific, honest controls. We name the mechanism and tell you what we do and don’t do. The marked steps change key material — treat them with care." />
 
 <div class="recovery-hero" class:done={recoverySet}>
 	<div class="rh-left">

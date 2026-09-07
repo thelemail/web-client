@@ -1,13 +1,11 @@
 <script lang="ts">
 	interface Props {
-		title: string;
 		desc?: string;
 	}
 
-	let { title, desc }: Props = $props();
+	let { desc }: Props = $props();
 </script>
 
-<div class="sec-h">
-	<h2>{title}<span class="ln"></span></h2>
-	{#if desc}<p>{desc}</p>{/if}
-</div>
+{#if desc}
+	<div class="sec-h"><p>{desc}</p></div>
+{/if}

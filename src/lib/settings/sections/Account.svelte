@@ -105,10 +105,7 @@
 	}
 </script>
 
-<SecHead
-	title="Account & plan"
-	desc="Your subscription, the people on it, and your right to take everything and leave."
-/>
+<SecHead desc="Your subscription, the people on it, and your right to take everything and leave." />
 
 {#if !ws}
 	<div class="scard">

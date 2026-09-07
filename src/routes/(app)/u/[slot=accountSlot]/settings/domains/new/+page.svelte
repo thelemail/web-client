@@ -9,6 +9,7 @@
 
 	import Card from '$lib/settings/Card.svelte';
 	import SecHead from '$lib/settings/SecHead.svelte';
+	import { settingsPageTitle } from '$lib/settings/pageTitle.svelte';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
@@ -54,14 +55,16 @@
 			submitting = false;
 		}
 	}
+
+	$effect(() => {
+		settingsPageTitle.set('Add a domain');
+		return () => settingsPageTitle.set(null);
+	});
 </script>
 
 <svelte:head><title>Thelemail — Add a domain</title></svelte:head>
 
-<SecHead
-	title="Add a domain"
-	desc="Setup runs in order: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last. Nothing about your current mail changes until the final step."
-/>
+<SecHead desc="Setup runs in order: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last. Nothing about your current mail changes until the final step." />
 
 {#if !billing.canAddDomains}
 	<div class="upgrade-list">

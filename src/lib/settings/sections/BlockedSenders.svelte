@@ -100,10 +100,7 @@
 	}
 </script>
 
-<SecHead
-	title="Blocked senders"
-	desc="Mail from a blocked address lands in Spam and raises no notification. The server keeps only a keyed hash of the address, so it cannot read your block list; the label shown here is decrypted in this browser."
-/>
+<SecHead desc="Mail from a blocked address lands in Spam and raises no notification. The server keeps only a keyed hash of the address, so it cannot read your block list; the label shown here is decrypted in this browser." />
 
 <div class="scard">
 	<CardHead icon={UserX} title="Block list">

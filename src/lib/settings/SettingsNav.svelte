@@ -14,7 +14,7 @@
 	import Upload from '@lucide/svelte/icons/upload';
 	import UserX from '@lucide/svelte/icons/user-x';
 	import { page } from '$app/state';
-	import { SECTIONS } from './data';
+	import { SECTIONS, sectionIdFromPath } from './data';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { platform } from '$platform';
@@ -37,11 +37,7 @@
 	};
 
 	const slot = $derived(page.params.slot ?? '0');
-	const current = $derived.by(() => {
-		const parts = page.url.pathname.split('/').filter(Boolean);
-		const i = parts.indexOf('settings');
-		return (i === -1 ? parts.at(-1) : parts[i + 1]) ?? '';
-	});
+	const current = $derived(sectionIdFromPath(page.url.pathname));
 	const accountEmail = $derived(auth.email ?? '');
 	const accountDomain = $derived(accountEmail.includes('@') ? accountEmail.split('@')[1] : '');
 	const workspaceName = $derived(workspaces.workspace?.name ?? '');

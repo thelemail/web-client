@@ -89,10 +89,7 @@
 	onkeydown={(e) => e.key === 'Escape' && (menuFor = null)}
 />
 
-<SecHead
-	title="Domains you own"
-	desc="Setup runs in a fixed order so mail never arrives somewhere it cannot be delivered: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last."
-/>
+<SecHead desc="Setup runs in a fixed order so mail never arrives somewhere it cannot be delivered: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last." />
 
 <Card>
 	{#snippet head()}

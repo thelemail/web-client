@@ -38,10 +38,7 @@
 	];
 </script>
 
-<SecHead
-	title="Composing & sending"
-	desc="How new messages start, the safety nets before they leave, and when mail is encrypted to the recipient."
-/>
+<SecHead desc="How new messages start, the safety nets before they leave, and when mail is encrypted to the recipient." />
 
 <div class="scard">
 	<CardHead title="Compose defaults" />
