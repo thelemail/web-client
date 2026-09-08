@@ -19,6 +19,7 @@
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Menu from '@lucide/svelte/icons/menu';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Search from '@lucide/svelte/icons/search';
 	import { mailNav } from '$lib/stores/nav.svelte';
 	import MessageRow from './MessageRow.svelte';
 	import {
@@ -69,6 +70,11 @@
 		pendingCount?: number;
 		onFlushPending?: () => void;
 		onAtTopChange?: (atTop: boolean) => void;
+		searchActive?: boolean;
+		searchPending?: boolean;
+		searchIndexed?: number;
+		searchComplete?: boolean;
+		onClearSearch?: () => void;
 	}
 
 	let {
@@ -102,11 +108,43 @@
 		onDismissReturned,
 		pendingCount = 0,
 		onFlushPending,
-		onAtTopChange
+		onAtTopChange,
+		searchActive = false,
+		searchPending = false,
+		searchIndexed = 0,
+		searchComplete = true,
+		onClearSearch = () => {}
 	}: Props = $props();
 
 	const anyChecked = $derived(checked.size > 0);
 	const activeFilters = $derived(countActiveFilters(filters));
+
+	const counted = $derived(new Intl.NumberFormat().format(searchIndexed));
+	const searchScopeText = $derived(
+		searchComplete
+			? 'All mail — matching sender, subject and preview text'
+			: `Still reading your mail — ${counted} messages searched so far`
+	);
+	const emptyTitle = $derived(
+		searchActive
+			? searchPending
+				? 'Searching'
+				: 'No matches'
+			: activeFilters > 0
+				? 'Nothing matches'
+				: `${folderLabel} is empty`
+	);
+	const emptyDetail = $derived(
+		searchActive
+			? searchPending
+				? 'Looking through your mail.'
+				: searchComplete
+					? 'Nothing in your mail matches that.'
+					: `No match yet in the ${counted} messages searched so far.`
+			: activeFilters > 0
+				? 'No message here fits the filters you have on.'
+				: 'Nothing here yet.'
+	);
 
 	let refreshing = $state(false);
 	const SPIN_MS = 800;
@@ -428,16 +466,20 @@
 				{/if}
 			</div>
 		{/if}
+		{#if searchActive}
+			<div class="srch-strip">
+				<Search size={14} />
+				<span>{searchScopeText}</span>
+			</div>
+		{/if}
 		{#if list.length === 0}
 			<div class="empty-list">
 				<span class="el-rule"></span>
-				<div class="t">{activeFilters > 0 ? 'Nothing matches' : `${folderLabel} is empty`}</div>
-				<div class="d">
-					{activeFilters > 0
-						? 'No message here fits the filters you have on.'
-						: 'Nothing here yet.'}
-				</div>
-				{#if activeFilters > 0}
+				<div class="t">{emptyTitle}</div>
+				<div class="d">{emptyDetail}</div>
+				{#if searchActive}
+					<button class="empty-clear" onclick={onClearSearch}><X size={14} />Clear search</button>
+				{:else if activeFilters > 0}
 					<button class="empty-clear" onclick={clearFilters}><X size={14} />Clear filters</button>
 				{/if}
 			</div>
@@ -465,12 +507,14 @@
 					/>
 				{/each}
 			{/each}
+		{/if}
+		{#if !searchActive}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<button class="lf-retry" onclick={onLoadMore}>Could not load more — Retry</button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">Loading more…</span>
-				{:else if exhausted}
+				{:else if exhausted && list.length > 0}
 					<span class="lf-hair"></span>
 					<span class="lf-text">— end of conversation list —</span>
 					<span class="lf-hair"></span>

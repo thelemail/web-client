@@ -11,7 +11,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { mailNav } from '$lib/stores/nav.svelte';
 	import Compose from './Compose.svelte';
-	import { mailSearch } from '$lib/stores/mailSearch.svelte';
+	import { mailSearch } from '$lib/stores/search.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { scheduled, type ScheduledRow } from '$lib/stores/scheduled.svelte';

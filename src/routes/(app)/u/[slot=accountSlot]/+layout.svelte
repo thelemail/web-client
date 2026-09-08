@@ -9,6 +9,7 @@
 	import { platform } from '$platform';
 	import MirrorScopePrompt from '$lib/mail/MirrorScopePrompt.svelte';
 	import { mailbox } from '$lib/stores/mailbox.svelte';
+	import { mailSearch } from '$lib/stores/search.svelte';
 
 	let { children, data } = $props();
 
@@ -17,6 +18,8 @@
 	});
 
 	onMount(() => realtime.start());
+
+	onMount(() => mailSearch.start(data.accountId));
 
 	onMount(() => {
 		const mirror = platform.mirror;

@@ -2,7 +2,7 @@
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 	import { page } from '$app/state';
-	import { mailSearch } from '$lib/stores/mailSearch.svelte';
+	import { mailSearch } from '$lib/stores/search.svelte';
 
 	let inputRef: HTMLInputElement | undefined = $state();
 
@@ -30,7 +30,7 @@
 		<input
 			bind:this={inputRef}
 			value={mailSearch.text}
-			oninput={(e) => (mailSearch.text = (e.currentTarget as HTMLInputElement).value)}
+			oninput={(e) => mailSearch.setText((e.currentTarget as HTMLInputElement).value)}
 			placeholder="Search mail"
 		/>
 		{#if mailSearch.text}
