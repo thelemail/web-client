@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { platform } from '$platform';
 import type { KeystoreChannel } from '$lib/platform/types';
+import { serverClockOffsetMs } from '$lib/api/serverclock';
 import type {
 	AttachmentBytesArgs,
 	AttachmentBytesResponse,
@@ -239,7 +240,10 @@ export const keystore = {
 	opaqueStartRegistration: (args: OpaqueStartRegistrationArgs) =>
 		call<OpaqueStartRegistrationResponse>('opaqueStartRegistration', args),
 	opaqueFinishRegistration: (args: OpaqueFinishRegistrationArgs) =>
-		call<OpaqueFinishRegistrationResponse>('opaqueFinishRegistration', args),
+		call<OpaqueFinishRegistrationResponse>('opaqueFinishRegistration', {
+			...args,
+			serverClockOffsetMs: serverClockOffsetMs()
+		}),
 	opaqueFinalizeRegister: (args: OpaqueFinalizeRegisterArgs) =>
 		call<OpaqueFinalizeRegisterResponse>('opaqueFinalizeRegister', args),
 	opaqueStartAuth: (args: OpaqueStartAuthArgs) => call<OpaqueStartAuthResponse>('opaqueStartAuth', args),
@@ -312,7 +316,11 @@ export const keystore = {
 	loadAliasKeys: (args: LoadAliasKeysArgs) => call<LoadAliasKeysResponse>('loadAliasKeys', args),
 	unloadAliasKeys: (args: UnloadAliasKeysArgs) => call<void>('unloadAliasKeys', args),
 	createAliasKey: (args: CreateAliasKeyArgs) =>
-		call<CreateAliasKeyResponse>('createAliasKey', args, CRYPTO_TIMEOUT_MS),
+		call<CreateAliasKeyResponse>(
+			'createAliasKey',
+			{ ...args, serverClockOffsetMs: serverClockOffsetMs() },
+			CRYPTO_TIMEOUT_MS
+		),
 	getPublicKey: (args: GetPublicKeyArgs) => call<GetPublicKeyResponse>('getPublicKey', args),
 	reformatKeyWithUids: (args: ReformatKeyWithUidsArgs) =>
 		call<ReformatKeyWithUidsResponse>('reformatKeyWithUids', args, CRYPTO_TIMEOUT_MS),

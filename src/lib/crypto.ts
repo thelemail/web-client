@@ -1,11 +1,6 @@
 import * as openpgp from 'openpgp';
 import { argon2id } from 'hash-wasm';
 
-export type ArmoredKeypair = {
-	publicKey: string;
-	privateKey: string;
-};
-
 export type WrappedVault = {
 	wrappedBlob: string;
 	saltHex: string;
@@ -17,15 +12,6 @@ const ARGON2_PARALLELISM = 1;
 const ARGON2_HASH_LENGTH = 32;
 const AES_IV_BYTES = 12;
 const SALT_BYTES = 16;
-
-export async function generateKeypair(name: string, email: string): Promise<ArmoredKeypair> {
-	const { privateKey, publicKey } = await openpgp.generateKey({
-		type: 'curve25519',
-		userIDs: [{ name, email }],
-		format: 'armored'
-	});
-	return { publicKey, privateKey };
-}
 
 export function randomSalt(): Uint8Array {
 	return crypto.getRandomValues(new Uint8Array(SALT_BYTES));
