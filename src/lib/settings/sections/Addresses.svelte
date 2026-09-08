@@ -19,6 +19,7 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { canManageWorkspace } from '../permissions';
+	import { SHARED_DOMAIN } from '../entitlements';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { SharedAlias } from '$lib/api/aliases';
 
@@ -37,6 +38,9 @@
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
 	const manage = $derived(canManageWorkspace());
 	const sharedList = $derived<SharedAlias[]>(manage ? aliases.items : []);
+	const canAddMore = $derived(
+		billing.canAddDomains || !sharedList.some((a) => !a.customDomainId)
+	);
 	let managing = $state<SharedAlias | null>(null);
 
 	function memberSummary(a: SharedAlias): string {

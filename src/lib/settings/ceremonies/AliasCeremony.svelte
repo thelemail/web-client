@@ -8,6 +8,9 @@
 	import Select from '../Select.svelte';
 	import type { CeremonyKind } from '../data';
 	import { customDomains } from '$lib/stores/customDomains.svelte';
+	import { billing } from '$lib/stores/billing.svelte';
+	import { SHARED_DOMAIN } from '$lib/settings/entitlements';
+	import { checkAddressAvailability } from '$lib/api/auth';
 	import { ownershipProven } from '$lib/settings/domains/steps';
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { aliases } from '$lib/stores/aliases.svelte';
@@ -46,13 +49,22 @@
 	let progress = $state<string | null>(null);
 
 	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
+	const sharedSlotFree = $derived(
+		billing.canAddSharedDomainAlias && !aliases.items.some((a) => !a.customDomainId)
+	);
+	const domainOptions = $derived([
+		...ownedDomains.map((d) => d.domain),
+		...(sharedSlotFree ? [SHARED_DOMAIN] : [])
+	]);
 	let userPickedDomainId = $state<string | null>(presetDomainId);
 
-	const selectedDomain = $derived(
-		ownedDomains.find((d) => d.id === userPickedDomainId) ?? ownedDomains[0] ?? null
+	const selectedDomainName = $derived(
+		domainOptions.includes(userPickedDomainId ?? '')
+			? (userPickedDomainId as string)
+			: (ownedDomains.find((d) => d.id === userPickedDomainId)?.domain ?? domainOptions[0] ?? '')
 	);
-	const domainOptions = $derived(ownedDomains.map((d) => d.domain));
-	const selectedDomainName = $derived(selectedDomain?.domain ?? '');
+	const onSharedDomain = $derived(selectedDomainName === SHARED_DOMAIN);
+	const selectedDomain = $derived(ownedDomains.find((d) => d.domain === selectedDomainName) ?? null);
 
 	const localOk = $derived(/^[a-z0-9]([a-z0-9._+-]*[a-z0-9])?$/i.test(local.trim()));
 	const nameOk = $derived(name.trim().length > 0);
@@ -98,8 +110,8 @@
 	}
 
 	function pickDomain(n: string) {
-		const d = ownedDomains.find((x) => x.domain === n);
-		if (d) userPickedDomainId = d.id;
+		userPickedDomainId = n;
+		if (n === SHARED_DOMAIN) shared = true;
 	}
 
 	async function resolveRecipients(emails: { accountId: string; email: string }[]) {
@@ -124,6 +136,12 @@
 		if (!targets.length) throw new Error('Pick at least one person');
 
 		const recipients = await resolveRecipients(targets);
+
+		if (mode === 'create' && onSharedDomain) {
+			progress = 'Checking the address';
+			const { available } = await checkAddressAvailability(local.trim().toLowerCase());
+			if (!available) throw new Error('That address is taken. Pick another one.');
+		}
 
 		progress = 'Creating the address key';
 		const email = alias?.email ?? `${local.trim().toLowerCase()}@${selectedDomainName}`;
@@ -153,7 +171,7 @@
 			});
 		} else {
 			await aliases.create(ws, {
-				customDomainId: selectedDomain!.id,
+				customDomainId: onSharedDomain ? undefined : selectedDomain!.id,
 				localPart: local.trim().toLowerCase(),
 				name: name.trim(),
 				aliasPublicKeyArmored: created.publicKeyArmored,
@@ -200,7 +218,9 @@
 
 	const peopleStep = $derived(mode === 'create' ? 1 : 0);
 	const canSubmit = $derived(
-		(mode === 'members' || (localOk && nameOk && !!selectedDomain)) && picked.length > 0 && changed
+		(mode === 'members' || (localOk && nameOk && !!selectedDomainName)) &&
+			picked.length > 0 &&
+			changed
 	);
 </script>
 
@@ -216,13 +236,18 @@
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
-					An address on a domain you own. Give it to one person, or share it with several so mail
-					sent to it reaches all of them.
+					{#if sharedSlotFree && ownedDomains.length === 0}
+						One address on {SHARED_DOMAIN} for the whole household. Everyone you pick receives a copy
+						in their own mailbox and can write from it.
+					{:else}
+						An address on a domain you own. Give it to one person, or share it with several so mail
+						sent to it reaches all of them.
+					{/if}
 				</p>
 			</div>
-			{#if customDomains.loading && customDomains.items.length === 0}
+			{#if customDomains.loading && customDomains.items.length === 0 && !sharedSlotFree}
 				<div class="field-hint">Loading your domains…</div>
-			{:else if ownedDomains.length === 0}
+			{:else if domainOptions.length === 0}
 				<div class="inline-warn">
 					<CircleAlert size={15} />
 					<span
@@ -261,34 +286,41 @@
 						</div>
 					{/if}
 				</div>
-				<div class="field">
-					<span class="field-lbl">Who uses it</span>
-					<RadioGroup
-						class="choice-set"
-						value={shared ? 'shared' : 'single'}
-						onValueChange={(v) => (shared = v === 'shared')}
-					>
-						<Label class="choice" for="alias-kind-single" data-on={!shared}>
-							<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
-							<span class="choice-tx">
-								<span class="choice-t">One person</span>
-								<span class="choice-d">
-									Mail arrives in their mailbox and only they can write from it.
+				{#if onSharedDomain}
+					<div class="field-hint">
+						An address on {SHARED_DOMAIN} is always shared. Everyone you pick gets a copy and can
+						write from it. Addresses for one person need a domain you own.
+					</div>
+				{:else}
+					<div class="field">
+						<span class="field-lbl">Who uses it</span>
+						<RadioGroup
+							class="choice-set"
+							value={shared ? 'shared' : 'single'}
+							onValueChange={(v) => (shared = v === 'shared')}
+						>
+							<Label class="choice" for="alias-kind-single" data-on={!shared}>
+								<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
+								<span class="choice-tx">
+									<span class="choice-t">One person</span>
+									<span class="choice-d">
+										Mail arrives in their mailbox and only they can write from it.
+									</span>
 								</span>
-							</span>
-						</Label>
-						<Label class="choice" for="alias-kind-shared" data-on={shared}>
-							<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
-							<span class="choice-tx">
-								<span class="choice-t">Shared</span>
-								<span class="choice-d">
-									Everyone you pick receives a copy and can write from it. The address gets its own
-									encryption key.
+							</Label>
+							<Label class="choice" for="alias-kind-shared" data-on={shared}>
+								<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
+								<span class="choice-tx">
+									<span class="choice-t">Shared</span>
+									<span class="choice-d">
+										Everyone you pick receives a copy and can write from it. The address gets its own
+										encryption key.
+									</span>
 								</span>
-							</span>
-						</Label>
-					</RadioGroup>
-				</div>
+							</Label>
+						</RadioGroup>
+					</div>
+				{/if}
 				<div class="identity-preview">
 					<span class="ip-label">Preview</span>
 					<span class="ip-from">

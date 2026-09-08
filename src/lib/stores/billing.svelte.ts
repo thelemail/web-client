@@ -9,6 +9,7 @@ import {
 	allowsCustomDomains,
 	allowsMembers,
 	allowsSharedAddresses,
+	allowsSharedDomainAlias,
 	isFreeFamily,
 	isFreePlan
 } from '$lib/settings/entitlements';
@@ -40,6 +41,7 @@ class BillingStore {
 	isFreeFamily = $derived(isFreeFamily(this.planCode));
 	canAddDomains = $derived(allowsCustomDomains(this.planCode));
 	canAddSharedAddresses = $derived(allowsSharedAddresses(this.planCode));
+	canAddSharedDomainAlias = $derived(allowsSharedDomainAlias(this.planCode));
 	canAddMembers = $derived(allowsMembers(this.planCode));
 
 	async ensureLoaded(): Promise<Subscription | null> {

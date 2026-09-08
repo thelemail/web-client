@@ -4,6 +4,7 @@ import type { WorkspaceType } from '$lib/api/workspaces';
 export const SHARED_DOMAIN = 'thelemail.com';
 
 const FREE_CODES: PlanCode[] = ['free', 'free_family'];
+const SOLO_CODES: PlanCode[] = ['free', 'personal', 'personal_plus'];
 
 export type InviteMode = 'none' | 'domain' | 'existing-account';
 
@@ -20,7 +21,11 @@ export function allowsCustomDomains(code: PlanCode | null | undefined): boolean 
 }
 
 export function allowsSharedAddresses(code: PlanCode | null | undefined): boolean {
-	return !!code && !isFreePlan(code);
+	return !!code && (!isFreePlan(code) || allowsSharedDomainAlias(code));
+}
+
+export function allowsSharedDomainAlias(code: PlanCode | null | undefined): boolean {
+	return !!code && !SOLO_CODES.includes(code);
 }
 
 export function allowsMembers(code: PlanCode | null | undefined): boolean {
