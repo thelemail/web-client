@@ -123,9 +123,11 @@
 
 	const counted = $derived(new Intl.NumberFormat().format(searchIndexed));
 	const searchScopeText = $derived(
-		searchComplete
-			? 'All mail — matching sender, subject and preview text'
-			: `Still reading your mail — ${counted} messages searched so far`
+		!searchComplete
+			? `Still reading your mail — ${counted} messages searched so far`
+			: searchChips.length
+				? 'All mail'
+				: 'All mail — matching sender, subject and preview text'
 	);
 	const emptyTitle = $derived(
 		searchActive
