@@ -43,10 +43,11 @@
 	let step = $state(0);
 	let local = $state('');
 	let name = $state('');
-	let shared = $state(mode === 'members');
+	let sharedPicked = $state(mode === 'members');
 	let submitting = $state(false);
 	let submitError = $state<string | null>(null);
 	let progress = $state<string | null>(null);
+	let createdEmail = $state<string | null>(null);
 
 	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
 	const sharedSlotFree = $derived(
@@ -64,12 +65,15 @@
 			: (ownedDomains.find((d) => d.id === userPickedDomainId)?.domain ?? domainOptions[0] ?? '')
 	);
 	const onSharedDomain = $derived(selectedDomainName === SHARED_DOMAIN);
+	const shared = $derived(sharedPicked || onSharedDomain);
 	const selectedDomain = $derived(ownedDomains.find((d) => d.domain === selectedDomainName) ?? null);
 
 	const localOk = $derived(/^[a-z0-9]([a-z0-9._+-]*[a-z0-9])?$/i.test(local.trim()));
 	const nameOk = $derived(name.trim().length > 0);
 	const full = $derived(
-		alias?.email ?? (local.trim() || 'name') + '@' + (selectedDomainName || 'example.com')
+		createdEmail ??
+			alias?.email ??
+			(local.trim() || 'name') + '@' + (selectedDomainName || 'example.com')
 	);
 
 	const members = $derived(workspaces.members);
@@ -111,7 +115,6 @@
 
 	function pickDomain(n: string) {
 		userPickedDomainId = n;
-		if (n === SHARED_DOMAIN) shared = true;
 	}
 
 	async function resolveRecipients(emails: { accountId: string; email: string }[]) {
@@ -170,6 +173,7 @@
 				members: grants
 			});
 		} else {
+			createdEmail = email;
 			await aliases.create(ws, {
 				customDomainId: onSharedDomain ? undefined : selectedDomain!.id,
 				localPart: local.trim().toLowerCase(),
@@ -297,7 +301,7 @@
 						<RadioGroup
 							class="choice-set"
 							value={shared ? 'shared' : 'single'}
-							onValueChange={(v) => (shared = v === 'shared')}
+							onValueChange={(v) => (sharedPicked = v === 'shared')}
 						>
 							<Label class="choice" for="alias-kind-single" data-on={!shared}>
 								<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
@@ -418,7 +422,7 @@
 	{#snippet footer()}
 		{#if mode === 'create' && step === 0}
 			<Button variant="ghost" onclick={onClose}>Cancel</Button>
-			<Button variant="primary" disabled={!localOk || !nameOk || !selectedDomain} onclick={() => (step = 1)}>Continue</Button>
+			<Button variant="primary" disabled={!localOk || !nameOk || !selectedDomainName} onclick={() => (step = 1)}>Continue</Button>
 		{:else if step === peopleStep}
 			<Button variant="ghost" onclick={onClose}>Cancel</Button>
 			<Button variant="primary" disabled={!canSubmit || submitting} onclick={submit}>

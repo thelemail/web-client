@@ -239,8 +239,15 @@
 					desc="Paid plans add unlimited addresses on your own domain, shared with the people you choose."
 				/>
 			</div>
-		{:else}
+		{:else if canAddMore}
 			<AddRow label="Add an address" onClick={() => launch('alias')} />
+		{:else}
+			<div class="upgrade-list">
+				<UpgradeNudge
+					title="One shared address on {SHARED_DOMAIN}"
+					desc="Add a domain you own on a paid plan to give the household more addresses."
+				/>
+			</div>
 		{/if}
 	{:else}
 		{#if addresses.shared.length === 0}
