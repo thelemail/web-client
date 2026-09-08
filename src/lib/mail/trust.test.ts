@@ -351,3 +351,48 @@ describe('deriveTrust', () => {
 	});
 
 });
+
+describe('delegated signers', () => {
+	function delegated(overrides: Partial<TrustFacts> = {}): TrustFacts {
+		return gmail({
+			senderAddress: 'billing@acme.test',
+			delegatedSigner: { label: 'Stripe invoices', address: 'billing@acme.test' },
+			...overrides
+		});
+	}
+
+	it('names the service that signed the message', () => {
+		const trust = deriveTrust(delegated());
+		expect(trust.tier).toBe('delegated');
+		expect(trust.headline).toBe('Signed by Stripe invoices');
+		expect(trust.checks.find((c) => c.id === 'delegation')?.state).toBe('pass');
+	});
+
+	it('never presents a delegated signature as end-to-end verified', () => {
+		const trust = deriveTrust(delegated());
+		expect(trust.tier).not.toBe('verified');
+		expect(trust.tier).not.toBe('official');
+	});
+
+	it('says the service cannot read mail for the address', () => {
+		const trust = deriveTrust(delegated());
+		const scope = trust.checks.find((c) => c.id === 'delegation-scope');
+		expect(scope?.state).toBe('pass');
+		expect(scope?.label).toContain('cannot read mail');
+	});
+
+	it('still fails when the sending domain fails authentication', () => {
+		const trust = deriveTrust(
+			delegated({
+				domainAuth: { spf: 'fail', dkim: 'fail', dmarc: 'fail' },
+				domainAuthState: 'fail'
+			})
+		);
+		expect(trust.tier).toBe('failed');
+	});
+
+	it('falls back to domain authentication when no delegation is verified', () => {
+		const trust = deriveTrust(delegated({ delegatedSigner: null }));
+		expect(trust.tier).toBe('authenticated');
+	});
+});

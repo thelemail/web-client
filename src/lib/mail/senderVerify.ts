@@ -8,6 +8,7 @@ import {
 	type DirectoryStatement,
 	type TlogOutcome
 } from '$lib/directory/verify';
+import { verifyDelegation } from '$lib/directory/delegation';
 import type {
 	DirectoryVerificationCode,
 	DirectoryVerificationDetails
@@ -26,6 +27,12 @@ export interface DirectoryTrust {
 	details?: DirectoryVerificationDetails;
 }
 
+export interface DelegatedSignerTrust {
+	label: string;
+	address: string;
+	revokedAt?: string | null;
+}
+
 export interface ExternalKeyState {
 	status: ExternalKeyTrust['status'];
 	fingerprint?: string;
@@ -37,6 +44,7 @@ export interface ExternalKeyState {
 const TRUST_TTL_MS = 2 * 60 * 1000;
 
 const directoryCache = new Map<string, { value: DirectoryTrust; at: number }>();
+const delegationCache = new Map<string, { value: DelegatedSignerTrust | null; at: number }>();
 const externalCache = new Map<string, { value: ExternalKeyState | null; at: number }>();
 
 let workspaceCache: { accountId: string; id: string | null } | null = null;
@@ -148,4 +156,38 @@ export async function acceptSenderKeyChange(
 		return;
 	}
 	await directoryTrust(accountId, address, { acceptKeyChange: true });
+}
+
+/**
+ * Resolves the service that signed a message, verifying the operator's signed
+ * delegation statement against the pinned directory key rather than trusting
+ * the server's word for which key was authorized.
+ */
+export async function delegatedSignerTrust(
+	senderAddress: string,
+	delegationId: string
+): Promise<DelegatedSignerTrust | null> {
+	const address = senderAddress.trim().toLowerCase();
+	if (!address || !delegationId) return null;
+	const key = `${address}:${delegationId}`;
+	const hit = delegationCache.get(key);
+	if (hit && Date.now() - hit.at < TRUST_TTL_MS) return hit.value;
+
+	let value: DelegatedSignerTrust | null = null;
+	try {
+		const lookup = await lookupAccount(address);
+		const match = lookup.delegations?.find((d) => d.id === delegationId);
+		if (match) {
+			const statement = await verifyDelegation(match, address);
+			value = {
+				label: statement.label,
+				address: statement.address,
+				revokedAt: statement.revokedAt
+			};
+		}
+	} catch {
+		value = null;
+	}
+	delegationCache.set(key, { value, at: Date.now() });
+	return value;
 }
