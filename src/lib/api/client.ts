@@ -3,6 +3,7 @@ import { platform } from '$platform';
 import { deviceId } from '$lib/realtime/device';
 import type { Transport } from '$lib/platform/types';
 import { ApiCallError, type ErrorEnvelope } from './types';
+import { recordServerDate } from './serverclock';
 
 let transport: Transport = platform.transport ?? ((url, init) => fetch(url, init));
 
@@ -97,6 +98,7 @@ async function doFetch<T>(path: string, opts: FetchOptions, retried: boolean): P
 
 	const kind = base === PUBLIC_SUBMISSION_BASE_URL.replace(/\/$/, '') ? 'submission' : 'api';
 	const resp = await transport(url, init, kind);
+	recordServerDate(resp.headers.get('date'));
 	if (resp.status === 204) {
 		return undefined as T;
 	}

@@ -36,6 +36,7 @@ import {
 	deriveMasterKeyId,
 	derivePgpPassphrase,
 	generateAMK,
+	keyCreationDate,
 	unwrapMasterKey,
 	wrapMasterKey
 } from './opaque-params';
@@ -1105,6 +1106,7 @@ async function handleCreateAliasKey(args: CreateAliasKeyArgs): Promise<CreateAli
 		const generated = await openpgp.generateKey({
 			type: 'curve25519',
 			userIDs: [{ name: args.displayName, email: args.email }],
+			date: keyCreationDate(Date.now() + (args.serverClockOffsetMs ?? 0)),
 			format: 'object'
 		});
 		const armoredPrivate = generated.privateKey.armor();
@@ -1816,6 +1818,7 @@ async function handleOpaqueFinishRegistration(
 	const { publicKey: pubObj, privateKey: privObj } = await openpgp.generateKey({
 		type: 'curve25519',
 		userIDs: [{ email: op.email }],
+		date: keyCreationDate(Date.now() + (args.serverClockOffsetMs ?? 0)),
 		format: 'object'
 	});
 	const publicKeyArmored = pubObj.armor();

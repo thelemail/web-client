@@ -381,6 +381,7 @@ export interface OpaqueFinishRegistrationArgs {
 	operationId: string;
 	accountId: string;
 	registrationResponse: string;
+	serverClockOffsetMs?: number;
 }
 
 export type OpaqueFinishRegistrationResponse =
@@ -598,6 +599,7 @@ export interface CreateAliasKeyArgs extends AccountScopedArgs {
 	email: string;
 	displayName: string;
 	recipients: CreateAliasKeyRecipient[];
+	serverClockOffsetMs?: number;
 }
 
 export interface CreatedAliasKeyGrant {

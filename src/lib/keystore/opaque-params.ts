@@ -125,3 +125,9 @@ export async function derivePgpPassphrase(amk: Uint8Array): Promise<string> {
 	const bytes = await hkdf(amk, INFO_PGP_PASSPHRASE, 32);
 	return bytesToBase64(bytes);
 }
+
+export const KEY_CREATION_BACKDATE_MS = 5 * 60 * 1000;
+
+export function keyCreationDate(now: number = Date.now()): Date {
+	return new Date(now - KEY_CREATION_BACKDATE_MS);
+}
