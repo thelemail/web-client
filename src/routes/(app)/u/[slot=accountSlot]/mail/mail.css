@@ -63,7 +63,7 @@
 .mail-app .search { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 0 11px; height: 34px; color: var(--fg-faint); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
 .mail-app .search svg { flex: 0 0 auto; }
 .mail-app .search:hover { border-color: var(--border-strong); }
-.mail-app .search:focus-within { border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.mail-app .search:focus-within { border-color: var(--border-strong); }
 .mail-app .search input { border: none; background: none; outline: none; font-size: 13px; color: var(--fg); width: 100%; min-width: 0; letter-spacing: var(--track-snug); }
 .mail-app .search input::placeholder { color: var(--fg-faint); }
 .mail-app .search .kbd { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-faint); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 1px 5px; background: var(--paper-50); flex: 0 0 auto; }

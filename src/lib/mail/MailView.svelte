@@ -159,8 +159,10 @@
 		mailbox.pin(selected);
 	});
 
+	const routeFolder = $derived(query.folder);
+
 	$effect(() => {
-		void query.folder;
+		void routeFolder;
 		untrack(() => {
 			checked = new Set();
 			mailSearch.clear();
