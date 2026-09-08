@@ -3,6 +3,7 @@ import {
 	allowsCustomDomains,
 	allowsMembers,
 	allowsSharedAddresses,
+	allowsSharedDomainAlias,
 	inviteMode,
 	isFreeFamily,
 	isFreePlan,
@@ -26,12 +27,26 @@ describe('plan capabilities', () => {
 		expect(ALL.filter(isFreePlan)).toEqual(['free', 'free_family']);
 	});
 
-	it('gives neither free tier a custom domain or a shared address', () => {
+	it('gives neither free tier a custom domain', () => {
 		for (const code of ALL) {
-			const paid = !isFreePlan(code);
-			expect(allowsCustomDomains(code)).toBe(paid);
-			expect(allowsSharedAddresses(code)).toBe(paid);
+			expect(allowsCustomDomains(code)).toBe(!isFreePlan(code));
 		}
+	});
+
+	it('offers the shared-domain address to every plan that holds more than one seat', () => {
+		expect(ALL.filter(allowsSharedDomainAlias)).toEqual([
+			'free_family',
+			'family',
+			'family_plus',
+			'team',
+			'business'
+		]);
+	});
+
+	it('opens the shared-address flow to a free family but not a free personal account', () => {
+		expect(allowsSharedAddresses('free')).toBe(false);
+		expect(allowsSharedAddresses('free_family')).toBe(true);
+		expect(allowsSharedAddresses('personal')).toBe(true);
 	});
 
 	it('lets a free family hold members but not a free personal account', () => {
@@ -42,7 +57,14 @@ describe('plan capabilities', () => {
 	});
 
 	it('tolerates a missing subscription', () => {
-		for (const fn of [isFreePlan, isFreeFamily, allowsCustomDomains, allowsSharedAddresses, allowsMembers]) {
+		for (const fn of [
+			isFreePlan,
+			isFreeFamily,
+			allowsCustomDomains,
+			allowsSharedAddresses,
+			allowsSharedDomainAlias,
+			allowsMembers
+		]) {
 			expect(fn(null)).toBe(false);
 			expect(fn(undefined)).toBe(false);
 		}

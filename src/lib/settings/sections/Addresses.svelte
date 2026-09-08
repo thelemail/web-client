@@ -19,6 +19,7 @@
 	import { billing } from '$lib/stores/billing.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { canManageWorkspace } from '../permissions';
+	import { SHARED_DOMAIN } from '../entitlements';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { SharedAlias } from '$lib/api/aliases';
 
@@ -37,6 +38,9 @@
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
 	const manage = $derived(canManageWorkspace());
 	const sharedList = $derived<SharedAlias[]>(manage ? aliases.items : []);
+	const canAddMore = $derived(
+		billing.canAddDomains || !sharedList.some((a) => !a.customDomainId)
+	);
 	let managing = $state<SharedAlias | null>(null);
 
 	function memberSummary(a: SharedAlias): string {
@@ -235,8 +239,15 @@
 					desc="Paid plans add unlimited addresses on your own domain, shared with the people you choose."
 				/>
 			</div>
-		{:else}
+		{:else if canAddMore}
 			<AddRow label="Add an address" onClick={() => launch('alias')} />
+		{:else}
+			<div class="upgrade-list">
+				<UpgradeNudge
+					title="One shared address on {SHARED_DOMAIN}"
+					desc="Add a domain you own on a paid plan to give the household more addresses."
+				/>
+			</div>
 		{/if}
 	{:else}
 		{#if addresses.shared.length === 0}
