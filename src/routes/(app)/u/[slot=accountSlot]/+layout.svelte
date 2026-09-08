@@ -19,7 +19,7 @@
 
 	onMount(() => realtime.start());
 
-	onMount(() => mailSearch.start(data.accountId));
+	$effect(() => mailSearch.start(data.accountId));
 
 	onMount(() => {
 		const mirror = platform.mirror;

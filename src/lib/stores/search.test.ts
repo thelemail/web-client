@@ -157,6 +157,31 @@ describe('mailSearch on the web build', () => {
 	});
 });
 
+describe('mailSearch across accounts', () => {
+	it('drops the previous account results when the account changes', async () => {
+		const stop = mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('from-acc-1', 'Invoice')]);
+		mailSearch.setText('invoice');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+
+		stop();
+		mailSearch.start('acc-2');
+
+		expect(mailSearch.text).toBe('');
+		expect(mailSearch.results).toEqual([]);
+		expect(mailSearch.active).toBe(false);
+	});
+
+	it('builds the index for the account it was restarted with', async () => {
+		mailSearch.start('acc-1');
+		await vi.waitFor(() => expect(indexSync).toHaveBeenCalledWith('acc-1'));
+
+		indexSync.mockClear();
+		mailSearch.start('acc-2');
+		await vi.waitFor(() => expect(indexSync).toHaveBeenCalledWith('acc-2'));
+	});
+});
+
 describe('mailSearch on the desktop build', () => {
 	it('renders mirror hits the mailbox has never loaded', async () => {
 		const search = vi.fn(async () => [

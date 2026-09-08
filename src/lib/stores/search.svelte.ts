@@ -95,6 +95,7 @@ class MailSearchStore {
 	start(accountId: string): () => void {
 		this.#accountId = accountId;
 		this.#unsubscribe?.();
+		this.#reset();
 		if (platform.mirror) {
 			return () => {
 				this.#accountId = null;
@@ -142,6 +143,16 @@ class MailSearchStore {
 
 	clear(): void {
 		this.setText('');
+	}
+
+	#reset(): void {
+		if (this.#timer !== undefined) clearTimeout(this.#timer);
+		this.#run += 1;
+		this.text = '';
+		this.results = [];
+		this.searching = false;
+		this.indexed = 0;
+		this.complete = false;
 	}
 
 	#execute(): void {
