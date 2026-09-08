@@ -7,6 +7,8 @@
 
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Label } from '$lib/components/ui/label';
 	import { delegations } from '$lib/stores/delegations.svelte';
 	import type { SigningDelegation } from '$lib/api/delegations';
 
@@ -72,10 +74,14 @@
 			</li>
 		</ul>
 
-		<label class="cer-ack danger">
-			<input type="checkbox" bind:checked={ack} />
+		<Label class="cer-ack danger" for="revoke-delegation-ack">
+			<Checkbox
+				id="revoke-delegation-ack"
+				checked={ack}
+				onCheckedChange={(v) => (ack = v === true)}
+			/>
 			<span>I understand this service will no longer be able to sign as {delegation.address}.</span>
-		</label>
+		</Label>
 
 		<div class="field">
 			<label for="revoke-delegation-confirm">Type <span class="mono">{target}</span> to confirm</label>

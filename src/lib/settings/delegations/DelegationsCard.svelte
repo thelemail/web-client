@@ -7,6 +7,8 @@
 	import CardHead from '../CardHead.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
 	import RevokeDelegationDialog from './RevokeDelegationDialog.svelte';
+	import UpgradeNudge from '../UpgradeNudge.svelte';
+	import { billing } from '$lib/stores/billing.svelte';
 	import { delegations } from '$lib/stores/delegations.svelte';
 	import type { AccountAddress } from '$lib/api/addresses';
 	import type { SigningDelegation } from '$lib/api/delegations';
@@ -94,7 +96,14 @@
 		</div>
 	{/if}
 
-	<AddRow label="Authorize a service" onClick={() => (creating = true)} />
+	{#if billing.canAddDomains}
+		<AddRow label="Authorize a service" onClick={() => (creating = true)} />
+	{:else}
+		<UpgradeNudge
+			title="Signing delegation comes with a paid plan"
+			desc="Paid plans let a service sign as an address on your own domain, without mailbox access."
+		/>
+	{/if}
 </div>
 
 {#if creating}
