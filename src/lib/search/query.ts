@@ -1,4 +1,4 @@
-import type { IndexedText } from './types';
+import type { IndexedRow, IndexedText } from './types';
 
 const WEIGHT_SUBJECT = 10;
 const WEIGHT_SENDER = 6;
@@ -19,6 +19,145 @@ export function parseTerms(input: string): string[] {
 		.split(/[^\p{L}\p{N}@._+-]+/u)
 		.filter((t) => t.length > 0)
 		.slice(0, MAX_TERMS);
+}
+
+export type SearchFolder =
+	| 'inbox'
+	| 'sent'
+	| 'archive'
+	| 'spam'
+	| 'trash'
+	| 'snoozed'
+	| 'starred';
+
+const FOLDERS: readonly SearchFolder[] = [
+	'inbox',
+	'sent',
+	'archive',
+	'spam',
+	'trash',
+	'snoozed',
+	'starred'
+];
+
+export interface ParsedQuery {
+	terms: string[];
+	from: string[];
+	folder: SearchFolder | null;
+	unknownFolder: string | null;
+	unread: boolean | null;
+	starred: boolean;
+	hasAttachment: boolean;
+}
+
+export function splitRespectingQuotes(input: string): string[] {
+	const out: string[] = [];
+	let current = '';
+	let quoted = false;
+	for (const ch of input) {
+		if (ch === '"') {
+			quoted = !quoted;
+			continue;
+		}
+		if (!quoted && /\s/u.test(ch)) {
+			if (current) out.push(current);
+			current = '';
+			continue;
+		}
+		current += ch;
+	}
+	if (current) out.push(current);
+	return out;
+}
+
+function isFolder(value: string): value is SearchFolder {
+	return (FOLDERS as readonly string[]).includes(value);
+}
+
+export function parseQuery(input: string): ParsedQuery {
+	const parsed: ParsedQuery = {
+		terms: [],
+		from: [],
+		folder: null,
+		unknownFolder: null,
+		unread: null,
+		starred: false,
+		hasAttachment: false
+	};
+	const free: string[] = [];
+
+	for (const token of splitRespectingQuotes(input)) {
+		const at = token.indexOf(':');
+		const key = at < 0 ? '' : token.slice(0, at).toLowerCase();
+		const raw = at < 0 ? '' : token.slice(at + 1);
+		const value = raw.toLowerCase();
+		if (key === 'from' && value) {
+			parsed.from.push(normalize(raw));
+		} else if (key === 'in' && value) {
+			if (isFolder(value)) {
+				parsed.folder = value;
+				parsed.unknownFolder = null;
+			} else {
+				parsed.folder = null;
+				parsed.unknownFolder = value;
+			}
+		} else if (key === 'is' && value === 'unread') {
+			parsed.unread = true;
+		} else if (key === 'is' && value === 'read') {
+			parsed.unread = false;
+		} else if (key === 'is' && value === 'starred') {
+			parsed.starred = true;
+		} else if (key === 'has' && value === 'attachment') {
+			parsed.hasAttachment = true;
+		} else {
+			free.push(token);
+		}
+	}
+
+	parsed.terms = parseTerms(free.join(' '));
+	return parsed;
+}
+
+export function hasFilters(parsed: ParsedQuery): boolean {
+	return (
+		parsed.from.length > 0 ||
+		parsed.folder !== null ||
+		parsed.unknownFolder !== null ||
+		parsed.unread !== null ||
+		parsed.starred ||
+		parsed.hasAttachment
+	);
+}
+
+export function isEmptyQuery(parsed: ParsedQuery): boolean {
+	return parsed.terms.length === 0 && !hasFilters(parsed);
+}
+
+function folderOf(row: IndexedRow): SearchFolder {
+	if (row.mailboxState === 'archive') return 'archive';
+	if (row.mailboxState === 'trash') return 'trash';
+	if (row.mailboxState === 'spam') return 'spam';
+	if (row.mailboxState === 'snoozed') return 'snoozed';
+	return row.direction === 'sent' ? 'sent' : 'inbox';
+}
+
+export function matchesRow(row: IndexedRow, parsed: ParsedQuery): boolean {
+	if (parsed.unknownFolder !== null) return false;
+	if (parsed.folder === 'starred') {
+		if (!row.starred) return false;
+	} else if (parsed.folder !== null && folderOf(row) !== parsed.folder) {
+		return false;
+	}
+	if (parsed.unread !== null && row.read !== !parsed.unread) return false;
+	if (parsed.starred && !row.starred) return false;
+	if (parsed.hasAttachment && row.attachmentCount <= 0) return false;
+	return true;
+}
+
+export function matchesFrom(text: IndexedText, parsed: ParsedQuery): boolean {
+	if (!parsed.from.length) return true;
+	const sender = normalize(`${text.senderDisplay} ${text.senderAddress}`);
+	return parsed.from.every((needle) => sender.includes(needle));
 }
 
 interface Haystack {

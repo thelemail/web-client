@@ -125,6 +125,21 @@ describe('MessageList search states', () => {
 		expect(container.textContent).toContain('Nothing in your mail matches that.');
 	});
 
+	it('names the filters that were applied', () => {
+		const { container } = mount({
+			list: [message('m1')],
+			searchActive: true,
+			searchChips: ['from:anna', 'unread']
+		});
+		const chips = [...container.querySelectorAll('.srch-chip')].map((c) => c.textContent?.trim());
+		expect(chips).toEqual(['from:anna', 'unread']);
+	});
+
+	it('shows no chips for a plain free-text search', () => {
+		const { container } = mount({ list: [message('m1')], searchActive: true });
+		expect(container.querySelectorAll('.srch-chip')).toHaveLength(0);
+	});
+
 	it('offers to clear the search rather than the filters', () => {
 		const { container } = mount({ list: [], searchActive: true });
 		expect(container.querySelector('.empty-clear')?.textContent).toContain('Clear search');

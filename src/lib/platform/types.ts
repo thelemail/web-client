@@ -27,6 +27,7 @@ export interface SearchHit {
 	excerpt: string;
 	storedAt: string;
 	mailboxState: string;
+	direction?: 'sent' | 'received';
 	read: boolean;
 	starred: boolean;
 	attachmentCount: number;

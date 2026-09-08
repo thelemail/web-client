@@ -74,6 +74,7 @@
 		searchPending?: boolean;
 		searchIndexed?: number;
 		searchComplete?: boolean;
+		searchChips?: string[];
 		onClearSearch?: () => void;
 	}
 
@@ -113,6 +114,7 @@
 		searchPending = false,
 		searchIndexed = 0,
 		searchComplete = true,
+		searchChips = [],
 		onClearSearch = () => {}
 	}: Props = $props();
 
@@ -470,6 +472,9 @@
 			<div class="srch-strip">
 				<Search size={14} />
 				<span>{searchScopeText}</span>
+				{#each searchChips as chip (chip)}
+					<span class="srch-chip">{chip}</span>
+				{/each}
 			</div>
 		{/if}
 		{#if list.length === 0}

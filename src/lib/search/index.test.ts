@@ -263,3 +263,122 @@ describe('SearchIndex persistence', () => {
 		expect(reopened.search('stored invoice').map((h) => h.row.id)).toEqual(['kept']);
 	});
 });
+
+describe('SearchIndex operators', () => {
+	async function indexed(items: MessageListItem[], previews: Record<string, ReturnType<typeof preview>>) {
+		listMessages.mockImplementation(async (opts: { mailbox?: string; direction?: string }) => {
+			const isInbox = opts.mailbox === 'inbox' && opts.direction === 'received';
+			const isSent = opts.mailbox === 'inbox' && opts.direction === 'sent';
+			const isArchive = opts.mailbox === 'archive';
+			return {
+				items: items.filter((i) => {
+					if (i.mailboxState === 'archive') return isArchive;
+					return i.direction === 'sent' ? isSent : isInbox;
+				}),
+				nextCursor: null
+			};
+		});
+		decryptPreview.mockImplementation(async (_a: string, enc: string) => previews[enc]);
+		const index = new SearchIndex(memorySearchDb());
+		await index.sync(ACCOUNT);
+		return index;
+	}
+
+	it('narrows free text by sender', async () => {
+		const index = await indexed(
+			[item('a', '2024-01-01T00:00:00Z'), item('b', '2024-02-01T00:00:00Z')],
+			{
+				'enc-a': preview('Invoice 42', 'anna@school.pt'),
+				'enc-b': preview('Invoice 43', 'bob@other.pt')
+			}
+		);
+		expect(index.search('invoice').map((h) => h.row.id).sort()).toEqual(['a', 'b']);
+		expect(index.search('invoice from:anna').map((h) => h.row.id)).toEqual(['a']);
+		expect(index.search('invoice from:school').map((h) => h.row.id)).toEqual(['a']);
+	});
+
+	it('narrows by unread', async () => {
+		const index = await indexed(
+			[
+				item('read', '2024-01-01T00:00:00Z', { read: true }),
+				item('unread', '2024-02-01T00:00:00Z', { read: false })
+			],
+			{ 'enc-read': preview('Invoice'), 'enc-unread': preview('Invoice') }
+		);
+		expect(index.search('invoice is:unread').map((h) => h.row.id)).toEqual(['unread']);
+		expect(index.search('invoice is:read').map((h) => h.row.id)).toEqual(['read']);
+	});
+
+	it('tells sent from inbox', async () => {
+		const index = await indexed(
+			[
+				item('in', '2024-01-01T00:00:00Z', { direction: 'received' }),
+				item('out', '2024-02-01T00:00:00Z', { direction: 'sent' })
+			],
+			{ 'enc-in': preview('Invoice'), 'enc-out': preview('Invoice') }
+		);
+		expect(index.search('invoice in:sent').map((h) => h.row.id)).toEqual(['out']);
+		expect(index.search('invoice in:inbox').map((h) => h.row.id)).toEqual(['in']);
+	});
+
+	it('narrows by attachments and by star', async () => {
+		const index = await indexed(
+			[
+				item('plain', '2024-01-01T00:00:00Z'),
+				item('withatt', '2024-02-01T00:00:00Z', { attachmentCount: 2, starred: true })
+			],
+			{ 'enc-plain': preview('Invoice'), 'enc-withatt': preview('Invoice') }
+		);
+		expect(index.search('invoice has:attachment').map((h) => h.row.id)).toEqual(['withatt']);
+		expect(index.search('invoice is:starred').map((h) => h.row.id)).toEqual(['withatt']);
+	});
+
+	it('answers a filter-only query newest first', async () => {
+		const index = await indexed(
+			[
+				item('old', '2024-01-01T00:00:00Z', { read: false }),
+				item('new', '2024-06-01T00:00:00Z', { read: false }),
+				item('seen', '2024-07-01T00:00:00Z', { read: true })
+			],
+			{
+				'enc-old': preview('One'),
+				'enc-new': preview('Two'),
+				'enc-seen': preview('Three')
+			}
+		);
+		expect(index.search('is:unread').map((h) => h.row.id)).toEqual(['new', 'old']);
+	});
+
+	it('returns nothing for a query that parses to nothing', async () => {
+		const index = await indexed([item('a', '2024-01-01T00:00:00Z')], {
+			'enc-a': preview('Invoice')
+		});
+		expect(index.search('()')).toEqual([]);
+		expect(index.search('   ')).toEqual([]);
+	});
+
+	it('returns nothing for a folder it does not know', async () => {
+		const index = await indexed([item('a', '2024-01-01T00:00:00Z')], {
+			'enc-a': preview('Invoice')
+		});
+		expect(index.search('invoice in:nowhere')).toEqual([]);
+	});
+
+	it('combines operators', async () => {
+		const index = await indexed(
+			[
+				item('hit', '2024-02-01T00:00:00Z', { read: false, attachmentCount: 1 }),
+				item('wrongsender', '2024-03-01T00:00:00Z', { read: false, attachmentCount: 1 }),
+				item('alreadyread', '2024-04-01T00:00:00Z', { read: true, attachmentCount: 1 })
+			],
+			{
+				'enc-hit': preview('Invoice', 'anna@school.pt'),
+				'enc-wrongsender': preview('Invoice', 'bob@other.pt'),
+				'enc-alreadyread': preview('Invoice', 'anna@school.pt')
+			}
+		);
+		expect(index.search('invoice from:anna is:unread has:attachment').map((h) => h.row.id)).toEqual(
+			['hit']
+		);
+	});
+});

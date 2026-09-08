@@ -2,7 +2,15 @@ import { listMessageChanges, listMessages, type ListMessagesOptions } from '$lib
 import type { MessageListItem } from '$lib/api/types';
 import { decryptPreview } from '$lib/mail/decrypt';
 import { idbSearchDb, type SearchDb } from './db';
-import { excerptFor, parseTerms, scoreText } from './query';
+import {
+	excerptFor,
+	hasFilters,
+	isEmptyQuery,
+	matchesFrom,
+	matchesRow,
+	parseQuery,
+	scoreText
+} from './query';
 import { rowFor, textFor, undecryptableText } from './records';
 import { openChunk, sealChunk } from './seal';
 import {
@@ -259,14 +267,18 @@ export class SearchIndex {
 	}
 
 	search(text: string, limit = 200): SearchResult[] {
-		const terms = parseTerms(text);
-		if (!terms.length) return [];
+		const parsed = parseQuery(text);
+		if (isEmptyQuery(parsed)) return [];
+		const { terms } = parsed;
+		const filtersOnly = terms.length === 0 && hasFilters(parsed);
 		const hits: SearchResult[] = [];
 		for (const [id, row] of this.#rows) {
+			if (!matchesRow(row, parsed)) continue;
 			const indexed = this.#texts.get(id);
 			if (!indexed) continue;
-			const score = scoreText(indexed, terms);
-			if (score <= 0) continue;
+			if (!matchesFrom(indexed, parsed)) continue;
+			const score = filtersOnly ? 0 : scoreText(indexed, terms);
+			if (!filtersOnly && score <= 0) continue;
 			hits.push({ row, text: indexed, excerpt: excerptFor(indexed, terms), score });
 		}
 		hits.sort((a, b) => b.score - a.score || b.row.storedAt - a.row.storedAt);

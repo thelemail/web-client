@@ -830,6 +830,7 @@
 			searchPending={mailSearch.searching}
 			searchIndexed={mailSearch.indexed}
 			searchComplete={!mailSearch.partial}
+			searchChips={mailSearch.chips}
 			onClearSearch={() => mailSearch.clear()}
 		/>
 		{#if messageId && !selected && deepLinkMissing}

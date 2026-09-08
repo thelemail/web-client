@@ -71,7 +71,12 @@
 .mail-app .search .clr { display: flex; border: none; background: none; color: var(--fg-muted); padding: 2px; border-radius: var(--radius-xs); flex: 0 0 auto; }
 .mail-app .search .clr:hover { background: var(--paper-100); color: var(--fg-strong); }
 
-.mail-app .rail > .search { margin: 0 2px; }
+.mail-app .searchwrap { position: relative; }
+.mail-app .srch-ops { display: flex; flex-wrap: wrap; gap: 4px; padding: 7px 2px 0; }
+.mail-app .srch-op { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-muted); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 2px 6px; background: var(--paper-50); cursor: pointer; }
+.mail-app .srch-op:hover { border-color: var(--border-strong); color: var(--fg-strong); background: var(--paper-100); }
+
+.mail-app .rail > .searchwrap { margin: 0 2px; }
 
 .mail-app .rail-acct { position: relative; margin-top: 12px; }
 .mail-app .acct-btn { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 6px 8px; border: 1px solid transparent; border-radius: var(--radius-control); background: none; cursor: pointer; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
@@ -963,6 +968,7 @@
 
 .mail-app .srch-strip { display: flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 12.5px; color: var(--ink-500); background: var(--paper-100); border-bottom: 1px solid var(--border); }
 .mail-app .srch-strip svg { flex: 0 0 auto; color: var(--ink-400); }
+.mail-app .srch-strip .srch-chip { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-strong); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 1px 6px; background: var(--surface); flex: 0 0 auto; }
 .mail-app .snz-strip { display: flex; align-items: center; gap: 8px; padding: 9px 18px; font-size: 12.5px; color: var(--pine-700); background: var(--pine-50); border-bottom: 1px solid var(--border); }
 .mail-app .snz-strip svg { flex: 0 0 auto; }
 .mail-app .snz-strip .snz-x { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border: none; background: none; border-radius: 50%; color: var(--ink-400); cursor: pointer; }

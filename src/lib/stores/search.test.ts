@@ -157,6 +157,34 @@ describe('mailSearch on the web build', () => {
 	});
 });
 
+describe('mailSearch filter chips', () => {
+	it('names the filters the query applied', () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([]);
+		mailSearch.setText('invoice from:anna is:unread has:attachment in:sent');
+		expect(mailSearch.chips).toEqual([
+			'from:anna',
+			'in:sent',
+			'unread',
+			'has attachment'
+		]);
+	});
+
+	it('shows an unrecognised folder rather than hiding it', () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([]);
+		mailSearch.setText('in:nowhere');
+		expect(mailSearch.chips).toEqual(['in:nowhere']);
+	});
+
+	it('has no chips for plain free text', () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([]);
+		mailSearch.setText('invoice');
+		expect(mailSearch.chips).toEqual([]);
+	});
+});
+
 describe('mailSearch across accounts', () => {
 	it('drops the previous account results when the account changes', async () => {
 		const stop = mailSearch.start('acc-1');
@@ -209,6 +237,65 @@ describe('mailSearch on the desktop build', () => {
 		expect(mailSearch.results[0].id).toBe('deep');
 		expect(mailSearch.results[0].folder).toBe('archive');
 		expect(search).toHaveBeenCalledWith('acc-1', 'permission', 200);
+	});
+
+	it('forwards the operator query to the mirror untouched', async () => {
+		const search = vi.fn(async () => []);
+		platformState.mirror = { search };
+		mailSearch.start('acc-1');
+		mailSearch.setText('invoice from:anna is:unread');
+		await vi.waitFor(() => expect(search).toHaveBeenCalled());
+		expect(search).toHaveBeenCalledWith('acc-1', 'invoice from:anna is:unread', 200);
+	});
+
+	it('files a sent hit as sent when the mirror reports its direction', async () => {
+		const search = vi.fn(async () => [
+			{
+				id: 'out',
+				subject: 'Invoice',
+				senderDisplay: 'Me',
+				senderAddress: 'me@thelemail.com',
+				snippet: '',
+				excerpt: '',
+				storedAt: '2024-01-01T00:00:00Z',
+				mailboxState: 'inbox',
+				direction: 'sent' as const,
+				read: true,
+				starred: false,
+				attachmentCount: 0,
+				threadRootId: null
+			}
+		]);
+		platformState.mirror = { search };
+		mailSearch.start('acc-1');
+		mailSearch.setText('invoice');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+		expect(mailSearch.results[0].folder).toBe('sent');
+		expect(mailSearch.results[0].direction).toBe('sent');
+	});
+
+	it('falls back to received when an older binary omits the direction', async () => {
+		const search = vi.fn(async () => [
+			{
+				id: 'old',
+				subject: 'Invoice',
+				senderDisplay: 'Anna',
+				senderAddress: 'anna@school.pt',
+				snippet: '',
+				excerpt: '',
+				storedAt: '2024-01-01T00:00:00Z',
+				mailboxState: 'inbox',
+				read: true,
+				starred: false,
+				attachmentCount: 0,
+				threadRootId: null
+			}
+		]);
+		platformState.mirror = { search };
+		mailSearch.start('acc-1');
+		mailSearch.setText('invoice');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+		expect(mailSearch.results[0].folder).toBe('inbox');
 	});
 
 	it('never builds a web index when a mirror is present', () => {

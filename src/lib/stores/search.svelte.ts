@@ -2,6 +2,7 @@ import { folderFromServer, type LabelId, type Message } from '$lib/mail/data';
 import { initialsFor } from '$lib/mail/initials';
 import { paletteFor } from '$lib/mail/avatarPalette';
 import { searchIndex, type SearchResult } from '$lib/search';
+import { parseQuery } from '$lib/search/query';
 import type { SearchHit } from '$lib/platform/types';
 import { platform } from '$platform';
 
@@ -44,10 +45,11 @@ function messageFromHit(hit: SearchHit): Message {
 	const palette = paletteFor(hit.senderAddress.toLowerCase());
 	const storedAt = new Date(hit.storedAt).getTime();
 	const state = hit.mailboxState as 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed';
+	const direction = hit.direction ?? 'received';
 	return {
 		id: hit.id,
-		folder: folderFromServer(state, 'received'),
-		direction: 'received',
+		folder: folderFromServer(state, direction),
+		direction,
 		from: display,
 		fromAddr: hit.senderAddress,
 		to: '',
@@ -90,6 +92,20 @@ class MailSearchStore {
 
 	get partial(): boolean {
 		return this.active && !this.complete && !platform.mirror;
+	}
+
+	get chips(): string[] {
+		if (!this.active) return [];
+		const parsed = parseQuery(this.text);
+		const out: string[] = [];
+		for (const sender of parsed.from) out.push(`from:${sender}`);
+		if (parsed.folder) out.push(`in:${parsed.folder}`);
+		if (parsed.unknownFolder !== null) out.push(`in:${parsed.unknownFolder}`);
+		if (parsed.unread === true) out.push('unread');
+		if (parsed.unread === false) out.push('read');
+		if (parsed.starred) out.push('starred');
+		if (parsed.hasAttachment) out.push('has attachment');
+		return out;
 	}
 
 	start(accountId: string): () => void {
