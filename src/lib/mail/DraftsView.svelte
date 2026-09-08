@@ -12,7 +12,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { mailNav } from '$lib/stores/nav.svelte';
 	import Compose from './Compose.svelte';
-	import { mailSearch } from '$lib/stores/mailSearch.svelte';
+	import { mailSearch } from '$lib/stores/search.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import { drafts, type DraftRow } from '$lib/stores/drafts.svelte';
 	import { scheduled } from '$lib/stores/scheduled.svelte';

@@ -5,6 +5,7 @@ import { scheduled } from '$lib/stores/scheduled.svelte';
 import { addresses } from '$lib/stores/addresses.svelte';
 import { signatures } from '$lib/stores/signatures.svelte';
 import { accountSettings } from '$lib/stores/accountSettings.svelte';
+import { mailSearch } from '$lib/stores/search.svelte';
 import { auth } from '$lib/stores/auth.svelte';
 import { coalesce } from './coalesce';
 import { notifyCalendarHint, notifyCalendarMessage } from './calendarHook';
@@ -28,6 +29,10 @@ const refreshScheduledCoalesced = coalesce(() => {
 	void scheduled.refresh();
 }, COALESCE_WINDOW_MS);
 
+const refreshSearchIndexCoalesced = coalesce(() => {
+	void mailSearch.refresh();
+}, COALESCE_WINDOW_MS);
+
 function entityOf(kind: string): string {
 	const dot = kind.indexOf('.');
 	return dot < 0 ? kind : kind.slice(0, dot);
@@ -43,6 +48,7 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) {
 				mailbox.applyRealtime(hint);
 				refreshCountsCoalesced();
+				refreshSearchIndexCoalesced();
 				if (hint.kind === 'message.created') notifyCalendarMessage(hint);
 			} else {
 				void unread.refresh(hint.accountId);
@@ -52,6 +58,7 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) {
 				refreshLoadedCoalesced();
 				refreshCountsCoalesced();
+				refreshSearchIndexCoalesced();
 			} else {
 				void unread.refresh(hint.accountId);
 			}

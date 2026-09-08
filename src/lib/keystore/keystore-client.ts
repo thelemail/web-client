@@ -26,6 +26,10 @@ import type {
 	EncryptToKeysResponse,
 	SignDetachedArgs,
 	SignDetachedResponse,
+	SealIndexArgs,
+	SealIndexResponse,
+	OpenIndexArgs,
+	OpenIndexResponse,
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
 	GetPublicKeyResponse,
@@ -318,6 +322,8 @@ export const keystore = {
 	encryptToKeys: (args: EncryptToKeysArgs) =>
 		call<EncryptToKeysResponse>('encryptToKeys', args, CRYPTO_TIMEOUT_MS),
 	signDetached: (args: SignDetachedArgs) => call<SignDetachedResponse>('signDetached', args),
+	sealIndex: (args: SealIndexArgs) => call<SealIndexResponse>('sealIndex', args, CRYPTO_TIMEOUT_MS),
+	openIndex: (args: OpenIndexArgs) => call<OpenIndexResponse>('openIndex', args, CRYPTO_TIMEOUT_MS),
 	subscribe(cb: (b: Broadcast) => void): () => void {
 		const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
 		if (channel) return channel.subscribe(cb);

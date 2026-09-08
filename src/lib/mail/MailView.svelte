@@ -8,8 +8,7 @@
 	import MessageList, { type BulkAction } from './MessageList.svelte';
 	import Reader from './Reader.svelte';
 	import Compose from './Compose.svelte';
-	import { mailSearch } from '$lib/stores/mailSearch.svelte';
-	import { platform } from '$platform';
+	import { mailSearch } from '$lib/stores/search.svelte';
 	import Toast from '$lib/components/Toast.svelte';
 	import {
 		FOLDERS,
@@ -126,47 +125,10 @@
 		return m.direction;
 	}
 
-	function matchQ(m: Message): boolean {
-		if (!mailSearch.text.trim()) return true;
-		const q = mailSearch.text.toLowerCase();
-		return [m.from, m.subj, m.prev, m.fromAddr, m.to].some((v) =>
-			(v ?? '').toLowerCase().includes(q)
-		);
-	}
-
-	let localHits = $state<string[] | null>(null);
-
-	$effect(() => {
-		const mirror = platform.mirror;
-		const q = mailSearch.text.trim();
-		const accountId = mailbox.accountId;
-		if (!mirror || !q || !accountId) {
-			localHits = null;
-			return;
-		}
-		let cancelled = false;
-		void mirror
-			.search(accountId, q)
-			.then((hits) => {
-				if (!cancelled) localHits = hits.map((h) => h.id);
-			})
-			.catch(() => {
-				if (!cancelled) localHits = null;
-			});
-		return () => {
-			cancelled = true;
-		};
-	});
-
 	const list = $derived(
-		localHits === null
-			? snapshot.msgs.filter(matchQ)
-			: (() => {
-					const order = new Map(localHits.map((id, i) => [id, i]));
-					return snapshot.msgs
-						.filter((m) => order.has(m.id))
-						.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
-				})()
+		mailSearch.active
+			? mailSearch.results.map((hit) => mailbox.findMessage(hit.id) ?? hit)
+			: snapshot.msgs
 	);
 	const selected = $derived(mailbox.findMessage(messageId));
 
@@ -197,11 +159,13 @@
 		mailbox.pin(selected);
 	});
 
+	const routeFolder = $derived(query.folder);
+
 	$effect(() => {
-		void query.folder;
+		void routeFolder;
 		untrack(() => {
 			checked = new Set();
-			mailSearch.text = '';
+			mailSearch.clear();
 			returnedDismissed = false;
 		});
 	});
@@ -862,6 +826,12 @@
 			{pendingCount}
 			onFlushPending={() => mailbox.flushPending(query)}
 			onAtTopChange={(v) => (atTop = v)}
+			searchActive={mailSearch.active}
+			searchPending={mailSearch.searching}
+			searchIndexed={mailSearch.indexed}
+			searchComplete={!mailSearch.partial}
+			searchChips={mailSearch.chips}
+			onClearSearch={() => mailSearch.clear()}
 		/>
 		{#if messageId && !selected && deepLinkMissing}
 			<section class="reader reader-missing">

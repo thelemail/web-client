@@ -69,6 +69,10 @@ import type {
 	EncryptToKeysResponse,
 	SignDetachedArgs,
 	SignDetachedResponse,
+	SealIndexArgs,
+	SealIndexResponse,
+	OpenIndexArgs,
+	OpenIndexResponse,
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
 	GetPublicKeyResponse,
@@ -207,6 +211,7 @@ interface PendingPasswordChange {
 }
 
 const vaults = new Map<string, VaultState>();
+const indexKeys = new Map<string, CryptoKey>();
 const cachedRecords = new Map<string, VaultRecord>();
 let pendingLogin: PendingLogin | null = null;
 let pendingRecoveryLogin: PendingRecoveryLogin | null = null;
@@ -720,6 +725,7 @@ function handleAbandonPasswordChange(): void {
 
 async function handleClear(args: ClearArgs): Promise<void> {
 	vaults.delete(args.accountId);
+	indexKeys.delete(args.accountId);
 	cachedRecords.delete(args.accountId);
 	await deleteVault(args.accountId);
 	broadcast({ type: 'cleared', accountId: args.accountId });
@@ -727,6 +733,7 @@ async function handleClear(args: ClearArgs): Promise<void> {
 
 async function handleClearAll(): Promise<void> {
 	vaults.clear();
+	indexKeys.clear();
 	cachedRecords.clear();
 	pendingLogin = null;
 	pendingRecoveryLogin = null;
@@ -741,8 +748,74 @@ async function handleClearAll(): Promise<void> {
 }
 
 function handleLock(args: LockArgs): void {
+	indexKeys.delete(args.accountId);
 	if (vaults.delete(args.accountId)) {
 		broadcast({ type: 'locked', accountId: args.accountId });
+	}
+}
+
+const HKDF_INFO_SEARCH_INDEX = new TextEncoder().encode('thelemail-search-index-v1');
+
+async function searchIndexKey(accountId: string): Promise<CryptoKey | null> {
+	const cached = indexKeys.get(accountId);
+	if (cached) return cached;
+	const v = vaults.get(accountId);
+	if (!v) return null;
+	const ikm = await crypto.subtle.importKey(
+		'raw',
+		new TextEncoder().encode(v.keyPassword) as BufferSource,
+		'HKDF',
+		false,
+		['deriveKey']
+	);
+	const key = await crypto.subtle.deriveKey(
+		{
+			name: 'HKDF',
+			hash: 'SHA-256',
+			salt: new TextEncoder().encode(accountId) as BufferSource,
+			info: HKDF_INFO_SEARCH_INDEX as BufferSource
+		},
+		ikm,
+		{ name: 'AES-GCM', length: 256 },
+		false,
+		['encrypt', 'decrypt']
+	);
+	indexKeys.set(accountId, key);
+	return key;
+}
+
+async function handleSealIndex(args: SealIndexArgs): Promise<SealIndexResponse> {
+	const key = await searchIndexKey(args.accountId);
+	if (!key) return { ok: false, code: 'locked' };
+	try {
+		const iv = crypto.getRandomValues(new Uint8Array(12));
+		const ciphertext = new Uint8Array(
+			await crypto.subtle.encrypt(
+				{ name: 'AES-GCM', iv: iv as BufferSource },
+				key,
+				args.plaintext as BufferSource
+			)
+		);
+		return { ok: true, iv, ciphertext };
+	} catch {
+		return { ok: false, code: 'unknown' };
+	}
+}
+
+async function handleOpenIndex(args: OpenIndexArgs): Promise<OpenIndexResponse> {
+	const key = await searchIndexKey(args.accountId);
+	if (!key) return { ok: false, code: 'locked' };
+	try {
+		const plaintext = new Uint8Array(
+			await crypto.subtle.decrypt(
+				{ name: 'AES-GCM', iv: args.iv as BufferSource },
+				key,
+				args.ciphertext as BufferSource
+			)
+		);
+		return { ok: true, plaintext };
+	} catch {
+		return { ok: false, code: 'invalid_ciphertext' };
 	}
 }
 
@@ -2648,6 +2721,12 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'signDetached':
 				respond(port, msg.id, await handleSignDetached(msg.args as SignDetachedArgs));
+				break;
+			case 'sealIndex':
+				respond(port, msg.id, await handleSealIndex(msg.args as SealIndexArgs));
+				break;
+			case 'openIndex':
+				respond(port, msg.id, await handleOpenIndex(msg.args as OpenIndexArgs));
 				break;
 			default:
 				respondError(port, msg.id, `unknown command: ${msg.cmd}`);

@@ -129,6 +129,23 @@ export type SignDetachedResponse =
 	| { ok: true; signature: Uint8Array; keyFingerprintHex: string }
 	| { ok: false; code: 'locked' | 'unknown' };
 
+export interface SealIndexArgs extends AccountScopedArgs {
+	plaintext: Uint8Array;
+}
+
+export type SealIndexResponse =
+	| { ok: true; iv: Uint8Array; ciphertext: Uint8Array }
+	| { ok: false; code: 'locked' | 'unknown' };
+
+export interface OpenIndexArgs extends AccountScopedArgs {
+	iv: Uint8Array;
+	ciphertext: Uint8Array;
+}
+
+export type OpenIndexResponse =
+	| { ok: true; plaintext: Uint8Array }
+	| { ok: false; code: 'locked' | 'invalid_ciphertext' | 'unknown' };
+
 export type EncryptToKeysResponse =
 	| { ok: true; armored: string }
 	| { ok: false; code: 'locked' | 'invalid_recipient_key' | 'no_recipients' | 'unknown' };
