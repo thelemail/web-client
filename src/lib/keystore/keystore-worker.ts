@@ -1,6 +1,8 @@
 /// <reference lib="webworker" />
 
 import * as openpgp from 'openpgp';
+
+import { generateDelegationKey } from '$lib/keys/delegationKey';
 import { CryptoProxy } from '@protontech/crypto';
 import { Api as CryptoApi } from '@protontech/crypto/proxy/endpoint/api.ts';
 import {
@@ -61,6 +63,8 @@ import type {
 	LoadAliasKeysResponse,
 	UnloadAliasKeysArgs,
 	CreateAliasKeyArgs,
+	CreateSigningDelegationKeyArgs,
+	CreateSigningDelegationKeyResponse,
 	CreateAliasKeyResponse,
 	DecryptResponse,
 	DisablePersistentArgs,
@@ -1133,6 +1137,29 @@ async function handleCreateAliasKey(args: CreateAliasKeyArgs): Promise<CreateAli
 		};
 	} catch (err) {
 		console.warn('keystore: alias key generation failed', err);
+		return { ok: false, code: 'unknown' };
+	}
+}
+
+async function handleCreateSigningDelegationKey(
+	args: CreateSigningDelegationKeyArgs
+): Promise<CreateSigningDelegationKeyResponse> {
+	if (!vaults.get(args.accountId)) {
+		return { ok: false, code: 'locked' };
+	}
+	const email = args.email.trim().toLowerCase();
+	if (!email.includes('@')) {
+		return { ok: false, code: 'invalid_address' };
+	}
+	try {
+		const generated = await generateDelegationKey({
+			email,
+			validForDays: args.validForDays,
+			now: Date.now() + (args.serverClockOffsetMs ?? 0)
+		});
+		return { ok: true, ...generated };
+	} catch (err) {
+		console.warn('keystore: delegation key generation failed', err);
 		return { ok: false, code: 'unknown' };
 	}
 }
@@ -2698,6 +2725,13 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'createAliasKey':
 				respond(port, msg.id, await handleCreateAliasKey(msg.args as CreateAliasKeyArgs));
+				break;
+			case 'createSigningDelegationKey':
+				respond(
+					port,
+					msg.id,
+					await handleCreateSigningDelegationKey(msg.args as CreateSigningDelegationKeyArgs)
+				);
 				break;
 			case 'getPublicKey':
 				respond(port, msg.id, await handleGetPublicKey(msg.args as GetPublicKeyArgs));

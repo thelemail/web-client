@@ -608,6 +608,24 @@ export interface CreatedAliasKeyGrant {
 	memberKeyFingerprintHex: string;
 }
 
+export interface CreateSigningDelegationKeyArgs extends AccountScopedArgs {
+	email: string;
+	label: string;
+	validForDays: number;
+	serverClockOffsetMs?: number;
+}
+
+export type CreateSigningDelegationKeyResponse =
+	| {
+			ok: true;
+			publicKeyArmored: string;
+			revokedPublicKeyArmored: string;
+			privateKeyArmored: string;
+			keyFingerprintHex: string;
+			notAfter: string;
+	  }
+	| { ok: false; code: 'locked' | 'invalid_address' | 'unknown' };
+
 export type CreateAliasKeyResponse =
 	| {
 			ok: true;

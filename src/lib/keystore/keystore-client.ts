@@ -14,6 +14,8 @@ import type {
 	LoadAliasKeysResponse,
 	UnloadAliasKeysArgs,
 	CreateAliasKeyArgs,
+	CreateSigningDelegationKeyArgs,
+	CreateSigningDelegationKeyResponse,
 	CreateAliasKeyResponse,
 	DecryptResponse,
 	CompleteLoginUnlockArgs,
@@ -318,6 +320,12 @@ export const keystore = {
 	createAliasKey: (args: CreateAliasKeyArgs) =>
 		call<CreateAliasKeyResponse>(
 			'createAliasKey',
+			{ ...args, serverClockOffsetMs: serverClockOffsetMs() },
+			CRYPTO_TIMEOUT_MS
+		),
+	createSigningDelegationKey: (args: CreateSigningDelegationKeyArgs) =>
+		call<CreateSigningDelegationKeyResponse>(
+			'createSigningDelegationKey',
 			{ ...args, serverClockOffsetMs: serverClockOffsetMs() },
 			CRYPTO_TIMEOUT_MS
 		),
