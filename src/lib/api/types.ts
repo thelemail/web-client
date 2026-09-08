@@ -88,6 +88,21 @@ export interface MessageListResponse {
 	nextCursor?: string | null;
 }
 
+export interface MessageChange {
+	id: string;
+	updatedAt: string;
+	deleted: boolean;
+	message?: MessageListItem;
+}
+
+export interface MessageChangesResponse {
+	changes: MessageChange[];
+	nextCursor: string;
+	hasMore: boolean;
+	resyncRequired: boolean;
+	watermark: string;
+}
+
 export interface PresignedPointer {
 	url: string;
 	expiresAt: string;

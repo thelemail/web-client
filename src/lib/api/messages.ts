@@ -15,6 +15,7 @@ import type {
 	MailboxState,
 	MessageDetail,
 	MessageDirection,
+	MessageChangesResponse,
 	MessageListResponse,
 	MessageState,
 	ReportMessageRequest,
@@ -61,6 +62,23 @@ export function listMessages(opts: ListMessagesOptions = {}): Promise<MessageLis
 	if (opts.limit) params.set('limit', String(opts.limit));
 	const qs = params.toString();
 	return apiFetch<MessageListResponse>(qs ? `/v1/messages?${qs}` : '/v1/messages');
+}
+
+export interface ListMessageChangesOptions {
+	cursor?: string;
+	limit?: number;
+}
+
+export function listMessageChanges(
+	opts: ListMessageChangesOptions = {}
+): Promise<MessageChangesResponse> {
+	const params = new URLSearchParams();
+	if (opts.cursor) params.set('cursor', opts.cursor);
+	if (opts.limit) params.set('limit', String(opts.limit));
+	const qs = params.toString();
+	return apiFetch<MessageChangesResponse>(
+		qs ? `/v1/messages/changes?${qs}` : '/v1/messages/changes'
+	);
 }
 
 export type ListThreadsOptions = Omit<ListMessagesOptions, 'direction'>;
