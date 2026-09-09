@@ -14,5 +14,9 @@
     "check": "pnpm --recursive --filter './apps/*' check",
     "test": "pnpm --recursive --filter './apps/*' test",
     "verify:bundle": "pnpm --recursive --filter './apps/*' verify:bundle"
+  },
+  "devDependencies": {
+    "openpgp": "^6.3.0",
+    "vite": "^8.0.7"
   }
 }

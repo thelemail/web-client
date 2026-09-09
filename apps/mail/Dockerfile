@@ -8,7 +8,9 @@ WORKDIR /src
 
 ENV CI=true
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/mail/package.json apps/mail/
+COPY packages/core/package.json packages/core/
 RUN corepack enable && corepack install
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
@@ -35,21 +37,21 @@ RUN set -eu; \
     export PUBLIC_TLOG_POLICY="$(cat trust-roots/tlog-policy.json)"; \
     export PUBLIC_OFFICIAL_SENDER_POLICY="$(cat trust-roots/official-sender.json)"; \
     node scripts/check-trust-roots.mjs; \
-    pnpm build && pnpm verify:bundle
+    pnpm --filter @thelemail/mail build && pnpm --filter @thelemail/mail verify:bundle
 
 ARG GIT_COMMIT=""
 ARG GIT_REF=""
 ARG BUILD_RUN_URL=""
 
-RUN mkdir -p build/.well-known && \
+RUN mkdir -p apps/mail/build/.well-known && \
     printf '{"commit":"%s","ref":"%s","image":"ghcr.io/thelemail/web-client","build":"%s"}\n' \
-      "$GIT_COMMIT" "$GIT_REF" "$BUILD_RUN_URL" > build/.well-known/thelemail-build.json && \
-    cp LICENSE build/LICENSE
+      "$GIT_COMMIT" "$GIT_REF" "$BUILD_RUN_URL" > apps/mail/build/.well-known/thelemail-build.json && \
+    cp LICENSE apps/mail/build/LICENSE
 
 
 FROM caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 AS runtime
 
-COPY --from=builder /src/build /srv
-COPY Caddyfile /etc/caddy/Caddyfile
+COPY --from=builder /src/apps/mail/build /srv
+COPY apps/mail/Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80
