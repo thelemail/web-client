@@ -634,3 +634,126 @@ export type CreateAliasKeyResponse =
 			grants: CreatedAliasKeyGrant[];
 	  }
 	| { ok: false; code: 'locked' | 'invalid_recipient_key' | 'no_recipients' | 'unknown' };
+
+export type KeystoreCommand =
+	| 'status'
+	| 'prepareLogin'
+	| 'verifyLoginProof'
+	| 'completeLoginUnlock'
+	| 'abandonLogin'
+	| 'opaqueStartRegistration'
+	| 'opaqueFinishRegistration'
+	| 'opaqueFinalizeRegister'
+	| 'opaqueStartAuth'
+	| 'opaqueFinishAuth'
+	| 'opaqueCompleteLoginUnlock'
+	| 'opaqueAbandonOperation'
+	| 'migrationStartRegistration'
+	| 'migrationFinishStage'
+	| 'opaqueRecoverySetupStart'
+	| 'opaqueRecoverySetupFinish'
+	| 'opaqueCompleteRecoveryUnlock'
+	| 'opaquePrepareCredentialReset'
+	| 'opaqueFinishCredentialReset'
+	| 'opaquePrepareAmkRotation'
+	| 'opaqueFinishAmkRotation'
+	| 'opaquePasswordChangeStart'
+	| 'opaquePasswordChangeFinish'
+	| 'opaquePasswordChangeCommit'
+	| 'prepareRecoverySetup'
+	| 'prepareRecoveryLogin'
+	| 'verifyRecoveryProof'
+	| 'completeRecoveryUnlock'
+	| 'prepareCredentialReset'
+	| 'discardRecovery'
+	| 'prepareDeletionProof'
+	| 'preparePasswordChangeProof'
+	| 'verifyPasswordChangeProof'
+	| 'preparePasswordChangeCredentials'
+	| 'commitPasswordChange'
+	| 'invalidatePersistedVault'
+	| 'abandonPasswordChange'
+	| 'lock'
+	| 'clear'
+	| 'clearAll'
+	| 'enrollPersistent'
+	| 'tryRestoreFromPersistent'
+	| 'disablePersistent'
+	| 'attachmentHeader'
+	| 'attachmentBytes'
+	| 'decrypt'
+	| 'loadAliasKeys'
+	| 'unloadAliasKeys'
+	| 'createAliasKey'
+	| 'createSigningDelegationKey'
+	| 'getPublicKey'
+	| 'reformatKeyWithUids'
+	| 'commitReformattedKey'
+	| 'encrypt'
+	| 'encryptToKeys'
+	| 'signDetached'
+	| 'sealIndex'
+	| 'openIndex';
+
+export type VaultMode = 'account' | 'product';
+
+export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = {
+	status: ['account', 'product'],
+	prepareLogin: ['account'],
+	verifyLoginProof: ['account'],
+	completeLoginUnlock: ['account'],
+	abandonLogin: ['account'],
+	opaqueStartRegistration: ['account'],
+	opaqueFinishRegistration: ['account'],
+	opaqueFinalizeRegister: ['account'],
+	opaqueStartAuth: ['account'],
+	opaqueFinishAuth: ['account'],
+	opaqueCompleteLoginUnlock: ['account'],
+	opaqueAbandonOperation: ['account'],
+	migrationStartRegistration: ['account'],
+	migrationFinishStage: ['account'],
+	opaqueRecoverySetupStart: ['account'],
+	opaqueRecoverySetupFinish: ['account'],
+	opaqueCompleteRecoveryUnlock: ['account'],
+	opaquePrepareCredentialReset: ['account'],
+	opaqueFinishCredentialReset: ['account'],
+	opaquePrepareAmkRotation: ['account'],
+	opaqueFinishAmkRotation: ['account'],
+	opaquePasswordChangeStart: ['account'],
+	opaquePasswordChangeFinish: ['account'],
+	opaquePasswordChangeCommit: ['account'],
+	prepareRecoverySetup: ['account'],
+	prepareRecoveryLogin: ['account'],
+	verifyRecoveryProof: ['account'],
+	completeRecoveryUnlock: ['account'],
+	prepareCredentialReset: ['account'],
+	discardRecovery: ['account'],
+	prepareDeletionProof: ['account'],
+	preparePasswordChangeProof: ['account'],
+	verifyPasswordChangeProof: ['account'],
+	preparePasswordChangeCredentials: ['account'],
+	commitPasswordChange: ['account'],
+	invalidatePersistedVault: ['account'],
+	abandonPasswordChange: ['account'],
+	lock: ['account', 'product'],
+	clear: ['account', 'product'],
+	clearAll: ['account', 'product'],
+	enrollPersistent: ['account', 'product'],
+	tryRestoreFromPersistent: ['account', 'product'],
+	disablePersistent: ['account', 'product'],
+	attachmentHeader: ['account', 'product'],
+	attachmentBytes: ['account', 'product'],
+	decrypt: ['account', 'product'],
+	loadAliasKeys: ['account'],
+	unloadAliasKeys: ['account'],
+	createAliasKey: ['account'],
+	createSigningDelegationKey: ['account'],
+	getPublicKey: ['account', 'product'],
+	reformatKeyWithUids: ['account'],
+	commitReformattedKey: ['account'],
+	encrypt: ['account', 'product'],
+	encryptToKeys: ['account', 'product'],
+	signDetached: ['account', 'product'],
+	sealIndex: ['account', 'product'],
+	openIndex: ['account', 'product'],
+};

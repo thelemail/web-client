@@ -148,8 +148,11 @@ import type {
 	VerifyPasswordChangeProofArgs,
 	VerifyPasswordChangeProofResponse,
 	VerifyRecoveryProofArgs,
-	VerifyRecoveryProofResponse
+	VerifyRecoveryProofResponse,
+	KeystoreCommand,
+	VaultMode
 } from './protocol';
+import { commandVaultModes } from './protocol';
 
 declare const self: SharedWorkerGlobalScope;
 
@@ -760,7 +763,11 @@ function handleLock(args: LockArgs): void {
 	}
 }
 
-const HKDF_INFO_SEARCH_INDEX = new TextEncoder().encode('thelemail-search-index-v1');
+const HKDF_INFO_SEARCH_INDEX = new TextEncoder().encode(
+	import.meta.env.PUBLIC_THELEMAIL_PRODUCT
+		? `thelemail-search-index-product-v1:${import.meta.env.PUBLIC_THELEMAIL_PRODUCT}`
+		: 'thelemail-search-index-v1'
+);
 
 async function searchIndexKey(accountId: string): Promise<CryptoKey | null> {
 	const cached = indexKeys.get(accountId);
@@ -2437,7 +2444,7 @@ function constantTimeEqual(aB64: string, bB64: string): boolean {
 
 interface RequestMessage {
 	id: string;
-	cmd: string;
+	cmd: KeystoreCommand;
 	args?: unknown;
 }
 
@@ -2462,8 +2469,19 @@ function respondError(port: MessagePort, id: string, error: unknown) {
 	port.postMessage(msg);
 }
 
+const VAULT_MODE: VaultMode = import.meta.env.PUBLIC_THELEMAIL_PRODUCT ? 'product' : 'account';
+
+function commandAllowed(cmd: KeystoreCommand): boolean {
+	const modes = commandVaultModes[cmd];
+	return modes !== undefined && modes.includes(VAULT_MODE);
+}
+
 async function dispatch(port: MessagePort, msg: RequestMessage) {
 	try {
+		if (!commandAllowed(msg.cmd)) {
+			respondError(port, msg.id, new Error('command unavailable'));
+			return;
+		}
 		switch (msg.cmd) {
 			case 'status':
 				respond(port, msg.id, await handleStatus());
