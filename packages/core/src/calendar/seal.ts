@@ -1,7 +1,7 @@
-import type { CalendarRow } from '$core/api/calendars';
+import type { CalendarMemberGrant, CalendarRow } from '$core/api/calendars';
 import { keystore } from '$core/keystore/keystore-client';
 import { b64ToBytes, bytesToB64 } from '$core/crypto';
-import { b64ToHex } from '$core/keys/encode';
+import { b64ToHex, hexToB64, textToB64 } from '$core/keys/encode';
 import { senderKey } from '$core/mail/send';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
@@ -19,6 +19,39 @@ export class SealError extends Error {
 		this.code = code;
 		this.name = 'SealError';
 	}
+}
+
+export const CALENDAR_KEY_ALGORITHM = 'openpgp-curve25519-v6';
+
+export interface MintedCalendarKey {
+	key: SealKey;
+	grants: CalendarMemberGrant[];
+}
+
+export async function mintOwnCalendarKey(accountId: string): Promise<MintedCalendarKey> {
+	const own = await senderKey(accountId);
+	const created = await keystore.createAliasKey({
+		accountId,
+		email: '',
+		displayName: 'Thelemail calendar',
+		recipients: [{ accountId, publicKeyArmored: own.publicKeyArmored }]
+	});
+	if (!created.ok) {
+		throw new SealError(created.code === 'locked' ? 'locked' : 'unknown', 'Could not create the calendar key');
+	}
+	return {
+		key: {
+			publicKeyArmored: created.publicKeyArmored,
+			fingerprintB64: hexToB64(created.keyFingerprintHex),
+			fingerprintHex: created.keyFingerprintHex
+		},
+		grants: created.grants.map((g) => ({
+			accountId: g.accountId,
+			role: 'owner' as const,
+			memberKeyFingerprint: hexToB64(g.memberKeyFingerprintHex),
+			wrappedPrivateKey: textToB64(g.wrappedPrivateKeyArmored)
+		}))
+	};
 }
 
 export async function ownKey(accountId: string): Promise<SealKey> {

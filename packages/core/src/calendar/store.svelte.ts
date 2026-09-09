@@ -50,7 +50,16 @@ import {
 import { replayOne, type OutboxMail, type OutboxOp, type ReplayApi } from './outbox';
 import { busyWindows, expandItems, itemSpan, type Occurrence } from './recur';
 import { signBusyWindows } from './busysign';
-import { keyForCalendar, openText, ownKey, sealText, SealError, type SealKey } from './seal';
+import {
+	CALENDAR_KEY_ALGORITHM,
+	keyForCalendar,
+	mintOwnCalendarKey,
+	openText,
+	ownKey,
+	sealText,
+	SealError,
+	type SealKey
+} from './seal';
 import { fullLoad, liveSyncApi, pullChanges, type SyncApi } from './sync';
 
 export interface CalendarView {
@@ -363,7 +372,7 @@ export class CalendarStore {
 	}
 
 	async #createPersonalCalendar(accountId: string): Promise<void> {
-		const key = await ownKey(accountId);
+		const { key, grants } = await mintOwnCalendarKey(accountId);
 		const meta: CalendarMeta = {
 			schemaVersion: META_SCHEMA_VERSION,
 			name: 'My calendar',
@@ -375,8 +384,12 @@ export class CalendarStore {
 			kind: 'personal',
 			sealedMeta,
 			metaKeyFingerprint: key.fingerprintB64,
-			metaSchemaVersion: META_SCHEMA_VERSION
+			metaSchemaVersion: META_SCHEMA_VERSION,
+			calendarPublicKeyArmored: key.publicKeyArmored,
+			keyAlgorithm: CALENDAR_KEY_ALGORITHM,
+			members: grants
 		});
+		await calendarKeys.load(accountId);
 		if (this.#accountId !== accountId) return;
 		await this.adoptCalendar(row);
 	}

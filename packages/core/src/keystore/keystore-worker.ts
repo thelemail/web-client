@@ -2556,7 +2556,7 @@ async function handleSealProductFork(args: SealProductForkArgs): Promise<SealPro
 	const joined = new Uint8Array(iv.byteLength + ciphertext.byteLength);
 	joined.set(iv, 0);
 	joined.set(ciphertext, iv.byteLength);
-	const out = { ok: true as const, payload: bytesToBase64Url(joined), key: bytesToBase64Url(raw) };
+	const out = { ok: true as const, payload: opaqueBytesToBase64(joined), key: bytesToBase64Url(raw) };
 	raw.fill(0);
 	return out;
 }
@@ -2565,7 +2565,7 @@ async function handleOpenProductFork(args: OpenProductForkArgs): Promise<OpenPro
 	let payload: ForkPayload;
 	const raw = base64UrlToBytes(args.key);
 	try {
-		const joined = base64UrlToBytes(args.payload);
+		const joined = opaqueBase64ToBytes(args.payload);
 		const iv = joined.subarray(0, 12);
 		const ciphertext = joined.subarray(12);
 		const key = await forkKey(raw);

@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { currentProduct } from '$core/products';
 import {
 	getMyWorkspace,
 	listWorkspaceMembers,
@@ -78,7 +79,7 @@ class WorkspaceStore {
 			const { members } = await listWorkspaceMembers(id);
 			if (this.#accountId !== acct) return;
 			this.members = members;
-			if (this.canManage(callerAccountId)) {
+			if (currentProduct === 'app' && this.canManage(callerAccountId)) {
 				const { invites } = await listWorkspaceInvites(id);
 				if (this.#accountId !== acct) return;
 				this.invites = invites;

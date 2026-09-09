@@ -9,6 +9,7 @@ import { aliasKeys } from './aliasKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
 import { billing } from './billing.svelte';
 import { calendarStore } from '$core/calendar/store.svelte';
+import { currentProduct } from '$core/products';
 
 let loadedFor: string | null = null;
 
@@ -23,8 +24,9 @@ export function ensureAccountData(accountId: string): void {
 		await workspaces.load(accountId);
 		if (loadedFor !== accountId) return;
 		const workspaceId = workspaces.workspace?.id ?? null;
-		void customDomains.load(workspaceId);
 		await addresses.load();
+		if (currentProduct !== 'app') return;
+		void customDomains.load(workspaceId);
 		void signatures.load();
 		if (workspaceId && workspaces.canManage(accountId)) {
 			void aliases.load(workspaceId);

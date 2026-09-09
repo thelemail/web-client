@@ -25,7 +25,7 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
 	import { META_SCHEMA_VERSION, serializeMeta, type CalendarMeta, type Privacy } from '../model';
-	import { sealText, type SealKey } from '../seal';
+	import { mintOwnCalendarKey, sealText, type SealKey } from '../seal';
 	import { cal } from '../state.svelte';
 	import { calendarStore } from '../store.svelte';
 	import type { BoundaryLine, CalendarDialogRequest } from '../types';
@@ -159,9 +159,9 @@
 		return { grants, key };
 	}
 
-	async function ownKey(accountId: string): Promise<SealKey> {
-		const own = await senderKey(accountId);
-		return { publicKeyArmored: own.publicKeyArmored, fingerprintB64: own.fingerprintB64, fingerprintHex: '' };
+	async function mintOwnKey(accountId: string) {
+		progress = 'Creating the calendar key';
+		return mintOwnCalendarKey(accountId);
 	}
 
 	async function aliasKey(accountId: string, aliasId: string): Promise<SealKey> {
@@ -185,7 +185,9 @@
 			sharedAliasId = addr.sharedAliasId;
 			key = await aliasKey(accountId, addr.sharedAliasId);
 		} else {
-			key = await ownKey(accountId);
+			const minted = await mintOwnKey(accountId);
+			key = minted.key;
+			grants = minted.grants;
 		}
 		progress = 'Sealing';
 		const sealedMeta = await sealText(accountId, key, serializeMeta(meta()));
@@ -195,12 +197,12 @@
 			sealedMeta,
 			metaKeyFingerprint: key.fingerprintB64,
 			metaSchemaVersion: META_SCHEMA_VERSION,
-			calendarPublicKeyArmored: kind === 'shared' ? key.publicKeyArmored : undefined,
-			keyAlgorithm: kind === 'shared' ? KEY_ALGORITHM : undefined,
+			calendarPublicKeyArmored: kind === 'role' ? undefined : key.publicKeyArmored,
+			keyAlgorithm: kind === 'role' ? undefined : KEY_ALGORITHM,
 			sharedAliasId,
 			members: grants
 		});
-		if (kind === 'shared') await calendarKeys.load(accountId);
+		if (kind !== 'role') await calendarKeys.load(accountId);
 		await calendarStore.adoptCalendar(row);
 		cal.notify(`Created “${row.id ? name.trim() : name}”`);
 	}
