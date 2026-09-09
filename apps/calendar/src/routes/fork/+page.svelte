@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { adoptFork, ForkError } from '$core/fork';
+	import { getPersistentHalf } from '$core/api/auth';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import AuthShell from '$core/auth/AuthShell.svelte';
@@ -13,6 +15,15 @@
 	onMount(() => {
 		void run();
 	});
+
+	async function rememberVault(accountId: string) {
+		try {
+			const { serverHalf } = await getPersistentHalf(accountId);
+			await keystore.enrollPersistent({ accountId, serverHalf });
+		} catch {
+			return;
+		}
+	}
 
 	async function run() {
 		try {
@@ -28,7 +39,7 @@
 				lastActiveAt: now
 			});
 			auth.activate(adopted.accountId);
-			await auth.tryRefresh(adopted.accountId);
+			await rememberVault(adopted.accountId);
 			history.replaceState(null, '', '/fork');
 			const target = adopted.redirect === '/' ? `/u/${slot}/calendar` : adopted.redirect;
 			await goto(target, { replaceState: true });

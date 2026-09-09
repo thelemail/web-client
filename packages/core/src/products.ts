@@ -46,3 +46,11 @@ export function productOrigins(): ProductTarget[] {
 export function appOrigin(): string {
 	return productTarget('app')?.origin ?? '/';
 }
+
+export function handOffToApp(): never {
+	const target = appOrigin();
+	if (typeof window !== 'undefined' && target !== '/') {
+		window.location.assign(target);
+	}
+	return new Promise<never>(() => {}) as never;
+}

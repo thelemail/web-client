@@ -1,5 +1,6 @@
 import { consumeSessionFork, produceSessionFork } from './api/forks';
 import { keystore } from './keystore/keystore-client';
+import { auth } from './stores/auth.svelte';
 import type { AliasKeyGrantInput } from './keystore/protocol';
 import { currentProduct, productTarget } from './products';
 
@@ -54,6 +55,12 @@ export async function adoptFork(fragment: string): Promise<AdoptedFork> {
 	const res = await consumeSessionFork(selector);
 	if (res.audience !== currentProduct) {
 		throw new ForkError('wrong_product', 'This link was issued for a different product.');
+	}
+	if (!(await auth.tryRefresh(res.accountId))) {
+		throw new ForkError(
+			'no_session',
+			'Sign in to that account first, then open Calendar from your mailbox.'
+		);
 	}
 	const opened = await keystore.openProductFork({
 		product: currentProduct,
