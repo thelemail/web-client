@@ -78,6 +78,11 @@ export async function adoptFork(fragment: string): Promise<AdoptedFork> {
 	};
 }
 
+export function localForkPath(redirect: string, slot: number): string {
+	const rest = redirect.replace(/^\/u\/\d+(?=\/|$)/, '');
+	return `/u/${slot}${rest === '' || rest === '/' ? '/calendar' : rest}`;
+}
+
 function safeRedirect(value: string | null): string {
 	if (!value) return '/';
 	if (!value.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return '/';

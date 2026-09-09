@@ -102,3 +102,22 @@ describe('adoptFork', () => {
 		);
 	});
 });
+
+describe('localForkPath', () => {
+	it('rewrites the slot to the one this origin allocated for the account', async () => {
+		const { localForkPath } = await import('./fork');
+		expect(localForkPath('/u/0/calendar', 1)).toBe('/u/1/calendar');
+		expect(localForkPath('/u/7/calendar/2026-09', 3)).toBe('/u/3/calendar/2026-09');
+	});
+
+	it('falls back to the calendar root when the link carries no path of its own', async () => {
+		const { localForkPath } = await import('./fork');
+		expect(localForkPath('/', 2)).toBe('/u/2/calendar');
+		expect(localForkPath('/u/4', 2)).toBe('/u/2/calendar');
+	});
+
+	it('leaves a path that names no slot under the local slot', async () => {
+		const { localForkPath } = await import('./fork');
+		expect(localForkPath('/settings', 5)).toBe('/u/5/settings');
+	});
+});

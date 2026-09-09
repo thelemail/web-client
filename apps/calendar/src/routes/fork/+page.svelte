@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { adoptFork, ForkError } from '$core/fork';
+	import { adoptFork, ForkError, localForkPath } from '$core/fork';
 	import { getPersistentHalf } from '$core/api/auth';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$core/stores/accounts.svelte';
@@ -41,7 +41,7 @@
 			auth.activate(adopted.accountId);
 			await rememberVault(adopted.accountId);
 			history.replaceState(null, '', '/fork');
-			const target = adopted.redirect === '/' ? `/u/${slot}/calendar` : adopted.redirect;
+			const target = localForkPath(adopted.redirect, slot);
 			await goto(target, { replaceState: true });
 		} catch (err) {
 			history.replaceState(null, '', '/fork');
