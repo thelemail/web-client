@@ -2,9 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import PasswordField from '$lib/auth/PasswordField.svelte';
-	import Stepper from '$lib/auth/Stepper.svelte';
-	import brandmark from '$lib/assets/logo-mark.svg';
+	import PasswordField from '$core/auth/PasswordField.svelte';
+	import Stepper from '$core/auth/Stepper.svelte';
+	import brandmark from '$core/assets/logo-mark.svg';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -16,10 +16,10 @@
 	import { registrationInit } from '$core/api/auth';
 	import { previewWorkspaceInvite, registerAndAcceptInvite, type WorkspaceInvitePreview } from '$core/api/workspaces';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { accounts } from '$lib/stores/accounts.svelte';
-	import JoinFamilyInvite from '$lib/auth/JoinFamilyInvite.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
+	import JoinFamilyInvite from '$core/auth/JoinFamilyInvite.svelte';
+	import { Button } from '$core/components/ui/button';
 
 	const STR_LABELS = ['', 'weak', 'fair', 'good', 'strong'];
 

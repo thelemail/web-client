@@ -2,10 +2,10 @@
 	import { platform } from '$platform';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import PasswordField from '$lib/auth/PasswordField.svelte';
-	import PasswordStrength from '$lib/auth/PasswordStrength.svelte';
-	import { passwordReqs } from '$lib/auth/password-policy';
-	import Stepper from '$lib/auth/Stepper.svelte';
+	import PasswordField from '$core/auth/PasswordField.svelte';
+	import PasswordStrength from '$core/auth/PasswordStrength.svelte';
+	import { passwordReqs } from '$core/auth/password-policy';
+	import Stepper from '$core/auth/Stepper.svelte';
 	import {
 		completeRecoveryReset,
 		RecoveryPhraseError,
@@ -16,14 +16,14 @@
 		verifyRecoveryPhrase,
 		type PendingTwoFactorRecovery,
 		type VerifyRecoveryPhraseResult
-	} from '$lib/auth/perform-recovery';
-	import { TwoFactorExpiredError, TwoFactorRejectedError } from '$lib/auth/perform-login';
-	import TwoFactorChallenge from '$lib/auth/TwoFactorChallenge.svelte';
-	import { isWebauthnCancelled } from '$lib/auth/webauthn';
+	} from '$core/auth/perform-recovery';
+	import { TwoFactorExpiredError, TwoFactorRejectedError } from '$core/auth/perform-login';
+	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
+	import { isWebauthnCancelled } from '$core/auth/webauthn';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
-	import brandmark from '$lib/assets/logo-mark.svg';
+	import brandmark from '$core/assets/logo-mark.svg';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import KeyRound from '@lucide/svelte/icons/key-round';
@@ -35,7 +35,7 @@
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import Mail from '@lucide/svelte/icons/mail';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '$core/components/ui/button';
 
 	const REC_LABELS = ['Account', 'Phrase', 'Password'];
 	const REC_LABELS_2FA = ['Account', 'Phrase', '2FA', 'Password'];

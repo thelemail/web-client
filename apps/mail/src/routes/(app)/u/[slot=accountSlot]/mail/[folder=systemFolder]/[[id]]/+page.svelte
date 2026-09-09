@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import MailView from '$lib/mail/MailView.svelte';
-	import DraftsView from '$lib/mail/DraftsView.svelte';
-	import ScheduledView from '$lib/mail/ScheduledView.svelte';
-	import { parseQuery } from '$lib/mail/url';
+	import MailView from '$core/mail/MailView.svelte';
+	import DraftsView from '$core/mail/DraftsView.svelte';
+	import ScheduledView from '$core/mail/ScheduledView.svelte';
+	import { parseQuery } from '$core/mail/url';
 
 	const folder = $derived(page.params.folder);
 	const query = $derived(parseQuery(folder, page.url.searchParams));

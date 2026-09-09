@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import AuthShell from '$lib/auth/AuthShell.svelte';
-	import { billing } from '$lib/stores/billing.svelte';
-	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { planLabelFor } from '$lib/auth/plans';
+	import AuthShell from '$core/auth/AuthShell.svelte';
+	import { billing } from '$core/stores/billing.svelte';
+	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { auth } from '$core/stores/auth.svelte';
+	import { planLabelFor } from '$core/auth/plans';
 	import Mail from '@lucide/svelte/icons/mail';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '$core/components/ui/button';
 
 	let { data } = $props();
 

@@ -2,12 +2,12 @@
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
 	import { page } from '$app/state';
-	import PasswordField from '$lib/auth/PasswordField.svelte';
-	import PasswordStrength from '$lib/auth/PasswordStrength.svelte';
-	import { passwordReqs } from '$lib/auth/password-policy';
-	import Stepper from '$lib/auth/Stepper.svelte';
-	import PlanStep from '$lib/auth/PlanStep.svelte';
-	import PaymentStep from '$lib/auth/PaymentStep.svelte';
+	import PasswordField from '$core/auth/PasswordField.svelte';
+	import PasswordStrength from '$core/auth/PasswordStrength.svelte';
+	import { passwordReqs } from '$core/auth/password-policy';
+	import Stepper from '$core/auth/Stepper.svelte';
+	import PlanStep from '$core/auth/PlanStep.svelte';
+	import PaymentStep from '$core/auth/PaymentStep.svelte';
 	import {
 		eur,
 		findPlan,
@@ -15,12 +15,12 @@
 		planTotal,
 		periodFromQuery,
 		type PlanSelection
-	} from '$lib/auth/plans';
-	import { performLogin } from '$lib/auth/perform-login';
-	import { resolveReturnTo } from '$lib/auth/return-to';
+	} from '$core/auth/plans';
+	import { performLogin } from '$core/auth/perform-login';
+	import { resolveReturnTo } from '$core/auth/return-to';
 	import { createCheckoutSession, type PlanCode } from '$core/api/billing';
 	import { changeMyWorkspaceType } from '$core/api/workspaces';
-	import brandmark from '$lib/assets/logo-mark.svg';
+	import brandmark from '$core/assets/logo-mark.svg';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
@@ -30,8 +30,8 @@
 	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
 	import { ApiCallError } from '$core/api/types';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { auth } from '$core/stores/auth.svelte';
+	import { Button } from '$core/components/ui/button';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const signInHref = $derived.by(() => {

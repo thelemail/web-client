@@ -1,18 +1,18 @@
 <script lang="ts">
-	import '$lib/settings/settings.css';
-	import '$lib/lifecycle/lifecycle.css';
+	import '$core/settings/settings.css';
+	import '$core/lifecycle/lifecycle.css';
 	import Check from '@lucide/svelte/icons/check';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { page } from '$app/state';
 	import { afterNavigate, beforeNavigate, replaceState } from '$app/navigation';
-	import SettingsNav from '$lib/settings/SettingsNav.svelte';
-	import { sectionLabelFromPath } from '$lib/settings/data';
-	import { settingsPageTitle } from '$lib/settings/pageTitle.svelte';
-	import Ceremonies from '$lib/settings/ceremonies/Ceremonies.svelte';
-	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
-	import { ensureAccountData } from '$lib/stores/accountData';
-	import { preferences } from '$lib/stores/preferences.svelte';
-	import { auth } from '$lib/stores/auth.svelte';
+	import SettingsNav from '$core/settings/SettingsNav.svelte';
+	import { sectionLabelFromPath } from '$core/settings/data';
+	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
+	import Ceremonies from '$core/settings/ceremonies/Ceremonies.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
+	import { ensureAccountData } from '$core/stores/accountData';
+	import { preferences } from '$core/stores/preferences.svelte';
+	import { auth } from '$core/stores/auth.svelte';
 
 	let { children, data } = $props();
 

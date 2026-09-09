@@ -3,17 +3,17 @@
 	import { platform } from '$platform';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import AuthShell from '$lib/auth/AuthShell.svelte';
-	import PlanStep from '$lib/auth/PlanStep.svelte';
-	import { findPlan, planLabelFor, selectionForCode, type PlanSelection } from '$lib/auth/plans';
+	import AuthShell from '$core/auth/AuthShell.svelte';
+	import PlanStep from '$core/auth/PlanStep.svelte';
+	import { findPlan, planLabelFor, selectionForCode, type PlanSelection } from '$core/auth/plans';
 	import { changePlan, createCheckoutSession, type PlanCode } from '$core/api/billing';
-	import { billing } from '$lib/stores/billing.svelte';
-	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import { auth } from '$lib/stores/auth.svelte';
+	import { billing } from '$core/stores/billing.svelte';
+	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { auth } from '$core/stores/auth.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Mail from '@lucide/svelte/icons/mail';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '$core/components/ui/button';
 
 	let { data } = $props();
 

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import AgendaView from '$lib/calendar/agenda/AgendaView.svelte';
-	import AvailabilityView from '$lib/calendar/availability/AvailabilityView.svelte';
-	import MonthView from '$lib/calendar/month/MonthView.svelte';
-	import WeekView from '$lib/calendar/week/WeekView.svelte';
-	import { cal } from '$lib/calendar/state.svelte';
+	import AgendaView from '$core/calendar/agenda/AgendaView.svelte';
+	import AvailabilityView from '$core/calendar/availability/AvailabilityView.svelte';
+	import MonthView from '$core/calendar/month/MonthView.svelte';
+	import WeekView from '$core/calendar/week/WeekView.svelte';
+	import { cal } from '$core/calendar/state.svelte';
 </script>
 
 <svelte:head><title>Thelemail — Calendar</title></svelte:head>
@@ -17,7 +17,7 @@
 {:else if cal.view === 'avail'}
 	<AvailabilityView />
 {:else if cal.view === 'booking' && import.meta.env.DEV}
-	{#await import('$lib/calendar/preview/booking/BookingView.svelte') then mod}
+	{#await import('$core/calendar/preview/booking/BookingView.svelte') then mod}
 		<mod.default />
 	{/await}
 {/if}

@@ -5,14 +5,14 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import X from '@lucide/svelte/icons/x';
-	import Avatar from '$lib/components/Avatar.svelte';
-	import RemoveAccountDialog from '$lib/mail/RemoveAccountDialog.svelte';
-	import { initialsFor } from '$lib/mail/initials';
+	import Avatar from '$core/components/Avatar.svelte';
+	import RemoveAccountDialog from '$core/mail/RemoveAccountDialog.svelte';
+	import { initialsFor } from '$core/mail/initials';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { accounts } from '$lib/stores/accounts.svelte';
+	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
 	import { page } from '$app/state';
-	import { resolveReturnTo } from '$lib/auth/return-to';
+	import { resolveReturnTo } from '$core/auth/return-to';
 
 	const returnTo = $derived(page.url.searchParams.get('redirect'));
 	const moreQuery = $derived(

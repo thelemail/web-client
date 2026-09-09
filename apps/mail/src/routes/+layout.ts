@@ -1,6 +1,6 @@
-import { auth } from '$lib/stores/auth.svelte';
-import { accounts } from '$lib/stores/accounts.svelte';
-import { boot } from '$lib/stores/boot.svelte';
+import { auth } from '$core/stores/auth.svelte';
+import { accounts } from '$core/stores/accounts.svelte';
+import { boot } from '$core/stores/boot.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { platform } from '$platform';
 

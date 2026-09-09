@@ -2,9 +2,9 @@
 	import './layout.css';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import favicon from '$lib/assets/favicon.svg';
-	import { accounts } from '$lib/stores/accounts.svelte';
-	import { auth } from '$lib/stores/auth.svelte';
+	import favicon from '$core/assets/favicon.svg';
+	import { accounts } from '$core/stores/accounts.svelte';
+	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
 	import type { NotificationTarget } from '$core/platform/types';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import PasswordField from '$lib/auth/PasswordField.svelte';
+	import PasswordField from '$core/auth/PasswordField.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import KeyRound from '@lucide/svelte/icons/key-round';
@@ -18,13 +18,13 @@
 		TwoFactorExpiredError,
 		TwoFactorRejectedError,
 		type PendingTwoFactorLogin
-	} from '$lib/auth/perform-login';
-	import TwoFactorChallenge from '$lib/auth/TwoFactorChallenge.svelte';
-	import { isWebauthnCancelled } from '$lib/auth/webauthn';
-	import { resolveReturnTo } from '$lib/auth/return-to';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { accounts } from '$lib/stores/accounts.svelte';
-	import { Button } from '$lib/components/ui/button';
+	} from '$core/auth/perform-login';
+	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
+	import { isWebauthnCancelled } from '$core/auth/webauthn';
+	import { resolveReturnTo } from '$core/auth/return-to';
+	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
+	import { Button } from '$core/components/ui/button';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const returnTo = $derived(page.url.searchParams.get('redirect'));

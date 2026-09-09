@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import LcShell from '$lib/lifecycle/LcShell.svelte';
-	import ExpiryScreen from '$lib/lifecycle/ExpiryScreen.svelte';
-	import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
+	import LcShell from '$core/lifecycle/LcShell.svelte';
+	import ExpiryScreen from '$core/lifecycle/ExpiryScreen.svelte';
+	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 
 	let { data } = $props();
 	const slot = $derived(data.slot);

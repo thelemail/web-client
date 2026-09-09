@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Profile from '$lib/settings/sections/Profile.svelte';
-	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
-	import { auth } from '$lib/stores/auth.svelte';
+	import Profile from '$core/settings/sections/Profile.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
+	import { auth } from '$core/stores/auth.svelte';
 </script>
 
 <svelte:head><title>Thelemail — Profile</title></svelte:head>

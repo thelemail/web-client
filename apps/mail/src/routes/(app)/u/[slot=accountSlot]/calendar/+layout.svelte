@@ -1,22 +1,22 @@
 <script lang="ts">
-	import '$lib/calendar/calendar.css';
+	import '$core/calendar/calendar.css';
 	import { onMount } from 'svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import Toast from '$lib/components/Toast.svelte';
-	import ReadOnlyGuard from '$lib/lifecycle/ReadOnlyGuard.svelte';
-	import SyncQueueDialog from '$lib/calendar/dialogs/SyncQueueDialog.svelte';
-	import CalRail from '$lib/calendar/rail/CalRail.svelte';
-	import SystemBar from '$lib/calendar/SystemBar.svelte';
-	import TasksPane from '$lib/calendar/tasks/TasksPane.svelte';
-	import TopBar from '$lib/calendar/TopBar.svelte';
-	import { takePending } from '$lib/calendar/entry';
-	import { observeNewMessage } from '$lib/calendar/entry';
-	import { startReminders } from '$lib/calendar/reminders';
-	import { cal } from '$lib/calendar/state.svelte';
-	import { calendarStore } from '$lib/calendar/store.svelte';
-	import { ensureAccountData } from '$lib/stores/accountData';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { calendarKeys } from '$lib/stores/calendarKeys.svelte';
+	import * as Dialog from '$core/components/ui/dialog';
+	import Toast from '$core/components/Toast.svelte';
+	import ReadOnlyGuard from '$core/lifecycle/ReadOnlyGuard.svelte';
+	import SyncQueueDialog from '$core/calendar/dialogs/SyncQueueDialog.svelte';
+	import CalRail from '$core/calendar/rail/CalRail.svelte';
+	import SystemBar from '$core/calendar/SystemBar.svelte';
+	import TasksPane from '$core/calendar/tasks/TasksPane.svelte';
+	import TopBar from '$core/calendar/TopBar.svelte';
+	import { takePending } from '$core/calendar/entry';
+	import { observeNewMessage } from '$core/calendar/entry';
+	import { startReminders } from '$core/calendar/reminders';
+	import { cal } from '$core/calendar/state.svelte';
+	import { calendarStore } from '$core/calendar/store.svelte';
+	import { ensureAccountData } from '$core/stores/accountData';
+	import { auth } from '$core/stores/auth.svelte';
+	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 
 	let { children } = $props();
 
@@ -142,29 +142,29 @@
 	}}
 >
 	{#if cal.dialog === 'mail' && import.meta.env.DEV}
-		{#await import('$lib/calendar/preview/dialogs/MailCommitmentsDialog.svelte') then mod}
+		{#await import('$core/calendar/preview/dialogs/MailCommitmentsDialog.svelte') then mod}
 			<mod.default />
 		{/await}
 	{:else if cal.dialog === 'offer' && import.meta.env.DEV}
-		{#await import('$lib/calendar/preview/dialogs/OfferTimesDialog.svelte') then mod}
+		{#await import('$core/calendar/preview/dialogs/OfferTimesDialog.svelte') then mod}
 			<mod.default />
 		{/await}
 	{:else if cal.dialog === 'sync'}
 		<SyncQueueDialog />
 	{:else if cal.dialog === 'editor' && cal.editor}
-		{#await import('$lib/calendar/dialogs/ItemEditorDialog.svelte') then mod}
+		{#await import('$core/calendar/dialogs/ItemEditorDialog.svelte') then mod}
 			<mod.default request={cal.editor} />
 		{/await}
 	{:else if cal.dialog === 'calendar' && cal.calendarDialog}
-		{#await import('$lib/calendar/dialogs/CalendarDialog.svelte') then mod}
+		{#await import('$core/calendar/dialogs/CalendarDialog.svelte') then mod}
 			<mod.default request={cal.calendarDialog} />
 		{/await}
 	{:else if cal.dialog === 'history' && cal.history}
-		{#await import('$lib/calendar/dialogs/HistoryDialog.svelte') then mod}
+		{#await import('$core/calendar/dialogs/HistoryDialog.svelte') then mod}
 			<mod.default request={cal.history} />
 		{/await}
 	{:else if cal.dialog === 'scope' && cal.scope}
-		{#await import('$lib/calendar/dialogs/RecurrenceScopeDialog.svelte') then mod}
+		{#await import('$core/calendar/dialogs/RecurrenceScopeDialog.svelte') then mod}
 			<mod.default request={cal.scope} />
 		{/await}
 	{/if}

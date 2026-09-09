@@ -1,9 +1,9 @@
 import { redirect } from '@sveltejs/kit';
-import { auth } from '$lib/stores/auth.svelte';
-import { accounts } from '$lib/stores/accounts.svelte';
+import { auth } from '$core/stores/auth.svelte';
+import { accounts } from '$core/stores/accounts.svelte';
 import { keystore } from '$core/keystore/keystore-client';
-import { billing } from '$lib/stores/billing.svelte';
-import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
+import { billing } from '$core/stores/billing.svelte';
+import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 import type { LayoutLoad } from './$types';
 
 export const ssr = false;

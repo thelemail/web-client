@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AuthShell from '$lib/auth/AuthShell.svelte';
+	import AuthShell from '$core/auth/AuthShell.svelte';
 
 	let { children } = $props();
 </script>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import AuthShell from '$lib/auth/AuthShell.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import AuthShell from '$core/auth/AuthShell.svelte';
+	import { Button } from '$core/components/ui/button';
 
 	const status = $derived(page.status);
 	const message = $derived(page.error?.message ?? 'Something went wrong loading this page.');

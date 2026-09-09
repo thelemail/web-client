@@ -1,0 +1,188 @@
+import { lookupAccount } from '$core/api/accounts';
+import { acceptExternalKey, lookupExternalKey } from '$core/api/externalKeys';
+import { getMyWorkspace } from '$core/api/workspaces';
+import { ApiCallError, type ExternalKeyTrust } from '$core/api/types';
+import {
+	verifyDirectoryLookup,
+	DirectoryVerificationError,
+	type DirectoryStatement,
+	type TlogOutcome
+} from '$core/directory/verify';
+import { verifyDelegation } from '$core/directory/delegation';
+import type {
+	DirectoryVerificationCode,
+	DirectoryVerificationDetails
+} from '$core/directory/errors';
+
+export interface DirectoryTrust {
+	ok: boolean;
+	missing?: boolean;
+	statement?: DirectoryStatement;
+	publicKeyArmored?: string;
+	firstContact: boolean;
+	sameWorkspace: boolean;
+	verifiedAtMillis?: number;
+	tlog: TlogOutcome;
+	code?: DirectoryVerificationCode;
+	details?: DirectoryVerificationDetails;
+}
+
+export interface DelegatedSignerTrust {
+	label: string;
+	address: string;
+	revokedAt?: string | null;
+}
+
+export interface ExternalKeyState {
+	status: ExternalKeyTrust['status'];
+	fingerprint?: string;
+	source?: ExternalKeyTrust['source'];
+	armoredKey?: string;
+	firstSeenAtMillis?: number;
+}
+
+const TRUST_TTL_MS = 2 * 60 * 1000;
+
+const directoryCache = new Map<string, { value: DirectoryTrust; at: number }>();
+const delegationCache = new Map<string, { value: DelegatedSignerTrust | null; at: number }>();
+const externalCache = new Map<string, { value: ExternalKeyState | null; at: number }>();
+
+let workspaceCache: { accountId: string; id: string | null } | null = null;
+
+async function ownWorkspaceId(accountId: string): Promise<string | null> {
+	if (workspaceCache?.accountId === accountId) return workspaceCache.id;
+	try {
+		const ws = await getMyWorkspace();
+		workspaceCache = { accountId, id: ws.id };
+	} catch {
+		return null;
+	}
+	return workspaceCache.id;
+}
+
+export async function directoryTrust(
+	accountId: string,
+	senderAddress: string,
+	opts: { acceptKeyChange?: boolean } = {}
+): Promise<DirectoryTrust | null> {
+	const address = senderAddress.trim().toLowerCase();
+	if (!address) return null;
+	const key = `${accountId}:${address}`;
+	if (!opts.acceptKeyChange) {
+		const hit = directoryCache.get(key);
+		if (hit && Date.now() - hit.at < TRUST_TTL_MS) return hit.value;
+	}
+	let value: DirectoryTrust;
+	try {
+		const lookup = await lookupAccount(address);
+		const res = await verifyDirectoryLookup(lookup, address, opts);
+		const mine = await ownWorkspaceId(accountId);
+		value = {
+			ok: true,
+			statement: res.statement,
+			publicKeyArmored: res.publicKeyArmored,
+			firstContact: res.firstContact,
+			sameWorkspace: Boolean(lookup.workspaceId && lookup.workspaceId === mine),
+			verifiedAtMillis: res.verifiedAt.getTime(),
+			tlog: res.tlog
+		};
+	} catch (e) {
+		if (e instanceof ApiCallError && e.status === 404) {
+			value = {
+				ok: false,
+				missing: true,
+				firstContact: false,
+				sameWorkspace: false,
+				tlog: { state: 'not_configured' }
+			};
+		} else if (e instanceof DirectoryVerificationError) {
+			value = {
+				ok: false,
+				firstContact: false,
+				sameWorkspace: false,
+				tlog: { state: 'not_configured' },
+				code: e.code,
+				details: e.details
+			};
+		} else {
+			return null;
+		}
+	}
+	directoryCache.set(key, { value, at: Date.now() });
+	return value;
+}
+
+export async function externalKeyState(senderAddress: string): Promise<ExternalKeyState | null> {
+	const address = senderAddress.trim().toLowerCase();
+	if (!address) return null;
+	const hit = externalCache.get(address);
+	if (hit && Date.now() - hit.at < TRUST_TTL_MS) return hit.value;
+	let value: ExternalKeyState | null;
+	try {
+		const trust = await lookupExternalKey(address);
+		value = {
+			status: trust.status,
+			fingerprint: trust.fingerprint,
+			source: trust.source,
+			armoredKey: trust.armoredKey,
+			firstSeenAtMillis: trust.firstSeenAt ? Date.parse(trust.firstSeenAt) : undefined
+		};
+	} catch {
+		value = null;
+	}
+	externalCache.set(address, { value, at: Date.now() });
+	return value;
+}
+
+export function forgetSenderTrust(senderAddress: string): void {
+	const address = senderAddress.trim().toLowerCase();
+	for (const key of [...directoryCache.keys()]) {
+		if (key.endsWith(`:${address}`)) directoryCache.delete(key);
+	}
+	externalCache.delete(address);
+}
+
+export async function acceptSenderKeyChange(
+	accountId: string,
+	senderAddress: string
+): Promise<void> {
+	const address = senderAddress.trim().toLowerCase();
+	if (!address) return;
+	forgetSenderTrust(address);
+	const external = await externalKeyState(address);
+	if (external?.status === 'changed' && external.fingerprint) {
+		await acceptExternalKey(address, external.fingerprint);
+		externalCache.delete(address);
+		return;
+	}
+	await directoryTrust(accountId, address, { acceptKeyChange: true });
+}
+
+export async function delegatedSignerTrust(
+	senderAddress: string,
+	delegationId: string
+): Promise<DelegatedSignerTrust | null> {
+	const address = senderAddress.trim().toLowerCase();
+	if (!address || !delegationId) return null;
+	const key = `${address}:${delegationId}`;
+	const hit = delegationCache.get(key);
+	if (hit && Date.now() - hit.at < TRUST_TTL_MS) return hit.value;
+
+	let value: DelegatedSignerTrust | null = null;
+	try {
+		const lookup = await lookupAccount(address);
+		const match = lookup.delegations?.find((d) => d.id === delegationId);
+		if (match) {
+			const statement = await verifyDelegation(match, address);
+			value = {
+				label: statement.label,
+				address: statement.address,
+				revokedAt: statement.revokedAt
+			};
+		}
+	} catch {
+		value = null;
+	}
+	delegationCache.set(key, { value, at: Date.now() });
+	return value;
+}

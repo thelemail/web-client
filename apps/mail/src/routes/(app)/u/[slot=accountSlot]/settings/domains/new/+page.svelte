@@ -7,15 +7,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import Card from '$lib/settings/Card.svelte';
-	import SecHead from '$lib/settings/SecHead.svelte';
-	import { settingsPageTitle } from '$lib/settings/pageTitle.svelte';
-	import { customDomains } from '$lib/stores/customDomains.svelte';
-	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import { billing } from '$lib/stores/billing.svelte';
-	import UpgradeNudge from '$lib/settings/UpgradeNudge.svelte';
-	import { resumeStep } from '$lib/settings/domains/steps';
-	import { Button } from '$lib/components/ui/button';
+	import Card from '$core/settings/Card.svelte';
+	import SecHead from '$core/settings/SecHead.svelte';
+	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
+	import { customDomains } from '$core/stores/customDomains.svelte';
+	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { billing } from '$core/stores/billing.svelte';
+	import UpgradeNudge from '$core/settings/UpgradeNudge.svelte';
+	import { resumeStep } from '$core/settings/domains/steps';
+	import { Button } from '$core/components/ui/button';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);

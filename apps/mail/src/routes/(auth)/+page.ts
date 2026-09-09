@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
-import { accounts } from '$lib/stores/accounts.svelte';
-import { resolveReturnTo } from '$lib/auth/return-to';
+import { accounts } from '$core/stores/accounts.svelte';
+import { resolveReturnTo } from '$core/auth/return-to';
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async ({ parent, url }) => {

@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
-	import { realtime } from '$lib/realtime/realtime.svelte';
-	import { accounts } from '$lib/stores/accounts.svelte';
+	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
+	import { realtime } from '$core/realtime/realtime.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { auth } from '$lib/stores/auth.svelte';
+	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
-	import MirrorScopePrompt from '$lib/mail/MirrorScopePrompt.svelte';
-	import { mailbox } from '$lib/stores/mailbox.svelte';
-	import { mailSearch } from '$lib/stores/search.svelte';
+	import MirrorScopePrompt from '$core/mail/MirrorScopePrompt.svelte';
+	import { mailbox } from '$core/stores/mailbox.svelte';
+	import { mailSearch } from '$core/stores/search.svelte';
 
 	let { children, data } = $props();
 

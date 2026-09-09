@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Reading from '$lib/settings/sections/Reading.svelte';
-	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
+	import Reading from '$core/settings/sections/Reading.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 </script>
 
 <svelte:head><title>Thelemail — Reading & behaviour</title></svelte:head>

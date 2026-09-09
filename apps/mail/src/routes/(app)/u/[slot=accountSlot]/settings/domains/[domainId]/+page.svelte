@@ -4,13 +4,13 @@
 	import { replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import DomainWizard from '$lib/settings/domains/DomainWizard.svelte';
-	import SecHead from '$lib/settings/SecHead.svelte';
-	import { settingsPageTitle } from '$lib/settings/pageTitle.svelte';
-	import { isDomainStep, resumeStep, type DomainStep } from '$lib/settings/domains/steps';
-	import { customDomains } from '$lib/stores/customDomains.svelte';
-	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import DomainWizard from '$core/settings/domains/DomainWizard.svelte';
+	import SecHead from '$core/settings/SecHead.svelte';
+	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
+	import { isDomainStep, resumeStep, type DomainStep } from '$core/settings/domains/steps';
+	import { customDomains } from '$core/stores/customDomains.svelte';
+	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { Button } from '$core/components/ui/button';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);

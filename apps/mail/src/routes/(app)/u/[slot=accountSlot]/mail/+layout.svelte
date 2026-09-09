@@ -1,18 +1,18 @@
 <script lang="ts">
 	import './mail.css';
-	import Sidebar from '$lib/mail/Sidebar.svelte';
-	import { mailbox } from '$lib/stores/mailbox.svelte';
-	import { drafts } from '$lib/stores/drafts.svelte';
-	import { scheduled } from '$lib/stores/scheduled.svelte';
-	import { composeStore } from '$lib/stores/compose.svelte';
-	import { mailNav } from '$lib/stores/nav.svelte';
-	import { preferences } from '$lib/stores/preferences.svelte';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { ensureAccountData } from '$lib/stores/accountData';
-	import { DEFAULT_QUERY } from '$lib/mail/url';
-	import '$lib/lifecycle/lifecycle.css';
-	import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
-	import ReadOnlyGuard from '$lib/lifecycle/ReadOnlyGuard.svelte';
+	import Sidebar from '$core/mail/Sidebar.svelte';
+	import { mailbox } from '$core/stores/mailbox.svelte';
+	import { drafts } from '$core/stores/drafts.svelte';
+	import { scheduled } from '$core/stores/scheduled.svelte';
+	import { composeStore } from '$core/stores/compose.svelte';
+	import { mailNav } from '$core/stores/nav.svelte';
+	import { preferences } from '$core/stores/preferences.svelte';
+	import { auth } from '$core/stores/auth.svelte';
+	import { ensureAccountData } from '$core/stores/accountData';
+	import { DEFAULT_QUERY } from '$core/mail/url';
+	import '$core/lifecycle/lifecycle.css';
+	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
+	import ReadOnlyGuard from '$core/lifecycle/ReadOnlyGuard.svelte';
 
 	let { children, data } = $props();
 

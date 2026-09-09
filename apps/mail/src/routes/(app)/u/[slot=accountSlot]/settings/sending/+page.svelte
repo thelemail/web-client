@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Sending from '$lib/settings/sections/Sending.svelte';
-	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
+	import Sending from '$core/settings/sections/Sending.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 </script>
 
 <svelte:head><title>Thelemail — Composing & sending</title></svelte:head>

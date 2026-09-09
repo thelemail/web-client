@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import AuthShell from '$lib/auth/AuthShell.svelte';
+	import AuthShell from '$core/auth/AuthShell.svelte';
 	import { cancelDeletion } from '$core/api/deletion';
-	import { auth } from '$lib/stores/auth.svelte';
-	import { accounts } from '$lib/stores/accounts.svelte';
+	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import LogOut from '@lucide/svelte/icons/log-out';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '$core/components/ui/button';
 
 	let { data } = $props();
 

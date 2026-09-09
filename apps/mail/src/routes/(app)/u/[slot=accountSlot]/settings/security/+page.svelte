@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Security from '$lib/settings/sections/Security.svelte';
-	import { settingsDraft } from '$lib/stores/settingsDraft.svelte';
+	import Security from '$core/settings/sections/Security.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 </script>
 
 <svelte:head><title>Thelemail — Security & privacy</title></svelte:head>

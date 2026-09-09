@@ -1,7 +1,7 @@
 <script lang="ts">
-	import LcShell from '$lib/lifecycle/LcShell.svelte';
-	import ExportCenter from '$lib/lifecycle/ExportCenter.svelte';
-	import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
+	import LcShell from '$core/lifecycle/LcShell.svelte';
+	import ExportCenter from '$core/lifecycle/ExportCenter.svelte';
+	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 
 	let { data } = $props();
 	const slot = $derived(data.slot);

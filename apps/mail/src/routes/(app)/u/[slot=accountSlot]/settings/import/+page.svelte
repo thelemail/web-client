@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Import from '$lib/settings/sections/Import.svelte';
+	import Import from '$core/settings/sections/Import.svelte';
 </script>
 
 <svelte:head><title>Thelemail — Import</title></svelte:head>
