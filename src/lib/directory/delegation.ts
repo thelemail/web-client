@@ -38,11 +38,6 @@ export interface DelegationForVerification {
 	statementSignature?: string;
 }
 
-/**
- * Verifies that the operator signed this delegation for the address being
- * looked up, and that the published certificate is the one the statement names
- * and cannot be used to encrypt.
- */
 export async function verifyDelegation(
 	delegation: DelegationForVerification,
 	requestedAddress: string

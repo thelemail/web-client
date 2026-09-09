@@ -158,11 +158,6 @@ export async function acceptSenderKeyChange(
 	await directoryTrust(accountId, address, { acceptKeyChange: true });
 }
 
-/**
- * Resolves the service that signed a message, verifying the operator's signed
- * delegation statement against the pinned directory key rather than trusting
- * the server's word for which key was authorized.
- */
 export async function delegatedSignerTrust(
 	senderAddress: string,
 	delegationId: string

@@ -18,9 +18,6 @@ const statement: DelegationStatement = {
 	version: 1
 };
 
-// Byte-for-byte fixture shared with the Go canonicaliser in
-// platform/internal/pkg/dirsign/delegation_test.go. If these ever diverge, a
-// statement signed by the server stops verifying in the browser.
 const GO_CANONICAL =
 	'{"accountId":"11111111-2222-3333-4444-555555555555",' +
 	'"address":"billing@example.com",' +
