@@ -773,10 +773,11 @@ export type SealProductForkResponse =
 
 export interface OpenProductForkArgs {
 	product: string;
+	accountId: string;
 	payload: string;
 	key: string;
 }
 
 export type OpenProductForkResponse =
 	| { ok: true; accountId: string; email: string; keyCount: number }
-	| { ok: false; code: 'invalid_payload' | 'wrong_product' };
+	| { ok: false; code: 'invalid_payload' | 'wrong_product' | 'wrong_account' };

@@ -2498,6 +2498,10 @@ interface ForkPayload {
 	}[];
 }
 
+function forkAad(product: string, accountId: string): BufferSource {
+	return new TextEncoder().encode(`${product}:${accountId}`) as BufferSource;
+}
+
 async function forkKey(raw: Uint8Array): Promise<CryptoKey> {
 	return crypto.subtle.importKey('raw', raw as BufferSource, { name: 'AES-GCM' }, false, [
 		'encrypt',
@@ -2548,7 +2552,11 @@ async function handleSealProductFork(args: SealProductForkArgs): Promise<SealPro
 	const key = await forkKey(raw);
 	const ciphertext = new Uint8Array(
 		await crypto.subtle.encrypt(
-			{ name: 'AES-GCM', iv: iv as BufferSource, additionalData: new TextEncoder().encode(args.product) as BufferSource },
+			{
+				name: 'AES-GCM',
+				iv: iv as BufferSource,
+				additionalData: forkAad(args.product, args.accountId)
+			},
 			key,
 			new TextEncoder().encode(JSON.stringify(payload)) as BufferSource
 		)
@@ -2571,7 +2579,11 @@ async function handleOpenProductFork(args: OpenProductForkArgs): Promise<OpenPro
 		const key = await forkKey(raw);
 		const plaintext = new Uint8Array(
 			await crypto.subtle.decrypt(
-				{ name: 'AES-GCM', iv: iv as BufferSource, additionalData: new TextEncoder().encode(args.product) as BufferSource },
+				{
+					name: 'AES-GCM',
+					iv: iv as BufferSource,
+					additionalData: forkAad(args.product, args.accountId)
+				},
 				key,
 				ciphertext as BufferSource
 			)
@@ -2585,6 +2597,7 @@ async function handleOpenProductFork(args: OpenProductForkArgs): Promise<OpenPro
 	}
 	if (payload.v !== FORK_PAYLOAD_VERSION) return { ok: false, code: 'invalid_payload' };
 	if (payload.product !== args.product) return { ok: false, code: 'wrong_product' };
+	if (payload.accountId !== args.accountId) return { ok: false, code: 'wrong_account' };
 	if (!payload.keys.length) return { ok: false, code: 'invalid_payload' };
 
 	const aliasKeys = new Map<string, AliasKeyEntry>();
@@ -2609,20 +2622,20 @@ async function handleOpenProductFork(args: OpenProductForkArgs): Promise<OpenPro
 	if (!primary) return { ok: false, code: 'invalid_payload' };
 
 	const state: VaultState = {
-		accountId: payload.accountId,
+		accountId: args.accountId,
 		email: payload.email,
 		authScheme: 'opaque_v1',
 		armoredEncryptedPrivateKey: '',
 		privateKey: primary,
-		keyPassword: `${args.product}:${payload.accountId}`,
+		keyPassword: `${args.product}:${args.accountId}`,
 		aliasKeys,
 		aliasCurrent: new Map()
 	};
 	recomputeAliasCurrent(state);
-	vaults.set(payload.accountId, state);
-	indexKeys.delete(payload.accountId);
-	broadcast({ type: 'vaultChanged', accountId: payload.accountId, email: payload.email });
-	return { ok: true, accountId: payload.accountId, email: payload.email, keyCount: aliasKeys.size };
+	vaults.set(args.accountId, state);
+	indexKeys.delete(args.accountId);
+	broadcast({ type: 'vaultChanged', accountId: args.accountId, email: payload.email });
+	return { ok: true, accountId: args.accountId, email: payload.email, keyCount: aliasKeys.size };
 }
 
 async function dispatch(port: MessagePort, msg: RequestMessage) {

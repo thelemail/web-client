@@ -57,6 +57,7 @@ export async function adoptFork(fragment: string): Promise<AdoptedFork> {
 	}
 	const opened = await keystore.openProductFork({
 		product: currentProduct,
+		accountId: res.accountId,
 		payload: res.payload,
 		key
 	});
