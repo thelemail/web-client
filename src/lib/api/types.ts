@@ -1,3 +1,4 @@
+import type { SigningDelegation } from './delegations';
 import type { PlanCode } from './billing';
 
 export type ErrorCode =
@@ -70,6 +71,7 @@ export interface MessageListItem {
 	encrypted?: boolean;
 	signatureStatus?: SignatureStatus;
 	signerKeyFingerprint?: string;
+	signerDelegationId?: string;
 	schemaVersion: number;
 	mailboxState: MailboxState;
 	starred: boolean;
@@ -129,6 +131,7 @@ export interface MessageDetail {
 	encrypted?: boolean;
 	signatureStatus?: SignatureStatus;
 	signerKeyFingerprint?: string;
+	signerDelegationId?: string;
 	schemaVersion: number;
 	body: PresignedPointer;
 	attachments: AttachmentDetail[];
@@ -988,6 +991,7 @@ export interface AccountLookupResponse {
 	directoryStatement: DirectoryStatementWire;
 	directorySignature: string;
 	tlogProof?: string;
+	delegations?: SigningDelegation[];
 }
 
 export interface AddressAvatar {

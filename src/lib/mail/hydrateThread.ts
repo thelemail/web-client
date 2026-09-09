@@ -8,7 +8,7 @@ import {
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { isOfficialAddress, OFFICIAL_KEYS_ARMORED } from '$lib/directory/official';
 import { officialFacts } from './officialSender';
-import { directoryTrust, externalKeyState } from '$lib/mail/senderVerify';
+import { delegatedSignerTrust, directoryTrust, externalKeyState } from '$lib/mail/senderVerify';
 import { deriveTrust, type TrustFacts } from '$lib/mail/trust';
 import { renderBody, type RenderResult } from '$lib/mail/render';
 import type { SignatureVerdict } from '$lib/keystore/protocol';
@@ -118,6 +118,11 @@ async function hydrateEntry(
 				? await externalKeyState(senderAddress).catch(() => null)
 				: null;
 
+		const delegatedSigner =
+			!me && item.signerDelegationId && item.signatureStatus === 'verified' && senderAddress
+				? await delegatedSignerTrust(senderAddress, item.signerDelegationId).catch(() => null)
+				: null;
+
 		const facts: TrustFacts = {
 			channel: item.source,
 			senderAddress,
@@ -128,6 +133,7 @@ async function hydrateEntry(
 			domainAuth: authSummaryFromPreview(preview),
 			domainAuthState: authStateFromPreview(preview),
 			official: officialFacts({ senderAddress, channel: item.source, signature, signedMime }),
+			delegatedSigner,
 			nowMillis: Date.now()
 		};
 		const trust = me ? undefined : deriveTrust(facts);

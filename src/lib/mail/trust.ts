@@ -2,12 +2,14 @@ import type { SignatureVerdict } from '$lib/keystore/protocol';
 import type { DirectoryTrust, ExternalKeyState } from './senderVerify';
 import type { AuthState, MessagePreviewAuth } from './preview';
 import type { OfficialFacts } from './officialSender';
+import type { DelegatedSignerTrust } from './senderVerify';
 import { formatFingerprintHex, formatVerifiedAt } from '$lib/directory/format';
 
 export type TrustTier =
 	| 'official'
 	| 'verified'
 	| 'encrypted'
+	| 'delegated'
 	| 'authenticated'
 	| 'none'
 	| 'attention'
@@ -50,6 +52,7 @@ export interface TrustFacts {
 	domainAuth?: MessagePreviewAuth;
 	domainAuthState?: AuthState;
 	official?: OfficialFacts;
+	delegatedSigner?: DelegatedSignerTrust | null;
 	nowMillis: number;
 }
 
@@ -554,7 +557,13 @@ function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 	];
 }
 
-const GREEN_TIERS = new Set<TrustTier>(['official', 'verified', 'encrypted', 'authenticated']);
+const GREEN_TIERS = new Set<TrustTier>([
+	'official',
+	'verified',
+	'encrypted',
+	'delegated',
+	'authenticated'
+]);
 
 function clamp(trust: MessageTrust): MessageTrust {
 	if (!GREEN_TIERS.has(trust.tier)) return trust;
@@ -564,6 +573,31 @@ function clamp(trust: MessageTrust): MessageTrust {
 
 export function deriveTrust(facts: TrustFacts): MessageTrust {
 	return clamp(derive(facts));
+}
+
+function delegatedChecks(facts: TrustFacts): TrustCheck[] {
+	const signer = facts.delegatedSigner;
+	return [
+		{
+			id: 'delegation',
+			state: signer ? 'pass' : 'fail',
+			label: signer
+				? `${signer.label} is authorized to sign for this address`
+				: 'No authorization found for this signer',
+			explain:
+				'The address owner published a signed statement naming this key. This app checked that statement against the directory key it carries, so the server cannot invent a signer.',
+			rows: signer ? [{ label: 'Service', value: signer.label }] : []
+		},
+		{
+			id: 'delegation-scope',
+			state: 'pass',
+			label: 'The service cannot read mail for this address',
+			explain:
+				'A delegated key can only sign. It carries no encryption key, so nothing addressed to this mailbox can be opened with it.',
+			rows: []
+		},
+		...externalAuthChecks(facts)
+	];
 }
 
 function officialChecks(facts: TrustFacts): TrustCheck[] {
@@ -764,6 +798,17 @@ function derive(facts: TrustFacts): MessageTrust {
 				: dir?.verifiedAtMillis
 					? `Verified on this device · ${relativeTime(dir.verifiedAtMillis, facts.nowMillis)}`
 					: undefined
+		};
+	}
+
+	if (facts.delegatedSigner) {
+		return {
+			...base,
+			tier: 'delegated',
+			label: 'Signed by an authorized service',
+			headline: `Signed by ${facts.delegatedSigner.label}`,
+			checks: delegatedChecks(facts),
+			footnote: `${domainOf(facts.senderAddress)} authorized this service to sign as ${facts.senderAddress}. It cannot read mail sent to that address.`
 		};
 	}
 

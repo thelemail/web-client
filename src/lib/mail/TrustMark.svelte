@@ -26,6 +26,7 @@
 		official: BadgeCheck,
 		verified: ShieldCheck,
 		encrypted: Lock,
+		delegated: BadgeCheck,
 		authenticated: CircleCheck,
 		none: CircleDashed,
 		attention: KeyRound,
@@ -229,6 +230,11 @@
 		background: var(--success-100);
 		color: var(--success-700);
 		border-color: color-mix(in oklab, var(--success-500) 22%, transparent);
+	}
+	.tmark[data-tier='delegated'] {
+		background: var(--success-100);
+		color: var(--success-700);
+		border-color: color-mix(in oklab, var(--success-500) 30%, transparent);
 	}
 	.tmark[data-tier='authenticated'] {
 		color: var(--success-700);

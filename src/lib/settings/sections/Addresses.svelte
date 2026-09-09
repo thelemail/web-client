@@ -21,6 +21,7 @@
 	import { canManageWorkspace } from '../permissions';
 	import { SHARED_DOMAIN } from '../entitlements';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
+	import DelegationsCard from '../delegations/DelegationsCard.svelte';
 	import type { SharedAlias } from '$lib/api/aliases';
 
 	interface Props {
@@ -36,6 +37,7 @@
 	let renameError = $state<string | null>(null);
 
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
+	const delegable = $derived(addresses.personal.filter((a) => Boolean(a.customDomainId)));
 	const manage = $derived(canManageWorkspace());
 	const sharedList = $derived<SharedAlias[]>(manage ? aliases.items : []);
 	const canAddMore = $derived(
@@ -269,6 +271,10 @@
 		<div class="alias-row"><div class="alias-info"><div class="alias-addr err">{aliases.error}</div></div></div>
 	{/if}
 </div>
+
+{#each delegable as a (a.id)}
+	<DelegationsCard address={a} />
+{/each}
 
 {#if showCatchAll}
 	<CatchAllCard />
