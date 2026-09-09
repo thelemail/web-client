@@ -36,6 +36,6 @@ export interface UpdateKeysInput {
 	encryptedPrivateKey: string;
 }
 
-export function updateKeys(input: UpdateKeysInput): Promise<MeResponse> {
-	return apiFetch('/v1/me/keys', { method: 'PUT', body: input });
+export function updateKeys(input: UpdateKeysInput, accountId?: string): Promise<MeResponse> {
+	return apiFetch('/v1/me/keys', { method: 'PUT', body: input, accountId });
 }
