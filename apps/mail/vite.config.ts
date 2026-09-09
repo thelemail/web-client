@@ -6,6 +6,11 @@ export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	envPrefix: ['VITE_', 'PUBLIC_'],
 	envDir: '../..',
+	server: {
+		fs: {
+			allow: ['../..']
+		}
+	},
 	resolve: {
 		alias: [
 			{ find: /^core-js\/stable$/, replacement: '/src/lib/empty-module.ts' },

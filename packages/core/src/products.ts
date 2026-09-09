@@ -20,7 +20,9 @@ function parse(value: string | undefined): ProductTarget[] {
 
 const targets = parse(import.meta.env.PUBLIC_PRODUCT_ORIGINS);
 
-export const currentProduct = import.meta.env.PUBLIC_THELEMAIL_PRODUCT ?? 'app';
+export const currentProduct = import.meta.env.PUBLIC_THELEMAIL_PRODUCT || 'app';
+
+export const isProductVault = currentProduct !== 'app';
 
 export function productTarget(audience: string): ProductTarget | null {
 	return targets.find((t) => t.audience === audience) ?? null;

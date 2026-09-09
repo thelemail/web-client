@@ -79,3 +79,11 @@ describe('commandVaultModes', () => {
 		}
 	});
 });
+
+describe('vault mode selection', () => {
+	it('treats the mail app as an account vault, not a product vault', async () => {
+		const { currentProduct, isProductVault } = await import('../products');
+		expect(currentProduct).toBe('app');
+		expect(isProductVault).toBe(false);
+	});
+});

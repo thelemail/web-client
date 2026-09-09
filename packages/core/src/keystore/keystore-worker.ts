@@ -4,6 +4,7 @@ import * as openpgp from 'openpgp';
 
 import { generateDelegationKey } from '$core/keys/delegationKey';
 import { isAllowedBlobUrl } from './blobOrigins';
+import { currentProduct, isProductVault } from '../products';
 import { CryptoProxy } from '@protontech/crypto';
 import { Api as CryptoApi } from '@protontech/crypto/proxy/endpoint/api.ts';
 import {
@@ -768,8 +769,8 @@ function handleLock(args: LockArgs): void {
 }
 
 const HKDF_INFO_SEARCH_INDEX = new TextEncoder().encode(
-	import.meta.env.PUBLIC_THELEMAIL_PRODUCT
-		? `thelemail-search-index-product-v1:${import.meta.env.PUBLIC_THELEMAIL_PRODUCT}`
+	isProductVault
+		? `thelemail-search-index-product-v1:${currentProduct}`
 		: 'thelemail-search-index-v1'
 );
 
@@ -2473,7 +2474,7 @@ function respondError(port: MessagePort, id: string, error: unknown) {
 	port.postMessage(msg);
 }
 
-const VAULT_MODE: VaultMode = import.meta.env.PUBLIC_THELEMAIL_PRODUCT ? 'product' : 'account';
+const VAULT_MODE: VaultMode = isProductVault ? 'product' : 'account';
 
 function commandAllowed(cmd: KeystoreCommand): boolean {
 	const modes = commandVaultModes[cmd];
