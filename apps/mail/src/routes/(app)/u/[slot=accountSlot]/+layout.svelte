@@ -4,7 +4,7 @@
 	import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
 	import { realtime } from '$lib/realtime/realtime.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { platform } from '$platform';
 	import MirrorScopePrompt from '$lib/mail/MirrorScopePrompt.svelte';

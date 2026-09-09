@@ -28,9 +28,9 @@
 	import EditorToolbar from './editor/EditorToolbar.svelte';
 	import { SendError } from './send';
 	import { dispatchSend } from './sendDispatch';
-	import { acceptExternalKey } from '$lib/api/externalKeys';
-	import { getMessage } from '$lib/api/messages';
-	import type { MessageDetail } from '$lib/api/types';
+	import { acceptExternalKey } from '$core/api/externalKeys';
+	import { getMessage } from '$core/api/messages';
+	import type { MessageDetail } from '$core/api/types';
 	import {
 		recipientChip,
 		type Message,

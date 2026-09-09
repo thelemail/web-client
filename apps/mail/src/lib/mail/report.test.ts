@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('$lib/api/messages', () => ({
+vi.mock('$core/api/messages', () => ({
 	reportMessage: vi.fn()
 }));
 
@@ -8,8 +8,8 @@ vi.mock('./originalHeaders', () => ({
 	loadOriginalHeaders: vi.fn()
 }));
 
-import { reportMessage } from '$lib/api/messages';
-import { ApiCallError } from '$lib/api/types';
+import { reportMessage } from '$core/api/messages';
+import { ApiCallError } from '$core/api/types';
 import { loadOriginalHeaders } from './originalHeaders';
 import { buildReportRequest, submitReport } from './report';
 

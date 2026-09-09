@@ -22,7 +22,7 @@
 	import { SHARED_DOMAIN } from '../entitlements';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import DelegationsCard from '../delegations/DelegationsCard.svelte';
-	import type { SharedAlias } from '$lib/api/aliases';
+	import type { SharedAlias } from '$core/api/aliases';
 
 	interface Props {
 		s: SettingsState;

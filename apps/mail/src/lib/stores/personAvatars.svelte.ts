@@ -1,5 +1,5 @@
 import { SvelteMap } from 'svelte/reactivity';
-import { resolveAvatars } from '$lib/api/accounts';
+import { resolveAvatars } from '$core/api/accounts';
 import {
 	cachePersonAvatar,
 	hydratePersonAvatars,

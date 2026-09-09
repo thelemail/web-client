@@ -10,7 +10,7 @@
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Label } from '$lib/components/ui/label';
 	import { delegations } from '$lib/stores/delegations.svelte';
-	import type { SigningDelegation } from '$lib/api/delegations';
+	import type { SigningDelegation } from '$core/api/delegations';
 
 	interface Props {
 		delegation: SigningDelegation;

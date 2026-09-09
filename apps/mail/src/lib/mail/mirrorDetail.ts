@@ -1,5 +1,5 @@
-import type { MessageDetail, AttachmentDetail } from '$lib/api/types';
-import type { MirrorMessage } from '$lib/platform/types';
+import type { MessageDetail, AttachmentDetail } from '$core/api/types';
+import type { MirrorMessage } from '$core/platform/types';
 
 const ABSENT_POINTER = {
 	url: '',

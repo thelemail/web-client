@@ -32,7 +32,7 @@
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { canManageWorkspace } from '../permissions';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
-	import type { CustomDomain, RequiredDNSRecord } from '$lib/api/customDomains';
+	import type { CustomDomain, RequiredDNSRecord } from '$core/api/customDomains';
 	import { Button } from '$lib/components/ui/button';
 
 	interface Props {

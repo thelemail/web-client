@@ -9,7 +9,7 @@ import {
 	isFreePlan,
 	isSharedDomainAddress
 } from './entitlements';
-import type { PlanCode } from '$lib/api/billing';
+import type { PlanCode } from '$core/api/billing';
 
 const ALL: PlanCode[] = [
 	'free',

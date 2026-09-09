@@ -14,9 +14,9 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
-	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$lib/api/twofactor';
+	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$core/api/twofactor';
 	import { createCredential, isWebauthnCancelled, webauthnSupported } from '$lib/auth/webauthn';
-	import { ApiCallError } from '$lib/api/types';
+	import { ApiCallError } from '$core/api/types';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { twofactor } from '$lib/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';

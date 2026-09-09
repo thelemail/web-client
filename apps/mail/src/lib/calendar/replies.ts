@@ -1,4 +1,4 @@
-import { getMessage } from '$lib/api/messages';
+import { getMessage } from '$core/api/messages';
 import { decryptPreview } from '$lib/mail/decrypt';
 import { loadMessageBody } from '$lib/mail/bodySource';
 import type { CalendarEvent } from '$lib/mail/render/icalParse';

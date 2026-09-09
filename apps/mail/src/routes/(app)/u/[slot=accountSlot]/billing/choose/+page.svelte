@@ -6,7 +6,7 @@
 	import AuthShell from '$lib/auth/AuthShell.svelte';
 	import PlanStep from '$lib/auth/PlanStep.svelte';
 	import { findPlan, planLabelFor, selectionForCode, type PlanSelection } from '$lib/auth/plans';
-	import { changePlan, createCheckoutSession, type PlanCode } from '$lib/api/billing';
+	import { changePlan, createCheckoutSession, type PlanCode } from '$core/api/billing';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { auth } from '$lib/stores/auth.svelte';

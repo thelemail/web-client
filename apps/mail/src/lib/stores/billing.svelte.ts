@@ -4,7 +4,7 @@ import {
 	getPlans,
 	type PlanCatalog,
 	type Subscription
-} from '$lib/api/billing';
+} from '$core/api/billing';
 import {
 	allowsCustomDomains,
 	allowsMembers,

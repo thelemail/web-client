@@ -1,5 +1,5 @@
 import type { CalendarEvent } from '$lib/mail/render/icalParse';
-import type { RsvpStatus } from '$lib/api/types';
+import type { RsvpStatus } from '$core/api/types';
 
 const PARTSTAT: Record<RsvpStatus, string> = {
 	accepted: 'ACCEPTED',

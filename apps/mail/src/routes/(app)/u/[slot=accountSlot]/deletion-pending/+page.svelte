@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import AuthShell from '$lib/auth/AuthShell.svelte';
-	import { cancelDeletion } from '$lib/api/deletion';
+	import { cancelDeletion } from '$core/api/deletion';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';

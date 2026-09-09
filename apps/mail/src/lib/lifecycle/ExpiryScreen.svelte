@@ -10,7 +10,7 @@
 	import Download from '@lucide/svelte/icons/download';
 	import PersonalTimeline from './PersonalTimeline.svelte';
 	import { lifecycle } from './lifecycle.svelte';
-	import { markExpiryScreenShown } from '$lib/api/lifecycle';
+	import { markExpiryScreenShown } from '$core/api/lifecycle';
 	import { auth } from '$lib/stores/auth.svelte';
 	import type { LifecycleContext } from './types';
 	import { Button } from '$lib/components/ui/button';

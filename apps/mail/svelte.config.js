@@ -24,7 +24,10 @@ const config = {
 			dir: '../..'
 		},
 		alias: {
-			$platform: desktop ? process.env.THELEMAIL_PLATFORM_DIR ?? 'src/lib/platform/web' : 'src/lib/platform/web'
+			$core: '../../packages/core/src',
+			$platform: desktop
+				? process.env.THELEMAIL_PLATFORM_DIR ?? '../../packages/core/src/platform/web'
+				: '../../packages/core/src/platform/web'
 		},
 		adapter: adapter({
 			pages: 'build',

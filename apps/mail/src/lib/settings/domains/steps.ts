@@ -1,4 +1,4 @@
-import type { CustomDomain, CustomDomainStatus, DNSRecordPhase } from '$lib/api/customDomains';
+import type { CustomDomain, CustomDomainStatus, DNSRecordPhase } from '$core/api/customDomains';
 
 export type DomainStep = 'ownership' | 'sending' | 'recipients' | 'routing' | 'done';
 

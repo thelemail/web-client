@@ -2,7 +2,7 @@
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import { submitReport, type ReportOutcome } from './report';
-	import type { MessageReportKind } from '$lib/api/types';
+	import type { MessageReportKind } from '$core/api/types';
 	import { auth } from '$lib/stores/auth.svelte';
 
 	interface Props {

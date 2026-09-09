@@ -10,7 +10,7 @@
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
-	import { cancelSubscription, resumeSubscription, changePlan } from '$lib/api/billing';
+	import { cancelSubscription, resumeSubscription, changePlan } from '$core/api/billing';
 	import { fmt } from './dates';
 	import type { LifecycleContext, RetentionOffer } from './types';
 	import { Button } from '$lib/components/ui/button';

@@ -1,7 +1,7 @@
 import { PUBLIC_API_BASE_URL, PUBLIC_SUBMISSION_BASE_URL } from '$env/static/public';
 import { platform } from '$platform';
-import { deviceId } from '$lib/realtime/device';
-import type { Transport } from '$lib/platform/types';
+import { deviceId } from '$core/realtime/device';
+import type { Transport } from '$core/platform/types';
 import { ApiCallError, type ErrorEnvelope } from './types';
 import { recordServerDate } from './serverclock';
 

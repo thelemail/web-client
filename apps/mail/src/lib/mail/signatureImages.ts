@@ -1,10 +1,10 @@
 import { platform } from '$platform';
-import { fetchRemoteImages } from '$lib/api/messages';
+import { fetchRemoteImages } from '$core/api/messages';
 import {
 	requestSignatureImageUploadUrl,
 	commitSignatureImage,
 	type SignatureImage
-} from '$lib/api/signatures';
+} from '$core/api/signatures';
 import { signatures } from '$lib/stores/signatures.svelte';
 import { sealSignatureImage } from './signatureCrypto';
 import { SIGNATURE_IMAGE_ATTR } from './editor/signatureImage';

@@ -1,7 +1,7 @@
 import { isOfficialAddress, isOfficialFingerprint } from '$lib/directory/official';
 import { splitMimeHeaders } from '$lib/mail/render/mimeHeaders';
 import { parseMailbox } from '$lib/mail/address';
-import type { SignatureVerdict } from '$lib/keystore/protocol';
+import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { Channel } from './trust';
 
 export interface OfficialFacts {

@@ -7,7 +7,7 @@
 	import TrustMark from './TrustMark.svelte';
 	import { formatWhenLong, type ThreadEntry } from './data';
 	import AttachmentList from './AttachmentList.svelte';
-	import { getMessage } from '$lib/api/messages';
+	import { getMessage } from '$core/api/messages';
 	import { senderImage } from './senderImage';
 
 	interface Props {

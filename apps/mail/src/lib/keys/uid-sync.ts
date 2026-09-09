@@ -1,6 +1,6 @@
-import { keystore } from '$lib/keystore/keystore-client';
-import { updateKeys } from '$lib/api/me';
-import { listMyAddresses } from '$lib/api/addresses';
+import { keystore } from '$core/keystore/keystore-client';
+import { updateKeys } from '$core/api/me';
+import { listMyAddresses } from '$core/api/addresses';
 
 interface Pending {
 	sig: string;

@@ -38,8 +38,8 @@ vi.mock('./sendExternal', () => ({
 	}
 }));
 
-vi.mock('$lib/api/accounts', async () => {
-	const { ApiCallError } = await import('$lib/api/types');
+vi.mock('$core/api/accounts', async () => {
+	const { ApiCallError } = await import('$core/api/types');
 	return {
 		lookupAccount: async (email: string) => {
 			if (email.endsWith('@thelemail.test')) return { accountId: `acct:${email}` };

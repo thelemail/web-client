@@ -9,7 +9,7 @@
 	import { customDomains } from '$lib/stores/customDomains.svelte';
 	import { addresses } from '$lib/stores/addresses.svelte';
 	import { workspaces } from '$lib/stores/workspaces.svelte';
-	import type { CustomDomain } from '$lib/api/customDomains';
+	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$lib/components/ui/button';
 
 	interface Props {

@@ -34,9 +34,9 @@
 		trashMessage,
 		unsnoozeMessage,
 		unstarMessage
-	} from '$lib/api/messages';
+	} from '$core/api/messages';
 	import { returnedFromSnooze } from './timePresets';
-	import type { MessageReportKind, MessageState } from '$lib/api/types';
+	import type { MessageReportKind, MessageState } from '$core/api/types';
 	import { submitReport, type ReportOutcome } from './report';
 	import { applyToThread, type ThreadVerb } from './threadActions';
 	import { canFetchFolder, mailbox } from '$lib/stores/mailbox.svelte';

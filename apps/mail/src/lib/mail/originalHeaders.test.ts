@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('$lib/api/messages', () => ({ getMessage: vi.fn() }));
+vi.mock('$core/api/messages', () => ({ getMessage: vi.fn() }));
 vi.mock('./decrypt', () => ({ decryptBodyFromUrl: vi.fn() }));
 
-import { getMessage } from '$lib/api/messages';
-import type { MessageDetail } from '$lib/api/types';
+import { getMessage } from '$core/api/messages';
+import type { MessageDetail } from '$core/api/types';
 import { decryptBodyFromUrl } from './decrypt';
 import { loadOriginalHeaders } from './originalHeaders';
 

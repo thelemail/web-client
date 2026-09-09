@@ -10,8 +10,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { delegations } from '$lib/stores/delegations.svelte';
-	import { keystore } from '$lib/keystore/keystore-client';
-	import type { AccountAddress } from '$lib/api/addresses';
+	import { keystore } from '$core/keystore/keystore-client';
+	import type { AccountAddress } from '$core/api/addresses';
 
 	interface Props {
 		address: AccountAddress;

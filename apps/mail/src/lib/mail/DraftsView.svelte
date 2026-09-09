@@ -17,7 +17,7 @@
 	import { drafts, type DraftRow } from '$lib/stores/drafts.svelte';
 	import { scheduled } from '$lib/stores/scheduled.svelte';
 	import { composeStore } from '$lib/stores/compose.svelte';
-	import { deleteDraft } from '$lib/api/drafts';
+	import { deleteDraft } from '$core/api/drafts';
 	import { mailbox } from '$lib/stores/mailbox.svelte';
 	import { DEFAULT_QUERY } from './url';
 	import { auth } from '$lib/stores/auth.svelte';

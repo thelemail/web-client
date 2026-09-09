@@ -1,5 +1,5 @@
-import type { PlanCode } from '$lib/api/billing';
-import type { WorkspaceType } from '$lib/api/workspaces';
+import type { PlanCode } from '$core/api/billing';
+import type { WorkspaceType } from '$core/api/workspaces';
 
 export const SHARED_DOMAIN = 'thelemail.com';
 

@@ -8,7 +8,7 @@
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import Wallet from '@lucide/svelte/icons/wallet';
-	import { acceptFamilyInvite, type WorkspaceInvitePreview } from '$lib/api/workspaces';
+	import { acceptFamilyInvite, type WorkspaceInvitePreview } from '$core/api/workspaces';
 	import { acceptInviteError } from '$lib/settings/family-invite-errors';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { auth } from '$lib/stores/auth.svelte';

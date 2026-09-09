@@ -8,7 +8,7 @@ import type {
 	DraftDetail,
 	DraftRequest,
 	PresignedPointer
-} from '$lib/api/types';
+} from '$core/api/types';
 
 export const DRAFT_SCHEMA_VERSION = 1;
 

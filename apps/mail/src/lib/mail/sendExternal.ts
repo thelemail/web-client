@@ -1,9 +1,9 @@
 import { auth } from '$lib/stores/auth.svelte';
 import { platform } from '$platform';
 import { bytesToB64 } from '$lib/crypto';
-import { issueStagingUrls, submitExternal } from '$lib/api/submission';
-import { lookupExternalKey } from '$lib/api/externalKeys';
-import { keystore } from '$lib/keystore/keystore-client';
+import { issueStagingUrls, submitExternal } from '$core/api/submission';
+import { lookupExternalKey } from '$core/api/externalKeys';
+import { keystore } from '$core/keystore/keystore-client';
 import {
 	ApiCallError,
 	type AttachmentDescriptor,
@@ -13,7 +13,7 @@ import {
 	type StagedAttachment,
 	type StagingSlotRequest,
 	type SubmitMessageResponse
-} from '$lib/api/types';
+} from '$core/api/types';
 import {
 	SendError,
 	sendErrorFromApi,

@@ -17,7 +17,7 @@
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
-	import { createBillingPortalSession } from '$lib/api/billing';
+	import { createBillingPortalSession } from '$core/api/billing';
 	import { PRODUCTS, eur } from '$lib/auth/plans';
 	import { planLabel, freeNote } from '../plan-display';
 	import UpgradeNudge from '../UpgradeNudge.svelte';

@@ -4,7 +4,7 @@ import {
 	type SettingsState,
 	type TwoFaSetupMethod
 } from '$lib/settings/data';
-import { putAccountSettingsSection } from '$lib/api/accountSettings';
+import { putAccountSettingsSection } from '$core/api/accountSettings';
 import { accountSettings } from './accountSettings.svelte';
 import { workspaces } from './workspaces.svelte';
 import { twofactor } from './twofactor.svelte';

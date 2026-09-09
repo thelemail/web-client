@@ -12,7 +12,7 @@ export default mergeConfig(
 				PUBLIC_BLOB_ORIGIN: 'https://blob.test.thelemail.local'
 			},
 			globals: false,
-			include: ['src/**/*.{test,spec}.ts'],
+			include: ['src/**/*.{test,spec}.ts', '../../packages/*/src/**/*.{test,spec}.ts'],
 			setupFiles: ['./vitest.setup.ts']
 		}
 	})

@@ -62,7 +62,7 @@ const keystoreState = vi.hoisted(() => ({
 	accounts: [] as { accountId: string; unlocked: boolean }[]
 }));
 const keystoreSubscribe = vi.fn((_cb: (b: unknown) => void) => () => {});
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		status: vi.fn(async () => ({ accounts: keystoreState.accounts })),
 		subscribe: (cb: (b: unknown) => void) => keystoreSubscribe(cb)

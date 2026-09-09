@@ -1,7 +1,7 @@
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, b64ToBytes, b64ToHex } from '$lib/keys/encode';
-import * as attframe from './attframe';
-import type { SignatureRecord, UpsertSignatureInput } from '$lib/api/signatures';
+import * as attframe from '$core/mail/attframe';
+import type { SignatureRecord, UpsertSignatureInput } from '$core/api/signatures';
 
 export type SignatureMode = 'rich' | 'html' | 'markdown';
 

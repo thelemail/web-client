@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CopyBtn from '../CopyBtn.svelte';
 	import DnsChip from '../DnsChip.svelte';
-	import type { DNSRecordKind, DNSRecordStatus, RequiredDNSRecord } from '$lib/api/customDomains';
+	import type { DNSRecordKind, DNSRecordStatus, RequiredDNSRecord } from '$core/api/customDomains';
 
 	interface Props {
 		records: RequiredDNSRecord[];

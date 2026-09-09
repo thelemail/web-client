@@ -1,9 +1,9 @@
 import { platform } from '$platform';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { aliasKeys } from '$lib/stores/aliasKeys.svelte';
-import type { AttachmentFailureCode } from '$lib/keystore/protocol';
-import type { DecryptedAttachmentHeader } from './attframe';
-import type { AttachmentDetail, PresignedPointer } from '$lib/api/types';
+import type { AttachmentFailureCode } from '$core/keystore/protocol';
+import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
+import type { AttachmentDetail, PresignedPointer } from '$core/api/types';
 
 export type AttachmentDecryptError = AttachmentFailureCode;
 

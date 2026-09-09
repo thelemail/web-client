@@ -1,7 +1,7 @@
-import { cancelScheduledSend, listScheduledSends } from '$lib/api/scheduledSends';
+import { cancelScheduledSend, listScheduledSends } from '$core/api/scheduledSends';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { initialsFor } from '$lib/mail/initials';
-import type { ScheduledSend, ScheduledSendKind } from '$lib/api/types';
+import type { ScheduledSend, ScheduledSendKind } from '$core/api/types';
 import { auth } from './auth.svelte';
 
 export interface ScheduledRow {

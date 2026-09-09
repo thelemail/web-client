@@ -1,15 +1,15 @@
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { platform } from '$platform';
 import { bytesToB64 } from '$lib/crypto';
 import { senderKey, buildMIME, SendError, type KeyMaterial } from '../send';
-import { build as buildAttFrame } from '../attframe';
-import { issueAttachmentUploadUrls, importMessage } from '$lib/api/messages';
+import { build as buildAttFrame } from '$core/mail/attframe';
+import { issueAttachmentUploadUrls, importMessage } from '$core/api/messages';
 import type {
 	AttachmentUploadSlotRequest,
 	ClientInboundImportRequest,
 	ClientInboundImportResponse,
 	ImportAttachmentDescriptor
-} from '$lib/api/types';
+} from '$core/api/types';
 import type { MessagePreview, MessagePreviewRecipient } from '../preview';
 import { parseEml, type ParsedEml, type ParsedEmlAttachment } from './parseEml';
 import { buildInlinedBody, resolveBimiDomain } from './inlineImages';

@@ -1,4 +1,4 @@
-import { openDatabase } from '$lib/idb-open';
+import { openDatabase } from '$core/idb-open';
 
 export interface TlogLogState {
 	origin: string;

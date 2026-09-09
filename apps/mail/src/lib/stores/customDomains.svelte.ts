@@ -8,7 +8,7 @@ import {
 	type CustomDomain,
 	type CustomDomainWithRecords,
 	type RequiredDNSRecord
-} from '$lib/api/customDomains';
+} from '$core/api/customDomains';
 
 class CustomDomainsStore {
 	items = $state<CustomDomain[]>([]);

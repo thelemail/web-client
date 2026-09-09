@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		attachmentHeader: vi.fn(),
 		attachmentBytes: vi.fn()
@@ -10,9 +10,9 @@ vi.mock('$lib/stores/aliasKeys.svelte', () => ({
 	aliasKeys: { ready: vi.fn().mockResolvedValue(undefined), refresh: vi.fn() }
 }));
 
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { AttachmentError, initialChips, loadAttachmentHeader } from './attachments';
-import type { AttachmentDetail, PresignedPointer } from '$lib/api/types';
+import type { AttachmentDetail, PresignedPointer } from '$core/api/types';
 
 const attachmentHeader = vi.mocked(keystore.attachmentHeader);
 

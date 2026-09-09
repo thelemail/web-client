@@ -1,4 +1,4 @@
-import type { LifecycleInfo } from '$lib/api/types';
+import type { LifecycleInfo } from '$core/api/types';
 import { auth } from '$lib/stores/auth.svelte';
 import { billing } from '$lib/stores/billing.svelte';
 import { buildContextFromServer, contextDefaults, deriveStage } from './context';

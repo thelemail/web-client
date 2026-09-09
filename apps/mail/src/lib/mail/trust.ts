@@ -1,4 +1,4 @@
-import type { SignatureVerdict } from '$lib/keystore/protocol';
+import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { DirectoryTrust, ExternalKeyState } from './senderVerify';
 import type { AuthState, MessagePreviewAuth } from './preview';
 import type { OfficialFacts } from './officialSender';

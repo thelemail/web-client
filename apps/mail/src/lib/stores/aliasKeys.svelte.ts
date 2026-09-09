@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
-import { listMyAliasKeys } from '$lib/api/aliases';
-import { keystore } from '$lib/keystore/keystore-client';
+import { listMyAliasKeys } from '$core/api/aliases';
+import { keystore } from '$core/keystore/keystore-client';
 import { b64ToHex, b64ToText } from '$lib/keys/encode';
 
 const REFRESH_INTERVAL_MS = 30_000;

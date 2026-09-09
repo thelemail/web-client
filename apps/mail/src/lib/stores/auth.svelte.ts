@@ -1,16 +1,16 @@
 import { browser } from '$app/environment';
 import { invalidateAll } from '$app/navigation';
-import { registerAuthRouter, registerLifecycleReconciler } from '$lib/api/client';
+import { registerAuthRouter, registerLifecycleReconciler } from '$core/api/client';
 import {
 	refreshSession,
 	logout as apiLogout,
 	logoutAll as apiLogoutAll,
 	getMe,
 	getPersistentHalf
-} from '$lib/api/auth';
-import { ApiCallError, type DeletionStatus, type LifecycleInfo, type MeResponse } from '$lib/api/types';
-import { keystore } from '$lib/keystore/keystore-client';
-import type { StatusResponse } from '$lib/keystore/protocol';
+} from '$core/api/auth';
+import { ApiCallError, type DeletionStatus, type LifecycleInfo, type MeResponse } from '$core/api/types';
+import { keystore } from '$core/keystore/keystore-client';
+import type { StatusResponse } from '$core/keystore/protocol';
 import { accounts } from './accounts.svelte';
 import { mailbox } from './mailbox.svelte';
 import { drafts } from './drafts.svelte';

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const getMailboxCounts = vi.fn();
-vi.mock('$lib/api/messages', () => ({
+vi.mock('$core/api/messages', () => ({
 	getMailboxCounts: (...a: unknown[]) => getMailboxCounts(...a)
 }));
 

@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { MessageListItem } from '$lib/api/types';
+import type { MessageListItem } from '$core/api/types';
 
 const listMessages = vi.fn();
 const listMessageChanges = vi.fn();
 const decryptPreview = vi.fn();
 
-vi.mock('$lib/api/messages', () => ({
+vi.mock('$core/api/messages', () => ({
 	listMessages: (...a: unknown[]) => listMessages(...a),
 	listMessageChanges: (...a: unknown[]) => listMessageChanges(...a)
 }));

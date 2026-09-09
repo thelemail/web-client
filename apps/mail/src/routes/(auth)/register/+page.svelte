@@ -18,8 +18,8 @@
 	} from '$lib/auth/plans';
 	import { performLogin } from '$lib/auth/perform-login';
 	import { resolveReturnTo } from '$lib/auth/return-to';
-	import { createCheckoutSession, type PlanCode } from '$lib/api/billing';
-	import { changeMyWorkspaceType } from '$lib/api/workspaces';
+	import { createCheckoutSession, type PlanCode } from '$core/api/billing';
+	import { changeMyWorkspaceType } from '$core/api/workspaces';
 	import brandmark from '$lib/assets/logo-mark.svg';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -27,9 +27,9 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Check from '@lucide/svelte/icons/check';
 	import Mail from '@lucide/svelte/icons/mail';
-	import { checkAddressAvailability, registrationInit, register } from '$lib/api/auth';
-	import { ApiCallError } from '$lib/api/types';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
+	import { ApiCallError } from '$core/api/types';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { Button } from '$lib/components/ui/button';
 

@@ -6,7 +6,7 @@ import {
 	type CalendarItemRow,
 	type CalendarItemStateRow,
 	type CalendarRow
-} from '$lib/api/calendars';
+} from '$core/api/calendars';
 import type { CachedCalendar, CachedItem, CachedState, CalendarDb } from './db';
 
 export interface SyncApi {

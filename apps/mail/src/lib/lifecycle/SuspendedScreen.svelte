@@ -11,7 +11,7 @@
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { lifecycle } from './lifecycle.svelte';
-	import { setNotificationEmail } from '$lib/api/lifecycle';
+	import { setNotificationEmail } from '$core/api/lifecycle';
 	import { fmt } from './dates';
 	import type { LifecycleContext } from './types';
 

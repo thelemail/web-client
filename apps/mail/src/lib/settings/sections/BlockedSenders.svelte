@@ -6,7 +6,7 @@
 	import SecHead from '../SecHead.svelte';
 	import CardHead from '../CardHead.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
-	import { deleteBlockedSender, listBlockedSenders } from '$lib/api/blockedSenders';
+	import { deleteBlockedSender, listBlockedSenders } from '$core/api/blockedSenders';
 	import { blockSender, unsealAddress } from '$lib/mail/blockedSenders';
 	import { Button } from '$lib/components/ui/button';
 

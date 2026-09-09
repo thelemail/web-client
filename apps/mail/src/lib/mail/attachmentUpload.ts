@@ -1,17 +1,17 @@
 import * as openpgp from 'openpgp';
 import { platform } from '$platform';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, hexToBytes } from '$lib/crypto';
-import { lookupAccount } from '$lib/api/accounts';
-import { ApiCallError } from '$lib/api/types';
-import { issueAttachmentUploadUrls } from '$lib/api/messages';
-import { build as buildAttFrame } from './attframe';
+import { lookupAccount } from '$core/api/accounts';
+import { ApiCallError } from '$core/api/types';
+import { issueAttachmentUploadUrls } from '$core/api/messages';
+import { build as buildAttFrame } from '$core/mail/attframe';
 import { senderKey, SendError, type KeyMaterial } from './send';
 import type {
 	AttachmentDescriptor,
 	AttachmentUploadGrant,
 	AttachmentUploadSlotRequest
-} from '$lib/api/types';
+} from '$core/api/types';
 
 export const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 export const MAX_TOTAL_BYTES = 50 * 1024 * 1024;

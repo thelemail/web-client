@@ -1,4 +1,4 @@
-import { ApiCallError } from '$lib/api/types';
+import { ApiCallError } from '$core/api/types';
 import { SHARED_DOMAIN } from './entitlements';
 
 export function familyInviteError(err: unknown, email: string): string {

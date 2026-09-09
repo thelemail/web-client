@@ -5,7 +5,7 @@ import {
 	listThreads,
 	type ListMessagesOptions,
 	type ListThreadsOptions
-} from '$lib/api/messages';
+} from '$core/api/messages';
 import {
 	folderFromServer,
 	type LabelId,
@@ -18,9 +18,9 @@ import { bimiDomainFromPreview } from '$lib/mail/preview';
 import { paletteFor } from '$lib/mail/avatarPalette';
 import { initialsFor } from '$lib/mail/initials';
 import { platform } from '$platform';
-import type { MirrorRow } from '$lib/platform/types';
+import type { MirrorRow } from '$core/platform/types';
 import { queryMatches } from '$lib/mail/match';
-import type { MailboxCounts, MessageListItem, ThreadListItem } from '$lib/api/types';
+import type { MailboxCounts, MessageListItem, ThreadListItem } from '$core/api/types';
 import { DEFAULT_QUERY, type Query } from '$lib/mail/url';
 import type { RealtimeHint } from '$lib/realtime/types';
 import { auth } from './auth.svelte';

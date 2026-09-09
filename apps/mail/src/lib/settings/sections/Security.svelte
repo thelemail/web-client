@@ -34,8 +34,8 @@
 		regenerateBackupCodes,
 		totpDisable,
 		webauthnDelete
-	} from '$lib/api/twofactor';
-	import { listSessions, listSecurityEvents, revokeSession, revokeOtherSessions } from '$lib/api/auth';
+	} from '$core/api/twofactor';
+	import { listSessions, listSecurityEvents, revokeSession, revokeOtherSessions } from '$core/api/auth';
 	import type {
 		SecurityEventAction,
 		SecurityEventInfo,
@@ -43,9 +43,9 @@
 		SessionInfo,
 		TwoFactorMethod,
 		TwoFactorProof
-	} from '$lib/api/types';
+	} from '$core/api/types';
 	import { webauthnSupported } from '$lib/auth/webauthn';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import TwoFactorProofDialog from '../TwoFactorProofDialog.svelte';
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
 	import type { SettingsState, CeremonyKind, TwoFaSetupMethod } from '../data';

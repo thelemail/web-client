@@ -5,7 +5,7 @@ const listThreads = vi.fn();
 const decryptPreview = vi.fn();
 const getMessage = vi.fn();
 
-vi.mock('$lib/api/messages', () => ({
+vi.mock('$core/api/messages', () => ({
 	listMessages: (...a: unknown[]) => listMessages(...a),
 	listThreads: (...a: unknown[]) => listThreads(...a),
 	getMailboxCounts: vi.fn(async () => ({ inbox: 0, starred: 0, spam: 0, snoozed: 0 })),

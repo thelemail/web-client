@@ -2,7 +2,7 @@
 
 import * as openpgp from 'openpgp';
 
-import { generateDelegationKey } from '$lib/keys/delegationKey';
+import { generateDelegationKey } from '$core/keys/delegationKey';
 import { isAllowedBlobUrl } from './blobOrigins';
 import { CryptoProxy } from '@protontech/crypto';
 import { Api as CryptoApi } from '@protontech/crypto/proxy/endpoint/api.ts';
@@ -43,8 +43,8 @@ import {
 	unwrapMasterKey,
 	wrapMasterKey
 } from './opaque-params';
-import { MAX_HEADER_BYTES, parseHeaderPrefix } from '$lib/mail/attframe';
-import type { DecryptedAttachmentHeader } from '$lib/mail/attframe';
+import { MAX_HEADER_BYTES, parseHeaderPrefix } from '$core/mail/attframe';
+import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 import type {
 	AttachmentBytesArgs,
 	AttachmentBytesResponse,

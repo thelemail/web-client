@@ -1,4 +1,4 @@
-import { ApiCallError } from '$lib/api/types';
+import { ApiCallError } from '$core/api/types';
 
 export function isReadOnlyError(e: unknown): boolean {
 	return e instanceof ApiCallError && e.status === 403 && e.envelope?.error?.code === 'read_only';

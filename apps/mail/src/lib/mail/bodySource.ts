@@ -1,7 +1,7 @@
-import { getMessage } from '$lib/api/messages';
+import { getMessage } from '$core/api/messages';
 import { platform } from '$platform';
-import type { MessageDetail } from '$lib/api/types';
-import type { MirrorMessage } from '$lib/platform/types';
+import type { MessageDetail } from '$core/api/types';
+import type { MirrorMessage } from '$core/platform/types';
 import { decryptBodyFromUrl, unwrapPgpMime } from './decrypt';
 import { getCachedRender, putCachedRender, renderBody, type CachedRender } from './render';
 import { detailFromMirror } from './mirrorDetail';

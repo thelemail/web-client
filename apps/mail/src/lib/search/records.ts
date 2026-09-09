@@ -1,4 +1,4 @@
-import type { MessageListItem } from '$lib/api/types';
+import type { MessageListItem } from '$core/api/types';
 import type { MessagePreview } from '$lib/mail/preview';
 import { decodeWords } from 'postal-mime';
 import type { IndexedRow, IndexedText } from './types';

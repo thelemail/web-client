@@ -1,7 +1,7 @@
-import { setMessageRsvp } from '$lib/api/messages';
+import { setMessageRsvp } from '$core/api/messages';
 import { dispatchSend } from '$lib/mail/sendDispatch';
 import type { CalendarEvent } from '$lib/mail/render/icalParse';
-import type { RsvpStatus } from '$lib/api/types';
+import type { RsvpStatus } from '$core/api/types';
 import type { Message } from '$lib/mail/data';
 import { buildIcsReply } from './buildIcsReply';
 import { auth } from '$lib/stores/auth.svelte';

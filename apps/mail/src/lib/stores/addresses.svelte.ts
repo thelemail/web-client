@@ -6,8 +6,8 @@ import {
 	removeAddress,
 	type AccountAddress,
 	type UpdateAddressInput
-} from '$lib/api/addresses';
-import { listMySharedAliases } from '$lib/api/aliases';
+} from '$core/api/addresses';
+import { listMySharedAliases } from '$core/api/aliases';
 import { syncAddressUids } from '$lib/keys/uid-sync';
 
 class AddressesStore {

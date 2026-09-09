@@ -6,10 +6,10 @@ import {
 	deleteSignature,
 	getSignatureImageDownloadUrl,
 	type SignatureRecord
-} from '$lib/api/signatures';
+} from '$core/api/signatures';
 import { aliasKeys } from './aliasKeys.svelte';
 import { addresses } from './addresses.svelte';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import {
 	openSignature,
 	openSignatureImage,

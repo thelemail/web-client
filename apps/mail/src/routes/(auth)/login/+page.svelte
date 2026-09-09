@@ -8,7 +8,7 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Check from '@lucide/svelte/icons/check';
-	import { ApiCallError } from '$lib/api/types';
+	import { ApiCallError } from '$core/api/types';
 	import {
 		abandonTwoFactorLogin,
 		performLogin,

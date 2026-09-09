@@ -1,4 +1,4 @@
-import { openDatabase } from '$lib/idb-open';
+import { openDatabase } from '$core/idb-open';
 import { emptyMeta, type IndexChunk, type IndexMeta, type IndexedRow } from './types';
 
 export interface SearchDb {

@@ -1,4 +1,4 @@
-import type { MailboxState, MessageDirection } from '$lib/api/types';
+import type { MailboxState, MessageDirection } from '$core/api/types';
 
 export interface IndexedRow {
 	accountId: string;

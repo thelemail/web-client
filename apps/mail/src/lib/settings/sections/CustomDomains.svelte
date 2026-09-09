@@ -25,7 +25,7 @@
 	import { workspaces } from '$lib/stores/workspaces.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
 	import UpgradeNudge from '$lib/settings/UpgradeNudge.svelte';
-	import type { CustomDomain } from '$lib/api/customDomains';
+	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$lib/components/ui/button';
 
 	const POLL_MS = 60000;

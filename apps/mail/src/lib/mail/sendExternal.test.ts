@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { SubmitMessageRequest } from '$lib/api/types';
+import type { SubmitMessageRequest } from '$core/api/types';
 
 const encryptToKeysCalls: string[][] = [];
 const submitted: SubmitMessageRequest[] = [];
@@ -16,7 +16,7 @@ vi.mock('./signaturePack', () => ({
 vi.mock('$lib/stores/auth.svelte', () => ({
 	auth: { accountId: 'acct-1', email: 'me@thelemail.test', fullName: 'Me' }
 }));
-vi.mock('$lib/api/externalKeys', () => ({
+vi.mock('$core/api/externalKeys', () => ({
 	lookupExternalKey: async (address: string) => ({
 		address,
 		status: 'known',
@@ -24,14 +24,14 @@ vi.mock('$lib/api/externalKeys', () => ({
 		armoredKey: `key:${address}`
 	})
 }));
-vi.mock('$lib/api/submission', () => ({
+vi.mock('$core/api/submission', () => ({
 	issueStagingUrls: async () => ({ slots: [] }),
 	submitExternal: async (req: SubmitMessageRequest) => {
 		submitted.push(req);
 		return { messageId: 'msg-1', enqueuedAt: new Date().toISOString() };
 	}
 }));
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		subscribe: () => () => {},
 		encryptToKeys: async (args: { recipientPublicKeysArmored: string[] }) => {

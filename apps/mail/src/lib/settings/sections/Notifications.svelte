@@ -7,7 +7,7 @@
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import type { SettingsState } from '../data';
-	import type { NotificationStatus } from '$lib/platform/types';
+	import type { NotificationStatus } from '$core/platform/types';
 	import { platform } from '$platform';
 	import { accountSettings } from '$lib/stores/accountSettings.svelte';
 	import { Button } from '$lib/components/ui/button';

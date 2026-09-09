@@ -3,7 +3,7 @@ import { initialsFor } from '$lib/mail/initials';
 import { paletteFor } from '$lib/mail/avatarPalette';
 import { searchIndex, type SearchResult } from '$lib/search';
 import { parseQuery } from '$lib/search/query';
-import type { SearchHit } from '$lib/platform/types';
+import type { SearchHit } from '$core/platform/types';
 import { platform } from '$platform';
 
 const DEBOUNCE_MS = 180;

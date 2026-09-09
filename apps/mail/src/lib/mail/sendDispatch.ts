@@ -2,8 +2,8 @@ import { sendInternalMessage, SendError, sendErrorFromApi, type ComposeInput } f
 import { sendExternalMessage } from './sendExternal';
 import type { ReplyParty } from './replyRecipients';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
-import { lookupAccount } from '$lib/api/accounts';
-import { ApiCallError } from '$lib/api/types';
+import { lookupAccount } from '$core/api/accounts';
+import { ApiCallError } from '$core/api/types';
 
 const CLASSIFY_TTL_MS = 2 * 60 * 1000;
 

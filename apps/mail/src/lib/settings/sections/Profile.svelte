@@ -28,7 +28,7 @@
 		requestAvatarUploadUrl,
 		commitAvatar,
 		deleteAvatar
-	} from '$lib/api/me';
+	} from '$core/api/me';
 
 	interface Props {
 		email: string;

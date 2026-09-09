@@ -1,11 +1,11 @@
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { aliasKeys } from '$lib/stores/aliasKeys.svelte';
-import type { SignatureVerdict } from '$lib/keystore/protocol';
+import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
 import { platform } from '$platform';
 
-export type { SignatureVerdict } from '$lib/keystore/protocol';
+export type { SignatureVerdict } from '$core/keystore/protocol';
 
 export interface DecryptedText {
 	plaintext: string;

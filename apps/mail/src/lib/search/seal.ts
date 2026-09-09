@@ -1,4 +1,4 @@
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import type { IndexChunk, IndexedText } from './types';
 
 export class SealError extends Error {

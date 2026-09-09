@@ -13,9 +13,9 @@
 	import Minus from '@lucide/svelte/icons/minus';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Mail from '@lucide/svelte/icons/mail';
-	import { registrationInit } from '$lib/api/auth';
-	import { previewWorkspaceInvite, registerAndAcceptInvite, type WorkspaceInvitePreview } from '$lib/api/workspaces';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { registrationInit } from '$core/api/auth';
+	import { previewWorkspaceInvite, registerAndAcceptInvite, type WorkspaceInvitePreview } from '$core/api/workspaces';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import JoinFamilyInvite from '$lib/auth/JoinFamilyInvite.svelte';

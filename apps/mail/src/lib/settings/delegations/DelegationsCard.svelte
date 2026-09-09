@@ -10,8 +10,8 @@
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
 	import { delegations } from '$lib/stores/delegations.svelte';
-	import type { AccountAddress } from '$lib/api/addresses';
-	import type { SigningDelegation } from '$lib/api/delegations';
+	import type { AccountAddress } from '$core/api/addresses';
+	import type { SigningDelegation } from '$core/api/delegations';
 
 	interface Props {
 		address: AccountAddress;

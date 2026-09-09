@@ -1,5 +1,5 @@
 import { SvelteMap } from 'svelte/reactivity';
-import { fetchBimiLogo } from '$lib/api/bimi';
+import { fetchBimiLogo } from '$core/api/bimi';
 
 class BimiStore {
 	#logos = new SvelteMap<string, string | null>();

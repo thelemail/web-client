@@ -1,7 +1,7 @@
 import { browser } from '$app/environment';
 import { platform } from '$platform';
-import type { KeystoreChannel } from '$lib/platform/types';
-import { serverClockOffsetMs } from '$lib/api/serverclock';
+import type { KeystoreChannel } from '$core/platform/types';
+import { serverClockOffsetMs } from '$core/api/serverclock';
 import type {
 	AttachmentBytesArgs,
 	AttachmentBytesResponse,

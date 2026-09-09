@@ -1,4 +1,4 @@
-import type { PlanCode } from '$lib/api/billing';
+import type { PlanCode } from '$core/api/billing';
 
 export type LifecycleStage = 'active' | 'expired' | 'grace' | 'suspended';
 

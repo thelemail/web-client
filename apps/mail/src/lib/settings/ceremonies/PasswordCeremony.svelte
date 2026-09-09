@@ -17,23 +17,23 @@
 		passwordChangeOpaqueRegistrationInit,
 		passwordChangeOpaqueVerify,
 		passwordChangeVerify
-	} from '$lib/api/auth';
+	} from '$core/api/auth';
 	import {
 		init2faWebauthn,
 		verify2faBackupCode,
 		verify2faTotp,
 		verify2faWebauthn
-	} from '$lib/api/twofactor';
+	} from '$core/api/twofactor';
 	import {
 		ApiCallError,
 		type PasswordChangeGrant,
 		type TwoFactorMethod,
 		type TwoFactorPending,
 		type TwoFactorVerifyResponse
-	} from '$lib/api/types';
+	} from '$core/api/types';
 	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$lib/auth/webauthn';
 	import { STRENGTH_LABELS, passwordReqs, scorePassword } from '$lib/auth/password-policy';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$lib/components/ui/button';

@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { auth } from '$lib/stores/auth.svelte';
 import { accounts } from '$lib/stores/accounts.svelte';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { billing } from '$lib/stores/billing.svelte';
 import { lifecycle } from '$lib/lifecycle/lifecycle.svelte';
 import type { LayoutLoad } from './$types';

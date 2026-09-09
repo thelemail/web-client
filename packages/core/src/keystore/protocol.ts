@@ -1,4 +1,4 @@
-import type { DecryptedAttachmentHeader } from '$lib/mail/attframe';
+import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 
 export interface AccountStatus {
 	accountId: string;

@@ -1,5 +1,5 @@
-import { getMessageThread } from '$lib/api/messages';
-import type { MessageDetail } from '$lib/api/types';
+import { getMessageThread } from '$core/api/messages';
+import type { MessageDetail } from '$core/api/types';
 import {
 	authStateFromPreview,
 	authSummaryFromPreview,
@@ -11,11 +11,11 @@ import { officialFacts } from './officialSender';
 import { delegatedSignerTrust, directoryTrust, externalKeyState } from '$lib/mail/senderVerify';
 import { deriveTrust, type TrustFacts } from '$lib/mail/trust';
 import { renderBody, type RenderResult } from '$lib/mail/render';
-import type { SignatureVerdict } from '$lib/keystore/protocol';
+import type { SignatureVerdict } from '$core/keystore/protocol';
 import { renderDetail } from '$lib/mail/bodySource';
 import { detailFromMirror } from '$lib/mail/mirrorDetail';
 import { platform } from '$platform';
-import type { MirrorMessage } from '$lib/platform/types';
+import type { MirrorMessage } from '$core/platform/types';
 import type { MessagePreview } from '$lib/mail/preview';
 import { initialsFor } from '$lib/mail/initials';
 import { paletteFor } from '$lib/mail/avatarPalette';

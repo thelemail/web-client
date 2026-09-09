@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
-import { keystore } from '$lib/keystore/keystore-client';
-import type { SignatureVerdict } from '$lib/keystore/protocol';
+import { keystore } from '$core/keystore/keystore-client';
+import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { RenderResult } from './renderBody';
 
 export interface CachedRender {

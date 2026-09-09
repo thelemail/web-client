@@ -18,14 +18,14 @@ const behaviour = vi.hoisted(() => ({
 	updateGate: null as null | { promise: Promise<void>; release: () => void }
 }));
 
-vi.mock('$lib/api/addresses', () => ({
+vi.mock('$core/api/addresses', () => ({
 	listMyAddresses: async (accountId?: string) => {
 		calls.list.push(accountId);
 		return { addresses: (behaviour.addresses[accountId ?? ''] ?? []).map((email) => ({ email })) };
 	}
 }));
 
-vi.mock('$lib/api/me', () => ({
+vi.mock('$core/api/me', () => ({
 	updateKeys: async (input: Record<string, unknown>, accountId?: string) => {
 		calls.update.push({ input, accountId });
 		if (behaviour.updateGate) await behaviour.updateGate.promise;
@@ -33,7 +33,7 @@ vi.mock('$lib/api/me', () => ({
 	}
 }));
 
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		reformatKeyWithUids: async ({ accountId, emails }: { accountId: string; emails: string[] }) => {
 			calls.reformat.push({ accountId, emails });

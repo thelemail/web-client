@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const createFamilyInvite = vi.fn();
 const leaveMyWorkspace = vi.fn();
 
-vi.mock('$lib/api/workspaces', () => ({
+vi.mock('$core/api/workspaces', () => ({
 	getMyWorkspace: vi.fn(),
 	listWorkspaceMembers: vi.fn(),
 	listWorkspaceInvites: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('$lib/api/workspaces', () => ({
 }));
 
 import { workspaces } from './workspaces.svelte';
-import type { Workspace, WorkspaceMember, WorkspaceType } from '$lib/api/workspaces';
+import type { Workspace, WorkspaceMember, WorkspaceType } from '$core/api/workspaces';
 
 const OWNER = 'acc-owner';
 

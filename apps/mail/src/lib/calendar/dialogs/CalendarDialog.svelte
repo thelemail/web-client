@@ -3,20 +3,20 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Users from '@lucide/svelte/icons/users';
-	import { lookupAccount } from '$lib/api/accounts';
+	import { lookupAccount } from '$core/api/accounts';
 	import {
 		createCalendar,
 		rotateCalendarMembers,
 		updateCalendar,
 		type CalendarMemberGrant,
 		type CalendarRole
-	} from '$lib/api/calendars';
+	} from '$core/api/calendars';
 	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { verifyDirectoryLookup } from '$lib/directory/verify';
 	import { hexToB64, textToB64 } from '$lib/keys/encode';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { senderKey } from '$lib/mail/send';
 	import { bytesToB64 } from '$lib/crypto';
 	import { addresses } from '$lib/stores/addresses.svelte';

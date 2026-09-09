@@ -20,7 +20,7 @@ import {
 	type Workspace,
 	type WorkspaceInvite,
 	type WorkspaceMember
-} from '$lib/api/workspaces';
+} from '$core/api/workspaces';
 
 class WorkspaceStore {
 	workspace = $state<Workspace | null>(null);

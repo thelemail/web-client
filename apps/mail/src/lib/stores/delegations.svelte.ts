@@ -5,7 +5,7 @@ import {
 	revokeSigningDelegation,
 	type CreateSigningDelegationRequest,
 	type SigningDelegation
-} from '$lib/api/delegations';
+} from '$core/api/delegations';
 
 class DelegationsStore {
 	items = $state<Map<string, SigningDelegation[]>>(new Map());

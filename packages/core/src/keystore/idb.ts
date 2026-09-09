@@ -1,4 +1,4 @@
-import { openDb, VAULT_STORE, ACCOUNTS_STORE } from '$lib/idb';
+import { openDb, VAULT_STORE, ACCOUNTS_STORE } from '$core/idb';
 
 export interface VaultRecord {
 	accountId: string;

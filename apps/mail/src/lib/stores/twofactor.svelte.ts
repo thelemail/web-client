@@ -1,5 +1,5 @@
-import { getTwoFactorStatus } from '$lib/api/twofactor';
-import type { TwoFactorStatus } from '$lib/api/types';
+import { getTwoFactorStatus } from '$core/api/twofactor';
+import type { TwoFactorStatus } from '$core/api/types';
 
 class TwoFactorStore {
 	status = $state<TwoFactorStatus | null>(null);

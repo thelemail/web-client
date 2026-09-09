@@ -1,4 +1,4 @@
-import { openDatabase } from '$lib/idb-open';
+import { openDatabase } from '$core/idb-open';
 
 const DB_NAME = 'thelemail-import';
 const DB_VERSION = 1;

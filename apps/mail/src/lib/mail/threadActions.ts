@@ -5,8 +5,8 @@ import {
 	markMessageSpam,
 	restoreMessage,
 	trashMessage
-} from '$lib/api/messages';
-import type { MessageDetail, MessageState } from '$lib/api/types';
+} from '$core/api/messages';
+import type { MessageDetail, MessageState } from '$core/api/types';
 
 export type ThreadVerb = 'archive' | 'trash' | 'restore' | 'read' | 'spam' | 'inbox';
 

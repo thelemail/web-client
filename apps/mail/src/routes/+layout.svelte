@@ -6,7 +6,7 @@
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { platform } from '$platform';
-	import type { NotificationTarget } from '$lib/platform/types';
+	import type { NotificationTarget } from '$core/platform/types';
 
 	let { children } = $props();
 

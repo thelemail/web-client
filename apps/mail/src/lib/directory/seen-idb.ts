@@ -1,4 +1,4 @@
-import { openDb, DIRECTORY_SEEN_STORE } from '$lib/idb';
+import { openDb, DIRECTORY_SEEN_STORE } from '$core/idb';
 
 export interface SeenRecord {
 	address: string;

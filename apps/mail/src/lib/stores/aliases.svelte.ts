@@ -8,7 +8,7 @@ import {
 	type SharedAlias,
 	type CreateSharedAliasInput,
 	type RotateSharedAliasInput
-} from '$lib/api/aliases';
+} from '$core/api/aliases';
 
 class AliasesStore {
 	items = $state<SharedAlias[]>([]);

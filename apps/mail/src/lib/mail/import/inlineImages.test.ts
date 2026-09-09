@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const fetchRemoteImages = vi.fn();
 const resolveBimi = vi.fn();
-vi.mock('$lib/api/messages', () => ({
+vi.mock('$core/api/messages', () => ({
 	fetchRemoteImages: (...a: unknown[]) => fetchRemoteImages(...a),
 	resolveBimi: (...a: unknown[]) => resolveBimi(...a)
 }));

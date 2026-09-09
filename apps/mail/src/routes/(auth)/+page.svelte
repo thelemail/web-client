@@ -8,7 +8,7 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import RemoveAccountDialog from '$lib/mail/RemoveAccountDialog.svelte';
 	import { initialsFor } from '$lib/mail/initials';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { page } from '$app/state';

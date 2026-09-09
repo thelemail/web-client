@@ -1,4 +1,4 @@
-import { getAccountSettings, putAccountSettingsSection } from '$lib/api/accountSettings';
+import { getAccountSettings, putAccountSettingsSection } from '$core/api/accountSettings';
 import { locale, type LocaleSettings } from '$lib/mail/locale.svelte';
 import { theme, type ThemePref } from './theme.svelte';
 import { preferences } from './preferences.svelte';

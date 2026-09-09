@@ -1,7 +1,7 @@
 import { browser } from '$app/environment';
 import { SvelteMap } from 'svelte/reactivity';
 import { platform } from '$platform';
-import { openDatabase } from '$lib/idb-open';
+import { openDatabase } from '$core/idb-open';
 
 const DB_NAME = 'thelemail-avatars';
 const DB_VERSION = 2;

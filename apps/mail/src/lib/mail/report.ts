@@ -1,5 +1,5 @@
-import { reportMessage } from '$lib/api/messages';
-import { ApiCallError, type MessageReportKind, type ReportMessageRequest } from '$lib/api/types';
+import { reportMessage } from '$core/api/messages';
+import { ApiCallError, type MessageReportKind, type ReportMessageRequest } from '$core/api/types';
 import { loadOriginalHeaders } from './originalHeaders';
 
 const MAX_HEADER_CHARS = 65536;

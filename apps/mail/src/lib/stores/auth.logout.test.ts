@@ -28,7 +28,7 @@ vi.mock('$platform', () => ({
 	}
 }));
 
-vi.mock('$lib/api/auth', () => ({
+vi.mock('$core/api/auth', () => ({
 	refreshSession: vi.fn(),
 	logout: (...a: unknown[]) => apiLogout(...a),
 	logoutAll: (...a: unknown[]) => apiLogoutAll(...a),
@@ -36,7 +36,7 @@ vi.mock('$lib/api/auth', () => ({
 	getPersistentHalf: vi.fn()
 }));
 
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		clear: (...a: unknown[]) => keystoreClear(...a),
 		clearAll: (...a: unknown[]) => keystoreClearAll(...a),

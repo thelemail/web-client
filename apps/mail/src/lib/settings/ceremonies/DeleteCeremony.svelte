@@ -13,11 +13,11 @@
 	import { goto } from '$app/navigation';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
-	import { confirmDeletion, confirmDeletionOpaque, initDeletion, initDeletionOpaque } from '$lib/api/deletion';
-	import { webauthnProofInit } from '$lib/api/twofactor';
-	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$lib/api/types';
+	import { confirmDeletion, confirmDeletionOpaque, initDeletion, initDeletionOpaque } from '$core/api/deletion';
+	import { webauthnProofInit } from '$core/api/twofactor';
+	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
 	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$lib/auth/webauthn';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$lib/stores/accounts.svelte';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { twofactor } from '$lib/stores/twofactor.svelte';

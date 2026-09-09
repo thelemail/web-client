@@ -1,5 +1,5 @@
-import type { CalendarRow } from '$lib/api/calendars';
-import { keystore } from '$lib/keystore/keystore-client';
+import type { CalendarRow } from '$core/api/calendars';
+import { keystore } from '$core/keystore/keystore-client';
 import { b64ToBytes, bytesToB64 } from '$lib/crypto';
 import { b64ToHex } from '$lib/keys/encode';
 import { senderKey } from '$lib/mail/send';

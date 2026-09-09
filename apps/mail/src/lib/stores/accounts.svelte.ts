@@ -5,7 +5,7 @@ import {
 	getAllAccountSlots,
 	putAccountSlot,
 	type AccountSlotRecord
-} from '$lib/keystore/idb';
+} from '$core/keystore/idb';
 import { syncSessionHint } from './session-hint';
 
 const CHANNEL_NAME = 'thelemail:accounts';

@@ -1,5 +1,5 @@
 import { SendError } from '../send';
-import { ApiCallError } from '$lib/api/types';
+import { ApiCallError } from '$core/api/types';
 import { importEmlFile } from './buildImport';
 import {
 	clearTerminalImportFiles,

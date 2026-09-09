@@ -1,7 +1,7 @@
 import { auth } from '$lib/stores/auth.svelte';
 import { accounts } from '$lib/stores/accounts.svelte';
 import { boot } from '$lib/stores/boot.svelte';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { platform } from '$platform';
 
 export const ssr = false;

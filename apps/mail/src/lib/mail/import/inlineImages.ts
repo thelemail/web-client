@@ -1,5 +1,5 @@
 import { b64ToBytes } from '$lib/crypto';
-import { fetchRemoteImages, resolveBimi } from '$lib/api/messages';
+import { fetchRemoteImages, resolveBimi } from '$core/api/messages';
 import type { RelatedMIMEPart } from '../send';
 import type { ParsedEml } from './parseEml';
 

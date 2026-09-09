@@ -1,10 +1,10 @@
 import { browser } from '$app/environment';
-import { listMessages } from '$lib/api/messages';
+import { listMessages } from '$core/api/messages';
 import { decryptPreview } from '$lib/mail/decrypt';
 import { initialsFor } from '$lib/mail/initials';
 import { paletteFor } from '$lib/mail/avatarPalette';
 import type { Contact } from '$lib/mail/data';
-import type { MessageListItem } from '$lib/api/types';
+import type { MessageListItem } from '$core/api/types';
 import { auth } from './auth.svelte';
 import { addresses } from './addresses.svelte';
 

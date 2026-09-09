@@ -14,7 +14,7 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import FolderInput from '@lucide/svelte/icons/folder-input';
 	import Tag from '@lucide/svelte/icons/tag';
-	import { setMessageLabels } from '$lib/api/messages';
+	import { setMessageLabels } from '$core/api/messages';
 	import BellOff from '@lucide/svelte/icons/bell-off';
 	import Code from '@lucide/svelte/icons/code';
 	import Printer from '@lucide/svelte/icons/printer';
@@ -40,7 +40,7 @@
 	import { untrack } from 'svelte';
 	import { DecryptionError } from '$lib/mail/decrypt';
 	import { auth } from '$lib/stores/auth.svelte';
-	import { getMessage } from '$lib/api/messages';
+	import { getMessage } from '$core/api/messages';
 	import { initialChips, type AttachmentChip } from '$lib/mail/attachments';
 	import AttachmentList from '$lib/mail/AttachmentList.svelte';
 	import { hydrateThread } from './hydrateThread';
@@ -58,7 +58,7 @@
 		type ThreadEntry
 	} from './data';
 	import type { MailActionCaps } from './actions';
-	import type { MessageReportKind } from '$lib/api/types';
+	import type { MessageReportKind } from '$core/api/types';
 	import type { ReportOutcome } from './report';
 	import { accountSettings } from '$lib/stores/accountSettings.svelte';
 	import { mailbox } from '$lib/stores/mailbox.svelte';

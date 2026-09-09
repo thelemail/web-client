@@ -1,4 +1,4 @@
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$lib/stores/auth.svelte';
 import { mailbox } from '$lib/stores/mailbox.svelte';
 import { unread } from '$lib/stores/unread.svelte';

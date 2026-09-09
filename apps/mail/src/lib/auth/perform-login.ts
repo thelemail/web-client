@@ -4,16 +4,16 @@ import {
 	migrationFinalize,
 	migrationRegistrationInit,
 	migrationStage
-} from '$lib/api/auth';
+} from '$core/api/auth';
 import {
 	init2faWebauthn,
 	verify2faBackupCode,
 	verify2faTotp,
 	verify2faWebauthn
-} from '$lib/api/twofactor';
-import { ApiCallError, type LoginSessionGrant, type TwoFactorMethod } from '$lib/api/types';
+} from '$core/api/twofactor';
+import { ApiCallError, type LoginSessionGrant, type TwoFactorMethod } from '$core/api/types';
 import { getAssertion } from '$lib/auth/webauthn';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$lib/stores/auth.svelte';
 import { accounts } from '$lib/stores/accounts.svelte';
 import { syncAddressUids } from '$lib/keys/uid-sync';

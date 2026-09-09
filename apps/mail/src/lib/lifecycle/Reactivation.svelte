@@ -22,8 +22,8 @@
 	import BriefcaseBusiness from '@lucide/svelte/icons/briefcase-business';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { billing } from '$lib/stores/billing.svelte';
-	import { createCheckoutSession, createBillingPortalSession } from '$lib/api/billing';
-	import { ApiCallError } from '$lib/api/types';
+	import { createCheckoutSession, createBillingPortalSession } from '$core/api/billing';
+	import { ApiCallError } from '$core/api/types';
 	import { eur, planTotal, selectionForCode, type BillingPeriod } from '$lib/auth/plans';
 	import { fmt } from './dates';
 	import type { LifecycleContext, ReactivationPlan } from './types';

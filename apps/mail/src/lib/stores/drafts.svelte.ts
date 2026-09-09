@@ -1,7 +1,7 @@
-import { listDrafts } from '$lib/api/drafts';
+import { listDrafts } from '$core/api/drafts';
 import { decryptPreview, DecryptionError } from '$lib/mail/decrypt';
 import { initialsFor } from '$lib/mail/initials';
-import type { DraftListItem } from '$lib/api/types';
+import type { DraftListItem } from '$core/api/types';
 import { auth } from './auth.svelte';
 
 export interface DraftRow {

@@ -1,5 +1,5 @@
-import { getMailboxCounts } from '$lib/api/messages';
-import type { MailboxCounts } from '$lib/api/types';
+import { getMailboxCounts } from '$core/api/messages';
+import type { MailboxCounts } from '$core/api/types';
 
 class UnreadStore {
 	#counts = $state(new Map<string, MailboxCounts>());

@@ -1,4 +1,4 @@
-import { getMessage } from '$lib/api/messages';
+import { getMessage } from '$core/api/messages';
 import { decryptBodyFromUrl } from './decrypt';
 import { splitMimeHeaders } from './render/mimeHeaders';
 

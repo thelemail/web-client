@@ -19,8 +19,8 @@
 		recoveryOpaqueRegistrationInit,
 		recoverySetup,
 		recoverySetupOpaque
-	} from '$lib/api/auth';
-	import { keystore } from '$lib/keystore/keystore-client';
+	} from '$core/api/auth';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$lib/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$lib/components/ui/button';

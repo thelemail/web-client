@@ -1,6 +1,6 @@
 import { classifyAddress } from './sendDispatch';
-import { lookupExternalKey } from '$lib/api/externalKeys';
-import { ApiCallError } from '$lib/api/types';
+import { lookupExternalKey } from '$core/api/externalKeys';
+import { ApiCallError } from '$core/api/types';
 import type { RecipientEncStatus } from './RecipientField.svelte';
 
 type ResolvedStatus = 'checking' | 'internal' | 'encrypted' | 'cleartext';

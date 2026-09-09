@@ -1,5 +1,5 @@
-import { listMessageChanges, listMessages, type ListMessagesOptions } from '$lib/api/messages';
-import type { MessageListItem } from '$lib/api/types';
+import { listMessageChanges, listMessages, type ListMessagesOptions } from '$core/api/messages';
+import type { MessageListItem } from '$core/api/types';
 import { decryptPreview } from '$lib/mail/decrypt';
 import { idbSearchDb, type SearchDb } from './db';
 import {

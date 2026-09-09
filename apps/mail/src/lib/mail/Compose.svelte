@@ -35,7 +35,7 @@
 	import { signatures } from '$lib/stores/signatures.svelte';
 	import { SendError } from './send';
 	import { dispatchSend } from './sendDispatch';
-	import { acceptExternalKey } from '$lib/api/externalKeys';
+	import { acceptExternalKey } from '$core/api/externalKeys';
 	import type { RecipientEncStatus } from './RecipientField.svelte';
 	import { EncStatusTracker } from './encStatus.svelte';
 	import { summarizeEncryption } from './encSummary';
@@ -49,7 +49,7 @@
 		removeSignature,
 		hasSignature
 	} from './signatureRegion';
-	import { getDraft, putDraft, deleteDraft } from '$lib/api/drafts';
+	import { getDraft, putDraft, deleteDraft } from '$core/api/drafts';
 	import { buildDraftEnvelope, loadDraftDoc, restoreAttachmentFile, type DraftDoc } from './draft';
 	import { drafts, type DraftRow } from '$lib/stores/drafts.svelte';
 	import { onMount } from 'svelte';

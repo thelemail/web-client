@@ -1,6 +1,6 @@
 import { bytesToB64 } from '$lib/crypto';
 import { hexToB64 } from '$lib/keys/encode';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { canonicalise, type BusyStatement } from './busycanon';
 import { SealError } from './seal';
 

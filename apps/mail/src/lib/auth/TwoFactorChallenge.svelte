@@ -6,7 +6,7 @@
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import Usb from '@lucide/svelte/icons/usb';
-	import type { TwoFactorMethod } from '$lib/api/types';
+	import type { TwoFactorMethod } from '$core/api/types';
 	import { webauthnSupported } from '$lib/auth/webauthn';
 	import { Button } from '$lib/components/ui/button';
 

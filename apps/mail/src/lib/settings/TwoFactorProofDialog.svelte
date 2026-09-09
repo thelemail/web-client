@@ -3,8 +3,8 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Fingerprint from '@lucide/svelte/icons/fingerprint';
 	import CeremonyShell from './CeremonyShell.svelte';
-	import { webauthnProofInit } from '$lib/api/twofactor';
-	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$lib/api/types';
+	import { webauthnProofInit } from '$core/api/twofactor';
+	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
 	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$lib/auth/webauthn';
 	import { auth } from '$lib/stores/auth.svelte';
 	import { Button } from '$lib/components/ui/button';

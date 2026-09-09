@@ -10,7 +10,7 @@
 		type AttachmentChip,
 		type PointerRefresh
 	} from './attachments';
-	import type { DecryptedAttachmentHeader } from './attframe';
+	import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 	import { auth } from '$lib/stores/auth.svelte';
 
 	interface Props {

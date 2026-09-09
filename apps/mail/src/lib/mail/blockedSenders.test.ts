@@ -3,11 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('openpgp', () => ({}));
 vi.mock('hash-wasm', () => ({ argon2id: vi.fn() }));
 
-vi.mock('$lib/api/blockedSenders', () => ({
+vi.mock('$core/api/blockedSenders', () => ({
 	addBlockedSender: vi.fn()
 }));
 
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		getPublicKey: vi.fn(),
 		encrypt: vi.fn(),
@@ -15,8 +15,8 @@ vi.mock('$lib/keystore/keystore-client', () => ({
 	}
 }));
 
-import { addBlockedSender } from '$lib/api/blockedSenders';
-import { keystore } from '$lib/keystore/keystore-client';
+import { addBlockedSender } from '$core/api/blockedSenders';
+import { keystore } from '$core/keystore/keystore-client';
 import { blockSender, normalizeAddress, sealAddress, unsealAddress } from './blockedSenders';
 
 const add = vi.mocked(addBlockedSender);

@@ -1,6 +1,6 @@
 import * as openpgp from 'openpgp';
 
-import { keyCreationDate } from '$lib/keystore/opaque-params';
+import { keyCreationDate } from '$core/keystore/opaque-params';
 
 export interface GeneratedDelegationKey {
 	publicKeyArmored: string;

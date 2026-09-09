@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiCallError } from '$lib/api/types';
+import { ApiCallError } from '$core/api/types';
 import type { OutboxRecord } from './db';
 import { classifyError, replayOne, type ReplayApi, type ReplayHooks } from './outbox';
 

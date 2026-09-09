@@ -1,0 +1,15 @@
+{
+  "name": "@thelemail/core",
+  "private": true,
+  "version": "0.13.0",
+  "type": "module",
+  "dependencies": {
+    "@protontech/crypto": "^2.0.1",
+    "@scure/bip39": "^2.2.0",
+    "@serenity-kit/opaque": "1.1.0",
+    "openpgp": "^6.3.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.8"
+  }
+}

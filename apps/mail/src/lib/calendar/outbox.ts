@@ -3,8 +3,8 @@ import type {
 	CalendarItemStateRequest,
 	CalendarItemSummary,
 	UpdateCalendarRequest
-} from '$lib/api/calendars';
-import { ApiCallError } from '$lib/api/types';
+} from '$core/api/calendars';
+import { ApiCallError } from '$core/api/types';
 import type { OutboxRecord } from './db';
 
 export type OutboxStatus = 'queued' | 'sending' | 'blocked';

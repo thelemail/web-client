@@ -1,16 +1,16 @@
 import * as openpgp from 'openpgp';
 import { auth } from '$lib/stores/auth.svelte';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, hexToBytes } from '$lib/crypto';
-import { sendInternal } from '$lib/api/messages';
-import { lookupAccount } from '$lib/api/accounts';
-import { ApiCallError } from '$lib/api/types';
+import { sendInternal } from '$core/api/messages';
+import { lookupAccount } from '$core/api/accounts';
+import { ApiCallError } from '$core/api/types';
 import type {
 	AttachmentDescriptor,
 	InternalSendRequest,
 	InternalSendResponse,
 	SendEnvelope
-} from '$lib/api/types';
+} from '$core/api/types';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { verifyDirectoryLookup, DirectoryVerificationError } from '$lib/directory/verify';
 import type { DirectoryVerificationCode } from '$lib/directory/verify';

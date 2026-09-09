@@ -1,7 +1,7 @@
-import type { CalendarItemRow, CalendarItemStateRow, CalendarRow } from '$lib/api/calendars';
+import type { CalendarItemRow, CalendarItemStateRow, CalendarRow } from '$core/api/calendars';
 import type { ItemKind } from './model';
 import type { OutboxOp, OutboxStatus } from './outbox';
-import { openDatabase } from '$lib/idb-open';
+import { openDatabase } from '$core/idb-open';
 
 export interface CachedCalendar {
 	accountId: string;

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const refreshSession = vi.fn();
 const keystoreClear = vi.fn();
 
-vi.mock('$lib/api/auth', () => ({
+vi.mock('$core/api/auth', () => ({
 	refreshSession: (...a: unknown[]) => refreshSession(...a),
 	logout: vi.fn(),
 	logoutAll: vi.fn(),
@@ -11,7 +11,7 @@ vi.mock('$lib/api/auth', () => ({
 	getPersistentHalf: vi.fn()
 }));
 
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		clear: (...a: unknown[]) => keystoreClear(...a),
 		clearAll: vi.fn(),

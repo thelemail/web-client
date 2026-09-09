@@ -1,4 +1,4 @@
-import { listCalendarBusy, type CalendarBusyEntry } from '$lib/api/calendars';
+import { listCalendarBusy, type CalendarBusyEntry } from '$core/api/calendars';
 import { directoryTrust } from '$lib/mail/senderVerify';
 import { auth } from '$lib/stores/auth.svelte';
 import { workspaces } from '$lib/stores/workspaces.svelte';

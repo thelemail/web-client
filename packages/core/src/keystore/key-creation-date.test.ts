@@ -8,7 +8,7 @@ import {
 	resetServerClock,
 	serverClockOffsetMs,
 	serverNow
-} from '$lib/api/serverclock';
+} from '$core/api/serverclock';
 
 describe('keyCreationDate', () => {
 	it('sits a fixed margin behind the local clock', () => {

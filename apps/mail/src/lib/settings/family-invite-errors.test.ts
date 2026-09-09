@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ApiCallError, type ErrorCode } from '$lib/api/types';
+import { ApiCallError, type ErrorCode } from '$core/api/types';
 import { acceptInviteError, familyInviteError } from './family-invite-errors';
 
 function apiError(code: ErrorCode): ApiCallError {

@@ -1,7 +1,7 @@
-import { addBlockedSender } from '$lib/api/blockedSenders';
-import type { BlockedSender } from '$lib/api/types';
+import { addBlockedSender } from '$core/api/blockedSenders';
+import type { BlockedSender } from '$core/api/types';
 import { b64ToBytes, bytesToB64 } from '$lib/crypto';
-import { keystore } from '$lib/keystore/keystore-client';
+import { keystore } from '$core/keystore/keystore-client';
 
 export function normalizeAddress(address: string): string {
 	return address.trim().toLowerCase();

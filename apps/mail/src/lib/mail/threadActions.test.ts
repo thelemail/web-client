@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('$lib/api/messages', () => ({
+vi.mock('$core/api/messages', () => ({
 	getMessageThread: vi.fn(),
 	archiveMessage: vi.fn(),
 	trashMessage: vi.fn(),
@@ -16,8 +16,8 @@ import {
 	markMessageSpam,
 	restoreMessage,
 	trashMessage
-} from '$lib/api/messages';
-import type { MailboxState, MessageDetail } from '$lib/api/types';
+} from '$core/api/messages';
+import type { MailboxState, MessageDetail } from '$core/api/types';
 import { applyToThread } from './threadActions';
 
 const getThread = vi.mocked(getMessageThread);

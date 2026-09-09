@@ -50,6 +50,7 @@
     "@scure/bip39": "^2.2.0",
     "@serenity-kit/opaque": "1.1.0",
     "@simplewebauthn/browser": "^13.3.0",
+    "@thelemail/core": "workspace:*",
     "@tiptap/core": "^3.26.0",
     "@tiptap/extension-image": "^3.26.0",
     "@tiptap/extension-link": "^3.26.0",

@@ -1,7 +1,7 @@
-import { lookupAccount } from '$lib/api/accounts';
-import { acceptExternalKey, lookupExternalKey } from '$lib/api/externalKeys';
-import { getMyWorkspace } from '$lib/api/workspaces';
-import { ApiCallError, type ExternalKeyTrust } from '$lib/api/types';
+import { lookupAccount } from '$core/api/accounts';
+import { acceptExternalKey, lookupExternalKey } from '$core/api/externalKeys';
+import { getMyWorkspace } from '$core/api/workspaces';
+import { ApiCallError, type ExternalKeyTrust } from '$core/api/types';
 import {
 	verifyDirectoryLookup,
 	DirectoryVerificationError,

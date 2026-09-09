@@ -10,7 +10,7 @@ vi.mock('$lib/directory/verify', () => ({
 vi.mock('$lib/directory/signing-key', () => ({
 	DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX: ''
 }));
-vi.mock('$lib/keystore/keystore-client', () => ({
+vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: { subscribe: () => () => {} }
 }));
 vi.mock('$lib/stores/auth.svelte', () => ({
@@ -28,7 +28,7 @@ import {
 	SendError,
 	type ComposeInput
 } from './send';
-import { ApiCallError } from '$lib/api/types';
+import { ApiCallError } from '$core/api/types';
 
 function decode(bytes: Uint8Array): string {
 	return new TextDecoder().decode(bytes);

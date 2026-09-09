@@ -20,7 +20,7 @@
 	import { TwoFactorExpiredError, TwoFactorRejectedError } from '$lib/auth/perform-login';
 	import TwoFactorChallenge from '$lib/auth/TwoFactorChallenge.svelte';
 	import { isWebauthnCancelled } from '$lib/auth/webauthn';
-	import { keystore } from '$lib/keystore/keystore-client';
+	import { keystore } from '$core/keystore/keystore-client';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
 	import brandmark from '$lib/assets/logo-mark.svg';

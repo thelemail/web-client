@@ -15,7 +15,7 @@ import {
 	type CalendarItemRow,
 	type CalendarItemStateRow,
 	type CalendarRow
-} from '$lib/api/calendars';
+} from '$core/api/calendars';
 import { coalesce } from '$lib/realtime/coalesce';
 import { electLeader, type LeaderHandle } from '$lib/realtime/leader';
 import { registerCalendarRealtime } from '$lib/realtime/calendarHook';

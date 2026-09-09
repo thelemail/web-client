@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
-import { listMyCalendarKeys, type CalendarKeyGrant } from '$lib/api/calendars';
-import { keystore } from '$lib/keystore/keystore-client';
+import { listMyCalendarKeys, type CalendarKeyGrant } from '$core/api/calendars';
+import { keystore } from '$core/keystore/keystore-client';
 import { b64ToHex, b64ToText } from '$lib/keys/encode';
 
 const REFRESH_INTERVAL_MS = 30_000;

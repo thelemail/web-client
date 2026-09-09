@@ -1,5 +1,5 @@
-import type { Subscription } from '$lib/api/billing';
-import type { LifecycleInfo } from '$lib/api/types';
+import type { Subscription } from '$core/api/billing';
+import type { LifecycleInfo } from '$core/api/types';
 import { daysBetween, ladderFor } from './dates';
 import type { LifecycleContext, LifecycleStage, LifecyclePlan } from './types';
 

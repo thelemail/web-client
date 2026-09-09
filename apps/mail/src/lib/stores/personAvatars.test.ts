@@ -5,7 +5,7 @@ const cachePersonAvatar = vi.fn();
 const hydratePersonAvatars = vi.fn();
 const releasePersonAvatars = vi.fn();
 
-vi.mock('$lib/api/accounts', () => ({
+vi.mock('$core/api/accounts', () => ({
 	resolveAvatars: (...a: unknown[]) => resolveAvatars(...a)
 }));
 
