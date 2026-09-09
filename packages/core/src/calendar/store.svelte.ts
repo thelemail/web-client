@@ -55,7 +55,6 @@ import {
 	keyForCalendar,
 	mintOwnCalendarKey,
 	openText,
-	ownKey,
 	sealText,
 	SealError,
 	type SealKey
