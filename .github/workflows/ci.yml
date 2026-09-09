@@ -68,6 +68,8 @@ jobs:
 
       - name: Validate the Caddyfile
         run: |
-          docker run --rm -v "$PWD/apps/mail/Caddyfile:/etc/caddy/Caddyfile:ro" \
-            caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 \
-            caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile
+          for app in mail calendar; do
+            docker run --rm -v "$PWD/apps/$app/Caddyfile:/etc/caddy/Caddyfile:ro" \
+              caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 \
+              caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile
+          done

@@ -9,7 +9,7 @@ WORKDIR /src
 ENV CI=true
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/mail/package.json apps/mail/
+COPY apps/calendar/package.json apps/calendar/
 COPY packages/core/package.json packages/core/
 RUN corepack enable && corepack install
 
@@ -32,7 +32,7 @@ ENV PUBLIC_BLOB_ORIGIN=${PUBLIC_BLOB_ORIGIN}
 ARG PUBLIC_PRODUCT_ORIGINS=""
 ENV PUBLIC_PRODUCT_ORIGINS=${PUBLIC_PRODUCT_ORIGINS}
 
-ENV PUBLIC_THELEMAIL_PRODUCT=app
+ENV PUBLIC_THELEMAIL_PRODUCT=calendar
 
 RUN set -eu; \
     test -s trust-roots/directory-signing-key.asc || { echo "trust-roots/directory-signing-key.asc is missing or empty" >&2; exit 1; }; \
@@ -42,21 +42,21 @@ RUN set -eu; \
     export PUBLIC_TLOG_POLICY="$(cat trust-roots/tlog-policy.json)"; \
     export PUBLIC_OFFICIAL_SENDER_POLICY="$(cat trust-roots/official-sender.json)"; \
     node scripts/check-trust-roots.mjs; \
-    pnpm --filter @thelemail/mail build && pnpm --filter @thelemail/mail verify:bundle
+    pnpm --filter @thelemail/calendar build && pnpm --filter @thelemail/calendar verify:bundle
 
 ARG GIT_COMMIT=""
 ARG GIT_REF=""
 ARG BUILD_RUN_URL=""
 
-RUN mkdir -p apps/mail/build/.well-known && \
-    printf '{"commit":"%s","ref":"%s","image":"ghcr.io/thelemail/web-client","build":"%s"}\n' \
-      "$GIT_COMMIT" "$GIT_REF" "$BUILD_RUN_URL" > apps/mail/build/.well-known/thelemail-build.json && \
-    cp LICENSE apps/mail/build/LICENSE
+RUN mkdir -p apps/calendar/build/.well-known && \
+    printf '{"commit":"%s","ref":"%s","image":"ghcr.io/thelemail/calendar-client","build":"%s"}\n' \
+      "$GIT_COMMIT" "$GIT_REF" "$BUILD_RUN_URL" > apps/calendar/build/.well-known/thelemail-build.json && \
+    cp LICENSE apps/calendar/build/LICENSE
 
 
 FROM caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 AS runtime
 
-COPY --from=builder /src/apps/mail/build /srv
-COPY apps/mail/Caddyfile /etc/caddy/Caddyfile
+COPY --from=builder /src/apps/calendar/build /srv
+COPY apps/calendar/Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80
