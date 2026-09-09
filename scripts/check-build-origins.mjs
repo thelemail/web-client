@@ -3,6 +3,7 @@ import { extname, join } from 'node:path';
 import { loadBuildEnv, resolveOrigins } from './csp.ts';
 
 const BUILD_DIR = 'build';
+const WORKSPACE_ROOT = process.env.THELEMAIL_WORKSPACE_ROOT ?? '../..';
 const SCANNED = new Set(['.js', '.mjs', '.css', '.html', '.json', '.map', '.webmanifest']);
 const ABSOLUTE = String.raw`(?:[a-z][a-z0-9+.-]*:)?\/\/`;
 
@@ -40,7 +41,7 @@ function context(text, index) {
 	return text.slice(Math.max(0, index - 40), index + 60).replace(/\s+/g, ' ');
 }
 
-const env = loadBuildEnv();
+const env = loadBuildEnv(WORKSPACE_ROOT);
 const allowed = new Set(resolveOrigins(env));
 const inert = new Set(JSON.parse(readFileSync(new URL('./allowed-origins.json', import.meta.url), 'utf8')).inert);
 const production = [...allowed].every((origin) => origin.startsWith('https://'));

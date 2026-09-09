@@ -1,7 +1,7 @@
 import { loadEnv } from 'vite';
 
-export function loadBuildEnv(): Record<string, string> {
-	return loadEnv('production', '.', ['PUBLIC_']);
+export function loadBuildEnv(root: string): Record<string, string> {
+	return loadEnv('production', root, ['PUBLIC_']);
 }
 
 function originOf(value: string, name: string): string {

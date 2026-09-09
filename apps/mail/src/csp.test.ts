@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inlineScriptHashes, resolveOrigins } from '../scripts/csp.ts';
+import { inlineScriptHashes, resolveOrigins } from '../../../scripts/csp.ts';
 
 const complete = {
 	PUBLIC_API_BASE_URL: 'https://api.thelemail.com/',

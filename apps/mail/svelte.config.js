@@ -1,9 +1,11 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import adapter from '@sveltejs/adapter-static';
-import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from './scripts/csp.ts';
+import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from '../../scripts/csp.ts';
 
-const buildEnv = loadBuildEnv();
+const workspaceRoot = '../..';
+
+const buildEnv = loadBuildEnv(workspaceRoot);
 const origins = resolveOrigins(buildEnv);
 const secure = origins.every((origin) => origin.startsWith('https://'));
 const desktop = buildEnv.PUBLIC_THELEMAIL_TARGET === 'desktop';
@@ -18,6 +20,9 @@ const config = {
 		runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true)
 	},
 	kit: {
+		env: {
+			dir: '../..'
+		},
 		alias: {
 			$platform: desktop ? process.env.THELEMAIL_PLATFORM_DIR ?? 'src/lib/platform/web' : 'src/lib/platform/web'
 		},

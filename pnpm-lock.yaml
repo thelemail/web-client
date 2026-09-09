@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/mail:
     dependencies:
       '@internationalized/date':
         specifier: ^3.12.2

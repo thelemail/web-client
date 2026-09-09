@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	envPrefix: ['VITE_', 'PUBLIC_'],
+	envDir: '../..',
 	resolve: {
 		alias: [
 			{ find: /^core-js\/stable$/, replacement: '/src/lib/empty-module.ts' },
