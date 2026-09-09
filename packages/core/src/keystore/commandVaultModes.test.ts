@@ -40,8 +40,15 @@ describe('commandVaultModes', () => {
 	it('classifies every command', () => {
 		for (const [cmd, modes] of Object.entries(commandVaultModes)) {
 			expect(modes.length, `${cmd} has no vault mode`).toBeGreaterThan(0);
-			expect(modes, `${cmd} must stay available to the account vault`).toContain('account');
+			for (const mode of modes) {
+				expect(['account', 'product'], `${cmd} has an unknown mode`).toContain(mode);
+			}
 		}
+	});
+
+	it('keeps the fork ends on opposite sides of the boundary', () => {
+		expect(commandVaultModes.sealProductFork).toEqual(['account']);
+		expect(commandVaultModes.openProductFork).toEqual(['product']);
 	});
 
 	it('denies credential and recovery commands to a product vault', () => {

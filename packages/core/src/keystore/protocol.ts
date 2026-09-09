@@ -693,7 +693,9 @@ export type KeystoreCommand =
 	| 'encryptToKeys'
 	| 'signDetached'
 	| 'sealIndex'
-	| 'openIndex';
+	| 'openIndex'
+	| 'sealProductFork'
+	| 'openProductFork';
 
 export type VaultMode = 'account' | 'product';
 
@@ -756,4 +758,25 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	signDetached: ['account', 'product'],
 	sealIndex: ['account', 'product'],
 	openIndex: ['account', 'product'],
+	sealProductFork: ['account'],
+	openProductFork: ['product'],
 };
+
+export interface SealProductForkArgs extends AccountScopedArgs {
+	product: string;
+	grants: AliasKeyGrantInput[];
+}
+
+export type SealProductForkResponse =
+	| { ok: true; payload: string; key: string }
+	| { ok: false; code: 'locked' | 'no_keys' };
+
+export interface OpenProductForkArgs {
+	product: string;
+	payload: string;
+	key: string;
+}
+
+export type OpenProductForkResponse =
+	| { ok: true; accountId: string; email: string; keyCount: number }
+	| { ok: false; code: 'invalid_payload' | 'wrong_product' };

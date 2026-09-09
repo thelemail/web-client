@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import Reply from '@lucide/svelte/icons/reply';
 	import { platform } from '$platform';
 	import ReplyAll from '@lucide/svelte/icons/reply-all';
@@ -499,7 +500,8 @@
 			sourceMessageId: m.id,
 			threadSubject: m.subj
 		});
-		await goto(`/u/${page.params.slot ?? '0'}/calendar`);
+		if (!auth.accountId) return;
+		await openCalendarProduct(auth.accountId, Number(page.params.slot ?? '0'));
 	}
 
 	const calendarEvents = $derived<CalendarEvent[]>(

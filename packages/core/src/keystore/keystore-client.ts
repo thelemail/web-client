@@ -32,6 +32,10 @@ import type {
 	SealIndexArgs,
 	SealIndexResponse,
 	OpenIndexArgs,
+	SealProductForkArgs,
+	SealProductForkResponse,
+	OpenProductForkArgs,
+	OpenProductForkResponse,
 	OpenIndexResponse,
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
@@ -340,6 +344,10 @@ export const keystore = {
 	signDetached: (args: SignDetachedArgs) => call<SignDetachedResponse>('signDetached', args),
 	sealIndex: (args: SealIndexArgs) => call<SealIndexResponse>('sealIndex', args, CRYPTO_TIMEOUT_MS),
 	openIndex: (args: OpenIndexArgs) => call<OpenIndexResponse>('openIndex', args, CRYPTO_TIMEOUT_MS),
+	sealProductFork: (args: SealProductForkArgs) =>
+		call<SealProductForkResponse>('sealProductFork', args, CRYPTO_TIMEOUT_MS),
+	openProductFork: (args: OpenProductForkArgs) =>
+		call<OpenProductForkResponse>('openProductFork', args, CRYPTO_TIMEOUT_MS),
 	subscribe(cb: (b: Broadcast) => void): () => void {
 		const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
 		if (channel) return channel.subscribe(cb);

@@ -148,6 +148,10 @@ import type {
 	VerifyPasswordChangeProofArgs,
 	VerifyPasswordChangeProofResponse,
 	VerifyRecoveryProofArgs,
+	SealProductForkArgs,
+	SealProductForkResponse,
+	OpenProductForkArgs,
+	OpenProductForkResponse,
 	VerifyRecoveryProofResponse,
 	KeystoreCommand,
 	VaultMode
@@ -2476,6 +2480,150 @@ function commandAllowed(cmd: KeystoreCommand): boolean {
 	return modes !== undefined && modes.includes(VAULT_MODE);
 }
 
+const FORK_PAYLOAD_VERSION = 1;
+
+interface ForkPayload {
+	v: number;
+	product: string;
+	accountId: string;
+	email: string;
+	keys: {
+		aliasId: string;
+		addressId: string;
+		email: string;
+		keyVersion: number;
+		fingerprintHex: string;
+		privateKeyArmored: string;
+	}[];
+}
+
+async function forkKey(raw: Uint8Array): Promise<CryptoKey> {
+	return crypto.subtle.importKey('raw', raw as BufferSource, { name: 'AES-GCM' }, false, [
+		'encrypt',
+		'decrypt'
+	]);
+}
+
+async function handleSealProductFork(args: SealProductForkArgs): Promise<SealProductForkResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+
+	const keys: ForkPayload['keys'] = [];
+	for (const g of args.grants) {
+		try {
+			const message = await openpgp.readMessage({ armoredMessage: g.wrappedPrivateKeyArmored });
+			const { data } = await openpgp.decrypt({
+				message,
+				decryptionKeys: v.privateKey,
+				expectSigned: false
+			});
+			if (typeof data !== 'string') continue;
+			const privateKey = await openpgp.readPrivateKey({ armoredKey: data });
+			const got = fingerprintHexOf(privateKey);
+			if (got !== g.aliasKeyFingerprintHex.toLowerCase()) continue;
+			keys.push({
+				aliasId: g.aliasId,
+				addressId: g.addressId,
+				email: g.email,
+				keyVersion: g.keyVersion,
+				fingerprintHex: got,
+				privateKeyArmored: data
+			});
+		} catch (err) {
+			console.warn('keystore: fork key unwrap failed', err);
+		}
+	}
+	if (!keys.length) return { ok: false, code: 'no_keys' };
+
+	const payload: ForkPayload = {
+		v: FORK_PAYLOAD_VERSION,
+		product: args.product,
+		accountId: args.accountId,
+		email: v.email,
+		keys
+	};
+	const raw = crypto.getRandomValues(new Uint8Array(32));
+	const iv = crypto.getRandomValues(new Uint8Array(12));
+	const key = await forkKey(raw);
+	const ciphertext = new Uint8Array(
+		await crypto.subtle.encrypt(
+			{ name: 'AES-GCM', iv: iv as BufferSource, additionalData: new TextEncoder().encode(args.product) as BufferSource },
+			key,
+			new TextEncoder().encode(JSON.stringify(payload)) as BufferSource
+		)
+	);
+	const joined = new Uint8Array(iv.byteLength + ciphertext.byteLength);
+	joined.set(iv, 0);
+	joined.set(ciphertext, iv.byteLength);
+	const out = { ok: true as const, payload: bytesToBase64Url(joined), key: bytesToBase64Url(raw) };
+	raw.fill(0);
+	return out;
+}
+
+async function handleOpenProductFork(args: OpenProductForkArgs): Promise<OpenProductForkResponse> {
+	let payload: ForkPayload;
+	const raw = base64UrlToBytes(args.key);
+	try {
+		const joined = base64UrlToBytes(args.payload);
+		const iv = joined.subarray(0, 12);
+		const ciphertext = joined.subarray(12);
+		const key = await forkKey(raw);
+		const plaintext = new Uint8Array(
+			await crypto.subtle.decrypt(
+				{ name: 'AES-GCM', iv: iv as BufferSource, additionalData: new TextEncoder().encode(args.product) as BufferSource },
+				key,
+				ciphertext as BufferSource
+			)
+		);
+		payload = JSON.parse(new TextDecoder().decode(plaintext)) as ForkPayload;
+	} catch (err) {
+		console.warn('keystore: fork open failed', err);
+		return { ok: false, code: 'invalid_payload' };
+	} finally {
+		raw.fill(0);
+	}
+	if (payload.v !== FORK_PAYLOAD_VERSION) return { ok: false, code: 'invalid_payload' };
+	if (payload.product !== args.product) return { ok: false, code: 'wrong_product' };
+	if (!payload.keys.length) return { ok: false, code: 'invalid_payload' };
+
+	const aliasKeys = new Map<string, AliasKeyEntry>();
+	let primary: openpgp.PrivateKey | null = null;
+	for (const k of payload.keys) {
+		try {
+			const privateKey = await openpgp.readPrivateKey({ armoredKey: k.privateKeyArmored });
+			if (fingerprintHexOf(privateKey) !== k.fingerprintHex) continue;
+			aliasKeys.set(k.fingerprintHex, {
+				aliasId: k.aliasId,
+				addressId: k.addressId,
+				email: k.email,
+				keyVersion: k.keyVersion,
+				fingerprintHex: k.fingerprintHex,
+				privateKey
+			});
+			if (!primary) primary = privateKey;
+		} catch (err) {
+			console.warn('keystore: fork key import failed', err);
+		}
+	}
+	if (!primary) return { ok: false, code: 'invalid_payload' };
+
+	const state: VaultState = {
+		accountId: payload.accountId,
+		email: payload.email,
+		authScheme: 'opaque_v1',
+		armoredEncryptedPrivateKey: '',
+		privateKey: primary,
+		keyPassword: `${args.product}:${payload.accountId}`,
+		aliasKeys,
+		aliasCurrent: new Map()
+	};
+	recomputeAliasCurrent(state);
+	vaults.set(payload.accountId, state);
+	indexKeys.delete(payload.accountId);
+	broadcast({ type: 'vaultChanged', accountId: payload.accountId, email: payload.email });
+	return { ok: true, accountId: payload.accountId, email: payload.email, keyCount: aliasKeys.size };
+}
+
 async function dispatch(port: MessagePort, msg: RequestMessage) {
 	try {
 		if (!commandAllowed(msg.cmd)) {
@@ -2781,6 +2929,12 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'sealIndex':
 				respond(port, msg.id, await handleSealIndex(msg.args as SealIndexArgs));
+				break;
+			case 'sealProductFork':
+				respond(port, msg.id, await handleSealProductFork(msg.args as SealProductForkArgs));
+				break;
+			case 'openProductFork':
+				respond(port, msg.id, await handleOpenProductFork(msg.args as OpenProductForkArgs));
 				break;
 			case 'openIndex':
 				respond(port, msg.id, await handleOpenIndex(msg.args as OpenIndexArgs));

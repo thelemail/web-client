@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import User from '@lucide/svelte/icons/user';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import AtSign from '@lucide/svelte/icons/at-sign';
@@ -177,8 +178,9 @@
 
 	async function openCalendar() {
 		open = false;
-		const slot = page.params.slot ?? '0';
-		await goto(`/u/${slot}/calendar`);
+		const slot = Number(page.params.slot ?? '0');
+		if (!auth.accountId) return;
+		await openCalendarProduct(auth.accountId, slot);
 	}
 
 	async function openSettings() {

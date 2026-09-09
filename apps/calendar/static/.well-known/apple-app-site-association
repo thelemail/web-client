@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["SL7HL27HL7.com.thelemail.mail"],
+        "components": [
+          { "/": "/invite/*", "comment": "Workspace invite links open the Thelemail app" }
+        ]
+      }
+    ]
+  }
+}
