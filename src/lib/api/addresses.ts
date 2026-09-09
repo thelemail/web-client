@@ -17,8 +17,8 @@ export interface UpdateAddressInput {
 	name?: string | null;
 }
 
-export function listMyAddresses(): Promise<{ addresses: AccountAddress[] }> {
-	return apiFetch('/v1/me/addresses');
+export function listMyAddresses(accountId?: string): Promise<{ addresses: AccountAddress[] }> {
+	return apiFetch('/v1/me/addresses', { accountId });
 }
 
 export function updateMyAddress(id: string, input: UpdateAddressInput): Promise<AccountAddress> {

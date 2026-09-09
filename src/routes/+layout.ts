@@ -39,6 +39,8 @@ async function bootstrap() {
 		});
 	}
 
+	auth.adoptPreferredAccount();
+
 	for (const a of status.accounts) {
 		if (a.hasPersistent && !a.unlocked) {
 			await auth.ensureVaultUnlocked(a.accountId);

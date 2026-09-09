@@ -52,6 +52,7 @@ class AddressesStore {
 					updatedAt: a.updatedAt
 				}))
 			];
+			this.#syncUids();
 		} catch (err) {
 			if (this.#accountId !== acct) return;
 			this.error = err instanceof Error ? err.message : 'failed to load addresses';
