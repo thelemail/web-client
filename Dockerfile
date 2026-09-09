@@ -24,8 +24,8 @@ ENV PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL}
 ARG PUBLIC_SUBMISSION_BASE_URL
 ENV PUBLIC_SUBMISSION_BASE_URL=${PUBLIC_SUBMISSION_BASE_URL}
 
-ARG CSP_BLOB_ORIGIN=""
-ENV CSP_BLOB_ORIGIN=${CSP_BLOB_ORIGIN}
+ARG PUBLIC_BLOB_ORIGIN=""
+ENV PUBLIC_BLOB_ORIGIN=${PUBLIC_BLOB_ORIGIN}
 
 RUN set -eu; \
     test -s trust-roots/directory-signing-key.asc || { echo "trust-roots/directory-signing-key.asc is missing or empty" >&2; exit 1; }; \

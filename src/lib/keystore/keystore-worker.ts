@@ -3,6 +3,7 @@
 import * as openpgp from 'openpgp';
 
 import { generateDelegationKey } from '$lib/keys/delegationKey';
+import { isAllowedBlobUrl } from './blobOrigins';
 import { CryptoProxy } from '@protontech/crypto';
 import { Api as CryptoApi } from '@protontech/crypto/proxy/endpoint/api.ts';
 import {
@@ -1538,6 +1539,7 @@ async function openAttachmentStream(
 	url: string,
 	signal: AbortSignal
 ): Promise<ReadableStream<Uint8Array>> {
+	if (!isAllowedBlobUrl(url)) throw new AttachmentNetworkError('blocked origin');
 	let resp: Response;
 	try {
 		resp = await fetch(url, { signal });
