@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
+	import { productLaunched } from '$core/products';
 	import Reply from '@lucide/svelte/icons/reply';
 	import { platform } from '$platform';
 	import ReplyAll from '@lucide/svelte/icons/reply-all';
@@ -721,29 +722,31 @@
 						>
 							<Printer size={17} />Print<span class="rt">⌘P</span>
 						</button>
-						<div class="msep"></div>
-						<button
-							type="button"
-							class="mitem"
-							role="menuitem"
-							onclick={() => {
-								moreOpen = false;
-								void sendToCalendar('event');
-							}}
-						>
-							<CalendarPlus size={17} />Create event from message
-						</button>
-						<button
-							type="button"
-							class="mitem"
-							role="menuitem"
-							onclick={() => {
-								moreOpen = false;
-								void sendToCalendar('task');
-							}}
-						>
-							<ListTodo size={17} />Create task from message
-						</button>
+						{#if productLaunched('calendar')}
+							<div class="msep"></div>
+							<button
+								type="button"
+								class="mitem"
+								role="menuitem"
+								onclick={() => {
+									moreOpen = false;
+									void sendToCalendar('event');
+								}}
+							>
+								<CalendarPlus size={17} />Create event from message
+							</button>
+							<button
+								type="button"
+								class="mitem"
+								role="menuitem"
+								onclick={() => {
+									moreOpen = false;
+									void sendToCalendar('task');
+								}}
+							>
+								<ListTodo size={17} />Create task from message
+							</button>
+						{/if}
 						{#if canBlock || canReport}
 							<div class="msep"></div>
 						{/if}

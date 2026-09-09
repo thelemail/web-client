@@ -24,6 +24,17 @@ export const currentProduct = import.meta.env.PUBLIC_THELEMAIL_PRODUCT || 'app';
 
 export const isProductVault = currentProduct !== 'app';
 
+const launched = new Set(
+	String(import.meta.env.PUBLIC_LAUNCHED_PRODUCTS ?? '')
+		.split(',')
+		.map((name: string) => name.trim())
+		.filter(Boolean)
+);
+
+export function productLaunched(audience: string): boolean {
+	return launched.has(audience);
+}
+
 export function productTarget(audience: string): ProductTarget | null {
 	return targets.find((t) => t.audience === audience) ?? null;
 }

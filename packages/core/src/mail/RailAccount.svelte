@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
+	import { productLaunched } from '$core/products';
 	import User from '@lucide/svelte/icons/user';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import AtSign from '@lucide/svelte/icons/at-sign';
@@ -306,10 +307,12 @@
 					<span class="mi-chev"><ChevronRight size={15} /></span>
 				</button>
 				<div class="msep"></div>
-				<button class="mitem" onclick={openCalendar}>
-					<CalendarDays size={17} />Go to Calendar
-				</button>
-				<div class="msep"></div>
+				{#if productLaunched('calendar')}
+					<button class="mitem" onclick={openCalendar}>
+						<CalendarDays size={17} />Go to Calendar
+					</button>
+					<div class="msep"></div>
+				{/if}
 				<button class="mitem" onclick={() => openSettingsSection('profile')}
 					><User size={17} />Account &amp; profile</button
 				>
