@@ -7,6 +7,323 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      openpgp:
+        specifier: ^6.3.0
+        version: 6.3.0
+      vite:
+        specifier: ^8.0.7
+        version: 8.0.14(jiti@2.7.0)
+
+  apps/calendar:
+    dependencies:
+      '@internationalized/date':
+        specifier: ^3.12.2
+        version: 3.12.2
+      '@noble/curves':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@noble/hashes':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@protontech/crypto':
+        specifier: ^2.0.1
+        version: 2.0.1(typescript@6.0.3)
+      '@scure/bip39':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@serenity-kit/opaque':
+        specifier: 1.1.0
+        version: 1.1.0
+      '@simplewebauthn/browser':
+        specifier: ^13.3.0
+        version: 13.3.0
+      '@thelemail/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@tiptap/core':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/pm@3.26.0)
+      '@tiptap/extension-image':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))
+      '@tiptap/extension-link':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))(@tiptap/pm@3.26.0)
+      '@tiptap/extension-placeholder':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/extensions@3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))(@tiptap/pm@3.26.0))
+      '@tiptap/extension-underline':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))
+      '@tiptap/starter-kit':
+        specifier: ^3.26.0
+        version: 3.26.0
+      dompurify:
+        specifier: ^3.4.8
+        version: 3.4.8
+      hash-wasm:
+        specifier: ^4.12.0
+        version: 4.12.0
+      ical.js:
+        specifier: 2.2.1
+        version: 2.2.1
+      iconv-lite:
+        specifier: ^0.7.2
+        version: 0.7.2
+      lucide:
+        specifier: ^1.33.0
+        version: 1.33.0
+      marked:
+        specifier: ^18.0.11
+        version: 18.0.11
+      morphicons:
+        specifier: ^1.7.0
+        version: 1.7.0(svelte@5.56.0)
+      openpgp:
+        specifier: ^6.3.0
+        version: 6.3.0
+      postal-mime:
+        specifier: ^2.7.4
+        version: 2.7.4
+      turndown:
+        specifier: ^7.2.4
+        version: 7.2.4
+    devDependencies:
+      '@fontsource-variable/inter':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@lucide/svelte':
+        specifier: ^1.39.0
+        version: 1.39.0(svelte@5.56.0)
+      '@sveltejs/adapter-static':
+        specifier: ^3.0.10
+        version: 3.0.10(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)(typescript@6.0.3)(vite@8.0.14(jiti@2.7.0)))
+      '@sveltejs/kit':
+        specifier: ^2.70.3
+        version: 2.70.3(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)(typescript@6.0.3)(vite@8.0.14(jiti@2.7.0))
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^7.0.0
+        version: 7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0))
+      '@tailwindcss/forms':
+        specifier: ^0.5.11
+        version: 0.5.11(tailwindcss@4.3.0)
+      '@tailwindcss/typography':
+        specifier: ^0.5.19
+        version: 0.5.19(tailwindcss@4.3.0)
+      '@tailwindcss/vite':
+        specifier: ^4.2.2
+        version: 4.3.0(vite@8.0.14(jiti@2.7.0))
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/svelte':
+        specifier: ^5.3.1
+        version: 5.3.1(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0))(vitest@4.1.8)
+      '@types/dompurify':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@types/turndown':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@vitest/coverage-v8':
+        specifier: ^4.1.8
+        version: 4.1.8(vitest@4.1.8)
+      bits-ui:
+        specifier: ^2.18.1
+        version: 2.18.1(@internationalized/date@3.12.2)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)(typescript@6.0.3)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1(@noble/hashes@2.2.0)
+      shadcn-svelte:
+        specifier: ^1.3.0
+        version: 1.3.0(svelte@5.56.0)
+      svelte:
+        specifier: ^5.55.2
+        version: 5.56.0
+      svelte-check:
+        specifier: ^4.4.6
+        version: 4.4.8(picomatch@4.0.4)(svelte@5.56.0)(typescript@6.0.3)
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
+      tailwind-variants:
+        specifier: ^3.3.1
+        version: 3.3.1(tailwind-merge@3.6.0)(tailwindcss@4.3.0)
+      tailwindcss:
+        specifier: ^4.2.2
+        version: 4.3.0
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vite:
+        specifier: ^8.0.7
+        version: 8.0.14(jiti@2.7.0)
+      vitest:
+        specifier: ^4.1.8
+        version: 4.1.8(@vitest/coverage-v8@4.1.8)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.0.14(jiti@2.7.0))
+
+  apps/mail:
+    dependencies:
+      '@internationalized/date':
+        specifier: ^3.12.2
+        version: 3.12.2
+      '@noble/curves':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@noble/hashes':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@protontech/crypto':
+        specifier: ^2.0.1
+        version: 2.0.1(typescript@6.0.3)
+      '@scure/bip39':
+        specifier: ^2.2.0
+        version: 2.2.0
+      '@serenity-kit/opaque':
+        specifier: 1.1.0
+        version: 1.1.0
+      '@simplewebauthn/browser':
+        specifier: ^13.3.0
+        version: 13.3.0
+      '@thelemail/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@tiptap/core':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/pm@3.26.0)
+      '@tiptap/extension-image':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))
+      '@tiptap/extension-link':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))(@tiptap/pm@3.26.0)
+      '@tiptap/extension-placeholder':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/extensions@3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))(@tiptap/pm@3.26.0))
+      '@tiptap/extension-underline':
+        specifier: ^3.26.0
+        version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))
+      '@tiptap/starter-kit':
+        specifier: ^3.26.0
+        version: 3.26.0
+      dompurify:
+        specifier: ^3.4.8
+        version: 3.4.8
+      hash-wasm:
+        specifier: ^4.12.0
+        version: 4.12.0
+      ical.js:
+        specifier: 2.2.1
+        version: 2.2.1
+      iconv-lite:
+        specifier: ^0.7.2
+        version: 0.7.2
+      lucide:
+        specifier: ^1.33.0
+        version: 1.33.0
+      marked:
+        specifier: ^18.0.11
+        version: 18.0.11
+      morphicons:
+        specifier: ^1.7.0
+        version: 1.7.0(svelte@5.56.0)
+      openpgp:
+        specifier: ^6.3.0
+        version: 6.3.0
+      postal-mime:
+        specifier: ^2.7.4
+        version: 2.7.4
+      turndown:
+        specifier: ^7.2.4
+        version: 7.2.4
+    devDependencies:
+      '@fontsource-variable/inter':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@lucide/svelte':
+        specifier: ^1.39.0
+        version: 1.39.0(svelte@5.56.0)
+      '@sveltejs/adapter-static':
+        specifier: ^3.0.10
+        version: 3.0.10(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)(typescript@6.0.3)(vite@8.0.14(jiti@2.7.0)))
+      '@sveltejs/kit':
+        specifier: ^2.70.3
+        version: 2.70.3(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)(typescript@6.0.3)(vite@8.0.14(jiti@2.7.0))
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^7.0.0
+        version: 7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0))
+      '@tailwindcss/forms':
+        specifier: ^0.5.11
+        version: 0.5.11(tailwindcss@4.3.0)
+      '@tailwindcss/typography':
+        specifier: ^0.5.19
+        version: 0.5.19(tailwindcss@4.3.0)
+      '@tailwindcss/vite':
+        specifier: ^4.2.2
+        version: 4.3.0(vite@8.0.14(jiti@2.7.0))
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/svelte':
+        specifier: ^5.3.1
+        version: 5.3.1(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0))(vitest@4.1.8)
+      '@types/dompurify':
+        specifier: ^3.2.0
+        version: 3.2.0
+      '@types/turndown':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@vitest/coverage-v8':
+        specifier: ^4.1.8
+        version: 4.1.8(vitest@4.1.8)
+      bits-ui:
+        specifier: ^2.18.1
+        version: 2.18.1(@internationalized/date@3.12.2)(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.56.0)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)(typescript@6.0.3)(vite@8.0.14(jiti@2.7.0)))(svelte@5.56.0)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1(@noble/hashes@2.2.0)
+      shadcn-svelte:
+        specifier: ^1.3.0
+        version: 1.3.0(svelte@5.56.0)
+      svelte:
+        specifier: ^5.55.2
+        version: 5.56.0
+      svelte-check:
+        specifier: ^4.4.6
+        version: 4.4.8(picomatch@4.0.4)(svelte@5.56.0)(typescript@6.0.3)
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
+      tailwind-variants:
+        specifier: ^3.3.1
+        version: 3.3.1(tailwind-merge@3.6.0)(tailwindcss@4.3.0)
+      tailwindcss:
+        specifier: ^4.2.2
+        version: 4.3.0
+      tw-animate-css:
+        specifier: ^1.4.0
+        version: 1.4.0
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vite:
+        specifier: ^8.0.7
+        version: 8.0.14(jiti@2.7.0)
+      vitest:
+        specifier: ^4.1.8
+        version: 4.1.8(@vitest/coverage-v8@4.1.8)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.0.14(jiti@2.7.0))
+
+  packages/core:
     dependencies:
       '@internationalized/date':
         specifier: ^3.12.2

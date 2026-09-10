@@ -1,0 +1,66 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import adapter from '@sveltejs/adapter-static';
+import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from '../../scripts/csp.ts';
+
+const workspaceRoot = '../..';
+
+const buildEnv = loadBuildEnv(workspaceRoot);
+const origins = resolveOrigins(buildEnv);
+const secure = origins.every((origin) => origin.startsWith('https://'));
+const desktop = false;
+
+const scriptHashes = inlineScriptHashes(readFileSync('src/app.html', 'utf8')).map(
+	(source) => `sha256-${createHash('sha256').update(source, 'utf8').digest('base64')}`
+);
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+	compilerOptions: {
+		runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true)
+	},
+	kit: {
+		env: {
+			dir: '../..'
+		},
+		alias: {
+			$core: '../../packages/core/src',
+			$platform: desktop
+				? process.env.THELEMAIL_PLATFORM_DIR ?? '../../packages/core/src/platform/web'
+				: '../../packages/core/src/platform/web'
+		},
+		adapter: adapter({
+			pages: 'build',
+			assets: 'build',
+			fallback: 'index.html',
+			precompress: false,
+			strict: true
+		}),
+		...(desktop
+			? {}
+			: {
+					csp: {
+			mode: 'hash',
+			directives: {
+				'default-src': ['none'],
+				'script-src': ['self', 'wasm-unsafe-eval', ...scriptHashes],
+				'style-src': ['self', 'unsafe-inline'],
+				'img-src': ['self', 'data:', 'blob:', 'cid:', ...origins],
+				'font-src': ['self', 'data:'],
+				'connect-src': ['self', ...origins],
+				'worker-src': ['self'],
+				'frame-src': ['self'],
+				'object-src': ['none'],
+				'base-uri': ['none'],
+				'form-action': ['none'],
+				...(secure ? { 'upgrade-insecure-requests': true } : {})
+					}
+				}
+			}),
+		version: {
+			pollInterval: desktop ? 0 : 60000
+		}
+	}
+};
+
+export default config;

@@ -1,7 +1,7 @@
 import { loadEnv } from 'vite';
 
-export function loadBuildEnv(): Record<string, string> {
-	return loadEnv('production', '.', ['PUBLIC_', 'CSP_']);
+export function loadBuildEnv(root: string): Record<string, string> {
+	return loadEnv('production', root, ['PUBLIC_']);
 }
 
 function originOf(value: string, name: string): string {
@@ -16,7 +16,7 @@ export function resolveOrigins(env: Record<string, string | undefined>): string[
 	const required: Record<string, string | undefined> = {
 		PUBLIC_API_BASE_URL: env.PUBLIC_API_BASE_URL,
 		PUBLIC_SUBMISSION_BASE_URL: env.PUBLIC_SUBMISSION_BASE_URL,
-		CSP_BLOB_ORIGIN: env.CSP_BLOB_ORIGIN
+		PUBLIC_BLOB_ORIGIN: env.PUBLIC_BLOB_ORIGIN
 	};
 
 	const missing = Object.entries(required)

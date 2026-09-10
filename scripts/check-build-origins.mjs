@@ -3,6 +3,22 @@ import { extname, join } from 'node:path';
 import { loadBuildEnv, resolveOrigins } from './csp.ts';
 
 const BUILD_DIR = 'build';
+
+function resolveProductOrigins(value) {
+	if (!value) return [];
+	const out = [];
+	for (const entry of value.split(',')) {
+		const origin = entry.split('=')[1];
+		if (!origin) continue;
+		try {
+			out.push(new URL(origin.trim()).origin);
+		} catch {
+			continue;
+		}
+	}
+	return out;
+}
+const WORKSPACE_ROOT = process.env.THELEMAIL_WORKSPACE_ROOT ?? '../..';
 const SCANNED = new Set(['.js', '.mjs', '.css', '.html', '.json', '.map', '.webmanifest']);
 const ABSOLUTE = String.raw`(?:[a-z][a-z0-9+.-]*:)?\/\/`;
 
@@ -40,9 +56,11 @@ function context(text, index) {
 	return text.slice(Math.max(0, index - 40), index + 60).replace(/\s+/g, ' ');
 }
 
-const env = loadBuildEnv();
+const env = loadBuildEnv(WORKSPACE_ROOT);
 const allowed = new Set(resolveOrigins(env));
-const inert = new Set(JSON.parse(readFileSync(new URL('./allowed-origins.json', import.meta.url), 'utf8')).inert);
+const allowlist = JSON.parse(readFileSync(new URL('./allowed-origins.json', import.meta.url), 'utf8'));
+const inert = new Set(allowlist.inert);
+const navigable = new Set(resolveProductOrigins(env.PUBLIC_PRODUCT_ORIGINS));
 const production = [...allowed].every((origin) => origin.startsWith('https://'));
 
 const loads = [];
@@ -69,7 +87,7 @@ for (const file of walk(BUILD_DIR)) {
 
 	for (const match of text.matchAll(ANY_ORIGIN)) {
 		const origin = toOrigin(match[0]);
-		if (!origin || allowed.has(origin) || inert.has(origin)) continue;
+		if (!origin || allowed.has(origin) || inert.has(origin) || navigable.has(origin)) continue;
 		if (!production && LOOPBACK_HOST.test(origin)) continue;
 		if (!unknown.has(origin)) unknown.set(origin, `${file}: ...${context(text, match.index)}...`);
 	}
@@ -94,7 +112,7 @@ if (unknown.size > 0) {
 	failed = true;
 	console.error('Origins in build/ that are neither configured nor recognised:');
 	for (const [origin, where] of unknown) console.error(`  ${origin}\n    ${where}`);
-	console.error('  Add it to the CSP if the client fetches it, or to scripts/allowed-origins.json if it is inert text.');
+	console.error('  Add it to the CSP if the client fetches it, to PUBLIC_PRODUCT_ORIGINS if the client navigates to it, or to scripts/allowed-origins.json if it is inert text.');
 }
 
 if (failed) process.exit(1);

@@ -1,0 +1,240 @@
+<script lang="ts">
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import { platform } from '$platform';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import UserRound from '@lucide/svelte/icons/user-round';
+	import Users from '@lucide/svelte/icons/users';
+	import Building2 from '@lucide/svelte/icons/building-2';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import SecHead from '../SecHead.svelte';
+	import Row from '../Row.svelte';
+	import CardHead from '../CardHead.svelte';
+	import Badge from '../Badge.svelte';
+	import MembershipCard from '../MembershipCard.svelte';
+	import type { CeremonyKind } from '../data';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { billing } from '$core/stores/billing.svelte';
+	import { auth } from '$core/stores/auth.svelte';
+	import { createBillingPortalSession } from '$core/api/billing';
+	import { PRODUCTS, eur } from '$core/auth/plans';
+	import { planLabel, freeNote } from '../plan-display';
+	import UpgradeNudge from '../UpgradeNudge.svelte';
+	import { Button } from '$core/components/ui/button';
+
+	interface Props {
+		launch: (k: CeremonyKind) => void;
+	}
+
+	let { launch }: Props = $props();
+
+	let portalBusy = $state(false);
+	let portalError = $state<string | null>(null);
+
+	const ws = $derived(workspaces.workspace);
+	const type = $derived(ws?.type ?? null);
+	const sub = $derived(billing.subscription);
+	const isPersonal = $derived(type === 'personal');
+	const isFree = $derived(billing.isFree);
+	const isFreeFamily = $derived(billing.isFreeFamily);
+	const isSoloFree = $derived(billing.planCode === 'free');
+	const isOwner = $derived(workspaces.isOwner(auth.accountId));
+	const slot = $derived(page.params.slot ?? '0');
+	const PlanIcon = $derived(
+		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
+	);
+
+	$effect(() => {
+		void billing.refresh();
+	});
+
+	const tierInfo = $derived.by(() => {
+		const code = sub?.planCode;
+		if (!code) return null;
+		const tierId = code.replace(/_/g, '-');
+		for (const product of PRODUCTS) {
+			const tier = product.tiers.find((t) => t.id === tierId);
+			if (tier) return { product, tier };
+		}
+		return null;
+	});
+
+	const planName = $derived(
+		isFree ? planLabel(type, sub?.planCode) : (tierInfo?.tier.name ?? planLabel(type))
+	);
+
+	const priceLine = $derived.by(() => {
+		if (!tierInfo || !sub) return null;
+		const period = sub.interval ?? 'year';
+		const price = tierInfo.tier.prices[period];
+		if (tierInfo.product.perMailbox) {
+			const seats = sub.seats ?? 1;
+			return `${eur(price)} × ${seats} mailbox${seats === 1 ? '' : 'es'} = ${eur(price * seats)} / ${period}`;
+		}
+		return `${eur(price)} / ${period}`;
+	});
+
+	const renewalLine = $derived.by(() => {
+		if (!sub?.currentPeriodEnd) return null;
+		const date = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(
+			new Date(sub.currentPeriodEnd)
+		);
+		return sub.cancelAtPeriodEnd ? `Ends ${date}` : `Renews ${date}`;
+	});
+
+	async function openPortal() {
+		if (portalBusy) return;
+		portalBusy = true;
+		portalError = null;
+		try {
+			const origin = platform.returnOrigin();
+			const slot = page.params.slot;
+			const { url } = await createBillingPortalSession({
+				returnUrl: `${origin}/u/${slot}/settings/account`
+			});
+			platform.openExternal(url);
+		} catch (err) {
+			portalBusy = false;
+			portalError = err instanceof Error ? err.message : 'Could not open billing portal';
+		}
+	}
+
+	function choosePlan() {
+		void goto(`/u/${page.params.slot}/billing/choose`);
+	}
+</script>
+
+<SecHead desc="Your subscription, the people on it, and your right to take everything and leave." />
+
+{#if !ws}
+	<div class="scard">
+		<div class="plan-top">
+			<div class="plan-id">
+				<div class="plan-eyebrow">Loading your plan…</div>
+			</div>
+		</div>
+	</div>
+{:else}
+	<div class="scard plan-card" data-type={type}>
+		<div class="plan-top">
+			<div class="plan-id">
+				<div class="plan-eyebrow">Current plan</div>
+				<div class="plan-name">
+					<PlanIcon size={18} />
+					<span>{planName}</span>
+					{#if sub?.status === 'past_due'}
+						<Badge kind="warn">Payment problem</Badge>
+					{/if}
+				</div>
+				<div class="plan-price">
+					{#if isFree}
+						{freeNote(type, sub?.planCode)}
+					{:else if priceLine}
+						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
+					{:else if isPersonal}
+						A single mailbox just for you.
+					{:else if type === 'family'}
+						A household sharing one plan.
+					{:else}
+						Members and seats with admin controls.
+					{/if}
+				</div>
+				{#if sub?.status === 'past_due'}
+					<div class="plan-warn">
+						The last payment didn&rsquo;t go through. Update your payment method in the billing
+						portal to keep your mailbox active.
+					</div>
+				{/if}
+			</div>
+			<div class="plan-acts">
+				{#if isOwner}
+					{#if isFree}
+						<Button variant="primary" size="sm" onclick={choosePlan}>
+							Upgrade
+						</Button>
+					{:else if sub && (sub.status === 'active' || sub.status === 'past_due')}
+						{#if sub.status === 'active'}
+							<Button variant="ghost" size="sm" onclick={choosePlan}>
+								Change plan
+							</Button>
+						{/if}
+						<Button variant="ghost" size="sm" disabled={portalBusy} onclick={openPortal}>
+							<ExternalLink size={14} />
+							{portalBusy ? 'Opening…' : 'Manage billing'}
+						</Button>
+						{#if sub.status === 'active' && !sub.cancelAtPeriodEnd}
+							<Button variant="ghost" size="sm" href={`/u/${slot}/billing/cancel`}>
+								Cancel plan
+							</Button>
+						{/if}
+					{:else}
+						<Button variant="primary" size="sm" onclick={choosePlan}>
+							Choose a plan
+						</Button>
+					{/if}
+				{/if}
+			</div>
+		</div>
+		{#if portalError}
+			<div class="plan-warn">{portalError}</div>
+		{/if}
+	</div>
+
+	{#if isSoloFree}
+		{#if isOwner}
+			<div class="scard">
+				<CardHead icon={Users} title="Start a family" />
+				<Row
+					t="Bring up to five other accounts into one family"
+					d="Everyone keeps their own address, their own mail and their own keys, and you all share a calendar. It stays free."
+				>
+					<Button variant="secondary" size="sm" onclick={() => launch('family')}>
+						<Users size={14} />Start a family
+					</Button>
+				</Row>
+			</div>
+		{/if}
+		<div class="upgrade-list">
+			<UpgradeNudge
+				title="More storage and your own domain"
+				desc="Paid plans raise storage for every mailbox and let you send from a domain you own."
+			/>
+		</div>
+	{:else if !isPersonal}
+		<MembershipCard {launch} />
+		{#if isFreeFamily}
+			<div class="upgrade-list">
+				<UpgradeNudge
+					title="Family on your own domain"
+					desc="The paid Family plan keeps the same six seats and adds custom domains, more storage, and addresses you create yourself."
+				/>
+			</div>
+		{/if}
+	{/if}
+{/if}
+
+<div class="scard danger">
+	<CardHead icon={CircleAlert} title="Delete account" />
+	<Row
+		t="Delete this account permanently"
+		d="Deactivates the account now and erases every mailbox, address, and message after a 30-day grace period. Once purged, encrypted data is gone for good. Export first."
+	>
+		<Button variant="danger" size="sm" onclick={() => launch('delete')}>
+			<Trash2 size={14} />Delete account…
+		</Button>
+	</Row>
+</div>
+
+<style>
+	.plan-name {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.plan-warn {
+		margin-top: 8px;
+		font-size: var(--text-sm, 13px);
+		color: var(--warning-500, #c08431);
+	}
+</style>
