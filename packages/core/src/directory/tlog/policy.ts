@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/public';
 import { bytesFromBase64 } from './bytes';
+import { parseWitnessPolicy } from './cosignature';
 import { parseVerifierKey } from './note';
 
 export type TlogMode = 'monitor' | 'enforce';
@@ -48,11 +49,15 @@ function loadPolicy(): TlogRuntimePolicy | null {
 		) {
 			throw new Error('PUBLIC_TLOG_POLICY: witnessVerifierKeys must be an array of strings');
 		}
-		for (const k of p.witnessVerifierKeys) parseVerifierKey(k);
 		witnessVerifierKeys = p.witnessVerifierKeys;
 	}
 	if (typeof p.witnessThreshold !== 'number' || !Number.isInteger(p.witnessThreshold) || p.witnessThreshold < 0) {
 		throw new Error('PUBLIC_TLOG_POLICY: witnessThreshold must be a non-negative integer');
+	}
+	try {
+		parseWitnessPolicy(witnessVerifierKeys, p.witnessThreshold);
+	} catch (e) {
+		throw new Error(`PUBLIC_TLOG_POLICY: ${e instanceof Error ? e.message : 'invalid witness policy'}`);
 	}
 	if (
 		typeof p.maxCosignatureAgeSeconds !== 'number' ||

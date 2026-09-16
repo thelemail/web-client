@@ -64,6 +64,56 @@ describe('verifyTlogProof fixtures', () => {
 	}
 });
 
+describe('verifyTlogProof witness policy', () => {
+	const witnessed = cases.find((c) => c.name === 'ok-witnessed')!;
+	const [w1, w2] = witnessed.policy.witnessVerifierKeys!;
+
+	async function codeFor(policy: TlogPolicy) {
+		const err = await run({ ...witnessed, policy }, memoryStore()).then(
+			() => null,
+			(e) => e as unknown
+		);
+		expect(err).toBeInstanceOf(DirectoryVerificationError);
+		return (err as DirectoryVerificationError).code;
+	}
+
+	it('accepts the two distinct witnesses that cosigned', async () => {
+		const details = await run(
+			{ ...witnessed, policy: { ...witnessed.policy, witnessVerifierKeys: [w1, w2] } },
+			memoryStore()
+		);
+		expect(details.validWitnessCount).toBe(2);
+	});
+
+	it('rejects a witness key listed twice', async () => {
+		expect(
+			await codeFor({ ...witnessed.policy, witnessVerifierKeys: [w1, w1], witnessThreshold: 2 })
+		).toBe('tlog_policy_invalid');
+	});
+
+	it('rejects a threshold above the distinct witness keys', async () => {
+		expect(
+			await codeFor({ ...witnessed.policy, witnessVerifierKeys: [w1, w2], witnessThreshold: 3 })
+		).toBe('tlog_policy_invalid');
+	});
+
+	it('rejects a log key configured as a witness', async () => {
+		expect(
+			await codeFor({
+				...witnessed.policy,
+				witnessVerifierKeys: [w1, witnessed.policy.logVerifierKey],
+				witnessThreshold: 1
+			})
+		).toBe('tlog_policy_invalid');
+	});
+
+	it('rejects an unparseable witness key', async () => {
+		expect(
+			await codeFor({ ...witnessed.policy, witnessVerifierKeys: [w1, w2, 'garbage'], witnessThreshold: 2 })
+		).toBe('tlog_policy_invalid');
+	});
+});
+
 interface ConsistencyCase {
 	name: string;
 	label: string;

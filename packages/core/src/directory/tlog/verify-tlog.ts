@@ -2,7 +2,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { DirectoryVerificationError } from '../errors';
 import { bytesEqual, bytesFromBase64, bytesToBase64, concatBytes, utf8 } from './bytes';
 import { parseCheckpoint, type Checkpoint } from './checkpoint';
-import { verifyCosignature } from './cosignature';
+import { parseWitnessPolicy, verifyCosignature } from './cosignature';
 import { leafHash, verifyConsistency, verifyInclusion } from './merkle';
 import { findSignature, parseVerifierKey, verifyNoteSignature, type VerifierKey } from './note';
 import { parseTlogProof, type TlogProofBundle } from './proof';
@@ -86,14 +86,19 @@ export async function verifyTlogProof(
 		);
 	}
 
+	let witnessKeys: VerifierKey[];
+	try {
+		witnessKeys = parseWitnessPolicy(policy.witnessVerifierKeys, policy.witnessThreshold);
+	} catch (e) {
+		throw new DirectoryVerificationError(
+			'tlog_policy_invalid',
+			e instanceof Error ? e.message : 'invalid witness policy',
+			{ logOrigin: policy.origin, witnessThreshold: policy.witnessThreshold }
+		);
+	}
+
 	const witnessTimestamps: number[] = [];
-	for (const vkey of policy.witnessVerifierKeys ?? []) {
-		let witnessKey: VerifierKey;
-		try {
-			witnessKey = parseVerifierKey(vkey);
-		} catch {
-			continue;
-		}
+	for (const witnessKey of witnessKeys) {
 		const sig = findSignature(checkpoint.note, witnessKey);
 		if (!sig) continue;
 		const timestamp = verifyCosignature(sig, witnessKey, checkpoint.note.text);

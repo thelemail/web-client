@@ -11,6 +11,7 @@ export type DirectoryVerificationCode =
 	| 'tlog_proof_malformed'
 	| 'tlog_checkpoint_unverified'
 	| 'tlog_witness_policy_unmet'
+	| 'tlog_policy_invalid'
 	| 'tlog_checkpoint_stale'
 	| 'tlog_inclusion_invalid'
 	| 'tlog_vrf_invalid'
