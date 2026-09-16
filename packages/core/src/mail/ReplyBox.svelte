@@ -70,6 +70,7 @@
 		hasRenderableHtml
 	} from './signatureRegion';
 	import type { Editor } from '@tiptap/core';
+	import { holdRestart } from '$core/stores/restartGuard';
 	import {
 		MAX_ATTACHMENT_BYTES,
 		MAX_ATTACHMENTS,
@@ -654,7 +655,15 @@
 	onMount(() => {
 		void contacts.ensureLoaded();
 		const t = setTimeout(() => boxRef?.scrollIntoView({ block: 'start' }), 0);
-		return () => clearTimeout(t);
+		const release = holdRestart(() => {
+			if (status === 'sending') return 'A message is still sending.';
+			if (text.trim() || attachments.length > 0) return 'A reply you are writing is not saved.';
+			return null;
+		});
+		return () => {
+			clearTimeout(t);
+			release();
+		};
 	});
 </script>
 

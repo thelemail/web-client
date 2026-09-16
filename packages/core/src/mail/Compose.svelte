@@ -52,6 +52,7 @@
 	import { getDraft, putDraft, deleteDraft } from '$core/api/drafts';
 	import { buildDraftEnvelope, loadDraftDoc, restoreAttachmentFile, type DraftDoc } from './draft';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
+	import { holdRestart } from '$core/stores/restartGuard';
 	import { onMount } from 'svelte';
 	import {
 		MAX_ATTACHMENT_BYTES,
@@ -323,10 +324,25 @@
 		scheduleSave();
 	});
 
+	async function restartHold(): Promise<string | null> {
+		if (status === 'sending') return 'A message is still sending.';
+		if (uploadsInFlight()) return 'An attachment is still uploading.';
+		if (hydrating) return null;
+		clearTimeout(saveTimer);
+		await saveDraft();
+		const doc = currentDoc();
+		if (!savedDraftId && !isWorthSaving(doc)) return null;
+		return JSON.stringify(doc) === lastSavedJson ? null : 'A draft could not be saved.';
+	}
+
 	onMount(() => {
 		void contacts.ensureLoaded();
 		if (draftId) void hydrateDraft(draftId);
-		return () => clearTimeout(saveTimer);
+		const release = holdRestart(restartHold);
+		return () => {
+			clearTimeout(saveTimer);
+			release();
+		};
 	});
 
 	async function hydrateDraft(id: string): Promise<void> {
