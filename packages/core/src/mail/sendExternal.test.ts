@@ -5,6 +5,9 @@ const encryptToKeysCalls: string[][] = [];
 const submitted: SubmitMessageRequest[] = [];
 
 vi.mock('openpgp', () => ({ readKey: vi.fn() }));
+vi.mock('$core/directory/lookup', () => ({
+	lookupDirectory: vi.fn()
+}));
 vi.mock('$core/directory/verify', () => ({
 	verifyDirectoryLookup: vi.fn(),
 	DirectoryVerificationError: class extends Error {}

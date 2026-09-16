@@ -991,7 +991,14 @@ export interface AccountLookupResponse {
 	directoryStatement: DirectoryStatementWire;
 	directorySignature: string;
 	tlogProof?: string;
+	tlogConsistency?: TlogConsistencyProof;
 	delegations?: SigningDelegation[];
+}
+
+export interface TlogConsistencyProof {
+	fromSize: number;
+	toSize: number;
+	hashes: string[];
 }
 
 export interface AddressAvatar {

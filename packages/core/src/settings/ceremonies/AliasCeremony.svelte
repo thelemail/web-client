@@ -19,7 +19,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { hexToB64, textToB64 } from '$core/keys/encode';
-	import { lookupAccount } from '$core/api/accounts';
+	import { lookupDirectory } from '$core/directory/lookup';
 	import { verifyDirectoryLookup, DirectoryVerificationError } from '$core/directory/verify';
 	import { createWorkspaceAlias } from '$core/api/aliases';
 	import type { SharedAlias, SharedAliasMemberGrant } from '$core/api/aliases';
@@ -121,7 +121,7 @@
 		const out = [];
 		for (const m of emails) {
 			progress = `Verifying ${m.email}`;
-			const lookup = await lookupAccount(m.email);
+			const lookup = await lookupDirectory(m.email);
 			await verifyDirectoryLookup(lookup, m.email.trim().toLowerCase());
 			out.push({ accountId: m.accountId, publicKeyArmored: lookup.publicKeyArmored });
 		}

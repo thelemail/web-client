@@ -3,7 +3,7 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Users from '@lucide/svelte/icons/users';
-	import { lookupAccount } from '$core/api/accounts';
+	import { lookupDirectory } from '$core/directory/lookup';
 	import {
 		createCalendar,
 		rotateCalendarMembers,
@@ -124,7 +124,7 @@
 			const role = roles[m.accountId];
 			if (!role) continue;
 			progress = `Verifying ${m.email}`;
-			const lookup = await lookupAccount(m.email);
+			const lookup = await lookupDirectory(m.email);
 			await verifyDirectoryLookup(lookup, m.email.trim().toLowerCase());
 			out.push({ accountId: m.accountId, publicKeyArmored: lookup.publicKeyArmored, role });
 		}

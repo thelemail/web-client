@@ -12,7 +12,12 @@ import {
 } from './errors';
 import { TLOG_POLICY } from './tlog/policy';
 import { tlogStateStore } from './tlog/state-idb';
-import { verifyTlogProof, type TlogProofDetails } from './tlog/verify-tlog';
+import { lookupAccount } from '$core/api/accounts';
+import {
+	verifyTlogProof,
+	type TlogConsistencyProof,
+	type TlogProofDetails
+} from './tlog/verify-tlog';
 
 export { DirectoryVerificationError } from './errors';
 export type { DirectoryVerificationCode, DirectoryVerificationDetails } from './errors';
@@ -32,6 +37,7 @@ export interface LookupInputForVerification {
 	directoryStatement: DirectoryStatement;
 	directorySignature: string;
 	tlogProof?: string;
+	tlogConsistency?: TlogConsistencyProof;
 }
 
 let cachedSigningKey: openpgp.PublicKey | null = null;
@@ -219,7 +225,13 @@ export async function verifyDirectoryLookup(
 				canon,
 				requestedAddressNormalised.toLowerCase(),
 				TLOG_POLICY,
-				{ nowMillis: Date.now(), store: tlogStateStore }
+				{
+					nowMillis: Date.now(),
+					store: tlogStateStore,
+					consistency: lookup.tlogConsistency,
+					refetchConsistency: async (since) =>
+						(await lookupAccount(requestedAddressNormalised, since)).tlogConsistency
+				}
 			);
 			tlog = { state: 'verified', ...details };
 		} catch (e) {

@@ -58,6 +58,8 @@ export interface TrustFacts {
 
 const BLOCKING_TLOG_CODES = new Set([
 	'tlog_tree_rolled_back',
+	'tlog_checkpoint_conflict',
+	'tlog_consistency_invalid',
 	'tlog_inclusion_invalid',
 	'tlog_vrf_invalid',
 	'tlog_checkpoint_unverified'
@@ -71,6 +73,8 @@ function tlogAttack(dir?: DirectoryTrust | null): boolean {
 const BLOCKING_DIRECTORY_CODES = new Set([
 	'version_rolled_back',
 	'tlog_tree_rolled_back',
+	'tlog_checkpoint_conflict',
+	'tlog_consistency_invalid',
 	'tlog_inclusion_invalid',
 	'tlog_checkpoint_unverified',
 	'tlog_vrf_invalid'
@@ -91,7 +95,10 @@ const FAILURE_HEADLINES: Record<string, string> = {
 	tlog_checkpoint_stale: 'The transparency log checkpoint is out of date',
 	tlog_inclusion_invalid: 'The key is not included in the transparency log',
 	tlog_vrf_invalid: 'The transparency log entry does not match this address',
-	tlog_tree_rolled_back: 'The transparency log went backwards'
+	tlog_tree_rolled_back: 'The transparency log went backwards',
+	tlog_checkpoint_conflict: 'The transparency log showed this device two different histories',
+	tlog_consistency_invalid: 'The transparency log rewrote history this device already saw',
+	tlog_consistency_unavailable: 'The transparency log history could not be checked'
 };
 
 function domainOf(address: string): string {

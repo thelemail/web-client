@@ -3,7 +3,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, hexToBytes } from '$core/crypto';
 import { sendInternal } from '$core/api/messages';
-import { lookupAccount } from '$core/api/accounts';
+import { lookupDirectory } from '$core/directory/lookup';
 import { ApiCallError } from '$core/api/types';
 import type {
 	AttachmentDescriptor,
@@ -253,7 +253,7 @@ async function resolveRecipient(
 	const normalised = normaliseEmail(emailAddress);
 	let lookup;
 	try {
-		lookup = await lookupAccount(emailAddress);
+		lookup = await lookupDirectory(emailAddress);
 	} catch (e) {
 		if (e instanceof ApiCallError && e.status === 404) {
 			throw new SendError('recipient_unknown', `No Thelemail account at ${emailAddress}`);
