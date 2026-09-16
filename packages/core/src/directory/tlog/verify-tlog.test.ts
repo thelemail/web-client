@@ -114,6 +114,76 @@ describe('verifyTlogProof witness policy', () => {
 	});
 });
 
+describe('verifyTlogProof witness freshness', () => {
+	const fixture = (name: string) => {
+		const c = cases.find((c) => c.name === name);
+		if (!c) throw new Error(`missing fixture ${name}`);
+		return c;
+	};
+	const freshTimestamp = nowUnix - 60;
+	const maxAge = fixture('ok-witnessed').policy.maxCosignatureAgeSeconds;
+
+	function runAt(c: FixtureCase, seconds: number) {
+		return verifyTlogProof(c.tlogProof, new TextEncoder().encode(c.statement), c.address, c.policy, {
+			nowMillis: seconds * 1000,
+			store: memoryStore()
+		});
+	}
+
+	async function failureAt(c: FixtureCase, seconds: number) {
+		const err = await runAt(c, seconds).then(
+			() => null,
+			(e) => e as unknown
+		);
+		expect(err).toBeInstanceOf(DirectoryVerificationError);
+		return err as DirectoryVerificationError;
+	}
+
+	it('counts only the fresh witnesses when a stale one is attached', async () => {
+		const details = await runAt(fixture('ok-fresh-quorum-stale-extra'), nowUnix);
+		expect(details.validWitnessCount).toBe(2);
+		expect(details.cosignatureTimestamp).toBe(freshTimestamp);
+	});
+
+	it('counts only the fresh witnesses when a future-dated one is attached', async () => {
+		const details = await runAt(fixture('ok-fresh-quorum-future-extra'), nowUnix);
+		expect(details.validWitnessCount).toBe(2);
+		expect(details.cosignatureTimestamp).toBe(freshTimestamp);
+	});
+
+	it('counts a future-dated witness once it falls inside the skew allowance', async () => {
+		const details = await runAt(fixture('ok-fresh-quorum-future-extra'), nowUnix + 3600 - 300);
+		expect(details.validWitnessCount).toBe(3);
+	});
+
+	it('reports the fresh count when too few witnesses are fresh', async () => {
+		const err = await failureAt(fixture('stale-quorum-one-fresh'), nowUnix);
+		expect(err.code).toBe('tlog_checkpoint_stale');
+		expect(err.details.validWitnessCount).toBe(1);
+		expect(err.details.witnessThreshold).toBe(2);
+	});
+
+	it('accepts a cosignature exactly at the maximum age', async () => {
+		const details = await runAt(fixture('ok-witnessed'), freshTimestamp + maxAge);
+		expect(details.validWitnessCount).toBe(2);
+	});
+
+	it('rejects a cosignature one second past the maximum age', async () => {
+		const err = await failureAt(fixture('ok-witnessed'), freshTimestamp + maxAge + 1);
+		expect(err.code).toBe('tlog_checkpoint_stale');
+	});
+
+	it('accepts a cosignature exactly at the forward skew allowance', async () => {
+		const details = await runAt(fixture('ok-witnessed'), freshTimestamp - 300);
+		expect(details.validWitnessCount).toBe(2);
+	});
+
+	it('rejects a cosignature one second beyond the forward skew allowance', async () => {
+		const err = await failureAt(fixture('ok-witnessed'), freshTimestamp - 301);
+		expect(err.code).toBe('tlog_checkpoint_stale');
+	});
+});
+
 interface ConsistencyCase {
 	name: string;
 	label: string;

@@ -118,21 +118,23 @@ export async function verifyTlogProof(
 	}
 
 	const nowSeconds = Math.floor(opts.nowMillis / 1000);
-	for (const timestamp of witnessTimestamps) {
-		if (
-			nowSeconds - timestamp > policy.maxCosignatureAgeSeconds ||
-			timestamp - nowSeconds > FORWARD_SKEW_SECONDS
-		) {
-			throw new DirectoryVerificationError(
-				'tlog_checkpoint_stale',
-				`witness cosignature timestamp ${timestamp} outside freshness window`,
-				{
-					logOrigin: policy.origin,
-					treeSize: checkpoint.treeSize,
-					cosignatureTimestamp: timestamp
-				}
-			);
-		}
+	const freshTimestamps = witnessTimestamps.filter(
+		(timestamp) =>
+			nowSeconds - timestamp <= policy.maxCosignatureAgeSeconds &&
+			timestamp - nowSeconds <= FORWARD_SKEW_SECONDS
+	);
+	if (freshTimestamps.length < policy.witnessThreshold) {
+		throw new DirectoryVerificationError(
+			'tlog_checkpoint_stale',
+			`${freshTimestamps.length} of ${witnessTimestamps.length} valid witness cosignatures inside freshness window, need ${policy.witnessThreshold}`,
+			{
+				logOrigin: policy.origin,
+				treeSize: checkpoint.treeSize,
+				validWitnessCount: freshTimestamps.length,
+				witnessThreshold: policy.witnessThreshold,
+				cosignatureTimestamp: Math.max(...witnessTimestamps)
+			}
+		);
 	}
 
 	let vrfPublicKey: Uint8Array;
@@ -175,9 +177,9 @@ export async function verifyTlogProof(
 		origin: policy.origin,
 		treeSize: checkpoint.treeSize,
 		leafIndex: Number(bundle.index),
-		validWitnessCount: witnessTimestamps.length,
+		validWitnessCount: freshTimestamps.length,
 		witnessThreshold: policy.witnessThreshold,
-		cosignatureTimestamp: witnessTimestamps.length ? Math.max(...witnessTimestamps) : undefined
+		cosignatureTimestamp: freshTimestamps.length ? Math.max(...freshTimestamps) : undefined
 	};
 }
 
