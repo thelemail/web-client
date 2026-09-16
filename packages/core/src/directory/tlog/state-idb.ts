@@ -10,6 +10,24 @@ export interface TlogLogState {
 export interface TlogStateStore {
 	get(origin: string): Promise<TlogLogState | null>;
 	put(state: TlogLogState): Promise<void>;
+	exclusive<T>(fn: () => Promise<T>): Promise<T>;
+}
+
+const LOCK_NAME = 'thelemail-tlog-state';
+
+let localQueue: Promise<unknown> = Promise.resolve();
+
+export function exclusiveInTab<T>(fn: () => Promise<T>): Promise<T> {
+	const run = localQueue.then(() => fn());
+	localQueue = run.catch(() => undefined);
+	return run;
+}
+
+function exclusiveAcrossTabs<T>(fn: () => Promise<T>): Promise<T> {
+	if (typeof navigator !== 'undefined' && navigator.locks) {
+		return navigator.locks.request(LOCK_NAME, fn);
+	}
+	return exclusiveInTab(fn);
 }
 
 const DB_NAME = 'thelemail-tlog';
@@ -48,6 +66,7 @@ export const tlogStateStore: TlogStateStore = {
 			req.onerror = () => reject(req.error);
 		});
 	},
+	exclusive: exclusiveAcrossTabs,
 	async put(state: TlogLogState): Promise<void> {
 		const db = await openTlogDb();
 		return new Promise((resolve, reject) => {

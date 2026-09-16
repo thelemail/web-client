@@ -1,18 +1,26 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { DirectoryVerificationError } from '../errors';
-import { bytesFromBase64, bytesToBase64, concatBytes, utf8 } from './bytes';
+import { bytesEqual, bytesFromBase64, bytesToBase64, concatBytes, utf8 } from './bytes';
 import { parseCheckpoint, type Checkpoint } from './checkpoint';
 import { verifyCosignature } from './cosignature';
-import { leafHash, verifyInclusion } from './merkle';
+import { leafHash, verifyConsistency, verifyInclusion } from './merkle';
 import { findSignature, parseVerifierKey, verifyNoteSignature, type VerifierKey } from './note';
 import { parseTlogProof, type TlogProofBundle } from './proof';
 import type { TlogPolicy } from './policy';
 import type { TlogStateStore } from './state-idb';
 import { vrfVerify } from './vrf';
 
+export interface TlogConsistencyProof {
+	fromSize: number;
+	toSize: number;
+	hashes: string[];
+}
+
 export interface VerifyTlogOptions {
 	nowMillis: number;
 	store: TlogStateStore;
+	consistency?: TlogConsistencyProof;
+	refetchConsistency?: (since: number) => Promise<TlogConsistencyProof | undefined>;
 }
 
 export interface TlogProofDetails {
@@ -156,24 +164,7 @@ export async function verifyTlogProof(
 		);
 	}
 
-	const stored = await opts.store.get(policy.origin);
-	if (stored && checkpoint.treeSize < stored.treeSize) {
-		throw new DirectoryVerificationError(
-			'tlog_tree_rolled_back',
-			`checkpoint tree size ${checkpoint.treeSize} < previously seen ${stored.treeSize}`,
-			{
-				logOrigin: policy.origin,
-				treeSize: checkpoint.treeSize,
-				previousTreeSize: stored.treeSize
-			}
-		);
-	}
-	await opts.store.put({
-		origin: policy.origin,
-		treeSize: checkpoint.treeSize,
-		rootHashB64: bytesToBase64(checkpoint.rootHash),
-		updatedAt: opts.nowMillis
-	});
+	await opts.store.exclusive(() => checkContinuity(checkpoint, policy.origin, opts));
 
 	return {
 		origin: policy.origin,
@@ -183,4 +174,104 @@ export async function verifyTlogProof(
 		witnessThreshold: policy.witnessThreshold,
 		cosignatureTimestamp: witnessTimestamps.length ? Math.max(...witnessTimestamps) : undefined
 	};
+}
+
+function consistencyHolds(
+	proof: TlogConsistencyProof | undefined,
+	older: { treeSize: number; rootHash: Uint8Array },
+	newer: { treeSize: number; rootHash: Uint8Array }
+): boolean | undefined {
+	if (!proof || proof.fromSize !== older.treeSize || proof.toSize !== newer.treeSize) {
+		return undefined;
+	}
+	let hashes: Uint8Array[];
+	try {
+		hashes = proof.hashes.map(bytesFromBase64);
+	} catch {
+		return false;
+	}
+	if (hashes.some((h) => h.length !== 32)) return false;
+	return verifyConsistency(
+		BigInt(older.treeSize),
+		older.rootHash,
+		BigInt(newer.treeSize),
+		newer.rootHash,
+		hashes
+	);
+}
+
+async function checkContinuity(
+	checkpoint: Checkpoint,
+	origin: string,
+	opts: VerifyTlogOptions
+): Promise<void> {
+	const current = { treeSize: checkpoint.treeSize, rootHash: checkpoint.rootHash };
+	const save = () =>
+		opts.store.put({
+			origin,
+			treeSize: checkpoint.treeSize,
+			rootHashB64: bytesToBase64(checkpoint.rootHash),
+			updatedAt: opts.nowMillis
+		});
+
+	const stored = await opts.store.get(origin);
+	if (!stored) {
+		await save();
+		return;
+	}
+	const details = {
+		logOrigin: origin,
+		treeSize: checkpoint.treeSize,
+		previousTreeSize: stored.treeSize
+	};
+	let storedRoot: Uint8Array;
+	try {
+		storedRoot = bytesFromBase64(stored.rootHashB64);
+	} catch {
+		storedRoot = new Uint8Array(0);
+	}
+	if (storedRoot.length !== 32) {
+		await save();
+		return;
+	}
+	const previous = { treeSize: stored.treeSize, rootHash: storedRoot };
+
+	if (checkpoint.treeSize === stored.treeSize) {
+		if (!bytesEqual(checkpoint.rootHash, storedRoot)) {
+			throw new DirectoryVerificationError(
+				'tlog_checkpoint_conflict',
+				`checkpoint root at tree size ${checkpoint.treeSize} differs from the one accepted before`,
+				details
+			);
+		}
+		return;
+	}
+
+	const grows = checkpoint.treeSize > stored.treeSize;
+	const [older, newer] = grows ? [previous, current] : [current, previous];
+	let holds = consistencyHolds(opts.consistency, older, newer);
+	if (holds === undefined && opts.refetchConsistency) {
+		holds = consistencyHolds(await opts.refetchConsistency(stored.treeSize), older, newer);
+	}
+	if (holds === undefined) {
+		throw new DirectoryVerificationError(
+			'tlog_consistency_unavailable',
+			`no consistency proof between tree sizes ${older.treeSize} and ${newer.treeSize}`,
+			details
+		);
+	}
+	if (!holds) {
+		throw grows
+			? new DirectoryVerificationError(
+					'tlog_consistency_invalid',
+					`tree size ${checkpoint.treeSize} does not extend the accepted tree size ${stored.treeSize}`,
+					details
+				)
+			: new DirectoryVerificationError(
+					'tlog_tree_rolled_back',
+					`tree size ${checkpoint.treeSize} is not a prefix of the accepted tree size ${stored.treeSize}`,
+					details
+				);
+	}
+	if (grows) await save();
 }
