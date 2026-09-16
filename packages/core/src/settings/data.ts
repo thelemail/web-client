@@ -10,7 +10,8 @@ export type SectionId =
 	| 'notify'
 	| 'region'
 	| 'appearance'
-	| 'account';
+	| 'account'
+	| 'about';
 
 export interface SectionMeta {
 	id: SectionId;
@@ -30,7 +31,8 @@ export const SECTIONS: SectionMeta[] = [
 	{ id: 'notify', icon: 'bell', label: 'Notifications' },
 	{ id: 'region', icon: 'globe', label: 'Localization & region' },
 	{ id: 'appearance', icon: 'palette', label: 'Appearance' },
-	{ id: 'account', icon: 'credit-card', label: 'Account & plan' }
+	{ id: 'account', icon: 'credit-card', label: 'Account & plan' },
+	{ id: 'about', icon: 'info', label: 'About & updates' }
 ];
 
 export type AccentIntensity = 'subtle' | 'standard' | 'bold';
