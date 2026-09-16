@@ -184,6 +184,81 @@ describe('verifyTlogProof witness freshness', () => {
 	});
 });
 
+describe('verifyTlogProof repeated signatures', () => {
+	const fixture = (name: string) => {
+		const c = cases.find((c) => c.name === name);
+		if (!c) throw new Error(`missing fixture ${name}`);
+		return c;
+	};
+	const newestFresh = nowUnix - 30;
+
+	async function failure(c: FixtureCase) {
+		const err = await run(c, memoryStore()).then(
+			() => null,
+			(e) => e as unknown
+		);
+		expect(err).toBeInstanceOf(DirectoryVerificationError);
+		return err as DirectoryVerificationError;
+	}
+
+	for (const name of [
+		'witness-invalid-first',
+		'witness-invalid-last',
+		'witness-invalid-only-extra',
+		'witness-invalid-below-threshold',
+		'log-invalid-first',
+		'log-invalid-last'
+	]) {
+		it(`rejects the checkpoint for ${name}`, async () => {
+			expect((await failure(fixture(name))).code).toBe('tlog_checkpoint_unverified');
+		});
+	}
+
+	it('ignores an invalid line from a witness that is not pinned', async () => {
+		const c = fixture('witness-invalid-only-extra');
+		const details = await run(
+			{
+				...c,
+				policy: { ...c.policy, witnessVerifierKeys: c.policy.witnessVerifierKeys!.slice(0, 2) }
+			},
+			memoryStore()
+		);
+		expect(details.validWitnessCount).toBe(2);
+	});
+
+	for (const name of [
+		'ok-witness-repeated-fresh-newest-first',
+		'ok-witness-repeated-fresh-newest-last',
+		'ok-witness-repeated-stale-first',
+		'ok-witness-repeated-stale-last',
+		'ok-witness-repeated-future-first',
+		'ok-witness-repeated-future-last'
+	]) {
+		it(`counts the witness once with its newest fresh timestamp for ${name}`, async () => {
+			const details = await run(fixture(name), memoryStore());
+			expect(details.validWitnessCount).toBe(2);
+			expect(details.cosignatureTimestamp).toBe(newestFresh);
+		});
+	}
+
+	it('does not let one witness signing twice meet a threshold of two', async () => {
+		const err = await failure(fixture('witness-repeated-counts-once'));
+		expect(err.code).toBe('tlog_witness_policy_unmet');
+		expect(err.details.validWitnessCount).toBe(1);
+	});
+
+	it('does not let one witness signing twice meet a threshold of two when stale', async () => {
+		const err = await failure(fixture('witness-repeated-stale-counts-once'));
+		expect(err.code).toBe('tlog_checkpoint_stale');
+		expect(err.details.validWitnessCount).toBe(1);
+	});
+
+	it('accepts a log key that signed twice', async () => {
+		const details = await run(fixture('ok-log-repeated'), memoryStore());
+		expect(details.validWitnessCount).toBe(0);
+	});
+});
+
 interface ConsistencyCase {
 	name: string;
 	label: string;

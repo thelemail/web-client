@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseNote, parseVerifierKey } from './note';
+import { bytesToBase64 } from './bytes';
+import { findSignatures, parseNote, parseVerifierKey } from './note';
 
 const LOG_VKEY = 'test.thelemail.com/keys+c4c5905b+ATrXu0X7XNHJ4s3quMMBIa0odVwRYHMRbwNhx010oXKu';
 const WITNESS_VKEY = 'witness1.example.org+ca7a5e13+BJmafJkUufEecDFtHm9Xxcow35DcXWWQmCjBkCuAmM+J';
@@ -71,5 +72,30 @@ describe('parseNote', () => {
 	it('rejects a malformed signature line', () => {
 		expect(() => parseNote(body + '\n' + 'not a signature\n')).toThrow();
 		expect(() => parseNote(body + '\n' + '— name not*base64\n')).toThrow();
+	});
+});
+
+describe('findSignatures', () => {
+	const key = parseVerifierKey(LOG_VKEY);
+	const line = (name: string, hash: number[], tag: number) =>
+		`— ${name} ${bytesToBase64(new Uint8Array([...hash, tag, 0, 0, 0]))}\n`;
+	const hash = [0xc4, 0xc5, 0x90, 0x5b];
+	const otherHash = [0xc4, 0xc5, 0x90, 0x5c];
+
+	it('returns every line from the key in note order', () => {
+		const note = parseNote(
+			'origin\n3\nroot\n\n' +
+				line(key.name, hash, 1) +
+				line('witness1.example.org', otherHash, 2) +
+				line(key.name, hash, 3)
+		);
+		expect(findSignatures(note, key).map((sig) => sig.body[0])).toEqual([1, 3]);
+	});
+
+	it('ignores lines that share only the name or only the key ID', () => {
+		const note = parseNote(
+			'origin\n3\nroot\n\n' + line(key.name, otherHash, 1) + line('other.example.org', hash, 2)
+		);
+		expect(findSignatures(note, key)).toEqual([]);
 	});
 });
