@@ -1,4 +1,5 @@
 import { lookupAccount } from '$core/api/accounts';
+import { lookupDirectory } from '$core/directory/lookup';
 import { acceptExternalKey, lookupExternalKey } from '$core/api/externalKeys';
 import { getMyWorkspace } from '$core/api/workspaces';
 import { ApiCallError, type ExternalKeyTrust } from '$core/api/types';
@@ -74,7 +75,7 @@ export async function directoryTrust(
 	}
 	let value: DirectoryTrust;
 	try {
-		const lookup = await lookupAccount(address);
+		const lookup = await lookupDirectory(address);
 		const res = await verifyDirectoryLookup(lookup, address, opts);
 		const mine = await ownWorkspaceId(accountId);
 		value = {

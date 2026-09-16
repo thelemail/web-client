@@ -14,7 +14,10 @@ export type DirectoryVerificationCode =
 	| 'tlog_checkpoint_stale'
 	| 'tlog_inclusion_invalid'
 	| 'tlog_vrf_invalid'
-	| 'tlog_tree_rolled_back';
+	| 'tlog_tree_rolled_back'
+	| 'tlog_checkpoint_conflict'
+	| 'tlog_consistency_unavailable'
+	| 'tlog_consistency_invalid';
 
 export interface DirectoryVerificationDetails {
 	statementAddress?: string;

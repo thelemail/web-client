@@ -338,6 +338,70 @@ describe('deriveTrust', () => {
 		expect(witnesses?.label).not.toContain('No independent witnesses');
 	});
 
+	for (const [code, headline] of [
+		['tlog_checkpoint_conflict', 'The transparency log showed this device two different histories'],
+		['tlog_consistency_invalid', 'The transparency log rewrote history this device already saw']
+	]) {
+		it(`blocks ${code} in enforce mode`, () => {
+			const trust = deriveTrust(
+				internal({
+					directory: directory({
+						ok: false,
+						statement: undefined,
+						code,
+						details: { treeSize: 90, previousTreeSize: 90 }
+					})
+				})
+			);
+			expect(trust.tier).toBe('failed');
+			expect(trust.label).toBe('Verification failed');
+			expect(trust.headline).toBe(headline);
+		});
+
+		it(`blocks ${code} in monitor mode`, () => {
+			const trust = deriveTrust(
+				internal({
+					directory: directory({
+						tlog: { state: 'failed', code, details: { treeSize: 90, previousTreeSize: 90 } }
+					})
+				})
+			);
+			expect(trust.tier).toBe('failed');
+			expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('fail');
+		});
+	}
+
+	it('keeps a missing consistency proof non-blocking in monitor mode', () => {
+		const trust = deriveTrust(
+			internal({
+				directory: directory({
+					tlog: {
+						state: 'failed',
+						code: 'tlog_consistency_unavailable',
+						details: { treeSize: 90, previousTreeSize: 80 }
+					}
+				})
+			})
+		);
+		expect(trust.tier).toBe('encrypted');
+		expect(trust.checks.find((c) => c.id === 'tlog')?.state).toBe('absent');
+	});
+
+	it('reports a missing consistency proof as unverifiable in enforce mode', () => {
+		const trust = deriveTrust(
+			internal({
+				directory: directory({
+					ok: false,
+					statement: undefined,
+					code: 'tlog_consistency_unavailable',
+					details: { treeSize: 90, previousTreeSize: 80 }
+				})
+			})
+		);
+		expect(trust.tier).toBe('failed');
+		expect(trust.label).toBe('Could not verify');
+	});
+
 	it('blocks a transparency failure that looks like key substitution', () => {
 		const trust = deriveTrust(
 			internal({

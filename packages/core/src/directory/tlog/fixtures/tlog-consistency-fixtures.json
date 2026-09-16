@@ -1,0 +1,322 @@
+{
+  "nowUnix": 1789575160,
+  "policy": {
+    "origin": "test.thelemail.com/keys",
+    "logVerifierKey": "test.thelemail.com/keys+0e652ea2+Adu4n52tEpaYJjgMbnUcmQszMiYTSO/uTvcENx1xcNkC",
+    "vrfPublicKey": "xnh/8c+69tSkIxWoIFC3aQB3JHS8cAa7xM7+mtW+5Qk=",
+    "witnessVerifierKeys": [],
+    "witnessThreshold": 0,
+    "maxCosignatureAgeSeconds": 86400
+  },
+  "cases": [
+    {
+      "name": "first-checkpoint",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\n\ntest.thelemail.com/keys\n4\nOXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM=\n\n— test.thelemail.com/keys DmUuolrRcu0jzxp2VJl0GeOQbrpqOsvCDnkFUbvLw+NJYf0B/lrt7+Rfbl6gX99S5qA60TDRADNWtHZYQsHpo1WvWwc=\n",
+      "previous": null,
+      "consistency": null,
+      "expect": "ok",
+      "advance": true
+    },
+    {
+      "name": "repeated-identical-checkpoint",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\n\ntest.thelemail.com/keys\n4\nOXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM=\n\n— test.thelemail.com/keys DmUuolrRcu0jzxp2VJl0GeOQbrpqOsvCDnkFUbvLw+NJYf0B/lrt7+Rfbl6gX99S5qA60TDRADNWtHZYQsHpo1WvWwc=\n",
+      "previous": {
+        "treeSize": 4,
+        "rootHash": "OXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM="
+      },
+      "consistency": null,
+      "expect": "ok",
+      "advance": false
+    },
+    {
+      "name": "conflicting-root-same-size",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\n77rjdOnj+EhBjnJZN7USQ2z7nT0TM2ueXXPZ1EAGm/0=\n\ntest.thelemail.com/keys\n4\nQ6MNMfQXc1uk5X2y0VMeQDiKjadpEn3SYXAPHZhkK1c=\n\n— test.thelemail.com/keys DmUuolMnZ0UDtAS5bMEO9rxJHgvfabz7vrUnMkSXxUANhlnylKwFKD/oXsYpaaYZrdZ3eYjOQcxQ7AmiqQIu80E5DwA=\n",
+      "previous": {
+        "treeSize": 4,
+        "rootHash": "OXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM="
+      },
+      "consistency": null,
+      "expect": "tlog_checkpoint_conflict",
+      "advance": false
+    },
+    {
+      "name": "valid-growth",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 3,
+        "rootHash": "/7QTDlbJyra4lZSXeUGXeVB4nEUqMATLywZoUfQyUcg="
+      },
+      "consistency": {
+        "fromSize": 3,
+        "toSize": 6,
+        "hashes": [
+          "GJ3ZqQ4+FrwxRRS2NpyoqSwYxdg88AN1obOu3PR6ARo=",
+          "ZVZWCl6V9nN7HuEVZLiVCTao8Dl0KOL3BowY6LpEdUU=",
+          "gOfLGg9yvgxIp+aO27bmzBRJRpG9PVP1ImtVYuAVz/I=",
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "ok",
+      "advance": true
+    },
+    {
+      "name": "valid-growth-power-of-two",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\n\ntest.thelemail.com/keys\n4\nOXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM=\n\n— test.thelemail.com/keys DmUuolrRcu0jzxp2VJl0GeOQbrpqOsvCDnkFUbvLw+NJYf0B/lrt7+Rfbl6gX99S5qA60TDRADNWtHZYQsHpo1WvWwc=\n",
+      "previous": {
+        "treeSize": 2,
+        "rootHash": "gOfLGg9yvgxIp+aO27bmzBRJRpG9PVP1ImtVYuAVz/I="
+      },
+      "consistency": {
+        "fromSize": 2,
+        "toSize": 4,
+        "hashes": [
+          "WM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M="
+        ]
+      },
+      "expect": "ok",
+      "advance": true
+    },
+    {
+      "name": "growth-without-proof",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 3,
+        "rootHash": "/7QTDlbJyra4lZSXeUGXeVB4nEUqMATLywZoUfQyUcg="
+      },
+      "consistency": null,
+      "expect": "tlog_consistency_unavailable",
+      "advance": false
+    },
+    {
+      "name": "growth-forged-proof-hash",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 3,
+        "rootHash": "/7QTDlbJyra4lZSXeUGXeVB4nEUqMATLywZoUfQyUcg="
+      },
+      "consistency": {
+        "fromSize": 3,
+        "toSize": 6,
+        "hashes": [
+          "GZ3ZqQ4+FrwxRRS2NpyoqSwYxdg88AN1obOu3PR6ARo=",
+          "ZVZWCl6V9nN7HuEVZLiVCTao8Dl0KOL3BowY6LpEdUU=",
+          "gOfLGg9yvgxIp+aO27bmzBRJRpG9PVP1ImtVYuAVz/I=",
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "tlog_consistency_invalid",
+      "advance": false
+    },
+    {
+      "name": "growth-empty-proof",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 3,
+        "rootHash": "/7QTDlbJyra4lZSXeUGXeVB4nEUqMATLywZoUfQyUcg="
+      },
+      "consistency": {
+        "fromSize": 3,
+        "toSize": 6,
+        "hashes": []
+      },
+      "expect": "tlog_consistency_invalid",
+      "advance": false
+    },
+    {
+      "name": "growth-proof-for-other-size",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 3,
+        "rootHash": "/7QTDlbJyra4lZSXeUGXeVB4nEUqMATLywZoUfQyUcg="
+      },
+      "consistency": {
+        "fromSize": 2,
+        "toSize": 6,
+        "hashes": [
+          "WM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=",
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "tlog_consistency_unavailable",
+      "advance": false
+    },
+    {
+      "name": "growth-proof-relabelled-size",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 3,
+        "rootHash": "/7QTDlbJyra4lZSXeUGXeVB4nEUqMATLywZoUfQyUcg="
+      },
+      "consistency": {
+        "fromSize": 3,
+        "toSize": 6,
+        "hashes": [
+          "WM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=",
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "tlog_consistency_invalid",
+      "advance": false
+    },
+    {
+      "name": "growth-from-four",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nIyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs=\n\n— test.thelemail.com/keys DmUuorySyTfw0fnQs2cJkfsb0p1CFHfW1odg6F9tAaZ6ige03iMvWrF/Ww0mrn1T6deG/nQfocYXK6jPsDxGNe1S2Ac=\n",
+      "previous": {
+        "treeSize": 4,
+        "rootHash": "OXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM="
+      },
+      "consistency": {
+        "fromSize": 4,
+        "toSize": 6,
+        "hashes": [
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "ok",
+      "advance": true
+    },
+    {
+      "name": "late-fork-growth-from-four",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nYsgoqdonFb3sJEHj4BtRFzLxdfelKe06Kkl5PSsGjvg=\n\ntest.thelemail.com/keys\n6\nyYCx/Lu/wG7p/JY0Gyy4iQvRSsztiEVoZUxV1w0CsP8=\n\n— test.thelemail.com/keys DmUuorgXuBzyGTHAqHomrrgq06NMBDkbNbayCm1PqHASh0JODpElFVEMkiJsY6DSSTRq1LSEUPFib7GTD5BoRx6qbQI=\n",
+      "previous": {
+        "treeSize": 4,
+        "rootHash": "OXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM="
+      },
+      "consistency": {
+        "fromSize": 4,
+        "toSize": 6,
+        "hashes": [
+          "YsgoqdonFb3sJEHj4BtRFzLxdfelKe06Kkl5PSsGjvg="
+        ]
+      },
+      "expect": "ok",
+      "advance": true
+    },
+    {
+      "name": "late-fork-after-honest-growth",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\nYsgoqdonFb3sJEHj4BtRFzLxdfelKe06Kkl5PSsGjvg=\n\ntest.thelemail.com/keys\n6\nyYCx/Lu/wG7p/JY0Gyy4iQvRSsztiEVoZUxV1w0CsP8=\n\n— test.thelemail.com/keys DmUuorgXuBzyGTHAqHomrrgq06NMBDkbNbayCm1PqHASh0JODpElFVEMkiJsY6DSSTRq1LSEUPFib7GTD5BoRx6qbQI=\n",
+      "previous": {
+        "treeSize": 6,
+        "rootHash": "IyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs="
+      },
+      "consistency": null,
+      "expect": "tlog_checkpoint_conflict",
+      "advance": false
+    },
+    {
+      "name": "fork-at-larger-size",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\n77rjdOnj+EhBjnJZN7USQ2z7nT0TM2ueXXPZ1EAGm/0=\nkdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc=\n\ntest.thelemail.com/keys\n6\nZknASWWNZAc8jcHi/IvzS+yJxEJayjyTzqvWq/Jgk6o=\n\n— test.thelemail.com/keys DmUuom/S/fFx0xWP5o6216r/AOplS6HrC0yLdizPQaCzCQE6uWiDzvfOTr1nZmARnPzof6m9to1NuUDXXCM7pyH7MQg=\n",
+      "previous": {
+        "treeSize": 4,
+        "rootHash": "OXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM="
+      },
+      "consistency": {
+        "fromSize": 4,
+        "toSize": 6,
+        "hashes": [
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "tlog_consistency_invalid",
+      "advance": false
+    },
+    {
+      "name": "older-consistent-checkpoint",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\n\ntest.thelemail.com/keys\n4\nOXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM=\n\n— test.thelemail.com/keys DmUuolrRcu0jzxp2VJl0GeOQbrpqOsvCDnkFUbvLw+NJYf0B/lrt7+Rfbl6gX99S5qA60TDRADNWtHZYQsHpo1WvWwc=\n",
+      "previous": {
+        "treeSize": 6,
+        "rootHash": "IyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs="
+      },
+      "consistency": {
+        "fromSize": 4,
+        "toSize": 6,
+        "hashes": [
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "ok",
+      "advance": false
+    },
+    {
+      "name": "rollback-to-forked-tree",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\n77rjdOnj+EhBjnJZN7USQ2z7nT0TM2ueXXPZ1EAGm/0=\n\ntest.thelemail.com/keys\n4\nQ6MNMfQXc1uk5X2y0VMeQDiKjadpEn3SYXAPHZhkK1c=\n\n— test.thelemail.com/keys DmUuolMnZ0UDtAS5bMEO9rxJHgvfabz7vrUnMkSXxUANhlnylKwFKD/oXsYpaaYZrdZ3eYjOQcxQ7AmiqQIu80E5DwA=\n",
+      "previous": {
+        "treeSize": 6,
+        "rootHash": "IyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs="
+      },
+      "consistency": {
+        "fromSize": 4,
+        "toSize": 6,
+        "hashes": [
+          "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "tlog_tree_rolled_back",
+      "advance": false
+    },
+    {
+      "name": "rollback-forged-proof-hash",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\n\ntest.thelemail.com/keys\n4\nOXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM=\n\n— test.thelemail.com/keys DmUuolrRcu0jzxp2VJl0GeOQbrpqOsvCDnkFUbvLw+NJYf0B/lrt7+Rfbl6gX99S5qA60TDRADNWtHZYQsHpo1WvWwc=\n",
+      "previous": {
+        "treeSize": 6,
+        "rootHash": "IyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs="
+      },
+      "consistency": {
+        "fromSize": 4,
+        "toSize": 6,
+        "hashes": [
+          "kNDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
+        ]
+      },
+      "expect": "tlog_tree_rolled_back",
+      "advance": false
+    },
+    {
+      "name": "rollback-without-proof",
+      "label": "vlad@thelemail.com",
+      "record": "{\"algorithm\":\"openpgp-curve25519-v6\",\"fingerprint\":\"ab\",\"issuedAt\":\"2026-09-16T15:12:40Z\",\"label\":\"vlad@thelemail.com\",\"version\":1}",
+      "proof": "c2sp.org/tlog-proof@v1\nextra tLy/tPXvs0etWwiCIa6H3kYGkCvmAbLKj7jZ15FfSVhpFaCVWAwj2LKDrUd/5v8u9GFcf+DThwVSuPLnpz+M++6TKjXwBnadr+xDPhQg3Qk=\nindex 1\nV9XWqmfdTK+22kCegLfxGvovdhtTe99DBKmWtgO2YTY=\nWM3fLbhZUJzDREYVDO2PvxEp4qxWYGwpSkZGukFWT+M=\n\ntest.thelemail.com/keys\n4\nOXCFSwfmnGR7wBO65JqDaew6iSujML1cT6JegVIn1eM=\n\n— test.thelemail.com/keys DmUuolrRcu0jzxp2VJl0GeOQbrpqOsvCDnkFUbvLw+NJYf0B/lrt7+Rfbl6gX99S5qA60TDRADNWtHZYQsHpo1WvWwc=\n",
+      "previous": {
+        "treeSize": 6,
+        "rootHash": "IyAEkFPTmag29BJH1Z7uQTqW3d+ekYRjJh3FqlasBYs="
+      },
+      "consistency": null,
+      "expect": "tlog_consistency_unavailable",
+      "advance": false
+    }
+  ]
+}
