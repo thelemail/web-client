@@ -4,7 +4,7 @@ import { bytesEqual, bytesFromBase64, bytesToBase64, concatBytes, utf8 } from '.
 import { parseCheckpoint, type Checkpoint } from './checkpoint';
 import { parseWitnessPolicy, verifyCosignature } from './cosignature';
 import { leafHash, verifyConsistency, verifyInclusion } from './merkle';
-import { findSignature, parseVerifierKey, verifyNoteSignature, type VerifierKey } from './note';
+import { findSignatures, parseVerifierKey, verifyNoteSignature, type VerifierKey } from './note';
 import { parseTlogProof, type TlogProofBundle } from './proof';
 import type { TlogPolicy } from './policy';
 import type { TlogStateStore } from './state-idb';
@@ -77,8 +77,11 @@ export async function verifyTlogProof(
 			{ logOrigin: checkpoint.origin }
 		);
 	}
-	const logSig = findSignature(checkpoint.note, logKey);
-	if (!logSig || !verifyNoteSignature(logSig, logKey, checkpoint.note.text)) {
+	const logSigs = findSignatures(checkpoint.note, logKey);
+	if (
+		logSigs.length === 0 ||
+		!logSigs.every((sig) => verifyNoteSignature(sig, logKey, checkpoint.note.text))
+	) {
 		throw new DirectoryVerificationError(
 			'tlog_checkpoint_unverified',
 			'checkpoint is not signed by the pinned log key',
@@ -97,12 +100,29 @@ export async function verifyTlogProof(
 		);
 	}
 
+	const nowSeconds = Math.floor(opts.nowMillis / 1000);
+	const isFresh = (timestamp: number) =>
+		nowSeconds - timestamp <= policy.maxCosignatureAgeSeconds &&
+		timestamp - nowSeconds <= FORWARD_SKEW_SECONDS;
 	const witnessTimestamps: number[] = [];
+	const freshTimestamps: number[] = [];
 	for (const witnessKey of witnessKeys) {
-		const sig = findSignature(checkpoint.note, witnessKey);
-		if (!sig) continue;
-		const timestamp = verifyCosignature(sig, witnessKey, checkpoint.note.text);
-		if (timestamp !== null) witnessTimestamps.push(timestamp);
+		const timestamps: number[] = [];
+		for (const sig of findSignatures(checkpoint.note, witnessKey)) {
+			const timestamp = verifyCosignature(sig, witnessKey, checkpoint.note.text);
+			if (timestamp === null) {
+				throw new DirectoryVerificationError(
+					'tlog_checkpoint_unverified',
+					`checkpoint carries an invalid cosignature from witness ${witnessKey.name}`,
+					{ logOrigin: policy.origin, treeSize: checkpoint.treeSize }
+				);
+			}
+			timestamps.push(timestamp);
+		}
+		if (timestamps.length === 0) continue;
+		witnessTimestamps.push(Math.max(...timestamps));
+		const fresh = timestamps.filter(isFresh);
+		if (fresh.length > 0) freshTimestamps.push(Math.max(...fresh));
 	}
 	if (witnessTimestamps.length < policy.witnessThreshold) {
 		throw new DirectoryVerificationError(
@@ -117,12 +137,6 @@ export async function verifyTlogProof(
 		);
 	}
 
-	const nowSeconds = Math.floor(opts.nowMillis / 1000);
-	const freshTimestamps = witnessTimestamps.filter(
-		(timestamp) =>
-			nowSeconds - timestamp <= policy.maxCosignatureAgeSeconds &&
-			timestamp - nowSeconds <= FORWARD_SKEW_SECONDS
-	);
 	if (freshTimestamps.length < policy.witnessThreshold) {
 		throw new DirectoryVerificationError(
 			'tlog_checkpoint_stale',

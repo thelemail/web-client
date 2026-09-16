@@ -62,11 +62,10 @@ export function parseVerifierKey(vkey: string): VerifierKey {
 	return { name, keyHash: computed, algorithm: keyBytes[0], publicKey: keyBytes.slice(1) };
 }
 
-export function findSignature(note: ParsedNote, key: VerifierKey): NoteSignature | null {
-	for (const sig of note.signatures) {
-		if (sig.name === key.name && bytesEqual(sig.keyHash, key.keyHash)) return sig;
-	}
-	return null;
+export function findSignatures(note: ParsedNote, key: VerifierKey): NoteSignature[] {
+	return note.signatures.filter(
+		(sig) => sig.name === key.name && bytesEqual(sig.keyHash, key.keyHash)
+	);
 }
 
 export function verifyNoteSignature(sig: NoteSignature, key: VerifierKey, text: string): boolean {
