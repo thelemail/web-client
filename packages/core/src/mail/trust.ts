@@ -92,6 +92,7 @@ const FAILURE_HEADLINES: Record<string, string> = {
 	tlog_proof_malformed: 'The transparency log proof could not be read',
 	tlog_checkpoint_unverified: 'The transparency log checkpoint is not trusted',
 	tlog_witness_policy_unmet: 'Not enough witnesses confirmed the checkpoint',
+	tlog_policy_invalid: 'The transparency log witness settings are invalid',
 	tlog_checkpoint_stale: 'The transparency log checkpoint is out of date',
 	tlog_inclusion_invalid: 'The key is not included in the transparency log',
 	tlog_vrf_invalid: 'The transparency log entry does not match this address',

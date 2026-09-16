@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { readKey } from 'openpgp';
 
@@ -8,6 +9,23 @@ const ADDRESS = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 const MODES = new Set(['monitor', 'enforce']);
 
 const failures = [];
+
+function parseCosignatureKey(vkey) {
+	if (typeof vkey !== 'string') return 'is not a string';
+	const first = vkey.indexOf('+');
+	const second = first < 0 ? -1 : vkey.indexOf('+', first + 1);
+	if (first <= 0 || second < 0) return 'is malformed';
+	const name = vkey.slice(0, first);
+	const hash = vkey.slice(first + 1, second);
+	const encoded = vkey.slice(second + 1);
+	if (/\s/.test(name)) return 'is malformed';
+	const key = Buffer.from(encoded, 'base64');
+	if (key.length !== 33 || key.toString('base64') !== encoded) return 'has an invalid key encoding';
+	if (key[0] !== 0x04) return 'is not a cosignature/v1 key';
+	const digest = createHash('sha256').update(`${name}\n`).update(key).digest('hex').slice(0, 8);
+	if (digest !== hash) return 'has a mismatched key hash';
+	return { name, publicKey: key.subarray(1).toString('hex') };
+}
 
 function read(path) {
 	const text = readFileSync(path, 'utf8');
@@ -37,14 +55,34 @@ try {
 	if (!MODES.has(policy.mode)) {
 		failures.push(`${POLICY_PATH}: mode must be one of ${[...MODES].join(', ')}`);
 	}
+	const witnessKeys = new Map();
+	const witnessNames = new Set();
 	if (!Array.isArray(policy.witnessVerifierKeys)) {
 		failures.push(`${POLICY_PATH}: witnessVerifierKeys must be an array`);
+	} else {
+		for (const vkey of policy.witnessVerifierKeys) {
+			const witness = parseCosignatureKey(vkey);
+			if (typeof witness === 'string') {
+				failures.push(`${POLICY_PATH}: witness key ${JSON.stringify(vkey)} ${witness}`);
+				continue;
+			}
+			if (witnessNames.has(witness.name)) {
+				failures.push(`${POLICY_PATH}: witness name ${witness.name} is listed more than once`);
+			}
+			witnessNames.add(witness.name);
+			const clash = witnessKeys.get(witness.publicKey);
+			if (clash) {
+				failures.push(`${POLICY_PATH}: witnesses ${clash} and ${witness.name} share a signing key`);
+				continue;
+			}
+			witnessKeys.set(witness.publicKey, witness.name);
+		}
 	}
 	if (!Number.isInteger(policy.witnessThreshold) || policy.witnessThreshold < 0) {
 		failures.push(`${POLICY_PATH}: witnessThreshold must be a non-negative integer`);
 	}
-	if (policy.witnessThreshold > (policy.witnessVerifierKeys ?? []).length) {
-		failures.push(`${POLICY_PATH}: witnessThreshold exceeds the number of witness keys`);
+	if (policy.witnessThreshold > witnessKeys.size) {
+		failures.push(`${POLICY_PATH}: witnessThreshold exceeds the number of distinct witness keys`);
 	}
 	if (!Number.isInteger(policy.maxCosignatureAgeSeconds) || policy.maxCosignatureAgeSeconds <= 0) {
 		failures.push(`${POLICY_PATH}: maxCosignatureAgeSeconds must be a positive integer`);
