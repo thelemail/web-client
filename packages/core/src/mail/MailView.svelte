@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import SystemAlerts from './SystemAlerts.svelte';
+	import UpdateBanner from './UpdateBanner.svelte';
 	import LifecycleBanners from '$core/lifecycle/LifecycleBanners.svelte';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import MessageList, { type BulkAction } from './MessageList.svelte';
@@ -767,6 +768,7 @@
 <svelte:document onkeydown={handleKey} />
 
 <LifecycleBanners />
+<UpdateBanner />
 <SystemAlerts />
 <div class="mailbody" class:show-reader={messageId !== null}>
 	{#if !supported}

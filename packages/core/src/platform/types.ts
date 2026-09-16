@@ -126,6 +126,41 @@ export interface NativeNotifications {
 	onOpened(cb: (target: NotificationTarget) => void): () => void;
 }
 
+export interface AvailableUpdate {
+	version: string;
+	notes: string | null;
+	publishedAt: string | null;
+	releaseUrl: string;
+}
+
+export type UpdateBlock = 'translocated' | 'read-only' | 'unbundled';
+
+export interface UpdateStatus {
+	currentVersion: string;
+	available: AvailableUpdate | null;
+	snoozed: boolean;
+	lastCheck: number | null;
+	lastFailure: string | null;
+	installing: boolean;
+	blocked: UpdateBlock | null;
+	releasesUrl: string;
+}
+
+export interface UpdateProgress {
+	downloaded: number;
+	total: number | null;
+	phase: 'download' | 'verify' | 'restart';
+}
+
+export interface NativeUpdates {
+	status(): Promise<UpdateStatus>;
+	check(): Promise<AvailableUpdate | null>;
+	snooze(version: string): Promise<void>;
+	install(version: string): Promise<void>;
+	onAvailable(cb: (update: AvailableUpdate) => void): () => void;
+	onProgress(cb: (progress: UpdateProgress) => void): () => void;
+}
+
 export type BillingMode = 'native' | 'handoff';
 
 export interface NativeSession {
@@ -145,6 +180,7 @@ export interface Platform {
 	writeFrameDoc?: boolean;
 	session?: NativeSession;
 	notifications?: NativeNotifications;
+	updates?: NativeUpdates;
 	billing: BillingMode;
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;

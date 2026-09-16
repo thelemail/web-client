@@ -13,13 +13,17 @@
 	import CreditCard from '@lucide/svelte/icons/credit-card';
 	import Upload from '@lucide/svelte/icons/upload';
 	import UserX from '@lucide/svelte/icons/user-x';
+	import Info from '@lucide/svelte/icons/info';
 	import { page } from '$app/state';
 	import { SECTIONS, sectionIdFromPath } from './data';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
 
-	const sections = SECTIONS.filter((sec) => sec.id !== 'notify' || platform.notifications);
+	const sections = SECTIONS.filter(
+		(sec) =>
+			(sec.id !== 'notify' || platform.notifications) && (sec.id !== 'about' || platform.updates)
+	);
 
 	const icons: Record<string, typeof Settings> = {
 		'user-round': UserRound,
@@ -33,7 +37,8 @@
 		palette: Palette,
 		'credit-card': CreditCard,
 		upload: Upload,
-		'user-x': UserX
+		'user-x': UserX,
+		info: Info
 	};
 
 	const slot = $derived(page.params.slot ?? '0');
