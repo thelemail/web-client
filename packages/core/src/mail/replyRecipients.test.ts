@@ -121,3 +121,36 @@ describe('replyTargets fallback', () => {
 		expect(addrs(to)).toEqual(['me@example.com', 'bob@example.com']);
 	});
 });
+
+describe('replyTargets with plus-tagged own addresses', () => {
+	const mine = new Set(['vlad@thelemail.com', 'support@company.com']);
+
+	it('drops tagged copies of my own addresses from reply-all', () => {
+		const { to, cc } = replyTargets(
+			seed({
+				recipients: [
+					r('vlad+shop@thelemail.com', 'to'),
+					r('bob@example.com', 'to'),
+					r('Support+Billing@company.com', 'cc'),
+					r('carol@example.com', 'cc')
+				]
+			}),
+			'all',
+			mine
+		);
+		expect(addrs(to)).toEqual(['alice@example.com', 'bob@example.com']);
+		expect(addrs(cc)).toEqual(['carol@example.com']);
+	});
+
+	it('keeps tagged addresses of other people and other domains', () => {
+		const { to, cc } = replyTargets(
+			seed({
+				recipients: [r('vlad+x@gmail.com', 'to'), r('bob+news@example.com', 'cc'), r('bob@example.com', 'cc')]
+			}),
+			'all',
+			mine
+		);
+		expect(addrs(to)).toEqual(['alice@example.com', 'vlad+x@gmail.com']);
+		expect(addrs(cc)).toEqual(['bob+news@example.com', 'bob@example.com']);
+	});
+});

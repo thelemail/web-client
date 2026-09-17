@@ -6,6 +6,7 @@ import type { Attendee, CalendarItem, Partstat } from './model';
 import type { OutboxMail, OutboxRecipient } from './outbox';
 import { expandItem, type Occurrence } from './recur';
 import { calendarStore } from './store.svelte';
+import { isOwnRecipient } from '$core/mail/recipientAddress';
 
 export interface SenderIdentity extends IcsIdentity {
 	aliasId?: string;
@@ -51,7 +52,7 @@ function recipientsOf(attendees: Attendee[], exclude: string[]): OutboxRecipient
 	const out: OutboxRecipient[] = [];
 	for (const a of attendees) {
 		const email = a.email.toLowerCase();
-		if (exclude.includes(email) || seen.has(email)) continue;
+		if (isOwnRecipient(email, exclude) || seen.has(email)) continue;
 		seen.add(email);
 		out.push({ display: a.name ?? '', address: a.email });
 	}
@@ -193,7 +194,7 @@ export async function sendReply(
 ): Promise<void> {
 	if (!item.organizer || isOrganizer(item)) return;
 	const mine = myAddressList();
-	const me = (item.attendees ?? []).find((a) => mine.includes(a.email.toLowerCase()));
+	const me = (item.attendees ?? []).find((a) => isOwnRecipient(a.email, mine));
 	const identity: IcsIdentity = {
 		email: me?.email ?? auth.email ?? '',
 		name: me?.name ?? auth.fullName ?? undefined

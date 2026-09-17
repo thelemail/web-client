@@ -9,6 +9,7 @@ import {
 } from '$core/api/addresses';
 import { listMySharedAliases } from '$core/api/aliases';
 import { syncAddressUids } from '$core/keys/uid-sync';
+import { canonicalRecipient } from '$core/mail/recipientAddress';
 
 class AddressesStore {
 	items = $state<AccountAddress[]>([]);
@@ -92,6 +93,10 @@ class AddressesStore {
 	getByEmail(email: string): AccountAddress | null {
 		const norm = email.trim().toLowerCase();
 		return this.items.find((a) => a.email.toLowerCase() === norm) ?? null;
+	}
+
+	getByRecipient(email: string): AccountAddress | null {
+		return this.getByEmail(email) ?? this.getByEmail(canonicalRecipient(email));
 	}
 
 	getById(id: string): AccountAddress | null {
