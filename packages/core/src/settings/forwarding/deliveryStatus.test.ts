@@ -11,6 +11,8 @@ describe('forward delivery status', () => {
 	it('explains every unsupported case in plain words', () => {
 		expect(deliveryLabel('not_forwarded_encrypted')).toMatch(/encrypted/);
 		expect(deliveryLabel('not_forwarded_missing_copy')).toMatch(/copy/);
+		expect(deliveryLabel('not_forwarded_needs_key')).toMatch(/key/);
+		expect(deliveryTone('not_forwarded_needs_key')).toBe('warn');
 		expect(deliveryTone('loop_suppressed')).toBe('warn');
 		expect(deliveryTone('queued')).toBe('neutral');
 	});

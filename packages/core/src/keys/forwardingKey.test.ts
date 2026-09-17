@@ -31,6 +31,21 @@ describe('forwarding authorization', () => {
 		expect(new TextDecoder().decode(bytes)).toBe(GO_CANONICAL);
 	});
 
+	it('names the plain permission and carries no key fingerprint', () => {
+		const bytes = canonicaliseAuthorization({
+			accountId: '11111111-2222-3333-4444-555555555555',
+			address: 'contact@example.com',
+			destination: 'someone@gmail.com',
+			encryptionKeyFingerprint: '',
+			issuedAt: '2026-09-17T12:00:00Z',
+			signerKeyFingerprint: 'cd'.repeat(32),
+			permission: 'forward-plaintext'
+		});
+		const text = new TextDecoder().decode(bytes);
+		expect(text).toContain('"encryptionKeyFingerprint":""');
+		expect(text).toContain('"permissions":["forward-plaintext"]');
+	});
+
 	it('formats issuedAt as whole-second RFC 3339', () => {
 		expect(authorizationTimestamp(Date.parse('2026-09-17T12:00:00.987Z'))).toBe('2026-09-17T12:00:00Z');
 	});

@@ -25,6 +25,8 @@ export async function generateForwardingKey(email: string, now = Date.now()): Pr
 	};
 }
 
+export type ReadDelegationPermission = 'decrypt-forwarded' | 'forward-plaintext';
+
 export interface ReadDelegationAuthorization {
 	accountId: string;
 	address: string;
@@ -32,6 +34,7 @@ export interface ReadDelegationAuthorization {
 	encryptionKeyFingerprint: string;
 	issuedAt: string;
 	signerKeyFingerprint: string;
+	permission?: ReadDelegationPermission;
 }
 
 export function authorizationTimestamp(millis: number): string {
@@ -45,7 +48,7 @@ export function canonicaliseAuthorization(a: ReadDelegationAuthorization): Uint8
 		destination: a.destination.trim().toLowerCase(),
 		encryptionKeyFingerprint: a.encryptionKeyFingerprint.toLowerCase(),
 		issuedAt: a.issuedAt,
-		permissions: ['decrypt-forwarded'],
+		permissions: [a.permission ?? 'decrypt-forwarded'],
 		signerKeyFingerprint: a.signerKeyFingerprint.toLowerCase(),
 		type: READ_DELEGATION_AUTHORIZATION_TYPE
 	};

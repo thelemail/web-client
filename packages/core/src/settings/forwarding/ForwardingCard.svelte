@@ -63,7 +63,8 @@
 	</CardHead>
 
 	<div class="fwd-lede">
-		Send new mail for {email} to a system like a helpdesk, encrypted to a key that only that system holds.
+		Send new mail for {email} somewhere else: a system you hand a key to, or an ordinary mailbox like
+		Gmail that receives it readable.
 	</div>
 
 	{#if flash}
@@ -76,6 +77,7 @@
 			<div class="alias-info">
 				<div class="alias-name">
 					{d.label}
+					{#if d.mode === 'plain'}<Badge kind="neutral">Plain text</Badge>{/if}
 					{#if d.state === 'active'}
 						<Badge kind="ok">Forwarding</Badge>
 					{:else if d.state === 'pending_verification'}
@@ -87,7 +89,11 @@
 					{/if}
 				</div>
 				<div class="alias-addr">To {d.destination}</div>
-				<div class="alias-addr mono">{shortFingerprint(d.encryptionKeyFingerprint)}</div>
+				{#if d.mode === 'plain'}
+					<div class="alias-addr">Readable mail, no key</div>
+				{:else if d.encryptionKeyFingerprint}
+					<div class="alias-addr mono">{shortFingerprint(d.encryptionKeyFingerprint)}</div>
+				{/if}
 				{#if summary.latest}
 					<div class="alias-addr">
 						Last message: {deliveryLabel(summary.latest.status)}
@@ -131,10 +137,12 @@
 					<Play size={16} />
 				</button>
 			{/if}
-			{#if d.state !== 'revoked'}
+			{#if d.state !== 'revoked' && d.mode !== 'plain'}
 				<button type="button" class="rowmenu" title="Replace the key" onclick={() => (rotating = d)}>
 					<RotateCw size={16} />
 				</button>
+			{/if}
+			{#if d.state !== 'revoked'}
 				<button type="button" class="rowmenu" title="Turn off" onclick={() => (revoking = d)}>
 					<Trash2 size={16} />
 				</button>

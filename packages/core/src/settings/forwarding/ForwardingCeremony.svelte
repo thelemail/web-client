@@ -10,12 +10,13 @@
 	import Send from '@lucide/svelte/icons/send';
 
 	import CeremonyShell from '../CeremonyShell.svelte';
+	import Seg from '../Seg.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { Label } from '$core/components/ui/label';
 	import { auth } from '$core/stores/auth.svelte';
 	import { readDelegations } from '$core/stores/readDelegations.svelte';
-	import type { ReadDelegation } from '$core/api/readDelegations';
+	import type { ReadDelegation, ReadDelegationMode } from '$core/api/readDelegations';
 	import { prepareForwarding } from './authorize';
 
 	interface Props {
@@ -29,7 +30,13 @@
 
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+	const MODE_CHOICES = [
+		{ v: 'encrypted', l: 'System with a key' },
+		{ v: 'plain', l: 'Plain mailbox' }
+	];
+
 	let step = $state(0);
+	let mode = $state<ReadDelegationMode>('encrypted');
 	let label = $state('');
 	let destination = $state('');
 	let understood = $state(false);
@@ -41,6 +48,7 @@
 	let copied = $state(false);
 
 	const target = $derived(rotating ? rotating.destination : destination.trim().toLowerCase());
+	const plain = $derived(mode === 'plain');
 	const canContinue = $derived(
 		!busy &&
 			understood &&
@@ -58,24 +66,29 @@
 		busy = true;
 		error = null;
 		try {
-			const prepared = await prepareForwarding(accountId, email, target);
+			const prepared = await prepareForwarding(accountId, email, target, mode);
 			if (rotating) {
 				await readDelegations.rotate(addressId, rotating.id, {
-					publicKeyArmored: prepared.publicKeyArmored,
+					publicKeyArmored: prepared.publicKeyArmored ?? '',
 					authorization: prepared.authorization,
 					authorizationSignature: prepared.authorizationSignature
 				});
 			} else {
 				await readDelegations.create(addressId, {
 					label: label.trim(),
+					mode,
 					publicKeyArmored: prepared.publicKeyArmored,
 					destination: target,
 					authorization: prepared.authorization,
 					authorizationSignature: prepared.authorizationSignature
 				});
 			}
-			privateKeyArmored = prepared.privateKeyArmored;
-			fingerprint = prepared.keyFingerprintHex;
+			if (plain) {
+				onClose();
+				return;
+			}
+			privateKeyArmored = prepared.privateKeyArmored ?? '';
+			fingerprint = prepared.keyFingerprintHex ?? '';
 			step = 1;
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Could not set up forwarding.';
@@ -115,7 +128,7 @@
 		: rotating
 			? `Replace the key for ${rotating.label}`
 			: `Forward new mail for ${email}`}
-	steps={['Set it up', 'Save the key']}
+	steps={plain ? undefined : ['Set it up', 'Save the key']}
 	{step}
 	onClose={step === 1 ? finish : onClose}
 >
@@ -131,10 +144,21 @@
 				</div>
 			{:else}
 				<div class="cer-lede">
-					<p>
-						New mail sent to <b>{email}</b> is also sent to another address, such as a helpdesk.
-						Each copy is encrypted to a key made just for that system.
-					</p>
+					<p>New mail sent to <b>{email}</b> is also sent to an address you choose.</p>
+				</div>
+
+				<div class="field">
+					<span class="field-lbl">Where it goes</span>
+					<Seg value={mode} options={MODE_CHOICES} onChange={(v) => (mode = v as ReadDelegationMode)} />
+					<div class="field-hint">
+						{#if plain}
+							An ordinary mailbox such as Gmail. Mail arrives there the way any other mail does, so
+							that provider can read it.
+						{:else}
+							A system you can hand a key to, such as a helpdesk. Every copy is encrypted to that
+							key alone.
+						{/if}
+					</div>
 				</div>
 
 				<div class="field">
@@ -171,7 +195,13 @@
 			<ul class="cer-points">
 				<li>
 					<Eye size={16} />
-					<span>Whoever holds the private key can read every message forwarded to it.</span>
+					{#if plain}
+						<span>
+							Forwarded mail leaves Thelemail readable, so whoever runs that mailbox can read it.
+						</span>
+					{:else}
+						<span>Whoever holds the private key can read every message forwarded to it.</span>
+					{/if}
 				</li>
 				<li>
 					<Inbox size={16} />
@@ -182,23 +212,40 @@
 				</li>
 				<li>
 					<LockKeyhole size={16} />
-					<span>
-						The key cannot open your mailbox and cannot send or sign as {email}.
-					</span>
+					{#if plain}
+						<span>
+							Your stored mail stays encrypted, and this destination can never send or sign as
+							{email}.
+						</span>
+					{:else}
+						<span>The key cannot open your mailbox and cannot send or sign as {email}.</span>
+					{/if}
 				</li>
 				<li>
 					<Send size={16} />
-					<span>
-						Mail that reaches us already encrypted to {email} alone is kept in your mailbox but not
-						forwarded. Turning forwarding off stops new copies. Copies already delivered cannot be
-						taken back.
-					</span>
+					{#if plain}
+						<span>
+							Only mail that reaches us from outside can be forwarded this way. Mail from other
+							Thelemail accounts, and mail that arrives already encrypted, stays in your mailbox and
+							is listed as not forwarded. Turning forwarding off stops new copies, and copies
+							already delivered cannot be taken back.
+						</span>
+					{:else}
+						<span>
+							Mail that reaches us already encrypted to {email} alone is kept in your mailbox but not
+							forwarded. Turning forwarding off stops new copies. Copies already delivered cannot be
+							taken back.
+						</span>
+					{/if}
 				</li>
 			</ul>
 
 			<Label class="cer-ack" for="forwarding-ack">
 				<Checkbox id="forwarding-ack" checked={understood} onCheckedChange={(v) => (understood = v === true)} />
-				<span>I understand that {rotating ? rotating.label : 'this system'} can read the mail forwarded to it.</span>
+				<span>
+					I understand that {rotating ? rotating.label : plain ? 'this mailbox and its provider' : 'this system'}
+					can read the mail forwarded to it.
+				</span>
 			</Label>
 
 			{#if error}
@@ -244,7 +291,7 @@
 		{#if step === 0}
 			<Button variant="ghost" disabled={busy} onclick={onClose}>Cancel</Button>
 			<Button disabled={!canContinue} onclick={create}>
-				{busy ? 'Generating…' : rotating ? 'Make a new key' : 'Set up forwarding'}
+				{busy ? 'Setting up…' : rotating ? 'Make a new key' : 'Set up forwarding'}
 			</Button>
 		{:else}
 			<Button disabled={!saved} onclick={finish}>

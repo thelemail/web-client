@@ -2,6 +2,8 @@ import { apiFetch } from './client';
 
 export type ReadDelegationState = 'pending_verification' | 'active' | 'paused' | 'revoked';
 
+export type ReadDelegationMode = 'encrypted' | 'plain';
+
 export type ForwardDeliveryStatus =
 	| 'pending'
 	| 'sending'
@@ -10,6 +12,7 @@ export type ForwardDeliveryStatus =
 	| 'failed'
 	| 'not_forwarded_encrypted'
 	| 'not_forwarded_missing_copy'
+	| 'not_forwarded_needs_key'
 	| 'not_forwarded_spam'
 	| 'loop_suppressed';
 
@@ -29,10 +32,11 @@ export interface ReadDelegation {
 	address: string;
 	label: string;
 	destination: string;
+	mode: ReadDelegationMode;
 	state: ReadDelegationState;
-	encryptionKeyFingerprint: string;
-	keyAlgorithm: string;
-	publicKeyArmored: string;
+	encryptionKeyFingerprint?: string;
+	keyAlgorithm?: string;
+	publicKeyArmored?: string;
 	notBefore: string;
 	destinationVerifiedAt?: string | null;
 	pausedAt?: string | null;
@@ -44,7 +48,8 @@ export interface ReadDelegation {
 
 export interface CreateReadDelegationRequest {
 	label: string;
-	publicKeyArmored: string;
+	mode: ReadDelegationMode;
+	publicKeyArmored?: string;
 	destination: string;
 	authorization: string;
 	authorizationSignature: string;
