@@ -26,8 +26,10 @@ export function textFor(item: MessageListItem, preview: MessagePreview): Indexed
 		subject: decodeWords(preview.subject || '') || '',
 		senderDisplay: preview.sender.display || '',
 		senderAddress: preview.sender.address || '',
-		recipients: preview.recipients
-			.map((r) => `${r.display} ${r.address}`.trim())
+		recipients: [
+			...preview.recipients.map((r) => `${r.display} ${r.address}`.trim()),
+			typeof preview.delivered_to === 'string' ? preview.delivered_to : ''
+		]
 			.join(' ')
 			.trim(),
 		snippet: preview.snippet || ''

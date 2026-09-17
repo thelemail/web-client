@@ -65,6 +65,7 @@ export interface ThreadEntry {
 	bimiDomain?: string;
 	to: string;
 	recipients?: MessagePreviewRecipient[];
+	deliveredTo?: string;
 	init: string;
 	bg: string;
 	fg: string;
