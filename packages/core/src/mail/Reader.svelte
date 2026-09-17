@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
+	import type { MessagePreviewRecipient } from './preview';
 	import { productLaunched } from '$core/products';
 	import Reply from '@lucide/svelte/icons/reply';
 	import { platform } from '$platform';
@@ -301,6 +302,8 @@
 		rsvpEventUid?: string;
 		externalMessageId?: string;
 		references?: string[];
+		deliveredTo?: string;
+		recipients?: MessagePreviewRecipient[];
 	};
 	let threadMeta = $state<ThreadMeta | null>(null);
 	let threadRefreshTick = $state(0);
@@ -354,8 +357,17 @@
 			rsvpStatus: meta.rsvpStatus ?? m.rsvpStatus,
 			rsvpEventUid: meta.rsvpEventUid ?? m.rsvpEventUid,
 			externalMessageId: meta.externalMessageId ?? m.externalMessageId,
-			references: meta.references ?? m.references
+			references: meta.references ?? m.references,
+			deliveredTo: meta.deliveredTo ?? m.deliveredTo,
+			recipients: meta.recipients ?? m.recipients
 		};
+	});
+
+	const deliveredLine = $derived.by(() => {
+		const d = enriched?.deliveredTo?.trim().toLowerCase();
+		if (!d) return '';
+		const shown = (enriched?.recipients ?? []).some((r) => r.address.trim().toLowerCase() === d);
+		return shown ? '' : d;
 	});
 
 	const replySeed = $derived.by<ThreadEntry | null>(() => {
@@ -391,7 +403,9 @@
 					rsvpStatus: hydrated.rsvpStatus,
 					rsvpEventUid: hydrated.rsvpEventUid,
 					externalMessageId: hydrated.externalMessageId,
-					references: hydrated.references
+					references: hydrated.references,
+					deliveredTo: seedEntry?.deliveredTo,
+					recipients: seedEntry?.recipients
 				};
 				cascadeMarkRead(hydrated.entries ?? []);
 			} catch (err) {
@@ -891,6 +905,9 @@
 							<div class="det">
 								<span class="em">{m.fromAddr}</span>
 								<span class="to">&rarr; {m.to || '—'}</span>
+								{#if deliveredLine}
+									<span class="to">Delivered to: {deliveredLine}</span>
+								{/if}
 							</div>
 						</div>
 						<div class="prov">

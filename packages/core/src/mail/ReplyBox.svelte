@@ -196,6 +196,7 @@
 	function addressedIdentityEmail(): string | null {
 		const candidates: (string | undefined)[] = [
 			seed?.deliveredTo,
+			m.deliveredTo,
 			...(m.thread ?? []).map((t) => t.deliveredTo),
 			...seedRecipients.map((r) => r.address),
 			...(m.recipients ?? []).map((r) => r.address),
