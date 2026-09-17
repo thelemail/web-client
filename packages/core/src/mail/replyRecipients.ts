@@ -1,4 +1,5 @@
 import type { MessagePreviewRecipient } from './preview';
+import { isOwnRecipient } from './recipientAddress';
 
 export interface ReplyParty {
 	display: string;
@@ -19,12 +20,12 @@ function party(r: MessagePreviewRecipient): ReplyParty {
 	return { display: r.display, address: r.address };
 }
 
-function dedupe(list: ReplyParty[], exclude: ReadonlySet<string>): ReplyParty[] {
+function dedupe(list: ReplyParty[], exclude: ReadonlySet<string>, mine: ReadonlySet<string> = new Set()): ReplyParty[] {
 	const seen = new Set(exclude);
 	const out: ReplyParty[] = [];
 	for (const p of list) {
 		const key = norm(p.address);
-		if (!key || seen.has(key)) continue;
+		if (!key || seen.has(key) || isOwnRecipient(key, mine)) continue;
 		seen.add(key);
 		out.push(p);
 	}
@@ -56,13 +57,13 @@ export function replyTargets(
 		const excluded = new Set(mine);
 		if (senderAddr) excluded.add(senderAddr);
 		if (!senderIsMe && senderAddr) {
-			to = [{ display: seed.sender.display, address: seed.sender.address }, ...dedupe(toKind, excluded)];
+			to = [{ display: seed.sender.display, address: seed.sender.address }, ...dedupe(toKind, excluded, mine)];
 		} else {
-			to = dedupe(toKind, excluded);
+			to = dedupe(toKind, excluded, mine);
 		}
 		const inTo = new Set(mine);
 		for (const p of to) inTo.add(norm(p.address));
-		cc = dedupe(ccKind, inTo);
+		cc = dedupe(ccKind, inTo, mine);
 	}
 
 	if (to.length === 0 && cc.length === 0) {

@@ -42,6 +42,13 @@
 			.join(', ')
 	);
 
+	const deliveredLine = $derived.by(() => {
+		const d = e.deliveredTo?.trim().toLowerCase();
+		if (!d) return '';
+		const shown = (e.recipients ?? []).some((r) => r.address.trim().toLowerCase() === d);
+		return shown ? '' : d;
+	});
+
 	const chips = $derived(e.attachments ?? []);
 
 	async function refreshPointer(attachmentId: string) {
@@ -105,6 +112,9 @@
 					<span class="to">→ {toLine || '—'}</span>
 					{#if ccLine}
 						<span class="to">Cc: {ccLine}</span>
+					{/if}
+					{#if deliveredLine}
+						<span class="to">Delivered to: {deliveredLine}</span>
 					{/if}
 				</div>
 			</div>

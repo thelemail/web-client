@@ -194,15 +194,18 @@
 	});
 
 	function addressedIdentityEmail(): string | null {
-		const lists: (MessagePreviewRecipient[] | undefined)[] = [
-			seedRecipients,
-			m.recipients,
-			...(m.thread ?? []).map((t) => t.recipients)
+		const candidates: (string | undefined)[] = [
+			seed?.deliveredTo,
+			m.deliveredTo,
+			...(m.thread ?? []).map((t) => t.deliveredTo),
+			...seedRecipients.map((r) => r.address),
+			...(m.recipients ?? []).map((r) => r.address),
+			...(m.thread ?? []).flatMap((t) => (t.recipients ?? []).map((r) => r.address))
 		];
-		for (const list of lists) {
-			for (const r of list ?? []) {
-				if (addresses.getByEmail(r.address)) return r.address;
-			}
+		for (const address of candidates) {
+			if (!address) continue;
+			const own = addresses.getByRecipient(address);
+			if (own) return own.email;
 		}
 		return auth.email;
 	}

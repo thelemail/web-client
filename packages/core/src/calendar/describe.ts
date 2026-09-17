@@ -6,6 +6,7 @@ import type { Occurrence } from './recur';
 import type { CalendarView } from './store.svelte';
 import type { BoundaryLine, GuestChip, Selection } from './types';
 import type { Attendee, CalendarItem, ItemKind, MemberState, Partstat } from './model';
+import { isOwnRecipient } from '$core/mail/recipientAddress';
 
 const KIND_LABEL: Record<ItemKind, string> = {
 	event: 'Event',
@@ -142,7 +143,7 @@ function organizerLine(item: CalendarItem, ctx: DescribeContext): string {
 }
 
 function myPartstat(item: CalendarItem, ctx: DescribeContext): Partstat | null {
-	const mine = (item.attendees ?? []).find((a) => ctx.myAddresses.includes(a.email.toLowerCase()));
+	const mine = (item.attendees ?? []).find((a) => isOwnRecipient(a.email, ctx.myAddresses));
 	return ctx.myState?.partstat ?? mine?.partstat ?? null;
 }
 

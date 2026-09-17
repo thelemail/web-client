@@ -42,6 +42,7 @@ import type {
 	Selection,
 	View
 } from './types';
+import { isOwnRecipient } from '$core/mail/recipientAddress';
 
 export const HOUR_HEIGHT = 48;
 
@@ -771,7 +772,7 @@ class CalendarState {
 		const item = occ.item;
 		const mine = new Set(this.myAddresses);
 		const attendees = (item.attendees ?? []).map((a) =>
-			mine.has(a.email.toLowerCase()) ? { ...a, partstat } : a
+			isOwnRecipient(a.email, mine) ? { ...a, partstat } : a
 		);
 		const next: CalendarItem = { ...item, attendees };
 		try {

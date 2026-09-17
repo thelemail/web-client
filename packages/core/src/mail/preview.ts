@@ -26,6 +26,7 @@ export interface MessagePreview {
 	recipients: MessagePreviewRecipient[];
 	snippet: string;
 	display_date: string;
+	delivered_to?: string;
 	flags?: { bimi_domain?: string; auth?: MessagePreviewAuth } & Record<string, unknown>;
 }
 

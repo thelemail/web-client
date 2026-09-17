@@ -4,6 +4,7 @@ import type { ReplyParty } from './replyRecipients';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { lookupAccount } from '$core/api/accounts';
 import { ApiCallError } from '$core/api/types';
+import { canonicalRecipient } from './recipientAddress';
 
 const CLASSIFY_TTL_MS = 2 * 60 * 1000;
 
@@ -18,7 +19,7 @@ export async function classifyAddress(address: string): Promise<'internal' | 'ex
 	if (hit && Date.now() - hit.at < CLASSIFY_TTL_MS) return hit.cls;
 	let cls: 'internal' | 'external';
 	try {
-		await lookupAccount(email);
+		await lookupAccount(canonicalRecipient(email));
 		cls = 'internal';
 	} catch (e) {
 		if (e instanceof ApiCallError && e.status === 404) {

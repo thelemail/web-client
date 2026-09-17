@@ -6,6 +6,7 @@ import { lookupAccount } from '$core/api/accounts';
 import { ApiCallError } from '$core/api/types';
 import { issueAttachmentUploadUrls } from '$core/api/messages';
 import { build as buildAttFrame } from '$core/mail/attframe';
+import { canonicalRecipient } from './recipientAddress';
 import { senderKey, SendError, type KeyMaterial } from './send';
 import type {
 	AttachmentDescriptor,
@@ -45,7 +46,7 @@ interface RecipientResolution {
 }
 
 async function recipientForAddress(address: string): Promise<RecipientResolution> {
-	const lookup = await lookupAccount(address);
+	const lookup = await lookupAccount(canonicalRecipient(address));
 	const k = await openpgp.readKey({ armoredKey: lookup.publicKeyArmored });
 	const fp = k.getFingerprint();
 	const bytes = typeof fp === 'string' ? hexToBytes(fp) : new Uint8Array(fp as ArrayLike<number>);

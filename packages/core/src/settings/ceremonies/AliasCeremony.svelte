@@ -68,7 +68,7 @@
 	const shared = $derived(sharedPicked || onSharedDomain);
 	const selectedDomain = $derived(ownedDomains.find((d) => d.domain === selectedDomainName) ?? null);
 
-	const localOk = $derived(/^[a-z0-9]([a-z0-9._+-]*[a-z0-9])?$/i.test(local.trim()));
+	const localOk = $derived(/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i.test(local.trim()));
 	const nameOk = $derived(name.trim().length > 0);
 	const full = $derived(
 		createdEmail ??

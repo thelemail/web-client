@@ -6,6 +6,7 @@ import { myAddressList } from './invite';
 import type { CalendarItem, ItemKind, Partstat } from './model';
 import { applyCalendarEvents, applyFromMessageId, type AppliedChange } from './replies';
 import { calendarStore } from './store.svelte';
+import { isOwnRecipient } from '$core/mail/recipientAddress';
 
 export interface PendingFromMail {
 	kind: ItemKind;
@@ -50,7 +51,7 @@ export async function statusFor(ev: CalendarEvent): Promise<InvitationStatus> {
 	const entry = calendarStore.itemByUid(ev.uid);
 	if (!entry) return { added: false, loaded: calendarStore.loaded };
 	const mine = myAddressList();
-	const me = (entry.item.attendees ?? []).find((a) => mine.includes(a.email.toLowerCase()));
+	const me = (entry.item.attendees ?? []).find((a) => isOwnRecipient(a.email, mine));
 	return {
 		added: true,
 		calendarName: calendarStore.calendar(entry.item.calendarId)?.name,
@@ -85,7 +86,7 @@ export async function addFromMail(
 	if (partstat) {
 		const mine = myAddressList();
 		item.attendees = (item.attendees ?? []).map((a) =>
-			mine.includes(a.email.toLowerCase()) ? { ...a, partstat } : a
+			isOwnRecipient(a.email, mine) ? { ...a, partstat } : a
 		);
 	}
 	const saved = await calendarStore.saveItem(item, { label: `Added “${item.title}” from mail` });

@@ -146,6 +146,7 @@ async function hydrateEntry(
 			bimiDomain: bimiDomainFromPreview(preview),
 			to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 			recipients: preview.recipients,
+			deliveredTo: typeof preview.delivered_to === 'string' ? preview.delivered_to : undefined,
 			init,
 			bg: me ? 'var(--pine-700)' : pal.bg,
 			fg: me ? '#EEF2EA' : pal.fg,
@@ -180,7 +181,8 @@ function previewFromMirror(m: MirrorMessage): MessagePreview {
 		sender: { display: m.senderDisplay, address: m.senderAddress },
 		recipients,
 		snippet: m.snippet,
-		display_date: m.displayDate
+		display_date: m.displayDate,
+		delivered_to: m.deliveredTo || undefined
 	} as MessagePreview;
 }
 
