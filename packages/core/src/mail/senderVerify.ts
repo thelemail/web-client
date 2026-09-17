@@ -176,7 +176,7 @@ export async function delegatedSignerTrust(
 		if (match) {
 			const statement = await verifyDelegation(match, address);
 			value = {
-				label: statement.label,
+				label: match.label,
 				address: statement.address,
 				revokedAt: statement.revokedAt
 			};
