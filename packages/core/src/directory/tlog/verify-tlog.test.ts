@@ -5,6 +5,7 @@ import { exclusiveInTab, type TlogLogState, type TlogStateStore } from './state-
 import { verifyTlogProof, type TlogConsistencyProof, type VerifyTlogOptions } from './verify-tlog';
 import fixtures from './fixtures/tlog-fixtures.json';
 import consistencyFixtures from './fixtures/tlog-consistency-fixtures.json';
+import { canonicalRecipient } from '$core/mail/recipientAddress';
 
 interface FixtureCase {
 	name: string;
@@ -62,6 +63,37 @@ describe('verifyTlogProof fixtures', () => {
 			}
 		});
 	}
+});
+
+describe('verifyTlogProof for plus-tagged recipients', () => {
+	const tagged = (address: string) => address.replace('@', '+shop@');
+
+	for (const c of cases) {
+		it(`${c.name} gives the same verdict through a tag`, async () => {
+			const via = { ...c, address: canonicalRecipient(tagged(c.address)) };
+			expect(via.address).toBe(c.address);
+			if (c.expect === 'ok') {
+				const details = await run(via, memoryStore());
+				expect(details.treeSize).toBeGreaterThan(0);
+			} else {
+				const err = await run(via, memoryStore()).then(
+					() => null,
+					(e) => e as unknown
+				);
+				expect((err as DirectoryVerificationError).code).toBe(c.expect);
+			}
+		});
+	}
+
+	it('does not accept the tagged address as its own VRF label', async () => {
+		const ok = cases.find((c) => c.name === 'ok-witnessed')!;
+		const err = await run({ ...ok, address: tagged(ok.address) }, memoryStore()).then(
+			() => null,
+			(e) => e as unknown
+		);
+		expect(err).toBeInstanceOf(DirectoryVerificationError);
+		expect((err as DirectoryVerificationError).code).toBe('tlog_vrf_invalid');
+	});
 });
 
 describe('verifyTlogProof witness policy', () => {

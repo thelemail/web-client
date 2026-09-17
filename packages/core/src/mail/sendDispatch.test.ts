@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const calls = vi.hoisted(() => ({
 	internal: [] as { input: Record<string, unknown>; opts: Record<string, unknown> }[],
-	external: [] as Record<string, unknown>[]
+	external: [] as Record<string, unknown>[],
+	lookups: [] as string[]
 }));
 
 vi.mock('./send', () => {
@@ -42,7 +43,8 @@ vi.mock('$core/api/accounts', async () => {
 	const { ApiCallError } = await import('$core/api/types');
 	return {
 		lookupAccount: async (email: string) => {
-			if (email.endsWith('@thelemail.test')) return { accountId: `acct:${email}` };
+			calls.lookups.push(email);
+			if (email.endsWith('@thelemail.test') && !email.includes('+')) return { accountId: `acct:${email}` };
 			throw new ApiCallError(404, null, 'no such account');
 		}
 	};
@@ -60,6 +62,7 @@ const WHEN = '2026-01-02T09:00:00.000Z';
 beforeEach(() => {
 	calls.internal.length = 0;
 	calls.external.length = 0;
+	calls.lookups.length = 0;
 });
 
 describe('dispatchSend scheduling', () => {
@@ -117,5 +120,31 @@ describe('dispatchSend scheduling', () => {
 		expect(calls.external).toHaveLength(1);
 		expect(calls.external[0].sentMessageId).toBe('internal-1');
 		expect(calls.external[0].scheduledAt).toBeUndefined();
+	});
+});
+
+describe('dispatchSend with plus-tagged recipients', () => {
+	it('keeps a tagged hosted recipient internal by classifying its base address', async () => {
+		await dispatchSend({ to: [party('Tagged+Shop@thelemail.test')], subject: 's', body: 'b' });
+
+		expect(calls.lookups).toEqual(['tagged@thelemail.test']);
+		expect(calls.internal).toHaveLength(1);
+		expect(calls.external).toHaveLength(0);
+		expect((calls.internal[0].input.to as { address: string }[])[0].address).toBe('Tagged+Shop@thelemail.test');
+	});
+
+	it('sends a tagged outside address unchanged to the external leg', async () => {
+		await dispatchSend({
+			to: [party('mixed+x@thelemail.test'), party('someone+list@example.test')],
+			subject: 's',
+			body: 'b'
+		});
+
+		expect(calls.internal).toHaveLength(1);
+		expect(calls.internal[0].opts.deliverOnly).toEqual(new Set(['mixed+x@thelemail.test']));
+		expect(calls.external).toHaveLength(1);
+		expect((calls.external[0].to as { address: string }[]).map((p) => p.address)).toEqual([
+			'someone+list@example.test'
+		]);
 	});
 });

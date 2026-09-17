@@ -20,6 +20,7 @@ import type { MessagePreview, MessagePreviewRecipient } from './preview';
 import type { ReplyParty } from './replyRecipients';
 import { packBodyForSend } from './signaturePack';
 import { snippetSource } from './quote';
+import { canonicalRecipient } from './recipientAddress';
 
 export interface ComposeInput {
 	to: ReplyParty[];
@@ -250,10 +251,10 @@ async function resolveRecipient(
 	emailAddress: string,
 	opts: ResolveOptions = {}
 ): Promise<{ accountId: string; key: KeyMaterial; fullName: string }> {
-	const normalised = normaliseEmail(emailAddress);
+	const normalised = canonicalRecipient(emailAddress);
 	let lookup;
 	try {
-		lookup = await lookupDirectory(emailAddress);
+		lookup = await lookupDirectory(normalised);
 	} catch (e) {
 		if (e instanceof ApiCallError && e.status === 404) {
 			throw new SendError('recipient_unknown', `No Thelemail account at ${emailAddress}`);
@@ -726,10 +727,16 @@ export async function sendInternalMessage(
 		string,
 		{ accountId: string; key: KeyMaterial; fullName: string }
 	>();
+	const deliveredTo = new Map<string, string>();
 	for (const p of deliverable) {
-		const addr = normaliseEmail(p.address);
-		if (resolutions.has(addr)) continue;
-		resolutions.set(addr, await resolveRecipient(p.address, { acceptKeyChange: opts.acceptKeyChange }));
+		const addr = canonicalRecipient(p.address);
+		let r = resolutions.get(addr);
+		if (!r) {
+			r = await resolveRecipient(p.address, { acceptKeyChange: opts.acceptKeyChange });
+			resolutions.set(addr, r);
+		}
+		const typed = normaliseEmail(p.address);
+		if (typed !== addr && !deliveredTo.has(r.accountId)) deliveredTo.set(r.accountId, typed);
 	}
 	const keyByAccount = new Map<string, KeyMaterial>();
 	for (const r of resolutions.values()) {
@@ -737,7 +744,7 @@ export async function sendInternalMessage(
 	}
 
 	const enrich = (p: ReplyParty): ReplyParty => {
-		const r = resolutions.get(normaliseEmail(p.address));
+		const r = resolutions.get(canonicalRecipient(p.address));
 		return r && r.fullName ? { display: r.fullName, address: p.address } : p;
 	};
 	const to = input.to.map(enrich);
@@ -774,7 +781,12 @@ export async function sendInternalMessage(
 	const senderPreview = encode(buildPreview(enriched, true, now));
 	const hasBcc = !!bcc;
 	const recipientMime = hasBcc ? buildMIME({ ...mimeArgs, bcc: undefined }) : senderMime;
-	const recipientPreview = hasBcc ? encode(buildPreview(enriched, false, now)) : senderPreview;
+	const recipientBasePreview = buildPreview(enriched, false, now);
+	const recipientPreview = hasBcc ? encode(recipientBasePreview) : senderPreview;
+	const previewFor = (id: string): Uint8Array => {
+		const tagged = deliveredTo.get(id);
+		return tagged ? encode({ ...recipientBasePreview, delivered_to: tagged }) : recipientPreview;
+	};
 
 	const senderAtts: AttachmentDescriptor[] = [];
 	const attsByAccount = new Map<string, AttachmentDescriptor[]>();
@@ -805,7 +817,7 @@ export async function sendInternalMessage(
 		...accountIds.map((id) =>
 			buildEnvelope(
 				accountId,
-				recipientPreview,
+				previewFor(id),
 				recipientMime,
 				keyByAccount.get(id)!,
 				attsByAccount.get(id) ?? []
