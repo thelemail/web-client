@@ -13,7 +13,7 @@ import {
 	DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX,
 	DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED
 } from './signing-key';
-import { TLOG_POLICY, type TlogPolicy } from './tlog/policy';
+import { TLOG_POLICY, type TlogRuntimePolicy } from './tlog/policy';
 import { tlogStateStore } from './tlog/state-idb';
 import { verifyTlogProof } from './tlog/verify-tlog';
 
@@ -33,7 +33,7 @@ function fingerprintHex(key: openpgp.Key): string {
 }
 
 export interface VerifyReadDelegateOptions {
-	tlogPolicy?: TlogPolicy | null;
+	tlogPolicy?: TlogRuntimePolicy | null;
 	nowMillis?: number;
 }
 

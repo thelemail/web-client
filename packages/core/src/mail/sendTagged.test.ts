@@ -38,6 +38,7 @@ vi.mock('$core/directory/verify', () => ({
 	},
 	DirectoryVerificationError: class extends Error {}
 }));
+vi.mock('$core/directory/read-delegation', () => ({ verifyReadDelegate: async () => ({}) }));
 vi.mock('$core/directory/signing-key', () => ({ DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX: '' }));
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {

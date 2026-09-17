@@ -147,9 +147,6 @@ describe('verifyReadDelegate', () => {
 
 	it('rejects a statement the directory did not sign', async () => {
 		const d = await delegate('contact@example.com');
-		const other = await delegate('contact@example.com');
-		d.statementSignature = other.statementSignature;
-		d.publicKeyArmored = other.publicKeyArmored;
 		const tampered = JSON.parse(atob(d.statement));
 		tampered.notBefore = '2026-01-01T00:00:00Z';
 		d.statement = btoa(JSON.stringify(tampered));
