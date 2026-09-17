@@ -4,6 +4,7 @@
 	import { submitReport, type ReportOutcome } from './report';
 	import type { MessageReportKind } from '$core/api/types';
 	import { auth } from '$core/stores/auth.svelte';
+	import { accountSettings } from '$core/stores/accountSettings.svelte';
 
 	interface Props {
 		messageId: string;
@@ -25,7 +26,7 @@
 	];
 
 	let kind = $state<MessageReportKind>('phishing');
-	let includeHeaders = $state(false);
+	let includeHeaders = $state(accountSettings.privacy.shareSpamHeaders === true);
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 
@@ -95,8 +96,8 @@
 				<span class="cfd-check-t">Include the message headers</span>
 				<span class="cfd-check-d">
 					Attaches the decrypted header block{senderAddress ? ` and ${senderAddress}` : ''} to the
-					report so we can trace how the message was routed. Off by default. Nothing leaves your
-					browser unless you tick this.
+					report so we can trace how the message was routed and train the spam filter. Nothing
+					leaves your browser unless this is ticked.
 				</span>
 			</span>
 		</label>

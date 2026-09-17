@@ -19,7 +19,7 @@ const SAVED_SETTLE_DELAY = 2200;
 const TOAST_DELAY = 2400;
 
 const OPEN_MESSAGE_KEYS = ['markRead', 'swipe'] as const satisfies ReadonlyArray<keyof SettingsState>;
-const PRIVACY_KEYS = ['stripTrack'] as const satisfies ReadonlyArray<keyof SettingsState>;
+const PRIVACY_KEYS = ['stripTrack', 'shareSpamHeaders'] as const satisfies ReadonlyArray<keyof SettingsState>;
 const LOCALIZATION_KEYS = ['dateFmt', 'timeFmt'] as const satisfies ReadonlyArray<
 	keyof SettingsState
 >;
@@ -59,6 +59,7 @@ class SettingsDraftStore {
 	#accountId: string | null = null;
 	#dirtyOpenMessage = false;
 	#dirtyPrivacy = false;
+	#shareSpamHeadersTouched = false;
 	#dirtyLocalization = false;
 	#dirtyAppearance = false;
 	#dirtyComposing = false;
@@ -80,6 +81,7 @@ class SettingsDraftStore {
 		this.profileDirty = false;
 		this.#dirtyOpenMessage = false;
 		this.#dirtyPrivacy = false;
+		this.#shareSpamHeadersTouched = false;
 		this.#dirtyLocalization = false;
 		this.#dirtyAppearance = false;
 		this.#dirtyComposing = false;
@@ -91,6 +93,7 @@ class SettingsDraftStore {
 		this.s.markRead = open.markRead;
 		this.s.swipe = open.swipe;
 		this.s.stripTrack = accountSettings.privacy.stripTrackingParams;
+		this.s.shareSpamHeaders = accountSettings.privacy.shareSpamHeaders === true;
 		const loc = accountSettings.localization;
 		this.s.dateFmt = loc.dateFormat;
 		this.s.timeFmt = loc.timeFormat;
@@ -107,6 +110,7 @@ class SettingsDraftStore {
 		let persisted = false;
 		if (includesKey(OPEN_MESSAGE_KEYS, key)) persisted = this.#dirtyOpenMessage = true;
 		if (includesKey(PRIVACY_KEYS, key)) persisted = this.#dirtyPrivacy = true;
+		if (key === 'shareSpamHeaders') this.#shareSpamHeadersTouched = true;
 		if (includesKey(LOCALIZATION_KEYS, key)) persisted = this.#dirtyLocalization = true;
 		if (includesKey(APPEARANCE_KEYS, key)) persisted = this.#dirtyAppearance = true;
 		if (includesKey(COMPOSING_KEYS, key)) persisted = this.#dirtyComposing = true;
@@ -147,7 +151,14 @@ class SettingsDraftStore {
 		const openMessageBody = this.#dirtyOpenMessage
 			? { markRead: this.s.markRead, swipe: this.s.swipe }
 			: null;
-		const privacyBody = this.#dirtyPrivacy ? { stripTrackingParams: this.s.stripTrack } : null;
+		const privacyBody = this.#dirtyPrivacy
+			? {
+					stripTrackingParams: this.s.stripTrack,
+					shareSpamHeaders: this.#shareSpamHeadersTouched
+						? this.s.shareSpamHeaders
+						: accountSettings.privacy.shareSpamHeaders
+				}
+			: null;
 		const localizationBody = this.#dirtyLocalization
 			? { dateFormat: this.s.dateFmt, timeFormat: this.s.timeFmt }
 			: null;
@@ -192,7 +203,7 @@ class SettingsDraftStore {
 				this.#dirtyOpenMessage = false;
 			}
 			if (privacyBody) {
-				accountSettings.setPrivacy({ stripTrackingParams: privacyBody.stripTrackingParams });
+				accountSettings.setPrivacy(privacyBody);
 				this.#dirtyPrivacy = false;
 			}
 			if (localizationBody) {

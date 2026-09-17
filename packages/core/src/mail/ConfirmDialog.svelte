@@ -16,6 +16,7 @@
 		error?: string | null;
 		body?: Snippet;
 		onConfirm: () => void;
+		onCancel?: () => void;
 		onClose: () => void;
 	}
 
@@ -31,12 +32,18 @@
 		error = null,
 		body,
 		onConfirm,
+		onCancel,
 		onClose
 	}: Props = $props();
 
 	function close() {
 		if (busy) return;
 		onClose();
+	}
+
+	function cancel() {
+		if (busy) return;
+		(onCancel ?? onClose)();
 	}
 
 	function handleKey(e: KeyboardEvent) {
@@ -85,7 +92,7 @@
 		{/if}
 
 		<div class="cfd-actions">
-			<Button variant="secondary" disabled={busy} onclick={close}>
+			<Button variant="secondary" disabled={busy} onclick={cancel}>
 				{cancelLabel}
 			</Button>
 			<Button

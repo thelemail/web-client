@@ -47,13 +47,14 @@ describe('generated account keys', () => {
 	it(
 		'would otherwise carry the local clock, which is what the server could not encrypt to',
 		async () => {
+			const before = Math.floor(Date.now() / 1000) * 1000;
 			const { publicKey } = await openpgp.generateKey({
 				type: 'curve25519',
 				userIDs: [{ email: 'anna@thelemail.test' }],
 				format: 'object'
 			});
-			const drift = publicKey.getCreationTime().getTime() - keyCreationDate().getTime();
-			expect(drift).toBeGreaterThanOrEqual(KEY_CREATION_BACKDATE_MS - 1000);
+			const drift = publicKey.getCreationTime().getTime() - keyCreationDate(before).getTime();
+			expect(drift).toBeGreaterThanOrEqual(KEY_CREATION_BACKDATE_MS);
 		},
 		60_000
 	);

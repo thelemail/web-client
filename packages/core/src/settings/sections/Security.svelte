@@ -358,6 +358,12 @@
 	>
 		<Toggle on={s.stripTrack} onChange={(v) => set('stripTrack', v)} />
 	</Row>
+	<Row
+		t="Share headers when reporting spam"
+		d="Mail you report as spam is sent with its header block so the spam filter can learn from it. The message body stays encrypted and is never sent."
+	>
+		<Toggle on={s.shareSpamHeaders} onChange={(v) => set('shareSpamHeaders', v)} />
+	</Row>
 </div>
 
 <div class="scard flat">

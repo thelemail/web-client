@@ -74,6 +74,7 @@ export interface SettingsState {
 	sendReceipts: string;
 
 	stripTrack: boolean;
+	shareSpamHeaders: boolean;
 	rememberDevice: boolean;
 
 	desktop: boolean;
@@ -127,6 +128,7 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	sendReceipts: 'Always ask me',
 
 	stripTrack: true,
+	shareSpamHeaders: false,
 	rememberDevice: true,
 
 	desktop: true,
