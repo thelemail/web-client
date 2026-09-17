@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import Stepper from '$core/auth/Stepper.svelte';
@@ -19,6 +19,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import JoinFamilyInvite from '$core/auth/JoinFamilyInvite.svelte';
+	import { createRegistrationProof, withRegistrationProof } from '$core/auth/registration-proof';
 	import { Button } from '$core/components/ui/button';
 
 	const STR_LABELS = ['', 'weak', 'fair', 'good', 'strong'];
@@ -51,6 +52,14 @@
 	let accepted = $state(false);
 
 	const nameReady = $derived(name.trim().length >= 2);
+
+	const proof = createRegistrationProof();
+
+	$effect(() => {
+		if (step === 1) untrack(() => proof.prepare());
+	});
+
+	$effect(() => () => proof.dispose());
 
 	onMount(async () => {
 		try {
@@ -100,7 +109,9 @@
 		try {
 			const email = invite.inviteeEmail;
 			const start = await keystore.opaqueStartRegistration({ email, password });
-			const init = await registrationInit({ email, registrationRequest: start.registrationRequest });
+			const init = await withRegistrationProof(proof, (payload) =>
+				registrationInit({ email, registrationRequest: start.registrationRequest, proof: payload })
+			);
 			const finish = await keystore.opaqueFinishRegistration({
 				operationId: start.operationId,
 				accountId: init.accountId,

@@ -26,7 +26,11 @@ export type ErrorCode =
 	| 'invitee_has_custom_domain'
 	| 'invitee_domain_not_shared'
 	| 'family_full'
-	| 'invite_not_acceptable';
+	| 'invite_not_acceptable'
+	| 'proof_required'
+	| 'proof_invalid'
+	| 'proof_expired'
+	| 'proof_reused';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
@@ -483,9 +487,23 @@ export interface ModulusResponse {
 	modulus: string;
 }
 
+export interface RegistrationChallenge {
+	parameters: {
+		algorithm: string;
+		nonce: string;
+		salt: string;
+		cost: number;
+		keyLength: number;
+		keyPrefix: string;
+		expiresAt: number;
+	};
+	signature: string;
+}
+
 export interface RegistrationInitRequest {
 	email: string;
 	registrationRequest: string;
+	proof: string;
 }
 
 export interface RegistrationInitResponse {
