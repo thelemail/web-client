@@ -2,7 +2,7 @@
 	import Forward from '@lucide/svelte/icons/forward';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import MailCheck from '@lucide/svelte/icons/mail-check';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
@@ -107,7 +107,7 @@
 					disabled={busyId === d.id}
 					onclick={() => run(d, () => readDelegations.resend(addressId, d.id), `A new link is on its way to ${d.destination}.`)}
 				>
-					<RefreshCw size={16} />
+					<MailCheck size={16} />
 				</button>
 			{/if}
 			{#if d.state === 'active'}
