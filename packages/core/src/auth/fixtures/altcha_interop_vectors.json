@@ -1,0 +1,130 @@
+[
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "10aa50a5dc183dca5c57c361",
+        "salt": "c429bb4ddd2d916ca88eccb1",
+        "cost": 1,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "9aa64302b29cd49d2f8fc1defe730217316afa899b34053878eacc80226f2a8d"
+    },
+    "counter": 4,
+    "derivedKey": "008cd0cb13d907d0dfd466e84cc4760aa645a6051183f6a0af659e411ed8845f"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "7c201757b6f86a9ce126b743",
+        "salt": "21986dd43cdca786d353ea22",
+        "cost": 1,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "884210f18974f35244cd8d35bec537157f37ffb4be50bb1edc1113d3a70d5eb5"
+    },
+    "counter": 24,
+    "derivedKey": "00516f46b1bb7fe54e8d727181f2927a1500df8af7f07cb1a09d3a53a7e725a8"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "b1cb4f55aae6edd964dd4440",
+        "salt": "3f6b5c2aa727654dbfe5efac",
+        "cost": 10,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "ac59611f9509a9b6a307c315d0380d969fa09bc3201faaf34e78cc1fe19a5efc"
+    },
+    "counter": 387,
+    "derivedKey": "00f1744a3a522733aad3032571d778af4f8855c85a704348382062c11fa24a46"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "cadb5f56469d36bb9c9e4d3d",
+        "salt": "794b5679764ee09df1d1af11",
+        "cost": 10,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "6bfed0d27fecd9a552c9f6a14cd9829dbc3ac482a47c462d2941a73d1f7b129c"
+    },
+    "counter": 17,
+    "derivedKey": "00286ea4b445210c2a2cc3de0e06825d9ebd4158a9a53a9393b0ee3fd758ec80"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "121b8f25c8cf30bfcf0c9f32",
+        "salt": "8594944e5472e4653a75b004",
+        "cost": 100,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "e11148643a019e608e7c5c9f6072bc4aea8e171a427ace8c2c4fe1afc7979b25"
+    },
+    "counter": 424,
+    "derivedKey": "005d2c8c48cf6953f7595500a83867a3c4367117bad1164def23a86005960fb4"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "517d6c0c11f3c71c820b6259",
+        "salt": "b8782febb65521a4b72b4e4e",
+        "cost": 100,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "1490a63c8ac0c1ae12474d27a2645199b585fdda256044e84b54ec16e0b87923"
+    },
+    "counter": 492,
+    "derivedKey": "00c23c3b7989414a19aed89402b7780da40a39a8f5addf65d73bdb10f4832ea5"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "72490438d7737ea65783f531",
+        "salt": "064500b38c9dae116d633927",
+        "cost": 1000,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "45a664052ab6547585f587e5ad46750f2d46382f34490be302439100e987a694"
+    },
+    "counter": 136,
+    "derivedKey": "009191e56b73559b5af86ef1d2f7e1a006fc3ad582baa75f12f70511fde661cf"
+  },
+  {
+    "hmacKey": "thelemail-altcha-interop-vectors-key",
+    "challenge": {
+      "parameters": {
+        "algorithm": "PBKDF2/SHA-256",
+        "nonce": "50c969b39f0169496907ce37",
+        "salt": "382cca2fb70de7c229fc0516",
+        "cost": 1000,
+        "keyLength": 32,
+        "keyPrefix": "00"
+      },
+      "signature": "78bafd0bc90b3744805c984e583f03bcf174349d8eb234454d8e55e9e9773a4f"
+    },
+    "counter": 441,
+    "derivedKey": "00ae697d511d7ce3571d84ef46f21f9e49122cdd2b3c74e3e9d955a513ebdaa8"
+  }
+]

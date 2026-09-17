@@ -44,6 +44,7 @@ import type {
 	RefreshResponse,
 	RegisterRequest,
 	RegisterResponse,
+	RegistrationChallenge,
 	RegistrationInitRequest,
 	RegistrationInitResponse,
 	SecurityEventListResponse,
@@ -64,6 +65,13 @@ export function getOpaqueParameters() {
 export function checkAddressAvailability(localPart: string) {
 	const qs = new URLSearchParams({ localPart }).toString();
 	return apiFetch<{ available: boolean }>(`/v1/auth/address-available?${qs}`, {
+		method: 'GET',
+		skipAuth: true
+	});
+}
+
+export function registrationChallenge() {
+	return apiFetch<RegistrationChallenge>('/v1/auth/registration/challenge', {
 		method: 'GET',
 		skipAuth: true
 	});

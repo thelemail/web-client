@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
@@ -17,6 +18,7 @@
 		type PlanSelection
 	} from '$core/auth/plans';
 	import { performLogin } from '$core/auth/perform-login';
+	import { createRegistrationProof, withRegistrationProof } from '$core/auth/registration-proof';
 	import { resolveReturnTo } from '$core/auth/return-to';
 	import { createCheckoutSession, type PlanCode } from '$core/api/billing';
 	import { changeMyWorkspaceType } from '$core/api/workspaces';
@@ -64,6 +66,14 @@
 	let submitError = $state<string | null>(null);
 
 	let status = $state<'idle' | 'invalid' | 'checking' | 'taken' | 'available'>('idle');
+
+	const proof = createRegistrationProof();
+
+	$effect(() => {
+		if (step === 1) untrack(() => proof.prepare());
+	});
+
+	$effect(() => () => proof.dispose());
 
 	$effect(() => {
 		const h = handle.trim().toLowerCase();
@@ -159,7 +169,9 @@
 		const plan = paid ? planCodeFor(sel) : null;
 		try {
 			const start = await keystore.opaqueStartRegistration({ email, password });
-			const init = await registrationInit({ email, registrationRequest: start.registrationRequest });
+			const init = await withRegistrationProof(proof, (payload) =>
+				registrationInit({ email, registrationRequest: start.registrationRequest, proof: payload })
+			);
 			const finish = await keystore.opaqueFinishRegistration({
 				operationId: start.operationId,
 				accountId: init.accountId,
