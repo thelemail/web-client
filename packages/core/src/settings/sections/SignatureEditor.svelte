@@ -8,6 +8,8 @@
 	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
 	import { Editor } from '@tiptap/core';
+	import LinkDialog from '$core/mail/editor/LinkDialog.svelte';
+	import { applyLink, currentLink } from '$core/mail/editor/link';
 	import StarterKit from '@tiptap/starter-kit';
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
@@ -226,18 +228,21 @@
 	const toggleItalic = () => editor?.chain().focus().toggleItalic().run();
 	const toggleCode = () => editor?.chain().focus().toggleCode().run();
 
+	let linkInitial = $state<string | null>(null);
+
 	function setLink() {
 		if (!editor) return;
-		const prev = (editor.getAttributes('link').href as string | undefined) ?? '';
-		const url = window.prompt('Link URL', prev);
-		editor.commands.focus();
-		if (url === null) return;
-		if (url === '') {
-			editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			return;
-		}
-		const normalized = /^[a-z]+:/i.test(url) ? url : `https://${url}`;
-		editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
+		linkInitial = currentLink(editor);
+	}
+
+	function closeLink() {
+		linkInitial = null;
+		editor?.commands.focus();
+	}
+
+	function submitLink(url: string) {
+		linkInitial = null;
+		if (editor) applyLink(editor, url);
 	}
 
 	function pickImage() {
@@ -343,6 +348,10 @@
 {/if}
 {#if notice}
 	<div class="sig-note">{notice}</div>
+{/if}
+
+{#if linkInitial !== null}
+	<LinkDialog initial={linkInitial} onApply={submitLink} onClose={closeLink} />
 {/if}
 
 <style>

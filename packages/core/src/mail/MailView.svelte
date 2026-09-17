@@ -11,6 +11,8 @@
 	import Compose from './Compose.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
 	import Toast from '$core/components/Toast.svelte';
+	import ConfirmDialog from './ConfirmDialog.svelte';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import {
 		FOLDERS,
 		LABELS,
@@ -63,6 +65,8 @@
 	let toast = $state<{ text: string; undo?: () => void } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 	let deepLinkMissing = $state(false);
+	let pendingDelete = $state<{ ids: string[]; bulk: boolean } | null>(null);
+	let deleting = $state(false);
 
 	const supported = $derived(canFetchFolder(query.folder));
 	const snapshot = $derived(mailbox.streamFor(query));
@@ -499,22 +503,32 @@
 		flash('Restored to Inbox');
 	}
 
-	async function deleteOne(id: string) {
-		const ok = typeof window !== 'undefined'
-			? window.confirm('Permanently delete this message? This cannot be undone.')
-			: true;
-		if (!ok) return;
-		if (messageId === id) {
-			const nextId = nextAfter(id);
-			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
-		}
+	function deleteOne(id: string) {
+		pendingDelete = { ids: [id], bulk: false };
+	}
+
+	async function confirmDelete() {
+		const pending = pendingDelete;
+		if (!pending || deleting) return;
+		const { ids, bulk: fromBulk } = pending;
+		deleting = true;
 		try {
-			await deleteMessage(id);
-			flash('Permanently deleted');
+			if (messageId !== null && ids.includes(messageId)) {
+				const nextId = fromBulk ? null : nextAfter(messageId);
+				void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
+			}
+			if (fromBulk) checked = new Set();
+			const results = await Promise.allSettled(ids.map((id) => deleteMessage(id)));
+			const failed = results.filter((r) => r.status === 'rejected').length;
+			if (!fromBulk) flash(failed === 0 ? 'Permanently deleted' : 'Could not delete');
+			else if (failed === 0) flash(`${ids.length} permanently deleted`);
+			else if (failed < ids.length) flash(`${ids.length - failed} deleted, ${failed} failed`);
+			else flash('Delete failed');
 			await mailbox.refresh([query]);
 			void mailbox.refreshCounts();
-		} catch {
-			flash('Could not delete');
+		} finally {
+			deleting = false;
+			pendingDelete = null;
 		}
 	}
 
@@ -593,22 +607,7 @@
 			return;
 		}
 		if (action === 'delete') {
-			const ok = typeof window !== 'undefined'
-				? window.confirm(`Permanently delete ${ids.length} message${ids.length > 1 ? 's' : ''}? This cannot be undone.`)
-				: true;
-			if (!ok) return;
-			if (messageId !== null && ids.includes(messageId)) {
-				void goto(withSearch(basePath), { replaceState: true });
-			}
-			checked = new Set();
-			const results = await Promise.allSettled(ids.map((id) => deleteMessage(id)));
-			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (failed === 0) flash(`${ids.length} permanently deleted`);
-			else if (failed < ids.length)
-				flash(`${ids.length - failed} deleted, ${failed} failed`);
-			else flash('Delete failed');
-			await mailbox.refresh([query]);
-			void mailbox.refreshCounts();
+			pendingDelete = { ids, bulk: true };
 			return;
 		}
 		if (action === 'spam') {
@@ -881,6 +880,29 @@
 			onSend={send}
 		/>
 	{/key}
+{/if}
+{#snippet deleteBody()}
+	<p class="cfd-p">
+		{pendingDelete && pendingDelete.ids.length > 1 ? 'These messages' : 'This message'} and any attachments
+		will be erased. This can't be undone.
+	</p>
+{/snippet}
+
+{#if pendingDelete}
+	<ConfirmDialog
+		icon={Trash2}
+		tone="danger"
+		title={pendingDelete.ids.length > 1
+			? `Delete ${pendingDelete.ids.length} messages permanently?`
+			: 'Delete this message permanently?'}
+		confirmLabel="Delete permanently"
+		busy={deleting}
+		body={deleteBody}
+		onConfirm={() => void confirmDelete()}
+		onClose={() => {
+			if (!deleting) pendingDelete = null;
+		}}
+	/>
 {/if}
 {#if toast}
 	<Toast text={toast.text} onUndo={toast.undo} shift={131} />

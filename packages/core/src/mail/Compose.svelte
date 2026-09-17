@@ -62,6 +62,8 @@
 		type Attachment as ComposeAttachment
 	} from './attachmentUpload';
 	import type { Editor } from '@tiptap/core';
+	import LinkDialog from './editor/LinkDialog.svelte';
+	import { applyLink, currentLink } from './editor/link';
 
 	interface Props {
 		onClose: () => void;
@@ -705,22 +707,29 @@
 		if (e.target === e.currentTarget) closeKeepingDraft();
 	}
 
+	let linkInitial = $state<string | null>(null);
+
 	function insertLink() {
 		if (!editor) return;
-		const previous = (editor.getAttributes('link').href as string | undefined) ?? '';
-		const url = window.prompt('Link URL', previous);
-		editor.commands.focus();
-		if (url === null) return;
-		if (url === '') {
-			editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			return;
-		}
-		const normalized = /^[a-z]+:/i.test(url) ? url : `https://${url}`;
-		editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
+		linkInitial = currentLink(editor);
+	}
+
+	function closeLink() {
+		linkInitial = null;
+		editor?.commands.focus();
+	}
+
+	function submitLink(url: string) {
+		linkInitial = null;
+		if (editor) applyLink(editor, url);
 	}
 </script>
 
 <svelte:document onkeydown={handleKey} onmousedown={handleDocMouseDown} />
+
+{#if linkInitial !== null}
+	<LinkDialog initial={linkInitial} onApply={submitLink} onClose={closeLink} />
+{/if}
 
 {#if min}
 	<div

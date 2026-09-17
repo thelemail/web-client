@@ -28,3 +28,7 @@
 .cfd-scrim .cfd-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; }
 @keyframes cfd-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cfd-pop { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+.cfd-scrim .cfd-field { display: flex; flex-direction: column; gap: 6px; }
+.cfd-scrim .cfd-label { font-size: 12px; font-weight: 600; color: var(--fg-muted); }
+.cfd-scrim .cfd-input { width: 100%; font-family: inherit; font-size: 13.5px; color: var(--fg-strong); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 9px 11px; outline: none; transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+.cfd-scrim .cfd-input:focus { border-color: var(--pine-600); box-shadow: 0 0 0 3px var(--pine-100); }
