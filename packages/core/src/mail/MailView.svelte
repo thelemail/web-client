@@ -46,6 +46,8 @@
 	import { drafts } from '$core/stores/drafts.svelte';
 	import { scheduled } from '$core/stores/scheduled.svelte';
 	import { auth } from '$core/stores/auth.svelte';
+	import { accountSettings } from '$core/stores/accountSettings.svelte';
+	import SpamConsentDialog from './SpamConsentDialog.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { DEFAULT_QUERY, withFilters, type Query } from './url';
 	import { mailActionsFor } from './actions';
@@ -66,6 +68,9 @@
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 	let deepLinkMissing = $state(false);
 	let pendingDelete = $state<{ ids: string[]; bulk: boolean } | null>(null);
+	let spamConsent = $state<{ resolve: (share: boolean | null) => void } | null>(null);
+	let spamConsentBusy = $state(false);
+	let spamConsentError = $state<string | null>(null);
 	let deleting = $state(false);
 
 	const supported = $derived(canFetchFolder(query.folder));
@@ -391,17 +396,56 @@
 			: queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, 'Could not move to Spam');
 	}
 
-	async function reportAndSpam(id: string): Promise<ReportOutcome> {
+	async function headersConsent(): Promise<boolean | null> {
+		await accountSettings.hydrate();
+		const saved = accountSettings.privacy.shareSpamHeaders;
+		if (saved !== null) return saved;
+		spamConsentError = null;
+		return new Promise((resolve) => {
+			spamConsent = { resolve };
+		});
+	}
+
+	async function answerSpamConsent(share: boolean) {
+		const pending = spamConsent;
+		if (!pending) return;
+		spamConsentBusy = true;
+		spamConsentError = null;
+		try {
+			await accountSettings.persistShareSpamHeaders(share);
+		} catch {
+			spamConsentError = 'Your answer could not be saved. Try again.';
+			return;
+		} finally {
+			spamConsentBusy = false;
+		}
+		spamConsent = null;
+		pending.resolve(share);
+	}
+
+	function dismissSpamConsent() {
+		const pending = spamConsent;
+		spamConsent = null;
+		pending?.resolve(null);
+	}
+
+	async function reportAndSpam(id: string, share: boolean): Promise<ReportOutcome> {
 		const accountId = auth.accountId;
 		if (!accountId) throw new Error('Unlock this account to report the message.');
-		const outcome = await submitReport(accountId, id, { kind: 'spam', includeHeaders: false });
+		const outcome = await submitReport(accountId, id, {
+			kind: 'spam',
+			includeHeaders: share,
+			senderAddress: share ? mailbox.findMessage(id)?.fromAddr : undefined
+		});
 		await moveToSpam(id);
 		return outcome;
 	}
 
-	function reportOne(id: string) {
+	async function reportOne(id: string) {
+		const share = await headersConsent();
+		if (share === null) return;
 		advancePast(id);
-		void reportAndSpam(id).then(
+		void reportAndSpam(id, share).then(
 			() => flash('Reported as spam', () => undoReport(id)),
 			() => flash('Could not report message')
 		);
@@ -611,11 +655,13 @@
 			return;
 		}
 		if (action === 'spam') {
+			const share = await headersConsent();
+			if (share === null) return;
 			if (messageId !== null && ids.includes(messageId)) {
 				void goto(withSearch(basePath), { replaceState: true });
 			}
 			checked = new Set();
-			const results = await Promise.allSettled(ids.map((id) => reportAndSpam(id)));
+			const results = await Promise.allSettled(ids.map((id) => reportAndSpam(id, share)));
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(`${ids.length} reported as spam`);
 			else if (failed < ids.length)
@@ -811,7 +857,7 @@
 			onTrash={trashOne}
 			onRestore={restoreOne}
 			onDelete={deleteOne}
-			onSpam={reportOne}
+			onSpam={(id) => void reportOne(id)}
 			onToggleRead={toggleRead}
 			onToggleAll={toggleAll}
 			onBulk={bulk}
@@ -888,6 +934,14 @@
 	</p>
 {/snippet}
 
+{#if spamConsent}
+	<SpamConsentDialog
+		busy={spamConsentBusy}
+		error={spamConsentError}
+		onAnswer={(share) => void answerSpamConsent(share)}
+		onClose={dismissSpamConsent}
+	/>
+{/if}
 {#if pendingDelete}
 	<ConfirmDialog
 		icon={Trash2}

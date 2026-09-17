@@ -18,6 +18,7 @@ export interface OpenMessageSettings {
 
 export interface PrivacySettings {
 	stripTrackingParams: boolean;
+	shareSpamHeaders: boolean | null;
 }
 
 export interface ComposingSettings {
@@ -38,7 +39,8 @@ const DEFAULTS: OpenMessageSettings = {
 };
 
 const PRIVACY_DEFAULTS: PrivacySettings = {
-	stripTrackingParams: true
+	stripTrackingParams: true,
+	shareSpamHeaders: null
 };
 
 const COMPOSING_DEFAULTS: ComposingSettings = {
@@ -138,6 +140,9 @@ class AccountSettingsStore {
 				if (typeof p.stripTrackingParams === 'boolean') {
 					next.stripTrackingParams = p.stripTrackingParams;
 				}
+				if (typeof p.shareSpamHeaders === 'boolean') {
+					next.shareSpamHeaders = p.shareSpamHeaders;
+				}
 				this.privacy = next;
 			}
 
@@ -224,6 +229,12 @@ class AccountSettingsStore {
 
 	setPrivacy(value: PrivacySettings): void {
 		this.privacy = { ...value };
+	}
+
+	async persistShareSpamHeaders(share: boolean): Promise<void> {
+		const next: PrivacySettings = { ...this.privacy, shareSpamHeaders: share };
+		await putAccountSettingsSection('privacy', { ...next });
+		this.privacy = next;
 	}
 
 	setComposing(value: ComposingSettings): void {

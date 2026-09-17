@@ -11,7 +11,7 @@ vi.mock('./originalHeaders', () => ({
 import { reportMessage } from '$core/api/messages';
 import { ApiCallError } from '$core/api/types';
 import { loadOriginalHeaders } from './originalHeaders';
-import { buildReportRequest, submitReport } from './report';
+import { buildReportRequest, capHeaderBytes, submitReport } from './report';
 
 const report = vi.mocked(reportMessage);
 const headers = vi.mocked(loadOriginalHeaders);
@@ -45,6 +45,17 @@ describe('buildReportRequest', () => {
 		const big = 'x'.repeat(70000);
 		const req = buildReportRequest('phishing', true, big, undefined);
 		expect(req.headers).toHaveLength(65536);
+	});
+
+	it('caps by UTF-8 bytes, not characters, and cuts on a line boundary', () => {
+		const line = 'Subject: ' + 'é'.repeat(100) + '\r\n';
+		const big = line.repeat(400);
+		const req = buildReportRequest('spam', true, big, undefined);
+		const bytes = new TextEncoder().encode(req.headers ?? '');
+		expect(bytes.length).toBeLessThanOrEqual(65536);
+		expect(bytes.length).toBeGreaterThan(65536 - line.length * 2);
+		expect(req.headers?.endsWith('é')).toBe(true);
+		expect(req.headers).not.toContain('\uFFFD');
 	});
 });
 
@@ -112,5 +123,18 @@ describe('submitReport', () => {
 		await expect(
 			submitReport('acc', 'msg', { kind: 'spam', includeHeaders: false })
 		).rejects.toThrow('boom');
+	});
+});
+
+describe('capHeaderBytes', () => {
+	it('leaves a block under the limit untouched', () => {
+		expect(capHeaderBytes('From: a@b.example\r\nTo: c@d.example', 1024)).toBe(
+			'From: a@b.example\r\nTo: c@d.example'
+		);
+	});
+
+	it('never splits a multi-byte character without a line to cut on', () => {
+		const out = capHeaderBytes('ééé', 5);
+		expect(out).toBe('éé');
 	});
 });
