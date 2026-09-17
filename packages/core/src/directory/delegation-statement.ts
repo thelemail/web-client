@@ -4,7 +4,6 @@ export interface DelegationStatement {
 	delegationId: string;
 	issuedAt: string;
 	keyAlgorithm: string;
-	label: string;
 	notAfter: string;
 	notBefore: string;
 	revokedAt: string | null;
@@ -38,7 +37,6 @@ export function canonicaliseDelegation(s: DelegationStatement): Uint8Array {
 		delegationId: s.delegationId,
 		issuedAt: s.issuedAt,
 		keyAlgorithm: s.keyAlgorithm,
-		label: s.label,
 		notAfter: s.notAfter,
 		notBefore: s.notBefore,
 		revokedAt: s.revokedAt,
@@ -63,7 +61,6 @@ export function parseDelegationStatement(raw: Uint8Array): DelegationStatement {
 		typeof s.delegationId !== 'string' ||
 		typeof s.issuedAt !== 'string' ||
 		typeof s.keyAlgorithm !== 'string' ||
-		typeof s.label !== 'string' ||
 		typeof s.notAfter !== 'string' ||
 		typeof s.notBefore !== 'string' ||
 		typeof s.signerFingerprint !== 'string' ||
@@ -73,7 +70,19 @@ export function parseDelegationStatement(raw: Uint8Array): DelegationStatement {
 	) {
 		throw new DelegationVerificationError('statement_malformed', 'statement is missing fields');
 	}
-	return s as DelegationStatement;
+	return {
+		accountId: s.accountId,
+		address: s.address,
+		delegationId: s.delegationId,
+		issuedAt: s.issuedAt,
+		keyAlgorithm: s.keyAlgorithm,
+		notAfter: s.notAfter,
+		notBefore: s.notBefore,
+		revokedAt: s.revokedAt ?? null,
+		signerFingerprint: s.signerFingerprint,
+		signingKeyFingerprint: s.signingKeyFingerprint,
+		version: s.version
+	};
 }
 
 export function delegationCoversSignatureAt(s: DelegationStatement, at: Date): boolean {

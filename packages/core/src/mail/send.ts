@@ -7,12 +7,15 @@ import { lookupDirectory } from '$core/directory/lookup';
 import { ApiCallError } from '$core/api/types';
 import type {
 	AttachmentDescriptor,
+	ForwardCopy,
 	InternalSendRequest,
 	InternalSendResponse,
+	ReadDelegate,
 	SendEnvelope
 } from '$core/api/types';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { verifyDirectoryLookup, DirectoryVerificationError } from '$core/directory/verify';
+import { verifyReadDelegate } from '$core/directory/read-delegation';
 import type { DirectoryVerificationCode } from '$core/directory/verify';
 import { DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX } from '$core/directory/signing-key';
 import { formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
@@ -247,10 +250,38 @@ function tofuPayload(
 	};
 }
 
+interface VerifiedReadDelegate {
+	id: string;
+	publicKeyArmored: string;
+}
+
+interface ResolvedRecipient {
+	accountId: string;
+	key: KeyMaterial;
+	fullName: string;
+	readDelegates: VerifiedReadDelegate[];
+}
+
+async function verifiedReadDelegates(
+	delegates: ReadDelegate[] | undefined,
+	address: string
+): Promise<VerifiedReadDelegate[]> {
+	const out: VerifiedReadDelegate[] = [];
+	for (const d of delegates ?? []) {
+		try {
+			await verifyReadDelegate(d, address);
+			out.push({ id: d.id, publicKeyArmored: d.publicKeyArmored });
+		} catch (e) {
+			console.warn('send: read delegate did not verify', d.id, e);
+		}
+	}
+	return out;
+}
+
 async function resolveRecipient(
 	emailAddress: string,
 	opts: ResolveOptions = {}
-): Promise<{ accountId: string; key: KeyMaterial; fullName: string }> {
+): Promise<ResolvedRecipient> {
 	const normalised = canonicalRecipient(emailAddress);
 	let lookup;
 	try {
@@ -289,8 +320,23 @@ async function resolveRecipient(
 	return {
 		accountId: lookup.accountId,
 		fullName: lookup.fullName,
-		key: { publicKeyArmored: lookup.publicKeyArmored, fingerprintB64 }
+		key: { publicKeyArmored: lookup.publicKeyArmored, fingerprintB64 },
+		readDelegates: await verifiedReadDelegates(lookup.readDelegates, normalised)
 	};
+}
+
+export async function readMimeAttachments(attachments: ComposeAttachment[]): Promise<MIMEAttachment[]> {
+	const out: MIMEAttachment[] = [];
+	for (const a of attachments) {
+		out.push({
+			filename: a.file.name,
+			contentType: a.file.type || 'application/octet-stream',
+			bytes: new Uint8Array(await a.file.arrayBuffer()),
+			disposition: a.disposition,
+			contentId: a.contentId
+		});
+	}
+	return out;
 }
 
 export interface RelatedMIMEPart {
@@ -723,10 +769,7 @@ export async function sendInternalMessage(
 		throw new SendError('no_account', 'At least one recipient is required.');
 	}
 
-	const resolutions = new Map<
-		string,
-		{ accountId: string; key: KeyMaterial; fullName: string }
-	>();
+	const resolutions = new Map<string, ResolvedRecipient>();
 	const deliveredTo = new Map<string, string>();
 	for (const p of deliverable) {
 		const addr = canonicalRecipient(p.address);
@@ -825,6 +868,13 @@ export async function sendInternalMessage(
 		)
 	]);
 
+	const forwardCopies = await buildForwardCopies(
+		accountId,
+		input,
+		resolutions.values(),
+		async () => buildMIME({ ...mimeArgs, bcc: undefined, attachments: await readMimeAttachments(input.attachments ?? []) })
+	);
+
 	const req: InternalSendRequest = {
 		idempotencyKey: crypto.randomUUID(),
 		schemaVersion: 1,
@@ -835,7 +885,9 @@ export async function sendInternalMessage(
 		inReplyToMessageId: input.inReplyToMessageId,
 		inReplyToHeader: input.inReplyToHeader,
 		references: input.references && input.references.length ? input.references : undefined,
-		scheduledAt: input.scheduledAt
+		scheduledAt: input.scheduledAt,
+		forwardCopies: forwardCopies.length ? forwardCopies : undefined,
+		forwardReplyTo: forwardCopies.length ? (input.fromEmail ?? auth.email ?? undefined) : undefined
 	};
 
 	try {
@@ -843,4 +895,36 @@ export async function sendInternalMessage(
 	} catch (err) {
 		throw sendErrorFromApi(err, 'Sending failed');
 	}
+}
+
+async function buildForwardCopies(
+	accountId: string,
+	input: ComposeInput,
+	resolved: Iterable<ResolvedRecipient>,
+	message: () => Promise<Uint8Array>
+): Promise<ForwardCopy[]> {
+	const targets = new Map<string, { recipientAccountId: string; publicKeyArmored: string }>();
+	for (const r of resolved) {
+		for (const d of r.readDelegates) {
+			if (!targets.has(d.id)) {
+				targets.set(d.id, { recipientAccountId: r.accountId, publicKeyArmored: d.publicKeyArmored });
+			}
+		}
+	}
+	if (targets.size === 0) return [];
+	const plaintext = await message();
+	const copies: ForwardCopy[] = [];
+	for (const [readDelegationId, target] of targets) {
+		const r = await keystore.encryptToKeys({
+			accountId,
+			recipientPublicKeysArmored: [target.publicKeyArmored],
+			plaintext,
+			aliasId: input.fromAliasId
+		});
+		if (!r.ok) {
+			throw new SendError(r.code === 'locked' ? 'locked' : 'encrypt', `keystore.encryptToKeys: ${r.code}`);
+		}
+		copies.push({ readDelegationId, recipientAccountId: target.recipientAccountId, encryptedMessage: r.armored });
+	}
+	return copies;
 }

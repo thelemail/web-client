@@ -24,7 +24,7 @@ import {
 	buildEnvelope,
 	buildPreview,
 	messageIdDomain,
-	type MIMEAttachment
+	readMimeAttachments
 } from './send';
 import type { ReplyParty } from './replyRecipients';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
@@ -137,19 +137,6 @@ async function stageCleartext(attachments: ComposeAttachment[]): Promise<StagedA
 	return staged;
 }
 
-async function readMimeAttachments(attachments: ComposeAttachment[]): Promise<MIMEAttachment[]> {
-	const out: MIMEAttachment[] = [];
-	for (const a of attachments) {
-		out.push({
-			filename: a.file.name,
-			contentType: a.file.type || 'application/octet-stream',
-			bytes: new Uint8Array(await a.file.arrayBuffer()),
-			disposition: a.disposition,
-			contentId: a.contentId
-		});
-	}
-	return out;
-}
 
 async function resolveExternalKeys(
 	recipients: ReplyParty[]

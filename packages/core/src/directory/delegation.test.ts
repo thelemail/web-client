@@ -9,7 +9,6 @@ const statement: DelegationStatement = {
 	delegationId: '66666666-7777-8888-9999-aaaaaaaaaaaa',
 	issuedAt: '2026-09-08T12:00:00Z',
 	keyAlgorithm: 'openpgp-curve25519-v6',
-	label: 'Stripe invoices',
 	notAfter: '2027-09-08T12:00:00Z',
 	notBefore: '2026-09-08T12:00:00Z',
 	revokedAt: null,
@@ -24,7 +23,6 @@ const GO_CANONICAL =
 	'"delegationId":"66666666-7777-8888-9999-aaaaaaaaaaaa",' +
 	'"issuedAt":"2026-09-08T12:00:00Z",' +
 	'"keyAlgorithm":"openpgp-curve25519-v6",' +
-	'"label":"Stripe invoices",' +
 	'"notAfter":"2027-09-08T12:00:00Z",' +
 	'"notBefore":"2026-09-08T12:00:00Z",' +
 	'"revokedAt":null,' +
@@ -61,6 +59,17 @@ describe('canonicaliseDelegation', () => {
 		const bytes = canonicaliseDelegation(statement);
 		const again = canonicaliseDelegation(parseDelegationStatement(bytes));
 		expect(new TextDecoder().decode(again)).toBe(GO_CANONICAL);
+	});
+
+	it('re-canonicalises the reordered, spaced JSON the server stores as jsonb', () => {
+		const jsonb =
+			`{"address": "billing@example.com", "version": 1, "notAfter": "2027-09-08T12:00:00Z", ` +
+			`"accountId": "11111111-2222-3333-4444-555555555555", "issuedAt": "2026-09-08T12:00:00Z", ` +
+			`"notBefore": "2026-09-08T12:00:00Z", "revokedAt": null, "delegationId": "66666666-7777-8888-9999-aaaaaaaaaaaa", ` +
+			`"keyAlgorithm": "openpgp-curve25519-v6", "signerFingerprint": "${'cd'.repeat(32)}", ` +
+			`"signingKeyFingerprint": "${'ef'.repeat(32)}"}`;
+		const parsed = parseDelegationStatement(new TextEncoder().encode(jsonb));
+		expect(new TextDecoder().decode(canonicaliseDelegation(parsed))).toBe(GO_CANONICAL);
 	});
 
 	it('rejects a statement missing revokedAt', () => {

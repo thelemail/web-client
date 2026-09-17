@@ -22,6 +22,7 @@
 	import { SHARED_DOMAIN } from '../entitlements';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import DelegationsCard from '../delegations/DelegationsCard.svelte';
+	import ForwardingCard from '../forwarding/ForwardingCard.svelte';
 	import type { SharedAlias } from '$core/api/aliases';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 
@@ -290,6 +291,11 @@
 
 {#each delegable as a (a.id)}
 	<DelegationsCard address={a} />
+	<ForwardingCard addressId={a.id} email={a.email} />
+{/each}
+
+{#each sharedList.filter((a) => Boolean(a.customDomainId)) as a (a.id)}
+	<ForwardingCard addressId={a.addressId} email={a.email} />
 {/each}
 
 {#if showCatchAll}

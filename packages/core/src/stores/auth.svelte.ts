@@ -39,6 +39,8 @@ import {
 import { personAvatars } from './personAvatars.svelte';
 import { contacts } from './contacts.svelte';
 import { realtime } from '$core/realtime/realtime.svelte';
+import { delegations } from './delegations.svelte';
+import { readDelegations } from './readDelegations.svelte';
 import { platform } from '$platform';
 
 function broadcastAccountToStores(accountId: string | null): void {
@@ -53,6 +55,8 @@ function broadcastAccountToStores(accountId: string | null): void {
 	workspaces.setAccount(accountId);
 	aliases.setAccount(accountId);
 	aliasKeys.setAccount(accountId);
+	delegations.setAccount(accountId);
+	readDelegations.setAccount(accountId);
 	calendarKeys.setAccount(accountId);
 	billing.setAccount(accountId);
 	composeStore.setAccount(accountId);

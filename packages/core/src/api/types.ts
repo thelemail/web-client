@@ -336,6 +336,14 @@ export interface InternalSendRequest {
 	inReplyToHeader?: string;
 	references?: string[];
 	scheduledAt?: string;
+	forwardCopies?: ForwardCopy[];
+	forwardReplyTo?: string;
+}
+
+export interface ForwardCopy {
+	readDelegationId: string;
+	recipientAccountId: string;
+	encryptedMessage: string;
 }
 
 export interface InternalSendResponse {
@@ -1011,6 +1019,15 @@ export interface AccountLookupResponse {
 	tlogProof?: string;
 	tlogConsistency?: TlogConsistencyProof;
 	delegations?: SigningDelegation[];
+	readDelegates?: ReadDelegate[];
+}
+
+export interface ReadDelegate {
+	id: string;
+	publicKeyArmored: string;
+	statement: string;
+	statementSignature: string;
+	tlogProof?: string;
 }
 
 export interface TlogConsistencyProof {
