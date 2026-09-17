@@ -8,7 +8,7 @@ const LABELS: Record<ForwardDeliveryStatus, string> = {
 	failed: 'Not delivered',
 	not_forwarded_encrypted: 'Not forwarded: it arrived encrypted to this address alone',
 	not_forwarded_missing_copy: "Not forwarded: the sender's app did not include a copy",
-	not_forwarded_needs_key: 'Not forwarded: only this destination\u2019s own key could open it',
+	not_forwarded_needs_key: 'Not forwarded: it was encrypted, and this destination has no key',
 	not_forwarded_spam: 'Not forwarded: held as spam',
 	loop_suppressed: 'Not forwarded: it would have looped back'
 };
