@@ -80,6 +80,7 @@ export interface MirrorMessage {
 	senderDisplay: string;
 	senderAddress: string;
 	recipientsJson: string;
+	deliveredTo?: string;
 	snippet: string;
 	displayDate: string;
 	attachmentCount: number;

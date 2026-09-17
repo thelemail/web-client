@@ -181,7 +181,8 @@ function previewFromMirror(m: MirrorMessage): MessagePreview {
 		sender: { display: m.senderDisplay, address: m.senderAddress },
 		recipients,
 		snippet: m.snippet,
-		display_date: m.displayDate
+		display_date: m.displayDate,
+		delivered_to: m.deliveredTo || undefined
 	} as MessagePreview;
 }
 
