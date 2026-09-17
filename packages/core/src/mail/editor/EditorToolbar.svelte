@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { Editor } from '@tiptap/core';
+	import LinkDialog from './LinkDialog.svelte';
+	import { applyLink, currentLink } from './link';
 	import List from '@lucide/svelte/icons/list';
 	import ListOrdered from '@lucide/svelte/icons/list-ordered';
 	import LinkIcon from '@lucide/svelte/icons/link';
@@ -59,18 +61,21 @@
 	const ol = () => editor?.chain().focus().toggleOrderedList().run();
 	const quote = () => editor?.chain().focus().toggleBlockquote().run();
 
+	let linkInitial = $state<string | null>(null);
+
 	function link() {
 		if (!editor) return;
-		const previous = editor.getAttributes('link').href ?? '';
-		const url = window.prompt('Link URL', previous);
+		linkInitial = currentLink(editor);
+	}
+
+	function closeLink() {
+		linkInitial = null;
 		focus();
-		if (url === null) return;
-		if (url === '') {
-			editor.chain().focus().extendMarkRange('link').unsetLink().run();
-			return;
-		}
-		const normalized = /^[a-z]+:/i.test(url) ? url : `https://${url}`;
-		editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
+	}
+
+	function submitLink(url: string) {
+		linkInitial = null;
+		if (editor) applyLink(editor, url);
 	}
 </script>
 
@@ -112,6 +117,10 @@
 		</button>
 	{/if}
 </div>
+
+{#if linkInitial !== null}
+	<LinkDialog initial={linkInitial} onApply={submitLink} onClose={closeLink} />
+{/if}
 
 <style>
 	.cbar {

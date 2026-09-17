@@ -9,6 +9,7 @@
 	import { deleteBlockedSender, listBlockedSenders } from '$core/api/blockedSenders';
 	import { blockSender, unsealAddress } from '$core/mail/blockedSenders';
 	import { Button } from '$core/components/ui/button';
+	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 
 	interface Entry {
 		id: string;
@@ -24,6 +25,8 @@
 	let addBusy = $state(false);
 	let addError = $state<string | null>(null);
 	let removing = $state<string | null>(null);
+	let pendingUnblock = $state<Entry | null>(null);
+	let unblockError = $state<string | null>(null);
 	let loadedFor: string | null = null;
 
 	const sealedHidden = $derived(entries.some((e) => e.address === null));
@@ -79,15 +82,22 @@
 		}
 	}
 
-	async function remove(entry: Entry) {
-		const label = entry.address ?? 'this sender';
-		if (!confirm(`Unblock ${label}? Their mail will reach your inbox again.`)) return;
+	function remove(entry: Entry) {
+		unblockError = null;
+		pendingUnblock = entry;
+	}
+
+	async function confirmUnblock() {
+		const entry = pendingUnblock;
+		if (!entry || removing) return;
 		removing = entry.id;
+		unblockError = null;
 		try {
 			await deleteBlockedSender(entry.id);
 			entries = entries.filter((e) => e.id !== entry.id);
+			pendingUnblock = null;
 		} catch (e) {
-			error = e instanceof Error && e.message ? e.message : 'Could not unblock';
+			unblockError = e instanceof Error && e.message ? e.message : 'Could not unblock';
 		} finally {
 			removing = null;
 		}
@@ -147,7 +157,7 @@
 				class="rowmenu"
 				title="Unblock"
 				disabled={removing === e.id}
-				onclick={() => void remove(e)}
+				onclick={() => remove(e)}
 			>
 				<Trash2 size={15} />
 			</button>
@@ -190,6 +200,26 @@
 		</button>
 	{/if}
 </div>
+
+{#snippet unblockBody()}
+	<p class="cfd-p">Their mail will reach your inbox again.</p>
+{/snippet}
+
+{#if pendingUnblock}
+	<ConfirmDialog
+		icon={UserX}
+		title="Unblock this sender?"
+		sub={pendingUnblock.address ?? 'Sealed address'}
+		confirmLabel="Unblock"
+		busy={removing !== null}
+		error={unblockError}
+		body={unblockBody}
+		onConfirm={() => void confirmUnblock()}
+		onClose={() => {
+			if (removing === null) pendingUnblock = null;
+		}}
+	/>
+{/if}
 
 <style>
 	.bs-err span {

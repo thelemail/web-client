@@ -23,6 +23,7 @@
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import DelegationsCard from '../delegations/DelegationsCard.svelte';
 	import type { SharedAlias } from '$core/api/aliases';
+	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 
 	interface Props {
 		s: SettingsState;
@@ -35,6 +36,9 @@
 	let editingNameFor = $state<string | null>(null);
 	let editingNameValue = $state('');
 	let renameError = $state<string | null>(null);
+	let pendingRemoval = $state<{ email: string; run: () => Promise<void> } | null>(null);
+	let removalBusy = $state(false);
+	let removalError = $state<string | null>(null);
 
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
 	const delegable = $derived(addresses.personal.filter((a) => Boolean(a.customDomainId)));
@@ -53,15 +57,32 @@
 		return a.members.length === 1 ? '1 person' : `${a.members.length} people`;
 	}
 
-	async function removeShared(a: SharedAlias) {
+	function removeShared(a: SharedAlias) {
 		const ws = workspaces.workspace?.id;
 		if (!ws) return;
-		if (!confirm(`Remove ${a.email}? Mail to it will stop being accepted.`)) return;
-		try {
+		askRemoval(a.email, async () => {
 			await aliases.remove(ws, a.id);
 			await addresses.load();
+		});
+	}
+
+	function askRemoval(email: string, run: () => Promise<void>) {
+		removalError = null;
+		pendingRemoval = { email, run };
+	}
+
+	async function confirmRemoval() {
+		const pending = pendingRemoval;
+		if (!pending || removalBusy) return;
+		removalBusy = true;
+		removalError = null;
+		try {
+			await pending.run();
+			pendingRemoval = null;
 		} catch (err) {
-			console.warn('remove shared alias failed', err);
+			removalError = err instanceof Error && err.message ? err.message : 'Could not remove this address.';
+		} finally {
+			removalBusy = false;
 		}
 	}
 
@@ -74,13 +95,8 @@
 		}
 	}
 
-	async function remove(id: string, email: string) {
-		if (!confirm(`Remove ${email}? Mail to it will stop being accepted.`)) return;
-		try {
-			await addresses.remove(id);
-		} catch (err) {
-			console.warn('remove failed', err);
-		}
+	function remove(id: string, email: string) {
+		askRemoval(email, () => addresses.remove(id));
 	}
 
 	function startRename(id: string, currentName: string | null | undefined) {
@@ -278,6 +294,27 @@
 
 {#if showCatchAll}
 	<CatchAllCard />
+{/if}
+
+{#snippet removalBody()}
+	<p class="cfd-p">Mail sent to this address will stop being accepted.</p>
+{/snippet}
+
+{#if pendingRemoval}
+	<ConfirmDialog
+		icon={Trash2}
+		tone="danger"
+		title="Remove this address?"
+		sub={pendingRemoval.email}
+		confirmLabel="Remove address"
+		busy={removalBusy}
+		error={removalError}
+		body={removalBody}
+		onConfirm={() => void confirmRemoval()}
+		onClose={() => {
+			if (!removalBusy) pendingRemoval = null;
+		}}
+	/>
 {/if}
 
 {#if managing}
