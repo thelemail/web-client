@@ -101,13 +101,6 @@
 		switcherAccounts.some((a) => a.id !== auth.accountId && unreadCountFor(a.id) > 0)
 	);
 
-
-	function currentSubpath(): string {
-		const m = page.url.pathname.match(/^\/u\/\d+(\/.*)?$/);
-		const rest = m?.[1] ?? '/mail/inbox';
-		return rest && rest.length > 1 ? rest : '/mail/inbox';
-	}
-
 	let switchTimer: ReturnType<typeof setTimeout> | undefined;
 	let finishTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -146,8 +139,7 @@
 		clearTimeout(finishTimer);
 		try {
 			auth.activate(target.accountId);
-			const dest = `/u/${target.slot}${currentSubpath()}`;
-			await goto(dest);
+			await goto(`/u/${target.slot}/mail/inbox`);
 			switchDone = true;
 			finishTimer = setTimeout(() => {
 				switching = null;
