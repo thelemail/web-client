@@ -46,7 +46,7 @@
 				inputmode="url"
 				autocomplete="off"
 				spellcheck={false}
-				placeholder="https://example.com"
+				placeholder="example.com"
 				onkeydown={(e) => {
 					if (e.key === 'Enter') {
 						e.preventDefault();
