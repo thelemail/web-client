@@ -95,3 +95,15 @@ export function statusKind(s: CustomDomainStatus): 'ok' | 'warn' | 'info' | 'neu
 			return 'neutral';
 	}
 }
+
+export function isDormant(d: { dormantAt?: string | null }): boolean {
+	return !!d.dormantAt;
+}
+
+export function domainBadge(d: {
+	status: CustomDomainStatus;
+	dormantAt?: string | null;
+}): { label: string; kind: 'ok' | 'warn' | 'info' | 'neutral' } {
+	if (isDormant(d)) return { label: 'Paused', kind: 'warn' };
+	return { label: statusLabel(d.status), kind: statusKind(d.status) };
+}

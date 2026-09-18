@@ -22,6 +22,7 @@
 	import { planLabel, freeNote } from '../plan-display';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { entryPointVisible, scheduledLine } from '$core/lifecycle/downgrade';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -40,6 +41,8 @@
 	const isFreeFamily = $derived(billing.isFreeFamily);
 	const isSoloFree = $derived(billing.planCode === 'free');
 	const isOwner = $derived(workspaces.isOwner(auth.accountId));
+	const canMoveToFree = $derived(isOwner && entryPointVisible(sub));
+	const pendingLine = $derived(scheduledLine(sub));
 	const slot = $derived(page.params.slot ?? '0');
 	const PlanIcon = $derived(
 		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
@@ -163,6 +166,11 @@
 							<ExternalLink size={14} />
 							{portalBusy ? 'Opening…' : 'Manage billing'}
 						</Button>
+						{#if canMoveToFree}
+							<Button variant="ghost" size="sm" href={`/u/${slot}/lifecycle/downgrade`}>
+								Move to Free
+							</Button>
+						{/if}
 						{#if sub.status === 'active' && !sub.cancelAtPeriodEnd}
 							<Button variant="ghost" size="sm" href={`/u/${slot}/billing/cancel`}>
 								Cancel plan
@@ -178,6 +186,12 @@
 		</div>
 		{#if portalError}
 			<div class="plan-warn">{portalError}</div>
+		{/if}
+		{#if pendingLine}
+			<div class="plan-warn">
+				{pendingLine}
+				<a href={`/u/${slot}/lifecycle/downgrade`}>See what changes</a>
+			</div>
 		{/if}
 	</div>
 

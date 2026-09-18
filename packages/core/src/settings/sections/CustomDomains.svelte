@@ -16,8 +16,7 @@
 		STEP_LABELS,
 		inboundLive,
 		resumeStep,
-		statusKind,
-		statusLabel,
+		domainBadge,
 		stepComplete
 	} from '$core/settings/domains/steps';
 	import { customDomains as store } from '$core/stores/customDomains.svelte';
@@ -109,7 +108,7 @@
 				<div class="cd-row" class:live>
 					<div class="cd-main">
 						<span class="cd-name mono">{d.domain}</span>
-						<Badge kind={statusKind(d.status)} dot>{statusLabel(d.status)}</Badge>
+						<Badge kind={domainBadge(d).kind} dot>{domainBadge(d).label}</Badge>
 					</div>
 
 					<div class="cd-progress" aria-label="Setup progress">

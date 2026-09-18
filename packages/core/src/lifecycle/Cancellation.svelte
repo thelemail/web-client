@@ -11,6 +11,7 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { cancelSubscription, resumeSubscription, changePlan } from '$core/api/billing';
+	import { entryPointVisible } from './downgrade';
 	import { fmt } from './dates';
 	import type { LifecycleContext, RetentionOffer } from './types';
 	import { Button } from '$core/components/ui/button';
@@ -22,6 +23,7 @@
 		billing.subscription?.currentPeriodEnd ? new Date(billing.subscription.currentPeriodEnd) : ctx.now
 	);
 	const showOffer = $derived(offer === 'cheaper');
+	const canMoveToFree = $derived(entryPointVisible(billing.subscription));
 
 	const REASONS = [
 		'Too expensive',
@@ -152,6 +154,16 @@
 				<Button variant="primary" size="lg" block disabled={busy} onclick={acceptCheaper}>
 					<CircleArrowDown size={17} />Switch to Personal
 				</Button>
+				{#if canMoveToFree}
+					<Button
+						variant="secondary"
+						size="lg"
+						block
+						href={`/u/${slot}/lifecycle/downgrade`}
+					>
+						Move to Free instead
+					</Button>
+				{/if}
 				<Button variant="ghost" size="lg" block onclick={() => (bump(), (step = 2))}>
 					No thanks, continue cancelling
 				</Button>

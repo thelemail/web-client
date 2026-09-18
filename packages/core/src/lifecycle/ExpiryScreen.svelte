@@ -8,16 +8,20 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Download from '@lucide/svelte/icons/download';
+	import CircleArrowDown from '@lucide/svelte/icons/circle-arrow-down';
 	import PersonalTimeline from './PersonalTimeline.svelte';
 	import { lifecycle } from './lifecycle.svelte';
 	import { markExpiryScreenShown } from '$core/api/lifecycle';
 	import { auth } from '$core/stores/auth.svelte';
+	import { billing } from '$core/stores/billing.svelte';
+	import { entryPointVisible } from './downgrade';
 	import type { LifecycleContext } from './types';
 	import { Button } from '$core/components/ui/button';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
 	const slot = $derived(page.params.slot ?? '0');
+	const canMoveToFree = $derived(entryPointVisible(billing.subscription));
 
 	async function markShown() {
 		try {
@@ -38,6 +42,10 @@
 	async function continueReadOnly() {
 		await markShown();
 		void goto(`/u/${slot}/mail/inbox`);
+	}
+	async function moveToFree() {
+		await markShown();
+		void goto(`/u/${slot}/lifecycle/downgrade`);
 	}
 </script>
 
@@ -68,6 +76,11 @@
 		</ul>
 		<div class="lc-cta">
 			<Button variant="primary" size="lg" onclick={choosePlan}><Sparkles size={17} />Choose a plan</Button>
+			{#if canMoveToFree}
+				<Button variant="secondary" size="lg" onclick={moveToFree}>
+					<CircleArrowDown size={17} />Move to the free plan
+				</Button>
+			{/if}
 			<Button variant="secondary" size="lg" onclick={downloadData}>
 				<Download size={17} />Download my data
 			</Button>
