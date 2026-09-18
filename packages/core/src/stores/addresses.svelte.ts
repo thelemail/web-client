@@ -42,6 +42,7 @@ class AddressesStore {
 				...addresses,
 				...shared.sharedAliases.map((a) => ({
 					id: a.addressId,
+					accountId: acct ?? '',
 					email: a.email,
 					localPart: a.localPart,
 					customDomainId: a.customDomainId ?? null,
