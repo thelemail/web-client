@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Users from '@lucide/svelte/icons/users';
+	import User from '@lucide/svelte/icons/user';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Check from '@lucide/svelte/icons/check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -299,12 +300,13 @@
 					<div class="field">
 						<span class="field-lbl">Who uses it</span>
 						<RadioGroup
-							class="choice-set"
+							class="choice-set two"
 							value={shared ? 'shared' : 'single'}
 							onValueChange={(v) => (sharedPicked = v === 'shared')}
 						>
 							<Label class="choice" for="alias-kind-single" data-on={!shared}>
 								<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
+								<span class="choice-ic"><User size={16} /></span>
 								<span class="choice-tx">
 									<span class="choice-t">One person</span>
 									<span class="choice-d">
@@ -314,11 +316,12 @@
 							</Label>
 							<Label class="choice" for="alias-kind-shared" data-on={shared}>
 								<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
+								<span class="choice-ic"><Users size={16} /></span>
 								<span class="choice-tx">
 									<span class="choice-t">Shared</span>
 									<span class="choice-d">
 										Everyone you pick receives a copy and can write from it. The address gets its own
-										encryption key.
+										key.
 									</span>
 								</span>
 							</Label>

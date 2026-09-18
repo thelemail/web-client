@@ -1103,3 +1103,7 @@
 
 .settings-app .ad-note { display: flex; gap: 10px; align-items: flex-start; padding: 13px 16px; margin-bottom: 16px; border: 1px dashed var(--border-strong); border-radius: var(--radius-surface); font-size: 12.5px; color: var(--fg-muted); line-height: 1.5; }
 .settings-app .ad-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--fg-faint); }
+
+.cer-scrim .choice-set.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cer-scrim .choice-set.two .choice-mark { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.cer-scrim .choice-ic { display: flex; margin-top: 1px; flex: 0 0 auto; color: var(--pine-600); }
