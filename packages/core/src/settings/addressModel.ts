@@ -241,3 +241,9 @@ export function planNote(sharedSlotUsed: boolean): string {
 		? `Unlimited aliases on any domain you own. Your plan includes one shared alias on ${SHARED_DOMAIN}, and it is in use.`
 		: `Unlimited aliases on any domain you own. Your plan also includes one shared alias on ${SHARED_DOMAIN}.`;
 }
+
+export function initialsOf(fullName: string, email: string): string {
+	const src = (fullName || email).trim();
+	const parts = src.split(/[\s@.]+/).filter(Boolean);
+	return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || src.slice(0, 2).toUpperCase();
+}

@@ -997,3 +997,109 @@
 .cer-scrim .choice-t { font-size: 13px; font-weight: 600; color: var(--fg-strong); }
 .cer-scrim .choice-d { font-size: 12px; color: var(--fg-muted); line-height: 1.5; overflow-wrap: anywhere; }
 .cer-scrim .choice-set .avatar { margin-top: 1px; }
+
+.settings-app .addr-intro { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 22px; }
+.settings-app .addr-intro-tx { min-width: 0; flex: 1; }
+.settings-app .addr-intro-act { flex: 0 0 auto; padding-top: 2px; }
+.settings-app .addr-lede { margin: 0; font-size: 13.5px; color: var(--fg-muted); line-height: 1.55; max-width: 62ch; text-wrap: pretty; }
+.settings-app .addr-plan { margin: 8px 0 0; font-size: 12.5px; color: var(--fg-faint); line-height: 1.5; }
+
+.settings-app .addr-group { overflow: visible; }
+.settings-app .addr-group-h { padding: 13px 18px 12px; }
+.settings-app .addr-group-h .addr-domain { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--fg-strong); margin: 0; }
+.settings-app .addr-group-h .badge { margin-left: 0; }
+.settings-app .addr-count { margin-left: auto; font-size: 11.5px; color: var(--fg-faint); font-weight: 500; }
+
+.settings-app .addr-cols { display: grid; grid-template-columns: minmax(0, 1fr) 200px 32px; gap: 0 12px; align-items: center; padding: 7px 18px; font-family: var(--font-mono); font-size: 10px; letter-spacing: .09em; text-transform: uppercase; color: var(--fg-faint); border-bottom: 1px solid var(--border); background: var(--bg-raised); }
+
+.settings-app .addr-row { display: grid; grid-template-columns: minmax(0, 1fr) 200px 32px; gap: 0 12px; align-items: center; padding: 11px 18px 12px; border-bottom: 1px solid var(--border); position: relative; transition: background var(--dur-fast); }
+.settings-app .addr-row:hover { background: var(--bg-raised); }
+.settings-app .addr-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius-surface) var(--radius-surface); }
+
+.settings-app .addr-main { display: flex; align-items: center; gap: 12px; min-width: 0; color: inherit; text-decoration: none; }
+.settings-app .addr-main:hover { text-decoration: none; color: inherit; }
+.settings-app .addr-main:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); border-radius: var(--radius-sm); }
+.settings-app .addr-chip { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; flex: 0 0 auto; background: var(--bg-sunken); color: var(--ink-500); }
+.settings-app .addr-text { min-width: 0; display: block; }
+.settings-app .addr-title { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.settings-app .addr-name { font-size: 14px; font-weight: 580; color: var(--fg-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.settings-app .addr-mail { display: block; font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-500); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.settings-app .addr-sum { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 6px; font-size: 12px; color: var(--fg-muted); }
+.settings-app .addr-sum > span { display: inline-flex; align-items: center; gap: 5px; }
+.settings-app .addr-sum > span.pending { color: var(--info-700); }
+.settings-app .addr-sum svg { width: 12px; height: 12px; flex: 0 0 auto; }
+
+.settings-app .addr-used { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.settings-app .addr-used-tx { font-size: 12.5px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.settings-app .avstack { display: flex; flex: 0 0 auto; }
+.settings-app .avstack :global(.av) { box-shadow: 0 0 0 2px var(--surface); }
+.settings-app .avstack :global(.av) + :global(.av) { margin-left: -7px; }
+.settings-app .addr-row:hover .avstack :global(.av) { box-shadow: 0 0 0 2px var(--bg-raised); }
+
+.settings-app .addr-menu-wrap { position: relative; display: flex; justify-content: flex-end; }
+.settings-app .addr-menu-wrap .rowmenu { margin-left: 0; }
+.settings-app .addr-menu { position: absolute; right: 0; top: 34px; z-index: 40; display: flex; flex-direction: column; width: 240px; padding: 5px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+.settings-app .mitem { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; background: none; padding: 8px 10px; border-radius: var(--radius-md); font-family: inherit; font-size: 13px; color: var(--ink-700); font-weight: 500; }
+.settings-app .mitem svg { width: 15px; height: 15px; color: var(--ink-500); flex: 0 0 auto; }
+.settings-app .mitem:hover { background: var(--paper-100); color: var(--fg-strong); }
+.settings-app .mitem.danger { color: var(--danger-700); }
+.settings-app .mitem.danger svg { color: var(--danger-700); }
+.settings-app .msep { display: block; height: 1px; margin: 4px 6px; background: var(--border); }
+
+.settings-app .addr-note { margin: 0 0 16px; font-size: 12.5px; color: var(--fg-muted); }
+.settings-app .addr-note.err { color: var(--warning-700); }
+.settings-app .addr-catchall { margin-top: 38px; }
+
+.settings-app .set-crumb { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.settings-app .set-crumb a { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 550; font-size: 15px; letter-spacing: var(--track-snug); color: var(--fg-muted); line-height: 1.2; text-decoration: none; }
+.settings-app .set-crumb a:hover { color: var(--fg-strong); text-decoration: none; }
+.settings-app .set-crumb svg { flex: 0 0 auto; color: var(--fg-faint); }
+.settings-app .set-crumb h1.mono { font-family: var(--font-mono); font-weight: 500; font-size: 13.5px; letter-spacing: 0; }
+
+.settings-app .card-lede { padding: 11px 18px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); line-height: 1.55; background: var(--bg-raised); }
+.settings-app .card-flash { display: flex; align-items: center; gap: 7px; padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--success-700); }
+.settings-app .card-flash svg { flex: 0 0 auto; }
+.settings-app .card-empty { padding: 14px 18px; font-size: 12.5px; color: var(--fg-muted); }
+.settings-app .card-empty.err { color: var(--warning-700); }
+
+.settings-app .rec-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.settings-app .rec-row.top { align-items: start; }
+.settings-app .rec-row:last-child { border-bottom: none; }
+.settings-app .rec-main { min-width: 0; }
+.settings-app .rec-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.settings-app .rec-label { font-size: 13.5px; font-weight: 580; color: var(--fg-strong); }
+.settings-app .rec-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 4px; font-size: 12.5px; color: var(--fg-muted); }
+.settings-app .rec-meta .mono { font-size: 12px; color: var(--ink-600); }
+.settings-app .rec-dest { display: flex; gap: 6px; align-items: center; margin-top: 4px; font-size: 12.5px; color: var(--fg-muted); min-width: 0; }
+.settings-app .rec-dest svg { flex: 0 0 auto; color: var(--ink-500); }
+.settings-app .rec-to { font-size: 12px; color: var(--ink-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.settings-app .rec-key { font-size: 12px; color: var(--fg-faint); white-space: nowrap; }
+.settings-app .rec-dot { color: var(--fg-faint); }
+.settings-app .rec-delivery { margin-top: 4px; font-size: 12.5px; }
+.settings-app .rec-actions { display: flex; align-items: center; gap: 4px; }
+
+.settings-app .ad-hero { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 26px; }
+.settings-app .ad-hero-chip { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px; flex: 0 0 auto; background: var(--bg-sunken); color: var(--ink-600); }
+.settings-app .ad-hero-tx { min-width: 0; flex: 1; }
+.settings-app .ad-hero-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.settings-app .ad-name { font-family: var(--font-sans); font-feature-settings: normal; font-size: 20px; font-weight: 520; color: var(--fg-strong); line-height: 1.2; }
+.settings-app .ad-lede { font-size: 13px; color: var(--fg-muted); margin-top: 5px; line-height: 1.5; }
+
+.settings-app .ad-alert { display: flex; align-items: center; gap: 11px; padding: 12px 16px; margin-bottom: 16px; border: 1px solid var(--warning-100); background: var(--warning-100); border-radius: var(--radius-surface); color: var(--warning-700); font-size: 12.5px; line-height: 1.5; }
+.settings-app .ad-alert-ic { display: flex; flex: 0 0 auto; }
+.settings-app .ad-alert-tx { min-width: 0; flex: 1; }
+.settings-app .ad-alert-tx b { font-weight: 600; }
+
+.settings-app .ad-name-ctl { display: flex; gap: 8px; align-items: center; }
+
+.settings-app .ad-person { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--border); }
+.settings-app .ad-person-tx { min-width: 0; flex: 1; }
+.settings-app .ad-person-name { font-size: 13.5px; font-weight: 560; color: var(--fg-strong); display: flex; align-items: center; gap: 7px; }
+.settings-app .ad-you { font-size: 11px; font-weight: 500; color: var(--fg-faint); }
+.settings-app .ad-person-mail { font-size: 12px; color: var(--ink-500); margin-top: 1px; }
+.settings-app .ad-person-role { font-size: 12px; color: var(--fg-muted); white-space: nowrap; }
+.settings-app .ad-people-note { display: flex; gap: 9px; align-items: flex-start; padding: 11px 18px; font-size: 12px; color: var(--fg-muted); line-height: 1.5; background: var(--bg-raised); }
+.settings-app .ad-people-note svg { flex: 0 0 auto; margin-top: 2px; }
+
+.settings-app .ad-note { display: flex; gap: 10px; align-items: flex-start; padding: 13px 16px; margin-bottom: 16px; border: 1px dashed var(--border-strong); border-radius: var(--radius-surface); font-size: 12.5px; color: var(--fg-muted); line-height: 1.5; }
+.settings-app .ad-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--fg-faint); }

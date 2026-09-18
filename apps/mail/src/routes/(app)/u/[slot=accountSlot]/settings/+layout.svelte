@@ -2,6 +2,7 @@
 	import '$core/settings/settings.css';
 	import '$core/lifecycle/lifecycle.css';
 	import Check from '@lucide/svelte/icons/check';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { page } from '$app/state';
 	import { afterNavigate, beforeNavigate, replaceState } from '$app/navigation';
@@ -63,7 +64,15 @@
 
 		<div class="set-col">
 			<header class="set-head">
-				<h1>{sectionLabel}</h1>
+				{#if settingsPageTitle.crumb}
+					<div class="set-crumb">
+						<a href={settingsPageTitle.crumb.href}>{settingsPageTitle.crumb.label}</a>
+						<ChevronRight size={14} />
+						<h1 class:mono={settingsPageTitle.mono}>{sectionLabel}</h1>
+					</div>
+				{:else}
+					<h1>{sectionLabel}</h1>
+				{/if}
 				<div class="autosave {settingsDraft.saveState}" aria-live="polite">
 					{#if settingsDraft.saveState === 'saving'}
 						<span class="as-spin"></span><span class="as-tx">Saving…</span>
