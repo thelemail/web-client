@@ -4,6 +4,7 @@ import type { AuthState, MessagePreviewAuth } from './preview';
 import type { OfficialFacts } from './officialSender';
 import type { DelegatedSignerTrust } from './senderVerify';
 import { formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
+import type { SignatureStatus } from '$core/api/types';
 
 export type TrustTier =
 	| 'official'
@@ -53,7 +54,13 @@ export interface TrustFacts {
 	domainAuthState?: AuthState;
 	official?: OfficialFacts;
 	delegatedSigner?: DelegatedSignerTrust | null;
+	serverSignature?: ServerSignature;
 	nowMillis: number;
+}
+
+export interface ServerSignature {
+	status: SignatureStatus;
+	keyFingerprintHex?: string;
 }
 
 const BLOCKING_TLOG_CODES = new Set([
@@ -468,8 +475,11 @@ function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 						rows
 					};
 
+	const signed = facts.serverSignature?.status === 'verified';
+
 	return [
 		auth,
+		...(facts.serverSignature ? [serverSignatureCheck(facts.serverSignature)] : []),
 		{
 			id: 'e2e',
 			state: 'absent',
@@ -482,8 +492,9 @@ function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 			id: 'identity',
 			state: 'absent',
 			label: 'The person behind the address is not verified',
-			explain:
-				'Domain authentication vouches for the domain, not the individual. Anyone with an account at this domain can send as themselves.',
+			explain: signed
+				? 'The signature ties this message to the key held for the address. It does not prove who holds that key.'
+				: 'Domain authentication vouches for the domain, not the individual. Anyone with an account at this domain can send as themselves.',
 			rows: []
 		},
 		{
@@ -495,6 +506,49 @@ function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 			rows: []
 		}
 	];
+}
+
+function serverSignatureCheck(sig: ServerSignature): TrustCheck {
+	const rows: TrustTechnicalRow[] = sig.keyFingerprintHex
+		? [{ label: 'Signing key', value: formatFingerprintHex(sig.keyFingerprintHex) }]
+		: [];
+	switch (sig.status) {
+		case 'verified':
+			return {
+				id: 'signature',
+				state: 'pass',
+				label: 'Signed with the key published for this address',
+				explain:
+					'Thelemail checked the OpenPGP signature when the message arrived, against the key it holds for this address. The text has not changed since it was signed.',
+				rows
+			};
+		case 'unverified':
+			return {
+				id: 'signature',
+				state: 'fail',
+				label: "The signature does not match the sender's key",
+				explain:
+					'The message carries a signature from the key held for this address, but the signature does not fit the content. The message was changed after it was signed, or the signature was forged.',
+				rows
+			};
+		case 'unknown_key':
+			return {
+				id: 'signature',
+				state: 'absent',
+				label: 'Signed with a key Thelemail could not find for this address',
+				explain:
+					'The message is signed, but not by any key published for this address, so the signature proves nothing about the sender. The sender may have a new key that is not published yet.',
+				rows
+			};
+		default:
+			return {
+				id: 'signature',
+				state: 'absent',
+				label: 'Not signed by the sender',
+				explain: 'The message carries no OpenPGP signature, so there is nothing to check.',
+				rows: []
+			};
+	}
 }
 
 function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
@@ -743,6 +797,17 @@ function derive(facts: TrustFacts): MessageTrust {
 		};
 	}
 
+	if (facts.serverSignature?.status === 'unverified') {
+		return {
+			...base,
+			tier: 'failed',
+			label: 'Signature invalid',
+			headline: 'The signature on this message is not valid',
+			checks: externalAuthChecks(facts),
+			footnote: 'The message was changed after it was signed, or the signature was forged.'
+		};
+	}
+
 	if (facts.externalKey?.status === 'changed') {
 		return {
 			...base,
@@ -817,6 +882,17 @@ function derive(facts: TrustFacts): MessageTrust {
 			headline: `Signed by ${facts.delegatedSigner.label}`,
 			checks: delegatedChecks(facts),
 			footnote: `${domainOf(facts.senderAddress)} authorized this service to sign as ${facts.senderAddress}. It cannot read mail sent to that address.`
+		};
+	}
+
+	if (facts.serverSignature?.status === 'verified') {
+		return {
+			...base,
+			tier: 'authenticated',
+			label: 'Signed by the sender',
+			headline: 'Signed by the sender',
+			checks: externalAuthChecks(facts),
+			footnote: 'The signature proves the key, not the person.'
 		};
 	}
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { deriveTrust, type TrustFacts } from './trust';
 import type { DirectoryTrust } from './senderVerify';
+import { formatFingerprintHex } from '$core/directory/format';
 
 const NOW = Date.UTC(2026, 7, 27, 12, 0, 0);
 
@@ -458,5 +459,81 @@ describe('delegated signers', () => {
 	it('falls back to domain authentication when no delegation is verified', () => {
 		const trust = deriveTrust(delegated({ delegatedSigner: null }));
 		expect(trust.tier).toBe('authenticated');
+	});
+});
+
+describe('signed external mail', () => {
+	const FP = 'a70578f8'.repeat(5);
+
+	function proton(overrides: Partial<TrustFacts> = {}): TrustFacts {
+		return gmail({
+			senderAddress: 'someone@proton.me',
+			serverSignature: { status: 'verified', keyFingerprintHex: FP },
+			...overrides
+		});
+	}
+
+	function signatureRow(facts: TrustFacts) {
+		return deriveTrust(facts).checks.find((c) => c.id === 'signature');
+	}
+
+	it('passes the signature check with the signer fingerprint', () => {
+		const trust = deriveTrust(proton());
+		expect(trust.tier).toBe('authenticated');
+		expect(trust.headline).toBe('Signed by the sender');
+		const sig = trust.checks.find((c) => c.id === 'signature');
+		expect(sig?.state).toBe('pass');
+		expect(sig?.rows).toEqual([{ label: 'Signing key', value: formatFingerprintHex(FP) }]);
+	});
+
+	it('keeps encryption and the person unverified', () => {
+		const trust = deriveTrust(proton());
+		const e2e = trust.checks.find((c) => c.id === 'e2e');
+		expect(e2e?.state).toBe('absent');
+		expect(e2e?.label).toBe('Not encrypted end to end');
+		expect(trust.checks.find((c) => c.id === 'identity')?.state).toBe('absent');
+	});
+
+	it('shows a signed message without domain authentication as signed', () => {
+		const trust = deriveTrust(proton({ domainAuth: undefined, domainAuthState: undefined }));
+		expect(trust.tier).toBe('authenticated');
+		expect(trust.checks.find((c) => c.id === 'signature')?.state).toBe('pass');
+	});
+
+	it('is red when the signature does not match the content', () => {
+		const trust = deriveTrust(
+			proton({ serverSignature: { status: 'unverified', keyFingerprintHex: FP } })
+		);
+		expect(trust.tier).toBe('failed');
+		expect(trust.headline).toBe('The signature on this message is not valid');
+		expect(trust.checks.find((c) => c.id === 'signature')?.state).toBe('fail');
+	});
+
+	it('tells an unknown key apart from an unsigned message', () => {
+		const unknown = signatureRow(
+			proton({ serverSignature: { status: 'unknown_key', keyFingerprintHex: FP } })
+		);
+		const unsigned = signatureRow(proton({ serverSignature: { status: 'unsigned' } }));
+		expect(unknown?.state).toBe('absent');
+		expect(unsigned?.state).toBe('absent');
+		expect(unknown?.label).not.toBe(unsigned?.label);
+		expect(unknown?.rows).toEqual([{ label: 'Signing key', value: formatFingerprintHex(FP) }]);
+		const trust = deriveTrust(proton({ serverSignature: { status: 'unknown_key' } }));
+		expect(trust.tier).toBe('authenticated');
+	});
+
+	it('still fails when the sending domain fails authentication', () => {
+		const trust = deriveTrust(
+			proton({ domainAuth: { spf: 'fail', dmarc: 'fail' }, domainAuthState: 'fail' })
+		);
+		expect(trust.tier).toBe('failed');
+	});
+
+	it('leaves external encrypted mail on the key-continuity checks', () => {
+		const trust = deriveTrust(
+			proton({ e2e: true, externalKey: { status: 'pinned', fingerprint: FP, source: 'wkd' } })
+		);
+		expect(trust.tier).toBe('encrypted');
+		expect(trust.checks.some((c) => c.id === 'signature')).toBe(false);
 	});
 });

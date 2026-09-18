@@ -76,6 +76,9 @@ export interface MirrorMessage {
 	inReplyTo: string | null;
 	labelsJson: string;
 	signatureStatus: string | null;
+	signerKeyFingerprint: string | null;
+	signerDelegationId: string | null;
+	encrypted: boolean;
 	subject: string;
 	senderDisplay: string;
 	senderAddress: string;
