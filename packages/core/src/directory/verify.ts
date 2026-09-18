@@ -5,6 +5,7 @@ import {
 	DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED
 } from './signing-key';
 import { getSeen, upsertSeen } from './seen-idb';
+import { labelMatchesKey } from './keyLabel';
 import {
 	DirectoryVerificationError,
 	type DirectoryVerificationCode,
@@ -70,8 +71,7 @@ function base64ToBytes(b64: string): Uint8Array {
 	return out;
 }
 
-async function fingerprintOf(armoredPublicKey: string): Promise<string> {
-	const k = await openpgp.readKey({ armoredKey: armoredPublicKey });
+function fingerprintOf(k: openpgp.Key): string {
 	const fp = k.getFingerprint();
 	if (typeof fp === 'string') return fp.toLowerCase();
 	const bytes = new Uint8Array(fp as ArrayLike<number>);
@@ -132,7 +132,8 @@ export async function verifyDirectoryLookup(
 			}
 		);
 	}
-	if (stmt.keyAlgorithm !== 'openpgp-curve25519-v6') {
+	const servedKey = await openpgp.readKey({ armoredKey: publicKeyArmored });
+	if (typeof stmt.keyAlgorithm !== 'string' || !labelMatchesKey(stmt.keyAlgorithm, servedKey, stmt.issuedAt)) {
 		throw new DirectoryVerificationError(
 			'algorithm_mismatch',
 			`unsupported algorithm ${stmt.keyAlgorithm}`,
@@ -150,7 +151,7 @@ export async function verifyDirectoryLookup(
 		);
 	}
 
-	const keyFp = await fingerprintOf(publicKeyArmored);
+	const keyFp = fingerprintOf(servedKey);
 	if (keyFp !== stmt.keyFingerprint.toLowerCase()) {
 		throw new DirectoryVerificationError(
 			'fingerprint_mismatch',
