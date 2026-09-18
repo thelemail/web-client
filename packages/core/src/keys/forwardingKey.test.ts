@@ -63,6 +63,10 @@ describe('generateForwardingKey', () => {
 		expect(flags & openpgp.enums.keyFlags.signData).toBe(0);
 		expect(flags & openpgp.enums.keyFlags.encryptCommunication).not.toBe(0);
 		expect(generated.keyFingerprintHex).toBe(key.getFingerprint().toLowerCase());
+		expect(key.keyPacket.version).toBe(6);
+		expect(generated.keyFingerprintHex).toMatch(/^[0-9a-f]{64}$/);
+		expect(subkeys[0].keyPacket.version).toBe(6);
+		expect(subkeys[0].getAlgorithmInfo().algorithm).toBe('x25519');
 		const priv = await openpgp.readPrivateKey({ armoredKey: generated.privateKeyArmored });
 		expect(priv.isDecrypted()).toBe(true);
 	});
