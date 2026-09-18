@@ -5,6 +5,7 @@ import { customDomains } from './customDomains.svelte';
 import { addresses } from './addresses.svelte';
 import { signatures } from './signatures.svelte';
 import { aliases } from './aliases.svelte';
+import { workspaceAddresses } from './workspaceAddresses.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
 import { billing } from './billing.svelte';
@@ -30,6 +31,7 @@ export function ensureAccountData(accountId: string): void {
 		void signatures.load();
 		if (workspaceId && workspaces.canManage(accountId)) {
 			void aliases.load(workspaceId);
+			void workspaceAddresses.load(workspaceId);
 		}
 	})();
 }
@@ -37,6 +39,7 @@ export function ensureAccountData(accountId: string): void {
 export async function reloadWorkspaceData(accountId: string): Promise<void> {
 	loadedFor = null;
 	aliases.clear();
+	workspaceAddresses.clear();
 	customDomains.clear();
 	calendarStore.setAccount(null);
 	await billing.refresh();

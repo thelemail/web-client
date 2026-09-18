@@ -1,13 +1,14 @@
 <script lang="ts">
 	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Check from '@lucide/svelte/icons/check';
 
-	import AddRow from '../AddRow.svelte';
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
 	import RevokeDelegationDialog from './RevokeDelegationDialog.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { billing } from '$core/stores/billing.svelte';
 	import { delegations } from '$core/stores/delegations.svelte';
 	import type { AccountAddress } from '$core/api/addresses';
@@ -30,8 +31,9 @@
 		void delegations.load(address.id);
 	});
 
-	function expiryLabel(d: SigningDelegation): string {
-		const on = new Date(d.notAfter);
+	function fmtDate(iso: string): string {
+		const on = new Date(iso);
+		if (Number.isNaN(on.getTime())) return iso;
 		return on.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
@@ -44,61 +46,61 @@
 	<CardHead icon={KeyRound} title="Signing delegation">
 		{#snippet right()}
 			<span class="card-meta">{active.length} active</span>
+			{#if billing.canAddDomains}
+				<Button variant="secondary" size="sm" onclick={() => (creating = true)}>
+					<Plus size={13} />Authorize a service
+				</Button>
+			{/if}
 		{/snippet}
 	</CardHead>
 
-	<div class="deleg-lede">
-		Let a service sign mail as {address.email} without giving it access to your mailbox.
+	<div class="card-lede">
+		Let a service sign mail as {address.email} without giving it access to your mailbox. Each
+		service gets its own key, which you can revoke at any time.
 	</div>
 
 	{#if flash}
-		<div class="alias-row"><div class="alias-info"><div class="alias-addr">{flash}</div></div></div>
+		<div class="card-flash"><Check size={14} />{flash}</div>
 	{/if}
 
 	{#each items as d (d.id)}
-		<div class="alias-row">
-			<div class="alias-info">
-				<div class="alias-name">
-					{d.label}
+		<div class="rec-row">
+			<div class="rec-main">
+				<div class="rec-title">
+					<span class="rec-label">{d.label}</span>
 					{#if d.revokedAt}
-						<Badge kind="warn">Revoked</Badge>
+						<Badge kind="warn" dot>Revoked</Badge>
 					{:else}
-						<Badge kind="ok">Active</Badge>
+						<Badge kind="ok" dot>Active</Badge>
 					{/if}
 				</div>
-				<div class="alias-addr mono">{shortFingerprint(d.signerFingerprint)}</div>
-				<div class="alias-addr">
-					{#if d.revokedAt}
-						Revoked {new Date(d.revokedAt).toLocaleDateString()}. Still published so other mail
-						clients pick up the revocation.
-					{:else}
-						Expires {expiryLabel(d)}
-					{/if}
+				<div class="rec-meta">
+					<span class="mono">{shortFingerprint(d.signerFingerprint)}</span>
+					<span>
+						{#if d.revokedAt}
+							Revoked {fmtDate(d.revokedAt)} · still published so other mail clients pick up the
+							revocation
+						{:else}
+							Expires {fmtDate(d.notAfter)}
+						{/if}
+					</span>
 				</div>
 			</div>
 			{#if !d.revokedAt}
-				<button type="button" class="rowmenu" title="Revoke" onclick={() => (revoking = d)}>
-					<Trash2 size={16} />
-				</button>
+				<Button variant="ghost" size="sm" onclick={() => (revoking = d)}>Revoke</Button>
 			{/if}
 		</div>
 	{/each}
 
 	{#if items.length === 0 && !delegations.loading}
-		<div class="alias-row">
-			<div class="alias-info"><div class="alias-addr">No services are authorized yet.</div></div>
-		</div>
+		<div class="card-empty">No services are authorized yet.</div>
 	{/if}
 
 	{#if delegations.error}
-		<div class="alias-row">
-			<div class="alias-info"><div class="alias-addr err">{delegations.error}</div></div>
-		</div>
+		<div class="card-empty err">{delegations.error}</div>
 	{/if}
 
-	{#if billing.canAddDomains}
-		<AddRow label="Authorize a service" onClick={() => (creating = true)} />
-	{:else}
+	{#if !billing.canAddDomains}
 		<UpgradeNudge
 			title="Signing delegation comes with a paid plan"
 			desc="Paid plans let a service sign as an address on your own domain, without mailbox access."
@@ -117,13 +119,3 @@
 		onRevoked={(label) => (flash = `${label} can no longer sign as ${address.email}.`)}
 	/>
 {/if}
-
-<style>
-	.deleg-lede {
-		padding: 13px 18px;
-		border-bottom: 1px solid var(--border);
-		font-size: 12.5px;
-		color: var(--fg-muted);
-		line-height: 1.55;
-	}
-</style>

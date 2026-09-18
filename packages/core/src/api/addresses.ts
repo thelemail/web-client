@@ -2,6 +2,7 @@ import { apiFetch } from './client';
 
 export interface AccountAddress {
 	id: string;
+	accountId: string;
 	email: string;
 	localPart: string;
 	customDomainId?: string | null;

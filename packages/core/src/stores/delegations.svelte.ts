@@ -12,10 +12,12 @@ class DelegationsStore {
 	loading = $state(false);
 	error = $state<string | null>(null);
 	#accountId: string | null = null;
+	#inflight = new Set<string>();
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
 		this.#accountId = accountId;
+		this.#inflight.clear();
 		this.clear();
 	}
 
@@ -25,6 +27,8 @@ class DelegationsStore {
 
 	async load(addressId: string): Promise<void> {
 		if (!browser) return;
+		if (this.#inflight.has(addressId)) return;
+		this.#inflight.add(addressId);
 		const acct = this.#accountId;
 		this.loading = true;
 		this.error = null;
@@ -36,6 +40,7 @@ class DelegationsStore {
 			if (this.#accountId !== acct) return;
 			this.error = err instanceof Error ? err.message : 'failed to load delegations';
 		} finally {
+			this.#inflight.delete(addressId);
 			if (this.#accountId === acct) this.loading = false;
 		}
 	}

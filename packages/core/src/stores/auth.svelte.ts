@@ -22,6 +22,7 @@ import { customDomains } from './customDomains.svelte';
 import { accountSettings } from './accountSettings.svelte';
 import { workspaces } from './workspaces.svelte';
 import { aliases } from './aliases.svelte';
+import { workspaceAddresses } from './workspaceAddresses.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
 import { composeStore } from './compose.svelte';
@@ -54,6 +55,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	accountSettings.setAccount(accountId);
 	workspaces.setAccount(accountId);
 	aliases.setAccount(accountId);
+	workspaceAddresses.setAccount(accountId);
 	aliasKeys.setAccount(accountId);
 	delegations.setAccount(accountId);
 	readDelegations.setAccount(accountId);

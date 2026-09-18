@@ -1,30 +1,49 @@
 <script lang="ts">
 	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Star from '@lucide/svelte/icons/star';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import Check from '@lucide/svelte/icons/check';
-	import X from '@lucide/svelte/icons/x';
-	import SecHead from '../SecHead.svelte';
-	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
-	import AddRow from '../AddRow.svelte';
-	import CatchAllCard from './CatchAllCard.svelte';
-	import type { CeremonyKind, SettingsState } from '../data';
 	import Users from '@lucide/svelte/icons/users';
+	import Globe from '@lucide/svelte/icons/globe';
+	import Plus from '@lucide/svelte/icons/plus';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Star from '@lucide/svelte/icons/star';
+	import PenLine from '@lucide/svelte/icons/pen-line';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import KeyRound from '@lucide/svelte/icons/key-round';
+	import Forward from '@lucide/svelte/icons/forward';
+	import Clock from '@lucide/svelte/icons/clock';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+
+	import Badge from '../Badge.svelte';
+	import Avatar from '$core/components/Avatar.svelte';
+	import CatchAllCard from './CatchAllCard.svelte';
+	import UpgradeNudge from '../UpgradeNudge.svelte';
+	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
+	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
+	import { Button } from '$core/components/ui/button';
+
+	import type { CeremonyKind, SettingsState } from '../data';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { aliases } from '$core/stores/aliases.svelte';
+	import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { customDomains } from '$core/stores/customDomains.svelte';
+	import { delegations } from '$core/stores/delegations.svelte';
+	import { readDelegations } from '$core/stores/readDelegations.svelte';
+	import { personAvatars } from '$core/stores/personAvatars.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { billing } from '$core/stores/billing.svelte';
-	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { canManageWorkspace } from '../permissions';
 	import { SHARED_DOMAIN } from '../entitlements';
-	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
-	import DelegationsCard from '../delegations/DelegationsCard.svelte';
-	import ForwardingCard from '../forwarding/ForwardingCard.svelte';
-	import type { SharedAlias } from '$core/api/aliases';
-	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
+	import {
+		buildRow,
+		groupByDomain,
+		dedupeAddresses,
+		initialsOf,
+		planNote,
+		type AddressRow,
+		type ModelContext
+	} from '../addressModel';
 
 	interface Props {
 		s: SettingsState;
@@ -34,42 +53,119 @@
 
 	let { launch }: Props = $props();
 
-	let editingNameFor = $state<string | null>(null);
-	let editingNameValue = $state('');
-	let renameError = $state<string | null>(null);
+	let menuFor = $state<string | null>(null);
+	let managingId = $state<string | null>(null);
 	let pendingRemoval = $state<{ email: string; run: () => Promise<void> } | null>(null);
 	let removalBusy = $state(false);
 	let removalError = $state<string | null>(null);
 
-	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
-	const delegable = $derived(addresses.personal.filter((a) => Boolean(a.customDomainId)));
+	const slot = $derived(page.params.slot ?? '0');
 	const manage = $derived(canManageWorkspace());
-	const sharedList = $derived<SharedAlias[]>(manage ? aliases.items : []);
-	const canAddMore = $derived(
-		billing.canAddDomains || !sharedList.some((a) => !a.customDomainId)
+	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
+
+	const ctx = $derived<ModelContext>({
+		accountId: auth.accountId,
+		manage,
+		members: workspaces.members,
+		domains: customDomains.items,
+		sharedAliases: manage ? aliases.items : [],
+		fullName: auth.fullName,
+		delegationsFor: (id) => delegations.for(id),
+		forwardingFor: (id) => readDelegations.for(id)
+	});
+
+	const source = $derived(
+		manage
+			? dedupeAddresses([addresses.items, workspaceAddresses.items])
+			: dedupeAddresses([addresses.items])
 	);
-	let managing = $state<SharedAlias | null>(null);
+	const rows = $derived(source.map((a) => buildRow(ctx, a)));
+	const groups = $derived(groupByDomain(ctx, rows));
+	const managing = $derived(
+		managingId ? (aliases.items.find((a) => a.id === managingId) ?? null) : null
+	);
 
-	function memberSummary(a: SharedAlias): string {
-		const mine = a.members.some((m) => m.accountId === auth.accountId);
-		const others = a.members.length - (mine ? 1 : 0);
-		if (mine && others === 0) return 'Only you';
-		if (mine) return others === 1 ? 'You and 1 other' : `You and ${others} others`;
-		return a.members.length === 1 ? '1 person' : `${a.members.length} people`;
+	const sharedSlotUsed = $derived(rows.some((r) => r.kind === 'shared' && r.domain === SHARED_DOMAIN));
+	const canAddMore = $derived(billing.canAddDomains || !sharedSlotUsed);
+	const canAdd = $derived(manage && billing.canAddSharedAddresses && canAddMore);
+
+	const delegableIds = $derived(
+		source
+			.filter((a) => a.customDomainId && !a.shared && a.accountId === auth.accountId)
+			.map((a) => a.id)
+	);
+	const forwardableIds = $derived(
+		source
+			.filter(
+				(a) =>
+					a.customDomainId && (a.accountId === auth.accountId || (Boolean(a.shared) && manage))
+			)
+			.map((a) => a.id)
+	);
+
+	$effect(() => {
+		for (const id of delegableIds) void delegations.load(id);
+	});
+
+	$effect(() => {
+		for (const id of forwardableIds) void readDelegations.load(id);
+	});
+
+	function href(row: AddressRow): string {
+		return `/u/${slot}/settings/addresses/${row.id}`;
 	}
 
-	function removeShared(a: SharedAlias) {
-		const ws = workspaces.workspace?.id;
-		if (!ws) return;
-		askRemoval(a.email, async () => {
-			await aliases.remove(ws, a.id);
+	function open(row: AddressRow) {
+		menuFor = null;
+		void goto(href(row));
+	}
+
+	function dismiss(e: Event) {
+		if (menuFor === null) return;
+		const t = e.target;
+		if (t instanceof Element && t.closest('.addr-menu-wrap')) return;
+		menuFor = null;
+	}
+
+	async function promote(row: AddressRow) {
+		menuFor = null;
+		try {
+			await addresses.setPrimary(row.id);
 			await addresses.load();
-		});
+			await workspaceAddresses.reload();
+		} catch (err) {
+			console.warn('set primary failed', err);
+		}
 	}
 
-	function askRemoval(email: string, run: () => Promise<void>) {
+	function managePeople(row: AddressRow) {
+		menuFor = null;
+		if (row.sharedAliasId) managingId = row.sharedAliasId;
+	}
+
+	function askRemoval(row: AddressRow) {
+		menuFor = null;
 		removalError = null;
-		pendingRemoval = { email, run };
+		const workspaceId = workspaces.workspace?.id;
+		if (row.kind === 'shared' && row.sharedAliasId && workspaceId) {
+			const aliasId = row.sharedAliasId;
+			pendingRemoval = {
+				email: row.email,
+				run: async () => {
+					await aliases.remove(workspaceId, aliasId);
+					await addresses.load();
+					await workspaceAddresses.reload();
+				}
+			};
+			return;
+		}
+		pendingRemoval = {
+			email: row.email,
+			run: async () => {
+				await addresses.remove(row.id);
+				await workspaceAddresses.reload();
+			}
+		};
 	}
 
 	async function confirmRemoval() {
@@ -81,225 +177,170 @@
 			await pending.run();
 			pendingRemoval = null;
 		} catch (err) {
-			removalError = err instanceof Error && err.message ? err.message : 'Could not remove this address.';
+			removalError =
+				err instanceof Error && err.message ? err.message : 'Could not remove this address.';
 		} finally {
 			removalBusy = false;
 		}
 	}
 
-	async function promote(id: string) {
-		try {
-			await addresses.setPrimary(id);
-			await addresses.load();
-		} catch (err) {
-			console.warn('set primary failed', err);
-		}
-	}
-
-	function remove(id: string, email: string) {
-		askRemoval(email, () => addresses.remove(id));
-	}
-
-	function startRename(id: string, currentName: string | null | undefined) {
-		editingNameFor = id;
-		editingNameValue = currentName ?? '';
-		renameError = null;
-	}
-
-	function cancelRename() {
-		editingNameFor = null;
-		editingNameValue = '';
-		renameError = null;
-	}
-
-	async function commitRename(id: string) {
-		const name = editingNameValue.trim();
-		try {
-			await addresses.update(id, { name: name === '' ? null : name });
-			editingNameFor = null;
-			editingNameValue = '';
-			renameError = null;
-		} catch (err) {
-			renameError = err instanceof Error ? err.message : 'Could not rename';
-		}
+	function avatarSrc(email: string): string | null {
+		return email ? personAvatars.avatarUrl(email) : null;
 	}
 </script>
 
-<SecHead desc="The addresses you send and receive as. Promoting one to primary makes it your default From and your sign-in email." />
+<svelte:window onclick={dismiss} />
 
-<div class="scard">
-	<CardHead icon={AtSign} title="Your addresses">
-		{#snippet right()}
-			<span class="card-meta">
-				{addresses.personal.length}
-				{addresses.personal.length === 1 ? 'address' : 'addresses'}
-			</span>
-		{/snippet}
-	</CardHead>
-	{#if addresses.loading && addresses.items.length === 0}
-		<div class="alias-row"><div class="alias-info"><div class="alias-addr">Loading…</div></div></div>
-	{:else if addresses.personal.length === 0}
-		<div class="alias-row"><div class="alias-info"><div class="alias-addr">No addresses yet.</div></div></div>
-	{/if}
-	{#each addresses.personal as a (a.id)}
-		<div class="alias-row">
-			{#if a.isPrimary}
-				<span class="alias-star" title="Primary identity"><Star size={16} /></span>
-			{:else}
-				<button
-					type="button"
-					class="alias-star promote"
-					title="Make primary"
-					onclick={() => promote(a.id)}
-				>
-					<Star size={16} />
-				</button>
-			{/if}
-			<div class="alias-info">
-				{#if editingNameFor === a.id}
-					<div class="alias-name editing">
-						<input
-							class="tin name-edit"
-							bind:value={editingNameValue}
-							maxlength="120"
-							placeholder="Display name (optional)"
-							autofocus
-							onkeydown={(e) => {
-								if (e.key === 'Enter') commitRename(a.id);
-								if (e.key === 'Escape') cancelRename();
-							}}
-						/>
-						<button type="button" class="rowmenu" title="Save" onclick={() => commitRename(a.id)}>
-							<Check size={15} />
-						</button>
-						<button type="button" class="rowmenu" title="Cancel" onclick={cancelRename}>
-							<X size={15} />
-						</button>
-					</div>
-					{#if renameError}<div class="alias-addr err">{renameError}</div>{/if}
-				{:else}
-					<div class="alias-name">
-						{a.name ?? auth.fullName ?? a.email}
-						{#if a.isPrimary}<Badge kind="pine">Primary</Badge>{/if}
-						<button
-							type="button"
-							class="rowmenu small"
-							title="Rename"
-							onclick={() => startRename(a.id, a.name)}
-						>
-							<Pencil size={13} />
-						</button>
-					</div>
-				{/if}
-				<div class="alias-addr">{a.email}</div>
-			</div>
-			{#if !a.isPrimary && editingNameFor !== a.id}
-				<button
-					type="button"
-					class="rowmenu"
-					title="Remove"
-					onclick={() => remove(a.id, a.email)}
-				>
-					<Trash2 size={16} />
-				</button>
-			{/if}
+<div class="addr-intro">
+	<div class="addr-intro-tx">
+		<p class="addr-lede">
+			The addresses you send and receive as, and the aliases set up for the workspace. Open one to
+			change its name, its people, who may sign as it, and where its mail is forwarded.
+		</p>
+		{#if manage}
+			<p class="addr-plan">{planNote(sharedSlotUsed)}</p>
+		{/if}
+	</div>
+	{#if canAdd}
+		<div class="addr-intro-act">
+			<Button variant="primary" onclick={() => launch('alias')}>
+				<Plus size={14} />Add an alias
+			</Button>
 		</div>
-	{/each}
-	{#if !manage}
-		<div class="alias-row">
-			<div class="alias-info"><div class="alias-addr">New addresses are set up by a workspace admin.</div></div>
-		</div>
-	{/if}
-	{#if addresses.error}
-		<div class="alias-row"><div class="alias-info"><div class="alias-addr err">{addresses.error}</div></div></div>
 	{/if}
 </div>
 
-<div class="scard">
-	<CardHead icon={Users} title="Shared addresses">
-		{#snippet right()}
-			{@const n = manage ? sharedList.length : addresses.shared.length}
-			<span class="card-meta">{n} {n === 1 ? 'address' : 'addresses'}</span>
-		{/snippet}
-	</CardHead>
-	{#if manage}
-		{#if sharedList.length === 0}
-			<div class="alias-row">
-				<div class="alias-info">
-					<div class="alias-addr">
-						None yet. A shared address reaches everyone on it, and each person can write from it.
-					</div>
+{#each groups as g (g.domain)}
+	<section class="scard addr-group">
+		<div class="scard-h addr-group-h">
+			<Globe size={16} />
+			<h3 class="addr-domain">{g.domain}</h3>
+			<Badge kind={g.badgeTone}>{g.badge}</Badge>
+			<span class="addr-count">{g.count}</span>
+		</div>
+		<div class="addr-cols">
+			<span>Address</span><span>Used by</span><span></span>
+		</div>
+		{#each g.rows as row (row.id)}
+			<div class="addr-row">
+				<a class="addr-main" href={href(row)}>
+					<span class="addr-chip">
+						{#if row.kind === 'shared'}<Users size={15} />{:else}<AtSign size={15} />{/if}
+					</span>
+					<span class="addr-text">
+						<span class="addr-title">
+							<span class="addr-name">{row.title}</span>
+							{#if row.isPrimary}<Badge kind="pine">Primary</Badge>{/if}
+							{#if row.rotationRequired}<Badge kind="warn" dot>Needs a new key</Badge>{/if}
+						</span>
+						<span class="addr-mail">{row.email}</span>
+						{#if row.signerSummary || row.forwardSummary || row.pendingSummary}
+							<span class="addr-sum">
+								{#if row.signerSummary}
+									<span><KeyRound size={12} />{row.signerSummary}</span>
+								{/if}
+								{#if row.forwardSummary}
+									<span><Forward size={12} />{row.forwardSummary}</span>
+								{/if}
+								{#if row.pendingSummary}
+									<span class="pending"><Clock size={12} />{row.pendingSummary}</span>
+								{/if}
+							</span>
+						{/if}
+					</span>
+				</a>
+				<div class="addr-used">
+					<span class="avstack">
+						{#each row.people.slice(0, 3) as p (p.accountId)}
+							<Avatar
+								initials={initialsOf(p.name, p.email)}
+								size={24}
+								src={avatarSrc(p.email)}
+								fit="cover"
+							/>
+						{/each}
+					</span>
+					<span class="addr-used-tx">{row.usedBy}</span>
 				</div>
-			</div>
-		{/if}
-		{#each sharedList as a (a.id)}
-			<div class="alias-row">
-				<span class="alias-star"><Users size={16} /></span>
-				<div class="alias-info">
-					<div class="alias-name">
-						{a.name}
-						<Badge kind="pine">Shared</Badge>
-						{#if a.rotationRequired}<Badge kind="warn">Needs a new key</Badge>{/if}
-					</div>
-					<div class="alias-addr">{a.email} · {memberSummary(a)}</div>
+				<div class="addr-menu-wrap">
+					<button
+						type="button"
+						class="rowmenu"
+						aria-label="Address actions"
+						aria-expanded={menuFor === row.id}
+						onclick={() => (menuFor = menuFor === row.id ? null : row.id)}
+					>
+						<Ellipsis size={16} />
+					</button>
+					{#if menuFor === row.id}
+						<div class="addr-menu" role="menu">
+							<button type="button" class="mitem" onclick={() => open(row)}>
+								<ArrowRight size={15} />Open
+							</button>
+							{#if row.canPromote}
+								<button type="button" class="mitem" onclick={() => promote(row)}>
+									<Star size={15} />Make primary
+								</button>
+							{/if}
+							{#if row.canRename}
+								<button type="button" class="mitem" onclick={() => open(row)}>
+									<PenLine size={15} />Rename
+								</button>
+							{/if}
+							{#if row.canManagePeople}
+								<button type="button" class="mitem" onclick={() => managePeople(row)}>
+									<Users size={15} />Manage people
+								</button>
+							{/if}
+							{#if row.canRemove}
+								<span class="msep"></span>
+								<button type="button" class="mitem danger" onclick={() => askRemoval(row)}>
+									<Trash2 size={15} />Remove address
+								</button>
+							{/if}
+						</div>
+					{/if}
 				</div>
-				<button type="button" class="rowmenu" title="Manage people" onclick={() => (managing = a)}>
-					<Users size={16} />
-				</button>
-				<button type="button" class="rowmenu" title="Remove" onclick={() => removeShared(a)}>
-					<Trash2 size={16} />
-				</button>
 			</div>
 		{/each}
-		{#if !billing.canAddSharedAddresses}
-			<div class="upgrade-list">
-				<UpgradeNudge
-					title="More addresses come with a paid plan"
-					desc="Paid plans add unlimited addresses on your own domain, shared with the people you choose."
-				/>
-			</div>
-		{:else if canAddMore}
-			<AddRow label="Add an address" onClick={() => launch('alias')} />
-		{:else}
-			<div class="upgrade-list">
-				<UpgradeNudge
-					title="One shared address on {SHARED_DOMAIN}"
-					desc="Add a domain you own on a paid plan to give the household more addresses."
-				/>
-			</div>
-		{/if}
-	{:else}
-		{#if addresses.shared.length === 0}
-			<div class="alias-row">
-				<div class="alias-info"><div class="alias-addr">You are not on any shared addresses.</div></div>
-			</div>
-		{/if}
-		{#each addresses.shared as a (a.id)}
-			<div class="alias-row">
-				<span class="alias-star"><Users size={16} /></span>
-				<div class="alias-info">
-					<div class="alias-name">{a.name ?? a.email}<Badge kind="pine">Shared</Badge></div>
-					<div class="alias-addr">{a.email}</div>
-				</div>
-			</div>
-		{/each}
-	{/if}
-	{#if aliases.error}
-		<div class="alias-row"><div class="alias-info"><div class="alias-addr err">{aliases.error}</div></div></div>
-	{/if}
-</div>
-
-{#each delegable as a (a.id)}
-	<DelegationsCard address={a} />
-	<ForwardingCard addressId={a.id} email={a.email} />
+	</section>
 {/each}
 
-{#each sharedList.filter((a) => Boolean(a.customDomainId)) as a (a.id)}
-	<ForwardingCard addressId={a.addressId} email={a.email} />
-{/each}
+{#if addresses.loading && rows.length === 0}
+	<p class="addr-note">Loading…</p>
+{:else if rows.length === 0}
+	<p class="addr-note">No addresses yet.</p>
+{/if}
+
+{#if !manage}
+	<p class="addr-note">New addresses are set up by a workspace admin.</p>
+{/if}
+
+{#if manage && !billing.canAddSharedAddresses}
+	<div class="upgrade-list">
+		<UpgradeNudge
+			title="More addresses come with a paid plan"
+			desc="Paid plans add unlimited addresses on your own domain, shared with the people you choose."
+		/>
+	</div>
+{:else if manage && !canAddMore}
+	<div class="upgrade-list">
+		<UpgradeNudge
+			title="One shared address on {SHARED_DOMAIN}"
+			desc="Add a domain you own on a paid plan to give the household more addresses."
+		/>
+	</div>
+{/if}
+
+{#if addresses.error}
+	<p class="addr-note err">{addresses.error}</p>
+{/if}
+{#if workspaceAddresses.error}
+	<p class="addr-note err">{workspaceAddresses.error}</p>
+{/if}
 
 {#if showCatchAll}
-	<CatchAllCard />
+	<div class="addr-catchall"><CatchAllCard /></div>
 {/if}
 
 {#snippet removalBody()}
@@ -327,33 +368,7 @@
 	<AliasCeremony
 		mode="members"
 		alias={managing}
-		onClose={() => (managing = null)}
+		onClose={() => (managingId = null)}
 		onComplete={() => {}}
 	/>
 {/if}
-
-<style>
-	.alias-star.promote {
-		background: none;
-		border: 0;
-		cursor: pointer;
-		color: var(--ink-2, rgba(0, 0, 0, 0.4));
-	}
-	.alias-star.promote:hover {
-		color: var(--pine, #2b5f3f);
-	}
-	.alias-addr.err {
-		color: var(--warn, #b25030);
-	}
-	.alias-name.editing {
-		display: inline-flex;
-		gap: 6px;
-		align-items: center;
-	}
-	.name-edit {
-		width: 240px;
-	}
-	.rowmenu.small {
-		padding: 2px 4px;
-	}
-</style>

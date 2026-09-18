@@ -87,12 +87,12 @@
 	{:else}
 		<Row
 			t="Route unmatched mail for this workspace"
-			d="Deliver mail sent to any address on your workspace’s verified domains that doesn’t match a mailbox straight to one chosen inbox."
+			d="Mail sent to any address on your verified domains that does not match a mailbox is delivered to one chosen inbox."
 		>
 			<Toggle on={enabled} onChange={onToggle} />
 		</Row>
 		{#if enabled}
-			<Row t="Deliver to" d="Catch-all messages land in this address’s mailbox.">
+			<Row t="Deliver to" d="Catch-all messages land in this address's mailbox.">
 				<Select value={value} options={options} onChange={onTargetChange} />
 			</Row>
 		{/if}
@@ -104,7 +104,7 @@
 
 <style>
 	.ca-err {
-		color: var(--warn, #b25030);
+		color: var(--warning-700);
 		display: inline-flex;
 		gap: 6px;
 		align-items: center;
