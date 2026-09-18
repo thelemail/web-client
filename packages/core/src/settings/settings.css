@@ -1115,3 +1115,19 @@
 .cer-scrim .choice-mark[data-state='checked'] { border-color: var(--pine-600); background: var(--pine-600); color: #fff; }
 .cer-scrim .choice-mark[data-state='checked'] svg { width: 12px; height: 12px; stroke-width: 2.5; }
 .cer-scrim .choice-mark:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+
+@media (max-width: 760px) {
+	.settings-app .addr-intro { flex-direction: column; gap: 14px; }
+	.settings-app .addr-cols, .settings-app .addr-row { grid-template-columns: minmax(0, 1fr) 150px 32px; }
+}
+
+@media (max-width: 620px) {
+	.settings-app .addr-cols { grid-template-columns: minmax(0, 1fr) 32px; }
+	.settings-app .addr-cols span:nth-child(2) { display: none; }
+	.settings-app .addr-row { grid-template-columns: minmax(0, 1fr) 32px; }
+	.settings-app .addr-main { grid-column: 1; grid-row: 1; }
+	.settings-app .addr-menu-wrap { grid-column: 2; grid-row: 1; }
+	.settings-app .addr-used { grid-column: 1 / -1; grid-row: 2; padding-left: 42px; margin-top: 6px; }
+	.settings-app .ad-person { flex-wrap: wrap; }
+	.settings-app .ad-person-role { width: 100%; padding-left: 40px; }
+}
