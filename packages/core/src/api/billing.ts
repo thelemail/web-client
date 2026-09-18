@@ -37,6 +37,8 @@ export interface PlanCatalog {
 	plans: Plan[];
 }
 
+export type BillingProvider = 'stripe' | 'google_play' | 'apple';
+
 export interface Subscription {
 	status: SubscriptionStatus;
 	entitled: boolean;
@@ -47,6 +49,57 @@ export interface Subscription {
 	cancelAtPeriodEnd: boolean;
 	storageBytesUsed?: number;
 	storageBytesLimit?: number;
+	provider?: BillingProvider;
+	downgradeEligible?: boolean;
+	pendingPlanCode?: PlanCode;
+	pendingPlanEffectiveAt?: string;
+}
+
+export type DowngradeSeverity = 'unaffected' | 'warn' | 'stops' | 'blocker';
+
+export type DowngradeIneligibleReason =
+	| 'no_free_tier'
+	| 'already_free'
+	| 'not_owner'
+	| 'no_subscription';
+
+export interface DowngradeDomain {
+	customDomainId?: string;
+	domain: string;
+	addressCount: number;
+	addresses?: string[];
+}
+
+export interface DowngradeMailbox {
+	accountId?: string;
+	email: string;
+	fullName?: string;
+	bytesUsed: number;
+	bytesOver: number;
+}
+
+export interface DowngradeFinding {
+	capability: string;
+	severity: DowngradeSeverity;
+	title: string;
+	summary: string;
+	domains?: DowngradeDomain[];
+	mailboxes?: DowngradeMailbox[];
+}
+
+export interface DowngradePreview {
+	eligible: boolean;
+	ineligibleReason?: DowngradeIneligibleReason;
+	blocked: boolean;
+	currentPlanCode: PlanCode;
+	targetPlanCode?: PlanCode;
+	provider?: BillingProvider;
+	storeCancellationRequired?: boolean;
+	effectiveAt?: string;
+	storageBytesPerMailbox?: number;
+	seatLimit?: number;
+	overQuotaGraceDays?: number;
+	findings: DowngradeFinding[];
 }
 
 export interface CreateCheckoutSessionInput {
@@ -87,4 +140,16 @@ export function cancelSubscription(): Promise<Subscription> {
 
 export function resumeSubscription(): Promise<Subscription> {
 	return apiFetch('/v1/billing/resume', { method: 'POST' });
+}
+
+export function getDowngradePreview(): Promise<DowngradePreview> {
+	return apiFetch('/v1/billing/downgrade');
+}
+
+export function requestDowngrade(): Promise<Subscription> {
+	return apiFetch('/v1/billing/downgrade', { method: 'POST' });
+}
+
+export function cancelDowngrade(): Promise<Subscription> {
+	return apiFetch('/v1/billing/downgrade', { method: 'DELETE' });
 }
