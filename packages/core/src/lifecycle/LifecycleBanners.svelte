@@ -2,11 +2,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { lifecycle } from './lifecycle.svelte';
+	import { billing } from '$core/stores/billing.svelte';
+	import { entryPointVisible, scheduledLine } from './downgrade';
 	import GraceBanner from './GraceBanner.svelte';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const stage = $derived(lifecycle.stage);
 	const ctx = $derived(lifecycle.context);
+	const canMoveToFree = $derived(entryPointVisible(billing.subscription));
+	const scheduled = $derived(scheduledLine(billing.subscription));
 
 	function toRestore(origin: 'grace' | 'suspended') {
 		lifecycle.markRestoreOrigin(origin);
@@ -17,7 +21,11 @@
 {#if stage === 'grace'}
 	<GraceBanner
 		{ctx}
+		{scheduled}
 		onRestore={() => toRestore('grace')}
 		onExport={() => void goto(`/u/${slot}/lifecycle/export`)}
+		onDowngrade={canMoveToFree && !scheduled
+			? () => void goto(`/u/${slot}/lifecycle/downgrade`)
+			: undefined}
 	/>
 {/if}

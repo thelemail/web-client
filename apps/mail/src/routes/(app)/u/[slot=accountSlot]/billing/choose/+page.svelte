@@ -14,6 +14,7 @@
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { Button } from '$core/components/ui/button';
+	import { entryPointVisible } from '$core/lifecycle/downgrade';
 
 	let { data } = $props();
 
@@ -29,6 +30,7 @@
 	const isFree = $derived(billing.isFree);
 	const alreadyActive = $derived(sub?.status === 'active' && !isFree);
 	const paymentProblem = $derived(sub?.status === 'past_due');
+	const canMoveToFree = $derived(isOwner && entryPointVisible(sub));
 
 	onMount(() => {
 		void (async () => {
@@ -232,6 +234,11 @@
 						<Button variant="primary" size="lg" block href={`/u/${slot}/settings/account`}>
 							Go to Settings &rarr; Manage billing
 						</Button>
+						{#if canMoveToFree}
+							<Button variant="ghost" size="lg" block href={`/u/${slot}/lifecycle/downgrade`}>
+								Move to the free plan instead
+							</Button>
+						{/if}
 					</div>
 				</div>
 				{@render signOutFoot()}
