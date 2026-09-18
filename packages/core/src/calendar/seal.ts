@@ -21,8 +21,6 @@ export class SealError extends Error {
 	}
 }
 
-export const CALENDAR_KEY_ALGORITHM = 'openpgp-curve25519-v6';
-
 export interface MintedCalendarKey {
 	key: SealKey;
 	grants: CalendarMemberGrant[];

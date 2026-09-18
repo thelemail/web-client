@@ -393,7 +393,6 @@ export type OpaqueFinishRegistrationResponse =
 			opaqueParamsVersion: number;
 			publicKey: string;
 			encryptedPrivateKey: string;
-			keyAlgorithm: 'openpgp-curve25519-v6';
 	  }
 	| { ok: false; code: 'no_pending_operation' };
 

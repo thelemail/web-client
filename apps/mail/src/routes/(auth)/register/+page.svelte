@@ -190,7 +190,6 @@
 				opaqueParamsVersion: finish.opaqueParamsVersion,
 				publicKey: finish.publicKey,
 				encryptedPrivateKey: finish.encryptedPrivateKey,
-				keyAlgorithm: finish.keyAlgorithm,
 				plan: plan ?? undefined,
 				source: acquisitionSource
 			});

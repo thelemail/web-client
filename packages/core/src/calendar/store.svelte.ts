@@ -51,7 +51,6 @@ import { replayOne, type OutboxMail, type OutboxOp, type ReplayApi } from './out
 import { busyWindows, expandItems, itemSpan, type Occurrence } from './recur';
 import { signBusyWindows } from './busysign';
 import {
-	CALENDAR_KEY_ALGORITHM,
 	keyForCalendar,
 	mintOwnCalendarKey,
 	openText,
@@ -385,7 +384,6 @@ export class CalendarStore {
 			metaKeyFingerprint: key.fingerprintB64,
 			metaSchemaVersion: META_SCHEMA_VERSION,
 			calendarPublicKeyArmored: key.publicKeyArmored,
-			keyAlgorithm: CALENDAR_KEY_ALGORITHM,
 			members: grants
 		});
 		await calendarKeys.load(accountId);

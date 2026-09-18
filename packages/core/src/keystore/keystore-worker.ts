@@ -1881,8 +1881,7 @@ async function handleOpaqueFinishRegistration(
 		masterKeyId: op.masterKeyIdB64,
 		opaqueParamsVersion: OPAQUE_PARAMS_VERSION,
 		publicKey: publicKeyArmored,
-		encryptedPrivateKey: armoredEncrypted,
-		keyAlgorithm: 'openpgp-curve25519-v6'
+		encryptedPrivateKey: armoredEncrypted
 	};
 }
 
