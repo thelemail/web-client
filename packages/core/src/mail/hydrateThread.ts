@@ -125,9 +125,13 @@ async function hydrateEntry(
 				: null;
 
 		const serverSignature: ServerSignature | undefined =
-			item.source !== 'internal' && !e2e && !item.signerDelegationId
+			item.source !== 'internal' &&
+			!e2e &&
+			!item.signerDelegationId &&
+			item.signatureStatus &&
+			item.signatureStatus !== 'encrypted'
 				? {
-						status: item.signatureStatus ?? 'unsigned',
+						status: item.signatureStatus,
 						keyFingerprintHex: item.signerKeyFingerprint
 							? b64ToHex(item.signerKeyFingerprint)
 							: undefined
