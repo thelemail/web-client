@@ -76,7 +76,8 @@ export const load: LayoutLoad = async ({ parent, params, url }) => {
 	) {
 		throw redirect(303, `/u/${slot}/mail/inbox`);
 	}
-	if (sub && !sub.entitled && stage === 'active' && !inBilling) {
+	const inDowngrade = url.pathname.startsWith(`/u/${slot}/lifecycle/downgrade`);
+	if (sub && !sub.entitled && stage === 'active' && !inBilling && !inDowngrade) {
 		throw redirect(303, `/u/${slot}/billing/choose`);
 	}
 

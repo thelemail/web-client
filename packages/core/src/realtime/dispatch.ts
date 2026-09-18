@@ -7,6 +7,7 @@ import { signatures } from '$core/stores/signatures.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { mailSearch } from '$core/stores/search.svelte';
 import { auth } from '$core/stores/auth.svelte';
+import { billing } from '$core/stores/billing.svelte';
 import { coalesce } from './coalesce';
 import { notifyCalendarHint, notifyCalendarMessage } from './calendarHook';
 import type { RealtimeHint } from './types';
@@ -79,8 +80,11 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) void accountSettings.refresh();
 			return;
 		case 'lifecycle':
+			void auth.loadProfile(hint.accountId);
+			return;
 		case 'subscription':
 			void auth.loadProfile(hint.accountId);
+			if (isActive) void billing.refresh();
 			return;
 		case 'calendar':
 		case 'calendar_item':
