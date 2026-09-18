@@ -1,6 +1,7 @@
 import * as openpgp from 'openpgp';
 
 import { keyCreationDate } from '$core/keystore/opaque-params';
+import { generateCurve25519Key } from './pgpKeys';
 
 export interface GeneratedDelegationKey {
 	publicKeyArmored: string;
@@ -23,13 +24,11 @@ export async function generateDelegationKey({
 }: GenerateDelegationKeyOptions): Promise<GeneratedDelegationKey> {
 	const date = keyCreationDate(now);
 	const keyExpirationTime = Math.round(validForDays * 24 * 60 * 60);
-	const generated = await openpgp.generateKey({
-		type: 'curve25519',
+	const generated = await generateCurve25519Key({
 		userIDs: [{ email }],
 		subkeys: [],
 		keyExpirationTime,
-		date,
-		format: 'object'
+		date
 	});
 	const { publicKey: revoked } = await openpgp.revokeKey({
 		key: generated.privateKey,

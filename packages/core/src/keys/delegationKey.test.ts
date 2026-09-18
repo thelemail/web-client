@@ -16,6 +16,15 @@ describe('generateDelegationKey', () => {
 		await expect(key.getSigningKey()).resolves.toBeTruthy();
 	});
 
+	it('is a v6 Ed25519 key', async () => {
+		const generated = await generateDelegationKey({ email, validForDays: 365 });
+		const key = await openpgp.readKey({ armoredKey: generated.publicKeyArmored });
+
+		expect(key.keyPacket.version).toBe(6);
+		expect(key.getAlgorithmInfo().algorithm).toBe('ed25519');
+		expect(generated.keyFingerprintHex).toMatch(/^[0-9a-f]{64}$/);
+	});
+
 	it('binds exactly one user id to the delegated address', async () => {
 		const generated = await generateDelegationKey({ email, validForDays: 365 });
 		const key = await openpgp.readKey({ armoredKey: generated.publicKeyArmored });

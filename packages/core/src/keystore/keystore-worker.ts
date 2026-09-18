@@ -3,6 +3,7 @@
 import * as openpgp from 'openpgp';
 
 import { generateDelegationKey } from '$core/keys/delegationKey';
+import { generateCurve25519Key, lockKey, reformatWithUserIDs } from '$core/keys/pgpKeys';
 import { isAllowedBlobUrl } from './blobOrigins';
 import { currentProduct, isProductVault } from '../products';
 import { CryptoProxy } from '@protontech/crypto';
@@ -424,7 +425,7 @@ async function handlePrepareRecoverySetup(
 	const phrase = generateMnemonic(wordlist, 128);
 	const keySalt = generateKeySalt();
 	const passphrase = await computeKeyPassword(phrase, keySalt);
-	const encrypted = await openpgp.encryptKey({ privateKey: v.privateKey, passphrase });
+	const encrypted = await lockKey(v.privateKey, passphrase);
 
 	const { salt: srpSalt, verifier: srpVerifier } = await getRandomSrpVerifier(
 		{ Modulus: args.modulus },
@@ -533,7 +534,7 @@ async function handlePrepareCredentialReset(
 
 	const keySalt = generateKeySalt();
 	const passphrase = await computeKeyPassword(args.newPassword, keySalt);
-	const encrypted = await openpgp.encryptKey({ privateKey: p.privateKey, passphrase });
+	const encrypted = await lockKey(p.privateKey, passphrase);
 
 	const { salt: srpSalt, verifier: srpVerifier } = await getRandomSrpVerifier(
 		{ Modulus: args.modulus },
@@ -648,7 +649,7 @@ async function handlePreparePasswordChangeCredentials(
 
 	const keySalt = generateKeySalt();
 	const passphrase = await computeKeyPassword(args.newPassword, keySalt);
-	const encrypted = await openpgp.encryptKey({ privateKey: v.privateKey, passphrase });
+	const encrypted = await lockKey(v.privateKey, passphrase);
 	const armoredEncrypted = encrypted.armor();
 
 	const { salt: srpSalt, verifier: srpVerifier } = await getRandomSrpVerifier(
@@ -1120,11 +1121,9 @@ async function handleCreateAliasKey(args: CreateAliasKeyArgs): Promise<CreateAli
 		return { ok: false, code: 'invalid_recipient_key' };
 	}
 	try {
-		const generated = await openpgp.generateKey({
-			type: 'curve25519',
+		const generated = await generateCurve25519Key({
 			userIDs: [{ name: args.displayName, email: args.email }],
-			date: keyCreationDate(Date.now() + (args.serverClockOffsetMs ?? 0)),
-			format: 'object'
+			date: keyCreationDate(Date.now() + (args.serverClockOffsetMs ?? 0))
 		});
 		const armoredPrivate = generated.privateKey.armor();
 		const grants = [];
@@ -1229,18 +1228,14 @@ async function handleReformatKeyWithUids(
 		}
 
 		const originalFingerprint = v.privateKey.getFingerprint();
-		const { privateKey: reformatted } = await openpgp.reformatKey({
-			privateKey: v.privateKey,
-			userIDs: emails.map((email) => ({ email })),
-			format: 'object'
-		});
+		const { privateKey: reformatted } = await reformatWithUserIDs(
+			v.privateKey,
+			emails.map((email) => ({ email }))
+		);
 		if (reformatted.getFingerprint() !== originalFingerprint) {
 			return { ok: false, code: 'fingerprint_changed' };
 		}
-		const encrypted = await openpgp.encryptKey({
-			privateKey: reformatted,
-			passphrase: v.keyPassword
-		});
+		const encrypted = await lockKey(reformatted, v.keyPassword);
 		const encryptedPrivateKey = encrypted.armor();
 		const publicKeyArmored = reformatted.toPublic().armor();
 		return { ok: true, unchanged: false, publicKeyArmored, encryptedPrivateKey };
@@ -1856,11 +1851,9 @@ async function handleOpaqueFinishRegistration(
 		keyStretching: KEY_STRETCHING
 	});
 
-	const { publicKey: pubObj, privateKey: privObj } = await openpgp.generateKey({
-		type: 'curve25519',
+	const { publicKey: pubObj, privateKey: privObj } = await generateCurve25519Key({
 		userIDs: [{ email: op.email }],
-		date: keyCreationDate(Date.now() + (args.serverClockOffsetMs ?? 0)),
-		format: 'object'
+		date: keyCreationDate(Date.now() + (args.serverClockOffsetMs ?? 0))
 	});
 	const publicKeyArmored = pubObj.armor();
 
@@ -1869,7 +1862,7 @@ async function handleOpaqueFinishRegistration(
 	const wrappedMasterKey = await wrapMasterKey(exportKeyBytes, amk, false);
 	const masterKeyId = await deriveMasterKeyId(amk);
 	const pgpPassphrase = await derivePgpPassphrase(amk);
-	const encryptedPriv = await openpgp.encryptKey({ privateKey: privObj, passphrase: pgpPassphrase });
+	const encryptedPriv = await lockKey(privObj, pgpPassphrase);
 	const armoredEncrypted = encryptedPriv.armor();
 	exportKeyBytes.fill(0);
 
@@ -2100,7 +2093,7 @@ async function handleMigrationFinishStage(
 	exportKeyBytes.fill(0);
 	const masterKeyId = await deriveMasterKeyId(amk);
 	const pgpPassphrase = await derivePgpPassphrase(amk);
-	const stagedEncrypted = await openpgp.encryptKey({ privateKey: v.privateKey, passphrase: pgpPassphrase });
+	const stagedEncrypted = await lockKey(v.privateKey, pgpPassphrase);
 	amk.fill(0);
 
 	return {
@@ -2303,7 +2296,7 @@ async function handleOpaqueFinishAmkRotation(
 	const wrappedMasterKey = await wrapMasterKey(exportKeyBytes, amk, false);
 	const masterKeyId = await deriveMasterKeyId(amk);
 	const pgpPassphrase = await derivePgpPassphrase(amk);
-	const encrypted = await openpgp.encryptKey({ privateKey: p.privateKey, passphrase: pgpPassphrase });
+	const encrypted = await lockKey(p.privateKey, pgpPassphrase);
 	exportKeyBytes.fill(0);
 	amk.fill(0);
 	pendingReset = null;

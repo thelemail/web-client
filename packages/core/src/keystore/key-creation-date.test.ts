@@ -3,6 +3,7 @@ import * as openpgp from 'openpgp';
 import { describe, expect, it } from 'vitest';
 
 import { KEY_CREATION_BACKDATE_MS, keyCreationDate } from './opaque-params';
+import { generateCurve25519Key } from '$core/keys/pgpKeys';
 import {
 	recordServerDate,
 	resetServerClock,
@@ -26,11 +27,9 @@ describe('generated account keys', () => {
 		'stamp the primary key and its encryption subkey in the past',
 		async () => {
 			const before = Date.now();
-			const { publicKey } = await openpgp.generateKey({
-				type: 'curve25519',
+			const { publicKey } = await generateCurve25519Key({
 				userIDs: [{ email: 'anna@thelemail.test' }],
-				date: keyCreationDate(),
-				format: 'object'
+				date: keyCreationDate()
 			});
 
 			expect(publicKey.getCreationTime().getTime()).toBeLessThan(before);

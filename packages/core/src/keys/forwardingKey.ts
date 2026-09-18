@@ -1,6 +1,7 @@
 import * as openpgp from 'openpgp';
 
 import { keyCreationDate } from '$core/keystore/opaque-params';
+import { generateCurve25519Key } from './pgpKeys';
 
 export const READ_DELEGATION_AUTHORIZATION_TYPE = 'thelemail-read-delegation/v1';
 
@@ -11,12 +12,10 @@ export interface GeneratedForwardingKey {
 }
 
 export async function generateForwardingKey(email: string, now = Date.now()): Promise<GeneratedForwardingKey> {
-	const generated = await openpgp.generateKey({
-		type: 'curve25519',
+	const generated = await generateCurve25519Key({
 		userIDs: [{ email: email.trim().toLowerCase() }],
 		subkeys: [{ sign: false }],
-		date: keyCreationDate(now),
-		format: 'object'
+		date: keyCreationDate(now)
 	});
 	return {
 		publicKeyArmored: generated.publicKey.armor(),
