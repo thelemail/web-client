@@ -9,7 +9,8 @@ import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { isOfficialAddress, OFFICIAL_KEYS_ARMORED } from '$core/directory/official';
 import { officialFacts } from './officialSender';
 import { delegatedSignerTrust, directoryTrust, externalKeyState } from '$core/mail/senderVerify';
-import { deriveTrust, type TrustFacts } from '$core/mail/trust';
+import { deriveTrust, type ServerSignature, type TrustFacts } from '$core/mail/trust';
+import { b64ToHex } from '$core/keys/encode';
 import { renderBody, type RenderResult } from '$core/mail/render';
 import type { SignatureVerdict } from '$core/keystore/protocol';
 import { renderDetail } from '$core/mail/bodySource';
@@ -123,6 +124,16 @@ async function hydrateEntry(
 				? await delegatedSignerTrust(senderAddress, item.signerDelegationId).catch(() => null)
 				: null;
 
+		const serverSignature: ServerSignature | undefined =
+			item.source !== 'internal' && !e2e && !item.signerDelegationId
+				? {
+						status: item.signatureStatus ?? 'unsigned',
+						keyFingerprintHex: item.signerKeyFingerprint
+							? b64ToHex(item.signerKeyFingerprint)
+							: undefined
+					}
+				: undefined;
+
 		const facts: TrustFacts = {
 			channel: item.source,
 			senderAddress,
@@ -134,6 +145,7 @@ async function hydrateEntry(
 			domainAuthState: authStateFromPreview(preview),
 			official: officialFacts({ senderAddress, channel: item.source, signature, signedMime }),
 			delegatedSigner,
+			serverSignature,
 			nowMillis: Date.now()
 		};
 		const trust = me ? undefined : deriveTrust(facts);
