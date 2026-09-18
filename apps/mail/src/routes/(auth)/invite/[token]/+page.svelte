@@ -134,7 +134,6 @@
 				opaqueParamsVersion: finish.opaqueParamsVersion,
 				publicKey: finish.publicKey,
 				encryptedPrivateKey: finish.encryptedPrivateKey,
-				keyAlgorithm: finish.keyAlgorithm,
 				enrollPersistentSession: false
 			});
 

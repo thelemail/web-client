@@ -531,7 +531,6 @@ export interface RegisterRequest {
 	opaqueParamsVersion: number;
 	publicKey: string;
 	encryptedPrivateKey: string;
-	keyAlgorithm: 'openpgp-curve25519-v6';
 	plan?: PlanCode;
 	source?: string;
 }

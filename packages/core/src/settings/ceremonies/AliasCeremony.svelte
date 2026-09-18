@@ -170,7 +170,6 @@
 		if (mode === 'members' && alias) {
 			await aliases.rotate(ws, alias.id, {
 				aliasPublicKeyArmored: created.publicKeyArmored,
-				keyAlgorithm: 'openpgp-curve25519-v6',
 				members: grants
 			});
 		} else {
@@ -180,7 +179,6 @@
 				localPart: local.trim().toLowerCase(),
 				name: name.trim(),
 				aliasPublicKeyArmored: created.publicKeyArmored,
-				keyAlgorithm: 'openpgp-curve25519-v6',
 				members: grants
 			});
 		}

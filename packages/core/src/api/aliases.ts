@@ -50,13 +50,11 @@ export interface CreateSharedAliasInput {
 	localPart: string;
 	name: string;
 	aliasPublicKeyArmored: string;
-	keyAlgorithm: string;
 	members: SharedAliasMemberGrant[];
 }
 
 export interface RotateSharedAliasInput {
 	aliasPublicKeyArmored: string;
-	keyAlgorithm: string;
 	members: SharedAliasMemberGrant[];
 }
 

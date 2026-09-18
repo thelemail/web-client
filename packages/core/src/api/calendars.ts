@@ -51,7 +51,6 @@ export interface CreateCalendarRequest {
 	metaKeyFingerprint: string;
 	metaSchemaVersion: number;
 	calendarPublicKeyArmored?: string;
-	keyAlgorithm?: string;
 	sharedAliasId?: string;
 	members?: CalendarMemberGrant[];
 }
@@ -65,7 +64,6 @@ export interface UpdateCalendarRequest {
 
 export interface RotateCalendarMembersRequest {
 	calendarPublicKeyArmored: string;
-	keyAlgorithm: string;
 	members: CalendarMemberGrant[];
 }
 

@@ -67,8 +67,7 @@
 			await delegations.create(address.id, {
 				label: label.trim(),
 				publicKeyArmored: generated.publicKeyArmored,
-				revokedPublicKeyArmored: generated.revokedPublicKeyArmored,
-				keyAlgorithm: 'openpgp-ed25519'
+				revokedPublicKeyArmored: generated.revokedPublicKeyArmored
 			});
 			privateKeyArmored = generated.privateKeyArmored;
 			fingerprint = generated.keyFingerprintHex;

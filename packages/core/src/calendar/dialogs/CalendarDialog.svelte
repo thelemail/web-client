@@ -37,7 +37,6 @@
 	let { request }: Props = $props();
 
 	const PALETTE = ['#2E5440', '#A87C3D', '#3C6E8C', '#9B5B4E', '#6E5B9E', '#4E8073', '#6B7360', '#7E6BA8'];
-	const KEY_ALGORITHM = 'openpgp-curve25519-v6';
 
 	const existing = $derived(request.calendarId ? calendarStore.calendar(request.calendarId) : undefined);
 
@@ -198,7 +197,6 @@
 			metaKeyFingerprint: key.fingerprintB64,
 			metaSchemaVersion: META_SCHEMA_VERSION,
 			calendarPublicKeyArmored: kind === 'role' ? undefined : key.publicKeyArmored,
-			keyAlgorithm: kind === 'role' ? undefined : KEY_ALGORITHM,
 			sharedAliasId,
 			members: grants
 		});
@@ -220,7 +218,6 @@
 		progress = 'Turning the key over';
 		const row = await rotateCalendarMembers(existing.id, {
 			calendarPublicKeyArmored: minted.key.publicKeyArmored,
-			keyAlgorithm: KEY_ALGORITHM,
 			members: minted.grants
 		});
 		await calendarKeys.load(accountId);

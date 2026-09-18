@@ -22,7 +22,6 @@ export interface CreateSigningDelegationRequest {
 	label: string;
 	publicKeyArmored: string;
 	revokedPublicKeyArmored: string;
-	keyAlgorithm: string;
 }
 
 export function listSigningDelegations(
