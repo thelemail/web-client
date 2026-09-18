@@ -1107,3 +1107,11 @@
 .cer-scrim .choice-set.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .cer-scrim .choice-set.two .choice-mark { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .cer-scrim .choice-ic { display: flex; margin-top: 1px; flex: 0 0 auto; color: var(--pine-600); }
+
+.settings-app .scard.menus { overflow: visible; }
+.settings-app .scard.menus .rec-row:last-child { border-radius: 0 0 var(--radius-surface) var(--radius-surface); }
+
+.cer-scrim .choice-mark { width: 18px; height: 18px; border-width: 1.5px; border-color: var(--ink-300); background: var(--surface); box-shadow: none; }
+.cer-scrim .choice-mark[data-state='checked'] { border-color: var(--pine-600); background: var(--pine-600); color: #fff; }
+.cer-scrim .choice-mark[data-state='checked'] svg { width: 12px; height: 12px; stroke-width: 2.5; }
+.cer-scrim .choice-mark:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }

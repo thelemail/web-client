@@ -100,7 +100,7 @@
 
 <svelte:window onclick={dismiss} />
 
-<div class="scard">
+<div class="scard menus">
 	<CardHead icon={Forward} title="Forwarding">
 		{#snippet right()}
 			<span class="card-meta">

@@ -142,7 +142,7 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 		kind,
 		ownerAccountId: address.accountId,
 		people,
-		isPrimary: address.isPrimary,
+		isPrimary: address.isPrimary && isMine,
 		isMine,
 		isOwnPersonal: own,
 		rotationRequired: Boolean(alias?.rotationRequired),

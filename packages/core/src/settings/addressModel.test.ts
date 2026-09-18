@@ -79,6 +79,16 @@ describe('buildRow', () => {
 		expect(row.isOwnPersonal).toBe(false);
 	});
 
+	it("does not mark another member's primary address as yours", () => {
+		const row = buildRow(
+			ctx(),
+			address({ id: 'a1b', email: 'panurge@abbaye.example', accountId: OTHER, isPrimary: true })
+		);
+		expect(row.isPrimary).toBe(false);
+		expect(row.canPromote).toBe(false);
+		expect(row.canRemove).toBe(false);
+	});
+
 	it('says You for an address of your own', () => {
 		const row = buildRow(ctx(), address({ id: 'a2', email: 'abbot@abbaye.example', name: 'The Abbot' }));
 		expect(row.usedBy).toBe('You');

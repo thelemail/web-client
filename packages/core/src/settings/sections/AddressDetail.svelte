@@ -193,32 +193,34 @@
 		</div>
 	{/if}
 
+	{#if row.canRename || row.isOwnPersonal}
 	<div class="scard">
 		<CardHead icon={AtSign} title="Identity" />
-		<Row
-			t="Display name"
-			d={row.kind === 'shared'
-				? 'The name people see when anyone writes from this address.'
-				: 'The name people see when you write from this address. Leave it empty to use your profile name.'}
-		>
-			<span class="ad-name-ctl">
-				<TextInput
-					value={nameDraft}
-					onChange={(v) => (nameDraft = v)}
-					placeholder={row.isMine ? (auth.fullName ?? 'Display name') : 'Display name'}
-					disabled={!row.canRename}
-					w="mid"
-				/>
-				<Button
-					variant={dirty ? 'primary' : 'secondary'}
-					size="sm"
-					disabled={!dirty || saving || !row.canRename}
-					onclick={() => void saveName()}
-				>
-					{saving ? 'Saving…' : 'Save'}
-				</Button>
-			</span>
-		</Row>
+		{#if row.canRename}
+			<Row
+				t="Display name"
+				d={row.kind === 'shared'
+					? 'The name people see when anyone writes from this address.'
+					: 'The name people see when you write from this address. Leave it empty to use your profile name.'}
+			>
+				<span class="ad-name-ctl">
+					<TextInput
+						value={nameDraft}
+						onChange={(v) => (nameDraft = v)}
+						placeholder={auth.fullName ?? 'Display name'}
+						w="mid"
+					/>
+					<Button
+						variant={dirty ? 'primary' : 'secondary'}
+						size="sm"
+						disabled={!dirty || saving}
+						onclick={() => void saveName()}
+					>
+						{saving ? 'Saving…' : 'Save'}
+					</Button>
+				</span>
+			</Row>
+		{/if}
 		{#if row.isOwnPersonal}
 			<Row
 				t="Primary address"
@@ -235,6 +237,15 @@
 		{/if}
 		{#if nameError}<div class="card-empty err">{nameError}</div>{/if}
 	</div>
+	{:else}
+		<div class="ad-note">
+			<Info size={14} />
+			<span>
+				This address belongs to {row.people[0]?.name ?? 'another member'}. Its name, signing and
+				forwarding are managed from their own settings.
+			</span>
+		</div>
+	{/if}
 
 	{#if row.kind === 'shared'}
 		<div class="scard">
@@ -293,8 +304,8 @@
 		<DelegationsCard {address} />
 	{/if}
 
-	{#if row.canForward}
-		<ForwardingCard addressId={row.id} email={row.email} />
+	{#if row.canForward && address}
+		<ForwardingCard addressId={address.id} email={address.email} />
 	{/if}
 
 	{#if row.canRemove}

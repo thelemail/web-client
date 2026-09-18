@@ -89,11 +89,26 @@
 	const canAddMore = $derived(billing.canAddDomains || !sharedSlotUsed);
 	const canAdd = $derived(manage && billing.canAddSharedAddresses && canAddMore);
 
+	const delegableIds = $derived(
+		source
+			.filter((a) => a.customDomainId && !a.shared && a.accountId === auth.accountId)
+			.map((a) => a.id)
+	);
+	const forwardableIds = $derived(
+		source
+			.filter(
+				(a) =>
+					a.customDomainId && (a.accountId === auth.accountId || (Boolean(a.shared) && manage))
+			)
+			.map((a) => a.id)
+	);
+
 	$effect(() => {
-		for (const row of rows) {
-			if (row.canDelegate) void delegations.load(row.id);
-			if (row.canForward) void readDelegations.load(row.id);
-		}
+		for (const id of delegableIds) void delegations.load(id);
+	});
+
+	$effect(() => {
+		for (const id of forwardableIds) void readDelegations.load(id);
 	});
 
 	function href(row: AddressRow): string {
