@@ -12,6 +12,7 @@ export interface CustomDomain {
 	domain: string;
 	status: CustomDomainStatus;
 	addressCount: number;
+	dormantAt?: string | null;
 	ownershipVerifiedAt?: string | null;
 	mxVerifiedAt?: string | null;
 	dkimVerifiedAt?: string | null;
