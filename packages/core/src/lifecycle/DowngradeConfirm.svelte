@@ -10,7 +10,6 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { cancelDowngrade, getDowngradePreview, requestDowngrade } from '$core/api/billing';
-	import { platform } from '$platform';
 	import ImpactList from './ImpactList.svelte';
 	import {
 		canConfirm,
@@ -33,13 +32,12 @@
 	let busy = $state(false);
 	let notice = $state('');
 	let done = $state(false);
-	let storeOpened = $state(false);
 
 	const target = $derived(targetPlanName(preview));
 	const effective = $derived(formatDay(preview?.effectiveAt ?? sub?.currentPeriodEnd));
 	const needsStore = $derived(storeCancelRequired(preview));
 	const store = $derived(storeStep(sub));
-	const confirmable = $derived(canConfirm(preview) && (!needsStore || storeOpened));
+	const confirmable = $derived(canConfirm(preview));
 	const blocked = $derived(preview?.blocked === true);
 	const ineligible = $derived(ineligibleMessage(preview, workspaceName));
 
@@ -95,11 +93,6 @@
 		}
 	}
 
-	function openStore() {
-		if (!store) return;
-		storeOpened = true;
-		platform.openExternal(store.url);
-	}
 </script>
 
 {#if loading}
@@ -199,10 +192,20 @@
 					<li>
 						Open your subscriptions in the {store.label} and turn off renewal for Thelemail {planName}.
 					</li>
-					<li>Come back and confirm here.</li>
+					<li>
+						Come back and confirm here. If renewal stays on, the {store.label} charges you again
+						and nothing changes.
+					</li>
 				</ol>
 				<div class="actions" style="margin-top:14px">
-					<Button variant="secondary" size="lg" block onclick={openStore}>
+					<Button
+						variant="secondary"
+						size="lg"
+						block
+						href={store.url}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<ExternalLink size={16} />Open {store.label}
 					</Button>
 				</div>
@@ -241,8 +244,6 @@
 
 			{#if blocked}
 				<p class="lc-lock-note">Sort out the item above to continue.</p>
-			{:else if needsStore && !storeOpened}
-				<p class="lc-lock-note">Turn off renewal in the {store?.label} first.</p>
 			{/if}
 			{#if notice}<p class="lc-restore-notice">{notice}</p>{/if}
 			<p class="legal">
