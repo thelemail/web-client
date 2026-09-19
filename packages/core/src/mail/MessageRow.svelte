@@ -208,6 +208,7 @@
 		{/if}
 		{#if caps.showRestore}
 			<button
+				data-mutates
 				title={msg.mail_action_restore()}
 				onclick={(e) => {
 					e.stopPropagation();
@@ -217,6 +218,7 @@
 		{/if}
 		{#if caps.showArchive}
 			<button
+				data-mutates
 				title={msg.mail_action_archive()}
 				onclick={(e) => {
 					e.stopPropagation();
@@ -235,6 +237,7 @@
 		{/if}
 		{#if caps.showTrash}
 			<button
+				data-mutates
 				title={msg.mail_action_trash()}
 				onclick={(e) => {
 					e.stopPropagation();
@@ -244,6 +247,7 @@
 		{/if}
 		{#if caps.showDelete}
 			<button
+				data-mutates
 				title={msg.mail_action_delete_forever()}
 				onclick={(e) => {
 					e.stopPropagation();

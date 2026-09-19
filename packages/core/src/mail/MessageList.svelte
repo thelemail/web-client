@@ -280,12 +280,12 @@
 				</button>
 			{/if}
 			{#if caps.showRestore}
-				<button class="lh-btn" title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
+				<button class="lh-btn" data-mutates title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
 					<Undo2 size={16} />
 				</button>
 			{/if}
 			{#if caps.showArchive}
-				<button class="lh-btn" title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
+				<button class="lh-btn" data-mutates title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
 					<Archive size={16} />
 				</button>
 			{/if}
@@ -295,12 +295,12 @@
 				</button>
 			{/if}
 			{#if caps.showTrash}
-				<button class="lh-btn" title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
+				<button class="lh-btn" data-mutates title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
 					<Trash2 size={16} />
 				</button>
 			{/if}
 			{#if caps.showDelete}
-				<button class="lh-btn lh-btn-danger" title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
+				<button class="lh-btn lh-btn-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
 					<Trash2 size={16} />
 				</button>
 			{/if}

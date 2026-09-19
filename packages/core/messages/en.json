@@ -4155,5 +4155,6 @@
 	"cal_app_go_to_thelemail": "Go to Thelemail",
 	"cal_fork_failed": "This link could not be opened.",
 	"cal_fork_title": "Calendar could not open",
-	"cal_fork_back": "Back to Thelemail"
+	"cal_fork_back": "Back to Thelemail",
+	"app_error_not_found_message": "That page does not exist."
 }

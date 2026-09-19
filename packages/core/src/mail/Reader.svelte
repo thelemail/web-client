@@ -597,22 +597,22 @@
 			{/if}
 			<div class="grow"></div>
 			{#if caps.showRestore}
-				<button class="rb-ico" title={msg.mail_action_restore()} onclick={() => onRestore?.(m.id)}>
+				<button class="rb-ico" data-mutates title={msg.mail_action_restore()} onclick={() => onRestore?.(m.id)}>
 					<Undo2 size={17} />
 				</button>
 			{/if}
 			{#if caps.showArchive}
-				<button class="rb-ico" title={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
+				<button class="rb-ico" data-mutates title={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
 					<Archive size={17} />
 				</button>
 			{/if}
 			{#if caps.showTrash}
-				<button class="rb-ico" title={msg.common_delete()} onclick={() => onTrash(m.id)}>
+				<button class="rb-ico" data-mutates title={msg.common_delete()} onclick={() => onTrash(m.id)}>
 					<Trash2 size={17} />
 				</button>
 			{/if}
 			{#if caps.showDelete}
-				<button class="rb-ico rb-ico-danger" title={msg.mail_action_delete_forever()} onclick={() => onDelete?.(m.id)}>
+				<button class="rb-ico rb-ico-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onDelete?.(m.id)}>
 					<Trash2 size={17} />
 				</button>
 			{/if}

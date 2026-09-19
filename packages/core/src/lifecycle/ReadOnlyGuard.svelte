@@ -7,16 +7,6 @@
 	import Rich from '$core/i18n/Rich.svelte';
 	import { fmt } from './dates';
 
-	const blockTitles = $derived(
-		new Set<string>([
-			m.mail_action_archive(),
-			m.common_delete(),
-			m.mail_action_delete_forever(),
-			m.mail_action_trash(),
-			m.mail_action_restore()
-		])
-	);
-
 	const slot = $derived(page.params.slot ?? '0');
 	const active = $derived(lifecycle.readOnly);
 	const removeAt = $derived(lifecycle.context.dates.remove);
@@ -32,8 +22,7 @@
 		if (!btn) return null;
 		if (btn.classList.contains('compose') || btn.classList.contains('fab')) return btn;
 		if (btn.classList.contains('rb-btn')) return btn;
-		const title = btn.getAttribute('title');
-		return title && blockTitles.has(title) ? btn : null;
+		return btn.hasAttribute('data-mutates') ? btn : null;
 	}
 
 	function onCapture(e: MouseEvent) {
