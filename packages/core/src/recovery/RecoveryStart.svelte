@@ -9,9 +9,6 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Inbox from '@lucide/svelte/icons/inbox';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import AuthShell from '$core/auth/AuthShell.svelte';
@@ -48,7 +45,6 @@
 	let saveError = $state('');
 	let submitting = $state(false);
 	let submitError = $state('');
-	let view = $state<'save' | 'done'>('save');
 
 	const email = $derived(
 		accounts.list.find((a) => a.accountId === accountId)?.email ?? auth.email ?? ''
@@ -162,164 +158,146 @@
 		}
 		auth.markRecoveryEnabled(accountId);
 		void auth.loadProfile(accountId);
-		material = null;
-		submitting = false;
-		view = 'done';
+		await goto(returnTo);
 	}
 </script>
 
 <AuthShell strip={false}>
-	{#if view === 'save'}
-		<div class="rk-card rk-screen">
-			<header class="rk-head">
-				<div class="rk-head-tx">
-					<p class="rk-eyebrow">{m.recovery_start_eyebrow()}</p>
-					<h1>{m.recovery_start_title()}</h1>
-					<p class="rk-lede">{m.recovery_start_lede()}</p>
-				</div>
-				<div class="rk-acct">
-					<Avatar {initials} size={28} />
-					<span class="mono">{email}</span>
-				</div>
-			</header>
-
-			<div class="rk-grid">
-				<section class="rk-col">
-					<div class="rk-label-row">
-						<span class="rk-label">{m.recovery_start_phrase_label()}</span>
-						<span class="rk-meta mono">{m.recovery_start_phrase_meta()}</span>
-					</div>
-
-					<div class="rk-words">
-						{#each words as w, i (i)}
-							<div class="rk-word">
-								<span class="rk-n mono">{i + 1}</span>
-								<span class="rk-w mono">{revealed && w ? w : '•••••'}</span>
-							</div>
-						{/each}
-						{#if !revealed}
-							<button
-								type="button"
-								class="rk-cover"
-								disabled={!material}
-								onclick={() => (revealed = true)}
-							>
-								{#if material}
-									<Eye size={18} />
-									<span>{m.settings_ceremony_recovery_reveal()}</span>
-									<span class="rk-cover-sub">{m.settings_ceremony_recovery_reveal_sub()}</span>
-								{:else if generateError}
-									<span class="rk-cover-sub">{generateError}</span>
-								{:else}
-									<span class="rk-cover-sub">{m.settings_ceremony_recovery_generating()}</span>
-								{/if}
-							</button>
-						{/if}
-					</div>
-
-					{#if generateError}
-						<Button variant="secondary" size="sm" disabled={generating} onclick={generate}>
-							<RotateCw size={14} />{m.recovery_start_retry()}
-						</Button>
-					{/if}
-
-					<p class="rk-note">{m.recovery_start_phrase_note()}</p>
-				</section>
-
-				<section class="rk-col">
-					<div class="rk-label-row">
-						<span class="rk-label">{m.recovery_start_keep_label()}</span>
-						{#if anySaved}
-							<span class="rk-saved">
-								<Check size={13} />
-								{savedCount > 1
-									? m.recovery_start_saved_n({ count: savedCount })
-									: m.settings_ceremony_recovery_saved()}
-							</span>
-						{/if}
-					</div>
-
-					<div class="rk-ways">
-						{#each ways as way (way.key)}
-							<button type="button" class="rk-way" disabled={!revealed} onclick={way.run}>
-								<span class="rk-way-ic"><way.icon size={16} /></span>
-								<span class="rk-way-tx">
-									<b>{way.title}</b>
-									<span>{way.sub}</span>
-								</span>
-								{#if saved[way.key]}
-									<span class="rk-way-done"><Check size={13} /></span>
-								{:else}
-									<span class="rk-way-go"><ChevronRight size={16} /></span>
-								{/if}
-							</button>
-						{/each}
-					</div>
-
-					{#if saveError}
-						<span class="rk-err"><CircleAlert size={13} /><span>{saveError}</span></span>
-					{/if}
-
-					<div class="rk-ack">
-						<Checkbox id="rk-ack" bind:checked={ack} />
-						<label for="rk-ack">{m.recovery_start_ack()}</label>
-					</div>
-
-					<div class="rk-actions">
-						<Button variant="primary" size="lg" block disabled={!canFinish} onclick={finish}>
-							{#if submitting}
-								{m.settings_ceremony_recovery_saving()}
-							{:else}
-								{m.recovery_start_open_mailbox()}<ArrowRight size={17} />
-							{/if}
-						</Button>
-						{#if submitError}
-							<span class="rk-err rk-center"><CircleAlert size={13} /><span>{submitError}</span></span>
-						{:else if !revealed && material}
-							<p class="rk-hint">{m.recovery_start_hint_reveal()}</p>
-						{:else if revealed && !anySaved}
-							<p class="rk-hint">{m.recovery_start_hint_save()}</p>
-						{:else if revealed && !ack}
-							<p class="rk-hint">{m.recovery_start_hint_ack()}</p>
-						{/if}
-					</div>
-				</section>
+	<div class="rk-card rk-screen">
+		<header class="rk-head">
+			<div class="rk-head-tx">
+				<p class="rk-eyebrow">{m.recovery_start_eyebrow()}</p>
+				<h1>{m.recovery_start_title()}</h1>
+				<p class="rk-lede">{m.recovery_start_lede()}</p>
 			</div>
-		</div>
+			<div class="rk-acct">
+				<Avatar {initials} size={28} />
+				<span class="mono">{email}</span>
+			</div>
+		</header>
 
-		<div class="rk-foot rk-screen">
-			<p>{m.recovery_start_footer()}</p>
-		</div>
+		<div class="rk-grid">
+			<section class="rk-col">
+				<div class="rk-label-row">
+					<span class="rk-label">{m.recovery_start_phrase_label()}</span>
+					<span class="rk-meta mono">{m.recovery_start_phrase_meta()}</span>
+				</div>
 
-		{#if material && revealed}
-			<div class="rk-print" aria-hidden="true">
-				<p class="rk-print-eyebrow">{m.recovery_kit_eyebrow()}</p>
-				<h1>{m.recovery_kit_title()}</h1>
-				<h2>{m.recovery_kit_phrase_heading()}</h2>
-				<ol class="rk-print-words">
-					{#each material.phrase as w, i (i)}
-						<li><span class="rk-print-n">{i + 1}</span><span class="rk-print-w">{w}</span></li>
+				<div class="rk-words">
+					{#each words as w, i (i)}
+						<div class="rk-word">
+							<span class="rk-n mono">{i + 1}</span>
+							<span class="rk-w mono">{revealed && w ? w : '•••••'}</span>
+						</div>
 					{/each}
-				</ol>
-				{#each printSections as s (s.heading)}
-					<h2>{s.heading}</h2>
-					<p>{s.body}</p>
+					{#if !revealed}
+						<button
+							type="button"
+							class="rk-cover"
+							disabled={!material}
+							onclick={() => (revealed = true)}
+						>
+							{#if material}
+								<Eye size={18} />
+								<span>{m.settings_ceremony_recovery_reveal()}</span>
+								<span class="rk-cover-sub">{m.settings_ceremony_recovery_reveal_sub()}</span>
+							{:else if generateError}
+								<span class="rk-cover-sub">{generateError}</span>
+							{:else}
+								<span class="rk-cover-sub">{m.settings_ceremony_recovery_generating()}</span>
+							{/if}
+						</button>
+					{/if}
+				</div>
+
+				{#if generateError}
+					<Button variant="secondary" size="sm" disabled={generating} onclick={generate}>
+						<RotateCw size={14} />{m.recovery_start_retry()}
+					</Button>
+				{/if}
+
+				<p class="rk-note">{m.recovery_start_phrase_note()}</p>
+			</section>
+
+			<section class="rk-col">
+				<div class="rk-label-row">
+					<span class="rk-label">{m.recovery_start_keep_label()}</span>
+					{#if anySaved}
+						<span class="rk-saved">
+							<Check size={13} />
+							{savedCount > 1
+								? m.recovery_start_saved_n({ count: savedCount })
+								: m.settings_ceremony_recovery_saved()}
+						</span>
+					{/if}
+				</div>
+
+				<div class="rk-ways">
+					{#each ways as way (way.key)}
+						<button type="button" class="rk-way" disabled={!revealed} onclick={way.run}>
+							<span class="rk-way-ic"><way.icon size={16} /></span>
+							<span class="rk-way-tx">
+								<b>{way.title}</b>
+								<span>{way.sub}</span>
+							</span>
+							{#if saved[way.key]}
+								<span class="rk-way-done"><Check size={13} /></span>
+							{:else}
+								<span class="rk-way-go"><ChevronRight size={16} /></span>
+							{/if}
+						</button>
+					{/each}
+				</div>
+
+				{#if saveError}
+					<span class="rk-err"><CircleAlert size={13} /><span>{saveError}</span></span>
+				{/if}
+
+				<div class="rk-ack">
+					<Checkbox id="rk-ack" bind:checked={ack} />
+					<label for="rk-ack">{m.recovery_start_ack()}</label>
+				</div>
+
+				<div class="rk-actions">
+					<Button variant="primary" size="lg" block disabled={!canFinish} onclick={finish}>
+						{#if submitting}
+							{m.settings_ceremony_recovery_saving()}
+						{:else}
+							{m.recovery_start_open_mailbox()}<ArrowRight size={17} />
+						{/if}
+					</Button>
+					{#if submitError}
+						<span class="rk-err rk-center"><CircleAlert size={13} /><span>{submitError}</span></span>
+					{:else if !revealed && material}
+						<p class="rk-hint">{m.recovery_start_hint_reveal()}</p>
+					{:else if revealed && !anySaved}
+						<p class="rk-hint">{m.recovery_start_hint_save()}</p>
+					{:else if revealed && !ack}
+						<p class="rk-hint">{m.recovery_start_hint_ack()}</p>
+					{/if}
+				</div>
+			</section>
+		</div>
+	</div>
+
+	<div class="rk-foot rk-screen">
+		<p>{m.recovery_start_footer()}</p>
+	</div>
+
+	{#if material && revealed}
+		<div class="rk-print" aria-hidden="true">
+			<p class="rk-print-eyebrow">{m.recovery_kit_eyebrow()}</p>
+			<h1>{m.recovery_kit_title()}</h1>
+			<h2>{m.recovery_kit_phrase_heading()}</h2>
+			<ol class="rk-print-words">
+				{#each material.phrase as w, i (i)}
+					<li><span class="rk-print-n">{i + 1}</span><span class="rk-print-w">{w}</span></li>
 				{/each}
-			</div>
-		{/if}
-	{:else}
-		<div class="rk-done">
-			<span class="rk-done-ic"><ShieldCheck size={26} /></span>
-			<h1>{m.recovery_start_done_title()}</h1>
-			<p class="rk-done-desc">{m.recovery_start_done_desc()}</p>
-			<div class="rk-done-note mono">
-				<Lock size={14} />{m.settings_ceremony_recovery_done_reminder()}
-			</div>
-			<div class="rk-done-act">
-				<Button variant="primary" size="lg" block onclick={() => goto(returnTo)}>
-					<Inbox size={17} />{m.recovery_start_go_inbox()}
-				</Button>
-			</div>
+			</ol>
+			{#each printSections as s (s.heading)}
+				<h2>{s.heading}</h2>
+				<p>{s.body}</p>
+			{/each}
 		</div>
 	{/if}
 </AuthShell>
@@ -347,19 +325,8 @@
 			transform: none;
 		}
 	}
-	@keyframes rk-screenin {
-		from {
-			opacity: 0;
-			transform: translateY(6px);
-		}
-		to {
-			opacity: 1;
-			transform: none;
-		}
-	}
 	@media (prefers-reduced-motion: reduce) {
-		.rk-card,
-		.rk-done {
+		.rk-card {
 			animation: none;
 		}
 	}
@@ -675,66 +642,6 @@
 		margin: 18px 0 0;
 		max-width: 64ch;
 		text-wrap: pretty;
-	}
-
-	.rk-done {
-		width: 432px;
-		max-width: 100%;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-panel);
-		box-shadow: var(--shadow-xs);
-		padding: 36px 34px 30px;
-		text-align: center;
-		animation: rk-screenin 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-	}
-	.rk-done-ic {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 60px;
-		height: 60px;
-		border-radius: 50%;
-		background: var(--success-100);
-		color: var(--success-700);
-		margin: 0 auto 20px;
-	}
-	.rk-done h1 {
-		font-family: var(--font-sans);
-		font-feature-settings: normal;
-		font-weight: 500;
-		font-size: 30px;
-		line-height: 1.12;
-		letter-spacing: -0.015em;
-		color: var(--fg-strong);
-		margin: 0;
-	}
-	.rk-done-desc {
-		font-size: 14.5px;
-		line-height: 1.55;
-		color: var(--ink-600);
-		margin: 12px auto 0;
-		max-width: 34ch;
-		text-wrap: pretty;
-	}
-	.rk-done-note {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 8px;
-		margin-top: 18px;
-		font-size: 12px;
-		color: var(--fg-muted);
-		font-family: var(--font-mono);
-	}
-	.rk-done-note :global(svg) {
-		color: var(--ink-400);
-	}
-	.rk-done-act {
-		display: flex;
-		flex-direction: column;
-		gap: 10px;
-		margin-top: 26px;
 	}
 
 	@media (max-width: 520px) {
