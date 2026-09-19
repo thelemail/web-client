@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ICAL from 'ical.js';
 	import { m } from '$paraglide/messages.js';
+	import { weekdayName } from '$core/i18n/intl';
 
 	interface Props {
 		value: string | undefined;
@@ -12,7 +13,7 @@
 
 	type Freq = 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
 	const DAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
-	const DAY_LABEL: Record<string, string> = { MO: 'M', TU: 'T', WE: 'W', TH: 'T', FR: 'F', SA: 'S', SU: 'S' };
+	const DAY_INDEX: Record<string, number> = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 };
 
 	let freq = $state<Freq>('NONE');
 	let interval = $state(1);
@@ -92,8 +93,8 @@
 		{#if freq === 'WEEKLY'}
 			<div class="rec-days">
 				{#each DAYS as d (d)}
-					<button type="button" class:on={byday.includes(d)} aria-label={d} onclick={() => toggleDay(d)}>
-						{DAY_LABEL[d]}
+					<button type="button" class:on={byday.includes(d)} aria-label={weekdayName(DAY_INDEX[d], 'long')} onclick={() => toggleDay(d)}>
+						{weekdayName(DAY_INDEX[d], 'narrow')}
 					</button>
 				{/each}
 			</div>

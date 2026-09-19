@@ -6,7 +6,7 @@
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import TrustMark from './TrustMark.svelte';
-	import { formatWhenLong, type ThreadEntry } from './data';
+	import { formatWhenLong, formatWhenShort, type ThreadEntry } from './data';
 	import AttachmentList from './AttachmentList.svelte';
 	import { getMessage } from '$core/api/messages';
 	import { senderImage } from './senderImage';
@@ -30,7 +30,7 @@
 
 	const name = $derived(e.me ? m.mail_thread_you() : e.from);
 	const when = $derived(formatWhenLong(new Date(e.epoch)));
-	const shortWhen = $derived(when.replace('Today at ', '').replace('Yesterday at ', 'Yesterday '));
+	const shortWhen = $derived(formatWhenShort(new Date(e.epoch)));
 
 	const toLine = $derived.by(() => {
 		const tos = (e.recipients ?? []).filter((r) => r.kind === 'to').map((r) => r.address);

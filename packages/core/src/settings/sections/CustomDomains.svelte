@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import Globe2 from '@lucide/svelte/icons/globe-2';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -59,7 +60,7 @@
 		if (!s) return m.settings_domains_never();
 		const d = new Date(s);
 		if (Number.isNaN(d.getTime())) return m.settings_domains_never();
-		return d.toLocaleString();
+		return d.toLocaleString(i18n.tag);
 	}
 
 	const empty = $derived(!store.loading && store.items.length === 0);

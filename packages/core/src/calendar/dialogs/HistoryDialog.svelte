@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import ClockArrowLeft from '@lucide/svelte/icons/clock-arrow-left';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -40,7 +41,7 @@
 	});
 
 	function whenOf(rev: RevisionView): string {
-		return new Date(rev.createdAt).toLocaleString(undefined, {
+		return new Date(rev.createdAt).toLocaleString(i18n.tag, {
 			dateStyle: 'medium',
 			timeStyle: 'short'
 		});

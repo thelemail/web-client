@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -60,7 +61,7 @@
 		<div class="avail-who"></div>
 		{#each board.days as day (day.date)}
 			<div class="avail-dh" class:is-today={day.today} class:is-weekend={day.weekend}>
-				{new Date(day.startMs).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' })}
+				{new Date(day.startMs).toLocaleDateString(i18n.tag, { weekday: 'short', day: 'numeric' })}
 			</div>
 		{/each}
 	</div>

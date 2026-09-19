@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Globe from '@lucide/svelte/icons/globe';
@@ -82,7 +83,7 @@
 	);
 
 	const purgeDateLabel = $derived(
-		purgeAt ? new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date(purgeAt)) : ''
+		purgeAt ? new Intl.DateTimeFormat(i18n.tag, { dateStyle: 'long' }).format(new Date(purgeAt)) : ''
 	);
 
 	function inlineProof(): TwoFactorProof | null {

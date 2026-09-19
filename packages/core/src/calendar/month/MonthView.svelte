@@ -3,12 +3,9 @@
 	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import { cal } from '../state.svelte';
+	import { weekdayNames } from '$core/i18n/intl';
 
-	const HEADINGS = $derived(
-		cal.weekStartsOn === 1
-			? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-			: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-	);
+	const HEADINGS = $derived(weekdayNames('short', cal.weekStartsOn === 1));
 
 	let openKey = $state<string | null>(null);
 </script>

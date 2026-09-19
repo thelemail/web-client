@@ -8,6 +8,7 @@ import type { CalendarView } from './store.svelte';
 import type { BoundaryLine, GuestChip, Selection } from './types';
 import type { Attendee, CalendarItem, ItemKind, MemberState, Partstat } from './model';
 import { isOwnRecipient } from '$core/mail/recipientAddress';
+import { i18n } from '$core/i18n/locale.svelte';
 
 const KIND_LABEL: Record<ItemKind, () => string> = {
 	event: () => m.cal_kind_event(),
@@ -158,7 +159,7 @@ export function describeOccurrence(occ: Occurrence, ctx: DescribeContext): Selec
 		? ctx.offline
 			? m.cal_desc_saved_waiting()
 			: m.cal_desc_saving()
-		: m.cal_desc_revision({ rev: ctx.rev, when: new Date(ctx.updatedAt).toLocaleString() });
+		: m.cal_desc_revision({ rev: ctx.rev, when: new Date(ctx.updatedAt).toLocaleString(i18n.tag) });
 	const when = longWhen(occ);
 	return {
 		title: item.kind === 'hold' ? m.cal_busy() : occ.title || m.cal_untitled(),

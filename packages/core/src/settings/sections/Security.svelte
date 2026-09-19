@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import { m } from '$paraglide/messages.js';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
@@ -147,7 +148,7 @@
 		const d = new Date(iso);
 		return Number.isNaN(d.getTime())
 			? ''
-			: d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+			: d.toLocaleDateString(i18n.tag, { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
 	const deviceIcons: Record<DeviceIcon, typeof Monitor> = {
@@ -239,7 +240,7 @@
 	function fmtRelative(iso: string): string {
 		const t = Date.parse(iso);
 		if (Number.isNaN(t)) return '';
-		const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
+		const rtf = new Intl.RelativeTimeFormat(i18n.tag, { numeric: 'auto' });
 		const min = Math.round((Date.now() - t) / 60000);
 		if (min < 1) return m.settings_security_just_now();
 		if (min < 60) return rtf.format(-min, 'minute');

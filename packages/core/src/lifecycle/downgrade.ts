@@ -5,6 +5,7 @@ import type {
 	Subscription
 } from '../api/billing';
 import { m } from '$paraglide/messages.js';
+import { i18n } from '$core/i18n/locale.svelte';
 
 const SEVERITY_ORDER: DowngradeSeverity[] = ['blocker', 'stops', 'warn', 'unaffected'];
 
@@ -151,7 +152,7 @@ export function formatDay(iso: string | undefined | null): string | null {
 	if (!iso) return null;
 	const at = new Date(iso);
 	if (Number.isNaN(at.getTime())) return null;
-	return at.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+	return at.toLocaleDateString(i18n.tag, { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export function formatBytes(bytes: number | undefined): string {

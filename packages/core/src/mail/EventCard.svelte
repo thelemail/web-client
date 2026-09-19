@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import Clock from '@lucide/svelte/icons/clock';
 	import MapPin from '@lucide/svelte/icons/map-pin';
@@ -111,7 +112,7 @@
 			const d = new Date(ev.start.iso);
 			if (!isNaN(d.getTime())) {
 				return {
-					m: d.toLocaleDateString(undefined, { month: 'short' }).toUpperCase(),
+					m: d.toLocaleDateString(i18n.tag, { month: 'short' }).toUpperCase(),
 					d: String(d.getDate())
 				};
 			}

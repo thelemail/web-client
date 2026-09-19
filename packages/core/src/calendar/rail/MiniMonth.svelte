@@ -4,10 +4,9 @@
 	import { m } from '$paraglide/messages.js';
 	import { shiftAnchor } from '../range';
 	import { cal } from '../state.svelte';
+	import { weekdayNames } from '$core/i18n/intl';
 
-	const dows = $derived(
-		cal.weekStartsOn === 1 ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-	);
+	const dows = $derived(weekdayNames('narrow', cal.weekStartsOn === 1));
 </script>
 
 <div class="mini">

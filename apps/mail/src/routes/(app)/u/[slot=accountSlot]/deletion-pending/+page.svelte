@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import { cancelDeletion } from '$core/api/deletion';
@@ -20,7 +21,7 @@
 	const slot = $derived(data.slot);
 	const deletion = $derived(auth.deletion);
 
-	const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' });
+	const fmt = $derived(new Intl.DateTimeFormat(i18n.tag, { dateStyle: 'long' }));
 	const requestedLabel = $derived(deletion ? fmt.format(new Date(deletion.requestedAt)) : '');
 	const purgeLabel = $derived(deletion ? fmt.format(new Date(deletion.purgeAt)) : '');
 	const daysLeft = $derived.by(() => {

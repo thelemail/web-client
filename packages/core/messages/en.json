@@ -4247,5 +4247,7 @@
 	"cal_op_resealed": "Re-sealed “{title}”",
 	"cal_op_invitation": "Invitation · {title}",
 	"cal_op_invitation_updated": "Updated invitation · {title}",
-	"cal_op_cancellation": "Cancellation · {title}"
+	"cal_op_cancellation": "Cancellation · {title}",
+	"mailbox_event_when": "{weekday}, {date}, {time}",
+	"cal_fmt_all_day": "{date} · all day"
 }

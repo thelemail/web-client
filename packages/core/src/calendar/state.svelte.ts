@@ -13,6 +13,7 @@ import {
 	durationLabel,
 	monthName,
 	monthShort,
+	monthYearLabel,
 	rangeTitle,
 	relativeDue,
 	shortTime,
@@ -458,7 +459,7 @@ class CalendarState {
 	}
 
 	get miniMonthLabel(): string {
-		return `${monthName(this.anchor)} ${year(this.anchor)}`;
+		return monthYearLabel(this.anchor);
 	}
 
 	get miniDays(): MiniDay[] {

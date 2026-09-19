@@ -6,6 +6,7 @@
 	import Seg from '../Seg.svelte';
 	import CardHead from '../CardHead.svelte';
 	import Select from '../Select.svelte';
+	import { formatDateLong } from '$core/mail/data';
 	import { m } from '$paraglide/messages.js';
 	import { followSystemLocale, i18n, setAppLocale } from '$core/i18n/locale.svelte';
 	import { LOCALES, LOCALE_NAMES, isAppLocale, languageTag } from '$core/i18n/locales';
@@ -23,6 +24,12 @@
 		{ v: 'auto', l: m.settings_region_language_auto() },
 		...LOCALES.map((locale) => ({ v: locale, l: LOCALE_NAMES[locale], lang: languageTag(locale) }))
 	]);
+
+	const SAMPLE = new Date(2026, 11, 31, 12);
+
+	function sample(pattern: 'dmy' | 'mdy' | 'iso'): string {
+		return formatDateLong(SAMPLE, pattern);
+	}
 
 	function chooseLanguage(value: string) {
 		if (value === 'auto') void followSystemLocale();
@@ -53,9 +60,9 @@
 		<Seg
 			value={s.dateFmt}
 			options={[
-				{ v: 'dmy', l: '31 Dec 2026' },
-				{ v: 'mdy', l: 'Dec 31, 2026' },
-				{ v: 'iso', l: '2026-12-31' }
+				{ v: 'dmy', l: sample('dmy') },
+				{ v: 'mdy', l: sample('mdy') },
+				{ v: 'iso', l: sample('iso') }
 			]}
 			onChange={(v) => set('dateFmt', v)}
 		/>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import UserX from '@lucide/svelte/icons/user-x';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -107,7 +108,7 @@
 	function formatDate(iso: string): string {
 		const d = new Date(iso);
 		if (Number.isNaN(d.getTime())) return '';
-		return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+		return d.toLocaleDateString(i18n.tag, { day: 'numeric', month: 'short', year: 'numeric' });
 	}
 </script>
 

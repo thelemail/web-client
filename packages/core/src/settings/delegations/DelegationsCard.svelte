@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Check from '@lucide/svelte/icons/check';
@@ -35,7 +36,7 @@
 	function fmtDate(iso: string): string {
 		const on = new Date(iso);
 		if (Number.isNaN(on.getTime())) return iso;
-		return on.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+		return on.toLocaleDateString(i18n.tag, { year: 'numeric', month: 'short', day: 'numeric' });
 	}
 
 	function shortFingerprint(fp: string): string {

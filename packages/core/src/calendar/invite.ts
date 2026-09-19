@@ -61,10 +61,10 @@ function recipientsOf(attendees: Attendee[], exclude: string[]): OutboxRecipient
 }
 
 function whenLine(item: CalendarItem, occurrence?: Occurrence): string {
-	if (occurrence) return longWhen(occurrence);
+	if (occurrence) return longWhen(occurrence, undefined, true);
 	const first =
 		item.start && item.end ? expandItem(item, new Date(0), new Date(8.64e15))[0] : undefined;
-	return first ? longWhen(first) : '';
+	return first ? longWhen(first, undefined, true) : '';
 }
 
 export function invitationChanged(previous: CalendarItem | undefined, next: CalendarItem): boolean {
@@ -168,11 +168,11 @@ export async function sendCancellation(item: CalendarItem, occurrence?: Occurren
 		{
 			to,
 			subject:
-				`Cancelled: ${item.title || '(untitled)'}${occurrence ? ` @ ${longWhen(occurrence)}` : ''}`.slice(
+				`Cancelled: ${item.title || '(untitled)'}${occurrence ? ` @ ${longWhen(occurrence, undefined, true)}` : ''}`.slice(
 					0,
 					200
 				),
-			body: `${identity.name ?? identity.email} cancelled "${item.title || '(untitled)'}"${occurrence ? ` on ${longWhen(occurrence)}` : ''}.`,
+			body: `${identity.name ?? identity.email} cancelled "${item.title || '(untitled)'}"${occurrence ? ` on ${longWhen(occurrence, undefined, true)}` : ''}.`,
 			ics,
 			method: 'CANCEL',
 			fromEmail: identity.email,

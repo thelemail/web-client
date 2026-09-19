@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import { onMount } from 'svelte';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -21,7 +22,7 @@
 
 	const lastChecked = $derived(
 		status?.lastCheck
-			? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
+			? new Intl.DateTimeFormat(i18n.tag, { dateStyle: 'medium', timeStyle: 'short' }).format(
 					new Date(status.lastCheck * 1000)
 				)
 			: null

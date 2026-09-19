@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { platform } from '$platform';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -85,7 +86,7 @@
 
 	const renewalLine = $derived.by(() => {
 		if (!sub?.currentPeriodEnd) return null;
-		const date = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(
+		const date = new Intl.DateTimeFormat(i18n.tag, { dateStyle: 'long' }).format(
 			new Date(sub.currentPeriodEnd)
 		);
 		return sub.cancelAtPeriodEnd

@@ -1,3 +1,4 @@
+import { i18n } from '$core/i18n/locale.svelte';
 import { m } from '$paraglide/messages.js';
 
 export interface IcalDateTime {
@@ -86,7 +87,7 @@ function parseIcsDate(value: string, tzid: string | undefined): IcalDateTime {
 		const date = new Date(`${iso}T00:00:00Z`);
 		const display = isNaN(date.getTime())
 			? iso
-			: date.toLocaleDateString(undefined, {
+			: date.toLocaleDateString(i18n.tag, {
 				weekday: 'short',
 				day: '2-digit',
 				month: 'short',
@@ -100,7 +101,7 @@ function parseIcsDate(value: string, tzid: string | undefined): IcalDateTime {
 		const date = new Date(iso);
 		display = isNaN(date.getTime())
 			? iso
-			: date.toLocaleString(undefined, {
+			: date.toLocaleString(i18n.tag, {
 				weekday: 'short',
 				day: '2-digit',
 				month: 'short',

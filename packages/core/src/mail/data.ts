@@ -5,6 +5,8 @@ import { initialsFor } from './initials';
 import { locale } from './locale.svelte';
 import { parseAddressList } from './address';
 import { m } from '$paraglide/messages.js';
+import { i18n } from '$core/i18n/locale.svelte';
+import { dateParts, intlLocale } from '$core/i18n/intl';
 
 export type LabelId = 'domains' | 'security' | 'family' | 'billing';
 
@@ -320,7 +322,7 @@ export function bucketFromEpoch(epoch: number, nowMs: number = Date.now()): DayB
 
 export function formatClock(date: Date): string {
 	const h12 = locale.timeFormat === '12';
-	return new Intl.DateTimeFormat(h12 ? 'en-US' : 'en-GB', {
+	return new Intl.DateTimeFormat(intlLocale(h12 ? 'en-US' : 'en-GB'), {
 		hour: h12 ? 'numeric' : '2-digit',
 		minute: '2-digit',
 		hour12: h12,
@@ -329,16 +331,27 @@ export function formatClock(date: Date): string {
 }
 
 export function formatWeekday(date: Date, long = false): string {
-	return new Intl.DateTimeFormat('en-GB', {
+	return new Intl.DateTimeFormat(intlLocale('en-GB'), {
 		weekday: long ? 'long' : 'short',
 		timeZone: locale.timeZone
 	}).format(date);
+}
+
+function monthFirst(date: Date, withYear: boolean): string {
+	const p = dateParts(date, {
+		month: 'short',
+		day: withYear ? 'numeric' : '2-digit',
+		year: withYear ? 'numeric' : undefined,
+		timeZone: locale.timeZone
+	});
+	return withYear ? `${p.month} ${p.day}, ${p.year}` : `${p.month} ${p.day}`;
 }
 
 export function formatDateShort(date: Date): string {
 	const z = locale.timeZone;
 	switch (locale.dateFormat) {
 		case 'mdy':
+			if (i18n.locale !== 'en') return monthFirst(date, false);
 			return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', timeZone: z }).format(
 				date
 			);
@@ -349,16 +362,19 @@ export function formatDateShort(date: Date): string {
 				timeZone: z
 			}).format(date);
 		default:
-			return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', timeZone: z }).format(
-				date
-			);
+			return new Intl.DateTimeFormat(intlLocale('en-GB'), {
+				day: '2-digit',
+				month: 'short',
+				timeZone: z
+			}).format(date);
 	}
 }
 
-export function formatDateLong(date: Date): string {
+export function formatDateLong(date: Date, pattern = locale.dateFormat): string {
 	const z = locale.timeZone;
-	switch (locale.dateFormat) {
+	switch (pattern) {
 		case 'mdy':
+			if (i18n.locale !== 'en') return monthFirst(date, true);
 			return new Intl.DateTimeFormat('en-US', {
 				month: 'short',
 				day: 'numeric',
@@ -373,7 +389,7 @@ export function formatDateLong(date: Date): string {
 				timeZone: z
 			}).format(date);
 		default:
-			return new Intl.DateTimeFormat('en-GB', {
+			return new Intl.DateTimeFormat(intlLocale('en-GB'), {
 				day: 'numeric',
 				month: 'short',
 				year: 'numeric',
@@ -383,7 +399,11 @@ export function formatDateLong(date: Date): string {
 }
 
 export function formatEventWhen(date: Date): string {
-	return `${formatWeekday(date)}, ${formatDateLong(date)}, ${formatClock(date)}`;
+	return m.mailbox_event_when({
+		weekday: formatWeekday(date),
+		date: formatDateLong(date),
+		time: formatClock(date)
+	});
 }
 
 export function formatRowTime(date: Date, now: Date = new Date()): string {
@@ -472,4 +492,12 @@ export function formatWhenLong(date: Date, now: Date = new Date()): string {
 		return m.mailbox_when_day_at({ day: formatWeekday(date, true), clock });
 	}
 	return m.mailbox_when_day_at({ day: formatDateShort(date), clock });
+}
+
+export function formatWhenShort(date: Date, now: Date = new Date()): string {
+	const sameDay =
+		date.getFullYear() === now.getFullYear() &&
+		date.getMonth() === now.getMonth() &&
+		date.getDate() === now.getDate();
+	return sameDay ? formatClock(date) : formatWhenLong(date, now);
 }

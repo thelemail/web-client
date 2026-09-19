@@ -4,8 +4,9 @@ import { BASE_LOCALE, isAppLocale, languageTag, matchLocale, type AppLocale } fr
 
 let current = $state<AppLocale>(BASE_LOCALE);
 let explicit = $state(false);
+let forced: AppLocale | null = null;
 
-overwriteGetLocale(() => current);
+overwriteGetLocale(() => forced ?? current);
 overwriteSetLocale((next) => setAppLocale(next));
 
 function apply() {
@@ -23,15 +24,25 @@ async function detect(): Promise<AppLocale> {
 
 export const i18n = {
 	get locale(): AppLocale {
-		return current;
+		return forced ?? current;
 	},
 	get explicit(): boolean {
 		return explicit;
 	},
 	get tag(): string {
-		return languageTag(current);
+		return languageTag(forced ?? current);
 	}
 };
+
+export function withLocale<T>(locale: AppLocale, fn: () => T): T {
+	const previous = forced;
+	forced = locale;
+	try {
+		return fn();
+	} finally {
+		forced = previous;
+	}
+}
 
 export async function initLocale(): Promise<void> {
 	const saved = platform.locale.saved();
