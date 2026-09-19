@@ -25,6 +25,7 @@ const config = {
 		},
 		alias: {
 			$core: '../../packages/core/src',
+			$paraglide: 'src/lib/paraglide',
 			$platform: desktop
 				? process.env.THELEMAIL_PLATFORM_DIR ?? '../../packages/core/src/platform/web'
 				: '../../packages/core/src/platform/web'

@@ -5,11 +5,13 @@
 	import wordmarkInverse from '$core/assets/logo-wordmark-inverse.svg';
 	import SignedInStrip from './SignedInStrip.svelte';
 	import StorageNotice from './StorageNotice.svelte';
+	import LanguagePicker from '$core/i18n/LanguagePicker.svelte';
 
 	let { children }: { children: Snippet } = $props();
 </script>
 
 <div class="auth">
+	<div class="langbar"><LanguagePicker /></div>
 	<div class="stagebody">
 		<a class="pagebrand" href="/" aria-label="Thelemail">
 			<img class="wm-light" src={wordmark} alt="Thelemail" />

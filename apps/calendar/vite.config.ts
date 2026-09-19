@@ -1,9 +1,15 @@
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
+import { i18nOptions } from '../../scripts/i18n.ts';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [
+		paraglideVitePlugin(i18nOptions('./src/lib/paraglide')),
+		tailwindcss(),
+		sveltekit()
+	],
 	envPrefix: ['VITE_', 'PUBLIC_'],
 	envDir: '../..',
 	server: {

@@ -1,4 +1,5 @@
 import type { Platform } from '../types';
+import { readLocaleCookie, writeLocaleCookie } from '../../i18n/cookie';
 
 export const platform: Platform = {
 	reportError: undefined,
@@ -7,6 +8,11 @@ export const platform: Platform = {
 	session: undefined,
 	notifications: undefined,
 	billing: 'native',
+	locale: {
+		saved: () => readLocaleCookie(document.cookie),
+		save: (locale) => writeLocaleCookie(locale),
+		preferred: async () => navigator.languages ?? [navigator.language]
+	},
 	mirror: undefined,
 	keystoreChannel: undefined,
 	transport: undefined,

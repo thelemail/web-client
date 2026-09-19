@@ -7,15 +7,17 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "prepare": "svelte-kit sync || echo ''",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "prepare": "pnpm i18n:compile && svelte-kit sync || echo ''",
+    "check": "pnpm i18n:compile && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "pnpm i18n:compile && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "verify:bundle": "node ../../scripts/check-build-origins.mjs"
+    "verify:bundle": "node ../../scripts/check-build-origins.mjs",
+    "i18n:compile": "node ../../scripts/i18n-compile.ts"
   },
   "devDependencies": {
     "@fontsource-variable/inter": "^5.2.8",
+    "@inlang/paraglide-js": "^2.25.4",
     "@lucide/svelte": "^1.39.0",
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.70.3",

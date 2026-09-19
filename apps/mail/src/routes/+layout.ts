@@ -2,6 +2,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { boot } from '$core/stores/boot.svelte';
 import { keystore } from '$core/keystore/keystore-client';
+import { initLocale } from '$core/i18n/locale.svelte';
 import { platform } from '$platform';
 
 export const ssr = false;
@@ -11,6 +12,7 @@ export const trailingSlash = 'never';
 const MAX_ATTEMPTS = 2;
 
 let bootstrapped = false;
+let localeReady: Promise<void> | null = null;
 let attempts = 0;
 
 async function bootstrap() {
@@ -55,6 +57,7 @@ async function bootstrap() {
 }
 
 export const load = async () => {
+	await (localeReady ??= initLocale());
 	if (bootstrapped || attempts >= MAX_ATTEMPTS) return {};
 	attempts++;
 	try {

@@ -29,7 +29,7 @@ export const SECTIONS: SectionMeta[] = [
 	{ id: 'blocked', icon: 'user-x', label: 'Blocked senders' },
 	{ id: 'import', icon: 'upload', label: 'Import' },
 	{ id: 'notify', icon: 'bell', label: 'Notifications' },
-	{ id: 'region', icon: 'globe', label: 'Localization & region' },
+	{ id: 'region', icon: 'globe', label: 'Language & region' },
 	{ id: 'appearance', icon: 'palette', label: 'Appearance' },
 	{ id: 'account', icon: 'credit-card', label: 'Account & plan' },
 	{ id: 'about', icon: 'info', label: 'About & updates' }
@@ -88,7 +88,6 @@ export interface SettingsState {
 	quietFrom: string;
 	quietTo: string;
 
-	lang: string;
 	tzAuto: boolean;
 	tz: string;
 	dateFmt: 'dmy' | 'mdy' | 'iso';
@@ -142,7 +141,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	quietFrom: '22:00',
 	quietTo: '07:00',
 
-	lang: 'English',
 	tzAuto: true,
 	tz: 'UTC',
 	dateFmt: 'dmy',

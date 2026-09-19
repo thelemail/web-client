@@ -21,6 +21,32 @@
 				document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
 				document.documentElement.setAttribute('data-theme-pref', v);
 			})();
+			(function () {
+				var tags = { en: 'en', de: 'de', fr: 'fr', pt: 'pt-PT' };
+				var m = document.cookie.match(/(?:^|;\s*)thelemail_locale=([a-z]+)/);
+				var l = m && m[1];
+				if (!tags[l]) {
+					try {
+						l = localStorage.getItem('thelemail.locale');
+					} catch (e) {}
+				}
+				if (!tags[l]) {
+					var prefs = navigator.languages || [navigator.language || ''];
+					l = 'en';
+					for (var i = 0; i < prefs.length; i++) {
+						var p = String(prefs[i]).toLowerCase().replace('_', '-').split('-');
+						if (p[0] === 'en' || p[0] === 'de' || p[0] === 'fr') {
+							l = p[0];
+							break;
+						}
+						if (p[0] === 'pt' && (!p[1] || p[1] === 'pt')) {
+							l = 'pt';
+							break;
+						}
+					}
+				}
+				document.documentElement.lang = tags[l];
+			})();
 		</script>
 		<style>
 			html {

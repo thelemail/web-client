@@ -11,6 +11,13 @@
 	font-size: 14px;
 }
 
+.auth .langbar {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	z-index: 1;
+}
+
 .auth .pagebrand {
 	display: block;
 	width: fit-content;

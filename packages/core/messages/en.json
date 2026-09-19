@@ -1,0 +1,8 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"language_picker_label": "Language: {language}",
+	"settings_region_language_title": "Language",
+	"settings_region_language": "Display language",
+	"settings_region_language_desc": "Applies to this device only. Your other devices keep their own language.",
+	"settings_region_language_auto": "Automatic"
+}
