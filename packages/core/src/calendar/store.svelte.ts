@@ -379,7 +379,7 @@ export class CalendarStore {
 		const { key, grants } = await mintOwnCalendarKey(accountId);
 		const meta: CalendarMeta = {
 			schemaVersion: META_SCHEMA_VERSION,
-			name: 'My calendar',
+			name: m.cal_default_calendar_name(),
 			color: '#2E5440',
 			defaultPrivacy: accountSettings.calendar.defaultPrivacy
 		};

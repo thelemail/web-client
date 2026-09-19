@@ -4249,5 +4249,6 @@
 	"cal_op_invitation_updated": "Updated invitation · {title}",
 	"cal_op_cancellation": "Cancellation · {title}",
 	"mailbox_event_when": "{weekday}, {date}, {time}",
-	"cal_fmt_all_day": "{date} · all day"
+	"cal_fmt_all_day": "{date} · all day",
+	"cal_default_calendar_name": "My calendar"
 }
