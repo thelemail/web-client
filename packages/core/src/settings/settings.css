@@ -546,6 +546,7 @@
 .cer-scrim .pw-n { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); width: 14px; flex: 0 0 auto; }
 .cer-scrim .pw-w { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--pine-800); filter: blur(5px); transition: filter var(--dur); }
 .cer-scrim .phrase-grid.shown .pw-w { filter: none; }
+[data-theme='dark'] .cer-scrim .pw-w { color: var(--pine-700); }
 .cer-scrim .phrase-cover { position: absolute; inset: 0; border: none; background: color-mix(in oklch, var(--surface) 70%, transparent); backdrop-filter: blur(2px); border-radius: var(--radius-control); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--pine-700); cursor: pointer; }
 .cer-scrim .phrase-cover svg { width: 18px; height: 18px; }
 .cer-scrim .pc-sub { font-size: 11.5px; font-weight: 400; color: var(--fg-muted); }

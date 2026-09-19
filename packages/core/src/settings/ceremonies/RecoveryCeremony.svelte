@@ -14,14 +14,14 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
-	import {
-		getModulus,
-		recoveryOpaqueRegistrationInit,
-		recoverySetup,
-		recoverySetupOpaque
-	} from '$core/api/auth';
-	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
+	import {
+		commitRecovery,
+		prepareRecovery,
+		RecoveryVaultLockedError,
+		type RecoveryMaterial
+	} from '$core/recovery/setup';
+	import { RECOVERY_KIT_FILENAME, recoveryKitBlob } from '$core/recovery/kit';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -34,31 +34,12 @@
 
 	let { onClose, onComplete }: Props = $props();
 
-	interface SrpSetupMaterial {
-		scheme: 'srp_v1';
-		phrase: string[];
-		srpSalt: string;
-		srpVerifier: string;
-		keySalt: string;
-		encryptedPrivateKey: string;
-	}
-
-	interface OpaqueSetupMaterial {
-		scheme: 'opaque_v1';
-		phrase: string[];
-		opaqueRecord: string;
-		wrappedMasterKey: string;
-		masterKeyId: string;
-		opaqueParamsVersion: number;
-	}
-
-	type SetupMaterial = SrpSetupMaterial | OpaqueSetupMaterial;
-
 	let step = $state(0);
 	let ack = $state(false);
 	let revealed = $state(false);
 	let saved = $state(false);
-	let setup = $state<SetupMaterial | null>(null);
+	let setup = $state<RecoveryMaterial | null>(null);
+	let setupAccountId = $state<string | null>(null);
 	let generating = $state(false);
 	let generateError = $state('');
 	let submitting = $state(false);
@@ -93,54 +74,6 @@
 		return pool.slice(0, 3).sort((a, b) => a - b);
 	}
 
-	async function generateSrp(accountId: string): Promise<boolean> {
-		const { modulus } = await getModulus();
-		const res = await keystore.prepareRecoverySetup({ accountId, modulus });
-		if (!res.ok) {
-			generateError = m.settings_ceremony_recovery_err_locked();
-			return false;
-		}
-		setup = {
-			scheme: 'srp_v1',
-			phrase: res.phrase.split(' '),
-			srpSalt: res.srpSalt,
-			srpVerifier: res.srpVerifier,
-			keySalt: res.keySalt,
-			encryptedPrivateKey: res.encryptedPrivateKey
-		};
-		return true;
-	}
-
-	async function generateOpaque(accountId: string): Promise<boolean> {
-		const start = await keystore.opaqueRecoverySetupStart({ accountId });
-		if (!start.ok) {
-			generateError = m.settings_ceremony_recovery_err_locked();
-			return false;
-		}
-		const init = await recoveryOpaqueRegistrationInit(
-			{ registrationRequest: start.registrationRequest },
-			accountId
-		);
-		const finish = await keystore.opaqueRecoverySetupFinish({
-			accountId,
-			operationId: start.operationId,
-			registrationResponse: init.registrationResponse
-		});
-		if (!finish.ok) {
-			generateError = m.settings_ceremony_recovery_err_generate();
-			return false;
-		}
-		setup = {
-			scheme: 'opaque_v1',
-			phrase: start.phrase.split(' '),
-			opaqueRecord: finish.opaqueRecord,
-			wrappedMasterKey: finish.wrappedMasterKey,
-			masterKeyId: finish.masterKeyId,
-			opaqueParamsVersion: finish.opaqueParamsVersion
-		};
-		return true;
-	}
-
 	async function generate() {
 		if (generating) return;
 		const accountId = auth.accountId;
@@ -148,10 +81,8 @@
 		generating = true;
 		generateError = '';
 		try {
-			const status = await keystore.status();
-			const scheme = status.accounts.find((a) => a.accountId === accountId)?.authScheme ?? 'srp_v1';
-			const ok = scheme === 'opaque_v1' ? await generateOpaque(accountId) : await generateSrp(accountId);
-			if (!ok) return;
+			setup = await prepareRecovery(accountId);
+			setupAccountId = accountId;
 			quizIdx = pickQuizIndices();
 			answers = ['', '', ''];
 			revealed = false;
@@ -159,7 +90,10 @@
 			step = 1;
 		} catch (err) {
 			console.warn('recovery: generate failed', err);
-			generateError = m.settings_ceremony_recovery_err_generate();
+			generateError =
+				err instanceof RecoveryVaultLockedError
+					? m.settings_ceremony_recovery_err_locked()
+					: m.settings_ceremony_recovery_err_generate();
 		} finally {
 			generating = false;
 		}
@@ -177,50 +111,17 @@
 
 	async function downloadKit() {
 		if (!setup) return;
-		const lines = [
-			'Thelemail recovery kit',
-			'======================',
-			'',
-			`Account:   ${auth.email ?? ''}`,
-			`Generated: ${new Date().toISOString().slice(0, 10)}`,
-			'',
-			'Your twelve-word recovery phrase, in order:',
-			'',
-			...setup.phrase.map((w, i) => `  ${String(i + 1).padStart(2, ' ')}. ${w}`),
-			'',
-			'Anyone with these words can unlock your mail and reset your password.',
-			'Keep this file offline — print it or store it on an encrypted drive,',
-			'then delete it from your downloads.',
-			''
-		];
-		const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-		await platform.saveBlob(blob, 'thelemail-recovery-kit.txt');
+		await platform.saveBlob(recoveryKitBlob(setup.phrase, auth.email ?? ''), RECOVERY_KIT_FILENAME);
 		saved = true;
 	}
 
 	async function confirmAndStore() {
-		if (!setup || submitting) return;
+		if (!setup || !setupAccountId || submitting) return;
 		submitting = true;
 		submitError = '';
 		try {
-			if (setup.scheme === 'opaque_v1') {
-				await recoverySetupOpaque({
-					opaqueRecord: setup.opaqueRecord,
-					wrappedMasterKey: setup.wrappedMasterKey,
-					masterKeyId: setup.masterKeyId,
-					opaqueParamsVersion: setup.opaqueParamsVersion
-				});
-			} else {
-				await recoverySetup({
-					srpSalt: setup.srpSalt,
-					srpVerifier: setup.srpVerifier,
-					keySalt: setup.keySalt,
-					encryptedPrivateKey: setup.encryptedPrivateKey,
-					kdfParamsVersion: 1,
-					srpParamsVersion: 1
-				});
-			}
-			void auth.loadProfile();
+			await commitRecovery(setup, setupAccountId);
+			void auth.loadProfile(setupAccountId);
 			step = 3;
 		} catch (err) {
 			console.warn('recovery: setup failed', err);

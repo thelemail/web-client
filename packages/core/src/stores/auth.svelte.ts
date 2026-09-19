@@ -368,6 +368,10 @@ class AuthStore {
 		return this.#profiles.get(accountId)?.avatarUrl ?? null;
 	}
 
+	markRecoveryEnabled(accountId: string): void {
+		this.#mutateProfile(accountId, (p) => ({ ...p, recoveryEnabled: true }));
+	}
+
 	fullNameFor(accountId: string): string | null {
 		return this.#profiles.get(accountId)?.fullName ?? null;
 	}
