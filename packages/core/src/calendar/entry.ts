@@ -90,8 +90,10 @@ export async function addFromMail(
 			isOwnRecipient(a.email, mine) ? { ...a, partstat } : a
 		);
 	}
-	const saved = await calendarStore.saveItem(item, { label: `Added “${item.title}” from mail` });
-	if (partstat) await calendarStore.setMyState(item.id, { partstat }, `Replied ${partstat}`);
+	const saved = await calendarStore.saveItem(item, {
+		label: m.cal_op_added_from_mail({ title: item.title })
+	});
+	if (partstat) await calendarStore.setMyState(item.id, { partstat }, m.cal_op_replied({ partstat }));
 	return saved.item;
 }
 

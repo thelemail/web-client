@@ -4156,5 +4156,96 @@
 	"cal_fork_failed": "This link could not be opened.",
 	"cal_fork_title": "Calendar could not open",
 	"cal_fork_back": "Back to Thelemail",
-	"app_error_not_found_message": "That page does not exist."
+	"app_error_not_found_message": "That page does not exist.",
+	"cal_op_untitled": "untitled",
+	"cal_op_created": "Created “{title}”",
+	"cal_op_edited": "Edited “{title}”",
+	"cal_op_deleted": "Deleted “{title}”",
+	"cal_op_created_hold": "Created a private hold",
+	"cal_op_edited_hold": "Edited a private hold",
+	"cal_op_deleted_hold": "Deleted a private hold",
+	"cal_op_added_from_mail": "Added “{title}” from mail",
+	"cal_op_replied": [
+		{
+			"declarations": [
+				"input partstat"
+			],
+			"selectors": [
+				"partstat"
+			],
+			"match": {
+				"partstat=accepted": "Replied accepted",
+				"partstat=tentative": "Replied tentative",
+				"partstat=declined": "Replied declined",
+				"partstat=needs-action": "Replied needs-action",
+				"partstat=*": "Replied {partstat}"
+			}
+		}
+	],
+	"cal_op_replied_to": [
+		{
+			"declarations": [
+				"input partstat",
+				"input title"
+			],
+			"selectors": [
+				"partstat"
+			],
+			"match": {
+				"partstat=accepted": "Replied accepted to “{title}”",
+				"partstat=tentative": "Replied tentative to “{title}”",
+				"partstat=declined": "Replied declined to “{title}”",
+				"partstat=needs-action": "Replied needs-action to “{title}”",
+				"partstat=*": "Replied {partstat} to “{title}”"
+			}
+		}
+	],
+	"cal_op_member_replied": [
+		{
+			"declarations": [
+				"input partstat",
+				"input name"
+			],
+			"selectors": [
+				"partstat"
+			],
+			"match": {
+				"partstat=accepted": "{name} replied accepted",
+				"partstat=tentative": "{name} replied tentative",
+				"partstat=declined": "{name} replied declined",
+				"partstat=needs-action": "{name} replied needs-action",
+				"partstat=*": "{name} replied {partstat}"
+			}
+		}
+	],
+	"cal_op_rsvp": [
+		{
+			"declarations": [
+				"input partstat",
+				"input title"
+			],
+			"selectors": [
+				"partstat"
+			],
+			"match": {
+				"partstat=accepted": "RSVP accepted · {title}",
+				"partstat=tentative": "RSVP tentative · {title}",
+				"partstat=declined": "RSVP declined · {title}",
+				"partstat=needs-action": "RSVP needs-action · {title}",
+				"partstat=*": "RSVP {partstat} · {title}"
+			}
+		}
+	],
+	"cal_op_organiser_cancelled_occurrence": "Organiser cancelled one occurrence of “{title}”",
+	"cal_op_organiser_updated": "Organiser updated “{title}”",
+	"cal_op_completed": "Completed “{title}”",
+	"cal_op_reopened": "Reopened “{title}”",
+	"cal_op_ack_cleared": "Cleared acknowledgement",
+	"cal_op_ack_marked": "Marked as seen",
+	"cal_op_renamed_calendar": "Renamed “{name}”",
+	"cal_op_deleted_calendar": "Deleted “{name}”",
+	"cal_op_resealed": "Re-sealed “{title}”",
+	"cal_op_invitation": "Invitation · {title}",
+	"cal_op_invitation_updated": "Updated invitation · {title}",
+	"cal_op_cancellation": "Cancellation · {title}"
 }

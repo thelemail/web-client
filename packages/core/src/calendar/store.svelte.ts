@@ -102,9 +102,14 @@ type MessageListener = (hint: RealtimeHint) => void;
 const REALTIME_COALESCE_MS = 750;
 const CHANGES_LAG_RESYNC_MS = 6500;
 
-function labelFor(item: CalendarItem, verb: string): string {
-	const title = item.kind === 'hold' ? 'a private hold' : item.title || 'untitled';
-	return `${verb} ${item.kind === 'hold' ? title : `“${title}”`}`;
+function labelFor(item: CalendarItem, action: 'created' | 'edited' | 'deleted'): string {
+	if (item.kind === 'hold') {
+		if (action === 'created') return m.cal_op_created_hold();
+		return action === 'edited' ? m.cal_op_edited_hold() : m.cal_op_deleted_hold();
+	}
+	const title = item.title || m.cal_op_untitled();
+	if (action === 'created') return m.cal_op_created({ title });
+	return action === 'edited' ? m.cal_op_edited({ title }) : m.cal_op_deleted({ title });
 }
 
 export class CalendarStore {
@@ -642,7 +647,7 @@ export class CalendarStore {
 			kind: 'item.put',
 			calendarId: item.calendarId,
 			itemId: item.id,
-			label: opts.label ?? labelFor(item, existing ? 'Edited' : 'Created'),
+			label: opts.label ?? labelFor(item, existing ? 'edited' : 'created'),
 			fields: opts.fields,
 			body
 		};
@@ -705,7 +710,7 @@ export class CalendarStore {
 			calendarId: existing.item.calendarId,
 			itemId: id,
 			baseRev: existing.rev,
-			label: labelFor(existing.item, 'Deleted')
+			label: labelFor(existing.item, 'deleted')
 		});
 	}
 
@@ -762,7 +767,7 @@ export class CalendarStore {
 		await this.#enqueue({
 			kind: 'calendar.patch',
 			calendarId,
-			label: `Renamed “${meta.name}”`,
+			label: m.cal_op_renamed_calendar({ name: meta.name }),
 			body: {
 				sealedMeta: sealed,
 				metaKeyFingerprint: key.fingerprintB64,
@@ -796,13 +801,15 @@ export class CalendarStore {
 		}
 		await this.#db.deleteCalendar(accountId, calendarId);
 		this.revision += 1;
-		await this.#enqueue({ kind: 'calendar.delete', calendarId, label: `Deleted “${cal.name}”` });
+		await this.#enqueue({ kind: 'calendar.delete', calendarId, label: m.cal_op_deleted_calendar({ name: cal.name }) });
 	}
 
 	async resealCalendar(calendarId: string): Promise<void> {
 		for (const entry of [...this.items.values()]) {
 			if (entry.item.calendarId !== calendarId || entry.unreadable) continue;
-			await this.saveItem(entry.item, { label: `Re-sealed “${entry.item.title || 'untitled'}”` });
+			await this.saveItem(entry.item, {
+				label: m.cal_op_resealed({ title: entry.item.title || m.cal_op_untitled() })
+			});
 		}
 	}
 

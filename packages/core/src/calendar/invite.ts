@@ -7,6 +7,7 @@ import type { OutboxMail, OutboxRecipient } from './outbox';
 import { expandItem, type Occurrence } from './recur';
 import { calendarStore } from './store.svelte';
 import { isOwnRecipient } from '$core/mail/recipientAddress';
+import { m } from '$paraglide/messages.js';
 
 export interface SenderIdentity extends IcsIdentity {
 	aliasId?: string;
@@ -120,7 +121,9 @@ export async function sendInvitations(
 				fromName: identity.name,
 				fromAliasId: identity.aliasId
 			},
-			`${verb} · ${item.title || 'untitled'}`
+			previous
+				? m.cal_op_invitation_updated({ title: item.title || m.cal_op_untitled() })
+				: m.cal_op_invitation({ title: item.title || m.cal_op_untitled() })
 		);
 	}
 	if (removed.length && previous) {
@@ -141,7 +144,7 @@ export async function sendInvitations(
 				fromName: identity.name,
 				fromAliasId: identity.aliasId
 			},
-			`Cancellation · ${previous.title || 'untitled'}`
+			m.cal_op_cancellation({ title: previous.title || m.cal_op_untitled() })
 		);
 	}
 }
@@ -176,7 +179,7 @@ export async function sendCancellation(item: CalendarItem, occurrence?: Occurren
 			fromName: identity.name,
 			fromAliasId: identity.aliasId
 		},
-		`Cancellation · ${item.title || 'untitled'}`
+		m.cal_op_cancellation({ title: item.title || m.cal_op_untitled() })
 	);
 }
 
@@ -214,5 +217,5 @@ export async function sendReply(
 		method: 'REPLY',
 		inReplyToMessageId: sourceMessageId
 	};
-	await calendarStore.queueMail(item.id, mail, `RSVP ${partstat} · ${item.title || 'untitled'}`);
+	await calendarStore.queueMail(item.id, mail, m.cal_op_rsvp({ partstat, title: item.title || m.cal_op_untitled() }));
 }

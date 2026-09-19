@@ -774,7 +774,9 @@ class CalendarState {
 		try {
 			await calendarStore.saveItem(next, {
 				fields: ['done'],
-				label: `${next.done ? 'Completed' : 'Reopened'} “${next.title}”`
+				label: next.done
+					? m.cal_op_completed({ title: next.title })
+					: m.cal_op_reopened({ title: next.title })
 			});
 		} catch (err) {
 			this.notify(err instanceof Error ? err.message : m.cal_task_update_failed());
@@ -786,7 +788,7 @@ class CalendarState {
 			await calendarStore.setMyState(
 				itemId,
 				{ ack: current ? undefined : { at: new Date().toISOString() } },
-				current ? 'Cleared acknowledgement' : 'Marked as seen'
+				current ? m.cal_op_ack_cleared() : m.cal_op_ack_marked()
 			);
 		} catch (err) {
 			this.notify(err instanceof Error ? err.message : m.cal_editor_save_failed());
@@ -803,9 +805,9 @@ class CalendarState {
 		try {
 			await calendarStore.saveItem(next, {
 				fields: ['partstat'],
-				label: `Replied ${partstat} to “${item.title}”`
+				label: m.cal_op_replied_to({ partstat, title: item.title })
 			});
-			await calendarStore.setMyState(item.id, { partstat }, `Replied ${partstat}`);
+			await calendarStore.setMyState(item.id, { partstat }, m.cal_op_replied({ partstat }));
 			await sendReply(next, partstat, item.sourceMessageId);
 			this.notify(
 				calendarStore.online
