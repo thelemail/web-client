@@ -5,6 +5,7 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import UserRound from '@lucide/svelte/icons/user-round';
+	import { m } from '$paraglide/messages.js';
 	import type { AccountMember } from './types';
 	import { Button } from '$core/components/ui/button';
 
@@ -27,7 +28,7 @@
 	}
 
 	let {
-		m,
+		m: member,
 		canPromote = false,
 		canDemote = false,
 		canRemove = false,
@@ -44,6 +45,16 @@
 	const hasActions = $derived(
 		Boolean(onAction) &&
 			(canPromote || canDemote || canRemove || canRevoke || canResend)
+	);
+
+	const roleLabel = $derived(
+		member.role === 'owner'
+			? m.settings_member_role_owner()
+			: member.role === 'admin'
+				? m.settings_member_role_admin()
+				: member.role === 'member'
+					? m.settings_member_role_member()
+					: member.role
 	);
 
 	function toggleMenu() {
@@ -100,22 +111,22 @@
 	}
 </script>
 
-<div class="mbr-row" class:pending={m.pending}>
-	<span class="mbr-av" style:background={m.bg} style:color={m.fg}>{m.init}</span>
+<div class="mbr-row" class:pending={member.pending}>
+	<span class="mbr-av" style:background={member.bg} style:color={member.fg}>{member.init}</span>
 	<div class="mbr-info">
 		<div class="mbr-name">
-			{m.name}{#if m.pending}<span class="mbr-flag">Invited</span>{/if}
+			{member.name}{#if member.pending}<span class="mbr-flag">{m.settings_member_invited()}</span>{/if}
 		</div>
-		<div class="mbr-addr">{m.addr}</div>
+		<div class="mbr-addr">{member.addr}</div>
 	</div>
-	<span class={'mbr-role r-' + m.role.toLowerCase()}>{m.role}</span>
+	<span class={'mbr-role r-' + member.role.toLowerCase()}>{roleLabel}</span>
 	{#if hasActions}
 		<div class="mbr-actions">
 			{#if mode === 'idle'}
 				<button
 					type="button"
 					class="mbr-act-btn"
-					aria-label="Actions"
+					aria-label={m.settings_member_actions()}
 					onclick={toggleMenu}
 					disabled={busy}
 				>
@@ -126,42 +137,42 @@
 						{#if canResend}
 							<button type="button" class="mbr-menu-item" onclick={resend}>
 								{#if copied}
-									<Check size={14} strokeWidth={1.75} />New link copied
+									<Check size={14} strokeWidth={1.75} />{m.settings_member_link_copied()}
 								{:else}
-									<Copy size={14} strokeWidth={1.75} />Send a new invitation link
+									<Copy size={14} strokeWidth={1.75} />{m.settings_member_resend()}
 								{/if}
 							</button>
 						{/if}
 						{#if canPromote}
 							<button type="button" class="mbr-menu-item" onclick={doPromote}>
-								<ShieldCheck size={14} strokeWidth={1.75} />Make admin
+								<ShieldCheck size={14} strokeWidth={1.75} />{m.settings_member_make_admin()}
 							</button>
 						{/if}
 						{#if canDemote}
 							<button type="button" class="mbr-menu-item" onclick={doDemote}>
-								<UserRound size={14} strokeWidth={1.75} />Change to member
+								<UserRound size={14} strokeWidth={1.75} />{m.settings_member_make_member()}
 							</button>
 						{/if}
 						{#if canRevoke}
 							<button type="button" class="mbr-menu-item danger" onclick={startRevoke}>
-								<Trash2 size={14} strokeWidth={1.75} />Revoke invitation
+								<Trash2 size={14} strokeWidth={1.75} />{m.settings_member_revoke_invite()}
 							</button>
 						{/if}
 						{#if canRemove}
 							<button type="button" class="mbr-menu-item danger" onclick={startRemove}>
-								<Trash2 size={14} strokeWidth={1.75} />Remove from workspace
+								<Trash2 size={14} strokeWidth={1.75} />{m.settings_member_remove_from_workspace()}
 							</button>
 						{/if}
 					</div>
 				{/if}
 			{:else if mode === 'confirm-remove'}
-				<span class="mbr-confirm">Remove {m.name}?</span>
-				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>Cancel</Button>
-				<Button variant="dangerSolid" size="sm" onclick={confirmRemove} disabled={busy}>Remove</Button>
+				<span class="mbr-confirm">{m.settings_member_remove_confirm({ name: member.name })}</span>
+				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
+				<Button variant="dangerSolid" size="sm" onclick={confirmRemove} disabled={busy}>{m.common_remove()}</Button>
 			{:else if mode === 'confirm-revoke'}
-				<span class="mbr-confirm">Revoke invitation for {m.addr}?</span>
-				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>Cancel</Button>
-				<Button variant="dangerSolid" size="sm" onclick={confirmRevoke} disabled={busy}>Revoke</Button>
+				<span class="mbr-confirm">{m.settings_member_revoke_confirm({ email: member.addr })}</span>
+				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
+				<Button variant="dangerSolid" size="sm" onclick={confirmRevoke} disabled={busy}>{m.settings_member_revoke()}</Button>
 			{/if}
 		</div>
 	{/if}

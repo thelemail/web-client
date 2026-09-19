@@ -9,6 +9,8 @@
 	import Apple from '@lucide/svelte/icons/apple';
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import type { LifecycleContext } from './types';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { Button } from '$core/components/ui/button';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
@@ -21,26 +23,26 @@
 	];
 </script>
 
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
+
 <div class="card lc-mid">
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<p class="eyebrow">Export your data</p>
-			<h1>Download everything with the Thelemail Export Tool</h1>
+			<p class="eyebrow">{m.lc_export_eyebrow()}</p>
+			<h1>{m.lc_export_title()}</h1>
 			<p>
-				Because your mail is end-to-end encrypted, the export runs on your own computer — the server
-				never sees your keys or your messages. The tool handles mailboxes of any size and can resume
-				if it's interrupted.
+				{m.lc_export_intro()}
 			</p>
 		</div>
 
 		<ul class="lc-changed">
-			<li class="ch-h">What you get</li>
-			<li><Mail size={16} /><span><b>All folders as standard MBOX</b> — imports cleanly into Apple Mail, Thunderbird and others, with attachments intact.</span></li>
-			<li><KeyRound size={16} /><span><b>Your key material</b> — public key and your password-encrypted private key.</span></li>
-			<li><Settings size={16} /><span><b>A settings and aliases snapshot</b> for {ctx.domain}.</span></li>
+			<li class="ch-h">{m.lc_export_get_heading()}</li>
+			<li><Mail size={16} /><span><Rich text={m.lc_export_get_mbox()} tags={{ b: bold }} /></span></li>
+			<li><KeyRound size={16} /><span><Rich text={m.lc_export_get_keys()} tags={{ b: bold }} /></span></li>
+			<li><Settings size={16} /><span><Rich text={m.lc_export_get_settings({ domain: ctx.domain })} tags={{ b: bold }} /></span></li>
 		</ul>
 
-		<div class="lc-reassure"><ShieldCheck size={16} />Runs locally. Works even while an account is suspended.</div>
+		<div class="lc-reassure"><ShieldCheck size={16} />{m.lc_export_reassure()}</div>
 
 		<div class="lc-cta" style="margin-top:6px">
 			{#each DOWNLOADS as d (d.os)}
@@ -52,14 +54,13 @@
 		</div>
 
 		<ol class="lc-steps">
-			<li><Download size={15} /><span>Download the tool for your system and open it.</span></li>
-			<li><span class="lc-step-n">2</span><span>Sign in with your Thelemail address and password.</span></li>
-			<li><HardDrive size={15} /><span>Pick a folder — everything is written there. Re-run any time to resume.</span></li>
+			<li><Download size={15} /><span>{m.lc_export_step_download()}</span></li>
+			<li><span class="lc-step-n">2</span><span>{m.lc_export_step_sign_in()}</span></li>
+			<li><HardDrive size={15} /><span>{m.lc_export_step_folder()}</span></li>
 		</ol>
 
 		<p class="lc-cta-note">
-			The tool is open source. While an export is running it holds your account's data for you, so a
-			scheduled deletion won't proceed until you're safely done.
+			{m.lc_export_note()}
 		</p>
 	</div>
 </div>

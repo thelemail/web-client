@@ -1,4 +1,5 @@
 import { auth } from '$core/stores/auth.svelte';
+import { m } from '$paraglide/messages.js';
 import { platform } from '$platform';
 import { bytesToB64 } from '$core/crypto';
 import { issueStagingUrls, submitExternal } from '$core/api/submission';
@@ -152,7 +153,7 @@ async function resolveExternalKeys(
 			if (trust.status === 'changed') {
 				throw new SendError(
 					'external_key_change',
-					`The encryption key for ${r.address} has changed.`,
+					m.send_error_external_key_changed({ address: r.address }),
 					undefined,
 					{ kind: 'external-key-change', address: r.address, currentFingerprint: trust.fingerprint }
 				);
@@ -173,7 +174,7 @@ async function resolveExternalKeys(
 				keyless.push(r);
 				continue;
 			}
-			throw sendErrorFromApi(e, 'Key lookup failed');
+			throw sendErrorFromApi(e, m.send_error_key_lookup_failed());
 		}
 	}
 	return { keyed, keyless };
@@ -184,10 +185,10 @@ export async function sendExternalMessage(
 ): Promise<SubmitMessageResponse> {
 	const allRecipients = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])];
 	if (allRecipients.length === 0) {
-		throw new SendError('no_account', 'At least one recipient is required.');
+		throw new SendError('no_account', m.send_error_no_recipients());
 	}
 	if (!auth.accountId) {
-		throw new SendError('no_account', 'Not signed in.');
+		throw new SendError('no_account', m.send_error_not_signed_in());
 	}
 	const accountId = auth.accountId;
 
@@ -258,7 +259,7 @@ export async function sendExternalMessage(
 		const atts = input.attachments ?? [];
 		for (let i = 0; i < atts.length; i++) {
 			if (!atts[i].senderDescriptor) {
-				throw new SendError('encrypt', 'Some attachments are still uploading.');
+				throw new SendError('encrypt', m.send_error_attachments_uploading());
 			}
 			senderAtts.push({ ...atts[i].senderDescriptor!, ordinal: i });
 		}
@@ -305,6 +306,6 @@ export async function sendExternalMessage(
 			scheduledAt: input.scheduledAt
 		});
 	} catch (e) {
-		throw sendErrorFromApi(e, 'External send failed');
+		throw sendErrorFromApi(e, m.send_error_external_failed());
 	}
 }

@@ -3,6 +3,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import Check from '@lucide/svelte/icons/check';
 
+	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
@@ -43,20 +44,19 @@
 </script>
 
 <div class="scard">
-	<CardHead icon={KeyRound} title="Signing delegation">
+	<CardHead icon={KeyRound} title={m.settings_delegation_title()}>
 		{#snippet right()}
-			<span class="card-meta">{active.length} active</span>
+			<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
 			{#if billing.canAddDomains}
 				<Button variant="secondary" size="sm" onclick={() => (creating = true)}>
-					<Plus size={13} />Authorize a service
+					<Plus size={13} />{m.settings_delegation_authorize()}
 				</Button>
 			{/if}
 		{/snippet}
 	</CardHead>
 
 	<div class="card-lede">
-		Let a service sign mail as {address.email} without giving it access to your mailbox. Each
-		service gets its own key, which you can revoke at any time.
+		{m.settings_delegation_card_lede({ email: address.email })}
 	</div>
 
 	{#if flash}
@@ -69,31 +69,30 @@
 				<div class="rec-title">
 					<span class="rec-label">{d.label}</span>
 					{#if d.revokedAt}
-						<Badge kind="warn" dot>Revoked</Badge>
+						<Badge kind="warn" dot>{m.settings_delegation_badge_revoked()}</Badge>
 					{:else}
-						<Badge kind="ok" dot>Active</Badge>
+						<Badge kind="ok" dot>{m.settings_delegation_badge_active()}</Badge>
 					{/if}
 				</div>
 				<div class="rec-meta">
 					<span class="mono">{shortFingerprint(d.signerFingerprint)}</span>
 					<span>
 						{#if d.revokedAt}
-							Revoked {fmtDate(d.revokedAt)} · still published so other mail clients pick up the
-							revocation
+							{m.settings_delegation_revoked_on({ date: fmtDate(d.revokedAt) })}
 						{:else}
-							Expires {fmtDate(d.notAfter)}
+							{m.settings_delegation_expires_on({ date: fmtDate(d.notAfter) })}
 						{/if}
 					</span>
 				</div>
 			</div>
 			{#if !d.revokedAt}
-				<Button variant="ghost" size="sm" onclick={() => (revoking = d)}>Revoke</Button>
+				<Button variant="ghost" size="sm" onclick={() => (revoking = d)}>{m.settings_delegation_revoke()}</Button>
 			{/if}
 		</div>
 	{/each}
 
 	{#if items.length === 0 && !delegations.loading}
-		<div class="card-empty">No services are authorized yet.</div>
+		<div class="card-empty">{m.settings_delegation_empty()}</div>
 	{/if}
 
 	{#if delegations.error}
@@ -102,8 +101,8 @@
 
 	{#if !billing.canAddDomains}
 		<UpgradeNudge
-			title="Signing delegation comes with a paid plan"
-			desc="Paid plans let a service sign as an address on your own domain, without mailbox access."
+			title={m.settings_delegation_upgrade_title()}
+			desc={m.settings_delegation_upgrade_desc()}
 		/>
 	{/if}
 </div>
@@ -116,6 +115,6 @@
 	<RevokeDelegationDialog
 		delegation={revoking}
 		onClose={() => (revoking = null)}
-		onRevoked={(label) => (flash = `${label} can no longer sign as ${address.email}.`)}
+		onRevoked={(label) => (flash = m.settings_delegation_revoked_done({ label, email: address.email }))}
 	/>
 {/if}

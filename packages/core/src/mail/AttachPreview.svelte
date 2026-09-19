@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import X from '@lucide/svelte/icons/x';
 	import Image from '@lucide/svelte/icons/image';
@@ -49,9 +50,9 @@
 	}
 
 	function formatSize(n: number): string {
-		if (n < 1024) return n + ' B';
-		if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
-		return (n / (1024 * 1024)).toFixed(1) + ' MB';
+		if (n < 1024) return m.mail_size_bytes({ size: n });
+		if (n < 1024 * 1024) return m.mail_size_kb({ size: (n / 1024).toFixed(0) });
+		return m.mail_size_mb({ size: (n / (1024 * 1024)).toFixed(1) });
 	}
 
 	const previewUrls = new SvelteMap<string, string>();
@@ -84,7 +85,7 @@
 	<div class="att-preview">
 		<div class="apv-head">
 			<Paperclip size={13} />
-			{files.length} attachment{files.length > 1 ? 's' : ''}
+			{m.mail_attach_count({ count: files.length })}
 		</div>
 		<div class="apv-grid">
 			{#each files as a (a.id)}
@@ -97,7 +98,7 @@
 							<img src={url} alt={a.file.name} />
 						{:else}
 							<Ic size={24} />
-							<span class="apv-ext">{k.ext || 'file'}</span>
+							<span class="apv-ext">{k.ext || m.mail_attach_ext_fallback()}</span>
 						{/if}
 					</div>
 					{#if a.status === 'encrypting' || a.status === 'uploading' || a.status === 'queued'}
@@ -110,13 +111,13 @@
 						<span class="apv-size">{formatSize(a.file.size)}</span>
 					</div>
 					{#if a.status === 'error'}
-						<div class="apv-err">{a.error ?? 'Upload failed'}</div>
+						<div class="apv-err">{a.error ?? m.mail_attach_upload_failed()}</div>
 					{/if}
 					{#if onRemove}
 						<button
 							type="button"
 							class="apv-rm"
-							title="Remove"
+							title={m.common_remove()}
 							onclick={(e) => {
 								e.stopPropagation();
 								onRemove(a.id);

@@ -1,3 +1,5 @@
+import { m } from '$paraglide/messages.js';
+
 export type ProductId = 'personal' | 'family' | 'business';
 
 export type BillingPeriod = 'year' | 'month';
@@ -35,24 +37,32 @@ export interface PlanSelection {
 
 export const FREE_PLAN = {
 	id: 'free',
-	name: 'Free',
-	rows: [
-		['Mailboxes', '1'],
-		['Storage', '1 GB'],
-		['Address', 'yours@thelemail.com'],
-		['Custom domains', 'None']
-	] as [string, string][]
+	get name() {
+		return m.auth_plan_free_name();
+	},
+	get rows(): [string, string][] {
+		return [
+			[m.auth_plan_row_mailboxes(), '1'],
+			[m.auth_plan_row_storage(), m.auth_plan_value_gb({ size: 1 })],
+			[m.auth_plan_row_address(), 'yours@thelemail.com'],
+			[m.auth_plan_row_custom_domains(), m.auth_plan_value_none()]
+		];
+	}
 };
 
 export const FREE_FAMILY_PLAN = {
 	id: 'free_family',
-	name: 'Free family',
-	rows: [
-		['Mailboxes', 'Up to 6'],
-		['Storage per mailbox', '1 GB'],
-		['Addresses', 'yours@thelemail.com'],
-		['Custom domains', 'None']
-	] as [string, string][]
+	get name() {
+		return m.auth_plan_free_family_name();
+	},
+	get rows(): [string, string][] {
+		return [
+			[m.auth_plan_row_mailboxes(), m.auth_plan_value_up_to({ count: 6 })],
+			[m.auth_plan_row_storage_per_mailbox(), m.auth_plan_value_gb({ size: 1 })],
+			[m.auth_plan_row_addresses(), 'yours@thelemail.com'],
+			[m.auth_plan_row_custom_domains(), m.auth_plan_value_none()]
+		];
+	}
 };
 
 export const MIN_SEATS = 3;
@@ -61,103 +71,153 @@ export const MAX_SEATS = 50;
 export const PRODUCTS: PlanProduct[] = [
 	{
 		id: 'personal',
-		name: 'Personal',
-		tagline: 'A private, encrypted mailbox of your own.',
-		bothLine:
-			'Both include zero-access encryption at rest, end-to-end encryption between accounts, encryption to outsiders who publish a key, 2FA & device sessions, full data export, and EU data residency.',
+		get name() {
+			return m.auth_plan_personal_name();
+		},
+		get tagline() {
+			return m.auth_plan_personal_tagline();
+		},
+		get bothLine() {
+			return m.auth_plan_personal_both();
+		},
 		tiers: [
 			{
 				id: 'personal',
-				name: 'Personal',
+				get name() {
+					return m.auth_plan_personal_name();
+				},
 				prices: { year: 24, month: 3 },
-				rows: [
-					['Mailboxes', '1'],
-					['Storage', '15 GB'],
-					['Custom domains', '1'],
-					['Addresses on your domain', 'Unlimited']
-				]
+				get rows(): [string, string][] {
+					return [
+						[m.auth_plan_row_mailboxes(), '1'],
+						[m.auth_plan_row_storage(), m.auth_plan_value_gb({ size: 15 })],
+						[m.auth_plan_row_custom_domains(), '1'],
+						[m.auth_plan_row_domain_addresses(), m.auth_plan_value_unlimited()]
+					];
+				}
 			},
 			{
 				id: 'personal-plus',
-				name: 'Personal Plus',
+				get name() {
+					return m.auth_plan_personal_plus_name();
+				},
 				prices: { year: 48, month: 5 },
-				framing: 'For heavy archives and multiple identities.',
-				rows: [
-					['Mailboxes', '1'],
-					['Storage', '50 GB'],
-					['Custom domains', '3'],
-					['Addresses on your domain', 'Unlimited']
-				]
+				get framing() {
+					return m.auth_plan_personal_plus_framing();
+				},
+				get rows(): [string, string][] {
+					return [
+						[m.auth_plan_row_mailboxes(), '1'],
+						[m.auth_plan_row_storage(), m.auth_plan_value_gb({ size: 50 })],
+						[m.auth_plan_row_custom_domains(), '3'],
+						[m.auth_plan_row_domain_addresses(), m.auth_plan_value_unlimited()]
+					];
+				}
 			}
 		]
 	},
 	{
 		id: 'family',
-		name: 'Family',
-		badge: 'Most chosen',
-		tagline: 'Everything your household needs, one flat price.',
-		bothLine: 'Both include everything in Personal. One flat price for the whole household — never per seat.',
+		get name() {
+			return m.auth_plan_family_name();
+		},
+		get badge() {
+			return m.auth_plan_badge_most_chosen();
+		},
+		get tagline() {
+			return m.auth_plan_family_tagline();
+		},
+		get bothLine() {
+			return m.auth_plan_family_both();
+		},
 		tiers: [
 			{
 				id: 'family',
-				name: 'Family',
+				get name() {
+					return m.auth_plan_family_name();
+				},
 				prices: { year: 60, month: 6.5 },
-				badge: 'Most chosen',
-				rows: [
-					['Mailboxes', 'Up to 6'],
-					['Storage per mailbox', '10 GB'],
-					['Custom domains', '2'],
-					['Addresses on your domain', 'Unlimited']
-				]
+				get badge() {
+					return m.auth_plan_badge_most_chosen();
+				},
+				get rows(): [string, string][] {
+					return [
+						[m.auth_plan_row_mailboxes(), m.auth_plan_value_up_to({ count: 6 })],
+						[m.auth_plan_row_storage_per_mailbox(), m.auth_plan_value_gb({ size: 10 })],
+						[m.auth_plan_row_custom_domains(), '2'],
+						[m.auth_plan_row_domain_addresses(), m.auth_plan_value_unlimited()]
+					];
+				}
 			},
 			{
 				id: 'family-plus',
-				name: 'Family Plus',
+				get name() {
+					return m.auth_plan_family_plus_name();
+				},
 				prices: { year: 96, month: 10 },
-				framing: 'For households that keep everything.',
-				rows: [
-					['Mailboxes', 'Up to 6'],
-					['Storage per mailbox', '30 GB'],
-					['Custom domains', '4'],
-					['Addresses on your domain', 'Unlimited']
-				]
+				get framing() {
+					return m.auth_plan_family_plus_framing();
+				},
+				get rows(): [string, string][] {
+					return [
+						[m.auth_plan_row_mailboxes(), m.auth_plan_value_up_to({ count: 6 })],
+						[m.auth_plan_row_storage_per_mailbox(), m.auth_plan_value_gb({ size: 30 })],
+						[m.auth_plan_row_custom_domains(), '4'],
+						[m.auth_plan_row_domain_addresses(), m.auth_plan_value_unlimited()]
+					];
+				}
 			}
 		]
 	},
 	{
 		id: 'business',
-		name: 'Business',
-		tagline: 'For studios, businesses, and small teams.',
-		bothLine:
-			'Both include everything in Personal. Billed per mailbox, prorated when adding or removing people mid-term.',
+		get name() {
+			return m.auth_plan_business_name();
+		},
+		get tagline() {
+			return m.auth_plan_business_tagline();
+		},
+		get bothLine() {
+			return m.auth_plan_business_both();
+		},
 		perMailbox: true,
 		tiers: [
 			{
 				id: 'team',
-				name: 'Team',
+				get name() {
+					return m.auth_plan_team_name();
+				},
 				prices: { year: 54, month: 6 },
-				rows: [
-					['Storage per mailbox', '25 GB'],
-					['Custom domains', 'Up to 5'],
-					['Addresses on your domain', 'Unlimited'],
-					['Roles & org settings', 'Included'],
-					['Audit logs', '90-day retention'],
-					['Priority support', 'Included']
-				]
+				get rows(): [string, string][] {
+					return [
+						[m.auth_plan_row_storage_per_mailbox(), m.auth_plan_value_gb({ size: 25 })],
+						[m.auth_plan_row_custom_domains(), m.auth_plan_value_up_to({ count: 5 })],
+						[m.auth_plan_row_domain_addresses(), m.auth_plan_value_unlimited()],
+						[m.auth_plan_row_roles(), m.auth_plan_value_included()],
+						[m.auth_plan_row_audit_logs(), m.auth_plan_value_retention_days({ days: 90 })],
+						[m.auth_plan_row_priority_support(), m.auth_plan_value_included()]
+					];
+				}
 			},
 			{
 				id: 'business',
-				name: 'Business',
+				get name() {
+					return m.auth_plan_business_name();
+				},
 				prices: { year: 84, month: 9 },
-				framing: 'For firms with heavier storage and compliance needs.',
-				rows: [
-					['Storage per mailbox', '100 GB'],
-					['Custom domains', 'Up to 10'],
-					['Addresses on your domain', 'Unlimited'],
-					['Roles & org settings', 'Included'],
-					['Audit logs', '1-year retention'],
-					['Priority support', 'Same business day']
-				]
+				get framing() {
+					return m.auth_plan_business_framing();
+				},
+				get rows(): [string, string][] {
+					return [
+						[m.auth_plan_row_storage_per_mailbox(), m.auth_plan_value_gb({ size: 100 })],
+						[m.auth_plan_row_custom_domains(), m.auth_plan_value_up_to({ count: 10 })],
+						[m.auth_plan_row_domain_addresses(), m.auth_plan_value_unlimited()],
+						[m.auth_plan_row_roles(), m.auth_plan_value_included()],
+						[m.auth_plan_row_audit_logs(), m.auth_plan_value_retention_one_year()],
+						[m.auth_plan_row_priority_support(), m.auth_plan_value_same_business_day()]
+					];
+				}
 			}
 		]
 	}
@@ -188,7 +248,13 @@ export function planLabelFor(planCode: string, seats: number, period: BillingPer
 	if (!sel) return planCode.replace(/_/g, ' ');
 	const { tier } = findPlan(sel);
 	if (!tier) return planCode.replace(/_/g, ' ');
-	return `${tier.name} · ${eur(planTotal(sel))} / ${period}`;
+	return m.auth_plan_label({ plan: tier.name, price: pricePerPeriod(planTotal(sel), period) });
+}
+
+export function pricePerPeriod(amount: number, period: BillingPeriod): string {
+	return period === 'month'
+		? m.auth_price_per_month({ price: eur(amount) })
+		: m.auth_price_per_year({ price: eur(amount) });
 }
 
 export function planTotal(sel: PlanSelection): number {

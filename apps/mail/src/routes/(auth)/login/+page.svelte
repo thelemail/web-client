@@ -25,6 +25,8 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const returnTo = $derived(page.url.searchParams.get('redirect'));
@@ -88,10 +90,10 @@
 			if (err instanceof ApiCallError) {
 				loginError =
 					err.status === 401
-						? 'Wrong email or password.'
-						: `Sign-in failed (HTTP ${err.status}). Please try again.`;
+						? m.auth_login_wrong_credentials()
+						: m.auth_login_failed_http({ status: err.status });
 			} else {
-				loginError = err instanceof Error ? err.message : 'Authentication failed';
+				loginError = err instanceof Error ? err.message : m.auth_login_failed();
 			}
 			busy = false;
 		}
@@ -110,7 +112,7 @@
 		const pending = pendingTwoFactor;
 		if (!pending || twoFaBusy) return;
 		if (Date.now() > pending.expiresAt) {
-			await resetToPasswordStep('Your sign-in expired — enter your password again.');
+			await resetToPasswordStep(m.auth_login_2fa_expired());
 			return;
 		}
 		twoFaBusy = true;
@@ -122,15 +124,15 @@
 			if (err instanceof TwoFactorRejectedError) {
 				twoFaFailures += 1;
 				if (twoFaFailures >= 5 || Date.now() > pending.expiresAt) {
-					await resetToPasswordStep('Your sign-in expired — enter your password again.');
+					await resetToPasswordStep(m.auth_login_2fa_expired());
 					return;
 				}
-				twoFaError = 'That code didn’t work. Try again.';
+				twoFaError = m.auth_login_2fa_rejected();
 				twoFaBusy = false;
 				return;
 			}
 			if (err instanceof TwoFactorExpiredError) {
-				await resetToPasswordStep('Your sign-in expired — enter your password again.');
+				await resetToPasswordStep(m.auth_login_2fa_expired());
 				return;
 			}
 			if (isWebauthnCancelled(err)) {
@@ -138,7 +140,7 @@
 				return;
 			}
 			console.error('two-factor failed', err);
-			twoFaError = err instanceof Error ? err.message : 'Verification failed';
+			twoFaError = err instanceof Error ? err.message : m.auth_login_2fa_failed();
 			twoFaBusy = false;
 		}
 	}
@@ -150,23 +152,23 @@
 	}
 </script>
 
+{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet registerLink(t: string)}<a href={registerHref}>{t}</a>{/snippet}
+
 <svelte:head>
-	<title>Thelemail — Sign in</title>
+	<title>{m.auth_login_page_title()}</title>
 </svelte:head>
 
 {#if view === 'sso'}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<p class="eyebrow">Single sign-on</p>
-			<h1>Sign in with SSO</h1>
-			<p>
-				Enter the domain your organization uses with Thelemail. We&rsquo;ll route you to your
-				identity provider.
-			</p>
+			<p class="eyebrow">{m.auth_sso_eyebrow()}</p>
+			<h1>{m.auth_sso_title()}</h1>
+			<p>{m.auth_sso_lede()}</p>
 		</div>
 		<div class="form">
 			<div class="field">
-				<div class="lab"><label for="sso-domain">Organization domain</label></div>
+				<div class="lab"><label for="sso-domain">{m.auth_sso_domain_label()}</label></div>
 				<div class="affix">
 					<input
 						id="sso-domain"
@@ -181,21 +183,21 @@
 					/>
 					<span class="statusic"><Globe size={17} strokeWidth={1.75} /></span>
 				</div>
-				<span class="hint">For example, the domain on your work address.</span>
+				<span class="hint">{m.auth_sso_domain_hint()}</span>
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!ssoDomain || busy} onclick={ssoSubmit}>
 					{#if busy}
-						<span class="spinner"></span>Redirecting&hellip;
+						<span class="spinner"></span>{m.auth_sso_redirecting()}
 					{:else}
-						Continue with SSO<ArrowRight size={17} strokeWidth={1.75} />
+						{m.auth_sso_continue()}<ArrowRight size={17} strokeWidth={1.75} />
 					{/if}
 				</Button>
 				<Button variant="ghost" size="lg" block onclick={() => {
 						view = 'main';
 						busy = false;
 					}}>
-					<ArrowLeft size={17} strokeWidth={1.75} />Back to sign in
+					<ArrowLeft size={17} strokeWidth={1.75} />{m.auth_2fa_back_to_sign_in()}
 				</Button>
 			</div>
 		</div>
@@ -213,9 +215,10 @@
 			onBack={() => resetToPasswordStep(null)}
 		>
 			{#snippet lede()}
-				Password accepted. <span class="mono" style="color:var(--ink-700)"
-					>{pendingTwoFactor?.email}</span
-				> also asks for a second factor.
+				<Rich
+					text={m.auth_login_2fa_lede({ email: pendingTwoFactor?.email ?? '' })}
+					tags={{ addr }}
+				/>
 			{/snippet}
 		</TwoFactorChallenge>
 	</div>
@@ -223,21 +226,21 @@
 	<div class="card-surface screen-fade">
 		<div class="card-head">
 			{#if addMode}
-				<p class="eyebrow">Add another account</p>
-				<h1>Sign in to a second account</h1>
-				<p>You can be signed in to several Thelemail accounts at once on this device.</p>
+				<p class="eyebrow">{m.auth_login_add_eyebrow()}</p>
+				<h1>{m.auth_login_add_title()}</h1>
+				<p>{m.auth_login_add_lede()}</p>
 			{:else if targetSlot && slotAccountEmail()}
-				<p class="eyebrow">Continue session</p>
-				<h1>Sign back in</h1>
-				<p>Re-enter your password to unlock this account on this device.</p>
+				<p class="eyebrow">{m.auth_login_resume_eyebrow()}</p>
+				<h1>{m.auth_login_resume_title()}</h1>
+				<p>{m.auth_login_resume_lede()}</p>
 			{:else}
-				<p class="eyebrow">Welcome back</p>
-				<h1>Sign in to Thelemail</h1>
+				<p class="eyebrow">{m.auth_login_eyebrow()}</p>
+				<h1>{m.auth_login_title()}</h1>
 			{/if}
 		</div>
 		<div class="form">
 			<div class="field">
-				<div class="lab"><label for="login-email">Email address</label></div>
+				<div class="lab"><label for="login-email">{m.common_email_address()}</label></div>
 				<input
 					id="login-email"
 					class="inp"
@@ -251,9 +254,9 @@
 				/>
 			</div>
 			<PasswordField
-				label="Password"
+				label={m.common_password()}
 				bind:value={pw}
-				placeholder="Your password"
+				placeholder={m.auth_login_password_placeholder()}
 				autocomplete="current-password"
 				onEnter={submit}
 			>
@@ -262,7 +265,7 @@
 						class="aux"
 						href={emailValid ? `/recover?email=${encodeURIComponent(email)}` : '/recover'}
 					>
-						Forgot password?
+						{m.auth_login_forgot_password()}
 					</a>
 				{/snippet}
 			</PasswordField>
@@ -275,20 +278,20 @@
 			<label class="remember">
 				<input type="checkbox" bind:checked={rememberMe} />
 				<span class="box"><Check size={13} strokeWidth={2.5} /></span>
-				Remember me on this device
+				{m.auth_login_remember_me()}
 			</label>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!canSignIn || busy} onclick={submit}>
 					{#if busy}
-						<span class="spinner"></span>Signing in&hellip;
+						<span class="spinner"></span>{m.auth_login_signing_in()}
 					{:else}
-						Sign in
+						{m.auth_sign_in()}
 					{/if}
 				</Button>
 			</div>
 		</div>
 		<p class="switch">
-			New to Thelemail? <a href={registerHref}>Create an account</a>
+			<Rich text={m.auth_login_new_to()} tags={{ link: registerLink }} />
 		</p>
 	</div>
 {/if}

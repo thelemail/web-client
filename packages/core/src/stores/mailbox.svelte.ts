@@ -26,6 +26,7 @@ import type { RealtimeHint } from '$core/realtime/types';
 import { auth } from './auth.svelte';
 import { unread } from './unread.svelte';
 import { decodeWords } from 'postal-mime';
+import { m } from '$paraglide/messages.js';
 
 interface Stream {
 	query: Query;
@@ -169,7 +170,7 @@ function withThreadAggregates(m: Message, t: ThreadListItem): Message {
 async function decryptItem(accountId: string, item: MessageListItem): Promise<Message> {
 	const preview = await decryptPreview(accountId, item.encryptedPreview);
 	const storedAt = new Date(item.storedAt);
-	const fromDisplay = preview.sender.display || preview.sender.address || 'Unknown';
+	const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
 	const init = initialsFor(fromDisplay, preview.sender.address);
 	const pal = paletteFor(preview.sender.address.toLowerCase());
 	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
@@ -285,7 +286,7 @@ function fallbackRow(item: MessageListItem, code: string): Message {
 		id: item.id,
 		folder: folderFromServer(item.mailboxState, item.direction),
 		direction: item.direction,
-		from: 'Encrypted message',
+		from: m.mailbox_fallback_encrypted_message(),
 		fromAddr: '',
 		to: '',
 		recipients: [],
@@ -293,12 +294,12 @@ function fallbackRow(item: MessageListItem, code: string): Message {
 		bg: 'var(--danger-100)',
 		fg: 'var(--danger-700)',
 		epoch: storedAt.getTime(),
-		subj: `Could not decrypt preview (${code})`,
+		subj: m.mailbox_fallback_decrypt_failed({ code }),
 		labels: (item.labels ?? []) as LabelId[],
 		unread: !item.read,
 		starred: item.starred,
 		snoozedUntil: item.snoozedUntil ?? null,
-		prev: 'The preview ciphertext could not be opened with this device’s key.',
+		prev: m.mailbox_fallback_preview_ciphertext(),
 		body: []
 	};
 }
@@ -776,7 +777,7 @@ class MailboxStore {
 					...current,
 					loading: false,
 					loadingMore: false,
-					error: err instanceof Error ? err.message : 'Failed to load messages.'
+					error: err instanceof Error ? err.message : m.mailbox_load_failed()
 				});
 			} finally {
 				this.#pending.delete(pendingKey);

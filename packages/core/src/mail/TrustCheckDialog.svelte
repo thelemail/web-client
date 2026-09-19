@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Check from '@lucide/svelte/icons/check';
 	import Minus from '@lucide/svelte/icons/minus';
 	import X from '@lucide/svelte/icons/x';
@@ -55,7 +56,7 @@
 				{/each}
 			</dl>
 		{/if}
-		<button class="tcd-close" onclick={onClose}>Close</button>
+		<button class="tcd-close" onclick={onClose}>{m.common_close()}</button>
 	</div>
 </div>
 

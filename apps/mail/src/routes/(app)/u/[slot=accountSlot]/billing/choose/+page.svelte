@@ -15,6 +15,8 @@
 	import Mail from '@lucide/svelte/icons/mail';
 	import { Button } from '$core/components/ui/button';
 	import { entryPointVisible } from '$core/lifecycle/downgrade';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	let { data } = $props();
 
@@ -77,7 +79,7 @@
 		const planCode = planCodeFor(sel);
 		if (!planCode) return;
 		if (!selectionChanged) {
-			checkoutError = 'That is already your current plan.';
+			checkoutError = m.billing_choose_already_current();
 			return;
 		}
 		busy = true;
@@ -94,7 +96,7 @@
 			switched = true;
 		} catch (err) {
 			checkoutError =
-				err instanceof Error ? err.message : 'Could not switch plans. Please try again.';
+				err instanceof Error ? err.message : m.billing_choose_switch_failed();
 		} finally {
 			busy = false;
 		}
@@ -129,7 +131,7 @@
 		} catch (err) {
 			busy = false;
 			checkoutError =
-				err instanceof Error ? err.message : 'Could not start checkout. Please try again.';
+				err instanceof Error ? err.message : m.billing_choose_checkout_failed();
 		}
 	}
 
@@ -141,35 +143,36 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Choose a plan</title>
+	<title>{m.billing_choose_page_title()}</title>
 </svelte:head>
 
 {#snippet signOutFoot()}
 	<p class="switch">
-		Signed in as {auth.email ?? 'this account'}.
-		<button type="button" class="linklike" onclick={signOut}>Sign out</button>
+		{m.billing_choose_signed_in_as({ email: auth.email ?? m.billing_choose_this_account() })}
+		<button type="button" class="linklike" onclick={signOut}>{m.billing_choose_sign_out()}</button>
 	</p>
 {/snippet}
+
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <AuthShell>
 	<div class="card">
 		{#if platform.billing === 'handoff'}
 			<div class="card-surface screen-fade">
 				<div class="welcome">
-					<h1>Choose a plan in your browser</h1>
+					<h1>{m.billing_choose_handoff_title()}</h1>
 					<p>
-						Plans and payment are handled on the web, where your card details never pass through
-						this app. Once you have chosen a plan, come back here and your mailbox will open.
+						{m.billing_choose_handoff_body()}
 					</p>
 					<button
 						type="button"
 						class="primary"
 						onclick={() => platform.openExternal(`${platform.returnOrigin()}/u/${slot}/billing/choose`)}
 					>
-						Open billing in browser
+						{m.billing_choose_handoff_open()}
 					</button>
 					<button type="button" class="linklike" onclick={() => billing.refresh()}>
-						I have chosen a plan
+						{m.billing_choose_handoff_done()}
 					</button>
 				</div>
 			</div>
@@ -177,15 +180,22 @@
 			<div class="card-surface screen-fade">
 				<div class="welcome">
 					<span class="switch-check"><CircleCheck size={44} strokeWidth={1.5} /></span>
-					<h1>Plan updated</h1>
+					<h1>{m.billing_choose_switched_title()}</h1>
 					<p>
-						You&rsquo;re now on
-						{#if sub?.planCode}<b>{planLabelFor(sub.planCode, sub.seats ?? 1, sub.interval ?? 'year')}</b>{:else}your new plan{/if}.
-						The difference is prorated on your next invoice.
+						{#if sub?.planCode}
+							<Rich
+								text={m.billing_choose_switched_plan({
+									plan: planLabelFor(sub.planCode, sub.seats ?? 1, sub.interval ?? 'year')
+								})}
+								tags={{ b: bold }}
+							/>
+						{:else}
+							{m.billing_choose_switched_generic()}
+						{/if}
 					</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block href={`/u/${slot}/mail/inbox`}>
-							<Mail size={17} strokeWidth={1.75} />Open your mailbox
+							<Mail size={17} strokeWidth={1.75} />{m.billing_open_mailbox()}
 						</Button>
 					</div>
 				</div>
@@ -194,11 +204,11 @@
 		{:else if alreadyActive && !isOwner}
 			<div class="card-surface screen-fade">
 				<div class="welcome">
-					<h1>You&rsquo;re all set</h1>
-					<p>This workspace has an active plan. Only the workspace owner can change it.</p>
+					<h1>{m.billing_choose_member_active_title()}</h1>
+					<p>{m.billing_choose_member_active_body()}</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block href={`/u/${slot}/mail/inbox`}>
-							<Mail size={17} strokeWidth={1.75} />Open your mailbox
+							<Mail size={17} strokeWidth={1.75} />{m.billing_open_mailbox()}
 						</Button>
 					</div>
 				</div>
@@ -214,10 +224,10 @@
 			<PlanStep
 				bind:sel
 				showStepper={false}
-				eyebrow="Billing"
-				heading="Change your plan"
-				ctaVerb="Switch plan"
-				busyLabel="Switching your plan…"
+				eyebrow={m.billing_choose_change_eyebrow()}
+				heading={m.billing_choose_change_heading()}
+				ctaVerb={m.billing_choose_change_cta()}
+				busyLabel={m.billing_choose_change_busy()}
 				{busy}
 				onNext={switchPlan}
 				footer={signOutFoot}
@@ -225,18 +235,17 @@
 		{:else if paymentProblem}
 			<div class="card-surface screen-fade">
 				<div class="welcome">
-					<h1>Payment problem</h1>
+					<h1>{m.billing_choose_past_due_title()}</h1>
 					<p>
-						The last payment for this workspace didn&rsquo;t go through. Update your payment
-						method from the billing portal to keep your mailbox active.
+						{m.billing_choose_past_due_body()}
 					</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block href={`/u/${slot}/settings/account`}>
-							Go to Settings &rarr; Manage billing
+							{m.billing_choose_past_due_settings()}
 						</Button>
 						{#if canMoveToFree}
 							<Button variant="ghost" size="lg" block href={`/u/${slot}/lifecycle/downgrade`}>
-								Move to the free plan instead
+								{m.billing_choose_move_to_free()}
 							</Button>
 						{/if}
 					</div>
@@ -246,10 +255,9 @@
 		{:else if !isOwner && workspaces.workspace}
 			<div class="card-surface screen-fade">
 				<div class="welcome">
-					<h1>Almost there</h1>
+					<h1>{m.billing_choose_member_pending_title()}</h1>
 					<p>
-						This workspace doesn&rsquo;t have an active plan yet. Your workspace owner needs to
-						choose a plan before mail is available.
+						{m.billing_choose_member_pending_body()}
 					</p>
 				</div>
 				{@render signOutFoot()}
@@ -258,7 +266,7 @@
 			{#if canceledNotice}
 				<p class="billing-notice">
 					<CircleCheck size={15} strokeWidth={1.75} />
-					<span>Checkout was cancelled &mdash; nothing was charged. Pick a plan when you&rsquo;re ready.</span>
+					<span>{m.billing_choose_canceled_notice()}</span>
 				</p>
 			{/if}
 			{#if checkoutError}
@@ -270,9 +278,9 @@
 			<PlanStep
 				bind:sel
 				showStepper={false}
-				eyebrow={isFree ? 'Upgrade' : 'Activate your mailbox'}
-				heading={isFree ? 'Upgrade your plan' : 'Choose your plan'}
-				ctaVerb="Continue to secure checkout"
+				eyebrow={isFree ? m.billing_choose_upgrade_eyebrow() : m.billing_choose_activate_eyebrow()}
+				heading={isFree ? m.billing_choose_upgrade_heading() : m.billing_choose_activate_heading()}
+				ctaVerb={m.billing_choose_checkout_cta()}
 				{busy}
 				onNext={startCheckout}
 				footer={signOutFoot}

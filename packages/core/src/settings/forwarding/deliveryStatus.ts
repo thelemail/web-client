@@ -1,20 +1,21 @@
+import { m } from '$paraglide/messages.js';
 import type { ForwardDelivery, ForwardDeliveryStatus, ReadDelegation } from '$core/api/readDelegations';
 
-const LABELS: Record<ForwardDeliveryStatus, string> = {
-	pending: 'Sending',
-	sending: 'Sending',
-	queued: 'Sending',
-	delivered: 'Delivered',
-	failed: 'Not delivered',
-	not_forwarded_encrypted: 'Not forwarded: it arrived encrypted to this address alone',
-	not_forwarded_missing_copy: "Not forwarded: the sender's app did not include a copy",
-	not_forwarded_needs_key: 'Not forwarded: it was encrypted, and this destination has no key',
-	not_forwarded_spam: 'Not forwarded: held as spam',
-	loop_suppressed: 'Not forwarded: it would have looped back'
+const LABELS: Record<ForwardDeliveryStatus, () => string> = {
+	pending: m.settings_forwarding_status_sending,
+	sending: m.settings_forwarding_status_sending,
+	queued: m.settings_forwarding_status_sending,
+	delivered: m.settings_forwarding_status_delivered,
+	failed: m.settings_forwarding_status_failed,
+	not_forwarded_encrypted: m.settings_forwarding_status_encrypted,
+	not_forwarded_missing_copy: m.settings_forwarding_status_missing_copy,
+	not_forwarded_needs_key: m.settings_forwarding_status_needs_key,
+	not_forwarded_spam: m.settings_forwarding_status_spam,
+	loop_suppressed: m.settings_forwarding_status_loop
 };
 
 export function deliveryLabel(status: ForwardDeliveryStatus): string {
-	return LABELS[status] ?? status;
+	return LABELS[status]?.() ?? status;
 }
 
 export function deliveryTone(status: ForwardDeliveryStatus): 'ok' | 'warn' | 'neutral' {

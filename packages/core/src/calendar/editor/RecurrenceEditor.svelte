@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ICAL from 'ical.js';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		value: string | undefined;
@@ -80,13 +81,13 @@
 
 <div class="rec">
 	<div class="seg">
-		{#each [['NONE', 'Once'], ['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['MONTHLY', 'Monthly'], ['YEARLY', 'Yearly']] as [key, label] (key)}
+		{#each [['NONE', m.cal_rec_once()], ['DAILY', m.cal_rec_daily()], ['WEEKLY', m.cal_rec_weekly()], ['MONTHLY', m.cal_rec_monthly()], ['YEARLY', m.cal_rec_yearly()]] as [key, label] (key)}
 			<button type="button" class:on={freq === key} onclick={() => pick(key as Freq)}>{label}</button>
 		{/each}
 	</div>
 	{#if freq !== 'NONE'}
 		<button type="button" class="rec-more" onclick={() => (custom = !custom)}>
-			{custom ? 'Fewer options' : 'More options'}
+			{custom ? m.cal_rec_fewer() : m.cal_rec_more()}
 		</button>
 		{#if freq === 'WEEKLY'}
 			<div class="rec-days">
@@ -100,24 +101,30 @@
 		{#if custom}
 			<div class="rec-row">
 				<label>
-					Every
+					{m.cal_rec_every()}
 					<input type="number" min="1" max="99" bind:value={interval} onchange={emit} />
-					{freq === 'DAILY' ? 'days' : freq === 'WEEKLY' ? 'weeks' : freq === 'MONTHLY' ? 'months' : 'years'}
+					{freq === 'DAILY'
+						? m.cal_rec_unit_days()
+						: freq === 'WEEKLY'
+							? m.cal_rec_unit_weeks()
+							: freq === 'MONTHLY'
+								? m.cal_rec_unit_months()
+								: m.cal_rec_unit_years()}
 				</label>
 			</div>
 			<div class="rec-row">
 				<label>
-					Ends
+					{m.cal_rec_ends()}
 					<select bind:value={ends} onchange={emit}>
-						<option value="never">never</option>
-						<option value="on">on a date</option>
-						<option value="after">after</option>
+						<option value="never">{m.cal_rec_ends_never()}</option>
+						<option value="on">{m.cal_rec_ends_on()}</option>
+						<option value="after">{m.cal_rec_ends_after()}</option>
 					</select>
 				</label>
 				{#if ends === 'on'}
 					<input type="date" bind:value={until} onchange={emit} />
 				{:else if ends === 'after'}
-					<label><input type="number" min="1" max="999" bind:value={count} onchange={emit} /> times</label>
+					<label><input type="number" min="1" max="999" bind:value={count} onchange={emit} /> {m.cal_rec_times()}</label>
 				{/if}
 			</div>
 		{/if}

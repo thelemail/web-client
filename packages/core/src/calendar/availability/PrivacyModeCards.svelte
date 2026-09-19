@@ -3,52 +3,53 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import Users from '@lucide/svelte/icons/users';
 	import { accountSettings, type CalendarPrivacyDefault } from '$core/stores/accountSettings.svelte';
+	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
 
 	const MODES: {
 		value: CalendarPrivacyDefault;
-		label: string;
-		body: string;
-		facts: string[];
+		label: () => string;
+		body: () => string;
+		facts: () => string[];
 		tone: string;
 	}[] = [
 		{
 			value: 'private',
-			label: 'Private',
-			body: 'Details and timing are encrypted. Reminders fire on your devices. No availability is published to anyone.',
-			facts: ['server reads: nothing', 'reminders: local only'],
+			label: () => m.cal_privacy_private(),
+			body: () => m.cal_privacy_private_body(),
+			facts: () => [m.cal_privacy_private_fact_server(), m.cal_privacy_private_fact_reminders()],
 			tone: 'var(--pine-600)'
 		},
 		{
 			value: 'busy',
-			label: 'Busy-only',
-			body: 'Details stay encrypted. Members of your workspace see the busy window so they can find a free slot, and nothing else.',
-			facts: ['server reads: start, end', 'shared: busy window only'],
+			label: () => m.cal_privacy_busy(),
+			body: () => m.cal_privacy_busy_body(),
+			facts: () => [m.cal_privacy_busy_fact_server(), m.cal_privacy_busy_fact_shared()],
 			tone: 'var(--brass-600)'
 		},
 		{
 			value: 'shared',
-			label: 'Shared',
-			body: 'You disclose chosen fields on purpose — to members, or to invitees. Each field is listed before it is sent.',
-			facts: ['server reads: start, end', 'shared: fields you name'],
+			label: () => m.cal_privacy_shared(),
+			body: () => m.cal_privacy_shared_body(),
+			facts: () => [m.cal_privacy_shared_fact_server(), m.cal_privacy_shared_fact_shared()],
 			tone: 'var(--info-500)'
 		}
 	];
 
 	const ICONS = { private: Lock, busy: Eye, shared: Users };
 
-	const NOTE: Record<CalendarPrivacyDefault, string> = {
-		private: 'New commitments default to Private',
-		busy: 'New commitments default to Busy-only',
-		shared: 'New commitments default to Shared — fields are named before sending'
+	const NOTE: Record<CalendarPrivacyDefault, () => string> = {
+		private: () => m.cal_privacy_note_private(),
+		busy: () => m.cal_privacy_note_busy(),
+		shared: () => m.cal_privacy_note_shared()
 	};
 
 	async function choose(mode: CalendarPrivacyDefault) {
 		try {
 			await accountSettings.persistCalendar({ ...accountSettings.calendar, defaultPrivacy: mode });
-			cal.notify(NOTE[mode]);
+			cal.notify(NOTE[mode]());
 		} catch {
-			cal.notify('Could not save the default');
+			cal.notify(m.cal_privacy_save_failed());
 		}
 	}
 </script>
@@ -63,11 +64,11 @@
 			onclick={() => choose(mode.value)}
 		>
 			<span class="pc-t" style:--icon-tone={mode.tone}>
-				<Icon size={16} color={mode.tone} />{mode.label}
+				<Icon size={16} color={mode.tone} />{mode.label()}
 			</span>
-			<span class="pc-d">{mode.body}</span>
+			<span class="pc-d">{mode.body()}</span>
 			<span class="pc-f">
-				{#each mode.facts as fact, i (fact)}{#if i}<br />{/if}{fact}{/each}
+				{#each mode.facts() as fact, i (fact)}{#if i}<br />{/if}{fact}{/each}
 			</span>
 		</button>
 	{/each}

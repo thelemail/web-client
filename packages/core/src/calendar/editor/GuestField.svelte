@@ -2,6 +2,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { m } from '$paraglide/messages.js';
 	import type { Attendee } from '../model';
 
 	interface Props {
@@ -73,14 +74,14 @@
 		{#each value as a (a.email)}
 			<span class="guest-chip" class:external={!a.internal}>
 				{a.name || a.email}
-				<button type="button" aria-label="Remove {a.email}" onclick={() => remove(a.email)}>
+				<button type="button" aria-label={m.cal_guest_remove_aria({ email: a.email })} onclick={() => remove(a.email)}>
 					<X size={12} />
 				</button>
 			</span>
 		{/each}
 		<input
 			type="text"
-			placeholder={value.length ? '' : 'Add people by name or address'}
+			placeholder={value.length ? '' : m.cal_guest_placeholder()}
 			bind:value={input}
 			onkeydown={onKey}
 			onfocus={() => (focused = true)}
@@ -92,7 +93,7 @@
 			{#each suggestions as s (s.email)}
 				<button type="button" onmousedown={(e) => e.preventDefault()} onclick={() => add(s.email, s.name)}>
 					<span>{s.name}</span>
-					<span class="guest-mail">{s.email}{s.internal ? ' · member' : ''}</span>
+					<span class="guest-mail">{s.internal ? m.cal_guest_member({ email: s.email }) : s.email}</span>
 				</button>
 			{/each}
 		</div>

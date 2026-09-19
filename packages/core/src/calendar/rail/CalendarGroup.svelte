@@ -4,6 +4,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { Label } from '$core/components/ui/label';
+	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
 	import type { CalendarGroup } from '../types';
 	import CalendarMenu from './CalendarMenu.svelte';
@@ -27,7 +28,7 @@
 			<button
 				type="button"
 				class="addbtn"
-				aria-label="Add a calendar"
+				aria-label={m.cal_group_add_aria()}
 				onclick={() => cal.openCalendarDialog({ mode: 'create' })}
 			>
 				<Plus size={13} />
@@ -42,7 +43,7 @@
 			class="cal-item"
 			class:on={entry.on}
 			style:--cc={entry.color}
-			title={entry.readOnly ? `${entry.name} — read only` : entry.name}
+			title={entry.readOnly ? m.cal_group_read_only_title({ name: entry.name }) : entry.name}
 		>
 			<Checkbox
 				id="cal-{entry.id}"
@@ -52,7 +53,7 @@
 			/>
 			<Label for="cal-{entry.id}" class="cal-nm {group === 'role' ? 'role' : ''}">{entry.name}</Label>
 			{#if entry.badge === 'key'}
-				<span class="cal-badge" title="A member needs a new key"><KeyRound size={11} /></span>
+				<span class="cal-badge" title={m.cal_group_key_badge_title()}><KeyRound size={11} /></span>
 			{:else if entry.badge}
 				<span class="cal-badge">{entry.badge}</span>
 			{/if}

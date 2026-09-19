@@ -5,6 +5,7 @@ import { b64ToHex, hexToB64, textToB64 } from '$core/keys/encode';
 import { senderKey } from '$core/mail/send';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
+import { m } from '$paraglide/messages.js';
 
 export interface SealKey {
 	publicKeyArmored: string;
@@ -35,7 +36,7 @@ export async function mintOwnCalendarKey(accountId: string): Promise<MintedCalen
 		recipients: [{ accountId, publicKeyArmored: own.publicKeyArmored }]
 	});
 	if (!created.ok) {
-		throw new SealError(created.code === 'locked' ? 'locked' : 'unknown', 'Could not create the calendar key');
+		throw new SealError(created.code === 'locked' ? 'locked' : 'unknown', m.cal_seal_key_failed());
 	}
 	return {
 		key: {
@@ -62,7 +63,7 @@ export async function keyForCalendar(accountId: string, cal: CalendarRow): Promi
 				await calendarKeys.load(accountId);
 				key = calendarKeys.publicKeyFor(cal.id);
 			}
-			if (!key) throw new SealError('no_key', 'You do not hold the key for this calendar yet.');
+			if (!key) throw new SealError('no_key', m.cal_seal_no_key());
 			return {
 				publicKeyArmored: key.publicKeyArmored,
 				fingerprintB64: key.fingerprintB64,
@@ -70,13 +71,13 @@ export async function keyForCalendar(accountId: string, cal: CalendarRow): Promi
 			};
 		}
 		case 'role': {
-			if (!cal.sharedAliasId) throw new SealError('no_key', 'This role calendar has no address.');
+			if (!cal.sharedAliasId) throw new SealError('no_key', m.cal_seal_role_no_address());
 			await aliasKeys.ready(accountId);
 			const res = await keystore.getPublicKey({ accountId, aliasId: cal.sharedAliasId });
 			if (!res.ok) {
 				await aliasKeys.load(accountId);
 				const retry = await keystore.getPublicKey({ accountId, aliasId: cal.sharedAliasId });
-				if (!retry.ok) throw new SealError('no_key', 'The shared address key is not loaded.');
+				if (!retry.ok) throw new SealError('no_key', m.cal_seal_alias_key_missing());
 				return fromPublicKey(retry.publicKeyArmored, retry.fingerprint);
 			}
 			return fromPublicKey(res.publicKeyArmored, res.fingerprint);

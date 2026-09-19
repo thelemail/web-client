@@ -9,6 +9,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { platform } from '$platform';
 	import { appUpdate, describeUpdateProblem } from '$core/stores/appUpdate.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	onMount(() => {
 		appUpdate.start();
@@ -27,32 +28,32 @@
 	);
 
 	const summary = $derived.by(() => {
-		if (!status) return 'Checking.';
-		if (appUpdate.installing) return 'Installing. Thelemail restarts when it is done.';
+		if (!status) return m.settings_about_checking();
+		if (appUpdate.installing) return m.settings_about_installing();
 		if (available) {
 			return appUpdate.hidden
-				? `Version ${available.version} is available. You chose to be reminded later.`
-				: `Version ${available.version} is available.`;
+				? m.settings_about_available_later({ version: available.version })
+				: m.settings_about_available({ version: available.version });
 		}
-		if (lastChecked) return `You have the latest version. Last checked ${lastChecked}.`;
-		return 'Not checked yet.';
+		if (lastChecked) return m.settings_about_latest({ lastChecked });
+		return m.settings_about_not_checked();
 	});
 
 	const blockedText = $derived(status?.blocked ? describeUpdateProblem(status.blocked) : null);
 	const failureText = $derived(
 		status?.lastFailure && !appUpdate.problem
-			? `The last attempt did not finish. ${describeUpdateProblem(status.lastFailure)}`
+			? m.settings_about_last_failure({ problem: describeUpdateProblem(status.lastFailure) })
 			: null
 	);
 </script>
 
-<SecHead desc="The version you are running and how it stays up to date." />
+<SecHead desc={m.settings_about_desc()} />
 
 {#if platform.updates}
 	<div class="scard">
-		<CardHead title="Thelemail for Mac" />
-		<Row t="Version" d={status ? status.currentVersion : ''} />
-		<Row t="Updates" descSnippet={desc}>
+		<CardHead title={m.settings_about_mac_title()} />
+		<Row t={m.settings_about_version()} d={status ? status.currentVersion : ''} />
+		<Row t={m.settings_about_updates()} descSnippet={desc}>
 			<div class="abt-actions">
 				<Button
 					variant="ghost"
@@ -60,11 +61,11 @@
 					onclick={() => appUpdate.check()}
 					disabled={appUpdate.checking || appUpdate.installing}
 				>
-					<RefreshCw />Check for updates
+					<RefreshCw />{m.settings_about_check()}
 				</Button>
 				{#if available}
 					<Button variant="secondary" size="sm" onclick={() => appUpdate.openRelease()}>
-						<ExternalLink />Release notes
+						<ExternalLink />{m.settings_about_release_notes()}
 					</Button>
 					{#if !status?.blocked}
 						<Button
@@ -73,23 +74,23 @@
 							onclick={() => appUpdate.install()}
 							disabled={appUpdate.installing}
 						>
-							<Download />Install and restart
+							<Download />{m.settings_about_install()}
 						</Button>
 					{/if}
 				{/if}
 			</div>
 		</Row>
 		<Row
-			t="How updates work"
-			d="Thelemail looks for a new release when it starts and every six hours. It downloads and installs one only when you choose Install. A download that is not signed with the Thelemail release key and Apple Developer ID for Thelemail is thrown away."
+			t={m.settings_about_how_title()}
+			d={m.settings_about_how_desc()}
 		/>
 	</div>
 {:else}
 	<div class="scard">
-		<CardHead title="Updates" />
+		<CardHead title={m.settings_about_updates()} />
 		<Row
-			t="Web app"
-			d="This page always loads the current version of Thelemail. Updates for the desktop app are managed here in the desktop app."
+			t={m.settings_about_web_title()}
+			d={m.settings_about_web_desc()}
 		/>
 	</div>
 {/if}
@@ -97,7 +98,7 @@
 {#snippet desc()}
 	<span>{summary}</span>
 	{#if appUpdate.blockers.length > 0}
-		<span class="abt-note">{appUpdate.blockers.join(' ')} Finish it, then install.</span>
+		<span class="abt-note">{m.settings_about_blockers({ blockers: appUpdate.blockers.join(' ') })}</span>
 	{/if}
 	{#if appUpdate.problem}
 		<span class="abt-note">{appUpdate.problem}</span>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import Check from '@lucide/svelte/icons/check';
 	import Star from '@lucide/svelte/icons/star';
 	import Archive from '@lucide/svelte/icons/archive';
@@ -96,7 +97,7 @@
 		class="lead"
 		role="button"
 		tabindex="-1"
-		aria-label="Select message"
+		aria-label={msg.mail_row_select()}
 		onclick={(e) => {
 			e.stopPropagation();
 			onToggleCheck(m.id);
@@ -134,15 +135,15 @@
 		<div class="r1">
 			<span class="from">{m.from}</span>
 			{#if threadCount > 1}
-				<span class="thr-ct" title="{threadCount} messages">
+				<span class="thr-ct" title={msg.mail_row_thread_count({ count: threadCount })}>
 					<MessagesSquare size={11} />{threadCount}
 				</span>
 			{/if}
 			{#if hasEvent}
-				<span class="tick" title="Invitation"><Calendar size={12} /></span>
+				<span class="tick" title={msg.mail_row_invitation()}><Calendar size={12} /></span>
 			{/if}
 			{#if nonIcsAttachments.length > 0}
-				<span class="tick" title="{nonIcsAttachments.length} attached">
+				<span class="tick" title={msg.mail_row_attached_count({ count: nonIcsAttachments.length })}>
 					<Paperclip size={12} />{nonIcsAttachments.length}
 				</span>
 			{/if}
@@ -150,10 +151,10 @@
 				<span class="lbl" title={label.name} style:background={label.color}></span>
 			{/each}
 			{#if labelOverflow > 0}
-				<span class="lbl-more" title="{labelOverflow} more">+{labelOverflow}</span>
+				<span class="lbl-more" title={msg.mail_row_labels_more({ count: labelOverflow })}>+{labelOverflow}</span>
 			{/if}
 			{#if wakeAt}
-				<span class="time wake" title="Comes back {formatWhenLong(wakeAt)}">
+				<span class="time wake" title={msg.mail_row_comes_back({ when: formatWhenLong(wakeAt) })}>
 					{formatRowTime(wakeAt)}
 				</span>
 			{:else}
@@ -163,7 +164,7 @@
 				<button
 					class="star"
 					class:on={m.starred}
-					title={m.starred ? 'Unstar' : 'Star'}
+					title={m.starred ? msg.mail_action_unstar() : msg.mail_action_star()}
 					onclick={(e) => {
 						e.stopPropagation();
 						onToggleStar(m.id);
@@ -183,7 +184,7 @@
 			<button
 				class="star"
 				class:on={m.starred}
-				title="Star"
+				title={msg.mail_action_star()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onToggleStar(m.id);
@@ -192,7 +193,7 @@
 		{/if}
 		{#if caps.showMarkRead}
 			<button
-				title={m.unread ? 'Mark as read' : 'Mark as unread'}
+				title={m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onToggleRead(m.id);
@@ -207,7 +208,7 @@
 		{/if}
 		{#if caps.showRestore}
 			<button
-				title="Restore"
+				title={msg.mail_action_restore()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onRestore?.(m.id);
@@ -216,7 +217,7 @@
 		{/if}
 		{#if caps.showArchive}
 			<button
-				title="Archive"
+				title={msg.mail_action_archive()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onArchive(m.id);
@@ -225,7 +226,7 @@
 		{/if}
 		{#if caps.showSpam && onSpam}
 			<button
-				title="Report spam"
+				title={msg.mail_action_report_spam()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onSpam?.(m.id);
@@ -234,7 +235,7 @@
 		{/if}
 		{#if caps.showTrash}
 			<button
-				title="Move to trash"
+				title={msg.mail_action_trash()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onTrash(m.id);
@@ -243,7 +244,7 @@
 		{/if}
 		{#if caps.showDelete}
 			<button
-				title="Permanently delete"
+				title={msg.mail_action_delete_forever()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onDelete?.(m.id);

@@ -9,6 +9,7 @@
 		planTotal,
 		annualSavingPercent,
 		eur,
+		pricePerPeriod,
 		type BillingPeriod,
 		type PlanSelection,
 		type PlanTier,
@@ -24,6 +25,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 
 	let {
 		sel = $bindable(),
@@ -31,11 +33,11 @@
 		onBack = null,
 		onNext,
 		showStepper = true,
-		eyebrow = 'Step 3 of 4',
-		heading = 'Choose your plan',
-		ctaVerb = 'Continue to payment',
+		eyebrow,
+		heading,
+		ctaVerb,
 		busy = false,
-		busyLabel = 'Preparing secure checkout…',
+		busyLabel,
 		footer = null
 	}: {
 		sel: PlanSelection;
@@ -50,6 +52,11 @@
 		busyLabel?: string;
 		footer?: Snippet | null;
 	} = $props();
+
+	const eyebrowText = $derived(eyebrow ?? m.auth_step_of({ step: 3, total: 4 }));
+	const headingText = $derived(heading ?? m.auth_plan_heading());
+	const ctaText = $derived(ctaVerb ?? m.auth_plan_cta_continue_payment());
+	const busyText = $derived(busyLabel ?? m.auth_preparing_checkout());
 
 	const ICONS = { personal: UserRound, family: UsersRound, business: BriefcaseBusiness };
 
@@ -75,15 +82,18 @@
 		return monthly ? t.prices.month : t.prices.year / 12;
 	}
 	function chargeNote(t: PlanTier): string {
-		if (monthly) return 'Billed monthly, cancel any time';
+		if (monthly) return m.auth_plan_charge_monthly();
 		return product.perMailbox
-			? `${eur(t.prices.year)} a mailbox, billed once a year`
-			: `${eur(t.prices.year)} billed once a year`;
+			? m.auth_plan_charge_yearly_per_mailbox({ price: eur(t.prices.year) })
+			: m.auth_plan_charge_yearly({ price: eur(t.prices.year) });
 	}
 	function savingNote(t: PlanTier): string {
 		return product.perMailbox
-			? `Annual is ${eur(t.prices.year)} a mailbox each year and saves ${annualSavingPercent(t)}%.`
-			: `Annual is ${eur(t.prices.year)} a year and saves ${annualSavingPercent(t)}%.`;
+			? m.auth_plan_saving_per_mailbox({
+					price: eur(t.prices.year),
+					percent: annualSavingPercent(t)
+				})
+			: m.auth_plan_saving({ price: eur(t.prices.year), percent: annualSavingPercent(t) });
 	}
 </script>
 
@@ -92,14 +102,14 @@
 		<Stepper step={2} {labels} />
 	{/if}
 	<div class="card-head">
-		{#if eyebrow}
-			<p class="eyebrow">{eyebrow}</p>
+		{#if eyebrowText}
+			<p class="eyebrow">{eyebrowText}</p>
 		{/if}
-		<h1>{heading}</h1>
+		<h1>{headingText}</h1>
 		<p>{product.tagline}</p>
 	</div>
 
-	<div class="prodtabs" role="radiogroup" aria-label="Product">
+	<div class="prodtabs" role="radiogroup" aria-label={m.auth_plan_product_group()}>
 		{#each PRODUCTS as p (p.id)}
 			{@const ProductIcon = ICONS[p.id]}
 			<button
@@ -119,14 +129,14 @@
 				</span>
 				<span class="pt-from mono">
 					{p.perMailbox
-						? `from ${eur(perMonth(p.tiers[0]))} / mailbox · month`
-						: `from ${eur(perMonth(p.tiers[0]))} / month`}
+						? m.auth_plan_from_per_mailbox({ price: eur(perMonth(p.tiers[0])) })
+						: m.auth_plan_from({ price: eur(perMonth(p.tiers[0])) })}
 				</span>
 			</button>
 		{/each}
 	</div>
 
-	<div class="periodtabs" role="radiogroup" aria-label="Billing period">
+	<div class="periodtabs" role="radiogroup" aria-label={m.auth_plan_period_group()}>
 		<button
 			type="button"
 			role="radio"
@@ -135,7 +145,7 @@
 			class:cur={!monthly}
 			onclick={() => pickPeriod('year')}
 		>
-			Annual
+			{m.auth_plan_period_annual()}
 		</button>
 		<button
 			type="button"
@@ -145,18 +155,18 @@
 			class:cur={monthly}
 			onclick={() => pickPeriod('month')}
 		>
-			Monthly
+			{m.auth_plan_period_monthly()}
 		</button>
 	</div>
 
 	{#if product.perMailbox}
 		<div class="seats">
-			<span class="seats-lab">Mailboxes</span>
+			<span class="seats-lab">{m.auth_plan_seats_label()}</span>
 			<span class="seats-ctl">
 				<button
 					type="button"
 					class="seatbtn"
-					aria-label="Fewer mailboxes"
+					aria-label={m.auth_plan_seats_fewer()}
 					disabled={sel.seats <= MIN_SEATS}
 					onclick={() => setSeats(sel.seats - 1)}
 				>
@@ -166,18 +176,18 @@
 				<button
 					type="button"
 					class="seatbtn"
-					aria-label="More mailboxes"
+					aria-label={m.auth_plan_seats_more()}
 					disabled={sel.seats >= MAX_SEATS}
 					onclick={() => setSeats(sel.seats + 1)}
 				>
 					<Plus size={15} strokeWidth={1.75} />
 				</button>
 			</span>
-			<span class="seats-note">Starts at 3 — prorated when your team changes mid-term.</span>
+			<span class="seats-note">{m.auth_plan_seats_note({ min: MIN_SEATS })}</span>
 		</div>
 	{/if}
 
-	<div class="tiers" role="radiogroup" aria-label="Plan">
+	<div class="tiers" role="radiogroup" aria-label={m.auth_plan_tier_group()}>
 		{#each product.tiers as t (t.id)}
 			{@const seld = t.id === sel.tier}
 			<button
@@ -200,7 +210,7 @@
 				{/if}
 				<span class="tc-price">
 					<b class="serif">{eur(perMonth(t))}</b>
-					<span class="tc-per mono">{product.perMailbox ? '/ mailbox · month' : '/ month'}</span>
+					<span class="tc-per mono">{product.perMailbox ? m.auth_plan_per_mailbox_month() : m.auth_plan_per_month()}</span>
 				</span>
 				<span class="tc-charge mono">{chargeNote(t)}</span>
 				{#if monthly}
@@ -208,7 +218,10 @@
 				{/if}
 				{#if product.perMailbox}
 					<span class="tc-total mono" class:on={seld}>
-						{sel.seats} mailboxes = {eur(t.prices[sel.period] * sel.seats)} / {sel.period}
+						{m.auth_plan_seats_total({
+							count: sel.seats,
+							total: pricePerPeriod(t.prices[sel.period] * sel.seats, sel.period)
+						})}
 					</span>
 				{/if}
 				<span class="tc-rows">
@@ -228,25 +241,28 @@
 	<div class="actions">
 		<div class="btnrow">
 			{#if onBack}
-				<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={onBack}>
+				<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={onBack}>
 					<ArrowLeft size={17} strokeWidth={1.75} />
 				</Button>
 			{/if}
 			<Button variant="primary" size="lg" disabled={!tier || busy} onclick={onNext}>
 				{#if busy}
-					<span class="spinner"></span>{busyLabel}
+					<span class="spinner"></span>{busyText}
 				{:else if tier}
-					{ctaVerb} — {tier.name} · {eur(total)} / {sel.period}
+					{m.auth_plan_cta({
+						verb: ctaText,
+						plan: tier.name,
+						price: pricePerPeriod(total, sel.period)
+					})}
 					<ArrowRight size={17} strokeWidth={1.75} />
 				{:else}
-					Select a plan to continue
+					{m.auth_plan_select_to_continue()}
 				{/if}
 			</Button>
 		</div>
 	</div>
 	<p class="legal">
-		{monthly ? 'Monthly billing' : 'Annual billing'}. Prices include VAT where applicable. Cancel
-		anytime &mdash; your archive stays exportable.
+		{monthly ? m.auth_plan_legal_monthly() : m.auth_plan_legal_annual()}
 	</p>
 	{#if footer}
 		{@render footer()}

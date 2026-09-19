@@ -4,6 +4,8 @@
 	import Send from '@lucide/svelte/icons/send';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
@@ -32,38 +34,43 @@
 			onRevoked(delegation.label);
 			onClose();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not turn off forwarding.';
+			error = err instanceof Error ? err.message : m.settings_forwarding_revoke_failed();
 		} finally {
 			busy = false;
 		}
 	}
 </script>
 
-<CeremonyShell icon={Trash2} eyebrow="Forwarding" title="Stop forwarding to {delegation.label}" tone="danger" {onClose}>
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
+<CeremonyShell icon={Trash2} eyebrow={m.settings_forwarding_title()} title={m.settings_forwarding_revoke_title({ label: delegation.label })} tone="danger" {onClose}>
 	<div class="cer-pane">
 		<div class="cer-lede">
-			<p>Turning off forwarding from {delegation.address} to <b>{delegation.destination}</b> means:</p>
+			<p>
+				<Rich
+					text={m.settings_forwarding_revoke_lede({ address: delegation.address, destination: delegation.destination })}
+					tags={{ b: bold }}
+				/>
+			</p>
 		</div>
 		<ul class="cer-points">
 			<li>
 				<Send size={16} />
-				<span>New mail is no longer forwarded, and senders stop encrypting copies to this key.</span>
+				<span>{m.settings_forwarding_revoke_point_new()}</span>
 			</li>
 			<li>
 				<CircleAlert size={16} />
-				<span>
-					Anything already forwarded stays with {delegation.label}. Thelemail cannot take it back.
-				</span>
+				<span>{m.settings_forwarding_revoke_point_kept({ label: delegation.label })}</span>
 			</li>
 			<li>
 				<Inbox size={16} />
-				<span>Your mailbox and any other forwarding keep working as before.</span>
+				<span>{m.settings_forwarding_revoke_point_mailbox()}</span>
 			</li>
 		</ul>
 
 		<Label class="cer-ack danger" for="revoke-forwarding-ack">
 			<Checkbox id="revoke-forwarding-ack" checked={ack} onCheckedChange={(v) => (ack = v === true)} />
-			<span>I understand the key is retired for good. To forward again I will set it up from scratch.</span>
+			<span>{m.settings_forwarding_revoke_ack()}</span>
 		</Label>
 
 		{#if error}
@@ -72,9 +79,9 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" disabled={busy} onclick={onClose}>Keep it</Button>
+		<Button variant="ghost" disabled={busy} onclick={onClose}>{m.settings_forwarding_revoke_keep()}</Button>
 		<Button variant="danger" disabled={!ack || busy} onclick={submit}>
-			{busy ? 'Turning off…' : 'Turn off'}
+			{busy ? m.settings_forwarding_revoke_busy() : m.settings_forwarding_turn_off()}
 		</Button>
 	{/snippet}
 </CeremonyShell>

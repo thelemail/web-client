@@ -4,6 +4,7 @@ import type { CustomDomain } from '$core/api/customDomains';
 import type { WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
+import { m } from '$paraglide/messages.js';
 import { SHARED_DOMAIN } from './entitlements';
 
 export type AddressKind = 'mailbox' | 'alias' | 'shared';
@@ -70,40 +71,40 @@ export function personFor(ctx: ModelContext, accountId: string): AddressPerson {
 	const member = ctx.members.find((m) => m.accountId === accountId);
 	if (member) return { accountId, name: member.fullName || member.email, email: member.email };
 	if (accountId && accountId === ctx.accountId) {
-		return { accountId, name: ctx.fullName ?? 'You', email: '' };
+		return { accountId, name: ctx.fullName ?? m.settings_address_you(), email: '' };
 	}
-	return { accountId, name: 'Another member', email: '' };
+	return { accountId, name: m.settings_address_another_member(), email: '' };
 }
 
 export function usedByLabel(ctx: ModelContext, row: Pick<AddressRow, 'kind' | 'people'>): string {
 	if (row.kind === 'shared') {
 		const mine = row.people.some((p) => p.accountId === ctx.accountId);
 		const n = row.people.length;
-		if (mine && n === 1) return 'Only you';
-		if (mine) return n === 2 ? 'You and 1 other' : `You and ${n - 1} others`;
-		return n === 1 ? '1 person' : `${n} people`;
+		if (mine && n === 1) return m.settings_address_used_only_you();
+		if (mine) return m.settings_address_used_you_and_others({ count: n - 1 });
+		return m.settings_address_used_people({ count: n });
 	}
 	const owner = row.people[0];
 	if (!owner) return '';
-	return owner.accountId === ctx.accountId ? 'You' : owner.name;
+	return owner.accountId === ctx.accountId ? m.settings_address_you() : owner.name;
 }
 
 function signerSummary(items: SigningDelegation[]): string {
 	const active = items.filter((d) => !d.revokedAt).length;
 	if (!active) return '';
-	return `${active} service${active > 1 ? 's' : ''} may sign`;
+	return m.settings_address_signers_summary({ count: active });
 }
 
 function forwardSummary(items: ReadDelegation[]): string {
 	const live = items.filter((f) => f.state === 'active' || f.state === 'paused');
 	if (!live.length) return '';
-	return `Forwards to ${live.map((f) => f.label).join(', ')}`;
+	return m.settings_address_forwards_to({ targets: live.map((f) => f.label).join(', ') });
 }
 
 function pendingSummary(items: ReadDelegation[]): string {
 	const pending = items.filter((f) => f.state === 'pending_verification').length;
 	if (!pending) return '';
-	return `${pending} destination${pending > 1 ? 's' : ''} unconfirmed`;
+	return m.settings_address_pending_summary({ count: pending });
 }
 
 function sharedPeople(members: SharedAliasMember[]): AddressPerson[] {
@@ -205,9 +206,9 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 		return {
 			domain,
 			ownDomain,
-			badge: ownDomain ? 'Your domain · verified' : 'Included with your plan',
+			badge: ownDomain ? m.settings_address_group_own_domain() : m.settings_address_group_included(),
 			badgeTone: ownDomain ? 'pine' : 'neutral',
-			count: `${list.length} address${list.length === 1 ? '' : 'es'}`,
+			count: m.settings_address_group_count({ count: list.length }),
 			rows: list
 		} satisfies AddressGroup;
 	});
@@ -225,21 +226,21 @@ export function dedupeAddresses(lists: AccountAddress[][]): AccountAddress[] {
 
 export function ledeFor(ctx: ModelContext, row: AddressRow): string {
 	if (row.kind === 'shared') {
-		return `Shared alias on ${row.domain}. Everyone on it receives a copy of its mail and can write from it.`;
+		return m.settings_address_lede_shared({ domain: row.domain });
 	}
 	if (row.isMine) {
 		return row.kind === 'alias'
-			? `An alias on ${row.domain} that belongs to you. It lands in your mailbox and only you can write from it.`
-			: `Your mailbox address on ${row.domain}.`;
+			? m.settings_address_lede_own_alias({ domain: row.domain })
+			: m.settings_address_lede_mailbox({ domain: row.domain });
 	}
 	const owner = personFor(ctx, row.ownerAccountId);
-	return `An alias on ${row.domain} that belongs to ${owner.name}. It lands in their mailbox and only they can write from it.`;
+	return m.settings_address_lede_other_alias({ domain: row.domain, name: owner.name });
 }
 
 export function planNote(sharedSlotUsed: boolean): string {
 	return sharedSlotUsed
-		? `Unlimited aliases on any domain you own. Your plan includes one shared alias on ${SHARED_DOMAIN}, and it is in use.`
-		: `Unlimited aliases on any domain you own. Your plan also includes one shared alias on ${SHARED_DOMAIN}.`;
+		? m.settings_address_plan_note_used({ domain: SHARED_DOMAIN })
+		: m.settings_address_plan_note_free({ domain: SHARED_DOMAIN });
 }
 
 export function initialsOf(fullName: string, email: string): string {

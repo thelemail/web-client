@@ -10,6 +10,7 @@
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
+	import { m } from '$paraglide/messages.js';
 	import { sendRsvp } from './calendar/rsvp';
 	import type { CalendarEvent, IcalDateTime } from './render/icalParse';
 	import { formatEventWhen, type Message, type RsvpStatus } from './data';
@@ -66,35 +67,43 @@
 			calendarStatus = await entry.statusFor(ev);
 			void item;
 		} catch (e) {
-			err = e instanceof Error ? e.message : 'Could not add to the calendar.';
+			err = e instanceof Error ? e.message : m.cal_card_add_failed();
 		} finally {
 			adding = false;
 		}
 	}
 
-	const ACK: Record<RsvpStatus, string> = {
-		accepted: 'You’re going.',
-		tentative: 'You replied maybe.',
-		declined: 'You declined.'
+	const ACK: Record<RsvpStatus, () => string> = {
+		accepted: () => m.cal_card_ack_accepted(),
+		tentative: () => m.cal_card_ack_tentative(),
+		declined: () => m.cal_card_ack_declined()
 	};
 
-	const REPLIED: Record<string, string> = {
-		accepted: 'is going',
-		tentative: 'replied maybe',
-		declined: 'declined',
-		'needs-action': 'has not answered yet'
-	};
+	function repliedLine(partstat: string, name: string): string {
+		switch (partstat) {
+			case 'accepted':
+				return m.cal_card_replied_accepted({ name });
+			case 'tentative':
+				return m.cal_card_replied_tentative({ name });
+			case 'declined':
+				return m.cal_card_replied_declined({ name });
+			case 'needs-action':
+				return m.cal_card_replied_needs_action({ name });
+			default:
+				return m.cal_card_replied_other({ name });
+		}
+	}
 
 	const replyLine = $derived.by(() => {
 		const who = reply
-			? `${reply.name ?? reply.email} ${REPLIED[reply.partstat] ?? 'replied'}`
-			: 'A guest replied';
+			? repliedLine(reply.partstat, reply.name ?? reply.email)
+			: m.cal_card_guest_replied();
 		if (!calendarStatus?.added) return who;
-		return `${who} · noted in ${calendarStatus.calendarName ?? 'your calendar'}`;
+		return m.cal_card_noted_in({ who, calendar: calendarStatus.calendarName ?? m.cal_card_your_calendar() });
 	});
 
 	const kicker = $derived(
-		isReply ? 'Reply to your invitation' : isCancel ? 'Event cancelled' : 'Calendar invitation'
+		isReply ? m.cal_card_kicker_reply() : isCancel ? m.cal_card_kicker_cancel() : m.cal_card_kicker_invite()
 	);
 
 	const monthDay = $derived.by(() => {
@@ -107,7 +116,7 @@
 				};
 			}
 		}
-		return { m: 'EVT', d: '·' };
+		return { m: m.cal_card_month_placeholder(), d: '·' };
 	});
 
 	const dateLabel = $derived.by(() => formatDateRange(ev));
@@ -141,7 +150,7 @@
 
 	async function choose(next: RsvpStatus) {
 		if (!ev.uid) {
-			err = 'Cannot RSVP — event has no UID.';
+			err = m.cal_card_no_uid();
 			return;
 		}
 		const prev = rsvp;
@@ -156,7 +165,7 @@
 			calendarStatus = await entry.statusFor(ev);
 		} catch (e) {
 			rsvp = prev;
-			err = e instanceof Error ? e.message : 'Failed to send RSVP.';
+			err = e instanceof Error ? e.message : m.cal_card_rsvp_failed();
 		} finally {
 			sending = false;
 		}
@@ -180,7 +189,7 @@
 		</div>
 		<div class="evt-info">
 			<div class="evt-kicker"><Calendar size={13} />{kicker}</div>
-			<div class="evt-title">{ev.summary || 'Event invite'}</div>
+			<div class="evt-title">{ev.summary || m.cal_card_untitled()}</div>
 			<div class="evt-meta">
 				{#if dateLabel}
 					<span><Clock size={14} />{dateLabel}</span>
@@ -212,7 +221,12 @@
 				{/if}
 			</div>
 			<span class="evt-who">
-				{ev.attendees.length} guest{ev.attendees.length === 1 ? '' : 's'}{#if ev.organizer} · organised by {ev.organizerName ?? ev.organizer}{/if}
+				{ev.organizer
+				? m.cal_card_guests_organised({
+						count: ev.attendees.length,
+						organizer: ev.organizerName ?? ev.organizer
+					})
+				: m.cal_card_guests({ count: ev.attendees.length })}
 			</span>
 		</div>
 	{/if}
@@ -223,7 +237,7 @@
 				<CheckCircle size={15} />
 				{replyLine}
 				{#if calendarStatus?.added}
-					<a class="evt-change" href="/u/{slot}/calendar">Open</a>
+					<a class="evt-change" href="/u/{slot}/calendar">{m.common_open()}</a>
 				{/if}
 			</span>
 		</div>
@@ -231,9 +245,7 @@
 		<div class="evt-cal-row">
 			<span class="evt-ack">
 				<X size={15} />
-				{applied === 'cancel'
-					? 'The organiser cancelled this event · removed from your calendar'
-					: 'The organiser cancelled this event'}
+				{applied === 'cancel' ? m.cal_card_cancelled_removed() : m.cal_card_cancelled()}
 			</span>
 		</div>
 	{:else}
@@ -241,12 +253,14 @@
 			{#if calendarStatus?.added}
 				<span class="evt-ack">
 					<CheckCircle size={15} />
-					In your calendar{calendarStatus.calendarName ? ` · ${calendarStatus.calendarName}` : ''}
-					<a class="evt-change" href="/u/{slot}/calendar">Open</a>
+					{calendarStatus.calendarName
+						? m.cal_card_in_named_calendar({ calendar: calendarStatus.calendarName })
+						: m.cal_card_in_calendar()}
+					<a class="evt-change" href="/u/{slot}/calendar">{m.common_open()}</a>
 				</span>
 			{:else}
 				<button type="button" class="evt-opt add" disabled={adding} onclick={addToCalendar}>
-					<CalendarPlus size={15} />{adding ? 'Adding…' : 'Add to calendar'}
+					<CalendarPlus size={15} />{adding ? m.cal_card_adding() : m.cal_card_add()}
 				</button>
 			{/if}
 		</div>
@@ -257,20 +271,20 @@
 		{#if rsvp}
 			<span class="evt-ack">
 				<CheckCircle size={15} />
-				{ACK[rsvp]}
-				<button type="button" class="evt-change" onclick={change} disabled={sending}>Change</button>
+				{ACK[rsvp]()}
+				<button type="button" class="evt-change" onclick={change} disabled={sending}>{m.cal_card_change()}</button>
 			</span>
 		{:else}
-			<span class="evt-q">Going?</span>
+			<span class="evt-q">{m.cal_card_going()}</span>
 			<div class="evt-seg">
 				<button type="button" class="evt-opt yes" disabled={sending} onclick={() => choose('accepted')}>
-					<Check size={15} />Yes
+					<Check size={15} />{m.cal_rsvp_yes()}
 				</button>
 				<button type="button" class="evt-opt maybe" disabled={sending} onclick={() => choose('tentative')}>
-					<HelpCircle size={15} />Maybe
+					<HelpCircle size={15} />{m.cal_rsvp_maybe()}
 				</button>
 				<button type="button" class="evt-opt no" disabled={sending} onclick={() => choose('declined')}>
-					<X size={15} />No
+					<X size={15} />{m.cal_rsvp_no()}
 				</button>
 			</div>
 		{/if}

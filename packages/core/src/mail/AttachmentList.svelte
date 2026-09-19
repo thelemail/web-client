@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Download from '@lucide/svelte/icons/download';
@@ -32,18 +33,18 @@
 		if (err instanceof AttachmentError) {
 			switch (err.code) {
 				case 'locked':
-					return 'Vault is locked';
+					return m.mail_attach_err_locked();
 				case 'network':
-					return 'Could not reach storage';
+					return m.mail_attach_err_network();
 				case 'no_matching_key':
-					return 'No key for this file';
+					return m.mail_attach_err_no_key();
 				case 'invalid_ciphertext':
-					return 'File is damaged';
+					return m.mail_attach_err_damaged();
 				default:
-					return 'Could not decrypt';
+					return m.mail_attach_err_decrypt();
 			}
 		}
-		return err instanceof Error ? err.message : 'Could not decrypt';
+		return err instanceof Error ? err.message : m.mail_attach_err_decrypt();
 	}
 
 	async function hydrate(chip: AttachmentChip) {
@@ -84,16 +85,16 @@
 			s?.kind === 'ready' || s?.kind === 'downloading'
 				? s.header.plaintextSize
 				: chip.pointer.sizeBytes;
-		if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
-		if (n >= 1024) return (n / 1024).toFixed(1) + ' KB';
-		return n + ' B';
+		if (n >= 1024 * 1024) return m.mail_size_mb({ size: (n / (1024 * 1024)).toFixed(1) });
+		if (n >= 1024) return m.mail_size_kb({ size: (n / 1024).toFixed(1) });
+		return m.mail_size_bytes({ size: n });
 	}
 </script>
 
 {#if chips.length > 0}
 	<div class="att-row">
 		<div class="att-h">
-			<Paperclip size={14} />{chips.length} attachment{chips.length > 1 ? 's' : ''}
+			<Paperclip size={14} />{m.mail_attach_count({ count: chips.length })}
 		</div>
 		<div class="att-list">
 			{#each chips as chip (chip.id)}
@@ -113,7 +114,7 @@
 						{/if}
 					</div>
 					{#if s.kind === 'error'}
-						<button type="button" class="dl" title="Try again" onclick={() => hydrate(chip)}>
+						<button type="button" class="dl" title={m.common_retry()} onclick={() => hydrate(chip)}>
 							<RotateCw size={16} />
 						</button>
 					{:else}
@@ -121,7 +122,7 @@
 							type="button"
 							class="dl"
 							class:busy={s.kind === 'downloading'}
-							title={s.kind === 'downloading' ? 'Downloading…' : 'Download'}
+							title={s.kind === 'downloading' ? m.mail_attach_downloading() : m.mail_attach_download()}
 							disabled={s.kind !== 'ready'}
 							onclick={() => download(chip)}
 						>

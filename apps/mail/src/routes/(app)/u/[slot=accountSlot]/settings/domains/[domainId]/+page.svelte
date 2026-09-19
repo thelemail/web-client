@@ -11,6 +11,7 @@
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);
@@ -36,7 +37,7 @@
 	}
 
 	$effect(() => {
-		settingsPageTitle.set(domain?.domain ?? 'Domain setup');
+		settingsPageTitle.set(domain?.domain ?? m.settings_domains_setup_title());
 		return () => settingsPageTitle.set(null);
 	});
 
@@ -47,23 +48,23 @@
 		loadedFor = id;
 		picked = null;
 		customDomains.fetchDetail(ws, id).catch((err) => {
-			loadError = err instanceof Error ? err.message : 'Could not load this domain';
+			loadError = err instanceof Error ? err.message : m.settings_domains_load_failed();
 		});
 	});
 </script>
 
 <svelte:head>
-	<title>Thelemail — {domain?.domain ?? 'Domain setup'}</title>
+	<title>{m.settings_page_title({ page: domain?.domain ?? m.settings_domains_setup_title() })}</title>
 </svelte:head>
 
-<SecHead desc="Prove ownership, set up sending, create the addresses that will receive mail, then point MX here last." />
+<SecHead desc={m.settings_domains_setup_desc()} />
 
-<p class="dw-back"><Button variant="ghost" href={base}><ArrowLeft size={15} />All domains</Button></p>
+<p class="dw-back"><Button variant="ghost" href={base}><ArrowLeft size={15} />{m.settings_domains_wizard_all_domains()}</Button></p>
 
 {#if loadError}
 	<div class="dw-note bad"><CircleAlert size={15} /><span>{loadError}</span></div>
 {:else if !domain}
-	<div class="dw-note"><span>Loading domain…</span></div>
+	<div class="dw-note"><span>{m.settings_domains_loading_one()}</span></div>
 {:else}
 	<DomainWizard {domain} {records} {step} listHref={base} onStep={select} />
 {/if}

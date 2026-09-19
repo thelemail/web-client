@@ -14,6 +14,8 @@
 	import { setNotificationEmail } from '$core/api/lifecycle';
 	import { fmt } from './dates';
 	import type { LifecycleContext } from './types';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
@@ -40,7 +42,7 @@
 			await setNotificationEmail({ email: emailValue.trim() });
 			emailSent = true;
 		} catch {
-			flash('Could not save that address. Please try again.');
+			flash(m.lc_suspended_email_save_failed());
 		} finally {
 			emailBusy = false;
 		}
@@ -52,54 +54,59 @@
 	}
 </script>
 
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
+{#snippet mono(text: string)}<span class="mono">{text}</span>{/snippet}
+
 <div class="lc-gate">
 	<div class="lc-gate-top"><img class="wm" src={wordmark} alt="Thelemail" /></div>
 	<div class="lc-gate-body">
 		<div class="lc-gate-card">
 			<div class="lc-gate-seal"><Lock size={26} /></div>
-			<h1>Your mailbox is suspended.</h1>
+			<h1>{m.lc_suspended_title()}</h1>
 			<p class="lede">
-				Your data is safe until <b>{fmt.full(ctx.dates.remove)}</b>. Restore any time before then and
-				everything comes back exactly as it was.
+				<Rich text={m.lc_suspended_lede({ date: fmt.full(ctx.dates.remove) })} tags={{ b: bold }} />
 			</p>
 			<div class="lc-honesty">
 				<div class="hl">
 					<CornerUpLeft size={16} />
 					<span
-						>Mail sent to you since <span class="mono">{fmt.med(ctx.dates.suspend)}</span> is being
-						returned to senders.</span
+						><Rich
+							text={m.lc_suspended_returning({ date: fmt.med(ctx.dates.suspend) })}
+							tags={{ date: mono }}
+						/></span
 					>
 				</div>
 				<div class="hl">
 					<TriangleAlert size={16} />
-					<span>Your mail apps will show sign-in errors while suspended — that's expected.</span>
+					<span>{m.lc_suspended_sign_in_errors()}</span>
 				</div>
 			</div>
 			<div class="lc-gate-actions">
 				<button class="lc-gbtn primary" onclick={restore}>
-					<RotateCcw size={17} />Restore my account
+					<RotateCcw size={17} />{m.lc_suspended_restore()}
 				</button>
 				<button class="lc-gbtn ghost" onclick={() => goto(`/u/${slot}/lifecycle/export`)}>
-					<Download size={17} />Download my data
+					<Download size={17} />{m.lc_download_my_data()}
 				</button>
 				<button class="lc-gbtn ghost" onclick={() => (emailOpen = !emailOpen)}>
-					<KeyRound size={17} />Add a notification email
+					<KeyRound size={17} />{m.lc_suspended_add_email()}
 				</button>
-				<button class="lc-gbtn ghost" onclick={() => flash('Support — opens a contact form')}>
-					<LifeBuoy size={17} />Contact support
+				<button class="lc-gbtn ghost" onclick={() => flash(m.lc_suspended_support_toast())}>
+					<LifeBuoy size={17} />{m.lc_suspended_contact_support()}
 				</button>
 			</div>
 			{#if emailOpen}
 				<div class="lc-email-form">
 					{#if emailSent}
 						<p class="lc-email-note">
-							<CircleCheck size={15} />Check <span class="mono">{emailValue.trim()}</span> for a link to
-							confirm. Once verified, we can reach you here even while suspended.
+							<CircleCheck size={15} /><Rich
+								text={m.lc_suspended_email_sent({ email: emailValue.trim() })}
+								tags={{ email: mono }}
+							/>
 						</p>
 					{:else}
 						<p class="lc-email-note">
-							An outside address is the only way we can reach you after suspension. We send a
-							confirmation link, then use it only for account notices.
+							{m.lc_suspended_email_intro()}
 						</p>
 						<div class="lc-email-row">
 							<input
@@ -110,14 +117,18 @@
 								disabled={emailBusy}
 							/>
 							<button class="lc-gbtn primary" disabled={!emailValid || emailBusy} onclick={submitEmail}>
-								Send link
+								{m.lc_suspended_send_link()}
 							</button>
 						</div>
 					{/if}
 				</div>
 			{/if}
 			<div class="lc-gate-foot">
-				{ctx.domain} · suspended {fmt.med(ctx.dates.suspend)} · deletion {fmt.med(ctx.dates.remove)}
+				{m.lc_suspended_foot({
+					domain: ctx.domain,
+					suspended: fmt.med(ctx.dates.suspend),
+					deletion: fmt.med(ctx.dates.remove)
+				})}
 			</div>
 		</div>
 	</div>

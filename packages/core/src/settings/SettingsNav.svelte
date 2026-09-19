@@ -19,6 +19,8 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	const sections = SECTIONS.filter(
 		(sec) =>
@@ -50,9 +52,9 @@
 
 <nav class="set-nav">
 	<a class="set-back" href={`/u/${slot}/mail/inbox`}>
-		<ArrowLeft size={16} /><span class="lbl">Back to inbox</span>
+		<ArrowLeft size={16} /><span class="lbl">{m.settings_nav_back_to_inbox()}</span>
 	</a>
-	<div class="nav-eyebrow">Settings</div>
+	<div class="nav-eyebrow">{m.settings_nav_eyebrow()}</div>
 	{#each sections as sec (sec.id)}
 		{@const Icon = icons[sec.icon] ?? UserRound}
 		<a
@@ -61,10 +63,12 @@
 			href={`/u/${slot}/settings/${sec.id}`}
 			aria-current={current === sec.id ? 'page' : undefined}
 		>
-			<Icon size={17} /><span class="lbl">{sec.label}</span>
+			<Icon size={17} /><span class="lbl">{sec.label()}</span>
 		</a>
 	{/each}
 	<div class="nav-foot">
-		Signed in as <b>{accountEmail}</b><br />{workspaceName} · {accountDomain}
+		<Rich text={m.settings_nav_signed_in_as({ email: accountEmail })} tags={{ b: bold }} /><br />{workspaceName} · {accountDomain}
 	</div>
 </nav>
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}

@@ -2,6 +2,7 @@ import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { addresses } from '$core/stores/addresses.svelte';
 import { auth } from '$core/stores/auth.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
+import { m } from '$paraglide/messages.js';
 import { describeOccurrence, type DescribeContext } from './describe';
 import { sendReply } from './invite';
 import {
@@ -152,7 +153,30 @@ export interface MiniDay {
 	dot: boolean;
 }
 
-const TASK_GROUP_ORDER = ['Overdue', 'Today', 'This week', 'Later', 'No date'];
+type TaskGroupId = 'overdue' | 'today' | 'week' | 'later' | 'none';
+
+const TASK_GROUP_ORDER: TaskGroupId[] = ['overdue', 'today', 'week', 'later', 'none'];
+
+const TASK_GROUP_LABEL: Record<TaskGroupId, () => string> = {
+	overdue: () => m.cal_task_group_overdue(),
+	today: () => m.cal_task_group_today(),
+	week: () => m.cal_task_group_this_week(),
+	later: () => m.cal_task_group_later(),
+	none: () => m.cal_task_group_no_date()
+};
+
+function replyingNotice(partstat: Partstat, email: string): string {
+	switch (partstat) {
+		case 'accepted':
+			return m.cal_rsvp_replying_accepted({ email });
+		case 'tentative':
+			return m.cal_rsvp_replying_tentative({ email });
+		case 'declined':
+			return m.cal_rsvp_replying_declined({ email });
+		default:
+			return m.cal_rsvp_replying_needs_action({ email });
+	}
+}
 
 function dayIndex(range: DayRange, date: string): number {
 	return range.dates.indexOf(date);
@@ -347,7 +371,7 @@ class CalendarState {
 						density: height < 40 ? 'tiny' : height < 56 ? 'oneline' : 'full',
 						done: item.occ.done,
 						pending: !!loaded?.pending,
-						title: item.occ.item.kind === 'hold' ? 'Busy' : item.occ.title || '(untitled)',
+						title: item.occ.item.kind === 'hold' ? m.cal_busy() : item.occ.title || m.cal_untitled(),
 						when: this.#whenLabel(item.occ, item.startMin, item.endMin, height),
 						occ: item.occ
 					} satisfies WeekBlock;
@@ -358,12 +382,14 @@ class CalendarState {
 
 	#whenLabel(occ: Occurrence, startMin: number, endMin: number, height: number): string {
 		const item = occ.item;
-		if (item.kind === 'hold') return 'private hold';
+		if (item.kind === 'hold') return m.cal_block_private_hold();
 		if (item.kind === 'task') {
 			const est = item.estimateMinutes ? durationLabel(item.estimateMinutes) : '';
 			if (height < 40) return est;
-			const due = item.due ? `due ${relativeDue(whenDate(item.due), this.today)}` : 'no deadline';
-			return est ? `${due} · ${est}` : due;
+			const due = item.due
+				? m.cal_block_due({ when: relativeDue(whenDate(item.due), this.today) })
+				: m.cal_block_no_deadline();
+			return est ? m.cal_block_due_estimate({ due, estimate: est }) : due;
 		}
 		if (height < 40) return timeLabel(startMin);
 		return `${timeLabel(startMin)} – ${timeLabel(endMin)}`;
@@ -395,7 +421,7 @@ class CalendarState {
 				const cal = calendarStore.calendar(occ.item.calendarId);
 				return {
 					key: occ.key,
-					title: occ.item.kind === 'hold' ? 'Busy' : occ.title || '(untitled)',
+					title: occ.item.kind === 'hold' ? m.cal_busy() : occ.title || m.cal_untitled(),
 					color: cal?.color ?? '#2E5440',
 					day: first,
 					span: Math.min(span, 7 - first),
@@ -478,7 +504,7 @@ class CalendarState {
 				const list = byDate.get(date) ?? [];
 				list.push({
 					key: `${occ.key}@${date}`,
-					title: occ.item.kind === 'hold' ? 'Busy' : occ.title || '(untitled)',
+					title: occ.item.kind === 'hold' ? m.cal_busy() : occ.title || m.cal_untitled(),
 					time: banded ? null : shortTime(occ.start, tz),
 					allDay: banded,
 					color,
@@ -500,14 +526,15 @@ class CalendarState {
 				weekend: k % 7 >= 5,
 				today: date === this.today,
 				entries: entries.slice(0, cap),
-				more: entries.length > cap ? `+${entries.length - cap} more` : null
+				more: entries.length > cap ? m.cal_month_more({ count: entries.length - cap }) : null
 			};
 		});
 	}
 
 	get memberNames(): Map<string, string> {
 		const map = new Map<string, string>();
-		for (const m of workspaces.members) map.set(m.email.toLowerCase(), m.fullName || m.email);
+		for (const member of workspaces.members)
+			map.set(member.email.toLowerCase(), member.fullName || member.email);
 		return map;
 	}
 
@@ -536,26 +563,26 @@ class CalendarState {
 					? (this.memberNames.get(item.owner.email.toLowerCase()) ?? item.owner.email)
 					: null);
 			const subParts: string[] = [];
-			if (item.rrule) subParts.push('Recurring');
+			if (item.rrule) subParts.push(m.cal_agenda_recurring());
 			if (item.organizer && !this.myAddresses.includes(item.organizer.email.toLowerCase())) {
-				subParts.push(`Organised by ${item.organizer.name ?? item.organizer.email}`);
+				subParts.push(m.cal_desc_organised_by({ name: item.organizer.name ?? item.organizer.email }));
 			}
-			if (item.kind === 'task') subParts.push(item.sourceMessageId ? 'Task · from mail' : 'Task');
+			if (item.kind === 'task')
+				subParts.push(item.sourceMessageId ? m.cal_agenda_task_from_mail() : m.cal_kind_task());
 			if (occ.location) subParts.push(occ.location);
-			if (item.attendees?.length)
-				subParts.push(`${item.attendees.length} guest${item.attendees.length === 1 ? '' : 's'}`);
+			if (item.attendees?.length) subParts.push(m.cal_agenda_guests({ count: item.attendees.length }));
 			const rows = byDate.get(date) ?? [];
 			rows.push({
 				key: occ.key,
 				color: cal?.color ?? '#2E5440',
-				time: occ.allDay ? 'All day' : shortTime(occ.start, tz),
-				title: item.kind === 'hold' ? 'Busy' : occ.title || '(untitled)',
+				time: occ.allDay ? m.cal_allday() : shortTime(occ.start, tz),
+				title: item.kind === 'hold' ? m.cal_busy() : occ.title || m.cal_untitled(),
 				sub: subParts.join(' · ') || cal?.name || '',
 				ownerName,
 				ownerInit: ownerName ? initialsOf(ownerName) : '',
-				ownerLabel: ownerName ? `${ownerName} owns this` : 'Needs an owner',
+				ownerLabel: ownerName ? m.cal_agenda_owns({ name: ownerName }) : m.cal_desc_needs_owner(),
 				seen,
-				seenLabel: seen ? 'You have seen it' : 'Mark seen',
+				seenLabel: seen ? m.cal_agenda_seen() : m.cal_agenda_mark_seen(),
 				occ
 			});
 			byDate.set(date, rows);
@@ -572,36 +599,34 @@ class CalendarState {
 	}
 
 	get taskGroups(): TaskGroupView[] {
-		const groups = new Map<string, TaskRowView[]>();
+		const groups = new Map<TaskGroupId, TaskRowView[]>();
 		const week = this.weekWindow;
 		for (const entry of calendarStore.tasks()) {
 			const item = entry.item;
 			if (item.done) continue;
 			const cal = calendarStore.calendar(item.calendarId);
 			const dueDate = item.due ? whenDate(item.due) : null;
-			let group = 'No date';
+			let group: TaskGroupId = 'none';
 			if (dueDate) {
-				if (dueDate < this.today) group = 'Overdue';
-				else if (dueDate === this.today) group = 'Today';
-				else if (dueDate < week.endDate) group = 'This week';
-				else group = 'Later';
+				if (dueDate < this.today) group = 'overdue';
+				else if (dueDate === this.today) group = 'today';
+				else if (dueDate < week.endDate) group = 'week';
+				else group = 'later';
 			}
 			const owner =
 				item.owner?.name ||
 				(item.owner
 					? (this.memberNames.get(item.owner.email.toLowerCase()) ?? item.owner.email)
-					: 'Unassigned');
+					: m.cal_editor_unassigned());
 			const rows = groups.get(group) ?? [];
 			rows.push({
 				id: item.id,
-				title: item.title || '(untitled)',
-				due: dueDate ? relativeDue(dueDate, this.today) : 'No date',
+				title: item.title || m.cal_untitled(),
+				due: dueDate ? relativeDue(dueDate, this.today) : m.cal_task_no_date(),
 				est: item.estimateMinutes ? durationLabel(item.estimateMinutes) : '',
 				owner,
 				late: !!dueDate && dueDate < this.today,
-				roll: item.rolloverCount
-					? `${item.rolloverCount}${item.rolloverCount === 1 ? 'st' : item.rolloverCount === 2 ? 'nd' : item.rolloverCount === 3 ? 'rd' : 'th'} rollover`
-					: null,
+				roll: item.rolloverCount ? m.cal_task_rollover({ count: item.rolloverCount }) : null,
 				boxed: !!item.start && !!item.end,
 				fromMail: !!item.sourceMessageId,
 				done: !!item.done,
@@ -610,9 +635,9 @@ class CalendarState {
 			});
 			groups.set(group, rows);
 		}
-		return TASK_GROUP_ORDER.filter((name) => groups.has(name)).map((name) => ({
-			name,
-			rows: (groups.get(name) ?? []).sort((a, b) => a.due.localeCompare(b.due))
+		return TASK_GROUP_ORDER.filter((id) => groups.has(id)).map((id) => ({
+			name: TASK_GROUP_LABEL[id](),
+			rows: (groups.get(id) ?? []).sort((a, b) => a.due.localeCompare(b.due))
 		}));
 	}
 
@@ -628,7 +653,7 @@ class CalendarState {
 
 	get taskCount() {
 		const open = calendarStore.tasks().filter((t) => !t.item.done).length;
-		return `${open} open`;
+		return m.cal_tasks_open_count({ count: open });
 	}
 
 	get capacity(): { committed: number; boxed: number; total: number } {
@@ -653,13 +678,13 @@ class CalendarState {
 			case 'agenda': {
 				const w = this.weekWindow;
 				return w.startDate <= this.today && this.today < w.endDate
-					? 'This week'
+					? m.cal_title_this_week()
 					: rangeTitle(w.startDate, w.endDate);
 			}
 			case 'avail':
-				return 'Availability';
+				return m.cal_nav_availability();
 			case 'booking':
-				return 'Booking pages';
+				return m.cal_nav_booking();
 		}
 	}
 
@@ -752,7 +777,7 @@ class CalendarState {
 				label: `${next.done ? 'Completed' : 'Reopened'} “${next.title}”`
 			});
 		} catch (err) {
-			this.notify(err instanceof Error ? err.message : 'Could not update the task');
+			this.notify(err instanceof Error ? err.message : m.cal_task_update_failed());
 		}
 	}
 
@@ -764,7 +789,7 @@ class CalendarState {
 				current ? 'Cleared acknowledgement' : 'Marked as seen'
 			);
 		} catch (err) {
-			this.notify(err instanceof Error ? err.message : 'Could not save');
+			this.notify(err instanceof Error ? err.message : m.cal_editor_save_failed());
 		}
 	}
 
@@ -784,11 +809,11 @@ class CalendarState {
 			await sendReply(next, partstat, item.sourceMessageId);
 			this.notify(
 				calendarStore.online
-					? `Replying ${partstat} · reply goes to ${item.organizer?.email ?? 'the organiser'}`
-					: 'RSVP saved · queued until you reconnect'
+					? replyingNotice(partstat, item.organizer?.email ?? m.cal_rsvp_the_organiser())
+					: m.cal_rsvp_saved_offline()
 			);
 		} catch (err) {
-			this.notify(err instanceof Error ? err.message : 'Could not save your reply');
+			this.notify(err instanceof Error ? err.message : m.cal_rsvp_save_failed());
 		}
 	}
 
@@ -798,16 +823,16 @@ class CalendarState {
 		if (!s.online) {
 			const since = s.offlineSince
 				? shortTime(new Date(s.offlineSince), this.timeZone)
-				: 'a moment ago';
+				: m.cal_sys_moment_ago();
 			const n = s.pendingCount;
-			return `Offline since ${since}. ${n ? `${n} local change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} waiting; nothing has been lost.` : 'Changes keep working and send when you reconnect.'}`;
+			return n
+				? m.cal_sys_offline_pending({ since, count: n })
+				: m.cal_sys_offline_empty({ since });
 		}
-		if (s.blockedCount) {
-			return `${s.blockedCount} change${s.blockedCount === 1 ? '' : 's'} need${s.blockedCount === 1 ? 's' : ''} your review before ${s.blockedCount === 1 ? 'it' : 'they'} can be sent.`;
-		}
+		if (s.blockedCount) return m.cal_sys_blocked({ count: s.blockedCount });
 		const n = s.pendingCount;
-		if (!n) return 'Connected. Every change on this device has reached Thelemail.';
-		return `Connected. ${n} change${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} still waiting ${n === 1 ? 'its' : 'their'} turn to send.`;
+		if (!n) return m.cal_sys_connected_clear();
+		return m.cal_sys_connected_pending({ count: n });
 	}
 
 	get systemBarTone(): 'warn' | 'info' {

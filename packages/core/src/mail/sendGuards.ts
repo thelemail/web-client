@@ -1,5 +1,6 @@
 import type { RecipientEncStatus } from './RecipientField.svelte';
 import type { ComposingSettings } from '$core/stores/accountSettings.svelte';
+import { m } from '$paraglide/messages.js';
 
 export type SendGuard = 'unencrypted' | 'external' | 'subject';
 
@@ -9,22 +10,22 @@ export interface SendGuardInput {
 	subject?: string;
 }
 
-const REASONS: Record<SendGuard, string> = {
-	unencrypted: 'A recipient has no published key, so their copy leaves in the clear.',
-	external: 'At least one recipient is not a Thelemail account.',
-	subject: 'The subject line is empty.'
+const REASONS: Record<SendGuard, () => string> = {
+	unencrypted: () => m.send_guard_reason_unencrypted(),
+	external: () => m.send_guard_reason_external(),
+	subject: () => m.send_guard_reason_subject()
 };
 
-const TITLES: Record<SendGuard, string> = {
-	unencrypted: 'Send unencrypted?',
-	external: 'Send outside Thelemail?',
-	subject: 'Send without a subject?'
+const TITLES: Record<SendGuard, () => string> = {
+	unencrypted: () => m.send_guard_title_unencrypted(),
+	external: () => m.send_guard_title_external(),
+	subject: () => m.send_guard_title_subject()
 };
 
-const CONFIRM_LABELS: Record<SendGuard, string> = {
-	unencrypted: 'Send unencrypted',
-	external: 'Send',
-	subject: 'Send anyway'
+const CONFIRM_LABELS: Record<SendGuard, () => string> = {
+	unencrypted: () => m.send_guard_confirm_unencrypted(),
+	external: () => m.common_send(),
+	subject: () => m.send_guard_confirm_subject()
 };
 
 export function pendingSendGuards({ settings, statuses, subject }: SendGuardInput): SendGuard[] {
@@ -42,13 +43,13 @@ export function pendingSendGuards({ settings, statuses, subject }: SendGuardInpu
 }
 
 export function sendGuardTitle(guards: SendGuard[]): string {
-	return guards.length ? TITLES[guards[0]] : '';
+	return guards.length ? TITLES[guards[0]]() : '';
 }
 
 export function sendGuardConfirmLabel(guards: SendGuard[]): string {
-	return guards.length ? CONFIRM_LABELS[guards[0]] : 'Send';
+	return guards.length ? CONFIRM_LABELS[guards[0]]() : m.common_send();
 }
 
 export function sendGuardReasons(guards: SendGuard[]): string[] {
-	return guards.map((g) => REASONS[g]);
+	return guards.map((g) => REASONS[g]());
 }

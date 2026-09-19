@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Fingerprint from '@lucide/svelte/icons/fingerprint';
@@ -47,10 +48,10 @@
 			console.warn('twofa: proof confirm failed', err);
 			error =
 				err instanceof ApiCallError && err.status === 401
-					? 'That didn’t verify. Try again.'
+					? m.settings_security_proof_invalid()
 					: err instanceof ApiCallError && err.status === 503
-						? 'The code service is temporarily unavailable. Try again in a moment.'
-						: 'Something went wrong. Try again.';
+						? m.settings_security_proof_unavailable()
+						: m.common_something_went_wrong();
 			code = '';
 			busy = false;
 		}
@@ -80,7 +81,7 @@
 				return;
 			}
 			console.warn('twofa: webauthn proof failed', err);
-			error = 'Could not verify with the key. Try again.';
+			error = m.settings_security_proof_key_failed();
 			busy = false;
 		}
 	}
@@ -88,7 +89,7 @@
 
 <CeremonyShell
 	icon={ShieldCheck}
-	eyebrow="Confirm it’s you"
+	eyebrow={m.settings_security_proof_eyebrow()}
 	{title}
 	tone={danger ? 'danger' : undefined}
 	{onClose}
@@ -97,7 +98,7 @@
 		<div class="cer-lede"><p>{desc}</p></div>
 		<div class="field">
 			<label for="proof-code">
-				{mode === 'totp' ? 'Authenticator code' : 'Backup code'}
+				{mode === 'totp' ? m.settings_security_proof_totp_label() : m.settings_security_proof_backup_label()}
 			</label>
 			<input
 				id="proof-code"
@@ -129,12 +130,12 @@
 					error = '';
 				}}
 			>
-				{mode === 'totp' ? 'Use a backup code instead' : 'Use an authenticator code instead'}
+				{mode === 'totp' ? m.settings_security_proof_use_backup() : m.settings_security_proof_use_totp()}
 			</button>
 		{/if}
 		{#if hasWebauthn}
 			<Button variant="secondary" size="sm" disabled={busy} onclick={submitWebauthn}>
-				<Fingerprint size={14} />Use security key or passkey
+				<Fingerprint size={14} />{m.settings_security_proof_use_key()}
 			</Button>
 		{/if}
 		{#if error}
@@ -143,14 +144,14 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" disabled={busy} onclick={onClose}>Cancel</Button>
+		<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 		<Button
 			variant={danger ? 'danger' : 'primary'}
 			disabled={busy || !codeReady}
 			onclick={submitCode}
 		>
 			{#if busy}
-				Verifying…
+				{m.settings_security_proof_verifying()}
 			{:else}
 				{confirmLabel}
 			{/if}

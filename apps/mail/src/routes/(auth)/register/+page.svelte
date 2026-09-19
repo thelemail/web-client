@@ -10,10 +10,10 @@
 	import PlanStep from '$core/auth/PlanStep.svelte';
 	import PaymentStep from '$core/auth/PaymentStep.svelte';
 	import {
-		eur,
 		findPlan,
 		planFromQuery,
 		planTotal,
+		pricePerPeriod,
 		periodFromQuery,
 		type PlanSelection
 	} from '$core/auth/plans';
@@ -34,6 +34,8 @@
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const signInHref = $derived.by(() => {
@@ -49,8 +51,6 @@
 	const preselected = planFromQuery(page.url.searchParams.get('plan'), preselectedPeriod);
 
 	const HANDLE_RE = /^[a-z0-9]([a-z0-9._-]{1,28})[a-z0-9]$/;
-	const FREE_LABELS = ['Address', 'Password'];
-	const PAID_LABELS = ['Address', 'Password', 'Plan', 'Payment'];
 
 	let step = $state<0 | 1 | 2 | 3 | 4>(0);
 	let paid = $state(preselected !== null);
@@ -101,15 +101,24 @@
 		};
 	});
 
-	const labels = $derived(paid ? PAID_LABELS : FREE_LABELS);
+	const labels = $derived(
+		paid
+			? [
+					m.auth_step_address(),
+					m.auth_step_password(),
+					m.auth_step_plan(),
+					m.auth_step_payment()
+				]
+			: [m.auth_step_address(), m.auth_step_password()]
+	);
 	const totalSteps = $derived(labels.length);
 	const product = $derived(findPlan(sel).product);
 	const audience = $derived(paid ? product.id : 'personal');
 
 	const heading = $derived.by(() => {
-		if (audience === 'family') return 'Set up email for your household';
-		if (audience === 'business') return 'Set up email for your team';
-		return 'Claim your address';
+		if (audience === 'family') return m.auth_register_heading_family();
+		if (audience === 'business') return m.auth_register_heading_business();
+		return m.auth_register_heading_personal();
 	});
 
 	const nameReady = $derived(fullName.trim().length > 0 && fullName.trim().length <= 120);
@@ -127,7 +136,12 @@
 	const planLabel = $derived.by(() => {
 		if (!paid) return null;
 		const { tier } = findPlan(sel);
-		return tier ? `${tier.name} plan · ${eur(planTotal(sel))} / ${sel.period}` : null;
+		return tier
+			? m.auth_register_plan_label({
+					plan: tier.name,
+					price: pricePerPeriod(planTotal(sel), sel.period)
+				})
+			: null;
 	});
 
 	function planCodeFor(selection: PlanSelection): PlanCode | null {
@@ -138,9 +152,9 @@
 
 	function registerErrorMessage(err: unknown): string {
 		if (err instanceof ApiCallError && (err.status === 503 || err.status === 429)) {
-			return "We couldn't finish that just now. Try again in a few minutes.";
+			return m.auth_register_busy_error();
 		}
-		return err instanceof Error ? err.message : 'Registration failed';
+		return err instanceof Error ? err.message : m.auth_register_failed();
 	}
 
 	function choosePaid() {
@@ -178,7 +192,7 @@
 				registrationResponse: init.registrationResponse
 			});
 			if (!finish.ok) {
-				throw new Error('Could not prepare your mailbox keys. Please try again.');
+				throw new Error(m.auth_register_keys_failed());
 			}
 			await register({
 				email,
@@ -259,15 +273,20 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Create account</title>
+	<title>{m.auth_register_page_title()}</title>
 </svelte:head>
+
+{#snippet freeButton(t: string)}
+	<button type="button" class="linklike" disabled={submitting} onclick={chooseFree}>{t}</button>
+{/snippet}
+{#snippet strong(t: string)}<strong>{t}</strong>{/snippet}
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet domain(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
 
 {#snippet freeFoot()}
 	<p class="switch">
-		Not ready to pay?
-		<button type="button" class="linklike" disabled={submitting} onclick={chooseFree}>
-			Start with the free plan
-		</button>
+		<Rich text={m.auth_register_free_foot()} tags={{ free: freeButton }} />
 	</p>
 {/snippet}
 
@@ -276,54 +295,40 @@
 		<Stepper step={0} {labels} />
 		<div class="card-head">
 			{#if addMode && auth.email}
-				<p class="eyebrow">Add another account</p>
-				<h1>Create a second account</h1>
+				<p class="eyebrow">{m.auth_login_add_eyebrow()}</p>
+				<h1>{m.auth_register_add_title()}</h1>
 				<p>
-					You're signed in as <strong>{auth.email}</strong>. The new account will be added alongside
-					it on this device &mdash; both stay signed in.
+					<Rich text={m.auth_register_add_lede({ email: auth.email })} tags={{ b: strong }} />
 				</p>
 			{:else}
-				<p class="eyebrow">Step 1 of {totalSteps}</p>
+				<p class="eyebrow">{m.auth_step_of({ step: 1, total: totalSteps })}</p>
 				<h1>{heading}</h1>
 			{/if}
 			{#if audience === 'family'}
-				<p>
-					Start with your own address on
-					<span class="mono" style="color:var(--ink-700)">thelemail.com</span>. It becomes the
-					administrator account for the household, and you connect your family's domain from
-					Settings once the account exists.
-				</p>
+				<p><Rich text={m.auth_register_lede_family()} tags={{ domain }} /></p>
 			{:else if audience === 'business'}
-				<p>
-					Start with your own address on
-					<span class="mono" style="color:var(--ink-700)">thelemail.com</span>. It becomes the
-					administrator account for the team, and you connect your company domain from Settings
-					once the account exists.
-				</p>
+				<p><Rich text={m.auth_register_lede_business()} tags={{ domain }} /></p>
 			{:else}
-				<p>
-					Pick a name on <span class="mono" style="color:var(--ink-700)">thelemail.com</span>. You
-					can add your own domain later.
-				</p>
+				<p><Rich text={m.auth_register_lede_personal()} tags={{ domain }} /></p>
 			{/if}
 		</div>
 		<div class="form">
 			<div class="field">
-				<div class="lab"><label for="register-name">Full name</label></div>
+				<div class="lab"><label for="register-name">{m.auth_register_name_label()}</label></div>
 				<input
 					id="register-name"
 					class="inp"
 					type="text"
 					bind:value={fullName}
-					placeholder="Camille Rabelais"
+					placeholder={m.auth_register_name_placeholder()}
 					autocomplete="name"
 					maxlength={120}
 					spellcheck="true"
 				/>
-				<span class="hint">Shown to people you write to.</span>
+				<span class="hint">{m.auth_register_name_hint()}</span>
 			</div>
 			<div class="field">
-				<div class="lab"><label for="register-handle">Email address</label></div>
+				<div class="lab"><label for="register-handle">{m.common_email_address()}</label></div>
 				<div
 					class="affix"
 					class:ok={status === 'available'}
@@ -334,7 +339,7 @@
 						bind:value={handle}
 						oninput={(e) =>
 							(handle = e.currentTarget.value.toLowerCase().replace(/\s+/g, ''))}
-						placeholder="françois"
+						placeholder={m.auth_register_handle_placeholder()}
 						maxlength={30}
 						autocomplete="off"
 						spellcheck="false"
@@ -352,70 +357,75 @@
 					</span>
 				</div>
 				{#if status === 'idle'}
-					<span class="hint">Letters, numbers, dots, hyphens. 3&ndash;30 characters.</span>
+					<span class="hint">{m.auth_register_handle_hint()}</span>
 				{:else if status === 'invalid'}
 					<span class="errtext">
 						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>Use 3&ndash;30 letters, numbers, dots or hyphens.</span>
+						<span>{m.auth_register_handle_invalid()}</span>
 					</span>
 				{:else if status === 'checking'}
-					<span class="hint">Checking availability&hellip;</span>
+					<span class="hint">{m.auth_register_handle_checking()}</span>
 				{:else if status === 'taken'}
 					<span class="errtext">
 						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>That address is already taken &mdash; please choose another.</span>
+						<span>{m.auth_register_handle_taken()}</span>
 					</span>
 				{:else if status === 'available'}
 					<span class="hint">
-						If <b>{handle}@thelemail.com</b> is new, we'll set it up. If it isn't, we'll let the
-						existing owner know.
+						<Rich
+							text={m.auth_register_handle_available({ address: `${handle}@thelemail.com` })}
+							tags={{ b: bold }}
+						/>
 					</span>
 				{/if}
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!addressReady} onclick={() => (step = 1)}>
-					Continue<ArrowRight size={17} strokeWidth={1.75} />
+					{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
 				</Button>
 			</div>
 		</div>
 		<p class="switch">
-			Already have an account? <a href="/login">Sign in</a>
+			<Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} />
 		</p>
 	</div>
 {:else if step === 1}
 	<div class="card-surface screen-fade">
 		<Stepper step={1} {labels} />
 		<div class="card-head">
-			<p class="eyebrow">Step 2 of {totalSteps}</p>
-			<h1>Set a password</h1>
+			<p class="eyebrow">{m.auth_step_of({ step: 2, total: totalSteps })}</p>
+			<h1>{m.auth_register_password_title()}</h1>
 			<p>
-				Securing <span class="mono" style="color:var(--ink-700)">{handle}@thelemail.com</span>
+				<Rich
+					text={m.auth_register_password_securing({ address: `${handle}@thelemail.com` })}
+					tags={{ addr: domain }}
+				/>
 			</p>
 		</div>
 		<div class="form">
 			<PasswordField
-				label="Password"
+				label={m.common_password()}
 				bind:value={pw}
-				placeholder="Create a strong password"
+				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
 			/>
 			<PasswordStrength {pw} />
 			<PasswordField
-				label="Confirm password"
+				label={m.auth_register_confirm_label()}
 				bind:value={confirm}
-				placeholder="Re-enter password"
+				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
 				onEnter={continueFromPassword}
 			/>
 			{#if mismatch}
 				<span class="errtext" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>Passwords don&rsquo;t match.</span>
+					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
 			{:else if matches}
 				<span class="oktext" style="margin-top:-8px">
 					<CircleCheck size={13} strokeWidth={1.75} />
-					<span>Passwords match.</span>
+					<span>{m.auth_register_passwords_match()}</span>
 				</span>
 			{/if}
 			{#if submitError}
@@ -426,40 +436,34 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" disabled={submitting} onclick={() => (step = 0)}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={!passwordReady || submitting} onclick={continueFromPassword}>
 						{#if submitting}
-							Creating your mailbox…
+							{m.auth_register_creating()}
 						{:else if paid}
-							Continue<ArrowRight size={17} strokeWidth={1.75} />
+							{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
 						{:else}
-							Create my mailbox<ArrowRight size={17} strokeWidth={1.75} />
+							{m.auth_register_create_mailbox()}<ArrowRight size={17} strokeWidth={1.75} />
 						{/if}
 					</Button>
 				</div>
 				{#if paid}
 					<Button variant="ghost" size="lg" block disabled={submitting} onclick={chooseFree}>
-						Start with the free plan instead
+						{m.auth_register_free_instead()}
 					</Button>
 				{:else}
 					<Button variant="ghost" size="lg" block disabled={!passwordReady || submitting} onclick={choosePaid}>
-						Choose a paid plan instead
+						{m.auth_register_paid_instead()}
 					</Button>
 				{/if}
 			</div>
 		</div>
 		{#if paid}
-			<p class="legal">
-				Your account is created first, then you pick up where you left off at checkout. Nothing is
-				charged until you confirm there.
-			</p>
+			<p class="legal">{m.auth_register_legal_paid()}</p>
 		{:else}
-			<p class="legal">
-				The free plan is a real mailbox on thelemail.com with 1 GB of storage, no card required.
-				Upgrade whenever you want your own domain, more storage, or more people.
-			</p>
+			<p class="legal">{m.auth_register_legal_free()}</p>
 		{/if}
 	</div>
 {:else if step === 2}
@@ -486,10 +490,12 @@
 	<div class="card-surface screen-fade">
 		<div class="welcome">
 			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
-			<h1>Submitted</h1>
+			<h1>{m.auth_register_submitted_title()}</h1>
 			<p>
-				If <b>{handle}@thelemail.com</b> is new, your mailbox is ready &mdash; sign in to open it.
-				If the address was already taken, the existing owner has been notified.
+				<Rich
+					text={m.auth_register_submitted_body({ address: `${handle}@thelemail.com` })}
+					tags={{ b: bold }}
+				/>
 			</p>
 			<div class="addrcard">
 				<span class="av">{initials}</span>
@@ -499,12 +505,12 @@
 			{#if planLabel}
 				<p class="planline">
 					<CircleCheck size={14} strokeWidth={1.75} />
-					<span><b>{planLabel}</b> &mdash; ready to complete after sign-in</span>
+					<span><Rich text={m.auth_register_plan_pending({ plan: planLabel })} tags={{ b: bold }} /></span>
 				</p>
 			{/if}
 			<div class="actions" style="margin-top:24px">
 				<Button variant="primary" size="lg" block onclick={() => goto(signInHref)}>
-					<Mail size={17} strokeWidth={1.75} />Sign in
+					<Mail size={17} strokeWidth={1.75} />{m.auth_sign_in()}
 				</Button>
 			</div>
 		</div>

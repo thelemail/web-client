@@ -5,6 +5,7 @@ import type { OfficialFacts } from './officialSender';
 import type { DelegatedSignerTrust } from './senderVerify';
 import { formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
 import type { SignatureStatus } from '$core/api/types';
+import { m } from '$paraglide/messages.js';
 
 export type TrustTier =
 	| 'official'
@@ -87,26 +88,26 @@ const BLOCKING_DIRECTORY_CODES = new Set([
 	'tlog_vrf_invalid'
 ]);
 
-const FAILURE_HEADLINES: Record<string, string> = {
-	signature_invalid: 'Sender identity could not be verified',
-	address_mismatch: 'The directory answered for a different address',
-	fingerprint_mismatch: 'The served key does not match the signed record',
-	algorithm_mismatch: 'Unsupported key algorithm',
-	signing_key_mismatch: 'The directory record was signed by an unknown key',
-	statement_malformed: 'The directory record could not be read',
-	version_rolled_back: 'The directory record went backwards',
-	tlog_proof_missing: 'No transparency log proof was provided',
-	tlog_proof_malformed: 'The transparency log proof could not be read',
-	tlog_checkpoint_unverified: 'The transparency log checkpoint is not trusted',
-	tlog_witness_policy_unmet: 'Not enough witnesses confirmed the checkpoint',
-	tlog_policy_invalid: 'The transparency log witness settings are invalid',
-	tlog_checkpoint_stale: 'The transparency log checkpoint is out of date',
-	tlog_inclusion_invalid: 'The key is not included in the transparency log',
-	tlog_vrf_invalid: 'The transparency log entry does not match this address',
-	tlog_tree_rolled_back: 'The transparency log went backwards',
-	tlog_checkpoint_conflict: 'The transparency log showed this device two different histories',
-	tlog_consistency_invalid: 'The transparency log rewrote history this device already saw',
-	tlog_consistency_unavailable: 'The transparency log history could not be checked'
+const FAILURE_HEADLINES: Record<string, () => string> = {
+	signature_invalid: () => m.trust_failure_signature_invalid(),
+	address_mismatch: () => m.trust_failure_address_mismatch(),
+	fingerprint_mismatch: () => m.trust_failure_fingerprint_mismatch(),
+	algorithm_mismatch: () => m.trust_failure_algorithm_mismatch(),
+	signing_key_mismatch: () => m.trust_failure_signing_key_mismatch(),
+	statement_malformed: () => m.trust_failure_statement_malformed(),
+	version_rolled_back: () => m.trust_failure_version_rolled_back(),
+	tlog_proof_missing: () => m.trust_failure_tlog_proof_missing(),
+	tlog_proof_malformed: () => m.trust_failure_tlog_proof_malformed(),
+	tlog_checkpoint_unverified: () => m.trust_failure_tlog_checkpoint_unverified(),
+	tlog_witness_policy_unmet: () => m.trust_failure_tlog_witness_policy_unmet(),
+	tlog_policy_invalid: () => m.trust_failure_tlog_policy_invalid(),
+	tlog_checkpoint_stale: () => m.trust_failure_tlog_checkpoint_stale(),
+	tlog_inclusion_invalid: () => m.trust_failure_tlog_inclusion_invalid(),
+	tlog_vrf_invalid: () => m.trust_failure_tlog_vrf_invalid(),
+	tlog_tree_rolled_back: () => m.trust_failure_tlog_tree_rolled_back(),
+	tlog_checkpoint_conflict: () => m.trust_failure_tlog_checkpoint_conflict(),
+	tlog_consistency_invalid: () => m.trust_failure_tlog_consistency_invalid(),
+	tlog_consistency_unavailable: () => m.trust_failure_tlog_consistency_unavailable()
 };
 
 function domainOf(address: string): string {
@@ -116,26 +117,26 @@ function domainOf(address: string): string {
 
 function relativeTime(fromMillis: number, nowMillis: number): string {
 	const seconds = Math.max(0, Math.round((nowMillis - fromMillis) / 1000));
-	if (seconds < 60) return 'just now';
+	if (seconds < 60) return m.trust_just_now();
 	const minutes = Math.round(seconds / 60);
-	if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+	if (minutes < 60) return m.trust_minutes_ago({ count: minutes });
 	const hours = Math.round(minutes / 60);
-	if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+	if (hours < 24) return m.trust_hours_ago({ count: hours });
 	const days = Math.round(hours / 24);
-	return `${days} day${days === 1 ? '' : 's'} ago`;
+	return m.trust_days_ago({ count: days });
 }
 
 function keyRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	if (!dir) return [];
 	const rows: TrustTechnicalRow[] = [];
 	if (dir.statement) {
-		rows.push({ label: 'Sender key', value: formatFingerprintHex(dir.statement.keyFingerprint) });
+		rows.push({ label: m.trust_row_sender_key(), value: formatFingerprintHex(dir.statement.keyFingerprint) });
 		rows.push({
-			label: 'Directory record',
+			label: m.trust_row_directory_record(),
 			value: formatVerifiedAt(Date.parse(dir.statement.issuedAt), dir.statement.version)
 		});
 		rows.push({
-			label: 'Signed by',
+			label: m.trust_row_signed_by(),
 			value: formatFingerprintHex(dir.statement.signingKeyFingerprint)
 		});
 	}
@@ -147,29 +148,29 @@ function changeRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	const d = dir.details;
 	const rows: TrustTechnicalRow[] = [];
 	if (d.previousFingerprint) {
-		rows.push({ label: 'Key you saw', value: formatFingerprintHex(d.previousFingerprint) });
+		rows.push({ label: m.trust_row_key_you_saw(), value: formatFingerprintHex(d.previousFingerprint) });
 	}
 	if (d.currentFingerprint) {
-		rows.push({ label: 'Key served now', value: formatFingerprintHex(d.currentFingerprint) });
+		rows.push({ label: m.trust_row_key_served_now(), value: formatFingerprintHex(d.currentFingerprint) });
 	}
 	if (d.previousVersion !== undefined) {
-		rows.push({ label: 'Version you saw', value: `v${d.previousVersion}` });
+		rows.push({ label: m.trust_row_version_you_saw(), value: `v${d.previousVersion}` });
 	}
 	if (d.currentVersion !== undefined) {
-		rows.push({ label: 'Version served now', value: `v${d.currentVersion}` });
+		rows.push({ label: m.trust_row_version_served_now(), value: `v${d.currentVersion}` });
 	}
-	if (dir.code) rows.push({ label: 'Finding', value: dir.code });
+	if (dir.code) rows.push({ label: m.trust_row_finding(), value: dir.code });
 	return rows;
 }
 
 function signatureRows(sig?: SignatureVerdict): TrustTechnicalRow[] {
 	if (!sig || sig.state === 'none') return [];
-	const rows: TrustTechnicalRow[] = [{ label: 'Result', value: sig.state }];
+	const rows: TrustTechnicalRow[] = [{ label: m.trust_row_result(), value: sig.state }];
 	if (sig.keyFingerprintHex) {
-		rows.push({ label: 'Signing key', value: formatFingerprintHex(sig.keyFingerprintHex) });
+		rows.push({ label: m.trust_row_signing_key(), value: formatFingerprintHex(sig.keyFingerprintHex) });
 	}
 	if (sig.signedAtMillis) {
-		rows.push({ label: 'Signed at', value: new Date(sig.signedAtMillis).toISOString() });
+		rows.push({ label: m.trust_row_signed_at(), value: new Date(sig.signedAtMillis).toISOString() });
 	}
 	return rows;
 }
@@ -179,16 +180,16 @@ function logRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	if (!tlog) return [];
 	if (tlog.state === 'verified') {
 		return [
-			{ label: 'Log', value: tlog.origin },
-			{ label: 'Tree size', value: String(tlog.treeSize) },
-			{ label: 'Leaf index', value: String(tlog.leafIndex) }
+			{ label: m.trust_row_log(), value: tlog.origin },
+			{ label: m.trust_row_tree_size(), value: String(tlog.treeSize) },
+			{ label: m.trust_row_leaf_index(), value: String(tlog.leafIndex) }
 		];
 	}
 	if (tlog.state === 'failed') {
-		const rows: TrustTechnicalRow[] = [{ label: 'Finding', value: tlog.code }];
-		if (tlog.details.logOrigin) rows.push({ label: 'Log', value: tlog.details.logOrigin });
+		const rows: TrustTechnicalRow[] = [{ label: m.trust_row_finding(), value: tlog.code }];
+		if (tlog.details.logOrigin) rows.push({ label: m.trust_row_log(), value: tlog.details.logOrigin });
 		if (tlog.details.treeSize !== undefined) {
-			rows.push({ label: 'Tree size', value: String(tlog.details.treeSize) });
+			rows.push({ label: m.trust_row_tree_size(), value: String(tlog.details.treeSize) });
 		}
 		return rows;
 	}
@@ -200,12 +201,12 @@ function witnessRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	if (!tlog) return [];
 	if (tlog.state === 'verified') {
 		const rows: TrustTechnicalRow[] = [
-			{ label: 'Confirmed by', value: String(tlog.validWitnessCount) },
-			{ label: 'Required', value: String(tlog.witnessThreshold) }
+			{ label: m.trust_row_confirmed_by(), value: String(tlog.validWitnessCount) },
+			{ label: m.trust_row_required(), value: String(tlog.witnessThreshold) }
 		];
 		if (tlog.cosignatureTimestamp) {
 			rows.push({
-				label: 'Last cosigned',
+				label: m.trust_row_last_cosigned(),
 				value: new Date(tlog.cosignatureTimestamp * 1000).toISOString()
 			});
 		}
@@ -213,8 +214,8 @@ function witnessRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	}
 	if (tlog.state === 'failed' && tlog.details.validWitnessCount !== undefined) {
 		return [
-			{ label: 'Confirmed by', value: String(tlog.details.validWitnessCount) },
-			{ label: 'Required', value: String(tlog.details.witnessThreshold ?? 0) }
+			{ label: m.trust_row_confirmed_by(), value: String(tlog.details.validWitnessCount) },
+			{ label: m.trust_row_required(), value: String(tlog.details.witnessThreshold ?? 0) }
 		];
 	}
 	return [];
@@ -258,25 +259,25 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'e2e',
 					state: 'pass',
-					label: 'Stored encrypted to your key',
+					label: m.trust_stored_encrypted_to_your_key(),
 					explain:
-						'Thelemail holds only ciphertext for this message and cannot read it at rest. Without a verified sender key, this device cannot tell whether it was already encrypted before it arrived.',
+						m.trust_explain_thelemail_holds_only_ciphertext_for_this(),
 					rows: []
 				}
 			: {
 					id: 'e2e',
 					state: 'pass',
-					label: 'Encrypted end to end',
+					label: m.trust_encrypted_end_to_end(),
 					explain:
-						'The message was encrypted to your key before it left the sender. Thelemail stores only the ciphertext and cannot read it.',
+						m.trust_explain_the_message_was_encrypted_to_your(),
 					rows: []
 				}
 		: {
 				id: 'e2e',
 				state: 'absent',
-				label: 'Not encrypted end to end',
+				label: m.trust_not_encrypted_end_to_end(),
 				explain:
-					'This message arrived as ordinary mail, so it was readable by the servers that carried it.',
+					m.trust_explain_this_message_arrived_as_ordinary_mail(),
 				rows: []
 			};
 
@@ -285,30 +286,30 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'signature',
 					state: 'pass',
-					label: 'Signature is valid',
+					label: m.trust_signature_is_valid(),
 					explain:
-						'This device checked the signature on the message against the key the directory publishes for the sender, and it matched.',
+						m.trust_explain_this_device_checked_the_signature_on(),
 					rows: signatureRows(facts.signature)
 				}
 			: sig === 'invalid'
 				? {
 						id: 'signature',
 						state: 'fail',
-						label: 'Signature does not match the sender key',
+						label: m.trust_signature_does_not_match_the_sender_key(),
 						explain:
-							'The message carries a signature, but it does not verify against the key the directory publishes for this sender. Treat the contents as unattributed.',
+							m.trust_explain_the_message_carries_a_signature_but(),
 						rows: signatureRows(facts.signature)
 					}
 				: {
 						id: 'signature',
 						state: 'absent',
 						label: !dir || dir.missing
-							? 'No signature to check'
-							: 'Signature was not checked',
+							? m.trust_no_signature_to_check()
+							: m.trust_signature_was_not_checked(),
 						explain:
 							!dir || dir.missing
-								? 'There is no published key for this address, so any signature on the message could not be checked against anything.'
-								: 'No signature could be checked on this message, either because it carries none or because the sender key was unavailable.',
+								? m.trust_explain_there_is_no_published_key_for()
+								: m.trust_explain_no_signature_could_be_checked_on(),
 						rows: signatureRows(facts.signature)
 					};
 
@@ -317,19 +318,19 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'binding',
 					state: 'pass',
-					label: 'Sender address matches the signing key',
+					label: m.trust_sender_address_matches_the_signing_key(),
 					explain:
-						'The key that signed this message is the one the directory publishes for this exact address, so the address and the key belong together.',
+						m.trust_explain_the_key_that_signed_this_message(),
 					rows: keyRows(dir)
 				}
 			: {
 					id: 'binding',
 					state: 'absent',
-					label: 'Sender identity is not cryptographically verified',
+					label: m.trust_sender_identity_is_not_cryptographically_verified(),
 					explain:
 						!dir || dir.missing
-							? 'Tying an address to a key needs a key published for that address. This one publishes none, so the sender in the header is not backed by any cryptography.'
-							: 'Tying an address to a key needs both a valid signature and a verified directory record. One of the two was missing here.',
+							? m.trust_explain_binding_no_published_key()
+							: m.trust_explain_binding_missing_part(),
 					rows: keyRows(dir)
 				};
 
@@ -338,9 +339,9 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'tlog',
 					state: 'pass',
-					label: 'Key is published in the transparency log',
+					label: m.trust_key_is_published_in_the_transparency_log(),
 					explain:
-						'The sender key appears in a public append-only log, so a key swapped in just for you would be visible to anyone watching the log.',
+						m.trust_explain_the_sender_key_appears_in_a(),
 					rows: logRows(dir)
 				}
 			: tlog?.state === 'failed'
@@ -348,25 +349,25 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 					? {
 							id: 'tlog',
 							state: 'fail',
-							label: 'The transparency log does not vouch for this key',
+							label: m.trust_the_transparency_log_does_not_vouch_for(),
 							explain:
-								'The log proof did not verify against the checkpoint this device trusts. A log that cannot show this key, or that shows a different history to you than to everyone else, is what a targeted key substitution looks like.',
+								m.trust_explain_the_log_proof_did_not_verify(),
 							rows: logRows(dir)
 						}
 					: {
 							id: 'tlog',
 							state: 'absent',
-							label: 'Transparency log could not be checked right now',
+							label: m.trust_transparency_log_could_not_be_checked_right(),
 							explain:
-								'The proof was missing or the checkpoint was too old to use. Nothing here says the key is wrong, only that the log could not confirm it on this attempt.',
+								m.trust_explain_the_proof_was_missing_or_the(),
 							rows: logRows(dir)
 						}
 				: {
 						id: 'tlog',
 						state: 'absent',
-						label: 'Transparency log is not configured here',
+						label: m.trust_transparency_log_is_not_configured_here(),
 						explain:
-							'This client has no transparency log policy loaded, so the key was not checked against the public log.',
+							m.trust_explain_this_client_has_no_transparency_log(),
 						rows: logRows(dir)
 					};
 
@@ -374,26 +375,26 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 		? {
 				id: 'witnesses',
 				state: 'pass',
-				label: `Checkpoint confirmed by ${witnessCount} of ${witnessNeed} independent witnesses`,
+				label: m.trust_witnesses_confirmed({ count: witnessCount, need: witnessNeed }),
 				explain:
-					'Independent witnesses cosigned the log checkpoint, so the log cannot show a different history to you than it shows to everyone else.',
+					m.trust_explain_independent_witnesses_cosigned_the_log_checkpoint(),
 				rows: witnessRows(dir)
 			}
 		: witnessNeed > 0
 			? {
 					id: 'witnesses',
 					state: 'absent',
-					label: `Witness quorum unavailable: ${witnessCount} of ${witnessNeed} confirmations`,
+					label: m.trust_witness_quorum_unavailable({ count: witnessCount, need: witnessNeed }),
 					explain:
-						'Independent witnesses are enrolled, but this checkpoint did not carry enough valid confirmations to meet the configured quorum. This can be a temporary witness or network outage.',
+						m.trust_explain_independent_witnesses_are_enrolled_but_this(),
 					rows: witnessRows(dir)
 				}
 			: {
 				id: 'witnesses',
 				state: 'absent',
-				label: 'No independent witnesses are watching this log yet',
+				label: m.trust_no_independent_witnesses_are_watching_this_log(),
 				explain:
-					'Witnesses are third parties that cosign the log checkpoint. None are enrolled yet, so the log is trusted on its own signature alone.',
+					m.trust_explain_witnesses_are_third_parties_that_cosign(),
 				rows: witnessRows(dir)
 			};
 
@@ -401,9 +402,9 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 		? {
 				id: 'keychange',
 				state: 'absent',
-				label: 'No key on record for this address',
+				label: m.trust_no_key_on_record_for_this_address(),
 				explain:
-					'This address publishes no key in the Thelemail directory, so there is nothing to compare against and no key change to detect.',
+					m.trust_explain_this_address_publishes_no_key_in(),
 				rows: []
 			}
 		: dir.ok
@@ -411,34 +412,34 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'keychange',
 					state: 'absent',
-					label: 'First message you have had from this sender',
+					label: m.trust_first_message_you_have_had_from_this(),
 					explain:
-						'This device has not seen this sender before, so there is no earlier key to compare against. The key is pinned now and future messages are checked against it.',
+						m.trust_explain_this_device_has_not_seen_this(),
 					rows: keyRows(dir)
 				}
 			: {
 					id: 'keychange',
 					state: 'pass',
-					label: 'Same key as the last message from this sender',
+					label: m.trust_same_key_as_the_last_message_from(),
 					explain:
-						'The key matches the one this device pinned the last time you heard from this address, so nobody has stepped in since.',
+						m.trust_explain_the_key_matches_the_one_this(),
 					rows: keyRows(dir)
 				}
 		: dir?.code === 'version_rolled_back'
 			? {
 					id: 'keychange',
 					state: 'fail',
-					label: 'The directory served an older record than you already saw',
+					label: m.trust_the_directory_served_an_older_record_than(),
 					explain:
-						'A directory record can only move forward. Being handed an older version means the record was rolled back, which is what an attacker would do to reinstate a retired key.',
+						m.trust_explain_a_directory_record_can_only_move(),
 					rows: changeRows(dir)
 				}
 			: {
 					id: 'keychange',
 					state: 'fail',
-					label: 'The key changed since you last saw this sender',
+					label: m.trust_the_key_changed_since_you_last_saw(),
 					explain:
-						'The address now publishes a different key. That is normal after a reinstall or a new device, and it is also what it looks like when somebody stands in for the sender.',
+						m.trust_explain_the_address_now_publishes_a_different(),
 					rows: changeRows(dir)
 				};
 
@@ -455,23 +456,23 @@ function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'domain',
 					state: 'pass',
-					label: `Sent by a server allowed to speak for ${domain}`,
-					explain: `The message carries a DKIM signature that lines up with ${domain}, and the domain's DMARC policy says that is how its mail should look.`,
+					label: m.trust_domain_pass({ domain }),
+					explain: m.trust_explain_domain_pass({ domain }),
 					rows
 				}
 			: state === 'fail'
 				? {
 						id: 'domain',
 						state: 'fail',
-						label: `Sending server could not prove it speaks for ${domain}`,
-						explain: `Domain authentication failed, so the address in the From line may not be the real sender. This is what forged mail looks like.`,
+						label: m.trust_domain_fail({ domain }),
+						explain: m.trust_explain_domain_authentication_failed_so_the_address(),
 						rows
 					}
 				: {
 						id: 'domain',
 						state: 'absent',
-						label: `${domain} published no way to check its mail`,
-						explain: `The domain has no usable SPF, DKIM or DMARC record, so there is nothing to check the sending server against. Nothing failed here.`,
+						label: m.trust_domain_absent({ domain }),
+						explain: m.trust_explain_the_domain_has_no_usable_spf(),
 						rows
 					};
 
@@ -483,26 +484,26 @@ function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 		{
 			id: 'e2e',
 			state: 'absent',
-			label: 'Not encrypted end to end',
+			label: m.trust_not_encrypted_end_to_end(),
 			explain:
-				'Ordinary mail is readable by every server that carries it. It was almost certainly encrypted in transit, which protects it on the wire but not at rest on those servers.',
+				m.trust_explain_ordinary_mail_is_readable_by_every(),
 			rows: []
 		},
 		{
 			id: 'identity',
 			state: 'absent',
-			label: 'The person behind the address is not verified',
+			label: m.trust_the_person_behind_the_address_is_not(),
 			explain: signed
-				? 'The signature ties this message to the key held for the address. It does not prove who holds that key.'
-				: 'Domain authentication vouches for the domain, not the individual. Anyone with an account at this domain can send as themselves.',
+				? m.trust_explain_the_signature_ties_this_message_to()
+				: m.trust_explain_domain_authentication_vouches_for_the_domain(),
 			rows: []
 		},
 		{
 			id: 'tlog',
 			state: 'absent',
-			label: 'No key transparency for this domain',
+			label: m.trust_no_key_transparency_for_this_domain(),
 			explain:
-				'Key transparency only covers addresses published in the Thelemail directory. There is no public log to check this sender against.',
+				m.trust_explain_key_transparency_only_covers_addresses_published(),
 			rows: []
 		}
 	];
@@ -510,42 +511,42 @@ function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
 
 function serverSignatureCheck(sig: ServerSignature): TrustCheck {
 	const rows: TrustTechnicalRow[] = sig.keyFingerprintHex
-		? [{ label: 'Signing key', value: formatFingerprintHex(sig.keyFingerprintHex) }]
+		? [{ label: m.trust_row_signing_key(), value: formatFingerprintHex(sig.keyFingerprintHex) }]
 		: [];
 	switch (sig.status) {
 		case 'verified':
 			return {
 				id: 'signature',
 				state: 'pass',
-				label: 'Signed with the key published for this address',
+				label: m.trust_signed_with_the_key_published_for_this(),
 				explain:
-					'Thelemail checked the OpenPGP signature when the message arrived, against the key it holds for this address. The text has not changed since it was signed.',
+					m.trust_explain_thelemail_checked_the_openpgp_signature_when(),
 				rows
 			};
 		case 'unverified':
 			return {
 				id: 'signature',
 				state: 'fail',
-				label: "The signature does not match the sender's key",
+				label: m.trust_the_signature_does_not_match_the_senders(),
 				explain:
-					'The message carries a signature from the key held for this address, but the signature does not fit the content. The message was changed after it was signed, or the signature was forged.',
+					m.trust_explain_the_message_carries_a_signature_from(),
 				rows
 			};
 		case 'unknown_key':
 			return {
 				id: 'signature',
 				state: 'absent',
-				label: 'Signed with a key Thelemail could not find for this address',
+				label: m.trust_signed_with_a_key_thelemail_could_not(),
 				explain:
-					'The message is signed, but not by any key published for this address, so the signature proves nothing about the sender. The sender may have a new key that is not published yet.',
+					m.trust_explain_the_message_is_signed_but_not(),
 				rows
 			};
 		default:
 			return {
 				id: 'signature',
 				state: 'absent',
-				label: 'Not signed by the sender',
-				explain: 'The message carries no OpenPGP signature, so there is nothing to check.',
+				label: m.trust_not_signed_by_the_sender(),
+				explain: m.trust_explain_the_message_carries_no_openpgp_signature(),
 				rows: []
 			};
 	}
@@ -555,11 +556,11 @@ function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 	const key = facts.externalKey;
 	const rows: TrustTechnicalRow[] = [];
 	if (key?.fingerprint) {
-		rows.push({ label: 'Key', value: formatFingerprintHex(key.fingerprint) });
+		rows.push({ label: m.trust_row_key(), value: formatFingerprintHex(key.fingerprint) });
 	}
-	if (key?.source) rows.push({ label: 'Found via', value: key.source });
+	if (key?.source) rows.push({ label: m.trust_row_found_via(), value: key.source });
 	if (key?.firstSeenAtMillis) {
-		rows.push({ label: 'First seen', value: new Date(key.firstSeenAtMillis).toISOString() });
+		rows.push({ label: m.trust_row_first_seen(), value: new Date(key.firstSeenAtMillis).toISOString() });
 	}
 
 	const continuity: TrustCheck =
@@ -567,26 +568,26 @@ function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'pinned',
 					state: 'pass',
-					label: 'Same key this device used before',
+					label: m.trust_same_key_this_device_used_before(),
 					explain:
-						'The key matches the one pinned on this device the last time you exchanged mail with this address.',
+						m.trust_explain_the_key_matches_the_one_pinned(),
 					rows
 				}
 			: key?.status === 'changed'
 				? {
 						id: 'pinned',
 						state: 'fail',
-						label: 'The key changed since this device last used it',
+						label: m.trust_the_key_changed_since_this_device_last(),
 						explain:
-							'A different key is now published for this address. Confirm it with the sender over another channel before trusting it.',
+							m.trust_explain_a_different_key_is_now_published(),
 						rows
 					}
 				: {
 						id: 'pinned',
 						state: 'absent',
-						label: 'First time this device has used this key',
+						label: m.trust_first_time_this_device_has_used_this(),
 						explain:
-							'There is no earlier key to compare against. The key is pinned now, and a later change will be flagged.',
+							m.trust_explain_there_is_no_earlier_key_to(),
 						rows
 					};
 
@@ -594,26 +595,26 @@ function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 		{
 			id: 'e2e',
 			state: 'pass',
-			label: 'Encrypted end to end',
+			label: m.trust_encrypted_end_to_end(),
 			explain:
-				'The message was encrypted to a key held by this recipient, so the servers that carried it only ever saw ciphertext.',
+				m.trust_explain_the_message_was_encrypted_to_a(),
 			rows: []
 		},
 		continuity,
 		{
 			id: 'tlog',
 			state: 'absent',
-			label: 'Key is not covered by Thelemail transparency',
+			label: m.trust_key_is_not_covered_by_thelemail_transparency(),
 			explain:
-				'This key came from outside the Thelemail directory, so it is not published in the transparency log and cannot be monitored there.',
+				m.trust_explain_this_key_came_from_outside_the(),
 			rows: []
 		},
 		{
 			id: 'witnesses',
 			state: 'absent',
-			label: 'No independent witnesses can confirm this key',
+			label: m.trust_no_independent_witnesses_can_confirm_this_key(),
 			explain:
-				'Witnesses cosign the Thelemail log. A key discovered outside that log has nothing for them to confirm.',
+				m.trust_explain_witnesses_cosign_the_thelemail_log_a(),
 			rows: []
 		}
 	];
@@ -630,7 +631,7 @@ const GREEN_TIERS = new Set<TrustTier>([
 function clamp(trust: MessageTrust): MessageTrust {
 	if (!GREEN_TIERS.has(trust.tier)) return trust;
 	if (!trust.checks.some((c) => c.state === 'fail')) return trust;
-	return { ...trust, tier: 'failed', label: 'Verification failed' };
+	return { ...trust, tier: 'failed', label: m.trust_verification_failed() };
 }
 
 export function deriveTrust(facts: TrustFacts): MessageTrust {
@@ -644,18 +645,18 @@ function delegatedChecks(facts: TrustFacts): TrustCheck[] {
 			id: 'delegation',
 			state: signer ? 'pass' : 'fail',
 			label: signer
-				? `${signer.label} is authorized to sign for this address`
-				: 'No authorization found for this signer',
+				? m.trust_signer_authorized({ signer: signer.label })
+				: m.trust_no_authorization_found_for_this_signer(),
 			explain:
-				'The address owner published a signed statement naming this key. This app checked that statement against the directory key it carries, so the server cannot invent a signer.',
-			rows: signer ? [{ label: 'Service', value: signer.label }] : []
+				m.trust_explain_the_address_owner_published_a_signed(),
+			rows: signer ? [{ label: m.trust_row_service(), value: signer.label }] : []
 		},
 		{
 			id: 'delegation-scope',
 			state: 'pass',
-			label: 'The service cannot read mail for this address',
+			label: m.trust_the_service_cannot_read_mail_for_this(),
 			explain:
-				'A delegated key can only sign. It carries no encryption key, so nothing addressed to this mailbox can be opened with it.',
+				m.trust_explain_a_delegated_key_can_only_sign(),
 			rows: []
 		},
 		...externalAuthChecks(facts)
@@ -669,44 +670,44 @@ function officialChecks(facts: TrustFacts): TrustCheck[] {
 		{
 			id: 'official',
 			state: o?.signedByOfficial ? 'pass' : 'fail',
-			label: o?.signedByOfficial ? 'Signed by Thelemail' : 'Not signed by Thelemail',
+			label: o?.signedByOfficial ? m.trust_signed_by_thelemail() : m.trust_not_signed_by_thelemail(),
 			explain:
-				'This message carries a signature from the Thelemail key built into this app. Nobody else can produce it, including the Thelemail servers.',
-			rows: fp ? [{ label: 'Signing key', value: formatFingerprintHex(fp) }] : []
+				m.trust_explain_this_message_carries_a_signature_from(),
+			rows: fp ? [{ label: m.trust_row_signing_key(), value: formatFingerprintHex(fp) }] : []
 		},
 		{
 			id: 'binding',
 			state: o?.headerBound ? 'pass' : 'fail',
 			label: o?.headerBound
-				? 'The signature covers the sender and subject shown'
-				: 'The signature does not cover the sender shown',
+				? m.trust_the_signature_covers_the_sender_and_subject()
+				: m.trust_the_signature_does_not_cover_the_sender(),
 			explain:
-				'The signature covers the sender address and subject you see above, not only the text, so neither can be swapped after signing.',
+				m.trust_explain_the_signature_covers_the_sender_address(),
 			rows: []
 		},
 		{
 			id: 'channel',
 			state: o?.channelOk ? 'pass' : 'fail',
 			label: o?.channelOk
-				? 'Delivered inside Thelemail'
-				: 'This arrived from outside Thelemail',
+				? m.trust_delivered_inside_thelemail()
+				: m.trust_this_arrived_from_outside_thelemail(),
 			explain:
-				'Thelemail sends its own notices straight into your mailbox. Anything claiming to be from Thelemail that arrived over ordinary mail is not from Thelemail.',
+				m.trust_explain_thelemail_sends_its_own_notices_straight(),
 			rows: []
 		},
 		{
 			id: 'e2e',
 			state: facts.e2e ? 'pass' : 'absent',
-			label: 'Encrypted to your key before it was stored',
-			explain: 'Thelemail holds only ciphertext for this message and cannot read it at rest.',
+			label: m.trust_encrypted_to_your_key_before_it_was(),
+			explain: m.trust_explain_official_ciphertext_at_rest(),
 			rows: []
 		},
 		{
 			id: 'tlog',
 			state: facts.directory?.tlog?.state === 'verified' ? 'pass' : 'absent',
-			label: 'Published in the transparency log',
+			label: m.trust_published_in_the_transparency_log(),
 			explain:
-				'The same key is published in the public Thelemail log, so its history can be audited independently of this app.',
+				m.trust_explain_the_same_key_is_published_in(),
 			rows: logRows(facts.directory)
 		}
 	];
@@ -722,18 +723,18 @@ function derive(facts: TrustFacts): MessageTrust {
 			return {
 				...base,
 				tier: 'failed',
-				label: 'Not from Thelemail',
-				headline: 'This message is not from Thelemail',
+				label: m.trust_not_from_thelemail(),
+				headline: m.trust_this_message_is_not_from_thelemail(),
 				checks: officialChecks(facts),
 				footnote:
-					'It uses a Thelemail address in the From line, but it is not signed by the Thelemail key this app carries. Do not act on it.'
+					m.trust_explain_it_uses_a_thelemail_address_in()
 			};
 		}
 		return {
 			...base,
 			tier: 'official',
-			label: 'Official',
-			headline: 'Sent by Thelemail',
+			label: m.trust_official(),
+			headline: m.trust_sent_by_thelemail(),
 			checks: officialChecks(facts)
 		};
 	}
@@ -742,8 +743,8 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'failed',
-			label: 'Verification failed',
-			headline: 'The transparency log does not vouch for this key',
+			label: m.trust_verification_failed(),
+			headline: m.trust_the_transparency_log_does_not_vouch_for(),
 			checks: internalChecks(facts)
 		};
 	}
@@ -752,10 +753,10 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'failed',
-			label: 'Signature invalid',
-			headline: 'The signature on this message is not valid',
+			label: m.trust_signature_invalid(),
+			headline: m.trust_the_signature_on_this_message_is_not(),
 			checks: internalChecks(facts),
-			footnote: 'This message was not signed by the key the directory publishes for the sender.'
+			footnote: m.trust_explain_this_message_was_not_signed_by()
 		};
 	}
 
@@ -767,11 +768,11 @@ function derive(facts: TrustFacts): MessageTrust {
 			return {
 				...base,
 				tier: 'attention',
-				label: 'Key changed',
-				headline: "The sender's key has changed since you last saw it",
+				label: m.trust_key_changed(),
+				headline: m.trust_the_senders_key_has_changed_since_you(),
 				checks: internalChecks(facts),
 				footnote: dir.details?.previousVerifiedAtMillis
-					? `Last verified ${relativeTime(dir.details.previousVerifiedAtMillis, facts.nowMillis)}`
+					? m.trust_last_verified({ when: relativeTime(dir.details.previousVerifiedAtMillis, facts.nowMillis) })
 					: undefined,
 				action: 'confirm_key_change'
 			};
@@ -780,8 +781,8 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'failed',
-			label: blocking ? 'Verification failed' : 'Could not verify',
-			headline: FAILURE_HEADLINES[dir.code] ?? 'Sender identity could not be verified',
+			label: blocking ? m.trust_verification_failed() : m.trust_could_not_verify(),
+			headline: FAILURE_HEADLINES[dir.code]?.() ?? m.trust_failure_signature_invalid(),
 			checks: internalChecks(facts)
 		};
 	}
@@ -790,10 +791,10 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'failed',
-			label: 'Authentication failed',
-			headline: 'This message failed domain authentication',
+			label: m.trust_authentication_failed(),
+			headline: m.trust_this_message_failed_domain_authentication(),
 			checks: externalAuthChecks(facts),
-			footnote: `The sending server could not prove it speaks for ${domainOf(facts.senderAddress)}.`
+			footnote: m.trust_footnote_domain_fail({ domain: domainOf(facts.senderAddress) })
 		};
 	}
 
@@ -801,10 +802,10 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'failed',
-			label: 'Signature invalid',
-			headline: 'The signature on this message is not valid',
+			label: m.trust_signature_invalid(),
+			headline: m.trust_the_signature_on_this_message_is_not(),
 			checks: externalAuthChecks(facts),
-			footnote: 'The message was changed after it was signed, or the signature was forged.'
+			footnote: m.trust_explain_the_message_was_changed_after_it()
 		};
 	}
 
@@ -812,11 +813,11 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'attention',
-			label: 'Key changed',
-			headline: "This sender's encryption key has changed",
+			label: m.trust_key_changed(),
+			headline: m.trust_this_senders_encryption_key_has_changed(),
 			checks: externalEncryptedChecks(facts),
 			footnote: facts.externalKey.fingerprint
-				? `New key · ${formatFingerprintHex(facts.externalKey.fingerprint)}`
+				? m.trust_new_key({ fingerprint: formatFingerprintHex(facts.externalKey.fingerprint) })
 				: undefined,
 			action: 'confirm_key_change'
 		};
@@ -834,11 +835,11 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'verified',
-			label: 'Encrypted and verified',
-			headline: 'Encrypted and verified',
+			label: m.trust_encrypted_and_verified(),
+			headline: m.trust_encrypted_and_verified(),
 			checks: internalChecks(facts),
 			footnote: dir?.verifiedAtMillis
-				? `Verified on this device · ${relativeTime(dir.verifiedAtMillis, facts.nowMillis)}`
+				? m.trust_verified_on_device({ when: relativeTime(dir.verifiedAtMillis, facts.nowMillis) })
 				: undefined
 		};
 	}
@@ -847,12 +848,12 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'none',
-			label: 'Unverified sender',
-			headline: 'Encrypted, but the sender is not verified',
+			label: m.trust_unverified_sender(),
+			headline: m.trust_encrypted_but_the_sender_is_not_verified(),
 			checks: internalChecks(facts),
 			footnote: dir?.missing
-				? 'This address publishes no key, so nothing here proves who sent it.'
-				: 'The directory could not be reached, so the sender was not checked.'
+				? m.trust_explain_this_address_publishes_no_key_so()
+				: m.trust_explain_the_directory_could_not_be_reached()
 		};
 	}
 
@@ -861,15 +862,15 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'encrypted',
-			label: 'End-to-end encrypted',
-			headline: 'End-to-end encrypted',
+			label: m.trust_end_to_end_encrypted(),
+			headline: m.trust_end_to_end_encrypted(),
 			checks: external ? externalEncryptedChecks(facts) : internalChecks(facts),
 			footnote: external
 				? facts.externalKey?.fingerprint
-					? `Key remembered · ${formatFingerprintHex(facts.externalKey.fingerprint)}`
-					: 'Key remembered on this device'
+					? m.trust_key_remembered({ fingerprint: formatFingerprintHex(facts.externalKey.fingerprint) })
+					: m.trust_key_remembered_on_this_device()
 				: dir?.verifiedAtMillis
-					? `Verified on this device · ${relativeTime(dir.verifiedAtMillis, facts.nowMillis)}`
+					? m.trust_verified_on_device({ when: relativeTime(dir.verifiedAtMillis, facts.nowMillis) })
 					: undefined
 		};
 	}
@@ -878,10 +879,10 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'delegated',
-			label: 'Signed by an authorized service',
-			headline: `Signed by ${facts.delegatedSigner.label}`,
+			label: m.trust_signed_by_an_authorized_service(),
+			headline: m.trust_signed_by_signer({ signer: facts.delegatedSigner.label }),
 			checks: delegatedChecks(facts),
-			footnote: `${domainOf(facts.senderAddress)} authorized this service to sign as ${facts.senderAddress}. It cannot read mail sent to that address.`
+			footnote: m.trust_footnote_delegated({ domain: domainOf(facts.senderAddress), address: facts.senderAddress })
 		};
 	}
 
@@ -889,10 +890,10 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'authenticated',
-			label: 'Signed by the sender',
-			headline: 'Signed by the sender',
+			label: m.trust_signed_by_the_sender(),
+			headline: m.trust_signed_by_the_sender(),
 			checks: externalAuthChecks(facts),
-			footnote: 'The signature proves the key, not the person.'
+			footnote: m.trust_the_signature_proves_the_key_not_the()
 		};
 	}
 
@@ -900,19 +901,19 @@ function derive(facts: TrustFacts): MessageTrust {
 		return {
 			...base,
 			tier: 'authenticated',
-			label: 'Sender domain authenticated',
-			headline: 'Sender domain authenticated',
+			label: m.trust_sender_domain_authenticated(),
+			headline: m.trust_sender_domain_authenticated(),
 			checks: externalAuthChecks(facts),
-			footnote: 'Protected in transit where supported'
+			footnote: m.trust_protected_in_transit_where_supported()
 		};
 	}
 
 	return {
 		...base,
 		tier: 'none',
-		label: 'Not authenticated',
-		headline: 'Sender domain not authenticated',
+		label: m.trust_not_authenticated(),
+		headline: m.trust_sender_domain_not_authenticated(),
 		checks: externalAuthChecks(facts),
-		footnote: 'Nothing failed. The sending domain simply published no way to check.'
+		footnote: m.trust_explain_nothing_failed_the_sending_domain_simply()
 	};
 }

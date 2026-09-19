@@ -5,17 +5,18 @@
 	import { Button } from '$core/components/ui/button';
 	import { paletteFor } from '$core/mail/avatarPalette';
 	import { initialsFor } from '$core/mail/initials';
+	import { m } from '$paraglide/messages.js';
 	import { dateToInstant } from '../tz';
 	import { cal } from '../state.svelte';
 	import { availability } from './availability.svelte';
 	import type { BoardDay, BoardLane } from './board';
 
-	const TRUST_COPY: Record<string, string> = {
-		signature_failed: 'Signature did not match. Treat these blocks as unconfirmed.',
-		key_mismatch: 'Signed with a key we do not have for this person.',
-		key_unresolved: 'We could not fetch this signer’s key, so nothing here is confirmed.',
-		signer_unknown: 'Published by an account we cannot identify.',
-		unsigned: 'These blocks arrived without a signature.'
+	const TRUST_COPY: Record<string, () => string> = {
+		signature_failed: () => m.cal_avail_trust_signature_failed(),
+		key_mismatch: () => m.cal_avail_trust_key_mismatch(),
+		key_unresolved: () => m.cal_avail_trust_key_unresolved(),
+		signer_unknown: () => m.cal_avail_trust_signer_unknown(),
+		unsigned: () => m.cal_avail_trust_unsigned()
 	};
 
 	const days = $derived.by<BoardDay[]>(() => {
@@ -40,11 +41,12 @@
 	const unverified = $derived(board.counts.unverified);
 
 	function laneLabel(lane: BoardLane): string {
-		return lane.isMe ? `${lane.name} (you)` : lane.name;
+		return lane.isMe ? m.cal_avail_lane_you({ name: lane.name }) : lane.name;
 	}
 
 	function blockLabel(lane: BoardLane, verified: boolean): string {
-		return `${laneLabel(lane)} is busy${verified ? '' : ', unconfirmed'}`;
+		const name = laneLabel(lane);
+		return verified ? m.cal_avail_block_busy({ name }) : m.cal_avail_block_busy_unconfirmed({ name });
 	}
 
 	$effect(() => {
@@ -71,7 +73,7 @@
 				size="sm"
 				onclick={() => availability.load(cal.weekWindow.from, cal.weekWindow.to, true)}
 			>
-				Try again
+				{m.common_retry()}
 			</Button>
 		</div>
 	{/if}
@@ -109,22 +111,21 @@
 			{/each}
 		</div>
 		{#if lane.worst && lane.worst !== 'verified'}
-			<div class="avail-trust"><TriangleAlert size={13} />{TRUST_COPY[lane.worst]}</div>
+			<div class="avail-trust"><TriangleAlert size={13} />{TRUST_COPY[lane.worst]?.()}</div>
 		{/if}
 	{/each}
 
 	{#if !board.lanes.length && !availability.loading}
-		<div class="avail-note">Nothing is published for this week.</div>
+		<div class="avail-note">{m.cal_avail_nothing_published()}</div>
 	{/if}
 
 	<div class="avail-tally">
 		{#if unverified > 0}
 			<TriangleAlert size={14} />
-			{board.counts.verified} of {board.counts.total} blocks are signed by the account that published
-			them and check out.
+			{m.cal_avail_tally_partial({ verified: board.counts.verified, total: board.counts.total })}
 		{:else if board.counts.total > 0}
 			<ShieldCheck size={14} />
-			Every block here is signed by the account that published it.
+			{m.cal_avail_tally_all()}
 		{/if}
 	</div>
 </div>

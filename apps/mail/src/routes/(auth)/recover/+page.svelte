@@ -36,15 +36,26 @@
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
-	const REC_LABELS = ['Account', 'Phrase', 'Password'];
-	const REC_LABELS_2FA = ['Account', 'Phrase', '2FA', 'Password'];
-	const WORK_LINES = [
-		'Opening your key with the recovery phrase',
-		'Deriving a key from the new password',
-		'Re-wrapping your private key',
-		'Retiring the old phrase · signing out other sessions'
-	];
+	const recLabelsBase = $derived([
+		m.auth_recover_step_account(),
+		m.auth_recover_step_phrase(),
+		m.auth_step_password()
+	]);
+	const recLabels2fa = $derived([
+		m.auth_recover_step_account(),
+		m.auth_recover_step_phrase(),
+		m.auth_recover_step_2fa(),
+		m.auth_step_password()
+	]);
+	const workLines = $derived([
+		m.auth_recover_work_open(),
+		m.auth_recover_work_derive(),
+		m.auth_recover_work_rewrap(),
+		m.auth_recover_work_retire()
+	]);
 
 	type Step =
 		| 'account'
@@ -61,7 +72,7 @@
 	let twoFaError = $state<string | null>(null);
 	let twoFaFailures = $state(0);
 	let hadTwoFa = $state(false);
-	const recLabels = $derived(hadTwoFa ? REC_LABELS_2FA : REC_LABELS);
+	const recLabels = $derived(hadTwoFa ? recLabels2fa : recLabelsBase);
 
 	let email = $state(page.url.searchParams.get('email') ?? '');
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
@@ -130,8 +141,7 @@
 		if (!allFilled || phraseStatus === 'checking') return;
 		if (!validateMnemonic(phrase, wordlist)) {
 			phraseStatus = 'bad';
-			phraseError =
-				'That doesn’t look like a valid recovery phrase. Check the marked words — order and spelling both matter.';
+			phraseError = m.auth_recover_phrase_invalid();
 			return;
 		}
 		phraseStatus = 'checking';
@@ -152,8 +162,8 @@
 			phraseStatus = 'bad';
 			phraseError =
 				err instanceof RecoveryPhraseError
-					? 'That phrase doesn’t open this archive. Order and spelling both matter.'
-					: 'Something went wrong on our end. Give it a moment and try again.';
+					? m.auth_recover_phrase_wrong()
+					: m.auth_recover_phrase_server_error();
 		}
 	}
 
@@ -183,7 +193,7 @@
 		const pending = pendingTwoFactor;
 		if (!pending || twoFaBusy) return;
 		if (Date.now() > pending.expiresAt) {
-			resetToPhraseStep('Your recovery session expired — enter your phrase again.');
+			resetToPhraseStep(m.auth_recover_2fa_expired());
 			return;
 		}
 		twoFaBusy = true;
@@ -196,15 +206,15 @@
 			if (err instanceof TwoFactorRejectedError) {
 				twoFaFailures += 1;
 				if (twoFaFailures >= 5 || Date.now() > pending.expiresAt) {
-					resetToPhraseStep('Your recovery session expired — enter your phrase again.');
+					resetToPhraseStep(m.auth_recover_2fa_expired());
 					return;
 				}
-				twoFaError = 'That code didn’t work. Try again.';
+				twoFaError = m.auth_login_2fa_rejected();
 				twoFaBusy = false;
 				return;
 			}
 			if (err instanceof TwoFactorExpiredError) {
-				resetToPhraseStep('Your recovery session expired — enter your phrase again.');
+				resetToPhraseStep(m.auth_recover_2fa_expired());
 				return;
 			}
 			if (isWebauthnCancelled(err)) {
@@ -212,7 +222,7 @@
 				return;
 			}
 			console.error('recovery two-factor failed', err);
-			twoFaError = err instanceof Error ? err.message : 'Verification failed';
+			twoFaError = err instanceof Error ? err.message : m.auth_login_2fa_failed();
 			twoFaBusy = false;
 		}
 	}
@@ -263,7 +273,7 @@
 					else if (stage === 'submit') workIdx = 3;
 				}
 			});
-			workIdx = WORK_LINES.length;
+			workIdx = workLines.length;
 			pw = '';
 			confirm = '';
 			resetToken = '';
@@ -272,39 +282,37 @@
 			platform.reportError?.('recover', err);
 			workError =
 				err instanceof RecoveryResetExpiredError
-					? 'This recovery session expired. Start over and enter your phrase again.'
-					: 'Something went wrong while re-keying. Start over and try again.';
+					? m.auth_recover_reset_expired()
+					: m.auth_recover_reset_failed();
 		}
 	}
 
-	const workPct = $derived(Math.min(100, Math.round((workIdx / WORK_LINES.length) * 100)));
+	const workPct = $derived(Math.min(100, Math.round((workIdx / workLines.length) * 100)));
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
+
 <svelte:head>
-	<title>Thelemail — Account recovery</title>
+	<title>{m.auth_recover_page_title()}</title>
 </svelte:head>
 
 {#if step === 'account'}
 	<div class="card-surface screen-fade">
-		<Stepper step={0} labels={REC_LABELS} />
+		<Stepper step={0} labels={recLabelsBase} />
 		<div class="card-head">
-			<p class="eyebrow">Account recovery</p>
-			<h1>Recover your account</h1>
-			<p>
-				Your mail is zero-access encrypted &mdash; we never hold your password or a copy of your
-				key, so there is no reset we can send you.
-			</p>
+			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
+			<h1>{m.auth_recover_title()}</h1>
+			<p>{m.auth_recover_lede()}</p>
 		</div>
 		<div class="form">
 			<div class="keynote">
 				<KeyRound size={16} strokeWidth={1.75} />
-				<span>
-					Your <b>twelve-word recovery phrase</b> is the spare key. With it, you&rsquo;ll set a new
-					password and nothing is lost.
-				</span>
+				<span><Rich text={m.auth_recover_keynote()} tags={{ b: bold }} /></span>
 			</div>
 			<div class="field">
-				<div class="lab"><label for="rec-email">Email address</label></div>
+				<div class="lab"><label for="rec-email">{m.common_email_address()}</label></div>
 				<input
 					id="rec-email"
 					class="inp"
@@ -316,28 +324,25 @@
 						if (e.key === 'Enter') continueAccount();
 					}}
 				/>
-				<span class="hint">
-					We won&rsquo;t say whether an address exists &mdash; the phrase decides.
-				</span>
+				<span class="hint">{m.auth_recover_email_hint()}</span>
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!emailValid} onclick={continueAccount}>
-					Continue<ArrowRight size={17} strokeWidth={1.75} />
+					{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
 				</Button>
 			</div>
 		</div>
-		<p class="switch">Remembered it after all? <a href="/login">Back to sign in</a></p>
+		<p class="switch">
+			<Rich text={m.auth_recover_remembered()} tags={{ link: signInLink }} />
+		</p>
 	</div>
 {:else if step === 'phrase'}
 	<div class="card-surface screen-fade">
 		<Stepper step={1} labels={recLabels} />
 		<div class="card-head">
-			<p class="eyebrow">Account recovery</p>
-			<h1>Enter your recovery phrase</h1>
-			<p>
-				The twelve words you wrote down when you set up recovery for
-				<span class="mono" style="color:var(--ink-700)">{email}</span> &mdash; in order.
-			</p>
+			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
+			<h1>{m.auth_recover_phrase_title()}</h1>
+			<p><Rich text={m.auth_recover_phrase_lede({ email })} tags={{ addr }} /></p>
 		</div>
 		<div class="form">
 			<div class="phrasegrid" class:shake={phraseStatus === 'bad'}>
@@ -364,18 +369,18 @@
 					<span>{phraseError}</span>
 				</span>
 			{:else}
-				<span class="hint">Tip: paste the whole phrase into any box and it will fill itself in.</span>
+				<span class="hint">{m.auth_recover_phrase_tip()}</span>
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = 'account')}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 'account')}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
 						{#if phraseStatus === 'checking'}
-							<span class="spinner"></span>Checking the phrase&hellip;
+							<span class="spinner"></span>{m.auth_recover_phrase_checking()}
 						{:else}
-							Unlock with phrase<ArrowRight size={17} strokeWidth={1.75} />
+							{m.auth_recover_phrase_unlock()}<ArrowRight size={17} strokeWidth={1.75} />
 						{/if}
 					</Button>
 				</div>
@@ -383,51 +388,45 @@
 		</div>
 		<p class="switch">
 			<button class="linklike" type="button" onclick={() => (step = 'nophrase')}>
-				I don&rsquo;t have my phrase
+				{m.auth_recover_no_phrase()}
 			</button>
 		</p>
 	</div>
 {:else if step === 'nophrase'}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<p class="eyebrow">Account recovery</p>
-			<h1>Without your phrase</h1>
-			<p>
-				We&rsquo;ll be straight with you: there is no back door. Your mail is encrypted to a key
-				only your password or your phrase can open. Here is what can still help.
-			</p>
+			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
+			<h1>{m.auth_recover_nophrase_title()}</h1>
+			<p>{m.auth_recover_nophrase_lede()}</p>
 		</div>
 		<div class="ways">
 			<div class="way">
 				<span class="way-ic"><MonitorSmartphone size={17} strokeWidth={1.75} /></span>
 				<div class="way-text">
-					<b>Still signed in somewhere?</b>
-					A signed-in device holds your unlocked key. Open Settings &rarr; Security there and set up
-					a fresh recovery phrase &mdash; no password needed.
+					<b>{m.auth_recover_way_device_title()}</b>
+					{m.auth_recover_way_device_body()}
 				</div>
 			</div>
 			<div class="way">
 				<span class="way-ic"><RotateCcw size={17} strokeWidth={1.75} /></span>
 				<div class="way-text">
-					<b>Take another run at the password.</b>
-					People often recall it with time. Try old variants, your password manager, the drawer with
-					the notebook.
+					<b>{m.auth_recover_way_retry_title()}</b>
+					{m.auth_recover_way_retry_body()}
 				</div>
 			</div>
 			<div class="way danger">
 				<span class="way-ic"><CircleAlert size={17} strokeWidth={1.75} /></span>
 				<div class="way-text">
-					<b>Last resort: start the account over.</b>
-					Your address and domains stay yours, but the encrypted archive is destroyed &mdash; we
-					can&rsquo;t decrypt it, not even to save it.
+					<b>{m.auth_recover_way_reset_title()}</b>
+					{m.auth_recover_way_reset_body()}
 				</div>
 			</div>
 		</div>
 		<div class="actions" style="margin-top:22px">
 			<Button variant="secondary" size="lg" block onclick={() => (step = 'phrase')}>
-				<ArrowLeft size={17} strokeWidth={1.75} />I&rsquo;ll look for the phrase
+				<ArrowLeft size={17} strokeWidth={1.75} />{m.auth_recover_look_for_phrase()}
 			</Button>
-			<Button variant="ghost" size="lg" block onclick={exitToLogin}>Back to sign in</Button>
+			<Button variant="ghost" size="lg" block onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</Button>
 		</div>
 	</div>
 {:else if step === 'twofa'}
@@ -438,8 +437,8 @@
 				methods={pendingTwoFactor.methods}
 				busy={twoFaBusy}
 				error={twoFaError}
-				eyebrow="Account recovery"
-				backLabel="Back"
+				eyebrow={m.auth_recover_eyebrow()}
+				backLabel={m.common_back()}
 				onTotp={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorTotp(p, code))}
 				onBackupCode={(code) =>
 					runRecoveryTwoFactor((p) => submitRecoveryTwoFactorBackupCode(p, code))}
@@ -447,12 +446,10 @@
 				onBack={() => resetToPhraseStep('')}
 			>
 				{#snippet top()}
-					<Stepper step={2} labels={REC_LABELS_2FA} />
+					<Stepper step={2} labels={recLabels2fa} />
 				{/snippet}
 				{#snippet lede()}
-					This account has two-factor enabled. The phrase checked out &mdash; confirm a second
-					factor for <span class="mono" style="color:var(--ink-700)">{email}</span> before the
-					reset.
+					<Rich text={m.auth_recover_2fa_lede({ email })} tags={{ addr }} />
 				{/snippet}
 			</TwoFactorChallenge>
 		{/if}
@@ -461,50 +458,47 @@
 	<div class="card-surface screen-fade">
 		<Stepper step={hadTwoFa ? 3 : 2} labels={recLabels} />
 		<div class="card-head">
-			<p class="eyebrow">Account recovery</p>
-			<h1>Set a new password</h1>
-			<p>The phrase opened your key. Now choose the password that will wrap it from here on.</p>
+			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
+			<h1>{m.auth_recover_password_title()}</h1>
+			<p>{m.auth_recover_password_lede()}</p>
 		</div>
 		<div class="form">
 			<PasswordField
-				label="New password"
+				label={m.auth_recover_new_password_label()}
 				bind:value={pw}
-				placeholder="Create a strong password"
+				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
 			/>
 			<PasswordStrength {pw} />
 			<PasswordField
-				label="Confirm new password"
+				label={m.auth_recover_confirm_label()}
 				bind:value={confirm}
-				placeholder="Re-enter password"
+				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
 				onEnter={startRekey}
 			/>
 			{#if mismatch}
 				<span class="errtext" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>Passwords don&rsquo;t match.</span>
+					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
 			{:else if matches}
 				<span class="oktext" style="margin-top:-8px">
 					<CircleCheck size={13} strokeWidth={1.75} />
-					<span>Passwords match.</span>
+					<span>{m.auth_register_passwords_match()}</span>
 				</span>
 			{/if}
 			<div class="keynote">
 				<KeyRound size={16} strokeWidth={1.75} />
-				<span>
-					This re-wraps your private key. Other devices sign out, and <b>your old phrase is
-						retired</b> &mdash; you&rsquo;ll set up a fresh one after you&rsquo;re back in.
-				</span>
+				<span><Rich text={m.auth_recover_rewrap_note()} tags={{ b: bold }} /></span>
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = 'phrase')}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 'phrase')}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={!passwordReady} onclick={startRekey}>
-						Reset password<ArrowRight size={17} strokeWidth={1.75} />
+						{m.auth_recover_reset_password()}<ArrowRight size={17} strokeWidth={1.75} />
 					</Button>
 				</div>
 			</div>
@@ -513,13 +507,13 @@
 {:else if step === 'working'}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<p class="eyebrow">Account recovery</p>
-			<h1>Re-keying your archive</h1>
+			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
+			<h1>{m.auth_recover_working_title()}</h1>
 		</div>
 		<div class="working">
 			<div class="wbar"><i style="width:{workPct}%"></i></div>
 			<ul class="wlines">
-				{#each WORK_LINES as line, j (j)}
+				{#each workLines as line, j (j)}
 					<li class:done={j < workIdx} class:active={j === workIdx && !workError}>
 						<span class="wic">
 							{#if j < workIdx}
@@ -541,9 +535,9 @@
 				</span>
 				<div class="actions" style="margin-top:18px">
 					<Button variant="secondary" size="lg" block onclick={startOver}>
-						<RotateCcw size={15} strokeWidth={1.75} />Start over
+						<RotateCcw size={15} strokeWidth={1.75} />{m.auth_recover_start_over()}
 					</Button>
-					<Button variant="ghost" size="lg" block onclick={exitToLogin}>Back to sign in</Button>
+					<Button variant="ghost" size="lg" block onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</Button>
 				</div>
 			{/if}
 		</div>
@@ -552,8 +546,8 @@
 	<div class="card-surface screen-fade">
 		<div class="welcome">
 			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
-			<h1>Your archive is back</h1>
-			<p>The phrase did its job. Every message is intact, re-encrypted under your new password.</p>
+			<h1>{m.auth_recover_done_title()}</h1>
+			<p>{m.auth_recover_done_lede()}</p>
 			<div class="addrcard">
 				<span class="av"><KeyRound size={16} strokeWidth={1.75} /></span>
 				<span class="em">{email}</span>
@@ -562,16 +556,16 @@
 			<div class="recnotes">
 				<span class="recnote">
 					<LogOut size={14} strokeWidth={1.75} />
-					Other devices were signed out &mdash; unlock them with the new password
+					{m.auth_recover_done_signed_out()}
 				</span>
 				<span class="recnote brass">
 					<LifeBuoy size={14} strokeWidth={1.75} />
-					Your old phrase is retired. Set up a new one in Settings &rarr; Security
+					{m.auth_recover_done_phrase_retired()}
 				</span>
 			</div>
 			<div class="actions" style="margin-top:24px">
 				<Button variant="primary" size="lg" block onclick={exitToLogin}>
-					<Mail size={17} strokeWidth={1.75} />Sign in with your new password
+					<Mail size={17} strokeWidth={1.75} />{m.auth_recover_done_sign_in()}
 				</Button>
 			</div>
 		</div>

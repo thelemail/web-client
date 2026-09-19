@@ -1,3 +1,5 @@
+import { m } from '$paraglide/messages.js';
+
 export type RestartHold = () => Promise<string | null> | string | null;
 
 const holds = new Set<RestartHold>();
@@ -15,7 +17,7 @@ export async function restartBlockers(): Promise<string[]> {
 			try {
 				return await hold();
 			} catch {
-				return 'Something is still saving.';
+				return m.store_restart_still_saving();
 			}
 		})
 	);

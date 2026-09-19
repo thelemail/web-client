@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Lock from '@lucide/svelte/icons/lock';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -8,6 +9,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import type { DirectoryVerificationCode } from '$core/directory/verify';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	interface Recipient {
 		name: string;
@@ -63,89 +65,81 @@
 		switch (inner) {
 			case 'signature_invalid':
 				return {
-					plain:
-						"The directory's signature on this address didn't verify against the key your client trusts.",
+					plain: m.mail_dirfail_plain_signature_invalid(),
 					rows: [
-						['Error code', 'signature_invalid'],
-						['Address', addr],
-						['Trusted signer', expectedSignerFingerprint ?? FP.expectedSigner]
+						[m.mail_dirfail_error_code(), 'signature_invalid'],
+						[m.mail_dirfail_address(), addr],
+						[m.mail_dirfail_trusted_signer(), expectedSignerFingerprint ?? FP.expectedSigner]
 					]
 				};
 			case 'signing_key_mismatch':
 				return {
-					plain:
-						"The record was signed by a different directory authority than the one this build of Thelemail trusts. Your client may be out of date — or the server is signing under a key we don't recognise.",
+					plain: m.mail_dirfail_plain_signing_key_mismatch(),
 					rows: [
-						['Error code', 'signing_key_mismatch'],
-						['Expected signer', expectedSignerFingerprint ?? FP.expectedSigner],
-						['Statement signed by', actualSignerFingerprint ?? FP.actualSigner]
+						[m.mail_dirfail_error_code(), 'signing_key_mismatch'],
+						[m.mail_dirfail_expected_signer(), expectedSignerFingerprint ?? FP.expectedSigner],
+						[m.mail_dirfail_statement_signed_by(), actualSignerFingerprint ?? FP.actualSigner]
 					]
 				};
 			case 'address_mismatch':
 				return {
-					plain:
-						'The signed record the server returned is for a different address than the one you typed. Someone may be standing in for the recipient you intended.',
+					plain: m.mail_dirfail_plain_address_mismatch(),
 					rows: [
-						['Error code', 'address_mismatch'],
-						['You addressed', addr],
-						['Record is for', statementAddress ?? 'a different address']
+						[m.mail_dirfail_error_code(), 'address_mismatch'],
+						[m.mail_dirfail_you_addressed(), addr],
+						[m.mail_dirfail_record_is_for(), statementAddress ?? m.mail_dirfail_different_address()]
 					]
 				};
 			case 'fingerprint_mismatch':
 				return {
-					plain:
-						"The public key the server handed back doesn't match the key the directory actually signed for this recipient. That is what a key-substitution attack looks like.",
+					plain: m.mail_dirfail_plain_fingerprint_mismatch(),
 					rows: [
-						['Error code', 'fingerprint_mismatch'],
-						['Directory signed', signedKeyFingerprint ?? FP.signed],
-						['Server returned', servedKeyFingerprint ?? FP.served]
+						[m.mail_dirfail_error_code(), 'fingerprint_mismatch'],
+						[m.mail_dirfail_directory_signed(), signedKeyFingerprint ?? FP.signed],
+						[m.mail_dirfail_server_returned(), servedKeyFingerprint ?? FP.served]
 					]
 				};
 			case 'algorithm_mismatch':
 				return {
-					plain:
-						"The signed record uses a key algorithm this client won't accept for encryption.",
+					plain: m.mail_dirfail_plain_algorithm_mismatch(),
 					rows: [
-						['Error code', 'algorithm_mismatch'],
-						['Record claims', 'ecdh-x448'],
-						['Accepted here', 'ed25519, rsa ≥ 3072']
+						[m.mail_dirfail_error_code(), 'algorithm_mismatch'],
+						[m.mail_dirfail_record_claims(), 'ecdh-x448'],
+						[m.mail_dirfail_accepted_here(), 'ed25519, rsa ≥ 3072']
 					]
 				};
 			case 'version_rolled_back':
 				return {
-					plain:
-						'The server is offering an older record for this recipient than this device has already verified once before. That can mean a replay or rollback.',
+					plain: m.mail_dirfail_plain_version_rolled_back(),
 					rows: [
-						['Error code', 'version_rolled_back'],
-						['Verified here before', seenVersion !== undefined ? `v${seenVersion}` : 'v7'],
-						['Server now serves', servedVersion !== undefined ? `v${servedVersion}` : 'v5']
+						[m.mail_dirfail_error_code(), 'version_rolled_back'],
+						[m.mail_dirfail_verified_before(), seenVersion !== undefined ? `v${seenVersion}` : 'v7'],
+						[m.mail_dirfail_server_now_serves(), servedVersion !== undefined ? `v${servedVersion}` : 'v5']
 					]
 				};
 			case 'fingerprint_changed':
 				return {
-					plain:
-						"The directory's record verified, but the key it pins is different from the one this device pinned previously.",
+					plain: m.mail_dirfail_plain_fingerprint_changed(),
 					rows: [
-						['Error code', 'fingerprint_changed'],
-						['Previously pinned', signedKeyFingerprint ?? FP.signed],
-						['Now serves', servedKeyFingerprint ?? FP.served]
+						[m.mail_dirfail_error_code(), 'fingerprint_changed'],
+						[m.mail_dirfail_previously_pinned(), signedKeyFingerprint ?? FP.signed],
+						[m.mail_dirfail_now_serves(), servedKeyFingerprint ?? FP.served]
 					]
 				};
 			case 'statement_malformed':
 				return {
-					plain: "The directory's response is missing fields we need before we can trust any of it.",
+					plain: m.mail_dirfail_plain_statement_malformed(),
 					rows: [
-						['Error code', 'statement_malformed'],
-						['Missing fields', 'signingKeyFingerprint, version']
+						[m.mail_dirfail_error_code(), 'statement_malformed'],
+						[m.mail_dirfail_missing_fields(), 'signingKeyFingerprint, version']
 					]
 				};
 			default:
 				return {
-					plain:
-						"The record's transparency-log evidence didn't hold up, so this client can't confirm the directory is showing everyone the same key for this recipient.",
+					plain: m.mail_dirfail_plain_default(),
 					rows: [
-						['Error code', inner],
-						['Address', addr]
+						[m.mail_dirfail_error_code(), inner],
+						[m.mail_dirfail_address(), addr]
 					]
 				};
 		}
@@ -173,33 +167,29 @@
 	<div class="dv-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
 		<div class="dv-crest">
 			<span class="dv-seal"><ShieldAlert size={26} /></span>
-			<span class="dv-eyebrow">Directory verification · stopped</span>
+			<span class="dv-eyebrow">{m.mail_dirfail_eyebrow()}</span>
 		</div>
 
 		<h2 class="dv-title" id="dv-title">
-			We held this message back before it left your device.
+			{m.mail_dirfail_title()}
 		</h2>
 		<p class="dv-lede">
-			Thelemail couldn't trust what the server asserted about
-			<b>{recipient.name || recipient.email}</b>. This isn't the same as "recipient not found" — the
-			account probably exists, but the signed record binding their address to a key didn't hold up.
-			So nothing was encrypted, and nothing was sent.
+			<Rich text={m.mail_dirfail_lede({ name: recipient.name || recipient.email })} tags={{ b: bold }} />
 		</p>
 
 		<div class="dv-finding">
-			<div class="dv-finding-h">What we found</div>
+			<div class="dv-finding-h">{m.mail_dirfail_what_we_found()}</div>
 			<p>{finding.plain}</p>
 		</div>
 
 		<div class="dv-assure">
 			<Lock size={14} />
-			No bytes were encrypted to the suspect key. Your draft is untouched and stays exactly as you
-			wrote it.
+			{m.mail_dirfail_assure()}
 		</div>
 
 		<div class="dv-fold">
 			<button type="button" class="dv-disclose" class:open={tech} onclick={() => (tech = !tech)}>
-				<ChevronRight size={15} />Show technical details
+				<ChevronRight size={15} />{m.mail_dirfail_show_details()}
 			</button>
 			{#if tech}
 				<div class="dv-tech">
@@ -214,29 +204,27 @@
 		</div>
 
 		<button type="button" class="dv-what" class:open={what} onclick={() => (what = !what)}>
-			What is this?
+			{m.mail_dirfail_what_is_this()}
 			{#if what}<ChevronUp size={14} />{:else}<ChevronDown size={14} />{/if}
 		</button>
 		{#if what}
 			<div class="dv-explainer">
-				Every Thelemail address is published with a record, signed offline by the directory
-				authority, that binds the address to a specific encryption key. Before sending, your client
-				re-checks that signature itself. A passing check proves the directory <i>signed</i> this binding
-				— it doesn't prove the operator running the directory is honest. When the check fails, we'd
-				rather stop than encrypt to a key we can't vouch for. Retrying won't change the answer: the
-				same server returns the same record.
+				<Rich text={m.mail_dirfail_explainer()} tags={{ i: italic }} />
 			</div>
 		{/if}
 
 		<div class="dv-actions">
 			<Button variant="primary" onclick={onEditRecipient}>
-				<Pencil size={15} />Edit recipient
+				<Pencil size={15} />{m.mail_dirfail_edit_recipient()}
 			</Button>
-			<Button variant="ghost" onclick={onRetry} title="The server will return the same record">
-				<RefreshCw size={15} />Try again
+			<Button variant="ghost" onclick={onRetry} title={m.mail_dirfail_retry_title()}>
+				<RefreshCw size={15} />{m.common_retry()}
 			</Button>
 			<div class="dv-spacer"></div>
-			<button type="button" class="linklike" onclick={onCancel}>Back to draft</button>
+			<button type="button" class="linklike" onclick={onCancel}>{m.mail_dirfail_back_to_draft()}</button>
 		</div>
 	</div>
 </div>
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet italic(t: string)}<i>{t}</i>{/snippet}

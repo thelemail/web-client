@@ -9,6 +9,8 @@
 	import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
 	import Send from '@lucide/svelte/icons/send';
 
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import Seg from '../Seg.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -30,10 +32,10 @@
 
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-	const MODE_CHOICES = [
-		{ v: 'encrypted', l: 'System with a key' },
-		{ v: 'plain', l: 'Plain mailbox' }
-	];
+	const modeChoices = $derived([
+		{ v: 'encrypted', l: m.settings_forwarding_mode_encrypted() },
+		{ v: 'plain', l: m.settings_forwarding_mode_plain() }
+	]);
 
 	let step = $state(0);
 	let mode = $state<ReadDelegationMode>('encrypted');
@@ -60,7 +62,7 @@
 		if (!canContinue) return;
 		const accountId = auth.accountId;
 		if (!accountId) {
-			error = 'Sign in again and retry.';
+			error = m.settings_forwarding_sign_in_again();
 			return;
 		}
 		busy = true;
@@ -91,7 +93,7 @@
 			fingerprint = prepared.keyFingerprintHex ?? '';
 			step = 1;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not set up forwarding.';
+			error = err instanceof Error ? err.message : m.settings_forwarding_setup_failed();
 		} finally {
 			busy = false;
 		}
@@ -104,7 +106,7 @@
 			saved = true;
 			setTimeout(() => (copied = false), 1600);
 		} catch {
-			error = 'Could not copy. Use Download instead.';
+			error = m.settings_forwarding_copy_failed();
 		}
 	}
 
@@ -120,15 +122,17 @@
 	}
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
 <CeremonyShell
 	icon={Forward}
-	eyebrow="Forwarding"
+	eyebrow={m.settings_forwarding_title()}
 	title={step === 1
-		? 'Save the private key'
+		? m.settings_forwarding_save_key_title()
 		: rotating
-			? `Replace the key for ${rotating.label}`
-			: `Forward new mail for ${email}`}
-	steps={plain ? undefined : ['Set it up', 'Save the key']}
+			? m.settings_forwarding_replace_title({ label: rotating.label })
+			: m.settings_forwarding_new_title({ email })}
+	steps={plain ? undefined : [m.settings_forwarding_step_setup(), m.settings_forwarding_step_save()]}
 	{step}
 	onClose={step === 1 ? finish : onClose}
 >
@@ -137,46 +141,48 @@
 			{#if rotating}
 				<div class="cer-lede">
 					<p>
-						A new key replaces the one {rotating.label} uses now. Forwarding to
-						<b>{rotating.destination}</b> keeps going, but copies sent from now on only open with the
-						new key, so update {rotating.label} right after saving it.
+						<Rich
+							text={m.settings_forwarding_replace_lede({
+								label: rotating.label,
+								destination: rotating.destination
+							})}
+							tags={{ b: bold }}
+						/>
 					</p>
 				</div>
 			{:else}
 				<div class="cer-lede">
-					<p>New mail sent to <b>{email}</b> is also sent to an address you choose.</p>
+					<p><Rich text={m.settings_forwarding_new_lede({ email })} tags={{ b: bold }} /></p>
 				</div>
 
 				<div class="field">
-					<span class="field-lbl">Where it goes</span>
-					<Seg value={mode} options={MODE_CHOICES} onChange={(v) => (mode = v as ReadDelegationMode)} />
+					<span class="field-lbl">{m.settings_forwarding_where()}</span>
+					<Seg value={mode} options={modeChoices} onChange={(v) => (mode = v as ReadDelegationMode)} />
 					<div class="field-hint">
 						{#if plain}
-							An ordinary mailbox such as Gmail. Mail arrives there the way any other mail does, so
-							that provider can read it.
+							{m.settings_forwarding_plain_hint()}
 						{:else}
-							A system you can hand a key to, such as a helpdesk. Every copy is encrypted to that
-							key alone.
+							{m.settings_forwarding_encrypted_hint()}
 						{/if}
 					</div>
 				</div>
 
 				<div class="field">
-					<label for="forwarding-label">System name</label>
+					<label for="forwarding-label">{m.settings_forwarding_name_label()}</label>
 					<input
 						id="forwarding-label"
 						class="tin"
 						bind:value={label}
 						maxlength="60"
-						placeholder="Helpdesk"
+						placeholder={m.settings_forwarding_name_placeholder()}
 						autocomplete="off"
 						spellcheck="false"
 					/>
-					<div class="field-hint">Shown in the confirmation email and in your list.</div>
+					<div class="field-hint">{m.settings_forwarding_name_hint()}</div>
 				</div>
 
 				<div class="field">
-					<label for="forwarding-destination">Forward to</label>
+					<label for="forwarding-destination">{m.settings_forwarding_to_label()}</label>
 					<input
 						id="forwarding-destination"
 						class="tin"
@@ -188,7 +194,7 @@
 						autocapitalize="none"
 						spellcheck="false"
 					/>
-					<div class="field-hint">We send a confirmation link here. Nothing is forwarded until it is used.</div>
+					<div class="field-hint">{m.settings_forwarding_to_hint()}</div>
 				</div>
 			{/if}
 
@@ -196,46 +202,29 @@
 				<li>
 					<Eye size={16} />
 					{#if plain}
-						<span>
-							Forwarded mail leaves Thelemail readable, so whoever runs that mailbox can read it.
-						</span>
+						<span>{m.settings_forwarding_point_plain_readable()}</span>
 					{:else}
-						<span>Whoever holds the private key can read every message forwarded to it.</span>
+						<span>{m.settings_forwarding_point_key_readable()}</span>
 					{/if}
 				</li>
 				<li>
 					<Inbox size={16} />
-					<span>
-						Only mail that arrives after the destination is confirmed is forwarded. Your existing
-						mail stays where it is.
-					</span>
+					<span>{m.settings_forwarding_point_after_confirm()}</span>
 				</li>
 				<li>
 					<LockKeyhole size={16} />
 					{#if plain}
-						<span>
-							Your stored mail stays encrypted, and this destination can never send or sign as
-							{email}.
-						</span>
+						<span>{m.settings_forwarding_point_plain_no_send({ email })}</span>
 					{:else}
-						<span>The key cannot open your mailbox and cannot send or sign as {email}.</span>
+						<span>{m.settings_forwarding_point_key_no_send({ email })}</span>
 					{/if}
 				</li>
 				<li>
 					<Send size={16} />
 					{#if plain}
-						<span>
-							Only mail that reaches us from outside can be forwarded this way. Mail from other
-							Thelemail accounts, and mail that arrives already encrypted, stays in your mailbox and
-							is listed as not forwarded. Turning forwarding off stops new copies, and copies
-							already delivered cannot be taken back.
-						</span>
+						<span>{m.settings_forwarding_point_plain_limits()}</span>
 					{:else}
-						<span>
-							Mail that reaches us already encrypted to {email} alone is kept in your mailbox but not
-							forwarded. Turning forwarding off stops new copies. Copies already delivered cannot be
-							taken back.
-						</span>
+						<span>{m.settings_forwarding_point_key_limits({ email })}</span>
 					{/if}
 				</li>
 			</ul>
@@ -243,8 +232,11 @@
 			<Label class="cer-ack" for="forwarding-ack">
 				<Checkbox id="forwarding-ack" checked={understood} onCheckedChange={(v) => (understood = v === true)} />
 				<span>
-					I understand that {rotating ? rotating.label : plain ? 'this mailbox and its provider' : 'this system'}
-					can read the mail forwarded to it.
+					{rotating
+						? m.settings_forwarding_ack_named({ name: rotating.label })
+						: plain
+							? m.settings_forwarding_ack_plain()
+							: m.settings_forwarding_ack_system()}
 				</span>
 			</Label>
 
@@ -254,17 +246,15 @@
 		{:else}
 			<div class="cer-lede">
 				<p>
-					This is the only time the private key is shown. Add it to
-					{rotating ? rotating.label : label.trim()} so it can open forwarded mail, then keep or destroy
-					your copy.
+					{m.settings_forwarding_key_once({ name: rotating ? rotating.label : label.trim() })}
 				</p>
 				{#if !rotating}
-					<p>A confirmation link is on its way to <b>{target}</b>.</p>
+					<p><Rich text={m.settings_forwarding_link_sent({ target })} tags={{ b: bold }} /></p>
 				{/if}
 			</div>
 
 			<div class="field">
-				<span class="field-lbl">Fingerprint</span>
+				<span class="field-lbl">{m.settings_forwarding_fingerprint()}</span>
 				<div class="mono fp">{fingerprint}</div>
 			</div>
 
@@ -273,11 +263,11 @@
 			<div class="key-actions">
 				<Button variant="ghost" onclick={copyKey}>
 					<Copy size={15} />
-					{copied ? 'Copied' : 'Copy'}
+					{copied ? m.common_copied() : m.common_copy()}
 				</Button>
 				<Button variant="ghost" onclick={downloadKey}>
 					<Download size={15} />
-					Download
+					{m.settings_forwarding_download()}
 				</Button>
 			</div>
 
@@ -289,13 +279,17 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>Cancel</Button>
+			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button disabled={!canContinue} onclick={create}>
-				{busy ? 'Setting up…' : rotating ? 'Make a new key' : 'Set up forwarding'}
+				{busy
+					? m.settings_forwarding_setting_up()
+					: rotating
+						? m.settings_forwarding_make_key()
+						: m.settings_forwarding_submit()}
 			</Button>
 		{:else}
 			<Button disabled={!saved} onclick={finish}>
-				{saved ? 'Done' : 'Copy or download first'}
+				{saved ? m.common_done() : m.settings_forwarding_save_first()}
 			</Button>
 		{/if}
 	{/snippet}

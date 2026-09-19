@@ -3,6 +3,7 @@ import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { initialsFor } from '$core/mail/initials';
 import type { DraftListItem } from '$core/api/types';
 import { auth } from './auth.svelte';
+import { m } from '$paraglide/messages.js';
 
 export interface DraftRow {
 	id: string;
@@ -44,8 +45,8 @@ function fallbackRow(item: DraftListItem): DraftRow {
 	const updatedAt = new Date(item.updatedAt);
 	return {
 		id: item.id,
-		subject: 'Could not decrypt draft',
-		snippet: 'The preview could not be opened with this device’s key.',
+		subject: m.store_drafts_fallback_subject(),
+		snippet: m.store_preview_fallback_snippet(),
 		to: '',
 		updatedAt: item.updatedAt,
 		epoch: updatedAt.getTime(),
@@ -142,7 +143,7 @@ class DraftsStore {
 				this.#loaded = true;
 			} catch (err) {
 				if (this.#accountId !== accountId) return;
-				this.loadError = err instanceof Error ? err.message : 'Failed to load drafts.';
+				this.loadError = err instanceof Error ? err.message : m.store_drafts_load_failed();
 			} finally {
 				if (more) this.loadingMore = false;
 				else this.loading = false;

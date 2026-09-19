@@ -30,7 +30,7 @@
 	}
 </script>
 
-<SecHead desc="How dates and times are written across your mailbox." />
+<SecHead desc={m.settings_region_desc()} />
 
 <div class="scard">
 	<CardHead icon={Languages} title={m.settings_region_language_title()} />
@@ -45,11 +45,11 @@
 </div>
 
 <div class="scard">
-	<CardHead icon={Clock} title="Time & date" />
-	<Row t="Time zone" d="Detected automatically from your device. Times in your mailbox use this zone.">
+	<CardHead icon={Clock} title={m.settings_region_time_title()} />
+	<Row t={m.settings_region_time_zone()} d={m.settings_region_time_zone_desc()}>
 		<span class="ctl-aux">{accountSettings.timeZone}</span>
 	</Row>
-	<Row t="Date format">
+	<Row t={m.settings_region_date_format()}>
 		<Seg
 			value={s.dateFmt}
 			options={[
@@ -60,12 +60,12 @@
 			onChange={(v) => set('dateFmt', v)}
 		/>
 	</Row>
-	<Row t="Time format">
+	<Row t={m.settings_region_time_format()}>
 		<Seg
 			value={s.timeFmt}
 			options={[
-				{ v: '24', l: '24-hour' },
-				{ v: '12', l: '12-hour' }
+				{ v: '24', l: m.settings_region_time_24h() },
+				{ v: '12', l: m.settings_region_time_12h() }
 			]}
 			onChange={(v) => set('timeFmt', v)}
 		/>

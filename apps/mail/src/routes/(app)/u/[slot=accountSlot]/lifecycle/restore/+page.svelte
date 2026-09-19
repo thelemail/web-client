@@ -2,6 +2,7 @@
 	import LcShell from '$core/lifecycle/LcShell.svelte';
 	import Reactivation from '$core/lifecycle/Reactivation.svelte';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	let { data } = $props();
 	const slot = $derived(data.slot);
@@ -9,9 +10,9 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Restore your account</title>
+	<title>{m.lc_page_title_restore()}</title>
 </svelte:head>
 
-<LcShell badge={{ label: 'Restore' }} backHref={`/u/${slot}/mail/inbox`}>
+<LcShell badge={{ label: m.lc_badge_restore() }} backHref={`/u/${slot}/mail/inbox`}>
 	<Reactivation {ctx} />
 </LcShell>

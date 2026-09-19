@@ -24,6 +24,7 @@ import { initialChips } from '$core/mail/attachments';
 import { type ThreadEntry, type Message } from '$core/mail/data';
 import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
+import { m } from '$paraglide/messages.js';
 
 export interface HydratedThread {
 	entries: ThreadEntry[];
@@ -60,7 +61,7 @@ async function hydrateEntry(
 ): Promise<ThreadEntry | null> {
 	try {
 		const preview = cached ? previewFromMirror(cached) : await decryptPreview(accountId, item.encryptedPreview);
-		const fromDisplay = preview.sender.display || preview.sender.address || 'Unknown';
+		const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
 		const init = initialsFor(fromDisplay, preview.sender.address);
 		const pal = paletteFor(preview.sender.address.toLowerCase());
 		const stored = new Date(item.storedAt);
@@ -157,7 +158,7 @@ async function hydrateEntry(
 		const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 		return {
 			id: item.id,
-			from: me ? 'You' : fromDisplay,
+			from: me ? m.mailbox_sender_you() : fromDisplay,
 			fromAddr: preview.sender.address,
 			bimiDomain: bimiDomainFromPreview(preview),
 			to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),

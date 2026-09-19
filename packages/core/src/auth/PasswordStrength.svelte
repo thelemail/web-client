@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
 	import Minus from '@lucide/svelte/icons/minus';
-	import { STRENGTH_LABELS, passwordReqs, scorePassword } from './password-policy';
+	import { strengthLabel, passwordReqs, scorePassword } from './password-policy';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		pw: string;
@@ -13,10 +15,14 @@
 	const reqs = $derived(passwordReqs(pw));
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
 {#if pw}
 	<div class="strength">
 		<div class="strbar s{score}"><i></i><i></i><i></i><i></i></div>
-		<div class="strlab s{score}">Strength: <b>{STRENGTH_LABELS[score]}</b></div>
+		<div class="strlab s{score}">
+			<Rich text={m.auth_password_strength({ label: strengthLabel(score) })} tags={{ b: bold }} />
+		</div>
 	</div>
 {/if}
 <div class="reqs">

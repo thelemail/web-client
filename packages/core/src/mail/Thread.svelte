@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import { SvelteSet } from 'svelte/reactivity';
 	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import ThreadMessage from './ThreadMessage.svelte';
@@ -44,10 +45,10 @@
 <div class="thread-wrap">
 	<div class="thread-top">
 		<span class="thr-n">
-			<MessagesSquare size={14} />{entries.length} messages in this conversation
+			<MessagesSquare size={14} />{msg.mail_thread_count({ count: entries.length })}
 		</span>
 		<button type="button" class="thr-exp" onclick={allOpen ? collapseAll : expandAll}>
-			{allOpen ? 'Collapse all' : 'Expand all'}
+			{allOpen ? msg.mail_thread_collapse_all() : msg.mail_thread_expand_all()}
 		</button>
 	</div>
 	<div class="thread">

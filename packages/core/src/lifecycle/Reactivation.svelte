@@ -28,6 +28,8 @@
 	import { fmt } from './dates';
 	import type { LifecycleContext, ReactivationPlan } from './types';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
@@ -38,57 +40,57 @@
 		'briefcase-business': BriefcaseBusiness
 	};
 
-	const RE_PLANS: ReactivationPlan[] = [
+	const RE_PLANS: ReactivationPlan[] = $derived([
 		{
 			id: 'personal',
-			name: 'Personal',
+			name: m.lc_restore_plan_personal(),
 			gb: 15,
 			icon: 'user-round',
-			framing: 'A private mailbox of your own.',
+			framing: m.lc_restore_framing_personal(),
 			rows: [
-				['Mailboxes', '1'],
-				['Storage', '15 GB'],
-				['Custom domains', '1']
+				[m.lc_restore_row_mailboxes(), '1'],
+				[m.lc_restore_row_storage(), m.lc_restore_gb({ gb: 15 })],
+				[m.lc_restore_row_custom_domains(), '1']
 			]
 		},
 		{
 			id: 'personal_plus',
-			name: 'Personal Plus',
+			name: m.lc_restore_plan_personal_plus(),
 			gb: 50,
 			icon: 'user-round',
-			framing: 'Room for a deep archive.',
+			framing: m.lc_restore_framing_personal_plus(),
 			rows: [
-				['Mailboxes', '1'],
-				['Storage', '50 GB'],
-				['Custom domains', '3']
+				[m.lc_restore_row_mailboxes(), '1'],
+				[m.lc_restore_row_storage(), m.lc_restore_gb({ gb: 50 })],
+				[m.lc_restore_row_custom_domains(), '3']
 			]
 		},
 		{
 			id: 'family',
-			name: 'Family',
+			name: m.lc_restore_plan_family(),
 			gb: 60,
 			icon: 'users-round',
-			badge: 'Your plan',
-			framing: 'The whole household, one price.',
+			badge: m.lc_restore_badge_your_plan(),
+			framing: m.lc_restore_framing_family(),
 			rows: [
-				['Mailboxes', 'Up to 6'],
-				['Storage', '60 GB pooled'],
-				['Custom domains', '2']
+				[m.lc_restore_row_mailboxes(), m.lc_restore_up_to({ count: 6 })],
+				[m.lc_restore_row_storage(), m.lc_restore_gb_pooled({ gb: 60 })],
+				[m.lc_restore_row_custom_domains(), '2']
 			]
 		},
 		{
 			id: 'business',
-			name: 'Business',
+			name: m.lc_restore_plan_business(),
 			gb: 100,
 			icon: 'briefcase-business',
-			framing: 'For studios and teams.',
+			framing: m.lc_restore_framing_business(),
 			rows: [
-				['Mailboxes', 'Per seat'],
-				['Storage', '100 GB each'],
-				['Custom domains', 'Up to 10']
+				[m.lc_restore_row_mailboxes(), m.lc_restore_per_seat()],
+				[m.lc_restore_row_storage(), m.lc_restore_gb_each({ gb: 100 })],
+				[m.lc_restore_row_custom_domains(), m.lc_restore_up_to({ count: 10 })]
 			]
 		}
-	];
+	]);
 
 	const stored = $derived(ctx.plan.mailboxGB);
 	const locked = (p: ReactivationPlan) => p.gb < stored;
@@ -107,6 +109,7 @@
 
 	let period = $state<BillingPeriod>('year');
 	const monthly = $derived(period === 'month');
+	const periodWord = $derived(monthly ? m.lc_restore_period_month() : m.lc_restore_period_year());
 
 	function priceOf(plan: ReactivationPlan): number {
 		const selection = selectionForCode(plan.id, 1, period);
@@ -150,13 +153,12 @@
 	}
 	function restoreErrorMessage(err: unknown): string {
 		if (err instanceof ApiCallError) {
-			if (err.status === 402)
-				return 'This plan is managed elsewhere. Update it from Settings → Billing.';
-			if (err.status === 404) return 'No payment method on file. Contact support to restore.';
+			if (err.status === 402) return m.lc_restore_error_managed_elsewhere();
+			if (err.status === 404) return m.lc_restore_error_no_payment_method();
 			const message = err.envelope?.error?.message;
 			if (message) return message;
 		}
-		return 'Could not restore just now. Please try again.';
+		return m.lc_restore_error_generic();
 	}
 	async function enterMailbox() {
 		if (auth.accountId) await auth.loadProfile(auth.accountId);
@@ -164,23 +166,24 @@
 	}
 </script>
 
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
+
 {#if step === 0}
 	<div class="card">
 		<div class="card-surface wide screen-fade">
 			<div class="card-head">
-				<p class="eyebrow">Restore your account</p>
-				<h1>Choose a plan to restore</h1>
-				<p>Your mailbox and everything in it comes back exactly as you left it.</p>
+				<p class="eyebrow">{m.lc_restore_eyebrow()}</p>
+				<h1>{m.lc_restore_choose_title()}</h1>
+				<p>{m.lc_restore_choose_intro()}</p>
 			</div>
 			<div class="lc-stored">
 				<span class="si"><Database size={18} /></span>
 				<span class="st">
-					Your mailbox holds <b>{stored} GB</b>. Restore is lossless — the plan you pick must be at
-					least that large.
+					<Rich text={m.lc_restore_stored({ gb: stored })} tags={{ b: bold }} />
 				</span>
 			</div>
 			<div class="tiers">
-				<div class="periodtabs" role="radiogroup" aria-label="Billing period">
+				<div class="periodtabs" role="radiogroup" aria-label={m.lc_restore_period_label()}>
 					<button
 						type="button"
 						role="radio"
@@ -189,7 +192,7 @@
 						class:cur={!monthly}
 						onclick={() => (period = 'year')}
 					>
-						Annual
+						{m.lc_restore_period_annual()}
 					</button>
 					<button
 						type="button"
@@ -199,7 +202,7 @@
 						class:cur={monthly}
 						onclick={() => (period = 'month')}
 					>
-						Monthly
+						{m.lc_restore_period_monthly()}
 					</button>
 				</div>
 				{#each RE_PLANS as p (p.id)}
@@ -217,7 +220,7 @@
 						<span class="tc-name">{p.name}</span>
 						<span class="tc-framing serif">{p.framing}</span>
 						<span class="tc-price"><b class="serif">{eur(priceOf(p))}</b><span class="tc-per mono"
-								>/ {period}</span
+								>{m.lc_restore_per_period({ period: periodWord })}</span
 							></span
 						>
 						<span class="tc-rows">
@@ -227,7 +230,7 @@
 						</span>
 						{#if lk}
 							<span class="lc-lock-note">
-								<Lock size={14} />Your mailbox is {stored} GB — this plan holds {p.gb} GB.
+								<Lock size={14} />{m.lc_restore_lock_note({ stored, gb: p.gb })}
 							</span>
 						{/if}
 					</button>
@@ -235,16 +238,16 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<ArrowLeft />
 					</Button>
 					<Button variant="primary" size="lg" onclick={() => (step = 1)}>
-						Continue — {sel.name} · {eur(selPrice)}/{period}<ArrowRight />
+						{m.lc_restore_continue({ plan: sel.name, price: eur(selPrice), period: periodWord })}<ArrowRight />
 					</Button>
 				</div>
 			</div>
 			<p class="legal">
-				Restoring reactivates your existing mailbox. Nothing is re-imported; nothing to reconfigure.
+				{m.lc_restore_legal()}
 			</p>
 		</div>
 	</div>
@@ -253,27 +256,31 @@
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
 			<div class="card-head">
-				<p class="eyebrow">Restore your account</p>
-				<h1>Confirm &amp; restore</h1>
+				<p class="eyebrow">{m.lc_restore_eyebrow()}</p>
+				<h1>{m.lc_restore_confirm_title()}</h1>
 			</div>
 			<div class="osum">
 				<span class="os-ic"><SelIcon size={17} /></span>
 				<span class="os-text">
-					<span class="os-name">{sel.name} plan</span>
+					<span class="os-name">{m.lc_restore_plan_name({ plan: sel.name })}</span>
 					<span class="os-sub"
-						>Billed {monthly ? 'monthly' : 'yearly'} · restores {stored} GB</span
+						>{monthly
+							? m.lc_restore_billed_monthly({ gb: stored })
+							: m.lc_restore_billed_yearly({ gb: stored })}</span
 					>
 				</span>
 				<span class="os-right">
-					<span class="os-price mono">{eur(selPrice)} / {period}</span>
-					<button class="os-change" onclick={() => (step = 0)}>Change</button>
+					<span class="os-price mono"
+						>{m.lc_restore_price_period({ price: eur(selPrice), period: periodWord })}</span
+					>
+					<button class="os-change" onclick={() => (step = 0)}>{m.lc_restore_change()}</button>
 				</span>
 			</div>
 			<div class="osum" style="margin-bottom:18px">
 				<span class="os-ic"><CreditCard size={17} /></span>
 				<span class="os-text">
-					<span class="os-name">Secure checkout</span>
-					<span class="os-sub">Payment is handled by Stripe. Your card never touches Thelemail.</span>
+					<span class="os-name">{m.lc_restore_checkout_title()}</span>
+					<span class="os-sub">{m.lc_restore_checkout_detail()}</span>
 				</span>
 			</div>
 			{#if notice}
@@ -281,18 +288,18 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = 0)} disabled={busy}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
 						<ArrowLeft />
 					</Button>
 					<Button variant="primary" size="lg" disabled={busy} onclick={pay}>
-						{#if busy}<span class="spinner"></span>Restoring…{:else}<RotateCcw />Pay {eur(selPrice)} &amp;
-							restore{/if}
+						{#if busy}<span class="spinner"></span>{m.lc_restore_busy()}{:else}<RotateCcw />{m.lc_restore_pay(
+								{ price: eur(selPrice) }
+							)}{/if}
 					</Button>
 				</div>
 			</div>
 			<p class="cardnote">
-				<Zap size={14} />Restore is instant — usually under a minute. Your account was never
-				dismantled.
+				<Zap size={14} />{m.lc_restore_instant()}
 			</p>
 		</div>
 	</div>
@@ -301,44 +308,38 @@
 		<div class="card-surface screen-fade">
 			<div class="welcome">
 				<img class="brandmark brandmark-lg" src={mark} alt="Thelemail" />
-				<h1>Welcome back.</h1>
-				<p>Your mailbox is active again. Everything is exactly where you left it.</p>
+				<h1>{m.lc_restore_welcome_title()}</h1>
+				<p>{m.lc_restore_welcome_intro()}</p>
 			</div>
 			<ul class="lc-welcome-truths">
 				{#if ctx.cameFromSuspended}
 					<li>
 						<CornerUpLeft size={16} />
 						<span
-							>Mail sent between <b>{fmt.med(ctx.dates.suspend)}</b> and today was
-							<b>returned to senders</b> — they saw a note that the mailbox was unavailable.</span
+							><Rich
+								text={m.lc_restore_truth_returned({ date: fmt.med(ctx.dates.suspend) })}
+								tags={{ b: bold }}
+							/></span
 						>
 					</li>
 				{:else}
 					<li>
 						<Inbox size={16} />
-						<span
-							><b>34 messages arrived while you were read-only</b> — they're waiting in your inbox.</span
-						>
+						<span><Rich text={m.lc_restore_truth_arrived()} tags={{ b: bold }} /></span>
 					</li>
 				{/if}
 				<li>
 					<Clock size={16} />
-					<span
-						>Your <b>scheduled sends are in Drafts</b>; auto-forwarding and auto-replies are
-						<b>off</b> until you re-enable them.</span
-					>
+					<span><Rich text={m.lc_restore_truth_scheduled()} tags={{ b: bold }} /></span>
 				</li>
 				<li>
 					<BellRing size={16} />
-					<span
-						>Some newsletters may have <b>unsubscribed you</b> after seeing bounces — worth a quick
-						check.</span
-					>
+					<span><Rich text={m.lc_restore_truth_newsletters()} tags={{ b: bold }} /></span>
 				</li>
 			</ul>
 			<div class="actions" style="margin-top:22px">
 				<Button variant="primary" size="lg" block onclick={enterMailbox}>
-					<Mail />Enter your mailbox
+					<Mail />{m.lc_restore_enter_mailbox()}
 				</Button>
 			</div>
 		</div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Popover from '$core/components/ui/popover';
+	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import { cal } from '../state.svelte';
 
@@ -32,7 +33,7 @@
 				<button
 					type="button"
 					class="mv-dh"
-					aria-label="Open {cell.date} in the week view"
+					aria-label={m.cal_month_open_week_aria({ date: cell.date })}
 					onclick={() => cal.goToDate(cell.date, 'week')}
 				>
 					<span class="mv-dnum">{cell.n}</span>

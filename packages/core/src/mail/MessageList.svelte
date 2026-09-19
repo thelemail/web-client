@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import Check from '@lucide/svelte/icons/check';
 	import MailOpen from '@lucide/svelte/icons/mail-open';
 	import Archive from '@lucide/svelte/icons/archive';
@@ -24,6 +25,7 @@
 	import MessageRow from './MessageRow.svelte';
 	import {
 		bucketFromEpoch,
+		dayBucketLabel,
 		GROUP_ORDER,
 		LABELS,
 		SORT_OPTIONS,
@@ -124,30 +126,30 @@
 	const counted = $derived(new Intl.NumberFormat().format(searchIndexed));
 	const searchScopeText = $derived(
 		!searchComplete
-			? `Still reading your mail — ${counted} messages searched so far`
+			? msg.mail_list_search_reading({ count: counted })
 			: searchChips.length
-				? 'All mail'
-				: 'All mail — matching sender, subject and preview text'
+				? msg.mail_list_search_all()
+				: msg.mail_list_search_all_detail()
 	);
 	const emptyTitle = $derived(
 		searchActive
 			? searchPending
-				? 'Searching'
-				: 'No matches'
+				? msg.mail_list_searching()
+				: msg.mail_no_matches()
 			: activeFilters > 0
-				? 'Nothing matches'
-				: `${folderLabel} is empty`
+				? msg.mail_list_nothing_matches()
+				: msg.mail_list_folder_empty({ folder: folderLabel })
 	);
 	const emptyDetail = $derived(
 		searchActive
 			? searchPending
-				? 'Looking through your mail.'
+				? msg.mail_list_searching_detail()
 				: searchComplete
-					? 'Nothing in your mail matches that.'
-					: `No match yet in the ${counted} messages searched so far.`
+					? msg.mail_list_search_none()
+					: msg.mail_list_search_none_yet({ count: counted })
 			: activeFilters > 0
-				? 'No message here fits the filters you have on.'
-				: 'Nothing here yet.'
+				? msg.mail_list_filters_none()
+				: msg.mail_list_empty_detail()
 	);
 
 	let refreshing = $state(false);
@@ -270,42 +272,42 @@
 	{#if anyChecked}
 		<div class="bulk">
 			<button class="ck" class:on={allChecked} onclick={onToggleAll}><Check size={12} /></button>
-			<span class="cnt">{checked.size} selected</span>
+			<span class="cnt">{msg.mail_list_selected({ count: checked.size })}</span>
 			<div class="grow"></div>
 			{#if caps.showMarkRead}
-				<button class="lh-btn" title="Mark read" onclick={() => onBulk('read')}>
+				<button class="lh-btn" title={msg.mail_list_mark_read()} onclick={() => onBulk('read')}>
 					<MailOpen size={16} />
 				</button>
 			{/if}
 			{#if caps.showRestore}
-				<button class="lh-btn" title="Restore" onclick={() => onBulk('restore')}>
+				<button class="lh-btn" title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
 					<Undo2 size={16} />
 				</button>
 			{/if}
 			{#if caps.showArchive}
-				<button class="lh-btn" title="Archive" onclick={() => onBulk('archive')}>
+				<button class="lh-btn" title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
 					<Archive size={16} />
 				</button>
 			{/if}
 			{#if caps.showSpam}
-				<button class="lh-btn" title="Report spam" onclick={() => onBulk('spam')}>
+				<button class="lh-btn" title={msg.mail_action_report_spam()} onclick={() => onBulk('spam')}>
 					<ShieldAlert size={16} />
 				</button>
 			{/if}
 			{#if caps.showTrash}
-				<button class="lh-btn" title="Move to trash" onclick={() => onBulk('trash')}>
+				<button class="lh-btn" title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
 					<Trash2 size={16} />
 				</button>
 			{/if}
 			{#if caps.showDelete}
-				<button class="lh-btn lh-btn-danger" title="Permanently delete" onclick={() => onBulk('delete')}>
+				<button class="lh-btn lh-btn-danger" title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
 					<Trash2 size={16} />
 				</button>
 			{/if}
 		</div>
 	{:else}
 		<div class="list-h">
-			<button class="lh-nav" title="Menu" onclick={() => (mailNav.open = !mailNav.open)}>
+			<button class="lh-nav" title={msg.mail_menu()} onclick={() => (mailNav.open = !mailNav.open)}>
 				<Menu size={18} />
 			</button>
 			<div class="ttl-block">
@@ -313,11 +315,11 @@
 				{#if sort !== 'newest' || activeFilters > 0}
 					<div class="list-sub">
 						{#if sort !== 'newest'}
-							<span>Sorted by {SORT_OPTIONS.find((o) => o.id === sort)?.label}</span>
+							<span>{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}</span>
 							<button
 								type="button"
 								class="list-sub-x"
-								title="Reset sort"
+								title={msg.mail_list_reset_sort()}
 								onclick={() => onSort('newest')}
 							>
 								<X size={11} />
@@ -327,11 +329,11 @@
 							<span class="list-sub-dot">·</span>
 						{/if}
 						{#if activeFilters > 0}
-							<span>{activeFilters} filter{activeFilters > 1 ? 's' : ''} active</span>
+							<span>{msg.mail_list_filters_active({ count: activeFilters })}</span>
 							<button
 								type="button"
 								class="list-sub-x"
-								title="Clear filters"
+								title={msg.mail_list_clear_filters()}
 								onclick={clearFilters}
 							>
 								<X size={11} />
@@ -342,18 +344,18 @@
 			</div>
 			<div class="grow"></div>
 			{#if onRefresh}
-				<button class="lh-btn" class:refreshing title="Refresh" disabled={refreshing} onclick={doRefresh}>
+				<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
 					<RefreshCw size={16} />
 				</button>
 			{/if}
-			<button class="lh-btn" title="Select all" onclick={onToggleAll}>
+			<button class="lh-btn" title={msg.mail_list_select_all()} onclick={onToggleAll}>
 				<SquareCheck size={16} />
 			</button>
 			<div class="lh-sort" bind:this={sortRef}>
 				<button
 					class="lh-btn"
 					class:on={sortOpen}
-					title="Sort"
+					title={msg.mail_list_sort()}
 					aria-haspopup="menu"
 					aria-expanded={sortOpen}
 					onclick={() => (sortOpen = !sortOpen)}
@@ -362,7 +364,7 @@
 				</button>
 				{#if sortOpen}
 					<div class="menu sort-menu" role="menu">
-						<div class="menu-lbl">Sort by</div>
+						<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
 						{#each SORT_OPTIONS as o (o.id)}
 							{@const SIcon = sortIcons[o.icon] ?? ArrowDown}
 							<button
@@ -385,7 +387,7 @@
 				<button
 					class="lh-btn"
 					class:on={filterOpen || activeFilters > 0}
-					title="Filter"
+					title={msg.mail_list_filter()}
 					aria-haspopup="dialog"
 					aria-expanded={filterOpen}
 					onclick={() => (filterOpen = !filterOpen)}
@@ -396,14 +398,14 @@
 					{/if}
 				</button>
 				{#if filterOpen}
-					<div class="menu filter-menu" role="dialog" aria-label="Filter messages">
+					<div class="menu filter-menu" role="dialog" aria-label={msg.mail_list_filter_aria()}>
 						<div class="fm-head">
-							<span class="menu-lbl">Filter</span>
+							<span class="menu-lbl">{msg.mail_list_filter()}</span>
 							{#if activeFilters > 0}
-								<button class="fm-clear" onclick={clearFilters}>Clear all</button>
+								<button class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
 							{/if}
 						</div>
-						<div class="fm-cap">Show only</div>
+						<div class="fm-cap">{msg.mail_list_show_only()}</div>
 						<div class="fm-chips">
 							<button
 								class="fchip"
@@ -411,7 +413,7 @@
 								aria-pressed={filters.unread}
 								onclick={() => toggleFlag('unread')}
 							>
-								<Mail size={15} />Unread
+								<Mail size={15} />{msg.mail_list_filter_unread()}
 							</button>
 							<button
 								class="fchip"
@@ -419,7 +421,7 @@
 								aria-pressed={filters.starred}
 								onclick={() => toggleFlag('starred')}
 							>
-								<Star size={15} />Starred
+								<Star size={15} />{msg.mail_list_filter_starred()}
 							</button>
 							<button
 								class="fchip"
@@ -427,11 +429,11 @@
 								aria-pressed={filters.attach}
 								onclick={() => toggleFlag('attach')}
 							>
-								<Paperclip size={15} />Has files
+								<Paperclip size={15} />{msg.mail_list_filter_attach()}
 							</button>
 						</div>
 						<div class="msep"></div>
-						<div class="fm-cap">Labels</div>
+						<div class="fm-cap">{msg.mail_list_labels()}</div>
 						<div class="fm-chips">
 							{#each Object.entries(LABELS) as [id, l] (id)}
 								{@const on = filters.labels.includes(id as keyof typeof LABELS)}
@@ -454,17 +456,15 @@
 		{#if pendingCount > 0}
 			<button type="button" class="new-strip" onclick={onFlushPending}>
 				<ArrowUp size={14} />
-				<span>{pendingCount} new message{pendingCount > 1 ? 's' : ''}</span>
+				<span>{msg.mail_list_new_messages({ count: pendingCount })}</span>
 			</button>
 		{/if}
 		{#if returnedCount > 0}
 			<div class="snz-strip">
 				<AlarmClock size={15} />
-				<span
-					>{returnedCount} conversation{returnedCount > 1 ? 's' : ''} came back from snooze</span
-				>
+				<span>{msg.mail_list_snooze_returned({ count: returnedCount })}</span>
 				{#if onDismissReturned}
-					<button type="button" class="snz-x" title="Dismiss" onclick={onDismissReturned}>
+					<button type="button" class="snz-x" title={msg.mail_list_dismiss()} onclick={onDismissReturned}>
 						<X size={13} />
 					</button>
 				{/if}
@@ -485,15 +485,15 @@
 				<div class="t">{emptyTitle}</div>
 				<div class="d">{emptyDetail}</div>
 				{#if searchActive}
-					<button class="empty-clear" onclick={onClearSearch}><X size={14} />Clear search</button>
+					<button class="empty-clear" onclick={onClearSearch}><X size={14} />{msg.mail_list_clear_search()}</button>
 				{:else if activeFilters > 0}
-					<button class="empty-clear" onclick={clearFilters}><X size={14} />Clear filters</button>
+					<button class="empty-clear" onclick={clearFilters}><X size={14} />{msg.mail_list_clear_filters()}</button>
 				{/if}
 			</div>
 		{:else}
 			{#each groups as { g, items } (g ?? 'all')}
 				{#if g}
-					<div class="daygrp"><span class="l">{g}</span><span class="rule"></span></div>
+					<div class="daygrp"><span class="l">{dayBucketLabel(g)}</span><span class="rule"></span></div>
 				{/if}
 				{#each items as m (m.id)}
 					<MessageRow
@@ -518,12 +518,12 @@
 		{#if !searchActive}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
-					<button class="lf-retry" onclick={onLoadMore}>Could not load more — Retry</button>
+					<button class="lf-retry" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</button>
 				{:else if loadingMore}
-					<span class="lf-spin"></span><span class="lf-text">Loading more…</span>
+					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
 				{:else if exhausted && list.length > 0}
 					<span class="lf-hair"></span>
-					<span class="lf-text">— end of conversation list —</span>
+					<span class="lf-text">{msg.mail_list_end()}</span>
 					<span class="lf-hair"></span>
 				{/if}
 			</div>

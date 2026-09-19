@@ -2,6 +2,8 @@
 	import CopyBtn from '../CopyBtn.svelte';
 	import DnsChip from '../DnsChip.svelte';
 	import type { DNSRecordKind, DNSRecordStatus, RequiredDNSRecord } from '$core/api/customDomains';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		records: RequiredDNSRecord[];
@@ -9,24 +11,23 @@
 
 	let { records }: Props = $props();
 
-	const LABEL: Record<DNSRecordKind, string> = {
-		ownership: 'OWNERSHIP',
+	const LABEL: Record<DNSRecordKind, string> = $derived({
+		ownership: m.settings_domains_record_ownership(),
 		mx: 'MX',
 		dkim: 'DKIM',
 		spf: 'SPF',
 		dmarc: 'DMARC',
 		wkd: 'WKD'
-	};
+	});
 
-	const PURPOSE: Record<DNSRecordKind, string> = {
-		ownership:
-			'Proves the domain is yours. Without it anyone pointing DNS at Thelemail could claim it.',
-		dkim: 'Signs your outgoing mail so recipients can tell it really came from you. Two records so we can rotate keys without you touching DNS again.',
-		spf: 'Tells other providers that Thelemail is allowed to send as this domain. Missing it sends your mail to spam.',
-		dmarc: 'Tells other providers what to do with mail that fails the checks above, and gets you the reports.',
-		wkd: 'Publishes your public keys at a standard address, so people on Proton and other OpenPGP clients can encrypt to you without asking for a key first. Skip it and mail still works, you just lose automatic encryption from outside Thelemail.',
-		mx: 'Points incoming mail at Thelemail. This is the cutover: until you add it, mail keeps going to your current provider.'
-	};
+	const PURPOSE: Record<DNSRecordKind, string> = $derived({
+		ownership: m.settings_domains_purpose_ownership(),
+		dkim: m.settings_domains_purpose_dkim(),
+		spf: m.settings_domains_purpose_spf(),
+		dmarc: m.settings_domains_purpose_dmarc(),
+		wkd: m.settings_domains_purpose_wkd(),
+		mx: m.settings_domains_purpose_mx()
+	});
 
 	const firstOfKind = $derived(
 		new Set(records.map((r) => records.find((c) => c.kind === r.kind)?.host + '|' + r.kind))
@@ -46,9 +47,9 @@
 				<span class="dw-rec-type">{LABEL[r.kind]}</span>
 				<span class="dw-rec-kind">{r.type}</span>
 				<span class="dw-rec-meta">
-					Host <code>{r.host}</code>
+					<Rich text={m.settings_domains_record_host({ host: r.host })} tags={{ code }} />
 				</span>
-				{#if !r.required}<span class="dw-opt">optional</span>{/if}
+				{#if !r.required}<span class="dw-opt">{m.settings_domains_record_optional()}</span>{/if}
 				<DnsChip kind={chipKind(r.status)} />
 			</div>
 			{#if firstOfKind.has(r.host + '|' + r.kind)}
@@ -61,3 +62,5 @@
 		</div>
 	{/each}
 </div>
+
+{#snippet code(t: string)}<code>{t}</code>{/snippet}

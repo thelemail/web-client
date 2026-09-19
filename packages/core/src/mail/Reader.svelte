@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import type { MessagePreviewRecipient } from './preview';
 	import { productLaunched } from '$core/products';
@@ -146,7 +147,7 @@
 			await setMessageLabels(messageId, { labels: next });
 		} catch (e) {
 			mailbox.patchMessage(messageId, { labels: currentLabels });
-			labelError = e instanceof Error ? e.message : 'Could not update labels';
+			labelError = e instanceof Error ? e.message : msg.mail_reader_labels_failed();
 		} finally {
 			labelSaving = false;
 		}
@@ -159,11 +160,11 @@
 		if (!m) return [];
 		const out: MoveTarget[] = [];
 		if (m.folder !== 'inbox' && m.direction !== 'sent') {
-			out.push({ id: 'inbox', label: 'Inbox', icon: Inbox });
+			out.push({ id: 'inbox', label: msg.mail_folder_inbox(), icon: Inbox });
 		}
-		if (m.folder !== 'archive') out.push({ id: 'archive', label: 'Archive', icon: Archive });
-		if (m.folder !== 'spam') out.push({ id: 'spam', label: 'Spam', icon: ShieldAlert });
-		if (m.folder !== 'trash') out.push({ id: 'trash', label: 'Trash', icon: Trash2 });
+		if (m.folder !== 'archive') out.push({ id: 'archive', label: msg.mail_folder_archive(), icon: Archive });
+		if (m.folder !== 'spam') out.push({ id: 'spam', label: msg.mail_folder_spam(), icon: ShieldAlert });
+		if (m.folder !== 'trash') out.push({ id: 'trash', label: msg.mail_folder_trash(), icon: Trash2 });
 		return out;
 	});
 
@@ -479,11 +480,11 @@
 		})();
 	});
 
-	const STATUS_SRCDOC: Record<'loading' | 'error', (msg?: string) => string> = {
+	const STATUS_SRCDOC: Record<'loading' | 'error', (error?: string) => string> = {
 		loading: () =>
-			'<!doctype html><html><body style="font-family:sans-serif;color:#6B7360;font-size:13px;padding:6px 2px">Decrypting…</body></html>',
-		error: (msg) =>
-			`<!doctype html><html><body style="font-family:sans-serif;color:#8E2F26;font-size:13px;padding:6px 2px">Failed to decrypt body: ${escapeForHtml(msg ?? '')}</body></html>`
+			`<!doctype html><html><body style="font-family:sans-serif;color:#6B7360;font-size:13px;padding:6px 2px">${escapeForHtml(msg.mail_reader_decrypting())}</body></html>`,
+		error: (error) =>
+			`<!doctype html><html><body style="font-family:sans-serif;color:#8E2F26;font-size:13px;padding:6px 2px">${escapeForHtml(msg.mail_reader_decrypt_failed({ error: error ?? '' }))}</body></html>`
 	};
 
 	function escapeForHtml(s: string): string {
@@ -554,19 +555,19 @@
 <section class="reader">
 	{#if !m}
 		<div class="reader-empty">
-			<div class="t">Nothing open</div>
-			<div class="d">Pick a message from the list to read it here.</div>
+			<div class="t">{msg.mail_reader_empty_title()}</div>
+			<div class="d">{msg.mail_reader_empty_detail()}</div>
 			<div class="re-hints">
-				<span><kbd>↑</kbd><kbd>↓</kbd> move</span>
-				<span><kbd>↵</kbd> open</span>
-				<span><kbd>C</kbd> compose</span>
+				<span><kbd>↑</kbd><kbd>↓</kbd> {msg.mail_reader_hint_move()}</span>
+				<span><kbd>↵</kbd> {msg.mail_reader_hint_open()}</span>
+				<span><kbd>C</kbd> {msg.mail_reader_hint_compose()}</span>
 			</div>
 		</div>
 	{:else if bodyState?.status === 'loading'}
 		<ReaderSkeleton {onBack} />
 	{:else}
 		<div class="reader-bar">
-			<button class="rb-ico rb-back" title="Back to list" onclick={() => onBack?.()}>
+			<button class="rb-ico rb-back" title={msg.mail_skeleton_back()} onclick={() => onBack?.()}>
 				<ArrowLeft size={17} />
 			</button>
 			{#if caps.showReply}
@@ -579,9 +580,9 @@
 						onclick={() => toggleReplyMode(m)}
 					>
 						{#if m === 'all'}
-							<ReplyAll size={15} /><span class="rb-t">Reply all</span>
+							<ReplyAll size={15} /><span class="rb-t">{msg.mail_reader_reply_all()}</span>
 						{:else}
-							<Reply size={15} /><span class="rb-t">Reply</span>
+							<Reply size={15} /><span class="rb-t">{msg.mail_reader_reply()}</span>
 						{/if}
 					</button>
 				{/each}
@@ -591,27 +592,27 @@
 					class:on={replyMode === 'forward'}
 					onclick={() => toggleReplyMode('forward')}
 				>
-					<Forward size={15} /><span class="rb-t">Forward</span>
+					<Forward size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
 				</button>
 			{/if}
 			<div class="grow"></div>
 			{#if caps.showRestore}
-				<button class="rb-ico" title="Restore" onclick={() => onRestore?.(m.id)}>
+				<button class="rb-ico" title={msg.mail_action_restore()} onclick={() => onRestore?.(m.id)}>
 					<Undo2 size={17} />
 				</button>
 			{/if}
 			{#if caps.showArchive}
-				<button class="rb-ico" title="Archive" onclick={() => onArchive(m.id)}>
+				<button class="rb-ico" title={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
 					<Archive size={17} />
 				</button>
 			{/if}
 			{#if caps.showTrash}
-				<button class="rb-ico" title="Delete" onclick={() => onTrash(m.id)}>
+				<button class="rb-ico" title={msg.common_delete()} onclick={() => onTrash(m.id)}>
 					<Trash2 size={17} />
 				</button>
 			{/if}
 			{#if caps.showDelete}
-				<button class="rb-ico rb-ico-danger" title="Permanently delete" onclick={() => onDelete?.(m.id)}>
+				<button class="rb-ico rb-ico-danger" title={msg.mail_action_delete_forever()} onclick={() => onDelete?.(m.id)}>
 					<Trash2 size={17} />
 				</button>
 			{/if}
@@ -620,7 +621,7 @@
 					type="button"
 					class="rb-ico"
 					class:on={moreOpen}
-					title="More"
+					title={msg.mail_reader_more()}
 					aria-haspopup="menu"
 					aria-expanded={moreOpen}
 					onclick={() => (moreOpen = !moreOpen)}
@@ -639,7 +640,7 @@
 									moreOpen = false;
 								}}
 							>
-								<MailOpen size={17} />Mark as read
+								<MailOpen size={17} />{msg.mail_action_mark_read()}
 							</button>
 						{:else if caps.showMarkRead}
 							<button
@@ -651,7 +652,7 @@
 									moreOpen = false;
 								}}
 							>
-								<Mail size={17} />Mark as unread
+								<Mail size={17} />{msg.mail_action_mark_unread()}
 							</button>
 						{/if}
 						{#if caps.showSnooze && onSnooze}
@@ -664,7 +665,7 @@
 									snoozePickerOpen = true;
 								}}
 							>
-								<Clock size={17} />Snooze
+								<Clock size={17} />{msg.mail_reader_snooze()}
 							</button>
 						{/if}
 						{#if caps.showUnsnooze && onUnsnooze}
@@ -677,7 +678,7 @@
 									onUnsnooze?.(m.id);
 								}}
 							>
-								<AlarmClockOff size={17} />Unsnooze
+								<AlarmClockOff size={17} />{msg.mail_reader_unsnooze()}
 							</button>
 						{/if}
 						<div class="msep"></div>
@@ -691,7 +692,7 @@
 									movePickerOpen = true;
 								}}
 							>
-								<FolderInput size={17} />Move to folder
+								<FolderInput size={17} />{msg.mail_reader_move_to_folder()}
 							</button>
 						{/if}
 						<button
@@ -703,7 +704,7 @@
 								labelPickerOpen = true;
 							}}
 						>
-							<Tag size={17} />Edit labels
+							<Tag size={17} />{msg.mail_reader_edit_labels()}
 						</button>
 						<button
 							type="button"
@@ -711,7 +712,7 @@
 							role="menuitem"
 							onclick={() => (moreOpen = false)}
 						>
-							<BellOff size={17} />Mute conversation
+							<BellOff size={17} />{msg.mail_reader_mute()}
 						</button>
 						<div class="msep"></div>
 						<button
@@ -723,7 +724,7 @@
 								headersOpen = true;
 							}}
 						>
-							<Code size={17} />View original headers
+							<Code size={17} />{msg.mail_reader_view_headers()}
 						</button>
 						<button
 							type="button"
@@ -734,7 +735,7 @@
 								moreOpen = false;
 							}}
 						>
-							<Printer size={17} />Print<span class="rt">⌘P</span>
+							<Printer size={17} />{msg.mail_reader_print()}<span class="rt">⌘P</span>
 						</button>
 						{#if productLaunched('calendar')}
 							<div class="msep"></div>
@@ -747,7 +748,7 @@
 									void sendToCalendar('event');
 								}}
 							>
-								<CalendarPlus size={17} />Create event from message
+								<CalendarPlus size={17} />{msg.mail_reader_create_event()}
 							</button>
 							<button
 								type="button"
@@ -758,7 +759,7 @@
 									void sendToCalendar('task');
 								}}
 							>
-								<ListTodo size={17} />Create task from message
+								<ListTodo size={17} />{msg.mail_reader_create_task()}
 							</button>
 						{/if}
 						{#if canBlock || canReport}
@@ -774,7 +775,7 @@
 									blockOpen = true;
 								}}
 							>
-								<UserX size={17} />Block sender
+								<UserX size={17} />{msg.mail_reader_block_sender()}
 							</button>
 						{/if}
 						{#if canReport}
@@ -787,7 +788,7 @@
 									reportOpen = true;
 								}}
 							>
-								<ShieldAlert size={17} />Report phishing or spam
+								<ShieldAlert size={17} />{msg.mail_reader_report()}
 							</button>
 						{/if}
 					</AnchoredMenu>
@@ -798,9 +799,9 @@
 						bind:panel={labelPickerRef}
 						extraClass="label-picker"
 						role="dialog"
-						label="Edit labels"
+						label={msg.mail_reader_edit_labels()}
 					>
-						<div class="menu-lbl">Labels</div>
+						<div class="menu-lbl">{msg.mail_list_labels()}</div>
 						{#each labelOptions as [id, l] (id)}
 							{@const on = currentLabels.includes(id)}
 							<button
@@ -829,9 +830,9 @@
 						bind:panel={movePickerRef}
 						extraClass="label-picker move-picker"
 						role="dialog"
-						label="Move to folder"
+						label={msg.mail_reader_move_to_folder()}
 					>
-						<div class="menu-lbl">Move to</div>
+						<div class="menu-lbl">{msg.mail_reader_move_to()}</div>
 						{#each moveTargets as t (t.id)}
 							{@const Icon = t.icon}
 							<button type="button" class="mitem" onclick={() => moveTo(t.id)}>
@@ -839,7 +840,7 @@
 							</button>
 						{/each}
 						<div class="msep"></div>
-						<div class="menu-lbl">Label and archive</div>
+						<div class="menu-lbl">{msg.mail_reader_label_and_archive()}</div>
 						{#each labelOptions as [id, l] (id)}
 							<button type="button" class="mitem lp-row" onclick={() => moveToLabel(id)}>
 								<span class="lp-dot" style:background={l.color}></span>
@@ -876,12 +877,12 @@
 						<Clock size={13} />
 						<span>
 							{snoozeState.kind === 'pending'
-								? `Snoozed until ${formatWhenLong(snoozeState.at)}`
-								: `Came back from snooze ${formatWhenLong(snoozeState.at).toLowerCase()}`}
+								? msg.mail_reader_snoozed_until({ when: formatWhenLong(snoozeState.at) })
+								: msg.mail_reader_came_back({ when: formatWhenLong(snoozeState.at).toLowerCase() })}
 						</span>
 						{#if snoozeState.kind === 'pending' && onUnsnooze}
 							<button type="button" class="snz-undo" onclick={() => onUnsnooze?.(m.id)}>
-								Unsnooze
+								{msg.mail_reader_unsnooze()}
 							</button>
 						{/if}
 					</div>
@@ -906,7 +907,7 @@
 								<span class="em">{m.fromAddr}</span>
 								<span class="to">&rarr; {m.to || '—'}</span>
 								{#if deliveredLine}
-									<span class="to">Delivered to: {deliveredLine}</span>
+									<span class="to">{msg.mail_thread_delivered_to({ address: deliveredLine })}</span>
 								{/if}
 							</div>
 						</div>
@@ -927,7 +928,7 @@
 					</div>
 
 					{#if isForwarded}
-						<div class="fwd-chip"><CornerDownLeft size={13} />Forwarded message</div>
+						<div class="fwd-chip"><CornerDownLeft size={13} />{msg.mail_forwarded_chip()}</div>
 					{/if}
 
 					{#if quotedSrcDoc}
@@ -936,7 +937,7 @@
 								type="button"
 								class="quoted-toggle"
 								class:on={showQuoted}
-								title={showQuoted ? 'Hide trimmed content' : 'Show trimmed content'}
+								title={showQuoted ? msg.mail_quoted_hide() : msg.mail_quoted_show()}
 								aria-expanded={showQuoted}
 								onclick={() => (showQuoted = !showQuoted)}
 							>

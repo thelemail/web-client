@@ -3,6 +3,7 @@
 	import type { Snippet } from 'svelte';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import { m } from '$paraglide/messages.js';
 
 	let {
 		badge,
@@ -23,6 +24,6 @@
 	{/if}
 	{@render children()}
 	{#if backHref}
-		<a class="lc-back" href={backHref}><ArrowLeft size={16} />Back to mailbox</a>
+		<a class="lc-back" href={backHref}><ArrowLeft size={16} />{m.lc_shell_back_to_mailbox()}</a>
 	{/if}
 </AuthShell>

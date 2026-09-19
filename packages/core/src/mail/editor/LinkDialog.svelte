@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import { untrack } from 'svelte';
 	import ConfirmDialog from '../ConfirmDialog.svelte';
@@ -29,15 +30,15 @@
 
 <ConfirmDialog
 	icon={LinkIcon}
-	title={initial ? 'Edit link' : 'Insert link'}
-	confirmLabel={removing ? 'Remove link' : 'Apply'}
+	title={initial ? m.mail_link_edit_title() : m.mail_link_insert_title()}
+	confirmLabel={removing ? m.mail_link_remove() : m.mail_link_apply()}
 	disabled={trimmed === '' && initial === ''}
 	onConfirm={apply}
 	{onClose}
 >
 	{#snippet body()}
 		<label class="cfd-field">
-			<span class="cfd-label">Link address</span>
+			<span class="cfd-label">{m.mail_link_address()}</span>
 			<input
 				{@attach focusInput}
 				bind:value

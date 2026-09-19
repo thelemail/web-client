@@ -29,6 +29,8 @@
 	import { Label } from '$core/components/ui/label';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		mode?: 'create' | 'members';
@@ -40,7 +42,15 @@
 
 	let { mode = 'create', alias = null, presetDomainId = null, onClose, onComplete }: Props = $props();
 
-	const steps = mode === 'create' ? ['Address', 'People', 'Done'] : ['People', 'Done'];
+	const steps = $derived(
+		mode === 'create'
+			? [
+					m.settings_ceremony_alias_step_address(),
+					m.settings_ceremony_alias_step_people(),
+					m.settings_ceremony_alias_step_done()
+				]
+			: [m.settings_ceremony_alias_step_people(), m.settings_ceremony_alias_step_done()]
+	);
 	let step = $state(0);
 	let local = $state('');
 	let name = $state('');
@@ -104,8 +114,8 @@
 	}
 
 	function nameOf(accountId: string): string {
-		const m = members.find((x) => x.accountId === accountId);
-		return m?.fullName || m?.email || 'a member';
+		const member = members.find((x) => x.accountId === accountId);
+		return member?.fullName || member?.email || m.settings_ceremony_alias_member_fallback();
 	}
 
 	function toggle(accountId: string) {
@@ -120,11 +130,11 @@
 
 	async function resolveRecipients(emails: { accountId: string; email: string }[]) {
 		const out = [];
-		for (const m of emails) {
-			progress = `Verifying ${m.email}`;
-			const lookup = await lookupDirectory(m.email);
-			await verifyDirectoryLookup(lookup, m.email.trim().toLowerCase());
-			out.push({ accountId: m.accountId, publicKeyArmored: lookup.publicKeyArmored });
+		for (const target of emails) {
+			progress = m.settings_ceremony_alias_progress_verifying({ email: target.email });
+			const lookup = await lookupDirectory(target.email);
+			await verifyDirectoryLookup(lookup, target.email.trim().toLowerCase());
+			out.push({ accountId: target.accountId, publicKeyArmored: lookup.publicKeyArmored });
 		}
 		return out;
 	}
@@ -137,17 +147,17 @@
 			.map((id) => members.find((m) => m.accountId === id))
 			.filter((m): m is NonNullable<typeof m> => !!m)
 			.map((m) => ({ accountId: m.accountId, email: m.email }));
-		if (!targets.length) throw new Error('Pick at least one person');
+		if (!targets.length) throw new Error(m.settings_ceremony_alias_err_pick_one());
 
 		const recipients = await resolveRecipients(targets);
 
 		if (mode === 'create' && onSharedDomain) {
-			progress = 'Checking the address';
+			progress = m.settings_ceremony_alias_progress_checking();
 			const { available } = await checkAddressAvailability(local.trim().toLowerCase());
-			if (!available) throw new Error('That address is taken. Pick another one.');
+			if (!available) throw new Error(m.settings_ceremony_alias_err_taken());
 		}
 
-		progress = 'Creating the address key';
+		progress = m.settings_ceremony_alias_progress_creating_key();
 		const email = alias?.email ?? `${local.trim().toLowerCase()}@${selectedDomainName}`;
 		const created = await keystore.createAliasKey({
 			accountId,
@@ -157,7 +167,9 @@
 		});
 		if (!created.ok) {
 			throw new Error(
-				created.code === 'locked' ? 'Unlock your mailbox and try again' : 'Could not create the key'
+				created.code === 'locked'
+					? m.settings_ceremony_alias_err_unlock()
+					: m.settings_ceremony_alias_err_create_key()
 			);
 		}
 		const grants: SharedAliasMemberGrant[] = created.grants.map((g) => ({
@@ -166,7 +178,7 @@
 			wrappedPrivateKey: textToB64(g.wrappedPrivateKeyArmored)
 		}));
 
-		progress = 'Saving';
+		progress = m.settings_ceremony_alias_progress_saving();
 		if (mode === 'members' && alias) {
 			await aliases.rotate(ws, alias.id, {
 				aliasPublicKeyArmored: created.publicKeyArmored,
@@ -189,7 +201,7 @@
 		const ws = workspaces.workspace?.id;
 		if (!ws || !selectedDomain) throw new Error('no workspace');
 		const assignee = picked[0];
-		if (!assignee) throw new Error('Pick who this address belongs to');
+		if (!assignee) throw new Error(m.settings_ceremony_alias_err_pick_owner());
 		await createWorkspaceAlias(ws, {
 			customDomainId: selectedDomain.id,
 			localPart: local.trim().toLowerCase(),
@@ -209,9 +221,9 @@
 			step = steps.length - 1;
 		} catch (err) {
 			if (err instanceof DirectoryVerificationError) {
-				submitError = `Could not verify a member's key (${err.code}). Nothing was saved.`;
+				submitError = m.settings_ceremony_alias_err_verify_key({ code: err.code });
 			} else {
-				submitError = err instanceof Error ? err.message : 'Could not save the address';
+				submitError = err instanceof Error ? err.message : m.settings_ceremony_alias_err_save();
 			}
 		} finally {
 			submitting = false;
@@ -229,8 +241,10 @@
 
 <CeremonyShell
 	icon={Users}
-	eyebrow="Addresses"
-	title={mode === 'members' ? 'Manage people' : 'Add an address'}
+	eyebrow={m.settings_ceremony_alias_eyebrow()}
+	title={mode === 'members'
+		? m.settings_ceremony_alias_title_members()
+		: m.settings_ceremony_alias_title_create()}
 	{steps}
 	{step}
 	{onClose}
@@ -240,38 +254,36 @@
 			<div class="cer-lede">
 				<p>
 					{#if sharedSlotFree && ownedDomains.length === 0}
-						One address on {SHARED_DOMAIN} for the whole household. Everyone you pick receives a copy
-						in their own mailbox and can write from it.
+						{m.settings_ceremony_alias_lede_shared_domain({ domain: SHARED_DOMAIN })}
 					{:else}
-						An address on a domain you own. Give it to one person, or share it with several so mail
-						sent to it reaches all of them.
+						{m.settings_ceremony_alias_lede_own_domain()}
 					{/if}
 				</p>
 			</div>
 			{#if customDomains.loading && customDomains.items.length === 0 && !sharedSlotFree}
-				<div class="field-hint">Loading your domains…</div>
+				<div class="field-hint">{m.settings_ceremony_alias_loading_domains()}</div>
 			{:else if domainOptions.length === 0}
 				<div class="inline-warn">
 					<CircleAlert size={15} />
 					<span
-						>You need a verified custom domain first. Open <b>Custom domains</b> and add one.</span
+						><Rich text={m.settings_ceremony_alias_need_domain()} tags={{ b: bold }} /></span
 					>
 				</div>
 			{:else}
 				<div class="field">
-					<label for="alias-name">Display name</label>
+					<label for="alias-name">{m.settings_ceremony_alias_display_name()}</label>
 					<input
 						id="alias-name"
 						class="tin"
 						bind:value={name}
 						maxlength="120"
-						placeholder="e.g. Support"
+						placeholder={m.settings_ceremony_alias_display_name_placeholder()}
 						autocomplete="off"
 					/>
-					<div class="field-hint">This is the name people see when you write from it.</div>
+					<div class="field-hint">{m.settings_ceremony_alias_display_name_hint()}</div>
 				</div>
 				<div class="field">
-					<label for="alias-local">Address</label>
+					<label for="alias-local">{m.settings_ceremony_alias_address_label()}</label>
 					<div class="alias-compose">
 						<input
 							id="alias-local"
@@ -285,18 +297,17 @@
 					</div>
 					{#if local.length > 0 && !localOk}
 						<div class="field-hint bad">
-							<CircleAlert size={13} />Use letters, numbers, dots, plus, underscore, or hyphens.
+							<CircleAlert size={13} />{m.settings_ceremony_alias_local_invalid()}
 						</div>
 					{/if}
 				</div>
 				{#if onSharedDomain}
 					<div class="field-hint">
-						An address on {SHARED_DOMAIN} is always shared. Everyone you pick gets a copy and can
-						write from it. Addresses for one person need a domain you own.
+						{m.settings_ceremony_alias_shared_domain_hint({ domain: SHARED_DOMAIN })}
 					</div>
 				{:else}
 					<div class="field">
-						<span class="field-lbl">Who uses it</span>
+						<span class="field-lbl">{m.settings_ceremony_alias_who_uses()}</span>
 						<RadioGroup
 							class="choice-set two"
 							value={shared ? 'shared' : 'single'}
@@ -306,9 +317,9 @@
 								<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
 								<span class="choice-ic"><User size={16} /></span>
 								<span class="choice-tx">
-									<span class="choice-t">One person</span>
+									<span class="choice-t">{m.settings_ceremony_alias_kind_single()}</span>
 									<span class="choice-d">
-										Mail arrives in their mailbox and only they can write from it.
+										{m.settings_ceremony_alias_kind_single_desc()}
 									</span>
 								</span>
 							</Label>
@@ -316,10 +327,9 @@
 								<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
 								<span class="choice-ic"><Users size={16} /></span>
 								<span class="choice-tx">
-									<span class="choice-t">Shared</span>
+									<span class="choice-t">{m.settings_ceremony_alias_kind_shared()}</span>
 									<span class="choice-d">
-										Everyone you pick receives a copy and can write from it. The address gets its own
-										key.
+										{m.settings_ceremony_alias_kind_shared_desc()}
 									</span>
 								</span>
 							</Label>
@@ -327,7 +337,7 @@
 					</div>
 				{/if}
 				<div class="identity-preview">
-					<span class="ip-label">Preview</span>
+					<span class="ip-label">{m.settings_ceremony_alias_preview()}</span>
 					<span class="ip-from">
 						{#if name.trim()}<b>{name.trim()}</b>{/if}
 						<span class="mono">&lt;{full}&gt;</span>
@@ -340,10 +350,9 @@
 			<div class="cer-lede">
 				<p>
 					{#if shared}
-						Everyone here receives mail sent to <span class="mono">{full}</span> and can write from
-						it.
+						<Rich text={m.settings_ceremony_alias_people_shared({ email: full })} tags={{ addr: mono }} />
 					{:else}
-						Choose whose mailbox <span class="mono">{full}</span> belongs to.
+						<Rich text={m.settings_ceremony_alias_people_single({ email: full })} tags={{ addr: mono }} />
 					{/if}
 				</p>
 			</div>
@@ -388,14 +397,12 @@
 				<div class="inline-warn">
 					<CircleAlert size={15} />
 					<span>
-						Changing who is on this address gives it a new key.
+						{m.settings_ceremony_alias_rekey_warning()}
 						{#if adding.length}
-							{adding.map(nameOf).join(', ')} will see mail that arrives from now on, not what came
-							before.
+							{m.settings_ceremony_alias_rekey_adding({ names: adding.map(nameOf).join(', ') })}
 						{/if}
 						{#if removing.length}
-							{removing.map(nameOf).join(', ')} stops receiving new mail. Mail already delivered
-							stays readable to them.
+							{m.settings_ceremony_alias_rekey_removing({ names: removing.map(nameOf).join(', ') })}
 						{/if}
 					</span>
 				</div>
@@ -411,10 +418,12 @@
 	{:else}
 		<DoneScreen
 			icon={Users}
-			title={mode === 'members' ? 'People updated' : 'Address added'}
+			title={mode === 'members'
+				? m.settings_ceremony_alias_done_title_members()
+				: m.settings_ceremony_alias_done_title_create()}
 			desc={shared
-				? 'Mail sent here reaches everyone on it. Pick it in the Compose From-selector to write from it.'
-				: 'It is ready to send and receive. Pick it in the Compose From-selector to write from it.'}
+				? m.settings_ceremony_alias_done_desc_shared()
+				: m.settings_ceremony_alias_done_desc_single()}
 		>
 			<div class="done-pill"><span class="mono">{full}</span></div>
 		</DoneScreen>
@@ -422,19 +431,26 @@
 
 	{#snippet footer()}
 		{#if mode === 'create' && step === 0}
-			<Button variant="ghost" onclick={onClose}>Cancel</Button>
-			<Button variant="primary" disabled={!localOk || !nameOk || !selectedDomainName} onclick={() => (step = 1)}>Continue</Button>
+			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="primary" disabled={!localOk || !nameOk || !selectedDomainName} onclick={() => (step = 1)}>{m.common_continue()}</Button>
 		{:else if step === peopleStep}
-			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!canSubmit || submitting} onclick={submit}>
 				{#if mode === 'members'}<Check size={15} />{:else}<Plus size={15} />{/if}
-				{submitting ? 'Saving…' : mode === 'members' ? 'Save people' : 'Add address'}
+				{submitting
+					? m.settings_ceremony_alias_saving()
+					: mode === 'members'
+						? m.settings_ceremony_alias_save_people()
+						: m.settings_ceremony_alias_add_address()}
 			</Button>
 		{:else}
 			<Button variant="primary" onclick={() => {
 					onComplete('alias');
 					onClose();
-				}}>Done</Button>
+				}}>{m.common_done()}</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}

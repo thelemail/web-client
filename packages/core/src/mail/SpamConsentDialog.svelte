@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 
@@ -14,9 +15,9 @@
 
 <ConfirmDialog
 	icon={ShieldCheck}
-	title="Help the spam filter learn?"
-	confirmLabel="Share headers"
-	cancelLabel="Don't share"
+	title={m.mail_spam_consent_title()}
+	confirmLabel={m.mail_spam_consent_confirm()}
+	cancelLabel={m.mail_spam_consent_decline()}
 	{busy}
 	{error}
 	onConfirm={() => onAnswer(true)}
@@ -24,14 +25,7 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">
-			When you report spam, we can send the message headers with the report. Headers show who sent
-			the message and which servers it passed through, and they teach our spam filter what to
-			catch. The body stays encrypted and is never sent.
-		</p>
-		<p class="cfd-p">
-			We'll remember your answer for this account. You can change it later in Settings under
-			Security.
-		</p>
+		<p class="cfd-p">{m.mail_spam_consent_body()}</p>
+		<p class="cfd-p">{m.mail_spam_consent_remember()}</p>
 	{/snippet}
 </ConfirmDialog>

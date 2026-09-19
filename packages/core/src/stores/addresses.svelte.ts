@@ -10,6 +10,7 @@ import {
 import { listMySharedAliases } from '$core/api/aliases';
 import { syncAddressUids } from '$core/keys/uid-sync';
 import { canonicalRecipient } from '$core/mail/recipientAddress';
+import { m } from '$paraglide/messages.js';
 
 class AddressesStore {
 	items = $state<AccountAddress[]>([]);
@@ -57,7 +58,7 @@ class AddressesStore {
 			this.#syncUids();
 		} catch (err) {
 			if (this.#accountId !== acct) return;
-			this.error = err instanceof Error ? err.message : 'failed to load addresses';
+			this.error = err instanceof Error ? err.message : m.store_addresses_load_failed();
 			this.items = [];
 		} finally {
 			if (this.#accountId === acct) this.loading = false;

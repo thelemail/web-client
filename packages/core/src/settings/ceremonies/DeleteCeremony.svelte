@@ -23,6 +23,8 @@
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -46,7 +48,12 @@
 
 	const target = $derived(auth.email ?? '');
 	const canContinue = $derived(target !== '' && confirmText.trim() === target && ackA && ackB);
-	const steps = ['Warning', 'Confirm', 'Verify', 'Scheduled'];
+	const steps = $derived([
+		m.settings_ceremony_delete_step_warning(),
+		m.settings_ceremony_delete_step_confirm(),
+		m.settings_ceremony_delete_step_verify(),
+		m.settings_ceremony_delete_step_scheduled()
+	]);
 
 	$effect(() => {
 		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
@@ -110,7 +117,7 @@
 					ke2: init.ke2
 				});
 				if (!finish.ok) {
-					verifyError = 'That password is incorrect.';
+					verifyError = m.settings_ceremony_delete_err_password();
 					return;
 				}
 				const proof = await getProof();
@@ -132,7 +139,7 @@
 				serverPublicEphemeral: init.serverPublicEphemeral
 			});
 			if (!proofs.ok) {
-				verifyError = 'Your mailbox is locked on this device. Sign in again, then retry.';
+				verifyError = m.settings_ceremony_delete_err_locked();
 				return;
 			}
 			const proof = await getProof();
@@ -147,7 +154,7 @@
 				accountId
 			);
 			if (res.serverProof !== proofs.expectedServerProof) {
-				verifyError = 'Could not verify the server. Please try again.';
+				verifyError = m.settings_ceremony_delete_err_server_proof();
 				return;
 			}
 			purgeAt = res.purgeAt;
@@ -161,18 +168,18 @@
 					workspaceBlocked = true;
 				} else if (err.status === 401) {
 					verifyError = proofSent
-						? 'That didn’t verify — check the password and the code, then try again.'
-						: 'That password is incorrect.';
+						? m.settings_ceremony_delete_err_not_verified()
+						: m.settings_ceremony_delete_err_password();
 					twoFaCode = '';
 				} else if (err.status === 409) {
-					verifyError = 'A deletion is already scheduled for this account.';
+					verifyError = m.settings_ceremony_delete_err_already_scheduled();
 				} else if (err.status === 429) {
-					verifyError = 'Too many attempts. Wait a few minutes and try again.';
+					verifyError = m.settings_ceremony_delete_err_rate_limited();
 				} else {
-					verifyError = 'Could not reach the server — check your connection and retry.';
+					verifyError = m.settings_ceremony_delete_err_network();
 				}
 			} else {
-				verifyError = 'Could not reach the server — check your connection and retry.';
+				verifyError = m.settings_ceremony_delete_err_network();
 			}
 		} finally {
 			busy = false;
@@ -206,8 +213,8 @@
 
 <CeremonyShell
 	icon={CircleAlert}
-	eyebrow="Account · ceremony"
-	title="Delete account"
+	eyebrow={m.settings_ceremony_delete_eyebrow()}
+	title={m.settings_ceremony_delete_title()}
 	tone="danger"
 	{steps}
 	{step}
@@ -217,34 +224,37 @@
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
-					Deleting <span class="mono">{target}</span> deactivates it immediately and erases
-					everything after a 30-day grace period. Because your mail is encrypted at rest, once it
-					is purged it is gone — not recoverable by us or by you.
+					<Rich text={m.settings_ceremony_delete_lede({ email: target })} tags={{ addr: mono }} />
 				</p>
 			</div>
 			<ul class="cer-points danger">
-				<li><Trash2 size={16} /><span>Every message, alias, and contact on this account will be erased.</span></li>
-				<li><Globe size={16} /><span>Domains stay yours — but mail stops routing until you reconnect them.</span></li>
-				<li><CalendarClock size={16} /><span>You are signed out everywhere now. You can change your mind by logging back in within 30 days.</span></li>
+				<li><Trash2 size={16} /><span>{m.settings_ceremony_delete_point_erased()}</span></li>
+				<li><Globe size={16} /><span>{m.settings_ceremony_delete_point_domains()}</span></li>
+				<li><CalendarClock size={16} /><span>{m.settings_ceremony_delete_point_signed_out()}</span></li>
 			</ul>
 			<div class="export-nudge">
 				<Download size={17} />
-				<div><b>Export first.</b> Take your archive with you before it’s gone.</div>
-				<Button variant="secondary" size="sm">Export archive</Button>
+				<div><Rich text={m.settings_ceremony_delete_export_nudge()} tags={{ b: bold }} /></div>
+				<Button variant="secondary" size="sm">{m.settings_ceremony_delete_export_archive()}</Button>
 			</div>
 		</div>
 	{:else if step === 1}
 		<div class="cer-pane">
 			<label class="cer-ack danger">
 				<input type="checkbox" bind:checked={ackA} />
-				<span>I understand my mail is encrypted and will be permanently destroyed after the grace period.</span>
+				<span>{m.settings_ceremony_delete_ack_destroyed()}</span>
 			</label>
 			<label class="cer-ack danger">
 				<input type="checkbox" bind:checked={ackB} />
-				<span>I have exported anything I want to keep.</span>
+				<span>{m.settings_ceremony_delete_ack_exported()}</span>
 			</label>
 			<div class="field">
-				<label for="del-confirm">Type <span class="mono">{target}</span> to confirm</label>
+				<label for="del-confirm"
+					><Rich
+						text={m.settings_ceremony_delete_type_to_confirm({ email: target })}
+						tags={{ addr: mono }}
+					/></label
+				>
 				<input
 					id="del-confirm"
 					class="tin mono"
@@ -258,28 +268,25 @@
 		{#if workspaceBlocked}
 			<div class="cer-pane">
 				<div class="cer-lede">
-					<p>
-						This account owns a workspace that still has other members. Transfer ownership to
-						another member — or remove them — before deleting the account.
-					</p>
+					<p>{m.settings_ceremony_delete_workspace_lede()}</p>
 				</div>
 				<ul class="cer-points danger">
-					<li><Users size={16} /><span>Manage members and ownership from Settings → Account &amp; plan.</span></li>
+					<li><Users size={16} /><span>{m.settings_ceremony_delete_workspace_point()}</span></li>
 				</ul>
 			</div>
 		{:else}
 			<div class="cer-pane">
 				<div class="cer-lede">
-					<p>Confirm it’s really you. This is the point of no return for this device’s sessions.</p>
+					<p>{m.settings_ceremony_delete_verify_lede()}</p>
 				</div>
 				<div class="field">
-					<label for="del-pw">Current password</label>
+					<label for="del-pw">{m.settings_ceremony_delete_current_password()}</label>
 					<input
 						id="del-pw"
 						class="tin"
 						type="password"
 						bind:value={cur}
-						placeholder="Enter current password"
+						placeholder={m.settings_ceremony_delete_current_password_placeholder()}
 						autocomplete="current-password"
 						disabled={busy}
 						onkeydown={(e) => {
@@ -290,7 +297,9 @@
 				{#if needsCode}
 					<div class="field">
 						<label for="del-2fa-code">
-							{twoFaMode === 'totp' ? 'Authenticator code' : 'Backup code'}
+							{twoFaMode === 'totp'
+								? m.settings_ceremony_delete_authenticator_code()
+								: m.settings_ceremony_delete_backup_code()}
 						</label>
 						<input
 							id="del-2fa-code"
@@ -323,12 +332,14 @@
 							verifyError = '';
 						}}
 					>
-						{twoFaMode === 'totp' ? 'Use a backup code instead' : 'Use an authenticator code instead'}
+						{twoFaMode === 'totp'
+							? m.settings_ceremony_delete_use_backup()
+							: m.settings_ceremony_delete_use_authenticator()}
 					</button>
 				{/if}
 				{#if hasWebauthn}
 					<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
-						<Fingerprint size={14} />Use security key or passkey
+						<Fingerprint size={14} />{m.settings_ceremony_delete_use_security_key()}
 					</Button>
 				{/if}
 				{#if verifyError}
@@ -339,46 +350,51 @@
 	{:else}
 		<DoneScreen
 			icon={CircleCheck}
-			title="Account scheduled for deletion"
-			desc={`You’ve been signed out everywhere. Everything will be permanently erased on ${purgeDateLabel}. Until then you can cancel by logging back in. We’re sorry to see you go.`}
+			title={m.settings_ceremony_delete_done_title()}
+			desc={m.settings_ceremony_delete_done_desc({ date: purgeDateLabel })}
 		/>
 	{/if}
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>Keep my account</Button>
+			<Button variant="ghost" onclick={onClose}>{m.settings_ceremony_delete_keep()}</Button>
 			<Button variant="danger" onclick={() => (step = 1)}>
-				Continue<ArrowRight size={15} />
+				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{:else if step === 1}
 			<Button variant="ghost" onclick={() => (step = 0)}>
-				<ArrowLeft size={15} />Back
+				<ArrowLeft size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={!canContinue} onclick={() => (step = 2)}>
-				Continue<ArrowRight size={15} />
+				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{:else if step === 2}
 			{#if workspaceBlocked}
-				<Button variant="primary" onclick={onClose}>Open settings</Button>
+				<Button variant="primary" onclick={onClose}>{m.settings_ceremony_delete_open_settings()}</Button>
 			{:else}
 				<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
-					<ArrowLeft size={15} />Back
+					<ArrowLeft size={15} />{m.common_back()}
 				</Button>
 				<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>
 					{#if busy}
-						Verifying…
+						{m.settings_ceremony_delete_verifying()}
 					{:else}
-						<Trash2 size={15} />Delete account permanently
+						<Trash2 size={15} />{m.settings_ceremony_delete_submit()}
 					{/if}
 				</Button>
 			{/if}
 		{:else}
 			<Button variant="primary" disabled={signingOut} onclick={signOutDeleted}>
-				<LogOut size={15} />{signingOut ? 'Signing out…' : 'Sign out'}
+				<LogOut size={15} />{signingOut
+					? m.settings_ceremony_delete_signing_out()
+					: m.settings_ceremony_delete_sign_out()}
 			</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <style>
 	.linklike {

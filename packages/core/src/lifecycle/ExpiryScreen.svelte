@@ -16,6 +16,8 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { entryPointVisible } from './downgrade';
 	import type { LifecycleContext } from './types';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { Button } from '$core/components/ui/button';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
@@ -49,45 +51,47 @@
 	}
 </script>
 
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
+
 <div class="card lc-mid">
 	<div class="card-surface screen-fade">
 		<img class="lc-mark" src={mark} alt="Thelemail" />
 		<div class="card-head">
-			<p class="eyebrow">Subscription ended</p>
-			<h1>Your subscription ended. Your mail is safe.</h1>
+			<p class="eyebrow">{m.lc_expiry_eyebrow()}</p>
+			<h1>{m.lc_expiry_title()}</h1>
 		</div>
 		<div class="lc-reassure">
-			<ShieldCheck size={16} />Nothing has been deleted. You have {ctx.retentionDays} days to decide.
+			<ShieldCheck size={16} />{m.lc_expiry_reassure({ count: ctx.retentionDays })}
 		</div>
 		<PersonalTimeline {ctx} />
 		<ul class="lc-changed">
-			<li class="ch-h">What changed</li>
+			<li class="ch-h">{m.lc_expiry_changed_heading()}</li>
 			<li>
 				<Send size={16} /><span
-					><b>Sending is paused.</b> You can still read, search, and receive mail.</span
+					><Rich text={m.lc_expiry_changed_sending()} tags={{ b: bold }} /></span
 				>
 			</li>
 			<li>
-				<Forward size={16} /><span><b>Auto-forwarding and auto-replies are off.</b></span>
+				<Forward size={16} /><span><b>{m.lc_expiry_changed_forwarding()}</b></span>
 			</li>
 			<li>
-				<Clock size={16} /><span><b>Scheduled sends moved to Drafts.</b> Nothing was sent.</span>
+				<Clock size={16} /><span><Rich text={m.lc_expiry_changed_scheduled()} tags={{ b: bold }} /></span>
 			</li>
 		</ul>
 		<div class="lc-cta">
-			<Button variant="primary" size="lg" onclick={choosePlan}><Sparkles size={17} />Choose a plan</Button>
+			<Button variant="primary" size="lg" onclick={choosePlan}><Sparkles size={17} />{m.lc_expiry_choose_plan()}</Button>
 			{#if canMoveToFree}
 				<Button variant="secondary" size="lg" onclick={moveToFree}>
-					<CircleArrowDown size={17} />Move to the free plan
+					<CircleArrowDown size={17} />{m.lc_expiry_move_to_free()}
 				</Button>
 			{/if}
 			<Button variant="secondary" size="lg" onclick={downloadData}>
-				<Download size={17} />Download my data
+				<Download size={17} />{m.lc_download_my_data()}
 			</Button>
-			<Button variant="ghost" size="lg" onclick={continueReadOnly}>Continue in read-only</Button>
+			<Button variant="ghost" size="lg" onclick={continueReadOnly}>{m.lc_expiry_continue_read_only()}</Button>
 		</div>
 		<p class="lc-cta-note">
-			You'll see this once. After today, a banner in your mailbox carries the same information.
+			{m.lc_expiry_note()}
 		</p>
 	</div>
 </div>

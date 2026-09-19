@@ -1,5 +1,6 @@
 import type { Platform } from '../types';
 import { readLocaleCookie, writeLocaleCookie } from '../../i18n/cookie';
+import { m } from '$paraglide/messages.js';
 
 export const platform: Platform = {
 	reportError: undefined,
@@ -27,7 +28,7 @@ export const platform: Platform = {
 				if (e.lengthComputable && e.total > 0) opts?.onProgress?.(e.loaded / e.total);
 			};
 			xhr.onload = () => resolve(new Response(null, { status: xhr.status }));
-			xhr.onerror = () => reject(new Error('network error during upload'));
+			xhr.onerror = () => reject(new Error(m.platform_upload_network_error()));
 			xhr.onabort = () => reject(new DOMException('aborted', 'AbortError'));
 			opts?.signal?.addEventListener('abort', () => xhr.abort(), { once: true });
 			xhr.send(body);

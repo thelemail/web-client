@@ -3,9 +3,19 @@
 	import { page } from '$app/state';
 	import Lock from '@lucide/svelte/icons/lock';
 	import { lifecycle } from './lifecycle.svelte';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { fmt } from './dates';
 
-	const BLOCK_TITLES = new Set(['Archive', 'Delete', 'Permanently delete', 'Move to trash', 'Restore']);
+	const blockTitles = $derived(
+		new Set<string>([
+			m.mail_action_archive(),
+			m.common_delete(),
+			m.mail_action_delete_forever(),
+			m.mail_action_trash(),
+			m.mail_action_restore()
+		])
+	);
 
 	const slot = $derived(page.params.slot ?? '0');
 	const active = $derived(lifecycle.readOnly);
@@ -23,7 +33,7 @@
 		if (btn.classList.contains('compose') || btn.classList.contains('fab')) return btn;
 		if (btn.classList.contains('rb-btn')) return btn;
 		const title = btn.getAttribute('title');
-		return title && BLOCK_TITLES.has(title) ? btn : null;
+		return title && blockTitles.has(title) ? btn : null;
 	}
 
 	function onCapture(e: MouseEvent) {
@@ -67,24 +77,25 @@
 	});
 </script>
 
+{#snippet mono(text: string)}<span class="mono">{text}</span>{/snippet}
+
 {#if active && tip}
 	<div class="lc-rotip" class:below={tip.below} style="left:{tip.x}px;top:{tip.y}px">
-		Sending and editing are paused — restore your plan to continue. Your mail is safe until
-		<span class="mono">{fmt.full(removeAt)}</span>.
+		<Rich text={m.lc_readonly_tip({ date: fmt.full(removeAt) })} tags={{ date: mono }} />
 	</div>
 {/if}
 
 {#if active && toast}
 	<div class="lc-ro-toast">
 		<Lock size={16} />
-		<span>Sending and editing are paused while read-only.</span>
+		<span>{m.lc_readonly_toast()}</span>
 		<a
 			href={`/u/${slot}/lifecycle/restore`}
 			onclick={(e) => {
 				e.preventDefault();
 				lifecycle.markRestoreOrigin('grace');
 				void goto(`/u/${slot}/lifecycle/restore`);
-			}}>Restore</a
+			}}>{m.lc_readonly_restore()}</a
 		>
 	</div>
 {/if}

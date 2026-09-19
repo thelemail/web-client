@@ -2,6 +2,7 @@ import 'altcha/external';
 import Pbkdf2Worker from 'altcha/workers/pbkdf2?worker';
 import type { AltchaWidgetElement } from 'altcha/types/generic';
 import type { RegistrationChallenge } from '$core/api/types';
+import { m } from '$paraglide/messages.js';
 
 const ALGORITHM = 'PBKDF2/SHA-256';
 const MOUNT_ATTEMPTS = 50;
@@ -10,7 +11,7 @@ globalThis.$altcha.algorithms.set(ALGORITHM, () => new Pbkdf2Worker());
 
 export class ProofSolveError extends Error {
 	constructor(cause?: unknown) {
-		super('We couldn’t verify this device. Try again.', { cause });
+		super(m.auth_proof_failed(), { cause });
 		this.name = 'ProofSolveError';
 	}
 }

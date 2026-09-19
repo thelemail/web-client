@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Lock from '@lucide/svelte/icons/lock';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 
@@ -26,7 +27,7 @@
 
 <section class="reader" aria-busy="true">
 	<div class="reader-bar sk-bar">
-		<button class="rb-ico rb-back" title="Back to list" onclick={() => onBack?.()}>
+		<button class="rb-ico rb-back" title={m.mail_skeleton_back()} onclick={() => onBack?.()}>
 			<ArrowLeft size={17} />
 		</button>
 		<span class="sk sk-pill" style="width:86px"></span>
@@ -42,7 +43,7 @@
 			<div class="sk-status" role="status">
 				<span class="sk-spin"></span>
 				<Lock size={13} />
-				<span>Decrypting message…</span>
+				<span>{m.mail_skeleton_decrypting()}</span>
 			</div>
 			<div class="reader-h sk-h">
 				<div class="sk sk-title" style="width:84%"></div>

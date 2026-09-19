@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import UserX from '@lucide/svelte/icons/user-x';
 	import ConfirmDialog from './ConfirmDialog.svelte';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { blockSender } from './blockedSenders';
 	import { auth } from '$core/stores/auth.svelte';
 
@@ -27,7 +29,7 @@
 	async function confirm() {
 		const accountId = auth.accountId;
 		if (!accountId) {
-			error = 'Unlock this account to block a sender.';
+			error = m.mail_block_unlock_required();
 			return;
 		}
 		busy = true;
@@ -37,7 +39,7 @@
 			onBlocked(address, moveExisting && existingCount > 0);
 			onClose();
 		} catch (e) {
-			error = e instanceof Error && e.message ? e.message : 'The sender could not be blocked.';
+			error = e instanceof Error && e.message ? e.message : m.mail_block_failed();
 		} finally {
 			busy = false;
 		}
@@ -46,9 +48,9 @@
 
 <ConfirmDialog
 	icon={UserX}
-	title="Block this sender"
+	title={m.mail_block_title()}
 	sub={displayName && displayName !== address ? `${displayName} · ${address}` : address}
-	confirmLabel="Block sender"
+	confirmLabel={m.mail_block_confirm()}
 	{busy}
 	{error}
 	onConfirm={() => void confirm()}
@@ -56,25 +58,24 @@
 >
 	{#snippet body()}
 		<p class="cfd-p">
-			New mail from <span class="cfd-mono">{address}</span> goes straight to Spam and raises no
-			notification. The address is stored as a keyed hash, so the server never sees it in the
-			clear, and the label you see here is encrypted to your key.
+			<Rich text={m.mail_block_body({ address })} tags={{ mono }} />
 		</p>
-		<p class="cfd-p">You can unblock the address from Settings at any time.</p>
+		<p class="cfd-p">{m.mail_block_unblock_hint()}</p>
 
 		{#if existingCount > 0}
 			<label class="cfd-check">
 				<input type="checkbox" bind:checked={moveExisting} disabled={busy} />
 				<span>
 					<span class="cfd-check-t">
-						Also move {existingCount} loaded message{existingCount === 1 ? '' : 's'} to Spam
+						{m.mail_block_move_existing({ count: existingCount })}
 					</span>
 					<span class="cfd-check-d">
-						Applies to the messages from this sender your browser has already decrypted. Older mail
-						stays where it is until you open the folder that holds it.
+						{m.mail_block_move_existing_detail()}
 					</span>
 				</span>
 			</label>
 		{/if}
 	{/snippet}
 </ConfirmDialog>
+
+{#snippet mono(t: string)}<span class="cfd-mono">{t}</span>{/snippet}

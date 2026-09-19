@@ -1,6 +1,7 @@
 import { bytesToB64 } from '$core/crypto';
 import { hexToB64 } from '$core/keys/encode';
 import { keystore } from '$core/keystore/keystore-client';
+import { m } from '$paraglide/messages.js';
 import { canonicalise, type BusyStatement } from './busycanon';
 import { SealError } from './seal';
 
@@ -17,7 +18,7 @@ export async function signBusyWindows(
 	if (!res.ok) {
 		throw new SealError(
 			res.code === 'locked' ? 'locked' : 'unknown',
-			'Could not sign busy windows'
+			m.cal_busy_sign_failed()
 		);
 	}
 	return {

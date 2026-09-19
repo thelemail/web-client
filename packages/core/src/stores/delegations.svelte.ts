@@ -6,6 +6,7 @@ import {
 	type CreateSigningDelegationRequest,
 	type SigningDelegation
 } from '$core/api/delegations';
+import { m } from '$paraglide/messages.js';
 
 class DelegationsStore {
 	items = $state<Map<string, SigningDelegation[]>>(new Map());
@@ -38,7 +39,7 @@ class DelegationsStore {
 			this.put(addressId, delegations);
 		} catch (err) {
 			if (this.#accountId !== acct) return;
-			this.error = err instanceof Error ? err.message : 'failed to load delegations';
+			this.error = err instanceof Error ? err.message : m.store_delegations_load_failed();
 		} finally {
 			this.#inflight.delete(addressId);
 			if (this.#accountId === acct) this.loading = false;

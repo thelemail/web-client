@@ -4,21 +4,22 @@ import type {
 	DowngradeSeverity,
 	Subscription
 } from '../api/billing';
+import { m } from '$paraglide/messages.js';
 
 const SEVERITY_ORDER: DowngradeSeverity[] = ['blocker', 'stops', 'warn', 'unaffected'];
 
-const GROUP_HEADINGS: Record<DowngradeSeverity, string> = {
-	blocker: 'Sort this out first',
-	stops: 'Stops working',
-	warn: 'Worth knowing',
-	unaffected: 'Stays the same'
+const GROUP_HEADINGS: Record<DowngradeSeverity, () => string> = {
+	blocker: m.lc_impact_group_blocker,
+	stops: m.lc_impact_group_stops,
+	warn: m.lc_impact_group_warn,
+	unaffected: m.lc_impact_group_unaffected
 };
 
-const SEVERITY_LABELS: Record<DowngradeSeverity, string> = {
-	blocker: 'Action needed',
-	stops: 'Stops',
-	warn: 'Changes',
-	unaffected: 'Unaffected'
+const SEVERITY_LABELS: Record<DowngradeSeverity, () => string> = {
+	blocker: m.lc_impact_severity_blocker,
+	stops: m.lc_impact_severity_stops,
+	warn: m.lc_impact_severity_warn,
+	unaffected: m.lc_impact_severity_unaffected
 };
 
 export interface DowngradeGroup {
@@ -86,12 +87,12 @@ export function groupsOf(preview: DowngradePreview): DowngradeGroup[] {
 }
 
 export function groupHeading(severity: DowngradeSeverity, count: number): string {
-	if (severity === 'unaffected') return `${GROUP_HEADINGS.unaffected} (${count})`;
-	return GROUP_HEADINGS[severity];
+	if (severity === 'unaffected') return m.lc_impact_group_unaffected_count({ count });
+	return GROUP_HEADINGS[severity]();
 }
 
 export function severityLabel(severity: DowngradeSeverity): string {
-	return SEVERITY_LABELS[severity];
+	return SEVERITY_LABELS[severity]();
 }
 
 export function canConfirm(preview: DowngradePreview | null): boolean {
@@ -106,8 +107,10 @@ export function entryPointVisible(sub: Subscription | null | undefined): boolean
 }
 
 export function targetPlanName(preview: DowngradePreview | null): string {
-	if (!preview?.targetPlanCode) return 'the free plan';
-	return preview.targetPlanCode === 'free_family' ? 'Free Family' : 'Free';
+	if (!preview?.targetPlanCode) return m.lc_downgrade_target_default();
+	return preview.targetPlanCode === 'free_family'
+		? m.lc_plan_free_family_name()
+		: m.lc_plan_free_name();
 }
 
 export function storeStep(sub: Subscription | null | undefined): StoreStep | null {
@@ -136,9 +139,12 @@ export function storeCancelRequired(preview: DowngradePreview | null): boolean {
 
 export function scheduledLine(sub: Subscription | null | undefined): string | null {
 	if (!sub?.pendingPlanCode) return null;
-	const name = sub.pendingPlanCode === 'free_family' ? 'Free Family' : 'Free';
-	const when = formatDay(sub.pendingPlanEffectiveAt);
-	return when ? `Moving to ${name} on ${when}.` : `Moving to ${name} when this period ends.`;
+	const plan =
+		sub.pendingPlanCode === 'free_family' ? m.lc_plan_free_family_name() : m.lc_plan_free_name();
+	const date = formatDay(sub.pendingPlanEffectiveAt);
+	return date
+		? m.lc_downgrade_scheduled_on({ plan, date })
+		: m.lc_downgrade_scheduled_period_end({ plan });
 }
 
 export function formatDay(iso: string | undefined | null): string | null {
@@ -152,10 +158,10 @@ export function formatBytes(bytes: number | undefined): string {
 	if (typeof bytes !== 'number' || bytes < 0) return '';
 	const gb = 1024 ** 3;
 	const mb = 1024 ** 2;
-	if (bytes >= gb) return `${trim(bytes / gb)} GB`;
-	if (bytes >= mb) return `${trim(bytes / mb)} MB`;
-	if (bytes >= 1024) return `${trim(bytes / 1024)} KB`;
-	return `${bytes} bytes`;
+	if (bytes >= gb) return m.lc_bytes_gb({ value: trim(bytes / gb) });
+	if (bytes >= mb) return m.lc_bytes_mb({ value: trim(bytes / mb) });
+	if (bytes >= 1024) return m.lc_bytes_kb({ value: trim(bytes / 1024) });
+	return m.lc_bytes_bytes({ count: bytes });
 }
 
 function trim(value: number): string {
@@ -169,14 +175,14 @@ export function ineligibleMessage(
 	if (!preview || preview.eligible) return null;
 	switch (preview.ineligibleReason) {
 		case 'not_owner':
-			return `Only the owner of ${workspaceName} can change its plan. Here is what would change for you.`;
+			return m.lc_downgrade_ineligible_not_owner({ workspace: workspaceName });
 		case 'already_free':
-			return 'This workspace is already on the free plan.';
+			return m.lc_downgrade_ineligible_already_free();
 		case 'no_free_tier':
-			return 'Business plans have no free tier to move to. Talk to us about the options.';
+			return m.lc_downgrade_ineligible_no_free_tier();
 		case 'no_subscription':
-			return 'This workspace has no plan to move from.';
+			return m.lc_downgrade_ineligible_no_subscription();
 		default:
-			return 'This workspace cannot move to the free plan right now.';
+			return m.lc_downgrade_ineligible_default();
 	}
 }

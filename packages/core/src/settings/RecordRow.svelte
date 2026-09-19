@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CopyBtn from './CopyBtn.svelte';
 	import type { NewRecord } from './types';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		r: NewRecord;
@@ -14,7 +15,7 @@
 		<span class="rec-type">{r.label ?? r.type}</span>
 		<span class="rec-kind">{r.type}</span>
 		<span class="rec-meta">
-			Host <code>{r.host}</code>{#if r.ttl} · TTL <code>{r.ttl}</code>{/if}
+			{m.settings_record_host()} <code>{r.host}</code>{#if r.ttl} · {m.settings_record_ttl()} <code>{r.ttl}</code>{/if}
 		</span>
 		<CopyBtn text={r.value} small />
 	</div>

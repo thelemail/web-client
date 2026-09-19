@@ -4,6 +4,7 @@
 	import * as Popover from '$core/components/ui/popover';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import PrivacyChip from '../PrivacyChip.svelte';
 	import { cal } from '../state.svelte';
@@ -14,8 +15,8 @@
 	const domain = $derived(customDomains.items[0]?.domain ?? 'thelemail.com');
 	const heroSub = $derived(
 		memberCount > 1
-			? `Shared across the ${memberCount} people behind ${domain}. Owners are set by whoever creates the commitment; acknowledgement is per person and never inferred from opening the app.`
-			: 'Every commitment can name an owner. Acknowledgement is per person and never inferred from opening the app.'
+			? m.cal_agenda_hero_team({ count: memberCount, domain })
+			: m.cal_agenda_hero_solo()
 	);
 </script>
 
@@ -23,15 +24,15 @@
 	<div class="ag-inner">
 		<div class="ag-hero">
 			<div>
-				<div class="agh-t">Every commitment has an owner.</div>
+				<div class="agh-t">{m.cal_agenda_hero_title()}</div>
 				<div class="agh-s">{heroSub}</div>
 			</div>
 			<div class="grow"></div>
-			<PrivacyChip tone="private" label="Encrypted for members" />
+			<PrivacyChip tone="private" label={m.cal_agenda_encrypted_members()} />
 		</div>
 
 		{#if !cal.agendaDays.length}
-			<div class="ag-empty">Nothing scheduled for {cal.title.toLowerCase()}.</div>
+			<div class="ag-empty">{m.cal_agenda_empty({ period: cal.title.toLowerCase() })}</div>
 		{/if}
 
 		{#each cal.agendaDays as day (day.date)}

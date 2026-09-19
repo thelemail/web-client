@@ -23,6 +23,8 @@
 	import { ownershipProven } from '$core/settings/domains/steps';
 	import { seatLimitFor } from '../plan-display';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -40,13 +42,21 @@
 	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
 	const domainNames = $derived(ownedDomains.map((d) => d.domain));
 
-	const steps = $derived(['Person', fam ? 'Invite' : 'Seat & invite']);
+	const steps = $derived([
+		m.settings_ceremony_member_step_person(),
+		fam ? m.settings_ceremony_member_step_invite() : m.settings_ceremony_member_step_seat_invite()
+	]);
 	let step = $state(0);
 	let name = $state('');
 	let local = $state('');
 	let customDomainId = $state<string>('');
 	let email = $state('');
 	let role = $state('Member');
+	const roleOptions = $derived([
+		{ v: 'Member', l: m.settings_ceremony_member_role_member() },
+		{ v: 'Admin', l: m.settings_ceremony_member_role_admin() }
+	]);
+	const roleLabel = $derived(roleOptions.find((o) => o.v === role)?.l ?? role);
 
 	let submitting = $state(false);
 	let submitError = $state<string | null>(null);
@@ -116,7 +126,7 @@
 			sentToEmail = result.invite.deliverTo ?? null;
 			step = 1;
 		} catch (err) {
-			submitError = err instanceof Error ? err.message : 'Could not create invitation';
+			submitError = err instanceof Error ? err.message : m.settings_ceremony_member_error();
 		} finally {
 			submitting = false;
 		}
@@ -125,8 +135,8 @@
 
 <CeremonyShell
 	icon={fam ? UserPlus : Building2}
-	eyebrow={fam ? 'Household' : 'Organization · seat'}
-	title={fam ? 'Add a family member' : 'Add a member'}
+	eyebrow={fam ? m.settings_ceremony_member_eyebrow_family() : m.settings_ceremony_member_eyebrow_org()}
+	title={fam ? m.settings_ceremony_member_title_family() : m.settings_ceremony_member_title_org()}
 	{steps}
 	{step}
 	{onClose}
@@ -136,24 +146,26 @@
 			<div class="cer-lede">
 				<p>
 					{fam
-						? 'Add someone to your household. You choose their address; they set their own password — their mail is encrypted to them alone, even from you.'
-						: 'Add a person to your organization. You choose their address and role; they set their own password. Their mail is encrypted to them alone.'}
+						? m.settings_ceremony_member_lede_family()
+						: m.settings_ceremony_member_lede_org()}
 				</p>
 			</div>
 
 			<div class="field">
-				<label for="add-mem-name">Full name</label>
+				<label for="add-mem-name">{m.settings_ceremony_member_name_label()}</label>
 				<input
 					id="add-mem-name"
 					class="tin"
 					bind:value={name}
-					placeholder={fam ? 'Jules Thélème' : 'Camille Rondeau'}
+					placeholder={fam
+						? m.settings_ceremony_member_name_placeholder_family()
+						: m.settings_ceremony_member_name_placeholder_org()}
 					autocomplete="off"
 				/>
 			</div>
 
 			<div class="field">
-				<label for="add-mem-local">Address you’re giving them</label>
+				<label for="add-mem-local">{m.settings_ceremony_member_address_label()}</label>
 				<div class="alias-compose">
 					<input
 						id="add-mem-local"
@@ -178,52 +190,52 @@
 				</div>
 				{#if ownedDomains.length === 0}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />Add and verify a custom domain in Custom domains
-						before inviting members.
+						<CircleAlert size={13} />{m.settings_ceremony_member_no_domain()}
 					</div>
 				{:else if local.length > 0 && !localOk}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />Use letters, numbers, dots, or hyphens.
+						<CircleAlert size={13} />{m.settings_ceremony_member_local_invalid()}
 					</div>
 				{:else if addrConflict}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />Address already in use in this workspace.
+						<CircleAlert size={13} />{m.settings_ceremony_member_address_conflict()}
 					</div>
 				{/if}
 			</div>
 
 			{#if !fam}
 				<div class="field">
-					<label for="add-mem-role">Role</label>
-					<Select value={role} options={['Member', 'Admin']} onChange={(v) => (role = v)} />
+					<label for="add-mem-role">{m.settings_ceremony_member_role_label()}</label>
+					<Select value={role} options={roleOptions} onChange={(v) => (role = v)} />
 					<div class="field-hint">
 						<Info size={13} />
 						{role === 'Admin'
-							? 'Admins manage members, domains, and billing.'
-							: 'Members manage only their own mailbox.'}
+							? m.settings_ceremony_member_role_admin_hint()
+							: m.settings_ceremony_member_role_member_hint()}
 					</div>
 				</div>
 			{/if}
 
 			<div class="field">
 				<label for="add-mem-email">
-					Send the invitation to <span class="lbl-opt">optional</span>
+					{m.settings_ceremony_member_send_to_label()}
+					<span class="lbl-opt">{m.settings_ceremony_member_optional()}</span>
 				</label>
 				<input
 					id="add-mem-email"
 					class="tin mono"
 					type="email"
 					bind:value={email}
-					placeholder="an existing email address"
+					placeholder={m.settings_ceremony_member_email_placeholder()}
 					autocomplete="off"
 				/>
 				{#if email.length > 0 && !emailOk}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />Enter a valid email address, or leave it blank.
+						<CircleAlert size={13} />{m.settings_ceremony_member_email_invalid()}
 					</div>
 				{:else}
 					<div class="field-hint">
-						<Link size={13} />No email yet? Skip this — you’ll get a link to share instead.
+						<Link size={13} />{m.settings_ceremony_member_email_hint()}
 					</div>
 				{/if}
 			</div>
@@ -238,21 +250,21 @@
 				<div class="seat-callout ok">
 					<Users size={17} />
 					<div>
-						<b>Uses 1 of your {seatsTotal} included seats.</b>
+						<b>{m.settings_ceremony_member_seat_uses_family({ total: seatsTotal ?? '' })}</b>
 						{(seatsLeft ?? 0) - 1 >= 0
-							? (seatsLeft ?? 0) - 1 + ' will remain'
-							: 'none will remain'} — no additional charge.
+							? m.settings_ceremony_member_seat_remain_family({ count: (seatsLeft ?? 0) - 1 })
+							: m.settings_ceremony_member_seat_none_remain_family()}
 					</div>
 				</div>
 			{:else}
 				<div class="seat-callout">
 					<Receipt size={17} />
 					<div>
-						<b>Adds 1 member to your workspace.</b>
+						<b>{m.settings_ceremony_member_seat_adds_org()}</b>
 						{(seatsLeft ?? 0) > 0
-							? 'Uses one of your paid seats.'
-							: 'Adds a prorated seat to your subscription when they join.'} You can remove the
-						member anytime.
+							? m.settings_ceremony_member_seat_paid_org()
+							: m.settings_ceremony_member_seat_prorated_org()}
+						{m.settings_ceremony_member_seat_remove_org()}
 					</div>
 				</div>
 			{/if}
@@ -260,38 +272,39 @@
 	{:else}
 		<DoneScreen
 			icon={UserCheck}
-			title="Member added"
-			desc={'You’ve created the mailbox for ' +
-				name.trim() +
-				'. They’ll set their own password from the invitation, then it’s theirs alone.'}
+			title={m.settings_ceremony_member_done_title()}
+			desc={m.settings_ceremony_member_done_desc({ name: name.trim() })}
 		>
 			<div class="done-pill">
 				<b>{name.trim()}</b><span class="dp-sep">·</span><span class="mono">{newAddr}</span>
-				{#if !fam}<span class="dp-tag">{role}</span>{/if}
+				{#if !fam}<span class="dp-tag">{roleLabel}</span>{/if}
 			</div>
 
 			<div class="invite-link">
 				<div class="il-label">
-					<Link size={14} />Invitation link <span class="il-note">expires in 7 days</span>
+					<Link size={14} />{m.settings_ceremony_member_link_label()}
+					<span class="il-note">{m.settings_ceremony_member_link_expiry()}</span>
 				</div>
 				<div class="il-row">
 					<code>{inviteLink ?? ''}</code>
-					<CopyBtn text={inviteLink ?? ''} small label="Copy link" />
+					<CopyBtn text={inviteLink ?? ''} small label={m.settings_ceremony_member_copy_link()} />
 				</div>
 			</div>
 
 			<div class="cer-reminder">
 				{#if sentToEmail}
-					<MailCheck size={15} />Invite also emailed to
-					<b class="mono">{sentToEmail}</b>
+					<MailCheck size={15} /><Rich
+						text={m.settings_ceremony_member_emailed_to({ email: sentToEmail })}
+						tags={{ b: mono }}
+					/>
 				{:else}
-					<Send size={15} />Share the link any way you like — no email required
+					<Send size={15} />{m.settings_ceremony_member_share_link()}
 				{/if}
 			</div>
 
 			{#if !fam}
 				<div class="cer-reminder">
-					<Receipt size={15} />Your workspace now has {seatsUsed + 1} members
+					<Receipt size={15} />{m.settings_ceremony_member_count({ count: seatsUsed + 1 })}
 				</div>
 			{/if}
 		</DoneScreen>
@@ -299,15 +312,19 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose} disabled={submitting}>Cancel</Button>
+			<Button variant="ghost" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
-				{submitting ? 'Creating invitation…' : 'Add member'}<ArrowRight size={15} />
+				{submitting
+					? m.settings_ceremony_member_creating()
+					: m.settings_ceremony_member_submit()}<ArrowRight size={15} />
 			</Button>
 		{:else}
 			<Button variant="primary" onclick={() => {
 					onComplete('member');
 					onClose();
-				}}>Done</Button>
+				}}>{m.common_done()}</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#snippet mono(t: string)}<b class="mono">{t}</b>{/snippet}

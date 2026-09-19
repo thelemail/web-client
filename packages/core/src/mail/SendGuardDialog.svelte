@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import {
@@ -24,7 +25,7 @@
 	icon={ShieldAlert}
 	title={sendGuardTitle(guards)}
 	confirmLabel={sendGuardConfirmLabel(guards)}
-	cancelLabel="Keep editing"
+	cancelLabel={m.mail_send_guard_keep_editing()}
 	{busy}
 	{body}
 	onConfirm={onConfirm}

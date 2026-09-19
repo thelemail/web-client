@@ -3,6 +3,7 @@ import { dispatchSend } from '$core/mail/sendDispatch';
 import type { CalendarEvent } from '$core/mail/render/icalParse';
 import type { RsvpStatus } from '$core/api/types';
 import type { Message } from '$core/mail/data';
+import { m } from '$paraglide/messages.js';
 import { buildIcsReply } from './buildIcsReply';
 import { auth } from '$core/stores/auth.svelte';
 
@@ -14,7 +15,7 @@ export interface SendRsvpInput {
 
 export async function sendRsvp({ message, event, status }: SendRsvpInput): Promise<void> {
 	if (!event.uid) {
-		throw new Error('Calendar event is missing UID — cannot persist RSVP.');
+		throw new Error(m.cal_rsvp_missing_uid());
 	}
 
 	await setMessageRsvp(message.id, { status, eventUid: event.uid });
@@ -24,7 +25,7 @@ export async function sendRsvp({ message, event, status }: SendRsvpInput): Promi
 
 	const myEmail = auth.email ?? '';
 	if (!myEmail) {
-		throw new Error('Cannot send RSVP reply: signed-out account.');
+		throw new Error(m.cal_rsvp_signed_out());
 	}
 	const reply = buildIcsReply({
 		source: event,

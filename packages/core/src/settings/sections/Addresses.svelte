@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import Users from '@lucide/svelte/icons/users';
 	import Globe from '@lucide/svelte/icons/globe';
@@ -178,7 +179,7 @@
 			pendingRemoval = null;
 		} catch (err) {
 			removalError =
-				err instanceof Error && err.message ? err.message : 'Could not remove this address.';
+				err instanceof Error && err.message ? err.message : m.settings_address_remove_failed();
 		} finally {
 			removalBusy = false;
 		}
@@ -194,8 +195,7 @@
 <div class="addr-intro">
 	<div class="addr-intro-tx">
 		<p class="addr-lede">
-			The addresses you send and receive as, and the aliases set up for the workspace. Open one to
-			change its name, its people, who may sign as it, and where its mail is forwarded.
+			{m.settings_address_list_lede()}
 		</p>
 		{#if manage}
 			<p class="addr-plan">{planNote(sharedSlotUsed)}</p>
@@ -204,7 +204,7 @@
 	{#if canAdd}
 		<div class="addr-intro-act">
 			<Button variant="primary" onclick={() => launch('alias')}>
-				<Plus size={14} />Add an alias
+				<Plus size={14} />{m.settings_address_add_alias()}
 			</Button>
 		</div>
 	{/if}
@@ -219,7 +219,7 @@
 			<span class="addr-count">{g.count}</span>
 		</div>
 		<div class="addr-cols">
-			<span>Address</span><span>Used by</span><span></span>
+			<span>{m.settings_address_col_address()}</span><span>{m.settings_address_col_used_by()}</span><span></span>
 		</div>
 		{#each g.rows as row (row.id)}
 			<div class="addr-row">
@@ -230,8 +230,8 @@
 					<span class="addr-text">
 						<span class="addr-title">
 							<span class="addr-name">{row.title}</span>
-							{#if row.isPrimary}<Badge kind="pine">Primary</Badge>{/if}
-							{#if row.rotationRequired}<Badge kind="warn" dot>Needs a new key</Badge>{/if}
+							{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
+							{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
 						</span>
 						<span class="addr-mail">{row.email}</span>
 						{#if row.signerSummary || row.forwardSummary || row.pendingSummary}
@@ -266,7 +266,7 @@
 					<button
 						type="button"
 						class="rowmenu"
-						aria-label="Address actions"
+						aria-label={m.settings_address_actions()}
 						aria-expanded={menuFor === row.id}
 						onclick={() => (menuFor = menuFor === row.id ? null : row.id)}
 					>
@@ -275,27 +275,27 @@
 					{#if menuFor === row.id}
 						<div class="addr-menu" role="menu">
 							<button type="button" class="mitem" onclick={() => open(row)}>
-								<ArrowRight size={15} />Open
+								<ArrowRight size={15} />{m.common_open()}
 							</button>
 							{#if row.canPromote}
 								<button type="button" class="mitem" onclick={() => promote(row)}>
-									<Star size={15} />Make primary
+									<Star size={15} />{m.settings_address_make_primary()}
 								</button>
 							{/if}
 							{#if row.canRename}
 								<button type="button" class="mitem" onclick={() => open(row)}>
-									<PenLine size={15} />Rename
+									<PenLine size={15} />{m.settings_address_rename()}
 								</button>
 							{/if}
 							{#if row.canManagePeople}
 								<button type="button" class="mitem" onclick={() => managePeople(row)}>
-									<Users size={15} />Manage people
+									<Users size={15} />{m.settings_address_manage_people()}
 								</button>
 							{/if}
 							{#if row.canRemove}
 								<span class="msep"></span>
 								<button type="button" class="mitem danger" onclick={() => askRemoval(row)}>
-									<Trash2 size={15} />Remove address
+									<Trash2 size={15} />{m.settings_address_remove()}
 								</button>
 							{/if}
 						</div>
@@ -307,27 +307,27 @@
 {/each}
 
 {#if addresses.loading && rows.length === 0}
-	<p class="addr-note">Loading…</p>
+	<p class="addr-note">{m.common_loading()}</p>
 {:else if rows.length === 0}
-	<p class="addr-note">No addresses yet.</p>
+	<p class="addr-note">{m.settings_address_empty()}</p>
 {/if}
 
 {#if !manage}
-	<p class="addr-note">New addresses are set up by a workspace admin.</p>
+	<p class="addr-note">{m.settings_address_admin_only()}</p>
 {/if}
 
 {#if manage && !billing.canAddSharedAddresses}
 	<div class="upgrade-list">
 		<UpgradeNudge
-			title="More addresses come with a paid plan"
-			desc="Paid plans add unlimited addresses on your own domain, shared with the people you choose."
+			title={m.settings_address_nudge_paid_title()}
+			desc={m.settings_address_nudge_paid_desc()}
 		/>
 	</div>
 {:else if manage && !canAddMore}
 	<div class="upgrade-list">
 		<UpgradeNudge
-			title="One shared address on {SHARED_DOMAIN}"
-			desc="Add a domain you own on a paid plan to give the household more addresses."
+			title={m.settings_address_nudge_shared_title({ domain: SHARED_DOMAIN })}
+			desc={m.settings_address_nudge_shared_desc()}
 		/>
 	</div>
 {/if}
@@ -344,16 +344,16 @@
 {/if}
 
 {#snippet removalBody()}
-	<p class="cfd-p">Mail sent to this address will stop being accepted.</p>
+	<p class="cfd-p">{m.settings_address_remove_body()}</p>
 {/snippet}
 
 {#if pendingRemoval}
 	<ConfirmDialog
 		icon={Trash2}
 		tone="danger"
-		title="Remove this address?"
+		title={m.settings_address_remove_title()}
 		sub={pendingRemoval.email}
-		confirmLabel="Remove address"
+		confirmLabel={m.settings_address_remove()}
 		busy={removalBusy}
 		error={removalError}
 		body={removalBody}

@@ -1,5 +1,6 @@
 import { parseDate } from '@internationalized/date';
 import { locale } from '$core/mail/locale.svelte';
+import { m } from '$paraglide/messages.js';
 import type { Occurrence } from './recur';
 import { deviceTimeZone, instantToWall } from './tz';
 
@@ -102,18 +103,18 @@ export function longWhen(occ: Occurrence, timeZone = deviceTimeZone()): string {
 
 export function relativeDue(date: string, today: string): string {
 	const diff = parseDate(date).compare(parseDate(today));
-	if (diff === 0) return 'Today';
-	if (diff === 1) return 'Tomorrow';
-	if (diff === -1) return 'Yesterday';
-	if (diff < 0) return `Was ${dayOfWeekLabel(date)} ${dayNumber(date)} ${monthShort(date)}`;
+	if (diff === 0) return m.cal_fmt_today();
+	if (diff === 1) return m.cal_fmt_tomorrow();
+	if (diff === -1) return m.cal_fmt_yesterday();
+	if (diff < 0) return m.cal_fmt_was({ date: `${dayOfWeekLabel(date)} ${dayNumber(date)} ${monthShort(date)}` });
 	return `${dayOfWeekLabel(date)} ${dayNumber(date)} ${monthShort(date)}`;
 }
 
 export function durationLabel(minutes: number): string {
-	if (minutes < 60) return `${minutes}m`;
-	const h = Math.floor(minutes / 60);
-	const m = minutes % 60;
-	return m ? `${h}h ${m}m` : `${h}h`;
+	if (minutes < 60) return m.cal_fmt_minutes_short({ minutes });
+	const hours = Math.floor(minutes / 60);
+	const rest = minutes % 60;
+	return rest ? m.cal_fmt_hours_minutes_short({ hours, minutes: rest }) : m.cal_fmt_hours_short({ hours });
 }
 
 export function clockLabel(instant: Date, timeZone = deviceTimeZone()): string {

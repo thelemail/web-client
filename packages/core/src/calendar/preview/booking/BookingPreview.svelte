@@ -5,6 +5,7 @@
 	import Video from '@lucide/svelte/icons/video';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 	import { BOOKING_DAYS } from '../fixtures';
 	import { cal } from '../state.svelte';
 
@@ -20,14 +21,11 @@
 		<div class="bk-head">
 			<Avatar initials="TC" size={46} bg="var(--pine-100)" fg="var(--pine-700)" />
 			<div>
-				<div class="bk-t">Consultation with Thélème Co</div>
-				<div class="bk-s">
-					Thirty minutes to talk through a migration, a domain, or whether we are the wrong choice
-					for you.
-				</div>
+				<div class="bk-t">{m.cal_bkprev_title()}</div>
+				<div class="bk-s">{m.cal_bkprev_desc()}</div>
 				<div class="bk-meta">
-					<span class="bk-tag"><Clock size={12} />30 min</span>
-					<span class="bk-tag"><Video size={12} />Link sent on confirmation</span>
+					<span class="bk-tag"><Clock size={12} />{m.cal_bkprev_duration()}</span>
+					<span class="bk-tag"><Video size={12} />{m.cal_bkprev_link_note()}</span>
 					<span class="bk-tag"><AtSign size={12} />bookings@thelema.co</span>
 				</div>
 			</div>
@@ -45,7 +43,7 @@
 						>
 							<span class="bd1">{entry.dow}</span>
 							<span class="bd2">{entry.num}</span>
-							<span class="bd3">{entry.free ? `${entry.free} open` : 'full'}</span>
+							<span class="bd3">{entry.free ? m.cal_bkprev_open({ count: entry.free }) : m.cal_bkprev_full()}</span>
 						</button>
 					{/each}
 				</div>
@@ -61,26 +59,21 @@
 						</button>
 					{/each}
 				</div>
-				<div class="bk-note bk-zone">All times in Europe/Paris (CEST). {day.note}</div>
+				<div class="bk-note bk-zone">{m.cal_bkprev_zone({ note: day.note })}</div>
 			</div>
 			<div class="bk-side">
 				<div class="bk-seal">
 					<span class="wax"></span>
 					<div>
-						<div class="bs-t">Hosted by Thelemail</div>
-						<div class="bs-s">
-							No account needed to book. Your name and address are used for the invitation and
-							nothing else.
-						</div>
+						<div class="bs-t">{m.cal_bkprev_hosted()}</div>
+						<div class="bs-s">{m.cal_bkprev_hosted_desc()}</div>
 					</div>
 				</div>
 				<div class="bk-note">
-					<b>Minimum notice</b><br />Twelve hours, so nothing lands on a morning that is already
-					gone.
+					<b>{m.cal_bkprev_notice_title()}</b><br />{m.cal_bkprev_notice_body()}
 				</div>
 				<div class="bk-note">
-					<b>If none of these work</b><br />Reply to the thread and ask for other times. Someone will
-					offer three.
+					<b>{m.cal_bkprev_fallback_title()}</b><br />{m.cal_bkprev_fallback_body()}
 				</div>
 				<Button variant="primary" block onclick={() => cal.confirmBooking()}>{cal.bookingCta}</Button>
 			</div>

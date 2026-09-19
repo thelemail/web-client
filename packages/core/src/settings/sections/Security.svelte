@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
 	import KeyRound from '@lucide/svelte/icons/key-round';
@@ -50,6 +51,7 @@
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
 	import type { SettingsState, CeremonyKind, TwoFaSetupMethod } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	interface Props {
 		s: SettingsState;
@@ -94,29 +96,29 @@
 		switch (a.kind) {
 			case 'disableTotp':
 				return {
-					title: 'Remove authenticator app',
+					title: m.settings_security_totp_remove_title(),
 					desc:
 						methodCount <= 1
-							? 'This is your last second factor — removing it turns two-factor authentication off and discards your backup codes.'
-							: 'Codes from your authenticator app will stop working at sign-in.',
-					confirmLabel: 'Remove authenticator',
+							? m.settings_security_last_factor_warning()
+							: m.settings_security_totp_remove_desc(),
+					confirmLabel: m.settings_security_totp_remove_confirm(),
 					danger: true
 				};
 			case 'deleteKey':
 				return {
-					title: `Remove “${a.name}”`,
+					title: m.settings_security_key_remove_title({ name: a.name }),
 					desc:
 						methodCount <= 1
-							? 'This is your last second factor — removing it turns two-factor authentication off and discards your backup codes.'
-							: 'This key will no longer work at sign-in.',
-					confirmLabel: 'Remove key',
+							? m.settings_security_last_factor_warning()
+							: m.settings_security_key_remove_desc(),
+					confirmLabel: m.settings_security_key_remove_confirm(),
 					danger: true
 				};
 			case 'regenCodes':
 				return {
-					title: 'Regenerate backup codes',
-					desc: 'All current backup codes stop working immediately and a fresh set of ten is issued.',
-					confirmLabel: 'Regenerate',
+					title: m.settings_security_backup_regen_title(),
+					desc: m.settings_security_backup_regen_desc(),
+					confirmLabel: m.settings_security_backup_regen(),
 					danger: false
 				};
 		}
@@ -160,11 +162,15 @@
 		desktop: 'monitor'
 	};
 
-	const sessionClientName: Record<SessionClient, string> = {
-		web: 'Web client',
-		mobile: 'Mobile app',
-		desktop: 'Desktop app'
+	const sessionClientNames: Record<SessionClient, () => string> = {
+		web: () => m.settings_security_client_web(),
+		mobile: () => m.settings_security_client_mobile(),
+		desktop: () => m.settings_security_client_desktop()
 	};
+
+	function sessionClientName(client: SessionClient): string | undefined {
+		return sessionClientNames[client]?.();
+	}
 
 	let sessions = $state<SessionInfo[] | null>(null);
 	let sessionsBusy = $state(false);
@@ -235,7 +241,7 @@
 		if (Number.isNaN(t)) return '';
 		const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' });
 		const min = Math.round((Date.now() - t) / 60000);
-		if (min < 1) return 'just now';
+		if (min < 1) return m.settings_security_just_now();
 		if (min < 60) return rtf.format(-min, 'minute');
 		const hours = Math.round(min / 60);
 		if (hours < 24) return rtf.format(-hours, 'hour');
@@ -243,11 +249,11 @@
 	}
 
 	function sessionMeta(s: SessionInfo): string {
-		const parts = [`Signed in ${fmtDate(s.createdAt)}`];
+		const parts = [m.settings_security_session_signed_in({ date: fmtDate(s.createdAt) })];
 		if (s.current) {
-			parts.push('current session');
+			parts.push(m.settings_security_session_current());
 		} else if (s.lastUsedAt) {
-			parts.push(`last active ${fmtRelative(s.lastUsedAt)}`);
+			parts.push(m.settings_security_session_last_active({ when: fmtRelative(s.lastUsedAt) }));
 		}
 		return parts.join(' · ');
 	}
@@ -282,25 +288,35 @@
 		}
 	}
 
-	const securityActionMeta: Record<SecurityEventAction, { icon: typeof LogIn; label: string }> = {
-		signed_in: { icon: LogIn, label: 'Signed in' },
-		signed_out: { icon: LogOut, label: 'Signed out' },
-		session_revoked: { icon: LogOut, label: 'Session signed out' },
-		other_sessions_revoked: { icon: LogOut, label: 'Signed out other sessions' },
-		password_changed: { icon: KeyRound, label: 'Password changed' },
-		recovery_phrase_set: { icon: LifeBuoy, label: 'Recovery phrase set' },
-		account_recovered: { icon: LifeBuoy, label: 'Account recovered' },
-		totp_enabled: { icon: ShieldCheckIcon, label: 'Authenticator app added' },
-		totp_disabled: { icon: ShieldOff, label: 'Authenticator app removed' },
-		webauthn_added: { icon: Usb, label: 'Security key added' },
-		webauthn_removed: { icon: Usb, label: 'Security key removed' },
-		backup_codes_regenerated: { icon: RefreshCw, label: 'Backup codes regenerated' },
-		account_deletion_requested: { icon: TriangleAlert, label: 'Account deletion requested' },
-		account_deletion_canceled: { icon: ShieldCheckIcon, label: 'Account deletion canceled' }
+	const securityActionMeta: Record<SecurityEventAction, { icon: typeof LogIn; label: () => string }> = {
+		signed_in: { icon: LogIn, label: () => m.settings_security_log_signed_in() },
+		signed_out: { icon: LogOut, label: () => m.settings_security_log_signed_out() },
+		session_revoked: { icon: LogOut, label: () => m.settings_security_log_session_revoked() },
+		other_sessions_revoked: { icon: LogOut, label: () => m.settings_security_log_other_sessions_revoked() },
+		password_changed: { icon: KeyRound, label: () => m.settings_security_log_password_changed() },
+		recovery_phrase_set: { icon: LifeBuoy, label: () => m.settings_security_log_recovery_phrase_set() },
+		account_recovered: { icon: LifeBuoy, label: () => m.settings_security_log_account_recovered() },
+		totp_enabled: { icon: ShieldCheckIcon, label: () => m.settings_security_log_totp_enabled() },
+		totp_disabled: { icon: ShieldOff, label: () => m.settings_security_log_totp_disabled() },
+		webauthn_added: { icon: Usb, label: () => m.settings_security_log_webauthn_added() },
+		webauthn_removed: { icon: Usb, label: () => m.settings_security_log_webauthn_removed() },
+		backup_codes_regenerated: { icon: RefreshCw, label: () => m.settings_security_log_backup_codes_regenerated() },
+		account_deletion_requested: { icon: TriangleAlert, label: () => m.settings_security_log_account_deletion_requested() },
+		account_deletion_canceled: { icon: ShieldCheckIcon, label: () => m.settings_security_log_account_deletion_canceled() }
 	};
 
 	function securityEventMeta(action: SecurityEventAction): { icon: typeof LogIn; label: string } {
-		return securityActionMeta[action] ?? { icon: ScrollText, label: action.replaceAll('_', ' ') };
+		const meta = securityActionMeta[action];
+		return meta
+			? { icon: meta.icon, label: meta.label() }
+			: { icon: ScrollText, label: action.replaceAll('_', ' ') };
+	}
+
+	function keyMeta(cred: { createdAt?: string; lastUsedAt?: string | null; backupState?: boolean }): string {
+		const parts = [m.settings_security_key_added({ date: fmtDate(cred.createdAt) })];
+		if (cred.lastUsedAt) parts.push(m.settings_security_key_last_used({ date: fmtDate(cred.lastUsedAt) }));
+		if (cred.backupState) parts.push(m.settings_security_key_synced());
+		return parts.join(' · ');
 	}
 
 	function fmtWhen(iso: string): string {
@@ -311,7 +327,10 @@
 	}
 </script>
 
-<SecHead desc="Specific, honest controls. We name the mechanism and tell you what we do and don’t do. The marked steps change key material — treat them with care." />
+<SecHead desc={m.settings_security_desc()} />
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet turnOnLink(t: string)}<button type="button" class="notelink" onclick={() => launch('twofa')}>{t}</button>{/snippet}
 
 <div class="recovery-hero" class:done={recoverySet}>
 	<div class="rh-left">
@@ -321,86 +340,86 @@
 	</div>
 	<div class="rh-body">
 		<div class="rh-eyebrow">
-			{recoverySet ? 'Recovery configured' : 'Action recommended'}
+			{recoverySet ? m.settings_security_recovery_configured() : m.settings_security_recovery_recommended()}
 		</div>
-		<h3 class="rh-title">Account recovery</h3>
+		<h3 class="rh-title">{m.settings_security_recovery_title()}</h3>
 		<p class="rh-desc">
-			Thelemail is zero-access encrypted — we cannot read your mail, and we cannot reset it for
-			you. A recovery phrase is the <b>only</b> way back into your archive if you forget your
-			password.
-			{recoverySet
-				? ' Yours is set. Keep the phrase somewhere safe and offline.'
-				: ' Without it, a forgotten password means the mail is gone for good.'}
+			<Rich
+				text={recoverySet
+					? m.settings_security_recovery_desc_set()
+					: m.settings_security_recovery_desc_unset()}
+				tags={{ b: bold }}
+			/>
 		</p>
 		<div class="rh-acts">
 			<Button variant="primary" onclick={() => launch('recovery')}>
 				{#if recoverySet}<RefreshCw size={15} />{:else}<KeyRound size={15} />{/if}
-				{recoverySet ? 'Regenerate recovery phrase' : 'Set up recovery'}
+				{recoverySet ? m.settings_security_recovery_regenerate() : m.settings_security_recovery_setup()}
 			</Button>
 		</div>
 	</div>
 	{#if !recoverySet}
-		<span class="rh-flag"><TriangleAlert size={13} />Not set up</span>
+		<span class="rh-flag"><TriangleAlert size={13} />{m.settings_security_recovery_not_set()}</span>
 	{/if}
 </div>
 
 <div class="scard">
-	<CardHead icon={EyeOff} title="Privacy" />
+	<CardHead icon={EyeOff} title={m.settings_security_privacy()} />
 	<Row
-		t="Remote images"
-		d="Every image in incoming mail is downloaded by our server at delivery and stored encrypted alongside the message. Senders never see when, or whether, you open an email."
+		t={m.settings_security_remote_images()}
+		d={m.settings_security_remote_images_desc()}
 	>
-		<span class="t-mono-xs" style="color: var(--success-700)">Always proxied</span>
+		<span class="t-mono-xs" style="color: var(--success-700)">{m.settings_security_always_proxied()}</span>
 	</Row>
 	<Row
-		t="Strip tracking links"
-		d="Removes utm_*, fbclid, gclid and other tracking parameters from links before you click."
+		t={m.settings_security_strip_tracking()}
+		d={m.settings_security_strip_tracking_desc()}
 	>
 		<Toggle on={s.stripTrack} onChange={(v) => set('stripTrack', v)} />
 	</Row>
 	<Row
-		t="Share headers when reporting spam"
-		d="Mail you report as spam is sent with its header block so the spam filter can learn from it. The message body stays encrypted and is never sent."
+		t={m.settings_security_spam_headers()}
+		d={m.settings_security_spam_headers_desc()}
 	>
 		<Toggle on={s.shareSpamHeaders} onChange={(v) => set('shareSpamHeaders', v)} />
 	</Row>
 </div>
 
 <div class="scard flat">
-	<CardHead icon={KeyRound} title="Sign-in & authentication">
+	<CardHead icon={KeyRound} title={m.settings_security_signin_title()}>
 		{#snippet right()}
 			{#if twofactor.enabled}
-				<Badge kind="ok" dot>2FA on</Badge>
+				<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
 			{:else}
-				<Badge kind="warn" dot>2FA off</Badge>
+				<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
 			{/if}
 		{/snippet}
 	</CardHead>
 	<div class="cer-rows">
 		<CeremonyRow
 			icon={Lock}
-			title="Change password"
-			desc="Re-wraps your private key, so this is more than a credential swap."
-			cta="Change"
+			title={m.settings_security_password_title()}
+			desc={m.settings_security_password_desc()}
+			cta={m.settings_security_password_cta()}
 			onLaunch={() => launch('password')}
 		/>
 	</div>
 	<div class="tfa-sub">
-		<ShieldCheckIcon size={13} />Two-factor methods
-		<span class="tfa-sub-note">any enrolled method works at sign-in</span>
+		<ShieldCheckIcon size={13} />{m.settings_security_2fa_methods()}
+		<span class="tfa-sub-note">{m.settings_security_2fa_methods_note()}</span>
 	</div>
 	{#if tfStatus?.totp?.active}
 		<div class="tfa-row">
 			<span class="tfa-ic"><Smartphone size={18} /></span>
 			<div class="tfa-info">
-				<div class="tfa-t">Authenticator app<Badge kind="ok">On</Badge></div>
+				<div class="tfa-t">{m.settings_security_totp()}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
 				<div class="tfa-d">
-					Codes from your authenticator · added {fmtDate(tfStatus.totp.createdAt)}
+					{m.settings_security_totp_meta({ date: fmtDate(tfStatus.totp.createdAt) })}
 				</div>
 			</div>
 			<div class="tfa-act">
 				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'disableTotp' })}>
-					Remove
+					{m.common_remove()}
 				</Button>
 			</div>
 		</div>
@@ -408,12 +427,12 @@
 		<div class="tfa-row off">
 			<span class="tfa-ic"><Smartphone size={18} /></span>
 			<div class="tfa-info">
-				<div class="tfa-t">Authenticator app</div>
-				<div class="tfa-d">6-digit codes from an app like Aegis or 1Password.</div>
+				<div class="tfa-t">{m.settings_security_totp()}</div>
+				<div class="tfa-d">{m.settings_security_totp_desc()}</div>
 			</div>
 			<div class="tfa-act">
 				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
-					<Plus size={14} />Set up
+					<Plus size={14} />{m.settings_security_setup()}
 				</Button>
 			</div>
 		</div>
@@ -424,16 +443,14 @@
 				{#if cred.backupState}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
 			</span>
 			<div class="tfa-info">
-				<div class="tfa-t">{cred.name}<Badge kind="ok">On</Badge></div>
+				<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
 				<div class="tfa-d">
-					Added {fmtDate(cred.createdAt)}{cred.lastUsedAt
-						? ' · last used ' + fmtDate(cred.lastUsedAt)
-						: ''}{cred.backupState ? ' · synced passkey' : ''}
+					{keyMeta(cred)}
 				</div>
 			</div>
 			<div class="tfa-act">
 				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'deleteKey', id: cred.id, name: cred.name })}>
-					Remove
+					{m.common_remove()}
 				</Button>
 			</div>
 		</div>
@@ -442,24 +459,24 @@
 		<div class="tfa-row off">
 			<span class="tfa-ic"><Usb size={18} /></span>
 			<div class="tfa-info">
-				<div class="tfa-t">Security key</div>
-				<div class="tfa-d">A YubiKey or any FIDO2 hardware key, via WebAuthn.</div>
+				<div class="tfa-t">{m.settings_security_key()}</div>
+				<div class="tfa-d">{m.settings_security_key_desc()}</div>
 			</div>
 			<div class="tfa-act">
 				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
-					<Plus size={14} />Set up
+					<Plus size={14} />{m.settings_security_setup()}
 				</Button>
 			</div>
 		</div>
 		<div class="tfa-row off">
 			<span class="tfa-ic"><Fingerprint size={18} /></span>
 			<div class="tfa-info">
-				<div class="tfa-t">This device</div>
-				<div class="tfa-d">Touch ID, Face ID, or your screen lock — a passkey kept on this device.</div>
+				<div class="tfa-t">{m.settings_security_this_device()}</div>
+				<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
 			</div>
 			<div class="tfa-act">
 				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
-					<Plus size={14} />Set up
+					<Plus size={14} />{m.settings_security_setup()}
 				</Button>
 			</div>
 		</div>
@@ -468,15 +485,14 @@
 		<div class="tfa-row backup">
 			<span class="tfa-ic"><LifeBuoy size={18} /></span>
 			<div class="tfa-info">
-				<div class="tfa-t">Backup codes</div>
+				<div class="tfa-t">{m.settings_security_backup_codes()}</div>
 				<div class="tfa-d">
-					{tfStatus.backupCodes?.remaining ?? 0} unused · each opens the door once if you lose every
-					method above.
+					{m.settings_security_backup_codes_meta({ count: tfStatus.backupCodes?.remaining ?? 0 })}
 				</div>
 			</div>
 			<div class="tfa-act">
 				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'regenCodes' })}>
-					<RefreshCw size={14} />Regenerate
+					<RefreshCw size={14} />{m.settings_security_backup_regen()}
 				</Button>
 			</div>
 		</div>
@@ -484,8 +500,7 @@
 		<div class="card-note warn">
 			<TriangleAlert size={13} />
 			<span>
-				Two-factor is off &mdash; your password is the only thing at the door.
-				<button type="button" class="notelink" onclick={() => launch('twofa')}>Turn it on</button>.
+				<Rich text={m.settings_security_2fa_off_note()} tags={{ link: turnOnLink }} />
 			</span>
 		</div>
 	{/if}
@@ -508,85 +523,85 @@
 {/if}
 
 <div class="scard">
-	<CardHead icon={MonitorSmartphone} title="Active sessions" />
+	<CardHead icon={MonitorSmartphone} title={m.settings_security_sessions()} />
 	{#each sortedSessions as d (d.id)}
 		{@const DevIcon = deviceIcons[sessionClientIcon[d.client]]}
 		<div class="devrow">
 			<span class="dv-ic"><DevIcon size={18} /></span>
 			<div class="dv-info">
 				<div class="dv-name">
-					{sessionClientName[d.client]}{#if d.current}<span class="this-dev">This device</span
+					{sessionClientName(d.client)}{#if d.current}<span class="this-dev">{m.settings_security_this_device()}</span
 						>{/if}
 				</div>
 				<div class="dv-meta">{sessionMeta(d)}</div>
 			</div>
 			<div class="dv-act">
-				{#if !d.current}<Button variant="ghost" size="sm" disabled={sessionsBusy} onclick={() => signOutSession(d.id)}>Sign out</Button>{/if}
+				{#if !d.current}<Button variant="ghost" size="sm" disabled={sessionsBusy} onclick={() => signOutSession(d.id)}>{m.settings_security_sign_out()}</Button>{/if}
 			</div>
 		</div>
 	{/each}
 	<div class="setrow">
 		<div class="info">
 			<div class="t" style:font-weight="600" style:color="var(--danger-700)">
-				Sign out everywhere else
+				{m.settings_security_sign_out_others()}
 			</div>
 		</div>
 		<div class="ctl">
 			<Button variant="danger" size="sm" disabled={sessionsBusy} onclick={signOutOtherSessions}>
-				<LogOut size={14} />Revoke all
+				<LogOut size={14} />{m.settings_security_revoke_all()}
 			</Button>
 		</div>
 	</div>
 </div>
 
 <div class="scard">
-	<CardHead icon={KeySquare} title="Encryption keys">
-		{#snippet right()}<Badge kind="neutral">Advanced</Badge>{/snippet}
+	<CardHead icon={KeySquare} title={m.settings_security_keys_title()}>
+		{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	</CardHead>
 	<Row
 		col
-		t="Your key fingerprint"
-		d="Share this out-of-band so others can verify they’re really writing to you."
+		t={m.settings_security_fingerprint()}
+		d={m.settings_security_fingerprint_desc()}
 	>
 		<div class="codeblock">
 			<span class="v">4F2A 9C71 B0E3 5D88 · 19FE 4B0C 2D71 88AC</span>
-			<button type="button" class="cp" title="Copy"><Copy size={15} /></button>
+			<button type="button" class="cp" title={m.common_copy()}><Copy size={15} /></button>
 		</div>
 	</Row>
 	<div class="cer-rows tight">
 		<CeremonyRow
 			icon={RefreshCw}
-			title="Rotate your key"
-			desc="Issues a new keypair and re-encrypts your archive. Old mail stays readable."
-			cta="Rotate"
+			title={m.settings_security_rotate_title()}
+			desc={m.settings_security_rotate_desc()}
+			cta={m.settings_security_rotate_cta()}
 			onLaunch={() => launch('keys')}
 		/>
 	</div>
 	<div class="setrow">
 		<div class="info">
-			<div class="t">Import &amp; export</div>
-			<div class="d">Bring in contacts’ public keys, or export your own.</div>
+			<div class="t">{m.settings_security_import_export()}</div>
+			<div class="d">{m.settings_security_import_export_desc()}</div>
 		</div>
 		<div class="ctl">
 			<Button variant="secondary" size="sm">
-				<Upload size={14} />Import
+				<Upload size={14} />{m.settings_security_import()}
 			</Button>
 			<Button variant="secondary" size="sm">
-				<Download size={14} />Export public key
+				<Download size={14} />{m.settings_security_export_key()}
 			</Button>
 		</div>
 	</div>
 </div>
 
 <div class="scard">
-	<CardHead icon={ScrollText} title="Security log" />
+	<CardHead icon={ScrollText} title={m.settings_security_log()} />
 	<div class="log-list">
 		{#if secEvents && secEvents.length === 0}
 			<div class="log-row">
 				<span class="log-ic"><ScrollText size={15} /></span>
 				<div class="log-info">
-					<div class="log-t">No security events yet</div>
-					<div class="log-meta">Sign-ins and account changes will appear here.</div>
+					<div class="log-t">{m.settings_security_log_empty()}</div>
+					<div class="log-meta">{m.settings_security_log_empty_desc()}</div>
 				</div>
 			</div>
 		{/if}
@@ -597,7 +612,7 @@
 				<span class="log-ic"><Ic size={15} /></span>
 				<div class="log-info">
 					<div class="log-t">{meta.label}</div>
-					<div class="log-meta">{sessionClientName[e.client] ?? e.client}</div>
+					<div class="log-meta">{sessionClientName(e.client) ?? e.client}</div>
 				</div>
 				<span class="log-when">{fmtWhen(e.occurredAt)}</span>
 			</div>
@@ -605,7 +620,7 @@
 		{#if secNextCursor}
 			<div class="log-row" style:justify-content="center">
 				<Button variant="ghost" size="sm" disabled={secLoadingMore} onclick={loadMoreSecurityEvents}>
-					Show more
+					{m.settings_security_show_more()}
 				</Button>
 			</div>
 		{/if}

@@ -34,6 +34,8 @@
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { CustomDomain, RequiredDNSRecord } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		domain: CustomDomain;
@@ -79,7 +81,7 @@
 			await customDomains.verify(ws, domain.id);
 			error = null;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not check DNS';
+			error = err instanceof Error ? err.message : m.settings_domains_wizard_check_failed();
 		} finally {
 			checking = false;
 		}
@@ -113,61 +115,56 @@
 <Card>
 	{#snippet head()}
 		{#if step === 'ownership'}
-			<Info size={16} /><h3>Prove you own {domain.domain}</h3>
+			<Info size={16} /><h3>{m.settings_domains_wizard_ownership_title({ domain: domain.domain })}</h3>
 		{:else if step === 'sending'}
-			<Info size={16} /><h3>Let {domain.domain} send mail</h3>
+			<Info size={16} /><h3>{m.settings_domains_wizard_sending_title({ domain: domain.domain })}</h3>
 		{:else if step === 'recipients'}
-			<AtSign size={16} /><h3>Add the people who will receive mail</h3>
+			<AtSign size={16} /><h3>{m.settings_domains_wizard_recipients_title()}</h3>
 		{:else if step === 'routing'}
-			<TriangleAlert size={16} /><h3>Point mail at Thelemail</h3>
+			<TriangleAlert size={16} /><h3>{m.settings_domains_wizard_routing_title()}</h3>
 		{:else}
-			<CircleCheck size={16} /><h3>Setup complete</h3>
+			<CircleCheck size={16} /><h3>{m.settings_domains_wizard_done_title()}</h3>
 		{/if}
 	{/snippet}
 
 	<div class="dw-pane">
 		{#if step === 'ownership'}
 			<p class="dw-lede">
-				Add this TXT record at your registrar. It proves you control the domain and nothing else
-				changes: mail keeps flowing wherever it flows today.
+				{m.settings_domains_wizard_ownership_lede()}
 			</p>
 			<RecordList records={phaseRecords} />
 			{#if ownershipProven(domain)}
 				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>Ownership confirmed.</span>
+					<CircleCheck size={15} /><span>{m.settings_domains_wizard_ownership_ok()}</span>
 				</div>
 			{:else}
 				<div class="dw-note">
 					<Clock size={15} />
 					<span>
-						DNS usually propagates within a few minutes, sometimes a few hours. You can close this
-						page. We keep checking, and the domain moves on by itself.
+						{m.settings_domains_wizard_propagation()}
 					</span>
 				</div>
 			{/if}
 		{:else if step === 'sending'}
 			<p class="dw-lede">
-				These records let Thelemail sign and send mail as <b>{domain.domain}</b>. Adding them does
-				not redirect incoming mail.
+				<Rich text={m.settings_domains_wizard_sending_lede({ domain: domain.domain })} tags={{ b: bold }} />
 			</p>
 			<RecordList records={phaseRecords} />
 			{#if canSend(domain)}
 				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>Sending records confirmed.</span>
+					<CircleCheck size={15} /><span>{m.settings_domains_wizard_sending_ok()}</span>
 				</div>
 			{:else}
 				<div class="dw-note">
 					<Clock size={15} />
 					<span>
-						DNS usually propagates within a few minutes, sometimes a few hours. You can close this
-						page. We keep checking, and the domain moves on by itself.
+						{m.settings_domains_wizard_propagation()}
 					</span>
 				</div>
 			{/if}
 		{:else if step === 'recipients'}
 			<p class="dw-lede">
-				Create the addresses that should receive mail <b>before</b> you change MX. Mail sent to an
-				address that does not exist yet bounces, and a bounce is not recoverable.
+				<Rich text={m.settings_domains_wizard_recipients_lede()} tags={{ b: bold }} />
 			</p>
 			{#if domainAddresses.length > 0}
 				<div class="dw-addrs">
@@ -181,69 +178,63 @@
 				</div>
 			{:else}
 				<div class="dw-note warn">
-					<TriangleAlert size={15} /><span>No addresses on this domain yet.</span>
+					<TriangleAlert size={15} /><span>{m.settings_domains_wizard_no_addresses()}</span>
 				</div>
 			{/if}
 			<div class="dw-addr-acts">
 				<Button variant="secondary" disabled={!manage} onclick={() => (addingAlias = true)}>
-					<Plus size={14} />Add an address
+					<Plus size={14} />{m.settings_domains_wizard_add_address()}
 				</Button>
 			</div>
 			<div class="dw-note">
 				<Info size={15} />
 				<span>
-					Colleagues get their address by invitation. Invite them from Members, then come back
-					here.
+					{m.settings_domains_wizard_invite_note()}
 				</span>
 			</div>
 		{:else if step === 'routing'}
 			<p class="dw-lede">
-				This is the cutover. Once this MX record is live, mail for <b>{domain.domain}</b> stops going
-				to your old provider and arrives here instead. Remove any other MX records for the domain.
+				<Rich text={m.settings_domains_wizard_routing_lede({ domain: domain.domain })} tags={{ b: bold }} />
 			</p>
 			{#if domain.addressCount === 0}
 				<div class="dw-note bad">
 					<TriangleAlert size={15} />
 					<span>
-						<b>There are no addresses on this domain.</b> If you change MX now, every message sent
-						to it will bounce.
-						<button type="button" class="dw-link" onclick={() => onStep('recipients')}>
-							Add an address first
-						</button>
+						<Rich
+							text={m.settings_domains_wizard_routing_no_addresses()}
+							tags={{ b: bold, link: recipientsLink }}
+						/>
 					</span>
 				</div>
 			{/if}
 			<RecordList records={phaseRecords} />
 			{#if domain.mxVerifiedAt}
 				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>Mail is routing here.</span>
+					<CircleCheck size={15} /><span>{m.settings_domains_wizard_routing_ok()}</span>
 				</div>
 			{:else}
 				<div class="dw-note">
 					<Clock size={15} />
 					<span>
-						DNS usually propagates within a few minutes, sometimes a few hours. You can close this
-						page. We keep checking, and the domain moves on by itself.
+						{m.settings_domains_wizard_propagation()}
 					</span>
 				</div>
 			{/if}
 		{:else}
 			<div class="dw-done">
 				<span class="dw-done-ic"><CircleCheck size={34} strokeWidth={1.6} /></span>
-				<h4 class="dw-done-title">{domain.domain} is live</h4>
+				<h4 class="dw-done-title">{m.settings_domains_wizard_live({ domain: domain.domain })}</h4>
 				<p class="dw-done-desc">
-					Mail addressed to it arrives here, and mail sent from it is signed. We keep watching the
-					records and will flag it if anything changes.
+					{m.settings_domains_wizard_done_desc()}
 				</p>
 				<div class="dw-done-stats">
 					{#each LADDER as s (s)}
-						<span class="dw-done-stat"><Check size={13} strokeWidth={2.5} />{STEP_LABELS[s]}</span>
+						<span class="dw-done-stat"><Check size={13} strokeWidth={2.5} />{STEP_LABELS[s]()}</span>
 					{/each}
 					<span class="dw-done-stat">
-						<Check size={13} strokeWidth={2.5} />{domain.addressCount} address{domain.addressCount ===
-						1
-							? ''
-							: 'es'}
+						<Check size={13} strokeWidth={2.5} />{m.settings_domains_wizard_address_count({
+							count: domain.addressCount
+						})}
 					</span>
 				</div>
 			</div>
@@ -259,20 +250,20 @@
 	<div class="dw-foot">
 		{#if step !== 'ownership'}
 			<Button variant="ghost" onclick={() => onStep(previousStep(step))}>
-				<ArrowLeft size={15} />Back
+				<ArrowLeft size={15} />{m.common_back()}
 			</Button>
 		{/if}
 		<span class="dw-spacer"></span>
 		{#if phase}
 			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check()}>
-				<RefreshCw size={14} />{checking ? 'Checking…' : 'Check now'}
+				<RefreshCw size={14} />{checking ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_now()}
 			</Button>
 		{/if}
 		{#if step === 'done'}
-			<Button variant="primary" href={listHref}>All domains<ArrowRight size={15} /></Button>
+			<Button variant="primary" href={listHref}>{m.settings_domains_wizard_all_domains()}<ArrowRight size={15} /></Button>
 		{:else}
 			<Button variant="primary" onclick={() => onStep(nextStep(step))}>
-				Continue<ArrowRight size={15} />
+				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{/if}
 	</div>
@@ -289,4 +280,6 @@
 	/>
 {/if}
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
+{#snippet recipientsLink(t: string)}<button type="button" class="dw-link" onclick={() => onStep('recipients')}>{t}</button>{/snippet}

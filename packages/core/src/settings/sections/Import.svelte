@@ -14,6 +14,8 @@
 	import { DEFAULT_QUERY } from '$core/mail/url';
 	import { importBatch, type ImportItemStatus } from '$core/mail/import/importBatch.svelte';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	let fileInput = $state<HTMLInputElement>();
 	let dragging = $state(false);
@@ -26,18 +28,18 @@
 		void importBatch.load(id);
 	});
 
-	const statusMeta: Record<ImportItemStatus, { icon: typeof CircleCheck; label: string; cls: string }> = {
-		pending: { icon: Clock, label: 'Queued', cls: 'pending' },
-		processing: { icon: LoaderCircle, label: 'Importing', cls: 'processing' },
-		done: { icon: CircleCheck, label: 'Imported', cls: 'done' },
-		duplicate: { icon: CopyCheck, label: 'Already imported', cls: 'dup' },
-		failed: { icon: TriangleAlert, label: 'Failed', cls: 'failed' }
+	const statusMeta: Record<ImportItemStatus, { icon: typeof CircleCheck; label: () => string; cls: string }> = {
+		pending: { icon: Clock, label: () => m.settings_import_status_queued(), cls: 'pending' },
+		processing: { icon: LoaderCircle, label: () => m.settings_import_status_importing(), cls: 'processing' },
+		done: { icon: CircleCheck, label: () => m.settings_import_status_imported(), cls: 'done' },
+		duplicate: { icon: CopyCheck, label: () => m.settings_import_status_duplicate(), cls: 'dup' },
+		failed: { icon: TriangleAlert, label: () => m.settings_import_status_failed(), cls: 'failed' }
 	};
 
 	function fmtSize(bytes: number): string {
-		if (bytes < 1024) return `${bytes} B`;
-		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+		if (bytes < 1024) return m.settings_import_size_b({ size: bytes });
+		if (bytes < 1024 * 1024) return m.settings_import_size_kb({ size: (bytes / 1024).toFixed(0) });
+		return m.settings_import_size_mb({ size: (bytes / (1024 * 1024)).toFixed(1) });
 	}
 
 	async function refreshMailbox() {
@@ -87,15 +89,15 @@
 	}
 </script>
 
-<SecHead desc="Bring existing mail into Thelemail from .eml files. Each message is parsed and encrypted to your key in this browser before it is uploaded — the server only ever stores ciphertext. Imported mail lands in your inbox, marked read, at its original date." />
+<SecHead desc={m.settings_import_desc()} />
 
 <div class="scard">
-	<CardHead icon={Upload} title="Import .eml files" />
+	<CardHead icon={Upload} title={m.settings_import_title()} />
 
 	{#if importBatch.locked}
 		<div class="card-note warn">
 			<Lock size={13} />
-			<span>Your vault is locked — unlock it to finish importing the remaining files.</span>
+			<span>{m.settings_import_locked()}</span>
 		</div>
 	{/if}
 
@@ -103,9 +105,7 @@
 		<div class="card-note">
 			<Clock size={13} />
 			<span>
-				{importBatch.resumable}
-				{importBatch.resumable === 1 ? 'file is' : 'files are'} still queued from a previous session.
-				<button type="button" class="notelink" onclick={startRun}>Resume import</button>.
+				<Rich text={m.settings_import_resumable({ count: importBatch.resumable })} tags={{ link: resumeLink }} />
 			</span>
 		</div>
 	{/if}
@@ -122,8 +122,8 @@
 		ondragleave={() => (dragging = false)}
 	>
 		<FileUp size={26} />
-		<div class="dz-t">Drop .eml files here, or click to choose</div>
-		<div class="dz-d">You can select hundreds at once — importing runs in the background.</div>
+		<div class="dz-t">{m.settings_import_drop()}</div>
+		<div class="dz-d">{m.settings_import_drop_desc()}</div>
 	</div>
 	<input
 		bind:this={fileInput}
@@ -136,23 +136,23 @@
 
 	{#if importBatch.items.length > 0}
 		<div class="imp-summary">
-			<span class="imp-stat"><CircleCheck size={14} />{importBatch.done} imported</span>
+			<span class="imp-stat"><CircleCheck size={14} />{m.settings_import_done({ count: importBatch.done })}</span>
 			{#if importBatch.duplicate > 0}
-				<span class="imp-stat dup"><CopyCheck size={14} />{importBatch.duplicate} already had</span>
+				<span class="imp-stat dup"><CopyCheck size={14} />{m.settings_import_duplicates({ count: importBatch.duplicate })}</span>
 			{/if}
 			{#if importBatch.failed > 0}
-				<span class="imp-stat failed"><TriangleAlert size={14} />{importBatch.failed} failed</span>
+				<span class="imp-stat failed"><TriangleAlert size={14} />{m.settings_import_failed({ count: importBatch.failed })}</span>
 			{/if}
 			{#if importBatch.pending > 0}
 				<span class="imp-stat pending">
 					{#if importBatch.running}<LoaderCircle size={14} class="spin" />{:else}<Clock size={14} />{/if}
-					{importBatch.pending} to go
+					{m.settings_import_pending({ count: importBatch.pending })}
 				</span>
 			{/if}
 			<span class="imp-spacer"></span>
 			{#if !importBatch.running && (importBatch.done + importBatch.duplicate + importBatch.failed) > 0}
 				<Button variant="ghost" size="sm" onclick={() => void importBatch.clearCompleted()}>
-					Clear finished
+					{m.settings_import_clear()}
 				</Button>
 			{/if}
 		</div>
@@ -166,7 +166,7 @@
 					<div class="imp-info">
 						<div class="imp-name">{item.name}</div>
 						<div class="imp-meta">
-							{fmtSize(item.size)} · {meta.label}{item.error ? ` — ${item.error}` : ''}
+							{fmtSize(item.size)} · {meta.label()}{item.error ? ` — ${item.error}` : ''}
 						</div>
 					</div>
 				</div>
@@ -174,6 +174,8 @@
 		</div>
 	{/if}
 </div>
+
+{#snippet resumeLink(t: string)}<button type="button" class="notelink" onclick={startRun}>{t}</button>{/snippet}
 
 <style>
 	.hidden-input {

@@ -1,6 +1,7 @@
 import type { CalendarEvent } from '$core/mail/render/icalParse';
 import type { Message } from '$core/mail/data';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
+import { m } from '$paraglide/messages.js';
 import { itemFromInvitation, parseInvitation } from './ics/fromMail';
 import { myAddressList } from './invite';
 import type { CalendarItem, ItemKind, Partstat } from './model';
@@ -67,13 +68,13 @@ export async function addFromMail(
 	partstat?: Partstat
 ): Promise<CalendarItem> {
 	await calendarStore.ensureLoaded();
-	if (!ev.rawIcs || !ev.uid) throw new Error('This invitation carries no calendar data');
+	if (!ev.rawIcs || !ev.uid) throw new Error(m.cal_entry_no_data());
 	const existing = calendarStore.itemByUid(ev.uid);
 	if (existing) return existing.item;
 	const target = calendarStore.defaultCalendar;
-	if (!target) throw new Error('No calendar to add it to yet');
+	if (!target) throw new Error(m.cal_entry_no_calendar());
 	const inv = parseInvitation(ev.rawIcs, myAddressList());
-	if (!inv) throw new Error('Could not read the invitation');
+	if (!inv) throw new Error(m.cal_entry_unreadable());
 	const item = itemFromInvitation(
 		inv,
 		ev,

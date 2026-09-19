@@ -9,6 +9,8 @@
 	import type { TwoFactorMethod } from '$core/api/types';
 	import { webauthnSupported } from '$core/auth/webauthn';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		email: string;
@@ -30,10 +32,10 @@
 		methods,
 		busy,
 		error,
-		eyebrow = 'Two-factor check',
+		eyebrow,
 		lede,
 		top,
-		backLabel = 'Back to sign in',
+		backLabel,
 		onTotp,
 		onBackupCode,
 		onWebauthn,
@@ -42,11 +44,26 @@
 
 	type MethodId = 'app' | 'key' | 'backup';
 
-	const META: Record<MethodId, { label: string; pick: string }> = {
-		app: { label: 'Authenticator app', pick: 'Enter a 6-digit code from your app' },
-		key: { label: 'Security key / passkey', pick: 'Touch your key, or use Touch ID or your screen lock' },
-		backup: { label: 'Backup code', pick: 'Use one of your one-time backup codes' }
+	const META: Record<MethodId, { label: () => string; pick: () => string; back: () => string }> = {
+		app: {
+			label: () => m.auth_2fa_method_app(),
+			pick: () => m.auth_2fa_method_app_pick(),
+			back: () => m.auth_2fa_back_to_app()
+		},
+		key: {
+			label: () => m.auth_2fa_method_key(),
+			pick: () => m.auth_2fa_method_key_pick(),
+			back: () => m.auth_2fa_back_to_key()
+		},
+		backup: {
+			label: () => m.auth_2fa_method_backup(),
+			pick: () => m.auth_2fa_method_backup_pick(),
+			back: () => m.auth_2fa_back_to_backup()
+		}
 	};
+
+	const eyebrowText = $derived(eyebrow ?? m.auth_2fa_eyebrow());
+	const backText = $derived(backLabel ?? m.auth_2fa_back_to_sign_in());
 
 	const available = $derived.by<MethodId[]>(() => {
 		const out: MethodId[] = [];
@@ -78,8 +95,8 @@
 		}
 	});
 
-	function switchTo(m: MethodId) {
-		method = m;
+	function switchTo(id: MethodId) {
+		method = id;
 		view = 'challenge';
 		digits = Array(6).fill('');
 		bcode = '';
@@ -135,46 +152,51 @@
 	}
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet retry(t: string)}<button type="button" class="linklike" onclick={retryKey}>{t}</button>{/snippet}
+{#snippet addrLede(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet addrHint(t: string)}<span class="mono">{t}</span>{/snippet}
+
 {#if view === 'switch'}
 	{@render top?.()}
 	<div class="card-head">
-		<p class="eyebrow">{eyebrow}</p>
-		<h1>Another way to confirm</h1>
-		<p>Any second factor on this account will do.</p>
+		<p class="eyebrow">{eyebrowText}</p>
+		<h1>{m.auth_2fa_switch_title()}</h1>
+		<p>{m.auth_2fa_switch_lede()}</p>
 	</div>
 	<div class="altlist">
-		{#each available.filter((m) => m !== method) as m (m)}
-			<button type="button" class="altopt" onclick={() => switchTo(m)}>
+		{#each available.filter((id) => id !== method) as id (id)}
+			<button type="button" class="altopt" onclick={() => switchTo(id)}>
 				<span class="alt-ic">
-					{#if m === 'app'}<Smartphone size={17} strokeWidth={1.75} />
-					{:else if m === 'key'}<Usb size={17} strokeWidth={1.75} />
+					{#if id === 'app'}<Smartphone size={17} strokeWidth={1.75} />
+					{:else if id === 'key'}<Usb size={17} strokeWidth={1.75} />
 					{:else}<LifeBuoy size={17} strokeWidth={1.75} />{/if}
 				</span>
-				<span class="alt-tx"><b>{META[m].label}</b><span>{META[m].pick}</span></span>
+				<span class="alt-tx"><b>{META[id].label()}</b><span>{META[id].pick()}</span></span>
 				<span class="alt-chev"><ChevronRight size={16} strokeWidth={1.75} /></span>
 			</button>
 		{/each}
 	</div>
 	<div class="actions" style="margin-top:18px">
 		<Button variant="ghost" size="lg" block onclick={() => (view = 'challenge')}>
-			<ArrowLeft size={17} strokeWidth={1.75} />Back to {META[method].label.toLowerCase()}
+			<ArrowLeft size={17} strokeWidth={1.75} />{META[method].back()}
 		</Button>
 	</div>
 {:else}
 	{@render top?.()}
 	<div class="card-head">
-		<p class="eyebrow">{eyebrow}</p>
-		<h1>Confirm it&rsquo;s you</h1>
+		<p class="eyebrow">{eyebrowText}</p>
+		<h1>{m.auth_2fa_title()}</h1>
 		{#if lede}
 			<p>{@render lede()}</p>
 		{:else}
-			<p><span class="mono" style="color:var(--ink-700)">{email}</span> asks for a second factor.</p>
+			<p><Rich text={m.auth_2fa_lede({ email })} tags={{ addr: addrLede }} /></p>
 		{/if}
 	</div>
 	<div class="form">
 		{#if method === 'app'}
 			<div class="field">
-				<div class="lab"><label for="otp-0">6-digit code</label></div>
+				<div class="lab"><label for="otp-0">{m.auth_2fa_code_label()}</label></div>
 				<div class="otpgrid" class:shake={showBad}>
 					{#each digits as d, i (i)}
 						<input
@@ -196,20 +218,20 @@
 				{#if showBad}
 					<span class="errtext">
 						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>That code didn&rsquo;t match. Codes rotate every 30 seconds &mdash; try the current one.</span>
+						<span>{m.auth_2fa_code_mismatch()}</span>
 					</span>
 				{:else}
 					<span class="hint">
-						Open your authenticator app and enter the code for <span class="mono">{email}</span>.
+						<Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr: addrHint }} />
 					</span>
 				{/if}
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={code.length < 6 || busy} onclick={() => verifyCode()}>
 					{#if busy}
-						<span class="spinner"></span>Checking&hellip;
+						<span class="spinner"></span>{m.auth_2fa_checking()}
 					{:else}
-						Verify code
+						{m.auth_2fa_verify_code()}
 					{/if}
 				</Button>
 			</div>
@@ -220,16 +242,16 @@
 			</div>
 			<div class="tfa-status">
 				{#if busy}
-					<span><b>Waiting for your authenticator.</b> Follow the browser prompt &mdash; touch your key, or use Touch ID or your screen lock.</span>
+					<span><Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} /></span>
 				{:else if showBad}
-					<span><b>That didn&rsquo;t verify.</b> <button type="button" class="linklike" onclick={retryKey}>Try again</button></span>
+					<span><Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} /></span>
 				{:else}
-					<span><b>Waiting for your security key or passkey.</b> No prompt? <button type="button" class="linklike" onclick={retryKey}>Try again</button></span>
+					<span><Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} /></span>
 				{/if}
 			</div>
 		{:else}
 			<div class="field">
-				<div class="lab"><label for="twofa-backup">Backup code</label></div>
+				<div class="lab"><label for="twofa-backup">{m.auth_2fa_method_backup()}</label></div>
 				<input
 					id="twofa-backup"
 					class="inp mono"
@@ -251,18 +273,18 @@
 				{#if showBad}
 					<span class="errtext">
 						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>That code isn&rsquo;t valid &mdash; it may have been used already. Each works once.</span>
+						<span>{m.auth_2fa_backup_invalid()}</span>
 					</span>
 				{:else}
-					<span class="hint">One of the codes you saved when you set up two-factor. Each works once.</span>
+					<span class="hint">{m.auth_2fa_backup_hint()}</span>
 				{/if}
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={bcode.trim().length < 8 || busy} onclick={verifyBackup}>
 					{#if busy}
-						<span class="spinner"></span>Checking&hellip;
+						<span class="spinner"></span>{m.auth_2fa_checking()}
 					{:else}
-						Use backup code
+						{m.auth_2fa_use_backup()}
 					{/if}
 				</Button>
 			</div>
@@ -270,11 +292,11 @@
 	</div>
 	<p class="switch">
 		{#if available.length > 1}
-			<button type="button" class="linklike" onclick={() => (view = 'switch')}>Try another way</button>
+			<button type="button" class="linklike" onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
 			<span>&nbsp;&middot;&nbsp;</span>
 		{/if}
 		<button type="button" class="linklike" onclick={onBack}>
-			{backLabel}
+			{backText}
 		</button>
 	</p>
 {/if}

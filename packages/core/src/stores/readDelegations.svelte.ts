@@ -11,6 +11,7 @@ import {
 	type ReadDelegation,
 	type RotateReadDelegationRequest
 } from '$core/api/readDelegations';
+import { m } from '$paraglide/messages.js';
 
 class ReadDelegationsStore {
 	items = $state<Map<string, ReadDelegation[]>>(new Map());
@@ -43,7 +44,7 @@ class ReadDelegationsStore {
 			this.put(addressId, readDelegations);
 		} catch (err) {
 			if (this.#accountId !== acct) return;
-			this.error = err instanceof Error ? err.message : 'Could not load forwarding.';
+			this.error = err instanceof Error ? err.message : m.store_forwarding_load_failed();
 		} finally {
 			this.#inflight.delete(addressId);
 			if (this.#accountId === acct) this.loading = false;

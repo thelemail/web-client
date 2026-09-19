@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import { productLaunched } from '$core/products';
 	import User from '@lucide/svelte/icons/user';
@@ -224,8 +225,8 @@
 		{#if open && view === 'switch'}
 			<div class="menu">
 				<div class="swh">
-					<button class="swh-bk" onclick={backToMain} title="Back"><ArrowLeft size={16} /></button>
-					<span class="swh-t">Switch account</span>
+					<button class="swh-bk" onclick={backToMain} title={m.common_back()}><ArrowLeft size={16} /></button>
+					<span class="swh-t">{m.mail_acct_switch_title()}</span>
 				</div>
 				<div class="acct-list" bind:this={listRef}>
 					{#each switcherAccounts as a (a.id)}
@@ -250,7 +251,7 @@
 								<span class="ar-org">{a.org ? `${a.org} · ${a.domain}` : a.domain}</span>
 							</span>
 							{#if isCur}
-								<span class="ar-cur"><Check size={13} />Current</span>
+								<span class="ar-cur"><Check size={13} />{m.mail_acct_current()}</span>
 							{:else}
 								{#if unreadCountFor(a.id) > 0}
 									<span class="ar-unread"
@@ -265,23 +266,23 @@
 				<div class="msep"></div>
 				{#if switcherAccounts.length > 1}
 					<a class="mitem" href="/" onclick={manageAccounts}
-						><UsersRound size={17} />Manage accounts</a
+						><UsersRound size={17} />{m.mail_acct_manage()}</a
 					>
 				{/if}
 				<a class="mitem" href="/login" onclick={signInAnother}
-					><LogIn size={17} />Sign in to another account</a
+					><LogIn size={17} />{m.mail_acct_sign_in_another()}</a
 				>
 				<a class="mitem" href="/register" onclick={createNewAccount}
-					><UserPlus size={17} />Create a new account</a
+					><UserPlus size={17} />{m.mail_acct_create()}</a
 				>
 				{#if switcherAccounts.length > 0}
 					<div class="msep"></div>
 					<a class="mitem danger" href="/login" onclick={signOutAll}
-						><LogOut size={17} />Sign out of all accounts</a
+						><LogOut size={17} />{m.mail_acct_sign_out_all()}</a
 					>
 				{/if}
 				<div class="sw-note">
-					Accounts stay signed in on this device. Manage sessions under Security.
+					{m.mail_acct_switch_note()}
 				</div>
 			</div>
 		{:else if open}
@@ -295,36 +296,36 @@
 				</div>
 				<div class="msep"></div>
 				<button class="mitem" onclick={openSwitchView}>
-					<ArrowLeftRight size={17} />Switch account
+					<ArrowLeftRight size={17} />{m.mail_acct_switch_title()}
 					<span class="mi-chev"><ChevronRight size={15} /></span>
 				</button>
 				<div class="msep"></div>
 				{#if productLaunched('calendar')}
 					<button class="mitem" onclick={openCalendar}>
-						<CalendarDays size={17} />Go to Calendar
+						<CalendarDays size={17} />{m.mail_acct_go_calendar()}
 					</button>
 					<div class="msep"></div>
 				{/if}
 				<button class="mitem" onclick={() => openSettingsSection('profile')}
-					><User size={17} />Account &amp; profile</button
+					><User size={17} />{m.mail_acct_profile()}</button
 				>
 				<button class="mitem" onclick={() => openSettingsSection('security')}
-					><ShieldCheck size={17} />Security{#if twofactor.status}<span class="rt"
-							>{twofactor.enabled ? '2FA on' : '2FA off'}</span
+					><ShieldCheck size={17} />{m.mail_acct_security()}{#if twofactor.status}<span class="rt"
+							>{twofactor.enabled ? m.mail_acct_2fa_on() : m.mail_acct_2fa_off()}</span
 						>{/if}</button
 				>
 				<button class="mitem" onclick={() => openSettingsSection('addresses')}
-					><AtSign size={17} />Aliases &amp; identities</button
+					><AtSign size={17} />{m.mail_acct_aliases()}</button
 				>
 				<button class="mitem" onclick={openSettings}
-					><Settings size={17} />Settings</button
+					><Settings size={17} />{m.mail_acct_settings()}</button
 				>
 				<div class="msep"></div>
 				<button class="mitem" onclick={() => theme.cycle()}>
-					<ThemeIcon size={17} />Appearance<span class="rt">{theme.label}</span>
+					<ThemeIcon size={17} />{m.mail_acct_appearance()}<span class="rt">{theme.label}</span>
 				</button>
 				<div class="msep"></div>
-				<button class="mitem danger" onclick={signOut}><LogOut size={17} />Sign out</button>
+				<button class="mitem danger" onclick={signOut}><LogOut size={17} />{m.mail_acct_sign_out()}</button>
 			</div>
 	{/if}
 </div>
@@ -338,7 +339,7 @@
 			{:else}
 				<span class="sw-spin"></span>
 			{/if}
-			<div class="sw-t">{switchDone ? 'Signed in' : 'Switching account'}</div>
+			<div class="sw-t">{switchDone ? m.mail_acct_signed_in() : m.mail_acct_switching()}</div>
 			<div class="sw-e">{switching.email}</div>
 			<div class="sw-d">{switching.org} · {switching.domain}</div>
 		</div>

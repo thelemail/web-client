@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { onDestroy, untrack } from 'svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
@@ -22,11 +23,11 @@
 	let {
 		html = $bindable(''),
 		text = $bindable(''),
-		placeholder = 'Write your message…',
+		placeholder = m.mail_editor_placeholder(),
 		disabled = false,
 		autofocus = false,
 		editor = $bindable<Editor | null>(null),
-		ariaLabel = 'Message body',
+		ariaLabel = m.mail_editor_aria(),
 		class: cls = 'cbody'
 	}: Props = $props();
 

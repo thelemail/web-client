@@ -50,7 +50,7 @@ vi.mock('$core/api/accounts', async () => {
 	};
 });
 
-import { dispatchSend, MIXED_SCHEDULE_MESSAGE } from './sendDispatch';
+import { dispatchSend, mixedScheduleMessage } from './sendDispatch';
 import { SendError } from './send';
 
 function party(address: string) {
@@ -77,7 +77,7 @@ describe('dispatchSend scheduling', () => {
 
 		expect(err).toBeInstanceOf(SendError);
 		expect((err as SendError).code).toBe('schedule_unsupported');
-		expect((err as SendError).message).toBe(MIXED_SCHEDULE_MESSAGE);
+		expect((err as SendError).message).toBe(mixedScheduleMessage());
 		expect(calls.internal).toHaveLength(0);
 		expect(calls.external).toHaveLength(0);
 	});

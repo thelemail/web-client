@@ -3,6 +3,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
 	import { ScrollArea } from '$core/components/ui/scroll-area';
+	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
 	import CapacityBar from './CapacityBar.svelte';
 	import TaskRow from './TaskRow.svelte';
@@ -11,12 +12,12 @@
 <div class="tkpane">
 	<div class="tkpane-h">
 		<ListTodo size={17} color="var(--brass-600)" />
-		<span class="tt">Tasks</span>
+		<span class="tt">{m.cal_tasks_title()}</span>
 		<span class="cnt">{cal.taskCount}</span>
 		<button
 			type="button"
 			class="icon-btn"
-			aria-label="New task"
+			aria-label={m.cal_tasks_new_aria()}
 			onclick={() => cal.openEditor({ mode: 'create', kind: 'task' })}
 		>
 			<Plus size={16} />
@@ -24,7 +25,7 @@
 		<button
 			type="button"
 			class="icon-btn tk-x"
-			aria-label="Close tasks"
+			aria-label={m.cal_tasks_close_aria()}
 			onclick={() => (cal.tasksOpen = false)}
 		>
 			<X size={16} />
@@ -34,7 +35,7 @@
 		<div class="tkpane-scroll">
 			<CapacityBar />
 			{#if !cal.taskGroups.length}
-				<div class="tkgroup">No open tasks</div>
+				<div class="tkgroup">{m.cal_tasks_empty()}</div>
 			{/if}
 			{#each cal.taskGroups as group (group.name)}
 				<div class="tkgroup">{group.name}</div>

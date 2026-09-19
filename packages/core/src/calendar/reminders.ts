@@ -1,4 +1,5 @@
 import { electLeader, type LeaderHandle } from '$core/realtime/leader';
+import { m } from '$paraglide/messages.js';
 import { longWhen } from './format';
 import { calendarStore } from './store.svelte';
 
@@ -68,8 +69,10 @@ export function startReminders(fallback: ReminderSink): () => void {
 				if (fired.has(key) || snoozed.includes(key)) continue;
 				fired.add(key);
 				saveFired(fired);
-				const title = occ.item.kind === 'hold' ? 'Busy' : occ.title || '(untitled)';
-				const body = occ.location ? `${longWhen(occ)} · ${occ.location}` : longWhen(occ);
+				const title = occ.item.kind === 'hold' ? m.cal_busy() : occ.title || m.cal_untitled();
+				const body = occ.location
+					? m.cal_reminder_body({ when: longWhen(occ), location: occ.location })
+					: longWhen(occ);
 				const notice: ReminderNotice = { key, title, body, at: occ.start };
 				if (reminderPermission() === 'granted' && document.visibilityState !== 'visible') {
 					try {

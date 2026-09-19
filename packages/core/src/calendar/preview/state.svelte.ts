@@ -1,3 +1,4 @@
+import { m } from '$paraglide/messages.js';
 import { cal as live } from '../state.svelte';
 import { ANSWERS, BOOKING_DAYS, COUNT_WORDS, PEOPLE, SLOTS } from './fixtures';
 
@@ -32,7 +33,7 @@ class PreviewState {
 	}
 
 	unbuilt() {
-		live.notify('Not built in this preview');
+		live.notify(m.cal_preview_unbuilt());
 	}
 
 	toggleMailProposal(key: string) {
@@ -52,7 +53,7 @@ class PreviewState {
 
 	confirmMail() {
 		if (this.mailOwnerMissing) {
-			this.notify('Choose who owns the consent form first');
+			this.notify(m.cal_preview_choose_owner());
 			return;
 		}
 		const n = this.mailSelectedCount;
@@ -60,7 +61,7 @@ class PreviewState {
 		live.dialog = null;
 		this.mailDone = true;
 		live.goTo('week');
-		this.notify(`${n} commitments added · Marie owns the consent form`);
+		this.notify(m.cal_preview_added({ count: n }));
 	}
 
 	dropSlot(index: number) {
@@ -70,7 +71,7 @@ class PreviewState {
 	addSlot() {
 		const next = [0, 1, 2, 3].find((i) => !this.offeredSlots.includes(i));
 		if (next === undefined) {
-			this.notify('No further free slots this week');
+			this.notify(m.cal_preview_no_slots());
 			return;
 		}
 		this.offeredSlots = [...this.offeredSlots, next].sort();
@@ -78,12 +79,12 @@ class PreviewState {
 
 	get slotDisclosure() {
 		const n = this.offeredSlots.length;
-		return `${count(COUNT_WORDS, n)} candidate time${n === 1 ? '' : 's'}, your name, and the sending identity.`;
+		return m.cal_preview_slot_disclosure({ n, count: count(COUNT_WORDS, n) });
 	}
 
 	get whyHeading() {
 		const n = this.offeredSlots.length;
-		return `Why ${count(COUNT_WORDS, n)} time${n === 1 ? '' : 's'}`;
+		return m.cal_preview_why_heading({ n, count: count(COUNT_WORDS, n) });
 	}
 
 	get hasTightSlot() {
@@ -122,20 +123,18 @@ class PreviewState {
 	get pollNote() {
 		const both = this.offeredSlots.filter((i) => ANSWERS.panurge[i] && ANSWERS.alex[i]);
 		if (!both.length) {
-			return 'No offered time works for both. Thelemail will suggest more rather than pick one.';
+			return m.cal_preview_poll_none();
 		}
 		const when = SLOTS[both[0]].when;
 		const label = when.replace(/,.*/, '') + when.slice(when.indexOf(','));
-		const lead =
-			both.length === 1
-				? `${label} is the only time both can make.`
-				: `${both.length} of the offered times work for both.`;
-		return `${lead} Thelemail will not book it for you — it will offer to.`;
+		return both.length === 1
+			? m.cal_preview_poll_only({ label })
+			: m.cal_preview_poll_many({ count: both.length });
 	}
 
 	confirmOffer() {
 		live.dialog = null;
-		this.notify('Times inserted · a Proposal is holding them for you');
+		this.notify(m.cal_preview_times_inserted());
 	}
 
 	toggleMirror(key: 'work' | 'school' | 'gcal') {
@@ -144,8 +143,8 @@ class PreviewState {
 		if (key === 'gcal') {
 			this.notify(
 				was
-					? 'Mirror off · Google keeps nothing new'
-					: 'Busy windows will leave Thelemail for Google'
+					? m.cal_preview_mirror_off()
+					: m.cal_preview_mirror_on()
 			);
 		}
 	}
@@ -155,7 +154,7 @@ class PreviewState {
 		this.bookingRequest = !was;
 		this.bookingSlot = null;
 		this.notify(
-			was ? 'Visitors book directly again' : 'Visitors now request · each becomes a Proposal'
+			was ? m.cal_preview_book_direct() : m.cal_preview_book_request()
 		);
 	}
 
@@ -165,20 +164,20 @@ class PreviewState {
 	}
 
 	get bookingCta() {
-		if (this.bookingSlot === null) return 'Pick a time';
+		if (this.bookingSlot === null) return m.cal_preview_pick_time();
 		const slot = BOOKING_DAYS[this.bookingDay].slots[this.bookingSlot];
-		return this.bookingRequest ? `Request ${slot}` : `Confirm ${slot}`;
+		return this.bookingRequest ? m.cal_preview_request_slot({ slot }) : m.cal_preview_confirm_slot({ slot });
 	}
 
 	confirmBooking() {
 		if (this.bookingSlot === null) {
-			this.notify('Pick a time first');
+			this.notify(m.cal_preview_pick_time_first());
 			return;
 		}
 		this.notify(
 			this.bookingRequest
-				? 'Request sent · a Proposal is waiting on bookings@thelema.co'
-				: 'Booked · invitation sent as bookings@thelema.co'
+				? m.cal_preview_request_sent({ email: 'bookings@thelema.co' })
+				: m.cal_preview_booked({ email: 'bookings@thelema.co' })
 		);
 	}
 }

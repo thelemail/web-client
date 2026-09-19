@@ -24,6 +24,8 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -73,7 +75,12 @@
 		quiz.length > 0 && quiz.every((q, j) => answers[j].trim().toLowerCase() === q.word)
 	);
 
-	const steps = ['Why it matters', 'Your phrase', 'Confirm', 'Done'];
+	const steps = $derived([
+		m.settings_ceremony_recovery_step_why(),
+		m.settings_ceremony_recovery_step_phrase(),
+		m.settings_ceremony_recovery_step_confirm(),
+		m.settings_ceremony_recovery_step_done()
+	]);
 
 	function pickQuizIndices(): number[] {
 		const pool = Array.from({ length: 12 }, (_, i) => i);
@@ -90,7 +97,7 @@
 		const { modulus } = await getModulus();
 		const res = await keystore.prepareRecoverySetup({ accountId, modulus });
 		if (!res.ok) {
-			generateError = 'Your mailbox is locked on this device. Sign in again, then retry.';
+			generateError = m.settings_ceremony_recovery_err_locked();
 			return false;
 		}
 		setup = {
@@ -107,7 +114,7 @@
 	async function generateOpaque(accountId: string): Promise<boolean> {
 		const start = await keystore.opaqueRecoverySetupStart({ accountId });
 		if (!start.ok) {
-			generateError = 'Your mailbox is locked on this device. Sign in again, then retry.';
+			generateError = m.settings_ceremony_recovery_err_locked();
 			return false;
 		}
 		const init = await recoveryOpaqueRegistrationInit(
@@ -120,7 +127,7 @@
 			registrationResponse: init.registrationResponse
 		});
 		if (!finish.ok) {
-			generateError = 'Could not generate a phrase. Check your connection and retry.';
+			generateError = m.settings_ceremony_recovery_err_generate();
 			return false;
 		}
 		setup = {
@@ -152,7 +159,7 @@
 			step = 1;
 		} catch (err) {
 			console.warn('recovery: generate failed', err);
-			generateError = 'Could not generate a phrase. Check your connection and retry.';
+			generateError = m.settings_ceremony_recovery_err_generate();
 		} finally {
 			generating = false;
 		}
@@ -217,7 +224,7 @@
 			step = 3;
 		} catch (err) {
 			console.warn('recovery: setup failed', err);
-			submitError = 'Could not save your recovery setup. Check your connection and retry.';
+			submitError = m.settings_ceremony_recovery_err_save();
 		} finally {
 			submitting = false;
 		}
@@ -232,8 +239,8 @@
 
 <CeremonyShell
 	icon={LifeBuoy}
-	eyebrow="Account recovery · ceremony"
-	title="Set up account recovery"
+	eyebrow={m.settings_ceremony_recovery_eyebrow()}
+	title={m.settings_ceremony_recovery_title()}
 	{steps}
 	{step}
 	{onClose}
@@ -242,37 +249,27 @@
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
-					Thelemail is <b>zero-access encrypted</b>. Your password unlocks your private key — and
-					we never hold a copy. That privacy has a cost: if you forget your password, <b>we cannot
-						get you back in</b>.
+					<Rich text={m.settings_ceremony_recovery_lede_zero_access()} tags={{ b: bold }} />
 				</p>
-				<p>
-					A recovery phrase is your own spare key. Twelve words, generated on this device. Anyone
-					with them can unlock your archive, so they’re yours alone to keep.
-				</p>
+				<p>{m.settings_ceremony_recovery_lede_spare_key()}</p>
 				{#if regenerating}
 					<p>
-						You already have a phrase. Generating a new one <b>retires the old phrase
-							immediately</b> — it won’t open this account anymore.
+						<Rich text={m.settings_ceremony_recovery_lede_regenerate()} tags={{ b: bold }} />
 					</p>
 				{/if}
 			</div>
 			<ul class="cer-points">
-				<li><ShieldCheck size={16} /><span>Stored offline by you — never uploaded to Thelemail.</span></li>
+				<li><ShieldCheck size={16} /><span>{m.settings_ceremony_recovery_point_offline()}</span></li>
 				<li>
-					<TriangleAlert size={16} /><span>Lose both your password and this phrase, and the mail
-						is gone. Not locked — gone.</span>
+					<TriangleAlert size={16} /><span>{m.settings_ceremony_recovery_point_gone()}</span>
 				</li>
 				<li>
-					<Lock size={16} /><span>Treat it like the deed to the archive. A safe, a password
-						manager, paper in a drawer.</span>
+					<Lock size={16} /><span>{m.settings_ceremony_recovery_point_deed()}</span>
 				</li>
 			</ul>
 			<label class="cer-ack">
 				<input type="checkbox" bind:checked={ack} />
-				<span>
-					I understand that without this phrase, a forgotten password means permanent data loss.
-				</span>
+				<span>{m.settings_ceremony_recovery_ack()}</span>
 			</label>
 			{#if generateError}
 				<span class="errtext"><CircleAlert size={13} /><span>{generateError}</span></span>
@@ -281,8 +278,7 @@
 	{:else if step === 1 && setup}
 		<div class="cer-pane">
 			<div class="cer-instruct">
-				Write these twelve words down <b>in order</b>, somewhere only you can reach. We’ll ask you
-				to confirm a few on the next step.
+				<Rich text={m.settings_ceremony_recovery_instruct_write()} tags={{ b: bold }} />
 			</div>
 			<div class="phrase-grid" class:shown={revealed}>
 				{#each setup.phrase as w, i (i)}
@@ -293,31 +289,31 @@
 				{/each}
 				{#if !revealed}
 					<button type="button" class="phrase-cover" onclick={() => (revealed = true)}>
-						<Eye size={18} />Reveal phrase
-						<span class="pc-sub">Make sure no one is watching your screen</span>
+						<Eye size={18} />{m.settings_ceremony_recovery_reveal()}
+						<span class="pc-sub">{m.settings_ceremony_recovery_reveal_sub()}</span>
 					</button>
 				{/if}
 			</div>
 			<div class="phrase-acts">
 				<Button variant="secondary" size="sm" disabled={!revealed} onclick={copyPhrase}>
-					<Copy size={14} />Copy
+					<Copy size={14} />{m.common_copy()}
 				</Button>
 				<Button variant="secondary" size="sm" disabled={!revealed} onclick={downloadKit}>
-					<Download size={14} />Download recovery file
+					<Download size={14} />{m.settings_ceremony_recovery_download()}
 				</Button>
-				{#if saved}<span class="phrase-saved"><Check size={13} />Saved</span>{/if}
+				{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_ceremony_recovery_saved()}</span>{/if}
 			</div>
 		</div>
 	{:else if step === 2}
 		<div class="cer-pane">
-			<div class="cer-instruct">Confirm you’ve stored the phrase by filling in these words.</div>
+			<div class="cer-instruct">{m.settings_ceremony_recovery_instruct_confirm()}</div>
 			<div class="quiz">
 				{#each quiz as q, j (q.i)}
 					{@const val = answers[j]}
 					{@const ok = val.trim().toLowerCase() === q.word}
 					{@const bad = val.length > 0 && !ok}
 					<div class="quiz-row" class:ok class:bad>
-						<span class="quiz-n">Word {q.i + 1}</span>
+						<span class="quiz-n">{m.settings_ceremony_recovery_word_n({ n: q.i + 1 })}</span>
 						<input
 							class="tin mono"
 							value={val}
@@ -335,7 +331,7 @@
 				{/each}
 			</div>
 			<button type="button" class="quiz-back" onclick={() => (step = 1)}>
-				<Eye size={14} />Show me the phrase again
+				<Eye size={14} />{m.settings_ceremony_recovery_show_again()}
 			</button>
 			{#if submitError}
 				<span class="errtext"><CircleAlert size={13} /><span>{submitError}</span></span>
@@ -344,45 +340,47 @@
 	{:else}
 		<DoneScreen
 			icon={ShieldCheck}
-			title="Recovery is set up"
-			desc="Your spare key is yours alone. Keep the twelve words offline and safe — you won’t be shown them again."
+			title={m.settings_ceremony_recovery_done_title()}
+			desc={m.settings_ceremony_recovery_done_desc()}
 		>
 			<div class="cer-reminder">
-				<Lock size={15} />Stored offline · never uploaded to Thelemail
+				<Lock size={15} />{m.settings_ceremony_recovery_done_reminder()}
 			</div>
 		</DoneScreen>
 	{/if}
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ack || generating} onclick={generate}>
 				{#if generating}
-					Generating…
+					{m.settings_ceremony_recovery_generating()}
 				{:else}
-					Generate my phrase<ArrowRight size={15} />
+					{m.settings_ceremony_recovery_generate()}<ArrowRight size={15} />
 				{/if}
 			</Button>
 		{:else if step === 1}
 			<Button variant="ghost" onclick={() => (step = 0)}>
-				<ArrowLeft size={15} />Back
+				<ArrowLeft size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!revealed} onclick={() => (step = 2)}>
-				I’ve written it down<ArrowRight size={15} />
+				{m.settings_ceremony_recovery_written_down()}<ArrowRight size={15} />
 			</Button>
 		{:else if step === 2}
 			<Button variant="ghost" onclick={() => (step = 1)}>
-				<ArrowLeft size={15} />Back
+				<ArrowLeft size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!allCorrect || submitting} onclick={confirmAndStore}>
 				{#if submitting}
-					Saving…
+					{m.settings_ceremony_recovery_saving()}
 				{:else}
-					Confirm &amp; finish<Check size={15} />
+					{m.settings_ceremony_recovery_confirm_finish()}<Check size={15} />
 				{/if}
 			</Button>
 		{:else}
-			<Button variant="primary" onclick={finish}>Done</Button>
+			<Button variant="primary" onclick={finish}>{m.common_done()}</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}

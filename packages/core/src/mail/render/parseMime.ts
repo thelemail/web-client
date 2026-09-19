@@ -1,6 +1,7 @@
 import { enableIconvFallback, mayNeedIconv } from './textDecoderPolyfill';
 import PostalMime, { type Attachment } from 'postal-mime';
 import { parseIcs, type CalendarEvent } from './icalParse';
+import { m } from '$paraglide/messages.js';
 
 function sniffNeedsIconv(raw: string): boolean {
 	const head = raw.slice(0, 8192);
@@ -62,7 +63,7 @@ export async function parseMimeBody(raw: string): Promise<ParsedMime> {
 	try {
 		email = await PostalMime.parse(raw);
 	} catch (e) {
-		throw new ParseError('Failed to parse MIME body', e);
+		throw new ParseError(m.mailbox_parse_mime_failed(), e);
 	}
 
 	const inlineImages: Record<string, InlineImage> = {};

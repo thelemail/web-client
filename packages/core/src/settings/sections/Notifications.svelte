@@ -16,6 +16,7 @@
 		requestReminderPermission,
 		type ReminderPermission
 	} from '$core/calendar/reminders';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		s: SettingsState;
@@ -26,30 +27,34 @@
 
 	const SYSTEM_SETTINGS_URL = 'x-apple.systempreferences:com.apple.Notifications-Settings.extension';
 
-	const REMINDER_CHOICES: [number | null, string][] = [
-		[null, 'No reminder'],
-		[0, 'At the time'],
-		[5, '5 minutes before'],
-		[10, '10 minutes before'],
-		[15, '15 minutes before'],
-		[30, '30 minutes before'],
-		[60, '1 hour before'],
-		[120, '2 hours before'],
-		[1440, '1 day before']
-	];
+	const REMINDER_CHOICES: (number | null)[] = [null, 0, 5, 10, 15, 30, 60, 120, 1440];
 
-	const reminderLabels = REMINDER_CHOICES.map(([, label]) => label);
+	function reminderLabel(minutes: number | null): string {
+		if (minutes === null) return m.settings_notify_reminder_none();
+		if (minutes === 0) return m.settings_notify_reminder_at_time();
+		if (minutes % 1440 === 0) return m.settings_notify_reminder_days({ count: minutes / 1440 });
+		if (minutes % 60 === 0) return m.settings_notify_reminder_hours({ count: minutes / 60 });
+		return m.settings_notify_reminder_minutes({ count: minutes });
+	}
 
-	const reminderDefault = $derived(
-		REMINDER_CHOICES.find(([m]) => m === accountSettings.calendar.defaultReminderMinutes)?.[1] ??
-			REMINDER_CHOICES[0][1]
+	const reminderKey = (minutes: number | null) => (minutes === null ? 'none' : String(minutes));
+
+	const reminderOptions = $derived(
+		REMINDER_CHOICES.map((minutes) => ({ v: reminderKey(minutes), l: reminderLabel(minutes) }))
 	);
 
-	function setReminderDefault(label: string) {
-		const choice = REMINDER_CHOICES.find(([, l]) => l === label);
-		if (!choice) return;
+	const reminderDefault = $derived(
+		reminderKey(
+			REMINDER_CHOICES.find((minutes) => minutes === accountSettings.calendar.defaultReminderMinutes) ??
+				REMINDER_CHOICES[0]
+		)
+	);
+
+	function setReminderDefault(key: string) {
+		const choice = REMINDER_CHOICES.find((minutes) => reminderKey(minutes) === key);
+		if (choice === undefined) return;
 		void accountSettings
-			.persistCalendar({ ...accountSettings.calendar, defaultReminderMinutes: choice[0] })
+			.persistCalendar({ ...accountSettings.calendar, defaultReminderMinutes: choice })
 			.catch(() => {});
 	}
 
@@ -77,23 +82,23 @@
 	});
 
 	const summary = $derived.by(() => {
-		if (!status) return 'Checking with macOS.';
-		if (!status.supported) return 'Not available on this platform.';
-		if (!status.bundled) return 'Not available in development builds.';
+		if (!status) return m.settings_notify_checking();
+		if (!status.supported) return m.settings_notify_unsupported();
+		if (!status.bundled) return m.settings_notify_unbundled();
 		if (status.translocated) {
-			return 'macOS is running Thelemail from a temporary location, so it cannot register for notifications. Move the app to the Applications folder and open it from there.';
+			return m.settings_notify_translocated();
 		}
 		switch (status.authorization) {
 			case 'authorized':
 			case 'provisional':
 			case 'ephemeral':
-				return 'Allowed. New mail shows a banner and plays a sound while Thelemail is running.';
+				return m.settings_notify_authorized();
 			case 'denied':
-				return 'Turned off for Thelemail in System Settings.';
+				return m.settings_notify_denied();
 			case 'notDetermined':
-				return 'macOS has not asked for permission yet. The prompt appears the next time a message arrives.';
+				return m.settings_notify_not_determined();
 			default:
-				return 'macOS did not report a state.';
+				return m.settings_notify_unknown();
 		}
 	});
 
@@ -110,13 +115,13 @@
 	const reminderSummary = $derived.by(() => {
 		switch (reminders) {
 			case 'granted':
-				return 'Allowed. Reminders you set on events fire as browser notifications while a Thelemail tab is open, and as an in-app notice otherwise.';
+				return m.settings_notify_reminders_granted();
 			case 'denied':
-				return 'Blocked for this site in the browser. Reminders still show inside the calendar while it is open.';
+				return m.settings_notify_reminders_denied();
 			case 'unsupported':
-				return 'This browser does not offer notifications. Reminders show inside the calendar while it is open.';
+				return m.settings_notify_reminders_unsupported();
 			default:
-				return 'Not asked yet. Reminders show inside the calendar until you allow browser notifications.';
+				return m.settings_notify_reminders_default();
 		}
 	});
 
@@ -125,19 +130,19 @@
 	);
 </script>
 
-<SecHead desc="What reaches you while the app is in the background." />
+<SecHead desc={m.settings_notify_desc()} />
 
 {#if platform.notifications}
 	<div class="scard">
-		<CardHead title="New mail" />
-		<Row t="macOS notifications" descSnippet={desc}>
+		<CardHead title={m.settings_notify_new_mail()} />
+		<Row t={m.settings_notify_macos()} descSnippet={desc}>
 			<div class="ntf-actions">
 				<Button variant="ghost" size="sm" onclick={check} disabled={checking}>
-					<RefreshCw />Check again
+					<RefreshCw />{m.settings_notify_check_again()}
 				</Button>
 				{#if canOpenSystemSettings}
 					<Button variant="secondary" size="sm" onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}>
-						<ExternalLink />Open System Settings
+						<ExternalLink />{m.settings_notify_open_system_settings()}
 					</Button>
 				{/if}
 			</div>
@@ -145,30 +150,30 @@
 	</div>
 {:else}
 	<div class="scard">
-		<CardHead title="New mail" />
+		<CardHead title={m.settings_notify_new_mail()} />
 		<Row
-			t="Desktop notifications"
-			d="Available in the Thelemail desktop app, which watches for new mail while it runs in the background."
+			t={m.settings_notify_desktop()}
+			d={m.settings_notify_desktop_desc()}
 		/>
 	</div>
 {/if}
 
 <div class="scard">
-	<CardHead title="Calendar reminders" />
-	<Row t="Reminders in this browser" d={reminderSummary}>
+	<CardHead title={m.settings_notify_reminders_title()} />
+	<Row t={m.settings_notify_reminders_browser()} d={reminderSummary}>
 		{#if reminders === 'default'}
-			<Button variant="secondary" size="sm" onclick={enableReminders}>Allow reminders</Button>
+			<Button variant="secondary" size="sm" onclick={enableReminders}>{m.settings_notify_reminders_allow()}</Button>
 		{/if}
 	</Row>
 	<Row
-		t="Remind me by default"
-		d="Applied to new events and to invitations that arrive without a reminder of their own."
+		t={m.settings_notify_reminder_default()}
+		d={m.settings_notify_reminder_default_desc()}
 	>
 		<Select
 			value={reminderDefault}
-			options={reminderLabels}
+			options={reminderOptions}
 			onChange={setReminderDefault}
-			ariaLabel="Default reminder"
+			ariaLabel={m.settings_notify_reminder_default_aria()}
 		/>
 	</Row>
 </div>

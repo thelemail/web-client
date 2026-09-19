@@ -24,6 +24,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 import { dispatchSend } from '$core/mail/sendDispatch';
+import { m } from '$paraglide/messages.js';
 import { onCalendarMessage, postCalendarMessage } from './channel';
 import {
 	idbCalendarDb,
@@ -291,7 +292,7 @@ export class CalendarStore {
 			this.start();
 			await this.#ensurePersonal(accountId);
 		} catch (err) {
-			this.loadError = err instanceof Error ? err.message : 'Could not load the calendar';
+			this.loadError = err instanceof Error ? err.message : m.cal_store_load_failed();
 			this.#noteFailure(err);
 		} finally {
 			if (this.#accountId === accountId) this.loading = false;
@@ -460,7 +461,7 @@ export class CalendarStore {
 			id: row.id,
 			row,
 			meta,
-			name: meta?.name ?? (row.kind === 'role' ? 'Role calendar' : 'Calendar'),
+			name: meta?.name ?? (row.kind === 'role' ? m.cal_store_role_calendar() : m.cal_store_calendar()),
 			color: meta?.color ?? '#2E5440',
 			kind: row.kind,
 			role,
@@ -488,7 +489,7 @@ export class CalendarStore {
 				id: row.id,
 				kind: 'event',
 				calendarId: row.calendarId,
-				title: 'Cannot open this item on this device',
+				title: m.cal_store_unreadable_item(),
 				privacy: row.privacy,
 				uid: row.id,
 				sequence: 0,
@@ -587,7 +588,7 @@ export class CalendarStore {
 		item: CalendarItem
 	): Promise<{ sealed: string; key: SealKey }> {
 		const cal = this.calendar(item.calendarId);
-		if (!cal) throw new SealError('no_key', 'Unknown calendar');
+		if (!cal) throw new SealError('no_key', m.cal_store_unknown_calendar());
 		const key = await keyForCalendar(accountId, cal.row);
 		const sealed = await sealText(accountId, key, serializeItem(item));
 		return { sealed, key };
@@ -625,7 +626,7 @@ export class CalendarStore {
 
 	async saveItem(draft: CalendarItem, opts: SaveOptions = {}): Promise<LoadedItem> {
 		const accountId = this.#accountId;
-		if (!accountId) throw new Error('No account');
+		if (!accountId) throw new Error(m.cal_store_no_account());
 		const existing = this.items.get(draft.id);
 		const now = new Date().toISOString();
 		const item: CalendarItem = {
@@ -925,7 +926,7 @@ export class CalendarStore {
 		const calendarId = entry.item.calendarId;
 		const { revisions } = await listCalendarItemRevisions(calendarId, itemId);
 		const target = revisions.find((r) => r.rev === rev);
-		if (!target || target.deleted) throw new Error('That revision cannot be restored');
+		if (!target || target.deleted) throw new Error(m.cal_store_revision_unrestorable());
 		const restored = parseItem(await openText(accountId, target.sealed, target.keyFingerprint));
 		const windows = busyWindows(restored);
 		const body: RestoreCalendarItemRevisionRequest = {

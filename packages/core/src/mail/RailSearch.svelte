@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 	import { page } from '$app/state';
@@ -43,10 +44,10 @@
 				oninput={(e) => mailSearch.setText((e.currentTarget as HTMLInputElement).value)}
 				onfocus={() => (focused = true)}
 				onblur={() => (focused = false)}
-				placeholder="Search mail"
+				placeholder={m.mail_search_placeholder()}
 			/>
 			{#if mailSearch.text}
-				<button class="clr" onclick={() => mailSearch.clear()} title="Clear"
+				<button class="clr" onclick={() => mailSearch.clear()} title={m.mail_search_clear()}
 					><X size={14} /></button
 				>
 			{:else}

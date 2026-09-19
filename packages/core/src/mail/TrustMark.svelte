@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import BadgeCheck from '@lucide/svelte/icons/badge-check';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
@@ -153,7 +154,7 @@
 		{/if}
 		{#if trust.action === 'confirm_key_change' && onConfirmKeyChange}
 			<button class="tpop-act" onclick={confirm} disabled={busy}>
-				{busy ? 'Confirming…' : 'Trust the new key'}
+				{busy ? m.mail_trust_confirming() : m.mail_trust_accept_key()}
 			</button>
 		{/if}
 	</div>

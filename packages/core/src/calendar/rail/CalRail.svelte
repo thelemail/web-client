@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { m } from '$paraglide/messages.js';
 	import CalendarGroup from './CalendarGroup.svelte';
 	import CreateMenu from './CreateMenu.svelte';
 	import MiniMonth from './MiniMonth.svelte';
@@ -12,19 +13,19 @@
 <div class="rail">
 	<a class="brand" href="/u/{slot}/mail/inbox">
 		<span class="wm">Thelemail</span>
-		<span class="wm-sub">Calendar</span>
+		<span class="wm-sub">{m.cal_rail_subtitle()}</span>
 	</a>
 
 	<CreateMenu />
 
 	<div class="rail-scroll">
 		<MiniMonth />
-		<CalendarGroup title="My calendars" group="mine" addable />
+		<CalendarGroup title={m.cal_rail_my_calendars()} group="mine" addable />
 		<CalendarGroup
-			title="Role calendars"
+			title={m.cal_rail_role_calendars()}
 			group="role"
 			addable
-			emptyText="None yet — bind one to a shared address"
+			emptyText={m.cal_rail_role_empty()}
 		/>
 	</div>
 

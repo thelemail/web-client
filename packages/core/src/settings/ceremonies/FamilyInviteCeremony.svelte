@@ -17,6 +17,8 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -28,7 +30,7 @@
 	const seatsTotal = $derived(seatLimitFor(workspaces.workspace?.type ?? null));
 	const seatsUsed = $derived(workspaces.members.length + workspaces.invites.length);
 	const seatsLeft = $derived(seatsTotal == null ? null : seatsTotal - seatsUsed);
-	const familyName = $derived(workspaces.workspace?.name ?? 'your family');
+	const familyName = $derived(workspaces.workspace?.name ?? m.settings_ceremony_family_invite_family_fallback());
 
 	let step = $state(0);
 	let email = $state('');
@@ -42,16 +44,16 @@
 
 	const localProblem = $derived.by((): string | null => {
 		if (trimmed.length === 0) return null;
-		if (!looksLikeEmail) return `Enter a full address, like jules@${SHARED_DOMAIN}.`;
+		if (!looksLikeEmail) return m.settings_ceremony_family_invite_err_full_address({ domain: SHARED_DOMAIN });
 		if (!isSharedDomainAddress(trimmed)) {
-			return `Family invitations only work with ${SHARED_DOMAIN} addresses.`;
+			return m.settings_ceremony_family_invite_err_shared_only({ domain: SHARED_DOMAIN });
 		}
-		if (auth.email && trimmed === auth.email.toLowerCase()) return 'That is your own address.';
+		if (auth.email && trimmed === auth.email.toLowerCase()) return m.settings_ceremony_family_invite_err_own();
 		if (workspaces.members.some((m) => m.email.toLowerCase() === trimmed)) {
-			return `${trimmed} is already in your family.`;
+			return m.settings_ceremony_family_invite_err_member({ email: trimmed });
 		}
 		if (workspaces.invites.some((i) => i.email.toLowerCase() === trimmed)) {
-			return `${trimmed} has already been invited. The invitation is still open.`;
+			return m.settings_ceremony_family_invite_err_invited({ email: trimmed });
 		}
 		return null;
 	});
@@ -81,23 +83,20 @@
 
 <CeremonyShell
 	icon={UserPlus}
-	eyebrow="Household"
-	title="Invite someone to {familyName}"
-	steps={['Person', 'Invite']}
+	eyebrow={m.settings_ceremony_family_eyebrow()}
+	title={m.settings_ceremony_family_invite_title({ family: familyName })}
+	steps={[m.settings_ceremony_family_invite_step_person(), m.settings_ceremony_family_invite_step_invite()]}
 	step={step}
 	{onClose}
 >
 	{#if step === 0}
 		<div class="cer-pane">
 			<div class="cer-lede">
-				<p>
-					They need a Thelemail account already. Their address, their mail and their keys stay
-					theirs. Joining moves them into your family so you can share a calendar.
-				</p>
+				<p>{m.settings_ceremony_family_invite_lede()}</p>
 			</div>
 
 			<div class="field">
-				<label for="fam-inv-email">Their Thelemail address</label>
+				<label for="fam-inv-email">{m.settings_ceremony_family_invite_email_label()}</label>
 				<input
 					id="fam-inv-email"
 					class="tin mono"
@@ -112,7 +111,7 @@
 					<div class="field-hint bad"><CircleAlert size={13} />{localProblem}</div>
 				{:else}
 					<div class="field-hint">
-						Only free accounts on {SHARED_DOMAIN} can join a family.
+						{m.settings_ceremony_family_invite_email_hint({ domain: SHARED_DOMAIN })}
 					</div>
 				{/if}
 			</div>
@@ -126,40 +125,48 @@
 			<div class="seat-callout ok">
 				<Users size={17} />
 				<div>
-					<b>Uses 1 of your {seatsTotal} seats.</b>
-					{(seatsLeft ?? 0) - 1 >= 0 ? (seatsLeft ?? 0) - 1 + ' will remain' : 'none will remain'}.
-					Nothing is charged.
+					<b>{m.settings_ceremony_family_invite_seat_uses({ total: seatsTotal ?? '' })}</b>
+					{(seatsLeft ?? 0) - 1 >= 0
+						? m.settings_ceremony_family_invite_seat_remain({ count: (seatsLeft ?? 0) - 1 })
+						: m.settings_ceremony_family_invite_seat_none_remain()}
+					{m.settings_ceremony_family_invite_not_charged()}
 				</div>
 			</div>
 		</div>
 	{:else}
 		<DoneScreen
 			icon={UserCheck}
-			title="Invitation sent"
-			desc="{invited} has been invited. They accept from the link below, signed in to their own account."
+			title={m.settings_ceremony_family_invite_done_title()}
+			desc={m.settings_ceremony_family_invite_done_desc({ email: invited })}
 		>
 			<div class="invite-link">
 				<div class="il-label">
-					<Link size={14} />Invitation link <span class="il-note">expires in 7 days</span>
+					<Link size={14} />{m.settings_ceremony_family_invite_link_label()}
+					<span class="il-note">{m.settings_ceremony_family_invite_link_expiry()}</span>
 				</div>
 				<div class="il-row">
 					<code>{inviteLink ?? ''}</code>
-					<CopyBtn text={inviteLink ?? ''} small label="Copy link" />
+					<CopyBtn text={inviteLink ?? ''} small label={m.settings_ceremony_family_invite_copy_link()} />
 				</div>
 			</div>
 
 			<div class="cer-reminder">
-				<MailCheck size={15} />Also sent to <b class="mono">{invited}</b>
+				<MailCheck size={15} /><Rich
+					text={m.settings_ceremony_family_invite_also_sent({ email: invited })}
+					tags={{ b: mono }}
+				/>
 			</div>
-			<div class="cer-reminder">Nothing changes for them until they accept.</div>
+			<div class="cer-reminder">{m.settings_ceremony_family_invite_nothing_changes()}</div>
 		</DoneScreen>
 	{/if}
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose} disabled={submitting}>Cancel</Button>
+			<Button variant="ghost" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
-				{submitting ? 'Sending…' : 'Send invitation'}<ArrowRight size={15} />
+				{submitting
+					? m.settings_ceremony_family_invite_sending()
+					: m.settings_ceremony_family_invite_submit()}<ArrowRight size={15} />
 			</Button>
 		{:else}
 			<Button
@@ -167,8 +174,10 @@
 				onclick={() => {
 					onComplete('familyInvite');
 					onClose();
-				}}>Done</Button
+				}}>{m.common_done()}</Button
 			>
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#snippet mono(t: string)}<b class="mono">{t}</b>{/snippet}

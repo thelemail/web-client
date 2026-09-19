@@ -9,6 +9,7 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -19,7 +20,9 @@
 
 	function suggestedName(): string {
 		const first = (auth.fullName ?? '').trim().split(/\s+/)[0];
-		return first ? `${first}'s family` : 'My family';
+		return first
+			? m.settings_ceremony_family_start_default_name({ first })
+			: m.settings_ceremony_family_start_default_name_fallback();
 	}
 
 	let name = $state(suggestedName());
@@ -39,24 +42,26 @@
 			onComplete('family');
 			onClose();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not start the family';
+			error = err instanceof Error ? err.message : m.settings_ceremony_family_start_error();
 		} finally {
 			busy = false;
 		}
 	}
 </script>
 
-<CeremonyShell icon={Users} eyebrow="Household" title="Start a family" {onClose}>
+<CeremonyShell
+	icon={Users}
+	eyebrow={m.settings_ceremony_family_eyebrow()}
+	title={m.settings_ceremony_family_start_title()}
+	{onClose}
+>
 	<div class="cer-pane">
 		<div class="cer-lede">
-			<p>
-				Your account becomes the first of up to six in one family. Nothing about your mailbox
-				changes.
-			</p>
+			<p>{m.settings_ceremony_family_start_lede()}</p>
 		</div>
 
 		<div class="field">
-			<label for="fam-start-name">Family name</label>
+			<label for="fam-start-name">{m.settings_ceremony_family_start_name_label()}</label>
 			<input
 				id="fam-start-name"
 				class="tin"
@@ -64,7 +69,7 @@
 				maxlength="120"
 				autocomplete="off"
 			/>
-			<div class="field-hint">Only people in the family see this.</div>
+			<div class="field-hint">{m.settings_ceremony_family_start_name_hint()}</div>
 		</div>
 
 		{#if error}
@@ -74,17 +79,18 @@
 		<div class="seat-callout ok">
 			<Users size={17} />
 			<div>
-				<b>Free family: 6 accounts, 1 GB of storage each.</b>
-				Everyone you invite already needs a {SHARED_DOMAIN} account. No custom domains, and
-				everything you have stays where it is.
+				<b>{m.settings_ceremony_family_start_callout_title()}</b>
+				{m.settings_ceremony_family_start_callout_body({ domain: SHARED_DOMAIN })}
 			</div>
 		</div>
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" onclick={onClose} disabled={busy}>Cancel</Button>
+		<Button variant="ghost" onclick={onClose} disabled={busy}>{m.common_cancel()}</Button>
 		<Button variant="primary" disabled={!ready} onclick={submit}>
-			{busy ? 'Creating…' : 'Create the family'}<ArrowRight size={15} />
+			{busy
+				? m.settings_ceremony_family_start_creating()
+				: m.settings_ceremony_family_start_submit()}<ArrowRight size={15} />
 		</Button>
 	{/snippet}
 </CeremonyShell>

@@ -9,6 +9,7 @@ import { accountSettings } from './accountSettings.svelte';
 import { workspaces } from './workspaces.svelte';
 import { twofactor } from './twofactor.svelte';
 import { auth } from './auth.svelte';
+import { m } from '$paraglide/messages.js';
 
 const OPEN_MESSAGE_SECTION = 'reading_open_message';
 const PRIVACY_SECTION = 'privacy';
@@ -31,16 +32,16 @@ const COMPOSING_KEYS = [
 	'replyDefault'
 ] as const satisfies ReadonlyArray<keyof SettingsState>;
 
-const CEREMONY_MESSAGES: Record<CeremonyKind, string> = {
-	recovery: 'Recovery set up',
-	password: 'Password changed',
-	twofa: 'Two-factor updated',
-	keys: 'Key rotated',
-	delete: 'Account scheduled for deletion',
-	alias: 'Address saved',
-	member: '',
-	familyInvite: 'Invitation sent',
-	family: 'Family created'
+const CEREMONY_MESSAGES: Record<CeremonyKind, () => string> = {
+	recovery: () => m.store_ceremony_done_recovery(),
+	password: () => m.store_ceremony_done_password(),
+	twofa: () => m.store_ceremony_done_twofa(),
+	keys: () => m.store_ceremony_done_keys(),
+	delete: () => m.store_ceremony_done_delete(),
+	alias: () => m.store_ceremony_done_alias(),
+	member: () => '',
+	familyInvite: () => m.store_ceremony_done_family_invite(),
+	family: () => m.store_ceremony_done_family()
 };
 
 function includesKey(keys: ReadonlyArray<keyof SettingsState>, key: keyof SettingsState): boolean {
@@ -226,7 +227,7 @@ class SettingsDraftStore {
 			}
 		} catch (err) {
 			this.saveState = 'idle';
-			this.flash(err instanceof Error ? err.message : 'Could not save — try again');
+			this.flash(err instanceof Error ? err.message : m.store_settings_save_failed());
 		} finally {
 			this.#flushing = false;
 			if (this.#flushAgain) {
@@ -257,15 +258,18 @@ class SettingsDraftStore {
 			twofactor.invalidate();
 			void twofactor.load();
 		}
-		let msg = CEREMONY_MESSAGES[kind];
+		let msg = CEREMONY_MESSAGES[kind]();
 		if (kind === 'member') {
-			msg = workspaces.workspace?.type === 'business' ? 'Member added · seat created' : 'Invitation sent';
+			msg =
+				workspaces.workspace?.type === 'business'
+					? m.store_ceremony_done_member_business()
+					: m.store_ceremony_done_family_invite();
 			workspaces.loadActiveDetails(auth.accountId);
 		}
 		if (kind === 'familyInvite' || kind === 'family') {
 			workspaces.loadActiveDetails(auth.accountId);
 		}
-		this.flash(msg || 'Done');
+		this.flash(msg || m.common_done());
 	};
 }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import type { Snippet } from 'svelte';
 	import X from '@lucide/svelte/icons/x';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -131,10 +132,14 @@
 	$effect(() => {
 		if (autoFocus) inputRef?.focus();
 	});
+
+	const labelText = $derived(
+		label === 'To' ? m.mail_recip_to() : label === 'Cc' ? m.mail_recip_cc() : m.mail_recip_bcc()
+	);
 </script>
 
 <div class="recip-row" onmousedown={rowMouseDown} role="presentation">
-	<span class="recip-label">{label}</span>
+	<span class="recip-label">{labelText}</span>
 	<div class="recip-box" class:focus={focused} onmousedown={boxMouseDown} role="presentation">
 		{#each chips as c, i (i)}
 			<span class="rchip" class:bad={!c.valid} title={c.email}>
@@ -154,9 +159,9 @@
 				{#if c.valid && encStatusFor}
 					{@const es = encStatusFor(c.email)}
 					{#if es === 'encrypted' || es === 'internal'}
-						<span class="renc ok" title="End-to-end encrypted"><Lock size={11} /></span>
+						<span class="renc ok" title={m.mail_recip_encrypted()}><Lock size={11} /></span>
 					{:else if es === 'cleartext'}
-						<span class="renc warn" title="No encryption key — sent unencrypted"
+						<span class="renc warn" title={m.mail_recip_cleartext()}
 							><LockOpen size={11} /></span
 						>
 					{/if}
@@ -164,7 +169,7 @@
 				<button
 					type="button"
 					class="rm"
-					title="Remove"
+					title={m.common_remove()}
 					onclick={(e) => {
 						e.stopPropagation();
 						removeChip(i);
@@ -178,7 +183,7 @@
 			bind:this={inputRef}
 			class="recip-input"
 			bind:value={text}
-			placeholder={chips.length ? '' : label === 'To' ? 'name@domain.com' : 'Add people…'}
+			placeholder={chips.length ? '' : label === 'To' ? 'name@domain.com' : m.mail_recip_add_people()}
 			oninput={() => (hi = 0)}
 			onpaste={onPaste}
 			onkeydown={onKey}
@@ -216,7 +221,7 @@
 	<div class="recip-right">
 		{#if rightSlot}{@render rightSlot()}{/if}
 		{#if onRemoveField}
-			<button type="button" class="recip-x" title={'Remove ' + label} onclick={onRemoveField}>
+			<button type="button" class="recip-x" title={m.mail_recip_remove_field({ field: labelText })} onclick={onRemoveField}>
 				<X size={15} />
 			</button>
 		{/if}

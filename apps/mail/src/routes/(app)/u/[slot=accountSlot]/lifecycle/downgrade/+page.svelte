@@ -4,6 +4,7 @@
 	import DowngradeConfirm from '$core/lifecycle/DowngradeConfirm.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	let { data } = $props();
 	const slot = $derived(data.slot);
@@ -14,9 +15,9 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Move to the free plan</title>
+	<title>{m.lc_page_title_downgrade()}</title>
 </svelte:head>
 
-<LcShell badge={{ label: 'Change plan', sev: 'warn' }} backHref={`/u/${slot}/mail/inbox`}>
+<LcShell badge={{ label: m.lc_badge_change_plan(), sev: 'warn' }} backHref={`/u/${slot}/mail/inbox`}>
 	<DowngradeConfirm />
 </LcShell>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import './mail.css';
 	import Sidebar from '$core/mail/Sidebar.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
@@ -40,7 +41,7 @@
 	data-motion={preferences.reduceMotion ? 'reduced' : 'full'}
 >
 	{#if mailNav.open}
-		<button class="rail-scrim" aria-label="Close menu" onclick={() => (mailNav.open = false)}
+		<button class="rail-scrim" aria-label={m.mail_close_menu()} onclick={() => (mailNav.open = false)}
 		></button>
 	{/if}
 	<Sidebar
