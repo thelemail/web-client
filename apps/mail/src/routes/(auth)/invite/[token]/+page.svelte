@@ -21,8 +21,11 @@
 	import JoinFamilyInvite from '$core/auth/JoinFamilyInvite.svelte';
 	import { createRegistrationProof, withRegistrationProof } from '$core/auth/registration-proof';
 	import { Button } from '$core/components/ui/button';
+	import { strengthLabel } from '$core/auth/password-policy';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
-	const STR_LABELS = ['', 'weak', 'fair', 'good', 'strong'];
+	const inviteLabels = $derived([m.auth_invite_step_account(), m.auth_step_password(), m.auth_step_done()]);
 
 	let invite = $state<WorkspaceInvitePreview | null>(null);
 	let previewError = $state<string | null>(null);
@@ -65,7 +68,7 @@
 		try {
 			invite = await previewWorkspaceInvite(page.params.token ?? '');
 		} catch (err) {
-			previewError = err instanceof Error ? err.message : 'This invitation is no longer valid.';
+			previewError = err instanceof Error ? err.message : m.auth_invite_no_longer_valid();
 		} finally {
 			previewLoading = false;
 		}
@@ -82,9 +85,17 @@
 
 	const score = $derived(pw ? scorePw(pw) : 0);
 	const reqs = $derived([
-		{ k: 'len', label: 'At least 8 characters', met: pw.length >= 8 },
-		{ k: 'mix', label: 'Upper & lowercase letters', met: /[a-z]/.test(pw) && /[A-Z]/.test(pw) },
-		{ k: 'num', label: 'A number or symbol', met: /\d/.test(pw) || /[^A-Za-z0-9]/.test(pw) }
+		{ k: 'len', label: m.auth_password_req_length(), met: pw.length >= 8 },
+		{
+			k: 'mix',
+			label: m.auth_password_req_mixed_case(),
+			met: /[a-z]/.test(pw) && /[A-Z]/.test(pw)
+		},
+		{
+			k: 'num',
+			label: m.auth_password_req_number_symbol(),
+			met: /\d/.test(pw) || /[^A-Za-z0-9]/.test(pw)
+		}
 	]);
 	const allMet = $derived(reqs.every((r) => r.met));
 	const matches = $derived(confirm.length > 0 && confirm === pw);
@@ -118,7 +129,7 @@
 				registrationResponse: init.registrationResponse
 			});
 			if (!finish.ok) {
-				throw new Error('Could not prepare your mailbox keys. Please try again.');
+				throw new Error(m.auth_register_keys_failed());
 			}
 			password = '';
 			pw = '';
@@ -142,7 +153,7 @@
 				accountId: result.accountId
 			});
 			if (!finalize.ok) {
-				throw new Error('Could not initialize local vault');
+				throw new Error(m.auth_invite_vault_failed());
 			}
 			auth.setSession(result.accessToken, result.expiresInSeconds, result.accountId);
 			await auth.loadProfile(result.accountId);
@@ -167,81 +178,93 @@
 			step = 2;
 		} catch (err) {
 			password = '';
-			submitError = err instanceof Error ? err.message : 'Registration failed';
+			submitError = err instanceof Error ? err.message : m.auth_register_failed();
 		} finally {
 			submitting = false;
 		}
 	}
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
+{#snippet terms(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
+{#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
+
 <svelte:head>
-	<title>Thelemail — Accept your invitation</title>
+	<title>{m.auth_invite_page_title()}</title>
 </svelte:head>
 
 {#if previewLoading}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<p class="eyebrow">Verifying invitation</p>
-			<h1>Just a moment…</h1>
+			<p class="eyebrow">{m.auth_invite_verifying_eyebrow()}</p>
+			<h1>{m.auth_invite_verifying_title()}</h1>
 		</div>
 	</div>
 {:else if previewError || !invite}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<p class="eyebrow">Invitation unavailable</p>
-			<h1>This link can&rsquo;t be used</h1>
-			<p>{previewError ?? 'The invitation may have expired, been revoked, or already been used.'}</p>
+			<p class="eyebrow">{m.auth_invite_unavailable_eyebrow()}</p>
+			<h1>{m.auth_invite_unavailable_title()}</h1>
+			<p>{previewError ?? m.auth_invite_unavailable_body()}</p>
 		</div>
 		<div class="actions" style="margin-top:24px">
-			<Button variant="primary" size="lg" block onclick={() => goto('/login')}>Go to sign in</Button>
+			<Button variant="primary" size="lg" block onclick={() => goto('/login')}>{m.auth_invite_go_to_sign_in()}</Button>
 		</div>
 	</div>
 {:else if invite.kind === 'join'}
 	<JoinFamilyInvite {invite} token={page.params.token ?? ''} />
 {:else if step === 0}
 	<div class="card-surface screen-fade">
-		<Stepper step={0} labels={['Account', 'Password', 'Done']} />
+		<Stepper step={0} labels={inviteLabels} />
 		{#if auth.email}
 			<div class="invite" style="background:var(--paper-100);border:1px solid var(--ink-200);border-radius:8px;padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
-					<span class="iname">You're signed in as <b>{auth.email}</b></span>
-					<span class="isub">
-						Accepting this invitation will add the new account alongside your existing one — both
-						stay signed in on this device.
-					</span>
+					<span class="iname"
+						><Rich text={m.auth_invite_signed_in_as({ email: auth.email })} tags={{ b: bold }} /></span
+					>
+					<span class="isub">{m.auth_invite_add_alongside()}</span>
 				</span>
 			</div>
 		{/if}
 		<div class="invite">
 			<span class="iav">{inviterInitials}</span>
 			<span class="itext">
-				<span class="iname">{invite.inviterDisplayName || 'Someone'} invited you</span>
-				<span class="isub">to join <b>{invite.workspaceName}</b> on Thelemail</span>
+				<span class="iname"
+					>{m.auth_invite_invited_you({
+						inviter: invite.inviterDisplayName || m.auth_family_invite_someone()
+					})}</span
+				>
+				<span class="isub"
+					><Rich
+						text={m.auth_invite_to_join({ workspace: invite.workspaceName })}
+						tags={{ b: bold }}
+					/></span
+				>
 			</span>
 		</div>
 		<div class="card-head">
-			<p class="eyebrow">Step 1 of 2</p>
-			<h1>Set up your account</h1>
-			<p>Your address has been created for you. Tell us your name to finish setting up.</p>
+			<p class="eyebrow">{m.auth_step_of({ step: 1, total: 2 })}</p>
+			<h1>{m.auth_invite_setup_title()}</h1>
+			<p>{m.auth_invite_setup_lede()}</p>
 		</div>
 		<div class="form">
 			<div class="field">
-				<div class="lab"><label for="invite-email">Your email address</label></div>
+				<div class="lab"><label for="invite-email">{m.auth_invite_email_label()}</label></div>
 				<div class="locked" id="invite-email">
 					<span class="lval">{invite.inviteeEmail}</span>
-					<span class="lk"><Lock size={13} strokeWidth={1.75} />Set by admin</span>
+					<span class="lk"><Lock size={13} strokeWidth={1.75} />{m.auth_invite_set_by_admin()}</span>
 				</div>
-				<span class="hint"
-					>This address was assigned by your organization and can&rsquo;t be changed.</span
-				>
+				<span class="hint">{m.auth_invite_email_hint()}</span>
 			</div>
 			<div class="field">
-				<div class="lab"><label for="invite-name">Display name</label></div>
+				<div class="lab"><label for="invite-name">{m.auth_invite_name_label()}</label></div>
 				<input
 					id="invite-name"
 					class="inp"
 					bind:value={name}
-					placeholder="e.g. Alex Renard"
+					placeholder={m.auth_invite_name_placeholder()}
 					maxlength={64}
 					autocomplete="name"
 					spellcheck="false"
@@ -249,37 +272,44 @@
 						if (e.key === 'Enter' && nameReady) step = 1;
 					}}
 				/>
-				<span class="hint">Shown to people you correspond with.</span>
+				<span class="hint">{m.auth_invite_name_hint()}</span>
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!nameReady} onclick={() => (step = 1)}>
-					Continue<ArrowRight size={17} strokeWidth={1.75} />
+					{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
 				</Button>
 			</div>
 		</div>
 		<p class="switch">
-			Already have an account? <a href="/login">Sign in</a>
+			<Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} />
 		</p>
 	</div>
 {:else if step === 1}
 	<div class="card-surface screen-fade">
-		<Stepper step={1} labels={['Account', 'Password', 'Done']} />
+		<Stepper step={1} labels={inviteLabels} />
 		<div class="card-head">
-			<p class="eyebrow">Step 2 of 2</p>
-			<h1>Set a password</h1>
-			<p>Securing <span class="mono" style="color:var(--ink-700)">{invite.inviteeEmail}</span></p>
+			<p class="eyebrow">{m.auth_step_of({ step: 2, total: 2 })}</p>
+			<h1>{m.auth_register_password_title()}</h1>
+			<p>
+				<Rich
+					text={m.auth_register_password_securing({ address: invite.inviteeEmail })}
+					tags={{ addr }}
+				/>
+			</p>
 		</div>
 		<div class="form">
 			<PasswordField
-				label="Password"
+				label={m.common_password()}
 				bind:value={pw}
-				placeholder="Create a strong password"
+				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
 			/>
 			{#if pw}
 				<div class="strength">
 					<div class="strbar s{score}"><i></i><i></i><i></i><i></i></div>
-					<div class="strlab s{score}">Strength: <b>{STR_LABELS[score]}</b></div>
+					<div class="strlab s{score}">
+						<Rich text={m.auth_password_strength({ label: strengthLabel(score) })} tags={{ b: bold }} />
+					</div>
 				</div>
 			{/if}
 			<div class="reqs">
@@ -297,9 +327,9 @@
 				{/each}
 			</div>
 			<PasswordField
-				label="Confirm password"
+				label={m.auth_register_confirm_label()}
 				bind:value={confirm}
-				placeholder="Re-enter password"
+				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
 				onEnter={() => {
 					if (passwordReady) submitRegistration();
@@ -308,12 +338,12 @@
 			{#if mismatch}
 				<span class="errtext" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>Passwords don&rsquo;t match.</span>
+					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
 			{:else if matches}
 				<span class="oktext" style="margin-top:-8px">
 					<CircleCheck size={13} strokeWidth={1.75} />
-					<span>Passwords match.</span>
+					<span>{m.auth_register_passwords_match()}</span>
 				</span>
 			{/if}
 			{#if submitError}
@@ -324,20 +354,15 @@
 			{/if}
 			<label class="accept">
 				<input type="checkbox" bind:checked={accepted} required />
-				<span>
-					I agree to the
-					<a href="https://thelemail.com/terms" target="_blank" rel="noopener">Terms of Service</a>
-					and
-					<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>.
-				</span>
+				<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms, privacy }} /></span>
 			</label>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" disabled={submitting} onclick={() => (step = 0)}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting} onclick={submitRegistration}>
-						{submitting ? 'Setting up your vault…' : 'Create account'}
+						{submitting ? m.auth_invite_setting_up() : m.auth_invite_create_account()}
 					</Button>
 				</div>
 			</div>
@@ -347,11 +372,8 @@
 	<div class="card-surface screen-fade">
 		<div class="welcome">
 			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
-			<h1>You&rsquo;re in</h1>
-			<p>
-				Welcome to {invite.workspaceName} on Thelemail. Your mailbox is provisioned and ready for its
-				first letter.
-			</p>
+			<h1>{m.auth_invite_done_title()}</h1>
+			<p>{m.auth_invite_done_body({ workspace: invite.workspaceName })}</p>
 			<div class="addrcard">
 				<span class="av">{initials}</span>
 				<span class="em">{invite.inviteeEmail}</span>
@@ -359,7 +381,7 @@
 			</div>
 			<div class="actions" style="margin-top:24px">
 				<Button variant="primary" size="lg" block onclick={() => goto(landingSlot !== null ? `/u/${landingSlot}/mail/inbox` : '/login')}>
-					<Mail size={17} strokeWidth={1.75} />Enter Thelemail
+					<Mail size={17} strokeWidth={1.75} />{m.auth_invite_enter()}
 				</Button>
 			</div>
 		</div>

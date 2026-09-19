@@ -8,6 +8,7 @@
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
 	import GuestField from '../editor/GuestField.svelte';
 	import RecurrenceEditor from '../editor/RecurrenceEditor.svelte';
@@ -36,16 +37,7 @@
 
 	let { request }: Props = $props();
 
-	const REMINDER_PRESETS = [
-		[0, 'At the time'],
-		[5, '5 minutes before'],
-		[10, '10 minutes before'],
-		[15, '15 minutes before'],
-		[30, '30 minutes before'],
-		[60, '1 hour before'],
-		[120, '2 hours before'],
-		[1440, '1 day before']
-	] as const;
+	const REMINDER_PRESETS = [0, 5, 10, 15, 30, 60, 120, 1440] as const;
 
 	const source = $derived(request.item ?? request.occ?.item ?? null);
 	const isEdit = $derived(request.mode === 'edit' && !!source);
@@ -164,26 +156,39 @@
 	const zones = $derived(supportedTimeZones());
 	const identity = $derived(source && source.organizer ? source.organizer : identityFor({ calendarId } as CalendarItem));
 	const externalCount = $derived(attendees.filter((a) => !a.internal).length);
+	const kindLabel = $derived(
+		kind === 'task' ? m.cal_kind_task_lower() : kind === 'hold' ? m.cal_kind_hold_lower() : m.cal_kind_event_lower()
+	);
+	const dialogTitle = $derived(
+		isEdit
+			? m.cal_editor_title_edit({ kind: kindLabel })
+			: request.mode === 'duplicate'
+				? m.cal_editor_title_duplicate({ kind: kindLabel })
+				: m.cal_editor_title_new({ kind: kindLabel })
+	);
 
 	const boundary = $derived.by((): BoundaryLine[] => {
 		const lines: BoundaryLine[] = [];
 		if (kind === 'hold') {
-			lines.push({ tone: 'yes', text: 'A busy window only. The title stays on your devices.' });
+			lines.push({ tone: 'yes', text: m.cal_editor_hold_sealed() });
 		} else {
 			lines.push({
 				tone: 'yes',
-				text: calendar?.kind === 'personal' ? 'Title, notes and guests are sealed to your key.' : `Title, notes and guests are sealed for ${calendar?.name ?? 'the calendar'} members.`
+				text:
+					calendar?.kind === 'personal'
+						? m.cal_editor_sealed_personal()
+						: m.cal_editor_sealed_members({ calendar: calendar?.name ?? m.cal_editor_the_calendar() })
 			});
 		}
-		if (privacy === 'private') lines.push({ tone: 'no', text: 'No busy window leaves this device.' });
-		else lines.push({ tone: 'warn', text: 'The start and end of each occurrence are sent so your workspace can see you are busy.', mono: 'server reads: start, end' });
+		if (privacy === 'private') lines.push({ tone: 'no', text: m.cal_editor_private_line() });
+		else lines.push({ tone: 'warn', text: m.cal_editor_busy_line(), mono: m.cal_editor_server_reads() });
 		if (attendees.length) {
 			lines.push({
 				tone: externalCount ? 'warn' : 'yes',
 				text: externalCount
-					? `Title, time and location go by mail to ${externalCount} guest${externalCount === 1 ? '' : 's'} outside your workspace, sealed when they use Thelemail.`
-					: 'Invitations travel as encrypted mail between Thelemail members.',
-				mono: `from: ${identity.email}`
+					? m.cal_editor_external_guests({ count: externalCount })
+					: m.cal_editor_internal_guests(),
+				mono: m.cal_editor_from({ email: identity.email })
 			});
 		}
 		return lines;
@@ -206,8 +211,11 @@
 		reminderPick = '';
 	}
 
-	function reminderLabel(m: number): string {
-		return REMINDER_PRESETS.find(([v]) => v === m)?.[1] ?? `${m} minutes before`;
+	function reminderLabel(minutes: number): string {
+		if (minutes === 0) return m.cal_reminder_at_time();
+		if (minutes === 1440) return m.cal_reminder_days_before({ count: 1 });
+		if (minutes === 60 || minutes === 120) return m.cal_reminder_hours_before({ count: minutes / 60 });
+		return m.cal_reminder_minutes_before({ count: minutes });
 	}
 
 	function buildItem(): CalendarItem {
@@ -215,7 +223,7 @@
 		const id = base?.id ?? crypto.randomUUID();
 		const now = new Date().toISOString();
 		const when = whenValues();
-		const ownerMember = members.find((m) => m.email.toLowerCase() === ownerEmail.toLowerCase());
+		const ownerMember = members.find((member) => member.email.toLowerCase() === ownerEmail.toLowerCase());
 		const item: CalendarItem = {
 			schemaVersion: ITEM_SCHEMA_VERSION,
 			id,
@@ -240,7 +248,7 @@
 			privacy: kind === 'hold' && privacy === 'shared' ? 'busy' : privacy,
 			sourceMessageId: base?.sourceMessageId ?? request.prefill?.sourceMessageId,
 			threadSubject: base?.threadSubject ?? request.prefill?.threadSubject,
-			reminders: reminders.length ? reminders.map((m): Reminder => ({ minutesBefore: m })) : undefined,
+			reminders: reminders.length ? reminders.map((minutes): Reminder => ({ minutesBefore: minutes })) : undefined,
 			uid: base?.uid ?? newUid(id, (auth.email ?? 'x@thelemail.com').split('@')[1] ?? 'thelemail.com'),
 			sequence: base ? base.sequence + (invitationChanged(base, { ...base, title, start: when.start, end: when.end } as CalendarItem) ? 1 : 0) : 0,
 			createdAt: base?.createdAt ?? now,
@@ -250,7 +258,7 @@
 	}
 
 	function buildOverride(): CalendarItem {
-		if (!source || !request.occ?.recurrenceId) throw new Error('No occurrence to edit');
+		if (!source || !request.occ?.recurrenceId) throw new Error(m.cal_editor_no_occurrence());
 		const when = whenValues();
 		const patch: OverridePatch = {
 			title: title.trim(),
@@ -260,7 +268,7 @@
 			start: when.start,
 			end: when.end,
 			attendees: attendees.length ? attendees : undefined,
-			reminders: reminders.length ? reminders.map((m) => ({ minutesBefore: m })) : undefined
+			reminders: reminders.length ? reminders.map((minutes) => ({ minutesBefore: minutes })) : undefined
 		};
 		return { ...source, overrides: { ...(source.overrides ?? {}), [request.occ.recurrenceId]: patch }, updatedAt: new Date().toISOString() };
 	}
@@ -268,15 +276,15 @@
 	async function save() {
 		error = null;
 		if (!calendarId) {
-			error = 'Pick a calendar';
+			error = m.cal_editor_pick_calendar();
 			return;
 		}
 		if (kind !== 'hold' && !title.trim()) {
-			error = 'Give it a title';
+			error = m.cal_editor_title_required();
 			return;
 		}
 		if ((kind !== 'task' || scheduled) && !startDate) {
-			error = 'Pick a date';
+			error = m.cal_editor_pick_date();
 			return;
 		}
 		busy = true;
@@ -291,10 +299,20 @@
 					await sendInvitations(next, previous, thisOnly ? request.occ : undefined);
 				}
 			}
-			cal.notify(isEdit ? 'Saved' : kind === 'task' ? 'Task added' : kind === 'hold' ? 'Hold placed' : attendees.length ? 'Saved · invitations queued' : 'Event added');
+			cal.notify(
+				isEdit
+					? m.cal_editor_saved()
+					: kind === 'task'
+						? m.cal_editor_task_added()
+						: kind === 'hold'
+							? m.cal_editor_hold_placed()
+							: attendees.length
+								? m.cal_editor_saved_invites()
+								: m.cal_editor_event_added()
+			);
 			cal.closeEditor();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not save';
+			error = err instanceof Error ? err.message : m.cal_editor_save_failed();
 		} finally {
 			busy = false;
 		}
@@ -305,27 +323,26 @@
 	<Dialog.Header class="cal-dlg-h">
 		{#if kind === 'task'}<ListTodo size={18} color="var(--brass-600)" />{:else if kind === 'hold'}<Lock size={18} color="var(--brass-600)" />{:else}<CalendarDays size={18} color="var(--brass-600)" />{/if}
 		<Dialog.Title class="dt">
-			{isEdit ? 'Edit' : request.mode === 'duplicate' ? 'Duplicate' : 'New'}
-			{kind === 'task' ? 'task' : kind === 'hold' ? 'hold' : 'event'}{thisOnly ? ' · this occurrence only' : ''}
+			{thisOnly ? m.cal_editor_title_this_only({ title: dialogTitle }) : dialogTitle}
 		</Dialog.Title>
 	</Dialog.Header>
 
 	<div class="cal-dlg-body cal-form">
 		{#if !isEdit}
 			<div class="seg kind-seg">
-				<button type="button" class:on={kind === 'event'} onclick={() => (kind = 'event')}>Event</button>
-				<button type="button" class:on={kind === 'task'} onclick={() => ((kind = 'task'), (scheduled = false))}>Task</button>
-				<button type="button" class:on={kind === 'hold'} onclick={() => ((kind = 'hold'), (privacy = privacy === 'shared' ? 'busy' : privacy))}>Hold</button>
+				<button type="button" class:on={kind === 'event'} onclick={() => (kind = 'event')}>{m.cal_editor_kind_event()}</button>
+				<button type="button" class:on={kind === 'task'} onclick={() => ((kind = 'task'), (scheduled = false))}>{m.cal_editor_kind_task()}</button>
+				<button type="button" class:on={kind === 'hold'} onclick={() => ((kind = 'hold'), (privacy = privacy === 'shared' ? 'busy' : privacy))}>{m.cal_editor_kind_hold()}</button>
 			</div>
 		{/if}
 
 		<label class="cal-field">
-			<span>{kind === 'hold' ? 'Label (stays on your devices)' : 'Title'}</span>
-			<input type="text" bind:value={title} maxlength="200" placeholder={kind === 'hold' ? 'Busy' : kind === 'task' ? 'What needs doing' : 'What is happening'} />
+			<span>{kind === 'hold' ? m.cal_editor_hold_label() : m.cal_editor_title()}</span>
+			<input type="text" bind:value={title} maxlength="200" placeholder={kind === 'hold' ? m.cal_editor_placeholder_hold() : kind === 'task' ? m.cal_editor_placeholder_task() : m.cal_editor_placeholder_event()} />
 		</label>
 
 		<label class="cal-field">
-			<span>Calendar</span>
+			<span>{m.cal_editor_calendar()}</span>
 			<select bind:value={calendarId} disabled={isEdit && !!source?.attendees?.length}>
 				{#each writable as c (c.id)}
 					<option value={c.id}>{c.name}</option>
@@ -336,39 +353,39 @@
 		{#if kind === 'task'}
 			<div class="cal-field two">
 				<label>
-					<span>Due date</span>
+					<span>{m.cal_editor_due_date()}</span>
 					<input type="date" bind:value={dueDate} />
 				</label>
 				<label>
-					<span>Time</span>
+					<span>{m.cal_editor_time()}</span>
 					<input type="time" bind:value={dueTime} />
 				</label>
 			</div>
 			<div class="cal-field two">
 				<label>
-					<span>Estimate (minutes)</span>
+					<span>{m.cal_editor_estimate()}</span>
 					<input type="number" min="0" step="5" bind:value={estimate} placeholder="30" />
 				</label>
 				<label>
-					<span>Owner</span>
+					<span>{m.cal_editor_owner()}</span>
 					<select bind:value={ownerEmail}>
-						<option value="">Unassigned</option>
-						{#each members as m (m.accountId)}
-							<option value={m.email}>{m.fullName || m.email}</option>
+						<option value="">{m.cal_editor_unassigned()}</option>
+						{#each members as member (member.accountId)}
+							<option value={member.email}>{member.fullName || member.email}</option>
 						{/each}
 					</select>
 				</label>
 			</div>
 			<label class="cal-check">
 				<input type="checkbox" bind:checked={scheduled} />
-				Timebox it on the grid
+				{m.cal_editor_timebox()}
 			</label>
 		{/if}
 
 		{#if kind !== 'task' || scheduled}
 			<div class="cal-field two">
 				<label>
-					<span>Starts</span>
+					<span>{m.cal_editor_starts()}</span>
 					<input type="date" bind:value={startDate} onchange={() => { if (!endDate || endDate < startDate) endDate = startDate; }} />
 				</label>
 				{#if !allDay}
@@ -380,7 +397,7 @@
 			</div>
 			<div class="cal-field two">
 				<label>
-					<span>Ends</span>
+					<span>{m.cal_editor_ends()}</span>
 					<input type="date" bind:value={endDate} min={startDate} />
 				</label>
 				{#if !allDay}
@@ -391,11 +408,11 @@
 				{/if}
 			</div>
 			<div class="cal-inline">
-				<label class="cal-check"><input type="checkbox" bind:checked={allDay} />All day</label>
+				<label class="cal-check"><input type="checkbox" bind:checked={allDay} />{m.cal_editor_all_day()}</label>
 				{#if !allDay}
-					<label class="cal-check"><input type="checkbox" bind:checked={floating} />Floating time</label>
+					<label class="cal-check"><input type="checkbox" bind:checked={floating} />{m.cal_editor_floating()}</label>
 					{#if !floating}
-						<select class="tz" bind:value={timeZone} aria-label="Time zone">
+						<select class="tz" bind:value={timeZone} aria-label={m.cal_editor_time_zone_aria()}>
 							{#each zones as z (z)}
 								<option value={z}>{z}</option>
 							{/each}
@@ -405,7 +422,7 @@
 			</div>
 			{#if kind !== 'task' && !thisOnly}
 				<div class="cal-field">
-					<span>Repeats · {rruleSummary(rrule)}</span>
+					<span>{m.cal_editor_repeats({ summary: rruleSummary(rrule) })}</span>
 					<RecurrenceEditor value={rrule} {startDate} onChange={(v) => (rrule = v)} />
 				</div>
 			{/if}
@@ -413,16 +430,16 @@
 
 		{#if kind === 'event'}
 			<div class="cal-field">
-				<span>Guests</span>
+				<span>{m.cal_editor_guests()}</span>
 				<GuestField value={attendees} exclude={myAddressList()} onChange={(next) => (attendees = next)} />
 			</div>
 			<div class="cal-field two">
 				<label>
-					<span>Location</span>
-					<input type="text" bind:value={location} maxlength="240" placeholder="Where" />
+					<span>{m.cal_editor_location()}</span>
+					<input type="text" bind:value={location} maxlength="240" placeholder={m.cal_editor_location_placeholder()} />
 				</label>
 				<label>
-					<span>Video link</span>
+					<span>{m.cal_editor_video()}</span>
 					<input type="url" bind:value={videoUrl} maxlength="500" placeholder="https://" />
 				</label>
 			</div>
@@ -430,49 +447,49 @@
 
 		{#if kind !== 'hold'}
 			<label class="cal-field">
-				<span>Notes</span>
+				<span>{m.cal_editor_notes()}</span>
 				<textarea rows="3" bind:value={notes} maxlength="8000"></textarea>
 			</label>
 		{/if}
 
 		<div class="cal-field">
-			<span>Reminders</span>
+			<span>{m.cal_editor_reminders()}</span>
 			<div class="reminders">
-				{#each reminders as m (m)}
+				{#each reminders as minutes (minutes)}
 					<span class="guest-chip">
-						{reminderLabel(m)}
-						<button type="button" aria-label="Remove reminder" onclick={() => (reminders = reminders.filter((x) => x !== m))}>×</button>
+						{reminderLabel(minutes)}
+						<button type="button" aria-label={m.cal_editor_remove_reminder_aria()} onclick={() => (reminders = reminders.filter((x) => x !== minutes))}>×</button>
 					</span>
 				{/each}
-				<select bind:value={reminderPick} onchange={addReminder} aria-label="Add a reminder">
-					<option value="">Add…</option>
-					{#each REMINDER_PRESETS as [value, label] (value)}
-						<option value={String(value)}>{label}</option>
+				<select bind:value={reminderPick} onchange={addReminder} aria-label={m.cal_editor_add_reminder_aria()}>
+					<option value="">{m.cal_editor_add_reminder()}</option>
+					{#each REMINDER_PRESETS as value (value)}
+						<option value={String(value)}>{reminderLabel(value)}</option>
 					{/each}
 				</select>
 			</div>
 		</div>
 
 		<div class="cal-field">
-			<span>Who can see it is busy</span>
+			<span>{m.cal_editor_visibility()}</span>
 			<div class="seg">
-				<button type="button" class:on={privacy === 'private'} onclick={() => (privacy = 'private')}>Private</button>
-				<button type="button" class:on={privacy === 'busy'} onclick={() => (privacy = 'busy')}>Busy-only</button>
+				<button type="button" class:on={privacy === 'private'} onclick={() => (privacy = 'private')}>{m.cal_privacy_private()}</button>
+				<button type="button" class:on={privacy === 'busy'} onclick={() => (privacy = 'busy')}>{m.cal_privacy_busy()}</button>
 				{#if kind !== 'hold'}
-					<button type="button" class:on={privacy === 'shared'} onclick={() => (privacy = 'shared')}>Shared</button>
+					<button type="button" class:on={privacy === 'shared'} onclick={() => (privacy = 'shared')}>{m.cal_privacy_shared()}</button>
 				{/if}
 			</div>
 		</div>
 
-		<DisclosureBoundary heading="What leaves this device" headingIcon={ShieldCheck} lines={boundary} />
+		<DisclosureBoundary heading={m.cal_boundary_heading_device()} headingIcon={ShieldCheck} lines={boundary} />
 
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">{calendarStore.online ? 'Saved to Thelemail as soon as you confirm.' : 'Offline — saved here and sent when you reconnect.'}</span>
+		<span class="note">{calendarStore.online ? m.cal_editor_note_online() : m.cal_editor_note_offline()}</span>
 		<div class="grow"></div>
-		<Button variant="ghost" disabled={busy} onclick={() => cal.closeEditor()}>Cancel</Button>
-		<Button variant="primary" disabled={busy} onclick={save}>{isEdit ? 'Save' : 'Add'}</Button>
+		<Button variant="ghost" disabled={busy} onclick={() => cal.closeEditor()}>{m.common_cancel()}</Button>
+		<Button variant="primary" disabled={busy} onclick={save}>{isEdit ? m.common_save() : m.common_add()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

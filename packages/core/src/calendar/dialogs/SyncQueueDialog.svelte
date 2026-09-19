@@ -10,6 +10,7 @@
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
 	import * as Table from '$core/components/ui/table';
+	import { m } from '$paraglide/messages.js';
 	import type { OutboxRecord } from '../db';
 	import { shortTime } from '../format';
 	import { cal } from '../state.svelte';
@@ -34,18 +35,23 @@
 
 	function subFor(rec: OutboxRecord): string {
 		const when = shortTime(new Date(rec.createdAt), cal.timeZone);
-		if (rec.status === 'blocked') return `${when} · ${rec.lastError ?? 'changed elsewhere first'}`;
-		if (rec.op.kind === 'item.put') return `local · ${when} · based on rev ${rec.op.body.baseRev}`;
-		if (rec.op.kind === 'invite.send') {
-			return `${rec.op.mail.method} to ${rec.op.mail.to.map((t) => t.address).join(', ')} · sends on reconnect`;
+		if (rec.status === 'blocked') {
+			return m.cal_queue_sub_blocked({ when, error: rec.lastError ?? m.cal_queue_changed_elsewhere() });
 		}
-		return `local · ${when}`;
+		if (rec.op.kind === 'item.put') return m.cal_queue_sub_put({ when, rev: rec.op.body.baseRev });
+		if (rec.op.kind === 'invite.send') {
+			return m.cal_queue_sub_invite({
+				method: rec.op.mail.method,
+				recipients: rec.op.mail.to.map((t) => t.address).join(', ')
+			});
+		}
+		return m.cal_queue_sub_local({ when });
 	}
 
 	function stateFor(rec: OutboxRecord): string {
-		if (rec.status === 'blocked') return 'needs review';
-		if (rec.status === 'sending') return 'sending';
-		return rec.attempts ? `retrying (${rec.attempts})` : 'queued';
+		if (rec.status === 'blocked') return m.cal_queue_state_review();
+		if (rec.status === 'sending') return m.cal_queue_state_sending();
+		return rec.attempts ? m.cal_queue_state_retrying({ attempts: rec.attempts }) : m.cal_queue_state_queued();
 	}
 
 	const ownership = $derived(
@@ -55,13 +61,13 @@
 			color: c.color,
 			owner:
 				c.kind === 'personal'
-					? 'Thelemail · zero-access'
+					? m.cal_queue_owner_personal()
 					: c.kind === 'role'
-						? 'Thelemail · role calendar'
-						: `Thelemail · ${c.row.memberCount} member${c.row.memberCount === 1 ? '' : 's'}`,
+						? m.cal_queue_owner_role()
+						: m.cal_queue_owner_shared({ count: c.row.memberCount }),
 			synced: calendarStore.lastSyncAt
 				? shortTime(new Date(calendarStore.lastSyncAt), cal.timeZone)
-				: 'not yet'
+				: m.cal_queue_not_synced()
 		}))
 	);
 </script>
@@ -69,7 +75,7 @@
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
 		<RefreshCw size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">Queue &amp; provenance</Dialog.Title>
+		<Dialog.Title class="dt">{m.cal_queue_title()}</Dialog.Title>
 	</Dialog.Header>
 
 	<div class="cal-dlg-body">
@@ -77,15 +83,15 @@
 			{#if !calendarStore.online}<CloudOff size={16} />{:else}<RefreshCw size={16} />{/if}
 			<span>{cal.systemBarText}</span>
 			<div class="grow"></div>
-			<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>Send now</button>
+			<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>{m.cal_queue_send_now()}</button>
 		</div>
 
 		{#if !calendarStore.queue.length}
 			<div class="qrow">
 				<span class="qi"><RefreshCw size={16} /></span>
 				<div>
-					<div class="qt">Nothing waiting</div>
-					<div class="qs">Every change on this device has reached Thelemail.</div>
+					<div class="qt">{m.cal_queue_empty()}</div>
+					<div class="qs">{m.cal_queue_empty_desc()}</div>
 				</div>
 			</div>
 		{/if}
@@ -100,16 +106,16 @@
 					{#if entry.status === 'blocked'}
 						<div class="qactions">
 							<Button variant="secondary" size="sm" onclick={() => calendarStore.keepMine(entry.seq)}>
-								Keep mine
+								{m.cal_queue_keep_mine()}
 							</Button>
 							<Button variant="ghost" size="sm" onclick={() => calendarStore.takeTheirs(entry.seq)}>
-								Take theirs
+								{m.cal_queue_take_theirs()}
 							</Button>
 						</div>
 					{:else}
 						<div class="qactions">
 							<Button variant="ghost" size="sm" onclick={() => calendarStore.discardOp(entry.seq)}>
-								Discard
+								{m.cal_queue_discard()}
 							</Button>
 						</div>
 					{/if}
@@ -119,14 +125,14 @@
 		{/each}
 
 		<div class="mtable-wrap">
-			<div class="sp-eyebrow">Where each calendar actually lives</div>
+			<div class="sp-eyebrow">{m.cal_queue_where()}</div>
 			<div class="card">
 				<Table.Root>
 					<Table.Header>
 						<Table.Row>
-							<Table.Head>Calendar</Table.Head>
-							<Table.Head>Owner of record</Table.Head>
-							<Table.Head>Last synced</Table.Head>
+							<Table.Head>{m.cal_queue_col_calendar()}</Table.Head>
+							<Table.Head>{m.cal_queue_col_owner()}</Table.Head>
+							<Table.Head>{m.cal_queue_col_synced()}</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
@@ -146,8 +152,8 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">Every queued change can be discarded before it leaves.</span>
+		<span class="note">{m.cal_queue_note()}</span>
 		<div class="grow"></div>
-		<Button variant="primary" onclick={() => (cal.dialog = null)}>Close</Button>
+		<Button variant="primary" onclick={() => (cal.dialog = null)}>{m.common_close()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

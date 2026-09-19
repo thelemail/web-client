@@ -12,6 +12,8 @@
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import * as Dialog from '$core/components/ui/dialog';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../../DisclosureBoundary.svelte';
 	import PrivacyChip from '../../PrivacyChip.svelte';
 	import { CALENDARS, PEOPLE } from '../fixtures';
@@ -21,7 +23,7 @@
 	const PROPOSALS = [
 		{
 			key: 'p1',
-			kind: 'Event',
+			kind: () => m.cal_editor_kind_event(),
 			calendar: 'Family',
 			color: CALENDARS.family.color,
 			title: 'Museum trip — Jules',
@@ -34,7 +36,7 @@
 		},
 		{
 			key: 'p2',
-			kind: 'Task',
+			kind: () => m.cal_editor_kind_task(),
 			calendar: 'school@meudon.fr',
 			color: CALENDARS.school.color,
 			title: 'Return signed consent form',
@@ -47,7 +49,7 @@
 		},
 		{
 			key: 'p3',
-			kind: 'Task',
+			kind: () => m.cal_editor_kind_task(),
 			calendar: 'Family',
 			color: CALENDARS.family.color,
 			title: 'Pay museum trip fee — €18',
@@ -62,36 +64,38 @@
 
 	const OWNERS = ['marie', 'you'] as const;
 
-	const HOW_READ: BoundaryLine[] = [
+	const howRead: BoundaryLine[] = $derived([
 		{
 			tone: 'yes',
-			text: 'Deterministic date, deadline and amount parsing ran locally.',
-			mono: 'no cloud call · no model · nothing logged'
+			text: m.cal_mailc_how_parsed(),
+			mono: m.cal_mailc_how_mono()
 		},
-		{ tone: 'no', text: 'Nothing is written to a calendar until you confirm below.' }
-	];
+		{ tone: 'no', text: m.cal_mailc_nothing_written() }
+	]);
 
-	const IF_CONFIRMED: BoundaryLine[] = [
-		{ tone: 'yes', text: 'Encrypted for the four members of meudon.fr.' },
-		{ tone: 'no', text: 'No invitation is sent. The school is not told anything.' },
+	const ifConfirmed: BoundaryLine[] = $derived([
+		{ tone: 'yes', text: m.cal_mailc_encrypted() },
+		{ tone: 'no', text: m.cal_mailc_no_invitation() },
 		{
 			tone: 'yes',
 			icon: Undo2,
-			text: 'Reversible in one step for 30 days, with the original message attached.'
+			text: m.cal_mailc_reversible()
 		}
-	];
+	]);
 </script>
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <Dialog.Content class="cal-surface cal-dlg wide" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
 		<Mail size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">Commitments found in this message</Dialog.Title>
-		<PrivacyChip tone="private" label="Parsed on this device" />
+		<Dialog.Title class="dt">{m.cal_mailc_title()}</Dialog.Title>
+		<PrivacyChip tone="private" label={m.cal_mailc_parsed_here()} />
 	</Dialog.Header>
 
 	<div class="split">
 		<div class="sp-l">
-			<div class="sp-eyebrow">Source message</div>
+			<div class="sp-eyebrow">{m.cal_mailc_source()}</div>
 			<div class="msg-h">
 				<div class="msg-sub">Sortie scolaire — Musée de Cluny (consent required)</div>
 				<div class="msg-meta">
@@ -119,16 +123,16 @@
 			</div>
 			<div class="limits">
 				<DisclosureBoundary
-					heading="How this was read"
+					heading={m.cal_mailc_how_read()}
 					headingIcon={ShieldCheck}
-					lines={HOW_READ}
+					lines={howRead}
 					noIcon="x"
 				/>
 			</div>
 		</div>
 
 		<div class="sp-r">
-			<div class="sp-eyebrow">Proposed — {cal.mailSelectedCount} selected</div>
+			<div class="sp-eyebrow">{m.cal_mailc_proposed({ count: cal.mailSelectedCount })}</div>
 			{#each PROPOSALS as proposal (proposal.key)}
 				{@const on = cal.mailSelected[proposal.key]}
 				<div class="prop" class:on class:off={!on} style:--c={proposal.color}>
@@ -140,14 +144,14 @@
 						aria-label={proposal.title}
 					/>
 					<div class="pr-main">
-						<div class="pr-kind"><i></i>{proposal.kind} · {proposal.calendar}</div>
+						<div class="pr-kind"><i></i>{m.cal_mailc_kind_calendar({ kind: proposal.kind(), calendar: proposal.calendar })}</div>
 						<div class="pr-t">{proposal.title}</div>
 						<div class="pr-rows">
 							{#each proposal.rows as row (row.text)}
 								<div class="pr-row"><row.icon size={14} /><span>{row.text}</span></div>
 							{/each}
 						</div>
-						<div class="pr-why"><b>Why:</b> {proposal.why}</div>
+						<div class="pr-why"><Rich text={m.cal_mailc_why({ why: proposal.why })} tags={{ b: bold }} /></div>
 						{#if proposal.needsOwner}
 							<div class="own">
 								{#each OWNERS as key (key)}
@@ -165,28 +169,30 @@
 							</div>
 							{#if cal.mailOwnerMissing}
 								<div class="own-req">
-									<CircleAlert size={13} />A task on a shared address needs one named owner.
+									<CircleAlert size={13} />{m.cal_mailc_owner_required()}
 								</div>
 							{/if}
 						{/if}
 					</div>
 				</div>
 			{/each}
-			<DisclosureBoundary heading="If you confirm" headingIcon={Eye} lines={IF_CONFIRMED} noIcon="x" />
+			<DisclosureBoundary heading={m.cal_mailc_if_confirm()} headingIcon={Eye} lines={ifConfirmed} noIcon="x" />
 		</div>
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>Not now</Button>
-		<span class="note">Nothing has changed yet.</span>
+		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_mailc_not_now()}</Button>
+		<span class="note">{m.cal_mailc_nothing_changed()}</span>
 		<div class="grow"></div>
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>Edit each first</Button>
+		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_mailc_edit_each()}</Button>
 		<Button
 			variant="primary"
 			disabled={cal.mailOwnerMissing || !cal.mailSelectedCount}
 			onclick={() => cal.confirmMail()}
 		>
-			{cal.mailSelectedCount ? `Add ${cal.mailSelectedCount} to the calendar` : 'Nothing selected'}
+			{cal.mailSelectedCount
+				? m.cal_mailc_add_n({ count: cal.mailSelectedCount })
+				: m.cal_mailc_nothing_selected()}
 		</Button>
 	</Dialog.Footer>
 </Dialog.Content>

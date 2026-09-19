@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Clock from '@lucide/svelte/icons/clock';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
@@ -31,11 +32,11 @@
 	const customWhen = $derived(parseLocalInput(customValue));
 	const customError = $derived(validateWhen(customWhen, bounds));
 
-	const RANGE_MESSAGES: Record<TimeRangeError, string> = {
-		invalid: 'Enter a date and time.',
-		past: 'Pick a time in the future.',
-		too_soon: 'Pick a time at least a minute from now.',
-		too_far: 'Snooze can reach a year ahead at most.'
+	const RANGE_MESSAGES: Record<TimeRangeError, () => string> = {
+		invalid: () => m.mail_time_invalid(),
+		past: () => m.mail_time_past(),
+		too_soon: () => m.mail_snooze_too_soon(),
+		too_far: () => m.mail_snooze_too_far()
 	};
 
 	function hint(when: Date): string {
@@ -74,9 +75,9 @@
 	bind:panel={root}
 	extraClass="label-picker snooze-picker"
 	role="dialog"
-	label="Snooze until"
+	label={m.mail_snooze_until()}
 >
-	<div class="menu-lbl">Snooze until</div>
+	<div class="menu-lbl">{m.mail_snooze_until()}</div>
 	{#each presets as p (p.id)}
 		<button type="button" class="mitem sp-row" onclick={() => pick(p.when)}>
 			<Clock size={17} />
@@ -92,12 +93,12 @@
 				bind:value={customValue}
 				min={toLocalInput(bounds.min)}
 				max={toLocalInput(bounds.max)}
-				aria-label="Snooze date and time"
+				aria-label={m.mail_snooze_input_aria()}
 			/>
 			{#if customWhen && !customError}
-				<div class="sp-hint">Comes back {formatWhenLong(customWhen, now).toLowerCase()}</div>
+				<div class="sp-hint">{m.mail_snooze_comes_back({ when: formatWhenLong(customWhen, now).toLowerCase() })}</div>
 			{:else}
-				<div class="sp-hint bad">{RANGE_MESSAGES[customError ?? 'invalid']}</div>
+				<div class="sp-hint bad">{RANGE_MESSAGES[customError ?? 'invalid']()}</div>
 			{/if}
 			<button
 				type="button"
@@ -105,12 +106,12 @@
 				disabled={!customWhen || !!customError}
 				onclick={confirmCustom}
 			>
-				Snooze
+				{m.mail_snooze_confirm()}
 			</button>
 		</div>
 	{:else}
 		<button type="button" class="mitem" onclick={() => (custom = true)}>
-			<CalendarClock size={17} />Pick date &amp; time
+			<CalendarClock size={17} />{m.mail_pick_date_time()}
 		</button>
 	{/if}
 </AnchoredMenu>

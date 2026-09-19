@@ -2,6 +2,8 @@
 	import Route from '@lucide/svelte/icons/route';
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import MailX from '@lucide/svelte/icons/mail-x';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { fmt } from './dates';
 	import type { LifecycleContext } from './types';
 
@@ -12,22 +14,22 @@
 		{
 			day: 0,
 			dt: fmt.med(ctx.dates.end),
-			nm: 'Subscription ends',
-			sub: 'Sending pauses. Mailbox becomes read-only.',
+			nm: m.lc_timeline_ends_title(),
+			sub: m.lc_timeline_ends_sub(),
 			danger: false
 		},
 		{
 			day: 30,
 			dt: fmt.med(ctx.dates.suspend),
-			nm: 'Mailbox goes inactive',
-			sub: 'Stops accepting mail. Senders get a bounce.',
+			nm: m.lc_timeline_inactive_title(),
+			sub: m.lc_timeline_inactive_sub(),
 			danger: false
 		},
 		{
 			day: 90,
 			dt: fmt.med(ctx.dates.remove),
-			nm: 'Data deleted',
-			sub: 'Only if you never restore or export.',
+			nm: m.lc_timeline_deleted_title(),
+			sub: m.lc_timeline_deleted_sub(),
 			danger: true
 		}
 	]);
@@ -42,8 +44,10 @@
 	const hereIdx = $derived(day < 0 ? -1 : day >= 90 ? 2 : day >= 30 ? 1 : 0);
 </script>
 
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
+
 <div class="lc-tl" class:compact>
-	<div class="lc-tl-cap"><Route size={14} />Your timeline · nothing happens without warning</div>
+	<div class="lc-tl-cap"><Route size={14} />{m.lc_timeline_caption()}</div>
 	<div class="lc-track">
 		<div class="fill" style="width:{pct}%"></div>
 		{#if day >= 0}
@@ -62,10 +66,10 @@
 	</div>
 	<div class="lc-phases">
 		<div class="lc-phase ok">
-			<Inbox size={15} /><span><b>Read-only · 30 days</b>Still receiving mail. Read, search, export.</span>
+			<Inbox size={15} /><span><Rich text={m.lc_timeline_phase_read_only()} tags={{ b: bold }} /></span>
 		</div>
 		<div class="lc-phase warn">
-			<MailX size={15} /><span><b>Inactive, then deletion</b>New mail bounces. Data kept until the end.</span>
+			<MailX size={15} /><span><Rich text={m.lc_timeline_phase_inactive()} tags={{ b: bold }} /></span>
 		</div>
 	</div>
 </div>

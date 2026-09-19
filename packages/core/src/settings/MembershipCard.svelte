@@ -7,6 +7,8 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import { browser } from '$app/environment';
 	import { page } from '$app/state';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import Badge from './Badge.svelte';
 	import CardHead from './CardHead.svelte';
 	import MemberRow from './MemberRow.svelte';
@@ -63,7 +65,7 @@
 				init: initials(wm.fullName || wm.email),
 				bg: c.bg,
 				fg: c.fg,
-				role: wm.role[0]!.toUpperCase() + wm.role.slice(1)
+				role: wm.role
 			};
 		})
 	);
@@ -77,7 +79,7 @@
 				init: initials(inv.email.split('@')[0] ?? inv.email),
 				bg: c.bg,
 				fg: c.fg,
-				role: inv.role[0]!.toUpperCase() + inv.role.slice(1),
+				role: inv.role,
 				pending: true
 			};
 		})
@@ -87,8 +89,12 @@
 	const planCode = $derived(billing.planCode);
 	const mode = $derived(inviteMode(type, planCode));
 	const isFreeFamily = $derived(billing.isFreeFamily);
-	const seatNoun = $derived(
-		type === 'business' ? 'paid seats used' : isFreeFamily ? 'seats used' : 'included seats used'
+	const seatUsage = $derived(
+		type === 'business'
+			? m.settings_member_seats_used_paid
+			: isFreeFamily
+				? m.settings_member_seats_used_free
+				: m.settings_member_seats_used_included
 	);
 	const hasRoom = $derived(type === 'business' || seatsTotal === null || seatsUsed < seatsTotal);
 	const ownedDomainCount = $derived(customDomains.items.filter(ownershipProven).length);
@@ -101,7 +107,7 @@
 	);
 	const domainGated = $derived(mode === 'domain' && hasRoom && ownedDomainCount === 0);
 	const seatsLeft = $derived(seatsTotal == null ? null : seatsTotal - seatsUsed);
-	const myMember = $derived(workspaces.members.find((m) => m.accountId === callerAccountId) ?? null);
+	const myMember = $derived(workspaces.members.find((wm) => wm.accountId === callerAccountId) ?? null);
 	const isWorkspaceOwner = $derived(myMember?.role === 'owner');
 	const canLeave = $derived(isFreeFamily && !!myMember && !isWorkspaceOwner);
 
@@ -178,6 +184,8 @@
 	}
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
 <div class="scard">
 	<CardHead icon={Icon} {title}>
 		{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
@@ -188,13 +196,14 @@
 			{#if seatsTotal != null}
 				<SeatMeter used={Math.min(seatsUsed, seatsTotal)} total={seatsTotal} />
 				<span class="seat-text">
-					<b>{seatsUsed}</b> of <b>{seatsTotal}</b>
-					{seatNoun}{pending.length ? ` · ${pending.length} pending` : ''}
+					<Rich text={seatUsage({ used: seatsUsed, total: seatsTotal })} tags={{ b: bold }} />{pending.length
+						? ` · ${m.settings_member_pending_count({ count: pending.length })}`
+						: ''}
 				</span>
 			{:else}
 				<span class="seat-text">
-					<b>{people.length}</b> active seats{pending.length
-						? ' · ' + pending.length + ' invited'
+					<Rich text={m.settings_member_active_seats({ count: people.length })} tags={{ b: bold }} />{pending.length
+						? ` · ${m.settings_member_invited_count({ count: pending.length })}`
 						: ''}
 				</span>
 			{/if}
@@ -241,15 +250,14 @@
 			</Button>
 			{#if mode === 'existing-account'}
 				<span class="mbr-note">
-					{seatsLeft} of {seatsTotal} seats free. You can invite anyone who already has a
-					thelemail.com address.
+					{m.settings_member_seats_free_existing({ left: seatsLeft ?? 0, total: seatsTotal ?? 0 })}
 				</span>
 			{:else if seatsTotal != null}
 				{#if type === 'business' && seatsUsed >= seatsTotal}
-					<span class="mbr-note">Inviting another member adds a prorated seat to your subscription.</span>
+					<span class="mbr-note">{m.settings_member_seats_prorated()}</span>
 				{:else if seatsTotal - seatsUsed > 0}
 					<span class="mbr-note">
-						{seatsTotal - seatsUsed} of {seatsTotal} seats available
+						{m.settings_member_seats_available({ left: seatsTotal - seatsUsed, total: seatsTotal })}
 					</span>
 				{/if}
 			{/if}
@@ -259,15 +267,15 @@
 			</Button>
 			<div class="seat-full">
 				<Info size={15} />
-				<span>Add a domain and prove you own it to invite members.</span>
+				<span>{m.settings_member_domain_gate_manage()}</span>
 			</div>
 			<Button variant="secondary" size="sm" href={`/u/${slot}/settings/domains/new`}>
-				<Globe size={14} />Add a domain
+				<Globe size={14} />{m.settings_member_add_domain()}
 			</Button>
 		{:else if domainGated}
 			<div class="seat-full">
 				<Info size={15} />
-				<span>An admin must add a domain and prove ownership before members can be invited.</span>
+				<span>{m.settings_member_domain_gate()}</span>
 			</div>
 		{:else if !hasRoom || canManage}
 			<div class="seat-full">
@@ -275,14 +283,14 @@
 			</div>
 		{/if}
 		{#if canLeave}
-			<Button variant="ghost" size="sm" onclick={() => (leaving = true)}>Leave family</Button>
+			<Button variant="ghost" size="sm" onclick={() => (leaving = true)}>{m.settings_family_leave()}</Button>
 		{/if}
 	</div>
 </div>
 
 {#if leaving}
 	<LeaveFamilyDialog
-		familyName={workspaces.workspace?.name ?? 'this family'}
+		familyName={workspaces.workspace?.name ?? m.settings_family_this_family()}
 		onClose={() => (leaving = false)}
 	/>
 {/if}

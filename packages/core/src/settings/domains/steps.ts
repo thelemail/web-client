@@ -1,15 +1,16 @@
 import type { CustomDomain, CustomDomainStatus, DNSRecordPhase } from '$core/api/customDomains';
+import { m } from '$paraglide/messages.js';
 
 export type DomainStep = 'ownership' | 'sending' | 'recipients' | 'routing' | 'done';
 
 export const DOMAIN_STEPS: DomainStep[] = ['ownership', 'sending', 'recipients', 'routing', 'done'];
 
-export const STEP_LABELS: Record<DomainStep, string> = {
-	ownership: 'Ownership',
-	sending: 'Sending',
-	recipients: 'Recipients',
-	routing: 'Routing',
-	done: 'Done'
+export const STEP_LABELS: Record<DomainStep, () => string> = {
+	ownership: () => m.settings_domains_step_ownership(),
+	sending: () => m.settings_domains_step_sending(),
+	recipients: () => m.settings_domains_step_recipients(),
+	routing: () => m.settings_domains_step_routing(),
+	done: () => m.settings_domains_step_done()
 };
 
 export const STEP_PHASE: Partial<Record<DomainStep, DNSRecordPhase>> = {
@@ -70,15 +71,15 @@ export function stepComplete(d: CustomDomain, step: DomainStep): boolean {
 export function statusLabel(s: CustomDomainStatus): string {
 	switch (s) {
 		case 'pending':
-			return 'Not started';
+			return m.settings_domains_status_pending();
 		case 'owned':
-			return 'Ownership verified';
+			return m.settings_domains_status_owned();
 		case 'ready':
-			return 'Ready to send';
+			return m.settings_domains_status_ready();
 		case 'active':
-			return 'Live';
+			return m.settings_domains_status_active();
 		case 'failed':
-			return 'Needs attention';
+			return m.settings_domains_status_failed();
 	}
 }
 
@@ -104,6 +105,6 @@ export function domainBadge(d: {
 	status: CustomDomainStatus;
 	dormantAt?: string | null;
 }): { label: string; kind: 'ok' | 'warn' | 'info' | 'neutral' } {
-	if (isDormant(d)) return { label: 'Paused', kind: 'warn' };
+	if (isDormant(d)) return { label: m.settings_domains_status_paused(), kind: 'warn' };
 	return { label: statusLabel(d.status), kind: statusKind(d.status) };
 }

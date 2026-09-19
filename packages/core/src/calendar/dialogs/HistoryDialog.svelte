@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import ClockArrowLeft from '@lucide/svelte/icons/clock-arrow-left';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
+	import { m } from '$paraglide/messages.js';
 	import { dateLabel } from '../format';
 	import { cal } from '../state.svelte';
 	import { calendarStore, type RevisionView } from '../store.svelte';
@@ -31,7 +33,7 @@
 				revisions = rows.sort((a, b) => b.rev - a.rev);
 			})
 			.catch((err) => {
-				error = err instanceof Error ? err.message : 'Could not load the history';
+				error = err instanceof Error ? err.message : m.cal_history_load_failed();
 			})
 			.finally(() => {
 				loading = false;
@@ -39,20 +41,25 @@
 	});
 
 	function whenOf(rev: RevisionView): string {
-		return new Date(rev.createdAt).toLocaleString(undefined, {
+		return new Date(rev.createdAt).toLocaleString(i18n.tag, {
 			dateStyle: 'medium',
 			timeStyle: 'short'
 		});
 	}
 
 	function summaryOf(rev: RevisionView): string {
-		if (rev.deleted) return 'Deleted';
-		if (!rev.item) return 'Cannot open this revision on this device';
+		if (rev.deleted) return m.cal_history_deleted();
+		if (!rev.item) return m.cal_history_unreadable();
 		const when = rev.item.start ?? rev.item.due;
-		if (!when) return rev.item.kind === 'task' ? 'No due date' : 'Unscheduled';
-		const prefix = rev.item.start ? '' : 'Due ';
-		if ('date' in when) return `${prefix}${dateLabel(when.date, true)}`;
-		return `${prefix}${dateLabel(when.dateTime.slice(0, 10), true)} · ${when.dateTime.slice(11, 16)}`;
+		if (!when) return rev.item.kind === 'task' ? m.cal_history_no_due() : m.cal_history_unscheduled();
+		const due = !rev.item.start;
+		if ('date' in when) {
+			const date = dateLabel(when.date, true);
+			return due ? m.cal_history_due_date({ date }) : date;
+		}
+		const date = dateLabel(when.dateTime.slice(0, 10), true);
+		const time = when.dateTime.slice(11, 16);
+		return due ? m.cal_history_due_datetime({ date, time }) : m.cal_history_datetime({ date, time });
 	}
 
 	async function restore(rev: RevisionView) {
@@ -60,11 +67,11 @@
 		error = null;
 		try {
 			await calendarStore.restoreRevision(request.itemId, rev.rev);
-			cal.notify(`Restored revision ${rev.rev}`);
+			cal.notify(m.cal_history_restored({ rev: rev.rev }));
 			cal.dialog = null;
 			cal.history = null;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not restore that revision';
+			error = err instanceof Error ? err.message : m.cal_history_restore_failed();
 		} finally {
 			restoring = null;
 		}
@@ -74,28 +81,25 @@
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
 		<ClockArrowLeft size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">History</Dialog.Title>
+		<Dialog.Title class="dt">{m.cal_history_title()}</Dialog.Title>
 	</Dialog.Header>
 
 	<div class="cal-dlg-body">
 		{#if current}
-			<p class="cal-dlg-lead">
-				Every saved version of “{current.item.title}” stays sealed on Thelemail. Restoring one makes
-				a new revision; nothing is overwritten.
-			</p>
+			<p class="cal-dlg-lead">{m.cal_history_lead({ title: current.item.title })}</p>
 		{/if}
 
 		{#if loading}
 			<div class="qrow">
 				<span class="qi"><ClockArrowLeft size={16} /></span>
-				<div><div class="qt">Loading…</div></div>
+				<div><div class="qt">{m.common_loading()}</div></div>
 			</div>
 		{:else if !revisions.length}
 			<div class="qrow">
 				<span class="qi"><ClockArrowLeft size={16} /></span>
 				<div>
-					<div class="qt">No history yet</div>
-					<div class="qs">Older versions appear here once the item has been edited.</div>
+					<div class="qt">{m.cal_history_empty()}</div>
+					<div class="qs">{m.cal_history_empty_desc()}</div>
 				</div>
 			</div>
 		{/if}
@@ -106,10 +110,14 @@
 			<div class="qrow">
 				<span class="qi"><Icon size={16} /></span>
 				<div>
-					<div class="qt">{rev.item?.title ?? '(sealed)'}</div>
+					<div class="qt">{rev.item?.title ?? m.cal_history_sealed()}</div>
 					<div class="qs">
-						Revision {rev.rev} · {whenOf(rev)} · {rev.mine ? 'you' : 'another member'} ·
-						{summaryOf(rev)}
+						{m.cal_history_rev_line({
+							rev: rev.rev,
+							when: whenOf(rev),
+							author: rev.mine ? m.cal_history_author_you() : m.cal_history_author_other(),
+							summary: summaryOf(rev)
+						})}
 					</div>
 					{#if !isCurrent && rev.item && !rev.deleted}
 						<div class="qactions">
@@ -119,12 +127,12 @@
 								disabled={restoring !== null}
 								onclick={() => restore(rev)}
 							>
-								{restoring === rev.rev ? 'Restoring…' : 'Restore this version'}
+								{restoring === rev.rev ? m.cal_history_restoring() : m.cal_history_restore()}
 							</Button>
 						</div>
 					{/if}
 				</div>
-				<span class="qstate">{isCurrent ? 'current' : rev.deleted ? 'deleted' : ''}</span>
+				<span class="qstate">{isCurrent ? m.cal_history_state_current() : rev.deleted ? m.cal_history_state_deleted() : ''}</span>
 			</div>
 		{/each}
 
@@ -134,6 +142,6 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>Close</Button>
+		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.common_close()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

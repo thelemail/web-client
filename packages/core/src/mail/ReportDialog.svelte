@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import { submitReport, type ReportOutcome } from './report';
@@ -16,13 +17,13 @@
 
 	let { messageId, subject = '', senderAddress = '', onClose, onReported }: Props = $props();
 
-	const KINDS: { id: MessageReportKind; label: string; hint: string }[] = [
+	const KINDS: { id: MessageReportKind; label: () => string; hint: () => string }[] = [
 		{
 			id: 'phishing',
-			label: 'Phishing',
-			hint: 'It impersonates someone, or tries to get credentials, payments or personal data.'
+			label: () => m.mail_report_kind_phishing(),
+			hint: () => m.mail_report_kind_phishing_hint()
 		},
-		{ id: 'spam', label: 'Spam', hint: 'It is unsolicited bulk mail you did not ask for.' }
+		{ id: 'spam', label: () => m.mail_report_kind_spam(), hint: () => m.mail_report_kind_spam_hint() }
 	];
 
 	let kind = $state<MessageReportKind>('phishing');
@@ -30,12 +31,12 @@
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 
-	const hint = $derived(KINDS.find((k) => k.id === kind)?.hint ?? '');
+	const hint = $derived(KINDS.find((k) => k.id === kind)?.hint() ?? '');
 
 	async function confirm() {
 		const accountId = auth.accountId;
 		if (!accountId) {
-			error = 'Unlock this account to report the message.';
+			error = m.mail_report_unlock_required();
 			return;
 		}
 		busy = true;
@@ -49,7 +50,7 @@
 			onReported(kind, outcome);
 			onClose();
 		} catch (e) {
-			error = e instanceof Error && e.message ? e.message : 'The report could not be sent.';
+			error = e instanceof Error && e.message ? e.message : m.mail_report_failed();
 		} finally {
 			busy = false;
 		}
@@ -58,22 +59,19 @@
 
 <ConfirmDialog
 	icon={ShieldAlert}
-	title="Report this message"
+	title={m.mail_report_title()}
 	sub={subject}
 	tone="danger"
-	confirmLabel="Report and move to Spam"
+	confirmLabel={m.mail_report_confirm()}
 	{busy}
 	{error}
 	onConfirm={() => void confirm()}
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">
-			We keep a record of the report and move the message to Spam. By default the record holds
-			nothing but the message reference and what you picked below.
-		</p>
+		<p class="cfd-p">{m.mail_report_body()}</p>
 
-		<div class="cfd-seg" role="radiogroup" aria-label="Report reason">
+		<div class="cfd-seg" role="radiogroup" aria-label={m.mail_report_reason_aria()}>
 			{#each KINDS as k (k.id)}
 				<button
 					type="button"
@@ -84,7 +82,7 @@
 					disabled={busy}
 					onclick={() => (kind = k.id)}
 				>
-					{k.label}
+					{k.label()}
 				</button>
 			{/each}
 		</div>
@@ -93,11 +91,11 @@
 		<label class="cfd-check">
 			<input type="checkbox" bind:checked={includeHeaders} disabled={busy} />
 			<span>
-				<span class="cfd-check-t">Include the message headers</span>
+				<span class="cfd-check-t">{m.mail_report_include_headers()}</span>
 				<span class="cfd-check-d">
-					Attaches the decrypted header block{senderAddress ? ` and ${senderAddress}` : ''} to the
-					report so we can trace how the message was routed and train the spam filter. Nothing
-					leaves your browser unless this is ticked.
+					{senderAddress
+						? m.mail_report_include_headers_detail_sender({ sender: senderAddress })
+						: m.mail_report_include_headers_detail()}
 				</span>
 			</span>
 		</label>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import Globe2 from '@lucide/svelte/icons/globe-2';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -26,6 +27,7 @@
 	import UpgradeNudge from '$core/settings/UpgradeNudge.svelte';
 	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 
 	const POLL_MS = 60000;
 
@@ -55,10 +57,10 @@
 	}
 
 	function formatTime(s: string | null | undefined): string {
-		if (!s) return 'never';
+		if (!s) return m.settings_domains_never();
 		const d = new Date(s);
-		if (Number.isNaN(d.getTime())) return 'never';
-		return d.toLocaleString();
+		if (Number.isNaN(d.getTime())) return m.settings_domains_never();
+		return d.toLocaleString(i18n.tag);
 	}
 
 	const empty = $derived(!store.loading && store.items.length === 0);
@@ -88,18 +90,18 @@
 	onkeydown={(e) => e.key === 'Escape' && (menuFor = null)}
 />
 
-<SecHead desc="Setup runs in a fixed order so mail never arrives somewhere it cannot be delivered: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last." />
+<SecHead desc={m.settings_domains_desc()} />
 
 <Card>
 	{#snippet head()}
 		<Globe2 size={16} />
-		<h3>Your domains</h3>
+		<h3>{m.settings_domains_title()}</h3>
 	{/snippet}
 
 	{#if store.loading && items.length === 0}
-		<div class="cd-empty">Loading domains…</div>
+		<div class="cd-empty">{m.settings_domains_loading()}</div>
 	{:else if empty}
-		<div class="cd-empty">No custom domains yet.</div>
+		<div class="cd-empty">{m.settings_domains_empty()}</div>
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
@@ -111,11 +113,11 @@
 						<Badge kind={domainBadge(d).kind} dot>{domainBadge(d).label}</Badge>
 					</div>
 
-					<div class="cd-progress" aria-label="Setup progress">
+					<div class="cd-progress" aria-label={m.settings_domains_progress_aria()}>
 						{#each LADDER as s (s)}
 							<span class="cd-stage" class:done={stepComplete(d, s)}>
 								<span class="cd-pip"></span>
-								<span class="cd-stage-lbl">{STEP_LABELS[s]}</span>
+								<span class="cd-stage-lbl">{STEP_LABELS[s]()}</span>
 							</span>
 						{/each}
 					</div>
@@ -127,17 +129,17 @@
 					<div class="cd-foot-row">
 						<span class="cd-meta">
 							{#if live}
-								Checked {formatTime(d.lastCheckedAt)}
+								{m.settings_domains_checked({ time: formatTime(d.lastCheckedAt) })}
 							{:else}
-								{left} step{left === 1 ? '' : 's'} left · checked {formatTime(d.lastCheckedAt)}
+								{m.settings_domains_steps_left({ count: left, time: formatTime(d.lastCheckedAt) })}
 							{/if}
 						</span>
 						<span class="cd-acts">
 							{#if live}
-								<Button variant="secondary" href={setupHref(d)}>Review setup</Button>
+								<Button variant="secondary" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
 							{:else}
 								<Button variant="primary" href={setupHref(d)}>
-									Continue setup<ArrowRight size={15} />
+									{m.settings_domains_continue_setup()}<ArrowRight size={15} />
 								</Button>
 							{/if}
 							{#if manage}
@@ -145,7 +147,7 @@
 									<button
 										type="button"
 										class="cd-menu-btn"
-										aria-label="Domain actions"
+										aria-label={m.settings_domains_actions_aria()}
 										aria-expanded={menuFor === d.id}
 										onclick={() => openMenu(d.id)}
 									>
@@ -158,7 +160,7 @@
 												class="cd-menu-item danger"
 												onclick={() => startRemove(d.id)}
 											>
-												<Trash2 size={14} strokeWidth={1.75} />Remove domain
+												<Trash2 size={14} strokeWidth={1.75} />{m.settings_domains_remove()}
 											</button>
 										</div>
 									{/if}
@@ -174,11 +176,11 @@
 	<div class="cd-card-foot">
 		{#if !billing.canAddDomains}
 			<UpgradeNudge
-				title="Your own domain needs a paid plan"
-				desc="Every paid plan includes at least one custom domain with unlimited addresses on it."
+				title={m.settings_domains_nudge_title()}
+				desc={m.settings_domains_nudge_desc()}
 			/>
 		{:else}
-			<Button variant="primary" href={`${base}/new`}><Plus size={15} />Add a domain</Button>
+			<Button variant="primary" href={`${base}/new`}><Plus size={15} />{m.settings_domains_add()}</Button>
 		{/if}
 	</div>
 
@@ -193,7 +195,7 @@
 	<RemoveDomainDialog
 		domain={removeTarget}
 		onClose={() => (removeId = null)}
-		onRemoved={(name) => settingsDraft.flash(`${name} removed`)}
+		onRemoved={(name) => settingsDraft.flash(m.settings_domains_removed_flash({ name }))}
 	/>
 {/if}
 

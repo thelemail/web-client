@@ -1,14 +1,15 @@
 import { browser } from '$app/environment';
+import { m } from '$paraglide/messages.js';
 
 export type ThemePref = 'light' | 'dark' | 'auto';
 export type ResolvedTheme = 'light' | 'dark';
 
 const KEY = 'thelemail.theme';
 
-export const THEME_META: Record<ThemePref, { label: string }> = {
-	light: { label: 'Parchment' },
-	dark: { label: 'Inkwell' },
-	auto: { label: 'Auto' }
+export const THEME_META: Record<ThemePref, { label: () => string }> = {
+	light: { label: () => m.settings_theme_parchment() },
+	dark: { label: () => m.settings_theme_inkwell() },
+	auto: { label: () => m.settings_theme_auto() }
 };
 
 const THEME_CYCLE: Record<ThemePref, ThemePref> = {
@@ -56,7 +57,7 @@ class ThemeStore {
 	}
 
 	get label(): string {
-		return THEME_META[this.pref].label;
+		return THEME_META[this.pref].label();
 	}
 
 	#apply() {

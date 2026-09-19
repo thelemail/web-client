@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import UserX from '@lucide/svelte/icons/user-x';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -10,6 +11,7 @@
 	import { blockSender, unsealAddress } from '$core/mail/blockedSenders';
 	import { Button } from '$core/components/ui/button';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Entry {
 		id: string;
@@ -54,7 +56,7 @@
 			if (auth.accountId !== accountId) return;
 			entries = opened;
 		} catch (e) {
-			error = e instanceof Error && e.message ? e.message : 'Could not load the block list';
+			error = e instanceof Error && e.message ? e.message : m.settings_blocked_load_failed();
 		} finally {
 			loading = false;
 		}
@@ -65,7 +67,7 @@
 		const address = newAddress.trim().toLowerCase();
 		if (!accountId || !address) return;
 		if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address)) {
-			addError = 'Enter a full email address.';
+			addError = m.settings_blocked_invalid_address();
 			return;
 		}
 		addBusy = true;
@@ -76,7 +78,7 @@
 			newAddress = '';
 			adding = false;
 		} catch (e) {
-			addError = e instanceof Error && e.message ? e.message : 'Could not block that address';
+			addError = e instanceof Error && e.message ? e.message : m.settings_blocked_block_failed();
 		} finally {
 			addBusy = false;
 		}
@@ -97,7 +99,7 @@
 			entries = entries.filter((e) => e.id !== entry.id);
 			pendingUnblock = null;
 		} catch (e) {
-			unblockError = e instanceof Error && e.message ? e.message : 'Could not unblock';
+			unblockError = e instanceof Error && e.message ? e.message : m.settings_blocked_unblock_failed();
 		} finally {
 			removing = null;
 		}
@@ -106,16 +108,16 @@
 	function formatDate(iso: string): string {
 		const d = new Date(iso);
 		if (Number.isNaN(d.getTime())) return '';
-		return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+		return d.toLocaleDateString(i18n.tag, { day: 'numeric', month: 'short', year: 'numeric' });
 	}
 </script>
 
-<SecHead desc="Mail from a blocked address lands in Spam and raises no notification. The server keeps only a keyed hash of the address, so it cannot read your block list; the label shown here is decrypted in this browser." />
+<SecHead desc={m.settings_blocked_desc()} />
 
 <div class="scard">
-	<CardHead icon={UserX} title="Block list">
+	<CardHead icon={UserX} title={m.settings_blocked_title()}>
 		{#snippet right()}
-			<span class="card-meta">{entries.length} blocked</span>
+			<span class="card-meta">{m.settings_blocked_count({ count: entries.length })}</span>
 		{/snippet}
 	</CardHead>
 
@@ -123,8 +125,7 @@
 		<div class="card-note">
 			<Lock size={13} />
 			<span>
-				Some labels were sealed with a key this browser no longer holds. Those entries still block
-				mail, and you can remove them by date.
+				{m.settings_blocked_sealed_note()}
 			</span>
 		</div>
 	{/if}
@@ -136,12 +137,12 @@
 	{/if}
 
 	{#if loading}
-		<div class="alias-row"><div class="alias-info"><div class="alias-addr">Loading…</div></div></div>
+		<div class="alias-row"><div class="alias-info"><div class="alias-addr">{m.common_loading()}</div></div></div>
 	{:else if entries.length === 0}
 		<div class="alias-row">
 			<div class="alias-info">
-				<div class="alias-addr">Nobody is blocked.</div>
-				<div class="alias-target">Block a sender from the message menu, or add an address below.</div>
+				<div class="alias-addr">{m.settings_blocked_empty()}</div>
+				<div class="alias-target">{m.settings_blocked_empty_desc()}</div>
 			</div>
 		</div>
 	{/if}
@@ -149,13 +150,13 @@
 	{#each entries as e (e.id)}
 		<div class="alias-row">
 			<div class="alias-info">
-				<div class="alias-addr">{e.address ?? 'Address held encrypted'}</div>
-				<div class="alias-target">Blocked {formatDate(e.createdAt)}</div>
+				<div class="alias-addr">{e.address ?? m.settings_blocked_address_encrypted()}</div>
+				<div class="alias-target">{m.settings_blocked_on({ date: formatDate(e.createdAt) })}</div>
 			</div>
 			<button
 				type="button"
 				class="rowmenu"
-				title="Unblock"
+				title={m.settings_blocked_unblock()}
 				disabled={removing === e.id}
 				onclick={() => remove(e)}
 			>
@@ -184,33 +185,33 @@
 				{#if addError}<div class="alias-target bs-adderr">{addError}</div>{/if}
 			</div>
 			<Button variant="secondary" size="sm" disabled={addBusy} onclick={() => void add()}>
-				Block
+				{m.settings_blocked_block()}
 			</Button>
 			<Button variant="ghost" size="sm" disabled={addBusy} onclick={() => {
 					adding = false;
 					newAddress = '';
 					addError = null;
 				}}>
-				Cancel
+				{m.common_cancel()}
 			</Button>
 		</div>
 	{:else}
 		<button type="button" class="addrow" onclick={() => (adding = true)}>
-			<Plus size={16} />Block an address
+			<Plus size={16} />{m.settings_blocked_add()}
 		</button>
 	{/if}
 </div>
 
 {#snippet unblockBody()}
-	<p class="cfd-p">Their mail will reach your inbox again.</p>
+	<p class="cfd-p">{m.settings_blocked_unblock_body()}</p>
 {/snippet}
 
 {#if pendingUnblock}
 	<ConfirmDialog
 		icon={UserX}
-		title="Unblock this sender?"
-		sub={pendingUnblock.address ?? 'Sealed address'}
-		confirmLabel="Unblock"
+		title={m.settings_blocked_unblock_title()}
+		sub={pendingUnblock.address ?? m.settings_blocked_sealed_address()}
+		confirmLabel={m.settings_blocked_unblock()}
 		busy={removing !== null}
 		error={unblockError}
 		body={unblockBody}

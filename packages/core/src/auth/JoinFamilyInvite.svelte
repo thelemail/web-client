@@ -14,6 +14,8 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { reloadWorkspaceData } from '$core/stores/accountData';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		invite: WorkspaceInvitePreview;
@@ -34,7 +36,7 @@
 		!!localRecord && auth.accountId === localRecord.accountId && !!auth.email
 	);
 	const landingSlot = $derived(localRecord?.slot ?? 0);
-	const inviter = $derived(invite.inviterDisplayName?.trim() || 'Someone');
+	const inviter = $derived(invite.inviterDisplayName?.trim() || m.auth_family_invite_someone());
 	const redirect = $derived(`/invite/${token}`);
 
 	const inviterInitials = $derived.by(() => {
@@ -66,18 +68,18 @@
 	}
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
 {#if joined}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
 			<CircleCheck size={28} />
-			<h1>You are in {invite.workspaceName}</h1>
-			<p>
-				Your mailbox is unchanged. The family's shared calendar shows up in your calendar list.
-			</p>
+			<h1>{m.auth_family_invite_joined_title({ workspace: invite.workspaceName })}</h1>
+			<p>{m.auth_family_invite_joined_body()}</p>
 		</div>
 		<div class="actions" style="margin-top:24px">
 			<Button variant="primary" size="lg" block onclick={() => goto(`/u/${landingSlot}/mail/inbox`)}>
-				Open Thelemail
+				{m.auth_family_invite_open()}
 			</Button>
 		</div>
 	</div>
@@ -86,16 +88,26 @@
 		<div class="invite">
 			<span class="iav">{inviterInitials}</span>
 			<span class="itext">
-				<span class="iname">{inviter} invited you</span>
-				<span class="isub">to join <b>{invite.workspaceName}</b> on Thelemail</span>
+				<span class="iname">{m.auth_invite_invited_you({ inviter })}</span>
+				<span class="isub"
+					><Rich
+						text={m.auth_invite_to_join({ workspace: invite.workspaceName })}
+						tags={{ b: bold }}
+					/></span
+				>
 			</span>
 		</div>
 		<div class="card-head">
-			<h1>This invitation is for {invite.inviteeEmail}</h1>
+			<h1>{m.auth_family_invite_wrong_account_title({ email: invite.inviteeEmail })}</h1>
 			{#if auth.email}
-				<p>You are signed in as {auth.email}. Switch to {invite.inviteeEmail} to accept it.</p>
+				<p>
+					{m.auth_family_invite_switch_account({
+						current: auth.email,
+						email: invite.inviteeEmail
+					})}
+				</p>
 			{:else}
-				<p>Sign in to that account to accept it.</p>
+				<p>{m.auth_family_invite_sign_in_to_accept()}</p>
 			{/if}
 		</div>
 		<div class="actions" style="margin-top:24px">
@@ -106,7 +118,7 @@
 					block
 					onclick={() => goto(`/login?slot=${localRecord.slot}&redirect=${encodeURIComponent(redirect)}`)}
 				>
-					Unlock {invite.inviteeEmail}
+					{m.auth_family_invite_unlock({ email: invite.inviteeEmail })}
 				</Button>
 			{:else if accounts.list.length > 0}
 				<Button
@@ -115,7 +127,7 @@
 					block
 					onclick={() => goto(`/login?addAccount=1&redirect=${encodeURIComponent(redirect)}`)}
 				>
-					Add {invite.inviteeEmail}
+					{m.auth_family_invite_add({ email: invite.inviteeEmail })}
 				</Button>
 			{:else}
 				<Button
@@ -124,7 +136,7 @@
 					block
 					onclick={() => goto(`/login?redirect=${encodeURIComponent(redirect)}`)}
 				>
-					Sign in
+					{m.auth_family_invite_sign_in()}
 				</Button>
 			{/if}
 		</div>
@@ -134,40 +146,40 @@
 		<div class="invite">
 			<span class="iav">{inviterInitials}</span>
 			<span class="itext">
-				<span class="iname">{inviter} invited you</span>
-				<span class="isub">to join <b>{invite.workspaceName}</b> on Thelemail</span>
+				<span class="iname">{m.auth_invite_invited_you({ inviter })}</span>
+				<span class="isub"
+					><Rich
+						text={m.auth_invite_to_join({ workspace: invite.workspaceName })}
+						tags={{ b: bold }}
+					/></span
+				>
 			</span>
 		</div>
 		<div class="card-head">
-			<h1>Join {invite.workspaceName}</h1>
-			<p>Accepting moves your account into {invite.workspaceName}. Here is what that means.</p>
+			<h1>{m.auth_family_invite_join_title({ workspace: invite.workspaceName })}</h1>
+			<p>{m.auth_family_invite_join_lede({ workspace: invite.workspaceName })}</p>
 		</div>
 
 		<ul class="terms">
 			<li>
 				<Inbox size={16} />
-				<span>You keep {invite.inviteeEmail}, every message in it, your keys and your calendars.</span>
+				<span>{m.auth_family_invite_term_keep({ email: invite.inviteeEmail })}</span>
 			</li>
 			<li>
 				<CalendarDays size={16} />
-				<span>You get the family's shared calendar.</span>
+				<span>{m.auth_family_invite_term_calendar()}</span>
 			</li>
 			<li>
 				<Wallet size={16} />
-				<span>Your plan stays free. Nothing is charged, now or later.</span>
+				<span>{m.auth_family_invite_term_free()}</span>
 			</li>
 			<li class="caveat">
 				<UserRound size={16} />
-				<span>
-					{inviter} cannot read your mail. They can see who is in the family and can remove you.
-				</span>
+				<span>{m.auth_family_invite_term_privacy({ inviter })}</span>
 			</li>
 			<li class="caveat">
 				<LogOut size={16} />
-				<span>
-					Your own workspace is dissolved, so you cannot add a domain or invite anyone while you
-					are in the family. You can leave at any time and get your workspace back.
-				</span>
+				<span>{m.auth_family_invite_term_dissolve()}</span>
 			</li>
 		</ul>
 
@@ -179,10 +191,12 @@
 
 		<div class="btnrow" style="margin-top:24px">
 			<Button variant="ghost" size="lg" onclick={() => goto(`/u/${landingSlot}/mail/inbox`)}>
-				Not now
+				{m.auth_family_invite_not_now()}
 			</Button>
 			<Button variant="primary" size="lg" disabled={joining} onclick={join}>
-				{joining ? 'Joining…' : `Join ${invite.workspaceName}`}<ArrowRight size={16} />
+				{joining
+					? m.auth_family_invite_joining()
+					: m.auth_family_invite_join({ workspace: invite.workspaceName })}<ArrowRight size={16} />
 			</Button>
 		</div>
 	</div>

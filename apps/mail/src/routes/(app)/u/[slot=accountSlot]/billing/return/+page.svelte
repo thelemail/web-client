@@ -8,6 +8,8 @@
 	import Mail from '@lucide/svelte/icons/mail';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	let { data } = $props();
 
@@ -50,8 +52,10 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Confirming payment</title>
+	<title>{m.billing_return_page_title()}</title>
 </svelte:head>
+
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <AuthShell>
 	<div class="card">
@@ -59,32 +63,34 @@
 			<div class="welcome">
 				{#if phase === 'active'}
 					<span class="return-check"><CircleCheck size={44} strokeWidth={1.5} /></span>
-					<h1>You&rsquo;re in</h1>
+					<h1>{m.billing_return_active_title()}</h1>
 					<p>
-						Your subscription is active{#if planLabel}{' '}&mdash;
-							<b>{planLabel}</b>{/if}. Welcome to Thelemail.
+						{#if planLabel}
+							<Rich text={m.billing_return_active_plan({ plan: planLabel })} tags={{ b: bold }} />
+						{:else}
+							{m.billing_return_active()}
+						{/if}
 					</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block onclick={() => goto(`/u/${slot}/mail/inbox`)}>
-							<Mail size={17} strokeWidth={1.75} />Open your mailbox
+							<Mail size={17} strokeWidth={1.75} />{m.billing_open_mailbox()}
 						</Button>
 					</div>
 				{:else if phase === 'slow'}
 					<span class="return-spinner" aria-hidden="true"></span>
-					<h1>Taking longer than expected</h1>
+					<h1>{m.billing_return_slow_title()}</h1>
 					<p>
-						Your payment was received &mdash; activation completes automatically as soon as our
-						payment provider confirms it. You can keep this page open or check back in a minute.
+						{m.billing_return_slow_body()}
 					</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="secondary" size="lg" block onclick={() => billing.refresh()}>
-							Check again
+							{m.billing_return_check_again()}
 						</Button>
 					</div>
 				{:else}
 					<span class="return-spinner" aria-hidden="true"></span>
-					<h1>Confirming your payment&hellip;</h1>
-					<p>This usually takes a few seconds. We&rsquo;ll take you to your mailbox automatically.</p>
+					<h1>{m.billing_return_confirming_title()}</h1>
+					<p>{m.billing_return_confirming_body()}</p>
 				{/if}
 			</div>
 		</div>

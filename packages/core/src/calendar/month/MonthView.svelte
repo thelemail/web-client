@@ -1,13 +1,11 @@
 <script lang="ts">
 	import * as Popover from '$core/components/ui/popover';
+	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import { cal } from '../state.svelte';
+	import { weekdayNames } from '$core/i18n/intl';
 
-	const HEADINGS = $derived(
-		cal.weekStartsOn === 1
-			? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-			: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-	);
+	const HEADINGS = $derived(weekdayNames('short', cal.weekStartsOn === 1));
 
 	let openKey = $state<string | null>(null);
 </script>
@@ -32,7 +30,7 @@
 				<button
 					type="button"
 					class="mv-dh"
-					aria-label="Open {cell.date} in the week view"
+					aria-label={m.cal_month_open_week_aria({ date: cell.date })}
 					onclick={() => cal.goToDate(cell.date, 'week')}
 				>
 					<span class="mv-dnum">{cell.n}</span>

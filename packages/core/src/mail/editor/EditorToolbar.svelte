@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import type { Editor } from '@tiptap/core';
 	import LinkDialog from './LinkDialog.svelte';
 	import { applyLink, currentLink } from './link';
@@ -79,35 +80,35 @@
 	}
 </script>
 
-<div class="cbar" role="toolbar" aria-label="Formatting">
-	<button type="button" title="Bold" class:on={active.bold} aria-pressed={active.bold} onclick={bold}>
+<div class="cbar" role="toolbar" aria-label={m.mail_toolbar_aria()}>
+	<button type="button" title={m.mail_toolbar_bold()} class:on={active.bold} aria-pressed={active.bold} onclick={bold}>
 		<b>B</b>
 	</button>
-	<button type="button" title="Italic" class:on={active.italic} aria-pressed={active.italic} onclick={italic}>
+	<button type="button" title={m.mail_toolbar_italic()} class:on={active.italic} aria-pressed={active.italic} onclick={italic}>
 		<i>I</i>
 	</button>
-	<button type="button" title="Underline" class:on={active.underline} aria-pressed={active.underline} onclick={underline}>
+	<button type="button" title={m.mail_toolbar_underline()} class:on={active.underline} aria-pressed={active.underline} onclick={underline}>
 		<u>U</u>
 	</button>
 	<span class="cbar-sep"></span>
-	<button type="button" title="Bulleted list" class:on={active.ul} aria-pressed={active.ul} onclick={ul}>
+	<button type="button" title={m.mail_toolbar_bulleted()} class:on={active.ul} aria-pressed={active.ul} onclick={ul}>
 		<List size={16} />
 	</button>
-	<button type="button" title="Numbered list" class:on={active.ol} aria-pressed={active.ol} onclick={ol}>
+	<button type="button" title={m.mail_toolbar_numbered()} class:on={active.ol} aria-pressed={active.ol} onclick={ol}>
 		<ListOrdered size={16} />
 	</button>
-	<button type="button" title="Insert link" class:on={active.link} aria-pressed={active.link} onclick={link}>
+	<button type="button" title={m.mail_toolbar_link()} class:on={active.link} aria-pressed={active.link} onclick={link}>
 		<LinkIcon size={16} />
 	</button>
-	<button type="button" title="Quote" class:on={active.quote} aria-pressed={active.quote} onclick={quote}>
+	<button type="button" title={m.mail_toolbar_quote()} class:on={active.quote} aria-pressed={active.quote} onclick={quote}>
 		<Quote size={16} />
 	</button>
 	{#if signature?.present}
 		<span class="cbar-sep"></span>
 		<button
 			type="button"
-			title={signature.on ? 'Remove signature' : 'Add signature'}
-			aria-label={signature.on ? 'Remove signature' : 'Add signature'}
+			title={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
+			aria-label={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
 			class:on={signature.on}
 			aria-pressed={signature.on}
 			disabled={signature.disabled}

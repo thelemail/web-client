@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { listWorkspaceAliases } from '$core/api/aliases';
 import type { AccountAddress } from '$core/api/addresses';
+import { m } from '$paraglide/messages.js';
 
 class WorkspaceAddressesStore {
 	items = $state<AccountAddress[]>([]);
@@ -26,7 +27,7 @@ class WorkspaceAddressesStore {
 			this.items = addresses;
 		} catch (err) {
 			if (this.#workspaceId !== workspaceId) return;
-			this.error = err instanceof Error ? err.message : 'failed to load workspace addresses';
+			this.error = err instanceof Error ? err.message : m.store_workspace_addresses_load_failed();
 			this.items = [];
 		} finally {
 			if (this.#workspaceId === workspaceId) this.loading = false;

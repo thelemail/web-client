@@ -5,6 +5,8 @@
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
@@ -39,38 +41,38 @@
 			onRevoked(target);
 			onClose();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not revoke this delegation';
+			error = err instanceof Error ? err.message : m.settings_delegation_revoke_failed();
 		} finally {
 			busy = false;
 		}
 	}
 </script>
 
-<CeremonyShell icon={Trash2} eyebrow="Signing delegation" title="Revoke {target}" tone="danger" {onClose}>
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
+
+<CeremonyShell icon={Trash2} eyebrow={m.settings_delegation_title()} title={m.settings_delegation_revoke_title({ label: target })} tone="danger" {onClose}>
 	<div class="cer-pane">
 		<div class="cer-lede">
-			<p>Revoking <b>{target}</b> for {delegation.address} means:</p>
+			<p>
+				<Rich
+					text={m.settings_delegation_revoke_lede({ label: target, address: delegation.address })}
+					tags={{ b: bold }}
+				/>
+			</p>
 		</div>
 		<ul class="cer-points">
 			<li>
 				<ShieldOff size={16} />
-				<span>
-					Thelemail stops treating new mail signed with this key as authorized. Mail the service
-					already sent stays verified.
-				</span>
+				<span>{m.settings_delegation_revoke_point_stop()}</span>
 			</li>
 			<li>
 				<Clock size={16} />
-				<span>
-					People outside Thelemail may keep trusting the key until their mail client refreshes it,
-					usually within a day. We publish the revocation for 90 days so they pick it up.
-				</span>
+				<span>{m.settings_delegation_revoke_point_outside()}</span>
 			</li>
 			<li>
 				<MailX size={16} />
-				<span>
-					Your other delegations, your own signing key and your mailbox are untouched.
-				</span>
+				<span>{m.settings_delegation_revoke_point_untouched()}</span>
 			</li>
 		</ul>
 
@@ -80,11 +82,13 @@
 				checked={ack}
 				onCheckedChange={(v) => (ack = v === true)}
 			/>
-			<span>I understand this service will no longer be able to sign as {delegation.address}.</span>
+			<span>{m.settings_delegation_revoke_ack({ address: delegation.address })}</span>
 		</Label>
 
 		<div class="field">
-			<label for="revoke-delegation-confirm">Type <span class="mono">{target}</span> to confirm</label>
+			<label for="revoke-delegation-confirm">
+				<Rich text={m.settings_delegation_revoke_confirm({ label: target })} tags={{ code: mono }} />
+			</label>
 			<input
 				id="revoke-delegation-confirm"
 				class="tin"
@@ -102,9 +106,9 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" disabled={busy} onclick={onClose}>Keep it</Button>
+		<Button variant="ghost" disabled={busy} onclick={onClose}>{m.settings_delegation_revoke_keep()}</Button>
 		<Button variant="danger" disabled={!canRevoke} onclick={submit}>
-			{busy ? 'Revoking…' : 'Revoke'}
+			{busy ? m.settings_delegation_revoking() : m.settings_delegation_revoke()}
 		</Button>
 	{/snippet}
 </CeremonyShell>

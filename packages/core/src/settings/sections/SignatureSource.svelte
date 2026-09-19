@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { signatures } from '$core/stores/signatures.svelte';
 	import { SIGNATURE_IMAGE_ATTR } from '$core/mail/editor/signatureImage';
 
@@ -45,7 +46,7 @@
 	value={value}
 	oninput={(e) => onChange((e.currentTarget as HTMLTextAreaElement).value)}
 ></textarea>
-<div class="sig-preview-lbl">Preview</div>
+<div class="sig-preview-lbl">{m.settings_signature_preview()}</div>
 <div bind:this={previewEl} class="sig-preview"></div>
 
 <style>

@@ -14,6 +14,7 @@
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { preferences } from '$core/stores/preferences.svelte';
 	import { auth } from '$core/stores/auth.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	let { children, data } = $props();
 
@@ -75,9 +76,9 @@
 				{/if}
 				<div class="autosave {settingsDraft.saveState}" aria-live="polite">
 					{#if settingsDraft.saveState === 'saving'}
-						<span class="as-spin"></span><span class="as-tx">Saving…</span>
+						<span class="as-spin"></span><span class="as-tx">{m.settings_autosave_saving()}</span>
 					{:else if settingsDraft.saveState === 'saved'}
-						<Check size={14} /><span class="as-tx">Saved</span>
+						<Check size={14} /><span class="as-tx">{m.settings_autosave_saved()}</span>
 					{/if}
 				</div>
 			</header>

@@ -13,6 +13,7 @@
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { page } from '$app/state';
 	import { resolveReturnTo } from '$core/auth/return-to';
+	import { m } from '$paraglide/messages.js';
 
 	const returnTo = $derived(page.url.searchParams.get('redirect'));
 	const moreQuery = $derived(
@@ -65,13 +66,13 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Choose an account</title>
+	<title>{m.auth_picker_page_title()}</title>
 </svelte:head>
 
 <div class="card-surface screen-fade">
 	<div class="card-head">
-		<p class="eyebrow">Signed in on this device</p>
-		<h1>Choose an account</h1>
+		<p class="eyebrow">{m.auth_picker_eyebrow()}</p>
+		<h1>{m.auth_picker_title()}</h1>
 	</div>
 	<div class="acctpick">
 		{#each rows as row (row.id)}
@@ -96,7 +97,7 @@
 						{/if}
 						<span class="ap-em" title={row.email}>{row.email}</span>
 						<span class="ap-state" class:ap-locked={!row.unlocked}>
-							{row.unlocked ? 'Signed in' : 'Locked'}
+							{row.unlocked ? m.auth_picker_state_signed_in() : m.auth_picker_state_locked()}
 						</span>
 					</span>
 					<span class="ap-go"><ChevronRight size={16} strokeWidth={1.75} /></span>
@@ -104,8 +105,8 @@
 				<button
 					type="button"
 					class="apick-rm"
-					title="Remove from this device"
-					aria-label={`Remove ${row.email} from this device`}
+					title={m.auth_picker_remove_title()}
+					aria-label={m.auth_picker_remove_label({ email: row.email })}
 					disabled={navigating !== null}
 					onclick={() => (removing = { id: row.id, email: row.email, name: row.name })}
 				>
@@ -116,13 +117,13 @@
 	</div>
 	<div class="apick-more">
 		<a class="apick-link" href={`/login?addAccount=1${moreQuery}`}>
-			<LogIn size={17} strokeWidth={1.75} />Sign in to another account
+			<LogIn size={17} strokeWidth={1.75} />{m.auth_picker_sign_in_another()}
 		</a>
 		<a class="apick-link" href={`/register?addAccount=1${moreQuery}`}>
-			<UserPlus size={17} strokeWidth={1.75} />Create a new account
+			<UserPlus size={17} strokeWidth={1.75} />{m.auth_picker_create_new()}
 		</a>
 	</div>
-	<p class="apick-note">Locked accounts ask for your password before the mailbox opens.</p>
+	<p class="apick-note">{m.auth_picker_note()}</p>
 </div>
 
 {#if removing}

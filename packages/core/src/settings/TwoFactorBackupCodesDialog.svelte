@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { platform } from '$platform';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -49,13 +50,13 @@
 
 <CeremonyShell
 	icon={ShieldCheck}
-	eyebrow="Security"
-	title="Your new backup codes"
+	eyebrow={m.settings_security_eyebrow()}
+	title={m.settings_security_backup_new_title()}
 	{onClose}
 >
 	<div class="cer-pane">
 		<div class="cer-instruct">
-			Your previous codes no longer work. Save these — each signs you in once.
+			{m.settings_security_backup_new_lede()}
 		</div>
 		<div class="backup-grid">
 			{#each codes as c, i (i)}
@@ -67,18 +68,18 @@
 		</div>
 		<div class="phrase-acts">
 			<Button variant="secondary" size="sm" onclick={copyCodes}>
-				<Copy size={14} />Copy
+				<Copy size={14} />{m.common_copy()}
 			</Button>
 			<Button variant="secondary" size="sm" onclick={downloadCodes}>
-				<Download size={14} />Download
+				<Download size={14} />{m.settings_security_backup_download()}
 			</Button>
-			{#if saved}<span class="phrase-saved"><Check size={13} />Saved</span>{/if}
+			{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_security_backup_saved()}</span>{/if}
 		</div>
 	</div>
 
 	{#snippet footer()}
 		<Button variant="primary" disabled={!saved} onclick={onClose}>
-			I’ve saved them<Check size={15} />
+			{m.settings_security_backup_saved_them()}<Check size={15} />
 		</Button>
 	{/snippet}
 </CeremonyShell>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
 	import { DOMAIN_STEPS, STEP_LABELS, type DomainStep } from './steps';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		current: DomainStep;
@@ -11,7 +12,7 @@
 	let { current, done, onSelect }: Props = $props();
 </script>
 
-<nav class="dw-rail" aria-label="Domain setup progress">
+<nav class="dw-rail" aria-label={m.settings_domains_rail_aria()}>
 	{#each DOMAIN_STEPS as s, i (s)}
 		<button
 			type="button"
@@ -24,7 +25,7 @@
 			<span class="dw-dot">
 				{#if done(s)}<Check size={13} strokeWidth={2} />{:else}{i + 1}{/if}
 			</span>
-			<span class="dw-lbl">{STEP_LABELS[s]}</span>
+			<span class="dw-lbl">{STEP_LABELS[s]()}</span>
 			{#if i < DOMAIN_STEPS.length - 1}
 				<span class="dw-line"></span>
 			{/if}

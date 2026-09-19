@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Popover from '$core/components/ui/popover';
+	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import { cal } from '../state.svelte';
 
@@ -7,7 +8,7 @@
 </script>
 
 <div class="tg-allday">
-	<div class="tg-allday-lbl">All day</div>
+	<div class="tg-allday-lbl">{m.cal_allday()}</div>
 	<div class="tg-allday-track">
 		<div class="tg-allday-cells"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
 		{#each cal.allDayRows as entry (entry.key)}

@@ -17,6 +17,7 @@
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { auth } from '$core/stores/auth.svelte';
 	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	let { children } = $props();
 
@@ -47,7 +48,9 @@
 
 	onMount(() => {
 		const stopClock = cal.startClock();
-		const stopReminders = startReminders((notice) => cal.notify(`${notice.title} · ${notice.body}`));
+		const stopReminders = startReminders((notice) =>
+			cal.notify(m.cal_reminder_toast({ title: notice.title, body: notice.body }))
+		);
 		const stopMessages = calendarStore.onMessage((hint) => {
 			if (hint.id) void observeNewMessage(hint.id).catch(() => {});
 		});
@@ -103,7 +106,7 @@
 		<button
 			type="button"
 			class="rail-scrim"
-			aria-label="Close menu"
+			aria-label={m.cal_layout_close_menu()}
 			onclick={() => (cal.navOpen = false)}
 		></button>
 	{/if}

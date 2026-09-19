@@ -4,6 +4,9 @@ import type { AttachmentChip } from './attachments';
 import { initialsFor } from './initials';
 import { locale } from './locale.svelte';
 import { parseAddressList } from './address';
+import { m } from '$paraglide/messages.js';
+import { i18n } from '$core/i18n/locale.svelte';
+import { dateParts, intlLocale } from '$core/i18n/intl';
 
 export type LabelId = 'domains' | 'security' | 'family' | 'billing';
 
@@ -125,22 +128,91 @@ export function plainSubject(s: unknown): string {
 }
 
 export const LABELS: Record<LabelId, Label> = {
-	domains: { name: 'Domains', color: 'var(--pine-500)' },
-	security: { name: 'Security', color: 'var(--brass-600)' },
-	family: { name: 'Family', color: 'var(--info-500)' },
-	billing: { name: 'Billing', color: 'var(--ink-400)' }
+	domains: {
+		get name() {
+			return m.mailbox_label_domains();
+		},
+		color: 'var(--pine-500)'
+	},
+	security: {
+		get name() {
+			return m.mailbox_label_security();
+		},
+		color: 'var(--brass-600)'
+	},
+	family: {
+		get name() {
+			return m.mailbox_label_family();
+		},
+		color: 'var(--info-500)'
+	},
+	billing: {
+		get name() {
+			return m.mailbox_label_billing();
+		},
+		color: 'var(--ink-400)'
+	}
 };
 
 export const FOLDERS: Folder[] = [
-	{ id: 'inbox', label: 'Inbox' },
-	{ id: 'starred', label: 'Starred' },
-	{ id: 'sent', label: 'Sent' },
-	{ id: 'drafts', label: 'Drafts' },
-	{ id: 'archive', label: 'Archive' },
-	{ id: 'snoozed', label: 'Snoozed', more: true },
-	{ id: 'scheduled', label: 'Scheduled', more: true },
-	{ id: 'spam', label: 'Spam', more: true },
-	{ id: 'trash', label: 'Trash', more: true }
+	{
+		id: 'inbox',
+		get label() {
+			return m.mailbox_folder_inbox();
+		}
+	},
+	{
+		id: 'starred',
+		get label() {
+			return m.mailbox_folder_starred();
+		}
+	},
+	{
+		id: 'sent',
+		get label() {
+			return m.mailbox_folder_sent();
+		}
+	},
+	{
+		id: 'drafts',
+		get label() {
+			return m.mailbox_folder_drafts();
+		}
+	},
+	{
+		id: 'archive',
+		get label() {
+			return m.mailbox_folder_archive();
+		}
+	},
+	{
+		id: 'snoozed',
+		get label() {
+			return m.mailbox_folder_snoozed();
+		},
+		more: true
+	},
+	{
+		id: 'scheduled',
+		get label() {
+			return m.mailbox_folder_scheduled();
+		},
+		more: true
+	},
+	{
+		id: 'spam',
+		get label() {
+			return m.mailbox_folder_spam();
+		},
+		more: true
+	},
+	{
+		id: 'trash',
+		get label() {
+			return m.mailbox_folder_trash();
+		},
+		more: true
+	}
 ];
 
 export function folderFromServer(
@@ -218,6 +290,16 @@ export const GROUP_ORDER: readonly DayBucket[] = DAY_BUCKETS;
 
 const WEEKDAYS = new Set(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
 
+const DAY_BUCKET_LABELS: Record<string, () => string> = {
+	Today: () => m.mailbox_bucket_today(),
+	'Earlier this week': () => m.mailbox_bucket_this_week(),
+	Earlier: () => m.mailbox_bucket_earlier()
+};
+
+export function dayBucketLabel(b: string): string {
+	return DAY_BUCKET_LABELS[b]?.() ?? b;
+}
+
 export function bucket(time: string): DayBucket {
 	if (/^\d{1,2}:\d{2}$/.test(time)) return 'Today';
 	if (WEEKDAYS.has(time)) return 'Earlier this week';
@@ -240,7 +322,7 @@ export function bucketFromEpoch(epoch: number, nowMs: number = Date.now()): DayB
 
 export function formatClock(date: Date): string {
 	const h12 = locale.timeFormat === '12';
-	return new Intl.DateTimeFormat(h12 ? 'en-US' : 'en-GB', {
+	return new Intl.DateTimeFormat(intlLocale(h12 ? 'en-US' : 'en-GB'), {
 		hour: h12 ? 'numeric' : '2-digit',
 		minute: '2-digit',
 		hour12: h12,
@@ -249,16 +331,27 @@ export function formatClock(date: Date): string {
 }
 
 export function formatWeekday(date: Date, long = false): string {
-	return new Intl.DateTimeFormat('en-GB', {
+	return new Intl.DateTimeFormat(intlLocale('en-GB'), {
 		weekday: long ? 'long' : 'short',
 		timeZone: locale.timeZone
 	}).format(date);
+}
+
+function monthFirst(date: Date, withYear: boolean): string {
+	const p = dateParts(date, {
+		month: 'short',
+		day: withYear ? 'numeric' : '2-digit',
+		year: withYear ? 'numeric' : undefined,
+		timeZone: locale.timeZone
+	});
+	return withYear ? `${p.month} ${p.day}, ${p.year}` : `${p.month} ${p.day}`;
 }
 
 export function formatDateShort(date: Date): string {
 	const z = locale.timeZone;
 	switch (locale.dateFormat) {
 		case 'mdy':
+			if (i18n.locale !== 'en') return monthFirst(date, false);
 			return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', timeZone: z }).format(
 				date
 			);
@@ -269,16 +362,19 @@ export function formatDateShort(date: Date): string {
 				timeZone: z
 			}).format(date);
 		default:
-			return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', timeZone: z }).format(
-				date
-			);
+			return new Intl.DateTimeFormat(intlLocale('en-GB'), {
+				day: '2-digit',
+				month: 'short',
+				timeZone: z
+			}).format(date);
 	}
 }
 
-export function formatDateLong(date: Date): string {
+export function formatDateLong(date: Date, pattern = locale.dateFormat): string {
 	const z = locale.timeZone;
-	switch (locale.dateFormat) {
+	switch (pattern) {
 		case 'mdy':
+			if (i18n.locale !== 'en') return monthFirst(date, true);
 			return new Intl.DateTimeFormat('en-US', {
 				month: 'short',
 				day: 'numeric',
@@ -293,7 +389,7 @@ export function formatDateLong(date: Date): string {
 				timeZone: z
 			}).format(date);
 		default:
-			return new Intl.DateTimeFormat('en-GB', {
+			return new Intl.DateTimeFormat(intlLocale('en-GB'), {
 				day: 'numeric',
 				month: 'short',
 				year: 'numeric',
@@ -303,7 +399,11 @@ export function formatDateLong(date: Date): string {
 }
 
 export function formatEventWhen(date: Date): string {
-	return `${formatWeekday(date)}, ${formatDateLong(date)}, ${formatClock(date)}`;
+	return m.mailbox_event_when({
+		weekday: formatWeekday(date),
+		date: formatDateLong(date),
+		time: formatClock(date)
+	});
 }
 
 export function formatRowTime(date: Date, now: Date = new Date()): string {
@@ -331,8 +431,20 @@ export interface SortOption {
 }
 
 export const SORT_OPTIONS: SortOption[] = [
-	{ id: 'newest', label: 'Date — newest first', icon: 'arrow-down' },
-	{ id: 'oldest', label: 'Date — oldest first', icon: 'arrow-up' }
+	{
+		id: 'newest',
+		get label() {
+			return m.mailbox_sort_newest();
+		},
+		icon: 'arrow-down'
+	},
+	{
+		id: 'oldest',
+		get label() {
+			return m.mailbox_sort_oldest();
+		},
+		icon: 'arrow-up'
+	}
 ];
 
 export interface ListFilters {
@@ -373,11 +485,19 @@ export function formatWhenLong(date: Date, now: Date = new Date()): string {
 		date.getFullYear() === now.getFullYear() &&
 		date.getMonth() === now.getMonth() &&
 		date.getDate() === now.getDate();
-	if (sameDay) return `Today at ${clock}`;
+	if (sameDay) return m.mailbox_when_today_at({ clock });
 	const diffMs = now.getTime() - date.getTime();
 	const sixDays = 6 * 24 * 60 * 60 * 1000;
 	if (diffMs >= 0 && diffMs < sixDays) {
-		return `${formatWeekday(date, true)} at ${clock}`;
+		return m.mailbox_when_day_at({ day: formatWeekday(date, true), clock });
 	}
-	return `${formatDateShort(date)} at ${clock}`;
+	return m.mailbox_when_day_at({ day: formatDateShort(date), clock });
+}
+
+export function formatWhenShort(date: Date, now: Date = new Date()): string {
+	const sameDay =
+		date.getFullYear() === now.getFullYear() &&
+		date.getMonth() === now.getMonth() &&
+		date.getDate() === now.getDate();
+	return sameDay ? formatClock(date) : formatWhenLong(date, now);
 }

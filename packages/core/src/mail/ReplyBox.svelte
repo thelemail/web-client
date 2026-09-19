@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import { onMount, untrack } from 'svelte';
 	import Reply from '@lucide/svelte/icons/reply';
 	import ReplyAll from '@lucide/svelte/icons/reply-all';
@@ -278,9 +279,9 @@
 	}
 
 	function formatSize(n: number): string {
-		if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
-		if (n >= 1024) return (n / 1024).toFixed(1) + ' KB';
-		return n + ' B';
+		if (n >= 1024 * 1024) return msg.mail_size_mb({ size: (n / (1024 * 1024)).toFixed(1) });
+		if (n >= 1024) return msg.mail_size_kb({ size: (n / 1024).toFixed(1) });
+		return msg.mail_size_bytes({ size: n });
 	}
 
 	function totalBytes(): number {
@@ -291,15 +292,15 @@
 		attErr = null;
 		for (const file of Array.from(files)) {
 			if (attachments.length >= MAX_ATTACHMENTS) {
-				attErr = `Maximum ${MAX_ATTACHMENTS} attachments per message.`;
+				attErr = msg.mail_compose_att_max_count({ count: MAX_ATTACHMENTS });
 				return;
 			}
 			if (file.size > MAX_ATTACHMENT_BYTES) {
-				attErr = `${file.name} is larger than ${formatSize(MAX_ATTACHMENT_BYTES)}.`;
+				attErr = msg.mail_compose_att_too_large({ name: file.name, size: formatSize(MAX_ATTACHMENT_BYTES) });
 				continue;
 			}
 			if (totalBytes() + file.size > MAX_TOTAL_BYTES) {
-				attErr = `Total attachment size would exceed ${formatSize(MAX_TOTAL_BYTES)}.`;
+				attErr = msg.mail_compose_att_total_too_large({ size: formatSize(MAX_TOTAL_BYTES) });
 				continue;
 			}
 			const att: ComposeAttachment = {
@@ -391,7 +392,7 @@
 			}
 		}
 		if (files.length) addFiles(files);
-		if (failed) attErr = 'Could not re-attach a file from the original message.';
+		if (failed) attErr = msg.mail_compose_att_reattach_failed();
 	}
 
 	async function initFromDetail(): Promise<void> {
@@ -456,7 +457,7 @@
 	);
 	const inlineErr = $derived(err && INLINE_CODES.has(err.code) ? err : null);
 	const primaryRecip = $derived(
-		allRecipients.find((c) => c.valid) ?? { name: '', email: 'this recipient' }
+		allRecipients.find((c) => c.valid) ?? { name: '', email: msg.mail_compose_this_recipient() }
 	);
 	const failedAddress = $derived.by(() => {
 		const p = err?.payload;
@@ -485,8 +486,18 @@
 		err = null;
 	});
 
+	function identityKindLabel(kind: SendIdentity['kind']): string {
+		if (kind === 'Alias') return msg.mail_compose_ident_alias();
+		if (kind === 'Identity') return msg.mail_compose_ident_identity();
+		return msg.mail_compose_ident_default();
+	}
+
 	const modeLabel = $derived(
-		mode === 'all' ? 'Reply all' : mode === 'forward' ? 'Forward' : 'Reply'
+		mode === 'all'
+			? msg.mail_reader_reply_all()
+			: mode === 'forward'
+				? msg.mail_reader_forward()
+				: msg.mail_reader_reply()
 	);
 
 	function handleDocMouseDown(e: MouseEvent) {
@@ -557,7 +568,7 @@
 				} catch {
 					throw new SendError(
 						'network',
-						'Could not link this message to the conversation. Check your connection and try again.'
+						msg.mail_compose_link_failed()
 					);
 				}
 			}
@@ -597,7 +608,7 @@
 				err = e;
 				attempts = e.code === 'encrypt' ? attempts + 1 : 0;
 			} else {
-				err = new SendError('unknown', e instanceof Error ? e.message : 'Send failed');
+				err = new SendError('unknown', e instanceof Error ? e.message : msg.mail_compose_send_failed());
 				attempts = 0;
 			}
 		}
@@ -648,7 +659,7 @@
 			try {
 				await acceptExternalKey(payload.address, payload.currentFingerprint);
 			} catch {
-				err = new SendError('unknown', 'Could not accept the new key. Please try again.');
+				err = new SendError('unknown', msg.mail_compose_accept_key_failed());
 				return;
 			}
 		}
@@ -659,8 +670,8 @@
 		void contacts.ensureLoaded();
 		const t = setTimeout(() => boxRef?.scrollIntoView({ block: 'start' }), 0);
 		const release = holdRestart(() => {
-			if (status === 'sending') return 'A message is still sending.';
-			if (text.trim() || attachments.length > 0) return 'A reply you are writing is not saved.';
+			if (status === 'sending') return msg.mail_compose_hold_sending();
+			if (text.trim() || attachments.length > 0) return msg.mail_compose_hold_reply_unsaved();
 			return null;
 		});
 		return () => {
@@ -703,7 +714,7 @@
 				</button>
 				{#if fromOpen}
 					<div class="from-menu" role="menu">
-						<div class="fm-h">Send mail as</div>
+						<div class="fm-h">{msg.mail_compose_send_as()}</div>
 						{#each identityOptions as id, i (id.email + '-' + i)}
 							<button
 								type="button"
@@ -724,7 +735,7 @@
 								<span class="fm-tx">
 									<span class="fm-top">
 										<b>{id.name}</b>
-										<span class="fm-kind">{id.kind}</span>
+										<span class="fm-kind">{identityKindLabel(id.kind)}</span>
 									</span>
 									<span class="fm-em">{id.email}</span>
 								</span>
@@ -739,7 +750,7 @@
 			<button
 				type="button"
 				class="rt-x"
-				title="Discard"
+				title={msg.mail_compose_discard()}
 				disabled={status === 'sending'}
 				onclick={onClose}
 			>
@@ -756,7 +767,7 @@
 					onclick={() => {
 						showCc = true;
 						ccFocus = true;
-					}}>Cc</button
+					}}>{msg.mail_recip_cc()}</button
 				>
 			{/if}
 			{#if !showBcc}
@@ -765,7 +776,7 @@
 					onclick={() => {
 						showBcc = true;
 						bccFocus = true;
-					}}>Bcc</button
+					}}>{msg.mail_recip_bcc()}</button
 				>
 			{/if}
 		</div>
@@ -814,9 +825,9 @@
 	{/if}
 
 	<div class="cfield subj">
-		<span class="recip-label">Subject</span>
+		<span class="recip-label">{msg.mail_compose_subject()}</span>
 		{#if mode === 'forward'}
-			<input bind:value={subject} placeholder="Subject" />
+			<input bind:value={subject} placeholder={msg.mail_compose_subject()} />
 		{:else}
 			<span class="subj-static" title={subject}>{subject}</span>
 		{/if}
@@ -826,7 +837,7 @@
 		bind:html
 		bind:text
 		bind:editor
-		placeholder={mode === 'forward' ? 'Add a note…' : 'Write your reply…'}
+		placeholder={mode === 'forward' ? msg.mail_compose_add_note() : msg.mail_compose_write_reply()}
 		disabled={status === 'sending'}
 		autofocus={mode !== 'forward'}
 		class="cbody reply"
@@ -838,17 +849,17 @@
 				type="button"
 				class="quoted-toggle"
 				class:on={showQuote}
-				title={showQuote ? 'Hide quoted text' : 'Show quoted text'}
+				title={showQuote ? msg.mail_compose_hide_quoted() : msg.mail_compose_show_quoted()}
 				aria-expanded={showQuote}
 				onclick={() => (showQuote = !showQuote)}
 			>
 				<Ellipsis size={16} />
 			</button>
-			<span class="rq-lbl">{mode === 'forward' ? 'Forwarded message' : 'Quoted text'}</span>
+			<span class="rq-lbl">{mode === 'forward' ? msg.mail_forwarded_chip() : msg.mail_compose_quoted_text()}</span>
 			<button
 				type="button"
 				class="rq-rm"
-				title="Remove quoted text"
+				title={msg.mail_compose_remove_quoted()}
 				onclick={() => {
 					quoteRemoved = true;
 					showQuote = false;
@@ -877,10 +888,10 @@
 		<div class="cwarn">
 			<CircleAlert size={14} />
 			{hasInvalid
-				? 'One or more addresses are not valid.'
+				? msg.mail_compose_invalid_addresses()
 				: validCount === 0
-					? 'Add at least one recipient.'
-					: 'Write a message first.'}
+					? msg.mail_compose_need_recipient()
+					: msg.mail_compose_need_body()}
 		</div>
 	{/if}
 
@@ -914,14 +925,14 @@
 						{#if a.status === 'encrypting' || a.status === 'uploading'}
 							<div class="bar"><div class="bar-fill" style="width:{Math.round(a.progress * 100)}%"></div></div>
 						{:else if a.status === 'error'}
-							<div class="errmsg">{a.error ?? 'Upload failed'}</div>
+							<div class="errmsg">{a.error ?? msg.mail_attach_upload_failed()}</div>
 						{/if}
 					</div>
 					<div class="state">
 						{#if a.status === 'encrypting' || a.status === 'uploading' || a.status === 'queued'}
 							<Loader2 size={14} class="spin" />
 						{/if}
-						<button type="button" class="rm" title="Remove" onclick={() => removeAttachment(a.id)}>
+						<button type="button" class="rm" title={msg.common_remove()} onclick={() => removeAttachment(a.id)}>
 							<X size={14} />
 						</button>
 					</div>
@@ -944,9 +955,9 @@
 				disabled={status === 'sending' || !canSend}
 			>
 				{#if status === 'sending'}
-					<span class="send-spin"></span>Sending…
+					<span class="send-spin"></span>{msg.mail_compose_sending()}
 				{:else}
-					<Send size={15} />Send
+					<Send size={15} />{msg.mail_compose_send()}
 				{/if}
 			</button>
 			{#if canArchive}
@@ -954,7 +965,7 @@
 					type="button"
 					class="rf-caret"
 					class:on={sendOpen}
-					title="Send options"
+					title={msg.mail_compose_send_options()}
 					aria-haspopup="menu"
 					aria-expanded={sendOpen}
 					disabled={status === 'sending' || !canSend}
@@ -965,16 +976,16 @@
 				{#if sendOpen}
 					<div class="menu rf-menu" role="menu">
 						<button type="button" class="mitem" role="menuitem" onclick={runSend}>
-							<Send size={17} />Send
+							<Send size={17} />{msg.mail_compose_send()}
 						</button>
 						<button type="button" class="mitem" role="menuitem" onclick={sendAndArchive}>
-							<Archive size={17} />Send &amp; archive
+							<Archive size={17} />{msg.mail_compose_send_archive()}
 						</button>
 					</div>
 				{/if}
 			{/if}
 		</div>
-		<button type="button" class="rb-ico" title="Attach" onclick={pickFiles}>
+		<button type="button" class="rb-ico" title={msg.mail_compose_attach()} onclick={pickFiles}>
 			<Paperclip size={17} />
 		</button>
 		<input
@@ -984,7 +995,7 @@
 			class="att-hidden-input"
 			onchange={onFileInputChange}
 		/>
-		<button type="button" class="rb-ico" title="Discard" onclick={discard}>
+		<button type="button" class="rb-ico" title={msg.mail_compose_discard()} onclick={discard}>
 			<Trash2 size={17} />
 		</button>
 		<span class="enc" data-tone={encSummary.tone} title={encSummary.title}>

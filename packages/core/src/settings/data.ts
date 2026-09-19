@@ -1,3 +1,5 @@
+import { m } from '$paraglide/messages.js';
+
 export type SectionId =
 	| 'profile'
 	| 'addresses'
@@ -16,23 +18,23 @@ export type SectionId =
 export interface SectionMeta {
 	id: SectionId;
 	icon: string;
-	label: string;
+	label: () => string;
 }
 
 export const SECTIONS: SectionMeta[] = [
-	{ id: 'profile', icon: 'user-round', label: 'Profile' },
-	{ id: 'addresses', icon: 'at-sign', label: 'Addresses' },
-	{ id: 'domains', icon: 'globe-2', label: 'Custom domains' },
-	{ id: 'sending', icon: 'send', label: 'Composing & sending' },
-	{ id: 'reading', icon: 'mail-open', label: 'Reading & behaviour' },
-	{ id: 'security', icon: 'shield-check', label: 'Security & privacy' },
-	{ id: 'blocked', icon: 'user-x', label: 'Blocked senders' },
-	{ id: 'import', icon: 'upload', label: 'Import' },
-	{ id: 'notify', icon: 'bell', label: 'Notifications' },
-	{ id: 'region', icon: 'globe', label: 'Localization & region' },
-	{ id: 'appearance', icon: 'palette', label: 'Appearance' },
-	{ id: 'account', icon: 'credit-card', label: 'Account & plan' },
-	{ id: 'about', icon: 'info', label: 'About & updates' }
+	{ id: 'profile', icon: 'user-round', label: m.settings_nav_profile },
+	{ id: 'addresses', icon: 'at-sign', label: m.settings_nav_addresses },
+	{ id: 'domains', icon: 'globe-2', label: m.settings_nav_domains },
+	{ id: 'sending', icon: 'send', label: m.settings_nav_sending },
+	{ id: 'reading', icon: 'mail-open', label: m.settings_nav_reading },
+	{ id: 'security', icon: 'shield-check', label: m.settings_nav_security },
+	{ id: 'blocked', icon: 'user-x', label: m.settings_nav_blocked },
+	{ id: 'import', icon: 'upload', label: m.settings_nav_import },
+	{ id: 'notify', icon: 'bell', label: m.settings_nav_notify },
+	{ id: 'region', icon: 'globe', label: m.settings_nav_region },
+	{ id: 'appearance', icon: 'palette', label: m.settings_nav_appearance },
+	{ id: 'account', icon: 'credit-card', label: m.settings_nav_account },
+	{ id: 'about', icon: 'info', label: m.settings_nav_about }
 ];
 
 export type AccentIntensity = 'subtle' | 'standard' | 'bold';
@@ -88,7 +90,6 @@ export interface SettingsState {
 	quietFrom: string;
 	quietTo: string;
 
-	lang: string;
 	tzAuto: boolean;
 	tz: string;
 	dateFmt: 'dmy' | 'mdy' | 'iso';
@@ -142,7 +143,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	quietFrom: '22:00',
 	quietTo: '07:00',
 
-	lang: 'English',
 	tzAuto: true,
 	tz: 'UTC',
 	dateFmt: 'dmy',
@@ -175,5 +175,5 @@ export function sectionIdFromPath(pathname: string): string {
 
 export function sectionLabelFromPath(pathname: string): string {
 	const id = sectionIdFromPath(pathname);
-	return SECTIONS.find((sec) => sec.id === id)?.label ?? 'Settings';
+	return SECTIONS.find((sec) => sec.id === id)?.label() ?? m.settings_nav_fallback();
 }

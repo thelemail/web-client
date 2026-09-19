@@ -7,6 +7,7 @@ import type { OutboxMail, OutboxRecipient } from './outbox';
 import { expandItem, type Occurrence } from './recur';
 import { calendarStore } from './store.svelte';
 import { isOwnRecipient } from '$core/mail/recipientAddress';
+import { m } from '$paraglide/messages.js';
 
 export interface SenderIdentity extends IcsIdentity {
 	aliasId?: string;
@@ -60,10 +61,10 @@ function recipientsOf(attendees: Attendee[], exclude: string[]): OutboxRecipient
 }
 
 function whenLine(item: CalendarItem, occurrence?: Occurrence): string {
-	if (occurrence) return longWhen(occurrence);
+	if (occurrence) return longWhen(occurrence, undefined, true);
 	const first =
 		item.start && item.end ? expandItem(item, new Date(0), new Date(8.64e15))[0] : undefined;
-	return first ? longWhen(first) : '';
+	return first ? longWhen(first, undefined, true) : '';
 }
 
 export function invitationChanged(previous: CalendarItem | undefined, next: CalendarItem): boolean {
@@ -120,7 +121,9 @@ export async function sendInvitations(
 				fromName: identity.name,
 				fromAliasId: identity.aliasId
 			},
-			`${verb} · ${item.title || 'untitled'}`
+			previous
+				? m.cal_op_invitation_updated({ title: item.title || m.cal_op_untitled() })
+				: m.cal_op_invitation({ title: item.title || m.cal_op_untitled() })
 		);
 	}
 	if (removed.length && previous) {
@@ -141,7 +144,7 @@ export async function sendInvitations(
 				fromName: identity.name,
 				fromAliasId: identity.aliasId
 			},
-			`Cancellation · ${previous.title || 'untitled'}`
+			m.cal_op_cancellation({ title: previous.title || m.cal_op_untitled() })
 		);
 	}
 }
@@ -165,18 +168,18 @@ export async function sendCancellation(item: CalendarItem, occurrence?: Occurren
 		{
 			to,
 			subject:
-				`Cancelled: ${item.title || '(untitled)'}${occurrence ? ` @ ${longWhen(occurrence)}` : ''}`.slice(
+				`Cancelled: ${item.title || '(untitled)'}${occurrence ? ` @ ${longWhen(occurrence, undefined, true)}` : ''}`.slice(
 					0,
 					200
 				),
-			body: `${identity.name ?? identity.email} cancelled "${item.title || '(untitled)'}"${occurrence ? ` on ${longWhen(occurrence)}` : ''}.`,
+			body: `${identity.name ?? identity.email} cancelled "${item.title || '(untitled)'}"${occurrence ? ` on ${longWhen(occurrence, undefined, true)}` : ''}.`,
 			ics,
 			method: 'CANCEL',
 			fromEmail: identity.email,
 			fromName: identity.name,
 			fromAliasId: identity.aliasId
 		},
-		`Cancellation · ${item.title || 'untitled'}`
+		m.cal_op_cancellation({ title: item.title || m.cal_op_untitled() })
 	);
 }
 
@@ -214,5 +217,5 @@ export async function sendReply(
 		method: 'REPLY',
 		inReplyToMessageId: sourceMessageId
 	};
-	await calendarStore.queueMail(item.id, mail, `RSVP ${partstat} · ${item.title || 'untitled'}`);
+	await calendarStore.queueMail(item.id, mail, m.cal_op_rsvp({ partstat, title: item.title || m.cal_op_untitled() }));
 }

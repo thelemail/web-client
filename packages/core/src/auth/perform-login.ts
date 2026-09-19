@@ -18,6 +18,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { syncAddressUids } from '$core/keys/uid-sync';
 import { platform } from '$platform';
+import { m } from '$paraglide/messages.js';
 
 export interface PerformLoginInput {
 	email: string;
@@ -197,8 +198,8 @@ export async function performLogin(input: PerformLoginInput): Promise<PerformLog
 		console.error('login: server proof verification failed', verified.code);
 		throw new Error(
 			verified.code === 'no_pending_login'
-				? 'Sign-in was interrupted — please try again.'
-				: 'Could not verify the server. Please try again.'
+				? m.auth_login_interrupted()
+				: m.auth_login_server_unverified()
 		);
 	}
 
@@ -231,7 +232,7 @@ async function finishOpaqueLogin(
 	rememberMe: boolean
 ): Promise<PerformLoginResult> {
 	if (!grant.accountId || !grant.encryptedPrivateKey || !grant.wrappedMasterKey || !grant.masterKeyId) {
-		throw new Error('Sign-in failed — unexpected server response.');
+		throw new Error(m.auth_login_unexpected_response());
 	}
 	const finalized = await finalizeMigrationIfGranted(grant);
 	const unlock = await keystore.opaqueCompleteLoginUnlock({
@@ -247,8 +248,8 @@ async function finishOpaqueLogin(
 		console.error('login: opaqueCompleteLoginUnlock failed', unlock.code);
 		throw new Error(
 			unlock.code === 'no_pending_operation'
-				? 'Sign-in was interrupted — please try again.'
-				: 'Could not unlock your mailbox keys. Please try again.'
+				? m.auth_login_interrupted()
+				: m.auth_login_unlock_failed()
 		);
 	}
 
@@ -278,7 +279,7 @@ async function finishLogin(
 	password: string
 ): Promise<PerformLoginResult> {
 	if (!grant.accountId || !grant.encryptedPrivateKey || !grant.keySalt) {
-		throw new Error('Sign-in failed — unexpected server response.');
+		throw new Error(m.auth_login_unexpected_response());
 	}
 	const unlock = await keystore.completeLoginUnlock({
 		accountId: grant.accountId,
@@ -290,8 +291,8 @@ async function finishLogin(
 		console.error('login: completeLoginUnlock failed', unlock.code);
 		throw new Error(
 			unlock.code === 'invalid_credentials'
-				? 'Could not unlock your mailbox keys. Please try again.'
-				: 'Sign-in was interrupted — please try again.'
+				? m.auth_login_unlock_failed()
+				: m.auth_login_interrupted()
 		);
 	}
 
@@ -345,7 +346,7 @@ function classifyTwoFactorError(err: unknown): never {
 function assertSessionGrant(res: unknown): Partial<LoginSessionGrant> {
 	const grant = res as Partial<LoginSessionGrant>;
 	if (!grant.accessToken || !grant.accountId || !grant.encryptedPrivateKey) {
-		throw new Error('Sign-in failed — unexpected server response.');
+		throw new Error(m.auth_login_unexpected_response());
 	}
 	return grant;
 }

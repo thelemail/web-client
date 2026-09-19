@@ -1,5 +1,6 @@
 import type { Subscription } from '$core/api/billing';
 import type { LifecycleInfo } from '$core/api/types';
+import { m } from '$paraglide/messages.js';
 import { daysBetween, ladderFor } from './dates';
 import type { LifecycleContext, LifecycleStage, LifecyclePlan } from './types';
 
@@ -56,7 +57,7 @@ export function planFrom(sub: Subscription | null): LifecyclePlan {
 	const gb = used > 0 ? Math.round(used / 2 ** 30) : DEFAULT_MAILBOX_GB;
 	return {
 		code: sub?.planCode ?? null,
-		name: sub?.planCode ? sub.planCode.replace(/_/g, ' ') : 'Free',
+		name: sub?.planCode ? sub.planCode.replace(/_/g, ' ') : m.lc_plan_free_name(),
 		mailboxGB: gb
 	};
 }

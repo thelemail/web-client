@@ -10,6 +10,7 @@
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
+	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
@@ -47,22 +48,22 @@
 	}
 
 	function keyLine(d: ReadDelegation): string {
-		if (d.mode === 'plain') return 'readable, no key';
+		if (d.mode === 'plain') return m.settings_forwarding_key_plain();
 		return d.encryptionKeyFingerprint ? shortFingerprint(d.encryptionKeyFingerprint) : '';
 	}
 
 	function deliveryText(d: ReadDelegation): string {
 		const summary = summarise(d);
 		if (summary.latest) {
-			let out = `Last message: ${deliveryLabel(summary.latest.status)}`;
+			let out: string = m.settings_forwarding_last_message({ status: deliveryLabel(summary.latest.status) });
 			if (summary.failed || summary.skipped) {
-				out += ` · ${summary.delivered} delivered, ${summary.failed} not delivered, ${summary.skipped} not forwarded recently`;
+				out += ` · ${m.settings_forwarding_recent_summary({ delivered: summary.delivered, failed: summary.failed, skipped: summary.skipped })}`;
 			}
 			return out;
 		}
-		if (d.state === 'active') return 'Nothing forwarded yet.';
+		if (d.state === 'active') return m.settings_forwarding_nothing_yet();
 		if (d.state === 'pending_verification') {
-			return `Waiting for someone at ${d.destination} to use the confirmation link.`;
+			return m.settings_forwarding_waiting_link({ destination: d.destination });
 		}
 		return '';
 	}
@@ -91,7 +92,7 @@
 			await action();
 			flash = done;
 		} catch (err) {
-			flash = err instanceof Error ? err.message : 'That did not work. Try again.';
+			flash = err instanceof Error ? err.message : m.settings_forwarding_action_failed();
 		} finally {
 			busyId = null;
 		}
@@ -101,23 +102,21 @@
 <svelte:window onclick={dismiss} />
 
 <div class="scard menus">
-	<CardHead icon={Forward} title="Forwarding">
+	<CardHead icon={Forward} title={m.settings_forwarding_title()}>
 		{#snippet right()}
 			<span class="card-meta">
-				{live.length}
-				{live.length === 1 ? 'destination' : 'destinations'}
+				{m.settings_forwarding_destinations({ count: live.length })}
 			</span>
 			{#if billing.canAddDomains}
 				<Button variant="secondary" size="sm" onclick={() => (creating = true)}>
-					<Plus size={13} />Forward to a system
+					<Plus size={13} />{m.settings_forwarding_add()}
 				</Button>
 			{/if}
 		{/snippet}
 	</CardHead>
 
 	<div class="card-lede">
-		Send new mail for {email} somewhere else: a system you hand a key to, or an ordinary mailbox
-		that receives it readable. Only mail arriving after the destination is confirmed is forwarded.
+		{m.settings_forwarding_lede({ email })}
 	</div>
 
 	{#if flash}
@@ -130,15 +129,15 @@
 				<div class="rec-title">
 					<span class="rec-label">{d.label}</span>
 					{#if d.state === 'active'}
-						<Badge kind="ok" dot>Forwarding</Badge>
+						<Badge kind="ok" dot>{m.settings_forwarding_badge_active()}</Badge>
 					{:else if d.state === 'pending_verification'}
-						<Badge kind="info" dot>Waiting for confirmation</Badge>
+						<Badge kind="info" dot>{m.settings_forwarding_badge_pending()}</Badge>
 					{:else if d.state === 'paused'}
-						<Badge kind="neutral" dot>Paused</Badge>
+						<Badge kind="neutral" dot>{m.settings_forwarding_badge_paused()}</Badge>
 					{:else}
-						<Badge kind="warn" dot>Turned off</Badge>
+						<Badge kind="warn" dot>{m.settings_forwarding_badge_off()}</Badge>
 					{/if}
-					{#if d.mode === 'plain'}<Badge kind="neutral">Plain text</Badge>{/if}
+					{#if d.mode === 'plain'}<Badge kind="neutral">{m.settings_forwarding_badge_plain()}</Badge>{/if}
 				</div>
 				<div class="rec-dest">
 					<ArrowRight size={12} />
@@ -163,10 +162,10 @@
 								run(
 									d,
 									() => readDelegations.resend(addressId, d.id),
-									`A new link is on its way to ${d.destination}.`
+									m.settings_forwarding_resend_done({ destination: d.destination })
 								)}
 						>
-							<Mail size={13} />Send link again
+							<Mail size={13} />{m.settings_forwarding_resend()}
 						</Button>
 					{/if}
 					{#if d.state === 'active'}
@@ -178,10 +177,10 @@
 								run(
 									d,
 									() => readDelegations.pause(addressId, d.id),
-									`Forwarding to ${d.label} is paused.`
+									m.settings_forwarding_paused_done({ label: d.label })
 								)}
 						>
-							<Pause size={13} />Pause
+							<Pause size={13} />{m.settings_forwarding_pause()}
 						</Button>
 					{:else if d.state === 'paused'}
 						<Button
@@ -192,17 +191,17 @@
 								run(
 									d,
 									() => readDelegations.resume(addressId, d.id),
-									`Forwarding to ${d.label} is back on.`
+									m.settings_forwarding_resumed_done({ label: d.label })
 								)}
 						>
-							<Play size={13} />Resume
+							<Play size={13} />{m.settings_forwarding_resume()}
 						</Button>
 					{/if}
 					<div class="addr-menu-wrap">
 						<button
 							type="button"
 							class="rowmenu"
-							aria-label="Forwarding actions"
+							aria-label={m.settings_forwarding_actions()}
 							aria-expanded={menuFor === d.id}
 							onclick={() => (menuFor = menuFor === d.id ? null : d.id)}
 						>
@@ -219,7 +218,7 @@
 											rotating = d;
 										}}
 									>
-										<RotateCw size={15} />Replace the key
+										<RotateCw size={15} />{m.settings_forwarding_replace_key()}
 									</button>
 								{/if}
 								<button
@@ -230,7 +229,7 @@
 										revoking = d;
 									}}
 								>
-									<Trash2 size={15} />Turn off
+									<Trash2 size={15} />{m.settings_forwarding_turn_off()}
 								</button>
 							</div>
 						{/if}
@@ -241,7 +240,7 @@
 	{/each}
 
 	{#if items.length === 0 && !readDelegations.loading}
-		<div class="card-empty">Mail to this address is not forwarded anywhere.</div>
+		<div class="card-empty">{m.settings_forwarding_empty()}</div>
 	{/if}
 
 	{#if readDelegations.error}
@@ -250,8 +249,8 @@
 
 	{#if !billing.canAddDomains}
 		<UpgradeNudge
-			title="Forwarding comes with a paid plan"
-			desc="Paid plans can send new mail for an address on your own domain to a helpdesk, encrypted."
+			title={m.settings_forwarding_upgrade_title()}
+			desc={m.settings_forwarding_upgrade_desc()}
 		/>
 	{/if}
 </div>
@@ -268,6 +267,6 @@
 	<RevokeForwardingDialog
 		delegation={revoking}
 		onClose={() => (revoking = null)}
-		onRevoked={(label) => (flash = `Nothing new will be forwarded to ${label}.`)}
+		onRevoked={(label) => (flash = m.settings_forwarding_revoked_done({ label }))}
 	/>
 {/if}

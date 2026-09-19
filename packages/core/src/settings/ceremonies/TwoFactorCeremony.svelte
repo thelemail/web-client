@@ -21,6 +21,8 @@
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -33,23 +35,35 @@
 	const SETUP: Record<
 		TwoFaSetupMethod,
 		{ icon: typeof Smartphone; t: string; d: string; disabled?: boolean }
-	> = {
+	> = $derived({
 		totp: {
 			icon: Smartphone,
-			t: 'Authenticator app',
-			d: 'A 6-digit code from an app like Aegis or 1Password.'
+			t: m.settings_ceremony_twofa_totp_title(),
+			d: m.settings_ceremony_twofa_totp_desc()
 		},
 		key: {
 			icon: Usb,
-			t: 'Security key',
-			d: 'A YubiKey or any FIDO2 hardware key, via WebAuthn.'
+			t: m.settings_ceremony_twofa_key_title(),
+			d: m.settings_ceremony_twofa_key_desc()
 		},
 		device: {
 			icon: Fingerprint,
-			t: 'This device',
-			d: 'Touch ID, Face ID, or your screen lock — a passkey kept on this device.'
+			t: m.settings_ceremony_twofa_device_title(),
+			d: m.settings_ceremony_twofa_device_desc()
 		}
-	};
+	});
+
+	function addTitle(kind: TwoFaSetupMethod): string {
+		if (kind === 'totp') return m.settings_ceremony_twofa_add_totp();
+		if (kind === 'key') return m.settings_ceremony_twofa_add_key();
+		return m.settings_ceremony_twofa_add_device();
+	}
+
+	function onTitle(kind: TwoFaSetupMethod): string {
+		if (kind === 'totp') return m.settings_ceremony_twofa_on_totp();
+		if (kind === 'key') return m.settings_ceremony_twofa_on_key();
+		return m.settings_ceremony_twofa_on_device();
+	}
 
 	let step = $derived(initialMethod ? 1 : 0);
 	let method = $derived<TwoFaSetupMethod>(initialMethod ?? 'totp');
@@ -75,8 +89,12 @@
 		}
 	});
 
-	const steps = ['Method', 'Verify', 'Backup codes', 'Done'];
-	const M = $derived(SETUP[method]);
+	const steps = $derived([
+		m.settings_ceremony_twofa_step_method(),
+		m.settings_ceremony_twofa_step_verify(),
+		m.settings_ceremony_twofa_step_backup(),
+		m.settings_ceremony_twofa_step_done()
+	]);
 
 	const methodOpts = $derived(
 		(Object.entries(SETUP) as [TwoFaSetupMethod, (typeof SETUP)['totp']][]).map(([v, o]) => ({
@@ -86,9 +104,9 @@
 				(v === 'totp' && totpActive) || ((v === 'key' || v === 'device') && !webauthnSupported()),
 			note:
 				v === 'totp' && totpActive
-					? 'Already active on this account.'
+					? m.settings_ceremony_twofa_note_active()
 					: (v === 'key' || v === 'device') && !webauthnSupported()
-						? 'Not supported by this browser.'
+						? m.settings_ceremony_twofa_note_unsupported()
 						: null
 		}))
 	);
@@ -110,8 +128,8 @@
 			console.warn('twofa: enroll init failed', err);
 			setupError =
 				err instanceof ApiCallError && err.status === 503
-					? 'The code service is temporarily unavailable. Try again in a moment.'
-					: 'Could not start enrollment. Check your connection and retry.';
+					? m.settings_ceremony_twofa_err_unavailable()
+					: m.settings_ceremony_twofa_err_start();
 		} finally {
 			busy = false;
 		}
@@ -134,8 +152,8 @@
 			console.warn('twofa: totp activate failed', err);
 			setupError =
 				err instanceof ApiCallError && (err.status === 400 || err.status === 401)
-					? 'That code didn’t match. Codes rotate every 30 seconds — try the current one.'
-					: 'Could not verify the code. Try again.';
+					? m.settings_ceremony_twofa_err_mismatch()
+					: m.settings_ceremony_twofa_err_verify();
 			code = '';
 		} finally {
 			busy = false;
@@ -173,8 +191,8 @@
 			console.warn('twofa: webauthn activate failed', err);
 			setupError =
 				err instanceof ApiCallError && err.status === 409
-					? 'This key is already registered on an account.'
-					: 'Could not register. Try again.';
+					? m.settings_ceremony_twofa_err_key_registered()
+					: m.settings_ceremony_twofa_err_register();
 		} finally {
 			busy = false;
 		}
@@ -243,8 +261,8 @@
 
 <CeremonyShell
 	icon={ShieldCheck}
-	eyebrow="Security · ceremony"
-	title={initialMethod ? 'Add ' + SETUP[initialMethod].t.toLowerCase() : 'Two-factor authentication'}
+	eyebrow={m.settings_ceremony_twofa_eyebrow()}
+	title={initialMethod ? addTitle(initialMethod) : m.settings_ceremony_twofa_title()}
 	{steps}
 	{step}
 	{onClose}
@@ -252,10 +270,7 @@
 	{#if step === 0}
 		<div class="cer-pane">
 			<div class="cer-lede">
-				<p>
-					Add a second step at sign-in. Choose how you’ll confirm it’s you — you can enrol more
-					than one method, and any of them will do at the door.
-				</p>
+				<p>{m.settings_ceremony_twofa_lede()}</p>
 			</div>
 			<div class="method-opts">
 				{#each methodOpts as o (o.v)}
@@ -288,13 +303,13 @@
 						<img
 							class="qr-img"
 							src={'data:image/png;base64,' + qrPngBase64}
-							alt="Authenticator QR code"
+							alt={m.settings_ceremony_twofa_qr_alt()}
 						/>
 					{/if}
 				</div>
 				<div class="qr-side">
 					<div class="cer-instruct">
-						Scan with your authenticator, or enter the key by hand:
+						{m.settings_ceremony_twofa_scan_instruct()}
 					</div>
 					{#if manualSecret}
 						<div class="codeblock sm">
@@ -302,7 +317,7 @@
 							<button
 								type="button"
 								class="cp"
-								title="Copy"
+								title={m.common_copy()}
 								onclick={() => navigator.clipboard.writeText(manualSecret.replaceAll(' ', ''))}
 							>
 								<Copy size={14} />
@@ -310,7 +325,7 @@
 						</div>
 					{/if}
 					<div class="field">
-						<label for="otp-code">Enter the 6-digit code</label>
+						<label for="otp-code">{m.settings_ceremony_twofa_code_label()}</label>
 						<input
 							id="otp-code"
 							class="tin mono otp"
@@ -342,23 +357,23 @@
 				<div class="cer-instruct center">
 					{#if confirmed}
 						{#if isKey}
-							<span><b>Key registered.</b> It’ll work in any USB port — and over NFC.</span>
+							<span><Rich text={m.settings_ceremony_twofa_key_registered()} tags={{ b: bold }} /></span>
 						{:else}
-							<span><b>This device is registered.</b> Your fingerprint or face never leaves it.</span>
+							<span><Rich text={m.settings_ceremony_twofa_device_registered()} tags={{ b: bold }} /></span>
 						{/if}
 					{:else if isKey}
-						Insert your security key and touch the contact when it blinks.
+						{m.settings_ceremony_twofa_key_instruct()}
 					{:else}
-						Follow your device’s prompt — Touch ID, Face ID, or your screen lock.
+						{m.settings_ceremony_twofa_device_instruct()}
 					{/if}
 				</div>
 				{#if !confirmed}
 					<Button variant="secondary" disabled={busy} onclick={registerKey}>
 						{#if isKey}<Pointer size={15} />{:else}<ScanFace size={15} />{/if}
 						{#if busy}
-							Waiting&hellip;
+							{m.settings_ceremony_twofa_waiting()}
 						{:else}
-							{isKey ? 'Touch the key' : 'Use Touch ID'}
+							{isKey ? m.settings_ceremony_twofa_touch_key() : m.settings_ceremony_twofa_use_touch_id()}
 						{/if}
 					</Button>
 				{/if}
@@ -370,8 +385,11 @@
 	{:else if step === 2}
 		<div class="cer-pane">
 			<div class="cer-instruct">
-				Save these one-time backup codes. Each works once if you lose your
-				{method === 'totp' ? 'authenticator' : method === 'key' ? 'key' : 'device'}.
+				{method === 'totp'
+					? m.settings_ceremony_twofa_backup_instruct_totp()
+					: method === 'key'
+						? m.settings_ceremony_twofa_backup_instruct_key()
+						: m.settings_ceremony_twofa_backup_instruct_device()}
 			</div>
 			<div class="backup-grid">
 				{#each backupCodes as c, i (i)}
@@ -383,60 +401,62 @@
 			</div>
 			<div class="phrase-acts">
 				<Button variant="secondary" size="sm" onclick={copyCodes}>
-					<Copy size={14} />Copy
+					<Copy size={14} />{m.common_copy()}
 				</Button>
 				<Button variant="secondary" size="sm" onclick={downloadCodes}>
-					<Download size={14} />Download
+					<Download size={14} />{m.settings_ceremony_twofa_download()}
 				</Button>
-				{#if saved}<span class="phrase-saved"><Check size={13} />Saved</span>{/if}
+				{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_ceremony_twofa_saved()}</span>{/if}
 			</div>
 		</div>
 	{:else}
 		<DoneScreen
 			icon={ShieldCheck}
-			title={M.t + ' is on'}
+			title={onTitle(method)}
 			desc={method === 'totp'
-				? 'You’ll confirm with a code from your authenticator when you sign in.'
+				? m.settings_ceremony_twofa_done_desc_totp()
 				: method === 'key'
-					? 'You’ll confirm with a touch of your key when you sign in.'
-					: 'You’ll confirm with Touch ID, Face ID, or your screen lock when you sign in here.'}
+					? m.settings_ceremony_twofa_done_desc_key()
+					: m.settings_ceremony_twofa_done_desc_device()}
 		/>
 	{/if}
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={busy} onclick={beginSetup}>
 				{#if busy}
-					Preparing&hellip;
+					{m.settings_ceremony_twofa_preparing()}
 				{:else}
-					Continue<ArrowRight size={15} />
+					{m.common_continue()}<ArrowRight size={15} />
 				{/if}
 			</Button>
 		{:else if step === 1}
 			<Button variant="ghost" disabled={busy} onclick={() => (initialMethod ? onClose() : (step = 0))}>
 				{#if initialMethod}
-					Cancel
+					{m.common_cancel()}
 				{:else}
-					<ArrowLeft size={15} />Back
+					<ArrowLeft size={15} />{m.common_back()}
 				{/if}
 			</Button>
 			<Button variant="primary" disabled={busy || (method === 'totp' ? code.length < 6 : !confirmed)} onclick={advanceFromVerify}>
 				{#if busy}
-					Verifying&hellip;
+					{m.settings_ceremony_twofa_verifying()}
 				{:else}
-					Verify<ArrowRight size={15} />
+					{m.settings_ceremony_twofa_verify()}<ArrowRight size={15} />
 				{/if}
 			</Button>
 		{:else if step === 2}
 			<Button variant="primary" disabled={!saved} onclick={() => (step = 3)}>
-				I’ve saved them<Check size={15} />
+				{m.settings_ceremony_twofa_saved_them()}<Check size={15} />
 			</Button>
 		{:else}
-			<Button variant="primary" onclick={finish}>Done</Button>
+			<Button variant="primary" onclick={finish}>{m.common_done()}</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <style>
 	.qr-img {

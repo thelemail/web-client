@@ -9,6 +9,7 @@
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { auth } from '$core/stores/auth.svelte';
 	import { initialsFor } from '$core/mail/initials';
+	import { m } from '$paraglide/messages.js';
 
 	const displayName = $derived(auth.fullName ?? auth.email ?? '');
 	const displayEmail = $derived(auth.email ?? '');
@@ -28,13 +29,13 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="cal-surface cal-menu w-64" align="start" side="top">
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/mail/inbox`)}>
-				<Mail size={17} />Go to Mail
+				<Mail size={17} />{m.cal_account_go_to_mail()}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/settings/profile`)}>
-				<User size={17} />Profile
+				<User size={17} />{m.cal_account_profile()}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/settings/account`)}>
-				<Settings size={17} />Settings
+				<Settings size={17} />{m.cal_account_settings()}
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>

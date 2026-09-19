@@ -1,3 +1,4 @@
+import { m } from '$paraglide/messages.js';
 import { serverNow } from '$core/api/serverclock';
 import { bytesToB64 } from '$core/crypto';
 import { keystore } from '$core/keystore/keystore-client';
@@ -39,7 +40,7 @@ export async function prepareForwarding(
 ): Promise<PreparedForwarding> {
 	const own = await keystore.getPublicKey({ accountId });
 	if (!own.ok) {
-		throw new ForwardingSetupError('locked', 'Unlock your mailbox and try again.');
+		throw new ForwardingSetupError('locked', m.settings_forwarding_err_unlock());
 	}
 	const generated = mode === 'plain' ? null : await generateForwardingKey(address, serverNow());
 	const authorization = canonicaliseAuthorization({
@@ -55,11 +56,11 @@ export async function prepareForwarding(
 	if (!signed.ok) {
 		throw new ForwardingSetupError(
 			signed.code === 'locked' ? 'locked' : 'unknown',
-			signed.code === 'locked' ? 'Unlock your mailbox and try again.' : 'Could not sign the authorization.'
+			signed.code === 'locked' ? m.settings_forwarding_err_unlock() : m.settings_forwarding_err_sign()
 		);
 	}
 	if (signed.keyFingerprintHex.toLowerCase() !== hex(own.fingerprint)) {
-		throw new ForwardingSetupError('unknown', 'Could not sign the authorization.');
+		throw new ForwardingSetupError('unknown', m.settings_forwarding_err_sign());
 	}
 	const armored = await armorDetachedSignature(signed.signature);
 	return {

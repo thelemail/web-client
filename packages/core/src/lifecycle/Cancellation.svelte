@@ -15,6 +15,8 @@
 	import { fmt } from './dates';
 	import type { LifecycleContext, RetentionOffer } from './types';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	let { ctx, offer = 'cheaper' }: { ctx: LifecycleContext; offer?: RetentionOffer } = $props();
 
@@ -25,13 +27,13 @@
 	const showOffer = $derived(offer === 'cheaper');
 	const canMoveToFree = $derived(entryPointVisible(billing.subscription));
 
-	const REASONS = [
-		'Too expensive',
-		'Not using it enough',
-		'Missing a feature I need',
-		'Switching to another provider',
-		'Just taking a break',
-		'Other'
+	const REASONS: { id: string; label: () => string }[] = [
+		{ id: 'too_expensive', label: m.lc_cancel_reason_too_expensive },
+		{ id: 'not_using', label: m.lc_cancel_reason_not_using },
+		{ id: 'missing_feature', label: m.lc_cancel_reason_missing_feature },
+		{ id: 'switching', label: m.lc_cancel_reason_switching },
+		{ id: 'break', label: m.lc_cancel_reason_break },
+		{ id: 'other', label: m.lc_cancel_reason_other }
 	];
 
 	let step = $state(0);
@@ -63,7 +65,7 @@
 			bump();
 			step = 3;
 		} catch {
-			flash('Could not cancel just now. Please try again.');
+			flash(m.lc_cancel_failed());
 		} finally {
 			busy = false;
 		}
@@ -79,7 +81,7 @@
 			flash(message);
 			void goto(`/u/${slot}/mail/inbox`);
 		} catch {
-			flash('Could not update your plan. Please try again.');
+			flash(m.lc_cancel_update_failed());
 		} finally {
 			busy = false;
 		}
@@ -91,68 +93,72 @@
 		try {
 			await changePlan({ planCode: 'personal' });
 			await billing.refresh();
-			flash('Moved to Personal. Your plan is kept.');
+			flash(m.lc_cancel_moved_personal());
 			void goto(`/u/${slot}/mail/inbox`);
 		} catch {
-			flash('Could not switch plans. Please try again.');
+			flash(m.lc_cancel_switch_failed());
 		} finally {
 			busy = false;
 		}
 	}
 </script>
 
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
+{#snippet mono(text: string)}<span class="mono">{text}</span>{/snippet}
+
 {#if step === 0}
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
 			<div class="card-head">
-				<p class="eyebrow">Cancel plan</p>
-				<h1>Before you go</h1>
-				<p>One quick question — it helps us improve. You can skip it.</p>
+				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
+				<h1>{m.lc_cancel_survey_title()}</h1>
+				<p>{m.lc_cancel_survey_intro()}</p>
 			</div>
 			<div class="lc-survey">
-				{#each REASONS as r (r)}
+				{#each REASONS as r (r.id)}
 					<button
 						type="button"
 						class="lc-survey-opt"
-						class:sel={reason === r}
-						onclick={() => (reason = r)}
+						class:sel={reason === r.id}
+						onclick={() => (reason = r.id)}
 					>
-						<span class="rd"><i></i></span><span>{r}</span>
+						<span class="rd"><i></i></span><span>{r.label()}</span>
 					</button>
 				{/each}
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<ArrowLeft />
 					</Button>
 					<Button variant="primary" size="lg" onclick={toConfirm}>
-						Continue<ArrowRight />
+						{m.common_continue()}<ArrowRight />
 					</Button>
 				</div>
 			</div>
 			<p class="legal">
-				Cancelling is always available here in <b>Settings → Billing</b>. No phone call, no retention
-				maze.
+				<Rich text={m.lc_cancel_survey_legal()} tags={{ b: bold }} />
 			</p>
 		</div>
 	</div>
 {:else if step === 1}
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
-			<div class="card-head"><p class="eyebrow">Cancel plan</p><h1>One thing before you confirm</h1></div>
+			<div class="card-head">
+				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
+				<h1>{m.lc_cancel_offer_title()}</h1>
+			</div>
 			<div class="lc-offer">
 				<span class="of-ic"><CircleArrowDown size={22} /></span>
 				<span class="of-tx"
-					><b>Move to Personal instead?</b><p>
-						Stay on a smaller plan rather than leaving. Your archive stays put; you just pay less. You
-						can move back up any time.
+					><b>{m.lc_cancel_offer_heading()}</b><p>
+						{m.lc_cancel_offer_body()}
 					</p></span
 				>
 			</div>
 			<div class="actions" style="margin-top:18px">
 				<Button variant="primary" size="lg" block disabled={busy} onclick={acceptCheaper}>
-					<CircleArrowDown size={17} />Switch to Personal
+					<CircleArrowDown size={17} />{m.lc_cancel_offer_accept()}
 				</Button>
 				{#if canMoveToFree}
 					<Button
@@ -161,11 +167,11 @@
 						block
 						href={`/u/${slot}/lifecycle/downgrade`}
 					>
-						Move to Free instead
+						{m.lc_cancel_offer_free()}
 					</Button>
 				{/if}
 				<Button variant="ghost" size="lg" block onclick={() => (bump(), (step = 2))}>
-					No thanks, continue cancelling
+					{m.lc_cancel_offer_decline()}
 				</Button>
 			</div>
 		</div>
@@ -174,40 +180,35 @@
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
 			<div class="card-head">
-				<p class="eyebrow">Cancel plan</p>
-				<h1>Confirm cancellation</h1>
-				<p>Here's what happens, and when. Nothing is deleted for months.</p>
+				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
+				<h1>{m.lc_cancel_confirm_title()}</h1>
+				<p>{m.lc_cancel_confirm_intro()}</p>
 			</div>
 			<ul class="lc-confirm-dates">
 				<li>
 					<span class="cd-dt">{fmt.med(paidThrough)}</span>
-					<span class="cd-tx"
-						><b>Paid through this date.</b> Full access until then — change your mind any time.</span
-					>
+					<span class="cd-tx"><Rich text={m.lc_cancel_confirm_paid()} tags={{ b: bold }} /></span>
 				</li>
 				<li>
-					<span class="cd-dt">then read-only</span>
-					<span class="cd-tx"><b>Still receiving mail;</b> sending and editing paused.</span>
+					<span class="cd-dt">{m.lc_cancel_confirm_then_read_only()}</span>
+					<span class="cd-tx"><Rich text={m.lc_cancel_confirm_read_only()} tags={{ b: bold }} /></span>
 				</li>
 				<li>
-					<span class="cd-dt">months later</span>
-					<span class="cd-tx"
-						><b>Data is kept</b> for a long grace period, then deleted. We email you the exact dates and
-						a one-click restore link.</span
-					>
+					<span class="cd-dt">{m.lc_cancel_confirm_months_later()}</span>
+					<span class="cd-tx"><Rich text={m.lc_cancel_confirm_kept()} tags={{ b: bold }} /></span>
 				</li>
 			</ul>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label="Back" onclick={() => (step = showOffer ? 1 : 0)}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = showOffer ? 1 : 0)}>
 						<ArrowLeft />
 					</Button>
 					<Button variant="dangerSolid" size="lg" disabled={busy} onclick={confirmCancel}>
-						<CircleX />Cancel my plan
+						<CircleX />{m.lc_cancel_confirm_submit()}
 					</Button>
 				</div>
 			</div>
-			<p class="legal">Annual plans run to the period end, then follow the timeline above.</p>
+			<p class="legal">{m.lc_cancel_confirm_legal()}</p>
 		</div>
 	</div>
 {:else}
@@ -215,25 +216,22 @@
 		<div class="card-surface screen-fade">
 			<div class="welcome">
 				<div class="seal"><Check size={20} /></div>
-				<h1>Your plan is cancelled.</h1>
-				<p>You're paid through <b>{fmt.med(paidThrough)}</b>. Nothing changes until then.</p>
+				<h1>{m.lc_cancel_done_title()}</h1>
+				<p><Rich text={m.lc_cancel_done_paid({ date: fmt.med(paidThrough) })} tags={{ b: bold }} /></p>
 			</div>
 			<div class="lc-mail-confirm">
 				<MailCheck size={18} />
-				<span
-					>A confirmation is on its way to <span class="mono">{ctx.email}</span> — with your dates and
-					a one-click restore link.</span
-				>
+				<span><Rich text={m.lc_cancel_done_email({ email: ctx.email })} tags={{ email: mono }} /></span>
 			</div>
 			<div class="actions" style="margin-top:22px">
 				<Button variant="primary" size="lg" block onclick={() => goto(`/u/${slot}/mail/inbox`)}>
-					<ArrowLeft />Back to your mailbox
+					<ArrowLeft />{m.lc_back_to_your_mailbox()}
 				</Button>
-				<Button variant="ghost" size="lg" block disabled={busy} onclick={() => keepPlan('Plan kept. Nothing changed.')}>
-					Actually, keep my plan
+				<Button variant="ghost" size="lg" block disabled={busy} onclick={() => keepPlan(m.lc_cancel_plan_kept())}>
+					{m.lc_cancel_done_keep()}
 				</Button>
 			</div>
-			<p class="lc-clickcount">Cancelled in {clicks} clicks · always this easy to find</p>
+			<p class="lc-clickcount">{m.lc_cancel_done_clicks({ count: clicks })}</p>
 		</div>
 	</div>
 {/if}

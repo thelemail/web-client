@@ -13,6 +13,7 @@ import type {
 import type { MessagePreview, MessagePreviewRecipient } from '../preview';
 import { parseEml, type ParsedEml, type ParsedEmlAttachment } from './parseEml';
 import { buildInlinedBody, resolveBimiDomain } from './inlineImages';
+import { m } from '$paraglide/messages.js';
 
 export const MAX_IMPORT_EML_BYTES = 50 * 1024 * 1024;
 export const MAX_IMPORT_ATTACHMENTS = 100;
@@ -186,7 +187,10 @@ export async function importEmlFile(
 ): Promise<ClientInboundImportResponse> {
 	if (raw.byteLength > MAX_IMPORT_EML_BYTES) {
 		throw new ImportTooLargeError(
-			`file is ${(raw.byteLength / 1048576).toFixed(1)} MB; max ${MAX_IMPORT_EML_BYTES / 1048576} MB`
+			m.import_error_too_large({
+				size: (raw.byteLength / 1048576).toFixed(1),
+				max: MAX_IMPORT_EML_BYTES / 1048576
+			})
 		);
 	}
 	const parsed = await parseEml(raw);
@@ -195,7 +199,7 @@ export async function importEmlFile(
 	);
 	if (regularAtts.length > MAX_IMPORT_ATTACHMENTS) {
 		throw new ImportTooManyAttachmentsError(
-			`message has ${regularAtts.length} attachments; max ${MAX_IMPORT_ATTACHMENTS}`
+			m.import_error_too_many_attachments({ count: regularAtts.length, max: MAX_IMPORT_ATTACHMENTS })
 		);
 	}
 

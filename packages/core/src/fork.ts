@@ -3,6 +3,7 @@ import { keystore } from './keystore/keystore-client';
 import { auth } from './stores/auth.svelte';
 import type { AliasKeyGrantInput } from './keystore/protocol';
 import { currentProduct, productTarget } from './products';
+import { m } from '$paraglide/messages.js';
 
 export class ForkError extends Error {
 	readonly code: string;
@@ -19,15 +20,15 @@ export async function handoffUrl(
 	path: string
 ): Promise<string> {
 	const target = productTarget(audience);
-	if (!target) throw new ForkError('unknown_product', 'That product is not configured.');
+	if (!target) throw new ForkError('unknown_product', m.product_fork_not_configured());
 
 	const sealed = await keystore.sealProductFork({ accountId, product: audience, grants });
 	if (!sealed.ok) {
 		throw new ForkError(
 			sealed.code,
 			sealed.code === 'locked'
-				? 'Vault is locked; sign in again.'
-				: 'There are no keys to hand over yet.'
+				? m.product_fork_vault_locked()
+				: m.product_fork_no_keys()
 		);
 	}
 	const res = await produceSessionFork(accountId, audience, sealed.payload);
@@ -50,16 +51,16 @@ export async function adoptFork(fragment: string): Promise<AdoptedFork> {
 	const params = new URLSearchParams(fragment.replace(/^#/, ''));
 	const selector = params.get('selector');
 	const key = params.get('key');
-	if (!selector || !key) throw new ForkError('missing_fragment', 'This link is incomplete.');
+	if (!selector || !key) throw new ForkError('missing_fragment', m.product_fork_link_incomplete());
 
 	const res = await consumeSessionFork(selector);
 	if (res.audience !== currentProduct) {
-		throw new ForkError('wrong_product', 'This link was issued for a different product.');
+		throw new ForkError('wrong_product', m.product_fork_wrong_product());
 	}
 	if (!(await auth.tryRefresh(res.accountId))) {
 		throw new ForkError(
 			'no_session',
-			'Sign in to that account first, then open Calendar from your mailbox.'
+			m.product_fork_no_session()
 		);
 	}
 	const opened = await keystore.openProductFork({
@@ -68,7 +69,7 @@ export async function adoptFork(fragment: string): Promise<AdoptedFork> {
 		payload: res.payload,
 		key
 	});
-	if (!opened.ok) throw new ForkError(opened.code, 'This link could not be opened.');
+	if (!opened.ok) throw new ForkError(opened.code, m.product_fork_open_failed());
 
 	return {
 		accountId: opened.accountId,

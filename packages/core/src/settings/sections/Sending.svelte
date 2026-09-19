@@ -12,6 +12,8 @@
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
 	import { UNRELEASED, type SettingsState } from '../data';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		s: SettingsState;
@@ -21,77 +23,94 @@
 	let { s, set }: Props = $props();
 
 	type EncOpt = { v: 'auto' | 'ask' | 'off'; icon: typeof Lock; t: string; d: string };
-	const encOpts: EncOpt[] = [
-		{ v: 'auto', icon: Lock, t: 'Encrypt automatically', d: 'Whenever a key is discovered.' },
+	const encOpts: EncOpt[] = $derived([
+		{
+			v: 'auto',
+			icon: Lock,
+			t: m.settings_sending_enc_auto(),
+			d: m.settings_sending_enc_auto_desc()
+		},
 		{
 			v: 'ask',
 			icon: CircleQuestionMark,
-			t: 'Ask each time',
-			d: 'Show a prompt before encrypting.'
+			t: m.settings_sending_enc_ask(),
+			d: m.settings_sending_enc_ask_desc()
 		},
 		{
 			v: 'off',
 			icon: LockOpen,
-			t: 'Never automatically',
-			d: 'Only when you turn it on in compose.'
+			t: m.settings_sending_enc_off(),
+			d: m.settings_sending_enc_off_desc()
 		}
-	];
+	]);
+
+	const AUTOSAVE_LABELS: Record<string, () => string> = {
+		'Every few seconds': () => m.settings_sending_autosave_few_seconds(),
+		'Every 30 seconds': () => m.settings_sending_autosave_30s(),
+		'Every minute': () => m.settings_sending_autosave_minute(),
+		'On close only': () => m.settings_sending_autosave_on_close()
+	};
 </script>
 
-<SecHead desc="How new messages start and the safety nets before they leave." />
+<SecHead desc={m.settings_sending_desc()} />
 
 <div class="scard">
-	<CardHead title="Compose defaults" />
+	<CardHead title={m.settings_sending_compose_title()} />
 	{#if UNRELEASED.composeFormat}
-		<Row t="Compose format">
+		<Row t={m.settings_sending_compose_format()}>
 			<Seg
 				value={s.composeFormat}
 				options={[
-					{ v: 'rich', l: 'Rich text', icon: 'type' },
-					{ v: 'plain', l: 'Plain text', icon: 'pilcrow' }
+					{ v: 'rich', l: m.settings_sending_rich_text(), icon: 'type' },
+					{ v: 'plain', l: m.settings_sending_plain_text(), icon: 'pilcrow' }
 				]}
 				onChange={(v) => set('composeFormat', v)}
 			/>
 		</Row>
 	{/if}
 	{#if UNRELEASED.composeFont}
-		<Row t="Default font" d="For rich-text composing.">
+		<Row t={m.settings_sending_font()} d={m.settings_sending_font_desc()}>
 			<Select
 				value={s.composeFont}
-				options={['Hanken Grotesk', 'Spectral', 'IBM Plex Mono', 'System sans']}
+				options={[
+					'Hanken Grotesk',
+					'Spectral',
+					'IBM Plex Mono',
+					{ v: 'System sans', l: m.settings_sending_font_system() }
+				]}
 				onChange={(v) => set('composeFont', v)}
 			/>
 		</Row>
 	{/if}
 	{#if UNRELEASED.undoSend}
-		<Row t="Undo send" d="A short window to recall a message after you hit send.">
+		<Row t={m.settings_sending_undo()} d={m.settings_sending_undo_desc()}>
 			<Seg
 				value={s.undo}
 				options={[
-					{ v: '0', l: 'Off' },
-					{ v: '5', l: '5s' },
-					{ v: '10', l: '10s' },
-					{ v: '30', l: '30s' }
+					{ v: '0', l: m.settings_sending_undo_off() },
+					{ v: '5', l: m.settings_sending_undo_seconds({ seconds: 5 }) },
+					{ v: '10', l: m.settings_sending_undo_seconds({ seconds: 10 }) },
+					{ v: '30', l: m.settings_sending_undo_seconds({ seconds: 30 }) }
 				]}
 				onChange={(v) => set('undo', v)}
 			/>
 		</Row>
 	{/if}
 	{#if UNRELEASED.draftAutosave}
-		<Row t="Auto-save drafts">
+		<Row t={m.settings_sending_autosave()}>
 			<Select
 				value={s.autosave}
-				options={['Every few seconds', 'Every 30 seconds', 'Every minute', 'On close only']}
+				options={Object.entries(AUTOSAVE_LABELS).map(([v, l]) => ({ v, l: l() }))}
 				onChange={(v) => set('autosave', v)}
 			/>
 		</Row>
 	{/if}
-	<Row t="Primary reply button" d="Which reply action sits in front when you open a message.">
+	<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
 		<Seg
 			value={s.replyDefault}
 			options={[
-				{ v: 'reply', l: 'Reply' },
-				{ v: 'all', l: 'Reply all' }
+				{ v: 'reply', l: m.settings_sending_reply() },
+				{ v: 'all', l: m.settings_sending_reply_all() }
 			]}
 			onChange={(v) => set('replyDefault', v)}
 		/>
@@ -99,19 +118,19 @@
 </div>
 
 <div class="scard">
-	<CardHead icon={ShieldAlert} title="Before a message leaves" />
+	<CardHead icon={ShieldAlert} title={m.settings_sending_before_title()} />
 	<Row
-		t="Confirm external recipients"
-		d="Ask before sending to anyone who is not a Thelemail account."
+		t={m.settings_sending_confirm_external()}
+		d={m.settings_sending_confirm_external_desc()}
 	>
 		<Toggle on={s.confirmExternal} onChange={(v) => set('confirmExternal', v)} />
 	</Row>
-	<Row t="Warn on empty subject">
+	<Row t={m.settings_sending_warn_subject()}>
 		<Toggle on={s.confirmSubject} onChange={(v) => set('confirmSubject', v)} />
 	</Row>
 	<Row
-		t="Warn before sending unencrypted"
-		d="When a recipient has no key, flag that the message will leave in the clear."
+		t={m.settings_sending_warn_unencrypted()}
+		d={m.settings_sending_warn_unencrypted_desc()}
 	>
 		<Toggle on={s.confirmUnencrypted} onChange={(v) => set('confirmUnencrypted', v)} />
 	</Row>
@@ -119,14 +138,12 @@
 
 {#if UNRELEASED.externalEncryptionPolicy}
 	<div class="scard encrypt-card">
-		<CardHead icon={LockKeyhole} title="Encryption to external recipients">
+		<CardHead icon={LockKeyhole} title={m.settings_sending_ext_title()}>
 			{#snippet right()}<Badge kind="pine" dot>WKD</Badge>{/snippet}
 		</CardHead>
 		<div class="encrypt-body">
 			<p>
-				When you message someone outside Thelemail, we look up their published PGP key (via
-				<code>WKD</code>). You decide what happens when one is found — encrypting automatically can
-				surprise a recipient who can’t decrypt, so this is yours to set.
+				<Rich text={m.settings_sending_ext_body()} tags={{ code }} />
 			</p>
 			<div class="enc-opts">
 				{#each encOpts as o (o.v)}
@@ -149,3 +166,5 @@
 		</div>
 	</div>
 {/if}
+
+{#snippet code(t: string)}<code>{t}</code>{/snippet}

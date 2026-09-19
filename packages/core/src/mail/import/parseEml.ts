@@ -1,5 +1,6 @@
 import { enableIconvFallback, mayNeedIconv } from '../render/textDecoderPolyfill';
 import PostalMime, { type Address, type Attachment } from 'postal-mime';
+import { m } from '$paraglide/messages.js';
 
 export interface ParsedEmlAddress {
 	display: string;
@@ -99,7 +100,7 @@ export async function parseEml(raw: Uint8Array): Promise<ParsedEml> {
 	try {
 		email = await PostalMime.parse(raw);
 	} catch (e) {
-		throw new EmlParseError('Failed to parse .eml', e);
+		throw new EmlParseError(m.import_error_parse_failed(), e);
 	}
 
 	const from = flattenAddresses(email.from ? [email.from] : undefined)[0] ?? {

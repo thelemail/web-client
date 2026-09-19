@@ -16,6 +16,8 @@
 	import UpgradeNudge from '$core/settings/UpgradeNudge.svelte';
 	import { resumeStep } from '$core/settings/domains/steps';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);
@@ -40,7 +42,7 @@
 		if (!valid || submitting) return;
 		const ws = workspaces.workspace?.id;
 		if (!ws) {
-			error = 'No workspace loaded. Refresh the page and try again.';
+			error = m.settings_domains_no_workspace();
 			return;
 		}
 		submitting = true;
@@ -51,38 +53,38 @@
 				replaceState: true
 			});
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not add domain';
+			error = err instanceof Error ? err.message : m.settings_domains_add_failed();
 			submitting = false;
 		}
 	}
 
 	$effect(() => {
-		settingsPageTitle.set('Add a domain');
+		settingsPageTitle.set(m.settings_domains_add());
 		return () => settingsPageTitle.set(null);
 	});
 </script>
 
-<svelte:head><title>Thelemail — Add a domain</title></svelte:head>
+<svelte:head><title>{m.settings_page_title({ page: m.settings_domains_add() })}</title></svelte:head>
 
-<SecHead desc="Setup runs in order: prove you own the domain, set up sending, create the addresses that will receive mail, then point MX here last. Nothing about your current mail changes until the final step." />
+<SecHead desc={m.settings_domains_new_desc()} />
 
 {#if !billing.canAddDomains}
 	<div class="upgrade-list">
 		<UpgradeNudge
-			title="Your own domain needs a paid plan"
-			desc="Every paid plan includes at least one custom domain with unlimited addresses on it."
+			title={m.settings_domains_nudge_title()}
+			desc={m.settings_domains_nudge_desc()}
 		/>
 	</div>
 {:else}
 <Card>
 	{#snippet head()}
 		<Globe size={16} />
-		<h3>Which domain?</h3>
+		<h3>{m.settings_domains_new_title()}</h3>
 	{/snippet}
 
 	<div class="dw-pane">
 		<div class="field">
-			<label for="new-domain-name">Domain name</label>
+			<label for="new-domain-name">{m.settings_domains_new_name()}</label>
 			<div class="input-prefix">
 				<span class="ip-ic"><Globe size={16} /></span>
 				<input
@@ -96,9 +98,7 @@
 			</div>
 			{#if name.length > 0 && !valid}
 				<div class="field-hint bad">
-					<CircleAlert size={13} />Enter a bare domain like
-					<span class="mono">example.com</span>, with no
-					<span class="mono">http://</span> and no path.
+					<CircleAlert size={13} /><Rich text={m.settings_domains_new_invalid()} tags={{ mono }} />
 				</div>
 			{/if}
 			{#if error}
@@ -107,16 +107,18 @@
 		</div>
 		<div class="dw-note">
 			<Info size={15} />
-			<span>You will need access to this domain's DNS settings at your registrar.</span>
+			<span>{m.settings_domains_new_dns_note()}</span>
 		</div>
 	</div>
 
 	<div class="dw-foot">
-		<Button variant="ghost" href={base}><ArrowLeft size={15} />Cancel</Button>
+		<Button variant="ghost" href={base}><ArrowLeft size={15} />{m.common_cancel()}</Button>
 		<span class="dw-spacer"></span>
 		<Button variant="primary" disabled={!valid || submitting} onclick={submit}>
-			{submitting ? 'Adding…' : 'Continue'}<ArrowRight size={15} />
+			{submitting ? m.settings_domains_new_adding() : m.common_continue()}<ArrowRight size={15} />
 		</Button>
 	</div>
 </Card>
 {/if}
+
+{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}

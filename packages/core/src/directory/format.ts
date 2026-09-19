@@ -1,3 +1,4 @@
+import { intlLocale } from '$core/i18n/intl';
 export function formatFingerprintHex(hex: string): string {
 	const clean = hex.replace(/\s+/g, '').toUpperCase();
 	if (clean.length === 0) return '';
@@ -13,7 +14,7 @@ export function formatFingerprintHex(hex: string): string {
 export function formatVerifiedAt(timestampMillis: number, version: number): string {
 	const date = new Date(timestampMillis);
 	const day = String(date.getUTCDate()).padStart(2, '0');
-	const month = date.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' });
+	const month = date.toLocaleString(intlLocale('en-GB'), { month: 'short', timeZone: 'UTC' });
 	const year = date.getUTCFullYear();
 	return `${day} ${month} ${year} · v${version}`;
 }

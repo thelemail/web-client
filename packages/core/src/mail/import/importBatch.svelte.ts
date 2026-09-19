@@ -10,6 +10,7 @@ import {
 	type ImportFileRecord,
 	type ImportFileStatus
 } from './importStore';
+import { m } from '$paraglide/messages.js';
 
 export type ImportItemStatus = 'pending' | 'processing' | 'done' | 'duplicate' | 'failed';
 
@@ -121,8 +122,8 @@ class ImportController {
 	async #process(accountId: string, id: string): Promise<void> {
 		const rec = await getImportFile(id);
 		if (!rec || !rec.bytes) {
-			await markTerminal(id, 'failed', { error: 'file data unavailable' });
-			this.#patch(id, { status: 'failed', error: 'file data unavailable' });
+			await markTerminal(id, 'failed', { error: m.import_error_file_unavailable() });
+			this.#patch(id, { status: 'failed', error: m.import_error_file_unavailable() });
 			return;
 		}
 		this.#patch(id, { status: 'processing', error: undefined });
@@ -154,8 +155,8 @@ class ImportController {
 
 function errorMessage(err: unknown): string {
 	if (err instanceof ApiCallError) {
-		if (err.status === 402) return 'subscription required';
-		if (err.status === 507 || err.status === 413) return 'storage quota exceeded';
+		if (err.status === 402) return m.import_error_subscription_required();
+		if (err.status === 507 || err.status === 413) return m.import_error_quota_exceeded();
 	}
 	if (err instanceof Error) return err.message;
 	return String(err);

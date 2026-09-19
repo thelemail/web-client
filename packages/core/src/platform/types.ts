@@ -178,6 +178,13 @@ export interface BlobPutOptions {
 	onProgress?: (fraction: number) => void;
 }
 
+export interface LocaleStore {
+	saved(): string | null;
+	save(locale: string | null): void;
+	preferred(): Promise<readonly string[]>;
+	applied?(locale: string): void;
+}
+
 export interface Platform {
 	reportError?: (kind: string, err: unknown) => void;
 	interceptFrameLinks?: boolean;
@@ -186,6 +193,7 @@ export interface Platform {
 	notifications?: NativeNotifications;
 	updates?: NativeUpdates;
 	billing: BillingMode;
+	locale: LocaleStore;
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
 	transport?: Transport;

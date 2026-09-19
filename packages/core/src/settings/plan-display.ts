@@ -1,16 +1,17 @@
+import { m } from '$paraglide/messages.js';
 import type { PlanCode } from '$core/api/billing';
 import type { WorkspaceType } from '$core/api/workspaces';
 
 export function planLabel(type: WorkspaceType | undefined | null, planCode?: string | null): string {
-	if (planCode === 'free_family') return 'Free family';
-	if (planCode === 'free') return 'Free';
+	if (planCode === 'free_family') return m.settings_plan_free_family();
+	if (planCode === 'free') return m.settings_plan_free();
 	switch (type) {
 		case 'personal':
-			return 'Personal';
+			return m.settings_plan_personal();
 		case 'family':
-			return 'Family';
+			return m.settings_plan_family();
 		case 'business':
-			return 'Business';
+			return m.settings_plan_business();
 		default:
 			return '';
 	}
@@ -39,16 +40,16 @@ export function isInvitable(type: WorkspaceType | undefined | null): boolean {
 export function membershipTitle(type: WorkspaceType | undefined | null): string {
 	switch (type) {
 		case 'family':
-			return 'Household';
+			return m.settings_member_title_family();
 		case 'business':
-			return 'Members & seats';
+			return m.settings_member_title_business();
 		default:
-			return 'This account';
+			return m.settings_member_title_personal();
 	}
 }
 
 export function addMemberLabel(type: WorkspaceType | undefined | null): string {
-	return type === 'family' ? 'Add a family member' : 'Add member';
+	return type === 'family' ? m.settings_member_add_family() : m.settings_member_add();
 }
 
 export function seatsFullNote(
@@ -58,21 +59,21 @@ export function seatsFullNote(
 ): string {
 	void total;
 	if (type === 'family' && planCode === 'free_family') {
-		return 'All 6 seats are in use. Remove someone before inviting anyone else.';
+		return m.settings_member_seats_full_free_family();
 	}
 	if (type === 'family') {
-		return 'All 6 included seats are in use. A larger team needs a Business plan.';
+		return m.settings_member_seats_full_family();
 	}
-	return 'Inviting another member adds a prorated seat to your subscription.';
+	return m.settings_member_seats_prorated();
 }
 
 export function personalNote(): string {
-	return 'Personal plans cover one person. There is no one else to manage.';
+	return m.settings_member_personal_note();
 }
 
 export function freeNote(type?: WorkspaceType | null, planCode?: PlanCode | null): string {
 	if (planCode === 'free_family' || (type === 'family' && planCode !== 'free')) {
-		return 'Up to 6 accounts on thelemail.com, 1 GB of storage each. Free, with no custom domains.';
+		return m.settings_plan_free_family_note();
 	}
-	return 'The Free plan covers one person with one address on thelemail.com and 1 GB of storage.';
+	return m.settings_plan_free_note();
 }

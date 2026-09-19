@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Clock from '@lucide/svelte/icons/clock';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import { formatWhenLong } from './data';
@@ -33,11 +34,11 @@
 	);
 	const rangeError = $derived(validateWhen(when, bounds));
 
-	const RANGE_MESSAGES: Record<TimeRangeError, string> = {
-		invalid: 'Enter a date and time.',
-		past: 'Pick a time in the future.',
-		too_soon: 'Scheduled sends need at least two minutes of lead time.',
-		too_far: 'Sends can be scheduled up to 30 days ahead.'
+	const RANGE_MESSAGES: Record<TimeRangeError, () => string> = {
+		invalid: () => m.mail_time_invalid(),
+		past: () => m.mail_time_past(),
+		too_soon: () => m.mail_schedule_too_soon(),
+		too_far: () => m.mail_schedule_too_far()
 	};
 
 	function confirm() {
@@ -47,10 +48,7 @@
 </script>
 
 {#snippet body()}
-	<p class="cfd-p">
-		The message is held encrypted on the server and goes out at the time you pick. You can cancel it
-		from the Scheduled folder until then.
-	</p>
+	<p class="cfd-p">{m.mail_schedule_body()}</p>
 	<div class="sch-list">
 		{#each presets as p (p.id)}
 			<button
@@ -75,7 +73,7 @@
 			onclick={() => (selected = CUSTOM)}
 		>
 			<Clock size={16} />
-			<span class="sch-name">Pick date &amp; time</span>
+			<span class="sch-name">{m.mail_pick_date_time()}</span>
 		</button>
 	</div>
 	{#if selected === CUSTOM}
@@ -86,20 +84,20 @@
 			min={toLocalInput(bounds.min)}
 			max={toLocalInput(bounds.max)}
 			disabled={busy}
-			aria-label="Send date and time"
+			aria-label={m.mail_schedule_input_aria()}
 		/>
 	{/if}
 	{#if rangeError}
-		<p class="cfd-hint">{RANGE_MESSAGES[rangeError]}</p>
+		<p class="cfd-hint">{RANGE_MESSAGES[rangeError]()}</p>
 	{:else if when}
-		<p class="cfd-hint">Goes out {formatWhenLong(when, now).toLowerCase()}.</p>
+		<p class="cfd-hint">{m.mail_schedule_goes_out({ when: formatWhenLong(when, now).toLowerCase() })}</p>
 	{/if}
 {/snippet}
 
 <ConfirmDialog
 	icon={Clock}
-	title="Schedule send"
-	confirmLabel="Schedule send"
+	title={m.mail_schedule_title()}
+	confirmLabel={m.mail_schedule_confirm()}
 	{busy}
 	disabled={!when || !!rangeError}
 	{body}

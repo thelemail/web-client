@@ -5,13 +5,14 @@ import { searchIndex, type SearchResult } from '$core/search';
 import { parseQuery } from '$core/search/query';
 import type { SearchHit } from '$core/platform/types';
 import { platform } from '$platform';
+import { m } from '$paraglide/messages.js';
 
 const DEBOUNCE_MS = 180;
 const MIRROR_LIMIT = 200;
 
 function messageFromResult(result: SearchResult): Message {
 	const { row, text } = result;
-	const display = text.senderDisplay || text.senderAddress || 'Unknown';
+	const display = text.senderDisplay || text.senderAddress || m.mailbox_unknown_sender();
 	const palette = paletteFor(text.senderAddress.toLowerCase());
 	return {
 		id: row.id,
@@ -41,7 +42,7 @@ function messageFromResult(result: SearchResult): Message {
 }
 
 function messageFromHit(hit: SearchHit): Message {
-	const display = hit.senderDisplay || hit.senderAddress || 'Unknown';
+	const display = hit.senderDisplay || hit.senderAddress || m.mailbox_unknown_sender();
 	const palette = paletteFor(hit.senderAddress.toLowerCase());
 	const storedAt = new Date(hit.storedAt).getTime();
 	const state = hit.mailboxState as 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed';

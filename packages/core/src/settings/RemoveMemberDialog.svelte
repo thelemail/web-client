@@ -5,6 +5,7 @@
 	import UserMinus from '@lucide/svelte/icons/user-minus';
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 
+	import { m } from '$paraglide/messages.js';
 	import CeremonyShell from './CeremonyShell.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -30,7 +31,7 @@
 			await workspaces.removeMember(accountId);
 			onClose();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not remove this person';
+			error = err instanceof Error ? err.message : m.settings_family_remove_failed();
 		} finally {
 			busy = false;
 		}
@@ -39,27 +40,27 @@
 
 <CeremonyShell
 	icon={UserMinus}
-	eyebrow="Household"
-	title="Remove {name} from the family"
+	eyebrow={m.settings_member_title_family()}
+	title={m.settings_family_remove_title({ name })}
 	tone="danger"
 	{onClose}
 >
 	<div class="cer-pane">
 		<div class="cer-lede">
-			<p>They keep their address and everything in their mailbox.</p>
+			<p>{m.settings_family_remove_lede()}</p>
 		</div>
 		<ul class="cer-points">
 			<li>
 				<Inbox size={16} />
-				<span>{email} goes back to being a free account of its own.</span>
+				<span>{m.settings_family_remove_point_free({ email })}</span>
 			</li>
 			<li>
 				<CalendarOff size={16} />
-				<span>They lose the family's shared calendar. Their own calendars go with them.</span>
+				<span>{m.settings_family_remove_point_calendar()}</span>
 			</li>
 			<li>
 				<UserPlus size={16} />
-				<span>You can invite them again later.</span>
+				<span>{m.settings_family_remove_point_reinvite()}</span>
 			</li>
 		</ul>
 
@@ -69,9 +70,9 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" disabled={busy} onclick={onClose}>Keep them in the family</Button>
+		<Button variant="ghost" disabled={busy} onclick={onClose}>{m.settings_family_remove_keep()}</Button>
 		<Button variant="danger" disabled={busy} onclick={submit}>
-			{busy ? 'Removing…' : `Remove ${firstName}`}
+			{busy ? m.settings_family_removing() : m.settings_family_remove_submit({ name: firstName })}
 		</Button>
 	{/snippet}
 </CeremonyShell>

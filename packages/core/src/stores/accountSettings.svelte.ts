@@ -3,12 +3,27 @@ import { locale, type LocaleSettings } from '$core/mail/locale.svelte';
 import { theme, type ThemePref } from './theme.svelte';
 import { preferences } from './preferences.svelte';
 import { auth } from './auth.svelte';
+import { m } from '$paraglide/messages.js';
 
 export const MARK_READ_DELAYS: Record<string, number | null> = {
 	'Immediately on open': 0,
 	'After 2 seconds': 2000,
 	'After 5 seconds': 5000,
 	'Never automatically': null
+};
+
+export const MARK_READ_LABELS: Record<string, () => string> = {
+	'Immediately on open': () => m.settings_reading_mark_read_immediately(),
+	'After 2 seconds': () => m.settings_reading_mark_read_2s(),
+	'After 5 seconds': () => m.settings_reading_mark_read_5s(),
+	'Never automatically': () => m.settings_reading_mark_read_never()
+};
+
+export const SWIPE_LABELS: Record<string, () => string> = {
+	Archive: () => m.settings_reading_swipe_archive(),
+	Delete: () => m.settings_reading_swipe_delete(),
+	'Mark read': () => m.settings_reading_swipe_mark_read(),
+	Snooze: () => m.settings_reading_swipe_snooze()
 };
 
 export interface OpenMessageSettings {

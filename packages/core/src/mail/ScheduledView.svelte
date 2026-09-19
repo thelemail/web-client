@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { onMount } from 'svelte';
 	import Clock from '@lucide/svelte/icons/clock';
 	import SendHorizontal from '@lucide/svelte/icons/send-horizontal';
@@ -58,10 +59,10 @@
 		try {
 			await scheduled.cancel(row.id);
 			pendingCancel = null;
-			flash('Scheduled send cancelled');
+			flash(m.mail_scheduled_cancelled());
 			void mailbox.refresh([{ ...DEFAULT_QUERY, folder: 'sent' }]);
 		} catch (e) {
-			cancelError = e instanceof Error ? e.message : 'Could not cancel this send.';
+			cancelError = e instanceof Error ? e.message : m.mail_scheduled_cancel_failed();
 		} finally {
 			cancelling = false;
 		}
@@ -71,8 +72,8 @@
 		composeStore.close();
 		flash(
 			info?.scheduledAt
-				? `Send scheduled for ${formatWhenLong(new Date(info.scheduledAt))}`
-				: 'Message sent'
+				? m.mail_toast_scheduled({ when: formatWhenLong(new Date(info.scheduledAt)) })
+				: m.mail_toast_sent()
 		);
 		void drafts.refresh();
 		void scheduled.refresh();
@@ -84,7 +85,7 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Scheduled</title>
+	<title>{m.mail_scheduled_page_title()}</title>
 </svelte:head>
 
 <LifecycleBanners />
@@ -93,34 +94,34 @@
 <div class="mailbody">
 	<section class="list">
 		<div class="list-h">
-			<button class="lh-nav" title="Menu" onclick={() => (mailNav.open = !mailNav.open)}>
+			<button class="lh-nav" title={m.mail_menu()} onclick={() => (mailNav.open = !mailNav.open)}>
 				<Menu size={18} />
 			</button>
 			<div class="ttl-block">
-				<span class="ttl">Scheduled<span class="n">{scheduled.items.length}</span></span>
+				<span class="ttl">{m.mail_scheduled_heading()}<span class="n">{scheduled.items.length}</span></span>
 			</div>
 			<div class="grow"></div>
-			<button class="lh-btn" title="Refresh" onclick={() => scheduled.refresh()}>
+			<button class="lh-btn" title={m.mail_refresh()} onclick={() => scheduled.refresh()}>
 				<RefreshCw size={16} />
 			</button>
 		</div>
 		<div class="scroll">
 			{#if scheduled.loading && list.length === 0}
-				<div class="sch-empty"><div class="t">Loading…</div></div>
+				<div class="sch-empty"><div class="t">{m.common_loading()}</div></div>
 			{:else if scheduled.loadError && list.length === 0}
 				<div class="sch-empty">
-					<div class="t">Could not load scheduled sends</div>
+					<div class="t">{m.mail_scheduled_load_failed()}</div>
 					<div class="d">{scheduled.loadError}</div>
-					<button class="sch-retry" onclick={() => scheduled.refresh()}>Retry</button>
+					<button class="sch-retry" onclick={() => scheduled.refresh()}>{m.mail_retry()}</button>
 				</div>
 			{:else if list.length === 0}
 				<div class="sch-empty">
 					<div class="ring"><Clock size={28} /></div>
-					<div class="t">{mailSearch.text.trim() ? 'No matches' : 'Nothing scheduled'}</div>
+					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_scheduled_empty()}</div>
 					<div class="d">
 						{mailSearch.text.trim()
-							? 'No scheduled sends match your search.'
-							: 'Messages you schedule from the compose window wait here until they go out.'}
+							? m.mail_scheduled_no_matches()
+							: m.mail_scheduled_empty_detail()}
 					</div>
 				</div>
 			{:else}
@@ -129,14 +130,14 @@
 						<Avatar initials={r.init || 'S'} size={34} bg="var(--pine-100)" fg="var(--pine-700)" />
 						<div class="sch-main">
 							<div class="sch-top">
-								<span class="sch-to">{r.to || '(no recipients)'}</span>
+								<span class="sch-to">{r.to || m.mail_no_recipients()}</span>
 								<span class="sch-time">{formatWhenLong(new Date(r.scheduledAt), now)}</span>
 							</div>
 							<div class="sch-subj">
-								<span class="sch-tag">{r.kind === 'external' ? 'External' : 'Thelemail'}</span>
+								<span class="sch-tag">{r.kind === 'external' ? m.mail_scheduled_tag_external() : m.mail_scheduled_tag_internal()}</span>
 								{r.subject}
 							</div>
-							<div class="sch-prev">{r.snippet || 'No preview'}</div>
+							<div class="sch-prev">{r.snippet || m.mail_scheduled_no_preview()}</div>
 						</div>
 						<button
 							type="button"
@@ -147,14 +148,14 @@
 								pendingCancel = r;
 							}}
 						>
-							Cancel
+							{m.common_cancel()}
 						</button>
 					</div>
 				{/each}
 				{#if !scheduled.exhausted}
 					<div class="sch-more">
 						<button onclick={() => scheduled.loadMore()} disabled={scheduled.loadingMore}>
-							{scheduled.loadingMore ? 'Loading…' : 'Load more'}
+							{scheduled.loadingMore ? m.common_loading() : m.mail_load_more()}
 						</button>
 					</div>
 				{/if}
@@ -164,25 +165,23 @@
 	<div class="sch-side">
 		<div class="sch-side-in">
 			<SendHorizontal size={40} />
-			<p>Scheduled messages stay encrypted until they go out.</p>
+			<p>{m.mail_scheduled_side()}</p>
 		</div>
 	</div>
 </div>
 
 {#snippet cancelBody()}
-	<p class="cfd-p">
-		The message will not be delivered and nothing is kept. Write it again when you're ready.
-	</p>
+	<p class="cfd-p">{m.mail_scheduled_cancel_body()}</p>
 {/snippet}
 
 {#if pendingCancel}
 	<ConfirmDialog
 		icon={Clock}
-		title="Cancel this scheduled send?"
+		title={m.mail_scheduled_cancel_title()}
 		sub={pendingCancel.subject}
 		tone="danger"
-		confirmLabel="Cancel send"
-		cancelLabel="Keep it scheduled"
+		confirmLabel={m.mail_scheduled_cancel_confirm()}
+		cancelLabel={m.mail_scheduled_cancel_keep()}
 		busy={cancelling}
 		error={cancelError}
 		body={cancelBody}
@@ -194,7 +193,7 @@
 {/if}
 
 {#if !composeStore.open}
-	<button class="fab" title="Compose" onclick={() => composeStore.openNew()}>
+	<button class="fab" title={m.mail_compose()} onclick={() => composeStore.openNew()}>
 		<PenLine size={22} />
 	</button>
 {/if}

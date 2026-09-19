@@ -1,16 +1,20 @@
 <script lang="ts">
 	import Check from '@lucide/svelte/icons/check';
+	import { m } from '$paraglide/messages.js';
 
 	let {
 		step,
-		labels = ['Address', 'Password', 'Done'],
+		labels,
 		compact = false
 	}: { step: number; labels?: string[]; compact?: boolean } = $props();
 
-	const nodes = $derived(labels.map((lbl, i) => ({ n: i + 1, lbl })));
+	const shown = $derived(
+		labels ?? [m.auth_step_address(), m.auth_step_password(), m.auth_step_done()]
+	);
+	const nodes = $derived(shown.map((lbl, i) => ({ n: i + 1, lbl })));
 </script>
 
-<div class="stepper" class:compact={compact || labels.length > 3}>
+<div class="stepper" class:compact={compact || shown.length > 3}>
 	{#each nodes as nd, i (nd.n)}
 		{#if i > 0}
 			<span class="seg" class:done={step >= i}></span>

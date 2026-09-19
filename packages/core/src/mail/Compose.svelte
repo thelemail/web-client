@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
 	import { page } from '$app/state';
@@ -244,13 +245,13 @@
 		const recips = [...doc.to, ...doc.cc, ...doc.bcc].map((r) => r.name || r.address);
 		const summary =
 			recips.length === 0
-				? '(no recipients)'
+				? m.mail_no_recipients()
 				: recips.length <= 2
 					? recips.join(', ')
 					: `${recips.slice(0, 2).join(', ')} +${recips.length - 2}`;
 		return {
 			id,
-			subject: doc.subject.trim() || '(no subject)',
+			subject: doc.subject.trim() || m.mail_compose_no_subject(),
 			snippet: doc.bodyText.slice(0, 280),
 			to: summary,
 			updatedAt: now.toISOString(),
@@ -327,14 +328,14 @@
 	});
 
 	async function restartHold(): Promise<string | null> {
-		if (status === 'sending') return 'A message is still sending.';
-		if (uploadsInFlight()) return 'An attachment is still uploading.';
+		if (status === 'sending') return m.mail_compose_hold_sending();
+		if (uploadsInFlight()) return m.mail_compose_hold_uploading();
 		if (hydrating) return null;
 		clearTimeout(saveTimer);
 		await saveDraft();
 		const doc = currentDoc();
 		if (!savedDraftId && !isWorthSaving(doc)) return null;
-		return JSON.stringify(doc) === lastSavedJson ? null : 'A draft could not be saved.';
+		return JSON.stringify(doc) === lastSavedJson ? null : m.mail_compose_hold_draft_unsaved();
 	}
 
 	onMount(() => {
@@ -383,11 +384,11 @@
 					attachments = [...attachments, att];
 					startUpload(att);
 				} catch {
-					attErr = `Could not restore attachment "${meta.filename}".`;
+					attErr = m.mail_compose_restore_att_failed({ name: meta.filename });
 				}
 			}
 		} catch {
-			err = new SendError('unknown', 'Could not open this draft.');
+			err = new SendError('unknown', m.mail_compose_open_draft_failed());
 		} finally {
 			hydrating = false;
 			draftStatus = 'saved';
@@ -400,9 +401,9 @@
 	}
 
 	function formatSize(n: number): string {
-		if (n >= 1024 * 1024) return (n / (1024 * 1024)).toFixed(1) + ' MB';
-		if (n >= 1024) return (n / 1024).toFixed(1) + ' KB';
-		return n + ' B';
+		if (n >= 1024 * 1024) return m.mail_size_mb({ size: (n / (1024 * 1024)).toFixed(1) });
+		if (n >= 1024) return m.mail_size_kb({ size: (n / 1024).toFixed(1) });
+		return m.mail_size_bytes({ size: n });
 	}
 
 	function totalBytes(): number {
@@ -414,15 +415,15 @@
 		const incoming = Array.from(files);
 		for (const file of incoming) {
 			if (attachments.length >= MAX_ATTACHMENTS) {
-				attErr = `Maximum ${MAX_ATTACHMENTS} attachments per message.`;
+				attErr = m.mail_compose_att_max_count({ count: MAX_ATTACHMENTS });
 				return;
 			}
 			if (file.size > MAX_ATTACHMENT_BYTES) {
-				attErr = `${file.name} is larger than ${formatSize(MAX_ATTACHMENT_BYTES)}.`;
+				attErr = m.mail_compose_att_too_large({ name: file.name, size: formatSize(MAX_ATTACHMENT_BYTES) });
 				continue;
 			}
 			if (totalBytes() + file.size > MAX_TOTAL_BYTES) {
-				attErr = `Total attachment size would exceed ${formatSize(MAX_TOTAL_BYTES)}.`;
+				attErr = m.mail_compose_att_total_too_large({ size: formatSize(MAX_TOTAL_BYTES) });
 				continue;
 			}
 			const att: ComposeAttachment = {
@@ -481,7 +482,13 @@
 	const canSend = $derived(
 		validCount > 0 && !hasInvalid && status !== 'sending' && attReady
 	);
-	const subjLine = $derived(subject.trim() || 'New message');
+	function identityKindLabel(kind: SendIdentity['kind']): string {
+		if (kind === 'Alias') return m.mail_compose_ident_shared();
+		if (kind === 'Identity') return m.mail_compose_ident_identity();
+		return m.mail_compose_ident_default();
+	}
+
+	const subjLine = $derived(subject.trim() || m.mail_compose_new_message());
 
 	const INLINE_CODES = new Set<SendError['code']>([
 		'recipient_unknown',
@@ -501,7 +508,7 @@
 	);
 	const inlineErr = $derived(err && INLINE_CODES.has(err.code) ? err : null);
 	const primaryRecip = $derived(
-		allRecipients.find((c) => c.valid) ?? { name: '', email: 'this recipient' }
+		allRecipients.find((c) => c.valid) ?? { name: '', email: m.mail_compose_this_recipient() }
 	);
 	const failedAddress = $derived.by(() => {
 		const p = err?.payload;
@@ -624,7 +631,7 @@
 				if (e.code === 'encrypt') attempts += 1;
 				else attempts = 0;
 			} else {
-				err = new SendError('unknown', e instanceof Error ? e.message : 'Send failed');
+				err = new SendError('unknown', e instanceof Error ? e.message : m.mail_compose_send_failed());
 				attempts = 0;
 			}
 		}
@@ -692,7 +699,7 @@
 			try {
 				await acceptExternalKey(payload.address, payload.currentFingerprint);
 			} catch {
-				err = new SendError('unknown', 'Could not accept the new key. Please try again.');
+				err = new SendError('unknown', m.mail_compose_accept_key_failed());
 				return;
 			}
 		}
@@ -749,7 +756,7 @@
 		<button
 			type="button"
 			class="dock-b"
-			title="Expand"
+			title={m.mail_compose_expand()}
 			onclick={(e) => {
 				e.stopPropagation();
 				min = false;
@@ -758,7 +765,7 @@
 		<button
 			type="button"
 			class="dock-b"
-			title="Discard"
+			title={m.mail_compose_discard()}
 			onclick={(e) => {
 				e.stopPropagation();
 				discardDraft();
@@ -783,12 +790,12 @@
 			ondrop={onDrop}
 		>
 			<div class="compose-h">
-				<PenLine size={16} />New message
+				<PenLine size={16} />{m.mail_compose_new_message()}
 				<div class="ch-actions">
-					<button type="button" class="chx" title="Minimize" onclick={() => (min = true)}>
+					<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => (min = true)}>
 						<Minus size={16} />
 					</button>
-					<button type="button" class="chx x" title="Close" onclick={closeKeepingDraft}>
+					<button type="button" class="chx x" title={m.common_close()} onclick={closeKeepingDraft}>
 						<X size={16} />
 					</button>
 				</div>
@@ -796,7 +803,7 @@
 
 			<div class="compose-scroll">
 				<div class="from-row" bind:this={fromRef}>
-					<span class="recip-label">From</span>
+					<span class="recip-label">{m.mail_compose_from()}</span>
 					<button
 						type="button"
 						class="from-trigger"
@@ -817,7 +824,7 @@
 					</button>
 					{#if fromOpen}
 						<div class="from-menu" role="menu">
-							<div class="fm-h">Send mail as</div>
+							<div class="fm-h">{m.mail_compose_send_as()}</div>
 							{#each identityOptions as id, i (id.email + '-' + i)}
 								<button
 									type="button"
@@ -840,7 +847,7 @@
 									<span class="fm-tx">
 										<span class="fm-top">
 											<b>{id.name}</b>
-											<span class="fm-kind">{id.kind === 'Alias' ? 'Shared' : id.kind}</span>
+											<span class="fm-kind">{identityKindLabel(id.kind)}</span>
 										</span>
 										<span class="fm-em">{id.email}</span>
 										{#if id.org}<span class="fm-org">{id.org}</span>{/if}
@@ -857,7 +864,7 @@
 									void goto(`/u/${page.params.slot ?? '0'}/settings/addresses`);
 								}}
 							>
-								<AtSign size={16} />Manage addresses
+								<AtSign size={16} />{m.mail_compose_manage_addresses()}
 							</button>
 						</div>
 					{/if}
@@ -866,10 +873,10 @@
 				{#snippet ccBccSlot()}
 					<div class="ccbcc">
 						{#if !showCc}
-							<button type="button" onclick={() => (showCc = true)}>Cc</button>
+							<button type="button" onclick={() => (showCc = true)}>{m.mail_recip_cc()}</button>
 						{/if}
 						{#if !showBcc}
-							<button type="button" onclick={() => (showBcc = true)}>Bcc</button>
+							<button type="button" onclick={() => (showBcc = true)}>{m.mail_recip_bcc()}</button>
 						{/if}
 					</div>
 				{/snippet}
@@ -915,15 +922,15 @@
 				{/if}
 
 				<div class="cfield subj">
-					<span class="recip-label">Subject</span>
-					<input bind:value={subject} placeholder="Subject" />
+					<span class="recip-label">{m.mail_compose_subject()}</span>
+					<input bind:value={subject} placeholder={m.mail_compose_subject()} />
 				</div>
 
 				<RichEditor
 					bind:html={bodyHtml}
 					bind:text={bodyText}
 					bind:editor
-					placeholder="Write your message…"
+					placeholder={m.mail_editor_placeholder()}
 					disabled={status === 'sending'}
 				/>
 
@@ -938,7 +945,7 @@
 				{/if}
 
 				{#if dragging}
-					<div class="att-drop">Drop to attach</div>
+					<div class="att-drop">{m.mail_compose_drop()}</div>
 				{/if}
 			</div>
 
@@ -963,8 +970,8 @@
 				<div class="cwarn">
 					<CircleAlert size={14} />
 					{hasInvalid
-						? 'One or more addresses are not valid.'
-						: 'Add at least one recipient and a message body.'}
+						? m.mail_compose_invalid_addresses()
+						: m.mail_compose_need_recipient_and_body()}
 				</div>
 			{/if}
 
@@ -1001,15 +1008,15 @@
 						disabled={status === 'sending' || !canSend}
 					>
 						{#if status === 'sending'}
-							<span class="send-spin"></span>Sending…
+							<span class="send-spin"></span>{m.mail_compose_sending()}
 						{:else}
-							<Send size={16} />Send
+							<Send size={16} />{m.mail_compose_send()}
 						{/if}
 					</button>
 					<button
 						type="button"
 						class="send-caret"
-						title="Send options"
+						title={m.mail_compose_send_options()}
 						disabled={!canSend || status === 'sending'}
 						onclick={() => {
 							if (canSend && status !== 'sending') sendOpen = !sendOpen;
@@ -1019,23 +1026,23 @@
 					</button>
 					{#if sendOpen}
 						<div class="send-menu" role="menu">
-							<button type="button" onclick={runSend}><Send size={16} />Send now</button>
+							<button type="button" onclick={runSend}><Send size={16} />{m.mail_compose_send_now()}</button>
 							<button
 								type="button"
 								onclick={() => {
 									sendOpen = false;
 									scheduleOpen = true;
-								}}><Clock size={16} />Schedule send</button
+								}}><Clock size={16} />{m.mail_compose_schedule()}</button
 							>
 						</div>
 					{/if}
 				</div>
 
-				<button type="button" class="cf-ico" title="Attach files" onclick={pickFiles}>
+				<button type="button" class="cf-ico" title={m.mail_compose_attach_files()} onclick={pickFiles}>
 					<Paperclip size={17} />
 				</button>
 
-				<button type="button" class="cf-ico" title="Insert link" onclick={insertLink}>
+				<button type="button" class="cf-ico" title={m.mail_toolbar_link()} onclick={insertLink}>
 					<Link size={17} />
 				</button>
 
@@ -1050,12 +1057,12 @@
 
 				<span class="csave"
 					>{draftStatus === 'saving'
-						? 'Saving…'
+						? m.mail_compose_saving()
 						: draftStatus === 'saved'
-							? 'Draft saved'
-							: 'Draft'}</span
+							? m.mail_compose_draft_saved()
+							: m.mail_compose_draft()}</span
 				>
-				<button type="button" class="cf-ico danger" title="Discard draft" onclick={discardDraft}>
+				<button type="button" class="cf-ico danger" title={m.mail_compose_discard_draft()} onclick={discardDraft}>
 					<Trash2 size={17} />
 				</button>
 			</div>

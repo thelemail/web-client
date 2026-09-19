@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import X from '@lucide/svelte/icons/x';
 	import './confirm-dialog.css';
 	import type { Component, Snippet } from 'svelte';
@@ -26,7 +27,7 @@
 		sub = '',
 		tone = 'neutral',
 		confirmLabel,
-		cancelLabel = 'Cancel',
+		cancelLabel,
 		busy = false,
 		disabled = false,
 		error = null,
@@ -78,7 +79,7 @@
 					<div class="cfd-sub" title={sub}>{sub}</div>
 				{/if}
 			</div>
-			<button type="button" class="cfd-x" title="Close" disabled={busy} onclick={close}>
+			<button type="button" class="cfd-x" title={m.common_close()} disabled={busy} onclick={close}>
 				<X size={16} />
 			</button>
 		</div>
@@ -93,14 +94,14 @@
 
 		<div class="cfd-actions">
 			<Button variant="secondary" disabled={busy} onclick={cancel}>
-				{cancelLabel}
+				{cancelLabel ?? m.common_cancel()}
 			</Button>
 			<Button
 				variant={tone === 'danger' ? 'danger' : 'primary'}
 				disabled={busy || disabled}
 				onclick={onConfirm}
 			>
-				{busy ? 'Working…' : confirmLabel}
+				{busy ? m.mail_confirm_working() : confirmLabel}
 			</Button>
 		</div>
 	</div>

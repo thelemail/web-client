@@ -9,6 +9,7 @@ import { signatures } from '$core/stores/signatures.svelte';
 import { sealSignatureImage } from './signatureCrypto';
 import { SIGNATURE_IMAGE_ATTR } from './editor/signatureImage';
 import { b64ToBytes } from '$core/keys/encode';
+import { m } from '$paraglide/messages.js';
 
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -26,10 +27,10 @@ export async function uploadSignatureImage(
 	meta: { filename: string; contentType: string }
 ): Promise<HostedImage> {
 	if (!ACCEPTED_IMAGE_TYPES.includes(meta.contentType)) {
-		throw new Error('Use a JPG, PNG, GIF, or WebP image.');
+		throw new Error(m.mailbox_sigimg_bad_type());
 	}
 	if (bytes.byteLength > MAX_IMAGE_BYTES) {
-		throw new Error(`Maximum size is ${(MAX_IMAGE_BYTES / 1024 / 1024).toFixed(0)} MB.`);
+		throw new Error(m.mailbox_sigimg_max_size({ size: (MAX_IMAGE_BYTES / 1024 / 1024).toFixed(0) }));
 	}
 	const target = signatures.targetFor(addressId);
 	if (!target) throw new Error('no active account');
@@ -37,7 +38,7 @@ export async function uploadSignatureImage(
 	const sealedImage = await sealSignatureImage(target, bytes, meta);
 	const grant = await requestSignatureImageUploadUrl(addressId);
 	if (sealedImage.ciphertext.byteLength > grant.maxBytes) {
-		throw new Error('That image is too large once encrypted. Try a smaller one.');
+		throw new Error(m.mailbox_sigimg_too_large_encrypted());
 	}
 	const put = await platform.blobPut(
 		grant.uploadUrl,

@@ -1,3 +1,5 @@
+import { m } from '$paraglide/messages.js';
+
 export interface TimePreset {
 	id: string;
 	label: string;
@@ -89,19 +91,19 @@ export function snoozePresets(now: Date = new Date()): TimePreset[] {
 	const bounds = snoozeBounds(now);
 	const day = now.getDay();
 	const candidates: TimePreset[] = [
-		{ id: 'later-today', label: 'Later today', when: todayAt(now, EVENING_HOUR) },
-		{ id: 'tomorrow', label: 'Tomorrow', when: tomorrowAt(now, MORNING_HOUR) }
+		{ id: 'later-today', label: m.mailbox_preset_later_today(), when: todayAt(now, EVENING_HOUR) },
+		{ id: 'tomorrow', label: m.mailbox_preset_tomorrow(), when: tomorrowAt(now, MORNING_HOUR) }
 	];
 	if (day !== 0 && day !== SATURDAY) {
 		candidates.push({
 			id: 'this-weekend',
-			label: 'This weekend',
+			label: m.mailbox_preset_this_weekend(),
 			when: nextWeekdayAt(now, SATURDAY, MORNING_HOUR)
 		});
 	}
 	candidates.push({
 		id: 'next-week',
-		label: 'Next week',
+		label: m.mailbox_preset_next_week(),
 		when: nextWeekdayAt(now, MONDAY, MORNING_HOUR)
 	});
 	return candidates.filter((p) => inBounds(p.when, bounds));
@@ -110,16 +112,16 @@ export function snoozePresets(now: Date = new Date()): TimePreset[] {
 export function schedulePresets(now: Date = new Date()): TimePreset[] {
 	const bounds = scheduleBounds(now);
 	const candidates: TimePreset[] = [
-		{ id: 'later-today', label: 'Later today', when: todayAt(now, EVENING_HOUR) },
-		{ id: 'tomorrow-morning', label: 'Tomorrow morning', when: tomorrowAt(now, MORNING_HOUR) },
+		{ id: 'later-today', label: m.mailbox_preset_later_today(), when: todayAt(now, EVENING_HOUR) },
+		{ id: 'tomorrow-morning', label: m.mailbox_preset_tomorrow_morning(), when: tomorrowAt(now, MORNING_HOUR) },
 		{
 			id: 'tomorrow-afternoon',
-			label: 'Tomorrow afternoon',
+			label: m.mailbox_preset_tomorrow_afternoon(),
 			when: tomorrowAt(now, AFTERNOON_HOUR)
 		},
 		{
 			id: 'monday-morning',
-			label: 'Monday morning',
+			label: m.mailbox_preset_monday_morning(),
 			when: nextWeekdayAt(now, MONDAY, MORNING_HOUR)
 		}
 	];

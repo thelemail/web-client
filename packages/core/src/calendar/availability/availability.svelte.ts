@@ -2,6 +2,7 @@ import { listCalendarBusy, type CalendarBusyEntry } from '$core/api/calendars';
 import { directoryTrust } from '$core/mail/senderVerify';
 import { auth } from '$core/stores/auth.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
+import { m } from '$paraglide/messages.js';
 import { calendarStore } from '../store.svelte';
 import { verifyBusyWindows, type BusyTrust } from '../verifybusy';
 import { buildBoard, type Board, type BoardDay, type BoardOwner, type BoardWindow } from './board';
@@ -33,7 +34,7 @@ class AvailabilityStore {
 		const accountId = auth.accountId;
 		if (!accountId) return;
 		if ((to.getTime() - from.getTime()) / 86_400_000 > MAX_RANGE_DAYS) {
-			this.error = 'That range is longer than availability can cover.';
+			this.error = m.cal_avail_range_too_long();
 			return;
 		}
 		const key = `${accountId}|${from.toISOString()}|${to.toISOString()}`;
@@ -60,7 +61,7 @@ class AvailabilityStore {
 			this.loadedAt = at;
 		} catch (err) {
 			if (token !== this.#token) return;
-			this.error = err instanceof Error ? err.message : 'Could not load availability.';
+			this.error = err instanceof Error ? err.message : m.cal_avail_load_failed();
 		} finally {
 			if (token === this.#token) this.loading = false;
 		}
@@ -154,7 +155,7 @@ class AvailabilityStore {
 									key,
 									kind: 'role',
 									accountId: null,
-									name: calendarStore.calendar(entry.calendarId)?.name ?? 'A role calendar',
+									name: calendarStore.calendar(entry.calendarId)?.name ?? m.cal_avail_role_calendar(),
 									email: null,
 									isMe: false,
 									windows: []
@@ -163,7 +164,7 @@ class AvailabilityStore {
 									key,
 									kind: 'unattributed',
 									accountId: entry.ownerAccountId,
-									name: 'An account in this workspace',
+									name: m.cal_avail_unattributed(),
 									email: null,
 									isMe: false,
 									windows: []

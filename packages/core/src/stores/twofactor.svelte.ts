@@ -1,5 +1,6 @@
 import { getTwoFactorStatus } from '$core/api/twofactor';
 import type { TwoFactorStatus } from '$core/api/types';
+import { m } from '$paraglide/messages.js';
 
 class TwoFactorStore {
 	status = $state<TwoFactorStatus | null>(null);
@@ -16,7 +17,7 @@ class TwoFactorStore {
 			this.status = await getTwoFactorStatus(accountId);
 		} catch (err) {
 			console.warn('twofactor: status load failed', err);
-			this.error = err instanceof Error ? err.message : 'Failed to load two-factor status';
+			this.error = err instanceof Error ? err.message : m.store_twofactor_load_failed();
 		} finally {
 			this.loading = false;
 		}

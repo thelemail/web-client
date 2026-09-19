@@ -1,3 +1,4 @@
+import { i18n } from '$core/i18n/locale.svelte';
 import type { LadderPosition, LifecycleDates } from './types';
 
 export const MS_PER_DAY = 86_400_000;
@@ -14,19 +15,13 @@ export function daysBetween(from: Date, to: Date): number {
 	return Math.floor((from.getTime() - to.getTime()) / MS_PER_DAY);
 }
 
-const full = new Intl.DateTimeFormat(undefined, {
-	weekday: 'short',
-	day: 'numeric',
-	month: 'short',
-	year: 'numeric'
-});
-const med = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
-const short = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short' });
+const format = (options: Intl.DateTimeFormatOptions) => (d: Date) =>
+	new Intl.DateTimeFormat(i18n.tag, options).format(d);
 
 export const fmt = {
-	full: (d: Date) => full.format(d),
-	med: (d: Date) => med.format(d),
-	short: (d: Date) => short.format(d)
+	full: format({ weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }),
+	med: format({ weekday: 'short', day: 'numeric', month: 'short' }),
+	short: format({ day: 'numeric', month: 'short' })
 };
 
 export function ladderFor(now: Date, dates: LifecycleDates): LadderPosition {

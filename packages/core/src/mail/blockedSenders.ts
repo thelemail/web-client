@@ -2,6 +2,7 @@ import { addBlockedSender } from '$core/api/blockedSenders';
 import type { BlockedSender } from '$core/api/types';
 import { b64ToBytes, bytesToB64 } from '$core/crypto';
 import { keystore } from '$core/keystore/keystore-client';
+import { m } from '$paraglide/messages.js';
 
 export function normalizeAddress(address: string): string {
 	return address.trim().toLowerCase();
@@ -10,7 +11,7 @@ export function normalizeAddress(address: string): string {
 export async function sealAddress(accountId: string, address: string): Promise<string> {
 	const key = await keystore.getPublicKey({ accountId });
 	if (!key.ok) {
-		throw new Error('Unlock this account to block a sender.');
+		throw new Error(m.mailbox_block_unlock_required());
 	}
 	const res = await keystore.encrypt({
 		accountId,
@@ -18,7 +19,7 @@ export async function sealAddress(accountId: string, address: string): Promise<s
 		plaintext: new TextEncoder().encode(normalizeAddress(address))
 	});
 	if (!res.ok) {
-		throw new Error('The address could not be encrypted, so the sender was not blocked.');
+		throw new Error(m.mailbox_block_seal_failed());
 	}
 	return bytesToB64(res.ciphertext);
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { onDestroy, untrack } from 'svelte';
 	import Bold from '@lucide/svelte/icons/bold';
 	import Italic from '@lucide/svelte/icons/italic';
@@ -51,11 +52,11 @@
 	let pasteUndo = $state<string | null>(null);
 	let fileInputRef: HTMLInputElement | undefined = $state();
 
-	const modeOptions: { v: SignatureMode; l: string }[] = [
-		{ v: 'rich', l: 'Rich' },
+	const modeOptions: { v: SignatureMode; l: string }[] = $derived([
+		{ v: 'rich', l: m.settings_signature_mode_rich() },
 		{ v: 'html', l: 'HTML' },
 		{ v: 'markdown', l: 'Markdown' }
-	];
+	]);
 
 	const sourcePlaceholder = $derived(
 		mode === 'markdown'
@@ -77,10 +78,10 @@
 		if (res.hosted > 0 || res.failed > 0) {
 			const parts: string[] = [];
 			if (res.hosted > 0) {
-				parts.push(`${res.hosted} image${res.hosted === 1 ? '' : 's'} copied to Thelemail`);
+				parts.push(m.settings_signature_images_copied({ count: res.hosted }));
 			}
 			if (res.failed > 0) {
-				parts.push(`${res.failed} could not be added`);
+				parts.push(m.settings_signature_images_failed({ count: res.failed }));
 			}
 			notice = parts.join(' · ');
 		}
@@ -119,14 +120,14 @@
 					HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' }
 				}),
 				SignatureImage,
-				Placeholder.configure({ placeholder: 'Write your signature…' })
+				Placeholder.configure({ placeholder: m.settings_signature_placeholder() })
 			],
 			content: initialHtml || '',
 			editorProps: {
 				attributes: {
 					class: 'sig-body',
 					role: 'textbox',
-					'aria-label': 'Signature body',
+					'aria-label': m.settings_signature_body_label(),
 					tabindex: '0'
 				},
 				handlePaste: (_view, event) => {
@@ -252,11 +253,11 @@
 
 	async function insertImageFile(file: File) {
 		if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-			notice = 'Use a JPG, PNG, GIF, or WebP image.';
+			notice = m.settings_signature_image_type();
 			return;
 		}
 		if (file.size > MAX_IMAGE_BYTES) {
-			notice = `Maximum size is ${(MAX_IMAGE_BYTES / 1024 / 1024).toFixed(0)} MB.`;
+			notice = m.settings_signature_image_size({ size: (MAX_IMAGE_BYTES / 1024 / 1024).toFixed(0) });
 			return;
 		}
 		imageBusy = true;
@@ -280,7 +281,7 @@
 				onSourceInput(`${source}${source.endsWith('\n') || !source ? '' : '\n'}${tag}`);
 			}
 		} catch (err) {
-			notice = err instanceof Error ? err.message : 'Could not insert image';
+			notice = err instanceof Error ? err.message : m.settings_signature_image_failed();
 		} finally {
 			imageBusy = false;
 		}
@@ -301,25 +302,25 @@
 
 {#if locked}
 	<div class="sig-locked">
-		<LockKeyhole size={14} />Unlock your vault to read and edit this signature.
+		<LockKeyhole size={14} />{m.settings_signature_locked()}
 	</div>
 {/if}
 
 {#if mode === 'rich'}
 	<div class="sig-tools">
-		<button type="button" title="Bold" onclick={toggleBold} disabled={locked}><Bold size={16} /></button>
-		<button type="button" title="Italic" onclick={toggleItalic} disabled={locked}><Italic size={16} /></button>
-		<button type="button" title="Link" onclick={setLink} disabled={locked}><LinkIcon size={16} /></button>
+		<button type="button" title={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Bold size={16} /></button>
+		<button type="button" title={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Italic size={16} /></button>
+		<button type="button" title={m.settings_signature_link()} onclick={setLink} disabled={locked}><LinkIcon size={16} /></button>
 		<span class="divr"></span>
-		<button type="button" title="Insert image" onclick={pickImage} disabled={imageBusy || locked}>
+		<button type="button" title={m.settings_signature_insert_image()} onclick={pickImage} disabled={imageBusy || locked}>
 			{#if imageBusy}<Loader2 size={16} class="spin" />{:else}<ImageIcon size={16} />{/if}
 		</button>
-		<button type="button" title="Inline code" onclick={toggleCode} disabled={locked}><Code size={16} /></button>
+		<button type="button" title={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Code size={16} /></button>
 	</div>
 	<div bind:this={mountEl} class="sig-edit-mount"></div>
 {:else}
 	<div class="sig-tools">
-		<button type="button" title="Insert image" onclick={pickImage} disabled={imageBusy || locked}>
+		<button type="button" title={m.settings_signature_insert_image()} onclick={pickImage} disabled={imageBusy || locked}>
 			{#if imageBusy}<Loader2 size={16} class="spin" />{:else}<ImageIcon size={16} />{/if}
 		</button>
 	</div>
@@ -342,8 +343,8 @@
 
 {#if pasteUndo !== null}
 	<div class="sig-note">
-		Pasted as formatted text.
-		<button type="button" class="linky" onclick={undoPaste}>Undo</button>
+		{m.settings_signature_pasted()}
+		<button type="button" class="linky" onclick={undoPaste}>{m.settings_signature_undo()}</button>
 	</div>
 {/if}
 {#if notice}

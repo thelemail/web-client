@@ -10,6 +10,7 @@
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
+	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../../DisclosureBoundary.svelte';
 	import PrivacyChip from '../../PrivacyChip.svelte';
 	import { SLOTS } from '../fixtures';
@@ -20,17 +21,17 @@
 		[
 			{
 				tone: 'yes',
-				text: 'Inside your working hours on Thélème Co, after a 15-minute turnaround buffer.'
+				text: m.cal_offer_why_hours()
 			},
 			...(cal.hasTightSlot
 				? [
 						{
 							tone: 'warn' as const,
-							text: 'Friday 13:30 sits 90 minutes after the DNS migration window. Kept, flagged tight.'
+							text: m.cal_offer_why_tight()
 						}
 					]
 				: []),
-			{ tone: 'no', text: 'Holds and family events were treated as busy but never read for content.' }
+			{ tone: 'no', text: m.cal_offer_why_holds() }
 		] as BoundaryLine[]
 	);
 
@@ -38,10 +39,10 @@
 		{
 			tone: 'yes',
 			text: cal.slotDisclosure,
-			mono: 'from: bookings@thelema.co (alias-aware organiser)'
+			mono: m.cal_offer_disclosure_from({ email: 'bookings@thelema.co' })
 		},
-		{ tone: 'no', icon: EyeOff, text: 'Not your other events, their titles, guests, or how full the day is.' },
-		{ tone: 'no', icon: UserPlus, text: 'No Thelemail account required to answer. One click, no login.' }
+		{ tone: 'no', icon: EyeOff, text: m.cal_offer_disclosure_events() },
+		{ tone: 'no', icon: UserPlus, text: m.cal_offer_disclosure_account() }
 	]);
 
 	const pollColumns = $derived(cal.pollColumns.length || 1);
@@ -50,13 +51,13 @@
 <Dialog.Content class="cal-surface cal-dlg wide" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
 		<CalendarClock size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">Offer times — reply to R. Panurge</Dialog.Title>
-		<PrivacyChip tone="external" label="Leaves Thelemail" />
+		<Dialog.Title class="dt">{m.cal_offer_title({ name: 'R. Panurge' })}</Dialog.Title>
+		<PrivacyChip tone="external" label={m.cal_offer_leaves()} />
 	</Dialog.Header>
 
 	<div class="split">
 		<div class="sp-l">
-			<div class="sp-eyebrow">Candidate times</div>
+			<div class="sp-eyebrow">{m.cal_offer_candidates()}</div>
 			<div class="slot-list">
 				{#each cal.offeredSlots as index (index)}
 					<div class="slot">
@@ -67,7 +68,7 @@
 						<button
 							type="button"
 							class="sl-x"
-							aria-label="Drop {SLOTS[index].when}"
+							aria-label={m.cal_offer_drop_aria({ when: SLOTS[index].when })}
 							onclick={() => cal.dropSlot(index)}
 						>
 							<X size={15} />
@@ -76,7 +77,7 @@
 				{/each}
 			</div>
 			<Button variant="secondary" block class="mt-3" onclick={() => cal.addSlot()}>
-				Suggest another from free time
+				{m.cal_offer_suggest_more()}
 			</Button>
 			<div class="limits">
 				<DisclosureBoundary heading={cal.whyHeading} headingIcon={Info} lines={why} noIcon="x" />
@@ -84,7 +85,7 @@
 		</div>
 
 		<div class="sp-r">
-			<div class="sp-eyebrow">What Panurge receives</div>
+			<div class="sp-eyebrow">{m.cal_offer_receives({ name: 'Panurge' })}</div>
 			<div class="reply">
 				<div class="rq">“Happy to talk through the studio migration — when suits you?”</div>
 				<p>Any of these work for me:</p>
@@ -97,12 +98,12 @@
 				</div>
 			</div>
 
-			<DisclosureBoundary heading="Disclosure boundary" headingIcon={Eye} lines={disclosure} />
+			<DisclosureBoundary heading={m.cal_offer_disclosure_heading()} headingIcon={Eye} lines={disclosure} />
 
-			<div class="sp-eyebrow">Once answers come back</div>
+			<div class="sp-eyebrow">{m.cal_offer_answers()}</div>
 			<div class="poll" style:--poll-cols={pollColumns}>
 				<div class="poll-r h">
-					<div>Invitee</div>
+					<div>{m.cal_offer_invitee()}</div>
 					{#each cal.pollColumns as column (column.index)}
 						<div class="pc">{column.label}</div>
 					{/each}
@@ -112,7 +113,7 @@
 						<div class="who">
 							<Avatar initials={row.init} size={22} bg={row.bg} fg={row.fg} />
 							<span class="pn">{row.name}</span>
-							{#if row.external}<span class="ext">external</span>{/if}
+							{#if row.external}<span class="ext">{m.cal_offer_external()}</span>{/if}
 						</div>
 						{#each row.cells as cell (cell.index)}
 							<div class="pc" class:yes={cell.yes} class:no={!cell.yes}>
@@ -127,9 +128,9 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>Cancel</Button>
+		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 		<div class="grow"></div>
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>Hold all three for me</Button>
-		<Button variant="primary" onclick={() => cal.confirmOffer()}>Insert into reply</Button>
+		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_offer_hold_all()}</Button>
+		<Button variant="primary" onclick={() => cal.confirmOffer()}>{m.cal_offer_insert()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

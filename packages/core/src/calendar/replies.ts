@@ -7,6 +7,7 @@ import { parseInvitation, type ParsedInvitation } from './ics/fromMail';
 import { isOrganizer, myAddressList } from './invite';
 import type { CalendarItem } from './model';
 import { calendarStore } from './store.svelte';
+import { m } from '$paraglide/messages.js';
 
 export type AppliedChange =
 	| { kind: 'reply'; itemId: string; email: string; partstat: string }
@@ -42,7 +43,10 @@ async function applyReply(
 		{ ...item, attendees },
 		{
 			fields: ['partstat'],
-			label: `${replying.name ?? replying.email} replied ${replying.partstat}`
+			label: m.cal_op_member_replied({
+				name: replying.name ?? replying.email,
+				partstat: replying.partstat
+			})
 		}
 	);
 	return { kind: 'reply', itemId: item.id, email, partstat: replying.partstat };
@@ -60,7 +64,7 @@ async function applyCancel(
 			overrides: { ...(item.overrides ?? {}), [inv.recurrenceId]: { cancelled: true } }
 		};
 		await calendarStore.saveItem(next, {
-			label: `Organiser cancelled one occurrence of “${item.title}”`
+			label: m.cal_op_organiser_cancelled_occurrence({ title: item.title })
 		});
 		return { kind: 'cancel', itemId: item.id, occurrence: inv.recurrenceId };
 	}
@@ -92,7 +96,9 @@ async function applyUpdate(
 		})),
 		sequence: inv.sequence
 	};
-	await calendarStore.saveItem(next, { label: `Organiser updated “${next.title}”` });
+	await calendarStore.saveItem(next, {
+		label: m.cal_op_organiser_updated({ title: next.title })
+	});
 	return { kind: 'update', itemId: item.id };
 }
 

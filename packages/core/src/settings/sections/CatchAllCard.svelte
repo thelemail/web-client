@@ -9,6 +9,7 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { ownershipProven } from '$core/settings/domains/steps';
+	import { m } from '$paraglide/messages.js';
 
 	const NONE_VALUE = '';
 
@@ -44,7 +45,7 @@
 			if (on) {
 				const target = currentTarget ?? eligibleAddresses[0];
 				if (!target) {
-					error = 'Add an address on a verified domain first.';
+					error = m.settings_catchall_need_address();
 					return;
 				}
 				await workspaces.setCatchAll(target.id);
@@ -52,7 +53,7 @@
 				await workspaces.setCatchAll(null);
 			}
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not update catch-all';
+			error = err instanceof Error ? err.message : m.settings_catchall_update_failed();
 		} finally {
 			busy = false;
 		}
@@ -66,7 +67,7 @@
 		try {
 			await workspaces.setCatchAll(match.id);
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not update catch-all target';
+			error = err instanceof Error ? err.message : m.settings_catchall_target_failed();
 		} finally {
 			busy = false;
 		}
@@ -74,25 +75,25 @@
 </script>
 
 <div class="scard">
-	<CardHead icon={Inbox} title="Catch-all" />
+	<CardHead icon={Inbox} title={m.settings_catchall_title()} />
 	{#if eligibleAddresses.length === 0}
 		<div class="setrow">
 			<div class="info">
-				<div class="t">Route unmatched addresses</div>
+				<div class="t">{m.settings_catchall_route_addresses()}</div>
 				<div class="d">
-					Add an address on a verified custom domain before enabling catch-all.
+					{m.settings_catchall_route_addresses_desc()}
 				</div>
 			</div>
 		</div>
 	{:else}
 		<Row
-			t="Route unmatched mail for this workspace"
-			d="Mail sent to any address on your verified domains that does not match a mailbox is delivered to one chosen inbox."
+			t={m.settings_catchall_route_mail()}
+			d={m.settings_catchall_route_mail_desc()}
 		>
 			<Toggle on={enabled} onChange={onToggle} />
 		</Row>
 		{#if enabled}
-			<Row t="Deliver to" d="Catch-all messages land in this address's mailbox.">
+			<Row t={m.settings_catchall_deliver_to()} d={m.settings_catchall_deliver_to_desc()}>
 				<Select value={value} options={options} onChange={onTargetChange} />
 			</Row>
 		{/if}

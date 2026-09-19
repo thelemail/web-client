@@ -32,11 +32,12 @@
 		type TwoFactorVerifyResponse
 	} from '$core/api/types';
 	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
-	import { STRENGTH_LABELS, passwordReqs, scorePassword } from '$core/auth/password-policy';
+	import { strengthLabel, passwordReqs, scorePassword } from '$core/auth/password-policy';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -77,8 +78,19 @@
 
 	const steps = $derived(
 		hadTwoFactor
-			? ['Verify', 'Two-factor', 'New password', 'Re-wrap key', 'Done']
-			: ['Verify', 'New password', 'Re-wrap key', 'Done']
+			? [
+					m.settings_ceremony_password_step_verify(),
+					m.settings_ceremony_password_step_twofa(),
+					m.settings_ceremony_password_step_new(),
+					m.settings_ceremony_password_step_rewrap(),
+					m.settings_ceremony_password_step_done()
+				]
+			: [
+					m.settings_ceremony_password_step_verify(),
+					m.settings_ceremony_password_step_new(),
+					m.settings_ceremony_password_step_rewrap(),
+					m.settings_ceremony_password_step_done()
+				]
 	);
 	const stepIndex = $derived.by(() => {
 		const order: Phase[] = hadTwoFactor
@@ -104,12 +116,12 @@
 		twoFaMode === 'totp' ? /^\d{6}$/.test(twoFaCode) : twoFaCode.trim().length > 0
 	);
 
-	const RUN_LINES = [
-		'Deriving new key from password',
-		'Re-encrypting private key',
-		'Updating the server',
-		'Finalizing this device'
-	];
+	const RUN_LINES = $derived([
+		m.settings_ceremony_password_line_derive(),
+		m.settings_ceremony_password_line_reencrypt(),
+		m.settings_ceremony_password_line_server(),
+		m.settings_ceremony_password_line_finalize()
+	]);
 
 	function close() {
 		void keystore.abandonPasswordChange();
@@ -155,7 +167,7 @@
 			serverPublicEphemeral: init.serverPublicEphemeral
 		});
 		if (!proofs.ok) {
-			verifyError = 'Your mailbox is locked on this device. Sign in again, then retry.';
+			verifyError = m.settings_ceremony_password_err_locked();
 			return true;
 		}
 		const res = await passwordChangeVerify(
@@ -168,7 +180,7 @@
 		);
 		const check = await keystore.verifyPasswordChangeProof({ serverProof: res.serverProof });
 		if (!check.ok) {
-			verifyError = 'Could not verify the server. Please try again.';
+			verifyError = m.settings_ceremony_password_err_server_proof();
 			return true;
 		}
 		return acceptVerifyResult(res);
@@ -183,7 +195,7 @@
 			ke2: init.ke2
 		});
 		if (!finish.ok) {
-			verifyError = 'That password is incorrect.';
+			verifyError = m.settings_ceremony_password_err_incorrect();
 			return true;
 		}
 		const res = await passwordChangeOpaqueVerify({ challengeId: init.challengeId, ke3: finish.ke3 }, accountId);
@@ -204,16 +216,16 @@
 					? await verifyCurrentOpaque(accountId)
 					: await verifyCurrentSrp(accountId);
 			if (!handled) {
-				verifyError = 'Unexpected server response. Please try again.';
+				verifyError = m.settings_ceremony_password_err_unexpected();
 			}
 		} catch (err) {
 			console.warn('password change: verify failed', err);
 			if (err instanceof ApiCallError && err.status === 401) {
-				verifyError = 'That password is incorrect.';
+				verifyError = m.settings_ceremony_password_err_incorrect();
 			} else if (err instanceof ApiCallError && err.status === 429) {
-				verifyError = 'Too many attempts. Wait a few minutes and try again.';
+				verifyError = m.settings_ceremony_password_err_rate_limited();
 			} else {
-				verifyError = 'Could not verify — check your connection and retry.';
+				verifyError = m.settings_ceremony_password_err_verify_network();
 			}
 		} finally {
 			verifying = false;
@@ -227,7 +239,7 @@
 		try {
 			const res = await fn();
 			if (res.scope !== 'password_change' || !res.changeToken) {
-				twoFaError = 'Unexpected server response. Start over and try again.';
+				twoFaError = m.settings_ceremony_password_err_unexpected_restart();
 				return;
 			}
 			acceptGrant(res.changeToken, res.changeTokenExpiresInSeconds ?? 600);
@@ -239,8 +251,8 @@
 			twoFaCode = '';
 			twoFaError =
 				err instanceof ApiCallError && err.status === 401
-					? 'That didn’t verify. Try again.'
-					: 'Something went wrong. Try again.';
+					? m.settings_ceremony_password_err_twofa_failed()
+					: m.common_something_went_wrong();
 		} finally {
 			twoFaBusy = false;
 		}
@@ -292,8 +304,8 @@
 			runRetryable = false;
 			runError =
 				prepared.code === 'locked'
-					? 'Your mailbox is locked on this device. Sign in again, then retry.'
-					: 'This change request expired. Start over to verify again.';
+					? m.settings_ceremony_password_err_locked()
+					: m.settings_ceremony_password_err_expired();
 			return false;
 		}
 		runProgress = 2;
@@ -322,7 +334,7 @@
 		const start = await keystore.opaquePasswordChangeStart({ accountId, newPassword: pw });
 		if (!start.ok) {
 			runRetryable = false;
-			runError = 'Your mailbox is locked on this device. Sign in again, then retry.';
+			runError = m.settings_ceremony_password_err_locked();
 			return false;
 		}
 		runProgress = 2;
@@ -337,7 +349,7 @@
 		});
 		if (!finish.ok) {
 			runRetryable = false;
-			runError = 'This change request expired. Start over to verify again.';
+			runError = m.settings_ceremony_password_err_expired();
 			return false;
 		}
 		await passwordChangeCompleteOpaque(
@@ -371,7 +383,7 @@
 		runRetryable = true;
 		runProgress = 0;
 		if (Date.now() > changeTokenExpiresAt) {
-			runError = 'This change request expired. Start over to verify again.';
+			runError = m.settings_ceremony_password_err_expired();
 			runRetryable = false;
 			return;
 		}
@@ -391,22 +403,21 @@
 			console.warn('password change: complete failed', err);
 			if (err instanceof ApiCallError) {
 				if (err.status === 401) {
-					runError = 'This change request expired. Start over to verify again.';
+					runError = m.settings_ceremony_password_err_expired();
 					runRetryable = false;
 				} else if (err.status === 422) {
-					runError = 'The re-encrypted key was rejected. Start over and try again.';
+					runError = m.settings_ceremony_password_err_rejected();
 					runRetryable = false;
 				} else if (err.status === 429) {
-					runError = 'Too many attempts. Wait a few minutes, then try again.';
+					runError = m.settings_ceremony_password_err_rate_limited_then();
 					runRetryable = true;
 				} else {
-					runError = 'Could not update the server. Check your connection and try again.';
+					runError = m.settings_ceremony_password_err_update_server();
 					runRetryable = true;
 				}
 			} else {
 				void keystore.invalidatePersistedVault({ accountId });
-				runError =
-					'The connection dropped before we could confirm. If the new password doesn’t work next time, sign in with your old one.';
+				runError = m.settings_ceremony_password_err_dropped();
 				runRetryable = true;
 			}
 		}
@@ -420,8 +431,8 @@
 
 <CeremonyShell
 	icon={Lock}
-	eyebrow="Security · ceremony"
-	title="Change password"
+	eyebrow={m.settings_ceremony_password_eyebrow()}
+	title={m.settings_ceremony_password_title()}
 	{steps}
 	step={stepIndex}
 	onClose={close}
@@ -429,19 +440,16 @@
 	{#if phase === 'verify'}
 		<div class="cer-pane">
 			<div class="cer-lede">
-				<p>
-					Your password unlocks your private key. Changing it re-encrypts that key — so we'll
-					confirm it's really you first.
-				</p>
+				<p>{m.settings_ceremony_password_verify_lede()}</p>
 			</div>
 			<div class="field">
-				<label for="cur-pw">Current password</label>
+				<label for="cur-pw">{m.settings_ceremony_password_current()}</label>
 				<input
 					id="cur-pw"
 					class="tin"
 					type="password"
 					bind:value={cur}
-					placeholder="Enter current password"
+					placeholder={m.settings_ceremony_password_current_placeholder()}
 					autocomplete="current-password"
 					disabled={verifying}
 					onkeydown={(e) => {
@@ -456,15 +464,14 @@
 	{:else if phase === 'twofa'}
 		<div class="cer-pane">
 			<div class="cer-lede">
-				<p>
-					Password confirmed. This account also asks for a second factor before the key is
-					re-wrapped.
-				</p>
+				<p>{m.settings_ceremony_password_twofa_lede()}</p>
 			</div>
 			{#if hasTotp || hasBackup}
 				<div class="field">
 					<label for="pwc-2fa-code">
-						{twoFaMode === 'totp' ? 'Authenticator code' : 'Backup code'}
+						{twoFaMode === 'totp'
+							? m.settings_ceremony_password_authenticator_code()
+							: m.settings_ceremony_password_backup_code()}
 					</label>
 					<input
 						id="pwc-2fa-code"
@@ -497,12 +504,14 @@
 						twoFaError = '';
 					}}
 				>
-					{twoFaMode === 'totp' ? 'Use a backup code instead' : 'Use an authenticator code instead'}
+					{twoFaMode === 'totp'
+						? m.settings_ceremony_password_use_backup()
+						: m.settings_ceremony_password_use_authenticator()}
 				</button>
 			{/if}
 			{#if hasWebauthn}
 				<Button variant="secondary" size="sm" disabled={twoFaBusy} onclick={submitTwoFaWebauthn}>
-					<Fingerprint size={14} />Use security key or passkey
+					<Fingerprint size={14} />{m.settings_ceremony_password_use_security_key()}
 				</Button>
 			{/if}
 			{#if twoFaError}
@@ -512,13 +521,13 @@
 	{:else if phase === 'newpw'}
 		<div class="cer-pane">
 			<div class="field">
-				<label for="new-pw">New password</label>
+				<label for="new-pw">{m.settings_ceremony_password_new()}</label>
 				<input
 					id="new-pw"
 					class="tin"
 					type="password"
 					bind:value={pw}
-					placeholder="At least 8 characters"
+					placeholder={m.settings_ceremony_password_new_placeholder()}
 					autocomplete="new-password"
 				/>
 			</div>
@@ -529,7 +538,7 @@
 							<span class={i < score ? 'on s' + score : ''}></span>
 						{/each}
 					</div>
-					<span class="pws-label">{STRENGTH_LABELS[score]}</span>
+					<span class="pws-label">{strengthLabel(score)}</span>
 				</div>
 				<div class="pwc-reqs">
 					{#each reqs as r (r.k)}
@@ -546,18 +555,18 @@
 								size={11}
 								strokeWidth={2.5}
 							/>{/if}
-						Different from your current password
+						{m.settings_ceremony_password_req_differs()}
 					</span>
 				</div>
 			{/if}
 			<div class="field">
-				<label for="new-pw2">Confirm new password</label>
+				<label for="new-pw2">{m.settings_ceremony_password_confirm()}</label>
 				<input
 					id="new-pw2"
 					class="tin"
 					type="password"
 					bind:value={pw2}
-					placeholder="Repeat it"
+					placeholder={m.settings_ceremony_password_confirm_placeholder()}
 					autocomplete="new-password"
 					onkeydown={(e) => {
 						if (e.key === 'Enter' && pwReady) void changePassword();
@@ -565,19 +574,16 @@
 				/>
 			</div>
 			{#if pw2.length > 0 && !match}
-				<span class="errtext"><CircleAlert size={13} /><span>Passwords don't match yet.</span></span>
+				<span class="errtext"><CircleAlert size={13} /><span>{m.settings_ceremony_password_mismatch()}</span></span>
 			{/if}
 			<div class="inline-warn">
 				<KeyRound size={15} />
-				<span>
-					This re-wraps your encryption key. Other devices will be signed out and will ask for the
-					new password.
-				</span>
+				<span>{m.settings_ceremony_password_rewrap_warning()}</span>
 			</div>
 		</div>
 	{:else if phase === 'run'}
 		<div class="cer-pane">
-			<ProgressRun label="Re-wrapping your key material…" lines={RUN_LINES} progress={runProgress} />
+			<ProgressRun label={m.settings_ceremony_password_progress()} lines={RUN_LINES} progress={runProgress} />
 			{#if runError}
 				<span class="errtext"><CircleAlert size={13} /><span>{runError}</span></span>
 			{/if}
@@ -585,48 +591,48 @@
 	{:else}
 		<DoneScreen
 			icon={Lock}
-			title="Password changed"
-			desc="Your key has been re-wrapped with the new password. Other devices have been signed out — within the hour they'll ask for the new password."
+			title={m.settings_ceremony_password_done_title()}
+			desc={m.settings_ceremony_password_done_desc()}
 		/>
 	{/if}
 
 	{#snippet footer()}
 		{#if phase === 'verify'}
-			<Button variant="ghost" onclick={close}>Cancel</Button>
+			<Button variant="ghost" onclick={close}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={cur.length === 0 || verifying} onclick={() => void verifyCurrent()}>
 				{#if verifying}
-					Checking…
+					{m.settings_ceremony_password_checking()}
 				{:else}
-					Continue<ArrowRight size={15} />
+					{m.common_continue()}<ArrowRight size={15} />
 				{/if}
 			</Button>
 		{:else if phase === 'twofa'}
 			<Button variant="ghost" disabled={twoFaBusy} onclick={restart}>
-				Start over
+				{m.settings_ceremony_password_start_over()}
 			</Button>
 			<Button variant="primary" disabled={twoFaBusy || !twoFaCodeReady} onclick={submitTwoFaCode}>
 				{#if twoFaBusy}
-					Verifying…
+					{m.settings_ceremony_password_verifying()}
 				{:else}
-					Verify<ArrowRight size={15} />
+					{m.settings_ceremony_password_verify()}<ArrowRight size={15} />
 				{/if}
 			</Button>
 		{:else if phase === 'newpw'}
-			<Button variant="ghost" onclick={close}>Cancel</Button>
+			<Button variant="ghost" onclick={close}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!pwReady} onclick={() => void changePassword()}>
-				Change password<ArrowRight size={15} />
+				{m.settings_ceremony_password_submit()}<ArrowRight size={15} />
 			</Button>
 		{:else if phase === 'run'}
 			{#if runError}
-				<Button variant="ghost" onclick={restart}>Start over</Button>
+				<Button variant="ghost" onclick={restart}>{m.settings_ceremony_password_start_over()}</Button>
 				{#if runRetryable}
 					<Button variant="primary" onclick={() => void changePassword()}>
-						Try again
+						{m.common_retry()}
 					</Button>
 				{/if}
 			{/if}
 		{:else if phase === 'done'}
-			<Button variant="primary" onclick={finish}>Done</Button>
+			<Button variant="primary" onclick={finish}>{m.common_done()}</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

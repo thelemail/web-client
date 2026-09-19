@@ -4,9 +4,10 @@
 	import MonthView from '$core/calendar/month/MonthView.svelte';
 	import WeekView from '$core/calendar/week/WeekView.svelte';
 	import { cal } from '$core/calendar/state.svelte';
+	import { m } from '$paraglide/messages.js';
 </script>
 
-<svelte:head><title>Thelemail — Calendar</title></svelte:head>
+<svelte:head><title>{m.cal_page_title()}</title></svelte:head>
 
 {#if cal.view === 'week'}
 	<WeekView />

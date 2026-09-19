@@ -11,6 +11,8 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
+	import Rich from '$core/i18n/Rich.svelte';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		domain: CustomDomain;
@@ -33,7 +35,7 @@
 		if (!canRemove) return;
 		const ws = workspaces.workspace?.id;
 		if (!ws) {
-			error = 'No workspace loaded. Refresh the page and try again.';
+			error = m.settings_domains_no_workspace();
 			return;
 		}
 		busy = true;
@@ -44,7 +46,7 @@
 			onRemoved(target);
 			onClose();
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not remove this domain';
+			error = err instanceof Error ? err.message : m.settings_domains_remove_failed();
 		} finally {
 			busy = false;
 		}
@@ -53,45 +55,43 @@
 
 <CeremonyShell
 	icon={Trash2}
-	eyebrow="Domains"
-	title="Remove {target}"
+	eyebrow={m.settings_domains_remove_eyebrow()}
+	title={m.settings_domains_remove_title({ domain: target })}
 	tone="danger"
 	{onClose}
 >
 	<div class="cer-pane">
 		<div class="cer-lede">
-			<p>This cannot be undone from here. Removing <b>{target}</b> means:</p>
+			<p><Rich text={m.settings_domains_remove_lede({ domain: target })} tags={{ b: bold }} /></p>
 		</div>
 		<ul class="cer-points">
 			<li>
 				<Inbox size={16} />
-				<span>Mail sent to this domain stops arriving. Senders get a bounce.</span>
+				<span>{m.settings_domains_remove_point_mail()}</span>
 			</li>
 			<li>
 				<AtSign size={16} />
 				<span>
 					{#if count === 0}
-						No addresses exist on this domain yet.
+						{m.settings_domains_remove_point_no_addresses()}
 					{:else}
-						{count} address{count === 1 ? '' : 'es'} on this domain
-						{count === 1 ? 'is' : 'are'} removed with it. Mail already delivered stays in the mailbox
-						it landed in.
+						{m.settings_domains_remove_point_addresses({ count })}
 					{/if}
 				</span>
 			</li>
 			<li>
 				<Globe size={16} />
-				<span>The domain stays yours at your registrar, and another workspace can claim it.</span>
+				<span>{m.settings_domains_remove_point_registrar()}</span>
 			</li>
 		</ul>
 
 		<label class="cer-ack danger">
 			<input type="checkbox" bind:checked={ack} />
-			<span>I understand mail to this domain will stop being accepted.</span>
+			<span>{m.settings_domains_remove_ack()}</span>
 		</label>
 
 		<div class="field">
-			<label for="rm-domain-confirm">Type <span class="mono">{target}</span> to confirm</label>
+			<label for="rm-domain-confirm"><Rich text={m.settings_domains_remove_type_confirm({ domain: target })} tags={{ mono }} /></label>
 			<input
 				id="rm-domain-confirm"
 				class="tin mono"
@@ -110,10 +110,14 @@
 
 	{#snippet footer()}
 		<Button variant="ghost" disabled={busy} onclick={onClose}>
-			Keep this domain
+			{m.settings_domains_remove_keep()}
 		</Button>
 		<Button variant="danger" disabled={!canRemove} onclick={submit}>
-			{busy ? 'Removing…' : 'Remove domain'}
+			{busy ? m.settings_domains_removing() : m.settings_domains_remove()}
 		</Button>
 	{/snippet}
 </CeremonyShell>
+
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
+{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}

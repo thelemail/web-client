@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { DowngradeFinding, DowngradePreview } from '$core/api/billing';
+	import { m } from '$paraglide/messages.js';
 	import { formatBytes, groupsOf, severityLabel } from './downgrade';
 
 	let { preview }: { preview: DowngradePreview } = $props();
@@ -30,9 +31,10 @@
 						<div
 							class="im-meter"
 							role="img"
-							aria-label="{formatBytes(f.mailboxes?.[0]?.bytesUsed)} of {formatBytes(
-								preview.storageBytesPerMailbox
-							)} used"
+							aria-label={m.lc_impact_meter_label({
+								used: formatBytes(f.mailboxes?.[0]?.bytesUsed),
+								quota: formatBytes(preview.storageBytesPerMailbox)
+							})}
 						>
 							<i style="width:{(usedFraction(f) ?? 0) * 100}%"></i>
 						</div>
@@ -49,7 +51,7 @@
 					{#if (f.mailboxes ?? []).length > 1}
 						<ul class="im-addrs">
 							{#each f.mailboxes ?? [] as box (box.email)}
-								<li>{box.email} · {formatBytes(box.bytesOver)} over</li>
+								<li>{m.lc_impact_mailbox_over({ email: box.email, over: formatBytes(box.bytesOver) })}</li>
 							{/each}
 						</ul>
 					{/if}

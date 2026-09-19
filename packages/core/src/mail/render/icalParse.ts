@@ -1,3 +1,6 @@
+import { i18n } from '$core/i18n/locale.svelte';
+import { m } from '$paraglide/messages.js';
+
 export interface IcalDateTime {
 	display: string;
 	iso: string;
@@ -84,7 +87,7 @@ function parseIcsDate(value: string, tzid: string | undefined): IcalDateTime {
 		const date = new Date(`${iso}T00:00:00Z`);
 		const display = isNaN(date.getTime())
 			? iso
-			: date.toLocaleDateString(undefined, {
+			: date.toLocaleDateString(i18n.tag, {
 				weekday: 'short',
 				day: '2-digit',
 				month: 'short',
@@ -98,7 +101,7 @@ function parseIcsDate(value: string, tzid: string | undefined): IcalDateTime {
 		const date = new Date(iso);
 		display = isNaN(date.getTime())
 			? iso
-			: date.toLocaleString(undefined, {
+			: date.toLocaleString(i18n.tag, {
 				weekday: 'short',
 				day: '2-digit',
 				month: 'short',
@@ -190,16 +193,16 @@ export function parseIcs(text: string): CalendarEvent[] {
 export function methodBadgeLabel(method: string | undefined): string {
 	switch ((method ?? '').toUpperCase()) {
 		case 'REQUEST':
-			return 'Invitation';
+			return m.mailbox_ical_invitation();
 		case 'REPLY':
-			return 'Reply';
+			return m.mailbox_ical_reply();
 		case 'CANCEL':
-			return 'Canceled';
+			return m.mailbox_ical_canceled();
 		case 'COUNTER':
-			return 'Counter';
+			return m.mailbox_ical_counter();
 		case 'PUBLISH':
-			return 'Event';
+			return m.mailbox_ical_event();
 		default:
-			return method ? method.charAt(0).toUpperCase() + method.slice(1).toLowerCase() : 'Event';
+			return method ? method.charAt(0).toUpperCase() + method.slice(1).toLowerCase() : m.mailbox_ical_event();
 	}
 }

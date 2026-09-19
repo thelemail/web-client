@@ -3,6 +3,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Download from '@lucide/svelte/icons/download';
 	import CircleArrowDown from '@lucide/svelte/icons/circle-arrow-down';
+	import { m } from '$paraglide/messages.js';
 	import { fmt } from './dates';
 	import type { LifecycleContext } from './types';
 
@@ -28,23 +29,26 @@
 			<span class="sa-pulse"></span>
 			{#if scheduled}
 				<span class="sa-h">{scheduled}</span>
-				<span class="sa-d">Your mail stays. Sending is paused until the change lands.</span>
+				<span class="sa-d">{m.lc_grace_scheduled_detail()}</span>
 			{:else}
-				<span class="sa-h">Read-only · still receiving mail.</span>
+				<span class="sa-h">{m.lc_grace_title()}</span>
 				<span class="sa-d">
-					Becomes inactive {fmt.med(ctx.dates.suspend)} · {ctx.ladder.toSuspend} days left · your mail
-					is safe until {fmt.med(ctx.dates.remove)}.
+					{m.lc_grace_detail({
+						count: ctx.ladder.toSuspend,
+						suspend: fmt.med(ctx.dates.suspend),
+						remove: fmt.med(ctx.dates.remove)
+					})}
 				</span>
 			{/if}
 		</span>
 		<span class="sa-acts">
-			<button class="sa-act solid" onclick={onRestore}><RotateCcw size={13} />Restore</button>
+			<button class="sa-act solid" onclick={onRestore}><RotateCcw size={13} />{m.lc_grace_restore()}</button>
 			{#if onDowngrade}
 				<button class="sa-act ghost" onclick={onDowngrade}>
-					<CircleArrowDown size={13} />Move to Free
+					<CircleArrowDown size={13} />{m.lc_grace_move_to_free()}
 				</button>
 			{/if}
-			<button class="sa-act ghost" onclick={onExport}><Download size={13} />Export</button>
+			<button class="sa-act ghost" onclick={onExport}><Download size={13} />{m.lc_grace_export()}</button>
 		</span>
 	</div>
 </div>

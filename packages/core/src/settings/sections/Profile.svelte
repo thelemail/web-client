@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Camera from '@lucide/svelte/icons/camera';
 	import { platform } from '$platform';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -15,6 +16,7 @@
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
 	import SignatureEditor from './SignatureEditor.svelte';
+	import Rich from '$core/i18n/Rich.svelte';
 	import type { SignatureMode, SignatureDocImage } from '$core/mail/signatureCrypto';
 	import { hostSignatureImages } from '$core/mail/signatureImages';
 	import { hasRenderableHtml } from '$core/mail/signatureRegion';
@@ -45,7 +47,6 @@
 	}: Props = $props();
 
 	const SAME_AS_SENDING_VALUE = '';
-	const REPLY_SAME_LABEL = 'Same as sending identity';
 	const ACCEPTED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 	const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
@@ -152,7 +153,7 @@
 	const ownIdentities = $derived(addresses.personal);
 
 	const replyOptions = $derived([
-		{ id: SAME_AS_SENDING_VALUE, label: REPLY_SAME_LABEL },
+		{ id: SAME_AS_SENDING_VALUE, label: m.settings_profile_reply_same() },
 		...ownIdentities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
 	]);
 
@@ -165,7 +166,7 @@
 	);
 
 	const replyValueLabel = $derived(
-		replyOptions.find((o) => o.id === defaultReplyAddressId)?.label ?? REPLY_SAME_LABEL
+		replyOptions.find((o) => o.id === defaultReplyAddressId)?.label ?? m.settings_profile_reply_same()
 	);
 	const sendingValueLabel = $derived(
 		sendingOptions.find((o) => o.id === primary?.id)?.label ?? sendingOptions[0]?.label ?? ''
@@ -198,7 +199,7 @@
 			initialDefaultReplyAddressId = updated.defaultReplyAddressId ?? SAME_AS_SENDING_VALUE;
 		}
 		if (signatureDirty && sigForAddressId) {
-			if (signatureLocked) throw new Error('Unlock your vault before saving a signature.');
+			if (signatureLocked) throw new Error(m.settings_profile_signature_locked_save());
 			if (signatureBodyHtml.trim()) {
 				const hostedResult = await hostSignatureImages(sigForAddressId, signatureBodyHtml);
 				if (hostedResult.html !== signatureBodyHtml) {
@@ -272,11 +273,11 @@
 		input.value = '';
 		if (!file) return;
 		if (!ACCEPTED_AVATAR_TYPES.includes(file.type)) {
-			avatarError = 'Use a JPG, PNG, or WebP image.';
+			avatarError = m.settings_profile_avatar_type();
 			return;
 		}
 		if (file.size > MAX_AVATAR_BYTES) {
-			avatarError = `Maximum size is ${(MAX_AVATAR_BYTES / 1024 / 1024).toFixed(0)} MB.`;
+			avatarError = m.settings_signature_image_size({ size: (MAX_AVATAR_BYTES / 1024 / 1024).toFixed(0) });
 			return;
 		}
 		avatarBusy = true;
@@ -289,7 +290,7 @@
 			const me = await commitAvatar(grant.objectKey);
 			auth.applyMe(me);
 		} catch (err) {
-			avatarError = err instanceof Error ? err.message : 'Could not upload avatar';
+			avatarError = err instanceof Error ? err.message : m.settings_profile_avatar_upload_failed();
 		} finally {
 			avatarBusy = false;
 		}
@@ -302,7 +303,7 @@
 			const me = await deleteAvatar();
 			auth.applyMe(me);
 		} catch (err) {
-			avatarError = err instanceof Error ? err.message : 'Could not remove avatar';
+			avatarError = err instanceof Error ? err.message : m.settings_profile_avatar_remove_failed();
 		} finally {
 			avatarBusy = false;
 		}
@@ -345,7 +346,7 @@
 	}
 </script>
 
-<SecHead desc="Your name and signature, and the address you send from by default. Your domain, your identity." />
+<SecHead desc={m.settings_profile_desc()} />
 
 <div class="scard">
 	<div class="profile">
@@ -362,7 +363,7 @@
 			<button
 				type="button"
 				class="pf-avedit"
-				title="Change photo"
+				title={m.settings_profile_change_photo()}
 				onclick={triggerPick}
 				disabled={avatarBusy}
 			>
@@ -376,7 +377,7 @@
 				<button
 					type="button"
 					class="pf-avclear"
-					title="Remove avatar"
+					title={m.settings_profile_remove_avatar()}
 					onclick={onAvatarClear}
 					disabled={avatarBusy}
 				>
@@ -396,16 +397,16 @@
 			<div class="pf-mail">{email}</div>
 			<div class="pf-tags">
 				{#if ownerBadge}
-					<Badge kind="pine" dot>Owner</Badge>
+					<Badge kind="pine" dot>{m.settings_profile_owner()}</Badge>
 				{/if}
-				<span class="badge b-ok"><ShieldCheck size={12} />Verified domain</span>
+				<span class="badge b-ok"><ShieldCheck size={12} />{m.settings_profile_verified_domain()}</span>
 			</div>
 			{#if avatarError}
 				<div class="pf-error">{avatarError}</div>
 			{/if}
 		</div>
 	</div>
-	<Row t="Display name" d="Shown on mail you send and across the archive.">
+	<Row t={m.settings_profile_display_name()} d={m.settings_profile_display_name_desc()}>
 		<input
 			class="tin w-mid"
 			value={displayName}
@@ -415,9 +416,9 @@
 			}}
 		/>
 	</Row>
-	<Row t="Default sending identity" d="The “From” address used when you start a new message.">
+	<Row t={m.settings_profile_sending_identity()} d={m.settings_profile_sending_identity_desc()}>
 		{#if sendingOptions.length === 0}
-			<span class="muted">Add an address to choose a sending identity.</span>
+			<span class="muted">{m.settings_profile_sending_identity_empty()}</span>
 		{:else}
 			<Select
 				value={sendingValueLabel}
@@ -426,7 +427,7 @@
 			/>
 		{/if}
 	</Row>
-	<Row t="Default reply address" d="Where replies are directed if it differs from the sending identity.">
+	<Row t={m.settings_profile_reply_address()} d={m.settings_profile_reply_address_desc()}>
 		<Select
 			value={replyValueLabel}
 			options={replyOptions.map((o) => o.label)}
@@ -435,11 +436,13 @@
 	</Row>
 </div>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
 <div class="scard">
-	<CardHead icon={PenLine} title="Signature">
+	<CardHead icon={PenLine} title={m.settings_profile_signature()}>
 		{#snippet right()}
 			<span class="sig-picker">
-				<span class="sig-picker-lbl">For</span>
+				<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
 				{#if signatureOptions.length > 0}
 					<Select
 						narrow
@@ -449,7 +452,7 @@
 							const opt = signatureOptions.find((o) => o.label === label);
 							if (opt) sigForAddressId = opt.id;
 						}}
-						ariaLabel="Signature identity"
+						ariaLabel={m.settings_profile_signature_identity()}
 					/>
 				{/if}
 			</span>
@@ -458,8 +461,11 @@
 	<div class="sig-wrap">
 		{#if sigIdentity}
 			<div class="sig-idnote">
-				<UserRound size={13} />Editing the signature for <b>{sigIdentity.name || sigIdentity.email}</b>
-				{#if sigIdentity.shared}<Badge kind="pine">Shared</Badge>{/if}
+				<UserRound size={13} /><Rich
+					text={m.settings_profile_signature_editing({ name: sigIdentity.name || sigIdentity.email })}
+					tags={{ b: bold }}
+				/>
+				{#if sigIdentity.shared}<Badge kind="pine">{m.settings_profile_shared()}</Badge>{/if}
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
@@ -471,15 +477,20 @@
 			/>
 			<div class="sig-hint">
 				{#if sigIdentity.shared}
-					<Info size={13} />Everyone who writes from <b>{sigIdentity.email}</b> sends this signature.
+					<Info size={13} /><Rich
+						text={m.settings_profile_signature_hint_shared({ email: sigIdentity.email })}
+						tags={{ b: bold }}
+					/>
 				{:else}
-					<Info size={13} />Each address keeps its own signature. This one is sent when you write from
-					<b>{sigIdentity.email}</b>.
+					<Info size={13} /><Rich
+						text={m.settings_profile_signature_hint({ email: sigIdentity.email })}
+						tags={{ b: bold }}
+					/>
 				{/if}
 			</div>
 			<Row
-				t="Include by default"
-				d="New messages start with this signature. Turn it off to add it only when you want it."
+				t={m.settings_profile_signature_default()}
+				d={m.settings_profile_signature_default_desc()}
 			>
 				<Toggle
 					on={signatureEnabled}
@@ -491,8 +502,8 @@
 				/>
 			</Row>
 			<Row
-				t="Append on replies and forwards"
-				d="When off, the signature is only added to new messages — not replies."
+				t={m.settings_profile_signature_replies()}
+				d={m.settings_profile_signature_replies_desc()}
 			>
 				<Toggle
 					on={signatureAppendOnReply}
@@ -504,7 +515,7 @@
 				/>
 			</Row>
 		{:else}
-			<div class="muted">Add an address before you can write a signature.</div>
+			<div class="muted">{m.settings_profile_signature_empty()}</div>
 		{/if}
 	</div>
 </div>

@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import UserMinus from '@lucide/svelte/icons/user-minus';
 	import ConfirmDialog from './ConfirmDialog.svelte';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
 
@@ -27,7 +29,7 @@
 			onRemoved();
 			onClose();
 		} catch (e) {
-			error = e instanceof Error && e.message ? e.message : 'The account could not be removed.';
+			error = e instanceof Error && e.message ? e.message : m.mail_remove_account_failed();
 		} finally {
 			busy = false;
 		}
@@ -37,9 +39,9 @@
 <ConfirmDialog
 	icon={UserMinus}
 	tone="danger"
-	title="Remove account from this device"
+	title={m.mail_remove_account_title()}
 	sub={name && name !== email ? `${name} · ${email}` : email}
-	confirmLabel="Remove account"
+	confirmLabel={m.mail_remove_account_confirm()}
 	{busy}
 	{error}
 	onConfirm={() => void confirm()}
@@ -47,9 +49,14 @@
 >
 	{#snippet body()}
 		<p class="cfd-p">
-			This signs <span class="cfd-mono">{email}</span> out here and forgets its keys on this
-			device{#if mirrored}, together with the mail mirrored to it{/if}. The account itself is not
-			changed, and you can sign in to it again at any time.
+			<Rich
+				text={mirrored
+					? m.mail_remove_account_body_mirrored({ email })
+					: m.mail_remove_account_body({ email })}
+				tags={{ mono }}
+			/>
 		</p>
 	{/snippet}
 </ConfirmDialog>
+
+{#snippet mono(t: string)}<span class="cfd-mono">{t}</span>{/snippet}

@@ -12,6 +12,7 @@
 	import Settings from '@lucide/svelte/icons/settings';
 	import { Button } from '$core/components/ui/button';
 	import * as Tooltip from '$core/components/ui/tooltip';
+	import { m } from '$paraglide/messages.js';
 	import ViewSwitch from './ViewSwitch.svelte';
 	import { cal } from './state.svelte';
 	import { calendarStore } from './store.svelte';
@@ -23,7 +24,7 @@
 			? [
 					{
 						key: 'mail',
-						label: 'Commitments found in mail',
+						label: m.cal_topbar_mail_commitments(),
 						icon: Inbox,
 						dot: true,
 						on: false,
@@ -33,7 +34,7 @@
 			: []),
 		{
 			key: 'tasks',
-			label: 'Tasks',
+			label: m.cal_topbar_tasks(),
 			icon: ListTodo,
 			dot: false,
 			on: cal.tasksOpen,
@@ -41,7 +42,7 @@
 		},
 		{
 			key: 'sync',
-			label: 'Sync & provenance',
+			label: m.cal_topbar_sync(),
 			icon: RefreshCw,
 			dot: calendarStore.pendingCount > 0 || calendarStore.blockedCount > 0,
 			on: calendarStore.syncing,
@@ -49,7 +50,7 @@
 		},
 		{
 			key: 'settings',
-			label: 'Settings',
+			label: m.cal_topbar_settings(),
 			icon: Settings,
 			dot: false,
 			on: false,
@@ -62,7 +63,7 @@
 	<button
 		type="button"
 		class="icon-btn menu-btn"
-		aria-label="Open calendar menu"
+		aria-label={m.cal_topbar_menu_aria()}
 		onclick={() => (cal.navOpen = true)}
 	>
 		<Menu size={18} />
@@ -70,13 +71,13 @@
 
 	{#if cal.isDated}
 		<Button variant="secondary" size="sm" onclick={() => cal.goToday()}>
-			<CalendarClock size={15} />Today
+			<CalendarClock size={15} />{m.cal_topbar_today()}
 		</Button>
 		<div class="nav-arrows">
-			<button type="button" aria-label="Previous period" onclick={() => cal.prev()}>
+			<button type="button" aria-label={m.cal_topbar_prev_aria()} onclick={() => cal.prev()}>
 				<ChevronLeft size={19} />
 			</button>
-			<button type="button" aria-label="Next period" onclick={() => cal.next()}>
+			<button type="button" aria-label={m.cal_topbar_next_aria()} onclick={() => cal.next()}>
 				<ChevronRight size={19} />
 			</button>
 		</div>
@@ -89,8 +90,8 @@
 		<Search size={16} />
 		<input
 			type="search"
-			placeholder="Search — runs on this device"
-			aria-label="Search the calendar"
+			placeholder={m.cal_topbar_search_placeholder()}
+			aria-label={m.cal_topbar_search_aria()}
 			bind:value={cal.query}
 		/>
 	</div>

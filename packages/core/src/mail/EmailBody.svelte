@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { theme } from '$core/stores/theme.svelte';
 	import { platform } from '$platform';
 
@@ -77,7 +78,7 @@
 	<iframe
 		bind:this={frame}
 		class="email-frame"
-		title="Message"
+		title={m.mail_body_frame_title()}
 		sandbox={platform.interceptFrameLinks ? 'allow-same-origin' : 'allow-same-origin allow-popups'}
 		srcdoc={writeFrameDoc ? undefined : srcDoc}
 		onload={writeFrameDoc ? fit : ready}

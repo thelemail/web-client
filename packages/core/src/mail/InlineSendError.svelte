@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import Lock from '@lucide/svelte/icons/lock';
 	import LogIn from '@lucide/svelte/icons/log-in';
@@ -12,6 +13,7 @@
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import Timer from '@lucide/svelte/icons/timer';
 	import X from '@lucide/svelte/icons/x';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	export type InlineErrorCode =
 		| 'recipient_unknown'
@@ -56,14 +58,10 @@
 	}: Props = $props();
 
 	function waitText(seconds: number): string {
-		if (seconds <= 0) return 'a little while';
-		if (seconds < 60) return 'less than a minute';
-		if (seconds < 3600) {
-			const m = Math.ceil(seconds / 60);
-			return m === 1 ? 'about a minute' : `about ${m} minutes`;
-		}
-		const h = Math.ceil(seconds / 3600);
-		return h === 1 ? 'about an hour' : `about ${h} hours`;
+		if (seconds <= 0) return msg.mail_send_err_wait_little();
+		if (seconds < 60) return msg.mail_send_err_wait_under_minute();
+		if (seconds < 3600) return msg.mail_send_err_wait_minutes({ count: Math.ceil(seconds / 60) });
+		return msg.mail_send_err_wait_hours({ count: Math.ceil(seconds / 3600) });
 	}
 
 	type Tone = 'info' | 'pine' | 'warn';
@@ -84,7 +82,7 @@
 
 	const serverText = $derived.by(() => {
 		const m = message.trim();
-		if (!m) return 'The server did not accept the request.';
+		if (!m) return msg.mail_send_err_server_default();
 		return /[.!?]$/.test(m) ? m : `${m}.`;
 	});
 
@@ -94,8 +92,8 @@
 				return {
 					tone: 'info',
 					ic: AtSign,
-					title: 'No Thelemail account at that address',
-					actionLabel: 'Edit recipient',
+					title: msg.mail_send_err_unknown_title(),
+					actionLabel: msg.mail_send_err_edit_recipient(),
 					actionIcon: Pencil,
 					onAction: onEditRecipient
 				};
@@ -103,8 +101,8 @@
 				return {
 					tone: 'pine',
 					ic: Lock,
-					title: 'Your vault is locked',
-					actionLabel: 'Unlock vault',
+					title: msg.mail_send_err_locked_title(),
+					actionLabel: msg.mail_send_err_unlock(),
 					actionIcon: KeyRound,
 					onAction: onUnlock
 				};
@@ -112,8 +110,8 @@
 				return {
 					tone: 'pine',
 					ic: LogIn,
-					title: "You're signed out",
-					actionLabel: 'Sign in',
+					title: msg.mail_send_err_signed_out_title(),
+					actionLabel: msg.mail_send_err_sign_in(),
 					actionIcon: LogIn,
 					onAction: onUnlock
 				};
@@ -122,16 +120,16 @@
 					? {
 							tone: 'warn',
 							ic: CircleAlert,
-							title: "Encryption didn't complete",
-							actionLabel: 'Reload the tab',
+							title: msg.mail_send_err_encrypt_title(),
+							actionLabel: msg.mail_send_err_reload(),
 							actionIcon: RotateCw,
 							onAction: reloadTab
 						}
 					: {
 							tone: 'warn',
 							ic: CircleAlert,
-							title: "Encryption didn't complete",
-							actionLabel: 'Try again',
+							title: msg.mail_send_err_encrypt_title(),
+							actionLabel: msg.common_retry(),
 							actionIcon: RefreshCw,
 							onAction: onRetry
 						};
@@ -139,8 +137,8 @@
 				return {
 					tone: 'warn',
 					ic: CircleAlert,
-					title: "Couldn't read the recipient's key",
-					actionLabel: 'Try again',
+					title: msg.mail_send_err_key_invalid_title(),
+					actionLabel: msg.common_retry(),
 					actionIcon: RefreshCw,
 					onAction: onRetry
 				};
@@ -148,8 +146,8 @@
 				return {
 					tone: 'warn',
 					ic: Timer,
-					title: "You've reached your sending limit",
-					actionLabel: 'Got it',
+					title: msg.mail_send_err_rate_title(),
+					actionLabel: msg.mail_send_err_got_it(),
 					actionIcon: Timer,
 					onAction: onDismiss
 				};
@@ -157,8 +155,8 @@
 				return {
 					tone: 'info',
 					ic: Timer,
-					title: "This mix of recipients can't be scheduled",
-					actionLabel: 'Back to the draft',
+					title: msg.mail_send_err_schedule_title(),
+					actionLabel: msg.mail_send_err_back_to_draft(),
 					actionIcon: Pencil,
 					onAction: onDismiss
 				};
@@ -166,8 +164,8 @@
 				return {
 					tone: 'warn',
 					ic: ShieldAlert,
-					title: 'This message contains malware',
-					actionLabel: 'Back to the draft',
+					title: msg.mail_send_err_malware_title(),
+					actionLabel: msg.mail_send_err_back_to_draft(),
 					actionIcon: Pencil,
 					onAction: onDismiss
 				};
@@ -175,8 +173,8 @@
 				return {
 					tone: 'warn',
 					ic: CircleAlert,
-					title: 'The server turned this message down',
-					actionLabel: 'Back to the draft',
+					title: msg.mail_send_err_rejected_title(),
+					actionLabel: msg.mail_send_err_back_to_draft(),
 					actionIcon: Pencil,
 					onAction: onDismiss
 				};
@@ -184,8 +182,8 @@
 				return {
 					tone: 'warn',
 					ic: ServerCrash,
-					title: 'Something went wrong on our side',
-					actionLabel: 'Try again',
+					title: msg.mail_send_err_server_title(),
+					actionLabel: msg.common_retry(),
 					actionIcon: RefreshCw,
 					onAction: onRetry
 				};
@@ -194,8 +192,8 @@
 				return {
 					tone: 'warn',
 					ic: WifiOff,
-					title: "Couldn't reach the server",
-					actionLabel: 'Try again',
+					title: msg.mail_send_err_network_title(),
+					actionLabel: msg.common_retry(),
 					actionIcon: RefreshCw,
 					onAction: onRetry
 				};
@@ -209,42 +207,31 @@
 		<div class="se-title">{conf.title}</div>
 		<div class="se-text">
 			{#if code === 'recipient_unknown'}
-				There's no mailbox at <code class="se-mono">{recipient.email}</code> on Thelemail. Most often
-				that's a small typo in the address.
+				<Rich text={msg.mail_send_err_unknown_text({ email: recipient.email })} tags={{ code: mono }} />
 			{:else if code === 'locked'}
-				Thelemail needs your vault unlocked in this tab before it can encrypt and send. Your draft is
-				kept.
+				{msg.mail_send_err_locked_text()}
 			{:else if code === 'no_account'}
-				This tab isn't signed in to an account. Sign in to send — your draft is kept here.
+				{msg.mail_send_err_signed_out_text()}
 			{:else if code === 'encrypt'}
 				{#if attempts >= 2}
-					The local encryption step failed again. This is usually environmental — reloading the tab
-					clears it. Your draft is kept.
+					{msg.mail_send_err_encrypt_again_text()}
 				{:else}
-					Something went wrong while encrypting this message on your device. This is usually
-					temporary.
+					{msg.mail_send_err_encrypt_text()}
 				{/if}
 			{:else if code === 'recipient_key_invalid'}
-				The recipient's public key couldn't be parsed, so nothing was encrypted. Trying again often
-				resolves it.
+				{msg.mail_send_err_key_invalid_text()}
 			{:else if code === 'rate_limited'}
-				To keep Thelemail safe from abuse, sending is capped per account. You can send again in
-				{waitText(retryAfterSeconds)}. Your draft is kept.
+				{msg.mail_send_err_rate_text({ wait: waitText(retryAfterSeconds) })}
 			{:else if code === 'schedule_unsupported'}
-				{serverText}
-				Nothing was sent and your draft is kept.
+				{msg.mail_send_err_not_sent_text({ server: serverText })}
 			{:else if code === 'malware_blocked'}
-				{serverText}
-				Your draft is kept. Remove the attachment before trying again.
+				{msg.mail_send_err_malware_text({ server: serverText })}
 			{:else if code === 'rejected'}
-				{serverText}
-				Nothing was sent and your draft is kept.
+				{msg.mail_send_err_not_sent_text({ server: serverText })}
 			{:else if code === 'server_error'}
-				{serverText}
-				Nothing was sent and your draft is kept. Trying again in a moment usually works.
+				{msg.mail_send_err_server_text({ server: serverText })}
 			{:else}
-				The request didn't make it through. Nothing was sent and your draft is kept. Check your
-				connection and try again.
+				{msg.mail_send_err_network_text()}
 			{/if}
 		</div>
 	</div>
@@ -252,8 +239,10 @@
 		<button type="button" class="se-btn primary" onclick={conf.onAction}>
 			<conf.actionIcon size={14} />{conf.actionLabel}
 		</button>
-		<button type="button" class="se-x" title="Dismiss" onclick={onDismiss}>
+		<button type="button" class="se-x" title={msg.mail_send_err_dismiss()} onclick={onDismiss}>
 			<X size={15} />
 		</button>
 	</div>
 </div>
+
+{#snippet mono(t: string)}<code class="se-mono">{t}</code>{/snippet}

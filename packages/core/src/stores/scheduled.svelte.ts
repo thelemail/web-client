@@ -3,6 +3,7 @@ import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { initialsFor } from '$core/mail/initials';
 import type { ScheduledSend, ScheduledSendKind } from '$core/api/types';
 import { auth } from './auth.svelte';
+import { m } from '$paraglide/messages.js';
 
 export interface ScheduledRow {
 	id: string;
@@ -45,8 +46,8 @@ function fallbackRow(item: ScheduledSend): ScheduledRow {
 	return {
 		id: item.id,
 		kind: item.kind,
-		subject: 'Could not decrypt message',
-		snippet: 'The preview could not be opened with this device’s key.',
+		subject: m.store_scheduled_fallback_subject(),
+		snippet: m.store_preview_fallback_snippet(),
 		to: '',
 		scheduledAt: item.scheduledAt,
 		epoch: new Date(item.scheduledAt).getTime(),
@@ -140,7 +141,7 @@ class ScheduledStore {
 				this.#loaded = true;
 			} catch (err) {
 				if (this.#accountId !== accountId) return;
-				this.loadError = err instanceof Error ? err.message : 'Failed to load scheduled sends.';
+				this.loadError = err instanceof Error ? err.message : m.store_scheduled_load_failed();
 			} finally {
 				if (more) this.loadingMore = false;
 				else this.loading = false;

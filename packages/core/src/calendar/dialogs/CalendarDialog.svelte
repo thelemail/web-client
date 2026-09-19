@@ -23,6 +23,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
 	import { META_SCHEMA_VERSION, serializeMeta, type CalendarMeta, type Privacy } from '../model';
 	import { mintOwnCalendarKey, sealText, type SealKey } from '../seal';
@@ -62,7 +63,7 @@
 			description = existing.meta?.description ?? '';
 			defaultPrivacy = existing.meta?.defaultPrivacy ?? 'busy';
 			const next: Record<string, CalendarRole | null> = {};
-			for (const m of existing.row.members) next[m.accountId] = m.role;
+			for (const member of existing.row.members) next[member.accountId] = member.role;
 			roles = next;
 		} else if (auth.accountId) {
 			roles = { [auth.accountId]: 'owner' };
@@ -76,31 +77,31 @@
 
 	const title = $derived(
 		request.mode === 'create'
-			? 'New calendar'
+			? m.cal_caldlg_title_create()
 			: request.mode === 'share'
-				? 'Members and key'
+				? m.cal_caldlg_title_share()
 				: request.mode === 'delete'
-					? 'Delete calendar'
-					: 'Calendar settings'
+					? m.cal_caldlg_title_delete()
+					: m.cal_caldlg_title_edit()
 	);
 
 	const boundary = $derived.by((): BoundaryLine[] => {
 		if (kind === 'personal') {
 			return [
-				{ tone: 'yes', text: 'Sealed to your own key. Nobody else can open a single field.' },
-				{ tone: 'no', text: 'The server keeps the calendar id and when it changes, nothing more.' }
+				{ tone: 'yes', text: m.cal_caldlg_personal_sealed() },
+				{ tone: 'no', text: m.cal_caldlg_personal_server() }
 			];
 		}
 		if (kind === 'role') {
 			return [
-				{ tone: 'yes', text: 'Sealed to the shared address key its members already hold.' },
-				{ tone: 'warn', text: 'Whoever can read the address can read this calendar. Membership follows the address.' }
+				{ tone: 'yes', text: m.cal_caldlg_role_sealed() },
+				{ tone: 'warn', text: m.cal_caldlg_role_warn() }
 			];
 		}
 		const count = Object.values(roles).filter(Boolean).length;
 		return [
-			{ tone: 'yes', text: `A fresh calendar key, wrapped to ${count} member${count === 1 ? '' : 's'}. Every membership change turns the key over.` },
-			{ tone: 'warn', text: 'The server learns who is a member and their role, never a title.' }
+			{ tone: 'yes', text: m.cal_caldlg_shared_key({ count }) },
+			{ tone: 'warn', text: m.cal_caldlg_shared_server() }
 		];
 	});
 
@@ -119,22 +120,22 @@
 
 	async function resolveRecipients(): Promise<{ accountId: string; publicKeyArmored: string; role: CalendarRole }[]> {
 		const out = [];
-		for (const m of members) {
-			const role = roles[m.accountId];
+		for (const member of members) {
+			const role = roles[member.accountId];
 			if (!role) continue;
-			progress = `Verifying ${m.email}`;
-			const lookup = await lookupDirectory(m.email);
-			await verifyDirectoryLookup(lookup, m.email.trim().toLowerCase());
-			out.push({ accountId: m.accountId, publicKeyArmored: lookup.publicKeyArmored, role });
+			progress = m.cal_caldlg_verifying({ email: member.email });
+			const lookup = await lookupDirectory(member.email);
+			await verifyDirectoryLookup(lookup, member.email.trim().toLowerCase());
+			out.push({ accountId: member.accountId, publicKeyArmored: lookup.publicKeyArmored, role });
 		}
-		if (!out.length) throw new Error('Pick at least one member');
-		if (!out.some((r) => r.role === 'owner')) throw new Error('A shared calendar needs an owner');
+		if (!out.length) throw new Error(m.cal_caldlg_pick_member());
+		if (!out.some((r) => r.role === 'owner')) throw new Error(m.cal_caldlg_needs_owner());
 		return out;
 	}
 
 	async function mintKey(accountId: string) {
 		const recipients = await resolveRecipients();
-		progress = 'Creating the calendar key';
+		progress = m.cal_caldlg_creating_key();
 		const created = await keystore.createAliasKey({
 			accountId,
 			email: '',
@@ -142,7 +143,7 @@
 			recipients: recipients.map((r) => ({ accountId: r.accountId, publicKeyArmored: r.publicKeyArmored }))
 		});
 		if (!created.ok) {
-			throw new Error(created.code === 'locked' ? 'Unlock your mailbox and try again' : 'Could not create the key');
+			throw new Error(created.code === 'locked' ? m.cal_caldlg_unlock() : m.cal_caldlg_key_failed());
 		}
 		const grants: CalendarMemberGrant[] = created.grants.map((g) => ({
 			accountId: g.accountId,
@@ -159,18 +160,18 @@
 	}
 
 	async function mintOwnKey(accountId: string) {
-		progress = 'Creating the calendar key';
+		progress = m.cal_caldlg_creating_key();
 		return mintOwnCalendarKey(accountId);
 	}
 
 	async function aliasKey(accountId: string, aliasId: string): Promise<SealKey> {
 		const res = await keystore.getPublicKey({ accountId, aliasId });
-		if (!res.ok) throw new Error('The shared address key is not loaded yet');
+		if (!res.ok) throw new Error(m.cal_caldlg_alias_key_missing());
 		return { publicKeyArmored: res.publicKeyArmored, fingerprintB64: bytesToB64(res.fingerprint), fingerprintHex: '' };
 	}
 
 	async function submitCreate(accountId: string) {
-		if (!name.trim()) throw new Error('Give the calendar a name');
+		if (!name.trim()) throw new Error(m.cal_caldlg_name_required());
 		let key: SealKey;
 		let grants: CalendarMemberGrant[] | undefined;
 		let sharedAliasId: string | undefined;
@@ -180,7 +181,7 @@
 			grants = minted.grants;
 		} else if (kind === 'role') {
 			const addr = sharedAddresses.find((a) => a.id === aliasAddressId);
-			if (!addr?.sharedAliasId) throw new Error('Pick a shared address');
+			if (!addr?.sharedAliasId) throw new Error(m.cal_caldlg_pick_address());
 			sharedAliasId = addr.sharedAliasId;
 			key = await aliasKey(accountId, addr.sharedAliasId);
 		} else {
@@ -188,9 +189,9 @@
 			key = minted.key;
 			grants = minted.grants;
 		}
-		progress = 'Sealing';
+		progress = m.cal_caldlg_sealing();
 		const sealedMeta = await sealText(accountId, key, serializeMeta(meta()));
-		progress = 'Saving';
+		progress = m.cal_caldlg_saving();
 		const row = await createCalendar({
 			kind,
 			sealedMeta,
@@ -202,20 +203,20 @@
 		});
 		if (kind !== 'role') await calendarKeys.load(accountId);
 		await calendarStore.adoptCalendar(row);
-		cal.notify(`Created “${row.id ? name.trim() : name}”`);
+		cal.notify(m.cal_caldlg_created({ name: row.id ? name.trim() : name }));
 	}
 
 	async function submitEdit() {
 		if (!existing) return;
-		if (!name.trim()) throw new Error('Give the calendar a name');
+		if (!name.trim()) throw new Error(m.cal_caldlg_name_required());
 		await calendarStore.updateCalendarMeta(existing.id, meta());
-		cal.notify('Calendar updated');
+		cal.notify(m.cal_caldlg_updated());
 	}
 
 	async function submitShare(accountId: string) {
 		if (!existing) return;
 		const minted = await mintKey(accountId);
-		progress = 'Turning the key over';
+		progress = m.cal_caldlg_rotating();
 		const row = await rotateCalendarMembers(existing.id, {
 			calendarPublicKeyArmored: minted.key.publicKeyArmored,
 			members: minted.grants
@@ -229,15 +230,15 @@
 			baseRev: row.rev
 		});
 		await calendarStore.adoptCalendar(patched);
-		progress = 'Re-sealing existing items for the new members';
+		progress = m.cal_caldlg_resealing();
 		await calendarStore.resealCalendar(existing.id);
-		cal.notify('Members updated · items re-sealed to the new key');
+		cal.notify(m.cal_caldlg_members_updated());
 	}
 
 	async function submitDelete() {
 		if (!existing) return;
 		await calendarStore.removeCalendar(existing.id);
-		cal.notify(`Deleted “${existing.name}”`);
+		cal.notify(m.cal_caldlg_deleted({ name: existing.name }));
 	}
 
 	async function submit() {
@@ -253,7 +254,7 @@
 			cal.dialog = null;
 			cal.calendarDialog = null;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Something went wrong';
+			error = err instanceof Error ? err.message : m.cal_caldlg_failed();
 		} finally {
 			busy = false;
 			progress = '';
@@ -275,17 +276,15 @@
 
 	<div class="cal-dlg-body cal-form">
 		{#if request.mode === 'delete'}
-			<p class="cal-dlg-lead">
-				Delete “{existing?.name}” and everything in it? Members lose access; the server keeps tombstones for a month so devices can catch up, then removes the rows.
-			</p>
+			<p class="cal-dlg-lead">{m.cal_caldlg_delete_lead({ name: existing?.name ?? '' })}</p>
 		{:else}
 			{#if request.mode === 'create' || request.mode === 'edit'}
 				<label class="cal-field">
-					<span>Name</span>
-					<input type="text" bind:value={name} maxlength="120" placeholder="Family, Studio, Domains…" />
+					<span>{m.cal_caldlg_name()}</span>
+					<input type="text" bind:value={name} maxlength="120" placeholder={m.cal_caldlg_name_placeholder()} />
 				</label>
 				<div class="cal-field">
-					<span>Colour</span>
+					<span>{m.cal_caldlg_colour()}</span>
 					<div class="swatches">
 						{#each PALETTE as c (c)}
 							<button
@@ -293,20 +292,20 @@
 								class="swatch"
 								class:on={color === c}
 								style:--c={c}
-								aria-label="Use colour {c}"
+								aria-label={m.cal_caldlg_use_colour_aria({ color: c })}
 								onclick={() => (color = c)}
 							></button>
 						{/each}
 					</div>
 				</div>
 				<label class="cal-field">
-					<span>Description</span>
-					<input type="text" bind:value={description} maxlength="240" placeholder="Optional" />
+					<span>{m.cal_caldlg_description()}</span>
+					<input type="text" bind:value={description} maxlength="240" placeholder={m.cal_caldlg_optional()} />
 				</label>
 				<div class="cal-field">
-					<span>New items default to</span>
+					<span>{m.cal_caldlg_default_privacy()}</span>
 					<div class="seg">
-						{#each [['private', 'Private'], ['busy', 'Busy-only'], ['shared', 'Shared']] as [value, label] (value)}
+						{#each [['private', m.cal_privacy_private()], ['busy', m.cal_privacy_busy()], ['shared', m.cal_privacy_shared()]] as [value, label] (value)}
 							<button
 								type="button"
 								class:on={defaultPrivacy === value}
@@ -321,20 +320,20 @@
 
 			{#if request.mode === 'create'}
 				<div class="cal-field">
-					<span>Who can see it</span>
+					<span>{m.cal_caldlg_who()}</span>
 					<div class="seg">
-						<button type="button" class:on={kind === 'personal'} onclick={() => (kind = 'personal')}>Just me</button>
-						<button type="button" class:on={kind === 'shared'} disabled={!canShare} onclick={() => (kind = 'shared')}>Chosen members</button>
-						<button type="button" class:on={kind === 'role'} disabled={!isAdmin || !sharedAddresses.length} onclick={() => (kind = 'role')}>A shared address</button>
+						<button type="button" class:on={kind === 'personal'} onclick={() => (kind = 'personal')}>{m.cal_caldlg_who_me()}</button>
+						<button type="button" class:on={kind === 'shared'} disabled={!canShare} onclick={() => (kind = 'shared')}>{m.cal_caldlg_who_members()}</button>
+						<button type="button" class:on={kind === 'role'} disabled={!isAdmin || !sharedAddresses.length} onclick={() => (kind = 'role')}>{m.cal_caldlg_who_address()}</button>
 					</div>
 				</div>
 			{/if}
 
 			{#if request.mode === 'create' && kind === 'role'}
 				<label class="cal-field">
-					<span>Shared address</span>
+					<span>{m.cal_caldlg_shared_address()}</span>
 					<select bind:value={aliasAddressId}>
-						<option value="">Choose an address</option>
+						<option value="">{m.cal_caldlg_choose_address()}</option>
 						{#each sharedAddresses as addr (addr.id)}
 							<option value={addr.id}>{addr.email}</option>
 						{/each}
@@ -344,26 +343,26 @@
 
 			{#if (request.mode === 'create' && kind === 'shared') || request.mode === 'share'}
 				<div class="cal-field">
-					<span><Users size={14} /> Members</span>
+					<span><Users size={14} /> {m.cal_caldlg_members()}</span>
 					<div class="member-list">
-						{#each members as m (m.accountId)}
-							{@const role = roles[m.accountId] ?? null}
+						{#each members as member (member.accountId)}
+							{@const role = roles[member.accountId] ?? null}
 							<div class="member-row" class:on={!!role}>
 								<Checkbox
-									id="cal-member-{m.accountId}"
+									id="cal-member-{member.accountId}"
 									checked={!!role}
-									disabled={m.accountId === auth.accountId && request.mode === 'create'}
-									onCheckedChange={() => toggle(m.accountId)}
+									disabled={member.accountId === auth.accountId && request.mode === 'create'}
+									onCheckedChange={() => toggle(member.accountId)}
 								/>
-								<label for="cal-member-{m.accountId}" class="member-name">
-									{m.fullName || m.email}
-									<span class="member-mail">{m.email}</span>
+								<label for="cal-member-{member.accountId}" class="member-name">
+									{member.fullName || member.email}
+									<span class="member-mail">{member.email}</span>
 								</label>
 								{#if role}
-									<select value={role} onchange={(e) => setRole(m.accountId, (e.currentTarget as HTMLSelectElement).value as CalendarRole)}>
-										<option value="owner">Owner</option>
-										<option value="editor">Editor</option>
-										<option value="viewer">Viewer</option>
+									<select value={role} onchange={(e) => setRole(member.accountId, (e.currentTarget as HTMLSelectElement).value as CalendarRole)}>
+										<option value="owner">{m.cal_role_owner()}</option>
+										<option value="editor">{m.cal_role_editor()}</option>
+										<option value="viewer">{m.cal_role_viewer()}</option>
 									</select>
 								{/if}
 							</div>
@@ -372,18 +371,18 @@
 				</div>
 			{/if}
 
-			<DisclosureBoundary heading="What the server learns" lines={boundary} />
+			<DisclosureBoundary heading={m.cal_caldlg_server_learns()} lines={boundary} />
 		{/if}
 
-		{#if progress}<div class="cal-progress">{progress}…</div>{/if}
+		{#if progress}<div class="cal-progress">{m.cal_caldlg_progress({ step: progress })}</div>{/if}
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
 		<div class="grow"></div>
-		<Button variant="ghost" disabled={busy} onclick={() => (cal.dialog = null)}>Cancel</Button>
+		<Button variant="ghost" disabled={busy} onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 		<Button variant={request.mode === 'delete' ? 'dangerSolid' : 'primary'} disabled={busy} onclick={submit}>
-			{request.mode === 'delete' ? 'Delete' : request.mode === 'share' ? 'Save members' : request.mode === 'edit' ? 'Save' : 'Create'}
+			{request.mode === 'delete' ? m.common_delete() : request.mode === 'share' ? m.cal_caldlg_save_members() : request.mode === 'edit' ? m.common_save() : m.cal_caldlg_create()}
 		</Button>
 	</Dialog.Footer>
 </Dialog.Content>

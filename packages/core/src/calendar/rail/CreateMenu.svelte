@@ -8,6 +8,7 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import Plus from '@lucide/svelte/icons/plus';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
+	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
 
 	let open = $state(false);
@@ -15,30 +16,30 @@
 
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger class="create">
-		<span class="cr-main"><Plus size={18} />Create</span>
+		<span class="cr-main"><Plus size={18} />{m.cal_create()}</span>
 		<span class="cr-caret"><ChevronDown size={15} /></span>
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="cal-surface cal-menu w-60" align="start">
 		<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'event' })}>
-			<CalendarDays size={16} />Event<span class="rt">E</span>
+			<CalendarDays size={16} />{m.cal_create_event()}<span class="rt">E</span>
 		</DropdownMenu.Item>
 		<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'task' })}>
-			<ListTodo size={16} />Task<span class="rt">T</span>
+			<ListTodo size={16} />{m.cal_create_task()}<span class="rt">T</span>
 		</DropdownMenu.Item>
 		<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'hold' })}>
-			<Lock size={16} />Hold (private busy)<span class="rt">H</span>
+			<Lock size={16} />{m.cal_create_hold()}<span class="rt">H</span>
 		</DropdownMenu.Item>
 		<DropdownMenu.Separator />
 		<DropdownMenu.Item onSelect={() => cal.openCalendarDialog({ mode: 'create' })}>
-			<CalendarPlus size={16} />New calendar
+			<CalendarPlus size={16} />{m.cal_create_calendar()}
 		</DropdownMenu.Item>
 		{#if import.meta.env.DEV}
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => (cal.dialog = 'offer')}>
-				<CalendarClock size={16} />Proposal — offer times<span class="rt">P</span>
+				<CalendarClock size={16} />{m.cal_create_proposal()}<span class="rt">P</span>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => cal.goTo('booking')}>
-				<Globe size={16} />Booking page
+				<Globe size={16} />{m.cal_create_booking()}
 			</DropdownMenu.Item>
 		{/if}
 	</DropdownMenu.Content>

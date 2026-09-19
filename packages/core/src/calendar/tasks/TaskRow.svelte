@@ -5,6 +5,7 @@
 	import Repeat from '@lucide/svelte/icons/repeat';
 	import User from '@lucide/svelte/icons/user';
 	import { Checkbox } from '$core/components/ui/checkbox';
+	import { m } from '$paraglide/messages.js';
 	import { cal, type TaskRowView } from '../state.svelte';
 
 	interface Props {
@@ -19,7 +20,7 @@
 	<Checkbox
 		id="task-{task.id}"
 		checked={task.done}
-		aria-label="Complete {task.title}"
+		aria-label={m.cal_task_complete_aria({ title: task.title })}
 		onCheckedChange={() => cal.toggleTask(task.entry)}
 		class="mt-0.5 size-[18px] rounded-[5px]"
 	/>
@@ -41,7 +42,7 @@
 				<span class="mchip roll"><Repeat size={12} />{task.roll}</span>
 			{/if}
 			{#if task.fromMail}
-				<span class="mchip"><Mail size={12} />from mail</span>
+				<span class="mchip"><Mail size={12} />{m.cal_task_from_mail()}</span>
 			{/if}
 		</div>
 	</div>

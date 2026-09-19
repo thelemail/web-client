@@ -2,6 +2,7 @@
 	import type { Snippet, Component } from 'svelte';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		icon: Component;
@@ -55,7 +56,7 @@
 				<div class="cer-eyebrow">{eyebrow}</div>
 				<div class="cer-title">{title}</div>
 			</div>
-			<button type="button" class="cer-close" onclick={onClose} aria-label="Close">
+			<button type="button" class="cer-close" onclick={onClose} aria-label={m.common_close()}>
 				<X size={18} />
 			</button>
 		</header>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { platform } from '$platform';
 	import { Button } from '$core/components/ui/button';
 
@@ -46,20 +47,17 @@
 {#if asking}
 	<div class="msp-scrim" role="dialog" aria-modal="true" aria-labelledby="msp-title">
 		<div class="msp-modal">
-			<h2 id="msp-title">How much mail should this Mac keep?</h2>
-			<p>
-				Mail kept on this Mac is searchable by its full text and readable without a
-				connection. It is stored encrypted, and only this Mac can open it.
-			</p>
+			<h2 id="msp-title">{m.mail_mirror_scope_title()}</h2>
+			<p>{m.mail_mirror_scope_body()}</p>
 			<div class="msp-actions">
 				<Button variant="primary" disabled={busy} onclick={() => choose(90)}>
-					Last 90 days
+					{m.mail_mirror_scope_90_days()}
 				</Button>
 				<Button variant="secondary" disabled={busy} onclick={() => choose(null)}>
-					All mail
+					{m.mail_mirror_scope_all()}
 				</Button>
 			</div>
-			<p class="msp-note">You can change this later in Settings.</p>
+			<p class="msp-note">{m.mail_mirror_scope_note()}</p>
 		</div>
 	</div>
 {/if}

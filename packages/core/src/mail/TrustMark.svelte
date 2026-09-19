@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import BadgeCheck from '@lucide/svelte/icons/badge-check';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
@@ -12,7 +13,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { portal } from '$core/actions/portal';
 	import TrustCheckDialog from './TrustCheckDialog.svelte';
-	import type { MessageTrust, TrustCheck, TrustTier } from './trust';
+	import { deriveTrust, type MessageTrust, type TrustCheck, type TrustTier } from './trust';
 
 	interface Props {
 		trust: MessageTrust;
@@ -20,7 +21,9 @@
 		onConfirmKeyChange?: () => void | Promise<void>;
 	}
 
-	let { trust, variant = 'icon', onConfirmKeyChange }: Props = $props();
+	let { trust: source, variant = 'icon', onConfirmKeyChange }: Props = $props();
+
+	const trust = $derived(source.facts ? deriveTrust(source.facts) : source);
 
 	const MARKS = {
 		official: BadgeCheck,
@@ -153,7 +156,7 @@
 		{/if}
 		{#if trust.action === 'confirm_key_change' && onConfirmKeyChange}
 			<button class="tpop-act" onclick={confirm} disabled={busy}>
-				{busy ? 'Confirming…' : 'Trust the new key'}
+				{busy ? m.mail_trust_confirming() : m.mail_trust_accept_key()}
 			</button>
 		{/if}
 	</div>

@@ -9,3 +9,6 @@ dist
 .vscode
 .idea
 .playwright-mcp
+**/src/lib/paraglide
+packages/core/project.inlang/cache
+packages/core/project.inlang/.lix

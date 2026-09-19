@@ -1,3 +1,4 @@
+import { m } from '$paraglide/messages.js';
 import { ApiCallError } from '$core/api/types';
 import { SHARED_DOMAIN } from './entitlements';
 
@@ -5,49 +6,49 @@ export function familyInviteError(err: unknown, email: string): string {
 	const code = err instanceof ApiCallError ? err.envelope?.error?.code : null;
 	switch (code) {
 		case 'invitee_not_found':
-			return `There is no Thelemail account at ${email}. They need to create one first, then you can invite them.`;
+			return m.settings_family_invite_err_not_found({ email });
 		case 'invitee_plan_conflict':
-			return `${email} is on a paid plan. Joining a family would not refund it, so we leave the subscription alone. They can cancel it themselves under Account & plan, and you can invite them again once it ends.`;
+			return m.settings_family_invite_err_plan_conflict({ email });
 		case 'invitee_store_billed':
-			return `${email} pays through the App Store or Google Play. Those subscriptions have to be cancelled in the store, and they can be invited once it ends.`;
+			return m.settings_family_invite_err_store_billed({ email });
 		case 'invitee_already_in_family':
-			return `${email} is already in another family or team. They have to leave that one first.`;
+			return m.settings_family_invite_err_already_in_family({ email });
 		case 'invitee_has_custom_domain':
-			return `${email} has a custom domain set up. A free family has no custom domains, so the domain has to go before they can join.`;
+			return m.settings_family_invite_err_custom_domain({ email });
 		case 'invitee_domain_not_shared':
-			return `${email} is not a ${SHARED_DOMAIN} address. Only ${SHARED_DOMAIN} accounts can join a free family.`;
+			return m.settings_family_invite_err_domain_not_shared({ email, domain: SHARED_DOMAIN });
 		case 'family_full':
-			return 'Your family is full. Six accounts including yours is the limit, so remove someone before inviting anyone else.';
+			return m.settings_family_invite_err_full();
 		case 'rate_limited':
-			return 'That is a lot of invitations at once. Try again a little later.';
+			return m.settings_family_invite_err_rate_limited();
 		case 'conflict':
-			return `Cannot invite ${email} right now. They may already have an invitation waiting.`;
+			return m.settings_family_invite_err_conflict({ email });
 		default:
-			return 'Could not send the invitation. Try again.';
+			return m.settings_family_invite_err_default();
 	}
 }
 
 export function acceptInviteError(err: unknown, inviterName: string): string {
-	const who = inviterName.trim() || 'whoever invited you';
+	const who = inviterName.trim() || m.settings_family_accept_whoever();
 	const code = err instanceof ApiCallError ? err.envelope?.error?.code : null;
 	switch (code) {
 		case 'family_full':
-			return `That family is full now. Ask ${who} to make room and invite you again.`;
+			return m.settings_family_accept_err_full({ who });
 		case 'invite_not_acceptable':
-			return 'This invitation is for a different account.';
+			return m.settings_family_accept_err_not_acceptable();
 		case 'invitee_plan_conflict':
-			return 'You are on a paid plan. Cancel it under Account & plan, then accept this invitation once it ends.';
+			return m.settings_family_accept_err_plan_conflict();
 		case 'invitee_store_billed':
-			return 'Your plan is billed by the App Store or Google Play. Cancel it there, then accept this invitation once it ends.';
+			return m.settings_family_accept_err_store_billed();
 		case 'invitee_has_custom_domain':
-			return 'Your account has a custom domain. A free family has no custom domains, so the domain has to go before you can join.';
+			return m.settings_family_accept_err_custom_domain();
 		case 'invitee_already_in_family':
-			return 'Your account is already in a family or team. Leave that one first.';
+			return m.settings_family_accept_err_already_in_family();
 		case 'not_found':
-			return `This invitation is no longer valid. Ask ${who} to send a new one.`;
+			return m.settings_family_accept_err_not_found({ who });
 		case 'rate_limited':
-			return 'Too many failed attempts on this invitation. Wait a while, then try again.';
+			return m.settings_family_accept_err_rate_limited();
 		default:
-			return 'Could not join just now. Try again.';
+			return m.settings_family_accept_err_default();
 	}
 }

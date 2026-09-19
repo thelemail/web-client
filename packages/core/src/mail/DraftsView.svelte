@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import FileText from '@lucide/svelte/icons/file-text';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -59,9 +60,9 @@
 		if (composeStore.editingDraftId === d.id) composeStore.close();
 		try {
 			await deleteDraft(d.id);
-			flash('Draft discarded');
+			flash(m.mail_drafts_discarded());
 		} catch {
-			flash('Could not discard draft');
+			flash(m.mail_drafts_discard_failed());
 			void drafts.refresh();
 		}
 	}
@@ -69,10 +70,10 @@
 	function onSend(info?: { scheduledAt?: string }) {
 		composeStore.close();
 		if (info?.scheduledAt) {
-			flash(`Send scheduled for ${formatWhenLong(new Date(info.scheduledAt))}`);
+			flash(m.mail_toast_scheduled({ when: formatWhenLong(new Date(info.scheduledAt)) }));
 			void scheduled.refresh();
 		} else {
-			flash('Message sent');
+			flash(m.mail_toast_sent());
 		}
 		void drafts.refresh();
 		void mailbox.refresh([
@@ -83,7 +84,7 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Drafts</title>
+	<title>{m.mail_drafts_page_title()}</title>
 </svelte:head>
 
 <LifecycleBanners />
@@ -92,34 +93,34 @@
 <div class="mailbody">
 	<section class="list">
 		<div class="list-h">
-			<button class="lh-nav" title="Menu" onclick={() => (mailNav.open = !mailNav.open)}>
+			<button class="lh-nav" title={m.mail_menu()} onclick={() => (mailNav.open = !mailNav.open)}>
 				<Menu size={18} />
 			</button>
 			<div class="ttl-block">
-				<span class="ttl">Drafts<span class="n">{drafts.items.length}</span></span>
+				<span class="ttl">{m.mail_drafts_heading()}<span class="n">{drafts.items.length}</span></span>
 			</div>
 			<div class="grow"></div>
-			<button class="lh-btn" title="Refresh" onclick={() => drafts.refresh()}>
+			<button class="lh-btn" title={m.mail_refresh()} onclick={() => drafts.refresh()}>
 				<RefreshCw size={16} />
 			</button>
 		</div>
 		<div class="scroll">
 			{#if drafts.loading && list.length === 0}
-				<div class="drafts-empty"><div class="t">Loading…</div></div>
+				<div class="drafts-empty"><div class="t">{m.common_loading()}</div></div>
 			{:else if drafts.loadError && list.length === 0}
 				<div class="drafts-empty">
-					<div class="t">Could not load drafts</div>
+					<div class="t">{m.mail_drafts_load_failed()}</div>
 					<div class="d">{drafts.loadError}</div>
-					<button class="dretry" onclick={() => drafts.refresh()}>Retry</button>
+					<button class="dretry" onclick={() => drafts.refresh()}>{m.mail_retry()}</button>
 				</div>
 			{:else if list.length === 0}
 				<div class="drafts-empty">
 					<div class="ring"><FileText size={28} /></div>
-					<div class="t">{mailSearch.text.trim() ? 'No matches' : 'No drafts'}</div>
+					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_drafts_empty()}</div>
 					<div class="d">
 						{mailSearch.text.trim()
-							? 'No drafts match your search.'
-							: 'Messages you start but don’t send are saved here.'}
+							? m.mail_drafts_no_matches()
+							: m.mail_drafts_empty_detail()}
 					</div>
 				</div>
 			{:else}
@@ -140,14 +141,14 @@
 						<Avatar initials={d.init || 'D'} size={34} bg="var(--brass-100)" fg="var(--brass-700)" />
 						<div class="dmain">
 							<div class="dtop">
-								<span class="dto">{d.to || '(no recipients)'}</span>
+								<span class="dto">{d.to || m.mail_no_recipients()}</span>
 								<span class="dtime">{formatRowTime(new Date(d.epoch))}</span>
 							</div>
 							<div class="dsubj">
-								<span class="draft-tag">Draft</span>
+								<span class="draft-tag">{m.mail_drafts_tag()}</span>
 								{d.subject}
 							</div>
-							<div class="dprev">{d.snippet || 'No content yet'}</div>
+							<div class="dprev">{d.snippet || m.mail_drafts_no_content()}</div>
 						</div>
 						<div class="dmeta">
 							{#if d.attachmentCount > 0}
@@ -156,7 +157,7 @@
 							<button
 								type="button"
 								class="ddel"
-								title="Discard draft"
+								title={m.mail_drafts_discard()}
 								onclick={(e) => discardRow(e, d)}
 							>
 								<Trash2 size={16} />
@@ -167,7 +168,7 @@
 				{#if !drafts.exhausted}
 					<div class="dmore">
 						<button onclick={() => drafts.loadMore()} disabled={drafts.loadingMore}>
-							{drafts.loadingMore ? 'Loading…' : 'Load more'}
+							{drafts.loadingMore ? m.common_loading() : m.mail_load_more()}
 						</button>
 					</div>
 				{/if}
@@ -177,13 +178,13 @@
 	<div class="drafts-side">
 		<div class="ds-inner">
 			<FileText size={40} />
-			<p>Select a draft to continue editing.</p>
+			<p>{m.mail_drafts_side()}</p>
 		</div>
 	</div>
 </div>
 
 {#if !composeStore.open}
-	<button class="fab" title="Compose" onclick={() => composeStore.openNew()}>
+	<button class="fab" title={m.mail_compose()} onclick={() => composeStore.openNew()}>
 		<PenLine size={22} />
 	</button>
 {/if}

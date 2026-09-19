@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import { cancelDeletion } from '$core/api/deletion';
@@ -9,6 +10,8 @@
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 
 	let { data } = $props();
 
@@ -18,7 +21,7 @@
 	const slot = $derived(data.slot);
 	const deletion = $derived(auth.deletion);
 
-	const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' });
+	const fmt = $derived(new Intl.DateTimeFormat(i18n.tag, { dateStyle: 'long' }));
 	const requestedLabel = $derived(deletion ? fmt.format(new Date(deletion.requestedAt)) : '');
 	const purgeLabel = $derived(deletion ? fmt.format(new Date(deletion.purgeAt)) : '');
 	const daysLeft = $derived.by(() => {
@@ -44,7 +47,7 @@
 			await goto(`/u/${slot}/mail/inbox`);
 		} catch (err) {
 			console.warn('deletion: cancel failed', err);
-			cancelError = 'Could not cancel the deletion. Check your connection and try again.';
+			cancelError = m.lc_deletion_cancel_failed();
 			busy = false;
 		}
 	}
@@ -63,23 +66,31 @@
 </script>
 
 <svelte:head>
-	<title>Thelemail — Deletion scheduled</title>
+	<title>{m.lc_page_title_deletion()}</title>
 </svelte:head>
+
+{#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <AuthShell>
 	<div class="card">
 		<div class="card-surface screen-fade">
 			<div class="welcome">
 				<span class="pending-icon"><CalendarClock size={44} strokeWidth={1.5} /></span>
-				<h1>Deletion scheduled</h1>
+				<h1>{m.lc_deletion_title()}</h1>
 				<p>
-					This account was scheduled for deletion on <b>{requestedLabel}</b>. Everything it holds
-					— every mailbox, alias, and message — will be permanently erased on
-					<b>{purgeLabel}</b>{daysLeft > 0 ? ` (${daysLeft} day${daysLeft === 1 ? '' : 's'} left)` : ''}.
+					<Rich
+						text={daysLeft > 0
+							? m.lc_deletion_body_days({
+									count: daysLeft,
+									requested: requestedLabel,
+									purge: purgeLabel
+								})
+							: m.lc_deletion_body({ requested: requestedLabel, purge: purgeLabel })}
+						tags={{ b: bold }}
+					/>
 				</p>
 				<p>
-					Until then the account is deactivated: mail still arrives, but nothing can be read or
-					sent. Changed your mind? You can keep the account and everything in it.
+					{m.lc_deletion_deactivated()}
 				</p>
 				{#if cancelError}
 					<p class="billing-notice billing-notice-error">
@@ -90,10 +101,10 @@
 				<div class="actions" style="margin-top:24px">
 					<Button variant="primary" size="lg" block disabled={busy} onclick={keepAccount}>
 						<Undo2 size={17} strokeWidth={1.75} />
-						{busy ? 'Restoring your account…' : 'Cancel deletion and keep my account'}
+						{busy ? m.lc_deletion_restoring() : m.lc_deletion_keep()}
 					</Button>
 					<Button variant="secondary" size="lg" block disabled={busy} onclick={signOut}>
-						<LogOut size={17} strokeWidth={1.75} />Sign out
+						<LogOut size={17} strokeWidth={1.75} />{m.lc_deletion_sign_out()}
 					</Button>
 				</div>
 			</div>

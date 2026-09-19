@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import Users from '@lucide/svelte/icons/users';
 	import Star from '@lucide/svelte/icons/star';
@@ -31,6 +32,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { canManageWorkspace } from '../permissions';
 	import { settingsPageTitle } from '../pageTitle.svelte';
+	import Rich from '$core/i18n/Rich.svelte';
 	import {
 		buildRow,
 		dedupeAddresses,
@@ -94,7 +96,7 @@
 
 	$effect(() => {
 		if (!row) return;
-		settingsPageTitle.setTrail({ label: 'Addresses', href: base }, row.email, true);
+		settingsPageTitle.setTrail({ label: m.settings_address_breadcrumb(), href: base }, row.email, true);
 		return () => settingsPageTitle.set(null);
 	});
 
@@ -116,7 +118,7 @@
 			}
 			await workspaceAddresses.reload();
 		} catch (err) {
-			nameError = err instanceof Error ? err.message : 'Could not save this name.';
+			nameError = err instanceof Error ? err.message : m.settings_address_save_name_failed();
 		} finally {
 			saving = false;
 		}
@@ -129,7 +131,7 @@
 			await addresses.load();
 			await workspaceAddresses.reload();
 		} catch (err) {
-			nameError = err instanceof Error ? err.message : 'Could not make this the primary address.';
+			nameError = err instanceof Error ? err.message : m.settings_address_promote_failed();
 		}
 	}
 
@@ -150,7 +152,7 @@
 			await goto(base);
 		} catch (err) {
 			removalError =
-				err instanceof Error && err.message ? err.message : 'Could not remove this address.';
+				err instanceof Error && err.message ? err.message : m.settings_address_remove_failed();
 		} finally {
 			removalBusy = false;
 		}
@@ -159,7 +161,7 @@
 
 {#if !row}
 	<p class="addr-note">
-		{#if loaded}This address is no longer available.{:else}Loading…{/if}
+		{#if loaded}{m.settings_address_unavailable()}{:else}{m.common_loading()}{/if}
 	</p>
 {:else}
 	<div class="ad-hero">
@@ -169,9 +171,9 @@
 		<div class="ad-hero-tx">
 			<div class="ad-hero-title">
 				<span class="ad-name">{row.title}</span>
-				{#if row.isPrimary}<Badge kind="pine">Primary</Badge>{/if}
-				{#if row.kind === 'shared'}<Badge kind="neutral">Shared</Badge>{/if}
-				{#if row.rotationRequired}<Badge kind="warn" dot>Needs a new key</Badge>{/if}
+				{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
+				{#if row.kind === 'shared'}<Badge kind="neutral">{m.settings_address_shared()}</Badge>{/if}
+				{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
 			</div>
 			<div class="ad-lede">{ledeFor(ctx, row)}</div>
 		</div>
@@ -181,13 +183,12 @@
 		<div class="ad-alert">
 			<span class="ad-alert-ic"><KeyRound size={15} /></span>
 			<div class="ad-alert-tx">
-				<b>This address needs a new key.</b>
-				Someone on it left the workspace. Save its people again and a fresh key is issued to everyone
-				who stays.
+				<b>{m.settings_address_rotate_title()}</b>
+				{m.settings_address_rotate_body()}
 			</div>
 			{#if row.canManagePeople}
 				<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
-					Manage people
+					{m.settings_address_manage_people()}
 				</Button>
 			{/if}
 		</div>
@@ -195,19 +196,19 @@
 
 	{#if row.canRename || row.isOwnPersonal}
 	<div class="scard">
-		<CardHead icon={AtSign} title="Identity" />
+		<CardHead icon={AtSign} title={m.settings_address_identity()} />
 		{#if row.canRename}
 			<Row
-				t="Display name"
+				t={m.settings_address_display_name()}
 				d={row.kind === 'shared'
-					? 'The name people see when anyone writes from this address.'
-					: 'The name people see when you write from this address. Leave it empty to use your profile name.'}
+					? m.settings_address_display_name_shared_desc()
+					: m.settings_address_display_name_desc()}
 			>
 				<span class="ad-name-ctl">
 					<TextInput
 						value={nameDraft}
 						onChange={(v) => (nameDraft = v)}
-						placeholder={auth.fullName ?? 'Display name'}
+						placeholder={auth.fullName ?? m.settings_address_display_name()}
 						w="mid"
 					/>
 					<Button
@@ -216,21 +217,21 @@
 						disabled={!dirty || saving}
 						onclick={() => void saveName()}
 					>
-						{saving ? 'Saving…' : 'Save'}
+						{saving ? m.settings_address_saving() : m.common_save()}
 					</Button>
 				</span>
 			</Row>
 		{/if}
 		{#if row.isOwnPersonal}
 			<Row
-				t="Primary address"
-				d="Your default From and the email you sign in with. One address at a time."
+				t={m.settings_address_primary_title()}
+				d={m.settings_address_primary_desc()}
 			>
 				{#if row.isPrimary}
-					<Badge kind="pine">Primary</Badge>
+					<Badge kind="pine">{m.settings_address_primary()}</Badge>
 				{:else}
 					<Button variant="secondary" size="sm" onclick={() => void promote()}>
-						<Star size={14} />Make primary
+						<Star size={14} />{m.settings_address_make_primary()}
 					</Button>
 				{/if}
 			</Row>
@@ -241,23 +242,21 @@
 		<div class="ad-note">
 			<Info size={14} />
 			<span>
-				This address belongs to {row.people[0]?.name ?? 'another member'}. Its name, signing and
-				forwarding are managed from their own settings.
+				{m.settings_address_belongs_to({ name: row.people[0]?.name ?? m.settings_address_another_member_lower() })}
 			</span>
 		</div>
 	{/if}
 
 	{#if row.kind === 'shared'}
 		<div class="scard">
-			<CardHead icon={Users} title="People">
+			<CardHead icon={Users} title={m.settings_address_people()}>
 				{#snippet right()}
 					<span class="card-meta">
-						{row.people.length}
-						{row.people.length === 1 ? 'person' : 'people'}
+						{m.settings_address_used_people({ count: row.people.length })}
 					</span>
 					{#if row.canManagePeople}
 						<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
-							<Users size={13} />Change people
+							<Users size={13} />{m.settings_address_change_people()}
 						</Button>
 					{/if}
 				{/snippet}
@@ -273,18 +272,17 @@
 					<div class="ad-person-tx">
 						<div class="ad-person-name">
 							{p.name}
-							{#if p.accountId === auth.accountId}<span class="ad-you">you</span>{/if}
+							{#if p.accountId === auth.accountId}<span class="ad-you">{m.settings_address_you_tag()}</span>{/if}
 						</div>
 						<div class="ad-person-mail mono">{p.email}</div>
 					</div>
-					<span class="ad-person-role">Receives a copy · can write from it</span>
+					<span class="ad-person-role">{m.settings_address_person_role()}</span>
 				</div>
 			{/each}
 			<div class="ad-people-note">
 				<Info size={13} />
 				<span>
-					Changing who is on this address gives it a new key. Newcomers see mail that arrives from
-					then on, not what came before. Anyone removed keeps what was already delivered.
+					{m.settings_address_people_note()}
 				</span>
 			</div>
 		</div>
@@ -294,8 +292,7 @@
 		<div class="ad-note">
 			<Info size={14} />
 			<span>
-				Signing delegation and forwarding are available for addresses on a domain you own.
-				Addresses on {row.domain} do not have them.
+				{m.settings_address_own_domain_only({ domain: row.domain })}
 			</span>
 		</div>
 	{/if}
@@ -310,31 +307,33 @@
 
 	{#if row.canRemove}
 		<div class="scard danger">
-			<CardHead icon={TriangleAlert} title="Remove this address" />
+			<CardHead icon={TriangleAlert} title={m.settings_address_remove_card()} />
 			<Row
 				t={row.kind === 'shared'
-					? 'Remove this shared alias'
+					? m.settings_address_remove_shared()
 					: row.isMine
-						? 'Remove this address'
-						: `Remove ${row.people[0]?.name ?? 'this member'}'s alias`}
-				d="Mail sent to it will stop being accepted. Anything already delivered stays where it is."
+						? m.settings_address_remove_card()
+						: m.settings_address_remove_member_alias({
+								name: row.people[0]?.name ?? m.settings_address_this_member()
+							})}
+				d={m.settings_address_remove_desc()}
 			>
 				<Button variant="danger" size="sm" onclick={() => (removing = true)}>
-					<Trash2 size={14} />Remove address
+					<Trash2 size={14} />{m.settings_address_remove()}
 				</Button>
 			</Row>
 		</div>
 	{/if}
 
+	{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
+
 	{#snippet removalBody()}
 		<p class="cfd-p">
-			Mail sent to <span class="mono">{row.email}</span> will stop being accepted.
+			<Rich text={m.settings_address_remove_confirm_body({ email: row.email })} tags={{ mono }} />
 		</p>
 		{#if row.kind === 'shared' && row.people.length}
 			<p class="cfd-p">
-				{row.people.length}
-				{row.people.length === 1 ? 'person loses' : 'people lose'} it from their From list. Mail already
-				delivered to them stays in their mailboxes.
+				{m.settings_address_remove_confirm_people({ count: row.people.length })}
 			</p>
 		{/if}
 	{/snippet}
@@ -343,9 +342,9 @@
 		<ConfirmDialog
 			icon={Trash2}
 			tone="danger"
-			title="Remove this address?"
+			title={m.settings_address_remove_title()}
 			sub={row.email}
-			confirmLabel="Remove address"
+			confirmLabel={m.settings_address_remove()}
 			busy={removalBusy}
 			error={removalError}
 			body={removalBody}

@@ -9,6 +9,7 @@
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { appOrigin } from '$core/products';
+	import { m } from '$paraglide/messages.js';
 
 	let error = $state<string | null>(null);
 
@@ -45,7 +46,7 @@
 			await goto(target, { replaceState: true });
 		} catch (err) {
 			history.replaceState(null, '', '/fork');
-			error = err instanceof ForkError ? err.message : 'This link could not be opened.';
+			error = err instanceof ForkError ? err.message : m.cal_fork_failed();
 		}
 	}
 </script>
@@ -53,9 +54,9 @@
 {#if error}
 	<AuthShell>
 		<div class="card forkcard">
-			<h1>Calendar could not open</h1>
+			<h1>{m.cal_fork_title()}</h1>
 			<p class="forkmsg">{error}</p>
-			<Button variant="primary" size="lg" href={appOrigin()}>Back to Thelemail</Button>
+			<Button variant="primary" size="lg" href={appOrigin()}>{m.cal_fork_back()}</Button>
 		</div>
 	</AuthShell>
 {/if}

@@ -2,14 +2,17 @@ import { auth } from '$core/stores/auth.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { boot } from '$core/stores/boot.svelte';
 import { keystore } from '$core/keystore/keystore-client';
+import { initLocale } from '$core/i18n/locale.svelte';
 
 export const ssr = false;
 export const prerender = false;
 export const trailingSlash = 'never';
 
 let bootstrapped = false;
+let localeReady: Promise<void> | null = null;
 
 export const load = async () => {
+	await (localeReady ??= initLocale());
 	if (bootstrapped) return {};
 	try {
 		await auth.hydrate();

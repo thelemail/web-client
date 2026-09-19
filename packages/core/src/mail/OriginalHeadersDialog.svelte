@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Code from '@lucide/svelte/icons/code';
 	import Copy from '@lucide/svelte/icons/copy';
 	import Check from '@lucide/svelte/icons/check';
@@ -28,12 +29,12 @@
 	function failureText(err: unknown): string {
 		if (err instanceof DecryptionError) {
 			return err.code === 'locked'
-				? 'Unlock this account to read the original headers.'
-				: 'The message body could not be decrypted.';
+				? m.mail_headers_locked()
+				: m.mail_headers_decrypt_failed();
 		}
 		return err instanceof Error && err.message
 			? err.message
-			: 'The original headers could not be loaded.';
+			: m.mail_headers_load_failed();
 	}
 
 	$effect(() => {
@@ -44,7 +45,7 @@
 			const accountId = auth.accountId;
 			if (!accountId) {
 				if (!cancelled) {
-					view = { status: 'error', message: 'Unlock this account to read the original headers.' };
+					view = { status: 'error', message: m.mail_headers_locked() };
 				}
 				return;
 			}
@@ -53,7 +54,7 @@
 				if (cancelled) return;
 				view = headers
 					? { status: 'ready', headers }
-					: { status: 'error', message: 'This message was stored without a header block.' };
+					: { status: 'error', message: m.mail_headers_missing() };
 			} catch (err) {
 				if (cancelled) return;
 				view = { status: 'error', message: failureText(err) };
@@ -103,18 +104,18 @@
 		<div class="oh-head">
 			<span class="oh-ic"><Code size={17} /></span>
 			<div class="oh-tx">
-				<h2 class="oh-title" id="oh-title">Original headers</h2>
+				<h2 class="oh-title" id="oh-title">{m.mail_headers_title()}</h2>
 				{#if subject}
 					<div class="oh-sub" title={subject}>{subject}</div>
 				{/if}
 			</div>
-			<button type="button" class="oh-x" title="Close" onclick={onClose}>
+			<button type="button" class="oh-x" title={m.common_close()} onclick={onClose}>
 				<X size={16} />
 			</button>
 		</div>
 
 		{#if view.status === 'loading'}
-			<div class="oh-note">Fetching and decrypting the stored message…</div>
+			<div class="oh-note">{m.mail_headers_loading()}</div>
 		{:else if view.status === 'error'}
 			<div class="oh-note err" role="alert">{view.message}</div>
 		{:else}
@@ -122,12 +123,12 @@
 		{/if}
 
 		<div class="oh-actions">
-			<Button variant="secondary" onclick={onClose}>Close</Button>
+			<Button variant="secondary" onclick={onClose}>{m.common_close()}</Button>
 			<Button variant="primary" disabled={view.status !== 'ready'} onclick={copy}>
 				{#if copied}
-					<Check size={15} />Copied
+					<Check size={15} />{m.common_copied()}
 				{:else}
-					<Copy size={15} />Copy
+					<Copy size={15} />{m.common_copy()}
 				{/if}
 			</Button>
 		</div>

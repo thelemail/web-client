@@ -15,6 +15,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Popover from '$core/components/ui/popover';
+	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from './DisclosureBoundary.svelte';
 	import type { Partstat } from './model';
 	import { cal } from './state.svelte';
@@ -28,10 +29,10 @@
 
 	let { selection, onClose }: Props = $props();
 
-	const RSVP: { value: Partstat; label: string; icon: typeof Check; cls: string }[] = [
-		{ value: 'accepted', label: 'Yes', icon: Check, cls: 'yes' },
-		{ value: 'tentative', label: 'Maybe', icon: CircleAlert, cls: 'maybe' },
-		{ value: 'declined', label: 'No', icon: X, cls: 'no' }
+	const RSVP: { value: Partstat; label: () => string; icon: typeof Check; cls: string }[] = [
+		{ value: 'accepted', label: () => m.cal_rsvp_yes(), icon: Check, cls: 'yes' },
+		{ value: 'tentative', label: () => m.cal_rsvp_maybe(), icon: CircleAlert, cls: 'maybe' },
+		{ value: 'declined', label: () => m.cal_rsvp_no(), icon: X, cls: 'no' }
 	];
 
 	function edit() {
@@ -55,7 +56,7 @@
 			return;
 		}
 		await calendarStore.deleteItem(selection.occ.item.id);
-		cal.notify(`Deleted “${selection.title}”`);
+		cal.notify(m.cal_pop_deleted({ title: selection.title }));
 	}
 
 	function history() {
@@ -73,17 +74,17 @@
 	<div class="evpop-top">
 		<div class="grow"></div>
 		{#if selection.canEdit}
-			<button type="button" class="evpop-ic" aria-label="Edit" onclick={edit}>
+			<button type="button" class="evpop-ic" aria-label={m.common_edit()} onclick={edit}>
 				<PenLine size={17} />
 			</button>
-			<button type="button" class="evpop-ic" aria-label="Duplicate" onclick={duplicate}>
+			<button type="button" class="evpop-ic" aria-label={m.cal_pop_duplicate_aria()} onclick={duplicate}>
 				<Copy size={17} />
 			</button>
-			<button type="button" class="evpop-ic danger" aria-label="Delete" onclick={remove}>
+			<button type="button" class="evpop-ic danger" aria-label={m.common_delete()} onclick={remove}>
 				<Trash2 size={17} />
 			</button>
 		{/if}
-		<button type="button" class="evpop-ic" aria-label="Close" onclick={onClose}>
+		<button type="button" class="evpop-ic" aria-label={m.common_close()} onclick={onClose}>
 			<X size={17} />
 		</button>
 	</div>
@@ -121,7 +122,7 @@
 					<Mail size={17} />
 					<div class="er-main">
 						{selection.thread}
-						<div class="er-sub">Source thread stays attached and encrypted.</div>
+						<div class="er-sub">{m.cal_pop_thread_note()}</div>
 					</div>
 				</div>
 			{/if}
@@ -151,7 +152,7 @@
 				</div>
 			{/if}
 			<DisclosureBoundary
-				heading="What leaves this device"
+				heading={m.cal_boundary_heading_device()}
 				headingIcon={ShieldCheck}
 				lines={selection.boundary}
 			/>
@@ -162,7 +163,7 @@
 					<div class="er-sub">
 						{selection.provSub}
 						{#if selection.canEdit}
-							<button type="button" class="evpop-hist" onclick={history}>History</button>
+							<button type="button" class="evpop-hist" onclick={history}>{m.cal_pop_history()}</button>
 						{/if}
 					</div>
 				</div>
@@ -177,7 +178,7 @@
 						class:on={selection.myPartstat === option.value}
 						onclick={() => respond(option.value)}
 					>
-						<option.icon size={14} />{option.label}
+						<option.icon size={14} />{option.label()}
 					</button>
 				{/each}
 			</div>

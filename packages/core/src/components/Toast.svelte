@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		text: string;
@@ -8,13 +9,13 @@
 		shift?: number;
 	}
 
-	let { text, undoLabel = 'Undo', onUndo, shift = 0 }: Props = $props();
+	let { text, undoLabel, onUndo, shift = 0 }: Props = $props();
 </script>
 
 <div class="toast" style:--toast-shift="{shift}px">
 	<CircleCheck size={16} />{text}
 	{#if onUndo}
-		<button type="button" class="undo" onclick={onUndo}>{undoLabel}</button>
+		<button type="button" class="undo" onclick={onUndo}>{undoLabel ?? m.ui_toast_undo()}</button>
 	{/if}
 </div>
 

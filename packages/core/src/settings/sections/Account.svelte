@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { i18n } from '$core/i18n/locale.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { platform } from '$platform';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -23,6 +24,7 @@
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { entryPointVisible, scheduledLine } from '$core/lifecycle/downgrade';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -73,17 +75,23 @@
 		const price = tierInfo.tier.prices[period];
 		if (tierInfo.product.perMailbox) {
 			const seats = sub.seats ?? 1;
-			return `${eur(price)} × ${seats} mailbox${seats === 1 ? '' : 'es'} = ${eur(price * seats)} / ${period}`;
+			return period === 'month'
+				? m.settings_account_price_seats_month({ price: eur(price), count: seats, total: eur(price * seats) })
+				: m.settings_account_price_seats_year({ price: eur(price), count: seats, total: eur(price * seats) });
 		}
-		return `${eur(price)} / ${period}`;
+		return period === 'month'
+			? m.settings_account_price_month({ price: eur(price) })
+			: m.settings_account_price_year({ price: eur(price) });
 	});
 
 	const renewalLine = $derived.by(() => {
 		if (!sub?.currentPeriodEnd) return null;
-		const date = new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(
+		const date = new Intl.DateTimeFormat(i18n.tag, { dateStyle: 'long' }).format(
 			new Date(sub.currentPeriodEnd)
 		);
-		return sub.cancelAtPeriodEnd ? `Ends ${date}` : `Renews ${date}`;
+		return sub.cancelAtPeriodEnd
+			? m.settings_account_ends({ date })
+			: m.settings_account_renews({ date });
 	});
 
 	async function openPortal() {
@@ -99,7 +107,7 @@
 			platform.openExternal(url);
 		} catch (err) {
 			portalBusy = false;
-			portalError = err instanceof Error ? err.message : 'Could not open billing portal';
+			portalError = err instanceof Error ? err.message : m.settings_account_portal_failed();
 		}
 	}
 
@@ -108,13 +116,13 @@
 	}
 </script>
 
-<SecHead desc="Your subscription, the people on it, and your right to take everything and leave." />
+<SecHead desc={m.settings_account_desc()} />
 
 {#if !ws}
 	<div class="scard">
 		<div class="plan-top">
 			<div class="plan-id">
-				<div class="plan-eyebrow">Loading your plan…</div>
+				<div class="plan-eyebrow">{m.settings_account_loading_plan()}</div>
 			</div>
 		</div>
 	</div>
@@ -122,12 +130,12 @@
 	<div class="scard plan-card" data-type={type}>
 		<div class="plan-top">
 			<div class="plan-id">
-				<div class="plan-eyebrow">Current plan</div>
+				<div class="plan-eyebrow">{m.settings_account_current_plan()}</div>
 				<div class="plan-name">
 					<PlanIcon size={18} />
 					<span>{planName}</span>
 					{#if sub?.status === 'past_due'}
-						<Badge kind="warn">Payment problem</Badge>
+						<Badge kind="warn">{m.settings_account_payment_problem()}</Badge>
 					{/if}
 				</div>
 				<div class="plan-price">
@@ -136,17 +144,16 @@
 					{:else if priceLine}
 						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
 					{:else if isPersonal}
-						A single mailbox just for you.
+						{m.settings_account_personal_desc()}
 					{:else if type === 'family'}
-						A household sharing one plan.
+						{m.settings_account_family_desc()}
 					{:else}
-						Members and seats with admin controls.
+						{m.settings_account_business_desc()}
 					{/if}
 				</div>
 				{#if sub?.status === 'past_due'}
 					<div class="plan-warn">
-						The last payment didn&rsquo;t go through. Update your payment method in the billing
-						portal to keep your mailbox active.
+						{m.settings_account_past_due()}
 					</div>
 				{/if}
 			</div>
@@ -154,31 +161,31 @@
 				{#if isOwner}
 					{#if isFree}
 						<Button variant="primary" size="sm" onclick={choosePlan}>
-							Upgrade
+							{m.settings_account_upgrade()}
 						</Button>
 					{:else if sub && (sub.status === 'active' || sub.status === 'past_due')}
 						{#if sub.status === 'active'}
 							<Button variant="ghost" size="sm" onclick={choosePlan}>
-								Change plan
+								{m.settings_account_change_plan()}
 							</Button>
 						{/if}
 						<Button variant="ghost" size="sm" disabled={portalBusy} onclick={openPortal}>
 							<ExternalLink size={14} />
-							{portalBusy ? 'Opening…' : 'Manage billing'}
+							{portalBusy ? m.settings_account_opening() : m.settings_account_manage_billing()}
 						</Button>
 						{#if canMoveToFree}
 							<Button variant="ghost" size="sm" href={`/u/${slot}/lifecycle/downgrade`}>
-								Move to Free
+								{m.settings_account_move_to_free()}
 							</Button>
 						{/if}
 						{#if sub.status === 'active' && !sub.cancelAtPeriodEnd}
 							<Button variant="ghost" size="sm" href={`/u/${slot}/billing/cancel`}>
-								Cancel plan
+								{m.settings_account_cancel_plan()}
 							</Button>
 						{/if}
 					{:else}
 						<Button variant="primary" size="sm" onclick={choosePlan}>
-							Choose a plan
+							{m.settings_account_choose_plan()}
 						</Button>
 					{/if}
 				{/if}
@@ -190,7 +197,7 @@
 		{#if pendingLine}
 			<div class="plan-warn">
 				{pendingLine}
-				<a href={`/u/${slot}/lifecycle/downgrade`}>See what changes</a>
+				<a href={`/u/${slot}/lifecycle/downgrade`}>{m.settings_account_see_changes()}</a>
 			</div>
 		{/if}
 	</div>
@@ -198,21 +205,21 @@
 	{#if isSoloFree}
 		{#if isOwner}
 			<div class="scard">
-				<CardHead icon={Users} title="Start a family" />
+				<CardHead icon={Users} title={m.settings_account_start_family()} />
 				<Row
-					t="Bring up to five other accounts into one family"
-					d="Everyone keeps their own address, their own mail and their own keys, and you all share a calendar. It stays free."
+					t={m.settings_account_start_family_row()}
+					d={m.settings_account_start_family_desc()}
 				>
 					<Button variant="secondary" size="sm" onclick={() => launch('family')}>
-						<Users size={14} />Start a family
+						<Users size={14} />{m.settings_account_start_family()}
 					</Button>
 				</Row>
 			</div>
 		{/if}
 		<div class="upgrade-list">
 			<UpgradeNudge
-				title="More storage and your own domain"
-				desc="Paid plans raise storage for every mailbox and let you send from a domain you own."
+				title={m.settings_account_nudge_solo_title()}
+				desc={m.settings_account_nudge_solo_desc()}
 			/>
 		</div>
 	{:else if !isPersonal}
@@ -220,8 +227,8 @@
 		{#if isFreeFamily}
 			<div class="upgrade-list">
 				<UpgradeNudge
-					title="Family on your own domain"
-					desc="The paid Family plan keeps the same six seats and adds custom domains, more storage, and addresses you create yourself."
+					title={m.settings_account_nudge_family_title()}
+					desc={m.settings_account_nudge_family_desc()}
 				/>
 			</div>
 		{/if}
@@ -229,13 +236,13 @@
 {/if}
 
 <div class="scard danger">
-	<CardHead icon={CircleAlert} title="Delete account" />
+	<CardHead icon={CircleAlert} title={m.settings_account_delete_title()} />
 	<Row
-		t="Delete this account permanently"
-		d="Deactivates the account now and erases every mailbox, address, and message after a 30-day grace period. Once purged, encrypted data is gone for good. Export first."
+		t={m.settings_account_delete_row()}
+		d={m.settings_account_delete_desc()}
 	>
 		<Button variant="danger" size="sm" onclick={() => launch('delete')}>
-			<Trash2 size={14} />Delete account…
+			<Trash2 size={14} />{m.settings_account_delete_button()}
 		</Button>
 	</Row>
 </div>

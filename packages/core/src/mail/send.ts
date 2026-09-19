@@ -24,6 +24,7 @@ import type { ReplyParty } from './replyRecipients';
 import { packBodyForSend } from './signaturePack';
 import { snippetSource } from './quote';
 import { canonicalRecipient } from './recipientAddress';
+import { m } from '$paraglide/messages.js';
 
 export interface ComposeInput {
 	to: ReplyParty[];
@@ -113,14 +114,14 @@ export class SendError extends Error {
 export function rateLimitedSendError(e: ApiCallError): SendError {
 	const retryAfterSeconds = e.envelope?.error?.retryAfterSeconds ?? 0;
 	const message =
-		e.envelope?.error?.message ?? "You've reached your sending limit. Try again later.";
+		e.envelope?.error?.message ?? m.send_error_rate_limited();
 	return new SendError('rate_limited', message, undefined, { kind: 'rate_limited', retryAfterSeconds });
 }
 
 export function sendErrorFromApi(e: unknown, fallback: string): SendError {
 	if (e instanceof SendError) return e;
 	if (e instanceof ApiCallError) {
-		const message = e.envelope?.error?.message ?? `${fallback} (HTTP ${e.status})`;
+		const message = e.envelope?.error?.message ?? m.send_error_http({ reason: fallback, status: e.status });
 		if (e.status === 429) return rateLimitedSendError(e);
 		if (e.status === 401) return new SendError('locked', message);
 		if (e.envelope?.error?.code === 'content_rejected') {
@@ -168,8 +169,8 @@ export async function senderKey(accountId: string, aliasId?: string): Promise<Ke
 		throw new SendError(
 			'locked',
 			aliasId
-				? 'This address just changed its key. Reload to pick up the new one.'
-				: 'Vault is locked; sign in to send.'
+				? m.send_error_alias_key_changed()
+				: m.send_error_vault_locked()
 		);
 	}
 	const km: KeyMaterial = {
@@ -288,9 +289,9 @@ async function resolveRecipient(
 		lookup = await lookupDirectory(normalised);
 	} catch (e) {
 		if (e instanceof ApiCallError && e.status === 404) {
-			throw new SendError('recipient_unknown', `No Thelemail account at ${emailAddress}`);
+			throw new SendError('recipient_unknown', m.send_error_no_account_at({ address: emailAddress }));
 		}
-		throw sendErrorFromApi(e, 'Recipient lookup failed');
+		throw sendErrorFromApi(e, m.send_error_recipient_lookup_failed());
 	}
 
 	try {
@@ -301,14 +302,14 @@ async function resolveRecipient(
 				const payload = tofuPayload(e, normalised, lookup.shared === true);
 				throw new SendError(
 					'tofu',
-					`Recipient key has changed since you last verified them.`,
+					m.send_error_recipient_key_changed(),
 					e.code,
 					payload ?? undefined
 				);
 			}
 			throw new SendError(
 				'directory_verification_failed',
-				`Directory signature failed for ${emailAddress} — cannot safely send. Reason: ${e.code}`,
+				m.send_error_directory_failed({ address: emailAddress, code: e.code }),
 				e.code,
 				directoryPayload(e, normalised)
 			);
@@ -551,7 +552,7 @@ function makeBoundary(tag: string, parts: string[]): string {
 		const candidate = `=_thelemail_${tag}_${crypto.randomUUID()}`;
 		if (!parts.some((p) => p.includes(candidate))) return candidate;
 	}
-	throw new SendError('encrypt', 'Could not build the message body.');
+	throw new SendError('encrypt', m.send_error_build_body());
 }
 
 function base64Wrap(bytes: Uint8Array): string {
@@ -743,7 +744,7 @@ export function releaseDate(scheduledAt?: string): Date {
 	if (!scheduledAt) return new Date();
 	const d = new Date(scheduledAt);
 	if (Number.isNaN(d.getTime())) {
-		throw new SendError('rejected', 'That send time could not be read. Pick a time again.');
+		throw new SendError('rejected', m.send_error_bad_send_time());
 	}
 	return d;
 }
@@ -753,7 +754,7 @@ export async function sendInternalMessage(
 	opts: InternalSendOptions = {}
 ): Promise<InternalSendResponse> {
 	if (!auth.accountId) {
-		throw new SendError('no_account', 'Not signed in.');
+		throw new SendError('no_account', m.send_error_not_signed_in());
 	}
 	const accountId = auth.accountId;
 	const fromAddress = input.fromEmail ?? auth.email ?? 'me@thelemail.local';
@@ -766,7 +767,7 @@ export async function sendInternalMessage(
 		? allParties.filter((p) => opts.deliverOnly!.has(normaliseEmail(p.address)))
 		: allParties;
 	if (deliverable.length === 0) {
-		throw new SendError('no_account', 'At least one recipient is required.');
+		throw new SendError('no_account', m.send_error_no_recipients());
 	}
 
 	const resolutions = new Map<string, ResolvedRecipient>();
@@ -837,7 +838,7 @@ export async function sendInternalMessage(
 		for (let i = 0; i < input.attachments.length; i++) {
 			const a = input.attachments[i];
 			if (!a.senderDescriptor) {
-				throw new SendError('encrypt', 'Some attachments are still uploading.');
+				throw new SendError('encrypt', m.send_error_attachments_uploading());
 			}
 			senderAtts.push({ ...a.senderDescriptor, ordinal: i });
 		}
@@ -846,7 +847,7 @@ export async function sendInternalMessage(
 			for (let i = 0; i < input.attachments.length; i++) {
 				const rec = input.attachments[i].recipientDescriptors?.get(acct);
 				if (!rec) {
-					throw new SendError('encrypt', 'Some attachments are still uploading for this recipient.');
+					throw new SendError('encrypt', m.send_error_attachments_uploading_recipient());
 				}
 				list.push({ ...rec, ordinal: i });
 			}
@@ -893,7 +894,7 @@ export async function sendInternalMessage(
 	try {
 		return await sendInternal(req);
 	} catch (err) {
-		throw sendErrorFromApi(err, 'Sending failed');
+		throw sendErrorFromApi(err, m.send_error_sending_failed());
 	}
 }
 

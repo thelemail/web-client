@@ -24,6 +24,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 import { dispatchSend } from '$core/mail/sendDispatch';
+import { m } from '$paraglide/messages.js';
 import { onCalendarMessage, postCalendarMessage } from './channel';
 import {
 	idbCalendarDb,
@@ -101,9 +102,14 @@ type MessageListener = (hint: RealtimeHint) => void;
 const REALTIME_COALESCE_MS = 750;
 const CHANGES_LAG_RESYNC_MS = 6500;
 
-function labelFor(item: CalendarItem, verb: string): string {
-	const title = item.kind === 'hold' ? 'a private hold' : item.title || 'untitled';
-	return `${verb} ${item.kind === 'hold' ? title : `“${title}”`}`;
+function labelFor(item: CalendarItem, action: 'created' | 'edited' | 'deleted'): string {
+	if (item.kind === 'hold') {
+		if (action === 'created') return m.cal_op_created_hold();
+		return action === 'edited' ? m.cal_op_edited_hold() : m.cal_op_deleted_hold();
+	}
+	const title = item.title || m.cal_op_untitled();
+	if (action === 'created') return m.cal_op_created({ title });
+	return action === 'edited' ? m.cal_op_edited({ title }) : m.cal_op_deleted({ title });
 }
 
 export class CalendarStore {
@@ -291,7 +297,7 @@ export class CalendarStore {
 			this.start();
 			await this.#ensurePersonal(accountId);
 		} catch (err) {
-			this.loadError = err instanceof Error ? err.message : 'Could not load the calendar';
+			this.loadError = err instanceof Error ? err.message : m.cal_store_load_failed();
 			this.#noteFailure(err);
 		} finally {
 			if (this.#accountId === accountId) this.loading = false;
@@ -373,7 +379,7 @@ export class CalendarStore {
 		const { key, grants } = await mintOwnCalendarKey(accountId);
 		const meta: CalendarMeta = {
 			schemaVersion: META_SCHEMA_VERSION,
-			name: 'My calendar',
+			name: m.cal_default_calendar_name(),
 			color: '#2E5440',
 			defaultPrivacy: accountSettings.calendar.defaultPrivacy
 		};
@@ -460,7 +466,7 @@ export class CalendarStore {
 			id: row.id,
 			row,
 			meta,
-			name: meta?.name ?? (row.kind === 'role' ? 'Role calendar' : 'Calendar'),
+			name: meta?.name ?? (row.kind === 'role' ? m.cal_store_role_calendar() : m.cal_store_calendar()),
 			color: meta?.color ?? '#2E5440',
 			kind: row.kind,
 			role,
@@ -488,7 +494,7 @@ export class CalendarStore {
 				id: row.id,
 				kind: 'event',
 				calendarId: row.calendarId,
-				title: 'Cannot open this item on this device',
+				title: m.cal_store_unreadable_item(),
 				privacy: row.privacy,
 				uid: row.id,
 				sequence: 0,
@@ -587,7 +593,7 @@ export class CalendarStore {
 		item: CalendarItem
 	): Promise<{ sealed: string; key: SealKey }> {
 		const cal = this.calendar(item.calendarId);
-		if (!cal) throw new SealError('no_key', 'Unknown calendar');
+		if (!cal) throw new SealError('no_key', m.cal_store_unknown_calendar());
 		const key = await keyForCalendar(accountId, cal.row);
 		const sealed = await sealText(accountId, key, serializeItem(item));
 		return { sealed, key };
@@ -625,7 +631,7 @@ export class CalendarStore {
 
 	async saveItem(draft: CalendarItem, opts: SaveOptions = {}): Promise<LoadedItem> {
 		const accountId = this.#accountId;
-		if (!accountId) throw new Error('No account');
+		if (!accountId) throw new Error(m.cal_store_no_account());
 		const existing = this.items.get(draft.id);
 		const now = new Date().toISOString();
 		const item: CalendarItem = {
@@ -641,7 +647,7 @@ export class CalendarStore {
 			kind: 'item.put',
 			calendarId: item.calendarId,
 			itemId: item.id,
-			label: opts.label ?? labelFor(item, existing ? 'Edited' : 'Created'),
+			label: opts.label ?? labelFor(item, existing ? 'edited' : 'created'),
 			fields: opts.fields,
 			body
 		};
@@ -704,7 +710,7 @@ export class CalendarStore {
 			calendarId: existing.item.calendarId,
 			itemId: id,
 			baseRev: existing.rev,
-			label: labelFor(existing.item, 'Deleted')
+			label: labelFor(existing.item, 'deleted')
 		});
 	}
 
@@ -761,7 +767,7 @@ export class CalendarStore {
 		await this.#enqueue({
 			kind: 'calendar.patch',
 			calendarId,
-			label: `Renamed “${meta.name}”`,
+			label: m.cal_op_renamed_calendar({ name: meta.name }),
 			body: {
 				sealedMeta: sealed,
 				metaKeyFingerprint: key.fingerprintB64,
@@ -795,13 +801,15 @@ export class CalendarStore {
 		}
 		await this.#db.deleteCalendar(accountId, calendarId);
 		this.revision += 1;
-		await this.#enqueue({ kind: 'calendar.delete', calendarId, label: `Deleted “${cal.name}”` });
+		await this.#enqueue({ kind: 'calendar.delete', calendarId, label: m.cal_op_deleted_calendar({ name: cal.name }) });
 	}
 
 	async resealCalendar(calendarId: string): Promise<void> {
 		for (const entry of [...this.items.values()]) {
 			if (entry.item.calendarId !== calendarId || entry.unreadable) continue;
-			await this.saveItem(entry.item, { label: `Re-sealed “${entry.item.title || 'untitled'}”` });
+			await this.saveItem(entry.item, {
+				label: m.cal_op_resealed({ title: entry.item.title || m.cal_op_untitled() })
+			});
 		}
 	}
 
@@ -925,7 +933,7 @@ export class CalendarStore {
 		const calendarId = entry.item.calendarId;
 		const { revisions } = await listCalendarItemRevisions(calendarId, itemId);
 		const target = revisions.find((r) => r.rev === rev);
-		if (!target || target.deleted) throw new Error('That revision cannot be restored');
+		if (!target || target.deleted) throw new Error(m.cal_store_revision_unrestorable());
 		const restored = parseItem(await openText(accountId, target.sealed, target.keyFingerprint));
 		const windows = busyWindows(restored);
 		const body: RestoreCalendarItemRevisionRequest = {

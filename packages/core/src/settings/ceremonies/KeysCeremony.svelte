@@ -9,6 +9,7 @@
 	import DoneScreen from '../DoneScreen.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		onClose: () => void;
@@ -17,13 +18,17 @@
 
 	let { onClose, onComplete }: Props = $props();
 	let step = $state(0);
-	const steps = ['Rotate', 'Re-encrypt', 'Done'];
+	const steps = $derived([
+		m.settings_ceremony_keys_step_rotate(),
+		m.settings_ceremony_keys_step_reencrypt(),
+		m.settings_ceremony_keys_step_done()
+	]);
 </script>
 
 <CeremonyShell
 	icon={KeySquare}
-	eyebrow="Encryption · ceremony"
-	title="Rotate your key"
+	eyebrow={m.settings_ceremony_keys_eyebrow()}
+	title={m.settings_ceremony_keys_title()}
 	{steps}
 	{step}
 	{onClose}
@@ -31,40 +36,37 @@
 	{#if step === 0}
 		<div class="cer-pane">
 			<div class="cer-lede">
-				<p>
-					Rotating issues a fresh keypair and re-encrypts your archive to it. Useful if you suspect
-					your key is exposed.
-				</p>
+				<p>{m.settings_ceremony_keys_lede()}</p>
 			</div>
 			<ul class="cer-points">
-				<li><Check size={16} /><span>Existing mail stays readable — it’s re-encrypted, not lost.</span></li>
-				<li><Info size={16} /><span>Your fingerprint changes. Verified contacts will need to re-pin it.</span></li>
-				<li><Clock size={16} /><span>Re-encryption runs in the background and can take a few minutes.</span></li>
+				<li><Check size={16} /><span>{m.settings_ceremony_keys_point_readable()}</span></li>
+				<li><Info size={16} /><span>{m.settings_ceremony_keys_point_fingerprint()}</span></li>
+				<li><Clock size={16} /><span>{m.settings_ceremony_keys_point_background()}</span></li>
 			</ul>
 			<div class="field">
-				<label for="cur-fp">Current fingerprint</label>
+				<label for="cur-fp">{m.settings_ceremony_keys_current_fingerprint()}</label>
 				<div class="codeblock sm" id="cur-fp"><span class="v">4F2A 9C71 B0E3 5D88</span></div>
 			</div>
 		</div>
 	{:else if step === 1}
 		<ProgressRun
-			label="Rotating your key…"
+			label={m.settings_ceremony_keys_progress()}
 			lines={[
-				'Generating new keypair',
-				'Re-encrypting archive index',
-				'Re-encrypting mailbox',
-				'Publishing new public key'
+				m.settings_ceremony_keys_line_generate(),
+				m.settings_ceremony_keys_line_index(),
+				m.settings_ceremony_keys_line_mailbox(),
+				m.settings_ceremony_keys_line_publish()
 			]}
 			onDone={() => (step = 2)}
 		/>
 	{:else}
 		<DoneScreen
 			icon={KeySquare}
-			title="Key rotated"
-			desc="Your archive is now encrypted to a new key."
+			title={m.settings_ceremony_keys_done_title()}
+			desc={m.settings_ceremony_keys_done_desc()}
 		>
 			<div class="field" style:margin-top="18px">
-				<label for="new-fp">New fingerprint</label>
+				<label for="new-fp">{m.settings_ceremony_keys_new_fingerprint()}</label>
 				<div class="codeblock sm" id="new-fp"><span class="v">A19F 4B0C 2D71 88AC</span></div>
 			</div>
 		</DoneScreen>
@@ -72,15 +74,15 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>Cancel</Button>
+			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" onclick={() => (step = 1)}>
-				<RefreshCw size={15} />Rotate key
+				<RefreshCw size={15} />{m.settings_ceremony_keys_rotate()}
 			</Button>
 		{:else if step === 2}
 			<Button variant="primary" onclick={() => {
 					onComplete('keys');
 					onClose();
-				}}>Done</Button>
+				}}>{m.common_done()}</Button>
 		{/if}
 	{/snippet}
 </CeremonyShell>

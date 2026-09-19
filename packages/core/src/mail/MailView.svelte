@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m as msg } from '$paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import PenLine from '@lucide/svelte/icons/pen-line';
@@ -86,8 +87,8 @@
 
 	const folderLabel = $derived(
 		query.folder === 'starred'
-			? 'Starred'
-			: (FOLDERS.find((f) => f.id === query.folder)?.label ?? 'Inbox')
+			? msg.mail_folder_starred()
+			: (FOLDERS.find((f) => f.id === query.folder)?.label ?? msg.mail_folder_inbox())
 	);
 
 	const inFlight = new Map<string, Promise<void>>();
@@ -217,6 +218,12 @@
 		mailbox.counts.inbox > 99 ? '99+' : String(mailbox.counts.inbox)
 	);
 
+	const pageTitle = $derived(
+		mailbox.counts.inbox > 0
+			? msg.mail_page_title_unread({ count: titleUnread, folder: folderLabel })
+			: msg.mail_page_title({ folder: folderLabel })
+	);
+
 	const allChecked = $derived(list.length > 0 && list.every((m) => checked.has(m.id)));
 
 	type StateAction = (id: string) => Promise<MessageState>;
@@ -308,7 +315,7 @@
 			id,
 			{ starred: wantStar },
 			wantStar ? starMessage : unstarMessage,
-			wantStar ? 'Could not star message' : 'Could not unstar message'
+			wantStar ? msg.mail_err_star() : msg.mail_err_unstar()
 		);
 	}
 
@@ -327,13 +334,13 @@
 	function queueArchive(id: string): Promise<void> {
 		advancePast(id);
 		return isThread(mailbox.findMessage(id))
-			? queueThreadUpdate(id, { folder: 'archive' }, 'archive', 'Could not archive')
-			: queueStateUpdate(id, { folder: 'archive' }, archiveMessage, 'Could not archive');
+			? queueThreadUpdate(id, { folder: 'archive' }, 'archive', msg.mail_err_archive())
+			: queueStateUpdate(id, { folder: 'archive' }, archiveMessage, msg.mail_err_archive());
 	}
 
 	function archiveOne(id: string) {
 		void queueArchive(id);
-		flash('Conversation archived');
+		flash(msg.mail_toast_archived());
 	}
 
 	function moveToInbox(id: string) {
@@ -342,11 +349,11 @@
 		advancePast(id);
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
 		if (isThread(current)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'inbox', 'Could not move to Inbox');
+			void queueThreadUpdate(id, { folder: targetFolder }, 'inbox', msg.mail_err_move_inbox());
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, 'Could not move to Inbox');
+			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_move_inbox());
 		}
-		flash('Moved to Inbox');
+		flash(msg.mail_toast_moved_inbox());
 	}
 
 	function snoozeOne(id: string, until: Date) {
@@ -356,12 +363,12 @@
 			id,
 			{ folder: 'snoozed', snoozedUntil: iso },
 			(mid) => snoozeMessage(mid, iso),
-			'Could not snooze'
+			msg.mail_err_snooze()
 		).then(() => mailbox.refresh([query]));
-		flash(`Snoozed until ${formatWhenLong(until)}`, () => undoSnooze(id));
+		flash(msg.mail_toast_snoozed_until({ when: formatWhenLong(until) }), () => undoSnooze(id));
 	}
 
-	function unsnoozeOne(id: string, note = 'Back in the inbox') {
+	function unsnoozeOne(id: string, note = msg.mail_toast_back_in_inbox()) {
 		const current = mailbox.findMessage(id);
 		if (!current) return;
 		if (current.folder === 'snoozed') advancePast(id);
@@ -370,30 +377,30 @@
 			id,
 			{ folder: targetFolder, snoozedUntil: null },
 			unsnoozeMessage,
-			'Could not unsnooze'
+			msg.mail_err_unsnooze()
 		).then(() => mailbox.refresh([query]));
 		flash(note);
 	}
 
 	function undoSnooze(id: string) {
 		dismissToast();
-		unsnoozeOne(id, 'Snooze cancelled');
+		unsnoozeOne(id, msg.mail_toast_snooze_cancelled());
 	}
 
 	function spamOne(id: string) {
 		advancePast(id);
 		if (isThread(mailbox.findMessage(id))) {
-			void queueThreadUpdate(id, { folder: 'spam' }, 'spam', 'Could not move to Spam');
+			void queueThreadUpdate(id, { folder: 'spam' }, 'spam', msg.mail_err_move_spam());
 		} else {
-			void queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, 'Could not move to Spam');
+			void queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, msg.mail_err_move_spam());
 		}
-		flash('Moved to Spam');
+		flash(msg.mail_toast_moved_spam());
 	}
 
 	function moveToSpam(id: string): Promise<void> {
 		return isThread(mailbox.findMessage(id))
-			? queueThreadUpdate(id, { folder: 'spam' }, 'spam', 'Could not move to Spam')
-			: queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, 'Could not move to Spam');
+			? queueThreadUpdate(id, { folder: 'spam' }, 'spam', msg.mail_err_move_spam())
+			: queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, msg.mail_err_move_spam());
 	}
 
 	async function headersConsent(): Promise<boolean | null> {
@@ -414,7 +421,7 @@
 		try {
 			await accountSettings.persistShareSpamHeaders(share);
 		} catch {
-			spamConsentError = 'Your answer could not be saved. Try again.';
+			spamConsentError = msg.mail_spam_consent_save_failed();
 			return;
 		} finally {
 			spamConsentBusy = false;
@@ -431,7 +438,7 @@
 
 	async function reportAndSpam(id: string, share: boolean): Promise<ReportOutcome> {
 		const accountId = auth.accountId;
-		if (!accountId) throw new Error('Unlock this account to report the message.');
+		if (!accountId) throw new Error(msg.mail_report_unlock_required());
 		const outcome = await submitReport(accountId, id, {
 			kind: 'spam',
 			includeHeaders: share,
@@ -446,8 +453,8 @@
 		if (share === null) return;
 		advancePast(id);
 		void reportAndSpam(id, share).then(
-			() => flash('Reported as spam', () => undoReport(id)),
-			() => flash('Could not report message')
+			() => flash(msg.mail_toast_reported_spam(), () => undoReport(id)),
+			() => flash(msg.mail_err_report())
 		);
 	}
 
@@ -456,13 +463,15 @@
 		if (!alreadySpam) advancePast(id);
 		void moveToSpam(id);
 		const head = outcome.duplicate
-			? 'Already reported, moved to Spam'
+			? msg.mail_toast_already_reported()
 			: kind === 'phishing'
-				? 'Reported as phishing and moved to Spam'
-				: 'Reported as spam';
-		const tail =
-			outcome.headersRequested && !outcome.headersIncluded ? ' (headers could not be read)' : '';
-		flash(head + tail, alreadySpam ? undefined : () => undoReport(id));
+				? msg.mail_toast_reported_phishing()
+				: msg.mail_toast_reported_spam();
+		const text =
+			outcome.headersRequested && !outcome.headersIncluded
+				? msg.mail_toast_headers_unreadable({ head })
+				: head;
+		flash(text, alreadySpam ? undefined : () => undoReport(id));
 	}
 
 	function undoReport(id: string) {
@@ -471,11 +480,11 @@
 		if (!current) return;
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
 		if (isThread(current)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', 'Could not undo');
+			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_undo());
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, 'Could not undo');
+			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_undo());
 		}
-		flash('Moved back to Inbox');
+		flash(msg.mail_toast_moved_back_inbox());
 	}
 
 	function blockableFrom(address: string): Message[] {
@@ -490,12 +499,12 @@
 			advancePast(messageId);
 		}
 		for (const m of targets) {
-			void queueStateUpdate(m.id, { folder: 'spam' }, markMessageSpam, 'Could not move to Spam');
+			void queueStateUpdate(m.id, { folder: 'spam' }, markMessageSpam, msg.mail_err_move_spam());
 		}
 		flash(
 			targets.length > 0
-				? `Blocked ${address} · ${targets.length} message${targets.length === 1 ? '' : 's'} moved to Spam`
-				: `Blocked ${address}`
+				? msg.mail_toast_blocked_moved({ address, count: targets.length })
+				: msg.mail_toast_blocked({ address })
 		);
 	}
 
@@ -510,12 +519,12 @@
 				await setMessageLabels(id, { labels: next });
 			} catch {
 				mailbox.patchMessage(id, { labels: prev });
-				flash('Could not apply the label');
+				flash(msg.mail_err_label());
 				return;
 			}
 		}
 		void queueArchive(id);
-		flash(`Moved to ${LABELS[label].name}`);
+		flash(msg.mail_toast_moved_to_label({ label: LABELS[label].name }));
 	}
 
 	function trashOne(id: string) {
@@ -524,11 +533,11 @@
 			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 		}
 		if (isThread(mailbox.findMessage(id))) {
-			void queueThreadUpdate(id, { folder: 'trash' }, 'trash', 'Could not move to Trash');
+			void queueThreadUpdate(id, { folder: 'trash' }, 'trash', msg.mail_err_move_trash());
 		} else {
-			void queueStateUpdate(id, { folder: 'trash' }, trashMessage, 'Could not move to Trash');
+			void queueStateUpdate(id, { folder: 'trash' }, trashMessage, msg.mail_err_move_trash());
 		}
-		flash('Moved to Trash');
+		flash(msg.mail_toast_moved_trash());
 	}
 
 	function restoreOne(id: string) {
@@ -540,11 +549,11 @@
 		}
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
 		if (isThread(current)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', 'Could not restore');
+			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore());
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, 'Could not restore');
+			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_restore());
 		}
-		flash('Restored to Inbox');
+		flash(msg.mail_toast_restored_inbox());
 	}
 
 	function deleteOne(id: string) {
@@ -564,10 +573,11 @@
 			if (fromBulk) checked = new Set();
 			const results = await Promise.allSettled(ids.map((id) => deleteMessage(id)));
 			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (!fromBulk) flash(failed === 0 ? 'Permanently deleted' : 'Could not delete');
-			else if (failed === 0) flash(`${ids.length} permanently deleted`);
-			else if (failed < ids.length) flash(`${ids.length - failed} deleted, ${failed} failed`);
-			else flash('Delete failed');
+			if (!fromBulk) flash(failed === 0 ? msg.mail_toast_deleted_forever() : msg.mail_err_delete());
+			else if (failed === 0) flash(msg.mail_bulk_deleted({ count: ids.length }));
+			else if (failed < ids.length)
+				flash(msg.mail_bulk_deleted_partial({ ok: ids.length - failed, failed }));
+			else flash(msg.mail_bulk_delete_failed());
 			await mailbox.refresh([query]);
 			void mailbox.refreshCounts();
 		} finally {
@@ -578,14 +588,14 @@
 
 	function markRead(id: string) {
 		if (isThread(mailbox.findMessage(id))) {
-			void queueThreadUpdate(id, { unread: false }, 'read', 'Could not mark read');
+			void queueThreadUpdate(id, { unread: false }, 'read', msg.mail_err_mark_read());
 		} else {
-			void queueStateUpdate(id, { unread: false }, markMessageRead, 'Could not mark read');
+			void queueStateUpdate(id, { unread: false }, markMessageRead, msg.mail_err_mark_read());
 		}
 	}
 
 	function markUnread(id: string) {
-		void queueStateUpdate(id, { unread: true }, markMessageUnread, 'Could not mark unread');
+		void queueStateUpdate(id, { unread: true }, markMessageUnread, msg.mail_err_mark_unread());
 	}
 
 	function toggleRead(id: string) {
@@ -614,15 +624,15 @@
 			const results = await Promise.allSettled(
 				ids.map((id) =>
 					isThread(mailbox.findMessage(id))
-						? queueThreadUpdate(id, { unread: false }, 'read', 'Could not mark read')
-						: queueStateUpdate(id, { unread: false }, markMessageRead, 'Could not mark read')
+						? queueThreadUpdate(id, { unread: false }, 'read', msg.mail_err_mark_read())
+						: queueStateUpdate(id, { unread: false }, markMessageRead, msg.mail_err_mark_read())
 				)
 			);
 			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (failed === 0) flash(`${ids.length} marked as read`);
+			if (failed === 0) flash(msg.mail_bulk_read({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(`${ids.length - failed} marked as read, ${failed} failed`);
-			else flash('Mark as read failed');
+				flash(msg.mail_bulk_read_partial({ ok: ids.length - failed, failed }));
+			else flash(msg.mail_bulk_read_failed());
 			return;
 		}
 		if (action === 'restore') {
@@ -635,19 +645,20 @@
 					const current = mailbox.findMessage(id);
 					const targetFolder = current?.direction === 'sent' ? 'sent' : 'inbox';
 					return isThread(current)
-						? queueThreadUpdate(id, { folder: targetFolder }, 'restore', 'Could not restore')
+						? queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore())
 						: queueStateUpdate(
 								id,
 								{ folder: targetFolder },
 								restoreMessage,
-								'Could not restore'
+								msg.mail_err_restore()
 							);
 				})
 			);
 			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (failed === 0) flash(`${ids.length} restored`);
-			else if (failed < ids.length) flash(`${ids.length - failed} restored, ${failed} failed`);
-			else flash('Restore failed');
+			if (failed === 0) flash(msg.mail_bulk_restored({ count: ids.length }));
+			else if (failed < ids.length)
+				flash(msg.mail_bulk_restored_partial({ ok: ids.length - failed, failed }));
+			else flash(msg.mail_bulk_restore_failed());
 			return;
 		}
 		if (action === 'delete') {
@@ -663,10 +674,10 @@
 			checked = new Set();
 			const results = await Promise.allSettled(ids.map((id) => reportAndSpam(id, share)));
 			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (failed === 0) flash(`${ids.length} reported as spam`);
+			if (failed === 0) flash(msg.mail_bulk_reported({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(`${ids.length - failed} reported as spam, ${failed} failed`);
-			else flash('Report failed');
+				flash(msg.mail_bulk_reported_partial({ ok: ids.length - failed, failed }));
+			else flash(msg.mail_bulk_report_failed());
 			return;
 		}
 		const verb: 'archive' | 'trash' = action;
@@ -674,7 +685,8 @@
 			folder: verb === 'archive' ? 'archive' : 'trash'
 		};
 		const fn: StateAction = verb === 'archive' ? archiveMessage : trashMessage;
-		const label = verb === 'archive' ? 'archived' : 'moved to Trash';
+		const archiving = verb === 'archive';
+		const errMsg = archiving ? msg.mail_err_archive_message() : msg.mail_err_trash_message();
 		if (messageId !== null && ids.includes(messageId)) {
 			void goto(withSearch(basePath), { replaceState: true });
 		}
@@ -682,17 +694,24 @@
 		const results = await Promise.allSettled(
 			ids.map((id) =>
 				isThread(mailbox.findMessage(id))
-					? queueThreadUpdate(id, optimistic, verb, `Could not ${verb} message`)
-					: queueStateUpdate(id, optimistic, fn, `Could not ${verb} message`)
+					? queueThreadUpdate(id, optimistic, verb, errMsg)
+					: queueStateUpdate(id, optimistic, fn, errMsg)
 			)
 		);
 		const failed = results.filter((r) => r.status === 'rejected').length;
 		if (failed === 0) {
-			flash(`${ids.length} ${label}`);
+			flash(
+				archiving
+					? msg.mail_bulk_archived({ count: ids.length })
+					: msg.mail_bulk_trashed({ count: ids.length })
+			);
 		} else if (failed < ids.length) {
-			flash(`${ids.length - failed} ${label}, ${failed} failed`);
+			const counts = { ok: ids.length - failed, failed };
+			flash(
+				archiving ? msg.mail_bulk_archived_partial(counts) : msg.mail_bulk_trashed_partial(counts)
+			);
 		} else {
-			flash(`${verb === 'archive' ? 'Archive' : 'Move to Trash'} failed`);
+			flash(archiving ? msg.mail_bulk_archive_failed() : msg.mail_bulk_trash_failed());
 		}
 	}
 
@@ -707,22 +726,22 @@
 	function send(info?: { scheduledAt?: string }) {
 		composeStore.close();
 		if (info?.scheduledAt) {
-			flash(`Send scheduled for ${formatWhenLong(new Date(info.scheduledAt))}`);
+			flash(msg.mail_toast_scheduled({ when: formatWhenLong(new Date(info.scheduledAt)) }));
 			void scheduled.refresh();
 		} else {
-			flash('Message sent');
+			flash(msg.mail_toast_sent());
 		}
 		refreshAfterSend();
 		void drafts.refresh();
 	}
 
 	function replySent() {
-		flash('Reply sent');
+		flash(msg.mail_toast_reply_sent());
 		refreshAfterSend();
 	}
 
 	function replySentArchive(id: string) {
-		flash('Reply sent and conversation archived');
+		flash(msg.mail_toast_reply_sent_archived());
 		void queueArchive(id).then(refreshAfterSend);
 	}
 
@@ -807,7 +826,7 @@
 </script>
 
 <svelte:head>
-	<title>{mailbox.counts.inbox > 0 ? `(${titleUnread}) ` : ''}Thelemail — {folderLabel}</title>
+	<title>{pageTitle}</title>
 </svelte:head>
 
 <svelte:document onkeydown={handleKey} />
@@ -824,8 +843,8 @@
 				</div>
 			</div>
 			<div class="empty-folder">
-				<p>{folderLabel} isn't available yet.</p>
-				<p class="sub">This folder will light up once backend support lands.</p>
+				<p>{msg.mail_folder_unavailable({ folder: folderLabel })}</p>
+				<p class="sub">{msg.mail_folder_unavailable_detail()}</p>
 			</div>
 		</section>
 		<Reader
@@ -882,9 +901,9 @@
 		/>
 		{#if messageId && !selected && deepLinkMissing}
 			<section class="reader reader-missing">
-				<p>Message not found.</p>
-				<p class="sub">It may have been deleted, or you may not have access.</p>
-				<a class="back" href={withSearch(basePath)}>Back to {folderLabel}</a>
+				<p>{msg.mail_not_found()}</p>
+				<p class="sub">{msg.mail_not_found_detail()}</p>
+				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: folderLabel })}</a>
 			</section>
 		{:else}
 			<Reader
@@ -914,7 +933,7 @@
 </div>
 
 {#if messageId === null && !composeStore.open}
-	<button class="fab" title="Compose" onclick={() => composeStore.openNew()}>
+	<button class="fab" title={msg.mail_compose()} onclick={() => composeStore.openNew()}>
 		<PenLine size={22} />
 	</button>
 {/if}
@@ -929,8 +948,9 @@
 {/if}
 {#snippet deleteBody()}
 	<p class="cfd-p">
-		{pendingDelete && pendingDelete.ids.length > 1 ? 'These messages' : 'This message'} and any attachments
-		will be erased. This can't be undone.
+		{pendingDelete && pendingDelete.ids.length > 1
+			? msg.mail_delete_body_many()
+			: msg.mail_delete_body_one()}
 	</p>
 {/snippet}
 
@@ -947,9 +967,9 @@
 		icon={Trash2}
 		tone="danger"
 		title={pendingDelete.ids.length > 1
-			? `Delete ${pendingDelete.ids.length} messages permanently?`
-			: 'Delete this message permanently?'}
-		confirmLabel="Delete permanently"
+			? msg.mail_delete_title_many({ count: pendingDelete.ids.length })
+			: msg.mail_delete_title_one()}
+		confirmLabel={msg.mail_delete_confirm()}
 		busy={deleting}
 		body={deleteBody}
 		onConfirm={() => void confirmDelete()}
@@ -962,10 +982,10 @@
 	<Toast text={toast.text} onUndo={toast.undo} shift={131} />
 {/if}
 {#if snapshot.loadError}
-	<Toast text={'Error: ' + snapshot.loadError} shift={131} />
+	<Toast text={msg.mail_toast_error({ error: snapshot.loadError })} shift={131} />
 {/if}
 {#if snapshot.loading}
-	<Toast text="Loading…" shift={131} />
+	<Toast text={msg.common_loading()} shift={131} />
 {/if}
 
 <style>

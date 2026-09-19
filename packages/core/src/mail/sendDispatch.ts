@@ -5,11 +5,13 @@ import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { lookupAccount } from '$core/api/accounts';
 import { ApiCallError } from '$core/api/types';
 import { canonicalRecipient } from './recipientAddress';
+import { m } from '$paraglide/messages.js';
 
 const CLASSIFY_TTL_MS = 2 * 60 * 1000;
 
-export const MIXED_SCHEDULE_MESSAGE =
-	'Scheduling needs every recipient to be on Thelemail, or every recipient to be outside it. This message has both, so send it now or split it into two messages.';
+export function mixedScheduleMessage(): string {
+	return m.send_error_mixed_schedule();
+}
 
 const classifyCache = new Map<string, { cls: 'internal' | 'external'; at: number }>();
 
@@ -25,7 +27,7 @@ export async function classifyAddress(address: string): Promise<'internal' | 'ex
 		if (e instanceof ApiCallError && e.status === 404) {
 			cls = 'external';
 		} else {
-			throw sendErrorFromApi(e, 'Could not look up the recipient');
+			throw sendErrorFromApi(e, m.send_error_classify_failed());
 		}
 	}
 	classifyCache.set(email, { cls, at: Date.now() });
@@ -95,7 +97,7 @@ async function sendMixed(
 	classes: Map<string, 'internal' | 'external'>
 ): Promise<void> {
 	if (input.scheduledAt) {
-		throw new SendError('schedule_unsupported', MIXED_SCHEDULE_MESSAGE);
+		throw new SendError('schedule_unsupported', mixedScheduleMessage());
 	}
 	const internalAddresses = new Set(
 		[...classes].filter(([, cls]) => cls === 'internal').map(([addr]) => addr)
@@ -136,7 +138,7 @@ export async function dispatchSend(
 ): Promise<void> {
 	const all = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])];
 	if (all.length === 0) {
-		throw new SendError('no_account', 'At least one recipient is required.');
+		throw new SendError('no_account', m.send_error_no_recipients());
 	}
 
 	const unique = [...new Set(all.map((r) => r.address.trim().toLowerCase()))];

@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import TrustMark from './TrustMark.svelte';
-	import { formatWhenLong, type ThreadEntry } from './data';
+	import { formatWhenLong, formatWhenShort, type ThreadEntry } from './data';
 	import AttachmentList from './AttachmentList.svelte';
 	import { getMessage } from '$core/api/messages';
 	import { senderImage } from './senderImage';
@@ -27,9 +28,9 @@
 		showQuoted = false;
 	});
 
-	const name = $derived(e.me ? 'You' : e.from);
+	const name = $derived(e.me ? m.mail_thread_you() : e.from);
 	const when = $derived(formatWhenLong(new Date(e.epoch)));
-	const shortWhen = $derived(when.replace('Today at ', '').replace('Yesterday at ', 'Yesterday '));
+	const shortWhen = $derived(formatWhenShort(new Date(e.epoch)));
 
 	const toLine = $derived.by(() => {
 		const tos = (e.recipients ?? []).filter((r) => r.kind === 'to').map((r) => r.address);
@@ -111,10 +112,10 @@
 					<span class="em">{e.fromAddr}</span>
 					<span class="to">→ {toLine || '—'}</span>
 					{#if ccLine}
-						<span class="to">Cc: {ccLine}</span>
+						<span class="to">{m.mail_thread_cc({ list: ccLine })}</span>
 					{/if}
 					{#if deliveredLine}
-						<span class="to">Delivered to: {deliveredLine}</span>
+						<span class="to">{m.mail_thread_delivered_to({ address: deliveredLine })}</span>
 					{/if}
 				</div>
 			</div>
@@ -139,7 +140,7 @@
 			</div>
 
 			{#if e.forwarded}
-				<div class="fwd-chip"><CornerDownLeft size={13} />Forwarded message</div>
+				<div class="fwd-chip"><CornerDownLeft size={13} />{m.mail_forwarded_chip()}</div>
 			{/if}
 
 			{#if e.quotedSrcDoc}
@@ -148,7 +149,7 @@
 						type="button"
 						class="quoted-toggle"
 						class:on={showQuoted}
-						title={showQuoted ? 'Hide trimmed content' : 'Show trimmed content'}
+						title={showQuoted ? m.mail_quoted_hide() : m.mail_quoted_show()}
 						aria-expanded={showQuoted}
 						onclick={() => (showQuoted = !showQuoted)}
 					>

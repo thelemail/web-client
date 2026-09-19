@@ -4,80 +4,80 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Switch } from '$core/components/ui/switch';
+	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../../DisclosureBoundary.svelte';
 	import { cal } from '../state.svelte';
 	import type { BoundaryLine } from '../../types';
 
 	const FACTS = [
-		{ title: 'Public address', body: 'thelema.co/book/consultation', mono: true },
+		{ key: 'address', title: () => m.cal_bkset_public_address(), body: () => 'thelema.co/book/consultation', mono: true },
 		{
-			title: 'Availability drawn from',
-			body: 'Thélème Co and My calendar, as busy windows only',
+			key: 'source',
+			title: () => m.cal_bkset_drawn_from(),
+			body: () => m.cal_bkset_drawn_from_body(),
 			mono: false
 		}
 	];
 
 	const LIMITS = [
-		{ title: 'Minimum notice', value: '12 hours' },
-		{ title: 'Buffer either side', value: '15 min' },
-		{ title: 'Cap per week', value: '6 bookings' }
+		{ key: 'notice', title: () => m.cal_bkset_min_notice(), value: () => m.cal_bkset_min_notice_value() },
+		{ key: 'buffer', title: () => m.cal_bkset_buffer(), value: () => m.cal_bkset_buffer_value() },
+		{ key: 'cap', title: () => m.cal_bkset_cap(), value: () => m.cal_bkset_cap_value() }
 	];
 
-	const VISIBILITY: BoundaryLine[] = [
-		{ tone: 'yes', text: 'Which 30-minute windows are open in the next 14 days.' },
+	const visibility: BoundaryLine[] = $derived([
+		{ tone: 'yes', text: m.cal_bkset_vis_open() },
 		{
 			tone: 'no',
 			icon: EyeOff,
-			text: 'Not what fills the rest — no titles, no guests, not even how many events there are.'
+			text: m.cal_bkset_vis_hidden()
 		},
 		{
 			tone: 'yes',
 			icon: KeyRound,
-			text: 'Slots are computed from encrypted busy windows. Generating this page never decrypts content.'
+			text: m.cal_bkset_vis_computed()
 		}
-	];
+	]);
 </script>
 
 <div>
 	<div class="card">
 		<div class="card-h">
 			<div>
-				<div class="ch-t">Consultation · 30 min</div>
+				<div class="ch-t">{m.cal_bkset_title()}</div>
 				<div class="ch-s">bookings@thelema.co</div>
 			</div>
 		</div>
 		<div class="card-b tight">
-			{#each FACTS as fact (fact.title)}
+			{#each FACTS as fact (fact.key)}
 				<div class="srow">
 					<div class="sr-m">
-						<div class="sr-t">{fact.title}</div>
-						<div class="sr-s" class:mono={fact.mono}>{fact.body}</div>
+						<div class="sr-t">{fact.title()}</div>
+						<div class="sr-s" class:mono={fact.mono}>{fact.body()}</div>
 					</div>
 				</div>
 			{/each}
-			{#each LIMITS as limit (limit.title)}
+			{#each LIMITS as limit (limit.key)}
 				<div class="srow">
-					<div class="sr-m"><div class="sr-t">{limit.title}</div></div>
-					<span class="sr-v">{limit.value}</span>
+					<div class="sr-m"><div class="sr-t">{limit.title()}</div></div>
+					<span class="sr-v">{limit.value()}</span>
 				</div>
 			{/each}
 			<div class="srow">
 				<div class="sr-m">
-					<div class="sr-t">Request to book</div>
-					<div class="sr-s">The visitor asks; you accept. Creates a Proposal, not an Event.</div>
+					<div class="sr-t">{m.cal_bkset_request()}</div>
+					<div class="sr-s">{m.cal_bkset_request_desc()}</div>
 				</div>
 				<Switch
 					checked={cal.bookingRequest}
 					onCheckedChange={() => cal.toggleBookingRequest()}
-					aria-label="Request to book"
+					aria-label={m.cal_bkset_request()}
 				/>
 			</div>
 			<div class="srow">
 				<div class="sr-m">
-					<div class="sr-t">Assign to</div>
-					<div class="sr-s">
-						Round-robin across the two people on bookings@ is on the roadmap, not in this build.
-					</div>
+					<div class="sr-t">{m.cal_bkset_assign()}</div>
+					<div class="sr-s">{m.cal_bkset_assign_desc()}</div>
 				</div>
 				<span class="ownchip">
 					<Avatar initials="FR" size={20} bg="#234132" fg="#EEF2EA" />François
@@ -85,5 +85,5 @@
 			</div>
 		</div>
 	</div>
-	<DisclosureBoundary heading="What a visitor can learn" headingIcon={Eye} lines={VISIBILITY} />
+	<DisclosureBoundary heading={m.cal_bkset_visitor_heading()} headingIcon={Eye} lines={visibility} />
 </div>

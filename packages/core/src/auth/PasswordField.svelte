@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Eye from '@lucide/svelte/icons/eye';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import { m } from '$paraglide/messages.js';
 
 	let {
 		label,
@@ -43,7 +44,7 @@
 		<button
 			type="button"
 			class="reveal"
-			aria-label={show ? 'Hide password' : 'Show password'}
+			aria-label={show ? m.common_hide_password() : m.common_show_password()}
 			onclick={() => (show = !show)}
 		>
 			{#if show}

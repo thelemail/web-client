@@ -1,12 +1,12 @@
 <script lang="ts">
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import { m } from '$paraglide/messages.js';
 	import { shiftAnchor } from '../range';
 	import { cal } from '../state.svelte';
+	import { weekdayNames } from '$core/i18n/intl';
 
-	const dows = $derived(
-		cal.weekStartsOn === 1 ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'] : ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-	);
+	const dows = $derived(weekdayNames('narrow', cal.weekStartsOn === 1));
 </script>
 
 <div class="mini">
@@ -14,14 +14,14 @@
 		<div class="mt">{cal.miniMonthLabel}</div>
 		<button
 			type="button"
-			aria-label="Previous month"
+			aria-label={m.cal_mini_prev_month()}
 			onclick={() => (cal.anchor = shiftAnchor(cal.anchor, 'month', -1))}
 		>
 			<ChevronLeft size={16} />
 		</button>
 		<button
 			type="button"
-			aria-label="Next month"
+			aria-label={m.cal_mini_next_month()}
 			onclick={() => (cal.anchor = shiftAnchor(cal.anchor, 'month', 1))}
 		>
 			<ChevronRight size={16} />

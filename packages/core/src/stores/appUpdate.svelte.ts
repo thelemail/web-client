@@ -1,23 +1,22 @@
 import { platform } from '$platform';
 import type { AvailableUpdate, UpdateProgress, UpdateStatus } from '$core/platform/types';
 import { restartBlockers } from './restartGuard';
+import { m } from '$paraglide/messages.js';
 
-const PROBLEMS: Record<string, string> = {
-	translocated:
-		'macOS is running Thelemail from a temporary location. Move the app to the Applications folder, open it from there, and install again.',
-	'read-only':
-		'Thelemail cannot replace itself in the folder it runs from. Download the new version from the release page instead.',
-	unbundled: 'Development builds do not install updates.',
-	verify: 'The download did not pass the signature checks, so nothing was installed.',
-	download: 'The download did not finish. Check your connection and try again.',
-	install: 'The new version could not be put in place. Thelemail is still on the version you had.',
-	stale: 'The release changed since it was offered. Check again to see the current one.',
-	busy: 'An update is already installing.',
-	check: 'Could not reach the update server.'
+const PROBLEMS: Record<string, () => string> = {
+	translocated: () => m.store_update_problem_translocated(),
+	'read-only': () => m.store_update_problem_read_only(),
+	unbundled: () => m.store_update_problem_unbundled(),
+	verify: () => m.store_update_problem_verify(),
+	download: () => m.store_update_problem_download(),
+	install: () => m.store_update_problem_install(),
+	stale: () => m.store_update_problem_stale(),
+	busy: () => m.store_update_problem_busy(),
+	check: () => m.store_update_problem_check()
 };
 
 export function describeUpdateProblem(code: string): string {
-	return PROBLEMS[code] ?? 'The update did not install.';
+	return PROBLEMS[code]?.() ?? m.store_update_problem_generic();
 }
 
 function problemCode(err: unknown): string {

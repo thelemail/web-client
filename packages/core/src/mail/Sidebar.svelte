@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '$paraglide/messages.js';
 	import { page } from '$app/state';
 	import {
 		AlarmClock,
@@ -79,10 +80,10 @@
 	const storagePct = $derived(storageLimit > 0 ? Math.min(100, (storageUsed / storageLimit) * 100) : 0);
 
 	function fmtStorage(bytes: number): string {
-		if (bytes <= 0) return '0 MB';
+		if (bytes <= 0) return m.mail_size_mb({ size: 0 });
 		const gib = bytes / 2 ** 30;
-		if (gib < 1) return `${Math.max(1, Math.round(bytes / 2 ** 20))} MB`;
-		return `${gib.toFixed(1).replace(/\.0$/, '')} GB`;
+		if (gib < 1) return m.mail_size_mb({ size: Math.max(1, Math.round(bytes / 2 ** 20)) });
+		return m.mail_size_gb({ size: gib.toFixed(1).replace(/\.0$/, '') });
 	}
 </script>
 
@@ -90,13 +91,13 @@
 	<a class="brand" href="/" aria-label="Thelemail"><span class="wm">Thelemail</span></a>
 
 	<button class="compose" onclick={onCompose}>
-		<PenLine size={17} />Compose
+		<PenLine size={17} />{m.mail_sidebar_compose()}
 	</button>
 
 	<RailSearch />
 
 	<div class="rail-scroll">
-		<div class="fgroup">Mailbox</div>
+		<div class="fgroup">{m.mail_sidebar_mailbox()}</div>
 		<div class="nav-list">
 			{#each primary as f (f.id)}
 				{@const pair = folderIcons[f.id] ?? FALLBACK_ICONS}
@@ -134,14 +135,14 @@
 				onclick={() => (showMore = !showMore)}
 			>
 				<NavMorph icon={showMore ? ChevronUp : ChevronDown} />
-				<span class="lbl">{showMore ? 'Less' : 'More'}</span>
+				<span class="lbl">{showMore ? m.mail_sidebar_less() : m.mail_sidebar_more()}</span>
 			</button>
 		</div>
 	</div>
 
 	{#if storageLimit > 0}
 		<div class="storage">
-			<div class="srow"><span>STORAGE</span><span><b>{fmtStorage(storageUsed)}</b> / {fmtStorage(storageLimit)}</span></div>
+			<div class="srow"><span>{m.mail_sidebar_storage()}</span><span><b>{fmtStorage(storageUsed)}</b> / {fmtStorage(storageLimit)}</span></div>
 			<div class="meter"><i style:width={`${storagePct}%`}></i></div>
 		</div>
 	{/if}

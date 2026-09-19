@@ -5,6 +5,7 @@ import type { MirrorMessage } from '$core/platform/types';
 import { decryptBodyFromUrl, unwrapPgpMime } from './decrypt';
 import { getCachedRender, putCachedRender, renderBody, type CachedRender } from './render';
 import { detailFromMirror } from './mirrorDetail';
+import { m } from '$paraglide/messages.js';
 
 export interface LoadedBody extends CachedRender {
 	detail: MessageDetail;
@@ -80,7 +81,7 @@ export async function loadMessageBody(
 		return { detail, render, signature };
 	} catch (err) {
 		if (mirrored) {
-			throw new Error('This message has not been saved for offline reading yet.');
+			throw new Error(m.mailbox_offline_not_saved());
 		}
 		throw err;
 	}

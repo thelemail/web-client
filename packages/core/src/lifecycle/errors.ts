@@ -1,4 +1,5 @@
 import { ApiCallError } from '$core/api/types';
+import { m } from '$paraglide/messages.js';
 
 export function isReadOnlyError(e: unknown): boolean {
 	return e instanceof ApiCallError && e.status === 403 && e.envelope?.error?.code === 'read_only';
@@ -19,13 +20,13 @@ export function isUpgradeRequiredError(e: unknown): boolean {
 }
 
 export function upgradeRequiredMessage(feature: string): string {
-	return `${feature} is not included in the Free plan. Upgrade to unlock it.`;
+	return m.lc_error_upgrade_required({ feature });
 }
 
 export function readOnlyMessage(): string {
-	return 'Sending and editing are paused. Restore your plan to continue.';
+	return m.lc_error_read_only();
 }
 
 export function suspendedMessage(): string {
-	return 'This account is suspended. Restore your plan to send and receive mail again.';
+	return m.lc_error_suspended();
 }

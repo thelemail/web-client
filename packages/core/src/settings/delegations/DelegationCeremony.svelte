@@ -5,6 +5,8 @@
 	import Download from '@lucide/svelte/icons/download';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 
+	import { m } from '$paraglide/messages.js';
+	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import Seg from '../Seg.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -20,11 +22,11 @@
 
 	let { address, onClose }: Props = $props();
 
-	const EXPIRY_CHOICES = [
-		{ v: '90', l: '90 days' },
-		{ v: '365', l: '1 year' },
-		{ v: '730', l: '2 years' }
-	];
+	const expiryChoices = $derived([
+		{ v: '90', l: m.settings_delegation_expiry_90d() },
+		{ v: '365', l: m.settings_delegation_expiry_1y() },
+		{ v: '730', l: m.settings_delegation_expiry_2y() }
+	]);
 
 	let step = $state(0);
 	let label = $state('');
@@ -45,7 +47,7 @@
 		if (!canCreate) return;
 		const accountId = auth.accountId;
 		if (!accountId) {
-			error = 'Sign in again and retry.';
+			error = m.settings_forwarding_sign_in_again();
 			return;
 		}
 		busy = true;
@@ -60,8 +62,8 @@
 			if (!generated.ok) {
 				error =
 					generated.code === 'locked'
-						? 'Unlock your mailbox and try again.'
-						: 'Could not generate a signing key.';
+						? m.settings_forwarding_err_unlock()
+						: m.settings_delegation_generate_failed();
 				return;
 			}
 			await delegations.create(address.id, {
@@ -73,7 +75,7 @@
 			fingerprint = generated.keyFingerprintHex;
 			step = 1;
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Could not create this delegation';
+			error = err instanceof Error ? err.message : m.settings_delegation_create_failed();
 		} finally {
 			busy = false;
 		}
@@ -86,7 +88,7 @@
 			saved = true;
 			setTimeout(() => (copied = false), 1600);
 		} catch {
-			error = 'Could not copy. Use Download instead.';
+			error = m.settings_forwarding_copy_failed();
 		}
 	}
 
@@ -102,11 +104,15 @@
 	}
 </script>
 
+{#snippet bold(t: string)}<b>{t}</b>{/snippet}
+
 <CeremonyShell
 	icon={KeyRound}
-	eyebrow="Signing delegation"
-	title={step === 0 ? `Authorize a service for ${address.email}` : 'Save the signing key'}
-	steps={['Name it', 'Save the key']}
+	eyebrow={m.settings_delegation_title()}
+	title={step === 0
+		? m.settings_delegation_authorize_title({ email: address.email })
+		: m.settings_delegation_save_key_title()}
+	steps={[m.settings_delegation_step_name(), m.settings_delegation_step_save()]}
 	{step}
 	onClose={step === 1 ? finish : onClose}
 >
@@ -114,29 +120,28 @@
 		{#if step === 0}
 			<div class="cer-lede">
 				<p>
-					The service gets its own key that can sign as <b>{address.email}</b> and nothing else.
-					It cannot read your mail, and you can withdraw it at any time.
+					<Rich text={m.settings_delegation_lede({ email: address.email })} tags={{ b: bold }} />
 				</p>
 			</div>
 
 			<div class="field">
-				<label for="delegation-label">Service name</label>
+				<label for="delegation-label">{m.settings_delegation_name_label()}</label>
 				<input
 					id="delegation-label"
 					class="tin"
 					bind:value={label}
 					maxlength="60"
-					placeholder="Billing provider"
+					placeholder={m.settings_delegation_name_placeholder()}
 					autocomplete="off"
 					spellcheck="false"
 				/>
-				<div class="field-hint">Only you see this. It labels the key in your list.</div>
+				<div class="field-hint">{m.settings_delegation_name_hint()}</div>
 			</div>
 
 			<div class="field">
-				<span class="field-lbl">Expires after</span>
-				<Seg value={expiry} options={EXPIRY_CHOICES} onChange={(v) => (expiry = v)} />
-				<div class="field-hint">The key stops signing on its own when it expires.</div>
+				<span class="field-lbl">{m.settings_delegation_expiry_label()}</span>
+				<Seg value={expiry} options={expiryChoices} onChange={(v) => (expiry = v)} />
+				<div class="field-hint">{m.settings_delegation_expiry_hint()}</div>
 			</div>
 
 			{#if error}
@@ -144,14 +149,11 @@
 			{/if}
 		{:else}
 			<div class="cer-lede">
-				<p>
-					This is the only time the private key is shown. Give it to the service, then keep or
-					destroy your copy.
-				</p>
+				<p>{m.settings_delegation_key_once()}</p>
 			</div>
 
 			<div class="field">
-				<span class="field-lbl">Fingerprint</span>
+				<span class="field-lbl">{m.settings_forwarding_fingerprint()}</span>
 				<div class="mono fp">{fingerprint}</div>
 			</div>
 
@@ -160,11 +162,11 @@
 			<div class="key-actions">
 				<Button variant="ghost" onclick={copyKey}>
 					<Copy size={15} />
-					{copied ? 'Copied' : 'Copy'}
+					{copied ? m.common_copied() : m.common_copy()}
 				</Button>
 				<Button variant="ghost" onclick={downloadKey}>
 					<Download size={15} />
-					Download
+					{m.settings_forwarding_download()}
 				</Button>
 			</div>
 
@@ -176,13 +178,13 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>Cancel</Button>
+			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button disabled={!canCreate} onclick={create}>
-				{busy ? 'Generating…' : 'Generate key'}
+				{busy ? m.settings_delegation_generating() : m.settings_delegation_generate()}
 			</Button>
 		{:else}
 			<Button disabled={!saved} onclick={finish}>
-				{saved ? 'Done' : 'Copy or download first'}
+				{saved ? m.common_done() : m.settings_forwarding_save_first()}
 			</Button>
 		{/if}
 	{/snippet}
