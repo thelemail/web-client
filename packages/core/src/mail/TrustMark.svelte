@@ -13,7 +13,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { portal } from '$core/actions/portal';
 	import TrustCheckDialog from './TrustCheckDialog.svelte';
-	import type { MessageTrust, TrustCheck, TrustTier } from './trust';
+	import { deriveTrust, type MessageTrust, type TrustCheck, type TrustTier } from './trust';
 
 	interface Props {
 		trust: MessageTrust;
@@ -21,7 +21,9 @@
 		onConfirmKeyChange?: () => void | Promise<void>;
 	}
 
-	let { trust, variant = 'icon', onConfirmKeyChange }: Props = $props();
+	let { trust: source, variant = 'icon', onConfirmKeyChange }: Props = $props();
+
+	const trust = $derived(source.facts ? deriveTrust(source.facts) : source);
 
 	const MARKS = {
 		official: BadgeCheck,

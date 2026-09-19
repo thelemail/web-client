@@ -40,6 +40,7 @@ export interface MessageTrust {
 	footnote?: string;
 	action?: 'confirm_key_change';
 	address?: string;
+	facts?: TrustFacts;
 }
 
 export type Channel = 'internal' | 'inbound_external' | 'outbound_external';

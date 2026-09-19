@@ -153,7 +153,7 @@ async function hydrateEntry(
 			serverSignature,
 			nowMillis: Date.now()
 		};
-		const trust = me ? undefined : deriveTrust(facts);
+		const trust = me ? undefined : { ...deriveTrust(facts), facts };
 
 		const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 		return {
