@@ -4,6 +4,7 @@ import { accounts } from '$core/stores/accounts.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { billing } from '$core/stores/billing.svelte';
 import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
+import { recoveryGateTarget } from '$core/recovery/gate';
 import type { LayoutLoad } from './$types';
 
 export const ssr = false;
@@ -79,6 +80,11 @@ export const load: LayoutLoad = async ({ parent, params, url }) => {
 	const inDowngrade = url.pathname.startsWith(`/u/${slot}/lifecycle/downgrade`);
 	if (sub && !sub.entitled && stage === 'active' && !inBilling && !inDowngrade) {
 		throw redirect(303, `/u/${slot}/billing/choose`);
+	}
+
+	const gate = recoveryGateTarget(url.pathname, url.search, slot, auth.recoveryEnabled);
+	if (gate) {
+		throw redirect(303, gate);
 	}
 
 	return { accountId, slot };

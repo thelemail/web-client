@@ -7,7 +7,7 @@
 	import StorageNotice from './StorageNotice.svelte';
 	import LanguagePicker from '$core/i18n/LanguagePicker.svelte';
 
-	let { children }: { children: Snippet } = $props();
+	let { children, strip = true }: { children: Snippet; strip?: boolean } = $props();
 </script>
 
 <div class="auth">
@@ -18,7 +18,7 @@
 			<img class="wm-dark" src={wordmarkInverse} alt="" aria-hidden="true" />
 		</a>
 		<StorageNotice />
-		<SignedInStrip />
+		{#if strip}<SignedInStrip />{/if}
 		{@render children()}
 	</div>
 </div>

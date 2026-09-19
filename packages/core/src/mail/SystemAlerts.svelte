@@ -3,10 +3,8 @@
 	import CreditCard from '@lucide/svelte/icons/credit-card';
 	import Globe from '@lucide/svelte/icons/globe';
 	import HardDrive from '@lucide/svelte/icons/hard-drive';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { page } from '$app/state';
-	import { auth } from '$core/stores/auth.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -15,8 +13,6 @@
 
 	const slot = $derived(page.params.slot ?? '0');
 	const settingsBase = $derived(`/u/${slot}/settings`);
-
-	const recoveryMissing = $derived(auth.recoveryEnabled === false);
 
 	const paymentOverdue = $derived(billing.subscription?.status === 'past_due');
 
@@ -29,7 +25,7 @@
 	);
 
 	const anyAlert = $derived(
-		recoveryMissing || paymentOverdue || failedDomains.length > 0 || storageAlmostFull
+		paymentOverdue || failedDomains.length > 0 || storageAlmostFull
 	);
 
 	function gb(bytes: number, decimals = 1): string {
@@ -39,20 +35,6 @@
 
 {#if anyAlert}
 	<div class="sysalerts" role="status" aria-label={m.mail_alerts_aria()}>
-		{#if recoveryMissing}
-			<div class="sysalert sa-warning">
-				<span class="sa-ic"><LifeBuoy size={15} /></span>
-				<span class="sa-tx">
-					<span class="sa-h">{m.mail_alerts_recovery_title()}</span>
-					<span class="sa-d">
-						{m.mail_alerts_recovery_detail()}
-					</span>
-				</span>
-				<a class="sa-act" href={`${settingsBase}/security?ceremony=recovery`}>
-					{m.mail_alerts_recovery_action()}<ArrowRight size={13} />
-				</a>
-			</div>
-		{/if}
 		{#if paymentOverdue}
 			<div class="sysalert sa-danger">
 				<span class="sa-ic"><CreditCard size={15} /></span>
