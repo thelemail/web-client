@@ -25,6 +25,7 @@
 		ownershipProven,
 		previousStep,
 		stepComplete,
+		stepReachable,
 		type DomainStep
 	} from './steps';
 	import { addresses } from '$core/stores/addresses.svelte';
@@ -116,7 +117,12 @@
 	});
 </script>
 
-<WizardRail current={step} done={(s) => stepComplete(domain, s)} onSelect={onStep} />
+<WizardRail
+	current={step}
+	done={(s) => stepComplete(domain, s)}
+	reachable={(s) => stepReachable(domain, s)}
+	onSelect={onStep}
+/>
 
 <Card>
 	{#snippet head()}
@@ -268,7 +274,7 @@
 		{#if step === 'done'}
 			<Button variant="primary" href={listHref}>{m.settings_domains_wizard_all_domains()}<ArrowRight size={15} /></Button>
 		{:else}
-			<Button variant="primary" onclick={() => onStep(nextStep(step))}>
+			<Button variant="primary" disabled={!stepReachable(domain, nextStep(step))} onclick={() => onStep(nextStep(step))}>
 				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{/if}

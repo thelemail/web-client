@@ -68,6 +68,23 @@ export function stepComplete(d: CustomDomain, step: DomainStep): boolean {
 	}
 }
 
+export function stepReachable(d: CustomDomain, step: DomainStep): boolean {
+	switch (step) {
+		case 'ownership':
+			return true;
+		case 'sending':
+		case 'recipients':
+		case 'routing':
+			return ownershipProven(d);
+		case 'done':
+			return stepComplete(d, 'done');
+	}
+}
+
+export function reachableStep(d: CustomDomain, step: DomainStep): DomainStep {
+	return stepReachable(d, step) ? step : resumeStep(d);
+}
+
 export function statusLabel(s: CustomDomainStatus): string {
 	switch (s) {
 		case 'pending':

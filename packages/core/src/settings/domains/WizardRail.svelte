@@ -6,10 +6,11 @@
 	interface Props {
 		current: DomainStep;
 		done: (s: DomainStep) => boolean;
+		reachable: (s: DomainStep) => boolean;
 		onSelect: (s: DomainStep) => void;
 	}
 
-	let { current, done, onSelect }: Props = $props();
+	let { current, done, reachable, onSelect }: Props = $props();
 </script>
 
 <nav class="dw-rail" aria-label={m.settings_domains_rail_aria()}>
@@ -20,6 +21,7 @@
 			class:on={current === s}
 			class:done={done(s)}
 			aria-current={current === s ? 'step' : undefined}
+			disabled={!reachable(s)}
 			onclick={() => onSelect(s)}
 		>
 			<span class="dw-dot">

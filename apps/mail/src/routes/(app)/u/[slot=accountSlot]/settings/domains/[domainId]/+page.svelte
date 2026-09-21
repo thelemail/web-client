@@ -7,7 +7,7 @@
 	import DomainWizard from '$core/settings/domains/DomainWizard.svelte';
 	import SecHead from '$core/settings/SecHead.svelte';
 	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
-	import { isDomainStep, resumeStep, type DomainStep } from '$core/settings/domains/steps';
+	import { isDomainStep, reachableStep, resumeStep, type DomainStep } from '$core/settings/domains/steps';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -25,9 +25,10 @@
 	let loadedFor = '';
 
 	const urlStep = $derived(page.url.searchParams.get('step'));
-	const step = $derived(
+	const requestedStep = $derived(
 		picked ?? (isDomainStep(urlStep) ? urlStep : domain ? resumeStep(domain) : 'ownership')
 	);
+	const step = $derived(domain ? reachableStep(domain, requestedStep) : requestedStep);
 
 	function select(s: DomainStep) {
 		picked = s;
