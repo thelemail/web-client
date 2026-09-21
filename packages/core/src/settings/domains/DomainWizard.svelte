@@ -25,6 +25,7 @@
 		ownershipProven,
 		previousStep,
 		stepComplete,
+		stepReachable,
 		type DomainStep
 	} from './steps';
 	import { addresses } from '$core/stores/addresses.svelte';
@@ -66,6 +67,8 @@
 	let addingAlias = $state(false);
 	const domainAddresses = $derived(addresses.items.filter((a) => a.customDomainId === domain.id));
 
+	const domainId = $derived(domain.id);
+
 	function stop() {
 		if (timer !== undefined) {
 			clearTimeout(timer);
@@ -73,12 +76,13 @@
 		}
 	}
 
-	async function check() {
+	async function check(id: string) {
+		if (checking) return;
 		const ws = workspaces.workspace?.id;
 		if (!ws) return;
 		checking = true;
 		try {
-			await customDomains.verify(ws, domain.id);
+			await customDomains.verify(ws, id);
 			error = null;
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.settings_domains_wizard_check_failed();
@@ -89,19 +93,22 @@
 
 	$effect(() => {
 		const s = step;
+		const id = domainId;
 		stop();
 		attempts = 0;
 		if (!STEP_PHASE[s]) return;
 
 		let cancelled = false;
 		const tick = async () => {
-			await check();
+			await check(id);
 			if (cancelled || stepComplete(domain, s)) return;
 			const delay = POLL_DELAYS_MS[attempts] ?? HEARTBEAT_MS;
 			attempts += 1;
 			timer = setTimeout(() => void tick(), delay);
 		};
-		if (!untrack(() => stepComplete(domain, s))) void tick();
+		untrack(() => {
+			if (!stepComplete(domain, s)) void tick();
+		});
 
 		return () => {
 			cancelled = true;
@@ -110,7 +117,12 @@
 	});
 </script>
 
-<WizardRail current={step} done={(s) => stepComplete(domain, s)} onSelect={onStep} />
+<WizardRail
+	current={step}
+	done={(s) => stepComplete(domain, s)}
+	reachable={(s) => stepReachable(domain, s)}
+	onSelect={onStep}
+/>
 
 <Card>
 	{#snippet head()}
@@ -255,14 +267,14 @@
 		{/if}
 		<span class="dw-spacer"></span>
 		{#if phase}
-			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check()}>
+			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check(domainId)}>
 				<RefreshCw size={14} />{checking ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_now()}
 			</Button>
 		{/if}
 		{#if step === 'done'}
 			<Button variant="primary" href={listHref}>{m.settings_domains_wizard_all_domains()}<ArrowRight size={15} /></Button>
 		{:else}
-			<Button variant="primary" onclick={() => onStep(nextStep(step))}>
+			<Button variant="primary" disabled={!stepReachable(domain, nextStep(step))} onclick={() => onStep(nextStep(step))}>
 				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{/if}

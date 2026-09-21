@@ -709,6 +709,9 @@
 .cer-scrim .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
 .cer-scrim .sel select:hover { border-color: var(--ink-300); }
 .cer-scrim .sel select:focus-visible { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.cer-scrim .sel select:disabled { cursor: default; padding-right: 13px; background: var(--paper-50); box-shadow: none; }
+.cer-scrim .sel select:disabled:hover { border-color: var(--border-strong); }
+.cer-scrim .sel:has(select:disabled) .chev { display: none; }
 .cer-scrim .sel .chev { position: absolute; right: 11px; display: flex; color: var(--ink-400); pointer-events: none; }
 .settings-app .ac-at,
 .cer-scrim .ac-at { font-family: var(--font-mono); color: var(--fg-muted); font-size: 14px; }

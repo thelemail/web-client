@@ -2568,6 +2568,7 @@
 	"settings_ceremony_alias_lede_own_domain": "Eine Adresse auf Ihrer eigenen Domain. Weisen Sie sie einer Person zu oder teilen Sie sie mit mehreren, damit E-Mails an diese Adresse alle erreichen.",
 	"settings_ceremony_alias_loading_domains": "Ihre Domains werden geladen…",
 	"settings_ceremony_alias_need_domain": "Sie benötigen zuerst eine verifizierte eigene Domain. Öffnen Sie <b>Eigene Domains</b> und fügen Sie eine hinzu.",
+	"settings_ceremony_alias_domain_unverified": "Adressen können hinzugefügt werden, sobald die Inhaberschaft dieser Domain verifiziert ist.",
 	"settings_ceremony_alias_display_name": "Anzeigename",
 	"settings_ceremony_alias_display_name_placeholder": "z. B. Support",
 	"settings_ceremony_alias_display_name_hint": "Dieser Name wird angezeigt, wenn Sie unter der Adresse schreiben.",
