@@ -2568,6 +2568,7 @@
   "settings_ceremony_alias_lede_own_domain": "Une adresse sur votre propre domaine. Attribuez-la à une seule personne ou partagez-la entre plusieurs pour que les e-mails envoyés à cette adresse leur parviennent à tous.",
   "settings_ceremony_alias_loading_domains": "Chargement de vos domaines…",
   "settings_ceremony_alias_need_domain": "Vous devez d’abord disposer d’un domaine personnalisé vérifié. Ouvrez <b>Domaines personnalisés</b> et ajoutez-en un.",
+  "settings_ceremony_alias_domain_unverified": "Vous pourrez ajouter des adresses une fois la propriété de ce domaine vérifiée.",
   "settings_ceremony_alias_display_name": "Nom affiché",
   "settings_ceremony_alias_display_name_placeholder": "p. ex. Assistance",
   "settings_ceremony_alias_display_name_hint": "Le nom que les destinataires voient lorsque vous écrivez depuis cette adresse.",

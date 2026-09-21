@@ -64,16 +64,23 @@
 	const sharedSlotFree = $derived(
 		billing.canAddSharedDomainAlias && !aliases.items.some((a) => !a.customDomainId)
 	);
-	const domainOptions = $derived([
-		...ownedDomains.map((d) => d.domain),
-		...(sharedSlotFree ? [SHARED_DOMAIN] : [])
-	]);
-	let userPickedDomainId = $state<string | null>(presetDomainId);
+	const presetDomain = $derived(
+		presetDomainId ? (ownedDomains.find((d) => d.id === presetDomainId) ?? null) : null
+	);
+	const presetUnverified = $derived(!!presetDomainId && !presetDomain);
+	const domainOptions = $derived(
+		presetDomainId
+			? presetDomain
+				? [presetDomain.domain]
+				: []
+			: [...ownedDomains.map((d) => d.domain), ...(sharedSlotFree ? [SHARED_DOMAIN] : [])]
+	);
+	let userPickedDomain = $state<string | null>(null);
 
 	const selectedDomainName = $derived(
-		domainOptions.includes(userPickedDomainId ?? '')
-			? (userPickedDomainId as string)
-			: (ownedDomains.find((d) => d.id === userPickedDomainId)?.domain ?? domainOptions[0] ?? '')
+		userPickedDomain && domainOptions.includes(userPickedDomain)
+			? userPickedDomain
+			: (domainOptions[0] ?? '')
 	);
 	const onSharedDomain = $derived(selectedDomainName === SHARED_DOMAIN);
 	const shared = $derived(sharedPicked || onSharedDomain);
@@ -125,7 +132,7 @@
 	}
 
 	function pickDomain(n: string) {
-		userPickedDomainId = n;
+		userPickedDomain = n;
 	}
 
 	async function resolveRecipients(emails: { accountId: string; email: string }[]) {
@@ -253,7 +260,7 @@
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
-					{#if sharedSlotFree && ownedDomains.length === 0}
+					{#if !presetDomainId && sharedSlotFree && ownedDomains.length === 0}
 						{m.settings_ceremony_alias_lede_shared_domain({ domain: SHARED_DOMAIN })}
 					{:else}
 						{m.settings_ceremony_alias_lede_own_domain()}
@@ -262,6 +269,11 @@
 			</div>
 			{#if customDomains.loading && customDomains.items.length === 0 && !sharedSlotFree}
 				<div class="field-hint">{m.settings_ceremony_alias_loading_domains()}</div>
+			{:else if presetUnverified}
+				<div class="inline-warn">
+					<CircleAlert size={15} />
+					<span>{m.settings_ceremony_alias_domain_unverified()}</span>
+				</div>
 			{:else if domainOptions.length === 0}
 				<div class="inline-warn">
 					<CircleAlert size={15} />
@@ -293,7 +305,12 @@
 							autocomplete="off"
 						/>
 						<span class="ac-at">@</span>
-						<Select value={selectedDomainName} options={domainOptions} onChange={pickDomain} />
+						<Select
+							value={selectedDomainName}
+							options={domainOptions}
+							onChange={pickDomain}
+							disabled={!!presetDomainId}
+						/>
 					</div>
 					{#if local.length > 0 && !localOk}
 						<div class="field-hint bad">

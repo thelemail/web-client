@@ -2568,6 +2568,7 @@
 	"settings_ceremony_alias_lede_own_domain": "An address on a domain you own. Give it to one person, or share it with several so mail sent to it reaches all of them.",
 	"settings_ceremony_alias_loading_domains": "Loading your domains…",
 	"settings_ceremony_alias_need_domain": "You need a verified custom domain first. Open <b>Custom domains</b> and add one.",
+	"settings_ceremony_alias_domain_unverified": "Addresses can be added once ownership of this domain is verified.",
 	"settings_ceremony_alias_display_name": "Display name",
 	"settings_ceremony_alias_display_name_placeholder": "e.g. Support",
 	"settings_ceremony_alias_display_name_hint": "This is the name people see when you write from it.",

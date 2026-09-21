@@ -7,15 +7,17 @@
 		onChange: (value: string) => void;
 		narrow?: boolean;
 		ariaLabel?: string;
+		disabled?: boolean;
 	}
 
-	let { value, options, onChange, narrow = false, ariaLabel }: Props = $props();
+	let { value, options, onChange, narrow = false, ariaLabel, disabled = false }: Props = $props();
 </script>
 
 <span class="sel">
 	<select
 		{value}
 		aria-label={ariaLabel}
+		{disabled}
 		style:min-width={narrow ? '0' : undefined}
 		onchange={(e) => onChange((e.currentTarget as HTMLSelectElement).value)}
 	>

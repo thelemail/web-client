@@ -2568,6 +2568,7 @@
 	"settings_ceremony_alias_lede_own_domain": "Um endereço num domínio seu. Atribua-o a uma pessoa ou partilhe-o com várias para que todas recebam as mensagens enviadas para ele.",
 	"settings_ceremony_alias_loading_domains": "A carregar os seus domínios…",
 	"settings_ceremony_alias_need_domain": "Precisa primeiro de um domínio personalizado verificado. Abra <b>Domínios personalizados</b> e adicione um.",
+	"settings_ceremony_alias_domain_unverified": "Os endereços podem ser adicionados assim que a propriedade deste domínio for verificada.",
 	"settings_ceremony_alias_display_name": "Nome de apresentação",
 	"settings_ceremony_alias_display_name_placeholder": "por ex., Apoio",
 	"settings_ceremony_alias_display_name_hint": "Este é o nome que as pessoas veem quando escreve a partir dele.",
