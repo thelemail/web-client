@@ -74,6 +74,7 @@
 	}
 
 	async function check() {
+		if (checking) return;
 		const ws = workspaces.workspace?.id;
 		if (!ws) return;
 		checking = true;
@@ -87,8 +88,11 @@
 		}
 	}
 
+	const domainId = $derived(domain.id);
+
 	$effect(() => {
 		const s = step;
+		void domainId;
 		stop();
 		attempts = 0;
 		if (!STEP_PHASE[s]) return;
@@ -101,7 +105,9 @@
 			attempts += 1;
 			timer = setTimeout(() => void tick(), delay);
 		};
-		if (!untrack(() => stepComplete(domain, s))) void tick();
+		untrack(() => {
+			if (!stepComplete(domain, s)) void tick();
+		});
 
 		return () => {
 			cancelled = true;
