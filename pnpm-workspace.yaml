@@ -8,3 +8,6 @@ allowBuilds:
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
+
+overrides:
+  cookie: ^0.7.0
