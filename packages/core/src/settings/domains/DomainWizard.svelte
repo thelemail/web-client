@@ -67,6 +67,8 @@
 	let addingAlias = $state(false);
 	const domainAddresses = $derived(addresses.items.filter((a) => a.customDomainId === domain.id));
 
+	const domainId = $derived(domain.id);
+
 	function stop() {
 		if (timer !== undefined) {
 			clearTimeout(timer);
@@ -74,13 +76,13 @@
 		}
 	}
 
-	async function check() {
+	async function check(id: string) {
 		if (checking) return;
 		const ws = workspaces.workspace?.id;
 		if (!ws) return;
 		checking = true;
 		try {
-			await customDomains.verify(ws, domain.id);
+			await customDomains.verify(ws, id);
 			error = null;
 		} catch (err) {
 			error = err instanceof Error ? err.message : m.settings_domains_wizard_check_failed();
@@ -89,18 +91,16 @@
 		}
 	}
 
-	const domainId = $derived(domain.id);
-
 	$effect(() => {
 		const s = step;
-		void domainId;
+		const id = domainId;
 		stop();
 		attempts = 0;
 		if (!STEP_PHASE[s]) return;
 
 		let cancelled = false;
 		const tick = async () => {
-			await check();
+			await check(id);
 			if (cancelled || stepComplete(domain, s)) return;
 			const delay = POLL_DELAYS_MS[attempts] ?? HEARTBEAT_MS;
 			attempts += 1;
@@ -267,7 +267,7 @@
 		{/if}
 		<span class="dw-spacer"></span>
 		{#if phase}
-			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check()}>
+			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check(domainId)}>
 				<RefreshCw size={14} />{checking ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_now()}
 			</Button>
 		{/if}
