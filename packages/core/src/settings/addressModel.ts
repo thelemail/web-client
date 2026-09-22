@@ -1,8 +1,8 @@
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias, SharedAliasMember } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
-import { canSend, isDormant, ownershipLapsing, ownershipProven } from '$core/settings/domains/steps';
-import type { WorkspaceMember } from '$core/api/workspaces';
+import { canSend, isDormant, ownershipLapsing, ownershipProven, usable } from '$core/settings/domains/steps';
+import type { WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
 import { m } from '$paraglide/messages.js';
@@ -130,6 +130,31 @@ export function addressHealth(
 	if (!domain) return 'live';
 	if (!canSend(domain)) return 'sending_off';
 	return ownershipLapsing(domain) ? 'lapsing' : 'live';
+}
+
+export function setupBlockedNote(row: Pick<AddressRow, 'health' | 'domain'>): string | null {
+	const domain = row.domain;
+	switch (row.health) {
+		case 'suspended':
+			return m.settings_address_setup_suspended({ domain });
+		case 'paused':
+			return m.settings_address_setup_paused({ domain });
+		case 'sending_off':
+			return m.settings_address_setup_sending({ domain });
+		case 'lapsing':
+			return m.settings_address_setup_lapsing({ domain });
+		case 'live':
+			return null;
+	}
+}
+
+export function canResendInvite(
+	invite: Pick<WorkspaceInvite, 'kind' | 'customDomainId'>,
+	domains: CustomDomain[]
+): boolean {
+	if (invite.kind !== 'provision' || !invite.customDomainId) return true;
+	const domain = domains.find((d) => d.id === invite.customDomainId);
+	return !domain || usable(domain);
 }
 
 export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow {

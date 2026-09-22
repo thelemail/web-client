@@ -9,6 +9,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Info from '@lucide/svelte/icons/info';
 
 	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
@@ -25,9 +26,10 @@
 	interface Props {
 		addressId: string;
 		email: string;
+		blocked?: string | null;
 	}
 
-	let { addressId, email }: Props = $props();
+	let { addressId, email, blocked = null }: Props = $props();
 
 	let creating = $state(false);
 	let rotating = $state<ReadDelegation | null>(null);
@@ -108,7 +110,12 @@
 				{m.settings_forwarding_destinations({ count: live.length })}
 			</span>
 			{#if billing.canAddDomains}
-				<Button variant="secondary" size="sm" onclick={() => (creating = true)}>
+				<Button
+					variant="secondary"
+					size="sm"
+					disabled={!!blocked}
+					onclick={() => (creating = true)}
+				>
 					<Plus size={13} />{m.settings_forwarding_add()}
 				</Button>
 			{/if}
@@ -118,6 +125,10 @@
 	<div class="card-lede">
 		{m.settings_forwarding_lede({ email })}
 	</div>
+
+	{#if blocked}
+		<div class="card-note"><Info size={14} />{blocked}</div>
+	{/if}
 
 	{#if flash}
 		<div class="card-flash"><Check size={14} />{flash}</div>
@@ -157,7 +168,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
-							disabled={busyId === d.id}
+							disabled={busyId === d.id || !!blocked}
 							onclick={() =>
 								run(
 									d,
@@ -186,7 +197,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
-							disabled={busyId === d.id}
+							disabled={busyId === d.id || !!blocked}
 							onclick={() =>
 								run(
 									d,
@@ -209,7 +220,7 @@
 						</button>
 						{#if menuFor === d.id}
 							<div class="addr-menu" role="menu">
-								{#if d.mode !== 'plain'}
+								{#if d.mode !== 'plain' && !blocked}
 									<button
 										type="button"
 										class="mitem"

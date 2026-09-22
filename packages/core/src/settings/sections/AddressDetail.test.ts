@@ -124,6 +124,32 @@ describe('AddressDetail', () => {
 		expect(button('Make primary')?.disabled).toBe(true);
 	});
 
+	it('switches off new signing and forwarding while suspended', async () => {
+		setup(acme('pending'), sales({ suspended: true }));
+		const note = 'New signing and forwarding can be set up once acme.co.uk is verified again.';
+		expect([...document.querySelectorAll('.card-note')].map((n) => n.textContent?.trim())).toEqual([
+			note,
+			note
+		]);
+		expect(button('Authorize a service')?.disabled).toBe(true);
+		expect(button('Forward to a system')?.disabled).toBe(true);
+	});
+
+	it('waits for sending records before new signing or forwarding', () => {
+		setup(acme('owned'), sales());
+		expect(text()).toContain(
+			'Signing and forwarding can be set up once the sending records of acme.co.uk are verified.'
+		);
+		expect(button('Authorize a service')?.disabled).toBe(true);
+	});
+
+	it('keeps setup open for a live address', () => {
+		setup(acme('ready'), sales());
+		expect(document.querySelector('.card-note')).toBeNull();
+		expect(button('Authorize a service')?.disabled).toBe(false);
+		expect(button('Forward to a system')?.disabled).toBe(false);
+	});
+
 	it('lets a live address become primary', () => {
 		setup(acme('ready'), sales());
 		expect(text()).not.toContain('This address is suspended.');

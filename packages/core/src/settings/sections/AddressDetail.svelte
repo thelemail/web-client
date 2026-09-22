@@ -40,6 +40,7 @@
 		dedupeAddresses,
 		initialsOf,
 		ledeFor,
+		setupBlockedNote,
 		type ModelContext
 	} from '../addressModel';
 
@@ -84,6 +85,7 @@
 		row?.sharedAliasId ? (aliases.items.find((a) => a.id === row.sharedAliasId) ?? null) : null
 	);
 	const ownDomain = $derived(Boolean(row?.customDomainId));
+	const setupNote = $derived(row ? setupBlockedNote(row) : null);
 	const domainRow = $derived(
 		row?.customDomainId
 			? (customDomains.items.find((d) => d.id === row.customDomainId) ?? null)
@@ -334,11 +336,11 @@
 	{/if}
 
 	{#if row.canDelegate && address}
-		<DelegationsCard {address} />
+		<DelegationsCard {address} blocked={setupNote} />
 	{/if}
 
 	{#if row.canForward && address}
-		<ForwardingCard addressId={address.id} email={address.email} />
+		<ForwardingCard addressId={address.id} email={address.email} blocked={setupNote} />
 	{/if}
 
 	{#if row.canRemove}

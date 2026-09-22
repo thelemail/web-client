@@ -29,6 +29,7 @@
 		personalNote
 	} from './plan-display';
 	import { inviteMode } from './entitlements';
+	import { canResendInvite } from './addressModel';
 	import LeaveFamilyDialog from './LeaveFamilyDialog.svelte';
 	import RemoveMemberDialog from './RemoveMemberDialog.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -174,7 +175,7 @@
 		const isOwner = member?.role === 'owner';
 		return {
 			canRevoke: isPending && canManage,
-			canResend: Boolean(inv) && browser,
+			canResend: !!inv && browser && canResendInvite(inv, customDomains.items),
 			canPromote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'member',
 			canDemote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'admin',
 			canRemove: !isPending && !isOwner && canManage && !isSelf,

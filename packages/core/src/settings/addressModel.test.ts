@@ -2,12 +2,14 @@ import { describe, it, expect } from 'vitest';
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
-import type { WorkspaceMember } from '$core/api/workspaces';
+import type { WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
 import {
 	addressHealth,
 	buildRow,
+	canResendInvite,
+	setupBlockedNote,
 	groupByDomain,
 	dedupeAddresses,
 	ledeFor,
@@ -285,5 +287,63 @@ describe('addressHealth', () => {
 		expect(buildRow(owned, alias).canPromote).toBe(false);
 		const lapsing = ctx({ domains: [domain('ready', { ownershipMissingSince: at })] });
 		expect(buildRow(lapsing, alias).canPromote).toBe(false);
+	});
+});
+
+describe('setupBlockedNote', () => {
+	it('names what holds setup back for each state', () => {
+		const domain = 'abbaye.example';
+		expect(setupBlockedNote({ health: 'suspended', domain })).toBe(
+			'New signing and forwarding can be set up once abbaye.example is verified again.'
+		);
+		expect(setupBlockedNote({ health: 'paused', domain })).toBe(
+			'Signing and forwarding cannot be set up while abbaye.example is paused.'
+		);
+		expect(setupBlockedNote({ health: 'sending_off', domain })).toBe(
+			'Signing and forwarding can be set up once the sending records of abbaye.example are verified.'
+		);
+		expect(setupBlockedNote({ health: 'lapsing', domain })).toBe(
+			'Signing and forwarding can be set up again once the ownership record of abbaye.example is restored.'
+		);
+		expect(setupBlockedNote({ health: 'live', domain })).toBeNull();
+	});
+});
+
+describe('canResendInvite', () => {
+	const at = '2026-09-21T12:00:00Z';
+
+	function domain(id: string, stage: 'owned' | 'ready', over: Partial<CustomDomain> = {}): CustomDomain {
+		const sending = stage === 'ready';
+		return {
+			id,
+			workspaceId: 'ws',
+			domain: `${id}.example`,
+			status: stage,
+			addressCount: 1,
+			ownershipVerifiedAt: at,
+			dkimVerifiedAt: sending ? at : null,
+			spfVerifiedAt: sending ? at : null,
+			dmarcVerifiedAt: sending ? at : null,
+			createdAt: at,
+			updatedAt: at,
+			...over
+		};
+	}
+
+	function invite(over: Partial<WorkspaceInvite>): Pick<WorkspaceInvite, 'kind' | 'customDomainId'> {
+		return { kind: 'provision', ...over };
+	}
+
+	it('offers a new invitation link only where the domain can take addresses', () => {
+		const domains = [
+			domain('owned', 'owned'),
+			domain('ready', 'ready'),
+			domain('lapsing', 'ready', { ownershipMissingSince: at })
+		];
+		expect(canResendInvite(invite({ customDomainId: 'owned' }), domains)).toBe(false);
+		expect(canResendInvite(invite({ customDomainId: 'ready' }), domains)).toBe(true);
+		expect(canResendInvite(invite({ customDomainId: 'lapsing' }), domains)).toBe(false);
+		expect(canResendInvite(invite({ kind: 'join', customDomainId: 'owned' }), domains)).toBe(true);
+		expect(canResendInvite(invite({ customDomainId: 'unknown' }), domains)).toBe(true);
 	});
 });
