@@ -57,6 +57,6 @@ RUN mkdir -p apps/mail/build/.well-known && \
 FROM caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 AS runtime
 
 COPY --from=builder /src/apps/mail/build /srv
-COPY apps/mail/Caddyfile /etc/caddy/Caddyfile
+COPY caddy/Caddyfile /etc/caddy/Caddyfile
 
 EXPOSE 80
