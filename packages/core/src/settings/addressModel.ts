@@ -157,6 +157,14 @@ export function canResendInvite(
 	return !domain || usable(domain);
 }
 
+export function sendingChoices(own: AccountAddress[], domains: CustomDomain[]): AccountAddress[] {
+	return own.filter((a) => a.isPrimary || addressHealth(a, domains) === 'live');
+}
+
+export function replyChoices(own: AccountAddress[], keepId: string | null): AccountAddress[] {
+	return own.filter((a) => !a.suspended || a.id === keepId);
+}
+
 export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow {
 	const alias = address.sharedAliasId
 		? (ctx.sharedAliases.find((a) => a.id === address.sharedAliasId) ?? null)

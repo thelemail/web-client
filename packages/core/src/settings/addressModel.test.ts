@@ -9,6 +9,8 @@ import {
 	addressHealth,
 	buildRow,
 	canResendInvite,
+	replyChoices,
+	sendingChoices,
 	setupBlockedNote,
 	groupByDomain,
 	dedupeAddresses,
@@ -345,5 +347,37 @@ describe('canResendInvite', () => {
 		expect(canResendInvite(invite({ customDomainId: 'lapsing' }), domains)).toBe(false);
 		expect(canResendInvite(invite({ kind: 'join', customDomainId: 'owned' }), domains)).toBe(true);
 		expect(canResendInvite(invite({ customDomainId: 'unknown' }), domains)).toBe(true);
+	});
+});
+
+describe('address pickers', () => {
+	const at = '2026-09-21T12:00:00Z';
+	const owned = {
+		id: OWN_DOMAIN_ID,
+		workspaceId: 'ws',
+		domain: 'abbaye.example',
+		status: 'owned',
+		addressCount: 2,
+		ownershipVerifiedAt: at,
+		createdAt: at,
+		updatedAt: at
+	} as CustomDomain;
+	const primary = address({ id: 'p', email: 'gargantua@thelemail.com', customDomainId: null, isPrimary: true });
+	const platform = address({ id: 'x', email: 'garg@thelemail.com', customDomainId: null });
+	const pending = address({ id: 'o', email: 'abbot@abbaye.example' });
+	const gone = address({ id: 's', email: 'cellar@abbaye.example', suspended: true });
+
+	it('offers only live addresses as the default sender', () => {
+		expect(sendingChoices([primary, platform, pending, gone], [owned]).map((a) => a.id)).toEqual(['p', 'x']);
+	});
+
+	it('keeps a suspended primary in the sending list so it still reads correctly', () => {
+		const suspendedPrimary = { ...gone, isPrimary: true };
+		expect(sendingChoices([suspendedPrimary, platform], [owned]).map((a) => a.id)).toEqual(['s', 'x']);
+	});
+
+	it('leaves suspended addresses out of reply-to unless already chosen', () => {
+		expect(replyChoices([primary, pending, gone], null).map((a) => a.id)).toEqual(['p', 'o']);
+		expect(replyChoices([primary, pending, gone], 's').map((a) => a.id)).toEqual(['p', 'o', 's']);
 	});
 });

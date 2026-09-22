@@ -72,7 +72,7 @@
 
 	const members = $derived(workspaces.members);
 	const canShare = $derived(members.length > 1);
-	const sharedAddresses = $derived(addresses.shared);
+	const sharedAddresses = $derived(addresses.sendable.filter((a) => a.shared));
 	const isAdmin = $derived(workspaces.canManage(auth.accountId));
 
 	const title = $derived(

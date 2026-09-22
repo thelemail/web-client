@@ -22,6 +22,8 @@
 	import { hasRenderableHtml } from '$core/mail/signatureRegion';
 	import { initialsFor } from '$core/mail/initials';
 	import { addresses } from '$core/stores/addresses.svelte';
+	import { customDomains } from '$core/stores/customDomains.svelte';
+	import { replyChoices, sendingChoices } from '../addressModel';
 	import { signatures } from '$core/stores/signatures.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -154,11 +156,17 @@
 
 	const replyOptions = $derived([
 		{ id: SAME_AS_SENDING_VALUE, label: m.settings_profile_reply_same() },
-		...ownIdentities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
+		...replyChoices(ownIdentities, defaultReplyAddressId).map((a) => ({
+			id: a.id,
+			label: identityLabel(a.name, a.email)
+		}))
 	]);
 
 	const sendingOptions = $derived(
-		ownIdentities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
+		sendingChoices(ownIdentities, customDomains.items).map((a) => ({
+			id: a.id,
+			label: identityLabel(a.name, a.email)
+		}))
 	);
 
 	const signatureOptions = $derived(
