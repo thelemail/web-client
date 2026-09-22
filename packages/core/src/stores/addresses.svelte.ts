@@ -17,6 +17,7 @@ class AddressesStore {
 	loading = $state(false);
 	error = $state<string | null>(null);
 	#accountId: string | null = null;
+	#primaryListener: ((accountId: string, email: string) => void) | null = null;
 
 	primary = $derived(this.items.find((a) => a.isPrimary) ?? this.items[0] ?? null);
 	personal = $derived(this.items.filter((a) => !a.shared));
@@ -59,6 +60,7 @@ class AddressesStore {
 				}))
 			];
 			this.#syncUids();
+			this.#announcePrimary();
 		} catch (err) {
 			if (this.#accountId !== acct) return;
 			this.error = err instanceof Error ? err.message : m.store_addresses_load_failed();
@@ -79,6 +81,17 @@ class AddressesStore {
 		this.items = this.items.map((a) =>
 			a.id === updated.id ? updated : { ...a, isPrimary: false }
 		);
+		this.#announcePrimary();
+	}
+
+	onPrimaryChange(listener: (accountId: string, email: string) => void): void {
+		this.#primaryListener = listener;
+	}
+
+	#announcePrimary(): void {
+		const acct = this.#accountId;
+		const primary = this.items.find((a) => a.isPrimary && !a.shared);
+		if (acct && primary) this.#primaryListener?.(acct, primary.email);
 	}
 
 	async remove(id: string): Promise<void> {

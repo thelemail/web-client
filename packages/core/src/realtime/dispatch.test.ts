@@ -103,9 +103,10 @@ describe('applyHint', () => {
 		expect(addressesLoad).toHaveBeenCalledTimes(1);
 	});
 
-	it('ignores address hints for a background account', () => {
+	it('refreshes the profile, not the address list, for a background account address hint', () => {
 		applyHint(hint({ accountId: 'acc-2', kind: 'address.updated' }));
 		expect(addressesLoad).not.toHaveBeenCalled();
+		expect(authLoadProfile).toHaveBeenCalledWith('acc-2');
 	});
 
 	it('routes signature hints to signatures.load', () => {
