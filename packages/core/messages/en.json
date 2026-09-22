@@ -2847,6 +2847,7 @@
 			}
 		}
 	],
+	"settings_domains_remove_point_shared": "Shared addresses and open invitations on this domain are removed too, along with any signing or forwarding set up for its addresses.",
 	"settings_domains_remove_point_registrar": "The domain stays yours at your registrar, and another workspace can claim it.",
 	"settings_domains_remove_ack": "I understand mail to this domain will stop being accepted.",
 	"settings_domains_remove_type_confirm": "Type <mono>{domain}</mono> to confirm",

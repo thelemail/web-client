@@ -2847,6 +2847,7 @@
       }
     }
   ],
+  "settings_domains_remove_point_shared": "Les adresses partagées et les invitations en attente sur ce domaine sont également supprimées, ainsi que les autorisations de signature ou de transfert de ses adresses.",
   "settings_domains_remove_point_registrar": "Le domaine vous appartient toujours chez votre bureau d’enregistrement, et un autre espace de travail peut le revendiquer.",
   "settings_domains_remove_ack": "Je comprends que les e-mails à destination de ce domaine ne seront plus acceptés.",
   "settings_domains_remove_type_confirm": "Saisissez <mono>{domain}</mono> pour confirmer",

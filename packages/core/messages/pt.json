@@ -2847,6 +2847,7 @@
 			}
 		}
 	],
+	"settings_domains_remove_point_shared": "Os endereços partilhados e os convites pendentes neste domínio também são removidos, bem como as autorizações de assinatura ou reencaminhamento dos seus endereços.",
 	"settings_domains_remove_point_registrar": "O domínio continua a ser seu na entidade de registo e pode ser reivindicado por outro espaço de trabalho.",
 	"settings_domains_remove_ack": "Compreendo que as mensagens para este domínio deixarão de ser aceites.",
 	"settings_domains_remove_type_confirm": "Escreva <mono>{domain}</mono> para confirmar",

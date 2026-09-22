@@ -2847,6 +2847,7 @@
 			}
 		}
 	],
+	"settings_domains_remove_point_shared": "Geteilte Adressen und offene Einladungen auf dieser Domain werden ebenfalls entfernt, ebenso alle Signier- und Weiterleitungsfreigaben ihrer Adressen.",
 	"settings_domains_remove_point_registrar": "Die Domain bleibt bei Ihrem Registrar Ihr Eigentum und kann von einem anderen Arbeitsbereich beansprucht werden.",
 	"settings_domains_remove_ack": "Ich verstehe, dass E-Mails an diese Domain nicht mehr angenommen werden.",
 	"settings_domains_remove_type_confirm": "Geben Sie zur Bestätigung <mono>{domain}</mono> ein",
