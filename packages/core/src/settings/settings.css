@@ -1032,6 +1032,7 @@
 .settings-app .addr-sum { display: flex; flex-wrap: wrap; gap: 5px 14px; margin-top: 6px; font-size: 12px; color: var(--fg-muted); }
 .settings-app .addr-sum > span { display: inline-flex; align-items: center; gap: 5px; }
 .settings-app .addr-sum > span.pending { color: var(--info-700); }
+.settings-app .addr-sum > span.warn { color: var(--warning-700); }
 .settings-app .addr-sum svg { width: 12px; height: 12px; flex: 0 0 auto; }
 
 .settings-app .addr-used { display: flex; align-items: center; gap: 8px; min-width: 0; }

@@ -6,6 +6,7 @@ import type { WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
 import {
+	addressHealth,
 	buildRow,
 	groupByDomain,
 	dedupeAddresses,
@@ -224,5 +225,65 @@ describe('ledeFor', () => {
 		const c = ctx();
 		const row = buildRow(c, address({ id: 'a1', email: 'billing@abbaye.example', accountId: OTHER }));
 		expect(ledeFor(c, row)).toContain('belongs to Panurge');
+	});
+});
+
+describe('addressHealth', () => {
+	const at = '2026-09-21T12:00:00Z';
+
+	function domain(stage: 'pending' | 'owned' | 'ready', over: Partial<CustomDomain> = {}): CustomDomain {
+		const owned = stage !== 'pending';
+		const sending = stage === 'ready';
+		return {
+			id: OWN_DOMAIN_ID,
+			workspaceId: 'ws',
+			domain: 'abbaye.example',
+			status: stage,
+			addressCount: 1,
+			ownershipVerifiedAt: owned ? at : null,
+			dkimVerifiedAt: sending ? at : null,
+			spfVerifiedAt: sending ? at : null,
+			dmarcVerifiedAt: sending ? at : null,
+			createdAt: at,
+			updatedAt: at,
+			...over
+		};
+	}
+
+	const alias = address({ id: 'a2', email: 'abbot@abbaye.example' });
+
+	it('marks an address the server suspended', () => {
+		const c = ctx({ domains: [domain('pending')] });
+		const row = buildRow(c, { ...alias, suspended: true });
+		expect(row.health).toBe('suspended');
+		expect(row.canPromote).toBe(false);
+	});
+
+	it('tells a paused domain apart from a suspended address', () => {
+		const paused = domain('ready', { dormantAt: at });
+		expect(addressHealth({ ...alias, suspended: true }, [paused])).toBe('paused');
+	});
+
+	it('holds setup back until the domain can send', () => {
+		expect(addressHealth(alias, [domain('owned')])).toBe('sending_off');
+	});
+
+	it('holds setup back while the ownership record is missing', () => {
+		expect(addressHealth(alias, [domain('ready', { ownershipMissingSince: at })])).toBe('lapsing');
+	});
+
+	it('treats addresses on the included domain as live', () => {
+		const platform = address({ id: 'a3', email: 'gargantua@thelemail.com', customDomainId: null });
+		expect(addressHealth(platform, [domain('pending')])).toBe('live');
+		expect(addressHealth(alias, [domain('ready')])).toBe('live');
+	});
+
+	it('only lets a live address become primary', () => {
+		const ready = ctx({ domains: [domain('ready')] });
+		expect(buildRow(ready, alias).canPromote).toBe(true);
+		const owned = ctx({ domains: [domain('owned')] });
+		expect(buildRow(owned, alias).canPromote).toBe(false);
+		const lapsing = ctx({ domains: [domain('ready', { ownershipMissingSince: at })] });
+		expect(buildRow(lapsing, alias).canPromote).toBe(false);
 	});
 });
