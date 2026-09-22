@@ -1,6 +1,7 @@
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias, SharedAliasMember } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
+import { isDormant, ownershipProven } from '$core/settings/domains/steps';
 import type { WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
@@ -46,7 +47,7 @@ export interface AddressGroup {
 	domain: string;
 	ownDomain: boolean;
 	badge: string;
-	badgeTone: 'pine' | 'neutral';
+	badgeTone: 'pine' | 'neutral' | 'warn';
 	count: string;
 	rows: AddressRow[];
 }
@@ -203,15 +204,25 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 			return a.email.localeCompare(b.email);
 		});
 		const ownDomain = domain !== SHARED_DOMAIN;
+		const row = ctx.domains.find((d) => d.domain.toLowerCase() === domain);
 		return {
 			domain,
 			ownDomain,
-			badge: ownDomain ? m.settings_address_group_own_domain() : m.settings_address_group_included(),
-			badgeTone: ownDomain ? 'pine' : 'neutral',
+			...groupBadge(ownDomain, row),
 			count: m.settings_address_group_count({ count: list.length }),
 			rows: list
 		} satisfies AddressGroup;
 	});
+}
+
+function groupBadge(
+	ownDomain: boolean,
+	row: CustomDomain | undefined
+): { badge: string; badgeTone: AddressGroup['badgeTone'] } {
+	if (!ownDomain) return { badge: m.settings_address_group_included(), badgeTone: 'neutral' };
+	if (row && isDormant(row)) return { badge: m.settings_domains_status_paused(), badgeTone: 'warn' };
+	if (row && !ownershipProven(row)) return { badge: m.settings_address_group_suspended(), badgeTone: 'warn' };
+	return { badge: m.settings_address_group_own_domain(), badgeTone: 'pine' };
 }
 
 export function dedupeAddresses(lists: AccountAddress[][]): AccountAddress[] {

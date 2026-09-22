@@ -59,7 +59,7 @@ function ctx(over: Partial<ModelContext> = {}): ModelContext {
 		accountId: ME,
 		manage: true,
 		members: [member(ME, 'Gargantua', 'gargantua@abbaye.example'), member(OTHER, 'Panurge', 'panurge@abbaye.example')],
-		domains: [{ domain: 'abbaye.example' } as CustomDomain],
+		domains: [{ domain: 'abbaye.example', status: 'active', ownershipVerifiedAt: '2026-09-01T00:00:00Z' } as CustomDomain],
 		sharedAliases: [],
 		fullName: 'Gargantua',
 		delegationsFor: () => [],
@@ -183,6 +183,29 @@ describe('groupByDomain', () => {
 		expect(groups[1].badge).toBe('Included with your plan');
 		expect(groups[1].count).toBe('1 address');
 		expect(groups[0].rows[0].isPrimary).toBe(true);
+	});
+
+	it('marks a domain group that no longer receives mail', () => {
+		const c = ctx({ domains: [{ domain: 'abbaye.example', status: 'pending', ownershipVerifiedAt: null } as CustomDomain] });
+		const [group] = groupByDomain(c, [buildRow(c, address({ id: 'a2', email: 'abbot@abbaye.example' }))]);
+		expect(group.badge).toBe('Not receiving mail');
+		expect(group.badgeTone).toBe('warn');
+	});
+
+	it('marks a paused domain group', () => {
+		const c = ctx({
+			domains: [
+				{
+					domain: 'abbaye.example',
+					status: 'active',
+					ownershipVerifiedAt: '2026-09-01T00:00:00Z',
+					dormantAt: '2026-09-10T00:00:00Z'
+				} as CustomDomain
+			]
+		});
+		const [group] = groupByDomain(c, [buildRow(c, address({ id: 'a2', email: 'abbot@abbaye.example' }))]);
+		expect(group.badge).toBe('Paused');
+		expect(group.badgeTone).toBe('warn');
 	});
 });
 

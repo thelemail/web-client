@@ -223,6 +223,7 @@
 		}
 	],
 	"settings_address_group_own_domain": "O seu domínio · verificado",
+	"settings_address_group_suspended": "Não recebe correio",
 	"settings_address_group_included": "Incluído no seu plano",
 	"settings_address_group_count": [
 		{
@@ -864,7 +865,7 @@
 	"settings_ceremony_member_name_placeholder_family": "Jules Thélème",
 	"settings_ceremony_member_name_placeholder_org": "Camille Rondeau",
 	"settings_ceremony_member_address_label": "Endereço que lhe está a atribuir",
-	"settings_ceremony_member_no_domain": "Adicione e verifique um domínio personalizado em Domínios personalizados antes de convidar membros.",
+	"settings_ceremony_member_no_domain": "Conclua o passo de envio de um domínio personalizado em Domínios personalizados antes de convidar membros.",
 	"settings_ceremony_member_local_invalid": "Use letras, números, pontos ou hífenes.",
 	"settings_ceremony_member_address_conflict": "O endereço já está em utilização neste espaço de trabalho.",
 	"settings_ceremony_member_role_label": "Função",
@@ -2410,9 +2411,10 @@
 			}
 		}
 	],
-	"settings_member_domain_gate_manage": "Adicione um domínio e comprove a propriedade para convidar membros.",
+	"settings_member_domain_gate_manage": "Adicione um domínio e verifique os registos de envio para convidar membros.",
 	"settings_member_add_domain": "Adicionar um domínio",
-	"settings_member_domain_gate": "Um administrador tem de adicionar um domínio e comprovar a propriedade antes de poderem ser convidados membros.",
+	"settings_member_finish_domain": "Concluir a configuração do domínio",
+	"settings_member_domain_gate": "Um administrador tem de adicionar um domínio e verificar os registos de envio antes de poderem ser convidados membros.",
 	"settings_family_leave": "Sair da família",
 	"settings_family_this_family": "esta família",
 	"settings_member_role_owner": "Proprietário",
@@ -2572,8 +2574,9 @@
 	"settings_ceremony_alias_lede_shared_domain": "Um endereço em {domain} para toda a família. Cada pessoa escolhida recebe uma cópia na sua caixa de correio e pode escrever a partir dele.",
 	"settings_ceremony_alias_lede_own_domain": "Um endereço num domínio seu. Atribua-o a uma pessoa ou partilhe-o com várias para que todas recebam as mensagens enviadas para ele.",
 	"settings_ceremony_alias_loading_domains": "A carregar os seus domínios…",
-	"settings_ceremony_alias_need_domain": "Precisa primeiro de um domínio personalizado verificado. Abra <b>Domínios personalizados</b> e adicione um.",
-	"settings_ceremony_alias_domain_unverified": "Os endereços podem ser adicionados assim que a propriedade deste domínio for verificada.",
+	"settings_ceremony_alias_need_domain": "Precisa primeiro de um domínio personalizado com os registos de envio verificados. Abra <b>Domínios personalizados</b> para configurar um.",
+	"settings_ceremony_alias_domain_unverified": "Os endereços podem ser adicionados assim que os registos de envio deste domínio forem verificados.",
+	"settings_ceremony_alias_domain_lapsing": "Os endereços podem voltar a ser adicionados assim que o registo de propriedade deste domínio for reposto.",
 	"settings_ceremony_alias_display_name": "Nome de apresentação",
 	"settings_ceremony_alias_display_name_placeholder": "por ex., Apoio",
 	"settings_ceremony_alias_display_name_hint": "Este é o nome que as pessoas veem quando escreve a partir dele.",

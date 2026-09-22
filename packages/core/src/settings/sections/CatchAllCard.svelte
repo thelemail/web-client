@@ -8,7 +8,7 @@
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
-	import { ownershipProven } from '$core/settings/domains/steps';
+	import { usable } from '$core/settings/domains/steps';
 	import { m } from '$paraglide/messages.js';
 
 	const NONE_VALUE = '';
@@ -16,10 +16,10 @@
 	let error = $state<string | null>(null);
 	let busy = $state(false);
 
-	const ownedDomainIds = $derived(customDomains.items.filter(ownershipProven).map((d) => d.id));
+	const usableDomainIds = $derived(customDomains.items.filter(usable).map((d) => d.id));
 	const eligibleAddresses = $derived(
 		addresses.items.filter(
-			(a) => a.customDomainId && ownedDomainIds.includes(a.customDomainId)
+			(a) => a.customDomainId && usableDomainIds.includes(a.customDomainId)
 		)
 	);
 
@@ -76,7 +76,7 @@
 
 <div class="scard">
 	<CardHead icon={Inbox} title={m.settings_catchall_title()} />
-	{#if eligibleAddresses.length === 0}
+	{#if eligibleAddresses.length === 0 && !enabled}
 		<div class="setrow">
 			<div class="info">
 				<div class="t">{m.settings_catchall_route_addresses()}</div>

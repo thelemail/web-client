@@ -223,6 +223,7 @@
 		}
 	],
 	"settings_address_group_own_domain": "Your domain · verified",
+	"settings_address_group_suspended": "Not receiving mail",
 	"settings_address_group_included": "Included with your plan",
 	"settings_address_group_count": [
 		{
@@ -864,7 +865,7 @@
 	"settings_ceremony_member_name_placeholder_family": "Jules Thélème",
 	"settings_ceremony_member_name_placeholder_org": "Camille Rondeau",
 	"settings_ceremony_member_address_label": "Address you’re giving them",
-	"settings_ceremony_member_no_domain": "Add and verify a custom domain in Custom domains before inviting members.",
+	"settings_ceremony_member_no_domain": "Finish the sending step for a custom domain in Custom domains before inviting members.",
 	"settings_ceremony_member_local_invalid": "Use letters, numbers, dots, or hyphens.",
 	"settings_ceremony_member_address_conflict": "Address already in use in this workspace.",
 	"settings_ceremony_member_role_label": "Role",
@@ -2410,9 +2411,10 @@
 			}
 		}
 	],
-	"settings_member_domain_gate_manage": "Add a domain and prove you own it to invite members.",
+	"settings_member_domain_gate_manage": "Add a domain and verify its sending records to invite members.",
 	"settings_member_add_domain": "Add a domain",
-	"settings_member_domain_gate": "An admin must add a domain and prove ownership before members can be invited.",
+	"settings_member_finish_domain": "Finish domain setup",
+	"settings_member_domain_gate": "An admin must add a domain and verify its sending records before members can be invited.",
 	"settings_family_leave": "Leave family",
 	"settings_family_this_family": "this family",
 	"settings_member_role_owner": "Owner",
@@ -2572,8 +2574,9 @@
 	"settings_ceremony_alias_lede_shared_domain": "One address on {domain} for the whole household. Everyone you pick receives a copy in their own mailbox and can write from it.",
 	"settings_ceremony_alias_lede_own_domain": "An address on a domain you own. Give it to one person, or share it with several so mail sent to it reaches all of them.",
 	"settings_ceremony_alias_loading_domains": "Loading your domains…",
-	"settings_ceremony_alias_need_domain": "You need a verified custom domain first. Open <b>Custom domains</b> and add one.",
-	"settings_ceremony_alias_domain_unverified": "Addresses can be added once ownership of this domain is verified.",
+	"settings_ceremony_alias_need_domain": "You need a custom domain with verified sending records first. Open <b>Custom domains</b> to set one up.",
+	"settings_ceremony_alias_domain_unverified": "Addresses can be added once the sending records of this domain are verified.",
+	"settings_ceremony_alias_domain_lapsing": "Addresses can be added again once the ownership record for this domain is restored.",
 	"settings_ceremony_alias_display_name": "Display name",
 	"settings_ceremony_alias_display_name_placeholder": "e.g. Support",
 	"settings_ceremony_alias_display_name_hint": "This is the name people see when you write from it.",

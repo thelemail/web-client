@@ -223,6 +223,7 @@
     }
   ],
   "settings_address_group_own_domain": "Votre domaine · vérifié",
+  "settings_address_group_suspended": "Ne reçoit pas d’e-mails",
   "settings_address_group_included": "Inclus dans votre offre",
   "settings_address_group_count": [
     {
@@ -864,7 +865,7 @@
   "settings_ceremony_member_name_placeholder_family": "Jules Thélème",
   "settings_ceremony_member_name_placeholder_org": "Camille Rondeau",
   "settings_ceremony_member_address_label": "Adresse que vous lui attribuez",
-  "settings_ceremony_member_no_domain": "Ajoutez et vérifiez un domaine personnalisé dans Domaines personnalisés avant d’inviter des membres.",
+  "settings_ceremony_member_no_domain": "Terminez l’étape d’envoi d’un domaine personnalisé dans Domaines personnalisés avant d’inviter des membres.",
   "settings_ceremony_member_local_invalid": "Utilisez des lettres, des chiffres, des points ou des tirets.",
   "settings_ceremony_member_address_conflict": "Adresse déjà utilisée dans cet espace de travail.",
   "settings_ceremony_member_role_label": "Rôle",
@@ -2410,9 +2411,10 @@
       }
     }
   ],
-  "settings_member_domain_gate_manage": "Ajoutez un domaine et prouvez qu’il vous appartient pour inviter des membres.",
+  "settings_member_domain_gate_manage": "Ajoutez un domaine et faites vérifier ses enregistrements d’envoi pour inviter des membres.",
   "settings_member_add_domain": "Ajouter un domaine",
-  "settings_member_domain_gate": "Un administrateur doit ajouter un domaine et en prouver la propriété avant de pouvoir inviter des membres.",
+  "settings_member_finish_domain": "Terminer la configuration du domaine",
+  "settings_member_domain_gate": "Un administrateur doit ajouter un domaine et faire vérifier ses enregistrements d’envoi avant de pouvoir inviter des membres.",
   "settings_family_leave": "Quitter la famille",
   "settings_family_this_family": "cette famille",
   "settings_member_role_owner": "Propriétaire",
@@ -2572,8 +2574,9 @@
   "settings_ceremony_alias_lede_shared_domain": "Une adresse sur {domain} pour tout le foyer. Chaque personne choisie reçoit une copie dans sa propre boîte mail et peut écrire depuis cette adresse.",
   "settings_ceremony_alias_lede_own_domain": "Une adresse sur votre propre domaine. Attribuez-la à une seule personne ou partagez-la entre plusieurs pour que les e-mails envoyés à cette adresse leur parviennent à tous.",
   "settings_ceremony_alias_loading_domains": "Chargement de vos domaines…",
-  "settings_ceremony_alias_need_domain": "Vous devez d’abord disposer d’un domaine personnalisé vérifié. Ouvrez <b>Domaines personnalisés</b> et ajoutez-en un.",
-  "settings_ceremony_alias_domain_unverified": "Vous pourrez ajouter des adresses une fois la propriété de ce domaine vérifiée.",
+  "settings_ceremony_alias_need_domain": "Vous devez d’abord disposer d’un domaine personnalisé dont les enregistrements d’envoi sont vérifiés. Ouvrez <b>Domaines personnalisés</b> pour en configurer un.",
+  "settings_ceremony_alias_domain_unverified": "Vous pourrez ajouter des adresses une fois les enregistrements d’envoi de ce domaine vérifiés.",
+  "settings_ceremony_alias_domain_lapsing": "Vous pourrez de nouveau ajouter des adresses une fois l’enregistrement de propriété de ce domaine rétabli.",
   "settings_ceremony_alias_display_name": "Nom affiché",
   "settings_ceremony_alias_display_name_placeholder": "p. ex. Assistance",
   "settings_ceremony_alias_display_name_hint": "Le nom que les destinataires voient lorsque vous écrivez depuis cette adresse.",

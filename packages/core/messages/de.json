@@ -223,6 +223,7 @@
 		}
 	],
 	"settings_address_group_own_domain": "Ihre Domain · verifiziert",
+	"settings_address_group_suspended": "Kein E-Mail-Empfang",
 	"settings_address_group_included": "In Ihrem Tarif enthalten",
 	"settings_address_group_count": [
 		{
@@ -864,7 +865,7 @@
 	"settings_ceremony_member_name_placeholder_family": "Jules Thélème",
 	"settings_ceremony_member_name_placeholder_org": "Camille Rondeau",
 	"settings_ceremony_member_address_label": "Adresse für die Person",
-	"settings_ceremony_member_no_domain": "Fügen Sie unter „Eigene Domains“ eine Domain hinzu und verifizieren Sie sie, bevor Sie Mitglieder einladen.",
+	"settings_ceremony_member_no_domain": "Schließen Sie unter „Eigene Domains“ den Versandschritt für eine Domain ab, bevor Sie Mitglieder einladen.",
 	"settings_ceremony_member_local_invalid": "Verwenden Sie Buchstaben, Zahlen, Punkte oder Bindestriche.",
 	"settings_ceremony_member_address_conflict": "Diese Adresse wird in diesem Arbeitsbereich bereits verwendet.",
 	"settings_ceremony_member_role_label": "Rolle",
@@ -2410,9 +2411,10 @@
 			}
 		}
 	],
-	"settings_member_domain_gate_manage": "Fügen Sie eine Domain hinzu und weisen Sie Ihre Inhaberschaft nach, um Mitglieder einzuladen.",
+	"settings_member_domain_gate_manage": "Fügen Sie eine Domain hinzu und lassen Sie ihre Sendeeinträge verifizieren, um Mitglieder einzuladen.",
 	"settings_member_add_domain": "Domain hinzufügen",
-	"settings_member_domain_gate": "Ein Administrator muss zuerst eine Domain hinzufügen und die Inhaberschaft nachweisen, bevor Mitglieder eingeladen werden können.",
+	"settings_member_finish_domain": "Domain-Einrichtung abschließen",
+	"settings_member_domain_gate": "Ein Administrator muss zuerst eine Domain hinzufügen und ihre Sendeeinträge verifizieren lassen, bevor Mitglieder eingeladen werden können.",
 	"settings_family_leave": "Familie verlassen",
 	"settings_family_this_family": "diese Familie",
 	"settings_member_role_owner": "Inhaber",
@@ -2572,8 +2574,9 @@
 	"settings_ceremony_alias_lede_shared_domain": "Eine Adresse auf {domain} für den ganzen Haushalt. Alle ausgewählten Personen erhalten eine Kopie in ihrem eigenen Postfach und können unter dieser Adresse schreiben.",
 	"settings_ceremony_alias_lede_own_domain": "Eine Adresse auf Ihrer eigenen Domain. Weisen Sie sie einer Person zu oder teilen Sie sie mit mehreren, damit E-Mails an diese Adresse alle erreichen.",
 	"settings_ceremony_alias_loading_domains": "Ihre Domains werden geladen…",
-	"settings_ceremony_alias_need_domain": "Sie benötigen zuerst eine verifizierte eigene Domain. Öffnen Sie <b>Eigene Domains</b> und fügen Sie eine hinzu.",
-	"settings_ceremony_alias_domain_unverified": "Adressen können hinzugefügt werden, sobald die Inhaberschaft dieser Domain verifiziert ist.",
+	"settings_ceremony_alias_need_domain": "Sie benötigen zuerst eine eigene Domain mit verifizierten Sendeeinträgen. Öffnen Sie <b>Eigene Domains</b>, um eine einzurichten.",
+	"settings_ceremony_alias_domain_unverified": "Adressen können hinzugefügt werden, sobald die Sendeeinträge dieser Domain verifiziert sind.",
+	"settings_ceremony_alias_domain_lapsing": "Adressen können wieder hinzugefügt werden, sobald der Eintrag für die Inhaberschaft dieser Domain wiederhergestellt ist.",
 	"settings_ceremony_alias_display_name": "Anzeigename",
 	"settings_ceremony_alias_display_name_placeholder": "z. B. Support",
 	"settings_ceremony_alias_display_name_hint": "Dieser Name wird angezeigt, wenn Sie unter der Adresse schreiben.",

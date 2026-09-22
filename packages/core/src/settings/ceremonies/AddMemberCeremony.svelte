@@ -20,7 +20,7 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
-	import { ownershipProven } from '$core/settings/domains/steps';
+	import { usable } from '$core/settings/domains/steps';
 	import { seatLimitFor } from '../plan-display';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -39,8 +39,8 @@
 	const seatsUsed = $derived(workspaces.members.length + workspaces.invites.length);
 	const seatsLeft = $derived(seatsTotal != null ? seatsTotal - seatsUsed : null);
 
-	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
-	const domainNames = $derived(ownedDomains.map((d) => d.domain));
+	const usableDomains = $derived(customDomains.items.filter(usable));
+	const domainNames = $derived(usableDomains.map((d) => d.domain));
 
 	const steps = $derived([
 		m.settings_ceremony_member_step_person(),
@@ -64,17 +64,17 @@
 	let sentToEmail = $state<string | null>(null);
 
 	$effect(() => {
-		if (ownedDomains.length === 0) {
+		if (usableDomains.length === 0) {
 			customDomainId = '';
 			return;
 		}
-		if (!ownedDomains.some((d) => d.id === customDomainId)) {
-			customDomainId = ownedDomains[0].id;
+		if (!usableDomains.some((d) => d.id === customDomainId)) {
+			customDomainId = usableDomains[0].id;
 		}
 	});
 
 	const selectedDomain = $derived(
-		ownedDomains.find((d) => d.id === customDomainId) ?? null
+		usableDomains.find((d) => d.id === customDomainId) ?? null
 	);
 	const selectedDomainName = $derived(selectedDomain?.domain ?? '');
 
@@ -100,11 +100,11 @@
 	);
 	const addrConflict = $derived(memberConflict || inviteConflict);
 
-	const hasDomain = $derived(ownedDomains.length > 0 && customDomainId !== '');
+	const hasDomain = $derived(usableDomains.length > 0 && customDomainId !== '');
 	const ready = $derived(nameOk && localOk && emailOk && hasDomain && !addrConflict);
 
 	function selectDomainByName(name: string) {
-		const match = ownedDomains.find((d) => d.domain === name);
+		const match = usableDomains.find((d) => d.domain === name);
 		if (match) customDomainId = match.id;
 	}
 
@@ -176,19 +176,19 @@
 						disabled={!hasDomain}
 					/>
 					<span class="ac-at">@</span>
-					{#if ownedDomains.length > 1}
+					{#if usableDomains.length > 1}
 						<Select
 							value={selectedDomainName}
 							options={domainNames}
 							onChange={(v) => selectDomainByName(v)}
 						/>
-					{:else if ownedDomains.length === 1}
+					{:else if usableDomains.length === 1}
 						<span class="ac-fixed mono">{selectedDomainName}</span>
 					{:else}
 						<span class="ac-fixed mono">—</span>
 					{/if}
 				</div>
-				{#if ownedDomains.length === 0}
+				{#if usableDomains.length === 0}
 					<div class="field-hint bad">
 						<CircleAlert size={13} />{m.settings_ceremony_member_no_domain()}
 					</div>
