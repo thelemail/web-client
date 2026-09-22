@@ -22,3 +22,15 @@ export function checkErrorMessage(err: unknown, now: number): string | null {
 		return m.settings_domains_check_rate_limited({ when: retryWhen(err, now) });
 	return m.settings_domains_wizard_check_failed();
 }
+
+export function createErrorMessage(err: unknown, now: number): string {
+	if (isUpgradeRequiredError(err) || isPaymentRequiredError(err)) return m.settings_domains_nudge_title();
+	if (isReadOnlyError(err)) return readOnlyMessage();
+	if (err instanceof ApiCallError) {
+		if (err.status === 400) return m.settings_domains_new_not_allowed();
+		if (err.status === 409) return m.settings_domains_new_exists();
+		if (err.status === 422) return m.settings_domains_new_limit();
+		if (err.status === 429) return m.settings_domains_new_rate_limited({ when: retryWhen(err, now) });
+	}
+	return m.settings_domains_add_failed();
+}
