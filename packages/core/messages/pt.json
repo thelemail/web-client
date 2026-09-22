@@ -2607,6 +2607,8 @@
 	"settings_ceremony_alias_done_title_create": "Endereço adicionado",
 	"settings_ceremony_alias_done_desc_shared": "As mensagens enviadas para aqui chegam a todos os membros. Escolha-o no campo De ao escrever para enviar a partir dele.",
 	"settings_ceremony_alias_done_desc_single": "Está pronto para enviar e receber. Escolha-o no campo De ao escrever para enviar a partir dele.",
+	"settings_ceremony_alias_done_desc_shared_pending": "Todos os membros já podem enviar a partir dele. As mensagens enviadas para aqui chegam a eles quando o MX do domínio apontar para a Thelemail. Escolha-o no campo De ao escrever para enviar a partir dele.",
+	"settings_ceremony_alias_done_desc_single_pending": "Já pode enviar e passa a receber mensagens quando o MX do domínio apontar para a Thelemail. Escolha-o no campo De ao escrever para enviar a partir dele.",
 	"settings_ceremony_alias_saving": "A guardar…",
 	"settings_ceremony_alias_save_people": "Guardar membros",
 	"settings_ceremony_alias_add_address": "Adicionar endereço",

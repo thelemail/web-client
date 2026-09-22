@@ -2607,6 +2607,8 @@
   "settings_ceremony_alias_done_title_create": "Adresse ajoutée",
   "settings_ceremony_alias_done_desc_shared": "Les e-mails envoyés ici parviennent à tous ses membres. Choisissez cette adresse dans le champ De de la fenêtre de rédaction pour l’utiliser comme expéditeur.",
   "settings_ceremony_alias_done_desc_single": "L’adresse est prête pour l’envoi et la réception. Choisissez-la dans le champ De de la fenêtre de rédaction pour l’utiliser comme expéditeur.",
+  "settings_ceremony_alias_done_desc_shared_pending": "Tous ses membres peuvent déjà envoyer depuis cette adresse. Les e-mails envoyés ici leur parviendront dès que le MX du domaine pointera vers Thelemail. Choisissez cette adresse dans le champ De de la fenêtre de rédaction pour l’utiliser comme expéditeur.",
+  "settings_ceremony_alias_done_desc_single_pending": "L’adresse peut déjà envoyer des e-mails et en recevra dès que le MX du domaine pointera vers Thelemail. Choisissez-la dans le champ De de la fenêtre de rédaction pour l’utiliser comme expéditeur.",
   "settings_ceremony_alias_saving": "Enregistrement…",
   "settings_ceremony_alias_save_people": "Enregistrer les membres",
   "settings_ceremony_alias_add_address": "Ajouter l’adresse",

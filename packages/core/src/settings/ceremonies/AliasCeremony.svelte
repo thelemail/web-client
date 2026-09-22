@@ -12,7 +12,7 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { SHARED_DOMAIN } from '$core/settings/entitlements';
 	import { checkAddressAvailability } from '$core/api/auth';
-	import { ownershipLapsing, usable } from '$core/settings/domains/steps';
+	import { inboundLive, ownershipLapsing, usable } from '$core/settings/domains/steps';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { aliases } from '$core/stores/aliases.svelte';
 	import { aliasKeys } from '$core/stores/aliasKeys.svelte';
@@ -88,6 +88,12 @@
 	const onSharedDomain = $derived(selectedDomainName === SHARED_DOMAIN);
 	const shared = $derived(sharedPicked || onSharedDomain);
 	const selectedDomain = $derived(usableDomains.find((d) => d.domain === selectedDomainName) ?? null);
+	const addressDomain = $derived(
+		mode === 'members'
+			? (customDomains.items.find((d) => !!alias?.customDomainId && d.id === alias.customDomainId) ?? null)
+			: selectedDomain
+	);
+	const receiving = $derived(!addressDomain || inboundLive(addressDomain));
 
 	const localOk = $derived(/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i.test(local.trim()));
 	const nameOk = $derived(name.trim().length > 0);
@@ -446,8 +452,12 @@
 				? m.settings_ceremony_alias_done_title_members()
 				: m.settings_ceremony_alias_done_title_create()}
 			desc={shared
-				? m.settings_ceremony_alias_done_desc_shared()
-				: m.settings_ceremony_alias_done_desc_single()}
+				? receiving
+					? m.settings_ceremony_alias_done_desc_shared()
+					: m.settings_ceremony_alias_done_desc_shared_pending()
+				: receiving
+					? m.settings_ceremony_alias_done_desc_single()
+					: m.settings_ceremony_alias_done_desc_single_pending()}
 		>
 			<div class="done-pill"><span class="mono">{full}</span></div>
 		</DoneScreen>

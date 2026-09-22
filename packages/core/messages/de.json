@@ -2607,6 +2607,8 @@
 	"settings_ceremony_alias_done_title_create": "Adresse hinzugefügt",
 	"settings_ceremony_alias_done_desc_shared": "E-Mails an diese Adresse erreichen alle zugeordneten Personen. Wählen Sie sie beim Verfassen im Absenderfeld, um unter ihr zu schreiben.",
 	"settings_ceremony_alias_done_desc_single": "Die Adresse ist zum Senden und Empfangen bereit. Wählen Sie sie beim Verfassen im Absenderfeld, um unter ihr zu schreiben.",
+	"settings_ceremony_alias_done_desc_shared_pending": "Alle zugeordneten Personen können ab sofort unter dieser Adresse senden. E-Mails an diese Adresse erreichen sie, sobald der MX-Eintrag der Domain auf Thelemail verweist. Wählen Sie sie beim Verfassen im Absenderfeld, um unter ihr zu schreiben.",
+	"settings_ceremony_alias_done_desc_single_pending": "Die Adresse kann ab sofort senden und empfängt E-Mails, sobald der MX-Eintrag der Domain auf Thelemail verweist. Wählen Sie sie beim Verfassen im Absenderfeld, um unter ihr zu schreiben.",
 	"settings_ceremony_alias_saving": "Wird gespeichert…",
 	"settings_ceremony_alias_save_people": "Personen speichern",
 	"settings_ceremony_alias_add_address": "Adresse hinzufügen",

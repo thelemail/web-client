@@ -38,9 +38,12 @@
 	}
 
 	$effect(() => {
-		if (!domain) return;
+		if (!domain || !loaded) return;
 		const s = step;
-		untrack(() => showStepInUrl(s));
+		untrack(() => {
+			if (picked !== s) picked = s;
+			showStepInUrl(s);
+		});
 	});
 
 	$effect(() => {

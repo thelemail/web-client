@@ -107,4 +107,22 @@ describe('new domain page', () => {
 
 		await vi.waitFor(() => expect(document.body.textContent).toContain('This domain cannot be added.'));
 	});
+
+	it('drops the last server error once the name is edited', async () => {
+		api.createWorkspaceDomain.mockRejectedValue(
+			new ApiCallError(409, { error: { code: 'conflict', message: 'domain already in use' } }, 'domain already in use')
+		);
+		render(NewDomainPage);
+
+		await enter('acme.co.uk');
+		await fireEvent.click(continueButton()!);
+		await vi.waitFor(() => expect(document.body.textContent).toContain('This domain is already in your workspace.'));
+
+		await enter('acme.co.uk:');
+		expect(document.body.textContent).toContain('Enter a bare domain like');
+		expect(document.body.textContent).not.toContain('This domain is already in your workspace.');
+
+		await enter('acme.org');
+		expect(document.body.textContent).not.toContain('This domain is already in your workspace.');
+	});
 });

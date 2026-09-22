@@ -87,6 +87,7 @@
 					bind:value={name}
 					placeholder="example.com"
 					autocomplete="off"
+					oninput={() => (error = null)}
 					onkeydown={(e) => e.key === 'Enter' && submit()}
 				/>
 			</div>

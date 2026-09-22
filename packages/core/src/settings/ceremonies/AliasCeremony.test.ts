@@ -1,16 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import AliasCeremony from './AliasCeremony.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { billing } from '$core/stores/billing.svelte';
 import { aliases } from '$core/stores/aliases.svelte';
+import { aliasKeys } from '$core/stores/aliasKeys.svelte';
+import { addresses } from '$core/stores/addresses.svelte';
+import { workspaces } from '$core/stores/workspaces.svelte';
+import type { Workspace, WorkspaceMember } from '$core/api/workspaces';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Subscription } from '$core/api/billing';
 import type { SharedAlias } from '$core/api/aliases';
 import { SHARED_DOMAIN } from '$core/settings/entitlements';
 
-vi.mock('$core/keystore/keystore-client', () => ({ keystore: {} }));
-vi.mock('$core/directory/lookup', () => ({ lookupDirectory: vi.fn() }));
+const keys = vi.hoisted(() => ({ createAliasKey: vi.fn() }));
+vi.mock('$core/keystore/keystore-client', () => ({ keystore: keys }));
+vi.mock('$core/directory/lookup', () => ({
+	lookupDirectory: vi.fn().mockResolvedValue({ publicKeyArmored: 'member-key' })
+}));
+vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me' } }));
+const aliasApi = vi.hoisted(() => ({ createWorkspaceAlias: vi.fn() }));
+vi.mock('$core/api/aliases', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$core/api/aliases')>()),
+	createWorkspaceAlias: aliasApi.createWorkspaceAlias
+}));
 vi.mock('$core/directory/verify', () => ({
 	verifyDirectoryLookup: vi.fn(),
 	DirectoryVerificationError: class extends Error {}
@@ -68,6 +81,9 @@ afterEach(() => {
 	cleanup();
 	customDomains.clear();
 	billing.subscription = null;
+	workspaces.workspace = null;
+	workspaces.members = [];
+	vi.restoreAllMocks();
 });
 
 describe('AliasCeremony with a preset domain', () => {
@@ -153,5 +169,70 @@ describe('AliasCeremony without a preset domain', () => {
 			'You need a custom domain with verified sending records first.'
 		);
 		expect(selectValues(container)).toEqual([]);
+	});
+});
+
+describe('AliasCeremony done screen', () => {
+	const live = { mxVerifiedAt: at, addressCount: 1 };
+
+	beforeEach(() => {
+		workspaces.workspace = { id: 'w1', ownerAccountId: 'me', name: 'Acme', type: 'business', createdAt: at, updatedAt: at } as Workspace;
+		workspaces.members = [{ accountId: 'me', email: 'ada@acme.test', fullName: 'Ada' } as WorkspaceMember];
+		aliasApi.createWorkspaceAlias.mockReset().mockResolvedValue({});
+		keys.createAliasKey.mockReset().mockResolvedValue({ ok: true, publicKeyArmored: 'alias-key', grants: [] });
+		vi.spyOn(addresses, 'load').mockResolvedValue();
+		vi.spyOn(aliasKeys, 'load').mockResolvedValue();
+		vi.spyOn(aliases, 'create').mockResolvedValue({} as SharedAlias);
+	});
+
+	function body() {
+		return document.body.textContent ?? '';
+	}
+
+	function button(label: string) {
+		return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+	}
+
+	async function create(kind: 'single' | 'shared') {
+		open('d1');
+		await fireEvent.input(document.querySelector('#alias-name')!, { target: { value: 'Support' } });
+		await fireEvent.input(document.querySelector('#alias-local')!, { target: { value: 'support' } });
+		if (kind === 'shared') await fireEvent.click(document.querySelector('#alias-kind-shared')!);
+		await fireEvent.click(button('Continue')!);
+		await fireEvent.click(button('Add address')!);
+		await vi.waitFor(() => expect(button('Done')).toBeDefined());
+	}
+
+	it('says a new address can send but waits for the MX before it receives', async () => {
+		customDomains.items = [domain('d1', 'acme.test', 'ready')];
+		await create('single');
+
+		expect(aliasApi.createWorkspaceAlias).toHaveBeenCalled();
+		expect(body()).toContain("It can send now and will receive mail once the domain's MX points at Thelemail.");
+		expect(body()).not.toContain('ready to send and receive');
+	});
+
+	it('says a new address is ready to send and receive on a live domain', async () => {
+		customDomains.items = [domain('d1', 'acme.test', 'ready', live)];
+		await create('single');
+
+		expect(body()).toContain('It is ready to send and receive.');
+		expect(body()).not.toContain('once the domain');
+	});
+
+	it('says a shared address reaches its people only once the MX points here', async () => {
+		customDomains.items = [domain('d1', 'acme.test', 'ready')];
+		await create('shared');
+
+		expect(aliases.create).toHaveBeenCalled();
+		expect(body()).toContain("Mail sent here reaches them once the domain's MX points at Thelemail.");
+		expect(body()).not.toContain('Mail sent here reaches everyone on it.');
+	});
+
+	it('says a shared address on a live domain reaches everyone on it', async () => {
+		customDomains.items = [domain('d1', 'acme.test', 'ready', live)];
+		await create('shared');
+
+		expect(body()).toContain('Mail sent here reaches everyone on it.');
 	});
 });

@@ -2607,6 +2607,8 @@
 	"settings_ceremony_alias_done_title_create": "Address added",
 	"settings_ceremony_alias_done_desc_shared": "Mail sent here reaches everyone on it. Pick it in the Compose From-selector to write from it.",
 	"settings_ceremony_alias_done_desc_single": "It is ready to send and receive. Pick it in the Compose From-selector to write from it.",
+	"settings_ceremony_alias_done_desc_shared_pending": "Everyone on it can send from it now. Mail sent here reaches them once the domain's MX points at Thelemail. Pick it in the Compose From-selector to write from it.",
+	"settings_ceremony_alias_done_desc_single_pending": "It can send now and will receive mail once the domain's MX points at Thelemail. Pick it in the Compose From-selector to write from it.",
 	"settings_ceremony_alias_saving": "Saving…",
 	"settings_ceremony_alias_save_people": "Save people",
 	"settings_ceremony_alias_add_address": "Add address",

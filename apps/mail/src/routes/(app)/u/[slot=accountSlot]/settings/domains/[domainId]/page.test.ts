@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Workspace } from '$core/api/workspaces';
 import { ApiCallError } from '$core/api/types';
@@ -17,12 +17,13 @@ const api = vi.hoisted(() => ({
 vi.mock('$core/api/customDomains', () => api);
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), replaceState: vi.fn() }));
-vi.mock('$app/state', () => ({
+const nav = vi.hoisted(() => ({
 	page: {
 		params: { slot: '0', domainId: 'd1' },
 		url: new URL('http://localhost/u/0/settings/domains/d1?step=ownership')
 	}
 }));
+vi.mock('$app/state', () => nav);
 
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: {} }));
 vi.mock('$core/directory/lookup', () => ({ lookupDirectory: vi.fn() }));
@@ -44,6 +45,14 @@ const listed: CustomDomain = {
 	updatedAt: at
 };
 
+function currentStep() {
+	return document.querySelector('.dw-rail [aria-current="step"] .dw-lbl')?.textContent?.trim();
+}
+
+function button(label: string) {
+	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+}
+
 function text() {
 	return document.body.textContent ?? '';
 }
@@ -59,6 +68,7 @@ afterEach(() => {
 	vi.useRealTimers();
 	customDomains.setAccount(null);
 	workspaces.workspace = null;
+	nav.page.url = new URL('http://localhost/u/0/settings/domains/d1?step=ownership');
 });
 
 describe('domain setup page', () => {
@@ -114,5 +124,21 @@ describe('domain setup page', () => {
 
 		await vi.waitFor(() => expect(text()).toContain('Could not load this domain'));
 		expect(text()).not.toContain('pq: connection refused');
+	});
+
+	it('stays on the clamped step when ownership verifies after a deep link further ahead', async () => {
+		nav.page.url = new URL('http://localhost/u/0/settings/domains/d1?step=routing');
+		api.getWorkspaceDomain.mockResolvedValue({ domain: listed, records: [] });
+		render(DomainPage);
+
+		await vi.waitFor(() => expect(currentStep()).toBe('Ownership'));
+		expect(button('Continue')?.disabled).toBe(true);
+
+		customDomains.items = [{ ...listed, status: 'owned', ownershipVerifiedAt: at, actionableStage: 'sending' }];
+		await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
+		expect(currentStep()).toBe('Ownership');
+
+		await fireEvent.click(button('Continue')!);
+		expect(currentStep()).toBe('Sending');
 	});
 });
