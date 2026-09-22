@@ -64,7 +64,12 @@ class SignaturesStore {
 		if (!browser || this.#watching) return;
 		this.#watching = true;
 		keystore.subscribe((b) => {
-			if (b.type === 'locked' || b.type === 'cleared' || b.type === 'clearedAll') {
+			if (b.type === 'clearedAll' || (b.type === 'cleared' && b.accountId === this.#accountId)) {
+				this.#accountId = null;
+				this.clear();
+				return;
+			}
+			if (b.type === 'locked' || b.type === 'cleared') {
 				this.locked = true;
 				return;
 			}
@@ -98,7 +103,7 @@ class SignaturesStore {
 		this.error = null;
 		try {
 			await aliasKeys.ready(acct);
-			const { signatures } = await listSignatures();
+			const { signatures } = await listSignatures(acct);
 			if (this.#accountId !== acct) return;
 			const decoded: Signature[] = [];
 			let anyLocked = false;

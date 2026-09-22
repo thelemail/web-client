@@ -133,6 +133,6 @@ export function listMySharedAliases(): Promise<{ sharedAliases: SharedAlias[] }>
 	return apiFetch('/v1/me/shared-aliases');
 }
 
-export function listMyAliasKeys(): Promise<{ keys: AliasKeyGrant[] }> {
-	return apiFetch('/v1/me/alias-keys');
+export function listMyAliasKeys(accountId: string): Promise<{ keys: AliasKeyGrant[] }> {
+	return apiFetch('/v1/me/alias-keys', { accountId });
 }

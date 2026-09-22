@@ -231,8 +231,8 @@ export function updateCalendarMemberRole(
 	});
 }
 
-export function listMyCalendarKeys(): Promise<{ keys: CalendarKeyGrant[] }> {
-	return apiFetch('/v1/me/calendar-keys');
+export function listMyCalendarKeys(accountId: string): Promise<{ keys: CalendarKeyGrant[] }> {
+	return apiFetch('/v1/me/calendar-keys', { accountId });
 }
 
 export interface ListCalendarItemsOptions {
