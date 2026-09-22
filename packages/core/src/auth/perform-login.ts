@@ -231,10 +231,18 @@ async function finishOpaqueLogin(
 	email: string,
 	rememberMe: boolean
 ): Promise<PerformLoginResult> {
-	if (!grant.accountId || !grant.encryptedPrivateKey || !grant.wrappedMasterKey || !grant.masterKeyId) {
+	if (
+		!grant.accountId ||
+		!grant.accessToken ||
+		!grant.expiresInSeconds ||
+		!grant.encryptedPrivateKey ||
+		!grant.wrappedMasterKey ||
+		!grant.masterKeyId
+	) {
 		throw new Error(m.auth_login_unexpected_response());
 	}
 	const finalized = await finalizeMigrationIfGranted(grant);
+	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId);
 	const unlock = await keystore.opaqueCompleteLoginUnlock({
 		operationId,
 		accountId: grant.accountId,
@@ -245,6 +253,7 @@ async function finishOpaqueLogin(
 		serverAuthScheme: finalized || !grant.staged ? 'opaque_v1' : 'srp_v1'
 	});
 	if (!unlock.ok) {
+		auth.forgetSession(grant.accountId);
 		console.error('login: opaqueCompleteLoginUnlock failed', unlock.code);
 		throw new Error(
 			unlock.code === 'no_pending_operation'
@@ -268,7 +277,7 @@ async function finishOpaqueLogin(
 		}
 	}
 
-	return finishLoginSession(grant.accountId, grant.accessToken as string, grant.expiresInSeconds as number, email);
+	return finishLoginSession(grant.accountId, grant.accessToken, grant.expiresInSeconds, email);
 }
 
 async function finishLogin(
@@ -278,9 +287,16 @@ async function finishLogin(
 	rememberMe: boolean,
 	password: string
 ): Promise<PerformLoginResult> {
-	if (!grant.accountId || !grant.encryptedPrivateKey || !grant.keySalt) {
+	if (
+		!grant.accountId ||
+		!grant.accessToken ||
+		!grant.expiresInSeconds ||
+		!grant.encryptedPrivateKey ||
+		!grant.keySalt
+	) {
 		throw new Error(m.auth_login_unexpected_response());
 	}
+	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId);
 	const unlock = await keystore.completeLoginUnlock({
 		accountId: grant.accountId,
 		encryptedPrivateKey: grant.encryptedPrivateKey,
@@ -288,6 +304,7 @@ async function finishLogin(
 		srpSalt
 	});
 	if (!unlock.ok) {
+		auth.forgetSession(grant.accountId);
 		console.error('login: completeLoginUnlock failed', unlock.code);
 		throw new Error(
 			unlock.code === 'invalid_credentials'
@@ -305,7 +322,7 @@ async function finishLogin(
 	}
 
 	void stageMigrationIfGranted(grant, grant.accountId, password);
-	return finishLoginSession(grant.accountId, grant.accessToken as string, grant.expiresInSeconds as number, email);
+	return finishLoginSession(grant.accountId, grant.accessToken, grant.expiresInSeconds, email);
 }
 
 async function finishLoginSession(
