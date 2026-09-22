@@ -56,9 +56,7 @@ class CustomDomainsStore {
 	}
 
 	async fetchDetail(workspaceId: string, domainId: string): Promise<CustomDomainWithRecords> {
-		const result = await getWorkspaceDomain(workspaceId, domainId);
-		this.upsert(result);
-		return result;
+		return this.#detail(workspaceId, domainId, this.#accountId);
 	}
 
 	async startCheck(
@@ -66,13 +64,31 @@ class CustomDomainsStore {
 		domainId: string,
 		stage: DNSRecordPhase
 	): Promise<CustomDomainWithRecords> {
+		const acct = this.#accountId;
 		try {
 			const result = await startWorkspaceDomainCheck(workspaceId, domainId, stage);
-			this.upsert(result);
+			if (this.#accountId === acct) this.upsert(result);
 			return result;
 		} catch (err) {
 			if (err instanceof ApiCallError && (err.status === 409 || err.status === 429)) {
-				await this.fetchDetail(workspaceId, domainId).catch(() => undefined);
+				await this.#detail(workspaceId, domainId, acct).catch(() => undefined);
+			}
+			throw err;
+		}
+	}
+
+	async #detail(
+		workspaceId: string,
+		domainId: string,
+		acct: string | null
+	): Promise<CustomDomainWithRecords> {
+		try {
+			const result = await getWorkspaceDomain(workspaceId, domainId);
+			if (this.#accountId === acct) this.upsert(result);
+			return result;
+		} catch (err) {
+			if (this.#accountId === acct && err instanceof ApiCallError && err.status === 404) {
+				this.forget(domainId);
 			}
 			throw err;
 		}
@@ -80,6 +96,10 @@ class CustomDomainsStore {
 
 	async remove(workspaceId: string, domainId: string): Promise<void> {
 		await deleteWorkspaceDomain(workspaceId, domainId);
+		this.forget(domainId);
+	}
+
+	private forget(domainId: string): void {
 		this.items = this.items.filter((d) => d.id !== domainId);
 		const next = new Map(this.records);
 		next.delete(domainId);

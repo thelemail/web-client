@@ -168,6 +168,12 @@ export function reasonStage(code: string | null | undefined): CheckStage | null 
 	}
 }
 
+export function reasonStands(d: CustomDomain, code: string | null | undefined): boolean {
+	if (!code) return false;
+	const stage = reasonStage(code);
+	return stage ? stageCheckState(d, stage) !== 'verified' : !stepComplete(d, 'done');
+}
+
 export function reasonMessage(code: string | null | undefined): string | null {
 	if (!code) return null;
 	switch (code) {

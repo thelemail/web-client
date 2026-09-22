@@ -2649,6 +2649,7 @@
 	"settings_domains_meta_running": "Prüfung bis {deadline} · zuletzt geprüft {when}",
 	"settings_domains_meta_expired": "Prüfung {when} beendet",
 	"settings_domains_meta_lapsing": "Eintrag für die Inhaberschaft bis {deadline} wiederherstellen",
+	"settings_domains_meta_lapsing_member": "Ein Inhaber oder Administrator muss den Eintrag für die Inhaberschaft bis {deadline} wiederherstellen",
 	"settings_domains_steps_left": [
 		{
 			"declarations": [
@@ -3100,7 +3101,9 @@
 	"settings_domains_check_expired_member": "Ein Inhaber oder Administrator kann eine neue Prüfung starten.",
 	"settings_domains_check_rate_limited": "In letzter Zeit wurden zu viele Prüfungen gestartet. Versuchen Sie es {when} erneut.",
 	"settings_domains_lapse_note": "Der TXT-Eintrag für die Inhaberschaft von <b>{domain}</b> fehlt seit {since}. Stellen Sie ihn bis {deadline} wieder her, sonst wird die Domain freigegeben und ihre Adressen funktionieren nicht mehr.",
+	"settings_domains_lapse_note_member": "Der TXT-Eintrag für die Inhaberschaft von <b>{domain}</b> fehlt seit {since}. Ein Inhaber oder Administrator muss ihn bis {deadline} wiederherstellen, sonst wird die Domain freigegeben und ihre Adressen funktionieren nicht mehr.",
 	"settings_domains_paused_note": "Diese Domain ist pausiert, solange der Arbeitsbereich den kostenlosen Tarif nutzt. Lassen Sie den Eintrag für die Inhaberschaft bestehen, dann geht die Einrichtung nach einem Upgrade weiter.",
+	"settings_domains_paused_note_member": "Diese Domain ist pausiert, solange der Arbeitsbereich den kostenlosen Tarif nutzt. Die Einrichtung geht weiter, sobald ein Inhaber oder Administrator ein Upgrade durchführt.",
 	"settings_domains_wizard_ownership_title": "Inhaberschaft von {domain} nachweisen",
 	"settings_domains_wizard_sending_title": "E-Mail-Versand für {domain} erlauben",
 	"settings_domains_wizard_recipients_title": "Personen hinzufügen, die E-Mails empfangen sollen",
@@ -3176,6 +3179,7 @@
 	"mail_trust_accept_key": "Dem neuen Schlüssel vertrauen",
 	"settings_domains_setup_title": "Domaineinrichtung",
 	"settings_domains_load_failed": "Diese Domain konnte nicht geladen werden",
+	"settings_domains_not_found": "Diese Domain gehört nicht mehr zu Ihrem Arbeitsbereich.",
 	"settings_domains_setup_desc": "Inhaberschaft nachweisen, Senden einrichten, Empfangsadressen erstellen und zuletzt MX hierher umstellen.",
 	"settings_domains_loading_one": "Domain wird geladen…",
 	"settings_domains_add_failed": "Domain konnte nicht hinzugefügt werden",

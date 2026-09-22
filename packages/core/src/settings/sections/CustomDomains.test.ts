@@ -160,6 +160,26 @@ describe('CustomDomains list', () => {
 		expect(document.querySelector('.cd-err')?.textContent).toBe('The last check did not find the DKIM records.');
 	});
 
+	it('drops a stale ownership reason once a window restores the record', () => {
+		open(domain({ ...live, lastError: 'ownership_missing' }));
+
+		expect(document.querySelector('.cd-err')).toBeNull();
+	});
+
+	it('drops a stale DKIM reason once sending verifies', () => {
+		open(domain({ ...live, status: 'failed', mxVerifiedAt: null, lastError: 'dkim_missing', actionableStage: 'routing' }));
+
+		expect(document.querySelector('.cd-err')).toBeNull();
+	});
+
+	it('shows a DNS outage only until the domain is live', () => {
+		open(domain({ ...owned, lastError: 'dns_unavailable' }), { ...live, id: 'd2', domain: 'live.test', lastError: 'dns_unavailable' });
+
+		const errs = [...document.querySelectorAll('.cd-row')].map((r) => r.querySelector('.cd-err')?.textContent ?? null);
+		expect(errs[0]).toBeTruthy();
+		expect(errs[1]).toBeNull();
+	});
+
 	it('says when checking stopped for an expired window', () => {
 		open(withCheck(fresh, 'ownership', 'expired'));
 
@@ -174,6 +194,14 @@ describe('CustomDomains list', () => {
 		expect(text()).toContain(`Restore the ownership record by ${formatMoment(iso(42 * HOUR))}`);
 		expect(stage('Ownership')?.classList.contains('warn')).toBe(true);
 		expect(stage('Ownership')?.classList.contains('done')).toBe(false);
+	});
+
+	it('tells members an owner or admin has to restore the ownership record', () => {
+		workspaces.members = [{ accountId: 'a1', role: 'member' } as WorkspaceMember];
+		open(lapsing);
+
+		expect(text()).toContain(`An owner or admin needs to restore the ownership record by ${formatMoment(iso(42 * HOUR))}`);
+		expect(text()).not.toContain('Restore the ownership record by');
 	});
 
 	it('reads a live domain as set up with a relative check time', () => {

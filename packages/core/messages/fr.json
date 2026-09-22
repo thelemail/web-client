@@ -2649,6 +2649,7 @@
   "settings_domains_meta_running": "Vérification jusqu’au {deadline} · dernière vérification {when}",
   "settings_domains_meta_expired": "Vérification arrêtée {when}",
   "settings_domains_meta_lapsing": "Rétablissez l’enregistrement de propriété avant le {deadline}",
+  "settings_domains_meta_lapsing_member": "Un propriétaire ou un administrateur doit rétablir l’enregistrement de propriété avant le {deadline}",
   "settings_domains_steps_left": [
     {
       "declarations": [
@@ -3100,7 +3101,9 @@
   "settings_domains_check_expired_member": "Un propriétaire ou un administrateur peut lancer une nouvelle vérification.",
   "settings_domains_check_rate_limited": "Trop de vérifications ont été lancées récemment. Réessayez {when}.",
   "settings_domains_lapse_note": "L’enregistrement TXT de propriété de <b>{domain}</b> est absent depuis le {since}. Rétablissez-le avant le {deadline}, sinon le domaine sera libéré et ses adresses cesseront de fonctionner.",
+  "settings_domains_lapse_note_member": "L’enregistrement TXT de propriété de <b>{domain}</b> est absent depuis le {since}. Un propriétaire ou un administrateur doit le rétablir avant le {deadline}, sinon le domaine sera libéré et ses adresses cesseront de fonctionner.",
   "settings_domains_paused_note": "Ce domaine est en pause tant que l’espace de travail utilise l’offre gratuite. Laissez l’enregistrement de propriété en place et la configuration reprendra après la mise à niveau.",
+  "settings_domains_paused_note_member": "Ce domaine est en pause tant que l’espace de travail utilise l’offre gratuite. La configuration reprendra lorsqu’un propriétaire ou un administrateur passera à une offre supérieure.",
   "settings_domains_wizard_ownership_title": "Prouvez que {domain} vous appartient",
   "settings_domains_wizard_sending_title": "Autoriser {domain} à envoyer des e-mails",
   "settings_domains_wizard_recipients_title": "Ajouter les personnes qui recevront les e-mails",
@@ -3176,6 +3179,7 @@
   "mail_trust_accept_key": "Faire confiance à la nouvelle clé",
   "settings_domains_setup_title": "Configuration du domaine",
   "settings_domains_load_failed": "Impossible de charger ce domaine",
+  "settings_domains_not_found": "Ce domaine ne fait plus partie de votre espace de travail.",
   "settings_domains_setup_desc": "Prouvez la propriété, configurez l’envoi, créez les adresses de réception, puis dirigez les MX ici en dernier.",
   "settings_domains_loading_one": "Chargement du domaine…",
   "settings_domains_add_failed": "Impossible d’ajouter le domaine",

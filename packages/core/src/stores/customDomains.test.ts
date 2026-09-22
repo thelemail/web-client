@@ -132,4 +132,57 @@ describe('customDomains store', () => {
 
 		expect(customDomains.items).toEqual([]);
 	});
+
+	it('drops a detail fetch that lands after the account changed', async () => {
+		let resolve: (v: CustomDomainWithRecords) => void = () => {};
+		api.getWorkspaceDomain.mockReturnValue(new Promise((r) => (resolve = r)));
+
+		const pending = customDomains.fetchDetail('w1', 'd1');
+		customDomains.setAccount('a2');
+		resolve(withRecords(running));
+		await pending;
+
+		expect(customDomains.items).toEqual([]);
+		expect(customDomains.records.size).toBe(0);
+	});
+
+	it('drops a started check that lands after the account changed', async () => {
+		let resolve: (v: CustomDomainWithRecords) => void = () => {};
+		api.startWorkspaceDomainCheck.mockReturnValue(new Promise((r) => (resolve = r)));
+
+		const pending = customDomains.startCheck('w1', 'd1', 'ownership');
+		customDomains.setAccount('a2');
+		resolve(withRecords(running));
+		await pending;
+
+		expect(customDomains.items).toEqual([]);
+		expect(customDomains.records.size).toBe(0);
+	});
+
+	it('drops the refetch after a refused check when the account changed', async () => {
+		let reject: (e: unknown) => void = () => {};
+		api.startWorkspaceDomainCheck.mockReturnValue(new Promise((_, r) => (reject = r)));
+		api.getWorkspaceDomain.mockResolvedValue(withRecords(running));
+
+		const pending = customDomains.startCheck('w1', 'd1', 'ownership');
+		customDomains.setAccount('a2');
+		reject(new ApiCallError(409, { error: { code: 'conflict', message: 'check running' } }, 'check running'));
+		await expect(pending).rejects.toBeInstanceOf(ApiCallError);
+
+		expect(customDomains.items).toEqual([]);
+		expect(customDomains.records.size).toBe(0);
+	});
+
+	it('forgets a domain the server no longer has', async () => {
+		customDomains.items = [domain(), domain({ id: 'd2', domain: 'other.test' })];
+		customDomains.records = new Map([['d1', []], ['d2', []]]);
+		api.getWorkspaceDomain.mockRejectedValue(
+			new ApiCallError(404, { error: { code: 'not_found', message: 'custom domain not found' } }, 'custom domain not found')
+		);
+
+		await expect(customDomains.fetchDetail('w1', 'd1')).rejects.toBeInstanceOf(ApiCallError);
+
+		expect(customDomains.items.map((d) => d.id)).toEqual(['d2']);
+		expect([...customDomains.records.keys()]).toEqual(['d2']);
+	});
 });

@@ -2649,6 +2649,7 @@
 	"settings_domains_meta_running": "Checking until {deadline} · last check {when}",
 	"settings_domains_meta_expired": "Checking stopped {when}",
 	"settings_domains_meta_lapsing": "Restore the ownership record by {deadline}",
+	"settings_domains_meta_lapsing_member": "An owner or admin needs to restore the ownership record by {deadline}",
 	"settings_domains_steps_left": [
 		{
 			"declarations": [
@@ -3100,7 +3101,9 @@
 	"settings_domains_check_expired_member": "An owner or admin can start a new check.",
 	"settings_domains_check_rate_limited": "Too many checks were started recently. Try again {when}.",
 	"settings_domains_lapse_note": "The ownership TXT record for <b>{domain}</b> has been missing since {since}. Restore it by {deadline}, or the domain will be released and its addresses will stop working.",
+	"settings_domains_lapse_note_member": "The ownership TXT record for <b>{domain}</b> has been missing since {since}. An owner or admin needs to restore it by {deadline}, or the domain will be released and its addresses will stop working.",
 	"settings_domains_paused_note": "This domain is paused while the workspace is on the free plan. Keep the ownership record in place and setup continues when you upgrade.",
+	"settings_domains_paused_note_member": "This domain is paused while the workspace is on the free plan. Setup continues when an owner or admin upgrades the workspace.",
 	"settings_domains_wizard_ownership_title": "Prove you own {domain}",
 	"settings_domains_wizard_sending_title": "Let {domain} send mail",
 	"settings_domains_wizard_recipients_title": "Add the people who will receive mail",
@@ -3176,6 +3179,7 @@
 	"mail_trust_accept_key": "Trust the new key",
 	"settings_domains_setup_title": "Domain setup",
 	"settings_domains_load_failed": "Could not load this domain",
+	"settings_domains_not_found": "This domain is no longer in your workspace.",
 	"settings_domains_setup_desc": "Prove ownership, set up sending, create the addresses that will receive mail, then point MX here last.",
 	"settings_domains_loading_one": "Loading domain…",
 	"settings_domains_add_failed": "Could not add domain",

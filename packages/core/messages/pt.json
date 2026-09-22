@@ -2649,6 +2649,7 @@
 	"settings_domains_meta_running": "A verificar até {deadline} · última verificação {when}",
 	"settings_domains_meta_expired": "Verificação terminada {when}",
 	"settings_domains_meta_lapsing": "Reponha o registo de propriedade até {deadline}",
+	"settings_domains_meta_lapsing_member": "Um proprietário ou administrador tem de repor o registo de propriedade até {deadline}",
 	"settings_domains_steps_left": [
 		{
 			"declarations": [
@@ -3100,7 +3101,9 @@
 	"settings_domains_check_expired_member": "Um proprietário ou administrador pode iniciar uma nova verificação.",
 	"settings_domains_check_rate_limited": "Foram iniciadas demasiadas verificações recentemente. Tente de novo {when}.",
 	"settings_domains_lapse_note": "O registo TXT de propriedade de <b>{domain}</b> está em falta desde {since}. Reponha-o até {deadline}, caso contrário o domínio será libertado e os seus endereços deixarão de funcionar.",
+	"settings_domains_lapse_note_member": "O registo TXT de propriedade de <b>{domain}</b> está em falta desde {since}. Um proprietário ou administrador tem de o repor até {deadline}, caso contrário o domínio será libertado e os seus endereços deixarão de funcionar.",
 	"settings_domains_paused_note": "Este domínio está em pausa enquanto o espaço de trabalho estiver no plano gratuito. Mantenha o registo de propriedade e a configuração continua quando fizer a atualização.",
+	"settings_domains_paused_note_member": "Este domínio está em pausa enquanto o espaço de trabalho estiver no plano gratuito. A configuração continua quando um proprietário ou administrador atualizar o espaço de trabalho.",
 	"settings_domains_wizard_ownership_title": "Comprove que {domain} lhe pertence",
 	"settings_domains_wizard_sending_title": "Permita que {domain} envie mensagens",
 	"settings_domains_wizard_recipients_title": "Adicione as pessoas que vão receber mensagens",
@@ -3176,6 +3179,7 @@
 	"mail_trust_accept_key": "Confiar na nova chave",
 	"settings_domains_setup_title": "Configuração do domínio",
 	"settings_domains_load_failed": "Não foi possível carregar este domínio",
+	"settings_domains_not_found": "Este domínio já não faz parte do seu espaço de trabalho.",
 	"settings_domains_setup_desc": "Comprove a propriedade, configure o envio, crie os endereços que receberão mensagens e só no fim aponte o MX para aqui.",
 	"settings_domains_loading_one": "A carregar domínio…",
 	"settings_domains_add_failed": "Não foi possível adicionar o domínio",

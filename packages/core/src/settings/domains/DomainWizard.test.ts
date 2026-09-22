@@ -354,6 +354,23 @@ describe('DomainWizard for members', () => {
 		expect(button('Check DNS')).toBeUndefined();
 	});
 
+	it('tells members an owner or admin has to restore a missing ownership record', () => {
+		perm.manage = false;
+		open(lapsing, 'ownership');
+
+		expect(text()).toContain(`has been missing since ${formatMoment(iso(-6 * HOUR))}`);
+		expect(text()).toContain(`An owner or admin needs to restore it by ${formatMoment(iso(42 * HOUR))}`);
+		expect(text()).not.toContain('Restore it by');
+	});
+
+	it('tells members an owner or admin has to upgrade a paused domain', () => {
+		perm.manage = false;
+		open(pausedOwned, 'sending');
+
+		expect(text()).toContain('Setup continues when an owner or admin upgrades the workspace.');
+		expect(text()).not.toContain('Keep the ownership record in place');
+	});
+
 	it('keeps the add address button off for members', () => {
 		perm.manage = false;
 		open(ready, 'recipients');
@@ -452,5 +469,20 @@ describe('DomainWizard states', () => {
 
 		await view.rerender({ step: 'ownership' });
 		expect(text()).not.toContain('The last check did not find the DKIM records.');
+	});
+
+	it('drops a stale ownership reason once a window restores the record', () => {
+		open(domain({ ...live, lastError: 'ownership_missing' }), 'ownership');
+
+		expect(text()).toContain('Ownership confirmed.');
+		expect(text()).not.toContain('The last check did not find the ownership TXT record.');
+		expect(document.querySelector('.dw-note.warn')).toBeNull();
+	});
+
+	it('drops a stale DKIM reason once sending verifies', () => {
+		open(domain({ ...live, status: 'failed', mxVerifiedAt: null, lastError: 'dkim_missing', actionableStage: 'routing' }), 'sending');
+
+		expect(text()).not.toContain('The last check did not find the DKIM records.');
+		expect(document.querySelector('.dw-note.warn')).toBeNull();
 	});
 });

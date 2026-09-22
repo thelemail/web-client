@@ -28,6 +28,7 @@
 		previousStep,
 		reasonMessage,
 		reasonStage,
+		reasonStands,
 		stageCheckState,
 		stepComplete,
 		stepReachable,
@@ -91,11 +92,16 @@
 	const lastErrorText = $derived(
 		phase &&
 			!domain.check &&
-			domain.lastError &&
+			reasonStands(domain, domain.lastError) &&
 			(reasonStage(domain.lastError) ?? domain.actionableStage) === phase
 			? reasonMessage(domain.lastError)
 			: null
 	);
+
+	function lapseNote(missingSince: string, releaseAt: string): string {
+		const args = { domain: domain.domain, since: formatMoment(missingSince), deadline: formatMoment(releaseAt) };
+		return manage ? m.settings_domains_lapse_note(args) : m.settings_domains_lapse_note_member(args);
+	}
 
 	async function startCheck() {
 		const stage = phase;
@@ -155,19 +161,12 @@
 			<div class="dw-note bad">
 				<TriangleAlert size={15} />
 				<span>
-					<Rich
-						text={m.settings_domains_lapse_note({
-							domain: domain.domain,
-							since: formatMoment(domain.ownershipMissingSince),
-							deadline: formatMoment(domain.releaseAt)
-						})}
-						tags={{ b: bold }}
-					/>
+					<Rich text={lapseNote(domain.ownershipMissingSince, domain.releaseAt)} tags={{ b: bold }} />
 				</span>
 			</div>
 		{:else if paused}
 			<div class="dw-note warn">
-				<Info size={15} /><span>{m.settings_domains_paused_note()}</span>
+				<Info size={15} /><span>{manage ? m.settings_domains_paused_note() : m.settings_domains_paused_note_member()}</span>
 			</div>
 		{/if}
 

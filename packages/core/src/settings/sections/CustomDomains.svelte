@@ -20,7 +20,8 @@
 		stepRunning,
 		checkRunning,
 		ownershipLapsing,
-		reasonMessage
+		reasonMessage,
+		reasonStands
 	} from '$core/settings/domains/steps';
 	import { pollWhileVisible } from '$core/settings/domains/poll';
 	import { serverNow } from '$core/api/serverclock';
@@ -80,10 +81,18 @@
 		return at ? timeSince(at, now) : m.settings_domains_never();
 	}
 
+	function reason(d: CustomDomain): string | null {
+		const code = d.check?.result ?? d.lastError;
+		return reasonStands(d, code) ? reasonMessage(code) : null;
+	}
+
 	function meta(d: CustomDomain): string {
 		const c = d.check;
 		if (ownershipLapsing(d) && d.releaseAt) {
-			return m.settings_domains_meta_lapsing({ deadline: formatMoment(d.releaseAt) });
+			const deadline = formatMoment(d.releaseAt);
+			return manage
+				? m.settings_domains_meta_lapsing({ deadline })
+				: m.settings_domains_meta_lapsing_member({ deadline });
 		}
 		if (c?.state === 'running') {
 			return m.settings_domains_meta_running({
@@ -130,7 +139,7 @@
 		<div class="cd-list">
 			{#each items as d (d.id)}
 				{@const live = stepComplete(d, 'done')}
-				{@const reason = reasonMessage(d.check?.result ?? d.lastError)}
+				{@const why = reason(d)}
 				<div class="cd-row" class:live>
 					<div class="cd-main">
 						<span class="cd-name mono">{d.domain}</span>
@@ -151,8 +160,8 @@
 						{/each}
 					</div>
 
-					{#if reason}
-						<div class="cd-err"><CircleAlert size={14} /><span>{reason}</span></div>
+					{#if why}
+						<div class="cd-err"><CircleAlert size={14} /><span>{why}</span></div>
 					{/if}
 
 					<div class="cd-foot-row">
