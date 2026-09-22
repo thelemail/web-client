@@ -1,41 +1,54 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Check from '@lucide/svelte/icons/check';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Clock from '@lucide/svelte/icons/clock';
 	import Info from '@lucide/svelte/icons/info';
 	import Plus from '@lucide/svelte/icons/plus';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	import Card from '../Card.svelte';
+	import CheckStatus from './CheckStatus.svelte';
 	import RecordList from './RecordList.svelte';
 	import WizardRail from './WizardRail.svelte';
+	import { checkErrorMessage } from './errors';
+	import { pollWhileVisible } from './poll';
 	import {
 		DOMAIN_STEPS,
 		STEP_LABELS,
 		STEP_PHASE,
-		canSend,
+		canRequestCheck,
+		checkRunning,
+		isDormant,
 		nextStep,
-		ownershipProven,
+		ownershipLapsing,
 		previousStep,
+		reasonMessage,
+		reasonStage,
+		reasonStands,
+		stageCheckState,
 		stepComplete,
 		stepReachable,
+		stepRunning,
+		usable,
+		type CheckStage,
 		type DomainStep
 	} from './steps';
+	import { serverNow } from '$core/api/serverclock';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
+	import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { dedupeAddresses } from '../addressModel';
 	import { canManageWorkspace } from '../permissions';
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import type { CustomDomain, RequiredDNSRecord } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
+	import { formatMoment } from '$core/i18n/relative';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -48,72 +61,75 @@
 
 	let { domain, records, step, listHref, onStep }: Props = $props();
 
-	const POLL_DELAYS_MS = [2000, 3000, 5000, 10000, 15000, 30000];
-	const HEARTBEAT_MS = 60000;
-
-	let checking = $state(false);
-	let error = $state<string | null>(null);
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	let attempts = 0;
-
-	let addingAddress = $state(false);
-	let addressError = $state<string | null>(null);
-
+	const CHECK_POLL_MS = 30_000;
+	const CLOCK_MS = 30_000;
 	const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
+
+	let starting = $state(false);
+	let startError = $state<{ stage: CheckStage; text: string } | null>(null);
+	let now = $state(serverNow());
+	let addingAlias = $state(false);
 
 	const phase = $derived(STEP_PHASE[step]);
 	const phaseRecords = $derived(phase ? records.filter((r) => r.phase === phase) : []);
 	const manage = $derived(canManageWorkspace());
-	let addingAlias = $state(false);
-	const domainAddresses = $derived(addresses.items.filter((a) => a.customDomainId === domain.id));
-
 	const domainId = $derived(domain.id);
+	const checkState = $derived(phase ? stageCheckState(domain, phase) : null);
+	const mayCheck = $derived(!!phase && canRequestCheck(domain, phase, manage));
+	const running = $derived(checkRunning(domain));
+	const lapsing = $derived(ownershipLapsing(domain));
+	const paused = $derived(isDormant(domain));
+	const missingKind = $derived<'pending' | 'fail'>(
+		checkState === 'expired' || (domain.status === 'failed' && !domain.check) ? 'fail' : 'pending'
+	);
+	const visibleAddresses = $derived(
+		(manage ? dedupeAddresses([addresses.items, workspaceAddresses.items]) : addresses.items).filter(
+			(a) => a.customDomainId === domain.id
+		)
+	);
+	const startErrorText = $derived(startError && startError.stage === phase ? startError.text : null);
+	const canContinue = $derived(stepComplete(domain, step) && stepReachable(domain, nextStep(step)));
+	const lastErrorText = $derived(
+		phase &&
+			!domain.check &&
+			reasonStands(domain, domain.lastError) &&
+			(reasonStage(domain.lastError) ?? domain.actionableStage) === phase
+			? reasonMessage(domain.lastError)
+			: null
+	);
 
-	function stop() {
-		if (timer !== undefined) {
-			clearTimeout(timer);
-			timer = undefined;
-		}
+	function lapseNote(missingSince: string, releaseAt: string): string {
+		const args = { domain: domain.domain, since: formatMoment(missingSince), deadline: formatMoment(releaseAt) };
+		return manage ? m.settings_domains_lapse_note(args) : m.settings_domains_lapse_note_member(args);
 	}
 
-	async function check(id: string) {
-		if (checking) return;
+	async function startCheck() {
+		const stage = phase;
 		const ws = workspaces.workspace?.id;
-		if (!ws) return;
-		checking = true;
+		if (starting || !stage || !ws) return;
+		starting = true;
+		startError = null;
 		try {
-			await customDomains.verify(ws, id);
-			error = null;
+			await customDomains.startCheck(ws, domainId, stage);
 		} catch (err) {
-			error = err instanceof Error ? err.message : m.settings_domains_wizard_check_failed();
+			const text = checkErrorMessage(err, serverNow());
+			startError = text ? { stage, text } : null;
 		} finally {
-			checking = false;
+			starting = false;
 		}
 	}
 
 	$effect(() => {
-		const s = step;
+		const t = setInterval(() => (now = serverNow()), CLOCK_MS);
+		return () => clearInterval(t);
+	});
+
+	$effect(() => {
+		if (!running) return;
+		const ws = workspaces.workspace?.id;
 		const id = domainId;
-		stop();
-		attempts = 0;
-		if (!STEP_PHASE[s]) return;
-
-		let cancelled = false;
-		const tick = async () => {
-			await check(id);
-			if (cancelled || stepComplete(domain, s)) return;
-			const delay = POLL_DELAYS_MS[attempts] ?? HEARTBEAT_MS;
-			attempts += 1;
-			timer = setTimeout(() => void tick(), delay);
-		};
-		untrack(() => {
-			if (!stepComplete(domain, s)) void tick();
-		});
-
-		return () => {
-			cancelled = true;
-			stop();
-		};
+		if (!ws) return;
+		return pollWhileVisible(() => customDomains.fetchDetail(ws, id), CHECK_POLL_MS);
 	});
 </script>
 
@@ -121,6 +137,7 @@
 	current={step}
 	done={(s) => stepComplete(domain, s)}
 	reachable={(s) => stepReachable(domain, s)}
+	running={(s) => stepRunning(domain, s)}
 	onSelect={onStep}
 />
 
@@ -140,47 +157,38 @@
 	{/snippet}
 
 	<div class="dw-pane">
+		{#if lapsing && domain.ownershipMissingSince && domain.releaseAt}
+			<div class="dw-note bad">
+				<TriangleAlert size={15} />
+				<span>
+					<Rich text={lapseNote(domain.ownershipMissingSince, domain.releaseAt)} tags={{ b: bold }} />
+				</span>
+			</div>
+		{:else if paused}
+			<div class="dw-note warn">
+				<Info size={15} /><span>{manage ? m.settings_domains_paused_note() : m.settings_domains_paused_note_member()}</span>
+			</div>
+		{/if}
+
 		{#if step === 'ownership'}
 			<p class="dw-lede">
 				{m.settings_domains_wizard_ownership_lede()}
 			</p>
-			<RecordList records={phaseRecords} />
-			{#if ownershipProven(domain)}
-				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>{m.settings_domains_wizard_ownership_ok()}</span>
-				</div>
-			{:else}
-				<div class="dw-note">
-					<Clock size={15} />
-					<span>
-						{m.settings_domains_wizard_propagation()}
-					</span>
-				</div>
-			{/if}
+			<RecordList records={phaseRecords} {now} missing={missingKind} />
+			<CheckStatus {domain} stage="ownership" {now} {manage} canStart={mayCheck} />
 		{:else if step === 'sending'}
 			<p class="dw-lede">
 				<Rich text={m.settings_domains_wizard_sending_lede({ domain: domain.domain })} tags={{ b: bold }} />
 			</p>
-			<RecordList records={phaseRecords} />
-			{#if canSend(domain)}
-				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>{m.settings_domains_wizard_sending_ok()}</span>
-				</div>
-			{:else}
-				<div class="dw-note">
-					<Clock size={15} />
-					<span>
-						{m.settings_domains_wizard_propagation()}
-					</span>
-				</div>
-			{/if}
+			<RecordList records={phaseRecords} {now} missing={missingKind} />
+			<CheckStatus {domain} stage="sending" {now} {manage} canStart={mayCheck} />
 		{:else if step === 'recipients'}
 			<p class="dw-lede">
 				<Rich text={m.settings_domains_wizard_recipients_lede()} tags={{ b: bold }} />
 			</p>
-			{#if domainAddresses.length > 0}
+			{#if visibleAddresses.length > 0}
 				<div class="dw-addrs">
-					{#each domainAddresses as a (a.id)}
+					{#each visibleAddresses as a (a.id)}
 						<div class="dw-addr">
 							<AtSign size={14} />
 							<span class="mono">{a.email}</span>
@@ -188,13 +196,18 @@
 						</div>
 					{/each}
 				</div>
-			{:else}
+			{:else if domain.addressCount > 0}
+				<div class="dw-note">
+					<AtSign size={15} /><span>{m.settings_domains_wizard_address_count({ count: domain.addressCount })}</span>
+				</div>
+			{/if}
+			{#if domain.addressCount === 0}
 				<div class="dw-note warn">
 					<TriangleAlert size={15} /><span>{m.settings_domains_wizard_no_addresses()}</span>
 				</div>
 			{/if}
 			<div class="dw-addr-acts">
-				<Button variant="secondary" disabled={!manage} onclick={() => (addingAlias = true)}>
+				<Button variant="secondary" disabled={!manage || !usable(domain)} onclick={() => (addingAlias = true)}>
 					<Plus size={14} />{m.settings_domains_wizard_add_address()}
 				</Button>
 			</div>
@@ -208,30 +221,8 @@
 			<p class="dw-lede">
 				<Rich text={m.settings_domains_wizard_routing_lede({ domain: domain.domain })} tags={{ b: bold }} />
 			</p>
-			{#if domain.addressCount === 0}
-				<div class="dw-note bad">
-					<TriangleAlert size={15} />
-					<span>
-						<Rich
-							text={m.settings_domains_wizard_routing_no_addresses()}
-							tags={{ b: bold, link: recipientsLink }}
-						/>
-					</span>
-				</div>
-			{/if}
-			<RecordList records={phaseRecords} />
-			{#if domain.mxVerifiedAt}
-				<div class="dw-note ok">
-					<CircleCheck size={15} /><span>{m.settings_domains_wizard_routing_ok()}</span>
-				</div>
-			{:else}
-				<div class="dw-note">
-					<Clock size={15} />
-					<span>
-						{m.settings_domains_wizard_propagation()}
-					</span>
-				</div>
-			{/if}
+			<RecordList records={phaseRecords} {now} missing={missingKind} />
+			<CheckStatus {domain} stage="routing" {now} {manage} canStart={mayCheck} />
 		{:else}
 			<div class="dw-done">
 				<span class="dw-done-ic"><CircleCheck size={34} strokeWidth={1.6} /></span>
@@ -252,10 +243,10 @@
 			</div>
 		{/if}
 
-		{#if error}
-			<div class="dw-note bad"><CircleAlert size={15} /><span>{error}</span></div>
-		{:else if domain.lastError && step !== 'done'}
-			<div class="dw-note warn"><CircleAlert size={15} /><span>{domain.lastError}</span></div>
+		{#if startErrorText}
+			<div class="dw-note bad"><CircleAlert size={15} /><span>{startErrorText}</span></div>
+		{:else if lastErrorText}
+			<div class="dw-note warn"><CircleAlert size={15} /><span>{lastErrorText}</span></div>
 		{/if}
 	</div>
 
@@ -266,15 +257,15 @@
 			</Button>
 		{/if}
 		<span class="dw-spacer"></span>
-		{#if phase}
-			<Button variant="secondary" disabled={checking || !manage} onclick={() => void check(domainId)}>
-				<RefreshCw size={14} />{checking ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_now()}
+		{#if mayCheck}
+			<Button variant="secondary" disabled={starting} onclick={() => void startCheck()}>
+				<RefreshCw size={14} />{starting ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_dns()}
 			</Button>
 		{/if}
 		{#if step === 'done'}
 			<Button variant="primary" href={listHref}>{m.settings_domains_wizard_all_domains()}<ArrowRight size={15} /></Button>
 		{:else}
-			<Button variant="primary" disabled={!stepReachable(domain, nextStep(step))} onclick={() => onStep(nextStep(step))}>
+			<Button variant="primary" disabled={!canContinue} onclick={() => onStep(nextStep(step))}>
 				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{/if}
@@ -287,11 +278,11 @@
 		onClose={() => (addingAlias = false)}
 		onComplete={() => {
 			const ws = workspaces.workspace?.id;
-			if (ws) void customDomains.fetchDetail(ws, domain.id);
+			if (!ws) return;
+			void customDomains.fetchDetail(ws, domain.id);
+			if (manage) void workspaceAddresses.reload();
 		}}
 	/>
 {/if}
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
-
-{#snippet recipientsLink(t: string)}<button type="button" class="dw-link" onclick={() => onStep('recipients')}>{t}</button>{/snippet}

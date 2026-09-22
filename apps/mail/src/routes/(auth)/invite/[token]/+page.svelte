@@ -14,6 +14,7 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { registrationInit } from '$core/api/auth';
+	import { ApiCallError } from '$core/api/types';
 	import { previewWorkspaceInvite, registerAndAcceptInvite, type WorkspaceInvitePreview } from '$core/api/workspaces';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
@@ -64,11 +65,16 @@
 
 	$effect(() => () => proof.dispose());
 
+	function inviteNotAcceptable(err: unknown): boolean {
+		return err instanceof ApiCallError && err.envelope?.error?.code === 'invite_not_acceptable';
+	}
+
 	onMount(async () => {
 		try {
 			invite = await previewWorkspaceInvite(page.params.token ?? '');
 		} catch (err) {
-			previewError = err instanceof Error ? err.message : m.auth_invite_no_longer_valid();
+			previewError =
+				inviteNotAcceptable(err) || !(err instanceof Error) ? m.auth_invite_no_longer_valid() : err.message;
 		} finally {
 			previewLoading = false;
 		}
@@ -178,7 +184,11 @@
 			step = 2;
 		} catch (err) {
 			password = '';
-			submitError = err instanceof Error ? err.message : m.auth_register_failed();
+			submitError = inviteNotAcceptable(err)
+				? m.auth_invite_unavailable_body()
+				: err instanceof Error
+					? err.message
+					: m.auth_register_failed();
 		} finally {
 			submitting = false;
 		}

@@ -5,6 +5,31 @@ export type DNSRecordKind = 'ownership' | 'mx' | 'dkim' | 'spf' | 'dmarc' | 'wkd
 export type DNSRecordPhase = 'ownership' | 'sending' | 'routing';
 export type DNSRecordStatus = 'ok' | 'missing' | 'mismatch';
 export type RequiredDNSRecordType = 'TXT' | 'MX' | 'CNAME';
+export type CustomDomainCheckState = 'running' | 'expired';
+export type CustomDomainCheckResult =
+	| 'ownership_missing'
+	| 'ownership_mismatch'
+	| 'ownership_wildcard'
+	| 'claimed_elsewhere'
+	| 'dkim_missing'
+	| 'dkim_mismatch'
+	| 'spf_missing'
+	| 'spf_mismatch'
+	| 'dmarc_missing'
+	| 'mx_missing'
+	| 'mx_mismatch'
+	| 'dns_unavailable';
+
+export interface CustomDomainCheck {
+	stage: DNSRecordPhase;
+	state: CustomDomainCheckState;
+	startedAt: string;
+	deadlineAt: string;
+	attempts: number;
+	lastCheckedAt?: string | null;
+	nextCheckAt?: string | null;
+	result?: CustomDomainCheckResult | null;
+}
 
 export interface CustomDomain {
 	id: string;
@@ -20,7 +45,11 @@ export interface CustomDomain {
 	dmarcVerifiedAt?: string | null;
 	wkdVerifiedAt?: string | null;
 	lastCheckedAt?: string | null;
-	lastError?: string | null;
+	lastError?: CustomDomainCheckResult | null;
+	check?: CustomDomainCheck | null;
+	actionableStage?: DNSRecordPhase | null;
+	ownershipMissingSince?: string | null;
+	releaseAt?: string | null;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -33,7 +62,7 @@ export interface RequiredDNSRecord {
 	value: string;
 	required: boolean;
 	status: DNSRecordStatus;
-	lastCheckedAt?: string | null;
+	verifiedAt?: string | null;
 }
 
 export interface CustomDomainWithRecords {
@@ -62,12 +91,14 @@ export function getWorkspaceDomain(
 	return apiFetch(`/v1/workspaces/${workspaceId}/domains/${domainId}`);
 }
 
-export function verifyWorkspaceDomain(
+export function startWorkspaceDomainCheck(
 	workspaceId: string,
-	domainId: string
+	domainId: string,
+	stage: DNSRecordPhase
 ): Promise<CustomDomainWithRecords> {
-	return apiFetch(`/v1/workspaces/${workspaceId}/domains/${domainId}/verify`, {
-		method: 'POST'
+	return apiFetch(`/v1/workspaces/${workspaceId}/domains/${domainId}/checks`, {
+		method: 'POST',
+		body: { stage }
 	});
 }
 

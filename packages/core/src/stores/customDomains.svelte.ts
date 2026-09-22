@@ -3,12 +3,14 @@ import {
 	listWorkspaceDomains,
 	createWorkspaceDomain,
 	getWorkspaceDomain,
-	verifyWorkspaceDomain,
+	startWorkspaceDomainCheck,
 	deleteWorkspaceDomain,
 	type CustomDomain,
 	type CustomDomainWithRecords,
+	type DNSRecordPhase,
 	type RequiredDNSRecord
 } from '$core/api/customDomains';
+import { ApiCallError } from '$core/api/types';
 
 class CustomDomainsStore {
 	items = $state<CustomDomain[]>([]);
@@ -41,6 +43,12 @@ class CustomDomainsStore {
 		}
 	}
 
+	async refresh(workspaceId: string): Promise<void> {
+		const acct = this.#accountId;
+		const { domains } = await listWorkspaceDomains(workspaceId);
+		if (this.#accountId === acct) this.items = domains;
+	}
+
 	async create(workspaceId: string, domain: string): Promise<CustomDomainWithRecords> {
 		const result = await createWorkspaceDomain(workspaceId, domain);
 		this.upsert(result);
@@ -48,19 +56,50 @@ class CustomDomainsStore {
 	}
 
 	async fetchDetail(workspaceId: string, domainId: string): Promise<CustomDomainWithRecords> {
-		const result = await getWorkspaceDomain(workspaceId, domainId);
-		this.upsert(result);
-		return result;
+		return this.#detail(workspaceId, domainId, this.#accountId);
 	}
 
-	async verify(workspaceId: string, domainId: string): Promise<CustomDomainWithRecords> {
-		const result = await verifyWorkspaceDomain(workspaceId, domainId);
-		this.upsert(result);
-		return result;
+	async startCheck(
+		workspaceId: string,
+		domainId: string,
+		stage: DNSRecordPhase
+	): Promise<CustomDomainWithRecords> {
+		const acct = this.#accountId;
+		try {
+			const result = await startWorkspaceDomainCheck(workspaceId, domainId, stage);
+			if (this.#accountId === acct) this.upsert(result);
+			return result;
+		} catch (err) {
+			if (err instanceof ApiCallError && (err.status === 409 || err.status === 429)) {
+				await this.#detail(workspaceId, domainId, acct).catch(() => undefined);
+			}
+			throw err;
+		}
+	}
+
+	async #detail(
+		workspaceId: string,
+		domainId: string,
+		acct: string | null
+	): Promise<CustomDomainWithRecords> {
+		try {
+			const result = await getWorkspaceDomain(workspaceId, domainId);
+			if (this.#accountId === acct) this.upsert(result);
+			return result;
+		} catch (err) {
+			if (this.#accountId === acct && err instanceof ApiCallError && err.status === 404) {
+				this.forget(domainId);
+			}
+			throw err;
+		}
 	}
 
 	async remove(workspaceId: string, domainId: string): Promise<void> {
 		await deleteWorkspaceDomain(workspaceId, domainId);
+		this.forget(domainId);
+	}
+
+	private forget(domainId: string): void {
 		this.items = this.items.filter((d) => d.id !== domainId);
 		const next = new Map(this.records);
 		next.delete(domainId);

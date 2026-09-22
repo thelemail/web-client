@@ -12,6 +12,7 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Forward from '@lucide/svelte/icons/forward';
 	import Clock from '@lucide/svelte/icons/clock';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -232,10 +233,16 @@
 							<span class="addr-name">{row.title}</span>
 							{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
 							{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
+							{#if row.health === 'suspended'}<Badge kind="warn" dot>{m.settings_address_suspended()}</Badge>{/if}
 						</span>
 						<span class="addr-mail">{row.email}</span>
-						{#if row.signerSummary || row.forwardSummary || row.pendingSummary}
+						{#if row.signerSummary || row.forwardSummary || row.pendingSummary || row.health === 'suspended'}
 							<span class="addr-sum">
+								{#if row.health === 'suspended'}
+									<span class="warn">
+										<CircleAlert size={12} />{m.settings_address_suspended_line({ domain: row.domain })}
+									</span>
+								{/if}
 								{#if row.signerSummary}
 									<span><KeyRound size={12} />{row.signerSummary}</span>
 								{/if}

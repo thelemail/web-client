@@ -31,6 +31,7 @@
 	import { recipientChip, type RecipientChip, type SendIdentity } from './data';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { initialsFor } from './initials';
+	import { chooseFrom, sendIdentityOf } from './identities';
 	import { auth } from '$core/stores/auth.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { signatures } from '$core/stores/signatures.svelte';
@@ -83,30 +84,18 @@
 		org: '',
 		kind: 'Default'
 	});
-	const identityOptions = $derived.by<SendIdentity[]>(() => {
-		const fromStore: SendIdentity[] = addresses.items.map((a) => {
-			const label = a.shared ? (a.name ?? a.email) : (a.name ?? auth.fullName ?? a.email);
-			return {
-				name: label,
-				email: a.email,
-				init: initialsFor(label, a.email),
-				bg: a.shared ? 'var(--info-700)' : 'var(--pine-700)',
-				fg: '#EEF2EA',
-				org: '',
-				kind: a.shared ? 'Alias' : a.isPrimary ? 'Default' : 'Identity',
-				addressId: a.id,
-				aliasId: a.sharedAliasId ?? undefined
-			};
-		});
-		if (fromStore.length === 0) return [userIdentity];
-		return fromStore;
-	});
-	let identIdx = $state(0);
-	const ident = $derived<SendIdentity>(identityOptions[identIdx] ?? userIdentity);
-
-	$effect(() => {
-		if (identIdx >= identityOptions.length) identIdx = 0;
-	});
+	const identityOptions = $derived<SendIdentity[]>(
+		addresses.items.length === 0
+			? [userIdentity]
+			: addresses.sendable.map((a) => sendIdentityOf(a, auth.fullName))
+	);
+	let fromEmail = $state<string | null>(null);
+	const from = $derived(chooseFrom(identityOptions, fromEmail));
+	const ident = $derived<SendIdentity>(from.identity ?? userIdentity);
+	const noSender = $derived(from.identity === null);
+	const fromNotice = $derived(
+		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
+	);
 	let fromOpen = $state(false);
 	let fromRef: HTMLDivElement | undefined = $state();
 
@@ -160,11 +149,11 @@
 		else removeSignature(editor);
 	}
 
-	function pickIdentity(i: number) {
-		identIdx = i;
+	function pickIdentity(email: string) {
+		fromEmail = email;
 		fromOpen = false;
 		if (isDraftEdit || !editor) return;
-		const addr = addresses.getByEmail(identityOptions[i]?.email ?? '');
+		const addr = addresses.getByEmail(email);
 		if (!addr) return;
 		const body = signatures.bodyFor(addr.id);
 		if (!seededSignature) {
@@ -357,8 +346,7 @@
 		try {
 			const detail = await getDraft(id);
 			const doc = await loadDraftDoc(accountId, detail);
-			const idx = identityOptions.findIndex((o) => o.email === doc.from.email);
-			if (idx >= 0) identIdx = idx;
+			fromEmail = doc.from.email;
 			to = doc.to.map(recipientChip);
 			cc = doc.cc.map(recipientChip);
 			bcc = doc.bcc.map(recipientChip);
@@ -480,7 +468,7 @@
 	const hasInvalid = $derived(allRecipients.some((c) => !c.valid));
 	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
 	const canSend = $derived(
-		validCount > 0 && !hasInvalid && status !== 'sending' && attReady
+		validCount > 0 && !hasInvalid && status !== 'sending' && attReady && !noSender
 	);
 	function identityKindLabel(kind: SendIdentity['kind']): string {
 		if (kind === 'Alias') return m.mail_compose_ident_shared();
@@ -829,12 +817,10 @@
 								<button
 									type="button"
 									class="fm-item"
-									class:on={i === identIdx}
+									class:on={id.email === ident.email}
 									role="menuitemradio"
-									aria-checked={i === identIdx}
-									onclick={() => {
-										pickIdentity(i);
-									}}
+									aria-checked={id.email === ident.email}
+									onclick={() => pickIdentity(id.email)}
 								>
 									<Avatar
 										initials={id.init}
@@ -852,7 +838,7 @@
 										<span class="fm-em">{id.email}</span>
 										{#if id.org}<span class="fm-org">{id.org}</span>{/if}
 									</span>
-									{#if i === identIdx}<Check size={17} />{/if}
+									{#if id.email === ident.email}<Check size={17} />{/if}
 								</button>
 							{/each}
 							<div class="fm-sep"></div>
@@ -869,6 +855,16 @@
 						</div>
 					{/if}
 				</div>
+				{#if noSender}
+					<div class="cnote"><CircleAlert size={14} />{m.mail_compose_no_sender()}</div>
+				{:else if fromNotice}
+					<div class="cnote">
+						<CircleAlert size={14} />{m.mail_compose_from_unavailable({
+							address: fromNotice,
+							from: ident.email
+						})}
+					</div>
+				{/if}
 
 				{#snippet ccBccSlot()}
 					<div class="ccbcc">
@@ -966,7 +962,7 @@
 				}}
 			/>
 
-			{#if warn && !canSend && status !== 'sending'}
+			{#if warn && !canSend && !noSender && status !== 'sending'}
 				<div class="cwarn">
 					<CircleAlert size={14} />
 					{hasInvalid

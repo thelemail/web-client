@@ -4,7 +4,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, hexToBytes } from '$core/crypto';
 import { sendInternal } from '$core/api/messages';
 import { lookupDirectory } from '$core/directory/lookup';
-import { ApiCallError } from '$core/api/types';
+import { ApiCallError, type ErrorCode } from '$core/api/types';
 import type {
 	AttachmentDescriptor,
 	ForwardCopy,
@@ -118,9 +118,17 @@ export function rateLimitedSendError(e: ApiCallError): SendError {
 	return new SendError('rate_limited', message, undefined, { kind: 'rate_limited', retryAfterSeconds });
 }
 
+const SENDER_REFUSALS: Partial<Record<ErrorCode, () => string>> = {
+	sender_address_suspended: () => m.send_error_sender_suspended(),
+	sending_not_verified: () => m.send_error_sending_not_verified(),
+	domain_paused: () => m.send_error_domain_paused()
+};
+
 export function sendErrorFromApi(e: unknown, fallback: string): SendError {
 	if (e instanceof SendError) return e;
 	if (e instanceof ApiCallError) {
+		const refusal = e.envelope?.error?.code ? SENDER_REFUSALS[e.envelope.error.code] : undefined;
+		if (refusal) return new SendError('rejected', refusal());
 		const message = e.envelope?.error?.message ?? m.send_error_http({ reason: fallback, status: e.status });
 		if (e.status === 429) return rateLimitedSendError(e);
 		if (e.status === 401) return new SendError('locked', message);
@@ -783,8 +791,10 @@ export async function sendInternalMessage(
 		if (typed !== addr && !deliveredTo.has(r.accountId)) deliveredTo.set(r.accountId, typed);
 	}
 	const keyByAccount = new Map<string, KeyMaterial>();
-	for (const r of resolutions.values()) {
+	const addressByAccount = new Map<string, string>();
+	for (const [addr, r] of resolutions) {
 		if (!keyByAccount.has(r.accountId)) keyByAccount.set(r.accountId, r.key);
+		if (!addressByAccount.has(r.accountId)) addressByAccount.set(r.accountId, addr);
 	}
 
 	const enrich = (p: ReplyParty): ReplyParty => {
@@ -881,14 +891,19 @@ export async function sendInternalMessage(
 		schemaVersion: 1,
 		source: 'internal',
 		sent: sentEnv,
-		recipients: accountIds.map((id, i) => ({ accountId: id, envelope: recipientEnvs[i] })),
+		recipients: accountIds.map((id, i) => ({
+			accountId: id,
+			envelope: recipientEnvs[i],
+			address: addressByAccount.get(id)
+		})),
 		externalMessageId,
 		inReplyToMessageId: input.inReplyToMessageId,
 		inReplyToHeader: input.inReplyToHeader,
 		references: input.references && input.references.length ? input.references : undefined,
 		scheduledAt: input.scheduledAt,
 		forwardCopies: forwardCopies.length ? forwardCopies : undefined,
-		forwardReplyTo: forwardCopies.length ? (input.fromEmail ?? auth.email ?? undefined) : undefined
+		forwardReplyTo: forwardCopies.length ? (input.fromEmail ?? auth.email ?? undefined) : undefined,
+		from: input.fromEmail ?? auth.email ?? undefined
 	};
 
 	try {

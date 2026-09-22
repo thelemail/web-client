@@ -32,7 +32,7 @@ import {
 	SendError,
 	type ComposeInput
 } from './send';
-import { ApiCallError } from '$core/api/types';
+import { ApiCallError, type ErrorCode } from '$core/api/types';
 
 function decode(bytes: Uint8Array): string {
 	return new TextDecoder().decode(bytes);
@@ -575,6 +575,21 @@ describe('sendErrorFromApi', () => {
 		const e = sendErrorFromApi(new ApiCallError(422, envelope, 'rejected'), 'Sending failed');
 		expect(e.code).toBe('malware_blocked');
 		expect(e.message).toContain('invoice.pdf');
+	});
+
+	it('explains in your language why an address may not send', () => {
+		const refusal = (code: ErrorCode, message: string) =>
+			sendErrorFromApi(new ApiCallError(403, { error: { code, message } }, message), 'Sending failed');
+		const suspended = refusal('sender_address_suspended', 'this address is paused until its domain is verified again');
+		expect(suspended.code).toBe('rejected');
+		expect(suspended.message).toBe('This address cannot send until its domain is verified again.');
+		expect(refusal('sending_not_verified', 'the sending records for this domain are not verified').message).toBe(
+			'This address can only send to Thelemail addresses until the sending records of its domain are verified.'
+		);
+		expect(refusal('domain_paused', 'this domain is paused on the free plan').message).toBe(
+			'This address cannot send while its domain is paused.'
+		);
+		expect(refusal('forbidden', 'sender not authorized').message).toBe('sender not authorized');
 	});
 
 	it('leaves an ordinary 422 as a plain rejection', () => {

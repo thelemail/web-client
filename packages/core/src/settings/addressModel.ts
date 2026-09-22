@@ -1,13 +1,16 @@
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias, SharedAliasMember } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
-import type { WorkspaceMember } from '$core/api/workspaces';
+import { canSend, isDormant, ownershipLapsing, ownershipProven, usable } from '$core/settings/domains/steps';
+import type { WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
 import { m } from '$paraglide/messages.js';
 import { SHARED_DOMAIN } from './entitlements';
 
 export type AddressKind = 'mailbox' | 'alias' | 'shared';
+
+export type AddressHealth = 'live' | 'suspended' | 'paused' | 'sending_off' | 'lapsing';
 
 export interface AddressPerson {
 	accountId: string;
@@ -30,6 +33,7 @@ export interface AddressRow {
 	isMine: boolean;
 	isOwnPersonal: boolean;
 	rotationRequired: boolean;
+	health: AddressHealth;
 	usedBy: string;
 	signerSummary: string;
 	forwardSummary: string;
@@ -46,7 +50,7 @@ export interface AddressGroup {
 	domain: string;
 	ownDomain: boolean;
 	badge: string;
-	badgeTone: 'pine' | 'neutral';
+	badgeTone: 'pine' | 'neutral' | 'warn';
 	count: string;
 	rows: AddressRow[];
 }
@@ -115,6 +119,52 @@ function sharedPeople(members: SharedAliasMember[]): AddressPerson[] {
 	}));
 }
 
+export function addressHealth(
+	address: Pick<AccountAddress, 'customDomainId' | 'suspended'>,
+	domains: CustomDomain[]
+): AddressHealth {
+	if (!address.customDomainId) return 'live';
+	const domain = domains.find((d) => d.id === address.customDomainId);
+	if (domain && isDormant(domain)) return 'paused';
+	if (address.suspended) return 'suspended';
+	if (!domain) return 'live';
+	if (!canSend(domain)) return 'sending_off';
+	return ownershipLapsing(domain) ? 'lapsing' : 'live';
+}
+
+export function setupBlockedNote(row: Pick<AddressRow, 'health' | 'domain'>): string | null {
+	const domain = row.domain;
+	switch (row.health) {
+		case 'suspended':
+			return m.settings_address_setup_suspended({ domain });
+		case 'paused':
+			return m.settings_address_setup_paused({ domain });
+		case 'sending_off':
+			return m.settings_address_setup_sending({ domain });
+		case 'lapsing':
+			return m.settings_address_setup_lapsing({ domain });
+		case 'live':
+			return null;
+	}
+}
+
+export function canResendInvite(
+	invite: Pick<WorkspaceInvite, 'kind' | 'customDomainId'>,
+	domains: CustomDomain[]
+): boolean {
+	if (invite.kind !== 'provision' || !invite.customDomainId) return true;
+	const domain = domains.find((d) => d.id === invite.customDomainId);
+	return !domain || usable(domain);
+}
+
+export function sendingChoices(own: AccountAddress[], domains: CustomDomain[]): AccountAddress[] {
+	return own.filter((a) => a.isPrimary || addressHealth(a, domains) === 'live');
+}
+
+export function replyChoices(own: AccountAddress[], keepId: string | null): AccountAddress[] {
+	return own.filter((a) => !a.suspended || a.id === keepId);
+}
+
 export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow {
 	const alias = address.sharedAliasId
 		? (ctx.sharedAliases.find((a) => a.id === address.sharedAliasId) ?? null)
@@ -131,6 +181,7 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 	const delegations = ctx.delegationsFor(address.id);
 	const forwardings = ctx.forwardingFor(address.id);
 	const own = kind !== 'shared' && isMine;
+	const health = addressHealth(address, ctx.domains);
 
 	const row: AddressRow = {
 		id: address.id,
@@ -147,11 +198,12 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 		isMine,
 		isOwnPersonal: own,
 		rotationRequired: Boolean(alias?.rotationRequired),
+		health,
 		usedBy: '',
 		signerSummary: signerSummary(delegations),
 		forwardSummary: forwardSummary(forwardings),
 		pendingSummary: pendingSummary(forwardings),
-		canPromote: own && !address.isPrimary,
+		canPromote: own && !address.isPrimary && health === 'live',
 		canRename: own || (kind === 'shared' && ctx.manage),
 		canRemove: (own && !address.isPrimary) || (kind !== 'mailbox' && ctx.manage && !address.isPrimary),
 		canManagePeople: kind === 'shared' && ctx.manage,
@@ -203,15 +255,25 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 			return a.email.localeCompare(b.email);
 		});
 		const ownDomain = domain !== SHARED_DOMAIN;
+		const row = ctx.domains.find((d) => d.domain.toLowerCase() === domain);
 		return {
 			domain,
 			ownDomain,
-			badge: ownDomain ? m.settings_address_group_own_domain() : m.settings_address_group_included(),
-			badgeTone: ownDomain ? 'pine' : 'neutral',
+			...groupBadge(ownDomain, row),
 			count: m.settings_address_group_count({ count: list.length }),
 			rows: list
 		} satisfies AddressGroup;
 	});
+}
+
+function groupBadge(
+	ownDomain: boolean,
+	row: CustomDomain | undefined
+): { badge: string; badgeTone: AddressGroup['badgeTone'] } {
+	if (!ownDomain) return { badge: m.settings_address_group_included(), badgeTone: 'neutral' };
+	if (row && isDormant(row)) return { badge: m.settings_domains_status_paused(), badgeTone: 'warn' };
+	if (row && !ownershipProven(row)) return { badge: m.settings_address_group_suspended(), badgeTone: 'warn' };
+	return { badge: m.settings_address_group_own_domain(), badgeTone: 'pine' };
 }
 
 export function dedupeAddresses(lists: AccountAddress[][]): AccountAddress[] {

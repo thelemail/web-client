@@ -7,6 +7,7 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -32,12 +33,14 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { canManageWorkspace } from '../permissions';
 	import { settingsPageTitle } from '../pageTitle.svelte';
+	import { resumeStep } from '../domains/steps';
 	import Rich from '$core/i18n/Rich.svelte';
 	import {
 		buildRow,
 		dedupeAddresses,
 		initialsOf,
 		ledeFor,
+		setupBlockedNote,
 		type ModelContext
 	} from '../addressModel';
 
@@ -82,6 +85,12 @@
 		row?.sharedAliasId ? (aliases.items.find((a) => a.id === row.sharedAliasId) ?? null) : null
 	);
 	const ownDomain = $derived(Boolean(row?.customDomainId));
+	const setupNote = $derived(row ? setupBlockedNote(row) : null);
+	const domainRow = $derived(
+		row?.customDomainId
+			? (customDomains.items.find((d) => d.id === row.customDomainId) ?? null)
+			: null
+	);
 	const loaded = $derived(addresses.items.length > 0 || workspaceAddresses.items.length > 0);
 
 	const currentName = $derived(alias?.name ?? address?.name ?? '');
@@ -174,10 +183,34 @@
 				{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
 				{#if row.kind === 'shared'}<Badge kind="neutral">{m.settings_address_shared()}</Badge>{/if}
 				{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
+				{#if row.health === 'suspended'}
+					<Badge kind="warn" dot>{m.settings_address_suspended()}</Badge>
+				{:else if row.health === 'paused'}
+					<Badge kind="warn" dot>{m.settings_domains_status_paused()}</Badge>
+				{/if}
 			</div>
 			<div class="ad-lede">{ledeFor(ctx, row)}</div>
 		</div>
 	</div>
+
+	{#if row.health === 'suspended'}
+		<div class="ad-alert">
+			<span class="ad-alert-ic"><CircleAlert size={15} /></span>
+			<div class="ad-alert-tx">
+				<b>{m.settings_address_suspended_title()}</b>
+				{m.settings_address_suspended_body({ domain: row.domain })}
+			</div>
+			{#if manage && domainRow}
+				<Button
+					variant="secondary"
+					size="sm"
+					href={`/u/${slot}/settings/domains/${domainRow.id}?step=${resumeStep(domainRow)}`}
+				>
+					{m.settings_address_suspended_action()}
+				</Button>
+			{/if}
+		</div>
+	{/if}
 
 	{#if row.rotationRequired}
 		<div class="ad-alert">
@@ -230,7 +263,12 @@
 				{#if row.isPrimary}
 					<Badge kind="pine">{m.settings_address_primary()}</Badge>
 				{:else}
-					<Button variant="secondary" size="sm" onclick={() => void promote()}>
+					<Button
+						variant="secondary"
+						size="sm"
+						disabled={!row.canPromote}
+						onclick={() => void promote()}
+					>
 						<Star size={14} />{m.settings_address_make_primary()}
 					</Button>
 				{/if}
@@ -298,11 +336,11 @@
 	{/if}
 
 	{#if row.canDelegate && address}
-		<DelegationsCard {address} />
+		<DelegationsCard {address} blocked={setupNote} />
 	{/if}
 
 	{#if row.canForward && address}
-		<ForwardingCard addressId={address.id} email={address.email} />
+		<ForwardingCard addressId={address.id} email={address.email} blocked={setupNote} />
 	{/if}
 
 	{#if row.canRemove}

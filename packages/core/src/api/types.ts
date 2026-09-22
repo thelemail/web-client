@@ -9,6 +9,7 @@ export type ErrorCode =
 	| 'forbidden'
 	| 'not_found'
 	| 'conflict'
+	| 'payment_required'
 	| 'internal_error'
 	| 'service_unavailable'
 	| 'account_pending_deletion'
@@ -27,6 +28,12 @@ export type ErrorCode =
 	| 'invitee_domain_not_shared'
 	| 'family_full'
 	| 'invite_not_acceptable'
+	| 'sender_address_suspended'
+	| 'sending_not_verified'
+	| 'domain_paused'
+	| 'domain_check_running'
+	| 'domain_stage_verified'
+	| 'domain_stage_locked'
 	| 'proof_required'
 	| 'proof_invalid'
 	| 'proof_expired'
@@ -323,6 +330,7 @@ export interface StagedAttachment {
 export interface SendRecipient {
 	accountId: string;
 	envelope: SendEnvelope;
+	address?: string;
 }
 
 export interface InternalSendRequest {
@@ -338,6 +346,7 @@ export interface InternalSendRequest {
 	scheduledAt?: string;
 	forwardCopies?: ForwardCopy[];
 	forwardReplyTo?: string;
+	from?: string;
 }
 
 export interface ForwardCopy {

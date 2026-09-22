@@ -1,13 +1,15 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import { replaceState } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 
 	import DomainWizard from '$core/settings/domains/DomainWizard.svelte';
 	import SecHead from '$core/settings/SecHead.svelte';
 	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
 	import { isDomainStep, reachableStep, resumeStep, type DomainStep } from '$core/settings/domains/steps';
+	import { showStepInUrl } from '$core/settings/domains/stepUrl';
+	import { ApiCallError } from '$core/api/types';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -21,6 +23,7 @@
 	const records = $derived(customDomains.records.get(domainId) ?? []);
 
 	let loadError = $state<string | null>(null);
+	let loaded = $state(false);
 	let picked = $state<DomainStep | null>(null);
 	let loadedFor = '';
 
@@ -32,10 +35,16 @@
 
 	function select(s: DomainStep) {
 		picked = s;
-		const url = new URL(page.url);
-		url.searchParams.set('step', s);
-		replaceState(url, page.state);
 	}
+
+	$effect(() => {
+		if (!domain || !loaded) return;
+		const s = step;
+		untrack(() => {
+			if (picked !== s) picked = s;
+			showStepInUrl(s);
+		});
+	});
 
 	$effect(() => {
 		settingsPageTitle.set(domain?.domain ?? m.settings_domains_setup_title());
@@ -48,9 +57,20 @@
 		if (!ws || !id || loadedFor === id) return;
 		loadedFor = id;
 		picked = null;
-		customDomains.fetchDetail(ws, id).catch((err) => {
-			loadError = err instanceof Error ? err.message : m.settings_domains_load_failed();
-		});
+		loadError = null;
+		loaded = false;
+		customDomains
+			.fetchDetail(ws, id)
+			.then(() => {
+				if (loadedFor === id) loaded = true;
+			})
+			.catch((err) => {
+				if (loadedFor !== id) return;
+				loadError =
+					err instanceof ApiCallError && err.status === 404
+						? m.settings_domains_not_found()
+						: m.settings_domains_load_failed();
+			});
 	});
 </script>
 
@@ -64,6 +84,8 @@
 
 {#if loadError}
 	<div class="dw-note bad"><CircleAlert size={15} /><span>{loadError}</span></div>
+{:else if !domain && loaded}
+	<div class="dw-note bad"><CircleAlert size={15} /><span>{m.settings_domains_not_found()}</span></div>
 {:else if !domain}
 	<div class="dw-note"><span>{m.settings_domains_loading_one()}</span></div>
 {:else}

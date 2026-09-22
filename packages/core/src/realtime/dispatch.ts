@@ -72,6 +72,7 @@ export function applyHint(hint: RealtimeHint): void {
 			return;
 		case 'address':
 			if (isActive) void addresses.load();
+			else void auth.loadProfile(hint.accountId);
 			return;
 		case 'signature':
 			if (isActive) void signatures.load();

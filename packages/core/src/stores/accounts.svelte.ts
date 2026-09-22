@@ -87,6 +87,15 @@ class AccountsStore {
 		this.#broadcast();
 	}
 
+	async setEmail(accountId: string, email: string): Promise<void> {
+		const all = await getAllAccountSlots();
+		const rec = all.find((r) => r.accountId === accountId);
+		if (!rec || rec.email === email) return;
+		await putAccountSlot({ ...rec, email });
+		await this.#reload();
+		this.#broadcast();
+	}
+
 	async remove(accountId: string): Promise<void> {
 		await deleteAccountSlot(accountId);
 		await this.#reload();

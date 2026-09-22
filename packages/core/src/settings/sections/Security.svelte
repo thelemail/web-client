@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
+	import { timeSince } from '$core/i18n/relative';
+	import { serverNow } from '$core/api/serverclock';
 	import { m } from '$paraglide/messages.js';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
@@ -237,24 +239,12 @@
 		}
 	}
 
-	function fmtRelative(iso: string): string {
-		const t = Date.parse(iso);
-		if (Number.isNaN(t)) return '';
-		const rtf = new Intl.RelativeTimeFormat(i18n.tag, { numeric: 'auto' });
-		const min = Math.round((Date.now() - t) / 60000);
-		if (min < 1) return m.settings_security_just_now();
-		if (min < 60) return rtf.format(-min, 'minute');
-		const hours = Math.round(min / 60);
-		if (hours < 24) return rtf.format(-hours, 'hour');
-		return rtf.format(-Math.round(hours / 24), 'day');
-	}
-
 	function sessionMeta(s: SessionInfo): string {
 		const parts = [m.settings_security_session_signed_in({ date: fmtDate(s.createdAt) })];
 		if (s.current) {
 			parts.push(m.settings_security_session_current());
 		} else if (s.lastUsedAt) {
-			parts.push(m.settings_security_session_last_active({ when: fmtRelative(s.lastUsedAt) }));
+			parts.push(m.settings_security_session_last_active({ when: timeSince(s.lastUsedAt) }));
 		}
 		return parts.join(' · ');
 	}
@@ -323,7 +313,7 @@
 	function fmtWhen(iso: string): string {
 		const t = Date.parse(iso);
 		if (Number.isNaN(t)) return '';
-		if (Date.now() - t < 7 * 24 * 60 * 60 * 1000) return fmtRelative(iso);
+		if (serverNow() - t < 7 * 24 * 60 * 60 * 1000) return timeSince(iso);
 		return fmtDate(iso);
 	}
 </script>

@@ -15,6 +15,9 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import UpgradeNudge from '$core/settings/UpgradeNudge.svelte';
 	import { resumeStep } from '$core/settings/domains/steps';
+	import { domainFromInput } from '$core/settings/domains/input';
+	import { createErrorMessage } from '$core/settings/domains/errors';
+	import { serverNow } from '$core/api/serverclock';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -26,17 +29,8 @@
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
 
-	const clean = $derived(
-		name
-			.trim()
-			.toLowerCase()
-			.replace(/^https?:\/\//, '')
-			.replace(/\/.*$/, '')
-			.replace(/\.$/, '')
-	);
-	const valid = $derived(
-		/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$/.test(clean)
-	);
+	const clean = $derived(domainFromInput(name));
+	const valid = $derived(clean !== '');
 
 	async function submit() {
 		if (!valid || submitting) return;
@@ -53,7 +47,7 @@
 				replaceState: true
 			});
 		} catch (err) {
-			error = err instanceof Error ? err.message : m.settings_domains_add_failed();
+			error = createErrorMessage(err, serverNow());
 			submitting = false;
 		}
 	}
@@ -93,6 +87,7 @@
 					bind:value={name}
 					placeholder="example.com"
 					autocomplete="off"
+					oninput={() => (error = null)}
 					onkeydown={(e) => e.key === 'Enter' && submit()}
 				/>
 			</div>

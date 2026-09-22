@@ -2,11 +2,16 @@ import { describe, it, expect } from 'vitest';
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
-import type { WorkspaceMember } from '$core/api/workspaces';
+import type { WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
 import {
+	addressHealth,
 	buildRow,
+	canResendInvite,
+	replyChoices,
+	sendingChoices,
+	setupBlockedNote,
 	groupByDomain,
 	dedupeAddresses,
 	ledeFor,
@@ -59,7 +64,7 @@ function ctx(over: Partial<ModelContext> = {}): ModelContext {
 		accountId: ME,
 		manage: true,
 		members: [member(ME, 'Gargantua', 'gargantua@abbaye.example'), member(OTHER, 'Panurge', 'panurge@abbaye.example')],
-		domains: [{ domain: 'abbaye.example' } as CustomDomain],
+		domains: [{ domain: 'abbaye.example', status: 'active', ownershipVerifiedAt: '2026-09-01T00:00:00Z' } as CustomDomain],
 		sharedAliases: [],
 		fullName: 'Gargantua',
 		delegationsFor: () => [],
@@ -184,6 +189,29 @@ describe('groupByDomain', () => {
 		expect(groups[1].count).toBe('1 address');
 		expect(groups[0].rows[0].isPrimary).toBe(true);
 	});
+
+	it('marks a domain group that no longer receives mail', () => {
+		const c = ctx({ domains: [{ domain: 'abbaye.example', status: 'pending', ownershipVerifiedAt: null } as CustomDomain] });
+		const [group] = groupByDomain(c, [buildRow(c, address({ id: 'a2', email: 'abbot@abbaye.example' }))]);
+		expect(group.badge).toBe('Not receiving mail');
+		expect(group.badgeTone).toBe('warn');
+	});
+
+	it('marks a paused domain group', () => {
+		const c = ctx({
+			domains: [
+				{
+					domain: 'abbaye.example',
+					status: 'active',
+					ownershipVerifiedAt: '2026-09-01T00:00:00Z',
+					dormantAt: '2026-09-10T00:00:00Z'
+				} as CustomDomain
+			]
+		});
+		const [group] = groupByDomain(c, [buildRow(c, address({ id: 'a2', email: 'abbot@abbaye.example' }))]);
+		expect(group.badge).toBe('Paused');
+		expect(group.badgeTone).toBe('warn');
+	});
 });
 
 describe('dedupeAddresses', () => {
@@ -201,5 +229,155 @@ describe('ledeFor', () => {
 		const c = ctx();
 		const row = buildRow(c, address({ id: 'a1', email: 'billing@abbaye.example', accountId: OTHER }));
 		expect(ledeFor(c, row)).toContain('belongs to Panurge');
+	});
+});
+
+describe('addressHealth', () => {
+	const at = '2026-09-21T12:00:00Z';
+
+	function domain(stage: 'pending' | 'owned' | 'ready', over: Partial<CustomDomain> = {}): CustomDomain {
+		const owned = stage !== 'pending';
+		const sending = stage === 'ready';
+		return {
+			id: OWN_DOMAIN_ID,
+			workspaceId: 'ws',
+			domain: 'abbaye.example',
+			status: stage,
+			addressCount: 1,
+			ownershipVerifiedAt: owned ? at : null,
+			dkimVerifiedAt: sending ? at : null,
+			spfVerifiedAt: sending ? at : null,
+			dmarcVerifiedAt: sending ? at : null,
+			createdAt: at,
+			updatedAt: at,
+			...over
+		};
+	}
+
+	const alias = address({ id: 'a2', email: 'abbot@abbaye.example' });
+
+	it('marks an address the server suspended', () => {
+		const c = ctx({ domains: [domain('pending')] });
+		const row = buildRow(c, { ...alias, suspended: true });
+		expect(row.health).toBe('suspended');
+		expect(row.canPromote).toBe(false);
+	});
+
+	it('tells a paused domain apart from a suspended address', () => {
+		const paused = domain('ready', { dormantAt: at });
+		expect(addressHealth({ ...alias, suspended: true }, [paused])).toBe('paused');
+	});
+
+	it('holds setup back until the domain can send', () => {
+		expect(addressHealth(alias, [domain('owned')])).toBe('sending_off');
+	});
+
+	it('holds setup back while the ownership record is missing', () => {
+		expect(addressHealth(alias, [domain('ready', { ownershipMissingSince: at })])).toBe('lapsing');
+	});
+
+	it('treats addresses on the included domain as live', () => {
+		const platform = address({ id: 'a3', email: 'gargantua@thelemail.com', customDomainId: null });
+		expect(addressHealth(platform, [domain('pending')])).toBe('live');
+		expect(addressHealth(alias, [domain('ready')])).toBe('live');
+	});
+
+	it('only lets a live address become primary', () => {
+		const ready = ctx({ domains: [domain('ready')] });
+		expect(buildRow(ready, alias).canPromote).toBe(true);
+		const owned = ctx({ domains: [domain('owned')] });
+		expect(buildRow(owned, alias).canPromote).toBe(false);
+		const lapsing = ctx({ domains: [domain('ready', { ownershipMissingSince: at })] });
+		expect(buildRow(lapsing, alias).canPromote).toBe(false);
+	});
+});
+
+describe('setupBlockedNote', () => {
+	it('names what holds setup back for each state', () => {
+		const domain = 'abbaye.example';
+		expect(setupBlockedNote({ health: 'suspended', domain })).toBe(
+			'New signing and forwarding can be set up once abbaye.example is verified again.'
+		);
+		expect(setupBlockedNote({ health: 'paused', domain })).toBe(
+			'Signing and forwarding cannot be set up while abbaye.example is paused.'
+		);
+		expect(setupBlockedNote({ health: 'sending_off', domain })).toBe(
+			'Signing and forwarding can be set up once the sending records of abbaye.example are verified.'
+		);
+		expect(setupBlockedNote({ health: 'lapsing', domain })).toBe(
+			'Signing and forwarding can be set up again once the ownership record of abbaye.example is restored.'
+		);
+		expect(setupBlockedNote({ health: 'live', domain })).toBeNull();
+	});
+});
+
+describe('canResendInvite', () => {
+	const at = '2026-09-21T12:00:00Z';
+
+	function domain(id: string, stage: 'owned' | 'ready', over: Partial<CustomDomain> = {}): CustomDomain {
+		const sending = stage === 'ready';
+		return {
+			id,
+			workspaceId: 'ws',
+			domain: `${id}.example`,
+			status: stage,
+			addressCount: 1,
+			ownershipVerifiedAt: at,
+			dkimVerifiedAt: sending ? at : null,
+			spfVerifiedAt: sending ? at : null,
+			dmarcVerifiedAt: sending ? at : null,
+			createdAt: at,
+			updatedAt: at,
+			...over
+		};
+	}
+
+	function invite(over: Partial<WorkspaceInvite>): Pick<WorkspaceInvite, 'kind' | 'customDomainId'> {
+		return { kind: 'provision', ...over };
+	}
+
+	it('offers a new invitation link only where the domain can take addresses', () => {
+		const domains = [
+			domain('owned', 'owned'),
+			domain('ready', 'ready'),
+			domain('lapsing', 'ready', { ownershipMissingSince: at })
+		];
+		expect(canResendInvite(invite({ customDomainId: 'owned' }), domains)).toBe(false);
+		expect(canResendInvite(invite({ customDomainId: 'ready' }), domains)).toBe(true);
+		expect(canResendInvite(invite({ customDomainId: 'lapsing' }), domains)).toBe(false);
+		expect(canResendInvite(invite({ kind: 'join', customDomainId: 'owned' }), domains)).toBe(true);
+		expect(canResendInvite(invite({ customDomainId: 'unknown' }), domains)).toBe(true);
+	});
+});
+
+describe('address pickers', () => {
+	const at = '2026-09-21T12:00:00Z';
+	const owned = {
+		id: OWN_DOMAIN_ID,
+		workspaceId: 'ws',
+		domain: 'abbaye.example',
+		status: 'owned',
+		addressCount: 2,
+		ownershipVerifiedAt: at,
+		createdAt: at,
+		updatedAt: at
+	} as CustomDomain;
+	const primary = address({ id: 'p', email: 'gargantua@thelemail.com', customDomainId: null, isPrimary: true });
+	const platform = address({ id: 'x', email: 'garg@thelemail.com', customDomainId: null });
+	const pending = address({ id: 'o', email: 'abbot@abbaye.example' });
+	const gone = address({ id: 's', email: 'cellar@abbaye.example', suspended: true });
+
+	it('offers only live addresses as the default sender', () => {
+		expect(sendingChoices([primary, platform, pending, gone], [owned]).map((a) => a.id)).toEqual(['p', 'x']);
+	});
+
+	it('keeps a suspended primary in the sending list so it still reads correctly', () => {
+		const suspendedPrimary = { ...gone, isPrimary: true };
+		expect(sendingChoices([suspendedPrimary, platform], [owned]).map((a) => a.id)).toEqual(['s', 'x']);
+	});
+
+	it('leaves suspended addresses out of reply-to unless already chosen', () => {
+		expect(replyChoices([primary, pending, gone], null).map((a) => a.id)).toEqual(['p', 'o']);
+		expect(replyChoices([primary, pending, gone], 's').map((a) => a.id)).toEqual(['p', 'o', 's']);
 	});
 });

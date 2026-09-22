@@ -19,7 +19,7 @@
 	import { paletteFor } from '$core/mail/avatarPalette';
 	import { billing } from '$core/stores/billing.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
-	import { ownershipProven } from '$core/settings/domains/steps';
+	import { usable } from '$core/settings/domains/steps';
 	import { auth } from '$core/stores/auth.svelte';
 	import {
 		seatLimitFor,
@@ -29,6 +29,7 @@
 		personalNote
 	} from './plan-display';
 	import { inviteMode } from './entitlements';
+	import { canResendInvite } from './addressModel';
 	import LeaveFamilyDialog from './LeaveFamilyDialog.svelte';
 	import RemoveMemberDialog from './RemoveMemberDialog.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -97,15 +98,15 @@
 				: m.settings_member_seats_used_included
 	);
 	const hasRoom = $derived(type === 'business' || seatsTotal === null || seatsUsed < seatsTotal);
-	const ownedDomainCount = $derived(customDomains.items.filter(ownershipProven).length);
+	const usableDomainCount = $derived(customDomains.items.filter(usable).length);
 	const mayInvite = $derived(
 		mode !== 'none' &&
 			workspaces.canInvite(callerAccountId, {
 				required: mode === 'domain',
-				verifiedCount: ownedDomainCount
+				verifiedCount: usableDomainCount
 			})
 	);
-	const domainGated = $derived(mode === 'domain' && hasRoom && ownedDomainCount === 0);
+	const domainGated = $derived(mode === 'domain' && hasRoom && usableDomainCount === 0);
 	const seatsLeft = $derived(seatsTotal == null ? null : seatsTotal - seatsUsed);
 	const myMember = $derived(workspaces.members.find((wm) => wm.accountId === callerAccountId) ?? null);
 	const isWorkspaceOwner = $derived(myMember?.role === 'owner');
@@ -174,7 +175,7 @@
 		const isOwner = member?.role === 'owner';
 		return {
 			canRevoke: isPending && canManage,
-			canResend: Boolean(inv) && browser,
+			canResend: !!inv && browser && canResendInvite(inv, customDomains.items),
 			canPromote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'member',
 			canDemote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'admin',
 			canRemove: !isPending && !isOwner && canManage && !isSelf,
@@ -269,8 +270,14 @@
 				<Info size={15} />
 				<span>{m.settings_member_domain_gate_manage()}</span>
 			</div>
-			<Button variant="secondary" size="sm" href={`/u/${slot}/settings/domains/new`}>
-				<Globe size={14} />{m.settings_member_add_domain()}
+			<Button
+				variant="secondary"
+				size="sm"
+				href={customDomains.items.length > 0 ? `/u/${slot}/settings/domains` : `/u/${slot}/settings/domains/new`}
+			>
+				<Globe size={14} />{customDomains.items.length > 0
+					? m.settings_member_finish_domain()
+					: m.settings_member_add_domain()}
 			</Button>
 		{:else if domainGated}
 			<div class="seat-full">

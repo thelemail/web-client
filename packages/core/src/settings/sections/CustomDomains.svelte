@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { i18n } from '$core/i18n/locale.svelte';
 	import Globe2 from '@lucide/svelte/icons/globe-2';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -15,11 +14,18 @@
 	import {
 		DOMAIN_STEPS,
 		STEP_LABELS,
-		inboundLive,
 		resumeStep,
 		domainBadge,
-		stepComplete
+		stepComplete,
+		stepRunning,
+		checkRunning,
+		ownershipLapsing,
+		reasonMessage,
+		reasonStands
 	} from '$core/settings/domains/steps';
+	import { pollWhileVisible } from '$core/settings/domains/poll';
+	import { serverNow } from '$core/api/serverclock';
+	import { formatMoment, timeSince } from '$core/i18n/relative';
 	import { customDomains as store } from '$core/stores/customDomains.svelte';
 	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -29,7 +35,8 @@
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
 
-	const POLL_MS = 60000;
+	const LIST_POLL_MS = 60_000;
+	const CLOCK_MS = 30_000;
 
 	const slot = $derived(page.params.slot ?? '0');
 	const base = $derived(`/u/${slot}/settings/domains`);
@@ -37,6 +44,7 @@
 
 	let menuFor = $state<string | null>(null);
 	let removeId = $state<string | null>(null);
+	let now = $state(serverNow());
 
 	const removeTarget = $derived(store.items.find((d) => d.id === removeId) ?? null);
 
@@ -56,17 +64,10 @@
 		removeId = id;
 	}
 
-	function formatTime(s: string | null | undefined): string {
-		if (!s) return m.settings_domains_never();
-		const d = new Date(s);
-		if (Number.isNaN(d.getTime())) return m.settings_domains_never();
-		return d.toLocaleString(i18n.tag);
-	}
-
 	const empty = $derived(!store.loading && store.items.length === 0);
 	const items = $derived(store.items);
 	const manage = $derived(workspaces.canManage());
-	const anyInSetup = $derived(items.some((d) => !inboundLive(d)));
+	const anyRunning = $derived(items.some(checkRunning));
 
 	function setupHref(d: CustomDomain): string {
 		return `${base}/${d.id}?step=${resumeStep(d)}`;
@@ -76,12 +77,44 @@
 		return LADDER.filter((s) => !stepComplete(d, s)).length;
 	}
 
+	function since(at: string | null | undefined): string {
+		return at ? timeSince(at, now) : m.settings_domains_never();
+	}
+
+	function reason(d: CustomDomain): string | null {
+		const code = d.check?.result ?? d.lastError;
+		return reasonStands(d, code) ? reasonMessage(code) : null;
+	}
+
+	function meta(d: CustomDomain): string {
+		const c = d.check;
+		if (ownershipLapsing(d) && d.releaseAt) {
+			const deadline = formatMoment(d.releaseAt);
+			return manage
+				? m.settings_domains_meta_lapsing({ deadline })
+				: m.settings_domains_meta_lapsing_member({ deadline });
+		}
+		if (c?.state === 'running') {
+			return m.settings_domains_meta_running({
+				deadline: formatMoment(c.deadlineAt),
+				when: since(c.lastCheckedAt)
+			});
+		}
+		if (c?.state === 'expired') return m.settings_domains_meta_expired({ when: timeSince(c.deadlineAt, now) });
+		if (stepComplete(d, 'done')) return m.settings_domains_checked({ time: since(d.lastCheckedAt) });
+		return m.settings_domains_steps_left({ count: remaining(d), time: since(d.lastCheckedAt) });
+	}
+
 	$effect(() => {
-		if (!anyInSetup) return;
+		const t = setInterval(() => (now = serverNow()), CLOCK_MS);
+		return () => clearInterval(t);
+	});
+
+	$effect(() => {
+		if (!anyRunning) return;
 		const ws = workspaces.workspace?.id;
 		if (!ws) return;
-		const t = setInterval(() => void store.load(ws), POLL_MS);
-		return () => clearInterval(t);
+		return pollWhileVisible(() => store.refresh(ws), LIST_POLL_MS);
 	});
 </script>
 
@@ -105,8 +138,8 @@
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
-				{@const live = inboundLive(d)}
-				{@const left = remaining(d)}
+				{@const live = stepComplete(d, 'done')}
+				{@const why = reason(d)}
 				<div class="cd-row" class:live>
 					<div class="cd-main">
 						<span class="cd-name mono">{d.domain}</span>
@@ -115,25 +148,24 @@
 
 					<div class="cd-progress" aria-label={m.settings_domains_progress_aria()}>
 						{#each LADDER as s (s)}
-							<span class="cd-stage" class:done={stepComplete(d, s)}>
+							<span
+								class="cd-stage"
+								class:done={stepComplete(d, s)}
+								class:run={stepRunning(d, s)}
+								class:warn={s === 'ownership' && ownershipLapsing(d)}
+							>
 								<span class="cd-pip"></span>
 								<span class="cd-stage-lbl">{STEP_LABELS[s]()}</span>
 							</span>
 						{/each}
 					</div>
 
-					{#if d.lastError}
-						<div class="cd-err"><CircleAlert size={14} /><span>{d.lastError}</span></div>
+					{#if why}
+						<div class="cd-err"><CircleAlert size={14} /><span>{why}</span></div>
 					{/if}
 
 					<div class="cd-foot-row">
-						<span class="cd-meta">
-							{#if live}
-								{m.settings_domains_checked({ time: formatTime(d.lastCheckedAt) })}
-							{:else}
-								{m.settings_domains_steps_left({ count: left, time: formatTime(d.lastCheckedAt) })}
-							{/if}
-						</span>
+						<span class="cd-meta">{meta(d)}</span>
 						<span class="cd-acts">
 							{#if live}
 								<Button variant="secondary" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
@@ -249,6 +281,12 @@
 	}
 	.cd-stage.done .cd-pip {
 		background: var(--success-500);
+	}
+	.cd-stage.run .cd-pip {
+		background: var(--pine-500);
+	}
+	.cd-stage.warn .cd-pip {
+		background: var(--warning-500);
 	}
 	.cd-stage-lbl {
 		font-size: 11.5px;

@@ -77,6 +77,7 @@ interface TokenSlot {
 
 interface ProfileSnapshot {
 	email: string | null;
+	serverEmail: string | null;
 	fullName: string | null;
 	avatarUrl: string | null;
 	defaultReplyAddressId: string | null;
@@ -89,6 +90,7 @@ interface ProfileSnapshot {
 
 const emptyProfile = (): ProfileSnapshot => ({
 	email: null,
+	serverEmail: null,
 	fullName: null,
 	avatarUrl: null,
 	defaultReplyAddressId: null,
@@ -155,7 +157,7 @@ class AuthStore {
 		for (const a of status.accounts) {
 			this.#mutateProfile(a.accountId, (p) => ({
 				...p,
-				email: a.email,
+				email: p.serverEmail ?? a.email,
 				vaultUnlocked: a.unlocked,
 				hasPersistent: a.hasPersistent
 			}));
@@ -178,7 +180,7 @@ class AuthStore {
 			this.#mutateProfile(accountId, (p) => ({
 				...p,
 				vaultUnlocked: true,
-				email: restored.email ?? p.email
+				email: p.serverEmail ?? restored.email ?? p.email
 			}));
 			void syncAddressUids(accountId);
 			return true;
@@ -219,7 +221,7 @@ class AuthStore {
 			if (msg.type === 'vaultChanged') {
 				this.#mutateProfile(msg.accountId, (p) => ({
 					...p,
-					email: msg.email,
+					email: p.serverEmail ?? msg.email,
 					vaultUnlocked: true
 				}));
 			} else if (msg.type === 'locked') {
@@ -351,6 +353,7 @@ class AuthStore {
 		this.#mutateProfile(id, (p) => ({
 			...p,
 			email: me.email,
+			serverEmail: me.email,
 			fullName: me.fullName,
 			avatarUrl: me.avatarUrl ?? null,
 			defaultReplyAddressId: me.defaultReplyAddressId ?? null,
@@ -359,6 +362,18 @@ class AuthStore {
 			lifecycle: me.lifecycle ?? null
 		}));
 		void cacheAccountAvatar(id, me.avatarUrl ?? null);
+		const slot = accounts.byId(id);
+		if (slot && slot.email !== me.email) void accounts.setEmail(id, me.email);
+	}
+
+	emailFor(accountId: string): string | null {
+		return this.#profiles.get(accountId)?.email ?? null;
+	}
+
+	reconcilePrimaryEmail(accountId: string, email: string): void {
+		const current = this.emailFor(accountId);
+		if (current === null || current.toLowerCase() === email.toLowerCase()) return;
+		void this.loadProfile(accountId);
 	}
 
 	avatarUrlFor(accountId: string): string | null {
@@ -462,6 +477,8 @@ if (browser) {
 		ensureFreshToken: (accountId) => auth.ensureFreshToken(accountId),
 		onUnauthorized: (accountId) => auth.tryRefresh(accountId ?? undefined)
 	});
+
+	addresses.onPrimaryChange((accountId, email) => auth.reconcilePrimaryEmail(accountId, email));
 
 	registerLifecycleReconciler({
 		onLifecycleError: (_code, accountId) => {

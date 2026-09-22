@@ -8,6 +8,9 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
+	import { aliases } from '$core/stores/aliases.svelte';
+	import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
+	import { auth } from '$core/stores/auth.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
@@ -43,6 +46,9 @@
 		try {
 			await customDomains.remove(ws, domain.id);
 			void addresses.load();
+			void aliases.load(ws);
+			void workspaceAddresses.reload();
+			void workspaces.load(auth.accountId);
 			onRemoved(target);
 			onClose();
 		} catch (err) {
@@ -78,6 +84,10 @@
 						{m.settings_domains_remove_point_addresses({ count })}
 					{/if}
 				</span>
+			</li>
+			<li>
+				<AtSign size={16} />
+				<span>{m.settings_domains_remove_point_shared()}</span>
 			</li>
 			<li>
 				<Globe size={16} />

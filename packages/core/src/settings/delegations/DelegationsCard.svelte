@@ -3,6 +3,7 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Check from '@lucide/svelte/icons/check';
+	import Info from '@lucide/svelte/icons/info';
 
 	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
@@ -18,9 +19,10 @@
 
 	interface Props {
 		address: AccountAddress;
+		blocked?: string | null;
 	}
 
-	let { address }: Props = $props();
+	let { address, blocked = null }: Props = $props();
 
 	let creating = $state(false);
 	let revoking = $state<SigningDelegation | null>(null);
@@ -49,7 +51,12 @@
 		{#snippet right()}
 			<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
 			{#if billing.canAddDomains}
-				<Button variant="secondary" size="sm" onclick={() => (creating = true)}>
+				<Button
+					variant="secondary"
+					size="sm"
+					disabled={!!blocked}
+					onclick={() => (creating = true)}
+				>
 					<Plus size={13} />{m.settings_delegation_authorize()}
 				</Button>
 			{/if}
@@ -59,6 +66,10 @@
 	<div class="card-lede">
 		{m.settings_delegation_card_lede({ email: address.email })}
 	</div>
+
+	{#if blocked}
+		<div class="card-note"><Info size={14} />{blocked}</div>
+	{/if}
 
 	{#if flash}
 		<div class="card-flash"><Check size={14} />{flash}</div>

@@ -8,6 +8,9 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
+	import { formatMoment } from '$core/i18n/relative';
+	import { canManageWorkspace } from '$core/settings/permissions';
+	import { isDormant, ownershipLapsing, resumeStep } from '$core/settings/domains/steps';
 
 	const STORAGE_WARN_RATIO = 0.9;
 
@@ -16,7 +19,13 @@
 
 	const paymentOverdue = $derived(billing.subscription?.status === 'past_due');
 
-	const failedDomains = $derived(customDomains.items.filter((d) => d.status === 'failed'));
+	const manage = $derived(canManageWorkspace());
+
+	const lapsing = $derived(customDomains.items.filter((d) => ownershipLapsing(d) && !!d.releaseAt));
+
+	const failedDomains = $derived(
+		customDomains.items.filter((d) => d.status === 'failed' && !isDormant(d) && !ownershipLapsing(d))
+	);
 
 	const storageUsed = $derived(billing.subscription?.storageBytesUsed ?? 0);
 	const storageLimit = $derived(billing.subscription?.storageBytesLimit ?? 0);
@@ -25,7 +34,7 @@
 	);
 
 	const anyAlert = $derived(
-		paymentOverdue || failedDomains.length > 0 || storageAlmostFull
+		paymentOverdue || lapsing.length > 0 || failedDomains.length > 0 || storageAlmostFull
 	);
 
 	function gb(bytes: number, decimals = 1): string {
@@ -47,6 +56,28 @@
 				<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_payment_action()}<ArrowRight size={13} /></a>
 			</div>
 		{/if}
+		{#each lapsing as d (d.id)}
+			{@const args = { domain: d.domain, deadline: formatMoment(d.releaseAt ?? '') }}
+			<div class="sysalert sa-danger">
+				<span class="sa-ic"><Globe size={15} /></span>
+				<span class="sa-tx">
+					<span class="sa-h">{m.mail_alerts_domain_lapse_title()}</span>
+					<span class="sa-d">
+						<Rich
+							text={manage
+								? m.mail_alerts_domain_lapse_detail(args)
+								: m.mail_alerts_domain_lapse_detail_member(args)}
+							tags={{ mono }}
+						/>
+					</span>
+				</span>
+				{#if manage}
+					<a class="sa-act" href={`${settingsBase}/domains/${d.id}?step=ownership`}>
+						{m.mail_alerts_domain_lapse_action()}<ArrowRight size={13} />
+					</a>
+				{/if}
+			</div>
+		{/each}
 		{#if failedDomains.length > 0}
 			<div class="sysalert sa-warning">
 				<span class="sa-ic"><Globe size={15} /></span>
@@ -64,7 +95,7 @@
 						/>
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}/domains/${failedDomains[0].id}`}>
+				<a class="sa-act" href={`${settingsBase}/domains/${failedDomains[0].id}?step=${resumeStep(failedDomains[0])}`}>
 					{m.mail_alerts_dns_action()}<ArrowRight size={13} />
 				</a>
 			</div>

@@ -12,7 +12,7 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { SHARED_DOMAIN } from '$core/settings/entitlements';
 	import { checkAddressAvailability } from '$core/api/auth';
-	import { ownershipProven } from '$core/settings/domains/steps';
+	import { inboundLive, ownershipLapsing, usable } from '$core/settings/domains/steps';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { aliases } from '$core/stores/aliases.svelte';
 	import { aliasKeys } from '$core/stores/aliasKeys.svelte';
@@ -60,20 +60,23 @@
 	let progress = $state<string | null>(null);
 	let createdEmail = $state<string | null>(null);
 
-	const ownedDomains = $derived(customDomains.items.filter(ownershipProven));
+	const usableDomains = $derived(customDomains.items.filter(usable));
 	const sharedSlotFree = $derived(
 		billing.canAddSharedDomainAlias && !aliases.items.some((a) => !a.customDomainId)
 	);
 	const presetDomain = $derived(
-		presetDomainId ? (ownedDomains.find((d) => d.id === presetDomainId) ?? null) : null
+		presetDomainId ? (usableDomains.find((d) => d.id === presetDomainId) ?? null) : null
 	);
 	const presetUnverified = $derived(!!presetDomainId && !presetDomain);
+	const presetLapsing = $derived(
+		!!presetDomainId && customDomains.items.some((d) => d.id === presetDomainId && ownershipLapsing(d))
+	);
 	const domainOptions = $derived(
 		presetDomainId
 			? presetDomain
 				? [presetDomain.domain]
 				: []
-			: [...ownedDomains.map((d) => d.domain), ...(sharedSlotFree ? [SHARED_DOMAIN] : [])]
+			: [...usableDomains.map((d) => d.domain), ...(sharedSlotFree ? [SHARED_DOMAIN] : [])]
 	);
 	let userPickedDomain = $state<string | null>(null);
 
@@ -84,7 +87,13 @@
 	);
 	const onSharedDomain = $derived(selectedDomainName === SHARED_DOMAIN);
 	const shared = $derived(sharedPicked || onSharedDomain);
-	const selectedDomain = $derived(ownedDomains.find((d) => d.domain === selectedDomainName) ?? null);
+	const selectedDomain = $derived(usableDomains.find((d) => d.domain === selectedDomainName) ?? null);
+	const addressDomain = $derived(
+		mode === 'members'
+			? (customDomains.items.find((d) => !!alias?.customDomainId && d.id === alias.customDomainId) ?? null)
+			: selectedDomain
+	);
+	const receiving = $derived(!addressDomain || inboundLive(addressDomain));
 
 	const localOk = $derived(/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i.test(local.trim()));
 	const nameOk = $derived(name.trim().length > 0);
@@ -260,7 +269,7 @@
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
-					{#if !presetDomainId && sharedSlotFree && ownedDomains.length === 0}
+					{#if !presetDomainId && sharedSlotFree && usableDomains.length === 0}
 						{m.settings_ceremony_alias_lede_shared_domain({ domain: SHARED_DOMAIN })}
 					{:else}
 						{m.settings_ceremony_alias_lede_own_domain()}
@@ -272,7 +281,11 @@
 			{:else if presetUnverified}
 				<div class="inline-warn">
 					<CircleAlert size={15} />
-					<span>{m.settings_ceremony_alias_domain_unverified()}</span>
+					<span
+						>{presetLapsing
+							? m.settings_ceremony_alias_domain_lapsing()
+							: m.settings_ceremony_alias_domain_unverified()}</span
+					>
 				</div>
 			{:else if domainOptions.length === 0}
 				<div class="inline-warn">
@@ -439,8 +452,12 @@
 				? m.settings_ceremony_alias_done_title_members()
 				: m.settings_ceremony_alias_done_title_create()}
 			desc={shared
-				? m.settings_ceremony_alias_done_desc_shared()
-				: m.settings_ceremony_alias_done_desc_single()}
+				? receiving
+					? m.settings_ceremony_alias_done_desc_shared()
+					: m.settings_ceremony_alias_done_desc_shared_pending()
+				: receiving
+					? m.settings_ceremony_alias_done_desc_single()
+					: m.settings_ceremony_alias_done_desc_single_pending()}
 		>
 			<div class="done-pill"><span class="mono">{full}</span></div>
 		</DoneScreen>
