@@ -31,7 +31,12 @@ class CalendarKeysStore {
 	#watch(): void {
 		if (!browser || this.#unsubscribe) return;
 		this.#unsubscribe = keystore.subscribe((b) => {
-			if (b.type === 'locked' || b.type === 'cleared' || b.type === 'clearedAll') {
+			if (b.type === 'clearedAll' || (b.type === 'cleared' && b.accountId === this.#accountId)) {
+				this.#accountId = null;
+				this.clear();
+				return;
+			}
+			if (b.type === 'locked' || b.type === 'cleared') {
 				this.clear();
 				return;
 			}
@@ -86,7 +91,7 @@ class CalendarKeysStore {
 		if (!browser) return;
 		this.#lastRefresh = Date.now();
 		try {
-			const { keys } = await listMyCalendarKeys();
+			const { keys } = await listMyCalendarKeys(accountId);
 			if (this.#accountId !== accountId) return;
 			this.grants = keys;
 			if (!keys.length) {

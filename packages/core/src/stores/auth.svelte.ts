@@ -275,6 +275,10 @@ class AuthStore {
 		if (accountId === this.#currentId) this.#scheduleProactiveRefresh();
 	}
 
+	forgetSession(accountId: string): void {
+		this.#dropToken(accountId);
+	}
+
 	setSession(accessToken: string, expiresInSeconds: number, accountId: string): void {
 		this.addSession(accessToken, expiresInSeconds, accountId);
 		this.activate(accountId);

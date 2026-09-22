@@ -23,7 +23,12 @@ class AliasKeysStore {
 	#watch(): void {
 		if (!browser || this.#unsubscribe) return;
 		this.#unsubscribe = keystore.subscribe((b) => {
-			if (b.type === 'locked' || b.type === 'cleared' || b.type === 'clearedAll') {
+			if (b.type === 'clearedAll' || (b.type === 'cleared' && b.accountId === this.#accountId)) {
+				this.#accountId = null;
+				this.clear();
+				return;
+			}
+			if (b.type === 'locked' || b.type === 'cleared') {
 				this.clear();
 				return;
 			}
@@ -57,7 +62,7 @@ class AliasKeysStore {
 		if (!browser) return;
 		this.#lastRefresh = Date.now();
 		try {
-			const { keys } = await listMyAliasKeys();
+			const { keys } = await listMyAliasKeys(accountId);
 			if (this.#accountId !== accountId) return;
 			if (!keys.length) {
 				this.loaded = true;

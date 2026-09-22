@@ -60,8 +60,8 @@ export interface CommitSignatureImageInput {
 	keyFingerprint: string;
 }
 
-export function listSignatures(): Promise<{ signatures: SignatureRecord[] }> {
-	return apiFetch('/v1/me/signatures');
+export function listSignatures(accountId: string): Promise<{ signatures: SignatureRecord[] }> {
+	return apiFetch('/v1/me/signatures', { accountId });
 }
 
 export function upsertSignature(
