@@ -1,6 +1,4 @@
-:80 {
-	root * /srv
-
+(security_headers) {
 	header {
 		Content-Security-Policy "frame-ancestors 'none'"
 		X-Content-Type-Options "nosniff"
@@ -10,6 +8,12 @@
 		Permissions-Policy "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), clipboard-write=(self), display-capture=(), encrypted-media=(), fullscreen=(), gamepad=(), geolocation=(), gyroscope=(), hid=(), idle-detection=(), local-fonts=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-create=(self), publickey-credentials-get=(self), screen-wake-lock=(), serial=(), usb=(), xr-spatial-tracking=()"
 		-Server
 	}
+}
+
+:80 {
+	root * /srv
+
+	import security_headers
 
 	@immutable path /_app/immutable/*
 	header @immutable Cache-Control "public, max-age=31536000, immutable"
@@ -17,7 +21,21 @@
 	@mutable not path /_app/immutable/*
 	header @mutable Cache-Control "no-cache"
 
-	try_files {path} /index.html
+	@spa {
+		not file
+		not path_regexp \.
+	}
+	rewrite @spa /index.html
 	file_server
 	encode zstd gzip
+
+	handle_errors 404 {
+		rewrite * /index.html
+		import security_headers
+		header Cache-Control "no-cache"
+		file_server {
+			status 404
+		}
+		encode zstd gzip
+	}
 }
