@@ -3,13 +3,16 @@
 	import DnsChip from '../DnsChip.svelte';
 	import type { DNSRecordKind, DNSRecordStatus, RequiredDNSRecord } from '$core/api/customDomains';
 	import Rich from '$core/i18n/Rich.svelte';
+	import { timeSince } from '$core/i18n/relative';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
 		records: RequiredDNSRecord[];
+		now: number;
+		missing?: 'pending' | 'fail';
 	}
 
-	let { records }: Props = $props();
+	let { records, now, missing = 'pending' }: Props = $props();
 
 	const LABEL: Record<DNSRecordKind, string> = $derived({
 		ownership: m.settings_domains_record_ownership(),
@@ -36,7 +39,7 @@
 	function chipKind(s: DNSRecordStatus): 'ok' | 'warn' | 'fail' | 'pending' {
 		if (s === 'ok') return 'ok';
 		if (s === 'mismatch') return 'fail';
-		return 'pending';
+		return missing;
 	}
 </script>
 
@@ -50,6 +53,9 @@
 					<Rich text={m.settings_domains_record_host({ host: r.host })} tags={{ code }} />
 				</span>
 				{#if !r.required}<span class="dw-opt">{m.settings_domains_record_optional()}</span>{/if}
+				{#if r.status === 'ok' && r.verifiedAt}
+					<span class="dw-rec-when">{m.settings_domains_record_verified({ when: timeSince(r.verifiedAt, now) })}</span>
+				{/if}
 				<DnsChip kind={chipKind(r.status)} />
 			</div>
 			{#if firstOfKind.has(r.host + '|' + r.kind)}

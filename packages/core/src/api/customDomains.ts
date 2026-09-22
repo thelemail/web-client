@@ -91,12 +91,14 @@ export function getWorkspaceDomain(
 	return apiFetch(`/v1/workspaces/${workspaceId}/domains/${domainId}`);
 }
 
-export function verifyWorkspaceDomain(
+export function startWorkspaceDomainCheck(
 	workspaceId: string,
-	domainId: string
+	domainId: string,
+	stage: DNSRecordPhase
 ): Promise<CustomDomainWithRecords> {
-	return apiFetch(`/v1/workspaces/${workspaceId}/domains/${domainId}/verify`, {
-		method: 'POST'
+	return apiFetch(`/v1/workspaces/${workspaceId}/domains/${domainId}/checks`, {
+		method: 'POST',
+		body: { stage }
 	});
 }
 

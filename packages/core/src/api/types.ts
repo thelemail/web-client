@@ -9,6 +9,7 @@ export type ErrorCode =
 	| 'forbidden'
 	| 'not_found'
 	| 'conflict'
+	| 'payment_required'
 	| 'internal_error'
 	| 'service_unavailable'
 	| 'account_pending_deletion'

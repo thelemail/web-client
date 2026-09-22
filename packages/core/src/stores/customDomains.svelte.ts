@@ -3,12 +3,14 @@ import {
 	listWorkspaceDomains,
 	createWorkspaceDomain,
 	getWorkspaceDomain,
-	verifyWorkspaceDomain,
+	startWorkspaceDomainCheck,
 	deleteWorkspaceDomain,
 	type CustomDomain,
 	type CustomDomainWithRecords,
+	type DNSRecordPhase,
 	type RequiredDNSRecord
 } from '$core/api/customDomains';
+import { ApiCallError } from '$core/api/types';
 
 class CustomDomainsStore {
 	items = $state<CustomDomain[]>([]);
@@ -41,6 +43,12 @@ class CustomDomainsStore {
 		}
 	}
 
+	async refresh(workspaceId: string): Promise<void> {
+		const acct = this.#accountId;
+		const { domains } = await listWorkspaceDomains(workspaceId);
+		if (this.#accountId === acct) this.items = domains;
+	}
+
 	async create(workspaceId: string, domain: string): Promise<CustomDomainWithRecords> {
 		const result = await createWorkspaceDomain(workspaceId, domain);
 		this.upsert(result);
@@ -53,10 +61,21 @@ class CustomDomainsStore {
 		return result;
 	}
 
-	async verify(workspaceId: string, domainId: string): Promise<CustomDomainWithRecords> {
-		const result = await verifyWorkspaceDomain(workspaceId, domainId);
-		this.upsert(result);
-		return result;
+	async startCheck(
+		workspaceId: string,
+		domainId: string,
+		stage: DNSRecordPhase
+	): Promise<CustomDomainWithRecords> {
+		try {
+			const result = await startWorkspaceDomainCheck(workspaceId, domainId, stage);
+			this.upsert(result);
+			return result;
+		} catch (err) {
+			if (err instanceof ApiCallError && (err.status === 409 || err.status === 429)) {
+				await this.fetchDetail(workspaceId, domainId).catch(() => undefined);
+			}
+			throw err;
+		}
 	}
 
 	async remove(workspaceId: string, domainId: string): Promise<void> {

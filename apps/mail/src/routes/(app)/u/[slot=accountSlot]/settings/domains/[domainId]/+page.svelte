@@ -1,13 +1,14 @@
 <script lang="ts">
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import { replaceState } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 
 	import DomainWizard from '$core/settings/domains/DomainWizard.svelte';
 	import SecHead from '$core/settings/SecHead.svelte';
 	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
 	import { isDomainStep, reachableStep, resumeStep, type DomainStep } from '$core/settings/domains/steps';
+	import { showStepInUrl } from '$core/settings/domains/stepUrl';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -32,10 +33,13 @@
 
 	function select(s: DomainStep) {
 		picked = s;
-		const url = new URL(page.url);
-		url.searchParams.set('step', s);
-		replaceState(url, page.state);
 	}
+
+	$effect(() => {
+		if (!domain) return;
+		const s = step;
+		untrack(() => showStepInUrl(s));
+	});
 
 	$effect(() => {
 		settingsPageTitle.set(domain?.domain ?? m.settings_domains_setup_title());
