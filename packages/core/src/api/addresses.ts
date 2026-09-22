@@ -10,6 +10,7 @@ export interface AccountAddress {
 	isPrimary: boolean;
 	shared?: boolean;
 	sharedAliasId?: string | null;
+	suspended?: boolean;
 	createdAt: string;
 	updatedAt: string;
 }

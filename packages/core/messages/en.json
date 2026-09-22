@@ -3890,6 +3890,8 @@
 	"mail_compose_minimize": "Minimize",
 	"mail_compose_from": "From",
 	"mail_compose_manage_addresses": "Manage addresses",
+	"mail_compose_from_unavailable": "{address} cannot send right now, so this message will go from {from}.",
+	"mail_compose_no_sender": "None of your addresses can send right now. Open Addresses in Settings to see why.",
 	"mail_compose_drop": "Drop to attach",
 	"mail_compose_send_now": "Send now",
 	"mail_compose_schedule": "Schedule send",

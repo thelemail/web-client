@@ -3890,6 +3890,8 @@
   "mail_compose_minimize": "Réduire",
   "mail_compose_from": "De",
   "mail_compose_manage_addresses": "Gérer les adresses",
+  "mail_compose_from_unavailable": "{address} ne peut pas envoyer pour le moment. Ce message partira donc de {from}.",
+  "mail_compose_no_sender": "Aucune de vos adresses ne peut envoyer pour le moment. Ouvrez « Adresses » dans les paramètres pour en connaître la raison.",
   "mail_compose_drop": "Déposez les fichiers pour les joindre",
   "mail_compose_send_now": "Envoyer maintenant",
   "mail_compose_schedule": "Programmer l’envoi",

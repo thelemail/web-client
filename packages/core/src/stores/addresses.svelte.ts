@@ -21,6 +21,8 @@ class AddressesStore {
 	primary = $derived(this.items.find((a) => a.isPrimary) ?? this.items[0] ?? null);
 	personal = $derived(this.items.filter((a) => !a.shared));
 	shared = $derived(this.items.filter((a) => a.shared));
+	sendable = $derived(this.items.filter((a) => !a.suspended));
+	defaultSender = $derived(this.sendable.find((a) => !a.shared) ?? null);
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -51,6 +53,7 @@ class AddressesStore {
 					isPrimary: false,
 					shared: true,
 					sharedAliasId: a.id,
+					suspended: a.suspended,
 					createdAt: a.createdAt,
 					updatedAt: a.updatedAt
 				}))

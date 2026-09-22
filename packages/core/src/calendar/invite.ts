@@ -36,7 +36,7 @@ export function identityFor(item: CalendarItem): SenderIdentity {
 			aliasId: addr?.sharedAliasId ?? undefined
 		};
 	}
-	const primary = addresses.primary;
+	const primary = addresses.defaultSender ?? addresses.primary;
 	return {
 		email: primary?.email ?? auth.email ?? '',
 		name: primary?.name ?? auth.fullName ?? undefined

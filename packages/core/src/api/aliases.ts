@@ -23,6 +23,7 @@ export interface SharedAlias {
 	memberCount: number;
 	rotationRequired: boolean;
 	members: SharedAliasMember[];
+	suspended?: boolean;
 	createdAt: string;
 	updatedAt: string;
 }

@@ -3890,6 +3890,8 @@
 	"mail_compose_minimize": "Minimieren",
 	"mail_compose_from": "Von",
 	"mail_compose_manage_addresses": "Adressen verwalten",
+	"mail_compose_from_unavailable": "{address} kann gerade nicht senden. Diese Nachricht wird deshalb von {from} gesendet.",
+	"mail_compose_no_sender": "Keine Ihrer Adressen kann gerade senden. Den Grund sehen Sie unter „Adressen“ in den Einstellungen.",
 	"mail_compose_drop": "Zum Anhängen ablegen",
 	"mail_compose_send_now": "Jetzt senden",
 	"mail_compose_schedule": "Senden planen",
