@@ -797,6 +797,10 @@
 		}
 	],
 	"mail_alerts_dns_action": "Verificar DNS",
+	"mail_alerts_domain_lapse_title": "Registo de propriedade do domínio em falta.",
+	"mail_alerts_domain_lapse_detail": "O registo de propriedade de <mono>{domain}</mono> está em falta no DNS. Reponha-o até {deadline}, caso contrário o domínio será libertado e os seus endereços deixarão de funcionar.",
+	"mail_alerts_domain_lapse_detail_member": "O registo de propriedade de <mono>{domain}</mono> está em falta no DNS. Um proprietário ou administrador tem de o repor até {deadline}, caso contrário os endereços deste domínio deixarão de funcionar.",
+	"mail_alerts_domain_lapse_action": "Repor registo",
 	"mail_alerts_storage_title": "O armazenamento está quase cheio.",
 	"mail_alerts_storage_detail": "Utilizou <mono>{used}</mono> de <mono>{limit} GB</mono>. As mensagens recebidas são devolvidas quando a caixa de correio está cheia.",
 	"mail_alerts_storage_upgrade": "Mudar para um plano superior",

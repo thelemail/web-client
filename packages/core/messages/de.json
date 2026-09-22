@@ -797,6 +797,10 @@
 		}
 	],
 	"mail_alerts_dns_action": "DNS prüfen",
+	"mail_alerts_domain_lapse_title": "Eintrag für die Domain-Inhaberschaft fehlt.",
+	"mail_alerts_domain_lapse_detail": "Der Eintrag für die Inhaberschaft von <mono>{domain}</mono> fehlt im DNS. Stellen Sie ihn bis {deadline} wieder her, sonst wird die Domain freigegeben und ihre Adressen funktionieren nicht mehr.",
+	"mail_alerts_domain_lapse_detail_member": "Der Eintrag für die Inhaberschaft von <mono>{domain}</mono> fehlt im DNS. Ein Inhaber oder Administrator muss ihn bis {deadline} wiederherstellen, sonst funktionieren die Adressen auf dieser Domain nicht mehr.",
+	"mail_alerts_domain_lapse_action": "Eintrag wiederherstellen",
 	"mail_alerts_storage_title": "Speicherplatz fast voll.",
 	"mail_alerts_storage_detail": "Sie haben <mono>{used}</mono> von <mono>{limit} GB</mono> belegt. Eingehende E-Mails werden bei vollem Postfach zurückgewiesen.",
 	"mail_alerts_storage_upgrade": "Tarif erweitern",

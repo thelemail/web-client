@@ -797,6 +797,10 @@
     }
   ],
   "mail_alerts_dns_action": "Vérifier le DNS",
+  "mail_alerts_domain_lapse_title": "Enregistrement de propriété du domaine absent.",
+  "mail_alerts_domain_lapse_detail": "L’enregistrement de propriété de <mono>{domain}</mono> est absent du DNS. Rétablissez-le avant le {deadline}, sinon le domaine sera libéré et ses adresses cesseront de fonctionner.",
+  "mail_alerts_domain_lapse_detail_member": "L’enregistrement de propriété de <mono>{domain}</mono> est absent du DNS. Un propriétaire ou un administrateur doit le rétablir avant le {deadline}, sinon les adresses de ce domaine cesseront de fonctionner.",
+  "mail_alerts_domain_lapse_action": "Rétablir l’enregistrement",
   "mail_alerts_storage_title": "L’espace de stockage est presque plein.",
   "mail_alerts_storage_detail": "Vous avez utilisé <mono>{used}</mono> sur <mono>{limit} Go</mono>. Les e-mails entrants sont rejetés lorsque la boîte mail est pleine.",
   "mail_alerts_storage_upgrade": "Passer à une offre supérieure",

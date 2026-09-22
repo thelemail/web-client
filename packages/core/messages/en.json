@@ -797,6 +797,10 @@
 		}
 	],
 	"mail_alerts_dns_action": "Verify DNS",
+	"mail_alerts_domain_lapse_title": "Domain ownership record missing.",
+	"mail_alerts_domain_lapse_detail": "The ownership record for <mono>{domain}</mono> is missing from DNS. Restore it by {deadline}, or the domain will be released and its addresses will stop working.",
+	"mail_alerts_domain_lapse_detail_member": "The ownership record for <mono>{domain}</mono> is missing from DNS. An owner or admin needs to restore it by {deadline}, or addresses on this domain will stop working.",
+	"mail_alerts_domain_lapse_action": "Restore record",
 	"mail_alerts_storage_title": "Storage is almost full.",
 	"mail_alerts_storage_detail": "You've used <mono>{used}</mono> of <mono>{limit} GB</mono>. Incoming mail bounces when the mailbox is full.",
 	"mail_alerts_storage_upgrade": "Upgrade",
