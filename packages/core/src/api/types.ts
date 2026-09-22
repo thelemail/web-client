@@ -330,6 +330,7 @@ export interface StagedAttachment {
 export interface SendRecipient {
 	accountId: string;
 	envelope: SendEnvelope;
+	address?: string;
 }
 
 export interface InternalSendRequest {
@@ -345,6 +346,7 @@ export interface InternalSendRequest {
 	scheduledAt?: string;
 	forwardCopies?: ForwardCopy[];
 	forwardReplyTo?: string;
+	from?: string;
 }
 
 export interface ForwardCopy {

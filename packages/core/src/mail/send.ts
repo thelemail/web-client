@@ -791,8 +791,10 @@ export async function sendInternalMessage(
 		if (typed !== addr && !deliveredTo.has(r.accountId)) deliveredTo.set(r.accountId, typed);
 	}
 	const keyByAccount = new Map<string, KeyMaterial>();
-	for (const r of resolutions.values()) {
+	const addressByAccount = new Map<string, string>();
+	for (const [addr, r] of resolutions) {
 		if (!keyByAccount.has(r.accountId)) keyByAccount.set(r.accountId, r.key);
+		if (!addressByAccount.has(r.accountId)) addressByAccount.set(r.accountId, addr);
 	}
 
 	const enrich = (p: ReplyParty): ReplyParty => {
@@ -889,14 +891,19 @@ export async function sendInternalMessage(
 		schemaVersion: 1,
 		source: 'internal',
 		sent: sentEnv,
-		recipients: accountIds.map((id, i) => ({ accountId: id, envelope: recipientEnvs[i] })),
+		recipients: accountIds.map((id, i) => ({
+			accountId: id,
+			envelope: recipientEnvs[i],
+			address: addressByAccount.get(id)
+		})),
 		externalMessageId,
 		inReplyToMessageId: input.inReplyToMessageId,
 		inReplyToHeader: input.inReplyToHeader,
 		references: input.references && input.references.length ? input.references : undefined,
 		scheduledAt: input.scheduledAt,
 		forwardCopies: forwardCopies.length ? forwardCopies : undefined,
-		forwardReplyTo: forwardCopies.length ? (input.fromEmail ?? auth.email ?? undefined) : undefined
+		forwardReplyTo: forwardCopies.length ? (input.fromEmail ?? auth.email ?? undefined) : undefined,
+		from: input.fromEmail ?? auth.email ?? undefined
 	};
 
 	try {

@@ -4,8 +4,10 @@ const h = vi.hoisted(() => ({
 	lookups: [] as string[],
 	verified: [] as string[],
 	requests: [] as {
-		recipients: { accountId: string; envelope: { encryptedPreview: string } }[];
+		recipients: { accountId: string; envelope: { encryptedPreview: string }; address?: string }[];
 		sent: { encryptedPreview: string };
+		from?: string;
+		scheduledAt?: string;
 	}[],
 	accounts: {
 		'vlad@thelemail.test': 'acct-vlad',
@@ -132,5 +134,41 @@ describe('internal send to plus-tagged recipients', () => {
 			sendInternalMessage({ to: [party('nobody+x@thelemail.test')], subject: 's', body: 'b' })
 		).rejects.toMatchObject({ code: 'recipient_unknown' });
 		expect(h.lookups).toEqual(['nobody@thelemail.test']);
+	});
+});
+
+describe('internal send addressing fields', () => {
+	it('sends the chosen From and the looked-up address for each recipient account', async () => {
+		await sendInternalMessage({
+			to: [party('Vlad+Shop@thelemail.test'), party('ada@thelemail.test')],
+			cc: [party('vlad@thelemail.test')],
+			bcc: [party('support+billing@company.test')],
+			fromEmail: 'desk@company.test',
+			subject: 's',
+			body: 'b'
+		});
+		const req = h.requests[0];
+		expect(req.from).toBe('desk@company.test');
+		expect(req.scheduledAt).toBeUndefined();
+		expect(Object.fromEntries(req.recipients.map((r) => [r.accountId, r.address]))).toEqual({
+			'acct-vlad': 'vlad@thelemail.test',
+			'acct-ada': 'ada@thelemail.test',
+			'acct-support': 'support@company.test'
+		});
+	});
+
+	it('carries both fields on a scheduled send and falls back to the account address for From', async () => {
+		const scheduledAt = new Date(Date.now() + 3_600_000).toISOString();
+		await sendInternalMessage({
+			to: [party('ada+news@thelemail.test')],
+			scheduledAt,
+			subject: 's',
+			body: 'b'
+		});
+		const req = h.requests[0];
+		expect(req.scheduledAt).toBe(scheduledAt);
+		expect(req.from).toBe('me@thelemail.test');
+		expect(req.recipients).toHaveLength(1);
+		expect(req.recipients[0]).toMatchObject({ accountId: 'acct-ada', address: 'ada@thelemail.test' });
 	});
 });
