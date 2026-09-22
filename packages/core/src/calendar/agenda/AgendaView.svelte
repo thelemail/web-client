@@ -4,6 +4,8 @@
 	import * as Popover from '$core/components/ui/popover';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { inboundLive, ownershipProven } from '$core/settings/domains/steps';
+	import { SHARED_DOMAIN } from '$core/settings/entitlements';
 	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import PrivacyChip from '../PrivacyChip.svelte';
@@ -12,7 +14,10 @@
 	let openKey = $state<string | null>(null);
 
 	const memberCount = $derived(workspaces.members.length);
-	const domain = $derived(customDomains.items[0]?.domain ?? 'thelemail.com');
+	const domain = $derived(
+		(customDomains.items.find(inboundLive) ?? customDomains.items.find(ownershipProven))?.domain ??
+			SHARED_DOMAIN
+	);
 	const heroSub = $derived(
 		memberCount > 1
 			? m.cal_agenda_hero_team({ count: memberCount, domain })
