@@ -2630,6 +2630,9 @@
 	"settings_domains_empty": "Ainda sem domínios personalizados.",
 	"settings_domains_progress_aria": "Progresso da configuração",
 	"settings_domains_checked": "Verificado {time}",
+	"settings_domains_meta_running": "A verificar até {deadline} · última verificação {when}",
+	"settings_domains_meta_expired": "Verificação terminada {when}",
+	"settings_domains_meta_lapsing": "Reponha o registo de propriedade até {deadline}",
 	"settings_domains_steps_left": [
 		{
 			"declarations": [

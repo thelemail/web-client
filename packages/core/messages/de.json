@@ -2630,6 +2630,9 @@
 	"settings_domains_empty": "Noch keine eigenen Domains.",
 	"settings_domains_progress_aria": "Einrichtungsfortschritt",
 	"settings_domains_checked": "Geprüft: {time}",
+	"settings_domains_meta_running": "Prüfung bis {deadline} · zuletzt geprüft {when}",
+	"settings_domains_meta_expired": "Prüfung {when} beendet",
+	"settings_domains_meta_lapsing": "Eintrag für die Inhaberschaft bis {deadline} wiederherstellen",
 	"settings_domains_steps_left": [
 		{
 			"declarations": [

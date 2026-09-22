@@ -2630,6 +2630,9 @@
 	"settings_domains_empty": "No custom domains yet.",
 	"settings_domains_progress_aria": "Setup progress",
 	"settings_domains_checked": "Checked {time}",
+	"settings_domains_meta_running": "Checking until {deadline} · last check {when}",
+	"settings_domains_meta_expired": "Checking stopped {when}",
+	"settings_domains_meta_lapsing": "Restore the ownership record by {deadline}",
 	"settings_domains_steps_left": [
 		{
 			"declarations": [
