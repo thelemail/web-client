@@ -15,9 +15,9 @@
 	import {
 		DOMAIN_STEPS,
 		STEP_LABELS,
-		inboundLive,
 		resumeStep,
 		domainBadge,
+		routingVerified,
 		stepComplete
 	} from '$core/settings/domains/steps';
 	import { customDomains as store } from '$core/stores/customDomains.svelte';
@@ -66,7 +66,7 @@
 	const empty = $derived(!store.loading && store.items.length === 0);
 	const items = $derived(store.items);
 	const manage = $derived(workspaces.canManage());
-	const anyInSetup = $derived(items.some((d) => !inboundLive(d)));
+	const anyInSetup = $derived(items.some((d) => !routingVerified(d)));
 
 	function setupHref(d: CustomDomain): string {
 		return `${base}/${d.id}?step=${resumeStep(d)}`;
@@ -105,7 +105,7 @@
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
-				{@const live = inboundLive(d)}
+				{@const live = routingVerified(d)}
 				{@const left = remaining(d)}
 				<div class="cd-row" class:live>
 					<div class="cd-main">

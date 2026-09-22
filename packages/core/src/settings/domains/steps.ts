@@ -2,6 +2,9 @@ import type { CustomDomain, CustomDomainStatus, DNSRecordPhase } from '$core/api
 import { m } from '$paraglide/messages.js';
 
 export type DomainStep = 'ownership' | 'sending' | 'recipients' | 'routing' | 'done';
+export type CheckStage = DNSRecordPhase;
+export type StageCheckState = 'idle' | 'running' | 'expired' | 'verified';
+export type BadgeKind = 'ok' | 'warn' | 'info' | 'neutral';
 
 export const DOMAIN_STEPS: DomainStep[] = ['ownership', 'sending', 'recipients', 'routing', 'done'];
 
@@ -33,21 +36,45 @@ export function isDomainStep(v: string | null | undefined): v is DomainStep {
 	return !!v && (DOMAIN_STEPS as string[]).includes(v);
 }
 
+function claimed(d: CustomDomain): boolean {
+	return d.status !== 'pending';
+}
+
+export function ownershipVerified(d: CustomDomain): boolean {
+	return claimed(d) && !!d.ownershipVerifiedAt;
+}
+
+export function sendingVerified(d: CustomDomain): boolean {
+	return ownershipVerified(d) && !!d.dkimVerifiedAt && !!d.spfVerifiedAt && !!d.dmarcVerifiedAt;
+}
+
+export function routingVerified(d: CustomDomain): boolean {
+	return sendingVerified(d) && !!d.mxVerifiedAt;
+}
+
+export function ownershipLapsing(d: CustomDomain): boolean {
+	return ownershipVerified(d) && !!d.ownershipMissingSince;
+}
+
 export function ownershipProven(d: CustomDomain): boolean {
-	return !!d.ownershipVerifiedAt;
+	return ownershipVerified(d) && !isDormant(d);
 }
 
 export function canSend(d: CustomDomain): boolean {
-	return ownershipProven(d) && !!d.dkimVerifiedAt && !!d.spfVerifiedAt && !!d.dmarcVerifiedAt;
+	return sendingVerified(d) && !isDormant(d);
 }
 
 export function inboundLive(d: CustomDomain): boolean {
-	return canSend(d) && !!d.mxVerifiedAt;
+	return routingVerified(d) && !isDormant(d);
+}
+
+export function usable(d: CustomDomain): boolean {
+	return canSend(d) && !ownershipLapsing(d);
 }
 
 export function resumeStep(d: CustomDomain): DomainStep {
-	if (!ownershipProven(d)) return 'ownership';
-	if (!canSend(d)) return 'sending';
+	if (!stepComplete(d, 'ownership')) return 'ownership';
+	if (!sendingVerified(d)) return 'sending';
 	if (d.addressCount === 0) return 'recipients';
 	if (!d.mxVerifiedAt) return 'routing';
 	return 'done';
@@ -56,15 +83,15 @@ export function resumeStep(d: CustomDomain): DomainStep {
 export function stepComplete(d: CustomDomain, step: DomainStep): boolean {
 	switch (step) {
 		case 'ownership':
-			return ownershipProven(d);
+			return ownershipVerified(d) && !d.ownershipMissingSince;
 		case 'sending':
-			return canSend(d);
+			return sendingVerified(d);
 		case 'recipients':
-			return d.addressCount > 0;
+			return sendingVerified(d) && d.addressCount > 0;
 		case 'routing':
-			return !!d.mxVerifiedAt;
+			return routingVerified(d);
 		case 'done':
-			return inboundLive(d) && d.addressCount > 0;
+			return routingVerified(d) && d.addressCount > 0;
 	}
 }
 
@@ -73,9 +100,11 @@ export function stepReachable(d: CustomDomain, step: DomainStep): boolean {
 		case 'ownership':
 			return true;
 		case 'sending':
+			return ownershipVerified(d);
 		case 'recipients':
+			return sendingVerified(d);
 		case 'routing':
-			return ownershipProven(d);
+			return sendingVerified(d) && d.addressCount > 0;
 		case 'done':
 			return stepComplete(d, 'done');
 	}
@@ -83,6 +112,92 @@ export function stepReachable(d: CustomDomain, step: DomainStep): boolean {
 
 export function reachableStep(d: CustomDomain, step: DomainStep): DomainStep {
 	return stepReachable(d, step) ? step : resumeStep(d);
+}
+
+function stageVerified(d: CustomDomain, stage: CheckStage): boolean {
+	switch (stage) {
+		case 'ownership':
+			return stepComplete(d, 'ownership');
+		case 'sending':
+			return sendingVerified(d);
+		case 'routing':
+			return routingVerified(d);
+	}
+}
+
+export function stageCheckState(d: CustomDomain, stage: CheckStage): StageCheckState {
+	if (stageVerified(d, stage)) return 'verified';
+	const c = d.check;
+	if (!c || c.stage !== stage) return 'idle';
+	return c.state;
+}
+
+export function checkRunning(d: CustomDomain): boolean {
+	return d.check?.state === 'running';
+}
+
+export function canRequestCheck(d: CustomDomain, stage: CheckStage, manage: boolean): boolean {
+	if (!manage || checkRunning(d) || d.actionableStage !== stage) return false;
+	const state = stageCheckState(d, stage);
+	return state === 'idle' || state === 'expired';
+}
+
+export function stepRunning(d: CustomDomain, step: DomainStep): boolean {
+	const stage = STEP_PHASE[step];
+	return !!stage && stageCheckState(d, stage) === 'running';
+}
+
+export function reasonStage(code: string | null | undefined): CheckStage | null {
+	switch (code) {
+		case 'ownership_missing':
+		case 'ownership_mismatch':
+		case 'ownership_wildcard':
+		case 'claimed_elsewhere':
+			return 'ownership';
+		case 'dkim_missing':
+		case 'dkim_mismatch':
+		case 'spf_missing':
+		case 'spf_mismatch':
+		case 'dmarc_missing':
+			return 'sending';
+		case 'mx_missing':
+		case 'mx_mismatch':
+			return 'routing';
+		default:
+			return null;
+	}
+}
+
+export function reasonMessage(code: string | null | undefined): string | null {
+	if (!code) return null;
+	switch (code) {
+		case 'ownership_missing':
+			return m.settings_domains_reason_ownership_missing();
+		case 'ownership_mismatch':
+			return m.settings_domains_reason_ownership_mismatch();
+		case 'ownership_wildcard':
+			return m.settings_domains_reason_ownership_wildcard();
+		case 'claimed_elsewhere':
+			return m.settings_domains_reason_claimed_elsewhere();
+		case 'dkim_missing':
+			return m.settings_domains_reason_dkim_missing();
+		case 'dkim_mismatch':
+			return m.settings_domains_reason_dkim_mismatch();
+		case 'spf_missing':
+			return m.settings_domains_reason_spf_missing();
+		case 'spf_mismatch':
+			return m.settings_domains_reason_spf_mismatch();
+		case 'dmarc_missing':
+			return m.settings_domains_reason_dmarc_missing();
+		case 'mx_missing':
+			return m.settings_domains_reason_mx_missing();
+		case 'mx_mismatch':
+			return m.settings_domains_reason_mx_mismatch();
+		case 'dns_unavailable':
+			return m.settings_domains_reason_dns_unavailable();
+		default:
+			return m.settings_domains_reason_unknown();
+	}
 }
 
 export function statusLabel(s: CustomDomainStatus): string {
@@ -100,7 +215,7 @@ export function statusLabel(s: CustomDomainStatus): string {
 	}
 }
 
-export function statusKind(s: CustomDomainStatus): 'ok' | 'warn' | 'info' | 'neutral' {
+export function statusKind(s: CustomDomainStatus): BadgeKind {
 	switch (s) {
 		case 'active':
 			return 'ok';
@@ -118,10 +233,16 @@ export function isDormant(d: { dormantAt?: string | null }): boolean {
 	return !!d.dormantAt;
 }
 
-export function domainBadge(d: {
-	status: CustomDomainStatus;
-	dormantAt?: string | null;
-}): { label: string; kind: 'ok' | 'warn' | 'info' | 'neutral' } {
+const VERIFYING: Record<CheckStage, () => string> = {
+	ownership: () => m.settings_domains_status_verifying_ownership(),
+	sending: () => m.settings_domains_status_verifying_sending(),
+	routing: () => m.settings_domains_status_verifying_routing()
+};
+
+export function domainBadge(d: CustomDomain): { label: string; kind: BadgeKind } {
+	if (ownershipLapsing(d)) return { label: m.settings_domains_status_lapsing(), kind: 'warn' };
 	if (isDormant(d)) return { label: m.settings_domains_status_paused(), kind: 'warn' };
+	if (d.check?.state === 'running') return { label: VERIFYING[d.check.stage](), kind: 'info' };
+	if (d.check?.state === 'expired') return { label: m.settings_domains_status_expired(), kind: 'warn' };
 	return { label: statusLabel(d.status), kind: statusKind(d.status) };
 }

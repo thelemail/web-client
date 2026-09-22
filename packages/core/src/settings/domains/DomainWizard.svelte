@@ -20,10 +20,10 @@
 		DOMAIN_STEPS,
 		STEP_LABELS,
 		STEP_PHASE,
-		canSend,
 		nextStep,
-		ownershipProven,
+		ownershipVerified,
 		previousStep,
+		sendingVerified,
 		stepComplete,
 		stepReachable,
 		type DomainStep
@@ -145,7 +145,7 @@
 				{m.settings_domains_wizard_ownership_lede()}
 			</p>
 			<RecordList records={phaseRecords} />
-			{#if ownershipProven(domain)}
+			{#if ownershipVerified(domain)}
 				<div class="dw-note ok">
 					<CircleCheck size={15} /><span>{m.settings_domains_wizard_ownership_ok()}</span>
 				</div>
@@ -162,7 +162,7 @@
 				<Rich text={m.settings_domains_wizard_sending_lede({ domain: domain.domain })} tags={{ b: bold }} />
 			</p>
 			<RecordList records={phaseRecords} />
-			{#if canSend(domain)}
+			{#if sendingVerified(domain)}
 				<div class="dw-note ok">
 					<CircleCheck size={15} /><span>{m.settings_domains_wizard_sending_ok()}</span>
 				</div>
