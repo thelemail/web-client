@@ -5,6 +5,7 @@ export type ErrorCode =
 	| 'invalid_request'
 	| 'invalid_credentials'
 	| 'rate_limited'
+	| 'server_busy'
 	| 'unsupported_parameters'
 	| 'forbidden'
 	| 'not_found'
@@ -323,7 +324,7 @@ export interface StagedAttachment {
 	disposition: 'attachment' | 'inline';
 	contentId?: string;
 	plaintextSizeBytes: number;
-	plaintextSha256?: string;
+	plaintextSha256: string;
 	ordinal: number;
 }
 
