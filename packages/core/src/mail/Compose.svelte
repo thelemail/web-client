@@ -644,11 +644,28 @@
 	let guards = $state<SendGuard[]>([]);
 	let guardedRun: (() => void) | null = null;
 
+	let settlingKeys = false;
+
 	function guardedSend(run: () => void): void {
 		if (!canSend || !bodyText.trim()) {
 			run();
 			return;
 		}
+		if (settlingKeys) return;
+		if (encStatuses.some((s) => s === 'checking' || s === 'failed')) {
+			settlingKeys = true;
+			void encTracker
+				.settle(allRecipients.filter((c) => c.valid).map((c) => c.email))
+				.then(() => {
+					settlingKeys = false;
+					evaluateGuards(run);
+				});
+			return;
+		}
+		evaluateGuards(run);
+	}
+
+	function evaluateGuards(run: () => void): void {
 		const next = pendingSendGuards({
 			settings: accountSettings.composing,
 			statuses: encStatuses,
@@ -1045,6 +1062,8 @@
 				<span class="cf-enc" data-tone={encSummary.tone} title={encSummary.title}>
 					{#if encSummary.tone === 'partial' || encSummary.tone === 'none'}
 						<LockOpen size={16} />
+					{:else if encSummary.tone === 'unknown'}
+						<CircleAlert size={16} />
 					{:else}
 						<Lock size={16} />
 					{/if}

@@ -10,7 +10,13 @@
 	import Avatar from '$core/components/Avatar.svelte';
 	import { personAvatars } from '$core/stores/personAvatars.svelte';
 
-	export type RecipientEncStatus = 'internal' | 'encrypted' | 'cleartext' | 'checking' | null;
+	export type RecipientEncStatus =
+		| 'internal'
+		| 'encrypted'
+		| 'cleartext'
+		| 'checking'
+		| 'failed'
+		| null;
 
 	interface Props {
 		label: 'To' | 'Cc' | 'Bcc';

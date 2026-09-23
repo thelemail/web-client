@@ -3972,6 +3972,8 @@
 	"send_enc_title_default": "As mensagens para contas Thelemail e para quem tenha uma chave publicada têm cifragem ponto a ponto.",
 	"send_enc_checking": "A verificar chaves",
 	"send_enc_title_checking": "A procurar chaves de cifragem dos destinatários.",
+	"send_enc_unknown": "Chaves não verificadas",
+	"send_enc_title_unknown": "Não foi possível obter as chaves de cifragem de alguns destinatários. O envio volta a tentar.",
 	"send_enc_title_all": "Cifragem ponto a ponto para todos os destinatários.",
 	"send_enc_none": "Sem cifragem",
 	"send_enc_title_none_one": "O destinatário não tem chave de cifragem, pelo que esta mensagem é enviada sem cifragem.",

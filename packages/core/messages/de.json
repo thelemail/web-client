@@ -3972,6 +3972,8 @@
 	"send_enc_title_default": "E-Mails an Thelemail-Konten und an Personen mit veröffentlichtem Schlüssel sind Ende-zu-Ende verschlüsselt.",
 	"send_enc_checking": "Schlüssel werden geprüft",
 	"send_enc_title_checking": "Verschlüsselungsschlüssel der Empfänger werden gesucht.",
+	"send_enc_unknown": "Schlüssel nicht geprüft",
+	"send_enc_title_unknown": "Die Verschlüsselungsschlüssel einiger Empfänger konnten nicht abgefragt werden. Beim Senden wird es erneut versucht.",
 	"send_enc_title_all": "Für alle Empfänger Ende-zu-Ende verschlüsselt.",
 	"send_enc_none": "Nicht verschlüsselt",
 	"send_enc_title_none_one": "Der Empfänger hat keinen Verschlüsselungsschlüssel. Diese Nachricht wird daher unverschlüsselt gesendet.",
