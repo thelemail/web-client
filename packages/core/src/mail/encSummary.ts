@@ -1,7 +1,7 @@
 import type { RecipientEncStatus } from './RecipientField.svelte';
 import { m } from '$paraglide/messages.js';
 
-export type EncryptionTone = 'ok' | 'pending' | 'partial' | 'none';
+export type EncryptionTone = 'ok' | 'pending' | 'unknown' | 'partial' | 'none';
 
 export interface EncryptionSummary {
 	tone: EncryptionTone;
@@ -23,6 +23,13 @@ export function summarizeEncryption(statuses: RecipientEncStatus[]): EncryptionS
 			tone: 'pending',
 			label: m.send_enc_checking(),
 			title: m.send_enc_title_checking()
+		};
+	}
+	if (statuses.some((s) => s === 'failed')) {
+		return {
+			tone: 'unknown',
+			label: m.send_enc_unknown(),
+			title: m.send_enc_title_unknown()
 		};
 	}
 	const cleartext = statuses.filter((s) => s === 'cleartext').length;

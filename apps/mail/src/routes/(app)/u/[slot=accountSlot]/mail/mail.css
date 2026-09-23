@@ -425,6 +425,7 @@
 .mail-app .replybox .rf { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-top: 1px solid var(--border); }
 .mail-app .replybox .enc { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--success-700); font-weight: 600; white-space: nowrap; }
 .mail-app .replybox .enc[data-tone="pending"] { color: var(--fg-faint); }
+.mail-app .replybox .enc[data-tone="unknown"] { color: var(--warning-700); }
 .mail-app .replybox .enc[data-tone="partial"] { color: var(--warning-700); }
 .mail-app .replybox .enc[data-tone="none"] { color: var(--danger-700); }
 .mail-app .replybox .rf-send { position: relative; display: inline-flex; align-items: stretch; }
@@ -591,6 +592,7 @@
 .mail-scrim .cf-ico.danger:hover { background: var(--danger-100); color: var(--danger-700); }
 .mail-scrim .cf-enc { display: inline-flex; align-items: center; gap: 6px; padding: 0 4px; font-size: 12px; font-weight: 600; color: var(--success-700); white-space: nowrap; }
 .mail-scrim .cf-enc[data-tone="pending"] { color: var(--fg-faint); }
+.mail-scrim .cf-enc[data-tone="unknown"] { color: var(--warning-700); }
 .mail-scrim .cf-enc[data-tone="partial"] { color: var(--warning-700); }
 .mail-scrim .cf-enc[data-tone="none"] { color: var(--danger-700); }
 .mail-scrim .compose-f .csave { margin-left: auto; font-size: 12px; color: var(--fg-faint); font-style: italic; }

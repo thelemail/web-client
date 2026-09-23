@@ -41,4 +41,18 @@ describe('summarizeEncryption', () => {
 		expect(summarizeEncryption(['cleartext', 'checking']).tone).toBe('pending');
 		expect(summarizeEncryption(['internal', null]).tone).toBe('pending');
 	});
+
+	it('reports unknown when a lookup failed', () => {
+		const s = summarizeEncryption(['encrypted', 'failed']);
+		expect(s.tone).toBe('unknown');
+		expect(s.label).toBe("Couldn't check keys");
+	});
+
+	it('stays pending over a failed lookup while another is unresolved', () => {
+		expect(summarizeEncryption(['failed', 'checking']).tone).toBe('pending');
+	});
+
+	it('reports unknown over a keyless recipient', () => {
+		expect(summarizeEncryption(['cleartext', 'failed']).tone).toBe('unknown');
+	});
 });
