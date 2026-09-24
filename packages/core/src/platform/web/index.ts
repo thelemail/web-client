@@ -33,6 +33,30 @@ export const platform: Platform = {
 			opts?.signal?.addEventListener('abort', () => xhr.abort(), { once: true });
 			xhr.send(body);
 		}),
+	submissionUpload: (url, body, headers, opts) =>
+		new Promise<Response>((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('PUT', url, true);
+			xhr.withCredentials = true;
+			for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value);
+			xhr.upload.onprogress = (e) => {
+				if (e.lengthComputable && e.total > 0) opts?.onProgress?.(e.loaded / e.total);
+			};
+			xhr.onload = () =>
+				resolve(
+					new Response(xhr.responseText, {
+						status: xhr.status,
+						headers: {
+							'content-type': xhr.getResponseHeader('content-type') ?? '',
+							date: xhr.getResponseHeader('date') ?? ''
+						}
+					})
+				);
+			xhr.onerror = () => reject(new Error(m.platform_upload_network_error()));
+			xhr.onabort = () => reject(new DOMException('aborted', 'AbortError'));
+			opts?.signal?.addEventListener('abort', () => xhr.abort(), { once: true });
+			xhr.send(body);
+		}),
 	returnOrigin: () => window.location.origin,
 	openExternal: (url) => window.location.assign(url),
 	saveBlob: async (blob, filename) => {

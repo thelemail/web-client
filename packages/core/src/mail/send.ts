@@ -23,6 +23,13 @@ import type { MessagePreview, MessagePreviewRecipient } from './preview';
 import type { ReplyParty } from './replyRecipients';
 import { packBodyForSend } from './signaturePack';
 import { snippetSource } from './quote';
+import {
+	buildMIME,
+	composeMimeBytes,
+	messageIdDomain,
+	readMimeAttachments,
+	type BuildMIMEArgs
+} from './mime';
 import { canonicalRecipient } from './recipientAddress';
 import { m } from '$paraglide/messages.js';
 
@@ -121,7 +128,10 @@ export function rateLimitedSendError(e: ApiCallError): SendError {
 const SENDER_REFUSALS: Partial<Record<ErrorCode, () => string>> = {
 	sender_address_suspended: () => m.send_error_sender_suspended(),
 	sending_not_verified: () => m.send_error_sending_not_verified(),
-	domain_paused: () => m.send_error_domain_paused()
+	domain_paused: () => m.send_error_domain_paused(),
+	payload_too_large: () => m.send_error_message_too_large(),
+	invalid_message: () => m.send_error_message_refused(),
+	intent_not_found: () => m.send_error_upload_expired()
 };
 
 export function sendErrorFromApi(e: unknown, fallback: string): SendError {
@@ -131,6 +141,12 @@ export function sendErrorFromApi(e: unknown, fallback: string): SendError {
 		if (refusal) return new SendError('rejected', refusal());
 		const message = e.envelope?.error?.message ?? m.send_error_http({ reason: fallback, status: e.status });
 		if (e.status === 429) return rateLimitedSendError(e);
+		if (e.envelope?.error?.code === 'scanner_unavailable') {
+			return new SendError('server_error', m.send_error_scanner_unavailable(), undefined, {
+				kind: 'rate_limited',
+				retryAfterSeconds: e.envelope.error.retryAfterSeconds ?? 0
+			});
+		}
 		if (e.status === 401) return new SendError('locked', message);
 		if (e.envelope?.error?.code === 'content_rejected') {
 			return new SendError('malware_blocked', message);
@@ -332,343 +348,6 @@ async function resolveRecipient(
 		key: { publicKeyArmored: lookup.publicKeyArmored, fingerprintB64 },
 		readDelegates: await verifiedReadDelegates(lookup.readDelegates, normalised)
 	};
-}
-
-export async function readMimeAttachments(attachments: ComposeAttachment[]): Promise<MIMEAttachment[]> {
-	const out: MIMEAttachment[] = [];
-	for (const a of attachments) {
-		out.push({
-			filename: a.file.name,
-			contentType: a.file.type || 'application/octet-stream',
-			bytes: new Uint8Array(await a.file.arrayBuffer()),
-			disposition: a.disposition,
-			contentId: a.contentId
-		});
-	}
-	return out;
-}
-
-export interface RelatedMIMEPart {
-	contentId: string;
-	contentType: string;
-	bytes: Uint8Array;
-}
-
-export interface MIMEAttachment {
-	filename: string;
-	contentType: string;
-	bytes: Uint8Array;
-	disposition?: 'attachment' | 'inline';
-	contentId?: string;
-}
-
-export interface BuildMIMEArgs {
-	fromName: string;
-	fromAddress: string;
-	to: ReplyParty[];
-	cc?: ReplyParty[];
-	bcc?: ReplyParty[];
-	replyTo?: ReplyParty;
-	subject: string;
-	body: string;
-	bodyHtml?: string;
-	date: Date;
-	messageId: string;
-	messageIdDomain?: string;
-	inReplyTo?: string;
-	references?: string[];
-	calendar?: { method: 'REQUEST' | 'REPLY' | 'CANCEL'; ics: string };
-	relatedParts?: RelatedMIMEPart[];
-	attachments?: MIMEAttachment[];
-}
-
-function formatParty(p: ReplyParty): string {
-	return mailbox(p.display, p.address);
-}
-
-function formatParties(parties: ReplyParty[]): string {
-	return parties.map(formatParty).join(', ');
-}
-
-export function messageIdDomain(fromAddress: string): string {
-	const clean = escapeAddress(fromAddress);
-	const at = clean.lastIndexOf('@');
-	const domain = at >= 0 ? clean.slice(at + 1) : '';
-	return domain || 'thelemail.local';
-}
-
-export function buildMIME(args: BuildMIMEArgs): Uint8Array {
-	const domain = escapeAddress(args.messageIdDomain ?? '') || 'thelemail.local';
-	const headers: string[] = [foldHeader('From', mailbox(args.fromName, args.fromAddress))];
-	if (args.to.length) headers.push(foldHeader('To', formatParties(args.to)));
-	if (args.cc && args.cc.length) headers.push(foldHeader('Cc', formatParties(args.cc)));
-	if (args.bcc && args.bcc.length) headers.push(foldHeader('Bcc', formatParties(args.bcc)));
-	if (args.replyTo) headers.push(foldHeader('Reply-To', formatParty(args.replyTo)));
-	headers.push(
-		foldHeader('Subject', encodeHeaderText(args.subject) || '(no subject)'),
-		`Date: ${headerValue(args.date.toUTCString())}`,
-		`Message-ID: ${ensureAngled(`${args.messageId}@${domain}`)}`,
-		'MIME-Version: 1.0'
-	);
-	const inReplyTo = args.inReplyTo ? ensureAngled(args.inReplyTo) : '';
-	if (inReplyTo) headers.push(`In-Reply-To: ${inReplyTo}`);
-	if (args.references && args.references.length) {
-		const refs = args.references.map((r) => ensureAngled(r)).filter((r) => r.length > 0);
-		if (refs.length) headers.push(foldHeader('References', refs.join(' ')));
-	}
-
-	const content = renderContentEntity(args);
-	headers.push(...content.headerLines);
-	const out = headers.join('\r\n') + '\r\n\r\n' + content.body;
-	return new TextEncoder().encode(out);
-}
-
-export function buildBodyEntity(args: BuildMIMEArgs): Uint8Array {
-	const content = renderContentEntity(args);
-	const out = content.headerLines.join('\r\n') + '\r\n\r\n' + content.body;
-	return new TextEncoder().encode(out);
-}
-
-function renderContentEntity(args: BuildMIMEArgs): { headerLines: string[]; body: string } {
-	const text = normalizeCRLF(args.body || '');
-	const html = args.bodyHtml ? normalizeCRLF(args.bodyHtml) : undefined;
-	const related = (args.relatedParts ?? []).filter((p) => p.bytes && p.bytes.length > 0);
-	const attachments = (args.attachments ?? []).filter((a) => a.bytes && a.bytes.length > 0);
-
-	if (attachments.length > 0 || args.calendar) {
-		const parts = [renderBodyAlternative(text, html, related)];
-		for (const att of attachments) {
-			parts.push(renderAttachmentPart(att));
-		}
-		if (args.calendar) {
-			parts.push(renderCalendarPart(args.calendar));
-		}
-		const boundary = makeBoundary('mix', parts);
-		const segments = parts.map((p) => `--${boundary}\r\n${p}`);
-		segments.push(`--${boundary}--`);
-		return {
-			headerLines: [`Content-Type: multipart/mixed; boundary="${boundary}"`],
-			body: `This is a multipart message in MIME format.\r\n\r\n` + segments.join('\r\n') + '\r\n'
-		};
-	}
-	if (html) {
-		const parts = [
-			renderTextPart(text),
-			related.length > 0 ? renderHtmlRelated(html, related) : renderHtmlPart(html)
-		];
-		const boundary = makeBoundary('alt', parts);
-		return {
-			headerLines: [`Content-Type: multipart/alternative; boundary="${boundary}"`],
-			body:
-				`This is a multipart message in MIME format.\r\n\r\n` +
-				parts.map((p) => `--${boundary}\r\n${p}\r\n`).join('') +
-				`--${boundary}--\r\n`
-		};
-	}
-	return {
-		headerLines: ['Content-Type: text/plain; charset=utf-8', 'Content-Transfer-Encoding: 8bit'],
-		body: text
-	};
-}
-
-function renderAttachmentPart(att: MIMEAttachment): string {
-	const b64 = base64Wrap(att.bytes);
-	const name = headerParam(att.filename) || 'attachment';
-	const disposition = att.disposition === 'inline' ? 'inline' : 'attachment';
-	const angledCid = att.contentId ? ensureAngled(att.contentId) : '';
-	const cid = angledCid ? `Content-ID: ${angledCid}\r\n` : '';
-	return (
-		`Content-Type: ${escapeContentType(att.contentType)}; name="${name}"\r\n` +
-		'Content-Transfer-Encoding: base64\r\n' +
-		cid +
-		`Content-Disposition: ${disposition}; filename="${name}"\r\n\r\n` +
-		b64
-	);
-}
-
-function renderBodyAlternative(text: string, html?: string, related: RelatedMIMEPart[] = []): string {
-	if (!html) {
-		return renderTextPart(text);
-	}
-	const parts = [
-		renderTextPart(text),
-		related.length > 0 ? renderHtmlRelated(html, related) : renderHtmlPart(html)
-	];
-	const boundary = makeBoundary('alt', parts);
-	return (
-		`Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n` +
-		parts.map((p) => `--${boundary}\r\n${p}\r\n`).join('') +
-		`--${boundary}--`
-	);
-}
-
-function renderTextPart(text: string): string {
-	return (
-		'Content-Type: text/plain; charset=utf-8\r\n' +
-		'Content-Transfer-Encoding: 8bit\r\n\r\n' +
-		text
-	);
-}
-
-function renderHtmlPart(html: string): string {
-	const b64 = base64Wrap(new TextEncoder().encode(html));
-	return (
-		'Content-Type: text/html; charset=utf-8\r\n' +
-		'Content-Transfer-Encoding: base64\r\n\r\n' +
-		b64
-	);
-}
-
-function renderHtmlRelated(html: string, parts: RelatedMIMEPart[]): string {
-	const rendered = [renderHtmlPart(html), ...parts.map(renderInlineImagePart)];
-	const boundary = makeBoundary('rel', rendered);
-	const segments = rendered.map((p) => `--${boundary}\r\n${p}`);
-	segments.push(`--${boundary}--`);
-	return (
-		`Content-Type: multipart/related; type="text/html"; boundary="${boundary}"\r\n\r\n` +
-		segments.join('\r\n')
-	);
-}
-
-function renderInlineImagePart(part: RelatedMIMEPart): string {
-	const b64 = base64Wrap(part.bytes);
-	const cid = ensureAngled(part.contentId);
-	return (
-		`Content-Type: ${escapeContentType(part.contentType)}\r\n` +
-		'Content-Transfer-Encoding: base64\r\n' +
-		`Content-ID: ${cid}\r\n` +
-		'Content-Disposition: inline\r\n\r\n' +
-		b64
-	);
-}
-
-function renderCalendarPart(cal: { method: string; ics: string }): string {
-	const method = cal.method.toUpperCase().replace(/[^A-Z]/g, '') || 'REQUEST';
-	const b64 = base64Wrap(new TextEncoder().encode(normalizeCRLF(cal.ics)));
-	return (
-		`Content-Type: text/calendar; method=${method}; charset=utf-8\r\n` +
-		'Content-Transfer-Encoding: base64\r\n' +
-		'Content-Disposition: attachment; filename="invite.ics"\r\n\r\n' +
-		b64
-	);
-}
-
-const BOUNDARY_ATTEMPTS = 16;
-
-function makeBoundary(tag: string, parts: string[]): string {
-	for (let i = 0; i < BOUNDARY_ATTEMPTS; i++) {
-		const candidate = `=_thelemail_${tag}_${crypto.randomUUID()}`;
-		if (!parts.some((p) => p.includes(candidate))) return candidate;
-	}
-	throw new SendError('encrypt', m.send_error_build_body());
-}
-
-function base64Wrap(bytes: Uint8Array): string {
-	let bin = '';
-	for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-	const b64 = btoa(bin);
-	return b64.replace(/(.{76})/g, '$1\r\n');
-}
-
-function ensureAngled(id: string): string {
-	const s = headerValue(id).replace(/[<>\s]/g, '');
-	return s ? `<${s}>` : '';
-}
-
-function normalizeCRLF(s: string): string {
-	return s.replace(/\r?\n/g, '\r\n');
-}
-
-function headerValue(s: string): string {
-	// eslint-disable-next-line no-control-regex
-	return s.replace(/[\u0000-\u001f\u007f\u0085\u2028\u2029]/g, '');
-}
-
-const HEADER_LINE_LIMIT = 78;
-const HEADER_TOKEN_LIMIT = 60;
-const ENCODED_WORD_BYTES = 45;
-
-function isPlainHeaderText(s: string): boolean {
-	for (const ch of s) {
-		const c = ch.codePointAt(0)!;
-		if (c < 0x20 || c > 0x7e) return false;
-	}
-	return !s.split(' ').some((token) => token.length > HEADER_TOKEN_LIMIT);
-}
-
-function encodedWord(bytes: number[]): string {
-	return `=?utf-8?B?${bytesToB64(new Uint8Array(bytes))}?=`;
-}
-
-function encodeHeaderText(s: string): string {
-	const value = headerValue(s);
-	if (isPlainHeaderText(value)) return value;
-	const encoder = new TextEncoder();
-	const words: string[] = [];
-	let chunk: number[] = [];
-	for (const ch of value) {
-		const bytes = encoder.encode(ch);
-		if (chunk.length > 0 && chunk.length + bytes.length > ENCODED_WORD_BYTES) {
-			words.push(encodedWord(chunk));
-			chunk = [];
-		}
-		for (const b of bytes) chunk.push(b);
-	}
-	if (chunk.length > 0) words.push(encodedWord(chunk));
-	return words.join(' ');
-}
-
-function foldHeader(name: string, value: string): string {
-	if (!value) return `${name}:`;
-	const lines: string[] = [];
-	let line = `${name}:`;
-	let empty = true;
-	for (const word of value.split(' ')) {
-		if (!empty && line.length + 1 + word.length > HEADER_LINE_LIMIT) {
-			lines.push(line);
-			line = ` ${word}`;
-		} else {
-			line += ` ${word}`;
-			empty = false;
-		}
-	}
-	lines.push(line);
-	return lines.join('\r\n');
-}
-
-function headerText(s: string): string {
-	return headerValue(s).replace(/"/g, '').slice(0, 200);
-}
-
-function quotedText(s: string): string {
-	return s.replace(/\\/g, '\\\\');
-}
-
-function mailbox(display: string, address: string): string {
-	const addr = escapeAddress(address);
-	const name = headerText(display);
-	if (!name) return addr;
-	return isPlainHeaderText(name)
-		? `"${quotedText(name)}" <${addr}>`
-		: `${encodeHeaderText(name)} <${addr}>`;
-}
-
-function headerParam(s: string): string {
-	const value = headerText(s);
-	return isPlainHeaderText(value) ? quotedText(value) : encodeHeaderText(value);
-}
-
-function escapeAddress(s: string): string {
-	return headerValue(s)
-		.replace(/[<>,;:"\\()[\]\s]/g, '')
-		.slice(0, 320);
-}
-
-function escapeContentType(s: string): string {
-	const t = headerValue(s)
-		.replace(/[;"\\()<>,:[\]?=\s]/g, '')
-		.slice(0, 200);
-	return t || 'application/octet-stream';
 }
 
 async function sha256B64(bytes: Uint8Array): Promise<string> {
@@ -883,7 +562,7 @@ export async function sendInternalMessage(
 		accountId,
 		input,
 		resolutions.values(),
-		async () => buildMIME({ ...mimeArgs, bcc: undefined, attachments: await readMimeAttachments(input.attachments ?? []) })
+		() => composeMimeBytes({ ...mimeArgs, bcc: undefined, attachments: readMimeAttachments(input.attachments ?? []) })
 	);
 
 	const req: InternalSendRequest = {

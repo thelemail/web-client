@@ -1,7 +1,8 @@
 import { keystore } from '$core/keystore/keystore-client';
 import { platform } from '$platform';
 import { bytesToB64 } from '$core/crypto';
-import { senderKey, buildMIME, SendError, type KeyMaterial } from '../send';
+import { senderKey, SendError, type KeyMaterial } from '../send';
+import { buildMIME } from '../mime';
 import { build as buildAttFrame } from '$core/mail/attframe';
 import { issueAttachmentUploadUrls, importMessage } from '$core/api/messages';
 import type {

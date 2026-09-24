@@ -1,32 +1,29 @@
 import { auth } from '$core/stores/auth.svelte';
 import { m } from '$paraglide/messages.js';
 import { platform } from '$platform';
-import { bytesToB64 } from '$core/crypto';
-import { issueStagingUrls, submitExternal } from '$core/api/submission';
+import { submitExternal, uploadIntentMessage } from '$core/api/submission';
 import { lookupExternalKey } from '$core/api/externalKeys';
 import { keystore } from '$core/keystore/keystore-client';
 import {
 	ApiCallError,
 	type AttachmentDescriptor,
 	type EncryptedCopy,
+	type IntentMailbox,
 	type RecipientParty,
 	type SendEnvelope,
-	type StagedAttachment,
-	type StagingSlotRequest,
-	type SubmitMessageResponse
+	type SubmissionIntent,
+	type SubmitMessageResponse,
+	type SubmitOutcome
 } from '$core/api/types';
+import { SendError, sendErrorFromApi, senderKey, releaseDate, buildEnvelope, buildPreview } from './send';
 import {
-	SendError,
-	sendErrorFromApi,
-	senderKey,
-	releaseDate,
 	buildMIME,
-	buildBodyEntity,
-	buildEnvelope,
-	buildPreview,
+	composeBodyEntityBytes,
+	composeMime,
 	messageIdDomain,
-	readMimeAttachments
-} from './send';
+	readMimeAttachments,
+	type BuildMIMEArgs
+} from './mime';
 import type { ReplyParty } from './replyRecipients';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { packBodyForSend } from './signaturePack';
@@ -100,45 +97,6 @@ export function encryptionGroups(
 	return shared.addresses.length > 0 ? [shared, ...blind] : blind;
 }
 
-async function stageCleartext(attachments: ComposeAttachment[]): Promise<StagedAttachment[]> {
-	if (attachments.length === 0) return [];
-	const slots: StagingSlotRequest[] = attachments.map((a, i) => ({
-		slotId: crypto.randomUUID(),
-		ordinal: i,
-		plaintextSizeBytes: a.file.size
-	}));
-	const grants = await issueStagingUrls({ slots });
-	const grantBySlot = new Map(grants.slots.map((g) => [g.slotId, g]));
-
-	const staged: StagedAttachment[] = [];
-	for (let i = 0; i < attachments.length; i++) {
-		const a = attachments[i];
-		const grant = grantBySlot.get(slots[i].slotId);
-		if (!grant) throw new SendError('network', 'staging grant missing');
-		const bytes = new Uint8Array(await a.file.arrayBuffer());
-		const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as BufferSource));
-		const blob = new Blob([
-			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
-		]);
-		const resp = await platform.blobPut(grant.putUrl, blob);
-		if (!resp.ok) {
-			throw new SendError('network', `staging PUT ${resp.status}: ${resp.statusText}`);
-		}
-		staged.push({
-			stagingSlotId: grant.slotId,
-			filename: a.file.name,
-			contentType: a.file.type || 'application/octet-stream',
-			disposition: a.disposition,
-			contentId: a.contentId,
-			plaintextSizeBytes: a.file.size,
-			plaintextSha256: bytesToB64(digest),
-			ordinal: i
-		});
-	}
-	return staged;
-}
-
-
 async function resolveExternalKeys(
 	recipients: ReplyParty[]
 ): Promise<{ keyed: KeyedRecipient[]; keyless: ReplyParty[] }> {
@@ -201,26 +159,27 @@ export async function sendExternalMessage(
 	const now = releaseDate(input.scheduledAt);
 	const packed = await packBodyForSend(input.bodyHtml);
 
+	const mimeArgs: BuildMIMEArgs = {
+		fromName,
+		fromAddress,
+		to: input.to,
+		cc: input.cc,
+		replyTo: input.replyTo,
+		subject: input.subject,
+		body: input.body,
+		bodyHtml: packed.bodyHtml,
+		date: now,
+		messageId: crypto.randomUUID(),
+		inReplyTo: input.inReplyToHeader,
+		references: input.references,
+		calendar: input.calendar,
+		relatedParts: packed.relatedParts,
+		attachments: readMimeAttachments(input.attachments ?? [])
+	};
+
 	let encryptedCopies: EncryptedCopy[] | undefined;
 	if (keyed.length > 0) {
-		const attachments = await readMimeAttachments(input.attachments ?? []);
-		const bodyEntity = buildBodyEntity({
-			fromName,
-			fromAddress,
-			to: input.to,
-			cc: input.cc,
-			replyTo: input.replyTo,
-			subject: input.subject,
-			body: input.body,
-			bodyHtml: packed.bodyHtml,
-			date: now,
-			messageId: crypto.randomUUID(),
-			inReplyTo: input.inReplyToHeader,
-			references: input.references,
-			calendar: input.calendar,
-			relatedParts: packed.relatedParts,
-			attachments
-		});
+		const bodyEntity = await composeBodyEntityBytes(mimeArgs);
 		const groups = encryptionGroups(keyed, [...input.to, ...(input.cc ?? [])]);
 		const copies: EncryptedCopy[] = [];
 		for (const group of groups) {
@@ -238,16 +197,6 @@ export async function sendExternalMessage(
 			copies.push({ encryptedBody: enc.armored, addresses: group.addresses });
 		}
 		encryptedCopies = copies;
-	}
-
-	let stagedAttachments: StagedAttachment[] | undefined;
-	let textBody: string | undefined;
-	let htmlBody: string | undefined;
-	if (keyless.length > 0) {
-		const staged = await stageCleartext(input.attachments ?? []);
-		stagedAttachments = staged.length > 0 ? staged : undefined;
-		textBody = input.body;
-		htmlBody = packed.bodyHtml;
 	}
 
 	let sealed: SendEnvelope | undefined;
@@ -284,8 +233,9 @@ export async function sendExternalMessage(
 		sealed = await buildEnvelope(accountId, previewBytes, sentMime, sender, senderAtts);
 	}
 
+	let outcome: SubmitOutcome;
 	try {
-		return await submitExternal({
+		outcome = await submitExternal({
 			idempotencyKey: crypto.randomUUID(),
 			schemaVersion: 1,
 			from: input.fromEmail,
@@ -294,17 +244,48 @@ export async function sendExternalMessage(
 			bcc: parties(input.bcc),
 			replyTo: input.replyTo?.address,
 			subject: input.subject,
-			textBody,
-			htmlBody,
 			inReplyToHeader: input.inReplyToHeader,
 			references: input.references && input.references.length ? input.references : undefined,
-			calendar: input.calendar,
 			sent: sealed,
 			sentMessageId: input.sentMessageId,
 			encryptedCopies,
-			stagedAttachments,
 			scheduledAt: input.scheduledAt
 		});
+	} catch (e) {
+		throw sendErrorFromApi(e, m.send_error_external_failed());
+	}
+	if (outcome.kind === 'accepted') return outcome.response;
+	if (keyless.length === 0) {
+		throw new SendError('server_error', m.send_error_external_failed());
+	}
+	return deliverCleartext(outcome.intent, mimeArgs);
+}
+
+function replyParties(list: IntentMailbox[] | undefined): ReplyParty[] {
+	return (list ?? []).map((p) => ({ display: p.name ?? '', address: p.address }));
+}
+
+async function deliverCleartext(
+	intent: SubmissionIntent,
+	args: BuildMIMEArgs
+): Promise<SubmitMessageResponse> {
+	const message = await composeMime(
+		{ ...args, to: replyParties(intent.to), cc: replyParties(intent.cc), bcc: undefined },
+		{
+			date: intent.date,
+			messageId: intent.messageIdHeader,
+			fromName: intent.from.name ?? '',
+			fromAddress: intent.from.address,
+			inReplyTo: intent.inReplyTo,
+			references: intent.references,
+			replyTo: intent.replyTo
+		}
+	);
+	if (message.size > intent.maxMessageBytes) {
+		throw new SendError('rejected', m.send_error_message_too_large());
+	}
+	try {
+		return await uploadIntentMessage(intent, message);
 	} catch (e) {
 		throw sendErrorFromApi(e, m.send_error_external_failed());
 	}

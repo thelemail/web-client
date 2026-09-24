@@ -65,6 +65,50 @@ export async function submissionFetch<T>(path: string, opts: FetchOptions = {}):
 	return doFetch<T>(path, { ...opts, baseUrl: PUBLIC_SUBMISSION_BASE_URL }, false);
 }
 
+export interface UploadOptions {
+	signal?: AbortSignal;
+	onProgress?: (fraction: number) => void;
+	accountId?: string;
+}
+
+export async function submissionUpload<T>(
+	path: string,
+	body: Blob,
+	contentType: string,
+	opts: UploadOptions = {},
+	retried = false
+): Promise<T> {
+	const base = PUBLIC_SUBMISSION_BASE_URL.replace(/\/$/, '');
+	if (!path.startsWith('/') || path.startsWith('//')) {
+		throw new Error('submission upload path must be relative to the submission origin');
+	}
+	const headers: Record<string, string> = { 'Content-Type': contentType, 'X-Device-Id': deviceId() };
+	const accountId = resolveAccountId(opts.accountId);
+	if (accountId) headers['X-Account-Id'] = accountId;
+	if (authRouter) {
+		await authRouter.ensureFreshToken?.(accountId);
+		const token = authRouter.getAccessToken(accountId);
+		if (token) headers['Authorization'] = `Bearer ${token}`;
+	}
+	const resp = await platform.submissionUpload(base + path, body, headers, {
+		signal: opts.signal,
+		onProgress: opts.onProgress
+	});
+	recordServerDate(resp.headers.get('date'));
+	const parsed = (resp.headers.get('content-type') ?? '').includes('application/json')
+		? await resp.json()
+		: null;
+	if (resp.ok) return parsed as T;
+	if (resp.status === 401 && !retried && authRouter && (await authRouter.onUnauthorized(accountId))) {
+		return submissionUpload<T>(path, body, contentType, opts, true);
+	}
+	throw new ApiCallError(
+		resp.status,
+		(parsed as ErrorEnvelope) ?? null,
+		(parsed as ErrorEnvelope)?.error?.message ?? `HTTP ${resp.status}`
+	);
+}
+
 function resolveAccountId(explicit: string | undefined): string | null {
 	if (explicit) return explicit;
 	return authRouter?.currentAccountId() ?? null;

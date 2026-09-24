@@ -3,6 +3,10 @@ import type { PlanCode } from './billing';
 
 export type ErrorCode =
 	| 'invalid_request'
+	| 'invalid_message'
+	| 'intent_not_found'
+	| 'scanner_unavailable'
+	| 'payload_too_large'
 	| 'invalid_credentials'
 	| 'rate_limited'
 	| 'server_busy'
@@ -296,38 +300,6 @@ export interface DraftDetail {
 	attachments: AttachmentDetail[];
 }
 
-export interface StagingSlotRequest {
-	slotId: string;
-	ordinal: number;
-	plaintextSizeBytes: number;
-}
-
-export interface StagingSlotGrant {
-	slotId: string;
-	objectKey: string;
-	putUrl: string;
-	expiresAt: string;
-}
-
-export interface StagingUrlsRequest {
-	slots: StagingSlotRequest[];
-}
-
-export interface StagingUrlsResponse {
-	slots: StagingSlotGrant[];
-}
-
-export interface StagedAttachment {
-	stagingSlotId: string;
-	filename: string;
-	contentType: string;
-	disposition: 'attachment' | 'inline';
-	contentId?: string;
-	plaintextSizeBytes: number;
-	plaintextSha256: string;
-	ordinal: number;
-}
-
 export interface SendRecipient {
 	accountId: string;
 	envelope: SendEnvelope;
@@ -455,15 +427,11 @@ export interface SubmitMessageRequest {
 	cc?: RecipientParty[];
 	bcc?: RecipientParty[];
 	subject: string;
-	textBody?: string;
-	htmlBody?: string;
 	replyTo?: string;
 	inReplyToHeader?: string;
 	references?: string[];
-	calendar?: { method: 'REQUEST' | 'REPLY' | 'CANCEL'; ics: string };
 	sent?: SendEnvelope;
 	sentMessageId?: string;
-	stagedAttachments?: StagedAttachment[];
 	encryptedCopies?: EncryptedCopy[];
 	scheduledAt?: string;
 }
@@ -477,6 +445,33 @@ export interface SubmitMessageResponse {
 	scheduledAt?: string | null;
 	scheduledSendId?: string | null;
 }
+
+export interface IntentMailbox {
+	name?: string;
+	address: string;
+}
+
+export interface SubmissionIntent {
+	intentId: string;
+	uploadUrl: string;
+	messageId: string;
+	messageIdHeader: string;
+	date: string;
+	from: IntentMailbox;
+	to: IntentMailbox[];
+	cc?: IntentMailbox[];
+	replyTo?: string;
+	inReplyTo?: string;
+	references?: string[];
+	scheduledAt?: string;
+	expiresAt: string;
+	maxMessageBytes: number;
+	recipients: { address: string; status: SubmitRecipientStatus }[];
+}
+
+export type SubmitOutcome =
+	| { kind: 'accepted'; response: SubmitMessageResponse }
+	| { kind: 'intent'; intent: SubmissionIntent };
 
 export type SignatureStatus = 'unsigned' | 'verified' | 'unverified' | 'unknown_key' | 'encrypted';
 

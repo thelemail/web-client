@@ -205,6 +205,12 @@ export interface Platform {
 		contentType?: string,
 		opts?: BlobPutOptions
 	) => Promise<Response>;
+	submissionUpload: (
+		url: string,
+		body: Blob,
+		headers: Record<string, string>,
+		opts?: BlobPutOptions
+	) => Promise<Response>;
 	returnOrigin: () => string;
 	openExternal: (url: string) => void;
 	saveBlob: (blob: Blob, filename: string) => Promise<void>;
