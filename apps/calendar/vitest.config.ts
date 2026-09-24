@@ -13,6 +13,11 @@ export default mergeConfig(
 			},
 			globals: false,
 			include: ['src/**/*.{test,spec}.ts', '../../packages/*/src/**/*.{test,spec}.ts'],
+			exclude: [
+				'**/node_modules/**',
+				'**/*.browser.test.ts',
+				'../../packages/*/src/**/*.browser.test.ts'
+			],
 			setupFiles: ['./vitest.setup.ts']
 		}
 	})
