@@ -24,14 +24,8 @@ vi.mock('./signaturePack', () => ({
 	packBodyForSend: async (bodyHtml: string | undefined) => ({ bodyHtml, relatedParts: [] })
 }));
 
-import {
-	buildMIME,
-	buildPreview,
-	messageIdDomain,
-	sendErrorFromApi,
-	SendError,
-	type ComposeInput
-} from './send';
+import { buildPreview, sendErrorFromApi, SendError, type ComposeInput } from './send';
+import { buildMIME, messageIdDomain } from './mime';
 import { ApiCallError, type ErrorCode } from '$core/api/types';
 
 function decode(bytes: Uint8Array): string {
@@ -90,7 +84,7 @@ describe('buildMIME with signature images', () => {
 				{
 					filename: 'a.txt',
 					contentType: 'text/plain',
-					bytes: new TextEncoder().encode('hello')
+					source: new TextEncoder().encode('hello')
 				}
 			]
 		});
@@ -223,7 +217,7 @@ describe('buildMIME', () => {
 					{
 						filename: 'ok.txt"\r\nX-Att-Evil: 1\r\n\r\npwned',
 						contentType: 'text/plain\r\nX-Type-Evil: 1',
-						bytes: new Uint8Array([1, 2, 3])
+						source: new Uint8Array([1, 2, 3])
 					}
 				]
 			})
@@ -311,7 +305,7 @@ describe('header quoting and folding', () => {
 				...baseArgs,
 				to,
 				attachments: [
-					{ filename: 'evil\\', contentType: 'text/plain', bytes: new Uint8Array([1, 2, 3]) }
+					{ filename: 'evil\\', contentType: 'text/plain', source: new Uint8Array([1, 2, 3]) }
 				]
 			})
 		);
@@ -428,22 +422,15 @@ describe('MIME boundaries', () => {
 		expect(parts[1]).toContain('Content-Transfer-Encoding: base64');
 	});
 
-	it('regenerates when the rendered parts already contain the drawn boundary', () => {
+	it('cannot collide with the body because every body line is encoded', () => {
 		const repeated = '00000000-0000-4000-8000-000000000000';
-		let draws = 0;
-		vi.spyOn(crypto, 'randomUUID').mockImplementation(() => {
-			draws++;
-			return (draws <= 2
-				? repeated
-				: `11111111-0000-4000-8000-${String(draws).padStart(12, '0')}`) as ReturnType<
-				typeof crypto.randomUUID
-			>;
-		});
-		const body = `hi\r\n--=_thelemail_alt_${repeated}\r\nContent-Type: text/plain\r\n\r\ninjected`;
+		vi.spyOn(crypto, 'randomUUID').mockReturnValue(repeated as ReturnType<typeof crypto.randomUUID>);
+		const forged = `=_tm_alt_${repeated.replace(/-/g, '')}`;
+		const body = `hi\r\n--${forged}\r\nContent-Type: text/plain\r\n\r\ninjected`;
 		const mime = decode(buildMIME({ ...baseArgs, to, body, bodyHtml: '<p>hi</p>' }));
 		const boundary = topBoundary(mime);
-		expect(draws).toBeGreaterThan(1);
-		expect(boundary).not.toContain(repeated);
+		expect(boundary).toBe(forged);
+		expect(mime).toContain(`--=3D_tm_alt_`);
 		expect(partsOf(mime, boundary)).toHaveLength(2);
 	});
 
@@ -459,7 +446,7 @@ describe('MIME boundaries', () => {
 				body: `hello\r\n--${guessed}\r\n\r\ninjected\r\n--${guessed}--`,
 				bodyHtml: '<p>hi</p>',
 				attachments: [
-					{ filename: 'a.txt', contentType: 'text/plain', bytes: new Uint8Array([1, 2, 3]) }
+					{ filename: 'a.txt', contentType: 'text/plain', source: new Uint8Array([1, 2, 3]) }
 				]
 			})
 		);

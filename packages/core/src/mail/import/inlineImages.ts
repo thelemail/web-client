@@ -1,6 +1,6 @@
 import { b64ToBytes } from '$core/crypto';
 import { fetchRemoteImages, resolveBimi } from '$core/api/messages';
-import type { RelatedMIMEPart } from '../send';
+import type { RelatedMIMEPart } from '../mime';
 import type { ParsedEml } from './parseEml';
 
 export interface InlinedBody {
