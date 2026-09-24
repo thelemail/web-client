@@ -371,3 +371,24 @@ jobs:
             dist/release-metadata.json \
             dist/SHA256SUMS \
             dist/SHA256SUMS.sigstore.json
+
+  promote:
+    needs: [preflight, build, release]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    environment: release
+    permissions: {}
+    steps:
+      - id: token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
+          owner: thelemail
+          permission-actions: write
+
+      - name: Ask for promotion
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          DISPATCH_PATH: ${{ secrets.DEPLOY_DISPATCH_PATH }}
+        run: gh api --silent --method POST "$DISPATCH_PATH" -f ref=main
