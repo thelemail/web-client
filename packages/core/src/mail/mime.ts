@@ -102,7 +102,11 @@ function headerChunks(args: BuildMIMEArgs, issued?: IssuedHeaders): string[] {
 		`Message-ID: ${issued ? headerValue(issued.messageId) : ensureAngled(`${args.messageId}@${domain}`)}`,
 		'MIME-Version: 1.0'
 	);
-	const inReplyTo = issued ? headerValue(issued.inReplyTo ?? '') : args.inReplyTo ? ensureAngled(args.inReplyTo) : '';
+	const inReplyTo = issued
+		? headerValue(issued.inReplyTo ?? '')
+		: args.inReplyTo
+			? ensureAngled(args.inReplyTo)
+			: '';
 	if (inReplyTo) headers.push(`In-Reply-To: ${inReplyTo}`);
 	const references = issued
 		? (issued.references ?? []).map(headerValue)
@@ -148,7 +152,10 @@ function contentEntity(args: BuildMIMEArgs): { headerLines: string[]; body: Chun
 		};
 	}
 	return {
-		headerLines: ['Content-Type: text/plain; charset=utf-8', 'Content-Transfer-Encoding: quoted-printable'],
+		headerLines: [
+			'Content-Type: text/plain; charset=utf-8',
+			'Content-Transfer-Encoding: quoted-printable'
+		],
 		body: [quotedPrintable(text)]
 	};
 }

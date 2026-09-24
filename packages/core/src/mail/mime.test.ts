@@ -60,13 +60,29 @@ function decodeQuotedPrintable(qp: string): string {
 }
 
 describe('composeMime', () => {
-	const sizes = [0, 1, 2, 3, 56, 57, 58, 57 * 1024 - 1, BASE64_WINDOW - 1, BASE64_WINDOW, BASE64_WINDOW + 1, 2 * BASE64_WINDOW + 5];
+	const sizes = [
+		0,
+		1,
+		2,
+		3,
+		56,
+		57,
+		58,
+		57 * 1024 - 1,
+		BASE64_WINDOW - 1,
+		BASE64_WINDOW,
+		BASE64_WINDOW + 1,
+		2 * BASE64_WINDOW + 5
+	];
 	for (const size of sizes) {
 		it(`encodes a ${size} byte file in windows exactly as a single pass would`, async () => {
 			const data = pattern(size);
 			const file = new GuardedFile([data], 'data.bin', { type: 'application/octet-stream' });
 			const blob = await composeMime(
-				{ ...baseArgs, attachments: [{ filename: 'data.bin', contentType: file.type, source: file }] },
+				{
+					...baseArgs,
+					attachments: [{ filename: 'data.bin', contentType: file.type, source: file }]
+				},
 				issued
 			);
 			const mime = await blob.text();
@@ -142,7 +158,10 @@ describe('composeMime', () => {
 	});
 
 	it('keeps buildMIME and composeMime in step for in-memory sources', async () => {
-		const args = { ...baseArgs, attachments: [{ filename: 'x.txt', contentType: 'text/plain', source: pattern(500) }] };
+		const args = {
+			...baseArgs,
+			attachments: [{ filename: 'x.txt', contentType: 'text/plain', source: pattern(500) }]
+		};
 		const sync = new TextDecoder().decode(buildMIME(args));
 		const streamed = new TextDecoder().decode(await composeMimeBytes(args));
 		const strip = (s: string) => s.replace(/=_tm_[a-z]+_[0-9a-f]+/g, 'B');
