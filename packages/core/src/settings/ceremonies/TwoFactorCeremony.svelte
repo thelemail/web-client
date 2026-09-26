@@ -16,7 +16,14 @@
 	import DoneScreen from '../DoneScreen.svelte';
 	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$core/api/twofactor';
 	import { createCredential, isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
-	import { ApiCallError } from '$core/api/types';
+	import { enrollmentStepUp } from '$core/auth/enrollment-step-up';
+	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
+	import {
+		ApiCallError,
+		type EnrollmentAction,
+		type TwoFactorMethod,
+		type TwoFactorProof
+	} from '$core/api/types';
 	import { auth } from '$core/stores/auth.svelte';
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
@@ -78,6 +85,39 @@
 	let backupCodes = $state<string[]>([]);
 	let saved = $state(false);
 
+	let grant = $state('');
+	let grantAction = $state<EnrollmentAction | null>(null);
+	let password = $state('');
+	let twoFaCode = $state('');
+	let confirmError = $state('');
+
+	const action = $derived<EnrollmentAction>(method === 'totp' ? 'totp_enroll' : 'webauthn_enroll');
+	const unlocked = $derived(grant !== '' && grantAction === action);
+
+	$effect(() => {
+		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
+			void twofactor.load(auth.accountId);
+		}
+	});
+
+	const existing = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
+	const needsFactor = $derived(existing.includes('totp') || existing.includes('webauthn'));
+	const hasTotp = $derived(existing.includes('totp'));
+	const hasBackup = $derived(existing.includes('backupCode'));
+	const hasWebauthn = $derived(existing.includes('webauthn') && webauthnSupported());
+	let twoFaMode = $derived<'totp' | 'backup'>(hasTotp ? 'totp' : 'backup');
+	const needsCode = $derived(needsFactor && (hasTotp || hasBackup));
+	const noUsableFactor = $derived(needsFactor && !needsCode && !hasWebauthn);
+	const codeReady = $derived(
+		twoFaMode === 'totp' ? /^\d{6}$/.test(twoFaCode) : twoFaCode.trim().length > 0
+	);
+	const canConfirm = $derived(
+		twofactor.status !== null &&
+			password.length > 0 &&
+			(!needsFactor || (needsCode && codeReady))
+	);
+
+
 	const totpActive = $derived(twofactor.status?.totp?.active === true);
 	const manualSecret = $derived.by(() => {
 		if (!otpauthUrl) return '';
@@ -111,21 +151,38 @@
 		}))
 	);
 
-	async function beginSetup() {
+	function isStepUpRequired(err: unknown): boolean {
+		return err instanceof ApiCallError && err.envelope?.error?.code === 'step_up_required';
+	}
+
+	function relock() {
+		grant = '';
+		grantAction = null;
+		confirmError = m.settings_ceremony_twofa_err_step_up_expired();
+	}
+
+	function beginSetup() {
+		if (busy) return;
+		setupError = '';
+		confirmed = false;
+		step = 1;
+	}
+
+	async function loadTotp() {
 		if (busy) return;
 		busy = true;
 		setupError = '';
-		confirmed = false;
 		try {
-			if (method === 'totp') {
-				const res = await totpEnrollInit(auth.accountId ?? undefined);
-				otpauthUrl = res.otpauthUrl;
-				qrPngBase64 = res.qrPngBase64;
-				code = '';
-			}
-			step = 1;
+			const res = await totpEnrollInit(grant, auth.accountId ?? undefined);
+			otpauthUrl = res.otpauthUrl;
+			qrPngBase64 = res.qrPngBase64;
+			code = '';
 		} catch (err) {
 			console.warn('twofa: enroll init failed', err);
+			if (isStepUpRequired(err)) {
+				relock();
+				return;
+			}
 			setupError =
 				err instanceof ApiCallError && err.status === 503
 					? m.settings_ceremony_twofa_err_unavailable()
@@ -136,20 +193,76 @@
 	}
 
 	$effect(() => {
-		if (initialMethod === 'totp' && step === 1 && !otpauthUrl && !busy && !setupError) {
-			void beginSetup();
+		if (step === 1 && method === 'totp' && unlocked && !otpauthUrl && !busy && !setupError) {
+			void loadTotp();
 		}
 	});
+
+	async function confirmIdentity(proof: () => Promise<TwoFactorProof | null>) {
+		const accountId = auth.accountId;
+		if (busy || !accountId) return;
+		busy = true;
+		confirmError = '';
+		const proofSent = needsFactor;
+		const wanted = action;
+		try {
+			const res = await enrollmentStepUp({ accountId, password, action: wanted, proof });
+			if (!res.ok) {
+				confirmError =
+					res.reason === 'scheme'
+						? m.settings_ceremony_twofa_err_upgrade()
+						: m.settings_ceremony_twofa_err_password();
+				return;
+			}
+			grant = res.grant;
+			grantAction = wanted;
+			password = '';
+			twoFaCode = '';
+		} catch (err) {
+			if (isWebauthnCancelled(err)) return;
+			console.warn('twofa: step-up failed', err);
+			if (err instanceof ApiCallError && err.status === 401) {
+				confirmError = proofSent
+					? m.settings_ceremony_twofa_err_not_verified()
+					: m.settings_ceremony_twofa_err_password();
+				twoFaCode = '';
+			} else if (err instanceof ApiCallError && err.status === 429) {
+				confirmError = m.settings_ceremony_twofa_err_locked();
+			} else if (err instanceof ApiCallError && err.status === 409) {
+				confirmError = m.settings_ceremony_twofa_err_upgrade();
+			} else {
+				confirmError = m.settings_ceremony_twofa_err_network();
+			}
+		} finally {
+			busy = false;
+		}
+	}
+
+	function confirmWithCode() {
+		if (!canConfirm) return;
+		void confirmIdentity(() => Promise.resolve(needsFactor ? codeProof(twoFaMode, twoFaCode) : null));
+	}
+
+	function confirmWithKey() {
+		if (busy || password.length === 0) return;
+		void confirmIdentity(() => webauthnProof(auth.accountId ?? undefined));
+	}
 
 	async function activateTotp() {
 		if (busy || code.length !== 6) return;
 		busy = true;
 		setupError = '';
 		try {
-			const res = await totpActivate({ code }, auth.accountId ?? undefined);
+			const res = await totpActivate({ code, grant }, auth.accountId ?? undefined);
+			grant = '';
 			finishActivation(res.backupCodes);
 		} catch (err) {
 			console.warn('twofa: totp activate failed', err);
+			if (isStepUpRequired(err)) {
+				relock();
+				code = '';
+				return;
+			}
 			setupError =
 				err instanceof ApiCallError && (err.status === 400 || err.status === 401)
 					? m.settings_ceremony_twofa_err_mismatch()
@@ -165,7 +278,7 @@
 		busy = true;
 		setupError = '';
 		try {
-			const init = await webauthnEnrollInit(auth.accountId ?? undefined);
+			const init = await webauthnEnrollInit(grant, auth.accountId ?? undefined);
 			const options = init.publicKey as Record<string, unknown>;
 			const selection = (options.authenticatorSelection as Record<string, unknown>) ?? {};
 			options.authenticatorSelection = {
@@ -177,10 +290,12 @@
 				{
 					registrationId: init.registrationId,
 					credential,
-					name: method === 'device' ? 'This device' : 'Security key'
+					name: method === 'device' ? 'This device' : 'Security key',
+					grant
 				},
 				auth.accountId ?? undefined
 			);
+			grant = '';
 			confirmed = true;
 			backupCodes = res.backupCodes ?? [];
 		} catch (err) {
@@ -189,6 +304,10 @@
 				return;
 			}
 			console.warn('twofa: webauthn activate failed', err);
+			if (isStepUpRequired(err)) {
+				relock();
+				return;
+			}
 			setupError =
 				err instanceof ApiCallError && err.status === 409
 					? m.settings_ceremony_twofa_err_key_registered()
@@ -293,6 +412,85 @@
 			</div>
 			{#if setupError}
 				<span class="errtext"><CircleAlert size={13} /><span>{setupError}</span></span>
+			{/if}
+		</div>
+	{:else if step === 1 && !unlocked && !confirmed}
+		<div class="cer-pane">
+			<div class="cer-lede">
+				<p>
+					{needsFactor
+						? m.settings_ceremony_twofa_confirm_lede_factor()
+						: m.settings_ceremony_twofa_confirm_lede()}
+				</p>
+			</div>
+			<div class="field">
+				<label for="twofa-pw">{m.settings_ceremony_twofa_password()}</label>
+				<input
+					id="twofa-pw"
+					class="tin"
+					type="password"
+					bind:value={password}
+					placeholder={m.settings_ceremony_twofa_password_placeholder()}
+					autocomplete="current-password"
+					disabled={busy}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && canConfirm) confirmWithCode();
+					}}
+				/>
+			</div>
+			{#if needsCode}
+				<div class="field">
+					<label for="twofa-proof-code">
+						{twoFaMode === 'totp'
+							? m.settings_ceremony_twofa_authenticator_code()
+							: m.settings_ceremony_twofa_backup_code()}
+					</label>
+					<input
+						id="twofa-proof-code"
+						class="tin mono otp"
+						maxlength={twoFaMode === 'totp' ? 6 : 12}
+						inputmode={twoFaMode === 'totp' ? 'numeric' : 'text'}
+						autocomplete={twoFaMode === 'totp' ? 'one-time-code' : 'off'}
+						spellcheck={false}
+						disabled={busy}
+						value={twoFaCode}
+						oninput={(e) => {
+							const v = (e.currentTarget as HTMLInputElement).value;
+							twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v;
+						}}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' && canConfirm) confirmWithCode();
+						}}
+						placeholder={twoFaMode === 'totp' ? '000000' : 'XXXX-XXXX'}
+					/>
+				</div>
+			{/if}
+			{#if hasTotp && hasBackup}
+				<button
+					type="button"
+					class="linklike"
+					disabled={busy}
+					onclick={() => {
+						twoFaMode = twoFaMode === 'totp' ? 'backup' : 'totp';
+						twoFaCode = '';
+						confirmError = '';
+					}}
+				>
+					{twoFaMode === 'totp'
+						? m.settings_ceremony_twofa_use_backup()
+						: m.settings_ceremony_twofa_use_authenticator()}
+				</button>
+			{/if}
+			{#if hasWebauthn}
+				<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={confirmWithKey}>
+					<Fingerprint size={14} />{m.settings_ceremony_twofa_use_security_key()}
+				</Button>
+			{/if}
+			{#if noUsableFactor}
+				<span class="errtext"><CircleAlert size={13} /><span>{m.settings_ceremony_twofa_confirm_no_method()}</span></span>
+			{/if}
+			{#if confirmError}
+				<span class="errtext"><CircleAlert size={13} /><span>{confirmError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1}
@@ -431,6 +629,21 @@
 					{m.common_continue()}<ArrowRight size={15} />
 				{/if}
 			</Button>
+		{:else if step === 1 && !unlocked && !confirmed}
+			<Button variant="ghost" disabled={busy} onclick={() => (initialMethod ? onClose() : (step = 0))}>
+				{#if initialMethod}
+					{m.common_cancel()}
+				{:else}
+					<ArrowLeft size={15} />{m.common_back()}
+				{/if}
+			</Button>
+			<Button variant="primary" disabled={busy || !canConfirm} onclick={confirmWithCode}>
+				{#if busy}
+					{m.settings_ceremony_twofa_confirming()}
+				{:else}
+					{m.settings_ceremony_twofa_confirm()}<ArrowRight size={15} />
+				{/if}
+			</Button>
 		{:else if step === 1}
 			<Button variant="ghost" disabled={busy} onclick={() => (initialMethod ? onClose() : (step = 0))}>
 				{#if initialMethod}
@@ -459,6 +672,20 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <style>
+	.linklike {
+		background: none;
+		border: none;
+		padding: 0;
+		font: inherit;
+		font-size: 12.5px;
+		color: var(--link, var(--pine-700));
+		font-weight: 500;
+		cursor: pointer;
+		align-self: flex-start;
+	}
+	.linklike:hover {
+		text-decoration: underline;
+	}
 	.qr-img {
 		width: 168px;
 		height: 168px;

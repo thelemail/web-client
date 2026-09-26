@@ -48,6 +48,7 @@
 		TwoFactorMethod,
 		TwoFactorProof
 	} from '$core/api/types';
+	import { enrolledMethods } from '$core/auth/two-factor-proof';
 	import { webauthnSupported } from '$core/auth/webauthn';
 	import { keystore } from '$core/keystore/keystore-client';
 	import TwoFactorProofDialog from '../TwoFactorProofDialog.svelte';
@@ -81,15 +82,7 @@
 	let newCodes = $state<string[] | null>(null);
 
 	const tfStatus = $derived(twofactor.status);
-	const proofMethods = $derived.by<TwoFactorMethod[]>(() => {
-		const st = twofactor.status;
-		if (!st) return [];
-		const methods: TwoFactorMethod[] = [];
-		if (st.totp?.active) methods.push('totp');
-		if (st.webauthnCredentials.length > 0) methods.push('webauthn');
-		if ((st.backupCodes?.remaining ?? 0) > 0) methods.push('backupCode');
-		return methods;
-	});
+	const proofMethods = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
 
 	const proofCopy = $derived.by(() => {
 		const a = proofAction;

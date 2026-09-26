@@ -15,9 +15,9 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import { confirmDeletion, confirmDeletionOpaque, initDeletion, initDeletionOpaque } from '$core/api/deletion';
-	import { webauthnProofInit } from '$core/api/twofactor';
 	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
-	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
+	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -62,15 +62,7 @@
 		}
 	});
 
-	const methods = $derived.by<TwoFactorMethod[]>(() => {
-		const st = twofactor.status;
-		if (!st) return [];
-		const out: TwoFactorMethod[] = [];
-		if (st.totp?.active) out.push('totp');
-		if (st.webauthnCredentials.length > 0) out.push('webauthn');
-		if ((st.backupCodes?.remaining ?? 0) > 0) out.push('backupCode');
-		return out;
-	});
+	const methods = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
 	const hasTotp = $derived(methods.includes('totp'));
 	const hasBackup = $derived(methods.includes('backupCode'));
 	const hasWebauthn = $derived(methods.includes('webauthn') && webauthnSupported());
@@ -88,15 +80,7 @@
 
 	function inlineProof(): TwoFactorProof | null {
 		if (methods.length === 0) return null;
-		return twoFaMode === 'totp'
-			? { method: 'totp', code: twoFaCode }
-			: { method: 'backupCode', code: twoFaCode.trim() };
-	}
-
-	async function webauthnProof(): Promise<TwoFactorProof> {
-		const init = await webauthnProofInit(auth.accountId ?? undefined);
-		const credential = await getAssertion(init.publicKey);
-		return { method: 'webauthn', proofToken: init.registrationId, credential };
+		return codeProof(twoFaMode, twoFaCode);
 	}
 
 	async function submitDeletion(getProof: () => Promise<TwoFactorProof | null>) {
@@ -194,7 +178,7 @@
 
 	function submitWithWebauthn() {
 		if (busy || cur.length === 0) return;
-		void submitDeletion(webauthnProof);
+		void submitDeletion(() => webauthnProof(auth.accountId ?? undefined));
 	}
 
 	async function signOutDeleted() {

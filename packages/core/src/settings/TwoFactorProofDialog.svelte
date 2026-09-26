@@ -4,9 +4,9 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Fingerprint from '@lucide/svelte/icons/fingerprint';
 	import CeremonyShell from './CeremonyShell.svelte';
-	import { webauthnProofInit } from '$core/api/twofactor';
 	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
-	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import { codeProof, webauthnProof } from '$core/auth/two-factor-proof';
+	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
 	import { auth } from '$core/stores/auth.svelte';
 	import { Button } from '$core/components/ui/button';
 
@@ -59,11 +59,7 @@
 
 	function submitCode() {
 		if (busy || !codeReady) return;
-		void run(
-			mode === 'totp'
-				? { method: 'totp', code }
-				: { method: 'backupCode', code: code.trim() }
-		);
+		void run(codeProof(mode, code));
 	}
 
 	async function submitWebauthn() {
@@ -71,10 +67,9 @@
 		busy = true;
 		error = '';
 		try {
-			const init = await webauthnProofInit(auth.accountId ?? undefined);
-			const credential = await getAssertion(init.publicKey);
+			const proof = await webauthnProof(auth.accountId ?? undefined);
 			busy = false;
-			await run({ method: 'webauthn', proofToken: init.registrationId, credential });
+			await run(proof);
 		} catch (err) {
 			if (isWebauthnCancelled(err)) {
 				busy = false;
