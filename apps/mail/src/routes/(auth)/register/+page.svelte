@@ -25,6 +25,7 @@
 	import brandmark from '$core/assets/logo-mark.svg';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Check from '@lucide/svelte/icons/check';
@@ -33,6 +34,7 @@
 	import { ApiCallError } from '$core/api/types';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
+	import { formatList, platformDomains } from '$core/stores/platformDomains.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -56,6 +58,12 @@
 	let paid = $state(preselected !== null);
 	let fullName = $state('');
 	let handle = $state('');
+	let pickedDomain = $state<string | null>(null);
+	const mailDomain = $derived(
+		pickedDomain && platformDomains.includes(pickedDomain) ? pickedDomain : platformDomains.default
+	);
+	const address = $derived(`${handle}@${mailDomain}`);
+	const companions = $derived(platformDomains.addressesFor(handle, mailDomain).slice(1));
 	let pw = $state('');
 	let confirm = $state('');
 	let sel = $state<PlanSelection>(
@@ -178,7 +186,7 @@
 	}
 
 	async function registerAndLogin(): Promise<number | null> {
-		const email = `${handle}@thelemail.com`;
+		const email = address;
 		const password = pw;
 		const plan = paid ? planCodeFor(sel) : null;
 		try {
@@ -305,11 +313,11 @@
 				<h1>{heading}</h1>
 			{/if}
 			{#if audience === 'family'}
-				<p><Rich text={m.auth_register_lede_family()} tags={{ domain }} /></p>
+				<p><Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} /></p>
 			{:else if audience === 'business'}
-				<p><Rich text={m.auth_register_lede_business()} tags={{ domain }} /></p>
+				<p><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></p>
 			{:else}
-				<p><Rich text={m.auth_register_lede_personal()} tags={{ domain }} /></p>
+				<p><Rich text={m.auth_register_lede_personal({ domain: mailDomain })} tags={{ domain }} /></p>
 			{/if}
 		</div>
 		<div class="form">
@@ -347,7 +355,23 @@
 							if (e.key === 'Enter' && addressReady) step = 1;
 						}}
 					/>
-					<span class="suf">@thelemail.com</span>
+					{#if platformDomains.list.length > 1}
+						<span class="suf pick">
+							<span aria-hidden="true">@</span>
+							<select
+								aria-label={m.auth_register_domain_label()}
+								value={mailDomain}
+								onchange={(e) => (pickedDomain = e.currentTarget.value)}
+							>
+								{#each platformDomains.list as d (d)}
+									<option value={d}>{d}</option>
+								{/each}
+							</select>
+							<ChevronDown size={14} strokeWidth={1.75} />
+						</span>
+					{:else}
+						<span class="suf">@{mailDomain}</span>
+					{/if}
 					<span class="statusic">
 						{#if status === 'available'}
 							<span class="ok-c"><CircleCheck size={17} strokeWidth={1.75} /></span>
@@ -373,10 +397,15 @@
 				{:else if status === 'available'}
 					<span class="hint">
 						<Rich
-							text={m.auth_register_handle_available({ address: `${handle}@thelemail.com` })}
+							text={m.auth_register_handle_available({ address })}
 							tags={{ b: bold }}
 						/>
 					</span>
+					{#if companions.length > 0}
+						<span class="hint">
+							{m.auth_register_handle_companions({ addresses: formatList(companions, 'conjunction') })}
+						</span>
+					{/if}
 				{/if}
 			</div>
 			<div class="actions">
@@ -397,7 +426,7 @@
 			<h1>{m.auth_register_password_title()}</h1>
 			<p>
 				<Rich
-					text={m.auth_register_password_securing({ address: `${handle}@thelemail.com` })}
+					text={m.auth_register_password_securing({ address })}
 					tags={{ addr: domain }}
 				/>
 			</p>
@@ -463,7 +492,7 @@
 		{#if paid}
 			<p class="legal">{m.auth_register_legal_paid()}</p>
 		{:else}
-			<p class="legal">{m.auth_register_legal_free()}</p>
+			<p class="legal">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
 		{/if}
 	</div>
 {:else if step === 2}
@@ -477,7 +506,7 @@
 	/>
 {:else if step === 3}
 	<PaymentStep
-		{handle}
+		{address}
 		{sel}
 		{labels}
 		{submitting}
@@ -493,13 +522,13 @@
 			<h1>{m.auth_register_submitted_title()}</h1>
 			<p>
 				<Rich
-					text={m.auth_register_submitted_body({ address: `${handle}@thelemail.com` })}
+					text={m.auth_register_submitted_body({ address })}
 					tags={{ b: bold }}
 				/>
 			</p>
 			<div class="addrcard">
 				<span class="av">{initials}</span>
-				<span class="em">{handle}@thelemail.com</span>
+				<span class="em">{address}</span>
 				<span class="vbadge"><Check size={13} strokeWidth={2.5} /></span>
 			</div>
 			{#if planLabel}
