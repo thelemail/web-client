@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 
+import { planUids } from '$core/keys/uidPlan';
 import * as openpgp from 'openpgp';
 
 import { generateDelegationKey } from '$core/keys/delegationKey';
@@ -1205,25 +1206,15 @@ async function handleReformatKeyWithUids(
 	if (!v.keyPassword) {
 		return { ok: false, code: 'no_key_password' };
 	}
-	const emails = Array.from(
-		new Set(args.emails.map((e) => e.trim().toLowerCase()).filter((e) => e.length > 0))
-	).sort();
+	const currentUids = v.privateKey.users
+		.map((u) => u.userID?.userID ?? '')
+		.filter((s) => s.length > 0);
+	const { emails, unchanged } = planUids(args.emails, currentUids);
 	if (emails.length === 0) {
 		return { ok: false, code: 'no_emails' };
 	}
 	try {
-		const desiredUids = emails.map((e) => `<${e}>`);
-		const currentUids = Array.from(
-			new Set(
-				v.privateKey.users
-					.map((u) => u.userID?.userID?.trim().toLowerCase())
-					.filter((s): s is string => !!s && s.length > 0)
-			)
-		).sort();
-		if (
-			currentUids.length === desiredUids.length &&
-			currentUids.every((s, i) => s === desiredUids[i])
-		) {
+		if (unchanged) {
 			return { ok: true, unchanged: true };
 		}
 

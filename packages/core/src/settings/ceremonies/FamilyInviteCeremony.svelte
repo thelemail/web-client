@@ -11,7 +11,7 @@
 	import CopyBtn from '../CopyBtn.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import type { CeremonyKind } from '../data';
-	import { SHARED_DOMAIN, isSharedDomainAddress } from '../entitlements';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import { familyInviteError } from '../family-invite-errors';
 	import { seatLimitFor } from '../plan-display';
 	import { auth } from '$core/stores/auth.svelte';
@@ -44,9 +44,9 @@
 
 	const localProblem = $derived.by((): string | null => {
 		if (trimmed.length === 0) return null;
-		if (!looksLikeEmail) return m.settings_ceremony_family_invite_err_full_address({ domain: SHARED_DOMAIN });
-		if (!isSharedDomainAddress(trimmed)) {
-			return m.settings_ceremony_family_invite_err_shared_only({ domain: SHARED_DOMAIN });
+		if (!looksLikeEmail) return m.settings_ceremony_family_invite_err_full_address({ domain: platformDomains.default });
+		if (platformDomains.loaded && !platformDomains.isPlatformAddress(trimmed)) {
+			return m.settings_ceremony_family_invite_err_shared_only({ domain: platformDomains.display() });
 		}
 		if (auth.email && trimmed === auth.email.toLowerCase()) return m.settings_ceremony_family_invite_err_own();
 		if (workspaces.members.some((m) => m.email.toLowerCase() === trimmed)) {
@@ -102,7 +102,7 @@
 					class="tin mono"
 					type="email"
 					bind:value={email}
-					placeholder="jules@{SHARED_DOMAIN}"
+					placeholder="jules@{platformDomains.default}"
 					autocomplete="off"
 					autocapitalize="none"
 					spellcheck="false"
@@ -111,7 +111,7 @@
 					<div class="field-hint bad"><CircleAlert size={13} />{localProblem}</div>
 				{:else}
 					<div class="field-hint">
-						{m.settings_ceremony_family_invite_email_hint({ domain: SHARED_DOMAIN })}
+						{m.settings_ceremony_family_invite_email_hint({ domain: platformDomains.display() })}
 					</div>
 				{/if}
 			</div>

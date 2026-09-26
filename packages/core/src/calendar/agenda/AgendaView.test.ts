@@ -1,13 +1,19 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/svelte';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Workspace, WorkspaceMember } from '$core/api/workspaces';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 import AgendaView from './AgendaView.svelte';
 
 vi.mock('../store.svelte', () => ({ calendarStore: {} }));
 vi.mock('../state.svelte', () => ({ cal: { agendaDays: [], title: 'September' } }));
+vi.mock('$core/api/auth', () => ({
+	getPlatformDomains: vi.fn().mockResolvedValue({ domains: ['temail.org', 'thelemail.com'], default: 'temail.org' })
+}));
+
+beforeAll(() => platformDomains.load());
 
 const at = '2026-09-20T12:00:00Z';
 
@@ -59,13 +65,13 @@ describe('AgendaView hero', () => {
 		expect(hero()).toContain('behind acme.test.');
 	});
 
-	it('names the shared domain when no custom domain is live', () => {
+	it('names the default platform domain when no custom domain is live', () => {
 		customDomains.items = [
 			domain('d1', 'pending.test'),
 			domain('d2', 'paused.test', { ...live, dormantAt: at })
 		];
 		render(AgendaView);
 
-		expect(hero()).toContain('behind thelemail.com.');
+		expect(hero()).toContain('behind temail.org.');
 	});
 });

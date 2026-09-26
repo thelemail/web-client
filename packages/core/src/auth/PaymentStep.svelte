@@ -15,7 +15,7 @@
 	import { m } from '$paraglide/messages.js';
 
 	let {
-		handle,
+		address,
 		sel,
 		labels,
 		submitting,
@@ -24,7 +24,7 @@
 		onChangePlan,
 		onPay
 	}: {
-		handle: string;
+		address: string;
 		sel: PlanSelection;
 		labels: string[];
 		submitting: boolean;
@@ -58,7 +58,7 @@
 	<div class="card-head">
 		<p class="eyebrow">{m.auth_step_of({ step: 4, total: 4 })}</p>
 		<h1>{m.auth_payment_heading()}</h1>
-		<p><Rich text={m.auth_payment_for({ address: `${handle}@thelemail.com` })} tags={{ addr }} /></p>
+		<p><Rich text={m.auth_payment_for({ address })} tags={{ addr }} /></p>
 	</div>
 
 	<div class="osum">

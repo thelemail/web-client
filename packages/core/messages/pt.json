@@ -116,7 +116,7 @@
 	"settings_ceremony_family_start_name_label": "Nome da família",
 	"settings_ceremony_family_start_name_hint": "Só os membros da família veem este nome.",
 	"settings_ceremony_family_start_callout_title": "Família gratuita: 6 contas, com 1 GB de armazenamento cada.",
-	"settings_ceremony_family_start_callout_body": "Todas as pessoas que convidar já precisam de uma conta {domain}. Sem domínios personalizados, e tudo o que tem fica onde está.",
+	"settings_ceremony_family_start_callout_body": "Todas as pessoas que convidar já precisam de uma conta Thelemail. Sem domínios personalizados, e tudo o que tem fica onde está.",
 	"settings_ceremony_family_start_creating": "A criar…",
 	"settings_ceremony_family_start_submit": "Criar a família",
 	"settings_ceremony_family_invite_family_fallback": "a sua família",
@@ -280,8 +280,8 @@
 	"settings_member_seats_full_family": "Os 6 lugares incluídos estão ocupados. Uma equipa maior precisa de um plano Business.",
 	"settings_member_seats_prorated": "Convidar outro membro adiciona à subscrição um lugar cobrado proporcionalmente.",
 	"settings_member_personal_note": "Os planos Personal abrangem uma pessoa. Não há mais ninguém para gerir.",
-	"settings_plan_free_family_note": "Até 6 contas em thelemail.com, com 1 GB de armazenamento cada. Gratuito, sem domínios personalizados.",
-	"settings_plan_free_note": "O plano Free abrange uma pessoa com um endereço em thelemail.com e 1 GB de armazenamento.",
+	"settings_plan_free_family_note": "Até 6 contas em {domains}, com 1 GB de armazenamento cada. Gratuito, sem domínios personalizados.",
+	"settings_plan_free_note": "O plano Free abrange uma pessoa, com endereços em {domains} e 1 GB de armazenamento.",
 	"settings_forwarding_err_unlock": "Desbloqueie a caixa de correio e tente novamente.",
 	"settings_forwarding_err_sign": "Não foi possível assinar a autorização.",
 	"settings_forwarding_status_sending": "A enviar",
@@ -2393,14 +2393,15 @@
 			"declarations": [
 				"input left",
 				"input total",
+				"input domains",
 				"local totalPlural = total: plural"
 			],
 			"selectors": [
 				"totalPlural"
 			],
 			"match": {
-				"totalPlural=one": "Lugares livres: {left} de {total}. Pode convidar qualquer pessoa que já tenha um endereço thelemail.com.",
-				"totalPlural=*": "Lugares livres: {left} de {total}. Pode convidar qualquer pessoa que já tenha um endereço thelemail.com."
+				"totalPlural=one": "Lugares livres: {left} de {total}. Pode convidar qualquer pessoa que já tenha um endereço {domains}.",
+				"totalPlural=*": "Lugares livres: {left} de {total}. Pode convidar qualquer pessoa que já tenha um endereço {domains}."
 			}
 		}
 	],
@@ -3666,13 +3667,15 @@
 	"auth_register_free_foot": "Ainda não quer pagar? <free>Comece com o plano gratuito</free>",
 	"auth_register_add_title": "Criar uma segunda conta",
 	"auth_register_add_lede": "Tem sessão iniciada como <b>{email}</b>. A nova conta será adicionada ao lado desta no dispositivo — ambas mantêm a sessão iniciada.",
-	"auth_register_lede_family": "Comece com o seu endereço em <domain>thelemail.com</domain>. Será a conta de administração da família e poderá ligar o domínio da família nas Definições depois de criar a conta.",
-	"auth_register_lede_business": "Comece com o seu endereço em <domain>thelemail.com</domain>. Será a conta de administração da equipa e poderá ligar o domínio da empresa nas Definições depois de criar a conta.",
-	"auth_register_lede_personal": "Escolha um nome em <domain>thelemail.com</domain>. Pode adicionar o seu domínio mais tarde.",
+	"auth_register_lede_family": "Comece com o seu endereço em <domain>{domain}</domain>. Será a conta de administração da família e poderá ligar o domínio da família nas Definições depois de criar a conta.",
+	"auth_register_lede_business": "Comece com o seu endereço em <domain>{domain}</domain>. Será a conta de administração da equipa e poderá ligar o domínio da empresa nas Definições depois de criar a conta.",
+	"auth_register_lede_personal": "Escolha um nome em <domain>{domain}</domain>. Pode adicionar o seu domínio mais tarde.",
 	"auth_register_name_label": "Nome completo",
 	"auth_register_name_placeholder": "Camille Rabelais",
 	"auth_register_name_hint": "Mostrado às pessoas a quem escreve.",
 	"auth_register_handle_placeholder": "françois",
+	"auth_register_domain_label": "Domínio do endereço",
+	"auth_register_handle_companions": "O correio enviado para {addresses} também chega até si.",
 	"auth_register_handle_hint": "Letras, números, pontos e hífenes. 3–30 carateres.",
 	"auth_register_handle_invalid": "Use 3–30 letras, números, pontos ou hífenes.",
 	"auth_register_handle_checking": "A verificar disponibilidade…",
@@ -3691,7 +3694,7 @@
 	"auth_register_free_instead": "Começar antes com o plano gratuito",
 	"auth_register_paid_instead": "Escolher antes um plano pago",
 	"auth_register_legal_paid": "A sua conta é criada primeiro e depois retoma o pagamento onde ficou. Nada é cobrado até confirmar nessa página.",
-	"auth_register_legal_free": "O plano gratuito é uma caixa de correio completa em thelemail.com com 1 GB de armazenamento, sem cartão. Mude de plano quando quiser o seu próprio domínio, mais armazenamento ou mais pessoas.",
+	"auth_register_legal_free": "O plano gratuito é uma caixa de correio completa em {domains} com 1 GB de armazenamento, sem cartão. Mude de plano quando quiser o seu próprio domínio, mais armazenamento ou mais pessoas.",
 	"auth_register_submitted_title": "Enviado",
 	"auth_register_submitted_body": "Se <b>{address}</b> for novo, a caixa de correio está pronta — inicie sessão para a abrir. Se o endereço já estava ocupado, o proprietário atual foi notificado.",
 	"auth_register_plan_pending": "<b>{plan}</b> — pronto para concluir após iniciar sessão",

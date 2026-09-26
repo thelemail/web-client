@@ -6,8 +6,7 @@ import {
 	allowsSharedDomainAlias,
 	inviteMode,
 	isFreeFamily,
-	isFreePlan,
-	isSharedDomainAddress
+	isFreePlan
 } from './entitlements';
 import type { PlanCode } from '$core/api/billing';
 
@@ -92,19 +91,5 @@ describe('inviteMode', () => {
 
 	it('never invites on the free personal plan', () => {
 		expect(inviteMode('family', 'free')).toBe('none');
-	});
-});
-
-describe('isSharedDomainAddress', () => {
-	it('accepts thelemail.com in any case', () => {
-		expect(isSharedDomainAddress('anna@thelemail.com')).toBe(true);
-		expect(isSharedDomainAddress('Anna@Thelemail.COM')).toBe(true);
-	});
-
-	it('rejects anything else', () => {
-		expect(isSharedDomainAddress('anna@example.com')).toBe(false);
-		expect(isSharedDomainAddress('anna@sub.thelemail.com')).toBe(false);
-		expect(isSharedDomainAddress('anna')).toBe(false);
-		expect(isSharedDomainAddress('')).toBe(false);
 	});
 });

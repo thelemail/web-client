@@ -4,7 +4,6 @@
 	import Users from '@lucide/svelte/icons/users';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import type { CeremonyKind } from '../data';
-	import { SHARED_DOMAIN } from '../entitlements';
 	import { auth } from '$core/stores/auth.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -80,7 +79,7 @@
 			<Users size={17} />
 			<div>
 				<b>{m.settings_ceremony_family_start_callout_title()}</b>
-				{m.settings_ceremony_family_start_callout_body({ domain: SHARED_DOMAIN })}
+				{m.settings_ceremony_family_start_callout_body()}
 			</div>
 		</div>
 	</div>

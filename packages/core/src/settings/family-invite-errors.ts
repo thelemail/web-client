@@ -1,6 +1,6 @@
 import { m } from '$paraglide/messages.js';
 import { ApiCallError } from '$core/api/types';
-import { SHARED_DOMAIN } from './entitlements';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 
 export function familyInviteError(err: unknown, email: string): string {
 	const code = err instanceof ApiCallError ? err.envelope?.error?.code : null;
@@ -16,7 +16,7 @@ export function familyInviteError(err: unknown, email: string): string {
 		case 'invitee_has_custom_domain':
 			return m.settings_family_invite_err_custom_domain({ email });
 		case 'invitee_domain_not_shared':
-			return m.settings_family_invite_err_domain_not_shared({ email, domain: SHARED_DOMAIN });
+			return m.settings_family_invite_err_domain_not_shared({ email, domain: platformDomains.display() });
 		case 'family_full':
 			return m.settings_family_invite_err_full();
 		case 'rate_limited':

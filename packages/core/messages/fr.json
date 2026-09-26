@@ -116,7 +116,7 @@
   "settings_ceremony_family_start_name_label": "Nom de la famille",
   "settings_ceremony_family_start_name_hint": "Seuls les membres de la famille le voient.",
   "settings_ceremony_family_start_callout_title": "Famille gratuite : 6 comptes, 1 Go de stockage chacun.",
-  "settings_ceremony_family_start_callout_body": "Chaque personne invitée doit déjà posséder un compte {domain}. Aucun domaine personnalisé, et tout ce que vous avez reste en place.",
+  "settings_ceremony_family_start_callout_body": "Chaque personne invitée doit déjà posséder un compte Thelemail. Aucun domaine personnalisé, et tout ce que vous avez reste en place.",
   "settings_ceremony_family_start_creating": "Création…",
   "settings_ceremony_family_start_submit": "Créer la famille",
   "settings_ceremony_family_invite_family_fallback": "votre famille",
@@ -280,8 +280,8 @@
   "settings_member_seats_full_family": "Les 6 places incluses sont occupées. Une équipe plus grande nécessite une offre Business.",
   "settings_member_seats_prorated": "Inviter un autre membre ajoute une place facturée au prorata à votre abonnement.",
   "settings_member_personal_note": "Les offres Personal couvrent une seule personne. Aucun autre membre à gérer.",
-  "settings_plan_free_family_note": "Jusqu’à 6 comptes sur thelemail.com, avec 1 Go de stockage chacun. Gratuit, sans domaines personnalisés.",
-  "settings_plan_free_note": "L’offre Free couvre une personne avec une adresse sur thelemail.com et 1 Go de stockage.",
+  "settings_plan_free_family_note": "Jusqu’à 6 comptes sur {domains}, avec 1 Go de stockage chacun. Gratuit, sans domaines personnalisés.",
+  "settings_plan_free_note": "L’offre Free couvre une personne, avec des adresses sur {domains} et 1 Go de stockage.",
   "settings_forwarding_err_unlock": "Déverrouillez votre boîte mail et réessayez.",
   "settings_forwarding_err_sign": "Impossible de signer l’autorisation.",
   "settings_forwarding_status_sending": "Envoi en cours",
@@ -2393,14 +2393,15 @@
       "declarations": [
         "input left",
         "input total",
+        "input domains",
         "local totalPlural = total: plural"
       ],
       "selectors": [
         "totalPlural"
       ],
       "match": {
-        "totalPlural=one": "Places libres : {left} sur {total}. Vous pouvez inviter toute personne possédant déjà une adresse thelemail.com.",
-        "totalPlural=*": "Places libres : {left} sur {total}. Vous pouvez inviter toute personne possédant déjà une adresse thelemail.com."
+        "totalPlural=one": "Places libres : {left} sur {total}. Vous pouvez inviter toute personne possédant déjà une adresse {domains}.",
+        "totalPlural=*": "Places libres : {left} sur {total}. Vous pouvez inviter toute personne possédant déjà une adresse {domains}."
       }
     }
   ],
@@ -3666,13 +3667,15 @@
   "auth_register_free_foot": "Vous préférez attendre avant de payer ? <free>Commencer avec l’offre gratuite</free>",
   "auth_register_add_title": "Créer un second compte",
   "auth_register_add_lede": "Vous êtes connecté en tant que <b>{email}</b>. Le nouveau compte sera ajouté à côté de celui-ci sur cet appareil ; les deux resteront connectés.",
-  "auth_register_lede_family": "Commencez avec votre propre adresse sur <domain>thelemail.com</domain>. Elle devient le compte administrateur du foyer. Une fois le compte créé, vous pourrez connecter le domaine familial depuis les paramètres.",
-  "auth_register_lede_business": "Commencez avec votre propre adresse sur <domain>thelemail.com</domain>. Elle devient le compte administrateur de l’équipe. Une fois le compte créé, vous pourrez connecter le domaine de votre entreprise depuis les paramètres.",
-  "auth_register_lede_personal": "Choisissez un nom sur <domain>thelemail.com</domain>. Vous pourrez ajouter votre propre domaine plus tard.",
+  "auth_register_lede_family": "Commencez avec votre propre adresse sur <domain>{domain}</domain>. Elle devient le compte administrateur du foyer. Une fois le compte créé, vous pourrez connecter le domaine familial depuis les paramètres.",
+  "auth_register_lede_business": "Commencez avec votre propre adresse sur <domain>{domain}</domain>. Elle devient le compte administrateur de l’équipe. Une fois le compte créé, vous pourrez connecter le domaine de votre entreprise depuis les paramètres.",
+  "auth_register_lede_personal": "Choisissez un nom sur <domain>{domain}</domain>. Vous pourrez ajouter votre propre domaine plus tard.",
   "auth_register_name_label": "Nom complet",
   "auth_register_name_placeholder": "Camille Rabelais",
   "auth_register_name_hint": "Affiché aux personnes à qui vous écrivez.",
   "auth_register_handle_placeholder": "françois",
+  "auth_register_domain_label": "Domaine de l’adresse",
+  "auth_register_handle_companions": "Les messages envoyés à {addresses} vous parviennent aussi.",
   "auth_register_handle_hint": "Lettres, chiffres, points, tirets. De 3 à 30 caractères.",
   "auth_register_handle_invalid": "Utilisez de 3 à 30 lettres, chiffres, points ou tirets.",
   "auth_register_handle_checking": "Vérification de la disponibilité…",
@@ -3691,7 +3694,7 @@
   "auth_register_free_instead": "Commencer plutôt avec l’offre gratuite",
   "auth_register_paid_instead": "Choisir plutôt une offre payante",
   "auth_register_legal_paid": "Votre compte est créé d’abord, puis vous reprenez le paiement là où vous en étiez. Aucun montant n’est facturé avant votre confirmation sur cette page.",
-  "auth_register_legal_free": "L’offre gratuite fournit une vraie boîte mail sur thelemail.com avec 1 Go de stockage, sans carte bancaire. Passez à une offre supérieure lorsque vous souhaitez votre propre domaine, plus de stockage ou davantage de membres.",
+  "auth_register_legal_free": "L’offre gratuite fournit une vraie boîte mail sur {domains} avec 1 Go de stockage, sans carte bancaire. Passez à une offre supérieure lorsque vous souhaitez votre propre domaine, plus de stockage ou davantage de membres.",
   "auth_register_submitted_title": "Demande envoyée",
   "auth_register_submitted_body": "Si <b>{address}</b> est disponible, votre boîte mail est prête : connectez-vous pour l’ouvrir. Si l’adresse était déjà prise, son propriétaire actuel a été prévenu.",
   "auth_register_plan_pending": "<b>{plan}</b> — à finaliser après la connexion",

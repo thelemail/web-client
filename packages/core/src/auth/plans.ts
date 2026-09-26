@@ -1,4 +1,5 @@
 import { m } from '$paraglide/messages.js';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 
 export type ProductId = 'personal' | 'family' | 'business';
 
@@ -44,7 +45,7 @@ export const FREE_PLAN = {
 		return [
 			[m.auth_plan_row_mailboxes(), '1'],
 			[m.auth_plan_row_storage(), m.auth_plan_value_gb({ size: 1 })],
-			[m.auth_plan_row_address(), 'yours@thelemail.com'],
+			[m.auth_plan_row_address(), `yours@${platformDomains.default}`],
 			[m.auth_plan_row_custom_domains(), m.auth_plan_value_none()]
 		];
 	}
@@ -59,7 +60,7 @@ export const FREE_FAMILY_PLAN = {
 		return [
 			[m.auth_plan_row_mailboxes(), m.auth_plan_value_up_to({ count: 6 })],
 			[m.auth_plan_row_storage_per_mailbox(), m.auth_plan_value_gb({ size: 1 })],
-			[m.auth_plan_row_addresses(), 'yours@thelemail.com'],
+			[m.auth_plan_row_addresses(), `yours@${platformDomains.default}`],
 			[m.auth_plan_row_custom_domains(), m.auth_plan_value_none()]
 		];
 	}

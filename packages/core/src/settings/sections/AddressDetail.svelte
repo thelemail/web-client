@@ -35,6 +35,7 @@
 	import { settingsPageTitle } from '../pageTitle.svelte';
 	import { resumeStep } from '../domains/steps';
 	import Rich from '$core/i18n/Rich.svelte';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import {
 		buildRow,
 		dedupeAddresses,
@@ -68,6 +69,7 @@
 		manage,
 		members: workspaces.members,
 		domains: customDomains.items,
+		platformDomains: platformDomains.list,
 		sharedAliases: manage ? aliases.items : [],
 		fullName: auth.fullName,
 		delegationsFor: (id) => delegations.for(id),

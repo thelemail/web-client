@@ -12,6 +12,13 @@ import { syncAddressUids } from '$core/keys/uid-sync';
 import { canonicalRecipient } from '$core/mail/recipientAddress';
 import { m } from '$paraglide/messages.js';
 
+export function personalEmailsPrimaryFirst(items: readonly AccountAddress[]): string[] {
+	return items
+		.filter((a) => !a.shared)
+		.sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary))
+		.map((a) => a.email);
+}
+
 class AddressesStore {
 	items = $state<AccountAddress[]>([]);
 	loading = $state(false);
@@ -23,7 +30,9 @@ class AddressesStore {
 	personal = $derived(this.items.filter((a) => !a.shared));
 	shared = $derived(this.items.filter((a) => a.shared));
 	sendable = $derived(this.items.filter((a) => !a.suspended));
-	defaultSender = $derived(this.sendable.find((a) => !a.shared) ?? null);
+	defaultSender = $derived(
+		this.sendable.find((a) => a.isPrimary && !a.shared) ?? this.sendable.find((a) => !a.shared) ?? null
+	);
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -82,6 +91,7 @@ class AddressesStore {
 			a.id === updated.id ? updated : { ...a, isPrimary: false }
 		);
 		this.#announcePrimary();
+		this.#syncUids();
 	}
 
 	onPrimaryChange(listener: (accountId: string, email: string) => void): void {
@@ -102,10 +112,7 @@ class AddressesStore {
 
 	#syncUids(): void {
 		if (!this.#accountId) return;
-		void syncAddressUids(
-			this.#accountId,
-			this.items.filter((a) => !a.shared).map((a) => a.email)
-		);
+		void syncAddressUids(this.#accountId, personalEmailsPrimaryFirst(this.items));
 	}
 
 	getByEmail(email: string): AccountAddress | null {

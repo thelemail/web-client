@@ -305,6 +305,32 @@
 	font-size: 15px;
 	white-space: nowrap;
 }
+.auth .affix .suf.pick {
+	position: relative;
+	padding-right: 0;
+	color: var(--ink-700);
+}
+.auth .affix .suf.pick select {
+	appearance: none;
+	border: none;
+	outline: none;
+	background: none;
+	font: inherit;
+	color: inherit;
+	padding: 11px 32px 11px 0;
+	field-sizing: content;
+	cursor: pointer;
+}
+.auth .affix .suf.pick select:hover,
+.auth .affix .suf.pick select:focus-visible {
+	color: var(--fg);
+}
+.auth .affix .suf.pick svg {
+	position: absolute;
+	right: 12px;
+	pointer-events: none;
+	color: var(--ink-500);
+}
 .auth .affix .statusic {
 	display: flex;
 	align-items: center;

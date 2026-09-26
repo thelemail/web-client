@@ -48,6 +48,7 @@ export interface SharedAliasMemberGrant {
 
 export interface CreateSharedAliasInput {
 	customDomainId?: string;
+	domain?: string;
 	localPart: string;
 	name: string;
 	aliasPublicKeyArmored: string;

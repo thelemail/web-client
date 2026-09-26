@@ -334,6 +334,7 @@ async function finishLoginSession(
 	auth.setSession(accessToken, expiresInSeconds, accountId);
 	await auth.loadProfile();
 	await accounts.load();
+	email = auth.email ?? email;
 	const existing = accounts.byId(accountId);
 	const now = Date.now();
 	let slot: number;

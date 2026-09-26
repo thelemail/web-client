@@ -65,6 +65,7 @@ function ctx(over: Partial<ModelContext> = {}): ModelContext {
 		manage: true,
 		members: [member(ME, 'Gargantua', 'gargantua@abbaye.example'), member(OTHER, 'Panurge', 'panurge@abbaye.example')],
 		domains: [{ domain: 'abbaye.example', status: 'active', ownershipVerifiedAt: '2026-09-01T00:00:00Z' } as CustomDomain],
+		platformDomains: ['temail.org', 'thelemail.com'],
 		sharedAliases: [],
 		fullName: 'Gargantua',
 		delegationsFor: () => [],
@@ -182,12 +183,52 @@ describe('groupByDomain', () => {
 			buildRow(c, address({ id: 'a3', email: 'gargantua@abbaye.example', isPrimary: true }))
 		];
 		const groups = groupByDomain(c, rows);
-		expect(groups.map((g) => g.domain)).toEqual(['abbaye.example', 'thelemail.com']);
+		expect(groups.map((g) => g.domain)).toEqual(['abbaye.example', 'temail.org and thelemail.com']);
 		expect(groups[0].badge).toBe('Your domain · verified');
 		expect(groups[0].count).toBe('2 addresses');
 		expect(groups[1].badge).toBe('Included with your plan');
 		expect(groups[1].count).toBe('1 address');
 		expect(groups[0].rows[0].isPrimary).toBe(true);
+	});
+
+	it('keeps one person\'s platform addresses together in one included group', () => {
+		const c = ctx();
+		const groups = groupByDomain(c, [
+			buildRow(c, address({ id: 'a2', email: 'gargantua@thelemail.com', customDomainId: null })),
+			buildRow(c, address({ id: 'a1', email: 'gargantua@temail.org', customDomainId: null, isPrimary: true })),
+			buildRow(c, address({ id: 'a3', email: 'panurge@temail.org', customDomainId: null, accountId: OTHER }))
+		]);
+		expect(groups).toHaveLength(1);
+		expect(groups[0].domain).toBe('temail.org and thelemail.com');
+		expect(groups[0].ownDomain).toBe(false);
+		expect(groups[0].badge).toBe('Included with your plan');
+		expect(groups[0].rows.map((r) => r.email)).toEqual([
+			'gargantua@temail.org',
+			'gargantua@thelemail.com',
+			'panurge@temail.org'
+		]);
+	});
+
+	it('lists the primary handle on every domain before other handles', () => {
+		const c = ctx();
+		const [group] = groupByDomain(c, [
+			buildRow(c, address({ id: 'r', email: 'abuse@temail.org', customDomainId: null })),
+			buildRow(c, address({ id: 't', email: 'zoe@temail.org', customDomainId: null })),
+			buildRow(c, address({ id: 'p', email: 'zoe@thelemail.com', customDomainId: null, isPrimary: true }))
+		]);
+		expect(group.rows.map((r) => r.email)).toEqual(['zoe@thelemail.com', 'zoe@temail.org', 'abuse@temail.org']);
+	});
+
+	it('never offers to remove a platform address', () => {
+		const c = ctx();
+		const twin = buildRow(c, address({ id: 'a2', email: 'gargantua@thelemail.com', customDomainId: null }));
+		const members = buildRow(c, address({ id: 'a3', email: 'panurge@temail.org', customDomainId: null, accountId: OTHER }));
+		expect(twin.kind).toBe('mailbox');
+		expect(twin.canRemove).toBe(false);
+		expect(twin.canPromote).toBe(true);
+		expect(members.canRemove).toBe(false);
+		const custom = buildRow(c, address({ id: 'a4', email: 'billing@abbaye.example' }));
+		expect(custom.canRemove).toBe(true);
 	});
 
 	it('marks a domain group that no longer receives mail', () => {
