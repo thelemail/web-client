@@ -49,6 +49,11 @@ describe('chooseFrom', () => {
 		expect(chooseFrom([sales, work], 'gone@acme.test').identity).toBe(work);
 	});
 
+	it('falls back to the primary even when another platform address is listed first', () => {
+		const twin = sendIdentityOf(address({ id: 't', email: 'ada@temail.org' }), 'Ada');
+		expect(chooseFrom([twin, primary], null).identity).toBe(primary);
+	});
+
 	it('falls back quietly when nothing was chosen', () => {
 		const choice = chooseFrom([primary, work], null);
 		expect(choice.identity).toBe(primary);

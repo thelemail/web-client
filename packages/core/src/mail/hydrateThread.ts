@@ -23,6 +23,7 @@ import { paletteFor } from '$core/mail/avatarPalette';
 import { initialChips } from '$core/mail/attachments';
 import { type ThreadEntry, type Message } from '$core/mail/data';
 import { auth } from '$core/stores/auth.svelte';
+import { addresses } from '$core/stores/addresses.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -53,6 +54,13 @@ async function mapLimit<T, R>(
 	return results;
 }
 
+function isMine(address: string): boolean {
+	const key = address.trim().toLowerCase();
+	if (!key) return false;
+	if (auth.email && auth.email.toLowerCase() === key) return true;
+	return addresses.items.some((a) => !a.shared && a.email.toLowerCase() === key);
+}
+
 async function hydrateEntry(
 	accountId: string,
 	item: MessageDetail,
@@ -65,9 +73,7 @@ async function hydrateEntry(
 		const init = initialsFor(fromDisplay, preview.sender.address);
 		const pal = paletteFor(preview.sender.address.toLowerCase());
 		const stored = new Date(item.storedAt);
-		const me = auth.email
-			? preview.sender.address.toLowerCase() === auth.email.toLowerCase()
-			: false;
+		const me = isMine(preview.sender.address);
 
 		const senderAddress = preview.sender.address;
 		const claimsOfficial = isOfficialAddress(senderAddress);

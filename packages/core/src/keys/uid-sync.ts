@@ -38,7 +38,7 @@ async function doSync(accountId: string, emails?: string[]): Promise<void> {
 		let addressEmails = emails;
 		if (!addressEmails) {
 			const { addresses } = await listMyAddresses(accountId);
-			addressEmails = addresses.map((a) => a.email);
+			addressEmails = [...addresses].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary)).map((a) => a.email);
 		}
 		const reformatted = await keystore.reformatKeyWithUids({ accountId, emails: addressEmails });
 		if (!reformatted.ok) {

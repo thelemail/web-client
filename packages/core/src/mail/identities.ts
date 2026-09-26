@@ -26,6 +26,7 @@ export function chooseFrom(options: SendIdentity[], wanted: string | null): From
 	const want = wanted?.trim() ?? '';
 	const key = want.toLowerCase();
 	const hit = key ? options.find((o) => o.email.toLowerCase() === key) : undefined;
-	const fallback = options.find((o) => o.kind !== 'Alias') ?? options[0] ?? null;
+	const fallback =
+		options.find((o) => o.kind === 'Default') ?? options.find((o) => o.kind !== 'Alias') ?? options[0] ?? null;
 	return { identity: hit ?? fallback, unavailable: key && !hit ? want : null };
 }

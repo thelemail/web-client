@@ -13,7 +13,7 @@ vi.mock('$core/api/addresses', () => api);
 vi.mock('$core/api/aliases', () => aliasApi);
 vi.mock('$core/keys/uid-sync', () => ({ syncAddressUids: vi.fn() }));
 
-import { addresses } from './addresses.svelte';
+import { addresses, personalEmailsPrimaryFirst } from './addresses.svelte';
 
 function address(id: string, over: Partial<AccountAddress> = {}): AccountAddress {
 	return {
@@ -100,5 +100,17 @@ describe('addresses store', () => {
 		await addresses.load();
 		expect(addresses.items[0]).toMatchObject({ id: 'sa1', shared: true, suspended: true });
 		expect(addresses.sendable).toEqual([]);
+	});
+});
+
+describe('personalEmailsPrimaryFirst', () => {
+	it('puts the primary first and leaves shared addresses out', () => {
+		expect(
+			personalEmailsPrimaryFirst([
+				address('twin', { email: 'ada@temail.org' }),
+				address('main', { email: 'ada@thelemail.com', isPrimary: true }),
+				address('house', { email: 'house@temail.org', shared: true })
+			])
+		).toEqual(['ada@thelemail.com', 'ada@temail.org']);
 	});
 });
