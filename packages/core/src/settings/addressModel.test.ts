@@ -209,6 +209,16 @@ describe('groupByDomain', () => {
 		]);
 	});
 
+	it('lists the primary handle on every domain before other handles', () => {
+		const c = ctx();
+		const [group] = groupByDomain(c, [
+			buildRow(c, address({ id: 'r', email: 'abuse@temail.org', customDomainId: null })),
+			buildRow(c, address({ id: 't', email: 'zoe@temail.org', customDomainId: null })),
+			buildRow(c, address({ id: 'p', email: 'zoe@thelemail.com', customDomainId: null, isPrimary: true }))
+		]);
+		expect(group.rows.map((r) => r.email)).toEqual(['zoe@thelemail.com', 'zoe@temail.org', 'abuse@temail.org']);
+	});
+
 	it('never offers to remove a platform address', () => {
 		const c = ctx();
 		const twin = buildRow(c, address({ id: 'a2', email: 'gargantua@thelemail.com', customDomainId: null }));

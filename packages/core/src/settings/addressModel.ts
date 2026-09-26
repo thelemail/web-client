@@ -256,8 +256,10 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 	const platformRank = (domain: string) => ctx.platformDomains.indexOf(domain);
 	return order.map((key) => {
 		const list = byKey.get(key) ?? [];
+		const primaryHandle = list.find((r) => r.isPrimary)?.localPart;
+		const rank = (r: AddressRow) => (r.isPrimary ? 0 : r.localPart === primaryHandle ? 1 : 2);
 		list.sort((a, b) => {
-			if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1;
+			if (rank(a) !== rank(b)) return rank(a) - rank(b);
 			if (a.localPart !== b.localPart) return a.localPart.localeCompare(b.localPart);
 			return platformRank(a.domain) - platformRank(b.domain) || a.email.localeCompare(b.email);
 		});
