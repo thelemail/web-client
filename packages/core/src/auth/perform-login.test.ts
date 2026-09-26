@@ -4,6 +4,8 @@ import type { KeystoreBroadcast } from '$core/keystore/protocol';
 const ACCOUNT = '120792e5-d313-4c0e-aa94-4a4b00cab094';
 const FRESH_TOKEN = 'fresh-login-token';
 
+const slots = vi.hoisted(() => ({ upserted: [] as { email: string }[] }));
+
 const bus = vi.hoisted(() => ({
 	listeners: new Set<(b: KeystoreBroadcast) => void>(),
 	unlockOk: true
@@ -58,7 +60,9 @@ vi.mock('$core/stores/accounts.svelte', () => ({
 		byId: () => undefined,
 		bySlot: () => undefined,
 		allocateSlot: () => 0,
-		upsert: async () => undefined,
+		upsert: async (rec: { email: string }) => {
+			slots.upserted.push(rec);
+		},
 		touch: async () => undefined,
 		remove: async () => undefined
 	}
@@ -134,5 +138,17 @@ describe('performLogin after the account was cleared in this tab', () => {
 		bus.unlockOk = false;
 		await expect(performLogin({ email: 'r@thelemail.com', password: 'pw' })).rejects.toThrow();
 		expect(auth.getAccessToken(ACCOUNT)).toBeNull();
+	});
+});
+
+describe('performLogin with another platform address', () => {
+	beforeEach(() => {
+		bus.unlockOk = true;
+		slots.upserted.length = 0;
+	});
+
+	it('labels the account with its primary address, not the one typed', async () => {
+		await performLogin({ email: 'r@temail.org', password: 'pw' });
+		expect(slots.upserted.at(-1)?.email).toBe('r@thelemail.com');
 	});
 });
