@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import AliasCeremony from './AliasCeremony.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
@@ -11,7 +11,7 @@ import type { Workspace, WorkspaceMember } from '$core/api/workspaces';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Subscription } from '$core/api/billing';
 import type { SharedAlias } from '$core/api/aliases';
-import { SHARED_DOMAIN } from '$core/settings/entitlements';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 
 const keys = vi.hoisted(() => ({ createAliasKey: vi.fn() }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: keys }));
@@ -23,6 +23,15 @@ const aliasApi = vi.hoisted(() => ({ createWorkspaceAlias: vi.fn() }));
 vi.mock('$core/api/aliases', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$core/api/aliases')>()),
 	createWorkspaceAlias: aliasApi.createWorkspaceAlias
+}));
+const authApi = vi.hoisted(() => ({
+	getPlatformDomains: vi.fn(),
+	checkAddressAvailability: vi.fn()
+}));
+vi.mock('$core/api/auth', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$core/api/auth')>()),
+	getPlatformDomains: authApi.getPlatformDomains,
+	checkAddressAvailability: authApi.checkAddressAvailability
 }));
 vi.mock('$core/directory/verify', () => ({
 	verifyDirectoryLookup: vi.fn(),
@@ -72,6 +81,11 @@ function continueButton(container: HTMLElement) {
 	);
 }
 
+beforeAll(async () => {
+	authApi.getPlatformDomains.mockResolvedValue({ domains: ['temail.org', 'thelemail.com'], default: 'temail.org' });
+	await platformDomains.load();
+});
+
 beforeEach(() => {
 	billing.subscription = { planCode: 'business' } as Subscription;
 	aliases.items = [];
@@ -95,7 +109,8 @@ describe('AliasCeremony with a preset domain', () => {
 			'Addresses can be added once the sending records of this domain are verified.'
 		);
 		expect(selectValues(container)).toEqual([]);
-		expect(container.ownerDocument.body.textContent).not.toContain(`@${SHARED_DOMAIN}`);
+		expect(container.ownerDocument.body.textContent).not.toContain('@temail.org');
+		expect(container.ownerDocument.body.textContent).not.toContain('@thelemail.com');
 		expect(continueButton(container)?.disabled).toBe(true);
 	});
 
@@ -131,12 +146,12 @@ describe('AliasCeremony with a preset domain', () => {
 });
 
 describe('AliasCeremony without a preset domain', () => {
-	it('offers only domains that can send, plus the shared one', () => {
+	it('offers only domains that can send, plus every platform domain', () => {
 		customDomains.items = [domain('d0', 'other.test', 'ready'), domain('d1', 'acme.test', 'owned')];
 		const { container } = open(null);
 
 		expect(selectValues(container)).toEqual([
-			{ value: 'other.test', options: ['other.test', SHARED_DOMAIN], disabled: false }
+			{ value: 'other.test', options: ['other.test', 'temail.org', 'thelemail.com'], disabled: false }
 		]);
 	});
 
@@ -147,7 +162,7 @@ describe('AliasCeremony without a preset domain', () => {
 		];
 		const { container } = open(null);
 
-		expect(selectValues(container)[0].options).toEqual(['other.test', SHARED_DOMAIN]);
+		expect(selectValues(container)[0].options).toEqual(['other.test', 'temail.org', 'thelemail.com']);
 	});
 
 	it('leaves domains with a missing ownership record out', () => {
@@ -157,7 +172,7 @@ describe('AliasCeremony without a preset domain', () => {
 		];
 		const { container } = open(null);
 
-		expect(selectValues(container)[0].options).toEqual(['other.test', SHARED_DOMAIN]);
+		expect(selectValues(container)[0].options).toEqual(['other.test', 'temail.org', 'thelemail.com']);
 	});
 
 	it('asks for a domain that can send when none is left', () => {
@@ -234,5 +249,49 @@ describe('AliasCeremony done screen', () => {
 		await create('shared');
 
 		expect(body()).toContain('Mail sent here reaches everyone on it.');
+	});
+});
+
+describe('AliasCeremony on a platform domain', () => {
+	beforeEach(() => {
+		workspaces.workspace = { id: 'w1', ownerAccountId: 'me', name: 'Home', type: 'family', createdAt: at, updatedAt: at } as Workspace;
+		workspaces.members = [{ accountId: 'me', email: 'ada@temail.org', fullName: 'Ada' } as WorkspaceMember];
+		billing.subscription = { planCode: 'family' } as Subscription;
+		authApi.checkAddressAvailability.mockReset().mockResolvedValue({ available: true });
+		keys.createAliasKey.mockReset().mockResolvedValue({ ok: true, publicKeyArmored: 'alias-key', grants: [] });
+		vi.spyOn(addresses, 'load').mockResolvedValue();
+		vi.spyOn(aliasKeys, 'load').mockResolvedValue();
+		vi.spyOn(aliases, 'create').mockResolvedValue({} as SharedAlias);
+	});
+
+	function button(label: string) {
+		return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+	}
+
+	it('defaults to the first platform domain', () => {
+		const { container } = open(null);
+		expect(selectValues(container)[0]).toEqual({
+			value: 'temail.org',
+			options: ['temail.org', 'thelemail.com'],
+			disabled: false
+		});
+	});
+
+	it('creates the address on the platform domain that was picked', async () => {
+		const { container } = open(null);
+		const select = container.ownerDocument.querySelector('select')!;
+		await fireEvent.change(select, { target: { value: 'thelemail.com' } });
+		await fireEvent.input(document.querySelector('#alias-name')!, { target: { value: 'Household' } });
+		await fireEvent.input(document.querySelector('#alias-local')!, { target: { value: 'home' } });
+		await fireEvent.click(button('Continue')!);
+		await fireEvent.click(button('Add address')!);
+		await vi.waitFor(() => expect(aliases.create).toHaveBeenCalled());
+
+		expect(authApi.checkAddressAvailability).toHaveBeenCalledWith('home');
+		expect(keys.createAliasKey).toHaveBeenCalledWith(expect.objectContaining({ email: 'home@thelemail.com' }));
+		expect(aliases.create).toHaveBeenCalledWith(
+			'w1',
+			expect.objectContaining({ customDomainId: undefined, domain: 'thelemail.com', localPart: 'home' })
+		);
 	});
 });

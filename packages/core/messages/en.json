@@ -116,7 +116,7 @@
 	"settings_ceremony_family_start_name_label": "Family name",
 	"settings_ceremony_family_start_name_hint": "Only people in the family see this.",
 	"settings_ceremony_family_start_callout_title": "Free family: 6 accounts, 1 GB of storage each.",
-	"settings_ceremony_family_start_callout_body": "Everyone you invite already needs a {domain} account. No custom domains, and everything you have stays where it is.",
+	"settings_ceremony_family_start_callout_body": "Everyone you invite already needs a Thelemail account. No custom domains, and everything you have stays where it is.",
 	"settings_ceremony_family_start_creating": "Creating…",
 	"settings_ceremony_family_start_submit": "Create the family",
 	"settings_ceremony_family_invite_family_fallback": "your family",
@@ -280,8 +280,8 @@
 	"settings_member_seats_full_family": "All 6 included seats are in use. A larger team needs a Business plan.",
 	"settings_member_seats_prorated": "Inviting another member adds a prorated seat to your subscription.",
 	"settings_member_personal_note": "Personal plans cover one person. There is no one else to manage.",
-	"settings_plan_free_family_note": "Up to 6 accounts on thelemail.com, 1 GB of storage each. Free, with no custom domains.",
-	"settings_plan_free_note": "The Free plan covers one person with one address on thelemail.com and 1 GB of storage.",
+	"settings_plan_free_family_note": "Up to 6 accounts on {domains}, 1 GB of storage each. Free, with no custom domains.",
+	"settings_plan_free_note": "The Free plan covers one person, with addresses on {domains} and 1 GB of storage.",
 	"settings_forwarding_err_unlock": "Unlock your mailbox and try again.",
 	"settings_forwarding_err_sign": "Could not sign the authorization.",
 	"settings_forwarding_status_sending": "Sending",
@@ -2393,14 +2393,15 @@
 			"declarations": [
 				"input left",
 				"input total",
+				"input domains",
 				"local totalPlural = total: plural"
 			],
 			"selectors": [
 				"totalPlural"
 			],
 			"match": {
-				"totalPlural=one": "{left} of {total} seats free. You can invite anyone who already has a thelemail.com address.",
-				"totalPlural=*": "{left} of {total} seats free. You can invite anyone who already has a thelemail.com address."
+				"totalPlural=one": "{left} of {total} seats free. You can invite anyone who already has a {domains} address.",
+				"totalPlural=*": "{left} of {total} seats free. You can invite anyone who already has a {domains} address."
 			}
 		}
 	],
@@ -3666,13 +3667,15 @@
 	"auth_register_free_foot": "Not ready to pay? <free>Start with the free plan</free>",
 	"auth_register_add_title": "Create a second account",
 	"auth_register_add_lede": "You're signed in as <b>{email}</b>. The new account will be added alongside it on this device — both stay signed in.",
-	"auth_register_lede_family": "Start with your own address on <domain>thelemail.com</domain>. It becomes the administrator account for the household, and you connect your family's domain from Settings once the account exists.",
-	"auth_register_lede_business": "Start with your own address on <domain>thelemail.com</domain>. It becomes the administrator account for the team, and you connect your company domain from Settings once the account exists.",
-	"auth_register_lede_personal": "Pick a name on <domain>thelemail.com</domain>. You can add your own domain later.",
+	"auth_register_lede_family": "Start with your own address on <domain>{domain}</domain>. It becomes the administrator account for the household, and you connect your family's domain from Settings once the account exists.",
+	"auth_register_lede_business": "Start with your own address on <domain>{domain}</domain>. It becomes the administrator account for the team, and you connect your company domain from Settings once the account exists.",
+	"auth_register_lede_personal": "Pick a name on <domain>{domain}</domain>. You can add your own domain later.",
 	"auth_register_name_label": "Full name",
 	"auth_register_name_placeholder": "Camille Rabelais",
 	"auth_register_name_hint": "Shown to people you write to.",
 	"auth_register_handle_placeholder": "françois",
+	"auth_register_domain_label": "Address domain",
+	"auth_register_handle_companions": "Mail to {addresses} reaches you too.",
 	"auth_register_handle_hint": "Letters, numbers, dots, hyphens. 3–30 characters.",
 	"auth_register_handle_invalid": "Use 3–30 letters, numbers, dots or hyphens.",
 	"auth_register_handle_checking": "Checking availability…",
@@ -3691,7 +3694,7 @@
 	"auth_register_free_instead": "Start with the free plan instead",
 	"auth_register_paid_instead": "Choose a paid plan instead",
 	"auth_register_legal_paid": "Your account is created first, then you pick up where you left off at checkout. Nothing is charged until you confirm there.",
-	"auth_register_legal_free": "The free plan is a real mailbox on thelemail.com with 1 GB of storage, no card required. Upgrade whenever you want your own domain, more storage, or more people.",
+	"auth_register_legal_free": "The free plan is a real mailbox on {domains} with 1 GB of storage, no card required. Upgrade whenever you want your own domain, more storage, or more people.",
 	"auth_register_submitted_title": "Submitted",
 	"auth_register_submitted_body": "If <b>{address}</b> is new, your mailbox is ready — sign in to open it. If the address was already taken, the existing owner has been notified.",
 	"auth_register_plan_pending": "<b>{plan}</b> — ready to complete after sign-in",

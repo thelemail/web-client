@@ -1,8 +1,6 @@
 import type { PlanCode } from '$core/api/billing';
 import type { WorkspaceType } from '$core/api/workspaces';
 
-export const SHARED_DOMAIN = 'thelemail.com';
-
 const FREE_CODES: PlanCode[] = ['free', 'free_family'];
 const SOLO_CODES: PlanCode[] = ['free', 'personal', 'personal_plus'];
 
@@ -39,10 +37,4 @@ export function inviteMode(
 	if (type !== 'family' && type !== 'business') return 'none';
 	if (!allowsMembers(code)) return 'none';
 	return isFreeFamily(code) ? 'existing-account' : 'domain';
-}
-
-export function isSharedDomainAddress(email: string): boolean {
-	const at = email.lastIndexOf('@');
-	if (at < 0) return false;
-	return email.slice(at + 1).toLowerCase() === SHARED_DOMAIN;
 }

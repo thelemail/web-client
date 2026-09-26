@@ -10,7 +10,7 @@
 	import type { CeremonyKind } from '../data';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { billing } from '$core/stores/billing.svelte';
-	import { SHARED_DOMAIN } from '$core/settings/entitlements';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import { checkAddressAvailability } from '$core/api/auth';
 	import { inboundLive, ownershipLapsing, usable } from '$core/settings/domains/steps';
 	import { addresses } from '$core/stores/addresses.svelte';
@@ -76,7 +76,7 @@
 			? presetDomain
 				? [presetDomain.domain]
 				: []
-			: [...usableDomains.map((d) => d.domain), ...(sharedSlotFree ? [SHARED_DOMAIN] : [])]
+			: [...usableDomains.map((d) => d.domain), ...(sharedSlotFree ? platformDomains.list : [])]
 	);
 	let userPickedDomain = $state<string | null>(null);
 
@@ -85,9 +85,9 @@
 			? userPickedDomain
 			: (domainOptions[0] ?? '')
 	);
-	const onSharedDomain = $derived(selectedDomainName === SHARED_DOMAIN);
-	const shared = $derived(sharedPicked || onSharedDomain);
 	const selectedDomain = $derived(usableDomains.find((d) => d.domain === selectedDomainName) ?? null);
+	const onSharedDomain = $derived(!selectedDomain && platformDomains.includes(selectedDomainName));
+	const shared = $derived(sharedPicked || onSharedDomain);
 	const addressDomain = $derived(
 		mode === 'members'
 			? (customDomains.items.find((d) => !!alias?.customDomainId && d.id === alias.customDomainId) ?? null)
@@ -204,6 +204,7 @@
 			createdEmail = email;
 			await aliases.create(ws, {
 				customDomainId: onSharedDomain ? undefined : selectedDomain!.id,
+				domain: onSharedDomain ? selectedDomainName : undefined,
 				localPart: local.trim().toLowerCase(),
 				name: name.trim(),
 				aliasPublicKeyArmored: created.publicKeyArmored,
@@ -270,7 +271,7 @@
 			<div class="cer-lede">
 				<p>
 					{#if !presetDomainId && sharedSlotFree && usableDomains.length === 0}
-						{m.settings_ceremony_alias_lede_shared_domain({ domain: SHARED_DOMAIN })}
+						{m.settings_ceremony_alias_lede_shared_domain({ domain: platformDomains.display() })}
 					{:else}
 						{m.settings_ceremony_alias_lede_own_domain()}
 					{/if}
@@ -333,7 +334,7 @@
 				</div>
 				{#if onSharedDomain}
 					<div class="field-hint">
-						{m.settings_ceremony_alias_shared_domain_hint({ domain: SHARED_DOMAIN })}
+						{m.settings_ceremony_alias_shared_domain_hint({ domain: selectedDomainName })}
 					</div>
 				{:else}
 					<div class="field">

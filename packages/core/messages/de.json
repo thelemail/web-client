@@ -116,7 +116,7 @@
 	"settings_ceremony_family_start_name_label": "Familienname",
 	"settings_ceremony_family_start_name_hint": "Nur Familienmitglieder können dies sehen.",
 	"settings_ceremony_family_start_callout_title": "Kostenlose Familie: 6 Konten mit je 1 GB Speicherplatz.",
-	"settings_ceremony_family_start_callout_body": "Alle eingeladenen Personen benötigen bereits ein Konto bei {domain}. Eigene Domains sind nicht enthalten; Ihre bestehenden Inhalte bleiben erhalten.",
+	"settings_ceremony_family_start_callout_body": "Alle eingeladenen Personen benötigen bereits ein Konto bei Thelemail. Eigene Domains sind nicht enthalten; Ihre bestehenden Inhalte bleiben erhalten.",
 	"settings_ceremony_family_start_creating": "Wird erstellt…",
 	"settings_ceremony_family_start_submit": "Familie erstellen",
 	"settings_ceremony_family_invite_family_fallback": "Ihre Familie",
@@ -280,8 +280,8 @@
 	"settings_member_seats_full_family": "Alle 6 enthaltenen Plätze sind belegt. Für ein größeres Team ist ein Business-Tarif erforderlich.",
 	"settings_member_seats_prorated": "Wenn Sie ein weiteres Mitglied einladen, wird Ihrem Abonnement ein anteilig berechneter Platz hinzugefügt.",
 	"settings_member_personal_note": "Personal-Tarife gelten für eine Person. Es gibt keine weiteren Mitglieder zu verwalten.",
-	"settings_plan_free_family_note": "Bis zu 6 Konten auf thelemail.com mit je 1 GB Speicherplatz. Kostenlos, ohne eigene Domains.",
-	"settings_plan_free_note": "Der Free-Tarif gilt für eine Person mit einer Adresse auf thelemail.com und 1 GB Speicherplatz.",
+	"settings_plan_free_family_note": "Bis zu 6 Konten auf {domains} mit je 1 GB Speicherplatz. Kostenlos, ohne eigene Domains.",
+	"settings_plan_free_note": "Der Free-Tarif gilt für eine Person, mit Adressen auf {domains} und 1 GB Speicherplatz.",
 	"settings_forwarding_err_unlock": "Entsperren Sie Ihr Postfach und versuchen Sie es erneut.",
 	"settings_forwarding_err_sign": "Die Autorisierung konnte nicht signiert werden.",
 	"settings_forwarding_status_sending": "Wird gesendet",
@@ -2393,14 +2393,15 @@
 			"declarations": [
 				"input left",
 				"input total",
+				"input domains",
 				"local totalPlural = total: plural"
 			],
 			"selectors": [
 				"totalPlural"
 			],
 			"match": {
-				"totalPlural=one": "Freie Plätze: {left} von {total}. Sie können alle einladen, die bereits eine Adresse auf thelemail.com haben.",
-				"totalPlural=*": "Freie Plätze: {left} von {total}. Sie können alle einladen, die bereits eine Adresse auf thelemail.com haben."
+				"totalPlural=one": "Freie Plätze: {left} von {total}. Sie können alle einladen, die bereits eine Adresse auf {domains} haben.",
+				"totalPlural=*": "Freie Plätze: {left} von {total}. Sie können alle einladen, die bereits eine Adresse auf {domains} haben."
 			}
 		}
 	],
@@ -3666,13 +3667,15 @@
 	"auth_register_free_foot": "Noch nicht bereit zu zahlen? <free>Mit dem kostenlosen Tarif beginnen</free>",
 	"auth_register_add_title": "Zweites Konto erstellen",
 	"auth_register_add_lede": "Sie sind als <b>{email}</b> angemeldet. Das neue Konto wird auf diesem Gerät zusätzlich hinzugefügt. Beide bleiben angemeldet.",
-	"auth_register_lede_family": "Beginnen Sie mit Ihrer eigenen Adresse auf <domain>thelemail.com</domain>. Sie wird zum Administratorkonto des Haushalts. Sobald das Konto erstellt ist, verbinden Sie die Domain Ihrer Familie in den Einstellungen.",
-	"auth_register_lede_business": "Beginnen Sie mit Ihrer eigenen Adresse auf <domain>thelemail.com</domain>. Sie wird zum Administratorkonto des Teams. Sobald das Konto erstellt ist, verbinden Sie Ihre Unternehmensdomain in den Einstellungen.",
-	"auth_register_lede_personal": "Wählen Sie einen Namen auf <domain>thelemail.com</domain>. Ihre eigene Domain können Sie später hinzufügen.",
+	"auth_register_lede_family": "Beginnen Sie mit Ihrer eigenen Adresse auf <domain>{domain}</domain>. Sie wird zum Administratorkonto des Haushalts. Sobald das Konto erstellt ist, verbinden Sie die Domain Ihrer Familie in den Einstellungen.",
+	"auth_register_lede_business": "Beginnen Sie mit Ihrer eigenen Adresse auf <domain>{domain}</domain>. Sie wird zum Administratorkonto des Teams. Sobald das Konto erstellt ist, verbinden Sie Ihre Unternehmensdomain in den Einstellungen.",
+	"auth_register_lede_personal": "Wählen Sie einen Namen auf <domain>{domain}</domain>. Ihre eigene Domain können Sie später hinzufügen.",
 	"auth_register_name_label": "Vollständiger Name",
 	"auth_register_name_placeholder": "Camille Rabelais",
 	"auth_register_name_hint": "Wird den Personen angezeigt, denen Sie schreiben.",
 	"auth_register_handle_placeholder": "françois",
+	"auth_register_domain_label": "Domain der Adresse",
+	"auth_register_handle_companions": "E-Mails an {addresses} erreichen Sie ebenfalls.",
 	"auth_register_handle_hint": "Buchstaben, Zahlen, Punkte, Bindestriche. 3–30 Zeichen.",
 	"auth_register_handle_invalid": "Verwenden Sie 3–30 Buchstaben, Zahlen, Punkte oder Bindestriche.",
 	"auth_register_handle_checking": "Verfügbarkeit wird geprüft…",
@@ -3691,7 +3694,7 @@
 	"auth_register_free_instead": "Stattdessen mit dem kostenlosen Tarif beginnen",
 	"auth_register_paid_instead": "Stattdessen einen kostenpflichtigen Tarif wählen",
 	"auth_register_legal_paid": "Zuerst wird Ihr Konto erstellt, danach setzen Sie den Zahlungsvorgang fort. Es wird nichts berechnet, bis Sie dort bestätigen.",
-	"auth_register_legal_free": "Der kostenlose Tarif bietet ein vollwertiges Postfach auf thelemail.com mit 1 GB Speicherplatz, ohne Kreditkarte. Wechseln Sie jederzeit zu einem höheren Tarif, wenn Sie eine eigene Domain, mehr Speicher oder mehr Personen benötigen.",
+	"auth_register_legal_free": "Der kostenlose Tarif bietet ein vollwertiges Postfach auf {domains} mit 1 GB Speicherplatz, ohne Kreditkarte. Wechseln Sie jederzeit zu einem höheren Tarif, wenn Sie eine eigene Domain, mehr Speicher oder mehr Personen benötigen.",
 	"auth_register_submitted_title": "Übermittelt",
 	"auth_register_submitted_body": "Ist <b>{address}</b> neu, ist Ihr Postfach bereit. Melden Sie sich an, um es zu öffnen. War die Adresse bereits vergeben, wurde der bisherige Inhaber benachrichtigt.",
 	"auth_register_plan_pending": "<b>{plan}</b> – nach der Anmeldung abschließbar",

@@ -5,7 +5,7 @@
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { inboundLive, ownershipProven } from '$core/settings/domains/steps';
-	import { SHARED_DOMAIN } from '$core/settings/entitlements';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import PrivacyChip from '../PrivacyChip.svelte';
@@ -16,7 +16,7 @@
 	const memberCount = $derived(workspaces.members.length);
 	const domain = $derived(
 		(customDomains.items.find(inboundLive) ?? customDomains.items.find(ownershipProven))?.domain ??
-			SHARED_DOMAIN
+			platformDomains.default
 	);
 	const heroSub = $derived(
 		memberCount > 1

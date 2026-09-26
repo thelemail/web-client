@@ -5,8 +5,8 @@ import { canSend, isDormant, ownershipLapsing, ownershipProven, usable } from '$
 import type { WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
+import { formatList } from '$core/stores/platformDomains.svelte';
 import { m } from '$paraglide/messages.js';
-import { SHARED_DOMAIN } from './entitlements';
 
 export type AddressKind = 'mailbox' | 'alias' | 'shared';
 
@@ -60,6 +60,7 @@ export interface ModelContext {
 	manage: boolean;
 	members: WorkspaceMember[];
 	domains: CustomDomain[];
+	platformDomains: readonly string[];
 	sharedAliases: SharedAlias[];
 	fullName: string | null;
 	delegationsFor: (addressId: string) => SigningDelegation[];
@@ -169,8 +170,8 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 	const alias = address.sharedAliasId
 		? (ctx.sharedAliases.find((a) => a.id === address.sharedAliasId) ?? null)
 		: (ctx.sharedAliases.find((a) => a.addressId === address.id) ?? null);
-	const kind: AddressKind = alias || address.shared ? 'shared' : address.isPrimary ? 'mailbox' : 'alias';
 	const ownDomain = Boolean(address.customDomainId);
+	const kind: AddressKind = alias || address.shared ? 'shared' : address.isPrimary || !ownDomain ? 'mailbox' : 'alias';
 	const isMine = address.accountId === ctx.accountId;
 	const people =
 		kind === 'shared'
@@ -205,7 +206,7 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 		pendingSummary: pendingSummary(forwardings),
 		canPromote: own && !address.isPrimary && health === 'live',
 		canRename: own || (kind === 'shared' && ctx.manage),
-		canRemove: (own && !address.isPrimary) || (kind !== 'mailbox' && ctx.manage && !address.isPrimary),
+		canRemove: (ownDomain || kind === 'shared') && !address.isPrimary && (own || (kind !== 'mailbox' && ctx.manage)),
 		canManagePeople: kind === 'shared' && ctx.manage,
 		canDelegate: ownDomain && own,
 		canForward: ownDomain && (own || (kind === 'shared' && ctx.manage))
@@ -230,17 +231,21 @@ function titleOf(
 	return address.localPart;
 }
 
+const PLATFORM_GROUP = '@platform';
+
 export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGroup[] {
+	const keyOf = (row: AddressRow) => (ctx.platformDomains.includes(row.domain) ? PLATFORM_GROUP : row.domain);
 	const order: string[] = [];
-	const byDomain = new Map<string, AddressRow[]>();
+	const byKey = new Map<string, AddressRow[]>();
 	for (const row of rows) {
-		const list = byDomain.get(row.domain);
+		const key = keyOf(row);
+		const list = byKey.get(key);
 		if (list) {
 			list.push(row);
 			continue;
 		}
-		byDomain.set(row.domain, [row]);
-		order.push(row.domain);
+		byKey.set(key, [row]);
+		order.push(key);
 	}
 	const owned = ctx.domains.map((d) => d.domain.toLowerCase());
 	order.sort((a, b) => {
@@ -248,16 +253,18 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 		const bv = owned.includes(b) ? 0 : 1;
 		return av === bv ? a.localeCompare(b) : av - bv;
 	});
-	return order.map((domain) => {
-		const list = byDomain.get(domain) ?? [];
+	const platformRank = (domain: string) => ctx.platformDomains.indexOf(domain);
+	return order.map((key) => {
+		const list = byKey.get(key) ?? [];
 		list.sort((a, b) => {
 			if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1;
-			return a.email.localeCompare(b.email);
+			if (a.localPart !== b.localPart) return a.localPart.localeCompare(b.localPart);
+			return platformRank(a.domain) - platformRank(b.domain) || a.email.localeCompare(b.email);
 		});
-		const ownDomain = domain !== SHARED_DOMAIN;
-		const row = ctx.domains.find((d) => d.domain.toLowerCase() === domain);
+		const ownDomain = key !== PLATFORM_GROUP;
+		const row = ctx.domains.find((d) => d.domain.toLowerCase() === key);
 		return {
-			domain,
+			domain: ownDomain ? key : formatList(ctx.platformDomains, 'conjunction'),
 			ownDomain,
 			...groupBadge(ownDomain, row),
 			count: m.settings_address_group_count({ count: list.length }),
@@ -299,10 +306,10 @@ export function ledeFor(ctx: ModelContext, row: AddressRow): string {
 	return m.settings_address_lede_other_alias({ domain: row.domain, name: owner.name });
 }
 
-export function planNote(sharedSlotUsed: boolean): string {
+export function planNote(sharedSlotUsed: boolean, domain: string): string {
 	return sharedSlotUsed
-		? m.settings_address_plan_note_used({ domain: SHARED_DOMAIN })
-		: m.settings_address_plan_note_free({ domain: SHARED_DOMAIN });
+		? m.settings_address_plan_note_used({ domain })
+		: m.settings_address_plan_note_free({ domain });
 }
 
 export function initialsOf(fullName: string, email: string): string {

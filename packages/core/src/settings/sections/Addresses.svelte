@@ -36,7 +36,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { canManageWorkspace } from '../permissions';
-	import { SHARED_DOMAIN } from '../entitlements';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import {
 		buildRow,
 		groupByDomain,
@@ -70,6 +70,7 @@
 		manage,
 		members: workspaces.members,
 		domains: customDomains.items,
+		platformDomains: platformDomains.list,
 		sharedAliases: manage ? aliases.items : [],
 		fullName: auth.fullName,
 		delegationsFor: (id) => delegations.for(id),
@@ -87,7 +88,9 @@
 		managingId ? (aliases.items.find((a) => a.id === managingId) ?? null) : null
 	);
 
-	const sharedSlotUsed = $derived(rows.some((r) => r.kind === 'shared' && r.domain === SHARED_DOMAIN));
+	const sharedSlotUsed = $derived(
+		rows.some((r) => r.kind === 'shared' && platformDomains.includes(r.domain))
+	);
 	const canAddMore = $derived(billing.canAddDomains || !sharedSlotUsed);
 	const canAdd = $derived(manage && billing.canAddSharedAddresses && canAddMore);
 
@@ -199,7 +202,7 @@
 			{m.settings_address_list_lede()}
 		</p>
 		{#if manage}
-			<p class="addr-plan">{planNote(sharedSlotUsed)}</p>
+			<p class="addr-plan">{planNote(sharedSlotUsed, platformDomains.display())}</p>
 		{/if}
 	</div>
 	{#if canAdd}
@@ -333,7 +336,7 @@
 {:else if manage && !canAddMore}
 	<div class="upgrade-list">
 		<UpgradeNudge
-			title={m.settings_address_nudge_shared_title({ domain: SHARED_DOMAIN })}
+			title={m.settings_address_nudge_shared_title({ domain: platformDomains.display() })}
 			desc={m.settings_address_nudge_shared_desc()}
 		/>
 	</div>

@@ -33,6 +33,7 @@
 	import LeaveFamilyDialog from './LeaveFamilyDialog.svelte';
 	import RemoveMemberDialog from './RemoveMemberDialog.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -251,7 +252,7 @@
 			</Button>
 			{#if mode === 'existing-account'}
 				<span class="mbr-note">
-					{m.settings_member_seats_free_existing({ left: seatsLeft ?? 0, total: seatsTotal ?? 0 })}
+					{m.settings_member_seats_free_existing({ left: seatsLeft ?? 0, total: seatsTotal ?? 0, domains: platformDomains.display() })}
 				</span>
 			{:else if seatsTotal != null}
 				{#if type === 'business' && seatsUsed >= seatsTotal}

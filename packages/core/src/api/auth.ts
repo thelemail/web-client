@@ -62,6 +62,13 @@ export function getOpaqueParameters() {
 	});
 }
 
+export function getPlatformDomains() {
+	return apiFetch<{ domains: string[]; default: string }>('/v1/auth/platform-domains', {
+		method: 'GET',
+		skipAuth: true
+	});
+}
+
 export function checkAddressAvailability(localPart: string) {
 	const qs = new URLSearchParams({ localPart }).toString();
 	return apiFetch<{ available: boolean }>(`/v1/auth/address-available?${qs}`, {
