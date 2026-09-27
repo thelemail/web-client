@@ -675,9 +675,11 @@
 		text-decoration: underline;
 	}
 	.qr-img {
-		width: 168px;
-		height: 168px;
+		display: block;
+		width: 100%;
+		height: 100%;
+		aspect-ratio: 1;
+		object-fit: contain;
 		image-rendering: pixelated;
-		border-radius: 8px;
 	}
 </style>
