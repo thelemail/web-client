@@ -44,14 +44,13 @@
 		SecurityEventAction,
 		SecurityEventInfo,
 		SessionClient,
-		SessionInfo,
-		TwoFactorMethod,
-		TwoFactorProof
+		SessionInfo
 	} from '$core/api/types';
-	import { enrolledMethods } from '$core/auth/two-factor-proof';
+	import { ApiCallError } from '$core/api/types';
 	import { webauthnSupported } from '$core/auth/webauthn';
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
-	import TwoFactorProofDialog from '../TwoFactorProofDialog.svelte';
+	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
 	import type { SettingsState, CeremonyKind, TwoFaSetupMethod } from '../data';
 	import { Button } from '$core/components/ui/button';
@@ -73,19 +72,20 @@
 		}
 	});
 
-	type ProofAction =
+	type FactorAction =
 		| { kind: 'disableTotp' }
 		| { kind: 'deleteKey'; id: string; name: string }
 		| { kind: 'regenCodes' };
 
-	let proofAction = $state<ProofAction | null>(null);
+	let factorAction = $state<FactorAction | null>(null);
+	let factorBusy = $state(false);
+	let factorError = $state<string | null>(null);
 	let newCodes = $state<string[] | null>(null);
 
 	const tfStatus = $derived(twofactor.status);
-	const proofMethods = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
 
-	const proofCopy = $derived.by(() => {
-		const a = proofAction;
+	const factorCopy = $derived.by(() => {
+		const a = factorAction;
 		const st = twofactor.status;
 		if (!a || !st) return { title: '', desc: '', confirmLabel: '', danger: false };
 		const methodCount = (st.totp?.active ? 1 : 0) + st.webauthnCredentials.length;
@@ -120,25 +120,43 @@
 		}
 	});
 
-	async function confirmProof(proof: TwoFactorProof) {
-		const a = proofAction;
-		if (!a) return;
+	function openFactorAction(a: FactorAction) {
+		factorError = null;
+		factorAction = a;
+	}
+
+	async function confirmFactorAction() {
+		const a = factorAction;
+		if (!a || factorBusy) return;
 		const accountId = auth.accountId ?? undefined;
-		if (a.kind === 'disableTotp') {
-			const res = await totpDisable(proof, accountId);
-			await auth.adoptRotatedSession(res.session);
-		} else if (a.kind === 'deleteKey') {
-			const res = await webauthnDelete(a.id, proof, accountId);
-			await auth.adoptRotatedSession(res.session);
-		} else {
-			const res = await regenerateBackupCodes(proof, accountId);
-			await auth.adoptRotatedSession(res.session);
-			newCodes = res.backupCodes ?? [];
+		factorBusy = true;
+		factorError = null;
+		try {
+			if (a.kind === 'disableTotp') {
+				const res = await totpDisable(accountId);
+				await auth.adoptRotatedSession(res.session);
+			} else if (a.kind === 'deleteKey') {
+				const res = await webauthnDelete(a.id, accountId);
+				await auth.adoptRotatedSession(res.session);
+			} else {
+				const res = await regenerateBackupCodes(accountId);
+				await auth.adoptRotatedSession(res.session);
+				newCodes = res.backupCodes ?? [];
+			}
+			factorAction = null;
+			twofactor.invalidate();
+			void twofactor.load(accountId);
+			void loadSecurityEvents();
+		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
+			console.warn('twofa: factor change failed', err);
+			factorError =
+				err instanceof ApiCallError && err.status === 503
+					? m.settings_ceremony_twofa_err_unavailable()
+					: m.common_something_went_wrong();
+		} finally {
+			factorBusy = false;
 		}
-		proofAction = null;
-		twofactor.invalidate();
-		void twofactor.load(accountId);
-		void loadSecurityEvents();
 	}
 
 	function fmtDate(iso: string | undefined): string {
@@ -412,7 +430,7 @@
 				</div>
 			</div>
 			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'disableTotp' })}>
+				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'disableTotp' })}>
 					{m.common_remove()}
 				</Button>
 			</div>
@@ -443,7 +461,7 @@
 				</div>
 			</div>
 			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'deleteKey', id: cred.id, name: cred.name })}>
+				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'deleteKey', id: cred.id, name: cred.name })}>
 					{m.common_remove()}
 				</Button>
 			</div>
@@ -485,7 +503,7 @@
 				</div>
 			</div>
 			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => (proofAction = { kind: 'regenCodes' })}>
+				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'regenCodes' })}>
 					<RefreshCw size={14} />{m.settings_security_backup_regen()}
 				</Button>
 			</div>
@@ -506,15 +524,23 @@
 	{/if}
 </div>
 
-{#if proofAction && proofCopy}
-	<TwoFactorProofDialog
-		title={proofCopy.title}
-		desc={proofCopy.desc}
-		confirmLabel={proofCopy.confirmLabel}
-		danger={proofCopy.danger}
-		methods={proofMethods}
-		onConfirm={confirmProof}
-		onClose={() => (proofAction = null)}
+{#snippet factorBody()}
+	<p class="cfd-p">{factorCopy.desc}</p>
+{/snippet}
+
+{#if factorAction}
+	<ConfirmDialog
+		icon={factorCopy.danger ? ShieldOff : RefreshCw}
+		tone={factorCopy.danger ? 'danger' : 'neutral'}
+		title={factorCopy.title}
+		confirmLabel={factorCopy.confirmLabel}
+		busy={factorBusy}
+		error={factorError}
+		body={factorBody}
+		onConfirm={() => void confirmFactorAction()}
+		onClose={() => {
+			if (!factorBusy) factorAction = null;
+		}}
 	/>
 {/if}
 

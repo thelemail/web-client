@@ -8,6 +8,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
 	import MirrorScopePrompt from '$core/mail/MirrorScopePrompt.svelte';
+	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
 
@@ -78,3 +79,4 @@
 {@render children()}
 
 <MirrorScopePrompt accountId={data.accountId} />
+<ReauthDialog />

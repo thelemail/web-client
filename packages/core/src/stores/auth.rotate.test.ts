@@ -99,6 +99,24 @@ describe('auth.adoptRotatedSession', () => {
 		expect(auth.sessionRotations).toBe(before + 1);
 	});
 
+	it('adopts a stepped-up token without counting a rotation or re-persisting', async () => {
+		auth.syncFromKeystoreStatus(status('acc-stepup', true));
+		auth.setSession('old-token', 3600, 'acc-stepup');
+		const before = auth.sessionRotations;
+
+		await auth.adoptSteppedUpToken({
+			accessToken: 'stepped-up',
+			tokenType: 'Bearer',
+			expiresInSeconds: 3600,
+			accountId: 'acc-stepup'
+		});
+
+		expect(auth.getAccessToken('acc-stepup')).toBe('stepped-up');
+		expect(mirrorSetToken).toHaveBeenCalledWith('acc-stepup', 'stepped-up');
+		expect(auth.sessionRotations).toBe(before);
+		expect(sessionPersist).not.toHaveBeenCalled();
+	});
+
 	it('re-persists the native session only for remembered accounts', async () => {
 		auth.syncFromKeystoreStatus(status('acc-remembered', true));
 		auth.syncFromKeystoreStatus(status('acc-transient', false));
