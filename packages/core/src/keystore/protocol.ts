@@ -90,10 +90,18 @@ export interface ReformatKeyWithUidsArgs extends AccountScopedArgs {
 	emails: string[];
 }
 
+export type ReformatKeyFailureCode =
+	| 'locked'
+	| 'no_key_password'
+	| 'fingerprint_changed'
+	| 'unusable_key'
+	| 'no_emails'
+	| 'unknown';
+
 export type ReformatKeyWithUidsResponse =
 	| { ok: true; unchanged: true }
 	| { ok: true; unchanged: false; publicKeyArmored: string; encryptedPrivateKey: string }
-	| { ok: false; code: 'locked' | 'no_key_password' | 'fingerprint_changed' | 'no_emails' | 'unknown' };
+	| { ok: false; code: ReformatKeyFailureCode };
 
 export interface CommitReformattedKeyArgs extends AccountScopedArgs {
 	encryptedPrivateKey: string;
