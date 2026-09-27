@@ -42,7 +42,8 @@ export type ErrorCode =
 	| 'proof_required'
 	| 'proof_invalid'
 	| 'proof_expired'
-	| 'proof_reused';
+	| 'proof_reused'
+	| 'step_up_required';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
@@ -757,6 +758,8 @@ export interface TwoFactorStatus {
 	webauthnCredentials: TwoFactorWebauthnCredential[];
 	backupCodes?: { remaining: number; generatedAt?: string };
 }
+
+export type EnrollmentAction = 'totp_enroll' | 'webauthn_enroll';
 
 export type TwoFactorProof =
 	| { method: 'totp'; code: string }

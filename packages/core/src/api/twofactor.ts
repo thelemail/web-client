@@ -1,5 +1,6 @@
 import { apiFetch } from './client';
 import type {
+	EnrollmentAction,
 	TwoFactorProof,
 	TwoFactorStatus,
 	TwoFactorVerifyResponse,
@@ -12,6 +13,8 @@ const P = {
 	webauthnVerify: '/v1/auth/2fa/webauthn/verify',
 	backupCodeVerify: '/v1/auth/2fa/backup-code/verify',
 	status: '/v1/2fa',
+	stepUpInit: '/v1/2fa/step-up/opaque/init',
+	stepUpConfirm: '/v1/2fa/step-up/opaque/confirm',
 	totpEnrollInit: '/v1/2fa/totp/init',
 	totpActivate: '/v1/2fa/totp/activate',
 	totpDisable: '/v1/2fa/totp/disable',
@@ -73,14 +76,37 @@ export function getTwoFactorStatus(accountId?: string) {
 	return apiFetch<TwoFactorStatus>(P.status, { method: 'GET', accountId });
 }
 
-export function totpEnrollInit(accountId?: string) {
+export function stepUpOpaqueInit(
+	req: { ke1: string; action: EnrollmentAction },
+	accountId?: string
+) {
+	return apiFetch<{ challengeId: string; ke2: string; challengeTtlSeconds: number }>(
+		P.stepUpInit,
+		{ method: 'POST', body: req, accountId }
+	);
+}
+
+export function stepUpOpaqueConfirm(
+	req: { challengeId: string; ke3: string; action: EnrollmentAction; proof?: TwoFactorProof },
+	accountId?: string
+) {
+	return apiFetch<{ grant: string; grantExpiresInSeconds: number }>(P.stepUpConfirm, {
+		method: 'POST',
+		body: req,
+		accountId,
+		skipRetryOnUnauthorized: true
+	});
+}
+
+export function totpEnrollInit(grant: string, accountId?: string) {
 	return apiFetch<{ otpauthUrl: string; qrPngBase64: string }>(P.totpEnrollInit, {
 		method: 'POST',
+		body: { grant },
 		accountId
 	});
 }
 
-export function totpActivate(req: { code: string }, accountId?: string) {
+export function totpActivate(req: { code: string; grant: string }, accountId?: string) {
 	return apiFetch<{ backupCodes?: string[] }>(P.totpActivate, {
 		method: 'POST',
 		body: req,
@@ -92,15 +118,16 @@ export function totpDisable(proof: TwoFactorProof, accountId?: string) {
 	return apiFetch<void>(P.totpDisable, { method: 'POST', body: { proof }, accountId });
 }
 
-export function webauthnEnrollInit(accountId?: string) {
+export function webauthnEnrollInit(grant: string, accountId?: string) {
 	return apiFetch<{ registrationId: string; publicKey: unknown }>(P.webauthnEnrollInit, {
 		method: 'POST',
+		body: { grant },
 		accountId
 	});
 }
 
 export function webauthnActivate(
-	req: { registrationId: string; credential: unknown; name: string },
+	req: { registrationId: string; credential: unknown; name: string; grant: string },
 	accountId?: string
 ) {
 	return apiFetch<{
