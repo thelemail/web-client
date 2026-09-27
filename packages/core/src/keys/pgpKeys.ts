@@ -27,5 +27,22 @@ export function lockKey(privateKey: openpgp.PrivateKey, passphrase: string) {
 }
 
 export function reformatWithUserIDs(privateKey: openpgp.PrivateKey, userIDs: openpgp.UserID[]) {
-	return openpgp.reformatKey({ privateKey, userIDs, format: 'object', config: configFor(privateKey) });
+	return openpgp.reformatKey({
+		privateKey,
+		userIDs,
+		date: privateKey.getCreationTime(),
+		format: 'object',
+		config: configFor(privateKey)
+	});
+}
+
+export function selfSignaturesPostdateCreation(key: openpgp.Key): boolean {
+	const created = key.getCreationTime().getTime();
+	const later = (sig: openpgp.SignaturePacket) => (sig.created?.getTime() ?? 0) > created;
+	const { directSignatures } = key as unknown as { directSignatures: openpgp.SignaturePacket[] };
+	return (
+		directSignatures.some(later) ||
+		key.users.some((u) => u.selfCertifications.some(later)) ||
+		key.subkeys.some((s) => s.bindingSignatures.some(later))
+	);
 }
