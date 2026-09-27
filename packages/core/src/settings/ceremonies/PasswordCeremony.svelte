@@ -37,6 +37,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -475,8 +476,10 @@
 					</label>
 					<input
 						id="pwc-2fa-code"
-						class="tin mono otp"
-						maxlength={twoFaMode === 'totp' ? 6 : 12}
+						class="tin mono"
+						class:otp={twoFaMode === 'totp'}
+						class:bcode={twoFaMode !== 'totp'}
+						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
 						inputmode={twoFaMode === 'totp' ? 'numeric' : 'text'}
 						autocomplete={twoFaMode === 'totp' ? 'one-time-code' : 'off'}
 						spellcheck={false}
@@ -484,12 +487,12 @@
 						value={twoFaCode}
 						oninput={(e) => {
 							const v = (e.currentTarget as HTMLInputElement).value;
-							twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v;
+							twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v.toUpperCase();
 						}}
 						onkeydown={(e) => {
 							if (e.key === 'Enter') submitTwoFaCode();
 						}}
-						placeholder={twoFaMode === 'totp' ? '000000' : 'XXXX-XXXX'}
+						placeholder={twoFaMode === 'totp' ? '000000' : BACKUP_CODE_PLACEHOLDER}
 					/>
 				</div>
 			{/if}

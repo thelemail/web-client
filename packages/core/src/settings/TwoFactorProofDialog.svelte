@@ -9,6 +9,7 @@
 	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
 	import { auth } from '$core/stores/auth.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 
 	interface Props {
 		title: string;
@@ -97,8 +98,10 @@
 			</label>
 			<input
 				id="proof-code"
-				class="tin mono otp"
-				maxlength={mode === 'totp' ? 6 : 12}
+				class="tin mono"
+				class:otp={mode === 'totp'}
+				class:bcode={mode !== 'totp'}
+				maxlength={mode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
 				inputmode={mode === 'totp' ? 'numeric' : 'text'}
 				autocomplete={mode === 'totp' ? 'one-time-code' : 'off'}
 				spellcheck={false}
@@ -106,12 +109,12 @@
 				value={code}
 				oninput={(e) => {
 					const v = (e.currentTarget as HTMLInputElement).value;
-					code = mode === 'totp' ? v.replace(/\D/g, '') : v;
+					code = mode === 'totp' ? v.replace(/\D/g, '') : v.toUpperCase();
 				}}
 				onkeydown={(e) => {
 					if (e.key === 'Enter') submitCode();
 				}}
-				placeholder={mode === 'totp' ? '000000' : 'XXXX-XXXX'}
+				placeholder={mode === 'totp' ? '000000' : BACKUP_CODE_PLACEHOLDER}
 			/>
 		</div>
 		{#if hasTotp && hasBackup}

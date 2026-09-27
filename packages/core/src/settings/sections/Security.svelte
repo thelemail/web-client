@@ -480,6 +480,12 @@
 				</Button>
 			</div>
 		</div>
+		{#if tfStatus.backupCodes?.outdated}
+			<div class="card-note warn">
+				<TriangleAlert size={13} />
+				<span>{m.settings_security_backup_outdated()}</span>
+			</div>
+		{/if}
 	{:else if tfStatus}
 		<div class="card-note warn">
 			<TriangleAlert size={13} />

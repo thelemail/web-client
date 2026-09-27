@@ -8,6 +8,7 @@
 	import CeremonyShell from './CeremonyShell.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { backupCodesFile } from '$core/auth/backup-codes';
 
 	interface Props {
 		codes: string[];
@@ -28,22 +29,7 @@
 	}
 
 	async function downloadCodes() {
-		const lines = [
-			'Thelemail two-factor backup codes',
-			'=================================',
-			'',
-			`Account:   ${auth.email ?? ''}`,
-			`Generated: ${new Date().toISOString().slice(0, 10)}`,
-			'',
-			'Each code signs you in once if you lose your second factor:',
-			'',
-			...codes.map((c, i) => `  ${String(i + 1).padStart(2, ' ')}. ${c}`),
-			'',
-			'Keep these offline. Anyone with a code and your password can sign in.',
-			''
-		];
-		const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-		await platform.saveBlob(blob, 'thelemail-backup-codes.txt');
+		await platform.saveBlob(backupCodesFile(codes, auth.email ?? ''), 'thelemail-backup-codes.txt');
 		saved = true;
 	}
 </script>

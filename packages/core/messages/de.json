@@ -2469,6 +2469,7 @@
 	"settings_security_key_remove_confirm": "Schlüssel entfernen",
 	"settings_security_backup_regen_title": "Ersatzcodes neu erstellen",
 	"settings_security_backup_regen_desc": "Alle aktuellen Ersatzcodes werden sofort ungültig. Zehn neue Codes werden erstellt.",
+	"settings_security_backup_outdated": "Ihre Ersatzcodes haben noch das ältere, kürzere Format. Erstellen Sie sie neu, um sicherere Codes zu erhalten.",
 	"settings_security_backup_regen": "Neu erstellen",
 	"settings_security_client_web": "Web-Client",
 	"settings_security_client_mobile": "Mobile App",

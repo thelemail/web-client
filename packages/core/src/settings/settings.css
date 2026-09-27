@@ -527,6 +527,8 @@
 
 .cer-scrim .cer-ack { display: flex; gap: 11px; align-items: flex-start; padding: 13px 14px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-control); font-size: 12.5px; color: var(--fg); line-height: 1.5; cursor: pointer; }
 .cer-scrim .cer-ack input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--pine-700); flex: 0 0 auto; }
+.cer-scrim .cer-ack [data-slot='checkbox'] { margin-top: 2px; }
+.cer-scrim .cer-ack label { cursor: pointer; text-wrap: pretty; }
 .cer-scrim .cer-ack.danger { background: var(--danger-100); border-color: transparent; color: var(--danger-700); }
 .cer-scrim .cer-ack.danger input { accent-color: var(--danger-700); }
 
@@ -539,6 +541,7 @@
 .settings-app .field .tin,
 .cer-scrim .field .tin { width: 100%; }
 .cer-scrim .otp { letter-spacing: .5em; text-align: center; font-size: 18px; }
+.cer-scrim .bcode { letter-spacing: .04em; text-align: center; font-size: 13.5px; }
 
 .cer-scrim .phrase-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; padding: 4px; }
 .cer-scrim .phrase-grid .pw { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
@@ -598,10 +601,11 @@
 .cer-scrim .webauthn { width: 84px; height: 84px; border-radius: 50%; background: var(--pine-50); color: var(--pine-600); display: flex; align-items: center; justify-content: center; }
 @media (max-width: 560px) { .cer-scrim .cer-pane.two-col { flex-direction: column; align-items: center; } }
 
-.cer-scrim .backup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.cer-scrim .bc { display: flex; align-items: center; gap: 9px; padding: 10px 12px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-control); font-family: var(--font-mono); }
-.cer-scrim .bc-n { font-size: 10px; color: var(--fg-faint); }
-.cer-scrim .bc-c { font-size: 13px; font-weight: 500; color: var(--pine-800); letter-spacing: .06em; }
+.cer-scrim .backup-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.cer-scrim .bc { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-control); font-family: var(--font-mono); }
+.cer-scrim .bc-n { font-size: 10px; color: var(--fg-faint); width: 14px; flex: 0 0 auto; text-align: right; }
+.cer-scrim .bc-c { font-size: 13px; font-weight: 500; color: var(--pine-800); letter-spacing: .04em; white-space: nowrap; }
+@media (max-width: 420px) { .cer-scrim .bc-c { font-size: 11.5px; letter-spacing: 0; } }
 
 .cer-scrim .cer-progress { padding: 8px 0; }
 .cer-scrim .cp-bar { height: 6px; border-radius: 999px; background: var(--paper-200); overflow: hidden; margin-bottom: 18px; }

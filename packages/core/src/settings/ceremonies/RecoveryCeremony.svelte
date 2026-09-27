@@ -24,6 +24,7 @@
 	import { RECOVERY_KIT_FILENAME, recoveryKitBlob } from '$core/recovery/kit';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import { Checkbox } from '$core/components/ui/checkbox';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
@@ -168,10 +169,10 @@
 					<Lock size={16} /><span>{m.settings_ceremony_recovery_point_deed()}</span>
 				</li>
 			</ul>
-			<label class="cer-ack">
-				<input type="checkbox" bind:checked={ack} />
-				<span>{m.settings_ceremony_recovery_ack()}</span>
-			</label>
+			<div class="cer-ack">
+				<Checkbox id="recovery-ack" bind:checked={ack} />
+				<label for="recovery-ack">{m.settings_ceremony_recovery_ack()}</label>
+			</div>
 			{#if generateError}
 				<span class="errtext"><CircleAlert size={13} /><span>{generateError}</span></span>
 			{/if}

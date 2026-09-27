@@ -756,7 +756,7 @@ export interface TwoFactorStatus {
 	enabled: boolean;
 	totp?: { active: boolean; createdAt: string };
 	webauthnCredentials: TwoFactorWebauthnCredential[];
-	backupCodes?: { remaining: number; generatedAt?: string };
+	backupCodes?: { remaining: number; outdated: boolean; generatedAt?: string };
 }
 
 export type EnrollmentAction = 'totp_enroll' | 'webauthn_enroll';

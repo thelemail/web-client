@@ -2469,6 +2469,7 @@
 	"settings_security_key_remove_confirm": "Remover chave",
 	"settings_security_backup_regen_title": "Gerar novos códigos de recuperação",
 	"settings_security_backup_regen_desc": "Todos os códigos de recuperação atuais deixam de funcionar de imediato e são emitidos dez novos códigos.",
+	"settings_security_backup_outdated": "Os seus códigos de recuperação usam um formato antigo e mais curto. Gere-os novamente para obter códigos mais seguros.",
 	"settings_security_backup_regen": "Gerar novamente",
 	"settings_security_client_web": "Cliente web",
 	"settings_security_client_mobile": "Aplicação móvel",
