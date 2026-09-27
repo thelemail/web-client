@@ -256,6 +256,7 @@
 		try {
 			const res = await totpActivate({ code, grant }, auth.accountId ?? undefined);
 			grant = '';
+			await auth.adoptRotatedSession(res.session);
 			finishActivation(res.backupCodes);
 		} catch (err) {
 			console.warn('twofa: totp activate failed', err);
@@ -297,6 +298,7 @@
 				auth.accountId ?? undefined
 			);
 			grant = '';
+			await auth.adoptRotatedSession(res.session);
 			confirmed = true;
 			backupCodes = res.backupCodes ?? [];
 		} catch (err) {

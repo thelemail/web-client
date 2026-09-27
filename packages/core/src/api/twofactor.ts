@@ -1,6 +1,7 @@
 import { apiFetch } from './client';
 import type {
 	EnrollmentAction,
+	RefreshResponse,
 	TwoFactorProof,
 	TwoFactorStatus,
 	TwoFactorVerifyResponse,
@@ -107,7 +108,7 @@ export function totpEnrollInit(grant: string, accountId?: string) {
 }
 
 export function totpActivate(req: { code: string; grant: string }, accountId?: string) {
-	return apiFetch<{ backupCodes?: string[] }>(P.totpActivate, {
+	return apiFetch<{ session: RefreshResponse; backupCodes?: string[] }>(P.totpActivate, {
 		method: 'POST',
 		body: req,
 		accountId
@@ -115,7 +116,11 @@ export function totpActivate(req: { code: string; grant: string }, accountId?: s
 }
 
 export function totpDisable(proof: TwoFactorProof, accountId?: string) {
-	return apiFetch<void>(P.totpDisable, { method: 'POST', body: { proof }, accountId });
+	return apiFetch<{ session: RefreshResponse }>(P.totpDisable, {
+		method: 'POST',
+		body: { proof },
+		accountId
+	});
 }
 
 export function webauthnEnrollInit(grant: string, accountId?: string) {
@@ -132,12 +137,17 @@ export function webauthnActivate(
 ) {
 	return apiFetch<{
 		credential: TwoFactorWebauthnCredential;
+		session: RefreshResponse;
 		backupCodes?: string[];
 	}>(P.webauthnActivate, { method: 'POST', body: req, accountId });
 }
 
 export function webauthnDelete(id: string, proof: TwoFactorProof, accountId?: string) {
-	return apiFetch<void>(P.webauthnDelete(id), { method: 'POST', body: { proof }, accountId });
+	return apiFetch<{ session: RefreshResponse }>(P.webauthnDelete(id), {
+		method: 'POST',
+		body: { proof },
+		accountId
+	});
 }
 
 export function webauthnProofInit(accountId?: string) {
@@ -148,7 +158,7 @@ export function webauthnProofInit(accountId?: string) {
 }
 
 export function regenerateBackupCodes(proof: TwoFactorProof, accountId?: string) {
-	return apiFetch<{ backupCodes?: string[] }>(P.backupCodesRegenerate, {
+	return apiFetch<{ session: RefreshResponse; backupCodes?: string[] }>(P.backupCodesRegenerate, {
 		method: 'POST',
 		body: { proof },
 		accountId

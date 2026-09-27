@@ -125,11 +125,14 @@
 		if (!a) return;
 		const accountId = auth.accountId ?? undefined;
 		if (a.kind === 'disableTotp') {
-			await totpDisable(proof, accountId);
+			const res = await totpDisable(proof, accountId);
+			await auth.adoptRotatedSession(res.session);
 		} else if (a.kind === 'deleteKey') {
-			await webauthnDelete(a.id, proof, accountId);
+			const res = await webauthnDelete(a.id, proof, accountId);
+			await auth.adoptRotatedSession(res.session);
 		} else {
 			const res = await regenerateBackupCodes(proof, accountId);
+			await auth.adoptRotatedSession(res.session);
 			newCodes = res.backupCodes ?? [];
 		}
 		proofAction = null;
@@ -192,6 +195,13 @@
 
 	$effect(() => {
 		if (auth.accountId) {
+			void loadSessions();
+			void loadSecurityEvents();
+		}
+	});
+
+	$effect(() => {
+		if (auth.accountId && auth.sessionRotations > 0) {
 			void loadSessions();
 			void loadSecurityEvents();
 		}
