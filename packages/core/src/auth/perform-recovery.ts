@@ -66,37 +66,51 @@ async function tryOpaqueRecovery(
 	phrase: string
 ): Promise<VerifyRecoveryPhraseOutcome | null> {
 	const start = await keystore.opaqueStartAuth({ password: phrase, email, recovery: true });
-	const init = await recoveryOpaqueInit({ email, ke1: start.ke1 });
-	if (!init.accountId || !init.ke2) {
-		await keystore.opaqueAbandonOperation({ operationId: start.operationId });
-		return null;
-	}
-	const finish = await keystore.opaqueFinishAuth({
-		operationId: start.operationId,
-		accountId: init.accountId,
-		ke2: init.ke2,
-		recovery: true
-	});
-	if (!finish.ok) {
-		return null;
-	}
+	try {
+		const init = await recoveryOpaqueInit({ email, ke1: start.ke1 });
+		if (!init.accountId || !init.ke2) {
+			await keystore.opaqueAbandonOperation({ operationId: start.operationId });
+			return null;
+		}
+		const finish = await keystore.opaqueFinishAuth({
+			operationId: start.operationId,
+			accountId: init.accountId,
+			ke2: init.ke2,
+			recovery: true
+		});
+		if (!finish.ok) {
+			return null;
+		}
 
-	const complete = await recoveryOpaqueComplete({ challengeId: init.challengeId, ke3: finish.ke3 });
+		const complete = await recoveryOpaqueComplete({ challengeId: init.challengeId, ke3: finish.ke3 });
 
-	if (complete.twoFactor) {
-		return {
-			status: 'twoFactorRequired',
-			pending: {
-				pendingToken: complete.twoFactor.pendingToken,
-				methods: complete.twoFactor.methods,
-				expiresAt: Date.now() + complete.twoFactor.expiresInSeconds * 1000,
-				opaqueOperationId: start.operationId
-			}
-		};
+		if (complete.twoFactor) {
+			return {
+				status: 'twoFactorRequired',
+				pending: {
+					pendingToken: complete.twoFactor.pendingToken,
+					methods: complete.twoFactor.methods,
+					expiresAt: Date.now() + complete.twoFactor.expiresInSeconds * 1000,
+					opaqueOperationId: start.operationId
+				}
+			};
+		}
+
+		const result = await finishOpaqueRecoveryUnlock(complete, start.operationId);
+		return { status: 'complete', result };
+	} catch (err) {
+		await discardRecovery(start.operationId);
+		throw err;
 	}
+}
 
-	const result = await finishOpaqueRecoveryUnlock(complete, start.operationId);
-	return { status: 'complete', result };
+export async function discardRecovery(operationId?: string): Promise<void> {
+	try {
+		if (operationId) await keystore.opaqueAbandonOperation({ operationId });
+		await keystore.discardRecovery();
+	} catch (err) {
+		console.warn('recovery: discard failed (non-fatal)', err);
+	}
 }
 
 export async function verifyRecoveryPhrase(
@@ -216,7 +230,12 @@ async function finishPendingRecovery(
 	pending: PendingTwoFactorRecovery
 ): Promise<VerifyRecoveryPhraseResult> {
 	if (pending.opaqueOperationId) {
-		return finishOpaqueRecoveryUnlock(grant, pending.opaqueOperationId);
+		try {
+			return await finishOpaqueRecoveryUnlock(grant, pending.opaqueOperationId);
+		} catch (err) {
+			await discardRecovery(pending.opaqueOperationId);
+			throw err;
+		}
 	}
 	return finishRecoveryUnlock(grant as RecoveryGrant);
 }

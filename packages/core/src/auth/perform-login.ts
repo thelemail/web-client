@@ -122,48 +122,55 @@ async function tryOpaqueLogin(
 	rememberMe: boolean
 ): Promise<PerformLoginOutcome | null> {
 	const start = await keystore.opaqueStartAuth({ password, email });
-	const init = await loginInit({ email, ke1: start.ke1 });
-	if (!init.accountId || !init.ke2) {
-		await keystore.opaqueAbandonOperation({ operationId: start.operationId });
-		return null;
-	}
-	const finish = await keystore.opaqueFinishAuth({
-		operationId: start.operationId,
-		accountId: init.accountId,
-		ke2: init.ke2
-	});
-	if (!finish.ok) {
-		return null;
-	}
-
-	let complete;
 	try {
-		complete = await loginComplete({
+		const init = await loginInit({ email, ke1: start.ke1 });
+		if (!init.accountId || !init.ke2) {
+			await keystore.opaqueAbandonOperation({ operationId: start.operationId });
+			return null;
+		}
+		const finish = await keystore.opaqueFinishAuth({
+			operationId: start.operationId,
+			accountId: init.accountId,
+			ke2: init.ke2
+		});
+		if (!finish.ok) {
+			return null;
+		}
+
+		const complete = await loginComplete({
 			challengeId: init.challengeId,
 			ke3: finish.ke3,
 			enrollPersistentSession: rememberMe
 		});
+
+		if (complete.twoFactor) {
+			return {
+				status: 'twoFactorRequired',
+				pending: {
+					pendingToken: complete.twoFactor.pendingToken,
+					methods: complete.twoFactor.methods,
+					email,
+					rememberMe,
+					expiresAt: Date.now() + complete.twoFactor.expiresInSeconds * 1000,
+					opaqueOperationId: start.operationId
+				}
+			};
+		}
+
+		const result = await finishOpaqueLogin(complete, start.operationId, email, rememberMe);
+		return { status: 'complete', result };
 	} catch (err) {
-		await keystore.opaqueAbandonOperation({ operationId: start.operationId });
+		await abandonOpaqueOperation(start.operationId);
 		throw err;
 	}
+}
 
-	if (complete.twoFactor) {
-		return {
-			status: 'twoFactorRequired',
-			pending: {
-				pendingToken: complete.twoFactor.pendingToken,
-				methods: complete.twoFactor.methods,
-				email,
-				rememberMe,
-				expiresAt: Date.now() + complete.twoFactor.expiresInSeconds * 1000,
-				opaqueOperationId: start.operationId
-			}
-		};
+async function abandonOpaqueOperation(operationId: string): Promise<void> {
+	try {
+		await keystore.opaqueAbandonOperation({ operationId });
+	} catch (err) {
+		console.warn('login: abandon failed (non-fatal)', err);
 	}
-
-	const result = await finishOpaqueLogin(complete, start.operationId, email, rememberMe);
-	return { status: 'complete', result };
 }
 
 export async function performLogin(input: PerformLoginInput): Promise<PerformLoginOutcome> {
@@ -374,7 +381,12 @@ async function finishPendingLogin(
 	pending: PendingTwoFactorLogin
 ): Promise<PerformLoginResult> {
 	if (pending.opaqueOperationId) {
-		return finishOpaqueLogin(grant, pending.opaqueOperationId, pending.email, pending.rememberMe);
+		try {
+			return await finishOpaqueLogin(grant, pending.opaqueOperationId, pending.email, pending.rememberMe);
+		} catch (err) {
+			await abandonOpaqueOperation(pending.opaqueOperationId);
+			throw err;
+		}
 	}
 	return finishLogin(grant, pending.email, pending.srpSalt as string, pending.rememberMe, pending.password ?? '');
 }
@@ -436,13 +448,13 @@ export async function submitTwoFactorWebauthn(
 	return finishPendingLogin(assertSessionGrant(res), pending);
 }
 
-export async function abandonTwoFactorLogin(pending?: PendingTwoFactorLogin): Promise<void> {
+export async function abandonTwoFactorLogin(pending: PendingTwoFactorLogin): Promise<void> {
+	if (pending.opaqueOperationId) {
+		await abandonOpaqueOperation(pending.opaqueOperationId);
+		return;
+	}
 	try {
-		if (pending?.opaqueOperationId) {
-			await keystore.opaqueAbandonOperation({ operationId: pending.opaqueOperationId });
-		} else {
-			await keystore.abandonLogin();
-		}
+		await keystore.abandonLogin();
 	} catch (err) {
 		console.warn('login: abandon failed (non-fatal)', err);
 	}

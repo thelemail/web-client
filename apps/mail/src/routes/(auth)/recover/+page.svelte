@@ -8,6 +8,7 @@
 	import Stepper from '$core/auth/Stepper.svelte';
 	import {
 		completeRecoveryReset,
+		discardRecovery,
 		RecoveryPhraseError,
 		RecoveryResetExpiredError,
 		submitRecoveryTwoFactorBackupCode,
@@ -20,7 +21,6 @@
 	import { TwoFactorExpiredError, TwoFactorRejectedError } from '$core/auth/perform-login';
 	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
 	import { isWebauthnCancelled } from '$core/auth/webauthn';
-	import { keystore } from '$core/keystore/keystore-client';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
 	import brandmark from '$core/assets/logo-mark.svg';
@@ -67,7 +67,7 @@
 		| 'done';
 	let step = $state<Step>('account');
 
-	let pendingTwoFactor = $state<PendingTwoFactorRecovery | null>(null);
+	let pendingTwoFactor = $state.raw<PendingTwoFactorRecovery | null>(null);
 	let twoFaBusy = $state(false);
 	let twoFaError = $state<string | null>(null);
 	let twoFaFailures = $state(0);
@@ -88,6 +88,13 @@
 	let resetTokenExpiresAt = $state(0);
 	let opaqueOperationId = $state<string | undefined>(undefined);
 	let recoveredAccountId = $state<string | undefined>(undefined);
+	let heldOperation: string | undefined;
+
+	function releaseRecovery() {
+		const held = heldOperation;
+		heldOperation = undefined;
+		void discardRecovery(held);
+	}
 
 	let pw = $state('');
 	let confirm = $state('');
@@ -146,10 +153,12 @@
 		}
 		phraseStatus = 'checking';
 		phraseError = '';
+		if (heldOperation) releaseRecovery();
 		try {
 			const outcome = await verifyRecoveryPhrase({ email, phrase });
 			phraseStatus = 'idle';
 			if (outcome.status === 'twoFactorRequired') {
+				heldOperation = outcome.pending.opaqueOperationId;
 				pendingTwoFactor = outcome.pending;
 				twoFaError = null;
 				twoFaFailures = 0;
@@ -171,13 +180,14 @@
 		resetToken = res.resetToken;
 		resetTokenExpiresAt = res.resetTokenExpiresAt;
 		opaqueOperationId = res.opaqueOperationId;
+		heldOperation = res.opaqueOperationId;
 		recoveredAccountId = res.accountId;
 		pendingTwoFactor = null;
 		step = 'password';
 	}
 
 	function resetToPhraseStep(message: string) {
-		void keystore.discardRecovery();
+		releaseRecovery();
 		pendingTwoFactor = null;
 		twoFaBusy = false;
 		twoFaError = null;
@@ -231,13 +241,36 @@
 		if (step === 'phrase') inputs[0]?.focus();
 	});
 
+	$effect(() => {
+		const pending = pendingTwoFactor;
+		if (!pending) return;
+		const expire = () => {
+			if (twoFaBusy) expiry = setTimeout(expire, 1000);
+			else resetToPhraseStep(m.auth_recover_2fa_expired());
+		};
+		let expiry = setTimeout(expire, Math.max(0, pending.expiresAt - Date.now()));
+		return () => clearTimeout(expiry);
+	});
+
+	$effect(() => {
+		const onPageHide = () => {
+			if (step === 'twofa') resetToPhraseStep('');
+			else if (step === 'password') startOver();
+		};
+		window.addEventListener('pagehide', onPageHide);
+		return () => {
+			window.removeEventListener('pagehide', onPageHide);
+			if (heldOperation && step !== 'working') releaseRecovery();
+		};
+	});
+
 	const allMet = $derived(passwordReqs(pw).every((r) => r.met));
 	const matches = $derived(confirm.length > 0 && confirm === pw);
 	const mismatch = $derived(confirm.length > 0 && confirm !== pw);
 	const passwordReady = $derived(allMet && matches);
 
 	function startOver() {
-		void keystore.discardRecovery();
+		releaseRecovery();
 		words = Array(12).fill('');
 		resetToken = '';
 		resetTokenExpiresAt = 0;
@@ -273,6 +306,7 @@
 					else if (stage === 'submit') workIdx = 3;
 				}
 			});
+			heldOperation = undefined;
 			workIdx = workLines.length;
 			pw = '';
 			confirm = '';

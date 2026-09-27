@@ -11,6 +11,12 @@ import {
 	selfSignaturesPostdateCreation
 } from '$core/keys/pgpKeys';
 import { isAllowedBlobUrl } from './blobOrigins';
+import {
+	OPAQUE_OP_TTL_MS,
+	OpaqueOperations,
+	settleLogin,
+	wipeOpaqueOperation
+} from './opaque-ops';
 import { currentProduct, isProductVault } from '../products';
 import { CryptoProxy } from '@protontech/crypto';
 import { Api as CryptoApi } from '@protontech/crypto/proxy/endpoint/api.ts';
@@ -240,8 +246,7 @@ let pendingReset: PendingReset | null = null;
 let pendingPasswordChange: PendingPasswordChange | null = null;
 let cryptoReady: Promise<void> | null = null;
 const ports = new Set<MessagePort>();
-const opaqueOps = new Map<string, OpaqueOperation>();
-const OPAQUE_OP_TTL_MS = 10 * 60 * 1000;
+const opaqueOps = new OpaqueOperations();
 
 const restorePromise = restoreFromIdb();
 
@@ -760,9 +765,6 @@ async function handleClearAll(): Promise<void> {
 	pendingRecoveryLogin = null;
 	pendingReset = null;
 	pendingPasswordChange = null;
-	for (const op of opaqueOps.values()) {
-		wipeOpaqueOperation(op);
-	}
 	opaqueOps.clear();
 	await clearAllVaults();
 	broadcast({ type: 'clearedAll' });
@@ -1751,53 +1753,12 @@ async function handleDisablePersistent(args: DisablePersistentArgs): Promise<voi
 	broadcast({ type: 'persistentDisabled', accountId: rec.accountId });
 }
 
-interface OpaqueOperation {
-	kind:
-		| 'register'
-		| 'login'
-		| 'migrationStage'
-		| 'recoverySetup'
-		| 'recoveryLogin'
-		| 'passwordChange'
-		| 'amkRotation';
-	at: number;
-	clientState?: string;
-	password?: string;
-	email?: string;
-	accountId?: string;
-	recovery?: boolean;
-	privateKeyObj?: openpgp.PrivateKey;
-	publicKeyArmored?: string;
-	armoredEncryptedPrivateKey?: string;
-	amk?: Uint8Array;
-	exportKey?: Uint8Array;
-	wrappedMasterKeyB64?: string;
-	masterKeyIdB64?: string;
-}
-
 function newOpaqueOperationId(): string {
 	return crypto.randomUUID();
 }
 
-function wipeOpaqueOperation(op: OpaqueOperation): void {
-	op.amk?.fill(0);
-	op.exportKey?.fill(0);
-	op.amk = undefined;
-	op.exportKey = undefined;
-	op.password = undefined;
-	op.clientState = undefined;
-	op.privateKeyObj = undefined;
-	op.armoredEncryptedPrivateKey = undefined;
-}
-
 function reapOpaqueOps(): void {
-	const cutoff = Date.now() - OPAQUE_OP_TTL_MS;
-	for (const [id, op] of opaqueOps) {
-		if (op.at < cutoff) {
-			wipeOpaqueOperation(op);
-			opaqueOps.delete(id);
-		}
-	}
+	opaqueOps.reap();
 }
 
 setInterval(reapOpaqueOps, OPAQUE_OP_TTL_MS / 4);
@@ -1811,11 +1772,7 @@ function fromOpaqueWire(opaqueB64Url: string): string {
 }
 
 function handleOpaqueAbandonOperation(args: OpaqueAbandonOperationArgs): void {
-	const op = opaqueOps.get(args.operationId);
-	if (op) {
-		wipeOpaqueOperation(op);
-		opaqueOps.delete(args.operationId);
-	}
+	opaqueOps.abandon(args.operationId);
 }
 
 async function handleOpaqueStartRegistration(
@@ -1963,41 +1920,49 @@ async function handleOpaqueFinishAuth(args: OpaqueFinishAuthArgs): Promise<Opaqu
 	if (!op || !op.clientState || !op.password) {
 		return { ok: false, code: 'no_pending_operation' };
 	}
-	await opaqueReady;
-	const recovery = args.recovery ?? op.recovery ?? false;
-	const result = opaqueClient.finishLogin({
-		clientLoginState: op.clientState,
-		loginResponse: toOpaqueWire(args.ke2),
-		password: op.password,
-		identifiers: { client: clientIdentity(args.accountId, recovery), server: SERVER_IDENTITY },
-		keyStretching: KEY_STRETCHING
-	});
-	if (!result) {
-		wipeOpaqueOperation(op);
-		opaqueOps.delete(args.operationId);
-		return { ok: false, code: 'invalid_credentials' };
+	const { clientState, password } = op;
+	op.clientState = undefined;
+	op.password = undefined;
+	let settled = false;
+	try {
+		await opaqueReady;
+		const recovery = args.recovery ?? op.recovery ?? false;
+		const result = opaqueClient.finishLogin({
+			clientLoginState: clientState,
+			loginResponse: toOpaqueWire(args.ke2),
+			password,
+			identifiers: { client: clientIdentity(args.accountId, recovery), server: SERVER_IDENTITY },
+			keyStretching: KEY_STRETCHING
+		});
+		if (!result) {
+			return { ok: false, code: 'invalid_credentials' };
+		}
+		settleLogin(op, args.accountId, base64UrlToBytes(result.exportKey));
+		settled = true;
+		return { ok: true, ke3: fromOpaqueWire(result.finishLoginRequest) };
+	} finally {
+		if (!settled) opaqueOps.abandon(args.operationId);
 	}
-	op.accountId = args.accountId;
-	op.exportKey = base64UrlToBytes(result.exportKey);
-	op.at = Date.now();
-	return { ok: true, ke3: fromOpaqueWire(result.finishLoginRequest) };
 }
 
 async function handleOpaqueCompleteLoginUnlock(
 	args: OpaqueCompleteLoginUnlockArgs
 ): Promise<OpaqueCompleteLoginUnlockResponse> {
-	const op = opaqueOps.get(args.operationId);
-	if (!op || !op.exportKey || op.accountId !== args.accountId) {
+	const op = opaqueOps.take(args.operationId);
+	if (!op) {
 		return { ok: false, code: 'no_pending_operation' };
 	}
-	opaqueOps.delete(args.operationId);
+	if (!op.exportKey || op.accountId !== args.accountId) {
+		wipeOpaqueOperation(op);
+		return { ok: false, code: 'no_pending_operation' };
+	}
+	let amk: Uint8Array | undefined;
+	let handedOver = false;
 	try {
-		const wrappedMasterKey = opaqueBase64ToBytes(args.wrappedMasterKey);
-		const amk = await unwrapMasterKey(op.exportKey, wrappedMasterKey, false);
+		amk = await unwrapMasterKey(op.exportKey, opaqueBase64ToBytes(args.wrappedMasterKey), false);
+		wipeOpaqueOperation(op);
 		const derivedMasterKeyId = opaqueBytesToBase64(await deriveMasterKeyId(amk));
 		if (!constantTimeEqual(derivedMasterKeyId, args.masterKeyId)) {
-			amk.fill(0);
-			wipeOpaqueOperation(op);
 			return { ok: false, code: 'master_key_mismatch' };
 		}
 		const pgpPassphrase = await derivePgpPassphrase(amk);
@@ -2032,14 +1997,16 @@ async function handleOpaqueCompleteLoginUnlock(
 			aliasCurrent: new Map()
 		};
 		vaults.set(args.accountId, v);
+		handedOver = true;
 
-		wipeOpaqueOperation(op);
 		broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
 		return { ok: true, accountId: v.accountId, email: v.email };
 	} catch (err) {
-		wipeOpaqueOperation(op);
 		console.warn('keystore: opaqueCompleteLoginUnlock failed', err);
 		return { ok: false, code: 'unwrap_failed' };
+	} finally {
+		wipeOpaqueOperation(op);
+		if (!handedOver) amk?.fill(0);
 	}
 }
 
@@ -2176,12 +2143,14 @@ async function handleOpaqueCompleteRecoveryUnlock(
 	try {
 		const wrappedMasterKey = opaqueBase64ToBytes(args.wrappedMasterKey);
 		const amk = await unwrapMasterKey(op.exportKey, wrappedMasterKey, true);
+		op.exportKey.fill(0);
+		op.exportKey = undefined;
+		op.amk = amk;
 		const pgpPassphrase = await derivePgpPassphrase(amk);
 		const privateKey = await openpgp.readPrivateKey({ armoredKey: args.encryptedPrivateKey });
 		const unlocked = await openpgp.decryptKey({ privateKey, passphrase: pgpPassphrase });
 
 		op.privateKeyObj = unlocked;
-		op.amk = amk;
 		op.at = Date.now();
 		return { ok: true };
 	} catch (err) {
