@@ -7,6 +7,7 @@
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import Usb from '@lucide/svelte/icons/usb';
 	import type { TwoFactorMethod } from '$core/api/types';
+	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_MIN_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import { webauthnSupported } from '$core/auth/webauthn';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -111,7 +112,7 @@
 	}
 
 	function verifyBackup() {
-		if (bcode.trim().length < 8 || busy) return;
+		if (bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy) return;
 		onBackupCode(bcode.trim());
 	}
 
@@ -257,11 +258,13 @@
 					class="inp mono"
 					class:err={showBad}
 					value={bcode}
-					placeholder="XXXX-XXXX"
+					placeholder={BACKUP_CODE_PLACEHOLDER}
+					maxlength={BACKUP_CODE_MAX_LENGTH}
 					autocomplete="off"
+					autocapitalize="characters"
 					spellcheck="false"
 					disabled={busy}
-					style="text-align:center;letter-spacing:.12em"
+					style="text-align:center;letter-spacing:.04em"
 					oninput={(e) => {
 						editedSinceError = true;
 						bcode = e.currentTarget.value.toUpperCase();
@@ -280,7 +283,7 @@
 				{/if}
 			</div>
 			<div class="actions">
-				<Button variant="primary" size="lg" block disabled={bcode.trim().length < 8 || busy} onclick={verifyBackup}>
+				<Button variant="primary" size="lg" block disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy} onclick={verifyBackup}>
 					{#if busy}
 						<span class="spinner"></span>{m.auth_2fa_checking()}
 					{:else}

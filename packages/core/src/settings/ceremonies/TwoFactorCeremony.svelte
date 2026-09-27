@@ -28,6 +28,7 @@
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER, backupCodesFile } from '$core/auth/backup-codes';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
@@ -352,22 +353,7 @@
 	}
 
 	async function downloadCodes() {
-		const lines = [
-			'Thelemail two-factor backup codes',
-			'=================================',
-			'',
-			`Account:   ${auth.email ?? ''}`,
-			`Generated: ${new Date().toISOString().slice(0, 10)}`,
-			'',
-			'Each code signs you in once if you lose your second factor:',
-			'',
-			...backupCodes.map((c, i) => `  ${String(i + 1).padStart(2, ' ')}. ${c}`),
-			'',
-			'Keep these offline. Anyone with a code and your password can sign in.',
-			''
-		];
-		const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-		await platform.saveBlob(blob, 'thelemail-backup-codes.txt');
+		await platform.saveBlob(backupCodesFile(backupCodes, auth.email ?? ''), 'thelemail-backup-codes.txt');
 		saved = true;
 	}
 
@@ -447,8 +433,10 @@
 					</label>
 					<input
 						id="twofa-proof-code"
-						class="tin mono otp"
-						maxlength={twoFaMode === 'totp' ? 6 : 12}
+						class="tin mono"
+						class:otp={twoFaMode === 'totp'}
+						class:bcode={twoFaMode !== 'totp'}
+						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
 						inputmode={twoFaMode === 'totp' ? 'numeric' : 'text'}
 						autocomplete={twoFaMode === 'totp' ? 'one-time-code' : 'off'}
 						spellcheck={false}
@@ -456,12 +444,12 @@
 						value={twoFaCode}
 						oninput={(e) => {
 							const v = (e.currentTarget as HTMLInputElement).value;
-							twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v;
+							twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v.toUpperCase();
 						}}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && canConfirm) confirmWithCode();
 						}}
-						placeholder={twoFaMode === 'totp' ? '000000' : 'XXXX-XXXX'}
+						placeholder={twoFaMode === 'totp' ? '000000' : BACKUP_CODE_PLACEHOLDER}
 					/>
 				</div>
 			{/if}

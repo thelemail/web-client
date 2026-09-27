@@ -2469,6 +2469,7 @@
 	"settings_security_key_remove_confirm": "Remove key",
 	"settings_security_backup_regen_title": "Regenerate backup codes",
 	"settings_security_backup_regen_desc": "All current backup codes stop working immediately and a fresh set of ten is issued.",
+	"settings_security_backup_outdated": "Your backup codes use an older, shorter format. Regenerate them to get a stronger set.",
 	"settings_security_backup_regen": "Regenerate",
 	"settings_security_client_web": "Web client",
 	"settings_security_client_mobile": "Mobile app",

@@ -2469,6 +2469,7 @@
   "settings_security_key_remove_confirm": "Supprimer la clé",
   "settings_security_backup_regen_title": "Régénérer les codes de secours",
   "settings_security_backup_regen_desc": "Tous les codes de secours actuels cessent immédiatement de fonctionner et dix nouveaux codes sont générés.",
+  "settings_security_backup_outdated": "Vos codes de secours utilisent un ancien format plus court. Régénérez-les pour obtenir des codes plus robustes.",
   "settings_security_backup_regen": "Régénérer",
   "settings_security_client_web": "Client web",
   "settings_security_client_mobile": "Application mobile",
