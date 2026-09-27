@@ -2,7 +2,13 @@
 import * as openpgp from 'openpgp';
 import { describe, expect, it } from 'vitest';
 
-import { generateCurve25519Key, lockKey, reformatWithUserIDs } from './pgpKeys';
+import {
+	generateCurve25519Key,
+	lockKey,
+	reformatWithUserIDs,
+	selfSignaturesPostdateCreation,
+	V6_KEY_CONFIG
+} from './pgpKeys';
 
 const email = 'alice@example.com';
 
@@ -129,5 +135,87 @@ describe('reformatWithUserIDs', () => {
 		expect(reformatted.getFingerprint()).toBe(legacy.getFingerprint());
 		const armored = await encryptTo(reformatted.toPublic());
 		expect((await wireShape(armored)).seipd).toBe(1);
+	});
+});
+
+describe('signatures made before a reformat', () => {
+	const hourAgo = () => new Date(Date.now() - 3_600_000);
+	const halfHourAgo = () => new Date(Date.now() - 1_800_000);
+
+	async function keyPair(version: 4 | 6, userEmail: string) {
+		const { privateKey } = await openpgp.generateKey({
+			type: 'curve25519',
+			userIDs: [{ email: userEmail }],
+			date: hourAgo(),
+			format: 'object',
+			config: version === 6 ? V6_KEY_CONFIG : undefined
+		});
+		return privateKey;
+	}
+
+	async function signedTo(sender: openpgp.PrivateKey, recipient: openpgp.PrivateKey) {
+		return openpgp.encrypt({
+			message: await openpgp.createMessage({ text: 'hello' }),
+			encryptionKeys: recipient.toPublic(),
+			signingKeys: sender,
+			date: halfHourAgo(),
+			format: 'armored'
+		});
+	}
+
+	async function verifies(armored: string, recipient: openpgp.PrivateKey, sender: openpgp.PublicKey) {
+		const { signatures } = await openpgp.decrypt({
+			message: await openpgp.readMessage({ armoredMessage: armored }),
+			decryptionKeys: recipient,
+			verificationKeys: sender,
+			expectSigned: false
+		});
+		return signatures[0].verified.then(
+			() => true,
+			() => false
+		);
+	}
+
+	for (const version of [6, 4] as const) {
+		it(`still verify against a v${version} key reformatted with another address`, async () => {
+			const sender = await keyPair(version, email);
+			const recipient = await keyPair(version, 'bob@example.com');
+			const armored = await signedTo(sender, recipient);
+
+			const { privateKey: reformatted } = await reformatWithUserIDs(sender, [
+				{ email },
+				{ email: 'alias@example.com' }
+			]);
+
+			expect(selfSignaturesPostdateCreation(reformatted)).toBe(false);
+			expect(await verifies(armored, recipient, reformatted.toPublic())).toBe(true);
+		});
+
+		it(`verify again once a v${version} key re-stamped at reformat time is repaired`, async () => {
+			const sender = await keyPair(version, email);
+			const recipient = await keyPair(version, 'bob@example.com');
+			const armored = await signedTo(sender, recipient);
+
+			const { privateKey: restamped } = await openpgp.reformatKey({
+				privateKey: sender,
+				userIDs: [{ email }],
+				format: 'object',
+				config: version === 6 ? V6_KEY_CONFIG : undefined
+			});
+			expect(selfSignaturesPostdateCreation(restamped)).toBe(true);
+			expect(await verifies(armored, recipient, restamped.toPublic())).toBe(false);
+
+			const { privateKey: repaired } = await reformatWithUserIDs(restamped, [{ email }]);
+			expect(repaired.getFingerprint()).toBe(sender.getFingerprint());
+			expect(selfSignaturesPostdateCreation(repaired)).toBe(false);
+			expect(await verifies(armored, recipient, repaired.toPublic())).toBe(true);
+			await expect(repaired.getSigningKey()).resolves.toBeDefined();
+			await expect(repaired.getEncryptionKey()).resolves.toBeDefined();
+		});
+	}
+
+	it('does not flag a freshly generated key', async () => {
+		const { privateKey } = await generate();
+		expect(selfSignaturesPostdateCreation(privateKey)).toBe(false);
 	});
 });

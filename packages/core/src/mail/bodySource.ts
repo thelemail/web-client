@@ -1,4 +1,5 @@
 import { getMessage } from '$core/api/messages';
+import { bytesToB64 } from '$core/crypto';
 import { platform } from '$platform';
 import type { MessageDetail } from '$core/api/types';
 import type { MirrorMessage } from '$core/platform/types';
@@ -16,15 +17,20 @@ export interface RenderDetailOptions {
 	verificationKeysArmored?: string[];
 }
 
+async function keysTag(armored?: string[]): Promise<string> {
+	if (!armored?.length) return '0';
+	const bytes = new TextEncoder().encode(armored.join('\n'));
+	return bytesToB64(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
+}
+
 export async function renderDetail(
 	accountId: string,
 	detail: MessageDetail,
 	opts: RenderDetailOptions,
 	cachedMime?: string
 ): Promise<CachedRender> {
-	const key = `${accountId}:${detail.id}|${opts.stripTracking ? 's' : '0'}|${
-		opts.verificationKeysArmored?.length ? 'v' : '0'
-	}`;
+	const keys = await keysTag(opts.verificationKeysArmored);
+	const key = `${accountId}:${detail.id}|${opts.stripTracking ? 's' : '0'}|${keys}`;
 	const cached = getCachedRender(key);
 	if (cached) return cached;
 

@@ -4,7 +4,12 @@ import { planUids } from '$core/keys/uidPlan';
 import * as openpgp from 'openpgp';
 
 import { generateDelegationKey } from '$core/keys/delegationKey';
-import { generateCurve25519Key, lockKey, reformatWithUserIDs } from '$core/keys/pgpKeys';
+import {
+	generateCurve25519Key,
+	lockKey,
+	reformatWithUserIDs,
+	selfSignaturesPostdateCreation
+} from '$core/keys/pgpKeys';
 import { isAllowedBlobUrl } from './blobOrigins';
 import { currentProduct, isProductVault } from '../products';
 import { CryptoProxy } from '@protontech/crypto';
@@ -1214,7 +1219,7 @@ async function handleReformatKeyWithUids(
 		return { ok: false, code: 'no_emails' };
 	}
 	try {
-		if (unchanged) {
+		if (unchanged && !selfSignaturesPostdateCreation(v.privateKey)) {
 			return { ok: true, unchanged: true };
 		}
 
@@ -1225,6 +1230,12 @@ async function handleReformatKeyWithUids(
 		);
 		if (reformatted.getFingerprint() !== originalFingerprint) {
 			return { ok: false, code: 'fingerprint_changed' };
+		}
+		try {
+			await reformatted.getSigningKey();
+			await reformatted.getEncryptionKey();
+		} catch {
+			return { ok: false, code: 'unusable_key' };
 		}
 		const encrypted = await lockKey(reformatted, v.keyPassword);
 		const encryptedPrivateKey = encrypted.armor();
