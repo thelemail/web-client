@@ -52,10 +52,11 @@
 	let busy = $state(false);
 	let loginError = $state<string | null>(null);
 	let rememberMe = $state(false);
-	let pendingTwoFactor = $state<PendingTwoFactorLogin | null>(null);
+	let pendingTwoFactor = $state.raw<PendingTwoFactorLogin | null>(null);
 	let twoFaBusy = $state(false);
 	let twoFaError = $state<string | null>(null);
 	let twoFaFailures = $state(0);
+	let heldTwoFactor: PendingTwoFactorLogin | null = null;
 
 	$effect(() => {
 		const next = initialEmail;
@@ -78,6 +79,7 @@
 			const outcome = await performLogin({ email, password, rememberMe });
 			pw = '';
 			if (outcome.status === 'twoFactorRequired') {
+				heldTwoFactor = outcome.pending;
 				pendingTwoFactor = outcome.pending;
 				twoFaError = null;
 				twoFaFailures = 0;
@@ -100,7 +102,9 @@
 	}
 
 	async function resetToPasswordStep(message: string | null) {
-		await abandonTwoFactorLogin();
+		const held = heldTwoFactor;
+		heldTwoFactor = null;
+		if (held) await abandonTwoFactorLogin(held);
 		pendingTwoFactor = null;
 		twoFaError = null;
 		twoFaFailures = 0;
@@ -119,6 +123,7 @@
 		twoFaError = null;
 		try {
 			const { slot } = await fn(pending);
+			if (heldTwoFactor === pending) heldTwoFactor = null;
 			await navigateAfterLogin(slot);
 		} catch (err) {
 			if (err instanceof TwoFactorRejectedError) {
@@ -144,6 +149,26 @@
 			twoFaBusy = false;
 		}
 	}
+
+	$effect(() => {
+		const pending = pendingTwoFactor;
+		if (!pending) return;
+		const expire = () => {
+			if (twoFaBusy) expiry = setTimeout(expire, 1000);
+			else void resetToPasswordStep(m.auth_login_2fa_expired());
+		};
+		let expiry = setTimeout(expire, Math.max(0, pending.expiresAt - Date.now()));
+		const onPageHide = () => void resetToPasswordStep(null);
+		window.addEventListener('pagehide', onPageHide);
+		return () => {
+			clearTimeout(expiry);
+			window.removeEventListener('pagehide', onPageHide);
+			if (heldTwoFactor === pending) {
+				heldTwoFactor = null;
+				void abandonTwoFactorLogin(pending);
+			}
+		};
+	});
 
 	function ssoSubmit() {
 		if (!ssoDomain || busy) return;
