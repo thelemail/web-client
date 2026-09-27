@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import CalendarOff from '@lucide/svelte/icons/calendar-off';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Inbox from '@lucide/svelte/icons/inbox';
@@ -31,6 +32,7 @@
 			await workspaces.removeMember(accountId);
 			onClose();
 		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			error = err instanceof Error ? err.message : m.settings_family_remove_failed();
 		} finally {
 			busy = false;

@@ -11,6 +11,7 @@
 	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
 	import { reauth } from './reauth.svelte';
 	import { sessionStepUp } from './session-step-up';
 
@@ -19,6 +20,8 @@
 	}
 
 	let { accountId }: Props = $props();
+
+	const email = $derived(accounts.byId(accountId)?.email ?? '');
 
 	let methods = $state<TwoFactorMethod[] | null>(null);
 	let password = $state('');
@@ -182,6 +185,7 @@
 	<ConfirmDialog
 		icon={ShieldCheck}
 		title={m.reauth_title()}
+		sub={email}
 		confirmLabel={m.reauth_continue()}
 		{busy}
 		disabled={!canSubmit}

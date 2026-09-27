@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
@@ -99,6 +100,7 @@
 		try {
 			material = await prepareRecovery(accountId);
 		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			console.warn('recovery: generate failed', err);
 			generateError =
 				err instanceof RecoveryVaultLockedError
@@ -151,9 +153,10 @@
 		try {
 			await commitRecovery(material, accountId);
 		} catch (err) {
+			submitting = false;
+			if (isReauthenticationRequired(err)) return;
 			console.warn('recovery: setup failed', err);
 			submitError = m.settings_ceremony_recovery_err_save();
-			submitting = false;
 			return;
 		}
 		auth.markRecoveryEnabled(accountId);

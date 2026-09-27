@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { page } from '$app/state';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Check from '@lucide/svelte/icons/check';
@@ -71,7 +72,8 @@
 			await billing.refresh();
 			if (auth.accountId) await auth.loadProfile(auth.accountId);
 			done = true;
-		} catch {
+		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			notice = m.lc_downgrade_schedule_failed();
 		} finally {
 			busy = false;
