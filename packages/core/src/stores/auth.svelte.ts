@@ -8,7 +8,13 @@ import {
 	getMe,
 	getPersistentHalf
 } from '$core/api/auth';
-import { ApiCallError, type DeletionStatus, type LifecycleInfo, type MeResponse } from '$core/api/types';
+import {
+	ApiCallError,
+	type DeletionStatus,
+	type LifecycleInfo,
+	type MeResponse,
+	type RefreshResponse
+} from '$core/api/types';
 import { keystore } from '$core/keystore/keystore-client';
 import type { StatusResponse } from '$core/keystore/protocol';
 import { accounts } from './accounts.svelte';
@@ -107,6 +113,7 @@ class AuthStore {
 	#currentId = $state<string | null>(null);
 	#refreshing = new Map<string, Promise<boolean>>();
 	#refreshTimer: ReturnType<typeof setTimeout> | null = null;
+	sessionRotations = $state(0);
 
 	accessToken = $derived<string | null>(this.#tokens.get(this.#currentId ?? '')?.accessToken ?? null);
 	accessTokenExpiresAt = $derived<number | null>(
@@ -273,6 +280,21 @@ class AuthStore {
 		this.#tokens = m;
 		this.#getOrCreateProfile(accountId);
 		if (accountId === this.#currentId) this.#scheduleProactiveRefresh();
+	}
+
+	async adoptRotatedSession(session: RefreshResponse): Promise<void> {
+		const { accessToken, expiresInSeconds, accountId } = session;
+		this.addSession(accessToken, expiresInSeconds, accountId);
+		this.sessionRotations += 1;
+		const mirror = platform.mirror;
+		if (mirror) await mirror.setToken(accountId, accessToken).catch(() => {});
+		if (platform.session && this.#profiles.get(accountId)?.hasPersistent) {
+			try {
+				await platform.session.persist(accountId);
+			} catch (err) {
+				console.warn('auth: could not persist the rotated native session', err);
+			}
+		}
 	}
 
 	forgetSession(accountId: string): void {
