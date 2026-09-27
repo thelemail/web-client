@@ -79,6 +79,7 @@ export async function wrapMasterKey(
 	const wrapKey = await crypto.subtle.importKey('raw', wrapKeyBytes as BufferSource, 'AES-GCM', false, [
 		'encrypt'
 	]);
+	wrapKeyBytes.fill(0);
 	const nonce = crypto.getRandomValues(new Uint8Array(12));
 	const ciphertext = new Uint8Array(
 		await crypto.subtle.encrypt(
@@ -109,6 +110,7 @@ export async function unwrapMasterKey(
 	const wrapKey = await crypto.subtle.importKey('raw', wrapKeyBytes as BufferSource, 'AES-GCM', false, [
 		'decrypt'
 	]);
+	wrapKeyBytes.fill(0);
 	const plaintext = await crypto.subtle.decrypt(
 		{ name: 'AES-GCM', iv: nonce as BufferSource, additionalData: info as BufferSource },
 		wrapKey,
