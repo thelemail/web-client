@@ -5,8 +5,8 @@ import { getAssertion } from '$core/auth/webauthn';
 export function enrolledMethods(status: TwoFactorStatus | null): TwoFactorMethod[] {
 	if (!status) return [];
 	const out: TwoFactorMethod[] = [];
-	if (status.totp?.active) out.push('totp');
 	if (status.webauthnCredentials.length > 0) out.push('webauthn');
+	if (status.totp?.active) out.push('totp');
 	if ((status.backupCodes?.remaining ?? 0) > 0) out.push('backupCode');
 	return out;
 }

@@ -751,6 +751,7 @@ export interface TwoFactorWebauthnCredential {
 	createdAt: string;
 	lastUsedAt?: string;
 	backupState?: boolean;
+	userVerified?: boolean;
 }
 
 export interface TwoFactorStatus {
