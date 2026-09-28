@@ -579,3 +579,190 @@ describe('optimistic patches move rows out of the streams they no longer belong 
 		expect(mailbox.pinned?.folder).toBe('spam');
 	});
 });
+
+describe('a thread appears once in a threaded stream', () => {
+	function msgRow(id: string, storedAt: string, threadRootId?: string) {
+		return { ...receivedRow(id, storedAt), threadRootId };
+	}
+
+	function threadOf(latest: ReturnType<typeof msgRow>, messageCount = 1) {
+		return {
+			threadKey: latest.threadRootId ?? latest.id,
+			latest,
+			messageCount,
+			unreadCount: 1,
+			hasAttachments: false,
+			starred: false
+		};
+	}
+
+	function ids(q: Query) {
+		return mailbox.streamFor(q).msgs.map((m) => m.id);
+	}
+
+	beforeEach(() => {
+		listMessages.mockReset();
+		listThreads.mockReset();
+		decryptPreview.mockReset();
+		getMessage.mockReset();
+		decryptPreview.mockImplementation(async (_accountId: string, b64: string) => {
+			const id = b64.replace('enc-', '');
+			return previewFor(id);
+		});
+		authState.canEnterApp = true;
+		authState.accountId = 'acc-1';
+		mailbox.setAccount(null);
+		mailbox.setAccount('acc-1');
+	});
+
+	async function loadInboxWithOldThread() {
+		listThreads.mockResolvedValueOnce({
+			items: [
+				threadOf(msgRow('a', '2026-08-20T12:00:00Z')),
+				threadOf(msgRow('t0', '2026-08-18T12:00:00Z', 't0'))
+			],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(RECEIVED_QUERY);
+	}
+
+	function replyDetail() {
+		return detail('r', {
+			direction: 'sent',
+			storedAt: '2026-08-21T12:00:00Z',
+			threadRootId: 't0',
+			threadCount: 2
+		});
+	}
+
+	it('drops the old row of a replied thread when the refresh lands before the realtime hint', async () => {
+		await loadInboxWithOldThread();
+		mailbox.setAutoFlush(RECEIVED_QUERY, true);
+
+		listThreads.mockResolvedValueOnce({
+			items: [
+				threadOf({ ...msgRow('r', '2026-08-21T12:00:00Z', 't0'), direction: 'sent' as const }, 2),
+				threadOf(msgRow('a', '2026-08-20T12:00:00Z'))
+			],
+			nextCursor: null
+		});
+		await mailbox.refresh([RECEIVED_QUERY]);
+		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a']);
+
+		getMessage.mockResolvedValueOnce(replyDetail());
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'r', thread_id: 't0', rev: 1 });
+		await flushAsync();
+		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a']);
+	});
+
+	it('moves a replied thread to the top when the realtime hint lands first', async () => {
+		await loadInboxWithOldThread();
+		mailbox.setAutoFlush(RECEIVED_QUERY, true);
+
+		getMessage.mockResolvedValueOnce(replyDetail());
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'r', thread_id: 't0', rev: 1 });
+		await flushAsync();
+		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a']);
+		expect(mailbox.streamFor(RECEIVED_QUERY).msgs[0].threadRootId).toBe('t0');
+
+		listThreads.mockResolvedValueOnce({
+			items: [
+				threadOf({ ...msgRow('r', '2026-08-21T12:00:00Z', 't0'), direction: 'sent' as const }, 2),
+				threadOf(msgRow('a', '2026-08-20T12:00:00Z'))
+			],
+			nextCursor: null
+		});
+		await mailbox.refresh([RECEIVED_QUERY]);
+		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a']);
+	});
+
+	it('skips a stale row of an already listed thread when loading more', async () => {
+		listThreads.mockResolvedValueOnce({
+			items: [
+				threadOf(msgRow('r', '2026-08-21T12:00:00Z', 't0'), 2),
+				threadOf(msgRow('a', '2026-08-20T12:00:00Z'))
+			],
+			nextCursor: 'cursor-2'
+		});
+		await mailbox.ensureLoaded(RECEIVED_QUERY);
+
+		listThreads.mockResolvedValueOnce({
+			items: [
+				threadOf(msgRow('t0', '2026-08-18T12:00:00Z', 't0')),
+				threadOf(msgRow('b', '2026-08-17T12:00:00Z'))
+			],
+			nextCursor: null
+		});
+		await mailbox.loadMore(RECEIVED_QUERY);
+		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a', 'b']);
+	});
+
+	it('buffers one entry per thread and flushes it as a single row', async () => {
+		await loadInboxWithOldThread();
+
+		getMessage.mockResolvedValueOnce(detail('x', { direction: 'received', storedAt: '2026-08-21T12:00:00Z', threadRootId: 'n' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'x', rev: 1 });
+		await flushAsync();
+		getMessage.mockResolvedValueOnce(detail('y', { direction: 'received', storedAt: '2026-08-22T12:00:00Z', threadRootId: 'n' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'y', rev: 1 });
+		await flushAsync();
+
+		expect(mailbox.pendingFor(RECEIVED_QUERY)).toBe(1);
+		mailbox.flushPending(RECEIVED_QUERY);
+		expect(ids(RECEIVED_QUERY)).toEqual(['y', 'a', 't0']);
+	});
+
+	it('forgets buffered messages whose thread a refresh already listed', async () => {
+		await loadInboxWithOldThread();
+
+		getMessage.mockResolvedValueOnce(detail('x', { direction: 'received', storedAt: '2026-08-21T12:00:00Z', threadRootId: 'n' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'x', rev: 1 });
+		await flushAsync();
+		expect(mailbox.pendingFor(RECEIVED_QUERY)).toBe(1);
+
+		listThreads.mockResolvedValueOnce({
+			items: [
+				threadOf(msgRow('y', '2026-08-22T12:00:00Z', 'n'), 2),
+				threadOf(msgRow('a', '2026-08-20T12:00:00Z')),
+				threadOf(msgRow('t0', '2026-08-18T12:00:00Z', 't0'))
+			],
+			nextCursor: null
+		});
+		await mailbox.refresh([RECEIVED_QUERY]);
+
+		expect(mailbox.pendingFor(RECEIVED_QUERY)).toBe(0);
+		mailbox.flushPending(RECEIVED_QUERY);
+		expect(ids(RECEIVED_QUERY)).toEqual(['y', 'a', 't0']);
+	});
+
+	it('keeps the latest message on the row when an older one in the thread changes', async () => {
+		listThreads.mockResolvedValueOnce({
+			items: [threadOf(msgRow('r', '2026-08-21T12:00:00Z', 't0'), 2)],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(RECEIVED_QUERY);
+
+		getMessage.mockResolvedValueOnce(
+			detail('t0', { direction: 'received', storedAt: '2026-08-18T12:00:00Z', threadRootId: 't0', read: true })
+		);
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.updated', id: 't0', rev: 1 });
+		await flushAsync();
+
+		expect(ids(RECEIVED_QUERY)).toEqual(['r']);
+	});
+
+	it('lists every sent reply of a thread as its own row in sent', async () => {
+		listMessages.mockResolvedValueOnce({
+			items: [{ ...row('s1', '2026-08-20T12:00:00Z'), threadRootId: 't0' }],
+			nextCursor: null
+		});
+		await mailbox.ensureLoaded(SENT_QUERY);
+		mailbox.setAutoFlush(SENT_QUERY, true);
+
+		getMessage.mockResolvedValueOnce(detail('s2', { storedAt: '2026-08-21T12:00:00Z', threadRootId: 't0' }));
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 's2', rev: 1 });
+		await flushAsync();
+
+		expect(ids(SENT_QUERY)).toEqual(['s2', 's1']);
+	});
+});
