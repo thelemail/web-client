@@ -151,6 +151,14 @@ function threadOptionsFor(q: Query): ListThreadsOptions | null {
 	return base;
 }
 
+function isThreaded(q: Query): boolean {
+	return threadOptionsFor(q) !== null;
+}
+
+function rowKey(m: Message, threaded: boolean): string {
+	return threaded ? (m.threadRootId ?? m.id) : m.id;
+}
+
 export function canFetchFolder(folder: RouteFolder): boolean {
 	return listOptionsFor({ ...DEFAULT_QUERY, folder }) !== null;
 }
@@ -543,8 +551,12 @@ class MailboxStore {
 		if (!buffered || buffered.length === 0) return;
 		const stream = this.#streams.get(key);
 		if (stream) {
-			const bufferedIds = new Set(buffered.map((m) => m.id));
-			const items = [...buffered, ...stream.items.filter((m) => !bufferedIds.has(m.id))];
+			const threaded = isThreaded(query);
+			const bufferedKeys = new Set(buffered.map((m) => rowKey(m, threaded)));
+			const items = [
+				...buffered,
+				...stream.items.filter((m) => !bufferedKeys.has(rowKey(m, threaded)))
+			];
 			this.#setStream(key, { ...stream, items });
 		}
 		const map = new Map(this.#pendingNew);
@@ -618,21 +630,34 @@ class MailboxStore {
 		const pendingMap = new Map(this.#pendingNew);
 		let pendingChanged = false;
 		for (const [key, stream] of map) {
-			const existingIdx = stream.items.findIndex(
-				(m) => m.id === msg.id || (!!msg.threadRootId && m.threadRootId === msg.threadRootId)
-			);
+			const threaded = isThreaded(stream.query);
+			const k = rowKey(msg, threaded);
+			const existingIdx = stream.items.findIndex((m) => rowKey(m, threaded) === k);
+			const existing = existingIdx >= 0 ? stream.items[existingIdx] : null;
+			if (existing && existing.id !== msg.id && msg.epoch < existing.epoch) continue;
 			if (!queryMatches(stream.query, msg)) {
-				if (existingIdx >= 0) {
+				if (existing) {
 					const items = stream.items.slice();
 					items.splice(existingIdx, 1);
 					map.set(key, { ...stream, items });
 				}
 				continue;
 			}
-			if (existingIdx >= 0) {
+			if (existing) {
+				const next = threaded
+					? { ...msg, threadRootId: existing.threadRootId ?? msg.threadRootId }
+					: msg;
 				const items = stream.items.slice();
-				items[existingIdx] = msg;
-				map.set(key, { ...stream, items });
+				if (existing.id === msg.id || !this.#autoFlush.has(key)) {
+					items[existingIdx] = next;
+					map.set(key, { ...stream, items });
+					continue;
+				}
+				items.splice(existingIdx, 1);
+				const placed = insertByEpoch(items, next, stream.query.sort);
+				const pastLoaded =
+					stream.query.sort === 'oldest' && !stream.exhausted && placed.at(-1) === next;
+				map.set(key, { ...stream, items: pastLoaded ? items : placed });
 				continue;
 			}
 			if (stream.query.folder === 'inbox' && msg.direction === 'sent') continue;
@@ -645,10 +670,9 @@ class MailboxStore {
 				map.set(key, { ...stream, items: [msg, ...stream.items] });
 			} else {
 				const buffered = pendingMap.get(key) ?? [];
-				pendingMap.set(
-					key,
-					[msg, ...buffered.filter((b) => b.id !== msg.id)]
-				);
+				const same = buffered.find((b) => rowKey(b, threaded) === k);
+				if (same && same.id !== msg.id && msg.epoch < same.epoch) continue;
+				pendingMap.set(key, [msg, ...buffered.filter((b) => rowKey(b, threaded) !== k)]);
 				pendingChanged = true;
 			}
 		}
@@ -663,28 +687,45 @@ class MailboxStore {
 		this.#streams = map;
 	}
 
-	#mergeMessages(target: Message[], incoming: Message[]): Message[] {
-		const byId = new Map<string, Message>(target.map((m) => [m.id, m]));
-		for (const item of incoming) byId.set(item.id, item);
-		const seen = new Set<string>(target.map((m) => m.id));
-		const out: Message[] = target.map((m) => byId.get(m.id) ?? m);
+	#mergeMessages(target: Message[], incoming: Message[], threaded: boolean): Message[] {
+		const out = target.slice();
+		const at = new Map<string, number>(out.map((m, i) => [rowKey(m, threaded), i]));
 		for (const item of incoming) {
-			if (!seen.has(item.id)) {
-				out.push(byId.get(item.id) ?? item);
-				seen.add(item.id);
+			const k = rowKey(item, threaded);
+			const i = at.get(k);
+			if (i === undefined) {
+				at.set(k, out.length);
+				out.push(item);
+			} else if (out[i].id === item.id) {
+				out[i] = item;
 			}
 		}
 		return out;
 	}
 
-	#reconcileFirstPage(current: Message[], page: Message[], sort: SortId): Message[] {
+	#reconcileFirstPage(current: Message[], page: Message[], query: Query): Message[] {
 		if (page.length === 0) return page;
-		const ids = new Set(page.map((m) => m.id));
+		const threaded = isThreaded(query);
+		const keys = new Set(page.map((m) => rowKey(m, threaded)));
 		const cutoff = page[page.length - 1].epoch;
 		const beyond = current.filter(
-			(m) => !ids.has(m.id) && (sort === 'oldest' ? m.epoch > cutoff : m.epoch < cutoff)
+			(m) =>
+				!keys.has(rowKey(m, threaded)) &&
+				(query.sort === 'oldest' ? m.epoch > cutoff : m.epoch < cutoff)
 		);
 		return [...page, ...beyond];
+	}
+
+	#dropListedPending(key: string, page: Message[], threaded: boolean): void {
+		const buffered = this.#pendingNew.get(key);
+		if (!buffered || buffered.length === 0) return;
+		const keys = new Set(page.map((m) => rowKey(m, threaded)));
+		const kept = buffered.filter((m) => !keys.has(rowKey(m, threaded)));
+		if (kept.length === buffered.length) return;
+		const map = new Map(this.#pendingNew);
+		if (kept.length === 0) map.delete(key);
+		else map.set(key, kept);
+		this.#pendingNew = map;
 	}
 
 	async #loadStream(query: Query, more: boolean, force = false): Promise<void> {
@@ -741,9 +782,11 @@ class MailboxStore {
 				}
 				if (this.#accountId !== accountId) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
+				const threaded = threadOpts !== null;
 				const merged = more
-					? this.#mergeMessages(current.items, decrypted)
-					: this.#reconcileFirstPage(current.items, decrypted, query.sort);
+					? this.#mergeMessages(current.items, decrypted, threaded)
+					: this.#reconcileFirstPage(current.items, decrypted, query);
+				if (!more) this.#dropListedPending(key, decrypted, threaded);
 				this.#setStream(key, {
 					...current,
 					items: merged,
