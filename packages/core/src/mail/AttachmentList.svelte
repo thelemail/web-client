@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import FileText from '@lucide/svelte/icons/file-text';
 	import Download from '@lucide/svelte/icons/download';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import {
@@ -13,6 +12,8 @@
 	} from './attachments';
 	import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 	import { auth } from '$core/stores/auth.svelte';
+	import { canPreview, fileKind } from './previewKind';
+	import AttachmentViewer, { type PreviewItem } from './AttachmentViewer.svelte';
 
 	interface Props {
 		chips: AttachmentChip[];
@@ -79,6 +80,28 @@
 		}
 	}
 
+	function previewable(header: DecryptedAttachmentHeader): boolean {
+		return canPreview(header.contentType, header.filename, header.plaintextSize);
+	}
+
+	const previewItems = $derived.by(() => {
+		const out: PreviewItem[] = [];
+		for (const chip of chips) {
+			const s = states[chip.id];
+			if ((s?.kind === 'ready' || s?.kind === 'downloading') && previewable(s.header)) {
+				out.push({ kind: 'remote', id: chip.id, chip, header: s.header, refresh });
+			}
+		}
+		return out;
+	});
+
+	let viewing = $state<number | null>(null);
+
+	function open(chip: AttachmentChip) {
+		const at = previewItems.findIndex((it) => it.id === chip.id);
+		if (at >= 0) viewing = at;
+	}
+
 	function sizeOf(chip: AttachmentChip): string {
 		const s = states[chip.id];
 		const n =
@@ -99,20 +122,33 @@
 		<div class="att-list">
 			{#each chips as chip (chip.id)}
 				{@const s = states[chip.id] ?? { kind: 'loading' }}
-				<div class="att-card" class:err={s.kind === 'error'}>
-					<div class="ic"><FileText size={19} /></div>
-					<div class="info">
-						{#if s.kind === 'ready' || s.kind === 'downloading'}
-							<div class="nm" title={s.header.filename}>{s.header.filename}</div>
-							<div class="sz">{sizeOf(chip)}</div>
-						{:else if s.kind === 'error'}
-							<div class="nm">{s.message}</div>
-							<div class="sz">{sizeOf(chip)}</div>
-						{:else}
-							<div class="nm-skel"></div>
-							<div class="sz-skel"></div>
-						{/if}
-					</div>
+				{@const Ic = s.kind === 'ready' || s.kind === 'downloading' ? fileKind(s.header.filename).icon : null}
+				{@const canOpen = (s.kind === 'ready' || s.kind === 'downloading') && previewable(s.header)}
+				<div class="att-card" class:err={s.kind === 'error'} class:open={canOpen}>
+					<svelte:element
+						this={canOpen ? 'button' : 'div'}
+						class="att-main"
+						role={canOpen ? undefined : 'presentation'}
+						type={canOpen ? 'button' : undefined}
+						title={canOpen ? m.mail_preview_open() : undefined}
+						onclick={canOpen ? () => open(chip) : undefined}
+					>
+						<div class="ic">
+							{#if Ic}<Ic size={19} />{:else}<Paperclip size={19} />{/if}
+						</div>
+						<div class="info">
+							{#if s.kind === 'ready' || s.kind === 'downloading'}
+								<div class="nm" title={s.header.filename}>{s.header.filename}</div>
+								<div class="sz">{sizeOf(chip)}</div>
+							{:else if s.kind === 'error'}
+								<div class="nm">{s.message}</div>
+								<div class="sz">{sizeOf(chip)}</div>
+							{:else}
+								<div class="nm-skel"></div>
+								<div class="sz-skel"></div>
+							{/if}
+						</div>
+					</svelte:element>
 					{#if s.kind === 'error'}
 						<button type="button" class="dl" title={m.common_retry()} onclick={() => hydrate(chip)}>
 							<RotateCw size={16} />
@@ -133,4 +169,8 @@
 			{/each}
 		</div>
 	</div>
+{/if}
+
+{#if viewing !== null && previewItems.length > 0}
+	<AttachmentViewer items={previewItems} bind:index={() => viewing ?? 0, (v) => (viewing = v)} onClose={() => (viewing = null)} />
 {/if}

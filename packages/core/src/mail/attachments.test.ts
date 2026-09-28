@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const listeners = vi.hoisted(() => [] as ((msg: { type: string; accountId?: string }) => void)[]);
+
+vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$platform', () => ({ platform: { saveBlob: vi.fn().mockResolvedValue(undefined) } }));
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		attachmentHeader: vi.fn(),
-		attachmentBytes: vi.fn()
+		attachmentBytes: vi.fn(),
+		subscribe: vi.fn((fn: (msg: { type: string; accountId?: string }) => void) => listeners.push(fn))
 	}
 }));
 vi.mock('$core/stores/aliasKeys.svelte', () => ({
@@ -11,10 +16,18 @@ vi.mock('$core/stores/aliasKeys.svelte', () => ({
 }));
 
 import { keystore } from '$core/keystore/keystore-client';
-import { AttachmentError, initialChips, loadAttachmentHeader } from './attachments';
+import { platform } from '$platform';
+import {
+	AttachmentError,
+	downloadAttachment,
+	initialChips,
+	loadAttachmentBytes,
+	loadAttachmentHeader
+} from './attachments';
 import type { AttachmentDetail, PresignedPointer } from '$core/api/types';
 
 const attachmentHeader = vi.mocked(keystore.attachmentHeader);
+const attachmentBytes = vi.mocked(keystore.attachmentBytes);
 
 const header = {
 	filename: 'q3-plan.docx',
@@ -141,5 +154,72 @@ describe('loadAttachmentHeader', () => {
 		const got = await loadAttachmentHeader('acct', chip('flaky'));
 		expect(got.filename).toBe('q3-plan.docx');
 		expect(attachmentHeader).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('loadAttachmentBytes', () => {
+	beforeEach(() => {
+		attachmentBytes.mockReset();
+		vi.mocked(platform.saveBlob).mockClear();
+	});
+
+	function bytes(size: number) {
+		return { ok: true as const, header, payload: new Blob([new Uint8Array(size)]) };
+	}
+
+	it('decrypts once for a preview followed by a download', async () => {
+		attachmentBytes.mockResolvedValue(bytes(8));
+
+		const shown = await loadAttachmentBytes('acct', chip('pv'));
+		await downloadAttachment('acct', chip('pv'));
+
+		expect(attachmentBytes).toHaveBeenCalledTimes(1);
+		expect(platform.saveBlob).toHaveBeenCalledWith(shown.blob, 'q3-plan.docx');
+	});
+
+	it('shares one worker call between concurrent requests', async () => {
+		attachmentBytes.mockResolvedValue(bytes(8));
+		const [a, b] = await Promise.all([
+			loadAttachmentBytes('acct', chip('both')),
+			loadAttachmentBytes('acct', chip('both'))
+		]);
+		expect(b).toBe(a);
+		expect(attachmentBytes).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps only the most recent few attachments', async () => {
+		attachmentBytes.mockImplementation(async () => bytes(8));
+		for (const id of ['e1', 'e2', 'e3', 'e4']) await loadAttachmentBytes('acct', chip(id));
+		await loadAttachmentBytes('acct', chip('e4'));
+		expect(attachmentBytes).toHaveBeenCalledTimes(4);
+		await loadAttachmentBytes('acct', chip('e1'));
+		expect(attachmentBytes).toHaveBeenCalledTimes(5);
+	});
+
+	it('does not hold on to very large files', async () => {
+		attachmentBytes.mockImplementation(async () => bytes(61 * 1024 * 1024));
+		await loadAttachmentBytes('acct', chip('huge'));
+		await loadAttachmentBytes('acct', chip('huge'));
+		expect(attachmentBytes).toHaveBeenCalledTimes(2);
+	});
+
+	it('forgets plaintext when the account locks', async () => {
+		attachmentBytes.mockImplementation(async () => bytes(8));
+		await loadAttachmentBytes('acct', chip('lk'));
+		await loadAttachmentBytes('other', chip('lk'));
+		for (const fn of listeners) fn({ type: 'locked', accountId: 'acct' });
+
+		await loadAttachmentBytes('other', chip('lk'));
+		expect(attachmentBytes).toHaveBeenCalledTimes(2);
+		await loadAttachmentBytes('acct', chip('lk'));
+		expect(attachmentBytes).toHaveBeenCalledTimes(3);
+	});
+
+	it('does not cache a failed decrypt', async () => {
+		attachmentBytes.mockResolvedValueOnce({ ok: false, code: 'unknown' });
+		await expect(loadAttachmentBytes('acct', chip('bad'))).rejects.toBeInstanceOf(AttachmentError);
+		attachmentBytes.mockResolvedValueOnce(bytes(8));
+		await loadAttachmentBytes('acct', chip('bad'));
+		expect(attachmentBytes).toHaveBeenCalledTimes(2);
 	});
 });

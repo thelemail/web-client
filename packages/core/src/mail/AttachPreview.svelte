@@ -2,17 +2,10 @@
 	import { m } from '$paraglide/messages.js';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import X from '@lucide/svelte/icons/x';
-	import Image from '@lucide/svelte/icons/image';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import FileSpreadsheet from '@lucide/svelte/icons/file-spreadsheet';
-	import MonitorPlay from '@lucide/svelte/icons/monitor-play';
-	import FileArchive from '@lucide/svelte/icons/file-archive';
-	import FileVideo from '@lucide/svelte/icons/file-video';
-	import FileAudio from '@lucide/svelte/icons/file-audio';
-	import File from '@lucide/svelte/icons/file';
 	import { SvelteMap } from 'svelte/reactivity';
-	import type { Component } from 'svelte';
 	import type { Attachment } from './attachmentUpload';
+	import { canPreview, fileKind } from './previewKind';
+	import AttachmentViewer, { type PreviewItem } from './AttachmentViewer.svelte';
 
 	interface Props {
 		files: Attachment[];
@@ -21,38 +14,23 @@
 
 	let { files, onRemove }: Props = $props();
 
-	const IMG_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'heic', 'avif', 'tif', 'tiff'];
-	const DOC_EXT = ['doc', 'docx', 'rtf', 'txt', 'md', 'pages'];
-	const SHEET_EXT = ['xls', 'xlsx', 'csv', 'numbers'];
-	const SLIDES_EXT = ['ppt', 'pptx', 'key'];
-	const ZIP_EXT = ['zip', 'rar', '7z', 'tar', 'gz'];
-	const VIDEO_EXT = ['mp4', 'mov', 'webm', 'avi', 'mkv'];
-	const AUDIO_EXT = ['mp3', 'wav', 'aac', 'flac', 'm4a', 'ogg'];
-
-	interface FileKind {
-		ext: string;
-		type: 'image' | 'file';
-		icon: Component;
-		cls: string;
-	}
-
-	function fileKind(name: string): FileKind {
-		const ext = (name.split('.').pop() ?? '').toLowerCase();
-		if (IMG_EXT.includes(ext)) return { ext, type: 'image', icon: Image, cls: 'img' };
-		if (ext === 'pdf') return { ext, type: 'file', icon: FileText, cls: 'pdf' };
-		if (DOC_EXT.includes(ext)) return { ext, type: 'file', icon: FileText, cls: 'doc' };
-		if (SHEET_EXT.includes(ext)) return { ext, type: 'file', icon: FileSpreadsheet, cls: 'sheet' };
-		if (SLIDES_EXT.includes(ext)) return { ext, type: 'file', icon: MonitorPlay, cls: 'slides' };
-		if (ZIP_EXT.includes(ext)) return { ext, type: 'file', icon: FileArchive, cls: 'zip' };
-		if (VIDEO_EXT.includes(ext)) return { ext, type: 'file', icon: FileVideo, cls: 'video' };
-		if (AUDIO_EXT.includes(ext)) return { ext, type: 'file', icon: FileAudio, cls: 'audio' };
-		return { ext, type: 'file', icon: File, cls: 'file' };
-	}
-
 	function formatSize(n: number): string {
 		if (n < 1024) return m.mail_size_bytes({ size: n });
 		if (n < 1024 * 1024) return m.mail_size_kb({ size: (n / 1024).toFixed(0) });
 		return m.mail_size_mb({ size: (n / (1024 * 1024)).toFixed(1) });
+	}
+
+	const previewItems = $derived<PreviewItem[]>(
+		files
+			.filter((a) => canPreview(a.file.type, a.file.name, a.file.size))
+			.map((a) => ({ kind: 'local', id: a.id, file: a.file }))
+	);
+
+	let viewing = $state<number | null>(null);
+
+	function open(id: string) {
+		const at = previewItems.findIndex((it) => it.id === id);
+		if (at >= 0) viewing = at;
 	}
 
 	const previewUrls = new SvelteMap<string, string>();
@@ -92,15 +70,23 @@
 				{@const k = fileKind(a.file.name)}
 				{@const url = previewUrls.get(a.id)}
 				{@const Ic = k.icon}
-				<div class="apv-card" title={a.file.name}>
-					<div class="apv-thumb k-{k.cls}">
+				{@const canOpen = canPreview(a.file.type, a.file.name, a.file.size)}
+				<div class="apv-card" class:open={canOpen} title={a.file.name}>
+					<svelte:element
+						this={canOpen ? 'button' : 'div'}
+						class="apv-thumb k-{k.cls}"
+						role={canOpen ? undefined : 'presentation'}
+						type={canOpen ? 'button' : undefined}
+						aria-label={canOpen ? `${m.mail_preview_open()}: ${a.file.name}` : undefined}
+						onclick={canOpen ? () => open(a.id) : undefined}
+					>
 						{#if k.type === 'image' && url}
 							<img src={url} alt={a.file.name} />
 						{:else}
 							<Ic size={24} />
 							<span class="apv-ext">{k.ext || m.mail_attach_ext_fallback()}</span>
 						{/if}
-					</div>
+					</svelte:element>
 					{#if a.status === 'encrypting' || a.status === 'uploading' || a.status === 'queued'}
 						<div class="apv-bar">
 							<div class="apv-bar-fill" style:width="{Math.round(a.progress * 100)}%"></div>
@@ -130,4 +116,8 @@
 			{/each}
 		</div>
 	</div>
+{/if}
+
+{#if viewing !== null && previewItems.length > 0}
+	<AttachmentViewer items={previewItems} bind:index={() => viewing ?? 0, (v) => (viewing = v)} onClose={() => (viewing = null)} />
 {/if}

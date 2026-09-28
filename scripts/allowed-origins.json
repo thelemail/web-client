@@ -14,6 +14,9 @@
     "https://play.google.com",
     "https://paraglidejs.com",
     "http://fallback.com",
-    "http://example.com"
+    "http://example.com",
+    "http://ns.adobe.com",
+    "http://www.xfa.org",
+    "https://foo.bar"
   ]
 }

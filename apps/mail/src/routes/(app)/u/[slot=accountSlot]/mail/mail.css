@@ -379,6 +379,10 @@
 .mail-app .att-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .mail-app .att-card { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: var(--radius-control); padding: 8px 10px; background: var(--paper-50); max-width: 300px; margin: 0; transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
 .mail-app .att-card:hover { background: var(--surface); border-color: var(--border-strong); }
+.mail-app .att-card .att-main { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; margin: 0; padding: 0; border: none; background: none; color: inherit; font: inherit; text-align: left; }
+.mail-app .att-card button.att-main { cursor: pointer; }
+.mail-app .att-card button.att-main:hover .nm { color: var(--pine-700); text-decoration: underline; text-underline-offset: 2px; }
+.mail-app .att-card button.att-main:focus-visible { outline: 2px solid var(--pine-500); outline-offset: 3px; border-radius: var(--radius-sm); }
 .mail-app .att-card .ic { width: 30px; height: 30px; border-radius: 7px; background: var(--surface); border: 1px solid var(--border); color: var(--ink-500); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .mail-app .att-card .ic svg { width: 15px; height: 15px; }
 .mail-app .att-card .info { min-width: 0; flex: 1; }
@@ -539,6 +543,8 @@
 .mail-app .apv-card { position: relative; border: 1px solid var(--border-strong); border-radius: var(--radius-md); background: var(--surface); overflow: hidden; box-shadow: var(--shadow-xs); transition: box-shadow var(--dur-fast), border-color var(--dur-fast); }
 .mail-app .apv-card:hover { box-shadow: var(--shadow-sm); border-color: var(--pine-300); }
 .mail-app .apv-thumb { height: 92px; display: flex; align-items: center; justify-content: center; position: relative; background: var(--paper-100); border-bottom: 1px solid var(--border); }
+.mail-app button.apv-thumb { width: 100%; margin: 0; padding: 0; border: none; border-bottom: 1px solid var(--border); font: inherit; cursor: zoom-in; }
+.mail-app button.apv-thumb:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -2px; }
 .mail-app .apv-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mail-app .apv-thumb svg { width: 24px; height: 24px; }
 .mail-app .apv-ext { position: absolute; bottom: 9px; font-family: var(--font-mono); font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; opacity: .9; }
@@ -693,6 +699,50 @@
 .oh-scrim .oh-note.err { color: var(--danger-700); }
 .oh-scrim .oh-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 14px; }
 
+.apx-scrim { position: fixed; inset: 0; z-index: 130; background: rgba(20, 39, 30, .52); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: mail-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
+.apx-scrim .apx-modal { width: 960px; max-width: 100%; height: 90vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--pine-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); overflow: hidden; outline: none; animation: mail-dvpop var(--dur-slow) var(--ease-out); }
+.apx-scrim .apx-head { display: flex; align-items: center; gap: 8px; padding: 14px 16px 13px 18px; border-bottom: 1px solid var(--border); }
+.apx-scrim .apx-ic { width: 34px; height: 34px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; background: var(--paper-100); color: var(--ink-500); flex: 0 0 auto; margin-right: 4px; }
+.apx-scrim .apx-ic.k-pdf { background: var(--danger-100); color: var(--danger-700); }
+.apx-scrim .apx-ic.k-doc { background: var(--info-100); color: var(--info-700); }
+.apx-scrim .apx-ic.k-sheet { background: var(--success-100); color: var(--success-700); }
+.apx-scrim .apx-ic.k-img { background: var(--pine-50); color: var(--pine-700); }
+.apx-scrim .apx-tx { flex: 1 1 auto; min-width: 0; }
+.apx-scrim .apx-title { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 550; font-size: 15px; line-height: 1.3; color: var(--fg-strong); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.apx-scrim .apx-sub { font-family: var(--font-mono); font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+.apx-scrim .apx-dot { margin: 0 6px; color: var(--fg-faint); }
+.apx-scrim .apx-x { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: none; background: none; border-radius: var(--radius-sm); color: var(--fg-muted); cursor: pointer; flex: 0 0 auto; }
+.apx-scrim .apx-x:hover { background: var(--paper-100); color: var(--ink-700); }
+.apx-scrim .apx-body { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: var(--paper-100); }
+.apx-scrim .apx-body.on-image { background: var(--paper-200); }
+.apx-scrim .apx-note { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px; max-width: 420px; text-align: center; font-size: 13.5px; color: var(--fg-muted); }
+.apx-scrim .apx-note.err { color: var(--danger-700); }
+.apx-scrim .apx-spin { animation: att-spin 1s linear infinite; }
+.apx-scrim .apx-img { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 20px; border: none; background: none; cursor: zoom-in; }
+.apx-scrim .apx-img img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; box-shadow: var(--shadow-md); background: repeating-conic-gradient(var(--paper-50) 0 25%, var(--surface) 0 50%) 0 0 / 16px 16px; }
+.apx-scrim .apx-img.actual { align-items: flex-start; justify-content: flex-start; cursor: zoom-out; }
+.apx-scrim .apx-img.actual img { max-width: none; max-height: none; margin: auto; }
+.apx-scrim .apx-text { flex: 1 1 auto; min-height: 0; overflow: auto; margin: 0; padding: 18px 22px; background: var(--surface); font-family: var(--font-mono); font-size: 12.5px; line-height: 1.65; color: var(--ink-700); white-space: pre-wrap; word-break: break-word; tab-size: 4; user-select: text; }
+.apx-scrim .apx-pdf { position: relative; flex: 1 1 auto; min-height: 0; display: flex; }
+.apx-scrim .apx-pdf-scroll { flex: 1 1 auto; overflow: auto; padding: 20px 24px 72px; }
+.apx-scrim .apx-page { margin: 0 auto 16px; background: #fff; box-shadow: var(--shadow-md); }
+.apx-scrim .apx-page canvas { display: block; width: 100%; height: 100%; }
+.apx-scrim .apx-page[data-failed] { background: var(--paper-50); }
+.apx-scrim .apx-pdf-bar { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; padding: 3px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); box-shadow: var(--shadow-md); }
+.apx-scrim .apx-pdf-bar button { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: none; background: none; border-radius: 50%; color: var(--ink-600); cursor: pointer; }
+.apx-scrim .apx-pdf-bar button:hover { background: var(--paper-100); }
+.apx-scrim .apx-pdf-bar button:disabled { opacity: .4; pointer-events: none; }
+.apx-scrim .apx-pdf-pos { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-muted); padding: 0 8px; white-space: nowrap; }
+@media (max-width: 640px) {
+	.apx-scrim { padding: 0; }
+	.apx-scrim .apx-modal { height: 100%; border-radius: 0; border-left: none; border-right: none; }
+	.apx-scrim .apx-pdf-scroll { padding: 12px 8px 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.apx-scrim, .apx-scrim .apx-modal { animation: none; }
+	.apx-scrim .apx-spin { animation: none; }
+}
+
 .tofu-scrim { position: fixed; inset: 0; z-index: 120; background: rgba(20, 39, 30, .44); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: mail-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
 .tofu-scrim .tofu-modal { width: 484px; max-width: 100%; max-height: 92vh; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--brass-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 26px 28px 22px; animation: mail-dvpop var(--dur-slow) var(--ease-out); }
 .tofu-scrim .tofu-crest { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--brass-100); color: var(--brass-700); margin-bottom: 14px; }
@@ -786,19 +836,7 @@
 .mail-scrim .att-drop { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--pine-900); background: rgba(132, 178, 124, 0.12); border: 2px dashed var(--pine-700); border-radius: var(--radius-md); }
 
 .replybox .att-hidden-input { display: none; }
-.replybox .att-list { display: flex; flex-direction: column; gap: 8px; padding: 8px 12px 0; }
-.replybox .att-chip { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 1px solid var(--paper-200); border-radius: var(--radius-sm); background: var(--paper-50); }
-.replybox .att-chip.err { border-color: var(--danger-300); background: var(--danger-50); }
-.replybox .att-chip .ic { color: var(--ink-500); display: flex; }
-.replybox .att-chip .info { flex: 1; min-width: 0; }
-.replybox .att-chip .nm { font-size: 13px; color: var(--ink-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.replybox .att-chip .sz { font-size: 11px; color: var(--ink-500); }
-.replybox .att-chip .errmsg { font-size: 11px; color: var(--danger-700); }
-.replybox .att-chip .bar { margin-top: 4px; height: 3px; border-radius: 999px; background: var(--paper-200); overflow: hidden; }
-.replybox .att-chip .bar-fill { height: 100%; background: var(--pine-700); transition: width var(--dur-fast); }
-.replybox .att-chip .state { display: flex; align-items: center; gap: 6px; color: var(--ink-500); }
-.replybox .att-chip .rm { background: none; border: none; padding: 4px; color: inherit; cursor: pointer; border-radius: var(--radius-xs); }
-.replybox .att-chip .rm:hover { background: var(--paper-200); color: var(--ink-700); }
+.replybox .att-drop { position: absolute; inset: 0; z-index: 9; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--pine-900); background: rgba(132, 178, 124, 0.12); border: 2px dashed var(--pine-700); border-radius: var(--radius-lg); }
 
 .mail-app .replybox .rt-from { position: relative; display: inline-flex; }
 .mail-app .replybox .rt-from .from-trigger { padding: 3px 9px 3px 4px; }
