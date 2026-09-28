@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CircleArrowDown from '@lucide/svelte/icons/circle-arrow-down';
@@ -64,7 +65,8 @@
 			if (auth.accountId) await auth.loadProfile(auth.accountId);
 			bump();
 			step = 3;
-		} catch {
+		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			flash(m.lc_cancel_failed());
 		} finally {
 			busy = false;
@@ -95,7 +97,8 @@
 			await billing.refresh();
 			flash(m.lc_cancel_moved_personal());
 			void goto(`/u/${slot}/mail/inbox`);
-		} catch {
+		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			flash(m.lc_cancel_switch_failed());
 		} finally {
 			busy = false;

@@ -48,7 +48,8 @@ import type {
 	RegistrationInitRequest,
 	RegistrationInitResponse,
 	SecurityEventListResponse,
-	SessionListResponse
+	SessionListResponse,
+	TwoFactorProof
 } from './types';
 
 export function getModulus() {
@@ -327,6 +328,26 @@ export function logoutAll() {
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true
+	});
+}
+
+export function sessionStepUpInit(req: { ke1: string }, accountId: string) {
+	return apiFetch<{ challengeId: string; ke2: string; challengeTtlSeconds: number }>(
+		'/v1/auth/step-up/opaque/init',
+		{ method: 'POST', body: req, accountId, skipReauth: true }
+	);
+}
+
+export function sessionStepUpConfirm(
+	req: { challengeId: string; ke3: string; proof?: TwoFactorProof },
+	accountId: string
+) {
+	return apiFetch<RefreshResponse>('/v1/auth/step-up/opaque/confirm', {
+		method: 'POST',
+		body: req,
+		accountId,
+		skipRetryOnUnauthorized: true,
+		skipReauth: true
 	});
 }
 

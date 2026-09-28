@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { platform } from '$platform';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
@@ -90,6 +91,7 @@
 			saved = false;
 			step = 1;
 		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			console.warn('recovery: generate failed', err);
 			generateError =
 				err instanceof RecoveryVaultLockedError
@@ -125,6 +127,7 @@
 			void auth.loadProfile(setupAccountId);
 			step = 3;
 		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			console.warn('recovery: setup failed', err);
 			submitError = m.settings_ceremony_recovery_err_save();
 		} finally {

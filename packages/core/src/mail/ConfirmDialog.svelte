@@ -37,6 +37,9 @@
 		onClose
 	}: Props = $props();
 
+	const uid = $props.id();
+	const titleId = `${uid}-title`;
+
 	function close() {
 		if (busy) return;
 		onClose();
@@ -64,7 +67,7 @@
 	class="cfd-scrim"
 	role="dialog"
 	aria-modal="true"
-	aria-labelledby="cfd-title"
+	aria-labelledby={titleId}
 	tabindex="-1"
 	onmousedown={scrimMouseDown}
 >
@@ -74,7 +77,7 @@
 				<span class="cfd-ic"><Icon size={17} /></span>
 			{/if}
 			<div class="cfd-tx">
-				<h2 class="cfd-title" id="cfd-title">{title}</h2>
+				<h2 class="cfd-title" id={titleId}>{title}</h2>
 				{#if sub}
 					<div class="cfd-sub" title={sub}>{sub}</div>
 				{/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import wordmark from '$core/assets/logo-wordmark-inverse.svg';
@@ -41,7 +42,8 @@
 		try {
 			await setNotificationEmail({ email: emailValue.trim() });
 			emailSent = true;
-		} catch {
+		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			flash(m.lc_suspended_email_save_failed());
 		} finally {
 			emailBusy = false;

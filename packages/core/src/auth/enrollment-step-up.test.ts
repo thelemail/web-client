@@ -6,7 +6,8 @@ const state = vi.hoisted(() => ({
 	scheme: 'opaque_v1' as 'opaque_v1' | 'srp_v1',
 	finishOk: true,
 	initCalls: [] as unknown[],
-	confirmCalls: [] as unknown[]
+	confirmCalls: [] as unknown[],
+	abandoned: [] as string[]
 }));
 
 vi.mock('$core/keystore/keystore-client', () => ({
@@ -14,7 +15,10 @@ vi.mock('$core/keystore/keystore-client', () => ({
 		status: async () => ({ accounts: [{ accountId: ACCOUNT, authScheme: state.scheme }] }),
 		opaqueStartAuth: async () => ({ operationId: 'op-1', ke1: 'ke1' }),
 		opaqueFinishAuth: async () =>
-			state.finishOk ? { ok: true, ke3: 'ke3' } : { ok: false, code: 'invalid_credentials' }
+			state.finishOk ? { ok: true, ke3: 'ke3' } : { ok: false, code: 'invalid_credentials' },
+		opaqueAbandonOperation: async ({ operationId }: { operationId: string }) => {
+			state.abandoned.push(operationId);
+		}
 	}
 }));
 
@@ -37,6 +41,7 @@ describe('enrollmentStepUp', () => {
 		state.finishOk = true;
 		state.initCalls = [];
 		state.confirmCalls = [];
+		state.abandoned = [];
 	});
 
 	it('returns the grant after password and factor are confirmed', async () => {
@@ -59,6 +64,7 @@ describe('enrollmentStepUp', () => {
 				accountId: ACCOUNT
 			}
 		]);
+		expect(state.abandoned).toEqual(['op-1']);
 	});
 
 	it('omits the proof when two-factor is off', async () => {
@@ -80,6 +86,7 @@ describe('enrollmentStepUp', () => {
 		expect(res).toEqual({ ok: false, reason: 'password' });
 		expect(proof).not.toHaveBeenCalled();
 		expect(state.confirmCalls).toEqual([]);
+		expect(state.abandoned).toEqual(['op-1']);
 	});
 
 	it('refuses SRP accounts without contacting the server', async () => {

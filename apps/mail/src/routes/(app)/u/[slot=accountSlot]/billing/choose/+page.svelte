@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { onMount } from 'svelte';
 	import { platform } from '$platform';
 	import { goto } from '$app/navigation';
@@ -95,6 +96,7 @@
 			await workspaces.load(auth.accountId);
 			switched = true;
 		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			checkoutError =
 				err instanceof Error ? err.message : m.billing_choose_switch_failed();
 		} finally {

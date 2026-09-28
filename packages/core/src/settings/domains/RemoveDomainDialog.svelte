@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Globe from '@lucide/svelte/icons/globe';
@@ -52,6 +53,7 @@
 			onRemoved(target);
 			onClose();
 		} catch (err) {
+			if (isReauthenticationRequired(err)) return;
 			error = err instanceof Error ? err.message : m.settings_domains_remove_failed();
 		} finally {
 			busy = false;

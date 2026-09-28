@@ -43,7 +43,8 @@ export type ErrorCode =
 	| 'proof_invalid'
 	| 'proof_expired'
 	| 'proof_reused'
-	| 'step_up_required';
+	| 'step_up_required'
+	| 'reauthentication_required';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';

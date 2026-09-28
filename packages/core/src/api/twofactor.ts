@@ -115,12 +115,8 @@ export function totpActivate(req: { code: string; grant: string }, accountId?: s
 	});
 }
 
-export function totpDisable(proof: TwoFactorProof, accountId?: string) {
-	return apiFetch<{ session: RefreshResponse }>(P.totpDisable, {
-		method: 'POST',
-		body: { proof },
-		accountId
-	});
+export function totpDisable(accountId?: string) {
+	return apiFetch<{ session: RefreshResponse }>(P.totpDisable, { method: 'POST', accountId });
 }
 
 export function webauthnEnrollInit(grant: string, accountId?: string) {
@@ -142,12 +138,8 @@ export function webauthnActivate(
 	}>(P.webauthnActivate, { method: 'POST', body: req, accountId });
 }
 
-export function webauthnDelete(id: string, proof: TwoFactorProof, accountId?: string) {
-	return apiFetch<{ session: RefreshResponse }>(P.webauthnDelete(id), {
-		method: 'POST',
-		body: { proof },
-		accountId
-	});
+export function webauthnDelete(id: string, accountId?: string) {
+	return apiFetch<{ session: RefreshResponse }>(P.webauthnDelete(id), { method: 'POST', accountId });
 }
 
 export function webauthnProofInit(accountId?: string) {
@@ -157,10 +149,9 @@ export function webauthnProofInit(accountId?: string) {
 	});
 }
 
-export function regenerateBackupCodes(proof: TwoFactorProof, accountId?: string) {
+export function regenerateBackupCodes(accountId?: string) {
 	return apiFetch<{ session: RefreshResponse; backupCodes?: string[] }>(P.backupCodesRegenerate, {
 		method: 'POST',
-		body: { proof },
 		accountId
 	});
 }

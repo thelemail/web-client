@@ -37,6 +37,14 @@ export function registerAuthTokenSource(src: AuthTokenSource) {
 	});
 }
 
+export type ReauthHandler = (accountId: string) => Promise<boolean>;
+
+let reauthHandler: ReauthHandler | null = null;
+
+export function registerReauthHandler(h: ReauthHandler | null) {
+	reauthHandler = h;
+}
+
 export interface LifecycleReconciler {
 	onLifecycleError(code: 'read_only' | 'account_suspended', accountId: string | null): void;
 }
@@ -52,17 +60,18 @@ interface FetchOptions {
 	body?: unknown;
 	skipAuth?: boolean;
 	skipRetryOnUnauthorized?: boolean;
+	skipReauth?: boolean;
 	baseUrl?: string;
 	accountId?: string;
 	headers?: Record<string, string>;
 }
 
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
-	return doFetch<T>(path, opts, false);
+	return doFetch<T>(path, opts, false, false);
 }
 
 export async function submissionFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
-	return doFetch<T>(path, { ...opts, baseUrl: PUBLIC_SUBMISSION_BASE_URL }, false);
+	return doFetch<T>(path, { ...opts, baseUrl: PUBLIC_SUBMISSION_BASE_URL }, false, false);
 }
 
 export interface UploadOptions {
@@ -114,7 +123,12 @@ function resolveAccountId(explicit: string | undefined): string | null {
 	return authRouter?.currentAccountId() ?? null;
 }
 
-async function doFetch<T>(path: string, opts: FetchOptions, retried: boolean): Promise<T> {
+async function doFetch<T>(
+	path: string,
+	opts: FetchOptions,
+	retried: boolean,
+	reauthed: boolean
+): Promise<T> {
 	const base = (opts.baseUrl ?? PUBLIC_API_BASE_URL).replace(/\/$/, '');
 	const url = base + path;
 	const headers: Record<string, string> = { ...opts.headers };
@@ -160,10 +174,21 @@ async function doFetch<T>(path: string, opts: FetchOptions, retried: boolean): P
 	) {
 		const refreshed = await authRouter.onUnauthorized(accountId);
 		if (refreshed) {
-			return doFetch<T>(path, opts, true);
+			return doFetch<T>(path, opts, true, reauthed);
 		}
 	}
 	const code = (body as ErrorEnvelope)?.error?.code;
+	if (
+		code === 'reauthentication_required' &&
+		!reauthed &&
+		!opts.skipReauth &&
+		!opts.skipAuth &&
+		accountId &&
+		reauthHandler &&
+		(await reauthHandler(accountId))
+	) {
+		return doFetch<T>(path, opts, retried, true);
+	}
 	if ((code === 'read_only' || code === 'account_suspended') && lifecycleReconciler) {
 		lifecycleReconciler.onLifecycleError(code, accountId);
 	}
