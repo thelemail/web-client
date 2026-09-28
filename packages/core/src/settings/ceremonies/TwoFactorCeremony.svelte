@@ -15,7 +15,12 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$core/api/twofactor';
-	import { createCredential, isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import {
+		createCredential,
+		isWebauthnCancelled,
+		platformAuthenticatorAvailable,
+		webauthnSupported
+	} from '$core/auth/webauthn';
 	import { enrollmentStepUp } from '$core/auth/enrollment-step-up';
 	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
 	import {
@@ -42,22 +47,25 @@
 
 	const SETUP: Record<
 		TwoFaSetupMethod,
-		{ icon: typeof Smartphone; t: string; d: string; disabled?: boolean }
+		{ icon: typeof Smartphone; t: string; d: string; recommended: boolean }
 	> = $derived({
-		totp: {
-			icon: Smartphone,
-			t: m.settings_ceremony_twofa_totp_title(),
-			d: m.settings_ceremony_twofa_totp_desc()
+		device: {
+			icon: Fingerprint,
+			t: m.settings_ceremony_twofa_device_title(),
+			d: m.settings_ceremony_twofa_device_desc(),
+			recommended: true
 		},
 		key: {
 			icon: Usb,
 			t: m.settings_ceremony_twofa_key_title(),
-			d: m.settings_ceremony_twofa_key_desc()
+			d: m.settings_ceremony_twofa_key_desc(),
+			recommended: true
 		},
-		device: {
-			icon: Fingerprint,
-			t: m.settings_ceremony_twofa_device_title(),
-			d: m.settings_ceremony_twofa_device_desc()
+		totp: {
+			icon: Smartphone,
+			t: m.settings_ceremony_twofa_totp_title(),
+			d: m.settings_ceremony_twofa_totp_desc(),
+			recommended: false
 		}
 	});
 
@@ -73,8 +81,15 @@
 		return m.settings_ceremony_twofa_on_device();
 	}
 
+	let platformAuth = $state<boolean | null>(null);
+	void platformAuthenticatorAvailable().then((v) => (platformAuth = v));
+
+	const preferred = $derived<TwoFaSetupMethod>(
+		!webauthnSupported() ? 'totp' : platformAuth === false ? 'key' : 'device'
+	);
+
 	let step = $derived(initialMethod ? 1 : 0);
-	let method = $derived<TwoFaSetupMethod>(initialMethod ?? 'totp');
+	let method = $derived<TwoFaSetupMethod>(initialMethod ?? preferred);
 	let busy = $state(false);
 	let setupError = $state('');
 	let confirmed = $state(false);
@@ -142,13 +157,17 @@
 			v,
 			...o,
 			disabled:
-				(v === 'totp' && totpActive) || ((v === 'key' || v === 'device') && !webauthnSupported()),
+				(v === 'totp' && totpActive) ||
+				((v === 'key' || v === 'device') && !webauthnSupported()) ||
+				(v === 'device' && platformAuth === false),
 			note:
 				v === 'totp' && totpActive
 					? m.settings_ceremony_twofa_note_active()
 					: (v === 'key' || v === 'device') && !webauthnSupported()
 						? m.settings_ceremony_twofa_note_unsupported()
-						: null
+						: v === 'device' && platformAuth === false
+							? m.settings_ceremony_twofa_note_no_platform()
+							: null
 		}))
 	);
 
@@ -392,7 +411,9 @@
 						<span class="mo-radio"><span></span></span>
 						<Ic size={20} />
 						<div class="mo-text">
-							<div class="mo-t">{o.t}</div>
+							<div class="mo-t">
+								{o.t}{#if o.recommended && !o.disabled}<span class="mo-tag">{m.settings_ceremony_twofa_recommended()}</span>{/if}
+							</div>
 							<div class="mo-d">{o.note ?? o.d}</div>
 						</div>
 					</button>

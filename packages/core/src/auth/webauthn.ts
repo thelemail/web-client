@@ -1,5 +1,6 @@
 import {
 	browserSupportsWebAuthn,
+	platformAuthenticatorIsAvailable,
 	startAuthentication,
 	startRegistration
 } from '@simplewebauthn/browser';
@@ -12,6 +13,15 @@ import type {
 
 export function webauthnSupported(): boolean {
 	return browserSupportsWebAuthn();
+}
+
+export async function platformAuthenticatorAvailable(): Promise<boolean> {
+	if (!browserSupportsWebAuthn()) return false;
+	try {
+		return await platformAuthenticatorIsAvailable();
+	} catch {
+		return false;
+	}
 }
 
 function unwrap<T>(options: unknown): T {

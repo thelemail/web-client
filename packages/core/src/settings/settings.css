@@ -589,6 +589,7 @@
 .cer-scrim .method-opt.on .mo-radio span { transform: scale(1); }
 .cer-scrim .mo-text { min-width: 0; }
 .cer-scrim .mo-t { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); }
+.cer-scrim .mo-tag { margin-left: 8px; font-size: 10.5px; font-weight: 600; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-pill); padding: 2px 8px; letter-spacing: .02em; vertical-align: 1px; }
 .cer-scrim .mo-d { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
 
 .cer-scrim .cer-pane.two-col { flex-direction: row; gap: 20px; align-items: flex-start; }
@@ -867,6 +868,7 @@
 .settings-app .tfa-t { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); display: flex; align-items: center; gap: 8px; }
 .settings-app .tfa-row.off .tfa-t { color: var(--fg); }
 .settings-app .tfa-d { font-size: 12.5px; color: var(--fg-muted); margin-top: 1px; line-height: 1.45; }
+.settings-app .tfa-d.tfa-warn { display: flex; align-items: center; gap: 5px; color: var(--warning-700); }
 .settings-app .tfa-act { display: flex; gap: 8px; flex: 0 0 auto; align-items: center; }
 .settings-app .card-note.warn { color: var(--warning-700); }
 .settings-app .card-note.warn svg { color: var(--warning-500); }
