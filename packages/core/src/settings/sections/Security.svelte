@@ -420,6 +420,55 @@
 		<ShieldCheckIcon size={13} />{m.settings_security_2fa_methods()}
 		<span class="tfa-sub-note">{m.settings_security_2fa_methods_note()}</span>
 	</div>
+	{#each tfStatus?.webauthnCredentials ?? [] as cred (cred.id)}
+		<div class="tfa-row">
+			<span class="tfa-ic">
+				{#if cred.backupState}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
+			</span>
+			<div class="tfa-info">
+				<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+				<div class="tfa-d">
+					{keyMeta(cred)}
+				</div>
+				{#if cred.userVerified === false}
+					<div class="tfa-d tfa-warn">
+						<TriangleAlert size={12} />{m.settings_security_key_no_pin()}
+					</div>
+				{/if}
+			</div>
+			<div class="tfa-act">
+				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'deleteKey', id: cred.id, name: cred.name })}>
+					{m.common_remove()}
+				</Button>
+			</div>
+		</div>
+	{/each}
+	{#if webauthnSupported()}
+		<div class="tfa-row off">
+			<span class="tfa-ic"><Fingerprint size={18} /></span>
+			<div class="tfa-info">
+				<div class="tfa-t">{m.settings_security_this_device()}</div>
+				<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
+			</div>
+			<div class="tfa-act">
+				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
+					<Plus size={14} />{m.settings_security_setup()}
+				</Button>
+			</div>
+		</div>
+		<div class="tfa-row off">
+			<span class="tfa-ic"><Usb size={18} /></span>
+			<div class="tfa-info">
+				<div class="tfa-t">{m.settings_security_key()}</div>
+				<div class="tfa-d">{m.settings_security_key_desc()}</div>
+			</div>
+			<div class="tfa-act">
+				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
+					<Plus size={14} />{m.settings_security_setup()}
+				</Button>
+			</div>
+		</div>
+	{/if}
 	{#if tfStatus?.totp?.active}
 		<div class="tfa-row">
 			<span class="tfa-ic"><Smartphone size={18} /></span>
@@ -444,50 +493,6 @@
 			</div>
 			<div class="tfa-act">
 				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
-					<Plus size={14} />{m.settings_security_setup()}
-				</Button>
-			</div>
-		</div>
-	{/if}
-	{#each tfStatus?.webauthnCredentials ?? [] as cred (cred.id)}
-		<div class="tfa-row">
-			<span class="tfa-ic">
-				{#if cred.backupState}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
-			</span>
-			<div class="tfa-info">
-				<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
-				<div class="tfa-d">
-					{keyMeta(cred)}
-				</div>
-			</div>
-			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'deleteKey', id: cred.id, name: cred.name })}>
-					{m.common_remove()}
-				</Button>
-			</div>
-		</div>
-	{/each}
-	{#if webauthnSupported()}
-		<div class="tfa-row off">
-			<span class="tfa-ic"><Usb size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_key()}</div>
-				<div class="tfa-d">{m.settings_security_key_desc()}</div>
-			</div>
-			<div class="tfa-act">
-				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
-					<Plus size={14} />{m.settings_security_setup()}
-				</Button>
-			</div>
-		</div>
-		<div class="tfa-row off">
-			<span class="tfa-ic"><Fingerprint size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_this_device()}</div>
-				<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
-			</div>
-			<div class="tfa-act">
-				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
 					<Plus size={14} />{m.settings_security_setup()}
 				</Button>
 			</div>
