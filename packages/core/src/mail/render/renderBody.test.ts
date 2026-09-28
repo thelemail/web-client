@@ -36,7 +36,7 @@ describe('renderBody', () => {
 
 	it('contentHtml keeps the full pre-split sanitized html while srcDoc drops the quote', async () => {
 		const html =
-			'<p>Here is my long reply with plenty of words to keep the split ratio balanced.</p>' +
+			'<p>Here is my long reply.</p>' +
 			'<div class="gmail_quote"><div class="gmail_attr">On Mon, 1 Jan 2024 at 10:00, Bob &lt;bob@x.com&gt; wrote:</div>' +
 			'<blockquote class="gmail_quote">old quoted line</blockquote></div>';
 		const res = await renderBody({ html });
@@ -56,7 +56,7 @@ describe('renderBody', () => {
 
 	it('contentText carries the full plain body including quoted lines', async () => {
 		const text = [
-			'Thanks, that works for me and I will follow up tomorrow morning.',
+			'Thanks, that works for me.',
 			'',
 			'On Mon, 1 Jan 2024 at 10:00, Bob <bob@x.com> wrote:',
 			'> the original line one',
