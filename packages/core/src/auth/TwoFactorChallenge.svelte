@@ -68,8 +68,8 @@
 
 	const available = $derived.by<MethodId[]>(() => {
 		const out: MethodId[] = [];
-		if (methods.includes('totp')) out.push('app');
 		if (methods.includes('webauthn') && webauthnSupported()) out.push('key');
+		if (methods.includes('totp')) out.push('app');
 		if (methods.includes('backupCode')) out.push('backup');
 		return out.length > 0 ? out : ['backup'];
 	});
