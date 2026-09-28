@@ -1,3 +1,4 @@
+import { browser } from '$app/environment';
 import { platform } from '$platform';
 import { keystore } from '$core/keystore/keystore-client';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
@@ -25,9 +26,13 @@ export type PointerRefresh = (attachmentId: string) => Promise<PresignedPointer 
 
 const HEADER_CONCURRENCY = 2;
 const HEADER_CACHE_MAX = 500;
+const BYTES_CACHE_MAX_ENTRIES = 3;
+const BYTES_CACHE_MAX_BYTES = 60 * 1024 * 1024;
 
 const headerCache = new Map<string, DecryptedAttachmentHeader>();
 const inFlight = new Map<string, Promise<DecryptedAttachmentHeader>>();
+const bytesCache = new Map<string, DecryptedAttachment>();
+const bytesInFlight = new Map<string, Promise<DecryptedAttachment>>();
 
 let active = 0;
 const waiting: (() => void)[] = [];
@@ -58,6 +63,41 @@ function cacheHeader(key: string, header: DecryptedAttachmentHeader): void {
 		headerCache.delete(oldest);
 	}
 }
+
+function cacheBytes(key: string, dec: DecryptedAttachment): void {
+	bytesCache.delete(key);
+	if (dec.blob.size > BYTES_CACHE_MAX_BYTES) return;
+	bytesCache.set(key, dec);
+	let total = 0;
+	for (const entry of bytesCache.values()) total += entry.blob.size;
+	while (bytesCache.size > BYTES_CACHE_MAX_ENTRIES || total > BYTES_CACHE_MAX_BYTES) {
+		const oldest = bytesCache.keys().next();
+		if (oldest.done) break;
+		total -= bytesCache.get(oldest.value)?.blob.size ?? 0;
+		bytesCache.delete(oldest.value);
+	}
+}
+
+function dropBytesFor(accountId: string | null): void {
+	for (const key of [...bytesCache.keys()]) {
+		if (accountId === null || key.startsWith(`${accountId}:`)) bytesCache.delete(key);
+	}
+}
+
+let subscribed = false;
+function subscribeOnce(): void {
+	if (subscribed || !browser) return;
+	subscribed = true;
+	try {
+		keystore.subscribe((msg) => {
+			if (msg.type === 'cleared' || msg.type === 'locked') dropBytesFor(msg.accountId);
+			else if (msg.type === 'clearedAll') dropBytesFor(null);
+		});
+	} catch {
+		subscribed = false;
+	}
+}
+subscribeOnce();
 
 async function withFreshPointer<T>(
 	chip: AttachmentChip,
@@ -111,20 +151,43 @@ async function attachmentBytes(
 	chip: AttachmentChip,
 	refresh?: PointerRefresh
 ): Promise<DecryptedAttachment> {
-	await aliasKeys.ready(accountId);
-	const dec = await withFreshPointer<DecryptedAttachment>(chip, refresh, async (pointer) => {
-		const res = await keystore.attachmentBytes({
-			accountId,
-			url: pointer.url,
-			attachmentId: chip.id,
-			keyFingerprintHex: pointer.keyFingerprint
+	const key = cacheKey(accountId, chip.id);
+	const cached = bytesCache.get(key);
+	if (cached) {
+		cacheBytes(key, cached);
+		return cached;
+	}
+	const running = bytesInFlight.get(key);
+	if (running) return running;
+
+	const task = (async () => {
+		await aliasKeys.ready(accountId);
+		const dec = await withFreshPointer<DecryptedAttachment>(chip, refresh, async (pointer) => {
+			const res = await keystore.attachmentBytes({
+				accountId,
+				url: pointer.url,
+				attachmentId: chip.id,
+				keyFingerprintHex: pointer.keyFingerprint
+			});
+			return res.ok
+				? { ok: true, value: { header: res.header, blob: res.payload } }
+				: { ok: false, code: res.code };
 		});
-		return res.ok
-			? { ok: true, value: { header: res.header, blob: res.payload } }
-			: { ok: false, code: res.code };
-	});
-	cacheHeader(cacheKey(accountId, chip.id), dec.header);
-	return dec;
+		cacheHeader(key, dec.header);
+		cacheBytes(key, dec);
+		return dec;
+	})().finally(() => bytesInFlight.delete(key));
+
+	bytesInFlight.set(key, task);
+	return task;
+}
+
+export function loadAttachmentBytes(
+	accountId: string,
+	chip: AttachmentChip,
+	refresh?: PointerRefresh
+): Promise<DecryptedAttachment> {
+	return attachmentBytes(accountId, chip, refresh);
 }
 
 export async function decryptAttachmentFull(
