@@ -12,8 +12,6 @@
 	import Lock from '@lucide/svelte/icons/lock';
 	import LockOpen from '@lucide/svelte/icons/lock-open';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -23,6 +21,7 @@
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
 	import InlineSendError, { type InlineErrorCode } from './InlineSendError.svelte';
+	import AttachPreview from './AttachPreview.svelte';
 	import DirectoryFailModal from './DirectoryFailModal.svelte';
 	import TofuModal from './TofuModal.svelte';
 	import RichEditor from './editor/RichEditor.svelte';
@@ -310,6 +309,24 @@
 
 	function removeAttachment(id: string) {
 		attachments = attachments.filter((a) => a.id !== id);
+	}
+
+	let dragging = $state(false);
+
+	function onDrop(e: DragEvent) {
+		e.preventDefault();
+		dragging = false;
+		if (e.dataTransfer?.files) addFiles(e.dataTransfer.files);
+	}
+
+	function onDragOver(e: DragEvent) {
+		e.preventDefault();
+		if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) dragging = true;
+	}
+
+	function onDragLeave(e: DragEvent) {
+		if (e.relatedTarget instanceof Node && boxRef?.contains(e.relatedTarget)) return;
+		dragging = false;
 	}
 
 	let quote = $state<{ html: string; text: string } | null>(null);
@@ -684,7 +701,14 @@
 
 <svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
 
-<div class="replybox" bind:this={boxRef}>
+<div
+	class="replybox"
+	role="group"
+	bind:this={boxRef}
+	ondragover={onDragOver}
+	ondragleave={onDragLeave}
+	ondrop={onDrop}
+>
 	<div class="rt">
 		{#if mode === 'all'}
 			<ReplyAll size={14} />
@@ -925,32 +949,7 @@
 		</div>
 	{/if}
 
-	{#if attachments.length > 0}
-		<div class="att-list">
-			{#each attachments as a (a.id)}
-				<div class="att-chip" class:err={a.status === 'error'}>
-					<div class="ic"><FileText size={16} /></div>
-					<div class="info">
-						<div class="nm" title={a.file.name}>{a.file.name}</div>
-						<div class="sz">{formatSize(a.file.size)}</div>
-						{#if a.status === 'encrypting' || a.status === 'uploading'}
-							<div class="bar"><div class="bar-fill" style="width:{Math.round(a.progress * 100)}%"></div></div>
-						{:else if a.status === 'error'}
-							<div class="errmsg">{a.error ?? msg.mail_attach_upload_failed()}</div>
-						{/if}
-					</div>
-					<div class="state">
-						{#if a.status === 'encrypting' || a.status === 'uploading' || a.status === 'queued'}
-							<Loader2 size={14} class="spin" />
-						{/if}
-						<button type="button" class="rm" title={msg.common_remove()} onclick={() => removeAttachment(a.id)}>
-							<X size={14} />
-						</button>
-					</div>
-				</div>
-			{/each}
-		</div>
-	{/if}
+	<AttachPreview files={attachments} onRemove={removeAttachment} />
 
 	{#if attErr}
 		<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
@@ -1023,6 +1022,9 @@
 
 	{#if status === 'sending'}
 		<SendingVeil />
+	{/if}
+	{#if dragging}
+		<div class="att-drop">{msg.mail_compose_drop()}</div>
 	{/if}
 </div>
 
