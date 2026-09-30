@@ -1,6 +1,7 @@
 import type { MessageTrust } from './trust';
 import type { MessagePreviewRecipient } from './preview';
 import type { AttachmentChip } from './attachments';
+import type { SentBy } from './sentBy';
 import { initialsFor } from './initials';
 import { locale } from './locale.svelte';
 import { parseAddressList } from './address';
@@ -82,6 +83,7 @@ export interface ThreadEntry {
 	attachments?: AttachmentChip[];
 	externalMessageId?: string;
 	inReplyTo?: string;
+	sentBy?: SentBy;
 }
 
 export type RsvpStatus = 'accepted' | 'tentative' | 'declined';
@@ -119,6 +121,7 @@ export interface Message {
 	rsvpEventUid?: string;
 	calendarMethod?: string;
 	event?: import('./render/icalParse').CalendarEvent | null;
+	sentBy?: SentBy;
 	epoch: number;
 }
 

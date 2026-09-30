@@ -28,7 +28,11 @@ export type RealtimeKind =
 	| 'calendar.invalidated'
 	| 'calendar_item.created'
 	| 'calendar_item.updated'
-	| 'calendar_item.deleted';
+	| 'calendar_item.deleted'
+	| 'shared_alias.created'
+	| 'shared_alias.updated'
+	| 'shared_alias.deleted'
+	| 'reply_presence.updated';
 
 export interface WireHint {
 	kind: RealtimeKind;

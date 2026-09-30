@@ -62,6 +62,7 @@ export type SendErrorCode =
 	| 'external_key_change'
 	| 'encrypt'
 	| 'rate_limited'
+	| 'alias_key_stale'
 	| 'schedule_unsupported'
 	| 'malware_blocked'
 	| 'rejected'
@@ -137,6 +138,9 @@ const SENDER_REFUSALS: Partial<Record<ErrorCode, () => string>> = {
 export function sendErrorFromApi(e: unknown, fallback: string): SendError {
 	if (e instanceof SendError) return e;
 	if (e instanceof ApiCallError) {
+		if (e.envelope?.error?.code === 'shared_alias_key_stale') {
+			return new SendError('alias_key_stale', m.send_error_alias_key_changed());
+		}
 		const refusal = e.envelope?.error?.code ? SENDER_REFUSALS[e.envelope.error.code] : undefined;
 		if (refusal) return new SendError('rejected', refusal());
 		const message = e.envelope?.error?.message ?? m.send_error_http({ reason: fallback, status: e.status });

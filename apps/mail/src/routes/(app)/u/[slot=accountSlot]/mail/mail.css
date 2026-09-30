@@ -274,6 +274,7 @@
 
 .mail-app .mrow .rowmain { min-width: 0; }
 .mail-app .mrow .r1 { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.mail-app .mrow .r1 .by { flex: 0 1 auto; min-width: 0; font-size: 11.5px; color: var(--info-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .mrow .from { font-size: 13px; line-height: 1.35; color: var(--fg-muted); font-weight: 450; letter-spacing: var(--track-snug); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .mrow.unread .from { font-weight: 560; color: var(--fg-strong); }
 .mail-app .mrow .r1 .time { margin-left: auto; font-size: 11px; color: var(--fg-faint); font-family: var(--font-mono); letter-spacing: .02em; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
@@ -795,6 +796,8 @@
 .mail-app .tmsg-head .who .nm-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .tmsg-head .who .det { display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap; }
 .mail-app .tmsg-head .who .em { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mail-app .tmsg-head .who .by,
+.mail-app .letterhead .who .by { font-size: 12px; color: var(--info-700); white-space: nowrap; }
 .mail-app .tmsg-head .who .to { font-size: 12px; color: var(--fg-faint); min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .tmsg-head .prov { margin-left: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 2px; }
 .mail-app .tmsg-head .when { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); text-align: right; white-space: nowrap; }
@@ -1004,6 +1007,8 @@
 .mail-app .snooze-picker .sp-go:hover { background: var(--primary-hover); }
 .mail-app .snooze-picker .sp-go:disabled { opacity: .5; pointer-events: none; }
 
+.mail-app .presence-note { display: flex; align-items: center; gap: 7px; margin: 0 0 14px; padding: 8px 12px; font-size: 12.5px; color: var(--info-700); background: var(--info-100); border-radius: var(--radius-md); }
+.mail-app .presence-note svg { flex: 0 0 auto; }
 .mail-app .snz-note { display: flex; align-items: center; gap: 7px; margin: 0 0 14px; padding: 8px 12px; font-size: 12.5px; color: var(--brass-700); background: var(--brass-100); border-radius: var(--radius-md); }
 .mail-app .snz-note.back { color: var(--pine-700); background: var(--pine-50); }
 .mail-app .snz-note svg { flex: 0 0 auto; }

@@ -22,6 +22,7 @@ import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { initialChips } from '$core/mail/attachments';
 import { type ThreadEntry, type Message } from '$core/mail/data';
+import { sentByFrom } from '$core/mail/sentBy';
 import { auth } from '$core/stores/auth.svelte';
 import { addresses } from '$core/stores/addresses.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
@@ -182,7 +183,8 @@ async function hydrateEntry(
 			forwarded,
 			attachments: initialChips(item.attachments ?? []),
 			externalMessageId: item.externalMessageId ?? undefined,
-			inReplyTo: item.inReplyTo ?? undefined
+			inReplyTo: item.inReplyTo ?? undefined,
+			sentBy: sentByFrom(item)
 		};
 	} catch (err) {
 		console.warn('Thread row hydration failed', err);

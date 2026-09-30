@@ -21,6 +21,8 @@
 	} from './data';
 	import type { MailActionCaps } from './actions';
 	import { senderImage } from './senderImage';
+	import { sentByName } from './sentBy';
+	import { auth } from '$core/stores/auth.svelte';
 
 	interface Props {
 		m: Message;
@@ -57,6 +59,7 @@
 	}: Props = $props();
 
 	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
+	const byName = $derived(m.sentBy ? sentByName(m.sentBy, auth.accountId) : null);
 
 	const labelChips = $derived(
 		(m.labels ?? []).slice(0, 2).map((id) => ({ id, label: LABELS[id] })).filter((x) => !!x.label)
@@ -134,6 +137,9 @@
 	<div class="rowmain">
 		<div class="r1">
 			<span class="from">{m.from}</span>
+			{#if byName}
+				<span class="by">{msg.mail_sent_by({ name: byName })}</span>
+			{/if}
 			{#if threadCount > 1}
 				<span class="thr-ct" title={msg.mail_row_thread_count({ count: threadCount })}>
 					<MessagesSquare size={11} />{threadCount}

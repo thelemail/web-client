@@ -18,6 +18,8 @@ import type {
 	MessageChangesResponse,
 	MessageListResponse,
 	MessageState,
+	ReplyPresenceResponse,
+	ReplyPresenceStarted,
 	ReportMessageRequest,
 	RsvpRequest,
 	SnoozeRequest,
@@ -104,6 +106,23 @@ export function getMailboxCounts(accountId?: string): Promise<MailboxCounts> {
 
 export function getMessage(messageId: string): Promise<MessageDetail> {
 	return apiFetch<MessageDetail>(`/v1/messages/${encodeURIComponent(messageId)}`);
+}
+
+export function getReplyPresence(messageId: string): Promise<ReplyPresenceResponse> {
+	return apiFetch<ReplyPresenceResponse>(`/v1/messages/${encodeURIComponent(messageId)}/reply-presence`);
+}
+
+export function startReplyPresence(messageId: string): Promise<ReplyPresenceStarted> {
+	return apiFetch<ReplyPresenceStarted>(`/v1/messages/${encodeURIComponent(messageId)}/reply-presence`, {
+		method: 'PUT'
+	});
+}
+
+export function stopReplyPresence(messageId: string, opts: { keepalive?: boolean } = {}): Promise<void> {
+	return apiFetch<void>(`/v1/messages/${encodeURIComponent(messageId)}/reply-presence`, {
+		method: 'DELETE',
+		keepalive: opts.keepalive
+	});
 }
 
 export function deleteMessage(messageId: string): Promise<void> {
