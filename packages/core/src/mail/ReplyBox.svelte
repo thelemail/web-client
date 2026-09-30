@@ -16,6 +16,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import Users from '@lucide/svelte/icons/users';
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import RecipientField from './RecipientField.svelte';
@@ -63,6 +64,8 @@
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { signatures } from '$core/stores/signatures.svelte';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
+	import { announceReplying, replyPresence } from '$core/stores/replyPresence.svelte';
+	import { replyingLine } from './presence';
 	import {
 		applySignatureSeed,
 		swapSignatureForAddress,
@@ -178,6 +181,14 @@
 	const fromNotice = $derived(
 		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
 	);
+	const replyingAsAlias = $derived(mode !== 'forward' && ident.kind === 'Alias');
+	const othersReplying = $derived(replyingLine(replyPresence.replying));
+
+	$effect(() => {
+		if (!replyingAsAlias) return;
+		return announceReplying(seedId);
+	});
+
 	let identInit = $state(false);
 	let fromOpen = $state(false);
 	let fromRef: HTMLElement | undefined = $state();
@@ -187,6 +198,8 @@
 			seed?.deliveredTo,
 			m.deliveredTo,
 			...(m.thread ?? []).map((t) => t.deliveredTo),
+			seed?.fromAddr,
+			m.fromAddr,
 			...seedRecipients.map((r) => r.address),
 			...(m.recipients ?? []).map((r) => r.address),
 			...(m.thread ?? []).flatMap((t) => (t.recipients ?? []).map((r) => r.address))
@@ -792,6 +805,9 @@
 				from: ident.email
 			})}
 		</div>
+	{/if}
+	{#if othersReplying}
+		<div class="cnote" role="status"><Users size={14} />{othersReplying}</div>
 	{/if}
 
 	{#snippet ccBccSlot()}

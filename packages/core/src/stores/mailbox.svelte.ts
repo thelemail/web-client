@@ -15,6 +15,7 @@ import {
 } from '$core/mail/data';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { bimiDomainFromPreview } from '$core/mail/preview';
+import { sentByFrom } from '$core/mail/sentBy';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { initialsFor } from '$core/mail/initials';
 import { platform } from '$platform';
@@ -207,6 +208,7 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		body: [],
 		threadCount: item.threadCount && item.threadCount > 1 ? item.threadCount : undefined,
 		threadRootId: item.threadRootId ?? undefined,
+		sentBy: sentByFrom(item),
 		attachments:
 			item.attachmentCount > 0
 				? new Array(item.attachmentCount).fill({ name: 'attachment', size: '' })
@@ -493,7 +495,9 @@ class MailboxStore {
 				threadRootId: detail.threadRootId,
 				threadCount: detail.threadCount,
 				rsvpStatus: detail.rsvpStatus,
-				labels: detail.labels
+				labels: detail.labels,
+				sentViaAliasId: detail.sentViaAliasId,
+				sentByAccountId: detail.sentByAccountId
 			};
 			let msg: Message;
 			let locked = false;

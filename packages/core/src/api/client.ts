@@ -64,6 +64,7 @@ interface FetchOptions {
 	baseUrl?: string;
 	accountId?: string;
 	headers?: Record<string, string>;
+	keepalive?: boolean;
 }
 
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
@@ -141,6 +142,7 @@ async function doFetch<T>(
 		headers['Content-Type'] = 'application/json';
 		init.body = JSON.stringify(opts.body);
 	}
+	if (opts.keepalive) init.keepalive = true;
 	const accountId = resolveAccountId(opts.accountId);
 	if (accountId) {
 		headers['X-Account-Id'] = accountId;

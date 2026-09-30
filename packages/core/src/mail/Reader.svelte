@@ -67,6 +67,11 @@
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { senderImage } from './senderImage';
+	import { sentByLabel } from './sentBy';
+	import { replyingLine } from './presence';
+	import { addresses } from '$core/stores/addresses.svelte';
+	import { replyPresence } from '$core/stores/replyPresence.svelte';
+	import Users from '@lucide/svelte/icons/users';
 
 	interface Props {
 		m: Message | null;
@@ -115,6 +120,17 @@
 	}: Props = $props();
 
 	const img = $derived(senderImage(m?.fromAddr, m?.bimiDomain));
+	const sentByText = $derived(m ? sentByLabel(m.sentBy, auth.accountId) : null);
+	const othersReplying = $derived(replyingLine(replyPresence.replying));
+	const presenceId = $derived(m && addresses.shared.length > 0 ? m.id : null);
+	const presenceThread = $derived(m?.threadRootId ?? null);
+
+	$effect(() => {
+		const id = presenceId;
+		const thread = presenceThread;
+		if (!id) return;
+		return replyPresence.watch(id, thread);
+	});
 
 	let moreOpen = $state(false);
 	let moreRef: HTMLDivElement | undefined = $state();
@@ -872,6 +888,13 @@
 					</h1>
 				</div>
 
+				{#if othersReplying}
+					<div class="presence-note" role="status">
+						<Users size={13} />
+						<span>{othersReplying}</span>
+					</div>
+				{/if}
+
 				{#if snoozeState}
 					<div class="snz-note" class:back={snoozeState.kind === 'returned'}>
 						<Clock size={13} />
@@ -905,6 +928,9 @@
 							<div class="nm">{m.from}</div>
 							<div class="det">
 								<span class="em">{m.fromAddr}</span>
+								{#if sentByText}
+									<span class="by">{sentByText}</span>
+								{/if}
 								<span class="to">&rarr; {m.to || '—'}</span>
 								{#if deliveredLine}
 									<span class="to">{msg.mail_thread_delivered_to({ address: deliveredLine })}</span>

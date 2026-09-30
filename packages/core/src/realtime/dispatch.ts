@@ -8,6 +8,8 @@ import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { mailSearch } from '$core/stores/search.svelte';
 import { auth } from '$core/stores/auth.svelte';
 import { billing } from '$core/stores/billing.svelte';
+import { aliasKeys } from '$core/stores/aliasKeys.svelte';
+import { replyPresence } from '$core/stores/replyPresence.svelte';
 import { coalesce } from './coalesce';
 import { notifyCalendarHint, notifyCalendarMessage } from './calendarHook';
 import type { RealtimeHint } from './types';
@@ -90,6 +92,15 @@ export function applyHint(hint: RealtimeHint): void {
 		case 'calendar':
 		case 'calendar_item':
 			if (isActive) notifyCalendarHint(hint);
+			return;
+		case 'shared_alias':
+			if (isActive) {
+				void addresses.load();
+				void aliasKeys.load(hint.accountId);
+			}
+			return;
+		case 'reply_presence':
+			if (isActive) replyPresence.onHint(hint);
 			return;
 		default:
 			return;

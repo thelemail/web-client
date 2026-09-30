@@ -10,6 +10,8 @@
 	import AttachmentList from './AttachmentList.svelte';
 	import { getMessage } from '$core/api/messages';
 	import { senderImage } from './senderImage';
+	import { sentByLabel } from './sentBy';
+	import { auth } from '$core/stores/auth.svelte';
 
 	interface Props {
 		e: ThreadEntry;
@@ -29,6 +31,7 @@
 	});
 
 	const name = $derived(e.me ? m.mail_thread_you() : e.from);
+	const sentByText = $derived(sentByLabel(e.sentBy, auth.accountId));
 	const when = $derived(formatWhenLong(new Date(e.epoch)));
 	const shortWhen = $derived(formatWhenShort(new Date(e.epoch)));
 
@@ -76,6 +79,9 @@
 			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={img.src} fit={img.fit} imgBg={img.imgBg} />
 			<span class="tc-name">
 				<span class="tc-nm">{name}</span>
+				{#if sentByText}
+					<span class="tc-by">{sentByText}</span>
+				{/if}
 				{#if e.trust}
 					<TrustMark trust={e.trust} variant="static" />
 				{/if}
@@ -110,6 +116,9 @@
 				</div>
 				<div class="det">
 					<span class="em">{e.fromAddr}</span>
+					{#if sentByText}
+						<span class="by">{sentByText}</span>
+					{/if}
 					<span class="to">→ {toLine || '—'}</span>
 					{#if ccLine}
 						<span class="to">{m.mail_thread_cc({ list: ccLine })}</span>

@@ -41,6 +41,16 @@ vi.mock('$core/stores/accountSettings.svelte', () => ({
 	accountSettings: { refresh: (...a: unknown[]) => accountSettingsRefresh(...a) }
 }));
 
+const aliasKeysLoad = vi.fn();
+vi.mock('$core/stores/aliasKeys.svelte', () => ({
+	aliasKeys: { load: (...a: unknown[]) => aliasKeysLoad(...a) }
+}));
+
+const replyPresenceHint = vi.fn();
+vi.mock('$core/stores/replyPresence.svelte', () => ({
+	replyPresence: { onHint: (...a: unknown[]) => replyPresenceHint(...a) }
+}));
+
 const authState = vi.hoisted(() => ({ accountId: 'acc-1' as string | null }));
 const authLoadProfile = vi.fn();
 vi.mock('$core/stores/auth.svelte', () => ({
@@ -124,6 +134,27 @@ describe('applyHint', () => {
 		applyHint(hint({ accountId: 'acc-2', kind: 'subscription.updated' }));
 		expect(authLoadProfile).toHaveBeenCalledWith('acc-1');
 		expect(authLoadProfile).toHaveBeenCalledWith('acc-2');
+	});
+
+	it('reloads addresses and alias keys when a shared address changes', () => {
+		applyHint(hint({ kind: 'shared_alias.updated', id: 'alias-1' }));
+		expect(addressesLoad).toHaveBeenCalledTimes(1);
+		expect(aliasKeysLoad).toHaveBeenCalledWith('acc-1');
+	});
+
+	it('ignores a shared address change on a background account', () => {
+		applyHint(hint({ accountId: 'acc-2', kind: 'shared_alias.updated', id: 'alias-1' }));
+		expect(addressesLoad).not.toHaveBeenCalled();
+		expect(aliasKeysLoad).not.toHaveBeenCalled();
+	});
+
+	it('routes reply presence hints for the active account to the presence store', () => {
+		const h = hint({ kind: 'reply_presence.updated', id: 'm9', thread_id: 't9' });
+		applyHint(h);
+		applyHint(hint({ accountId: 'acc-2', kind: 'reply_presence.updated' }));
+		expect(replyPresenceHint).toHaveBeenCalledTimes(1);
+		expect(replyPresenceHint).toHaveBeenCalledWith(h);
+		expect(mailboxApplyRealtime).not.toHaveBeenCalled();
 	});
 
 	it('does nothing for an unknown kind', () => {
