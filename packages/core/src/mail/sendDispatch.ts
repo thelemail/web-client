@@ -5,6 +5,8 @@ import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { lookupAccount } from '$core/api/accounts';
 import { ApiCallError } from '$core/api/types';
 import { canonicalRecipient } from './recipientAddress';
+import { auth } from '$core/stores/auth.svelte';
+import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { m } from '$paraglide/messages.js';
 
 const CLASSIFY_TTL_MS = 2 * 60 * 1000;
@@ -136,6 +138,19 @@ export async function dispatchSend(
 	input: DispatchInput,
 	opts: DispatchOptions = {}
 ): Promise<void> {
+	try {
+		await dispatchOnce(input, opts);
+	} catch (e) {
+		const accountId = auth.accountId;
+		if (!(e instanceof SendError) || e.code !== 'alias_key_stale' || !input.fromAliasId || !accountId) {
+			throw e;
+		}
+		await aliasKeys.load(accountId);
+		await dispatchOnce(input, opts);
+	}
+}
+
+async function dispatchOnce(input: DispatchInput, opts: DispatchOptions): Promise<void> {
 	const all = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])];
 	if (all.length === 0) {
 		throw new SendError('no_account', m.send_error_no_recipients());

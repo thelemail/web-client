@@ -25,6 +25,7 @@ export type ErrorCode =
 	| 'content_rejected'
 	| 'migration_conflict'
 	| 'stale_revision'
+	| 'shared_alias_key_stale'
 	| 'invitee_not_found'
 	| 'invitee_plan_conflict'
 	| 'invitee_store_billed'
@@ -90,6 +91,8 @@ export interface MessageListItem {
 	signatureStatus?: SignatureStatus;
 	signerKeyFingerprint?: string;
 	signerDelegationId?: string;
+	sentViaAliasId?: string;
+	sentByAccountId?: string;
 	schemaVersion: number;
 	mailboxState: MailboxState;
 	starred: boolean;
@@ -150,6 +153,8 @@ export interface MessageDetail {
 	signatureStatus?: SignatureStatus;
 	signerKeyFingerprint?: string;
 	signerDelegationId?: string;
+	sentViaAliasId?: string;
+	sentByAccountId?: string;
 	schemaVersion: number;
 	body: PresignedPointer;
 	attachments: AttachmentDetail[];
@@ -167,6 +172,21 @@ export interface MessageDetail {
 	rsvpStatus?: RsvpStatus | null;
 	rsvpEventUid?: string | null;
 	labels?: string[];
+}
+
+export interface ReplyPresenceEntry {
+	aliasId: string;
+	accountId: string;
+	since: string;
+	expiresAt: string;
+}
+
+export interface ReplyPresenceResponse {
+	replying: ReplyPresenceEntry[];
+}
+
+export interface ReplyPresenceStarted {
+	ttlSeconds: number;
 }
 
 export interface LabelsRequest {

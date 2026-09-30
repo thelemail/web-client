@@ -3,7 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const calls = vi.hoisted(() => ({
 	internal: [] as { input: Record<string, unknown>; opts: Record<string, unknown> }[],
 	external: [] as Record<string, unknown>[],
-	lookups: [] as string[]
+	lookups: [] as string[],
+	staleInternal: 0,
+	staleExternal: 0,
+	aliasKeyLoads: [] as string[]
+}));
+
+vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'acct-me' } }));
+
+vi.mock('$core/stores/aliasKeys.svelte', () => ({
+	aliasKeys: {
+		load: async (accountId: string) => {
+			calls.aliasKeyLoads.push(accountId);
+		}
+	}
 }));
 
 vi.mock('./send', () => {
@@ -24,6 +37,10 @@ vi.mock('./send', () => {
 			opts: Record<string, unknown> = {}
 		) => {
 			calls.internal.push({ input, opts });
+			if (calls.staleInternal > 0) {
+				calls.staleInternal--;
+				throw new SendError('alias_key_stale', 'stale');
+			}
 			if (input.scheduledAt) {
 				return { messageId: undefined as unknown as string, storedAt: '' };
 			}
@@ -35,6 +52,11 @@ vi.mock('./send', () => {
 vi.mock('./sendExternal', () => ({
 	sendExternalMessage: async (input: Record<string, unknown>) => {
 		calls.external.push(input);
+		if (calls.staleExternal > 0) {
+			calls.staleExternal--;
+			const { SendError } = await import('./send');
+			throw new SendError('alias_key_stale', 'stale');
+		}
 		return { messageId: 'external-1', enqueuedAt: '2026-01-01T00:00:00Z' };
 	}
 }));
@@ -63,6 +85,9 @@ beforeEach(() => {
 	calls.internal.length = 0;
 	calls.external.length = 0;
 	calls.lookups.length = 0;
+	calls.staleInternal = 0;
+	calls.staleExternal = 0;
+	calls.aliasKeyLoads.length = 0;
 });
 
 describe('dispatchSend scheduling', () => {
@@ -146,5 +171,46 @@ describe('dispatchSend with plus-tagged recipients', () => {
 		expect((calls.external[0].to as { address: string }[]).map((p) => p.address)).toEqual([
 			'someone+list@example.test'
 		]);
+	});
+});
+
+describe('dispatchSend with a shared address key that just rotated', () => {
+	it('reloads the alias keys and sends again once', async () => {
+		calls.staleExternal = 1;
+		await dispatchSend({
+			to: [party('customer@example.test')],
+			subject: 're: order',
+			body: 'on its way',
+			fromEmail: 'mike@acme.test',
+			fromAliasId: 'alias-1'
+		});
+		expect(calls.aliasKeyLoads).toEqual(['acct-me']);
+		expect(calls.external).toHaveLength(2);
+	});
+
+	it('gives up after the second refusal', async () => {
+		calls.staleInternal = 2;
+		const err = await dispatchSend({
+			to: [party('friend@thelemail.test')],
+			subject: 'hi',
+			body: 'hello',
+			fromEmail: 'mike@acme.test',
+			fromAliasId: 'alias-1'
+		}).catch((e) => e);
+		expect((err as SendError).code).toBe('alias_key_stale');
+		expect(calls.internal).toHaveLength(2);
+		expect(calls.aliasKeyLoads).toHaveLength(1);
+	});
+
+	it('does not retry a send from a personal address', async () => {
+		calls.staleInternal = 1;
+		const err = await dispatchSend({
+			to: [party('friend@thelemail.test')],
+			subject: 'hi',
+			body: 'hello'
+		}).catch((e) => e);
+		expect((err as SendError).code).toBe('alias_key_stale');
+		expect(calls.internal).toHaveLength(1);
+		expect(calls.aliasKeyLoads).toHaveLength(0);
 	});
 });
