@@ -79,9 +79,6 @@
 			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={img.src} fit={img.fit} imgBg={img.imgBg} />
 			<span class="tc-name">
 				<span class="tc-nm">{name}</span>
-				{#if sentByText}
-					<span class="tc-by">{sentByText}</span>
-				{/if}
 				{#if e.trust}
 					<TrustMark trust={e.trust} variant="static" />
 				{/if}
