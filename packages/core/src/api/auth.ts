@@ -70,11 +70,16 @@ export function getPlatformDomains() {
 	});
 }
 
-export function checkAddressAvailability(localPart: string) {
+function signupHeaders(signupSession?: string): Record<string, string> | undefined {
+	return signupSession ? { 'X-Signup-Session': signupSession } : undefined;
+}
+
+export function checkAddressAvailability(localPart: string, signupSession?: string) {
 	const qs = new URLSearchParams({ localPart }).toString();
 	return apiFetch<{ available: boolean }>(`/v1/auth/address-available?${qs}`, {
 		method: 'GET',
-		skipAuth: true
+		skipAuth: true,
+		headers: signupHeaders(signupSession)
 	});
 }
 
@@ -93,11 +98,12 @@ export function registrationInit(req: RegistrationInitRequest) {
 	});
 }
 
-export function register(req: RegisterRequest) {
+export function register(req: RegisterRequest, signupSession?: string) {
 	return apiFetch<RegisterResponse>('/v1/auth/register', {
 		method: 'POST',
 		body: req,
-		skipAuth: true
+		skipAuth: true,
+		headers: signupHeaders(signupSession)
 	});
 }
 

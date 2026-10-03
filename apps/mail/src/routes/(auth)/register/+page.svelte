@@ -31,6 +31,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
+	import { endSignupSession, signupSession } from '$core/auth/signup-session';
 	import { ApiCallError } from '$core/api/types';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
@@ -97,7 +98,7 @@
 		let cancelled = false;
 		const timer = setTimeout(async () => {
 			try {
-				const { available } = await checkAddressAvailability(h);
+				const { available } = await checkAddressAvailability(h, signupSession());
 				if (!cancelled) status = available ? 'available' : 'taken';
 			} catch {
 				if (!cancelled) status = 'available';
@@ -202,19 +203,23 @@
 			if (!finish.ok) {
 				throw new Error(m.auth_register_keys_failed());
 			}
-			await register({
-				email,
-				fullName: fullName.trim(),
-				registrationId: init.registrationId,
-				opaqueRecord: finish.opaqueRecord,
-				wrappedMasterKey: finish.wrappedMasterKey,
-				masterKeyId: finish.masterKeyId,
-				opaqueParamsVersion: finish.opaqueParamsVersion,
-				publicKey: finish.publicKey,
-				encryptedPrivateKey: finish.encryptedPrivateKey,
-				plan: plan ?? undefined,
-				source: acquisitionSource
-			});
+			await register(
+				{
+					email,
+					fullName: fullName.trim(),
+					registrationId: init.registrationId,
+					opaqueRecord: finish.opaqueRecord,
+					wrappedMasterKey: finish.wrappedMasterKey,
+					masterKeyId: finish.masterKeyId,
+					opaqueParamsVersion: finish.opaqueParamsVersion,
+					publicKey: finish.publicKey,
+					encryptedPrivateKey: finish.encryptedPrivateKey,
+					plan: plan ?? undefined,
+					source: acquisitionSource
+				},
+				signupSession()
+			);
+			endSignupSession();
 			await keystore.opaqueFinalizeRegister({ operationId: start.operationId, accountId: init.accountId });
 		} catch (err) {
 			submitError = registerErrorMessage(err);

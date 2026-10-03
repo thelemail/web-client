@@ -64,7 +64,7 @@ describe('register page', () => {
 		await vi.waitFor(() => expect(select()).not.toBeNull());
 
 		await typeAddress('camille');
-		await vi.waitFor(() => expect(authApi.checkAddressAvailability).toHaveBeenCalledWith('camille'));
+		await vi.waitFor(() => expect(authApi.checkAddressAvailability).toHaveBeenCalledWith('camille', expect.stringMatching(/^[0-9a-f]{32}$/)));
 		await vi.waitFor(() => expect(document.body.textContent).toContain('Mail to camille@thelemail.com reaches you too.'));
 
 		await fireEvent.change(select()!, { target: { value: 'thelemail.com' } });
