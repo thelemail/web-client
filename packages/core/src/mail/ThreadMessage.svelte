@@ -12,15 +12,19 @@
 	import { senderImage } from './senderImage';
 	import { sentByLabel } from './sentBy';
 	import { auth } from '$core/stores/auth.svelte';
+	import { unsubscribeMethod } from './unsubscribe';
 
 	interface Props {
 		e: ThreadEntry;
 		isOpen: boolean;
 		onToggle: () => void;
 		onConfirmKeyChange?: (address: string) => void | Promise<void>;
+		onUnsubscribe?: (e: ThreadEntry) => void;
 	}
 
-	let { e, isOpen, onToggle, onConfirmKeyChange }: Props = $props();
+	let { e, isOpen, onToggle, onConfirmKeyChange, onUnsubscribe }: Props = $props();
+
+	const canUnsubscribe = $derived(!!onUnsubscribe && !!e.id && !e.me && unsubscribeMethod(e.unsubscribe) !== null);
 
 	const img = $derived(senderImage(e.fromAddr, e.bimiDomain));
 
@@ -113,6 +117,19 @@
 				</div>
 				<div class="det">
 					<span class="em">{e.fromAddr}</span>
+					{#if canUnsubscribe}
+						<button
+							type="button"
+							class="unsub"
+							onclick={(ev) => {
+								ev.stopPropagation();
+								onUnsubscribe?.(e);
+							}}
+							onkeydown={(ev) => ev.stopPropagation()}
+						>
+							{m.mail_unsub_action()}
+						</button>
+					{/if}
 					{#if sentByText}
 						<span class="by">{sentByText}</span>
 					{/if}

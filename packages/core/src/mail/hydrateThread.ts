@@ -3,7 +3,8 @@ import type { MessageDetail } from '$core/api/types';
 import {
 	authStateFromPreview,
 	authSummaryFromPreview,
-	bimiDomainFromPreview
+	bimiDomainFromPreview,
+	unsubscribeFromPreview
 } from '$core/mail/preview';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { isOfficialAddress, OFFICIAL_KEYS_ARMORED } from '$core/directory/official';
@@ -168,6 +169,7 @@ async function hydrateEntry(
 			from: me ? m.mailbox_sender_you() : fromDisplay,
 			fromAddr: preview.sender.address,
 			bimiDomain: bimiDomainFromPreview(preview),
+			unsubscribe: me ? undefined : unsubscribeFromPreview(preview),
 			to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 			recipients: preview.recipients,
 			deliveredTo: typeof preview.delivered_to === 'string' ? preview.delivered_to : undefined,

@@ -14,7 +14,7 @@ import {
 	type SortId
 } from '$core/mail/data';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
-import { bimiDomainFromPreview } from '$core/mail/preview';
+import { bimiDomainFromPreview, unsubscribeFromPreview } from '$core/mail/preview';
 import { sentByFrom } from '$core/mail/sentBy';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { initialsFor } from '$core/mail/initials';
@@ -191,6 +191,7 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		from: fromDisplay,
 		fromAddr: preview.sender.address,
 		bimiDomain: bimiDomainFromPreview(preview),
+		unsubscribe: item.direction === 'received' ? unsubscribeFromPreview(preview) : undefined,
 		calendarMethod:
 			typeof preview.flags?.calendar === 'string' ? preview.flags.calendar : undefined,
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),

@@ -440,6 +440,20 @@
 	"mail_block_confirm": "Bloquear remetente",
 	"mail_block_body": "As novas mensagens de <mono>{address}</mono> vão diretamente para o Spam, sem notificação. O endereço é guardado como um hash com chave, pelo que o servidor nunca o vê em claro, e a etiqueta apresentada aqui é cifrada com a sua chave.",
 	"mail_block_unblock_hint": "Pode desbloquear o endereço nas Definições a qualquer momento.",
+	"mail_unsub_action": "Cancelar inscrição",
+	"mail_unsub_title": "Cancelar inscrição em {name}?",
+	"mail_unsub_confirm": "Cancelar inscrição",
+	"mail_unsub_open_page": "Abrir página",
+	"mail_unsub_body_one_click": "O Thelemail vai pedir a <mono>{domain}</mono> que remova você desta lista. O pedido sai dos nossos servidores, então o remetente não vê o seu endereço IP.",
+	"mail_unsub_body_mailto": "O Thelemail vai enviar um e-mail de cancelamento de <mono>{from}</mono> para <mono>{to}</mono>.",
+	"mail_unsub_body_page": "A página de cancelamento do remetente em <mono>{host}</mono> abre em uma nova aba. Conclua o cancelamento lá.",
+	"mail_unsub_rejected": "{name} não aceitou o pedido. Tente novamente mais tarde.",
+	"mail_unsub_unreachable": "Não foi possível contatar {name}. Tente novamente mais tarde.",
+	"mail_unsub_rate_limited": "Muitos pedidos de cancelamento. Tente novamente daqui a pouco.",
+	"mail_unsub_failed": "O pedido não foi concluído. Tente novamente.",
+	"mail_unsub_unlock_required": "Desbloqueie esta conta para cancelar a inscrição.",
+	"mail_toast_unsubscribed": "Inscrição em {name} cancelada",
+	"mail_toast_unsub_sent": "E-mail de cancelamento enviado para {name}",
 	"mail_block_move_existing": [
 		{
 			"declarations": [

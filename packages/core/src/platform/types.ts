@@ -213,5 +213,6 @@ export interface Platform {
 	) => Promise<Response>;
 	returnOrigin: () => string;
 	openExternal: (url: string) => void;
+	openLink: (url: string) => void;
 	saveBlob: (blob: Blob, filename: string) => Promise<void>;
 }

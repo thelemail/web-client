@@ -1,5 +1,5 @@
 import type { MessageTrust } from './trust';
-import type { MessagePreviewRecipient } from './preview';
+import type { MessagePreviewRecipient, UnsubscribeLinks } from './preview';
 import type { AttachmentChip } from './attachments';
 import type { SentBy } from './sentBy';
 import { initialsFor } from './initials';
@@ -67,6 +67,7 @@ export interface ThreadEntry {
 	from: string;
 	fromAddr: string;
 	bimiDomain?: string;
+	unsubscribe?: UnsubscribeLinks;
 	to: string;
 	recipients?: MessagePreviewRecipient[];
 	deliveredTo?: string;
@@ -95,6 +96,7 @@ export interface Message {
 	from: string;
 	fromAddr: string;
 	bimiDomain?: string;
+	unsubscribe?: UnsubscribeLinks;
 	to: string;
 	recipients?: MessagePreviewRecipient[];
 	deliveredTo?: string;

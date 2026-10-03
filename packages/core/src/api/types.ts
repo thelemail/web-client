@@ -45,7 +45,10 @@ export type ErrorCode =
 	| 'proof_expired'
 	| 'proof_reused'
 	| 'step_up_required'
-	| 'reauthentication_required';
+	| 'reauthentication_required'
+	| 'unsubscribe_tag_invalid'
+	| 'unsubscribe_rejected'
+	| 'unsubscribe_unreachable';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
@@ -199,6 +202,11 @@ export interface ReportMessageRequest {
 	kind: MessageReportKind;
 	headers?: string;
 	senderAddress?: string;
+}
+
+export interface UnsubscribeMessageRequest {
+	url: string;
+	tag: string;
 }
 
 export interface BlockedSender {
