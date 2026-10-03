@@ -94,7 +94,7 @@
 		onBlockedSender?: (address: string, moveExisting: boolean) => void;
 		onUnsubscribed?: (name: string, kind: UnsubscribeMethod['kind']) => void;
 		blockedSenderCount?: (address: string) => number;
-		onReplySent?: () => void;
+		onReplySent?: (id: string) => void;
 		onReplySentArchive?: (id: string) => void;
 		onBack?: () => void;
 	}
@@ -186,7 +186,7 @@
 	const moveTargets = $derived.by<MoveTarget[]>(() => {
 		if (!m) return [];
 		const out: MoveTarget[] = [];
-		if (m.folder !== 'inbox' && m.direction !== 'sent') {
+		if (m.folder !== 'inbox' && (m.direction !== 'sent' || mailbox.threadSize(m.id) > 1)) {
 			out.push({ id: 'inbox', label: msg.mail_folder_inbox(), icon: Inbox });
 		}
 		if (m.folder !== 'archive') out.push({ id: 'archive', label: msg.mail_folder_archive(), icon: Archive });
@@ -450,6 +450,7 @@
 					deliveredTo: seedEntry?.deliveredTo,
 					recipients: seedEntry?.recipients
 				};
+				mailbox.noteThreadSize(current.threadRootId ?? current.id, hydrated.entries.length);
 				cascadeMarkRead(hydrated.entries ?? []);
 			} catch (err) {
 				console.warn('Thread hydration failed', err);
@@ -1030,9 +1031,10 @@
 							seed={replySeed}
 							canArchive={caps.showArchive && !!onReplySentArchive}
 							onSent={() => {
+								const id = m.id;
 								threadRefreshTick += 1;
 								replyMode = null;
-								onReplySent?.();
+								onReplySent?.(id);
 							}}
 							onSentAndArchive={() => {
 								const id = m.id;
