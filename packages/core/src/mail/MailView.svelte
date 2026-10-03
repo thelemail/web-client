@@ -267,8 +267,13 @@
 		return next;
 	}
 
-	function isThread(m: Message | null | undefined): boolean {
-		return !!m && (m.threadCount ?? 0) > 1;
+	function isThread(id: string): boolean {
+		return mailbox.threadSize(id) > 1;
+	}
+
+	function memberPatch(m: Message, optimistic: Partial<Message>): Partial<Message> {
+		if (optimistic.folder !== 'inbox' && optimistic.folder !== 'sent') return optimistic;
+		return { ...optimistic, folder: m.direction === 'sent' ? 'sent' : 'inbox' };
 	}
 
 	function queueThreadUpdate(
@@ -279,12 +284,10 @@
 	): Promise<void> {
 		const current = mailbox.findMessage(id);
 		if (!current) return Promise.resolve();
-		const snap: Partial<Message> = {
-			folder: current.folder,
-			unread: current.unread
-		};
+		const members = mailbox.threadMembers(id);
+		const snaps = members.map((m) => ({ id: m.id, folder: m.folder, unread: m.unread }));
 		const rootId = current.threadRootId;
-		mailbox.patchMessage(id, optimistic);
+		for (const m of members) mailbox.patchMessage(m.id, memberPatch(m, optimistic));
 		const prev = inFlight.get(id) ?? Promise.resolve();
 		const next = prev.then(async () => {
 			try {
@@ -295,7 +298,7 @@
 				}
 				void mailbox.refreshCounts();
 			} catch {
-				mailbox.patchMessage(id, snap);
+				for (const s of snaps) mailbox.patchMessage(s.id, { folder: s.folder, unread: s.unread });
 				flash(errMsg);
 			}
 		});
@@ -334,7 +337,7 @@
 
 	function queueArchive(id: string): Promise<void> {
 		advancePast(id);
-		return isThread(mailbox.findMessage(id))
+		return isThread(id)
 			? queueThreadUpdate(id, { folder: 'archive' }, 'archive', msg.mail_err_archive())
 			: queueStateUpdate(id, { folder: 'archive' }, archiveMessage, msg.mail_err_archive());
 	}
@@ -349,7 +352,7 @@
 		if (!current) return;
 		advancePast(id);
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
-		if (isThread(current)) {
+		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: targetFolder }, 'inbox', msg.mail_err_move_inbox());
 		} else {
 			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_move_inbox());
@@ -390,7 +393,7 @@
 
 	function spamOne(id: string) {
 		advancePast(id);
-		if (isThread(mailbox.findMessage(id))) {
+		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: 'spam' }, 'spam', msg.mail_err_move_spam());
 		} else {
 			void queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, msg.mail_err_move_spam());
@@ -399,7 +402,7 @@
 	}
 
 	function moveToSpam(id: string): Promise<void> {
-		return isThread(mailbox.findMessage(id))
+		return isThread(id)
 			? queueThreadUpdate(id, { folder: 'spam' }, 'spam', msg.mail_err_move_spam())
 			: queueStateUpdate(id, { folder: 'spam' }, markMessageSpam, msg.mail_err_move_spam());
 	}
@@ -480,7 +483,7 @@
 		const current = mailbox.findMessage(id);
 		if (!current) return;
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
-		if (isThread(current)) {
+		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_undo());
 		} else {
 			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_undo());
@@ -537,7 +540,7 @@
 			const nextId = nextAfter(id);
 			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 		}
-		if (isThread(mailbox.findMessage(id))) {
+		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: 'trash' }, 'trash', msg.mail_err_move_trash());
 		} else {
 			void queueStateUpdate(id, { folder: 'trash' }, trashMessage, msg.mail_err_move_trash());
@@ -553,7 +556,7 @@
 			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 		}
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
-		if (isThread(current)) {
+		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore());
 		} else {
 			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_restore());
@@ -592,7 +595,7 @@
 	}
 
 	function markRead(id: string) {
-		if (isThread(mailbox.findMessage(id))) {
+		if (isThread(id)) {
 			void queueThreadUpdate(id, { unread: false }, 'read', msg.mail_err_mark_read());
 		} else {
 			void queueStateUpdate(id, { unread: false }, markMessageRead, msg.mail_err_mark_read());
@@ -628,7 +631,7 @@
 			checked = new Set();
 			const results = await Promise.allSettled(
 				ids.map((id) =>
-					isThread(mailbox.findMessage(id))
+					isThread(id)
 						? queueThreadUpdate(id, { unread: false }, 'read', msg.mail_err_mark_read())
 						: queueStateUpdate(id, { unread: false }, markMessageRead, msg.mail_err_mark_read())
 				)
@@ -649,7 +652,7 @@
 				ids.map((id) => {
 					const current = mailbox.findMessage(id);
 					const targetFolder = current?.direction === 'sent' ? 'sent' : 'inbox';
-					return isThread(current)
+					return isThread(id)
 						? queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore())
 						: queueStateUpdate(
 								id,
@@ -698,7 +701,7 @@
 		checked = new Set();
 		const results = await Promise.allSettled(
 			ids.map((id) =>
-				isThread(mailbox.findMessage(id))
+				isThread(id)
 					? queueThreadUpdate(id, optimistic, verb, errMsg)
 					: queueStateUpdate(id, optimistic, fn, errMsg)
 			)
@@ -740,12 +743,14 @@
 		void drafts.refresh();
 	}
 
-	function replySent() {
+	function replySent(id: string) {
+		mailbox.noteReplySent(id);
 		flash(msg.mail_toast_reply_sent());
 		refreshAfterSend();
 	}
 
 	function replySentArchive(id: string) {
+		mailbox.noteReplySent(id);
 		flash(msg.mail_toast_reply_sent_archived());
 		void queueArchive(id).then(refreshAfterSend);
 	}

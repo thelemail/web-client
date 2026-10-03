@@ -676,6 +676,40 @@ describe('a thread appears once in a threaded stream', () => {
 		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a']);
 	});
 
+	it('counts a first reply into the thread of the pinned original once the reply row lands', async () => {
+		await loadInboxWithOldThread();
+		mailbox.setAutoFlush(RECEIVED_QUERY, true);
+		mailbox.pin(mailbox.findMessage('t0'));
+		expect(mailbox.threadSize('t0')).toBe(1);
+
+		getMessage.mockResolvedValueOnce(replyDetail());
+		mailbox.applyRealtime({ accountId: 'acc-1', kind: 'message.created', id: 'r', thread_id: 't0', rev: 1 });
+		await flushAsync();
+
+		expect(ids(RECEIVED_QUERY)).toEqual(['r', 'a']);
+		expect(mailbox.findMessage('t0')?.threadCount).toBeUndefined();
+		expect(mailbox.threadSize('t0')).toBe(2);
+		expect(mailbox.threadMembers('t0').map((m) => m.id).sort()).toEqual(['r', 't0']);
+	});
+
+	it('counts a first reply into the thread before any realtime hint arrives', async () => {
+		await loadInboxWithOldThread();
+		mailbox.pin(mailbox.findMessage('t0'));
+		mailbox.noteReplySent('t0');
+		expect(mailbox.threadSize('t0')).toBe(2);
+		expect(mailbox.threadSize('a')).toBe(1);
+	});
+
+	it('forgets noted thread sizes when the account changes', async () => {
+		await loadInboxWithOldThread();
+		mailbox.noteThreadSize('t0', 5);
+		expect(mailbox.threadSize('t0')).toBe(5);
+		mailbox.setAccount('acc-2');
+		mailbox.setAccount('acc-1');
+		await loadInboxWithOldThread();
+		expect(mailbox.threadSize('t0')).toBe(1);
+	});
+
 	it('skips a stale row of an already listed thread when loading more', async () => {
 		listThreads.mockResolvedValueOnce({
 			items: [

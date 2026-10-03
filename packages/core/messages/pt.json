@@ -432,6 +432,21 @@
 	],
 	"mail_thread_collapse_all": "Recolher tudo",
 	"mail_thread_expand_all": "Expandir tudo",
+	"mail_thread_older": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"count"
+			],
+			"match": {
+				"count=1": "{count} mensagem mais antiga",
+				"count=*": "{count} mensagens mais antigas"
+			}
+		}
+	],
 	"mail_search_placeholder": "Pesquisar mensagens",
 	"mail_search_clear": "Limpar",
 	"mail_block_unlock_required": "Desbloqueie esta conta para bloquear um remetente.",

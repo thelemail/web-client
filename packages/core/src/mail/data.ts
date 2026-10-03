@@ -77,6 +77,8 @@ export interface ThreadEntry {
 	epoch: number;
 	trust?: MessageTrust;
 	me?: boolean;
+	unread?: boolean;
+	loaded?: boolean;
 	body: string[];
 	srcDoc?: string;
 	quotedSrcDoc?: string;

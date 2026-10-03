@@ -432,6 +432,21 @@
 	],
 	"mail_thread_collapse_all": "Alle einklappen",
 	"mail_thread_expand_all": "Alle aufklappen",
+	"mail_thread_older": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} ältere Nachricht",
+				"countPlural=*": "{count} ältere Nachrichten"
+			}
+		}
+	],
 	"mail_search_placeholder": "E-Mails durchsuchen",
 	"mail_search_clear": "Leeren",
 	"mail_block_unlock_required": "Entsperren Sie dieses Konto, um einen Absender zu blockieren.",

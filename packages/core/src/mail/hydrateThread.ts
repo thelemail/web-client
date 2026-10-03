@@ -31,13 +31,31 @@ import { m } from '$paraglide/messages.js';
 
 export interface HydratedThread {
 	entries: ThreadEntry[];
+	load: (id: string) => Promise<ThreadEntry | null>;
 	rsvpStatus?: Message['rsvpStatus'];
 	rsvpEventUid?: string;
 	externalMessageId?: string;
 	references?: string[];
 }
 
-const HYDRATE_CONCURRENCY = 3;
+const PREVIEW_CONCURRENCY = 6;
+const RENDER_CONCURRENCY = 3;
+
+function limiter(limit: number) {
+	let active = 0;
+	const waiting: (() => void)[] = [];
+	return async <T>(fn: () => Promise<T>): Promise<T> => {
+		if (active < limit) active++;
+		else await new Promise<void>((resolve) => waiting.push(resolve));
+		try {
+			return await fn();
+		} finally {
+			const next = waiting.shift();
+			if (next) next();
+			else active--;
+		}
+	};
+}
 
 async function mapLimit<T, R>(
 	items: T[],
@@ -63,19 +81,63 @@ function isMine(address: string): boolean {
 	return addresses.items.some((a) => !a.shared && a.email.toLowerCase() === key);
 }
 
-async function hydrateEntry(
+interface EntrySource {
+	item: MessageDetail;
+	preview: MessagePreview;
+	cached?: MirrorMessage;
+}
+
+async function sourceFor(
 	accountId: string,
 	item: MessageDetail,
-	stripTracking: boolean,
 	cached?: MirrorMessage
-): Promise<ThreadEntry | null> {
+): Promise<EntrySource | null> {
 	try {
 		const preview = cached ? previewFromMirror(cached) : await decryptPreview(accountId, item.encryptedPreview);
-		const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
-		const init = initialsFor(fromDisplay, preview.sender.address);
-		const pal = paletteFor(preview.sender.address.toLowerCase());
-		const stored = new Date(item.storedAt);
-		const me = isMine(preview.sender.address);
+		return { item, preview, cached };
+	} catch (err) {
+		console.warn('Thread row hydration failed', err);
+		return null;
+	}
+}
+
+function previewEntry({ item, preview }: EntrySource): ThreadEntry {
+	const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
+	const pal = paletteFor(preview.sender.address.toLowerCase());
+	const me = isMine(preview.sender.address);
+	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
+	return {
+		id: item.id,
+		from: me ? m.mailbox_sender_you() : fromDisplay,
+		fromAddr: preview.sender.address,
+		bimiDomain: bimiDomainFromPreview(preview),
+		unsubscribe: me ? undefined : unsubscribeFromPreview(preview),
+		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
+		recipients: preview.recipients,
+		deliveredTo: typeof preview.delivered_to === 'string' ? preview.delivered_to : undefined,
+		init: initialsFor(fromDisplay, preview.sender.address),
+		bg: me ? 'var(--pine-700)' : pal.bg,
+		fg: me ? '#EEF2EA' : pal.fg,
+		epoch: new Date(item.storedAt).getTime(),
+		me,
+		unread: !item.read,
+		body: [preview.snippet || '(empty)'],
+		attachments: initialChips(item.attachments ?? []),
+		externalMessageId: item.externalMessageId ?? undefined,
+		inReplyTo: item.inReplyTo ?? undefined,
+		sentBy: sentByFrom(item)
+	};
+}
+
+async function fullEntry(
+	accountId: string,
+	source: EntrySource,
+	stripTracking: boolean
+): Promise<ThreadEntry | null> {
+	const { item, preview, cached } = source;
+	try {
+		const base = previewEntry(source);
+		const me = base.me === true;
 
 		const senderAddress = preview.sender.address;
 		const claimsOfficial = isOfficialAddress(senderAddress);
@@ -163,30 +225,14 @@ async function hydrateEntry(
 		};
 		const trust = me ? undefined : { ...deriveTrust(facts), facts };
 
-		const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 		return {
-			id: item.id,
-			from: me ? m.mailbox_sender_you() : fromDisplay,
-			fromAddr: preview.sender.address,
-			bimiDomain: bimiDomainFromPreview(preview),
-			unsubscribe: me ? undefined : unsubscribeFromPreview(preview),
-			to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
-			recipients: preview.recipients,
-			deliveredTo: typeof preview.delivered_to === 'string' ? preview.delivered_to : undefined,
-			init,
-			bg: me ? 'var(--pine-700)' : pal.bg,
-			fg: me ? '#EEF2EA' : pal.fg,
-			epoch: stored.getTime(),
+			...base,
 			trust,
-			me,
 			body: bodyLines,
 			srcDoc,
 			quotedSrcDoc,
 			forwarded,
-			attachments: initialChips(item.attachments ?? []),
-			externalMessageId: item.externalMessageId ?? undefined,
-			inReplyTo: item.inReplyTo ?? undefined,
-			sentBy: sentByFrom(item)
+			loaded: true
 		};
 	} catch (err) {
 		console.warn('Thread row hydration failed', err);
@@ -243,13 +289,26 @@ export async function hydrateThread(messageId: string): Promise<HydratedThread |
 	const seed = resp.items.find((it) => it.id === messageId) ?? resp.items[resp.items.length - 1];
 	const stripTracking = accountSettings.privacy.stripTrackingParams;
 
-	const hydrated = await mapLimit(resp.items, HYDRATE_CONCURRENCY, (item) =>
-		hydrateEntry(accountId, item, stripTracking, resp.cached?.get(item.id))
-	);
-	const entries = hydrated.filter((e): e is ThreadEntry => e !== null);
+	const sources = (
+		await mapLimit(resp.items, PREVIEW_CONCURRENCY, (item) =>
+			sourceFor(accountId, item, resp.cached?.get(item.id))
+		)
+	).filter((s): s is EntrySource => s !== null);
+	const byId = new Map(sources.map((s) => [s.item.id, s]));
+	const run = limiter(RENDER_CONCURRENCY);
+	const loads = new Map<string, Promise<ThreadEntry | null>>();
+	const load = (id: string): Promise<ThreadEntry | null> => {
+		const existing = loads.get(id);
+		if (existing) return existing;
+		const source = byId.get(id);
+		const next = source ? run(() => fullEntry(accountId, source, stripTracking)) : Promise.resolve(null);
+		loads.set(id, next);
+		return next;
+	};
 
 	return {
-		entries,
+		entries: sources.map(previewEntry),
+		load,
 		rsvpStatus: seed.rsvpStatus ?? undefined,
 		rsvpEventUid: seed.rsvpEventUid ?? undefined,
 		externalMessageId: seed.externalMessageId ?? undefined,

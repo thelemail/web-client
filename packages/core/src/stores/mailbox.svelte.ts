@@ -27,6 +27,7 @@ import type { RealtimeHint } from '$core/realtime/types';
 import { auth } from './auth.svelte';
 import { unread } from './unread.svelte';
 import { decodeWords } from 'postal-mime';
+import { SvelteMap } from 'svelte/reactivity';
 import { m } from '$paraglide/messages.js';
 
 interface Stream {
@@ -335,6 +336,7 @@ class MailboxStore {
 	#pendingNew = $state(new Map<string, Message[]>());
 	#autoFlush = new Set<string>();
 	#threadTicks = $state(new Map<string, number>());
+	#threadSizes = new SvelteMap<string, number>();
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -350,6 +352,7 @@ class MailboxStore {
 		this.#pendingNew = new Map();
 		this.#autoFlush.clear();
 		this.#threadTicks = new Map();
+		this.#threadSizes.clear();
 	}
 
 	get counts(): MailboxCounts {
@@ -470,6 +473,42 @@ class MailboxStore {
 		}
 		if (this.pinned?.id === id) return this.pinned;
 		return null;
+	}
+
+	threadMembers(id: string | null): Message[] {
+		const seed = this.findMessage(id);
+		if (!seed) return [];
+		const key = seed.threadRootId ?? seed.id;
+		const out = new Map<string, Message>([[seed.id, seed]]);
+		const consider = (m: Message) => {
+			if ((m.threadRootId ?? m.id) !== key || out.has(m.id)) return;
+			out.set(m.id, m);
+		};
+		for (const [, s] of this.#streams) {
+			for (const m of s.items) consider(m);
+		}
+		if (this.pinned) consider(this.pinned);
+		return [...out.values()];
+	}
+
+	threadSize(id: string | null): number {
+		const members = this.threadMembers(id);
+		if (members.length === 0) return 0;
+		const key = members[0].threadRootId ?? members[0].id;
+		let size = Math.max(members.length, this.#threadSizes.get(key) ?? 0);
+		for (const m of members) size = Math.max(size, m.threadCount ?? 1);
+		return size;
+	}
+
+	noteThreadSize(threadRootId: string, size: number): void {
+		if (size <= (this.#threadSizes.get(threadRootId) ?? 0)) return;
+		this.#threadSizes.set(threadRootId, size);
+	}
+
+	noteReplySent(id: string): void {
+		const seed = this.findMessage(id);
+		if (!seed) return;
+		this.noteThreadSize(seed.threadRootId ?? seed.id, Math.max(this.threadSize(id), 1) + 1);
 	}
 
 	async #fetchDecrypted(id: string, accountId: string): Promise<{ msg: Message; locked: boolean } | null> {
