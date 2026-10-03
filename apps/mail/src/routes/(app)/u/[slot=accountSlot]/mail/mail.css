@@ -984,8 +984,9 @@
 	.mail-app .letterhead { flex-wrap: wrap; gap: 10px; }
 	.mail-app .letterhead .prov { margin-left: 46px; align-items: flex-start; flex-direction: row; gap: 10px; flex-wrap: wrap; }
 	.mail-app .sealbar { flex-wrap: wrap; padding: 12px 14px; gap: 12px; }
-	.mail-app .tmsg-head { padding: 13px 14px 10px; }
-	.mail-app .tmsg-head .prov { flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
+	.mail-app .tmsg-head { padding: 13px 14px 10px; flex-wrap: wrap; row-gap: 8px; }
+	.mail-app .tmsg-head .who { flex: 1 1 0; }
+	.mail-app .tmsg-head .prov { flex: 1 0 100%; margin-left: 0; padding-left: 55px; flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
 	.mail-app .tmsg-body { padding: 2px 14px 14px; }
 	.mail-app .tmsg-collapsed { padding: 10px 12px; }
 	.mail-app .tmsg-collapsed .tc-snip { display: none; }
