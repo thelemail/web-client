@@ -432,6 +432,21 @@
   ],
   "mail_thread_collapse_all": "Tout réduire",
   "mail_thread_expand_all": "Tout développer",
+  "mail_thread_older": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} message plus ancien",
+        "countPlural=*": "{count} messages plus anciens"
+      }
+    }
+  ],
   "mail_search_placeholder": "Rechercher des e-mails",
   "mail_search_clear": "Effacer",
   "mail_block_unlock_required": "Déverrouillez ce compte pour bloquer un expéditeur.",

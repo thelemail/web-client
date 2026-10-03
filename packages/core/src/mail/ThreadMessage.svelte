@@ -69,6 +69,7 @@
 {#if !isOpen}
 	<div
 		class="tmsg collapsed"
+		data-entry={e.id}
 		role="button"
 		tabindex="0"
 		onclick={onToggle}
@@ -97,7 +98,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="tmsg open">
+	<div class="tmsg open" data-entry={e.id}>
 		<div
 			class="tmsg-head"
 			role="button"
@@ -159,6 +160,8 @@
 			<div class="email-sheet flush">
 				{#if e.srcDoc}
 					<EmailBody srcDoc={e.srcDoc} />
+				{:else}
+					<div class="tmsg-pending">{m.mail_reader_decrypting()}</div>
 				{/if}
 			</div>
 

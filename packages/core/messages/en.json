@@ -432,6 +432,21 @@
 	],
 	"mail_thread_collapse_all": "Collapse all",
 	"mail_thread_expand_all": "Expand all",
+	"mail_thread_older": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} older message",
+				"countPlural=*": "{count} older messages"
+			}
+		}
+	],
 	"mail_search_placeholder": "Search mail",
 	"mail_search_clear": "Clear",
 	"mail_block_unlock_required": "Unlock this account to block a sender.",

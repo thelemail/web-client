@@ -49,7 +49,8 @@
 	import { getMessage } from '$core/api/messages';
 	import { initialChips, type AttachmentChip } from '$core/mail/attachments';
 	import AttachmentList from '$core/mail/AttachmentList.svelte';
-	import { hydrateThread } from './hydrateThread';
+	import { hydrateThread, type HydratedThread } from './hydrateThread';
+	import { focusIdOf, initialOpenIds } from './threadFold';
 	import TrustMark from './TrustMark.svelte';
 	import { acceptSenderKeyChange } from './senderVerify';
 	import { loadMessageBody } from './bodySource';
@@ -325,8 +326,11 @@
 
 	type ThreadMeta = {
 		id: string;
-		entries: Message['thread'];
-		trust?: NonNullable<Message['thread']>[number]['trust'];
+		entries: ThreadEntry[];
+		focusId?: string;
+		initialOpen: string[];
+		session: HydratedThread;
+		requested: Set<string>;
 		rsvpStatus?: Message['rsvpStatus'];
 		rsvpEventUid?: string;
 		externalMessageId?: string;
@@ -334,7 +338,8 @@
 		deliveredTo?: string;
 		recipients?: MessagePreviewRecipient[];
 	};
-	let threadMeta = $state<ThreadMeta | null>(null);
+	let threadMeta = $state.raw<ThreadMeta | null>(null);
+	let threadFailedFor = $state<string | null>(null);
 	let threadRefreshTick = $state(0);
 	let threadSeenTick = 0;
 
@@ -379,7 +384,9 @@
 	}
 
 	const readerTrust = $derived(
-		threadMeta && m && threadMeta.id === m.id ? threadMeta.trust : undefined
+		threadMeta && m && threadMeta.id === m.id
+			? threadMeta.entries.find((e) => e.id === m.id)?.trust
+			: undefined
 	);
 
 	async function confirmKeyChange(address: string) {
@@ -429,34 +436,66 @@
 		}
 		if (threadMeta?.id === current.id && threadSeenTick === tick) return;
 		threadSeenTick = tick;
+		const previous = untrack(() => threadMeta);
+		const kept = new Map(
+			previous?.id === current.id
+				? previous.entries.filter((e) => e.loaded && e.id).map((e) => [e.id!, e] as const)
+				: []
+		);
 		void (async () => {
 			try {
-				const hydrated = await hydrateThread(current.id);
-				if (!hydrated) {
+				const session = await hydrateThread(current.id);
+				if (untrack(() => m)?.id !== current.id) return;
+				if (!session) {
 					threadMeta = null;
+					threadFailedFor = current.id;
 					return;
 				}
-				const seedEntry =
-					hydrated.entries.find((e) => e.id === current.id) ??
-					hydrated.entries[hydrated.entries.length - 1];
+				const focusId = focusIdOf(session.entries, current.id);
+				const initialOpen = initialOpenIds(session.entries, focusId);
+				const loaded = new Map(kept);
+				if (kept.size === 0) {
+					const full = await Promise.all(initialOpen.map((id) => session.load(id)));
+					if (untrack(() => m)?.id !== current.id) return;
+					for (const e of full) if (e?.id) loaded.set(e.id, e);
+				}
+				const entries = session.entries.map((e) => (e.id && loaded.get(e.id)) || e);
+				const seedEntry = entries.find((e) => e.id === current.id) ?? entries[entries.length - 1];
 				threadMeta = {
 					id: current.id,
-					entries: hydrated.entries,
-					trust: seedEntry?.trust,
-					rsvpStatus: hydrated.rsvpStatus,
-					rsvpEventUid: hydrated.rsvpEventUid,
-					externalMessageId: hydrated.externalMessageId,
-					references: hydrated.references,
+					entries,
+					focusId,
+					initialOpen,
+					session,
+					requested: new Set(kept.size === 0 ? initialOpen : []),
+					rsvpStatus: session.rsvpStatus,
+					rsvpEventUid: session.rsvpEventUid,
+					externalMessageId: session.externalMessageId,
+					references: session.references,
 					deliveredTo: seedEntry?.deliveredTo,
 					recipients: seedEntry?.recipients
 				};
-				mailbox.noteThreadSize(current.threadRootId ?? current.id, hydrated.entries.length);
-				cascadeMarkRead(hydrated.entries ?? []);
+				threadFailedFor = null;
+				for (const id of kept.keys()) loadEntry(id);
+				mailbox.noteThreadSize(current.threadRootId ?? current.id, entries.length);
+				cascadeMarkRead(entries);
 			} catch (err) {
 				console.warn('Thread hydration failed', err);
+				if (untrack(() => m)?.id === current.id) threadFailedFor = current.id;
 			}
 		})();
 	});
+
+	function loadEntry(id: string) {
+		const meta = threadMeta;
+		if (!meta || meta.requested.has(id)) return;
+		meta.requested.add(id);
+		void meta.session.load(id).then((full) => {
+			const now = threadMeta;
+			if (!full || !now || now.session !== meta.session) return;
+			threadMeta = { ...now, entries: now.entries.map((e) => (e.id === id ? full : e)) };
+		});
+	}
 
 	function cascadeMarkRead(entries: NonNullable<Message['thread']>) {
 		const delay = accountSettings.markReadDelayMs;
@@ -570,7 +609,10 @@
 		bodyState?.status === 'ready' ? bodyState.attachments : []
 	);
 	const isThreadView = $derived(
-		Math.max(enriched?.thread?.length ?? 0, m?.threadCount ?? 0) > 1
+		Math.max(enriched?.thread?.length ?? 0, m ? mailbox.threadSize(m.id) : 0) > 1
+	);
+	const threadPending = $derived(
+		!!m && isThreadView && threadMeta?.id !== m.id && threadFailedFor !== m.id
 	);
 
 	async function refreshPointer(attachmentId: string) {
@@ -606,7 +648,7 @@
 				<span><kbd>C</kbd> {msg.mail_reader_hint_compose()}</span>
 			</div>
 		</div>
-	{:else if bodyState?.status === 'loading'}
+	{:else if bodyState?.status === 'loading' || threadPending}
 		<ReaderSkeleton {onBack} />
 	{:else}
 		<div class="reader-bar">
@@ -938,8 +980,15 @@
 					</div>
 				{/if}
 
-				{#if enriched?.thread && enriched.thread.length > 1}
-					<Thread m={enriched} onConfirmKeyChange={confirmKeyChange} onUnsubscribe={openUnsubscribe} />
+				{#if threadMeta?.id === m.id && threadMeta.entries.length > 1}
+					<Thread
+						entries={threadMeta.entries}
+						focusId={threadMeta.focusId}
+						initialOpen={threadMeta.initialOpen}
+						onNeed={loadEntry}
+						onConfirmKeyChange={confirmKeyChange}
+						onUnsubscribe={openUnsubscribe}
+					/>
 				{:else}
 					<div class="letterhead">
 						<Avatar
