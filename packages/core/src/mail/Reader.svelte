@@ -33,6 +33,8 @@
 	import OriginalHeadersDialog from './OriginalHeadersDialog.svelte';
 	import ReportDialog from './ReportDialog.svelte';
 	import BlockSenderDialog from './BlockSenderDialog.svelte';
+	import UnsubscribeDialog from './UnsubscribeDialog.svelte';
+	import { unsubscribeMethod, type UnsubscribeMethod } from './unsubscribe';
 	import SnoozePicker from './SnoozePicker.svelte';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import AlarmClockOff from '@lucide/svelte/icons/alarm-clock-off';
@@ -90,6 +92,7 @@
 		onUnsnooze?: (id: string) => void;
 		onReported?: (id: string, kind: MessageReportKind, outcome: ReportOutcome) => void;
 		onBlockedSender?: (address: string, moveExisting: boolean) => void;
+		onUnsubscribed?: (name: string, kind: UnsubscribeMethod['kind']) => void;
 		blockedSenderCount?: (address: string) => number;
 		onReplySent?: () => void;
 		onReplySentArchive?: (id: string) => void;
@@ -113,6 +116,7 @@
 		onUnsnooze,
 		onReported,
 		onBlockedSender,
+		onUnsubscribed,
 		blockedSenderCount,
 		onReplySent,
 		onReplySentArchive,
@@ -144,6 +148,13 @@
 	let headersOpen = $state(false);
 	let reportOpen = $state(false);
 	let blockOpen = $state(false);
+	let unsubTarget = $state<{
+		messageId: string;
+		name: string;
+		address: string;
+		deliveredTo?: string;
+		method: UnsubscribeMethod;
+	} | null>(null);
 	let labelSaving = $state(false);
 	let labelError = $state<string | null>(null);
 	const labelOptions = Object.entries(LABELS) as [LabelId, (typeof LABELS)[LabelId]][];
@@ -278,6 +289,7 @@
 			headersOpen = false;
 			reportOpen = false;
 			blockOpen = false;
+			unsubTarget = null;
 			replyMode = null;
 		}
 	});
@@ -350,6 +362,20 @@
 
 	function toggleReplyMode(next: ReplyMode) {
 		replyMode = replyMode === next ? null : next;
+	}
+
+	const unsubMethod = $derived(m ? unsubscribeMethod(m.unsubscribe) : null);
+
+	function openUnsubscribe(e: Pick<ThreadEntry, 'id' | 'from' | 'fromAddr' | 'deliveredTo' | 'unsubscribe'>) {
+		const method = unsubscribeMethod(e.unsubscribe);
+		if (!e.id || !method) return;
+		unsubTarget = {
+			messageId: e.id,
+			name: e.from,
+			address: e.fromAddr,
+			deliveredTo: e.deliveredTo,
+			method
+		};
 	}
 
 	const readerTrust = $derived(
@@ -912,7 +938,7 @@
 				{/if}
 
 				{#if enriched?.thread && enriched.thread.length > 1}
-					<Thread m={enriched} onConfirmKeyChange={confirmKeyChange} />
+					<Thread m={enriched} onConfirmKeyChange={confirmKeyChange} onUnsubscribe={openUnsubscribe} />
 				{:else}
 					<div class="letterhead">
 						<Avatar
@@ -928,6 +954,16 @@
 							<div class="nm">{m.from}</div>
 							<div class="det">
 								<span class="em">{m.fromAddr}</span>
+								{#if unsubMethod}
+									<button
+										type="button"
+										class="unsub"
+										onclick={() =>
+											openUnsubscribe({ ...m, deliveredTo: enriched?.deliveredTo ?? m.deliveredTo })}
+									>
+										{msg.mail_unsub_action()}
+									</button>
+								{/if}
 								{#if sentByText}
 									<span class="by">{sentByText}</span>
 								{/if}
@@ -1038,5 +1074,17 @@
 		existingCount={alsoInMailbox}
 		onClose={() => (blockOpen = false)}
 		onBlocked={(address, moveExisting) => onBlockedSender?.(address, moveExisting)}
+	/>
+{/if}
+
+{#if unsubTarget}
+	<UnsubscribeDialog
+		messageId={unsubTarget.messageId}
+		senderName={unsubTarget.name}
+		senderAddress={unsubTarget.address}
+		deliveredTo={unsubTarget.deliveredTo}
+		method={unsubTarget.method}
+		onClose={() => (unsubTarget = null)}
+		onUnsubscribed={(name, kind) => onUnsubscribed?.(name, kind)}
 	/>
 {/if}

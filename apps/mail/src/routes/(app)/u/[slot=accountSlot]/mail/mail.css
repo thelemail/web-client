@@ -798,6 +798,12 @@
 .mail-app .tmsg-head .who .em { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .tmsg-head .who .by,
 .mail-app .letterhead .who .by { font-size: 12px; color: var(--info-700); white-space: nowrap; }
+.mail-app .tmsg-head .who .unsub,
+.mail-app .letterhead .who .unsub { font-family: inherit; font-size: 12px; color: var(--fg-muted); background: none; border: none; padding: 0; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; white-space: nowrap; }
+.mail-app .tmsg-head .who .unsub:hover,
+.mail-app .letterhead .who .unsub:hover { color: var(--fg-strong); }
+.mail-app .tmsg-head .who .unsub:focus-visible,
+.mail-app .letterhead .who .unsub:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 2px; }
 .mail-app .tmsg-head .who .to { font-size: 12px; color: var(--fg-faint); min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .tmsg-head .prov { margin-left: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 2px; }
 .mail-app .tmsg-head .when { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); text-align: right; white-space: nowrap; }

@@ -42,6 +42,7 @@
 	import { returnedFromSnooze } from './timePresets';
 	import type { MessageReportKind, MessageState } from '$core/api/types';
 	import { submitReport, type ReportOutcome } from './report';
+	import type { UnsubscribeMethod } from './unsubscribe';
 	import { applyToThread, type ThreadVerb } from './threadActions';
 	import { canFetchFolder, mailbox } from '$core/stores/mailbox.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
@@ -493,6 +494,10 @@
 			.filter((m) => m.folder !== 'spam' && m.folder !== 'trash');
 	}
 
+	function unsubscribed(name: string, kind: UnsubscribeMethod['kind']) {
+		flash(kind === 'mailto' ? msg.mail_toast_unsub_sent({ name }) : msg.mail_toast_unsubscribed({ name }));
+	}
+
 	function blockedSender(address: string, moveExisting: boolean) {
 		const targets = moveExisting ? blockableFrom(address) : [];
 		if (messageId !== null && targets.some((m) => m.id === messageId)) {
@@ -923,6 +928,7 @@
 				onUnsnooze={(id) => unsnoozeOne(id)}
 				onReported={reported}
 				onBlockedSender={blockedSender}
+				onUnsubscribed={unsubscribed}
 				blockedSenderCount={(address) => blockableFrom(address).length}
 					onBack={() => closeMessage({ replace: true })}
 				onReplySent={replySent}

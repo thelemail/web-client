@@ -440,6 +440,20 @@
   "mail_block_confirm": "Bloquer l’expéditeur",
   "mail_block_body": "Les nouveaux e-mails de <mono>{address}</mono> vont directement dans les indésirables, sans notification. L’adresse est stockée sous forme de hachage à clé : le serveur ne la voit donc jamais en clair, et le libellé affiché ici est chiffré avec votre clé.",
   "mail_block_unblock_hint": "Vous pouvez débloquer l’adresse dans les paramètres à tout moment.",
+  "mail_unsub_action": "Se désabonner",
+  "mail_unsub_title": "Se désabonner de {name} ?",
+  "mail_unsub_confirm": "Se désabonner",
+  "mail_unsub_open_page": "Ouvrir la page",
+  "mail_unsub_body_one_click": "Thelemail demandera à <mono>{domain}</mono> de vous retirer de cette liste. La demande part de nos serveurs : l’expéditeur ne voit pas votre adresse IP.",
+  "mail_unsub_body_mailto": "Thelemail enverra un e-mail de désabonnement de <mono>{from}</mono> à <mono>{to}</mono>.",
+  "mail_unsub_body_page": "La page de désabonnement de l’expéditeur sur <mono>{host}</mono> s’ouvre dans un nouvel onglet. Terminez le désabonnement là-bas.",
+  "mail_unsub_rejected": "{name} n’a pas accepté la demande. Réessayez plus tard.",
+  "mail_unsub_unreachable": "{name} est injoignable. Réessayez plus tard.",
+  "mail_unsub_rate_limited": "Trop de demandes de désabonnement. Réessayez dans un moment.",
+  "mail_unsub_failed": "La demande n’a pas abouti. Réessayez.",
+  "mail_unsub_unlock_required": "Déverrouillez ce compte pour vous désabonner.",
+  "mail_toast_unsubscribed": "Désabonné de {name}",
+  "mail_toast_unsub_sent": "E-mail de désabonnement envoyé à {name}",
   "mail_block_move_existing": [
     {
       "declarations": [

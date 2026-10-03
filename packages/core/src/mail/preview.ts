@@ -19,6 +19,12 @@ export interface MessagePreviewAuth {
 
 export type AuthState = 'pass' | 'fail';
 
+export interface UnsubscribeLinks {
+	oneClick?: { url: string; tag: string };
+	mailto?: string;
+	page?: string;
+}
+
 export interface MessagePreview {
 	v: number;
 	subject: string;
@@ -55,4 +61,42 @@ export function authStateFromPreview(preview: MessagePreview): AuthState | undef
 	if (dmarc === 'pass') return 'pass';
 	if (dmarc === 'fail') return 'fail';
 	return undefined;
+}
+
+const MAX_UNSUBSCRIBE_URI = 2048;
+const TAG_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+function httpsUrl(value: unknown): string | undefined {
+	if (typeof value !== 'string' || value.length > MAX_UNSUBSCRIBE_URI) return undefined;
+	try {
+		const u = new URL(value);
+		if (u.protocol !== 'https:' || !u.hostname || u.username || u.password) return undefined;
+		if (u.port && u.port !== '443') return undefined;
+		return value;
+	} catch {
+		return undefined;
+	}
+}
+
+function mailtoUri(value: unknown): string | undefined {
+	if (typeof value !== 'string' || value.length > MAX_UNSUBSCRIBE_URI) return undefined;
+	return /^mailto:/i.test(value) ? value : undefined;
+}
+
+export function unsubscribeFromPreview(preview: MessagePreview): UnsubscribeLinks | undefined {
+	const raw = preview.flags?.unsubscribe;
+	if (typeof raw !== 'object' || raw === null) return undefined;
+	const value = raw as Record<string, unknown>;
+	const links: UnsubscribeLinks = {};
+	const oc = value.one_click;
+	if (typeof oc === 'object' && oc !== null) {
+		const { url, tag } = oc as Record<string, unknown>;
+		const safe = httpsUrl(url);
+		if (safe && typeof tag === 'string' && TAG_PATTERN.test(tag)) links.oneClick = { url: safe, tag };
+	}
+	const mailto = mailtoUri(value.mailto);
+	if (mailto) links.mailto = mailto;
+	const page = httpsUrl(value.https);
+	if (page) links.page = page;
+	return links.oneClick || links.mailto || links.page ? links : undefined;
 }

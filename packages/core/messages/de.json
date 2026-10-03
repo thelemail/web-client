@@ -440,6 +440,20 @@
 	"mail_block_confirm": "Absender blockieren",
 	"mail_block_body": "Neue E-Mails von <mono>{address}</mono> landen direkt im Spamordner und lösen keine Benachrichtigung aus. Die Adresse wird als schlüsselbasierter Hash gespeichert, sodass der Server sie nie im Klartext sieht. Die hier angezeigte Bezeichnung wird mit Ihrem Schlüssel verschlüsselt.",
 	"mail_block_unblock_hint": "Sie können die Adresse jederzeit in den Einstellungen wieder freigeben.",
+	"mail_unsub_action": "Abbestellen",
+	"mail_unsub_title": "{name} abbestellen?",
+	"mail_unsub_confirm": "Abbestellen",
+	"mail_unsub_open_page": "Seite öffnen",
+	"mail_unsub_body_one_click": "Thelemail bittet <mono>{domain}</mono>, dich von dieser Liste zu entfernen. Die Anfrage geht von unseren Servern aus, der Absender sieht deine IP-Adresse also nicht.",
+	"mail_unsub_body_mailto": "Thelemail sendet eine Abmelde-E-Mail von <mono>{from}</mono> an <mono>{to}</mono>.",
+	"mail_unsub_body_page": "Die Abmeldeseite des Absenders auf <mono>{host}</mono> öffnet sich in einem neuen Tab. Schließe die Abmeldung dort ab.",
+	"mail_unsub_rejected": "{name} hat die Anfrage nicht angenommen. Versuche es später noch einmal.",
+	"mail_unsub_unreachable": "{name} war nicht erreichbar. Versuche es später noch einmal.",
+	"mail_unsub_rate_limited": "Zu viele Abmeldeanfragen. Versuche es gleich noch einmal.",
+	"mail_unsub_failed": "Die Anfrage hat nicht geklappt. Versuche es noch einmal.",
+	"mail_unsub_unlock_required": "Entsperre dieses Konto, um dich abzumelden.",
+	"mail_toast_unsubscribed": "{name} abbestellt",
+	"mail_toast_unsub_sent": "Abmelde-E-Mail an {name} gesendet",
 	"mail_block_move_existing": [
 		{
 			"declarations": [

@@ -25,7 +25,8 @@ import type {
 	SnoozeRequest,
 	SortOrder,
 	ThreadListResponse,
-	ThreadResponse
+	ThreadResponse,
+	UnsubscribeMessageRequest
 } from './types';
 
 export function issueAttachmentUploadUrls(
@@ -168,6 +169,10 @@ export function markMessageSpam(messageId: string): Promise<MessageState> {
 
 export function reportMessage(messageId: string, body: ReportMessageRequest): Promise<void> {
 	return apiFetch<void>(statePath(messageId, 'report'), { method: 'POST', body });
+}
+
+export function unsubscribeMessage(messageId: string, body: UnsubscribeMessageRequest): Promise<void> {
+	return apiFetch<void>(statePath(messageId, 'unsubscribe'), { method: 'POST', body });
 }
 
 export function snoozeMessage(messageId: string, until: string): Promise<MessageState> {

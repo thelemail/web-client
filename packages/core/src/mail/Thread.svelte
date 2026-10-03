@@ -3,14 +3,15 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import ThreadMessage from './ThreadMessage.svelte';
-	import type { Message } from './data';
+	import type { Message, ThreadEntry } from './data';
 
 	interface Props {
 		m: Message;
 		onConfirmKeyChange?: (address: string) => void | Promise<void>;
+		onUnsubscribe?: (e: ThreadEntry) => void;
 	}
 
-	let { m, onConfirmKeyChange }: Props = $props();
+	let { m, onConfirmKeyChange, onUnsubscribe }: Props = $props();
 
 	const entries = $derived(m.thread ?? []);
 	const lastIdx = $derived(entries.length - 1);
@@ -58,6 +59,7 @@
 				isOpen={open.has(i)}
 				onToggle={() => toggle(i)}
 				{onConfirmKeyChange}
+				{onUnsubscribe}
 			/>
 		{/each}
 	</div>

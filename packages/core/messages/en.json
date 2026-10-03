@@ -440,6 +440,20 @@
 	"mail_block_confirm": "Block sender",
 	"mail_block_body": "New mail from <mono>{address}</mono> goes straight to Spam and raises no notification. The address is stored as a keyed hash, so the server never sees it in the clear, and the label you see here is encrypted to your key.",
 	"mail_block_unblock_hint": "You can unblock the address from Settings at any time.",
+	"mail_unsub_action": "Unsubscribe",
+	"mail_unsub_title": "Unsubscribe from {name}?",
+	"mail_unsub_confirm": "Unsubscribe",
+	"mail_unsub_open_page": "Open page",
+	"mail_unsub_body_one_click": "Thelemail will ask <mono>{domain}</mono> to take you off this list. The request is sent from our servers, so the sender doesn't see your IP address.",
+	"mail_unsub_body_mailto": "Thelemail will send an unsubscribe email from <mono>{from}</mono> to <mono>{to}</mono>.",
+	"mail_unsub_body_page": "The sender's unsubscribe page on <mono>{host}</mono> opens in a new tab. Finish unsubscribing there.",
+	"mail_unsub_rejected": "{name} didn't accept the request. Try again later.",
+	"mail_unsub_unreachable": "{name} couldn't be reached. Try again later.",
+	"mail_unsub_rate_limited": "Too many unsubscribe requests. Try again in a little while.",
+	"mail_unsub_failed": "The request didn't go through. Try again.",
+	"mail_unsub_unlock_required": "Unlock this account to unsubscribe.",
+	"mail_toast_unsubscribed": "Unsubscribed from {name}",
+	"mail_toast_unsub_sent": "Unsubscribe email sent to {name}",
 	"mail_block_move_existing": [
 		{
 			"declarations": [

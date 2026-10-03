@@ -59,6 +59,9 @@ export const platform: Platform = {
 		}),
 	returnOrigin: () => window.location.origin,
 	openExternal: (url) => window.location.assign(url),
+	openLink: (url) => {
+		window.open(url, '_blank', 'noopener,noreferrer');
+	},
 	saveBlob: async (blob, filename) => {
 		const href = URL.createObjectURL(blob);
 		const a = document.createElement('a');
