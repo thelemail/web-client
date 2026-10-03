@@ -10,6 +10,7 @@
 	let { srcDoc }: Props = $props();
 	let frame: HTMLIFrameElement | undefined = $state();
 	let observer: ResizeObserver | null = null;
+	let refit = 0;
 
 	const writeFrameDoc = platform.writeFrameDoc === true;
 
@@ -27,7 +28,8 @@
 		try {
 			const d = frame.contentDocument;
 			if (!d) return;
-			frame.style.height = Math.max(60, d.documentElement.scrollHeight) + 'px';
+			const next = Math.max(60, d.documentElement.scrollHeight) + 'px';
+			if (frame.style.height !== next) frame.style.height = next;
 			frame.dataset.fitted = '1';
 		} catch {
 		}
@@ -58,7 +60,10 @@
 		observer?.disconnect();
 		observer = null;
 		if (!doc.body || typeof ResizeObserver === 'undefined') return;
-		observer = new ResizeObserver(fit);
+		observer = new ResizeObserver(() => {
+			cancelAnimationFrame(refit);
+			refit = requestAnimationFrame(fit);
+		});
 		observer.observe(doc.body);
 	}
 
@@ -72,6 +77,7 @@
 	}
 
 	$effect(() => () => {
+		cancelAnimationFrame(refit);
 		observer?.disconnect();
 		observer = null;
 	});
