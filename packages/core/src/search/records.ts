@@ -13,7 +13,8 @@ export function rowFor(accountId: string, item: MessageListItem, chunkId: number
 		mailboxState: item.mailboxState,
 		read: item.read,
 		starred: item.starred,
-		labels: item.labels ?? [],
+		folderId: item.folderId ?? null,
+		labels: item.labelIds ?? [],
 		attachmentCount: item.attachmentCount,
 		threadRootId: item.threadRootId ?? null,
 		snoozedUntil: item.snoozedUntil ?? null

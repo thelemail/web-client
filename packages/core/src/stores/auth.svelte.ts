@@ -24,6 +24,7 @@ import { scheduled } from './scheduled.svelte';
 import { addresses } from './addresses.svelte';
 import { syncAddressUids } from '$core/keys/uid-sync';
 import { signatures } from './signatures.svelte';
+import { mailCollections } from './mailCollections.svelte';
 import { customDomains } from './customDomains.svelte';
 import { accountSettings } from './accountSettings.svelte';
 import { workspaces } from './workspaces.svelte';
@@ -57,6 +58,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	scheduled.setAccount(accountId);
 	addresses.setAccount(accountId);
 	signatures.setAccount(accountId);
+	mailCollections.setAccount(accountId);
 	customDomains.setAccount(accountId);
 	accountSettings.setAccount(accountId);
 	workspaces.setAccount(accountId);

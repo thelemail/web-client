@@ -52,18 +52,20 @@ export type ErrorCode =
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
-export type MailboxState = 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed';
+export type MailboxState = 'inbox' | 'archive' | 'folder' | 'trash' | 'spam' | 'snoozed';
 
 export interface MailboxCounts {
 	inbox: number;
 	starred: number;
 	spam: number;
 	snoozed: number;
+	folders: Record<string, number>;
 }
 
 export interface MessageState {
 	id: string;
 	mailboxState: MailboxState;
+	folderId?: string | null;
 	starred: boolean;
 	starredAt?: string | null;
 	read: boolean;
@@ -106,7 +108,8 @@ export interface MessageListItem {
 	threadRootId?: string | null;
 	rsvpStatus?: RsvpStatus | null;
 	threadCount?: number | null;
-	labels?: string[];
+	folderId?: string;
+	labelIds?: string[];
 }
 
 export interface MessageListResponse {
@@ -174,7 +177,8 @@ export interface MessageDetail {
 	threadCount?: number | null;
 	rsvpStatus?: RsvpStatus | null;
 	rsvpEventUid?: string | null;
-	labels?: string[];
+	folderId?: string;
+	labelIds?: string[];
 }
 
 export interface ReplyPresenceEntry {
@@ -192,9 +196,49 @@ export interface ReplyPresenceStarted {
 	ttlSeconds: number;
 }
 
-export interface LabelsRequest {
-	labels: string[];
+export interface MoveMessageRequest {
+	folderId: string;
 }
+
+export type MailCollectionKind = 'folder' | 'label';
+
+export interface MailCollectionRecord {
+	id: string;
+	kind: MailCollectionKind;
+	parentId?: string | null;
+	position: number;
+	sealedMeta: string;
+	metaKeyFingerprint: string;
+	metaSchemaVersion: number;
+	rev: number;
+	deleted: boolean;
+	createdAt: string;
+	updatedAt: string;
+}
+
+export interface MailCollectionListResponse {
+	collections: MailCollectionRecord[];
+}
+
+export interface CreateMailCollectionRequest {
+	kind: MailCollectionKind;
+	parentId?: string | null;
+	position: number;
+	sealedMeta: string;
+	metaKeyFingerprint: string;
+	metaSchemaVersion: number;
+}
+
+export interface UpdateMailCollectionRequest {
+	parentId?: string | null;
+	position: number;
+	sealedMeta: string;
+	metaKeyFingerprint: string;
+	metaSchemaVersion: number;
+	baseRev: number;
+}
+
+export type FolderDestination = 'inbox' | 'archive' | 'folder';
 
 export type MessageReportKind = 'spam' | 'phishing';
 

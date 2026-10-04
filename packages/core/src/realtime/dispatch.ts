@@ -10,6 +10,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { billing } from '$core/stores/billing.svelte';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { replyPresence } from '$core/stores/replyPresence.svelte';
+import { mailCollections } from '$core/stores/mailCollections.svelte';
 import { coalesce } from './coalesce';
 import { notifyCalendarHint, notifyCalendarMessage } from './calendarHook';
 import type { RealtimeHint } from './types';
@@ -101,6 +102,9 @@ export function applyHint(hint: RealtimeHint): void {
 			return;
 		case 'reply_presence':
 			if (isActive) replyPresence.onHint(hint);
+			return;
+		case 'mail_collection':
+			if (isActive) void mailCollections.load();
 			return;
 		default:
 			return;

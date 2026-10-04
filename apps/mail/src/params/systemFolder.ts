@@ -1,15 +1,4 @@
 import type { ParamMatcher } from '@sveltejs/kit';
+import { isMailFolderRoute } from '$core/mail/folderRoute';
 
-const SYSTEM_FOLDERS = new Set([
-	'inbox',
-	'starred',
-	'sent',
-	'drafts',
-	'scheduled',
-	'snoozed',
-	'archive',
-	'spam',
-	'trash'
-]);
-
-export const match = ((p) => SYSTEM_FOLDERS.has(p)) satisfies ParamMatcher;
+export const match = ((p) => isMailFolderRoute(p)) satisfies ParamMatcher;

@@ -51,6 +51,11 @@ vi.mock('$core/stores/replyPresence.svelte', () => ({
 	replyPresence: { onHint: (...a: unknown[]) => replyPresenceHint(...a) }
 }));
 
+const mailCollectionsLoad = vi.fn();
+vi.mock('$core/stores/mailCollections.svelte', () => ({
+	mailCollections: { load: (...a: unknown[]) => mailCollectionsLoad(...a) }
+}));
+
 const authState = vi.hoisted(() => ({ accountId: 'acc-1' as string | null }));
 const authLoadProfile = vi.fn();
 vi.mock('$core/stores/auth.svelte', () => ({
@@ -154,6 +159,13 @@ describe('applyHint', () => {
 		applyHint(hint({ accountId: 'acc-2', kind: 'reply_presence.updated' }));
 		expect(replyPresenceHint).toHaveBeenCalledTimes(1);
 		expect(replyPresenceHint).toHaveBeenCalledWith(h);
+		expect(mailboxApplyRealtime).not.toHaveBeenCalled();
+	});
+
+	it('reloads the folder and label registry for the active account only', () => {
+		applyHint(hint({ kind: 'mail_collection.updated', id: 'c1' }));
+		applyHint(hint({ accountId: 'acc-2', kind: 'mail_collection.deleted', id: 'c2' }));
+		expect(mailCollectionsLoad).toHaveBeenCalledTimes(1);
 		expect(mailboxApplyRealtime).not.toHaveBeenCalled();
 	});
 

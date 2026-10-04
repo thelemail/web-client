@@ -4,6 +4,7 @@ import { workspaces } from './workspaces.svelte';
 import { customDomains } from './customDomains.svelte';
 import { addresses } from './addresses.svelte';
 import { signatures } from './signatures.svelte';
+import { mailCollections } from './mailCollections.svelte';
 import { aliases } from './aliases.svelte';
 import { workspaceAddresses } from './workspaceAddresses.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
@@ -29,6 +30,7 @@ export function ensureAccountData(accountId: string): void {
 		if (currentProduct !== 'app') return;
 		void customDomains.load(workspaceId);
 		void signatures.load();
+		void mailCollections.load();
 		if (workspaceId && workspaces.canManage(accountId)) {
 			void aliases.load(workspaceId);
 			void workspaceAddresses.load(workspaceId);

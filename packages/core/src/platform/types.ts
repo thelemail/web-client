@@ -27,6 +27,7 @@ export interface SearchHit {
 	excerpt: string;
 	storedAt: string;
 	mailboxState: string;
+	folderId?: string | null;
 	direction?: 'sent' | 'received';
 	read: boolean;
 	starred: boolean;
@@ -49,6 +50,7 @@ export interface MirrorRow {
 	starred: boolean;
 	attachmentCount: number;
 	threadRootId: string | null;
+	folderId: string | null;
 	labelsJson: string;
 }
 
@@ -72,6 +74,7 @@ export interface MirrorMessage {
 	read: boolean;
 	starred: boolean;
 	threadRootId: string | null;
+	folderId: string | null;
 	externalMessageId: string | null;
 	inReplyTo: string | null;
 	labelsJson: string;
@@ -98,7 +101,13 @@ export interface LocalMirror {
 	setToken(accountId: string, accessToken: string): Promise<void>;
 	stopWatch(accountId: string): Promise<void>;
 	search(accountId: string, query: string, limit?: number): Promise<SearchHit[]>;
-	list(accountId: string, mailbox: string, direction?: string, limit?: number): Promise<MirrorRow[]>;
+	list(
+		accountId: string,
+		mailbox: string,
+		direction?: string,
+		limit?: number,
+		folderId?: string
+	): Promise<MirrorRow[]>;
 	message(accountId: string, messageId: string): Promise<MirrorMessage | null>;
 	thread(accountId: string, messageId: string): Promise<MirrorMessage[]>;
 	scope(accountId: string): Promise<string | null>;

@@ -1,14 +1,8 @@
-import {
-	isLabelId,
-	isRouteFolder,
-	type LabelId,
-	type RouteFolder,
-	type SortId
-} from './data';
+import { isCollectionId, isMailFolderRoute, type MailFolderRoute, type SortId } from './data';
 
 export interface Query {
-	folder: RouteFolder;
-	labels: LabelId[];
+	folder: MailFolderRoute;
+	labels: string[];
 	unread: boolean;
 	attach: boolean;
 	sort: SortId;
@@ -22,15 +16,18 @@ export const DEFAULT_QUERY: Query = {
 	sort: 'newest'
 };
 
-function parseLabels(raw: string | null): LabelId[] {
+const MAX_LABEL_FILTERS = 32;
+
+function parseLabels(raw: string | null): string[] {
 	if (!raw) return [];
-	const out: LabelId[] = [];
+	const out: string[] = [];
 	const seen = new Set<string>();
 	for (const part of raw.split(',')) {
-		const trimmed = part.trim();
-		if (!trimmed || seen.has(trimmed)) continue;
-		seen.add(trimmed);
-		if (isLabelId(trimmed)) out.push(trimmed);
+		const id = part.trim().toLowerCase();
+		if (!id || seen.has(id) || !isCollectionId(id)) continue;
+		seen.add(id);
+		out.push(id);
+		if (out.length === MAX_LABEL_FILTERS) break;
 	}
 	return out;
 }
@@ -44,7 +41,8 @@ function parseSort(raw: string | null): SortId {
 }
 
 export function parseQuery(folderParam: string | undefined, sp: URLSearchParams): Query {
-	const folder: RouteFolder = folderParam && isRouteFolder(folderParam) ? folderParam : 'inbox';
+	const folder: MailFolderRoute =
+		folderParam && isMailFolderRoute(folderParam) ? folderParam : 'inbox';
 	return {
 		folder,
 		labels: parseLabels(sp.get('labels')),
@@ -89,7 +87,7 @@ export function withFilters(
 	return buildSearch(sp, patch);
 }
 
-export function toggleLabel(sp: URLSearchParams, label: LabelId): string {
+export function toggleLabel(sp: URLSearchParams, label: string): string {
 	const current = parseLabels(sp.get('labels'));
 	const idx = current.indexOf(label);
 	const next = idx >= 0 ? current.filter((l) => l !== label) : [...current, label];

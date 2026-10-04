@@ -10,7 +10,6 @@ import type {
 	ResolveBimiResponse,
 	InternalSendRequest,
 	InternalSendResponse,
-	LabelsRequest,
 	MailboxCounts,
 	MailboxState,
 	MessageDetail,
@@ -18,6 +17,7 @@ import type {
 	MessageChangesResponse,
 	MessageListResponse,
 	MessageState,
+	MoveMessageRequest,
 	ReplyPresenceResponse,
 	ReplyPresenceStarted,
 	ReportMessageRequest,
@@ -45,7 +45,8 @@ export interface ListMessagesOptions {
 	snoozed?: boolean;
 	unread?: boolean;
 	hasAttachments?: boolean;
-	labels?: string[];
+	folderId?: string;
+	labelIds?: string[];
 	sort?: SortOrder;
 	cursor?: string;
 	limit?: number;
@@ -59,7 +60,8 @@ export function listMessages(opts: ListMessagesOptions = {}): Promise<MessageLis
 	if (opts.snoozed) params.set('snoozed', 'true');
 	if (opts.unread) params.set('unread', 'true');
 	if (opts.hasAttachments) params.set('hasAttachments', 'true');
-	if (opts.labels && opts.labels.length) params.set('labels', opts.labels.join(','));
+	if (opts.folderId) params.set('folderId', opts.folderId);
+	if (opts.labelIds && opts.labelIds.length) params.set('labelIds', opts.labelIds.join(','));
 	if (opts.sort) params.set('sort', opts.sort);
 	if (opts.cursor) params.set('cursor', opts.cursor);
 	if (opts.limit) params.set('limit', String(opts.limit));
@@ -93,7 +95,8 @@ export function listThreads(opts: ListThreadsOptions = {}): Promise<ThreadListRe
 	if (opts.snoozed) params.set('snoozed', 'true');
 	if (opts.unread) params.set('unread', 'true');
 	if (opts.hasAttachments) params.set('hasAttachments', 'true');
-	if (opts.labels && opts.labels.length) params.set('labels', opts.labels.join(','));
+	if (opts.folderId) params.set('folderId', opts.folderId);
+	if (opts.labelIds && opts.labelIds.length) params.set('labelIds', opts.labelIds.join(','));
 	if (opts.sort) params.set('sort', opts.sort);
 	if (opts.cursor) params.set('cursor', opts.cursor);
 	if (opts.limit) params.set('limit', String(opts.limit));
@@ -212,6 +215,18 @@ export function setMessageRsvp(messageId: string, body: RsvpRequest): Promise<vo
 	return apiFetch<void>(statePath(messageId, 'rsvp'), { method: 'PATCH', body });
 }
 
-export function setMessageLabels(messageId: string, body: LabelsRequest): Promise<void> {
-	return apiFetch<void>(statePath(messageId, 'labels'), { method: 'PATCH', body });
+export function addMessageLabel(messageId: string, labelId: string): Promise<void> {
+	return apiFetch<void>(statePath(messageId, `labels/${encodeURIComponent(labelId)}`), {
+		method: 'PUT'
+	});
+}
+
+export function removeMessageLabel(messageId: string, labelId: string): Promise<void> {
+	return apiFetch<void>(statePath(messageId, `labels/${encodeURIComponent(labelId)}`), {
+		method: 'DELETE'
+	});
+}
+
+export function moveMessage(messageId: string, body: MoveMessageRequest): Promise<MessageState> {
+	return apiFetch<MessageState>(statePath(messageId, 'move'), { method: 'POST', body });
 }

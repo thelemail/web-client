@@ -32,7 +32,10 @@ export type RealtimeKind =
 	| 'shared_alias.created'
 	| 'shared_alias.updated'
 	| 'shared_alias.deleted'
-	| 'reply_presence.updated';
+	| 'reply_presence.updated'
+	| 'mail_collection.created'
+	| 'mail_collection.updated'
+	| 'mail_collection.deleted';
 
 export interface WireHint {
 	kind: RealtimeKind;
