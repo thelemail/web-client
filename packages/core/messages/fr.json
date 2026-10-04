@@ -3561,6 +3561,7 @@
   "mail_toast_moved_to_label": "Déplacé vers {label}",
   "mail_err_move_folder": "Impossible de déplacer vers le dossier",
   "mail_toast_moved_to_folder": "Déplacé vers {folder}",
+  "mail_toast_restored_to_folder": "Restauré dans {folder}",
   "mail_collection_folders": "Dossiers",
   "mail_collection_new_folder": "Nouveau dossier",
   "mail_collection_new_label": "Nouveau libellé",

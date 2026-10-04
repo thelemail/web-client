@@ -3561,6 +3561,7 @@
 	"mail_toast_moved_to_label": "Movido para {label}",
 	"mail_err_move_folder": "Não foi possível mover para a pasta",
 	"mail_toast_moved_to_folder": "Movido para {folder}",
+	"mail_toast_restored_to_folder": "Restaurado para {folder}",
 	"mail_collection_folders": "Pastas",
 	"mail_collection_new_folder": "Nova pasta",
 	"mail_collection_new_label": "Nova etiqueta",

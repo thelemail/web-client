@@ -3561,6 +3561,7 @@
 	"mail_toast_moved_to_label": "Moved to {label}",
 	"mail_err_move_folder": "Could not move to the folder",
 	"mail_toast_moved_to_folder": "Moved to {folder}",
+	"mail_toast_restored_to_folder": "Restored to {folder}",
 	"mail_collection_folders": "Folders",
 	"mail_collection_new_folder": "New folder",
 	"mail_collection_new_label": "New label",

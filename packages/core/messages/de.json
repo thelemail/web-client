@@ -3561,6 +3561,7 @@
 	"mail_toast_moved_to_label": "Nach {label} verschoben",
 	"mail_err_move_folder": "Verschieben in den Ordner nicht möglich",
 	"mail_toast_moved_to_folder": "Nach {folder} verschoben",
+	"mail_toast_restored_to_folder": "Nach {folder} wiederhergestellt",
 	"mail_collection_folders": "Ordner",
 	"mail_collection_new_folder": "Neuer Ordner",
 	"mail_collection_new_label": "Neues Label",

@@ -80,6 +80,7 @@ export interface Message {
 	fg: string;
 	subj: string;
 	labels: string[];
+	folderId?: string | null;
 	unread: boolean;
 	starred: boolean;
 	spam?: boolean;

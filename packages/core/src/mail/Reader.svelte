@@ -948,7 +948,9 @@
 						{#if labelError}
 							<div class="lp-err" role="alert">{labelError}</div>
 						{/if}
-						<div class="msep"></div>
+						{#if labelOptions.length > 0}
+							<div class="msep"></div>
+						{/if}
 						{#if creatingLabel}
 							<CollectionCreate kind="label" onCreated={labelCreated} />
 						{:else}

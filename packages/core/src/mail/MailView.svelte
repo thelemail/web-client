@@ -17,6 +17,7 @@
 	import {
 		FOLDERS,
 		countActiveFilters,
+		customFolderId,
 		customFolderRoute,
 		folderFromServer,
 		formatWhenLong,
@@ -90,7 +91,9 @@
 	const folderLabel = $derived(
 		query.folder === 'starred'
 			? msg.mail_folder_starred()
-			: (FOLDERS.find((f) => f.id === query.folder)?.label ?? msg.mail_folder_inbox())
+			: (FOLDERS.find((f) => f.id === query.folder)?.label ??
+				mailCollections.folder(customFolderId(query.folder))?.name ??
+				msg.mail_folder_inbox())
 	);
 
 	const inFlight = new Map<string, Promise<void>>();
@@ -128,6 +131,7 @@
 		return {
 			...m,
 			folder: folderFromServer(state.mailboxState, direction, state.folderId),
+			folderId: state.folderId ?? null,
 			starred: state.starred,
 			unread: !state.read,
 			snoozedUntil: state.snoozedUntil ?? null
@@ -337,11 +341,13 @@
 		void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 	}
 
+	const ARCHIVED: Partial<Message> = { folder: 'archive', folderId: null };
+
 	function queueArchive(id: string): Promise<void> {
 		advancePast(id);
 		return isThread(id)
-			? queueThreadUpdate(id, { folder: 'archive' }, 'archive', msg.mail_err_archive())
-			: queueStateUpdate(id, { folder: 'archive' }, archiveMessage, msg.mail_err_archive());
+			? queueThreadUpdate(id, ARCHIVED, 'archive', msg.mail_err_archive())
+			: queueStateUpdate(id, ARCHIVED, archiveMessage, msg.mail_err_archive());
 	}
 
 	function archiveOne(id: string) {
@@ -355,9 +361,19 @@
 		advancePast(id);
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
 		if (isThread(id)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'inbox', msg.mail_err_move_inbox());
+			void queueThreadUpdate(
+				id,
+				{ folder: targetFolder, folderId: null },
+				'inbox',
+				msg.mail_err_move_inbox()
+			);
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_move_inbox());
+			void queueStateUpdate(
+				id,
+				{ folder: targetFolder, folderId: null },
+				restoreMessage,
+				msg.mail_err_move_inbox()
+			);
 		}
 		flash(msg.mail_toast_moved_inbox());
 	}
@@ -543,11 +559,17 @@
 		if (current.folder === route) return;
 		advancePast(id);
 		if (isThread(id)) {
-			void queueThreadUpdate(id, { folder: route }, 'move', msg.mail_err_move_folder(), folderId);
+			void queueThreadUpdate(
+				id,
+				{ folder: route, folderId },
+				'move',
+				msg.mail_err_move_folder(),
+				folderId
+			);
 		} else {
 			void queueStateUpdate(
 				id,
-				{ folder: route },
+				{ folder: route, folderId },
 				(mid) => moveMessage(mid, { folderId }),
 				msg.mail_err_move_folder()
 			);
@@ -575,13 +597,22 @@
 			const nextId = nextAfter(id);
 			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 		}
-		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
+		const homeFolder = current.folderId ? mailCollections.folder(current.folderId) : undefined;
+		const targetFolder = homeFolder
+			? customFolderRoute(homeFolder.id)
+			: current.direction === 'sent'
+				? 'sent'
+				: 'inbox';
 		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore());
 		} else {
 			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_restore());
 		}
-		flash(msg.mail_toast_restored_inbox());
+		flash(
+			homeFolder
+				? msg.mail_toast_restored_to_folder({ folder: homeFolder.name })
+				: msg.mail_toast_restored_inbox()
+		);
 	}
 
 	function deleteOne(id: string) {

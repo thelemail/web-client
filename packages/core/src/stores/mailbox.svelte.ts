@@ -199,6 +199,7 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 	return {
 		id: item.id,
 		folder: folderFromServer(item.mailboxState, item.direction, item.folderId),
+		folderId: item.folderId ?? null,
 		direction: item.direction,
 		from: fromDisplay,
 		fromAddr: preview.sender.address,
@@ -292,6 +293,7 @@ function mirrorRowToMessage(row: MirrorRow): Message {
 			row.direction,
 			row.folderId
 		),
+		folderId: row.folderId,
 		direction: row.direction,
 		from: display,
 		fromAddr: row.senderAddress,
@@ -318,6 +320,7 @@ function fallbackRow(item: MessageListItem, code: string): Message {
 	return {
 		id: item.id,
 		folder: folderFromServer(item.mailboxState, item.direction, item.folderId),
+		folderId: item.folderId ?? null,
 		direction: item.direction,
 		from: m.mailbox_fallback_encrypted_message(),
 		fromAddr: '',
