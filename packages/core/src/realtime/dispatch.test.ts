@@ -51,9 +51,9 @@ vi.mock('$core/stores/replyPresence.svelte', () => ({
 	replyPresence: { onHint: (...a: unknown[]) => replyPresenceHint(...a) }
 }));
 
-const mailCollectionsLoad = vi.fn();
+const mailCollectionsHint = vi.fn(async (_h: unknown) => false);
 vi.mock('$core/stores/mailCollections.svelte', () => ({
-	mailCollections: { load: (...a: unknown[]) => mailCollectionsLoad(...a) }
+	mailCollections: { applyHint: (h: unknown) => mailCollectionsHint(h) }
 }));
 
 const authState = vi.hoisted(() => ({ accountId: 'acc-1' as string | null }));
@@ -165,8 +165,17 @@ describe('applyHint', () => {
 	it('reloads the folder and label registry for the active account only', () => {
 		applyHint(hint({ kind: 'mail_collection.updated', id: 'c1' }));
 		applyHint(hint({ accountId: 'acc-2', kind: 'mail_collection.deleted', id: 'c2' }));
-		expect(mailCollectionsLoad).toHaveBeenCalledTimes(1);
+		expect(mailCollectionsHint).toHaveBeenCalledTimes(1);
 		expect(mailboxApplyRealtime).not.toHaveBeenCalled();
+	});
+
+	it('refreshes open lists and counts when a folder or label change reshapes the tree', async () => {
+		mailCollectionsHint.mockResolvedValueOnce(true);
+		applyHint(hint({ kind: 'mail_collection.updated', id: 'c1', rev: 3 }));
+		await vi.waitFor(() => {
+			expect(mailboxRefreshLoaded).toHaveBeenCalled();
+			expect(mailboxRefreshCounts).toHaveBeenCalled();
+		});
 	});
 
 	it('does nothing for an unknown kind', () => {

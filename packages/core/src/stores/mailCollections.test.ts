@@ -96,4 +96,31 @@ describe('mail collections registry', () => {
 		expect(created.name).toBe('Invoices');
 		expect(mailCollections.folders.map((f) => f.name)).toEqual(['clients', 'Invoices']);
 	});
+
+	it('skips a hint it already reflects and reports whether a fetch reshaped the tree', async () => {
+		seal.openCollectionMeta.mockImplementation(async (_acct: string, sealed: string) => ({
+			name: sealed.replace('sealed-', ''),
+			color: null
+		}));
+		api.listMailCollections.mockResolvedValue({
+			collections: [rec('f1', 'folder', 'sealed-clients'), rec('f2', 'folder', 'sealed-acme', { rev: 2 })]
+		});
+		await mailCollections.load();
+		api.listMailCollections.mockClear();
+
+		expect(await mailCollections.applyHint({ kind: 'mail_collection.updated', id: 'f2', rev: 2 })).toBe(false);
+		expect(await mailCollections.applyHint({ kind: 'mail_collection.deleted', id: 'gone', rev: 5 })).toBe(false);
+		expect(api.listMailCollections).not.toHaveBeenCalled();
+
+		api.listMailCollections.mockResolvedValue({
+			collections: [
+				rec('f1', 'folder', 'sealed-clients'),
+				rec('f2', 'folder', 'sealed-acme', { rev: 3, parentId: 'f1' })
+			]
+		});
+		expect(await mailCollections.applyHint({ kind: 'mail_collection.updated', id: 'f2', rev: 3 })).toBe(true);
+		expect(mailCollections.subtree('f1')).toEqual(['f1', 'f2']);
+
+		expect(await mailCollections.sync()).toBe(false);
+	});
 });

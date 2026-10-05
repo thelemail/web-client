@@ -37,6 +37,12 @@ const refreshSearchIndexCoalesced = coalesce(() => {
 	void mailSearch.refresh();
 }, COALESCE_WINDOW_MS);
 
+async function refreshCollections(hint: RealtimeHint): Promise<void> {
+	if (!(await mailCollections.applyHint(hint))) return;
+	refreshLoadedCoalesced();
+	refreshCountsCoalesced();
+}
+
 function entityOf(kind: string): string {
 	const dot = kind.indexOf('.');
 	return dot < 0 ? kind : kind.slice(0, dot);
@@ -104,7 +110,7 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) replyPresence.onHint(hint);
 			return;
 		case 'mail_collection':
-			if (isActive) void mailCollections.load();
+			if (isActive) void refreshCollections(hint);
 			return;
 		default:
 			return;

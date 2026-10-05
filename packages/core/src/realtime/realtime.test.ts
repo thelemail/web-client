@@ -108,6 +108,20 @@ vi.mock('$core/stores/scheduled.svelte', () => ({
 	}
 }));
 
+const collectionsSync = vi.fn(async () => false);
+vi.mock('$core/stores/mailCollections.svelte', () => ({
+	mailCollections: {
+		sync: () => collectionsSync()
+	}
+}));
+
+const searchRefresh = vi.fn();
+vi.mock('$core/stores/search.svelte', () => ({
+	mailSearch: {
+		refresh: (...a: unknown[]) => searchRefresh(...a)
+	}
+}));
+
 import { realtime } from './realtime.svelte';
 
 describe('realtime store', () => {
@@ -255,18 +269,33 @@ describe('realtime store', () => {
 	});
 
 	describe('resync on reconnect', () => {
-		it('a quick reconnect of the active account only refreshes counts', async () => {
+		it('a quick reconnect of the active account refreshes counts, the catalog and the search index', async () => {
 			authState.accountId = 'acc-1';
 			keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
 			realtime.start();
 			await vi.waitFor(() => expect(connInstances).toHaveLength(1));
 
 			connInstances[0].opts.onState?.('open', 5_000);
+			await Promise.resolve();
 
 			expect(refreshCounts).toHaveBeenCalledTimes(1);
+			expect(collectionsSync).toHaveBeenCalledTimes(1);
+			expect(searchRefresh).toHaveBeenCalledTimes(1);
 			expect(refreshLoaded).not.toHaveBeenCalled();
 			expect(draftsRefresh).not.toHaveBeenCalled();
 			expect(scheduledRefresh).not.toHaveBeenCalled();
+		});
+
+		it('a quick reconnect reloads open lists when folders or labels changed while offline', async () => {
+			authState.accountId = 'acc-1';
+			keystoreState.accounts = [{ accountId: 'acc-1', unlocked: true }];
+			collectionsSync.mockResolvedValueOnce(true);
+			realtime.start();
+			await vi.waitFor(() => expect(connInstances).toHaveLength(1));
+
+			connInstances[0].opts.onState?.('open', 5_000);
+
+			await vi.waitFor(() => expect(refreshLoaded).toHaveBeenCalledTimes(1));
 		});
 
 		it('a stale reconnect of the active account fully refreshes', async () => {
