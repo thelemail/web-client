@@ -1,6 +1,9 @@
 import { apiFetch } from './client';
+import { ApiCallError } from './types';
 import type {
 	AttachmentUploadUrlsRequest,
+	BatchMessageResponse,
+	BatchMoveMessagesRequest,
 	AttachmentUploadUrlsResponse,
 	ClientInboundImportRequest,
 	ClientInboundImportResponse,
@@ -229,4 +232,17 @@ export function removeMessageLabel(messageId: string, labelId: string): Promise<
 
 export function moveMessage(messageId: string, body: MoveMessageRequest): Promise<MessageState> {
 	return apiFetch<MessageState>(statePath(messageId, 'move'), { method: 'POST', body });
+}
+
+export function batchMoveMessages(body: BatchMoveMessagesRequest): Promise<BatchMessageResponse> {
+	return apiFetch<BatchMessageResponse>('/v1/mail/batch/move', { method: 'POST', body });
+}
+
+export async function moveMessageToInbox(messageId: string): Promise<MessageState> {
+	const { results } = await batchMoveMessages({ messageIds: [messageId], destination: 'inbox' });
+	const result = results[0];
+	if (result?.outcome !== 'ok' || !result.state) {
+		throw new ApiCallError(404, null, 'message not found');
+	}
+	return result.state;
 }

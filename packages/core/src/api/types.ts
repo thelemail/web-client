@@ -66,6 +66,7 @@ export interface MessageState {
 	id: string;
 	mailboxState: MailboxState;
 	folderId?: string | null;
+	returnsToArchive: boolean;
 	starred: boolean;
 	starredAt?: string | null;
 	read: boolean;
@@ -109,6 +110,7 @@ export interface MessageListItem {
 	rsvpStatus?: RsvpStatus | null;
 	threadCount?: number | null;
 	folderId?: string;
+	returnsToArchive: boolean;
 	labelIds?: string[];
 }
 
@@ -178,6 +180,7 @@ export interface MessageDetail {
 	rsvpStatus?: RsvpStatus | null;
 	rsvpEventUid?: string | null;
 	folderId?: string;
+	returnsToArchive: boolean;
 	labelIds?: string[];
 }
 
@@ -198,6 +201,27 @@ export interface ReplyPresenceStarted {
 
 export interface MoveMessageRequest {
 	folderId: string;
+}
+
+export type BatchMoveDestination = 'inbox' | 'archive' | 'folder';
+
+export interface BatchMoveMessagesRequest {
+	messageIds: string[];
+	destination: BatchMoveDestination;
+	folderId?: string;
+}
+
+export type BatchOutcome = 'ok' | 'not_found' | 'too_many_labels';
+
+export interface BatchMessageResult {
+	messageId: string;
+	outcome: BatchOutcome;
+	state?: MessageState;
+	labelIds?: string[];
+}
+
+export interface BatchMessageResponse {
+	results: BatchMessageResult[];
 }
 
 export type MailCollectionKind = 'folder' | 'label';
@@ -229,12 +253,16 @@ export interface CreateMailCollectionRequest {
 	metaSchemaVersion: number;
 }
 
-export interface UpdateMailCollectionRequest {
-	parentId?: string | null;
-	position: number;
+export interface MailCollectionMeta {
 	sealedMeta: string;
 	metaKeyFingerprint: string;
 	metaSchemaVersion: number;
+}
+
+export interface UpdateMailCollectionRequest {
+	meta?: MailCollectionMeta;
+	parent?: { id: string | null };
+	position?: number;
 	baseRev: number;
 }
 

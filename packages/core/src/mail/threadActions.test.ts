@@ -5,6 +5,7 @@ vi.mock('$core/api/messages', () => ({
 	archiveMessage: vi.fn(),
 	trashMessage: vi.fn(),
 	restoreMessage: vi.fn(),
+	moveMessageToInbox: vi.fn(),
 	markMessageRead: vi.fn(),
 	markMessageSpam: vi.fn()
 }));
@@ -14,6 +15,7 @@ import {
 	getMessageThread,
 	markMessageRead,
 	markMessageSpam,
+	moveMessageToInbox,
 	restoreMessage,
 	trashMessage
 } from '$core/api/messages';
@@ -24,6 +26,7 @@ const getThread = vi.mocked(getMessageThread);
 const archive = vi.mocked(archiveMessage);
 const trash = vi.mocked(trashMessage);
 const restore = vi.mocked(restoreMessage);
+const toInbox = vi.mocked(moveMessageToInbox);
 const read = vi.mocked(markMessageRead);
 const spam = vi.mocked(markMessageSpam);
 
@@ -36,11 +39,17 @@ function thread(...items: MessageDetail[]) {
 }
 
 const okState = (id: string) =>
-	Promise.resolve({ id, mailboxState: 'inbox' as const, starred: false, read: true });
+	Promise.resolve({
+		id,
+		mailboxState: 'inbox' as const,
+		returnsToArchive: false,
+		starred: false,
+		read: true
+	});
 
 beforeEach(() => {
 	vi.resetAllMocks();
-	for (const fn of [archive, trash, restore, read, spam]) {
+	for (const fn of [archive, trash, restore, toInbox, read, spam]) {
 		fn.mockImplementation(okState);
 	}
 });
@@ -90,7 +99,8 @@ describe('applyToThread', () => {
 		thread(item('a', 'archive'), item('b', 'trash'), item('c', 'spam'), item('d', 'inbox'));
 		const res = await applyToThread('a', 'a', 'inbox');
 		expect(res).toEqual({ total: 3, failed: 0 });
-		expect(restore.mock.calls.map((c) => c[0]).sort()).toEqual(['a', 'b', 'c']);
+		expect(toInbox.mock.calls.map((c) => c[0]).sort()).toEqual(['a', 'b', 'c']);
+		expect(restore).not.toHaveBeenCalled();
 	});
 
 	it('counts per-message failures without rejecting', async () => {
