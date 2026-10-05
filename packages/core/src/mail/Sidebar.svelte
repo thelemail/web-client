@@ -18,6 +18,7 @@
 		ShieldAlert,
 		ShieldX,
 		Star,
+		Tag,
 		Timer,
 		Trash,
 		Trash2,
@@ -27,7 +28,8 @@
 	import RailSearch from './RailSearch.svelte';
 	import RailAccount from './RailAccount.svelte';
 	import PenLine from '@lucide/svelte/icons/pen-line';
-	import { FOLDERS, customFolderRoute } from './data';
+	import { FOLDERS, customFolderRoute, customLabelRoute } from './data';
+	import type { CollectionUnread } from '$core/api/types';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { collectionColor } from './collections/palette';
 	import { billing } from '$core/stores/billing.svelte';
@@ -49,12 +51,14 @@
 
 	interface Props {
 		counts: Counts;
-		folderCounts?: Record<string, number>;
+		folderCounts?: Record<string, CollectionUnread>;
+		labelCounts?: Record<string, CollectionUnread>;
 		onCompose: () => void;
 	}
 
-	let { counts, folderCounts = {}, onCompose }: Props = $props();
+	let { counts, folderCounts = {}, labelCounts = {}, onCompose }: Props = $props();
 	const customFolders = $derived(mailCollections.folders.filter((f) => !f.sealed));
+	const customLabels = $derived(mailCollections.labels.filter((l) => !l.sealed));
 	let showMore = $state(false);
 
 	const slot = $derived(page.params.slot ?? '0');
@@ -148,7 +152,7 @@
 				{#each customFolders as f (f.id)}
 					{@const route = customFolderRoute(f.id)}
 					{@const on = activeSystemFolder === route}
-					{@const c = folderCounts[f.id]}
+					{@const c = folderCounts[f.id]?.subtree}
 					<a
 						class="fld custom"
 						class:active={on}
@@ -161,6 +165,30 @@
 					>
 						<NavMorph icon={Folder} />
 						<span class="lbl">{f.name}</span>
+						{#if c}<span class="ct">{c}</span>{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
+		{#if customLabels.length > 0}
+			<div class="fgroup">{m.mail_collection_labels()}</div>
+			<div class="nav-list">
+				{#each customLabels as l (l.id)}
+					{@const route = customLabelRoute(l.id)}
+					{@const on = activeSystemFolder === route}
+					{@const c = labelCounts[l.id]?.subtree}
+					<a
+						class="fld custom"
+						class:active={on}
+						class:unread={!!c}
+						style:padding-left={l.depth > 0 ? `calc(9px + ${l.depth * 14}px)` : undefined}
+						style:--fld-tint={l.color ? collectionColor(l.color) : undefined}
+						href={`${slotBase}/mail/${route}`}
+						title={l.path}
+						onclick={closeNav}
+					>
+						<NavMorph icon={Tag} />
+						<span class="lbl">{l.name}</span>
 						{#if c}<span class="ct">{c}</span>{/if}
 					</a>
 				{/each}

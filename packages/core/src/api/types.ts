@@ -54,12 +54,18 @@ export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
 export type MailboxState = 'inbox' | 'archive' | 'folder' | 'trash' | 'spam' | 'snoozed';
 
+export interface CollectionUnread {
+	direct: number;
+	subtree: number;
+}
+
 export interface MailboxCounts {
 	inbox: number;
 	starred: number;
 	spam: number;
 	snoozed: number;
-	folders: Record<string, number>;
+	folders: Record<string, CollectionUnread>;
+	labels: Record<string, CollectionUnread>;
 }
 
 export interface MessageState {

@@ -54,6 +54,7 @@
 			scheduled: scheduled.count
 		}}
 		folderCounts={mailbox.counts.folders}
+		labelCounts={mailbox.counts.labels}
 		onCompose={() => {
 			composeStore.openNew();
 			mailNav.open = false;

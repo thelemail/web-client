@@ -6,6 +6,7 @@ import { openCollectionMeta, sealCollectionMeta } from '$core/mail/collections/s
 import {
 	nextPosition,
 	orderTree,
+	subtreeIds,
 	type CollectionEntry,
 	type CollectionNode
 } from '$core/mail/collections/tree';
@@ -78,6 +79,12 @@ class MailCollectionsStore {
 
 	label(id: string | null | undefined): CollectionEntry | undefined {
 		return id ? this.labels.find((c) => c.id === id) : undefined;
+	}
+
+	subtree = (id: string): string[] => subtreeIds(this.nodes, id);
+
+	hasChildren(id: string | null | undefined): boolean {
+		return !!id && this.nodes.some((n) => n.parentId === id);
 	}
 
 	async create(
