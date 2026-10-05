@@ -2,13 +2,22 @@ import { folderFromServer, type Message } from '$core/mail/data';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { searchIndex, type SearchResult } from '$core/search';
-import { parseQuery } from '$core/search/query';
+import { collectionResolver, parseQuery, type CollectionResolver } from '$core/search/query';
+import { mailCollections } from './mailCollections.svelte';
 import type { SearchHit } from '$core/platform/types';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
 
 const DEBOUNCE_MS = 180;
 const MIRROR_LIMIT = 200;
+
+function collections(): CollectionResolver {
+	return collectionResolver(
+		mailCollections.folders.filter((f) => !f.sealed),
+		mailCollections.labels.filter((l) => !l.sealed),
+		mailCollections.subtree
+	);
+}
 
 function messageFromResult(result: SearchResult): Message {
 	const { row, text } = result;
@@ -97,11 +106,14 @@ class MailSearchStore {
 
 	get chips(): string[] {
 		if (!this.active) return [];
-		const parsed = parseQuery(this.text);
+		const parsed = parseQuery(this.text, collections());
 		const out: string[] = [];
 		for (const sender of parsed.from) out.push(`from:${sender}`);
 		if (parsed.folder) out.push(`in:${parsed.folder}`);
+		if (parsed.folderName !== null) out.push(`in:${parsed.folderName}`);
 		if (parsed.unknownFolder !== null) out.push(`in:${parsed.unknownFolder}`);
+		for (const name of parsed.labelNames) out.push(`label:${name}`);
+		if (parsed.unknownLabel !== null) out.push(`label:${parsed.unknownLabel}`);
 		if (parsed.unread === true) out.push('unread');
 		if (parsed.unread === false) out.push('read');
 		if (parsed.starred) out.push('starred');
@@ -197,7 +209,7 @@ class MailSearchStore {
 				});
 			return;
 		}
-		this.results = searchIndex.search(query).map(messageFromResult);
+		this.results = searchIndex.search(query, collections()).map(messageFromResult);
 		this.searching = false;
 	}
 }

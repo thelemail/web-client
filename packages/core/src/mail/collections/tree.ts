@@ -57,3 +57,23 @@ export function nextPosition(nodes: CollectionNode[], parentId: string | null): 
 	}
 	return max + POSITION_STEP;
 }
+
+export function subtreeIds(nodes: readonly CollectionNode[], id: string): string[] {
+	const children = new Map<string, string[]>();
+	for (const n of nodes) {
+		if (!n.parentId) continue;
+		const list = children.get(n.parentId) ?? [];
+		list.push(n.id);
+		children.set(n.parentId, list);
+	}
+	const out = [id];
+	const seen = new Set(out);
+	for (let i = 0; i < out.length; i++) {
+		for (const child of children.get(out[i]) ?? []) {
+			if (seen.has(child)) continue;
+			seen.add(child);
+			out.push(child);
+		}
+	}
+	return out;
+}

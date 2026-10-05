@@ -6,6 +6,7 @@ export interface Query {
 	unread: boolean;
 	attach: boolean;
 	sort: SortId;
+	direct: boolean;
 }
 
 export const DEFAULT_QUERY: Query = {
@@ -13,7 +14,8 @@ export const DEFAULT_QUERY: Query = {
 	labels: [],
 	unread: false,
 	attach: false,
-	sort: 'newest'
+	sort: 'newest',
+	direct: false
 };
 
 const MAX_LABEL_FILTERS = 32;
@@ -48,13 +50,14 @@ export function parseQuery(folderParam: string | undefined, sp: URLSearchParams)
 		labels: parseLabels(sp.get('labels')),
 		unread: parseBool(sp.get('unread')),
 		attach: parseBool(sp.get('attach')),
-		sort: parseSort(sp.get('sort'))
+		sort: parseSort(sp.get('sort')),
+		direct: sp.get('scope') === 'direct'
 	};
 }
 
 function buildSearch(
 	sp: URLSearchParams,
-	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort'>>
+	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort' | 'direct'>>
 ): string {
 	const next = new URLSearchParams(sp);
 
@@ -75,6 +78,10 @@ function buildSearch(
 		if (patch.sort === 'oldest') next.set('sort', 'oldest');
 		else next.delete('sort');
 	}
+	if ('direct' in patch) {
+		if (patch.direct) next.set('scope', 'direct');
+		else next.delete('scope');
+	}
 
 	const qs = next.toString();
 	return qs ? `?${qs}` : '';
@@ -82,7 +89,7 @@ function buildSearch(
 
 export function withFilters(
 	sp: URLSearchParams,
-	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort'>>
+	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort' | 'direct'>>
 ): string {
 	return buildSearch(sp, patch);
 }

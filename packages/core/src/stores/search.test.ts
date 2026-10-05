@@ -116,7 +116,7 @@ describe('mailSearch on the web build', () => {
 		expect(indexSearch).not.toHaveBeenCalled();
 
 		await vi.waitFor(() => expect(indexSearch).toHaveBeenCalledTimes(1));
-		expect(indexSearch).toHaveBeenCalledWith('inv');
+		expect(indexSearch).toHaveBeenCalledWith('inv', expect.any(Object));
 	});
 
 	it('drops results from a query the user has moved on from', async () => {

@@ -8,6 +8,7 @@ import {
 } from '$core/api/messages';
 import {
 	customFolderId,
+	customLabelId,
 	folderFromServer,
 	type MailFolderRoute,
 	type Message,
@@ -21,11 +22,12 @@ import { initialsFor } from '$core/mail/initials';
 import { platform } from '$platform';
 import type { MirrorRow } from '$core/platform/types';
 import { queryMatches } from '$core/mail/match';
-import type { MailboxCounts, MessageListItem, ThreadListItem } from '$core/api/types';
+import { ApiCallError, type MailboxCounts, type MessageListItem, type ThreadListItem } from '$core/api/types';
 import { DEFAULT_QUERY, type Query } from '$core/mail/url';
 import type { RealtimeHint } from '$core/realtime/types';
 import { auth } from './auth.svelte';
 import { unread } from './unread.svelte';
+import { mailCollections } from './mailCollections.svelte';
 import { decodeWords } from 'postal-mime';
 import { SvelteMap } from 'svelte/reactivity';
 import { m } from '$paraglide/messages.js';
@@ -38,6 +40,7 @@ interface Stream {
 	loading: boolean;
 	loadingMore: boolean;
 	error: string | null;
+	missing: boolean;
 }
 
 export interface StreamSnapshot {
@@ -46,6 +49,7 @@ export interface StreamSnapshot {
 	loadingMore: boolean;
 	exhausted: boolean;
 	loadError: string | null;
+	missing: boolean;
 }
 
 const PAGE_SIZE = 50;
@@ -55,7 +59,8 @@ const EMPTY_SNAPSHOT: StreamSnapshot = Object.freeze({
 	loading: false,
 	loadingMore: false,
 	exhausted: false,
-	loadError: null
+	loadError: null,
+	missing: false
 });
 
 function emptyStream(query: Query): Stream {
@@ -66,7 +71,8 @@ function emptyStream(query: Query): Stream {
 		exhausted: false,
 		loading: false,
 		loadingMore: false,
-		error: null
+		error: null,
+		missing: false
 	};
 }
 
@@ -86,6 +92,7 @@ function streamKey(q: Query): string {
 		q.sort,
 		q.unread ? '1' : '0',
 		q.attach ? '1' : '0',
+		q.direct ? 'D' : 'S',
 		`L:${labels}`
 	].join('|');
 }
@@ -119,13 +126,20 @@ function listOptionsFor(q: Query): ListMessagesOptions | null {
 			return null;
 		default: {
 			const folderId = customFolderId(q.folder);
-			if (!folderId) return null;
-			Object.assign(base, { mailbox: 'folder' as const, folderId });
+			const labelId = customLabelId(q.folder);
+			if (folderId) Object.assign(base, { folderId });
+			else if (labelId) Object.assign(base, { labelIds: [labelId] });
+			else return null;
 		}
 	}
+	return withViewFilters(base, q);
+}
+
+function withViewFilters<T extends ListThreadsOptions>(base: T, q: Query): T {
 	if (q.unread) base.unread = true;
 	if (q.attach) base.hasAttachments = true;
-	if (q.labels.length) base.labelIds = q.labels.slice();
+	if (q.labels.length && !customLabelId(q.folder)) base.labelIds = q.labels.slice();
+	if (q.direct) base.descendants = false;
 	return base;
 }
 
@@ -153,15 +167,13 @@ function threadOptionsFor(q: Query): ListThreadsOptions | null {
 			break;
 		default: {
 			const folderId = customFolderId(q.folder);
-			if (!folderId) return null;
-			base.mailbox = 'folder';
-			base.folderId = folderId;
+			const labelId = customLabelId(q.folder);
+			if (folderId) base.folderId = folderId;
+			else if (labelId) base.labelIds = [labelId];
+			else return null;
 		}
 	}
-	if (q.unread) base.unread = true;
-	if (q.attach) base.hasAttachments = true;
-	if (q.labels.length) base.labelIds = q.labels.slice();
-	return base;
+	return withViewFilters(base, q);
 }
 
 function isThreaded(q: Query): boolean {
@@ -235,14 +247,16 @@ async function loadFromMirror(accountId: string, query: Query): Promise<Message[
 	const mirror = platform.mirror;
 	if (!mirror) return null;
 	const mailbox = serverMailboxFor(query.folder);
-	if (!mailbox) return null;
+	if (!mailbox || query.labels.length || query.unread || query.attach) return null;
+	const folderId = customFolderId(query.folder);
+	if (folderId && !query.direct && mailCollections.hasChildren(folderId)) return null;
 	try {
 		const rows = await mirror.list(
 			accountId,
 			mailbox,
 			serverDirectionFor(query.folder),
 			undefined,
-			customFolderId(query.folder) ?? undefined
+			folderId ?? undefined
 		);
 		return rows.map(mirrorRowToMessage);
 	} catch {
@@ -355,7 +369,7 @@ class MailboxStore {
 		return this.#accountId;
 	}
 
-	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {} });
+	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {}, labels: {} });
 	#countsPending: Promise<void> | null = null;
 
 	#revs = new Map<string, number>();
@@ -372,7 +386,7 @@ class MailboxStore {
 		this.#streams = new Map();
 		this.#pending.clear();
 		this.#deepLinkPending.clear();
-		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {} };
+		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {}, labels: {} };
 		this.#countsPending = null;
 		this.#revs.clear();
 		this.#detached.clear();
@@ -414,7 +428,8 @@ class MailboxStore {
 			loading: s.loading,
 			loadingMore: s.loadingMore,
 			exhausted: s.exhausted,
-			loadError: s.error
+			loadError: s.error,
+			missing: s.missing
 		};
 	}
 
@@ -448,14 +463,14 @@ class MailboxStore {
 			if (idx < 0) {
 				if (!detached) continue;
 				const candidate = { ...detached, ...patch };
-				if (!queryMatches(stream.query, candidate)) continue;
+				if (!queryMatches(stream.query, candidate, mailCollections.subtree)) continue;
 				map.set(key, { ...stream, items: insertByEpoch(stream.items, candidate, stream.query.sort) });
 				restored = true;
 				continue;
 			}
 			const next = { ...stream.items[idx], ...patch };
 			const items = stream.items.slice();
-			if (queryMatches(stream.query, next)) {
+			if (queryMatches(stream.query, next, mailCollections.subtree)) {
 				items[idx] = next;
 			} else {
 				items.splice(idx, 1);
@@ -708,7 +723,7 @@ class MailboxStore {
 			const existingIdx = stream.items.findIndex((m) => rowKey(m, threaded) === k);
 			const existing = existingIdx >= 0 ? stream.items[existingIdx] : null;
 			if (existing && existing.id !== msg.id && msg.epoch < existing.epoch) continue;
-			if (!queryMatches(stream.query, msg)) {
+			if (!queryMatches(stream.query, msg, mailCollections.subtree)) {
 				if (existing) {
 					const items = stream.items.slice();
 					items.splice(existingIdx, 1);
@@ -867,11 +882,24 @@ class MailboxStore {
 					exhausted: !nextCursor,
 					loading: false,
 					loadingMore: false,
-					error: null
+					error: null,
+					missing: false
 				});
 			} catch (err) {
 				if (this.#accountId !== accountId) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
+				if (err instanceof ApiCallError && err.status === 404) {
+					this.#setStream(key, {
+						...current,
+						items: [],
+						exhausted: true,
+						loading: false,
+						loadingMore: false,
+						error: null,
+						missing: true
+					});
+					return;
+				}
 
 				if (!more) {
 					const cached = await loadFromMirror(accountId, query);

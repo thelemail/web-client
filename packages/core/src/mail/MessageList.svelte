@@ -10,6 +10,8 @@
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import Mail from '@lucide/svelte/icons/mail';
 	import Star from '@lucide/svelte/icons/star';
+	import Tag from '@lucide/svelte/icons/tag';
+	import Folder from '@lucide/svelte/icons/folder';
 	import User from '@lucide/svelte/icons/user';
 	import Type from '@lucide/svelte/icons/type';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
@@ -79,6 +81,8 @@
 		searchComplete?: boolean;
 		searchChips?: string[];
 		onClearSearch?: () => void;
+		collectionKind?: 'folder' | 'label' | null;
+		showScope?: boolean;
 	}
 
 	let {
@@ -118,7 +122,9 @@
 		searchIndexed = 0,
 		searchComplete = true,
 		searchChips = [],
-		onClearSearch = () => {}
+		onClearSearch = () => {},
+		collectionKind = null,
+		showScope = false
 	}: Props = $props();
 
 	const anyChecked = $derived(checked.size > 0);
@@ -216,7 +222,7 @@
 		sortOpen = false;
 	}
 
-	function toggleFlag(key: 'unread' | 'starred' | 'attach') {
+	function toggleFlag(key: 'unread' | 'starred' | 'attach' | 'direct') {
 		onSetFilters({ ...filters, [key]: !filters[key] });
 	}
 
@@ -432,25 +438,41 @@
 							>
 								<Paperclip size={15} />{msg.mail_list_filter_attach()}
 							</button>
-						</div>
-						<div class="msep"></div>
-						<div class="fm-cap">{msg.mail_list_labels()}</div>
-						<div class="fm-chips">
-							{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
-								{@const on = filters.labels.includes(l.id)}
+							{#if collectionKind && (showScope || filters.direct)}
 								<button
 									class="fchip"
-									class:on
-									aria-pressed={on}
-									title={l.path}
-									onclick={() => toggleLabel(l.id)}
+									class:on={!!filters.direct}
+									aria-pressed={!!filters.direct}
+									onclick={() => toggleFlag('direct')}
 								>
-									<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
+									{#if collectionKind === 'label'}
+										<Tag size={15} />{msg.mail_view_only_label()}
+									{:else}
+										<Folder size={15} />{msg.mail_view_only_folder()}
+									{/if}
 								</button>
-							{:else}
-								<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
-							{/each}
+							{/if}
 						</div>
+						{#if collectionKind !== 'label'}
+							<div class="msep"></div>
+							<div class="fm-cap">{msg.mail_list_labels()}</div>
+							<div class="fm-chips">
+								{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
+									{@const on = filters.labels.includes(l.id)}
+									<button
+										class="fchip"
+										class:on
+										aria-pressed={on}
+										title={l.path}
+										onclick={() => toggleLabel(l.id)}
+									>
+										<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
+									</button>
+								{:else}
+									<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
+								{/each}
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>

@@ -108,6 +108,38 @@ describe('RealtimeConnection', () => {
 		await vi.waitFor(() => expect(sources).toHaveLength(2));
 	});
 
+	it('reports how long the stream was down when it opens again', async () => {
+		const mint = vi.fn().mockResolvedValue({ ticket: 't1', expiresAt: '2026-01-01T00:00:00Z' });
+		const sources: FakeEventSource[] = [];
+		const open = vi.fn((url: string) => {
+			const es = new FakeEventSource(url);
+			sources.push(es);
+			return es;
+		});
+		const onState = vi.fn();
+		const conn = new RealtimeConnection({ accountId: 'acc-1', onHint: vi.fn(), mint, open, onState });
+
+		conn.start();
+		await vi.waitFor(() => expect(sources).toHaveLength(1));
+		sources[0].onopen?.(new Event('open'));
+		expect(onState).toHaveBeenLastCalledWith('open', 0);
+
+		sources[0].onerror?.(new Event('error'));
+		await vi.advanceTimersByTimeAsync(5000);
+		await vi.waitFor(() => expect(sources).toHaveLength(2));
+		sources[1].onopen?.(new Event('open'));
+
+		const [state, downMs] = onState.mock.lastCall!;
+		expect(state).toBe('open');
+		expect(downMs).toBeGreaterThanOrEqual(5000);
+
+		sources[1].onerror?.(new Event('error'));
+		await vi.advanceTimersByTimeAsync(5000);
+		await vi.waitFor(() => expect(sources).toHaveLength(3));
+		sources[2].onopen?.(new Event('open'));
+		expect(onState.mock.lastCall![1]).toBeLessThan(10_000);
+	});
+
 	it('does not reconnect after stop()', async () => {
 		const mint = vi.fn().mockResolvedValue({ ticket: 't1', expiresAt: '2026-01-01T00:00:00Z' });
 		const sources: FakeEventSource[] = [];

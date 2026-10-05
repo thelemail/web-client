@@ -14,10 +14,13 @@ export {
 	ROUTE_FOLDERS,
 	customFolderId,
 	customFolderRoute,
+	customLabelId,
+	customLabelRoute,
 	isCollectionId,
 	isMailFolderRoute,
 	isRouteFolder,
 	type CustomFolderRoute,
+	type CustomLabelRoute,
 	type MailFolderRoute,
 	type RouteFolder
 } from './folderRoute';
@@ -409,17 +412,25 @@ export interface ListFilters {
 	starred: boolean;
 	attach: boolean;
 	labels: string[];
+	direct?: boolean;
 }
 
 export const EMPTY_FILTERS: ListFilters = {
 	unread: false,
 	starred: false,
 	attach: false,
-	labels: []
+	labels: [],
+	direct: false
 };
 
 export function countActiveFilters(f: ListFilters): number {
-	return (f.unread ? 1 : 0) + (f.starred ? 1 : 0) + (f.attach ? 1 : 0) + f.labels.length;
+	return (
+		(f.unread ? 1 : 0) +
+		(f.starred ? 1 : 0) +
+		(f.attach ? 1 : 0) +
+		(f.direct ? 1 : 0) +
+		f.labels.length
+	);
 }
 
 export function sortMessages(list: Message[], sort: SortId): Message[] {

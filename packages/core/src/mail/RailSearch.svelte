@@ -5,7 +5,7 @@
 	import { page } from '$app/state';
 	import { mailSearch } from '$core/stores/search.svelte';
 
-	const OPERATORS = ['from:', 'is:unread', 'is:starred', 'has:attachment', 'in:folder'];
+	const OPERATORS = ['from:', 'is:unread', 'is:starred', 'has:attachment', 'in:', 'label:'];
 
 	let inputRef: HTMLInputElement | undefined = $state();
 	let focused = $state(false);

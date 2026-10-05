@@ -50,6 +50,7 @@ export interface ListMessagesOptions {
 	hasAttachments?: boolean;
 	folderId?: string;
 	labelIds?: string[];
+	descendants?: boolean;
 	sort?: SortOrder;
 	cursor?: string;
 	limit?: number;
@@ -65,6 +66,7 @@ export function listMessages(opts: ListMessagesOptions = {}): Promise<MessageLis
 	if (opts.hasAttachments) params.set('hasAttachments', 'true');
 	if (opts.folderId) params.set('folderId', opts.folderId);
 	if (opts.labelIds && opts.labelIds.length) params.set('labelIds', opts.labelIds.join(','));
+	if (opts.descendants === false) params.set('descendants', 'false');
 	if (opts.sort) params.set('sort', opts.sort);
 	if (opts.cursor) params.set('cursor', opts.cursor);
 	if (opts.limit) params.set('limit', String(opts.limit));
@@ -100,6 +102,7 @@ export function listThreads(opts: ListThreadsOptions = {}): Promise<ThreadListRe
 	if (opts.hasAttachments) params.set('hasAttachments', 'true');
 	if (opts.folderId) params.set('folderId', opts.folderId);
 	if (opts.labelIds && opts.labelIds.length) params.set('labelIds', opts.labelIds.join(','));
+	if (opts.descendants === false) params.set('descendants', 'false');
 	if (opts.sort) params.set('sort', opts.sort);
 	if (opts.cursor) params.set('cursor', opts.cursor);
 	if (opts.limit) params.set('limit', String(opts.limit));
@@ -108,7 +111,7 @@ export function listThreads(opts: ListThreadsOptions = {}): Promise<ThreadListRe
 }
 
 export function getMailboxCounts(accountId?: string): Promise<MailboxCounts> {
-	return apiFetch<MailboxCounts>('/v1/messages/counts', { accountId });
+	return apiFetch<MailboxCounts>('/v1/messages/counts?unit=threads', { accountId });
 }
 
 export function getMessage(messageId: string): Promise<MessageDetail> {

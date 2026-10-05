@@ -6,6 +6,7 @@ import { openCollectionMeta, sealCollectionMeta } from '$core/mail/collections/s
 import {
 	nextPosition,
 	orderTree,
+	subtreeIds,
 	type CollectionEntry,
 	type CollectionNode
 } from '$core/mail/collections/tree';
@@ -67,6 +68,28 @@ class MailCollectionsStore {
 		return this.#ready;
 	}
 
+	async sync(): Promise<boolean> {
+		const before = this.#shape();
+		await this.load();
+		return this.#shape() !== before;
+	}
+
+	async applyHint(hint: { kind: string; id?: string; rev?: number }): Promise<boolean> {
+		if (hint.id && hint.rev !== undefined) {
+			const known = this.nodes.find((n) => n.id === hint.id);
+			const settled = hint.kind.endsWith('.deleted') ? !known : !!known && known.rev >= hint.rev;
+			if (settled) return false;
+		}
+		return this.sync();
+	}
+
+	#shape(): string {
+		return this.nodes
+			.map((n) => `${n.id}:${n.rev}:${n.parentId ?? ''}`)
+			.sort()
+			.join('|');
+	}
+
 	byId(id: string | null | undefined): CollectionEntry | undefined {
 		if (!id) return undefined;
 		return this.folders.find((c) => c.id === id) ?? this.labels.find((c) => c.id === id);
@@ -78,6 +101,12 @@ class MailCollectionsStore {
 
 	label(id: string | null | undefined): CollectionEntry | undefined {
 		return id ? this.labels.find((c) => c.id === id) : undefined;
+	}
+
+	subtree = (id: string): string[] => subtreeIds(this.nodes, id);
+
+	hasChildren(id: string | null | undefined): boolean {
+		return !!id && this.nodes.some((n) => n.parentId === id);
 	}
 
 	async create(

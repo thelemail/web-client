@@ -19,6 +19,7 @@
 		countActiveFilters,
 		customFolderId,
 		customFolderRoute,
+		customLabelId,
 		folderFromServer,
 		formatWhenLong,
 		type ListFilters,
@@ -85,15 +86,24 @@
 		unread: query.unread,
 		starred: query.folder === 'starred',
 		attach: query.attach,
-		labels: query.labels
+		labels: query.labels,
+		direct: query.direct
 	});
+
+	const viewFolderId = $derived(customFolderId(query.folder));
+	const viewLabelId = $derived(customLabelId(query.folder));
+	const collectionKind = $derived<'folder' | 'label' | null>(
+		viewFolderId ? 'folder' : viewLabelId ? 'label' : null
+	);
+	const showScope = $derived(mailCollections.hasChildren(viewFolderId ?? viewLabelId));
 	const sort = $derived<SortId>(query.sort);
 
 	const folderLabel = $derived(
 		query.folder === 'starred'
 			? msg.mail_folder_starred()
 			: (FOLDERS.find((f) => f.id === query.folder)?.label ??
-				mailCollections.folder(customFolderId(query.folder))?.name ??
+				mailCollections.folder(viewFolderId)?.name ??
+				mailCollections.label(viewLabelId)?.name ??
 				msg.mail_folder_inbox())
 	);
 
@@ -178,6 +188,14 @@
 		mailbox.pin(selected);
 	});
 
+	$effect(() => {
+		if (!snapshot.missing) return;
+		untrack(() => {
+			flash(msg.mail_view_collection_gone());
+			void goto(`/u/${page.params.slot ?? '0'}/mail/inbox`, { replaceState: true });
+		});
+	});
+
 	const routeFolder = $derived(query.folder);
 
 	$effect(() => {
@@ -222,12 +240,20 @@
 		return () => mailbox.setAutoFlush(query, false);
 	});
 
-	const titleUnread = $derived(
-		mailbox.counts.inbox > 99 ? '99+' : String(mailbox.counts.inbox)
-	);
+	const viewUnread = $derived.by(() => {
+		const counts = mailbox.counts;
+		const scoped = (c: { direct: number; subtree: number } | undefined) =>
+			c ? (query.direct ? c.direct : c.subtree) : 0;
+		if (viewFolderId) return scoped(counts.folders[viewFolderId]);
+		if (viewLabelId) return scoped(counts.labels[viewLabelId]);
+		if (query.folder === 'spam') return counts.spam;
+		return counts.inbox;
+	});
+
+	const titleUnread = $derived(viewUnread > 99 ? '99+' : String(viewUnread));
 
 	const pageTitle = $derived(
-		mailbox.counts.inbox > 0
+		viewUnread > 0
 			? msg.mail_page_title_unread({ count: titleUnread, folder: folderLabel })
 			: msg.mail_page_title({ folder: folderLabel })
 	);
@@ -840,7 +866,8 @@
 			const search = withFilters(new URLSearchParams(), {
 				unread: next.unread,
 				attach: next.attach,
-				labels: next.labels
+				labels: next.labels,
+				direct: false
 			});
 			void goto(`${target}${search}`);
 			return;
@@ -848,7 +875,8 @@
 		const search = withFilters(page.url.searchParams, {
 			unread: next.unread,
 			attach: next.attach,
-			labels: next.labels
+			labels: next.labels,
+			direct: !!next.direct
 		});
 		void goto(`${basePath}${search}`);
 	}
@@ -979,6 +1007,8 @@
 			searchComplete={!mailSearch.partial}
 			searchChips={mailSearch.chips}
 			onClearSearch={() => mailSearch.clear()}
+			{collectionKind}
+			{showScope}
 		/>
 		{#if messageId && !selected && deepLinkMissing}
 			<section class="reader reader-missing">
