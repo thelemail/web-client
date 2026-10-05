@@ -30,7 +30,27 @@ describe('collection metadata sealing', () => {
 		const sent = keystore.encrypt.mock.calls[0][0];
 		expect(sent.recipientPublicKeyArmored).toBe('PUB');
 		expect(JSON.parse(new TextDecoder().decode(sent.plaintext))).toEqual({ n: 'Clients', c: 'pine' });
-		expect(sealed).toEqual({ sealedMeta: 'CQk=', metaKeyFingerprint: 'AQID', metaSchemaVersion: 1 });
+		expect(sealed).toEqual({ sealedMeta: 'CQk=', metaKeyFingerprint: 'AQID', metaSchemaVersion: 2 });
+	});
+
+	it('seals the favorite flag only when the collection is a favorite', async () => {
+		keystore.getPublicKey.mockResolvedValue({
+			ok: true,
+			publicKeyArmored: 'PUB',
+			fingerprint: new Uint8Array([1])
+		});
+		keystore.encrypt.mockResolvedValue({ ok: true, ciphertext: new Uint8Array([9]) });
+
+		await sealCollectionMeta('acc', { name: 'Clients', color: null, favorite: true });
+		await sealCollectionMeta('acc', { name: 'Home', color: null, favorite: false });
+
+		const sent = keystore.encrypt.mock.calls.map((c) =>
+			JSON.parse(new TextDecoder().decode(c[0].plaintext))
+		);
+		expect(sent).toEqual([
+			{ n: 'Clients', c: null, f: true },
+			{ n: 'Home', c: null }
+		]);
 	});
 
 	it('refuses to seal while the account is locked', async () => {
@@ -43,7 +63,21 @@ describe('collection metadata sealing', () => {
 
 	it('opens sealed metadata and rejects blobs without a name', async () => {
 		keystore.decrypt.mockResolvedValueOnce({ ok: true, plaintext: '{"n":"Tax / 2026","c":null}' });
-		expect(await openCollectionMeta('acc', 'CQk=')).toEqual({ name: 'Tax / 2026', color: null });
+		expect(await openCollectionMeta('acc', 'CQk=')).toEqual({
+			name: 'Tax / 2026',
+			color: null,
+			favorite: false
+		});
+
+		keystore.decrypt.mockResolvedValueOnce({ ok: true, plaintext: '{"n":"Clients","c":"pine","f":true}' });
+		expect(await openCollectionMeta('acc', 'CQk=')).toEqual({
+			name: 'Clients',
+			color: 'pine',
+			favorite: true
+		});
+
+		keystore.decrypt.mockResolvedValueOnce({ ok: true, plaintext: '{"n":"Home","f":"yes"}' });
+		expect((await openCollectionMeta('acc', 'CQk='))?.favorite).toBe(false);
 
 		keystore.decrypt.mockResolvedValueOnce({ ok: true, plaintext: '{"n":"  "}' });
 		expect(await openCollectionMeta('acc', 'CQk=')).toBeNull();

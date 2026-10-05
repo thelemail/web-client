@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const api = vi.hoisted(() => ({ listMailCollections: vi.fn(), createMailCollection: vi.fn() }));
+const api = vi.hoisted(() => ({
+	listMailCollections: vi.fn(),
+	createMailCollection: vi.fn(),
+	updateMailCollection: vi.fn(),
+	reorderMailCollections: vi.fn()
+}));
 const seal = vi.hoisted(() => ({ sealCollectionMeta: vi.fn(), openCollectionMeta: vi.fn() }));
 
 vi.mock('$core/api/mailCollections', () => api);
@@ -9,6 +14,7 @@ vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribe: vi.fn(
 vi.mock('$app/environment', () => ({ browser: true }));
 
 import { mailCollections } from './mailCollections.svelte';
+import { ApiCallError } from '$core/api/types';
 
 function rec(id: string, kind: 'folder' | 'label', sealedMeta: string, over: Record<string, unknown> = {}) {
 	return {
@@ -31,6 +37,8 @@ describe('mail collections registry', () => {
 	beforeEach(() => {
 		api.listMailCollections.mockReset();
 		api.createMailCollection.mockReset();
+		api.updateMailCollection.mockReset();
+		api.reorderMailCollections.mockReset();
 		seal.openCollectionMeta.mockReset();
 		seal.sealCollectionMeta.mockReset();
 		mailCollections.setAccount(null);
@@ -122,5 +130,157 @@ describe('mail collections registry', () => {
 		expect(mailCollections.subtree('f1')).toEqual(['f1', 'f2']);
 
 		expect(await mailCollections.sync()).toBe(false);
+	});
+
+	it('pins a favorite by resealing its name and color with the flag', async () => {
+		api.listMailCollections.mockResolvedValue({
+			collections: [rec('f1', 'folder', 'sealed-clients', { rev: 4 }), rec('l1', 'label', 'sealed-tax')]
+		});
+		seal.openCollectionMeta.mockImplementation(async (_acct: string, sealed: string) => ({
+			name: sealed.replace('sealed-', ''),
+			color: sealed === 'sealed-clients' ? 'pine' : null,
+			favorite: false
+		}));
+		await mailCollections.load();
+		expect(mailCollections.favorites).toEqual([]);
+
+		seal.sealCollectionMeta.mockResolvedValue({ sealedMeta: 'sealed-fav', metaKeyFingerprint: 'fp', metaSchemaVersion: 2 });
+		api.updateMailCollection.mockResolvedValue(rec('f1', 'folder', 'sealed-fav', { rev: 5 }));
+
+		await mailCollections.setFavorite('f1', true);
+
+		expect(seal.sealCollectionMeta).toHaveBeenCalledWith('acc-1', {
+			name: 'clients',
+			color: 'pine',
+			favorite: true
+		});
+		expect(api.updateMailCollection).toHaveBeenCalledWith('acc-1', 'f1', {
+			meta: { sealedMeta: 'sealed-fav', metaKeyFingerprint: 'fp', metaSchemaVersion: 2 },
+			baseRev: 4
+		});
+		expect(mailCollections.favorites.map((f) => [f.id, f.rev])).toEqual([['f1', 5]]);
+
+		seal.openCollectionMeta.mockClear();
+		api.listMailCollections.mockResolvedValue({
+			collections: [rec('f1', 'folder', 'sealed-fav', { rev: 5 }), rec('l1', 'label', 'sealed-tax')]
+		});
+		await mailCollections.load();
+		expect(seal.openCollectionMeta).not.toHaveBeenCalledWith('acc-1', 'sealed-fav');
+		expect(mailCollections.folder('f1')?.favorite).toBe(true);
+	});
+
+	it('reloads and retries once when another device changed the collection first', async () => {
+		api.listMailCollections.mockResolvedValueOnce({
+			collections: [rec('f1', 'folder', 'sealed-clients', { rev: 1 })]
+		});
+		seal.openCollectionMeta.mockResolvedValue({ name: 'clients', color: null, favorite: false });
+		await mailCollections.load();
+
+		api.listMailCollections.mockResolvedValueOnce({
+			collections: [rec('f1', 'folder', 'sealed-renamed', { rev: 2 })]
+		});
+		seal.openCollectionMeta.mockResolvedValue({ name: 'Clients 2026', color: 'brass', favorite: false });
+		seal.sealCollectionMeta.mockResolvedValue({ sealedMeta: 'x', metaKeyFingerprint: 'fp', metaSchemaVersion: 2 });
+		api.updateMailCollection
+			.mockRejectedValueOnce(new ApiCallError(409, null, 'stale'))
+			.mockResolvedValueOnce(rec('f1', 'folder', 'x', { rev: 3 }));
+
+		await mailCollections.setFavorite('f1', true);
+
+		expect(api.updateMailCollection).toHaveBeenCalledTimes(2);
+		expect(api.updateMailCollection.mock.calls[1][2].baseRev).toBe(2);
+		expect(seal.sealCollectionMeta).toHaveBeenLastCalledWith('acc-1', {
+			name: 'Clients 2026',
+			color: 'brass',
+			favorite: true
+		});
+		expect(mailCollections.folder('f1')?.favorite).toBe(true);
+	});
+
+	it('puts a favorite back when the server refuses the change', async () => {
+		api.listMailCollections.mockResolvedValue({ collections: [rec('f1', 'folder', 'sealed-clients')] });
+		seal.openCollectionMeta.mockResolvedValue({ name: 'clients', color: null, favorite: true });
+		await mailCollections.load();
+		seal.sealCollectionMeta.mockResolvedValue({ sealedMeta: 'x', metaKeyFingerprint: 'fp', metaSchemaVersion: 2 });
+		api.updateMailCollection.mockRejectedValue(new ApiCallError(500, null, 'boom'));
+
+		await expect(mailCollections.setFavorite('f1', false)).rejects.toThrow('boom');
+
+		expect(api.updateMailCollection).toHaveBeenCalledTimes(1);
+		expect(mailCollections.folder('f1')?.favorite).toBe(true);
+	});
+
+	it('reorders siblings at once and keeps the revisions the server returns', async () => {
+		api.listMailCollections.mockResolvedValue({
+			collections: [
+				rec('a', 'folder', 'sealed-a', { position: 1024, rev: 3 }),
+				rec('b', 'folder', 'sealed-b', { position: 2048, rev: 1 }),
+				rec('c', 'folder', 'sealed-c', { position: 3072, rev: 2 })
+			]
+		});
+		seal.openCollectionMeta.mockImplementation(async (_a: string, s: string) => ({
+			name: s.replace('sealed-', ''),
+			color: null,
+			favorite: false
+		}));
+		await mailCollections.load();
+
+		let resolve!: (v: unknown) => void;
+		api.reorderMailCollections.mockReturnValue(new Promise((r) => (resolve = r)));
+		const done = mailCollections.reorder('folder', null, ['c', 'a', 'b']);
+
+		expect(mailCollections.folders.map((f) => f.id)).toEqual(['c', 'a', 'b']);
+		expect(api.reorderMailCollections).toHaveBeenCalledWith('acc-1', {
+			kind: 'folder',
+			parentId: null,
+			items: [
+				{ id: 'c', baseRev: 2 },
+				{ id: 'a', baseRev: 3 },
+				{ id: 'b', baseRev: 1 }
+			]
+		});
+
+		resolve({
+			collections: [
+				rec('c', 'folder', 'sealed-c', { position: 1024, rev: 3 }),
+				rec('a', 'folder', 'sealed-a', { position: 2048, rev: 4 }),
+				rec('b', 'folder', 'sealed-b', { position: 3072, rev: 2 })
+			]
+		});
+		await done;
+
+		expect(mailCollections.folders.map((f) => [f.id, f.rev])).toEqual([
+			['c', 3],
+			['a', 4],
+			['b', 2]
+		]);
+	});
+
+	it('rolls a refused reorder back and resyncs when the siblings changed elsewhere', async () => {
+		api.listMailCollections.mockResolvedValueOnce({
+			collections: [
+				rec('a', 'folder', 'sealed-a', { position: 1024 }),
+				rec('b', 'folder', 'sealed-b', { position: 2048 })
+			]
+		});
+		seal.openCollectionMeta.mockImplementation(async (_a: string, s: string) => ({
+			name: s.replace('sealed-', ''),
+			color: null,
+			favorite: false
+		}));
+		await mailCollections.load();
+
+		api.reorderMailCollections.mockRejectedValue(new ApiCallError(409, null, 'changed'));
+		api.listMailCollections.mockResolvedValueOnce({
+			collections: [
+				rec('a', 'folder', 'sealed-a', { position: 1024 }),
+				rec('b', 'folder', 'sealed-b', { position: 2048 }),
+				rec('n', 'folder', 'sealed-n', { position: 4096 })
+			]
+		});
+
+		await expect(mailCollections.reorder('folder', null, ['b', 'a'])).rejects.toThrow('changed');
+
+		expect(mailCollections.folders.map((f) => f.id)).toEqual(['a', 'b', 'n']);
 	});
 });

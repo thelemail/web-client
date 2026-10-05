@@ -92,6 +92,40 @@ const CALENDAR_DEFAULTS: CalendarSettings = {
 	startHour: 6
 };
 
+export type MailSidebarSection = 'favorites' | 'folders' | 'labels';
+
+export interface MailSidebarSettings {
+	expanded: string[];
+	collapsed: MailSidebarSection[];
+	showMore: boolean;
+}
+
+const MAIL_SIDEBAR_SECTIONS: readonly MailSidebarSection[] = ['favorites', 'folders', 'labels'];
+const MAX_SIDEBAR_EXPANDED = 1500;
+const SIDEBAR_PERSIST_DELAY_MS = 400;
+
+const MAIL_SIDEBAR_DEFAULTS: MailSidebarSettings = {
+	expanded: [],
+	collapsed: [],
+	showMore: false
+};
+
+export function parseMailSidebar(raw: unknown): MailSidebarSettings {
+	const next: MailSidebarSettings = { ...MAIL_SIDEBAR_DEFAULTS, expanded: [], collapsed: [] };
+	if (!raw || typeof raw !== 'object') return next;
+	const v = raw as Record<string, unknown>;
+	if (Array.isArray(v.expanded)) {
+		next.expanded = [
+			...new Set(v.expanded.filter((x): x is string => typeof x === 'string' && x.length <= 64))
+		].slice(0, MAX_SIDEBAR_EXPANDED);
+	}
+	if (Array.isArray(v.collapsed)) {
+		next.collapsed = MAIL_SIDEBAR_SECTIONS.filter((s) => (v.collapsed as unknown[]).includes(s));
+	}
+	if (typeof v.showMore === 'boolean') next.showMore = v.showMore;
+	return next;
+}
+
 class AccountSettingsStore {
 	hydrated = $state(false);
 	readingOpenMessage = $state<OpenMessageSettings>({ ...DEFAULTS });
@@ -99,7 +133,9 @@ class AccountSettingsStore {
 	composing = $state<ComposingSettings>({ ...COMPOSING_DEFAULTS });
 	appearance = $state<AppearanceSettings>({ ...APPEARANCE_DEFAULTS });
 	calendar = $state<CalendarSettings>({ ...CALENDAR_DEFAULTS });
+	mailSidebar = $state<MailSidebarSettings>(parseMailSidebar(null));
 	#accountId: string | null = null;
+	#sidebarTimer: ReturnType<typeof setTimeout> | null = null;
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -110,6 +146,9 @@ class AccountSettingsStore {
 		this.composing = { ...COMPOSING_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
 		this.calendar = { ...CALENDAR_DEFAULTS };
+		this.mailSidebar = parseMailSidebar(null);
+		if (this.#sidebarTimer) clearTimeout(this.#sidebarTimer);
+		this.#sidebarTimer = null;
 		locale.reset();
 	}
 
@@ -218,6 +257,10 @@ class AccountSettingsStore {
 				this.calendar = next;
 			}
 
+			if (sections['mail_sidebar'] !== undefined && !this.#sidebarTimer) {
+				this.mailSidebar = parseMailSidebar(sections['mail_sidebar']);
+			}
+
 			const l = sections['localization'];
 			if (l && typeof l === 'object') {
 				const next: LocaleSettings = { ...locale.value };
@@ -279,6 +322,22 @@ class AccountSettingsStore {
 			weekStartsOn: next.weekStartsOn,
 			startHour: next.startHour
 		});
+	}
+
+	persistMailSidebar(next: MailSidebarSettings): void {
+		const value = parseMailSidebar(next);
+		this.mailSidebar = value;
+		const acct = this.#accountId;
+		if (this.#sidebarTimer) clearTimeout(this.#sidebarTimer);
+		this.#sidebarTimer = setTimeout(() => {
+			this.#sidebarTimer = null;
+			if (this.#accountId !== acct) return;
+			void putAccountSettingsSection('mail_sidebar', {
+				expanded: this.mailSidebar.expanded,
+				collapsed: this.mailSidebar.collapsed,
+				showMore: this.mailSidebar.showMore
+			}).catch(() => {});
+		}, SIDEBAR_PERSIST_DELAY_MS);
 	}
 
 	setTheme(pref: ThemePref): void {

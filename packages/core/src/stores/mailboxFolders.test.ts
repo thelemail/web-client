@@ -52,7 +52,7 @@ function query(over: Partial<Query>): Query {
 }
 
 function node(id: string, kind: 'folder' | 'label', parentId: string | null = null): CollectionNode {
-	return { id, kind, parentId, position: 1024, rev: 1, name: id.slice(0, 4), color: null, sealed: false };
+	return { id, kind, parentId, position: 1024, rev: 1, name: id.slice(0, 4), color: null, favorite: false, sealed: false };
 }
 
 function thread(item: ReturnType<typeof filed>) {
