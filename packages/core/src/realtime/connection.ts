@@ -112,15 +112,15 @@ export class RealtimeConnection {
 		es.onopen = () => {
 			if (seq !== this.#connectSeq) return;
 			this.#attempt = 0;
-			this.#closedAt = null;
 			this.#setState('open');
+			this.#closedAt = null;
 		};
 
 		es.onerror = () => {
 			es.close();
 			if (seq !== this.#connectSeq) return;
 			if (this.#es === es) this.#es = null;
-			this.#closedAt = Date.now();
+			this.#closedAt ??= Date.now();
 			if (this.#stopped) return;
 			this.#scheduleReconnect();
 		};
