@@ -1,3 +1,5 @@
+import { tick } from 'svelte';
+
 class MailNavStore {
 	open = $state(false);
 	#opener: HTMLElement | null = null;
@@ -16,7 +18,10 @@ class MailNavStore {
 		this.open = false;
 		const opener = this.#opener;
 		this.#opener = null;
-		if (restoreFocus && opener?.isConnected) opener.focus();
+		if (!restoreFocus || !opener) return;
+		void tick().then(() => {
+			if (opener.isConnected) opener.focus();
+		});
 	}
 }
 

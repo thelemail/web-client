@@ -936,9 +936,6 @@
 	.mail-app .rail { position: fixed; left: 0; top: 0; bottom: 0; z-index: 220; transform: translateX(-105%); transition: transform var(--dur-slow) var(--ease-out); will-change: transform; }
 	.mail-app:not(.nav-open) .rail { visibility: hidden; transition: transform var(--dur-slow) var(--ease-out), visibility 0s linear var(--dur-slow); }
 	.mail-app.nav-open .rail { transform: none; box-shadow: var(--shadow-lg); }
-	.mail-app .ctree-more { opacity: 1; }
-	.mail-app .fld, .mail-app .ctree-row { min-height: 40px; }
-	.mail-app .ctree-row { padding-top: 0; padding-bottom: 0; }
 	.mail-app .rail-scrim { display: block; position: fixed; inset: 0; z-index: 210; border: none; padding: 0; background: color-mix(in srgb, var(--ink-900) 45%, transparent); backdrop-filter: blur(2px); animation: mail-fade var(--dur); }
 	@media (prefers-reduced-motion: reduce) {
 		.mail-app .rail, .mail-app:not(.nav-open) .rail { transition: none; }
@@ -1120,3 +1117,7 @@
 .mail-app .coll-menu .mitem[data-highlighted] svg { color: var(--pine-600); }
 .mail-app .coll-menu .mitem[data-disabled] { opacity: .45; pointer-events: none; }
 .mail-app .menu-portal.coll-create { z-index: 240; width: 270px; }
+@media (max-width: 1000px) {
+	.mail-app .ctree-more { opacity: 1; }
+	.mail-app .fld, .mail-app .ctree-row { min-height: 40px; }
+}

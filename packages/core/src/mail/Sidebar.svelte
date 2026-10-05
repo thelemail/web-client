@@ -214,6 +214,13 @@
 		void reorder(entry, moveAmongSiblings(sibs, entry.id, at));
 	}
 
+	function moveAndRefocus(entry: CollectionEntry, delta: number, el: HTMLElement) {
+		move(entry, delta);
+		void tick().then(() => {
+			if (el.isConnected) el.focus();
+		});
+	}
+
 	async function toggleFavorite(entry: CollectionEntry) {
 		try {
 			await mailCollections.setFavorite(entry.id, !entry.favorite);
@@ -542,13 +549,17 @@
 				{/if}
 				{#if menuSibs.length > 1}
 					<DropdownMenu.Separator class="msep" />
-					<DropdownMenu.Item class="mitem" disabled={menuIndex <= 0} onSelect={() => move(e, -1)}>
+					<DropdownMenu.Item
+						class="mitem"
+						disabled={menuIndex <= 0}
+						onSelect={() => moveAndRefocus(e, -1, returnTo)}
+					>
 						<ArrowUp />{m.mail_sidebar_move_up()}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item
 						class="mitem"
 						disabled={menuIndex < 0 || menuIndex >= menuSibs.length - 1}
-						onSelect={() => move(e, 1)}
+						onSelect={() => moveAndRefocus(e, 1, returnTo)}
 					>
 						<ArrowDown />{m.mail_sidebar_move_down()}
 					</DropdownMenu.Item>
@@ -564,7 +575,13 @@
 		anchor={c.anchor}
 		bind:panel={createPanel}
 		role="dialog"
-		label={c.kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
+		label={c.parent
+			? c.kind === 'folder'
+				? m.mail_sidebar_new_subfolder()
+				: m.mail_sidebar_new_sublabel()
+			: c.kind === 'folder'
+				? m.mail_collection_new_folder()
+				: m.mail_collection_new_label()}
 		extraClass="coll-create"
 	>
 		<div onkeydown={onCreateKeydown} role="presentation">

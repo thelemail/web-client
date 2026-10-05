@@ -4,6 +4,7 @@
 
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
+	import { tick } from 'svelte';
 	import { Folder, FolderOpen, Tag } from 'lucide';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
@@ -142,6 +143,7 @@
 		if (ev.altKey && ev.shiftKey && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) {
 			ev.preventDefault();
 			onMove(e, ev.key === 'ArrowUp' ? -1 : 1);
+			void tick().then(() => focusRow(e.id));
 			return;
 		}
 		if ((ev.shiftKey && ev.key === 'F10') || ev.key === 'ContextMenu') {
