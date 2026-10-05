@@ -9,7 +9,8 @@ import {
 	matchesFrom,
 	matchesRow,
 	parseQuery,
-	scoreText
+	scoreText,
+	type CollectionResolver
 } from './query';
 import { rowFor, textFor, undecryptableText } from './records';
 import { openChunk, sealChunk } from './seal';
@@ -53,6 +54,8 @@ function optionsFor(scope: ScopeId): ListMessagesOptions {
 			return { ...base, mailbox: 'trash' };
 		case 'snoozed':
 			return { ...base, mailbox: 'snoozed' };
+		case 'folder':
+			return { ...base, mailbox: 'folder' };
 	}
 }
 
@@ -266,8 +269,8 @@ export class SearchIndex {
 		this.#meta = { ...this.#meta, nextChunkId: chunkId + 1 };
 	}
 
-	search(text: string, limit = 200): SearchResult[] {
-		const parsed = parseQuery(text);
+	search(text: string, collections?: CollectionResolver, limit = 200): SearchResult[] {
+		const parsed = parseQuery(text, collections);
 		if (isEmptyQuery(parsed)) return [];
 		const { terms } = parsed;
 		const filtersOnly = terms.length === 0 && hasFilters(parsed);

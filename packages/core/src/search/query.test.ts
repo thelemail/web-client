@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { excerptFor, isEmptyQuery, matchesFrom, matchesRow, parseQuery, parseTerms, scoreText, splitRespectingQuotes } from './query';
+import { collectionResolver, excerptFor, isEmptyQuery, matchesFrom, matchesRow, parseQuery, parseTerms, scoreText, splitRespectingQuotes } from './query';
 import type { IndexedRow, IndexedText } from './types';
 
 function text(over: Partial<IndexedText> = {}): IndexedText {
@@ -231,5 +231,65 @@ describe('matchesFrom', () => {
 
 	it('does not restrict a query with no from:', () => {
 		expect(matchesFrom(sender, parseQuery('invoice'))).toBe(true);
+	});
+});
+
+describe('folder and label operators', () => {
+	const folders = [
+		{ id: 'f-clients', name: 'Clients', path: 'Clients' },
+		{ id: 'f-acme', name: 'Acme', path: 'Clients / Acme' },
+		{ id: 'f-home', name: 'Receipts', path: 'Home / Receipts' },
+		{ id: 'f-work', name: 'Receipts', path: 'Work / Receipts' }
+	];
+	const labels = [
+		{ id: 'l-work', name: 'Work', path: 'Work' },
+		{ id: 'l-urgent', name: 'Urgent', path: 'Work / Urgent' },
+		{ id: 'l-tax', name: 'Tax', path: 'Tax' }
+	];
+	const children: Record<string, string[]> = { 'f-clients': ['f-acme'], 'l-work': ['l-urgent'] };
+	const subtree = (id: string) => [id, ...(children[id] ?? [])];
+	const resolver = collectionResolver(folders, labels, subtree);
+
+	it('resolves a folder by name or path and includes its subfolders', () => {
+		expect(parseQuery('in:clients', resolver).folderIds).toEqual(['f-clients', 'f-acme']);
+		expect(parseQuery('in:"Clients/Acme"', resolver).folderIds).toEqual(['f-acme']);
+		expect(parseQuery('in:receipts', resolver).folderIds).toEqual(['f-home', 'f-work']);
+		expect(parseQuery('in:"work / receipts"', resolver).folderIds).toEqual(['f-work']);
+	});
+
+	it('keeps system folders ahead of custom ones and marks unknown names', () => {
+		expect(parseQuery('in:archive', resolver).folder).toBe('archive');
+		const unknown = parseQuery('in:nowhere', resolver);
+		expect(unknown.folderIds).toBeNull();
+		expect(unknown.unknownFolder).toBe('nowhere');
+		expect(matchesRow(row(), unknown)).toBe(false);
+	});
+
+	it('matches only mail filed in the folder subtree', () => {
+		const parsed = parseQuery('in:clients', resolver);
+		expect(matchesRow(row({ mailboxState: 'folder', folderId: 'f-acme' }), parsed)).toBe(true);
+		expect(matchesRow(row({ mailboxState: 'folder', folderId: 'f-home' }), parsed)).toBe(false);
+		expect(matchesRow(row({ mailboxState: 'trash', folderId: 'f-acme' }), parsed)).toBe(false);
+	});
+
+	it('requires every label operator on the same message, each with its sublabels', () => {
+		const parsed = parseQuery('label:work label:tax', resolver);
+		expect(parsed.labelGroups).toEqual([['l-work', 'l-urgent'], ['l-tax']]);
+		expect(matchesRow(row({ labels: ['l-urgent', 'l-tax'] }), parsed)).toBe(true);
+		expect(matchesRow(row({ labels: ['l-urgent'] }), parsed)).toBe(false);
+	});
+
+	it('combines a folder, a label and flags', () => {
+		const parsed = parseQuery('label:Work in:"Clients/Acme" is:unread', resolver);
+		const hit = row({ mailboxState: 'folder', folderId: 'f-acme', labels: ['l-work'], read: false });
+		expect(matchesRow(hit, parsed)).toBe(true);
+		expect(matchesRow({ ...hit, read: true }, parsed)).toBe(false);
+		expect(isEmptyQuery(parseQuery('label:tax', resolver))).toBe(false);
+	});
+
+	it('matches nothing for an unknown label', () => {
+		const parsed = parseQuery('label:missing', resolver);
+		expect(parsed.unknownLabel).toBe('missing');
+		expect(matchesRow(row({ labels: ['l-tax'] }), parsed)).toBe(false);
 	});
 });

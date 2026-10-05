@@ -142,6 +142,33 @@ describe('SearchIndex backfill', () => {
 		expect(index.search('archived invoice').map((h) => h.row.id)).toEqual(['archived']);
 	});
 
+	it('backfills mail already filed in custom folders and finds it by folder and label', async () => {
+		listMessages.mockImplementation(async (opts: { mailbox?: string }) => ({
+			items:
+				opts.mailbox === 'folder'
+					? [
+							item('filed', '2024-03-01T00:00:00Z', {
+								mailboxState: 'folder',
+								folderId: 'f-acme',
+								labelIds: ['l-work']
+							})
+						]
+					: [],
+			nextCursor: null
+		}));
+		decryptPreview.mockResolvedValue(preview('Quarterly report'));
+
+		const index = new SearchIndex(memorySearchDb());
+		await index.sync(ACCOUNT);
+
+		const resolver = {
+			folder: (name: string) => (name.toLowerCase() === 'acme' ? ['f-acme'] : null),
+			label: (name: string) => (name.toLowerCase() === 'work' ? ['l-work'] : null)
+		};
+		expect(index.search('in:acme label:work', resolver).map((h) => h.row.id)).toEqual(['filed']);
+		expect(index.search('report in:archive', resolver)).toEqual([]);
+	});
+
 	it('resumes an interrupted backfill from the stored cursor', async () => {
 		const db = memorySearchDb();
 		const isInbox = (o: { mailbox?: string; direction?: string }) =>

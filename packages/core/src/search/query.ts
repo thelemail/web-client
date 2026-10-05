@@ -40,11 +40,23 @@ const FOLDERS: readonly SearchFolder[] = [
 	'starred'
 ];
 
+export interface CollectionResolver {
+	folder(name: string): string[] | null;
+	label(name: string): string[] | null;
+}
+
+const NO_COLLECTIONS: CollectionResolver = { folder: () => null, label: () => null };
+
 export interface ParsedQuery {
 	terms: string[];
 	from: string[];
 	folder: SearchFolder | null;
+	folderIds: string[] | null;
+	folderName: string | null;
 	unknownFolder: string | null;
+	labelGroups: string[][];
+	labelNames: string[];
+	unknownLabel: string | null;
 	unread: boolean | null;
 	starred: boolean;
 	hasAttachment: boolean;
@@ -74,12 +86,17 @@ function isFolder(value: string): value is SearchFolder {
 	return (FOLDERS as readonly string[]).includes(value);
 }
 
-export function parseQuery(input: string): ParsedQuery {
+export function parseQuery(input: string, collections: CollectionResolver = NO_COLLECTIONS): ParsedQuery {
 	const parsed: ParsedQuery = {
 		terms: [],
 		from: [],
 		folder: null,
+		folderIds: null,
+		folderName: null,
 		unknownFolder: null,
+		labelGroups: [],
+		labelNames: [],
+		unknownLabel: null,
 		unread: null,
 		starred: false,
 		hasAttachment: false
@@ -94,13 +111,22 @@ export function parseQuery(input: string): ParsedQuery {
 		if (key === 'from' && value) {
 			parsed.from.push(normalize(raw));
 		} else if (key === 'in' && value) {
-			if (isFolder(value)) {
-				parsed.folder = value;
-				parsed.unknownFolder = null;
-			} else {
-				parsed.folder = null;
-				parsed.unknownFolder = value;
-			}
+			parsed.folder = null;
+			parsed.folderIds = null;
+			parsed.folderName = null;
+			parsed.unknownFolder = null;
+			const ids = isFolder(value) ? null : collections.folder(raw);
+			if (isFolder(value)) parsed.folder = value;
+			else if (ids) {
+				parsed.folderIds = ids;
+				parsed.folderName = raw;
+			} else parsed.unknownFolder = raw;
+		} else if (key === 'label' && value) {
+			const ids = collections.label(raw);
+			if (ids) {
+				parsed.labelGroups.push(ids);
+				parsed.labelNames.push(raw);
+			} else parsed.unknownLabel = raw;
 		} else if (key === 'is' && value === 'unread') {
 			parsed.unread = true;
 		} else if (key === 'is' && value === 'read') {
@@ -122,7 +148,10 @@ export function hasFilters(parsed: ParsedQuery): boolean {
 	return (
 		parsed.from.length > 0 ||
 		parsed.folder !== null ||
+		parsed.folderIds !== null ||
 		parsed.unknownFolder !== null ||
+		parsed.labelGroups.length > 0 ||
+		parsed.unknownLabel !== null ||
 		parsed.unread !== null ||
 		parsed.starred ||
 		parsed.hasAttachment
@@ -143,11 +172,19 @@ function folderOf(row: IndexedRow): SearchFolder | 'folder' {
 }
 
 export function matchesRow(row: IndexedRow, parsed: ParsedQuery): boolean {
-	if (parsed.unknownFolder !== null) return false;
+	if (parsed.unknownFolder !== null || parsed.unknownLabel !== null) return false;
 	if (parsed.folder === 'starred') {
 		if (!row.starred) return false;
 	} else if (parsed.folder !== null && folderOf(row) !== parsed.folder) {
 		return false;
+	}
+	if (parsed.folderIds !== null) {
+		if (row.mailboxState !== 'folder' || !row.folderId || !parsed.folderIds.includes(row.folderId)) {
+			return false;
+		}
+	}
+	for (const group of parsed.labelGroups) {
+		if (!group.some((id) => row.labels.includes(id))) return false;
 	}
 	if (parsed.unread !== null && row.read !== !parsed.unread) return false;
 	if (parsed.starred && !row.starred) return false;
@@ -216,4 +253,35 @@ export function excerptFor(text: IndexedText, terms: string[]): string {
 	const head = start > 0 ? '…' : '';
 	const tail = end < source.length ? '…' : '';
 	return `${head}${source.slice(start, end).trim()}${tail}`;
+}
+
+interface NamedCollection {
+	id: string;
+	name: string;
+	path: string;
+}
+
+function pathKey(value: string): string {
+	return normalize(value)
+		.split('/')
+		.map((part) => part.trim())
+		.filter(Boolean)
+		.join('/');
+}
+
+export function collectionResolver(
+	folders: readonly NamedCollection[],
+	labels: readonly NamedCollection[],
+	subtree: (id: string) => readonly string[]
+): CollectionResolver {
+	const lookup = (entries: readonly NamedCollection[]) => (name: string) => {
+		const wanted = pathKey(name);
+		if (!wanted) return null;
+		const hits = entries.filter(
+			(e) => pathKey(e.path) === wanted || (!wanted.includes('/') && pathKey(e.name) === wanted)
+		);
+		if (!hits.length) return null;
+		return [...new Set(hits.flatMap((e) => subtree(e.id)))];
+	};
+	return { folder: lookup(folders), label: lookup(labels) };
 }

@@ -32,7 +32,7 @@ export interface IndexChunk {
 	ciphertext: Uint8Array;
 }
 
-export type ScopeId = 'inbox' | 'sent' | 'archive' | 'spam' | 'trash' | 'snoozed';
+export type ScopeId = 'inbox' | 'sent' | 'archive' | 'spam' | 'trash' | 'snoozed' | 'folder';
 
 export const SCOPES: readonly ScopeId[] = [
 	'inbox',
@@ -40,7 +40,8 @@ export const SCOPES: readonly ScopeId[] = [
 	'archive',
 	'spam',
 	'trash',
-	'snoozed'
+	'snoozed',
+	'folder'
 ];
 
 export interface ScopeProgress {
