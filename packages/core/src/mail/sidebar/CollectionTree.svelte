@@ -331,24 +331,6 @@
 			style:--depth={flat || filtering ? 0 : e.depth}
 			style:--fld-tint={e.color ? collectionColor(e.color) : undefined}
 		>
-			{#if !flat && !filtering}
-				{#if hasKids}
-					<button
-						type="button"
-						class="ctree-chev"
-						class:open
-						tabindex="-1"
-						aria-label={open
-							? m.mail_sidebar_collapse_item({ name: e.path })
-							: m.mail_sidebar_expand_item({ name: e.path })}
-						onclick={() => onToggle(e.id, !open)}
-					>
-						<ChevronRight />
-					</button>
-				{:else}
-					<span class="ctree-chev" aria-hidden="true"></span>
-				{/if}
-			{/if}
 			<a
 				class="ctree-link"
 				role="treeitem"
@@ -376,6 +358,24 @@
 				<span class="lbl">{e.name}</span>
 				{#if b}<span class="ct" aria-hidden="true">{b.count}</span>{/if}
 			</a>
+			{#if !flat && !filtering}
+				{#if hasKids}
+					<button
+						type="button"
+						class="ctree-chev"
+						class:open
+						tabindex="-1"
+						aria-label={open
+							? m.mail_sidebar_collapse_item({ name: e.path })
+							: m.mail_sidebar_expand_item({ name: e.path })}
+						onclick={() => onToggle(e.id, !open)}
+					>
+						<ChevronRight />
+					</button>
+				{:else}
+					<span class="ctree-chev" aria-hidden="true"></span>
+				{/if}
+			{/if}
 			<button
 				type="button"
 				class="ctree-more"

@@ -1086,7 +1086,7 @@
 .mail-app .ctree { list-style: none; margin: 0; padding: 0; }
 .mail-app .ctree-row { gap: 2px; padding: 0 3px 0 calc(3px + var(--depth, 0) * 14px); content-visibility: auto; contain-intrinsic-size: auto 33px; }
 .mail-app .ctree-row:active { transform: none; }
-.mail-app .ctree-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 7px 6px; color: inherit; text-decoration: none; border-radius: 6px; -webkit-touch-callout: none; user-select: none; }
+.mail-app .ctree-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 7px 6px; color: inherit; text-decoration: none; border-radius: 6px; -webkit-touch-callout: none; user-select: none; }
 .mail-app .rail .ctree-link:focus-visible { outline: none; }
 .mail-app .ctree-row:has(> .ctree-link:focus-visible) { box-shadow: inset 0 0 0 2px var(--pine-600); }
 .mail-app .ctree-chev, .mail-app .ctree-more { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border: none; background: none; padding: 0; border-radius: 5px; color: var(--fg-faint); }
