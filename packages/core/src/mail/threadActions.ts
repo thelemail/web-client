@@ -4,6 +4,7 @@ import {
 	markMessageRead,
 	markMessageSpam,
 	moveMessage,
+	moveMessageToInbox,
 	restoreMessage,
 	trashMessage
 } from '$core/api/messages';
@@ -53,7 +54,7 @@ function actionFor(verb: ThreadVerb, folderId?: string): (id: string) => Promise
 		case 'spam':
 			return markMessageSpam;
 		case 'inbox':
-			return restoreMessage;
+			return moveMessageToInbox;
 		case 'move':
 			return (id) => moveMessage(id, { folderId: folderId ?? '' });
 	}

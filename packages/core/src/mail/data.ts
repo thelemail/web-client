@@ -81,6 +81,7 @@ export interface Message {
 	subj: string;
 	labels: string[];
 	folderId?: string | null;
+	returnsToArchive?: boolean;
 	unread: boolean;
 	starred: boolean;
 	spam?: boolean;

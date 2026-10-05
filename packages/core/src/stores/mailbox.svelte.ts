@@ -200,6 +200,7 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		id: item.id,
 		folder: folderFromServer(item.mailboxState, item.direction, item.folderId),
 		folderId: item.folderId ?? null,
+		returnsToArchive: item.returnsToArchive,
 		direction: item.direction,
 		from: fromDisplay,
 		fromAddr: preview.sender.address,
@@ -294,6 +295,7 @@ function mirrorRowToMessage(row: MirrorRow): Message {
 			row.folderId
 		),
 		folderId: row.folderId,
+		returnsToArchive: row.returnsToArchive,
 		direction: row.direction,
 		from: display,
 		fromAddr: row.senderAddress,
@@ -321,6 +323,7 @@ function fallbackRow(item: MessageListItem, code: string): Message {
 		id: item.id,
 		folder: folderFromServer(item.mailboxState, item.direction, item.folderId),
 		folderId: item.folderId ?? null,
+		returnsToArchive: item.returnsToArchive,
 		direction: item.direction,
 		from: m.mailbox_fallback_encrypted_message(),
 		fromAddr: '',
@@ -560,6 +563,7 @@ class MailboxStore {
 				threadCount: detail.threadCount,
 				rsvpStatus: detail.rsvpStatus,
 				folderId: detail.folderId,
+				returnsToArchive: detail.returnsToArchive,
 				labelIds: detail.labelIds,
 				sentViaAliasId: detail.sentViaAliasId,
 				sentByAccountId: detail.sentByAccountId

@@ -51,6 +51,7 @@ export interface MirrorRow {
 	attachmentCount: number;
 	threadRootId: string | null;
 	folderId: string | null;
+	returnsToArchive: boolean;
 	labelsJson: string;
 }
 
@@ -75,6 +76,7 @@ export interface MirrorMessage {
 	starred: boolean;
 	threadRootId: string | null;
 	folderId: string | null;
+	returnsToArchive: boolean;
 	externalMessageId: string | null;
 	inReplyTo: string | null;
 	labelsJson: string;

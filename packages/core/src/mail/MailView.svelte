@@ -33,6 +33,7 @@
 		markMessageUnread,
 		addMessageLabel,
 		moveMessage,
+		moveMessageToInbox,
 		restoreMessage,
 		snoozeMessage,
 		starMessage,
@@ -132,6 +133,7 @@
 			...m,
 			folder: folderFromServer(state.mailboxState, direction, state.folderId),
 			folderId: state.folderId ?? null,
+			returnsToArchive: state.returnsToArchive,
 			starred: state.starred,
 			unread: !state.read,
 			snoozedUntil: state.snoozedUntil ?? null
@@ -343,6 +345,25 @@
 
 	const ARCHIVED: Partial<Message> = { folder: 'archive', folderId: null };
 
+	function homeOf(current: Message): { route: string; folderName?: string; archive: boolean } {
+		const homeFolder = current.folderId ? mailCollections.folder(current.folderId) : undefined;
+		if (homeFolder) {
+			return {
+				route: customFolderRoute(homeFolder.id),
+				folderName: homeFolder.name,
+				archive: false
+			};
+		}
+		if (current.returnsToArchive) return { route: 'archive', archive: true };
+		return { route: current.direction === 'sent' ? 'sent' : 'inbox', archive: false };
+	}
+
+	function movedBackToast(home: ReturnType<typeof homeOf>, inbox: string): string {
+		if (home.folderName) return msg.mail_toast_moved_back_to_folder({ folder: home.folderName });
+		if (home.archive) return msg.mail_toast_moved_back_archive();
+		return inbox;
+	}
+
 	function queueArchive(id: string): Promise<void> {
 		advancePast(id);
 		return isThread(id)
@@ -363,15 +384,15 @@
 		if (isThread(id)) {
 			void queueThreadUpdate(
 				id,
-				{ folder: targetFolder, folderId: null },
+				{ folder: targetFolder, folderId: null, returnsToArchive: false },
 				'inbox',
 				msg.mail_err_move_inbox()
 			);
 		} else {
 			void queueStateUpdate(
 				id,
-				{ folder: targetFolder, folderId: null },
-				restoreMessage,
+				{ folder: targetFolder, folderId: null, returnsToArchive: false },
+				moveMessageToInbox,
 				msg.mail_err_move_inbox()
 			);
 		}
@@ -390,18 +411,18 @@
 		flash(msg.mail_toast_snoozed_until({ when: formatWhenLong(until) }), () => undoSnooze(id));
 	}
 
-	function unsnoozeOne(id: string, note = msg.mail_toast_back_in_inbox()) {
+	function unsnoozeOne(id: string, note?: string) {
 		const current = mailbox.findMessage(id);
 		if (!current) return;
 		if (current.folder === 'snoozed') advancePast(id);
-		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
+		const home = homeOf(current);
 		void queueStateUpdate(
 			id,
-			{ folder: targetFolder, snoozedUntil: null },
+			{ folder: home.route, snoozedUntil: null, returnsToArchive: false },
 			unsnoozeMessage,
 			msg.mail_err_unsnooze()
 		).then(() => mailbox.refresh([query]));
-		flash(note);
+		flash(note ?? movedBackToast(home, msg.mail_toast_back_in_inbox()));
 	}
 
 	function undoSnooze(id: string) {
@@ -500,13 +521,14 @@
 		dismissToast();
 		const current = mailbox.findMessage(id);
 		if (!current) return;
-		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
+		const home = homeOf(current);
+		const optimistic = { folder: home.route, returnsToArchive: false };
 		if (isThread(id)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_undo());
+			void queueThreadUpdate(id, optimistic, 'restore', msg.mail_err_undo());
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_undo());
+			void queueStateUpdate(id, optimistic, restoreMessage, msg.mail_err_undo());
 		}
-		flash(msg.mail_toast_moved_back_inbox());
+		flash(movedBackToast(home, msg.mail_toast_moved_back_inbox()));
 	}
 
 	function blockableFrom(address: string): Message[] {
@@ -597,21 +619,19 @@
 			const nextId = nextAfter(id);
 			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 		}
-		const homeFolder = current.folderId ? mailCollections.folder(current.folderId) : undefined;
-		const targetFolder = homeFolder
-			? customFolderRoute(homeFolder.id)
-			: current.direction === 'sent'
-				? 'sent'
-				: 'inbox';
+		const home = homeOf(current);
+		const optimistic = { folder: home.route, returnsToArchive: false };
 		if (isThread(id)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore());
+			void queueThreadUpdate(id, optimistic, 'restore', msg.mail_err_restore());
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_restore());
+			void queueStateUpdate(id, optimistic, restoreMessage, msg.mail_err_restore());
 		}
 		flash(
-			homeFolder
-				? msg.mail_toast_restored_to_folder({ folder: homeFolder.name })
-				: msg.mail_toast_restored_inbox()
+			home.folderName
+				? msg.mail_toast_restored_to_folder({ folder: home.folderName })
+				: home.archive
+					? msg.mail_toast_restored_archive()
+					: msg.mail_toast_restored_inbox()
 		);
 	}
 
