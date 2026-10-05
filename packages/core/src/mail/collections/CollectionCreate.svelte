@@ -14,15 +14,16 @@
 
 	interface Props {
 		kind: MailCollectionKind;
+		parent?: string | null;
 		onCreated: (entry: CollectionEntry) => void;
 	}
 
-	let { kind, onCreated }: Props = $props();
+	let { kind, parent = null, onCreated }: Props = $props();
 
 	const MAX_NAME = 120;
 
 	let name = $state('');
-	let parentId = $state('');
+	let parentId = $state(untrack(() => parent ?? ''));
 	let color = $state<CollectionColor | null>(untrack(() => (kind === 'label' ? 'pine' : null)));
 	let saving = $state(false);
 	let error = $state<string | null>(null);

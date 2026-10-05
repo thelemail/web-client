@@ -934,10 +934,14 @@
 	.mail-app .lh-nav { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-right: 2px; margin-left: -4px; border: none; background: none; border-radius: var(--radius-control); color: var(--ink-600); flex: 0 0 auto; }
 	.mail-app .lh-nav:hover { background: var(--paper-100); }
 	.mail-app .rail { position: fixed; left: 0; top: 0; bottom: 0; z-index: 220; transform: translateX(-105%); transition: transform var(--dur-slow) var(--ease-out); will-change: transform; }
+	.mail-app:not(.nav-open) .rail { visibility: hidden; transition: transform var(--dur-slow) var(--ease-out), visibility 0s linear var(--dur-slow); }
 	.mail-app.nav-open .rail { transform: none; box-shadow: var(--shadow-lg); }
+	.mail-app .ctree-more { opacity: 1; }
+	.mail-app .fld, .mail-app .ctree-row { min-height: 40px; }
+	.mail-app .ctree-row { padding-top: 0; padding-bottom: 0; }
 	.mail-app .rail-scrim { display: block; position: fixed; inset: 0; z-index: 210; border: none; padding: 0; background: color-mix(in srgb, var(--ink-900) 45%, transparent); backdrop-filter: blur(2px); animation: mail-fade var(--dur); }
 	@media (prefers-reduced-motion: reduce) {
-		.mail-app .rail { transition: none; }
+		.mail-app .rail, .mail-app:not(.nav-open) .rail { transition: none; }
 		.mail-app .rail-scrim { animation: none; }
 	}
 }
@@ -1074,3 +1078,45 @@
 .mail-app .label-picker .lp-indent { display: inline-block; flex: 0 0 auto; }
 .mail-app .fm-empty { font-size: 12.5px; color: var(--fg-faint); padding: 2px 0; }
 .mail-app .fld.custom svg { color: var(--fld-tint, currentColor); }
+.mail-app .rail :focus-visible { outline: 2px solid var(--pine-600); outline-offset: -2px; }
+.mail-app .rail .fld:focus-visible { outline-offset: -2px; border-radius: 7px; }
+.mail-app .fgroup-sec { padding: 16px 4px 5px 4px; }
+.mail-app .fg-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 5px; border: none; background: none; padding: 3px 5px; margin: -3px 0; border-radius: 5px; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; text-align: left; }
+.mail-app .fg-toggle:hover { color: var(--fg-muted); }
+.mail-app .fg-toggle svg { flex: 0 0 auto; transform: rotate(90deg); transition: transform var(--dur-fast) var(--ease); }
+.mail-app .fg-toggle.closed svg { transform: none; }
+.mail-app .fgroup-sec .addbtn svg { width: 14px; height: 14px; }
+.mail-app .ctree { list-style: none; margin: 0; padding: 0; }
+.mail-app .ctree-row { gap: 2px; padding: 0 3px 0 calc(3px + var(--depth, 0) * 14px); content-visibility: auto; contain-intrinsic-size: auto 33px; }
+.mail-app .ctree-row:active { transform: none; }
+.mail-app .ctree-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 7px 6px; color: inherit; text-decoration: none; border-radius: 6px; -webkit-touch-callout: none; user-select: none; }
+.mail-app .rail .ctree-link:focus-visible { outline: none; }
+.mail-app .ctree-row:has(> .ctree-link:focus-visible) { box-shadow: inset 0 0 0 2px var(--pine-600); }
+.mail-app .ctree-chev, .mail-app .ctree-more { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border: none; background: none; padding: 0; border-radius: 5px; color: var(--fg-faint); }
+.mail-app .ctree-chev { width: 16px; height: 22px; }
+.mail-app .ctree-more { width: 24px; height: 24px; opacity: 0; transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
+.mail-app .fld.custom .ctree-chev svg, .mail-app .fld.custom .ctree-more svg { width: 14px; height: 14px; color: var(--fg-faint); }
+.mail-app .fld.custom .ctree-chev:hover svg, .mail-app .fld.custom .ctree-more:hover svg { color: var(--fg-strong); }
+.mail-app .ctree-chev svg { transition: transform var(--dur-fast) var(--ease); }
+.mail-app .ctree-chev.open svg { transform: rotate(90deg); }
+.mail-app .ctree-more:hover { background: var(--paper-200); }
+.mail-app .ctree-row:hover .ctree-more, .mail-app .ctree-row:focus-within .ctree-more, .mail-app .ctree-row.menu-on .ctree-more { opacity: 1; }
+.mail-app .ctree-row.menu-on { background: var(--paper-100); }
+.mail-app .ctree-row.active.menu-on { background: var(--chip-bg); }
+.mail-app .ctree-row.dragging { opacity: .45; }
+.mail-app .ctree-row.drop-before::before, .mail-app .ctree-row.drop-after::after { content: ''; position: absolute; left: calc(8px + var(--depth, 0) * 14px); right: 6px; height: 2px; border-radius: 2px; background: var(--pine-600); pointer-events: none; }
+.mail-app .ctree-row.drop-before::before { top: -1.5px; }
+.mail-app .ctree-row.drop-after::after { bottom: -1.5px; }
+.mail-app .rail-find { display: flex; align-items: center; gap: 7px; margin: 16px 3px 0; padding: 0 9px; height: 32px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--fg-faint); }
+.mail-app .rail-find:focus-within { border-color: var(--pine-600); }
+.mail-app .rail-find input { flex: 1; min-width: 0; border: none; background: none; outline: none; font-size: 13px; color: var(--fg); }
+.mail-app .rail .rail-find input:focus-visible { outline: none; }
+.mail-app .rail-find-empty { margin: 10px 9px 0; font-size: 12.5px; color: var(--fg-faint); }
+.mail-app .rail-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.mail-app .coll-menu { position: static; width: 260px; max-width: calc(100vw - 24px); max-height: min(420px, calc(100vh - 24px)); z-index: 240; }
+.mail-app .coll-menu .coll-menu-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; padding: 6px 11px 6px; }
+.mail-app .coll-menu .mitem { cursor: pointer; outline: none; }
+.mail-app .coll-menu .mitem[data-highlighted] { background: var(--paper-100); color: var(--fg-strong); }
+.mail-app .coll-menu .mitem[data-highlighted] svg { color: var(--pine-600); }
+.mail-app .coll-menu .mitem[data-disabled] { opacity: .45; pointer-events: none; }
+.mail-app .menu-portal.coll-create { z-index: 240; width: 270px; }

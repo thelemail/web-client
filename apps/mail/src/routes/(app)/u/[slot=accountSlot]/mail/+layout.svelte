@@ -17,6 +17,24 @@
 
 	let { children, data } = $props();
 
+	const NARROW = '(max-width: 1000px)';
+	let narrow = $state(false);
+	$effect(() => {
+		const mq = window.matchMedia(NARROW);
+		const sync = () => (narrow = mq.matches);
+		sync();
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+
+	const drawer = $derived(narrow && mailNav.open);
+
+	function onKeydown(e: KeyboardEvent) {
+		if (e.key !== 'Escape' || e.defaultPrevented || !drawer) return;
+		e.preventDefault();
+		mailNav.close(true);
+	}
+
 	let loadedFor: string | null = null;
 	$effect(() => {
 		const accountId = data.accountId;
@@ -31,6 +49,8 @@
 	});
 </script>
 
+<svelte:window onkeydown={onKeydown} />
+
 <div
 	class="mail-app"
 	class:nav-open={mailNav.open}
@@ -41,7 +61,7 @@
 	data-motion={preferences.reduceMotion ? 'reduced' : 'full'}
 >
 	{#if mailNav.open}
-		<button class="rail-scrim" aria-label={m.mail_close_menu()} onclick={() => (mailNav.open = false)}
+		<button class="rail-scrim" aria-label={m.mail_close_menu()} onclick={() => mailNav.close(true)}
 		></button>
 	{/if}
 	<Sidebar
@@ -57,10 +77,10 @@
 		labelCounts={mailbox.counts.labels}
 		onCompose={() => {
 			composeStore.openNew();
-			mailNav.open = false;
+			mailNav.close();
 		}}
 	/>
-	<div class="mailmain">{@render children()}</div>
+	<div class="mailmain" inert={drawer}>{@render children()}</div>
 </div>
 
 <ReadOnlyGuard />
