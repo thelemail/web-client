@@ -1,4 +1,4 @@
-import type { RouteFolder } from './data';
+import type { MailFolderRoute } from './data';
 
 export interface MailActionCaps {
 	showArchive: boolean;
@@ -14,7 +14,7 @@ export interface MailActionCaps {
 	showSpam: boolean;
 }
 
-export function mailActionsFor(folder: RouteFolder): MailActionCaps {
+export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 	switch (folder) {
 		case 'trash':
 			return {

@@ -3,22 +3,23 @@ import {
 	getMessageThread,
 	markMessageRead,
 	markMessageSpam,
+	moveMessage,
 	restoreMessage,
 	trashMessage
 } from '$core/api/messages';
 import type { MessageDetail, MessageState } from '$core/api/types';
 
-export type ThreadVerb = 'archive' | 'trash' | 'restore' | 'read' | 'spam' | 'inbox';
+export type ThreadVerb = 'archive' | 'trash' | 'restore' | 'read' | 'spam' | 'inbox' | 'move';
 
 export interface ThreadActionResult {
 	total: number;
 	failed: number;
 }
 
-function eligible(item: MessageDetail, verb: ThreadVerb): boolean {
+function eligible(item: MessageDetail, verb: ThreadVerb, folderId?: string): boolean {
 	switch (verb) {
 		case 'archive':
-			return item.mailboxState === 'inbox';
+			return item.mailboxState === 'inbox' || item.mailboxState === 'folder';
 		case 'trash':
 			return item.mailboxState !== 'trash';
 		case 'restore':
@@ -29,10 +30,17 @@ function eligible(item: MessageDetail, verb: ThreadVerb): boolean {
 			return item.mailboxState !== 'spam' && item.mailboxState !== 'trash';
 		case 'inbox':
 			return item.mailboxState !== 'inbox';
+		case 'move':
+			return (
+				(item.mailboxState === 'inbox' ||
+					item.mailboxState === 'archive' ||
+					item.mailboxState === 'folder') &&
+				item.folderId !== folderId
+			);
 	}
 }
 
-function actionFor(verb: ThreadVerb): (id: string) => Promise<MessageState> {
+function actionFor(verb: ThreadVerb, folderId?: string): (id: string) => Promise<MessageState> {
 	switch (verb) {
 		case 'archive':
 			return archiveMessage;
@@ -46,13 +54,16 @@ function actionFor(verb: ThreadVerb): (id: string) => Promise<MessageState> {
 			return markMessageSpam;
 		case 'inbox':
 			return restoreMessage;
+		case 'move':
+			return (id) => moveMessage(id, { folderId: folderId ?? '' });
 	}
 }
 
 export async function applyToThread(
 	latestId: string,
 	rootId: string | undefined,
-	verb: ThreadVerb
+	verb: ThreadVerb,
+	folderId?: string
 ): Promise<ThreadActionResult> {
 	let items: MessageDetail[];
 	try {
@@ -61,8 +72,8 @@ export async function applyToThread(
 		if (!rootId || rootId === latestId) throw err;
 		items = (await getMessageThread(rootId)).items;
 	}
-	const action = actionFor(verb);
-	const targets = items.filter((item) => eligible(item, verb)).map((item) => item.id);
+	const action = actionFor(verb, folderId);
+	const targets = items.filter((item) => eligible(item, verb, folderId)).map((item) => item.id);
 	if (targets.length === 0) return { total: 0, failed: 0 };
 	const results = await Promise.allSettled(targets.map((id) => action(id)));
 	const failed = results.filter((r) => r.status === 'rejected').length;

@@ -8,48 +8,21 @@ import { parseAddressList } from './address';
 import { m } from '$paraglide/messages.js';
 import { i18n } from '$core/i18n/locale.svelte';
 import { dateParts, intlLocale } from '$core/i18n/intl';
+import { customFolderRoute as customRoute } from './folderRoute';
 
-export type LabelId = 'domains' | 'security' | 'family' | 'billing';
-
-export const LABEL_IDS: readonly LabelId[] = ['domains', 'security', 'family', 'billing'];
-
-export function isLabelId(value: string): value is LabelId {
-	return (LABEL_IDS as readonly string[]).includes(value);
-}
+export {
+	ROUTE_FOLDERS,
+	customFolderId,
+	customFolderRoute,
+	isCollectionId,
+	isMailFolderRoute,
+	isRouteFolder,
+	type CustomFolderRoute,
+	type MailFolderRoute,
+	type RouteFolder
+} from './folderRoute';
 
 export type MailboxLocation = 'inbox' | 'archive' | 'sent' | 'trash';
-
-export type RouteFolder =
-	| 'inbox'
-	| 'starred'
-	| 'sent'
-	| 'drafts'
-	| 'scheduled'
-	| 'snoozed'
-	| 'archive'
-	| 'spam'
-	| 'trash';
-
-export const ROUTE_FOLDERS: readonly RouteFolder[] = [
-	'inbox',
-	'starred',
-	'sent',
-	'drafts',
-	'scheduled',
-	'snoozed',
-	'archive',
-	'spam',
-	'trash'
-];
-
-export function isRouteFolder(value: string): value is RouteFolder {
-	return (ROUTE_FOLDERS as readonly string[]).includes(value);
-}
-
-export interface Label {
-	name: string;
-	color: string;
-}
 
 export interface Folder {
 	id: string;
@@ -106,7 +79,8 @@ export interface Message {
 	bg: string;
 	fg: string;
 	subj: string;
-	labels: LabelId[];
+	labels: string[];
+	folderId?: string | null;
 	unread: boolean;
 	starred: boolean;
 	spam?: boolean;
@@ -133,33 +107,6 @@ export function plainSubject(s: unknown): string {
 	if (s == null) return '';
 	return String(s).replace(/[\uFE0E\uFE0F\u20D0-\u20FF]/g, '');
 }
-
-export const LABELS: Record<LabelId, Label> = {
-	domains: {
-		get name() {
-			return m.mailbox_label_domains();
-		},
-		color: 'var(--pine-500)'
-	},
-	security: {
-		get name() {
-			return m.mailbox_label_security();
-		},
-		color: 'var(--brass-600)'
-	},
-	family: {
-		get name() {
-			return m.mailbox_label_family();
-		},
-		color: 'var(--info-500)'
-	},
-	billing: {
-		get name() {
-			return m.mailbox_label_billing();
-		},
-		color: 'var(--ink-400)'
-	}
-};
 
 export const FOLDERS: Folder[] = [
 	{
@@ -223,9 +170,11 @@ export const FOLDERS: Folder[] = [
 ];
 
 export function folderFromServer(
-	mailboxState: 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed',
-	direction: 'sent' | 'received'
+	mailboxState: 'inbox' | 'archive' | 'folder' | 'trash' | 'spam' | 'snoozed',
+	direction: 'sent' | 'received',
+	folderId?: string | null
 ): string {
+	if (mailboxState === 'folder' && folderId) return customRoute(folderId);
 	if (mailboxState === 'archive') return 'archive';
 	if (mailboxState === 'trash') return 'trash';
 	if (mailboxState === 'spam') return 'spam';
@@ -458,7 +407,7 @@ export interface ListFilters {
 	unread: boolean;
 	starred: boolean;
 	attach: boolean;
-	labels: LabelId[];
+	labels: string[];
 }
 
 export const EMPTY_FILTERS: ListFilters = {

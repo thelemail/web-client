@@ -133,7 +133,8 @@ export function isEmptyQuery(parsed: ParsedQuery): boolean {
 	return parsed.terms.length === 0 && !hasFilters(parsed);
 }
 
-function folderOf(row: IndexedRow): SearchFolder {
+function folderOf(row: IndexedRow): SearchFolder | 'folder' {
+	if (row.mailboxState === 'folder') return 'folder';
 	if (row.mailboxState === 'archive') return 'archive';
 	if (row.mailboxState === 'trash') return 'trash';
 	if (row.mailboxState === 'spam') return 'spam';

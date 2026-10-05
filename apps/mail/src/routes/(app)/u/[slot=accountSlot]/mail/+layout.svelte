@@ -45,7 +45,15 @@
 		></button>
 	{/if}
 	<Sidebar
-		counts={{ ...mailbox.counts, drafts: drafts.count, scheduled: scheduled.count }}
+		counts={{
+			inbox: mailbox.counts.inbox,
+			starred: mailbox.counts.starred,
+			spam: mailbox.counts.spam,
+			snoozed: mailbox.counts.snoozed,
+			drafts: drafts.count,
+			scheduled: scheduled.count
+		}}
+		folderCounts={mailbox.counts.folders}
 		onCompose={() => {
 			composeStore.openNew();
 			mailNav.open = false;

@@ -13,7 +13,6 @@
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import Avatar from '$core/components/Avatar.svelte';
 	import {
-		LABELS,
 		plainSubject,
 		formatRowTime,
 		formatWhenLong,
@@ -23,6 +22,9 @@
 	import { senderImage } from './senderImage';
 	import { sentByName } from './sentBy';
 	import { auth } from '$core/stores/auth.svelte';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import { collectionColor } from './collections/palette';
+	import type { CollectionEntry } from './collections/tree';
 
 	interface Props {
 		m: Message;
@@ -61,10 +63,13 @@
 	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
 	const byName = $derived(m.sentBy ? sentByName(m.sentBy, auth.accountId) : null);
 
-	const labelChips = $derived(
-		(m.labels ?? []).slice(0, 2).map((id) => ({ id, label: LABELS[id] })).filter((x) => !!x.label)
+	const knownLabels = $derived(
+		(m.labels ?? [])
+			.map((id) => mailCollections.label(id))
+			.filter((l): l is CollectionEntry => !!l && !l.sealed)
 	);
-	const labelOverflow = $derived(Math.max(0, (m.labels ?? []).length - labelChips.length));
+	const labelChips = $derived(knownLabels.slice(0, 2));
+	const labelOverflow = $derived(Math.max(0, knownLabels.length - labelChips.length));
 	const threadCount = $derived(m.threadCount ?? m.thread?.length ?? 0);
 	const hasEvent = $derived(!!m.event);
 	const nonIcsAttachments = $derived(
@@ -153,8 +158,8 @@
 					<Paperclip size={12} />{nonIcsAttachments.length}
 				</span>
 			{/if}
-			{#each labelChips as { id, label } (id)}
-				<span class="lbl" title={label.name} style:background={label.color}></span>
+			{#each labelChips as label (label.id)}
+				<span class="lbl" title={label.path} style:background={collectionColor(label.color)}></span>
 			{/each}
 			{#if labelOverflow > 0}
 				<span class="lbl-more" title={msg.mail_row_labels_more({ count: labelOverflow })}>+{labelOverflow}</span>

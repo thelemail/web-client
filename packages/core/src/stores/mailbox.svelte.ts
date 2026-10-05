@@ -7,10 +7,10 @@ import {
 	type ListThreadsOptions
 } from '$core/api/messages';
 import {
+	customFolderId,
 	folderFromServer,
-	type LabelId,
+	type MailFolderRoute,
 	type Message,
-	type RouteFolder,
 	type SortId
 } from '$core/mail/data';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
@@ -117,10 +117,15 @@ function listOptionsFor(q: Query): ListMessagesOptions | null {
 		case 'drafts':
 		case 'scheduled':
 			return null;
+		default: {
+			const folderId = customFolderId(q.folder);
+			if (!folderId) return null;
+			Object.assign(base, { mailbox: 'folder' as const, folderId });
+		}
 	}
 	if (q.unread) base.unread = true;
 	if (q.attach) base.hasAttachments = true;
-	if (q.labels.length) base.labels = q.labels.slice();
+	if (q.labels.length) base.labelIds = q.labels.slice();
 	return base;
 }
 
@@ -146,10 +151,16 @@ function threadOptionsFor(q: Query): ListThreadsOptions | null {
 		case 'starred':
 			base.starred = true;
 			break;
+		default: {
+			const folderId = customFolderId(q.folder);
+			if (!folderId) return null;
+			base.mailbox = 'folder';
+			base.folderId = folderId;
+		}
 	}
 	if (q.unread) base.unread = true;
 	if (q.attach) base.hasAttachments = true;
-	if (q.labels.length) base.labels = q.labels.slice();
+	if (q.labels.length) base.labelIds = q.labels.slice();
 	return base;
 }
 
@@ -161,7 +172,7 @@ function rowKey(m: Message, threaded: boolean): string {
 	return threaded ? (m.threadRootId ?? m.id) : m.id;
 }
 
-export function canFetchFolder(folder: RouteFolder): boolean {
+export function canFetchFolder(folder: MailFolderRoute): boolean {
 	return listOptionsFor({ ...DEFAULT_QUERY, folder }) !== null;
 }
 
@@ -184,10 +195,11 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 	const init = initialsFor(fromDisplay, preview.sender.address);
 	const pal = paletteFor(preview.sender.address.toLowerCase());
 	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
-	const labels = (item.labels ?? []) as LabelId[];
+	const labels = item.labelIds ?? [];
 	return {
 		id: item.id,
-		folder: folderFromServer(item.mailboxState, item.direction),
+		folder: folderFromServer(item.mailboxState, item.direction, item.folderId),
+		folderId: item.folderId ?? null,
 		direction: item.direction,
 		from: fromDisplay,
 		fromAddr: preview.sender.address,
@@ -224,7 +236,13 @@ async function loadFromMirror(accountId: string, query: Query): Promise<Message[
 	const mailbox = serverMailboxFor(query.folder);
 	if (!mailbox) return null;
 	try {
-		const rows = await mirror.list(accountId, mailbox, serverDirectionFor(query.folder));
+		const rows = await mirror.list(
+			accountId,
+			mailbox,
+			serverDirectionFor(query.folder),
+			undefined,
+			customFolderId(query.folder) ?? undefined
+		);
 		return rows.map(mirrorRowToMessage);
 	} catch {
 		return null;
@@ -249,7 +267,7 @@ function serverMailboxFor(folder: string): string | null {
 		case 'trash':
 			return 'trash';
 		default:
-			return null;
+			return customFolderId(folder) ? 'folder' : null;
 	}
 }
 
@@ -262,15 +280,20 @@ function mirrorRowToMessage(row: MirrorRow): Message {
 	} catch {
 		recipients = [];
 	}
-	let labels: LabelId[] = [];
+	let labels: string[] = [];
 	try {
-		labels = JSON.parse(row.labelsJson) as LabelId[];
+		labels = JSON.parse(row.labelsJson) as string[];
 	} catch {
 		labels = [];
 	}
 	return {
 		id: row.id,
-		folder: folderFromServer(row.mailboxState as 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed', row.direction),
+		folder: folderFromServer(
+			row.mailboxState as 'inbox' | 'archive' | 'folder' | 'trash' | 'spam' | 'snoozed',
+			row.direction,
+			row.folderId
+		),
+		folderId: row.folderId,
 		direction: row.direction,
 		from: display,
 		fromAddr: row.senderAddress,
@@ -296,7 +319,8 @@ function fallbackRow(item: MessageListItem, code: string): Message {
 	const storedAt = new Date(item.storedAt);
 	return {
 		id: item.id,
-		folder: folderFromServer(item.mailboxState, item.direction),
+		folder: folderFromServer(item.mailboxState, item.direction, item.folderId),
+		folderId: item.folderId ?? null,
 		direction: item.direction,
 		from: m.mailbox_fallback_encrypted_message(),
 		fromAddr: '',
@@ -307,7 +331,7 @@ function fallbackRow(item: MessageListItem, code: string): Message {
 		fg: 'var(--danger-700)',
 		epoch: storedAt.getTime(),
 		subj: m.mailbox_fallback_decrypt_failed({ code }),
-		labels: (item.labels ?? []) as LabelId[],
+		labels: item.labelIds ?? [],
 		unread: !item.read,
 		starred: item.starred,
 		snoozedUntil: item.snoozedUntil ?? null,
@@ -328,7 +352,7 @@ class MailboxStore {
 		return this.#accountId;
 	}
 
-	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0 });
+	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {} });
 	#countsPending: Promise<void> | null = null;
 
 	#revs = new Map<string, number>();
@@ -345,7 +369,7 @@ class MailboxStore {
 		this.#streams = new Map();
 		this.#pending.clear();
 		this.#deepLinkPending.clear();
-		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0 };
+		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {} };
 		this.#countsPending = null;
 		this.#revs.clear();
 		this.#detached.clear();
@@ -535,7 +559,8 @@ class MailboxStore {
 				threadRootId: detail.threadRootId,
 				threadCount: detail.threadCount,
 				rsvpStatus: detail.rsvpStatus,
-				labels: detail.labels,
+				folderId: detail.folderId,
+				labelIds: detail.labelIds,
 				sentViaAliasId: detail.sentViaAliasId,
 				sentByAccountId: detail.sentByAccountId
 			};

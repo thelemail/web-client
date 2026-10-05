@@ -16,11 +16,11 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import {
 		FOLDERS,
-		LABELS,
 		countActiveFilters,
+		customFolderId,
+		customFolderRoute,
 		folderFromServer,
 		formatWhenLong,
-		type LabelId,
 		type ListFilters,
 		type Message,
 		type SortId
@@ -31,8 +31,9 @@
 		markMessageRead,
 		markMessageSpam,
 		markMessageUnread,
+		addMessageLabel,
+		moveMessage,
 		restoreMessage,
-		setMessageLabels,
 		snoozeMessage,
 		starMessage,
 		trashMessage,
@@ -45,6 +46,7 @@
 	import type { UnsubscribeMethod } from './unsubscribe';
 	import { applyToThread, type ThreadVerb } from './threadActions';
 	import { canFetchFolder, mailbox } from '$core/stores/mailbox.svelte';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
 	import { scheduled } from '$core/stores/scheduled.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -89,7 +91,9 @@
 	const folderLabel = $derived(
 		query.folder === 'starred'
 			? msg.mail_folder_starred()
-			: (FOLDERS.find((f) => f.id === query.folder)?.label ?? msg.mail_folder_inbox())
+			: (FOLDERS.find((f) => f.id === query.folder)?.label ??
+				mailCollections.folder(customFolderId(query.folder))?.name ??
+				msg.mail_folder_inbox())
 	);
 
 	const inFlight = new Map<string, Promise<void>>();
@@ -126,7 +130,8 @@
 	): Message {
 		return {
 			...m,
-			folder: folderFromServer(state.mailboxState, direction),
+			folder: folderFromServer(state.mailboxState, direction, state.folderId),
+			folderId: state.folderId ?? null,
 			starred: state.starred,
 			unread: !state.read,
 			snoozedUntil: state.snoozedUntil ?? null
@@ -280,7 +285,8 @@
 		id: string,
 		optimistic: Partial<Message>,
 		verb: ThreadVerb,
-		errMsg: string
+		errMsg: string,
+		folderId?: string
 	): Promise<void> {
 		const current = mailbox.findMessage(id);
 		if (!current) return Promise.resolve();
@@ -291,7 +297,7 @@
 		const prev = inFlight.get(id) ?? Promise.resolve();
 		const next = prev.then(async () => {
 			try {
-				const res = await applyToThread(id, rootId, verb);
+				const res = await applyToThread(id, rootId, verb, folderId);
 				if (res.failed > 0) {
 					flash(errMsg);
 					await mailbox.refresh([query]);
@@ -335,11 +341,13 @@
 		void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 	}
 
+	const ARCHIVED: Partial<Message> = { folder: 'archive', folderId: null };
+
 	function queueArchive(id: string): Promise<void> {
 		advancePast(id);
 		return isThread(id)
-			? queueThreadUpdate(id, { folder: 'archive' }, 'archive', msg.mail_err_archive())
-			: queueStateUpdate(id, { folder: 'archive' }, archiveMessage, msg.mail_err_archive());
+			? queueThreadUpdate(id, ARCHIVED, 'archive', msg.mail_err_archive())
+			: queueStateUpdate(id, ARCHIVED, archiveMessage, msg.mail_err_archive());
 	}
 
 	function archiveOne(id: string) {
@@ -353,9 +361,19 @@
 		advancePast(id);
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
 		if (isThread(id)) {
-			void queueThreadUpdate(id, { folder: targetFolder }, 'inbox', msg.mail_err_move_inbox());
+			void queueThreadUpdate(
+				id,
+				{ folder: targetFolder, folderId: null },
+				'inbox',
+				msg.mail_err_move_inbox()
+			);
 		} else {
-			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_move_inbox());
+			void queueStateUpdate(
+				id,
+				{ folder: targetFolder, folderId: null },
+				restoreMessage,
+				msg.mail_err_move_inbox()
+			);
 		}
 		flash(msg.mail_toast_moved_inbox());
 	}
@@ -516,15 +534,14 @@
 		);
 	}
 
-	async function moveToLabel(id: string, label: LabelId) {
+	async function moveToLabel(id: string, labelId: string) {
 		const current = mailbox.findMessage(id);
 		if (!current) return;
 		const prev = current.labels ?? [];
-		if (!prev.includes(label)) {
-			const next = [...prev, label];
-			mailbox.patchMessage(id, { labels: next });
+		if (!prev.includes(labelId)) {
+			mailbox.patchMessage(id, { labels: [...prev, labelId] });
 			try {
-				await setMessageLabels(id, { labels: next });
+				await addMessageLabel(id, labelId);
 			} catch {
 				mailbox.patchMessage(id, { labels: prev });
 				flash(msg.mail_err_label());
@@ -532,7 +549,32 @@
 			}
 		}
 		void queueArchive(id);
-		flash(msg.mail_toast_moved_to_label({ label: LABELS[label].name }));
+		flash(msg.mail_toast_moved_to_label({ label: mailCollections.label(labelId)?.name ?? '' }));
+	}
+
+	function moveToFolder(id: string, folderId: string) {
+		const current = mailbox.findMessage(id);
+		if (!current) return;
+		const route = customFolderRoute(folderId);
+		if (current.folder === route) return;
+		advancePast(id);
+		if (isThread(id)) {
+			void queueThreadUpdate(
+				id,
+				{ folder: route, folderId },
+				'move',
+				msg.mail_err_move_folder(),
+				folderId
+			);
+		} else {
+			void queueStateUpdate(
+				id,
+				{ folder: route, folderId },
+				(mid) => moveMessage(mid, { folderId }),
+				msg.mail_err_move_folder()
+			);
+		}
+		flash(msg.mail_toast_moved_to_folder({ folder: mailCollections.folder(folderId)?.name ?? '' }));
 	}
 
 	function trashOne(id: string) {
@@ -555,13 +597,22 @@
 			const nextId = nextAfter(id);
 			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
 		}
-		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
+		const homeFolder = current.folderId ? mailCollections.folder(current.folderId) : undefined;
+		const targetFolder = homeFolder
+			? customFolderRoute(homeFolder.id)
+			: current.direction === 'sent'
+				? 'sent'
+				: 'inbox';
 		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore());
 		} else {
 			void queueStateUpdate(id, { folder: targetFolder }, restoreMessage, msg.mail_err_restore());
 		}
-		flash(msg.mail_toast_restored_inbox());
+		flash(
+			homeFolder
+				? msg.mail_toast_restored_to_folder({ folder: homeFolder.name })
+				: msg.mail_toast_restored_inbox()
+		);
 	}
 
 	function deleteOne(id: string) {
@@ -929,6 +980,7 @@
 				onMoveToInbox={moveToInbox}
 				onSpam={spamOne}
 				onMoveToLabel={(id, label) => void moveToLabel(id, label)}
+				onMoveToFolder={moveToFolder}
 				onSnooze={snoozeOne}
 				onUnsnooze={(id) => unsnoozeOne(id)}
 				onReported={reported}

@@ -27,7 +27,6 @@
 		bucketFromEpoch,
 		dayBucketLabel,
 		GROUP_ORDER,
-		LABELS,
 		SORT_OPTIONS,
 		EMPTY_FILTERS,
 		countActiveFilters,
@@ -37,6 +36,8 @@
 		type SortId
 	} from './data';
 	import type { MailActionCaps } from './actions';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import { collectionColor } from './collections/palette';
 
 	export type BulkAction = 'read' | 'archive' | 'spam' | 'trash' | 'restore' | 'delete';
 
@@ -219,7 +220,7 @@
 		onSetFilters({ ...filters, [key]: !filters[key] });
 	}
 
-	function toggleLabel(id: keyof typeof LABELS) {
+	function toggleLabel(id: string) {
 		const has = filters.labels.includes(id);
 		onSetFilters({
 			...filters,
@@ -435,16 +436,19 @@
 						<div class="msep"></div>
 						<div class="fm-cap">{msg.mail_list_labels()}</div>
 						<div class="fm-chips">
-							{#each Object.entries(LABELS) as [id, l] (id)}
-								{@const on = filters.labels.includes(id as keyof typeof LABELS)}
+							{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
+								{@const on = filters.labels.includes(l.id)}
 								<button
 									class="fchip"
 									class:on
 									aria-pressed={on}
-									onclick={() => toggleLabel(id as keyof typeof LABELS)}
+									title={l.path}
+									onclick={() => toggleLabel(l.id)}
 								>
-									<span class="fdot" style:background={l.color}></span>{l.name}
+									<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
 								</button>
+							{:else}
+								<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
 							{/each}
 						</div>
 					</div>

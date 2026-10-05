@@ -1,4 +1,4 @@
-import { folderFromServer, type LabelId, type Message } from '$core/mail/data';
+import { folderFromServer, type Message } from '$core/mail/data';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { searchIndex, type SearchResult } from '$core/search';
@@ -16,7 +16,7 @@ function messageFromResult(result: SearchResult): Message {
 	const palette = paletteFor(text.senderAddress.toLowerCase());
 	return {
 		id: row.id,
-		folder: folderFromServer(row.mailboxState, row.direction),
+		folder: folderFromServer(row.mailboxState, row.direction, row.folderId),
 		direction: row.direction,
 		from: display,
 		fromAddr: text.senderAddress,
@@ -27,7 +27,7 @@ function messageFromResult(result: SearchResult): Message {
 		fg: palette.fg,
 		epoch: row.storedAt,
 		subj: text.subject || '(no subject)',
-		labels: row.labels as LabelId[],
+		labels: row.labels,
 		unread: !row.read,
 		starred: row.starred,
 		snoozedUntil: row.snoozedUntil,
@@ -45,11 +45,11 @@ function messageFromHit(hit: SearchHit): Message {
 	const display = hit.senderDisplay || hit.senderAddress || m.mailbox_unknown_sender();
 	const palette = paletteFor(hit.senderAddress.toLowerCase());
 	const storedAt = new Date(hit.storedAt).getTime();
-	const state = hit.mailboxState as 'inbox' | 'archive' | 'trash' | 'spam' | 'snoozed';
+	const state = hit.mailboxState as 'inbox' | 'archive' | 'folder' | 'trash' | 'spam' | 'snoozed';
 	const direction = hit.direction ?? 'received';
 	return {
 		id: hit.id,
-		folder: folderFromServer(state, direction),
+		folder: folderFromServer(state, direction, hit.folderId),
 		direction,
 		from: display,
 		fromAddr: hit.senderAddress,

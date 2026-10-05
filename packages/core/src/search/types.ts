@@ -9,6 +9,7 @@ export interface IndexedRow {
 	mailboxState: MailboxState;
 	read: boolean;
 	starred: boolean;
+	folderId?: string | null;
 	labels: string[];
 	attachmentCount: number;
 	threadRootId: string | null;

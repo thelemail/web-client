@@ -27,7 +27,9 @@
 	import RailSearch from './RailSearch.svelte';
 	import RailAccount from './RailAccount.svelte';
 	import PenLine from '@lucide/svelte/icons/pen-line';
-	import { FOLDERS } from './data';
+	import { FOLDERS, customFolderRoute } from './data';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import { collectionColor } from './collections/palette';
 	import { billing } from '$core/stores/billing.svelte';
 	import { mailNav } from '$core/stores/nav.svelte';
 
@@ -47,10 +49,12 @@
 
 	interface Props {
 		counts: Counts;
+		folderCounts?: Record<string, number>;
 		onCompose: () => void;
 	}
 
-	let { counts, onCompose }: Props = $props();
+	let { counts, folderCounts = {}, onCompose }: Props = $props();
+	const customFolders = $derived(mailCollections.folders.filter((f) => !f.sealed));
 	let showMore = $state(false);
 
 	const slot = $derived(page.params.slot ?? '0');
@@ -138,6 +142,30 @@
 				<span class="lbl">{showMore ? m.mail_sidebar_less() : m.mail_sidebar_more()}</span>
 			</button>
 		</div>
+		{#if customFolders.length > 0}
+			<div class="fgroup">{m.mail_collection_folders()}</div>
+			<div class="nav-list">
+				{#each customFolders as f (f.id)}
+					{@const route = customFolderRoute(f.id)}
+					{@const on = activeSystemFolder === route}
+					{@const c = folderCounts[f.id]}
+					<a
+						class="fld custom"
+						class:active={on}
+						class:unread={!!c}
+						style:padding-left={f.depth > 0 ? `calc(9px + ${f.depth * 14}px)` : undefined}
+						style:--fld-tint={f.color ? collectionColor(f.color) : undefined}
+						href={`${slotBase}/mail/${route}`}
+						title={f.path}
+						onclick={closeNav}
+					>
+						<NavMorph icon={Folder} />
+						<span class="lbl">{f.name}</span>
+						{#if c}<span class="ct">{c}</span>{/if}
+					</a>
+				{/each}
+			</div>
+		{/if}
 	</div>
 
 	{#if storageLimit > 0}

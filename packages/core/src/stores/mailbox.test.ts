@@ -55,7 +55,7 @@ function row(id: string, storedAt: string) {
 		mailboxState: 'inbox' as const,
 		starred: false,
 		read: true,
-		labels: []
+		labelIds: []
 	};
 }
 
@@ -193,7 +193,7 @@ function detail(id: string, overrides: Partial<Record<string, unknown>> = {}) {
 		mailboxState: 'inbox' as const,
 		starred: false,
 		read: false,
-		labels: [],
+		labelIds: [],
 		...overrides
 	};
 }
