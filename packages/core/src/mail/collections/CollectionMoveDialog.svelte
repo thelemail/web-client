@@ -53,6 +53,13 @@
 			busy = false;
 		}
 	}
+
+	function focusFirst(node: HTMLElement) {
+		const el = node.querySelector<HTMLElement>(
+			'input[type="search"], input:checked:not(:disabled), input:not(:disabled), button:not(:disabled)'
+		);
+		(el ?? node.closest('.cfd-modal')?.querySelector<HTMLElement>('.cfd-actions button'))?.focus();
+	}
 </script>
 
 {#snippet option(value: string, title: string, depth: number, path: string | null, why: string | null)}
@@ -74,27 +81,29 @@
 {/snippet}
 
 {#snippet body()}
-	<p class="cfd-p">{folder ? m.mail_collection_move_desc_folder() : m.mail_collection_move_desc_label()}</p>
-	{#if all.length > 8 || filtering}
-		<label class="cm-find">
-			<Search size={14} />
-			<input
-				type="search"
-				bind:value={query}
-				placeholder={folder ? m.mail_collection_move_find_folder() : m.mail_collection_move_find_label()}
-				aria-label={folder ? m.mail_collection_move_find_folder() : m.mail_collection_move_find_label()}
-			/>
-		</label>
-	{/if}
-	<div class="cm-list" role="radiogroup" aria-label={m.mail_collection_move_where()}>
-		{#if !filtering}
-			{@render option(TOP, m.mail_collection_no_parent(), 0, null, topReason)}
+	<div class="cc-body" {@attach focusFirst}>
+		<p class="cfd-p">{folder ? m.mail_collection_move_desc_folder() : m.mail_collection_move_desc_label()}</p>
+		{#if all.length > 8 || filtering}
+			<label class="cm-find">
+				<Search size={14} />
+				<input
+					type="search"
+					bind:value={query}
+					placeholder={folder ? m.mail_collection_move_find_folder() : m.mail_collection_move_find_label()}
+					aria-label={folder ? m.mail_collection_move_find_folder() : m.mail_collection_move_find_label()}
+				/>
+			</label>
 		{/if}
-		{#each shown as t (t.id)}
-			{@render option(t.id, t.name, filtering ? 0 : t.depth + 1, filtering || ambiguous.has(foldName(t.name)) ? t.path : null, reason(t.id))}
-		{:else}
-			<p class="cm-empty">{m.mail_sidebar_find_empty()}</p>
-		{/each}
+		<div class="cm-list" role="radiogroup" aria-label={m.mail_collection_move_where()}>
+			{#if !filtering}
+				{@render option(TOP, m.mail_collection_no_parent(), 0, null, topReason)}
+			{/if}
+			{#each shown as t (t.id)}
+				{@render option(t.id, t.name, filtering ? 0 : t.depth + 1, filtering || ambiguous.has(foldName(t.name)) ? t.path : null, reason(t.id))}
+			{:else}
+				<p class="cm-empty">{m.mail_sidebar_find_empty()}</p>
+			{/each}
+		</div>
 	</div>
 {/snippet}
 

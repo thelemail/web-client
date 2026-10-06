@@ -72,56 +72,67 @@
 			busy = false;
 		}
 	}
+
+	function focusFirst(node: HTMLElement) {
+		const el = node.querySelector<HTMLElement>(
+			'input[type="search"], input:checked:not(:disabled), input:not(:disabled), button:not(:disabled)'
+		);
+		(el ?? node.closest('.cfd-modal')?.querySelector<HTMLElement>('.cfd-actions button'))?.focus();
+	}
 </script>
 
 {#snippet body()}
-	{#if children.length > 0}
-		<p class="cfd-p">
-			{folder
-				? m.mail_collection_delete_blocked_folder({ count: children.length })
-				: m.mail_collection_delete_blocked_label({ count: children.length })}
-		</p>
-		<div class="cd-lift">
-			<Button variant="secondary" size="sm" disabled={busy} onclick={() => void liftChildren()}>
-				{parent
-					? m.mail_collection_delete_lift_into({ path: parent.path })
-					: m.mail_collection_delete_lift_top()}
-			</Button>
-		</div>
-		<p class="cfd-hint">
-			{folder ? m.mail_collection_delete_blocked_hint_folder() : m.mail_collection_delete_blocked_hint_label()}
-		</p>
-	{:else if folder}
-		<fieldset class="cd-dest" disabled={busy}>
-			<legend class="cc-lbl">{m.mail_collection_delete_where()}</legend>
-			<label class="cd-opt">
-				<input type="radio" name={`${uid}-dest`} value="archive" bind:group={destination} />
-				<span>{m.mail_folder_archive()}</span>
-			</label>
-			<label class="cd-opt">
-				<input type="radio" name={`${uid}-dest`} value="inbox" bind:group={destination} />
-				<span>{m.mail_folder_inbox()}</span>
-			</label>
-			{#if others.length > 0}
-				<label class="cd-opt">
-					<input type="radio" name={`${uid}-dest`} value="folder" bind:group={destination} />
-					<span>{m.mail_collection_delete_other_folder()}</span>
-				</label>
-				{#if destination === 'folder'}
-					<select class="cd-select" bind:value={folderId} aria-label={m.mail_collection_delete_other_folder()}>
-						<option value="" disabled>{m.mail_collection_delete_pick_folder()}</option>
-						{#each others as f (f.id)}
-							<option value={f.id}>{f.path}</option>
-						{/each}
-					</select>
-				{/if}
+	{#key children.length === 0}
+		<div class="cc-body" {@attach focusFirst}>
+			{#if children.length > 0}
+				<p class="cfd-p">
+					{folder
+						? m.mail_collection_delete_blocked_folder({ count: children.length })
+						: m.mail_collection_delete_blocked_label({ count: children.length })}
+				</p>
+				<div class="cd-lift">
+					<Button variant="secondary" size="sm" disabled={busy} onclick={() => void liftChildren()}>
+						{parent
+							? m.mail_collection_delete_lift_into({ path: parent.path })
+							: m.mail_collection_delete_lift_top()}
+					</Button>
+				</div>
+				<p class="cfd-hint">
+					{folder ? m.mail_collection_delete_blocked_hint_folder() : m.mail_collection_delete_blocked_hint_label()}
+				</p>
+			{:else if folder}
+				<fieldset class="cd-dest" disabled={busy}>
+					<legend class="cc-lbl">{m.mail_collection_delete_where()}</legend>
+					<label class="cd-opt">
+						<input type="radio" name={`${uid}-dest`} value="archive" bind:group={destination} />
+						<span>{m.mail_folder_archive()}</span>
+					</label>
+					<label class="cd-opt">
+						<input type="radio" name={`${uid}-dest`} value="inbox" bind:group={destination} />
+						<span>{m.mail_folder_inbox()}</span>
+					</label>
+					{#if others.length > 0}
+						<label class="cd-opt">
+							<input type="radio" name={`${uid}-dest`} value="folder" bind:group={destination} />
+							<span>{m.mail_collection_delete_other_folder()}</span>
+						</label>
+						{#if destination === 'folder'}
+							<select class="cd-select" bind:value={folderId} aria-label={m.mail_collection_delete_other_folder()}>
+								<option value="" disabled>{m.mail_collection_delete_pick_folder()}</option>
+								{#each others as f (f.id)}
+									<option value={f.id}>{f.path}</option>
+								{/each}
+							</select>
+						{/if}
+					{/if}
+				</fieldset>
+				<p class="cfd-p">{m.mail_collection_delete_folder_body({ place: placeName })}</p>
+				<p class="cfd-hint">{m.mail_collection_delete_folder_hint({ place: placeName })}</p>
+			{:else}
+				<p class="cfd-p">{m.mail_collection_delete_label_body()}</p>
 			{/if}
-		</fieldset>
-		<p class="cfd-p">{m.mail_collection_delete_folder_body({ place: placeName })}</p>
-		<p class="cfd-hint">{m.mail_collection_delete_folder_hint({ place: placeName })}</p>
-	{:else}
-		<p class="cfd-p">{m.mail_collection_delete_label_body()}</p>
-	{/if}
+		</div>
+	{/key}
 {/snippet}
 
 <ConfirmDialog

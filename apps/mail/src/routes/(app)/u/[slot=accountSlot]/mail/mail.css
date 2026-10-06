@@ -1116,11 +1116,13 @@
 .mail-app .rail .rail-find input:focus-visible { outline: none; }
 .mail-app .rail-find-empty { margin: 10px 9px 0; font-size: 12.5px; color: var(--fg-faint); }
 .mail-app .rail-live { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-.mail-app .coll-menu { position: static; width: 260px; max-width: calc(100vw - 24px); max-height: min(420px, calc(100vh - 24px)); z-index: 240; }
+.mail-app .coll-menu { position: static; width: 260px; max-width: calc(100vw - 24px); max-height: min(560px, calc(100dvh - 24px)); z-index: 240; }
 .mail-app .coll-menu .coll-menu-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; padding: 6px 11px 6px; }
 .mail-app .coll-menu .mitem { cursor: pointer; outline: none; }
 .mail-app .coll-menu .mitem[data-highlighted] { background: var(--paper-100); color: var(--fg-strong); }
 .mail-app .coll-menu .mitem[data-highlighted] svg { color: var(--pine-600); }
+.mail-app .coll-menu .mitem.danger[data-highlighted] { background: var(--danger-100); color: var(--danger-700); }
+.mail-app .coll-menu .mitem.danger[data-highlighted] svg { color: var(--danger-500); }
 .mail-app .coll-menu .mitem[data-disabled] { opacity: .45; pointer-events: none; }
 .mail-app .menu-portal.coll-create { z-index: 240; width: 270px; }
 @media (max-width: 1000px) {

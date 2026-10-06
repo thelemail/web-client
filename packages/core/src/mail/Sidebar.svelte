@@ -41,8 +41,7 @@
 	import FolderInput from '@lucide/svelte/icons/folder-input';
 	import ListTree from '@lucide/svelte/icons/list-tree';
 	import ListCollapse from '@lucide/svelte/icons/list-collapse';
-	import ArrowUp from '@lucide/svelte/icons/arrow-up';
-	import ArrowDown from '@lucide/svelte/icons/arrow-down';
+	import Settings2 from '@lucide/svelte/icons/settings-2';
 	import Search from '@lucide/svelte/icons/search';
 	import { FOLDERS, customFolderId, customLabelId, customFolderRoute, customLabelRoute } from './data';
 	import type { CollectionUnread, MailCollectionKind } from '$core/api/types';
@@ -59,6 +58,9 @@
 		type CollectionEntry
 	} from './collections/tree';
 	import CollectionCreate from './collections/CollectionCreate.svelte';
+	import CollectionDialogs from './collections/CollectionDialogs.svelte';
+	import CollectionManageItems from './collections/CollectionManageItems.svelte';
+	import type { DeletedCollection } from './collections/rules';
 	import CollectionTree, { type MenuAnchor } from './sidebar/CollectionTree.svelte';
 
 	function closeNav() {
@@ -227,6 +229,37 @@
 		} catch {
 			flash(m.mail_collection_favorite_failed());
 		}
+	}
+
+	async function recolor(entry: CollectionEntry, color: string | null) {
+		try {
+			await mailCollections.recolor(entry.id, color);
+		} catch {
+			flash(m.mail_collection_update_failed());
+		}
+	}
+
+	let dialogs = $state<ReturnType<typeof CollectionDialogs>>();
+	let handedOff = false;
+
+	function handOff(open: (d: ReturnType<typeof CollectionDialogs>) => void) {
+		if (!dialogs) return;
+		handedOff = true;
+		open(dialogs);
+	}
+
+	function deleted({ entry, destination }: DeletedCollection) {
+		flash(
+			entry.kind === 'folder'
+				? m.mail_collection_folder_deleted({ name: entry.name })
+				: m.mail_collection_label_deleted({ name: entry.name })
+		);
+		if (activeCollection !== entry.id) return;
+		const target =
+			destination?.kind === 'folder' && destination.folderId
+				? customFolderRoute(destination.folderId)
+				: (destination?.kind ?? 'inbox');
+		void goto(`${slotBase}/mail/${target}`);
 	}
 
 	type MenuState = { entry: CollectionEntry; anchor: MenuAnchor; returnTo: HTMLElement };
@@ -510,6 +543,10 @@
 				collisionPadding={12}
 				onCloseAutoFocus={(ev) => {
 					ev.preventDefault();
+					if (handedOff) {
+						handedOff = false;
+						return;
+					}
 					if (!creating && returnTo.isConnected) returnTo.focus();
 				}}
 			>
@@ -549,23 +586,27 @@
 						<ListCollapse />{m.mail_sidebar_collapse_all()}
 					</DropdownMenu.Item>
 				{/if}
-				{#if menuSibs.length > 1}
-					<DropdownMenu.Separator class="msep" />
-					<DropdownMenu.Item
-						class="mitem"
-						disabled={menuIndex <= 0}
-						onSelect={() => moveAndRefocus(e, -1, returnTo)}
-					>
-						<ArrowUp />{m.mail_sidebar_move_up()}
-					</DropdownMenu.Item>
-					<DropdownMenu.Item
-						class="mitem"
-						disabled={menuIndex < 0 || menuIndex >= menuSibs.length - 1}
-						onSelect={() => moveAndRefocus(e, 1, returnTo)}
-					>
-						<ArrowDown />{m.mail_sidebar_move_down()}
-					</DropdownMenu.Item>
-				{/if}
+				<DropdownMenu.Separator class="msep" />
+				<CollectionManageItems
+					entry={e}
+					index={menuIndex}
+					siblings={menuSibs.length}
+					onEdit={() => handOff((d) => d.edit(e, returnTo))}
+					onRecolor={(color) => void recolor(e, color)}
+					onMove={() => handOff((d) => d.move(e, returnTo))}
+					onShift={(delta) => moveAndRefocus(e, delta, returnTo)}
+					onDelete={() => handOff((d) => d.remove(e, returnTo))}
+				/>
+				<DropdownMenu.Separator class="msep" />
+				<DropdownMenu.Item
+					class="mitem"
+					onSelect={() => {
+						closeNav();
+						void goto(`${slotBase}/settings/collections`);
+					}}
+				>
+					<Settings2 />{m.mail_collection_manage()}
+				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Portal>
 	{/if}
@@ -598,6 +639,8 @@
 		</div>
 	</AnchoredMenu>
 {/if}
+
+<CollectionDialogs bind:this={dialogs} onDeleted={deleted} />
 
 {#if toast}
 	<Toast text={toast} />
