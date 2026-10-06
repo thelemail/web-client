@@ -227,7 +227,7 @@
 .mail-app .coll-picker .pk { display: flex; flex-direction: column; min-height: 0; }
 .mail-app .coll-picker .pk-find { display: flex; align-items: center; gap: 7px; margin: 2px 2px 6px; padding: 0 9px; height: 34px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--fg-faint); }
 .mail-app .coll-picker .pk-find:focus-within { border-color: var(--pine-600); }
-.mail-app .coll-picker .pk-find input { flex: 1; min-width: 0; border: none; background: none; outline: none; font: inherit; font-size: 13.5px; color: var(--fg); }
+.mail-app .coll-picker .pk-find input { flex: 1; min-width: 0; height: 100%; padding: 0; border: none; border-radius: 0; background: none; outline: none; box-shadow: none; font: inherit; font-size: 13.5px; color: var(--fg); }
 .mail-app .coll-picker .pk-list { max-height: min(340px, calc(100vh - 160px)); overflow-y: auto; overscroll-behavior: contain; }
 .mail-app .coll-picker .menu-lbl { padding-top: 8px; }
 .mail-app .coll-picker .pk-row { cursor: pointer; user-select: none; gap: 9px; white-space: nowrap; }
@@ -236,8 +236,8 @@
 .mail-app .coll-picker .pk-row.active svg { color: var(--pine-600); }
 .mail-app .coll-picker .pk-row.on { background: none; color: var(--fg-strong); font-weight: 500; }
 .mail-app .coll-picker .pk-row.on.active { background: var(--paper-100); }
-.mail-app .coll-picker .lp-name { overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
-.mail-app .coll-picker .pk-path { flex: 1 1 0; min-width: 0; margin-left: auto; text-align: right; font-size: 12px; font-weight: 400; color: var(--fg-faint); overflow: hidden; text-overflow: ellipsis; }
+.mail-app .coll-picker .lp-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mail-app .coll-picker .pk-parent { font-weight: 400; color: var(--fg-faint); }
 .mail-app .coll-picker .pk-box { width: 16px; height: 16px; flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid var(--ink-300); border-radius: 4px; background: var(--surface); }
 .mail-app .coll-picker .pk-box.checked { background: var(--pine-600); border-color: var(--pine-600); }
 .mail-app .coll-picker .pk-box svg, .mail-app .coll-picker .pk-row.active .pk-box svg { width: 12px; height: 12px; color: var(--surface); }

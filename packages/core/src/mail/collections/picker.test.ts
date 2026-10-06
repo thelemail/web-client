@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	chunk,
+	createTarget,
 	hasExactName,
 	labelChanges,
 	labelStates,
@@ -47,6 +48,28 @@ describe('searchEntries', () => {
 		expect(hasExactName(entries, 'acme')).toBe(true);
 		expect(hasExactName(entries, 'work / clients')).toBe(true);
 		expect(hasExactName(entries, 'acm')).toBe(false);
+	});
+});
+
+describe('createTarget', () => {
+	it('offers a blank create for an empty query', () => {
+		expect(createTarget(entries, ' ')).toEqual({ name: '', parent: null });
+	});
+
+	it('creates at the top level for a plain name and not for an existing one', () => {
+		expect(createTarget(entries, 'Travel')).toEqual({ name: 'Travel', parent: null });
+		expect(createTarget(entries, 'acme')).toBeNull();
+	});
+
+	it('creates inside the folder a path query names', () => {
+		const target = createTarget(entries, 'work / clients/ Beta');
+		expect(target?.name).toBe('Beta');
+		expect(target?.parent?.id).toBe('clients');
+	});
+
+	it('refuses a path whose parent does not exist or whose name is empty', () => {
+		expect(createTarget(entries, 'nowhere/Beta')).toBeNull();
+		expect(createTarget(entries, 'work/')).toBeNull();
 	});
 });
 

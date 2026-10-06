@@ -6,7 +6,7 @@
 	import CollectionPicker from './collections/CollectionPicker.svelte';
 	import { collectionColor } from './collections/palette';
 	import {
-		hasExactName,
+		createTarget,
 		labelChanges,
 		nextCheckState,
 		searchEntries,
@@ -77,11 +77,15 @@
 		];
 	});
 
-	const createText = $derived.by(() => {
-		const q = query.trim();
-		if (!q) return m.mail_collection_new_label();
-		if (hasExactName(mailCollections.labels, q)) return null;
-		return m.mail_picker_create_label({ name: q });
+	const create = $derived.by(() => {
+		const target = createTarget(mailCollections.labels, query);
+		if (!target) return null;
+		const parent = target.parent?.id ?? null;
+		if (!target.name) return { text: m.mail_collection_new_label(), name: '', parent };
+		const text = target.parent
+			? m.mail_picker_create_label_in({ name: target.name, parent: target.parent.path })
+			: m.mail_picker_create_label({ name: target.name });
+		return { text, name: target.name, parent };
 	});
 
 	function apply() {
@@ -98,7 +102,7 @@
 	{sections}
 	multi
 	createKind="label"
-	{createText}
+	{create}
 	onCreated={(entry) => (staged[entry.id] = 'on')}
 	onCancel={onClose}
 	onDismiss={apply}

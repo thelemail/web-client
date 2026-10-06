@@ -17,7 +17,7 @@
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import CollectionPicker from './collections/CollectionPicker.svelte';
 	import { collectionColor } from './collections/palette';
-	import { hasExactName, searchEntries, type PickerRow, type PickerSection } from './collections/picker';
+	import { createTarget, searchEntries, type PickerRow, type PickerSection } from './collections/picker';
 	import type { CollectionEntry } from './collections/tree';
 
 	interface Props {
@@ -124,11 +124,15 @@
 		];
 	});
 
-	const createText = $derived.by(() => {
-		const q = query.trim();
-		if (!q) return m.mail_collection_new_folder();
-		if (hasExactName(mailCollections.folders, q)) return null;
-		return m.mail_picker_create_folder({ name: q });
+	const create = $derived.by(() => {
+		const target = createTarget(mailCollections.folders, query);
+		if (!target) return null;
+		const parent = target.parent?.id ?? null;
+		if (!target.name) return { text: m.mail_collection_new_folder(), name: '', parent };
+		const text = target.parent
+			? m.mail_picker_create_folder_in({ name: target.name, parent: target.parent.path })
+			: m.mail_picker_create_folder({ name: target.name });
+		return { text, name: target.name, parent };
 	});
 </script>
 
@@ -139,7 +143,7 @@
 	bind:query
 	{sections}
 	createKind="folder"
-	{createText}
+	{create}
 	onCreated={(entry) => onFolder(entry.id)}
 	onCancel={onClose}
 	onDismiss={onClose}

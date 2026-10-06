@@ -1,4 +1,5 @@
 import type FolderIcon from '@lucide/svelte/icons/folder';
+import { MAX_COLLECTION_DEPTH } from './rules';
 import type { CollectionEntry } from './tree';
 
 export type CheckState = 'on' | 'off' | 'mixed';
@@ -48,6 +49,24 @@ export function searchEntries(entries: readonly CollectionEntry[], query: string
 export function hasExactName(entries: readonly CollectionEntry[], query: string): boolean {
 	const q = fold(query);
 	return entries.some((e) => fold(e.name) === q || fold(e.path) === q);
+}
+
+export interface CreateTarget {
+	name: string;
+	parent: CollectionEntry | null;
+}
+
+export function createTarget(entries: readonly CollectionEntry[], query: string): CreateTarget | null {
+	const q = query.trim();
+	if (!q) return { name: '', parent: null };
+	if (hasExactName(entries, q)) return null;
+	const cut = q.lastIndexOf('/');
+	if (cut < 0) return { name: q, parent: null };
+	const name = q.slice(cut + 1).trim();
+	const prefix = fold(q.slice(0, cut));
+	const parent = entries.find((e) => fold(e.path) === prefix);
+	if (!name || !parent || parent.sealed || parent.depth + 1 >= MAX_COLLECTION_DEPTH) return null;
+	return { name, parent };
 }
 
 export function labelStates(labelSets: readonly (readonly string[])[]): Map<string, CheckState> {

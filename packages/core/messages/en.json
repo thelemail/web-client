@@ -3568,6 +3568,8 @@
 	"mail_picker_back": "Back",
 	"mail_picker_create_folder": "Create folder “{name}”",
 	"mail_picker_create_label": "Create label “{name}”",
+	"mail_picker_create_folder_in": "Create folder “{name}” in {parent}",
+	"mail_picker_create_label_in": "Create label “{name}” in {parent}",
 	"mail_picker_apply": "Apply",
 	"mail_toast_labels_updated": "Labels updated",
 	"mail_bulk_moved_to_folder": "{count} moved to {folder}",

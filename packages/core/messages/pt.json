@@ -3568,6 +3568,8 @@
 	"mail_picker_back": "Voltar",
 	"mail_picker_create_folder": "Criar pasta “{name}”",
 	"mail_picker_create_label": "Criar etiqueta “{name}”",
+	"mail_picker_create_folder_in": "Criar pasta “{name}” em {parent}",
+	"mail_picker_create_label_in": "Criar etiqueta “{name}” em {parent}",
 	"mail_picker_apply": "Aplicar",
 	"mail_toast_labels_updated": "Etiquetas atualizadas",
 	"mail_bulk_moved_to_folder": "Mensagens movidas para {folder}: {count}",

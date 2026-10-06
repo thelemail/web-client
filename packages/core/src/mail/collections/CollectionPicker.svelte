@@ -20,7 +20,7 @@
 		sections: PickerSection[];
 		multi?: boolean;
 		createKind: MailCollectionKind;
-		createText: string | null;
+		create: { text: string; name: string; parent: string | null } | null;
 		footer?: Snippet;
 		onCreated: (entry: CollectionEntry) => void;
 		onCancel: () => void;
@@ -36,7 +36,7 @@
 		sections,
 		multi = false,
 		createKind,
-		createText,
+		create,
 		footer,
 		onCreated,
 		onCancel,
@@ -47,13 +47,11 @@
 	const uid = $props.id();
 	let panel: HTMLDivElement | undefined = $state();
 	let input: HTMLInputElement | undefined = $state();
-	let creating = $state(false);
-	let createName = $state('');
+	let creating = $state<{ name: string; parent: string | null } | null>(null);
 	let cursor = $state(0);
 
 	function startCreate() {
-		createName = query.trim();
-		creating = true;
+		if (create) creating = { name: create.name, parent: create.parent };
 	}
 
 	const groups = $derived.by(() => {
@@ -61,8 +59,8 @@
 		const out = sections
 			.filter((s) => s.rows.length > 0)
 			.map((s) => ({ ...s, rows: s.rows.map((row) => ({ row, index: index++ })) }));
-		if (createText !== null) {
-			const row: PickerRow = { key: 'create', title: createText, pick: startCreate };
+		if (create) {
+			const row: PickerRow = { key: 'create', title: create.text, pick: startCreate };
 			out.push({ key: 'create', rows: [{ row, index: index++ }] });
 		}
 		return out;
@@ -90,6 +88,7 @@
 
 	onMount(() => {
 		returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		const opener = anchor;
 		void tick().then(() => input?.focus());
 		return () => {
 			const focus = document.activeElement;
@@ -97,20 +96,20 @@
 			const target =
 				returnTo && returnTo.isConnected && returnTo !== document.body
 					? returnTo
-					: anchor?.querySelector<HTMLElement>('button') ?? anchor;
+					: opener;
 			target?.focus();
 		};
 	});
 
 	function backToList() {
-		creating = false;
+		creating = null;
 		void tick().then(() => input?.focus());
 	}
 
 	function created(entry: CollectionEntry) {
 		onCreated(entry);
 		if (!multi) return;
-		creating = false;
+		creating = null;
 		resetQuery();
 		void tick().then(() => input?.focus());
 	}
@@ -171,7 +170,7 @@
 				</button>
 				<span>{createKind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}</span>
 			</div>
-			<CollectionCreate kind={createKind} name={createName} onCreated={created} />
+			<CollectionCreate kind={createKind} name={creating.name} parent={creating.parent} onCreated={created} />
 		{:else}
 			<label class="pk-find">
 				<Search size={14} />
@@ -237,10 +236,9 @@
 								{:else if Icon}
 									<Icon size={17} color={row.iconColor ?? 'currentColor'} />
 								{/if}
-								<span class="lp-name">{row.title}</span>
-								{#if row.path}
-									<span class="pk-path">{row.path}</span>
-								{/if}
+								<span class="lp-name" title={row.path ? `${row.path} / ${row.title}` : undefined}>
+									{#if row.path}<span class="pk-parent">{`${row.path} / `}</span>{/if}{row.title}
+								</span>
 							</div>
 						{/each}
 					</div>
