@@ -4,7 +4,8 @@ const api = vi.hoisted(() => ({
 	listMailCollections: vi.fn(),
 	createMailCollection: vi.fn(),
 	updateMailCollection: vi.fn(),
-	reorderMailCollections: vi.fn()
+	reorderMailCollections: vi.fn(),
+	deleteMailCollection: vi.fn()
 }));
 const seal = vi.hoisted(() => ({ sealCollectionMeta: vi.fn(), openCollectionMeta: vi.fn() }));
 
@@ -15,6 +16,7 @@ vi.mock('$app/environment', () => ({ browser: true }));
 
 import { mailCollections } from './mailCollections.svelte';
 import { ApiCallError } from '$core/api/types';
+import { CollectionRuleError } from '$core/mail/collections/rules';
 
 function rec(id: string, kind: 'folder' | 'label', sealedMeta: string, over: Record<string, unknown> = {}) {
 	return {
@@ -39,6 +41,7 @@ describe('mail collections registry', () => {
 		api.createMailCollection.mockReset();
 		api.updateMailCollection.mockReset();
 		api.reorderMailCollections.mockReset();
+		api.deleteMailCollection.mockReset();
 		seal.openCollectionMeta.mockReset();
 		seal.sealCollectionMeta.mockReset();
 		mailCollections.setAccount(null);
@@ -282,5 +285,184 @@ describe('mail collections registry', () => {
 		await expect(mailCollections.reorder('folder', null, ['b', 'a'])).rejects.toThrow('changed');
 
 		expect(mailCollections.folders.map((f) => f.id)).toEqual(['a', 'b', 'n']);
+	});
+
+	async function loadTree(records: ReturnType<typeof rec>[], favorite = false) {
+		api.listMailCollections.mockResolvedValue({ collections: records });
+		seal.openCollectionMeta.mockImplementation(async (_a: string, s: string) => ({
+			name: s.replace('sealed-', ''),
+			color: s === 'sealed-clients' ? 'pine' : null,
+			favorite
+		}));
+		await mailCollections.load();
+		seal.sealCollectionMeta.mockResolvedValue({ sealedMeta: 'resealed', metaKeyFingerprint: 'fp', metaSchemaVersion: 2 });
+	}
+
+	it('renames without dropping the color or the favorite flag', async () => {
+		await loadTree([rec('f1', 'folder', 'sealed-clients', { rev: 2 })], true);
+		api.updateMailCollection.mockResolvedValue(rec('f1', 'folder', 'resealed', { rev: 3 }));
+
+		await mailCollections.rename('f1', '  Clients 2026 ');
+
+		expect(seal.sealCollectionMeta).toHaveBeenCalledWith('acc-1', {
+			name: 'Clients 2026',
+			color: 'pine',
+			favorite: true
+		});
+		expect(api.updateMailCollection.mock.calls[0][2]).toEqual({
+			meta: { sealedMeta: 'resealed', metaKeyFingerprint: 'fp', metaSchemaVersion: 2 },
+			baseRev: 2
+		});
+		expect(mailCollections.folder('f1')).toMatchObject({ name: 'Clients 2026', favorite: true, rev: 3 });
+	});
+
+	it('recolors by resealing the existing name', async () => {
+		await loadTree([rec('l1', 'label', 'sealed-tax')]);
+		api.updateMailCollection.mockResolvedValue(rec('l1', 'label', 'resealed', { rev: 2 }));
+
+		await mailCollections.recolor('l1', 'danger');
+
+		expect(seal.sealCollectionMeta).toHaveBeenCalledWith('acc-1', { name: 'tax', color: 'danger', favorite: false });
+		expect(mailCollections.label('l1')?.color).toBe('danger');
+	});
+
+	it('refuses a rename that clashes with a sibling and leaves the server alone', async () => {
+		await loadTree([
+			rec('f1', 'folder', 'sealed-clients'),
+			rec('f2', 'folder', 'sealed-acme'),
+			rec('f3', 'folder', 'sealed-acme', { parentId: 'f1' })
+		]);
+
+		await expect(mailCollections.rename('f1', 'ACME')).rejects.toBeInstanceOf(CollectionRuleError);
+		await expect(mailCollections.rename('f1', 'a/b')).rejects.toMatchObject({ problem: 'slash' });
+		await mailCollections.rename('f1', 'clients');
+
+		expect(api.updateMailCollection).not.toHaveBeenCalled();
+		expect(mailCollections.folder('f1')?.name).toBe('clients');
+	});
+
+	it('restores the old name when the server refuses a rename', async () => {
+		await loadTree([rec('f1', 'folder', 'sealed-clients')]);
+		api.updateMailCollection.mockRejectedValue(new ApiCallError(500, null, 'boom'));
+
+		await expect(mailCollections.rename('f1', 'Work')).rejects.toThrow('boom');
+
+		expect(mailCollections.folder('f1')?.name).toBe('clients');
+	});
+
+	it('moves a folder under a new parent at the end of its new siblings', async () => {
+		await loadTree([
+			rec('a', 'folder', 'sealed-a', { position: 1024 }),
+			rec('b', 'folder', 'sealed-b', { position: 2048, rev: 4 }),
+			rec('c', 'folder', 'sealed-c', { parentId: 'a', position: 5120 })
+		]);
+		api.updateMailCollection.mockImplementation(async (_acct: string, _id: string, body: { position: number }) =>
+			rec('b', 'folder', 'sealed-b', { parentId: 'a', position: body.position, rev: 5 })
+		);
+
+		await mailCollections.moveTo('b', 'a');
+
+		expect(api.updateMailCollection).toHaveBeenCalledWith('acc-1', 'b', {
+			parent: { id: 'a' },
+			position: 6144,
+			baseRev: 4
+		});
+		expect(mailCollections.folders.map((f) => f.path)).toEqual(['a', 'a / c', 'a / b']);
+		expect(mailCollections.folder('b')?.rev).toBe(5);
+	});
+
+	it('moves to the top level with an explicit null parent', async () => {
+		await loadTree([rec('a', 'folder', 'sealed-a'), rec('c', 'folder', 'sealed-c', { parentId: 'a' })]);
+		api.updateMailCollection.mockResolvedValue(rec('c', 'folder', 'sealed-c', { position: 2048, rev: 2 }));
+
+		await mailCollections.moveTo('c', null);
+
+		expect(api.updateMailCollection.mock.calls[0][2]).toMatchObject({ parent: { id: null }, position: 2048 });
+		expect(mailCollections.folders.map((f) => f.path)).toEqual(['a', 'c']);
+	});
+
+	it('refuses cycles, foreign kinds, clashes and moves past the depth limit before calling the server', async () => {
+		const chain = Array.from({ length: 15 }, (_, i) =>
+			rec(`d${i}`, 'folder', `sealed-d${i}`, { parentId: i ? `d${i - 1}` : null })
+		);
+		await loadTree([
+			...chain,
+			rec('x', 'folder', 'sealed-x'),
+			rec('y', 'folder', 'sealed-y', { parentId: 'x' }),
+			rec('l1', 'label', 'sealed-l1')
+		]);
+		api.updateMailCollection.mockResolvedValue(rec('y', 'folder', 'sealed-y', { parentId: 'd14', rev: 2 }));
+
+		await expect(mailCollections.moveTo('d0', 'd3')).rejects.toMatchObject({ problem: 'inside' });
+		await expect(mailCollections.moveTo('x', 'x')).rejects.toMatchObject({ problem: 'inside' });
+		await expect(mailCollections.moveTo('x', 'l1')).rejects.toMatchObject({ problem: 'missing' });
+		await expect(mailCollections.moveTo('x', 'd14')).rejects.toMatchObject({ problem: 'too_deep' });
+		await mailCollections.moveTo('y', 'd14');
+		expect(api.updateMailCollection).toHaveBeenCalledTimes(1);
+
+		await loadTree([rec('p', 'folder', 'sealed-p'), rec('q', 'folder', 'sealed-q'), rec('q2', 'folder', 'sealed-q', { parentId: 'p' })]);
+		api.updateMailCollection.mockClear();
+		await expect(mailCollections.moveTo('q2', null)).rejects.toMatchObject({ problem: 'duplicate' });
+		expect(api.updateMailCollection).not.toHaveBeenCalled();
+	});
+
+	it('retries a move once against fresh revisions and rolls back a final refusal', async () => {
+		await loadTree([rec('a', 'folder', 'sealed-a'), rec('b', 'folder', 'sealed-b', { rev: 1 })]);
+		api.listMailCollections.mockResolvedValue({
+			collections: [rec('a', 'folder', 'sealed-a'), rec('b', 'folder', 'sealed-b', { rev: 2 })]
+		});
+		api.updateMailCollection.mockRejectedValue(new ApiCallError(409, null, 'stale'));
+
+		await expect(mailCollections.moveTo('b', 'a')).rejects.toThrow('stale');
+
+		expect(api.updateMailCollection).toHaveBeenCalledTimes(2);
+		expect(api.updateMailCollection.mock.calls[1][2].baseRev).toBe(2);
+		expect(mailCollections.folder('b')?.parentId).toBeNull();
+	});
+
+	it('deletes a label without a destination and a folder with the one chosen', async () => {
+		await loadTree([
+			rec('f1', 'folder', 'sealed-f1', { rev: 3 }),
+			rec('f2', 'folder', 'sealed-f2'),
+			rec('l1', 'label', 'sealed-l1', { rev: 7 })
+		]);
+		api.deleteMailCollection.mockResolvedValue({});
+
+		await mailCollections.remove('l1', { kind: 'archive' });
+		await mailCollections.remove('f1', { kind: 'folder', folderId: 'f2' });
+
+		expect(api.deleteMailCollection.mock.calls).toEqual([
+			['acc-1', 'l1', 7, undefined],
+			['acc-1', 'f1', 3, { kind: 'folder', folderId: 'f2' }]
+		]);
+		expect(mailCollections.nodes.map((n) => n.id)).toEqual(['f2']);
+	});
+
+	it('will not delete a folder that still has subfolders or has nowhere to send its mail', async () => {
+		await loadTree([rec('a', 'folder', 'sealed-a'), rec('b', 'folder', 'sealed-b', { parentId: 'a' })]);
+
+		await expect(mailCollections.remove('a', { kind: 'archive' })).rejects.toMatchObject({ problem: 'has_children' });
+		await expect(mailCollections.remove('b')).rejects.toThrow();
+		await expect(mailCollections.remove('b', { kind: 'folder', folderId: 'b' })).rejects.toMatchObject({ problem: 'missing' });
+		expect(api.deleteMailCollection).not.toHaveBeenCalled();
+	});
+
+	it('puts a folder back when its deletion fails', async () => {
+		await loadTree([rec('a', 'folder', 'sealed-a')]);
+		api.deleteMailCollection.mockRejectedValue(new ApiCallError(500, null, 'boom'));
+
+		await expect(mailCollections.remove('a', { kind: 'inbox' })).rejects.toThrow('boom');
+
+		expect(mailCollections.folder('a')?.name).toBe('a');
+	});
+
+	it('treats a folder already deleted elsewhere as done', async () => {
+		await loadTree([rec('a', 'folder', 'sealed-a')]);
+		api.deleteMailCollection.mockRejectedValue(new ApiCallError(404, null, 'gone'));
+		api.listMailCollections.mockResolvedValue({ collections: [rec('a', 'folder', 'sealed-a', { deleted: true })] });
+
+		await mailCollections.remove('a', { kind: 'inbox' });
+
+		expect(mailCollections.folder('a')).toBeUndefined();
 	});
 });

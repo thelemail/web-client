@@ -2,12 +2,19 @@ import { browser } from '$app/environment';
 import { keystore } from '$core/keystore/keystore-client';
 import {
 	createMailCollection,
+	deleteMailCollection,
 	listMailCollections,
 	reorderMailCollections,
 	updateMailCollection
 } from '$core/api/mailCollections';
-import { ApiCallError, type MailCollectionKind, type MailCollectionRecord } from '$core/api/types';
-import { openCollectionMeta, sealCollectionMeta } from '$core/mail/collections/seal';
+import {
+	ApiCallError,
+	type FolderDestination,
+	type MailCollectionKind,
+	type MailCollectionRecord
+} from '$core/api/types';
+import { openCollectionMeta, sealCollectionMeta, type CollectionMeta } from '$core/mail/collections/seal';
+import { CollectionRuleError, moveProblem, nameProblem } from '$core/mail/collections/rules';
 import {
 	nextPosition,
 	orderTree,
@@ -130,6 +137,8 @@ class MailCollectionsStore {
 		const acct = this.#accountId;
 		if (!acct) throw new Error(m.mail_collection_no_account());
 		const trimmed = name.trim();
+		const problem = nameProblem(this.nodes, kind, parentId, trimmed);
+		if (problem) throw new CollectionRuleError(problem);
 		const sealed = await sealCollectionMeta(acct, { name: trimmed, color });
 		const rec = await createMailCollection(acct, {
 			kind,
@@ -147,31 +156,120 @@ class MailCollectionsStore {
 		return entry;
 	}
 
-	async setFavorite(id: string, favorite: boolean): Promise<void> {
+	setFavorite(id: string, favorite: boolean): Promise<void> {
+		return this.#reseal(id, (meta) => ({ ...meta, favorite }));
+	}
+
+	rename(id: string, name: string): Promise<void> {
+		const trimmed = name.trim();
+		return this.#reseal(id, (meta, node) => {
+			const problem = nameProblem(this.nodes, node.kind, node.parentId, trimmed, id);
+			if (problem) throw new CollectionRuleError(problem);
+			return { ...meta, name: trimmed };
+		});
+	}
+
+	recolor(id: string, color: string | null): Promise<void> {
+		return this.#reseal(id, (meta) => ({ ...meta, color }));
+	}
+
+	async moveTo(id: string, parentId: string | null): Promise<void> {
 		const acct = this.#accountId;
 		if (!acct) throw new Error(m.mail_collection_no_account());
 		for (let attempt = 0; ; attempt++) {
 			const node = this.nodes.find((n) => n.id === id);
 			if (!node || node.sealed) throw new Error(m.mail_collection_update_failed());
-			if (node.favorite === favorite) return;
-			const before = node;
-			this.#upsert({ ...node, favorite });
+			if (node.parentId === parentId) return;
+			const problem = moveProblem(this.nodes, id, parentId);
+			if (problem) throw new CollectionRuleError(problem);
+			const position = nextPosition(
+				this.nodes.filter((n) => n.kind === node.kind && n.id !== id),
+				parentId
+			);
+			this.#upsert({ ...node, parentId, position });
 			try {
-				const sealed = await sealCollectionMeta(acct, { name: node.name, color: node.color, favorite });
-				const rec = await updateMailCollection(acct, id, { meta: sealed, baseRev: node.rev });
-				if (this.#accountId !== acct) return;
-				this.#opened.set(rec.id, {
-					sealedMeta: rec.sealedMeta,
-					name: node.name,
-					color: node.color,
-					favorite
+				const rec = await updateMailCollection(acct, id, {
+					parent: { id: parentId },
+					position,
+					baseRev: node.rev
 				});
-				this.#upsert(this.#node(rec, node.name, node.color, favorite, false));
+				if (this.#accountId !== acct) return;
+				this.#upsert(this.#node(rec, node.name, node.color, node.favorite, false));
 				return;
 			} catch (err) {
 				if (this.#accountId !== acct) return;
 				const current = this.nodes.find((n) => n.id === id);
-				if (current && current.rev === before.rev) this.#upsert(before);
+				if (current && current.rev === node.rev) this.#upsert(node);
+				if (attempt === 0 && err instanceof ApiCallError && err.status === 409) {
+					await this.load();
+					continue;
+				}
+				throw err;
+			}
+		}
+	}
+
+	async remove(
+		id: string,
+		destination?: { kind: FolderDestination; folderId?: string }
+	): Promise<void> {
+		const acct = this.#accountId;
+		if (!acct) throw new Error(m.mail_collection_no_account());
+		for (let attempt = 0; ; attempt++) {
+			const node = this.nodes.find((n) => n.id === id);
+			if (!node) return;
+			if (this.hasChildren(id)) throw new CollectionRuleError('has_children');
+			const dest = node.kind === 'folder' ? destination : undefined;
+			if (node.kind === 'folder') {
+				if (!dest) throw new Error(m.mail_collection_update_failed());
+				if (dest.kind === 'folder' && (!dest.folderId || dest.folderId === id || !this.folder(dest.folderId))) {
+					throw new CollectionRuleError('missing');
+				}
+			}
+			this.nodes = this.nodes.filter((n) => n.id !== id);
+			try {
+				await deleteMailCollection(acct, id, node.rev, dest);
+				if (this.#accountId === acct) this.#opened.delete(id);
+				return;
+			} catch (err) {
+				if (this.#accountId !== acct) return;
+				if (!this.nodes.some((n) => n.id === id)) this.nodes = [...this.nodes, node];
+				if (err instanceof ApiCallError && err.status === 404) {
+					await this.sync();
+					return;
+				}
+				if (attempt === 0 && err instanceof ApiCallError && err.status === 409) {
+					await this.load();
+					continue;
+				}
+				throw err;
+			}
+		}
+	}
+
+	async #reseal(
+		id: string,
+		change: (meta: Required<CollectionMeta>, node: CollectionNode) => Required<CollectionMeta>
+	): Promise<void> {
+		const acct = this.#accountId;
+		if (!acct) throw new Error(m.mail_collection_no_account());
+		for (let attempt = 0; ; attempt++) {
+			const node = this.nodes.find((n) => n.id === id);
+			if (!node || node.sealed) throw new Error(m.mail_collection_update_failed());
+			const next = change({ name: node.name, color: node.color, favorite: node.favorite }, node);
+			if (next.name === node.name && next.color === node.color && next.favorite === node.favorite) return;
+			this.#upsert({ ...node, ...next });
+			try {
+				const sealed = await sealCollectionMeta(acct, next);
+				const rec = await updateMailCollection(acct, id, { meta: sealed, baseRev: node.rev });
+				if (this.#accountId !== acct) return;
+				this.#opened.set(rec.id, { sealedMeta: rec.sealedMeta, ...next });
+				this.#upsert(this.#node(rec, next.name, next.color, next.favorite, false));
+				return;
+			} catch (err) {
+				if (this.#accountId !== acct) return;
+				const current = this.nodes.find((n) => n.id === id);
+				if (current && current.rev === node.rev) this.#upsert(node);
 				if (attempt === 0 && err instanceof ApiCallError && err.status === 409) {
 					await this.load();
 					continue;

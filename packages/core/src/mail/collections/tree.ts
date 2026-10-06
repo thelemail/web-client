@@ -51,6 +51,10 @@ export function orderTree(nodes: CollectionNode[]): CollectionEntry[] {
 	return out;
 }
 
+export function childIds(nodes: readonly CollectionNode[], id: string): string[] {
+	return orderTree(nodes.filter((n) => n.parentId === id)).map((e) => e.id);
+}
+
 export function nextPosition(nodes: CollectionNode[], parentId: string | null): number {
 	let max = 0;
 	for (const n of nodes) {
