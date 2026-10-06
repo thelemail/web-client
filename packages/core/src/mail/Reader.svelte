@@ -254,6 +254,7 @@
 
 	const currentThreadRootId = $derived(m?.threadRootId ?? m?.id ?? null);
 	const seenThreadTicks = new Map<string, number>();
+	const THREAD_REFRESH_SETTLE_MS = 250;
 
 	$effect(() => {
 		const rootId = currentThreadRootId;
@@ -266,7 +267,8 @@
 		}
 		if (seen === tick) return;
 		seenThreadTicks.set(rootId, tick);
-		threadRefreshTick += 1;
+		const timer = setTimeout(() => (threadRefreshTick += 1), THREAD_REFRESH_SETTLE_MS);
+		return () => clearTimeout(timer);
 	});
 
 	let replyMode = $state<ReplyMode | null>(null);
