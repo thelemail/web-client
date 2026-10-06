@@ -13,12 +13,13 @@
 	interface Props {
 		kind: MailCollectionKind;
 		parent?: string | null;
+		name?: string;
 		onCreated: (entry: CollectionEntry) => void;
 	}
 
-	let { kind, parent = null, onCreated }: Props = $props();
+	let { kind, parent = null, name: initialName = '', onCreated }: Props = $props();
 
-	let name = $state('');
+	let name = $state(untrack(() => initialName));
 	let parentId = $state(untrack(() => parent ?? ''));
 	let color = $state<string | null>(untrack(() => (kind === 'label' ? 'pine' : null)));
 	let saving = $state(false);
