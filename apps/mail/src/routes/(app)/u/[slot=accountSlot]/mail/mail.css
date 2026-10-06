@@ -1064,16 +1064,6 @@
 }
 
 
-.mail-app .cc-form { display: flex; flex-direction: column; gap: 8px; padding: 4px 11px 6px; }
-.mail-app .cc-form input, .mail-app .cc-form select { font-family: inherit; font-size: 13px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 9px; }
-.mail-app .cc-colors { display: flex; flex-wrap: wrap; gap: 7px; }
-.mail-app .cc-swatch { width: 18px; height: 18px; padding: 0; border-radius: 50%; border: 2px solid transparent; cursor: pointer; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .08); }
-.mail-app .cc-swatch.none { background: var(--surface); border-color: var(--border-strong); }
-.mail-app .cc-swatch.on { outline: 2px solid var(--pine-600); outline-offset: 1px; }
-.mail-app .cc-err { font-size: 12px; color: var(--danger-700); }
-.mail-app .cc-go { font-family: inherit; font-size: 13px; font-weight: 600; background: var(--primary); color: var(--primary-fg); border: none; border-radius: var(--radius-sm); padding: 8px 12px; cursor: pointer; }
-.mail-app .cc-go:hover { background: var(--primary-hover); }
-.mail-app .cc-go:disabled { opacity: .5; pointer-events: none; }
 .mail-app .label-picker .lp-indent { display: inline-block; flex: 0 0 auto; }
 .mail-app .fm-empty { font-size: 12.5px; color: var(--fg-faint); padding: 2px 0; }
 .mail-app .fld.custom svg { color: var(--fld-tint, currentColor); }

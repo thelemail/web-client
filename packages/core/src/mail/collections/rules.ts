@@ -1,7 +1,12 @@
 import { m } from '$paraglide/messages.js';
-import { ApiCallError, type MailCollectionKind } from '$core/api/types';
+import { ApiCallError, type FolderDestination, type MailCollectionKind } from '$core/api/types';
 import { CollectionSealError } from './seal';
-import { subtreeIds, type CollectionNode } from './tree';
+import { subtreeIds, type CollectionEntry, type CollectionNode } from './tree';
+
+export interface DeletedCollection {
+	entry: CollectionEntry;
+	destination: { kind: FolderDestination; folderId?: string } | null;
+}
 
 export const MAX_COLLECTION_NAME = 120;
 export const MAX_COLLECTION_DEPTH = 16;
@@ -37,6 +42,17 @@ function siblingNamed(
 			(n.parentId ?? null) === parentId &&
 			foldName(n.name) === key
 	);
+}
+
+export function ambiguousNames(entries: readonly { name: string }[]): Set<string> {
+	const seen = new Set<string>();
+	const twice = new Set<string>();
+	for (const e of entries) {
+		const key = foldName(e.name);
+		if (seen.has(key)) twice.add(key);
+		seen.add(key);
+	}
+	return twice;
 }
 
 export function nameProblem(

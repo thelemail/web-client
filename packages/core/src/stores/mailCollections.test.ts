@@ -447,7 +447,7 @@ describe('mail collections registry', () => {
 		expect(api.deleteMailCollection).not.toHaveBeenCalled();
 	});
 
-	it('puts a folder back when its deletion fails', async () => {
+	it('keeps a folder when its deletion fails', async () => {
 		await loadTree([rec('a', 'folder', 'sealed-a')]);
 		api.deleteMailCollection.mockRejectedValue(new ApiCallError(500, null, 'boom'));
 

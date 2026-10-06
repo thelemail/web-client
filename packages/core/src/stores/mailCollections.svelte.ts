@@ -161,16 +161,26 @@ class MailCollectionsStore {
 	}
 
 	rename(id: string, name: string): Promise<void> {
-		const trimmed = name.trim();
-		return this.#reseal(id, (meta, node) => {
-			const problem = nameProblem(this.nodes, node.kind, node.parentId, trimmed, id);
-			if (problem) throw new CollectionRuleError(problem);
-			return { ...meta, name: trimmed };
-		});
+		return this.edit(id, { name });
 	}
 
 	recolor(id: string, color: string | null): Promise<void> {
-		return this.#reseal(id, (meta) => ({ ...meta, color }));
+		return this.edit(id, { color });
+	}
+
+	edit(id: string, changes: { name?: string; color?: string | null }): Promise<void> {
+		const name = changes.name?.trim();
+		return this.#reseal(id, (meta, node) => {
+			if (name !== undefined && name !== node.name) {
+				const problem = nameProblem(this.nodes, node.kind, node.parentId, name, id);
+				if (problem) throw new CollectionRuleError(problem);
+			}
+			return {
+				...meta,
+				name: name ?? meta.name,
+				color: changes.color === undefined ? meta.color : changes.color
+			};
+		});
 	}
 
 	async moveTo(id: string, parentId: string | null): Promise<void> {
@@ -226,14 +236,14 @@ class MailCollectionsStore {
 					throw new CollectionRuleError('missing');
 				}
 			}
-			this.nodes = this.nodes.filter((n) => n.id !== id);
 			try {
 				await deleteMailCollection(acct, id, node.rev, dest);
-				if (this.#accountId === acct) this.#opened.delete(id);
+				if (this.#accountId !== acct) return;
+				this.#opened.delete(id);
+				this.nodes = this.nodes.filter((n) => n.id !== id);
 				return;
 			} catch (err) {
 				if (this.#accountId !== acct) return;
-				if (!this.nodes.some((n) => n.id === id)) this.nodes = [...this.nodes, node];
 				if (err instanceof ApiCallError && err.status === 404) {
 					await this.sync();
 					return;
