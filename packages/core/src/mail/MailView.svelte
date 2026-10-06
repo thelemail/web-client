@@ -15,6 +15,12 @@
 	import Toast from '$core/components/Toast.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Inbox from '@lucide/svelte/icons/inbox';
+	import Archive from '@lucide/svelte/icons/archive';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import MovePicker, { type SystemTarget, type SystemTargetId } from './MovePicker.svelte';
+	import LabelPicker from './LabelPicker.svelte';
+	import { chunk, labelStates, type CheckState } from './collections/picker';
 	import {
 		FOLDERS,
 		countActiveFilters,
@@ -33,7 +39,7 @@
 		markMessageRead,
 		markMessageSpam,
 		markMessageUnread,
-		addMessageLabel,
+		batchLabelMessages,
 		moveMessage,
 		moveMessageToInbox,
 		restoreMessage,
@@ -47,7 +53,7 @@
 	import type { MessageReportKind, MessageState } from '$core/api/types';
 	import { submitReport, type ReportOutcome } from './report';
 	import type { UnsubscribeMethod } from './unsubscribe';
-	import { applyToThread, type ThreadVerb } from './threadActions';
+	import { applyToThread, threadMessageIds, type ThreadVerb } from './threadActions';
 	import { canFetchFolder, mailbox } from '$core/stores/mailbox.svelte';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
@@ -583,47 +589,229 @@
 		);
 	}
 
-	async function moveToLabel(id: string, labelId: string) {
-		const current = mailbox.findMessage(id);
-		if (!current) return;
-		const prev = current.labels ?? [];
-		if (!prev.includes(labelId)) {
-			mailbox.patchMessage(id, { labels: [...prev, labelId] });
-			try {
-				await addMessageLabel(id, labelId);
-			} catch {
-				mailbox.patchMessage(id, { labels: prev });
-				flash(msg.mail_err_label());
-				return;
-			}
+	const MESSAGES_PER_BATCH = 200;
+	const LABELS_PER_BATCH = 16;
+
+	type LabelOutcome = 'ok' | 'limit' | 'failed';
+
+	function selectionMessages(ids: readonly string[]): Message[] {
+		const out = new Map<string, Message>();
+		for (const id of ids) {
+			const members = isThread(id) ? mailbox.threadMembers(id) : [];
+			const own = mailbox.findMessage(id);
+			for (const m of own ? [own, ...members] : members) out.set(m.id, m);
 		}
-		void queueArchive(id);
+		return [...out.values()];
+	}
+
+	async function applyLabels(
+		ids: readonly string[],
+		add: readonly string[],
+		remove: readonly string[]
+	): Promise<LabelOutcome> {
+		if (add.length + remove.length === 0) return 'ok';
+		const local = selectionMessages(ids);
+		const snaps = local.map((m) => ({ id: m.id, labels: m.labels ?? [] }));
+		const drop = new Set(remove);
+		for (const m of local) {
+			const next = (m.labels ?? []).filter((l) => !drop.has(l));
+			for (const l of add) if (!next.includes(l)) next.push(l);
+			mailbox.patchMessage(m.id, { labels: next });
+		}
+		accountSettings.recordRecents('labels', add);
+		try {
+			const targets = new Set(local.map((m) => m.id));
+			const threads = ids.filter(isThread).map((id) => mailbox.findMessage(id));
+			const fetched = await Promise.all(
+				threads.map((m) => (m ? threadMessageIds(m.id, m.threadRootId) : Promise.resolve([])))
+			);
+			for (const list of fetched) for (const id of list) targets.add(id);
+			const addParts = chunk(add, LABELS_PER_BATCH);
+			const removeParts = chunk(remove, LABELS_PER_BATCH);
+			const rounds = Math.max(addParts.length, removeParts.length);
+			let limited = false;
+			for (const messageIds of chunk([...targets], MESSAGES_PER_BATCH)) {
+				for (let i = 0; i < rounds; i++) {
+					const { results } = await batchLabelMessages({
+						messageIds,
+						add: addParts[i],
+						remove: removeParts[i]
+					});
+					for (const r of results) {
+						if (r.outcome === 'too_many_labels') limited = true;
+						if (r.labelIds && mailbox.findMessage(r.messageId)) {
+							mailbox.patchMessage(r.messageId, { labels: r.labelIds });
+						}
+					}
+				}
+			}
+			if (limited) {
+				flash(msg.mail_err_too_many_labels());
+				return 'limit';
+			}
+			return 'ok';
+		} catch {
+			for (const snap of snaps) mailbox.patchMessage(snap.id, { labels: snap.labels });
+			flash(msg.mail_reader_labels_failed());
+			void mailbox.refresh([query]);
+			return 'failed';
+		}
+	}
+
+	async function labelAndArchive(ids: string[], labelId: string) {
+		if ((await applyLabels(ids, [labelId], [])) === 'failed') return;
+		if (ids.length > 1) {
+			await bulk('archive', ids);
+			return;
+		}
+		void queueArchive(ids[0]);
 		flash(msg.mail_toast_moved_to_label({ label: mailCollections.label(labelId)?.name ?? '' }));
+	}
+
+	function queueFolderMove(id: string, folderId: string): Promise<void> {
+		const patch: Partial<Message> = { folder: customFolderRoute(folderId), folderId };
+		return isThread(id)
+			? queueThreadUpdate(id, patch, 'move', msg.mail_err_move_folder(), folderId)
+			: queueStateUpdate(
+					id,
+					patch,
+					(mid) => moveMessage(mid, { folderId }),
+					msg.mail_err_move_folder()
+				);
 	}
 
 	function moveToFolder(id: string, folderId: string) {
 		const current = mailbox.findMessage(id);
 		if (!current) return;
-		const route = customFolderRoute(folderId);
-		if (current.folder === route) return;
+		if (current.folder === customFolderRoute(folderId)) return;
 		advancePast(id);
-		if (isThread(id)) {
-			void queueThreadUpdate(
-				id,
-				{ folder: route, folderId },
-				'move',
-				msg.mail_err_move_folder(),
-				folderId
-			);
-		} else {
-			void queueStateUpdate(
-				id,
-				{ folder: route, folderId },
-				(mid) => moveMessage(mid, { folderId }),
-				msg.mail_err_move_folder()
-			);
-		}
+		void queueFolderMove(id, folderId);
 		flash(msg.mail_toast_moved_to_folder({ folder: mailCollections.folder(folderId)?.name ?? '' }));
+	}
+
+	async function moveManyToFolder(ids: string[], folderId: string) {
+		const route = customFolderRoute(folderId);
+		const targets = ids.filter((id) => {
+			const current = mailbox.findMessage(id);
+			return current && current.folder !== route;
+		});
+		if (messageId !== null && targets.includes(messageId)) {
+			void goto(withSearch(basePath), { replaceState: true });
+		}
+		checked = new Set();
+		if (targets.length === 0) return;
+		const results = await Promise.allSettled(targets.map((id) => queueFolderMove(id, folderId)));
+		const failed = results.filter((r) => r.status === 'rejected').length;
+		const folder = mailCollections.folder(folderId)?.name ?? '';
+		if (failed === 0) flash(msg.mail_bulk_moved_to_folder({ count: targets.length, folder }));
+		else if (failed < targets.length)
+			flash(msg.mail_bulk_moved_partial({ ok: targets.length - failed, failed }));
+		else flash(msg.mail_err_move_folder());
+	}
+
+	type PickerKind = 'move' | 'labels';
+
+	let picker = $state<{
+		kind: PickerKind;
+		ids: string[];
+		anchor: HTMLElement;
+		initial: Map<string, CheckState>;
+	} | null>(null);
+
+	const openPickerName = $derived(picker?.anchor.dataset.picker ?? null);
+
+	function openPicker(kind: PickerKind, ids: string[], anchor: HTMLElement) {
+		if (picker && picker.anchor === anchor) {
+			picker = null;
+			return;
+		}
+		if (ids.length === 0) return;
+		const initial =
+			kind === 'labels' ? labelStates(selectionMessages(ids).map((m) => m.labels ?? [])) : new Map();
+		picker = { kind, ids, anchor, initial };
+	}
+
+	$effect(() => {
+		void messageId;
+		void query.folder;
+		picker = null;
+	});
+
+	const pickerMessages = $derived(
+		picker ? picker.ids.map((id) => mailbox.findMessage(id)).filter((m): m is Message => !!m) : []
+	);
+
+	const pickerSystemTargets = $derived.by<SystemTarget[]>(() => {
+		const ms = pickerMessages;
+		if (ms.length === 0) return [];
+		const out: SystemTarget[] = [];
+		const allIn = (test: (m: Message) => boolean) => ms.every(test);
+		if (!allIn((m) => m.folder === 'inbox' || (m.direction === 'sent' && mailbox.threadSize(m.id) <= 1))) {
+			out.push({ id: 'inbox', label: msg.mail_folder_inbox(), icon: Inbox });
+		}
+		if (!allIn((m) => m.folder === 'archive')) {
+			out.push({ id: 'archive', label: msg.mail_folder_archive(), icon: Archive });
+		}
+		if (!allIn((m) => m.folder === 'spam')) {
+			out.push({ id: 'spam', label: msg.mail_folder_spam(), icon: ShieldAlert });
+		}
+		if (!allIn((m) => m.folder === 'trash')) {
+			out.push({ id: 'trash', label: msg.mail_folder_trash(), icon: Trash2 });
+		}
+		return out;
+	});
+
+	const pickerCurrentFolders = $derived.by(() => {
+		const first = pickerMessages[0];
+		const id = first ? customFolderId(first.folder) : null;
+		if (!id || !pickerMessages.every((m) => m.folder === first.folder)) return new Set<string>();
+		return new Set([id]);
+	});
+
+	function takePicker(): string[] {
+		const ids = picker?.ids ?? [];
+		picker = null;
+		return ids;
+	}
+
+	function pickSystem(target: SystemTargetId) {
+		const ids = takePicker();
+		if (ids.length === 0) return;
+		accountSettings.recordRecents('move', [target]);
+		if (ids.length > 1) {
+			if (target === 'inbox') {
+				checked = new Set();
+				for (const id of ids) moveToInbox(id);
+			} else {
+				void bulk(target, ids);
+			}
+			return;
+		}
+		const [id] = ids;
+		if (target === 'inbox') moveToInbox(id);
+		else if (target === 'archive') archiveOne(id);
+		else if (target === 'spam') spamOne(id);
+		else trashOne(id);
+	}
+
+	function pickFolder(folderId: string) {
+		const ids = takePicker();
+		if (ids.length === 0) return;
+		accountSettings.recordRecents('move', [folderId]);
+		if (ids.length > 1) void moveManyToFolder(ids, folderId);
+		else moveToFolder(ids[0], folderId);
+	}
+
+	function pickLabelArchive(labelId: string) {
+		const ids = takePicker();
+		if (ids.length > 0) void labelAndArchive(ids, labelId);
+	}
+
+	function pickLabels(add: string[], remove: string[]) {
+		const ids = picker?.ids ?? [];
+		void applyLabels(ids, add, remove).then((outcome) => {
+			if (outcome === 'ok') flash(msg.mail_toast_labels_updated());
+		});
 	}
 
 	function trashOne(id: string) {
@@ -722,8 +910,7 @@
 		checked = allChecked ? new Set() : new Set(list.map((m) => m.id));
 	}
 
-	async function bulk(action: BulkAction) {
-		const ids = Array.from(checked);
+	async function bulk(action: BulkAction, ids: string[] = Array.from(checked)) {
 		if (ids.length === 0) return;
 		if (action === 'read') {
 			checked = new Set();
@@ -932,6 +1119,13 @@
 		} else if (e.key.toLowerCase() === 'c' && !lifecycle.readOnly) {
 			e.preventDefault();
 			composeStore.openNew();
+		} else if ((e.key.toLowerCase() === 'v' || e.key.toLowerCase() === 'l') && !lifecycle.readOnly) {
+			const kind = e.key.toLowerCase() === 'v' ? 'move' : 'labels';
+			const source = checked.size > 0 ? 'bulk' : 'reader';
+			const anchor = document.querySelector<HTMLElement>(`[data-picker="${source}-${kind}"]`);
+			if (!anchor) return;
+			e.preventDefault();
+			anchor.click();
 		}
 	}
 </script>
@@ -991,6 +1185,8 @@
 			onToggleRead={toggleRead}
 			onToggleAll={toggleAll}
 			onBulk={bulk}
+			onPicker={(kind, anchor) => openPicker(kind, Array.from(checked), anchor)}
+			openPicker={openPickerName}
 			onSort={handleSort}
 			onSetFilters={handleSetFilters}
 			onRefresh={() => mailbox.refresh([query])}
@@ -1029,10 +1225,8 @@
 				onDelete={deleteOne}
 				onMarkRead={markRead}
 				onMarkUnread={markUnread}
-				onMoveToInbox={moveToInbox}
-				onSpam={spamOne}
-				onMoveToLabel={(id, label) => void moveToLabel(id, label)}
-				onMoveToFolder={moveToFolder}
+				onPicker={(kind, id, anchor) => openPicker(kind, [id], anchor)}
+				openPicker={openPickerName}
 				onSnooze={snoozeOne}
 				onUnsnooze={(id) => unsnoozeOne(id)}
 				onReported={reported}
@@ -1046,6 +1240,25 @@
 		{/if}
 	{/if}
 </div>
+
+{#if picker?.kind === 'move'}
+	<MovePicker
+		anchor={picker.anchor}
+		systemTargets={pickerSystemTargets}
+		currentFolders={pickerCurrentFolders}
+		onSystem={pickSystem}
+		onFolder={pickFolder}
+		onLabelArchive={pickLabelArchive}
+		onClose={() => (picker = null)}
+	/>
+{:else if picker?.kind === 'labels'}
+	<LabelPicker
+		anchor={picker.anchor}
+		initial={picker.initial}
+		onApply={pickLabels}
+		onClose={() => (picker = null)}
+	/>
+{/if}
 
 {#if messageId === null && !composeStore.open}
 	<button class="fab" title={msg.mail_compose()} onclick={() => composeStore.openNew()}>

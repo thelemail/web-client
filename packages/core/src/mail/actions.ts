@@ -9,6 +9,7 @@ export interface MailActionCaps {
 	showStar: boolean;
 	showReply: boolean;
 	showMove: boolean;
+	showLabels: boolean;
 	showSnooze: boolean;
 	showUnsnooze: boolean;
 	showSpam: boolean;
@@ -26,6 +27,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: true,
 				showReply: false,
 				showMove: false,
+				showLabels: true,
 				showSnooze: false,
 				showUnsnooze: false,
 				showSpam: false
@@ -40,6 +42,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: true,
 				showReply: true,
 				showMove: true,
+				showLabels: true,
 				showSnooze: true,
 				showUnsnooze: false,
 				showSpam: true
@@ -54,6 +57,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: false,
 				showReply: false,
 				showMove: false,
+				showLabels: true,
 				showSnooze: false,
 				showUnsnooze: false,
 				showSpam: false
@@ -69,6 +73,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: false,
 				showReply: false,
 				showMove: false,
+				showLabels: false,
 				showSnooze: false,
 				showUnsnooze: false,
 				showSpam: false
@@ -83,6 +88,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: true,
 				showReply: true,
 				showMove: false,
+				showLabels: true,
 				showSnooze: false,
 				showUnsnooze: true,
 				showSpam: false
@@ -97,6 +103,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: true,
 				showReply: true,
 				showMove: true,
+				showLabels: true,
 				showSnooze: false,
 				showUnsnooze: false,
 				showSpam: false
@@ -113,6 +120,7 @@ export function mailActionsFor(folder: MailFolderRoute): MailActionCaps {
 				showStar: true,
 				showReply: true,
 				showMove: true,
+				showLabels: true,
 				showSnooze: true,
 				showUnsnooze: false,
 				showSpam: true

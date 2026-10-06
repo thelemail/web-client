@@ -13,18 +13,10 @@
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import Mail from '@lucide/svelte/icons/mail';
 	import MailOpen from '@lucide/svelte/icons/mail-open';
-	import Inbox from '@lucide/svelte/icons/inbox';
 	import Star from '@lucide/svelte/icons/star';
 	import Clock from '@lucide/svelte/icons/clock';
 	import FolderInput from '@lucide/svelte/icons/folder-input';
 	import Tag from '@lucide/svelte/icons/tag';
-	import { addMessageLabel, removeMessageLabel } from '$core/api/messages';
-	import FolderIcon from '@lucide/svelte/icons/folder';
-	import Plus from '@lucide/svelte/icons/plus';
-	import { mailCollections } from '$core/stores/mailCollections.svelte';
-	import { collectionColor } from './collections/palette';
-	import CollectionCreate from './collections/CollectionCreate.svelte';
-	import type { CollectionEntry } from './collections/tree';
 	import BellOff from '@lucide/svelte/icons/bell-off';
 	import Code from '@lucide/svelte/icons/code';
 	import Printer from '@lucide/svelte/icons/printer';
@@ -63,7 +55,6 @@
 	import type { RenderResult, CalendarEvent } from '$core/mail/render';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import {
-		customFolderRoute,
 		plainSubject,
 		formatWhenLong,
 		type Message,
@@ -91,10 +82,8 @@
 		onDelete?: (id: string) => void;
 		onMarkRead?: (id: string) => void;
 		onMarkUnread?: (id: string) => void;
-		onMoveToInbox?: (id: string) => void;
-		onSpam?: (id: string) => void;
-		onMoveToLabel?: (id: string, labelId: string) => void;
-		onMoveToFolder?: (id: string, folderId: string) => void;
+		onPicker?: (kind: 'move' | 'labels', id: string, anchor: HTMLElement) => void;
+		openPicker?: string | null;
 		onSnooze?: (id: string, until: Date) => void;
 		onUnsnooze?: (id: string) => void;
 		onReported?: (id: string, kind: MessageReportKind, outcome: ReportOutcome) => void;
@@ -116,10 +105,8 @@
 		onDelete,
 		onMarkRead,
 		onMarkUnread,
-		onMoveToInbox,
-		onSpam,
-		onMoveToLabel,
-		onMoveToFolder,
+		onPicker,
+		openPicker = null,
 		onSnooze,
 		onUnsnooze,
 		onReported,
@@ -148,10 +135,6 @@
 	let moreRef: HTMLDivElement | undefined = $state();
 	let morePanel: HTMLDivElement | undefined = $state();
 
-	let labelPickerOpen = $state(false);
-	let labelPickerRef: HTMLDivElement | undefined = $state();
-	let movePickerOpen = $state(false);
-	let movePickerRef: HTMLDivElement | undefined = $state();
 	let snoozePickerOpen = $state(false);
 	let headersOpen = $state(false);
 	let reportOpen = $state(false);
@@ -163,102 +146,6 @@
 		deliveredTo?: string;
 		method: UnsubscribeMethod;
 	} | null>(null);
-	let labelSaving = $state(false);
-	let labelError = $state<string | null>(null);
-	let creatingLabel = $state(false);
-	let creatingFolder = $state(false);
-	const labelOptions = $derived(mailCollections.labels.filter((l) => !l.sealed));
-	const currentLabels = $derived<string[]>(m?.labels ?? []);
-	const folderTargets = $derived(
-		m ? mailCollections.folders.filter((f) => !f.sealed && m.folder !== customFolderRoute(f.id)) : []
-	);
-
-	async function toggleLabel(id: string) {
-		if (!m?.id || labelSaving) return;
-		const has = currentLabels.includes(id);
-		const prev = currentLabels;
-		const messageId = m.id;
-		labelSaving = true;
-		labelError = null;
-		mailbox.patchMessage(messageId, {
-			labels: has ? prev.filter((l) => l !== id) : [...prev, id]
-		});
-		try {
-			await (has ? removeMessageLabel(messageId, id) : addMessageLabel(messageId, id));
-		} catch {
-			mailbox.patchMessage(messageId, { labels: prev });
-			labelError = msg.mail_reader_labels_failed();
-		} finally {
-			labelSaving = false;
-		}
-	}
-
-	function labelCreated(entry: CollectionEntry) {
-		creatingLabel = false;
-		if (!currentLabels.includes(entry.id)) void toggleLabel(entry.id);
-	}
-
-	function folderCreated(entry: CollectionEntry) {
-		creatingFolder = false;
-		moveToFolder(entry.id);
-	}
-
-	$effect(() => {
-		if (!labelPickerOpen) creatingLabel = false;
-	});
-
-	$effect(() => {
-		if (!movePickerOpen) creatingFolder = false;
-	});
-
-	function indentFor(entry: CollectionEntry): string {
-		return `${entry.depth * 14}px`;
-	}
-
-	type MoveTargetId = 'inbox' | 'archive' | 'spam' | 'trash';
-	type MoveTarget = { id: MoveTargetId; label: string; icon: typeof Inbox };
-
-	const moveTargets = $derived.by<MoveTarget[]>(() => {
-		if (!m) return [];
-		const out: MoveTarget[] = [];
-		if (m.folder !== 'inbox' && (m.direction !== 'sent' || mailbox.threadSize(m.id) > 1)) {
-			out.push({ id: 'inbox', label: msg.mail_folder_inbox(), icon: Inbox });
-		}
-		if (m.folder !== 'archive') out.push({ id: 'archive', label: msg.mail_folder_archive(), icon: Archive });
-		if (m.folder !== 'spam') out.push({ id: 'spam', label: msg.mail_folder_spam(), icon: ShieldAlert });
-		if (m.folder !== 'trash') out.push({ id: 'trash', label: msg.mail_folder_trash(), icon: Trash2 });
-		return out;
-	});
-
-	function moveTo(target: MoveTargetId) {
-		if (!m) return;
-		movePickerOpen = false;
-		switch (target) {
-			case 'inbox':
-				onMoveToInbox?.(m.id);
-				return;
-			case 'archive':
-				onArchive(m.id);
-				return;
-			case 'spam':
-				onSpam?.(m.id);
-				return;
-			case 'trash':
-				onTrash(m.id);
-		}
-	}
-
-	function moveToLabel(id: string) {
-		if (!m) return;
-		movePickerOpen = false;
-		onMoveToLabel?.(m.id, id);
-	}
-
-	function moveToFolder(folderId: string) {
-		if (!m) return;
-		movePickerOpen = false;
-		onMoveToFolder?.(m.id, folderId);
-	}
 
 	function snoozeUntil(when: Date) {
 		if (!m) return;
@@ -292,26 +179,10 @@
 			(moreRef && moreRef.contains(e.target as Node)) ||
 			(morePanel && morePanel.contains(e.target as Node));
 		if (moreOpen && !inMore) moreOpen = false;
-		if (labelPickerOpen && labelPickerRef && !labelPickerRef.contains(e.target as Node)) {
-			labelPickerOpen = false;
-		}
-		if (movePickerOpen && movePickerRef && !movePickerRef.contains(e.target as Node)) {
-			movePickerOpen = false;
-		}
 	}
 
 	function handleKey(e: KeyboardEvent) {
 		if (e.key !== 'Escape') return;
-		if (movePickerOpen) {
-			movePickerOpen = false;
-			e.stopPropagation();
-			return;
-		}
-		if (labelPickerOpen) {
-			labelPickerOpen = false;
-			e.stopPropagation();
-			return;
-		}
 		if (moreOpen) {
 			moreOpen = false;
 			e.stopPropagation();
@@ -324,8 +195,6 @@
 		if (id !== lastMessageId) {
 			lastMessageId = id;
 			moreOpen = false;
-			labelPickerOpen = false;
-			movePickerOpen = false;
 			snoozePickerOpen = false;
 			headersOpen = false;
 			reportOpen = false;
@@ -741,6 +610,36 @@
 					<Trash2 size={17} />
 				</button>
 			{/if}
+			{#if caps.showMove && onPicker}
+				<button
+					type="button"
+					class="rb-ico"
+					class:on={openPicker === 'reader-move'}
+					data-mutates
+					data-picker="reader-move"
+					title={msg.mail_reader_move_to()}
+					aria-haspopup="dialog"
+					aria-expanded={openPicker === 'reader-move'}
+					onclick={(e) => onPicker('move', m.id, e.currentTarget)}
+				>
+					<FolderInput size={17} />
+				</button>
+			{/if}
+			{#if caps.showLabels && onPicker}
+				<button
+					type="button"
+					class="rb-ico"
+					class:on={openPicker === 'reader-labels'}
+					data-mutates
+					data-picker="reader-labels"
+					title={msg.mail_list_labels()}
+					aria-haspopup="dialog"
+					aria-expanded={openPicker === 'reader-labels'}
+					onclick={(e) => onPicker('labels', m.id, e.currentTarget)}
+				>
+					<Tag size={17} />
+				</button>
+			{/if}
 			<div class="rb-more" bind:this={moreRef}>
 				<button
 					type="button"
@@ -807,30 +706,6 @@
 							</button>
 						{/if}
 						<div class="msep"></div>
-						{#if caps.showMove}
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									movePickerOpen = true;
-								}}
-							>
-								<FolderInput size={17} />{msg.mail_reader_move_to_folder()}
-							</button>
-						{/if}
-						<button
-							type="button"
-							class="mitem"
-							role="menuitem"
-							onclick={() => {
-								moreOpen = false;
-								labelPickerOpen = true;
-							}}
-						>
-							<Tag size={17} />{msg.mail_reader_edit_labels()}
-						</button>
 						<button
 							type="button"
 							class="mitem"
@@ -915,94 +790,6 @@
 							>
 								<ShieldAlert size={17} />{msg.mail_reader_report()}
 							</button>
-						{/if}
-					</AnchoredMenu>
-				{/if}
-				{#if labelPickerOpen && m}
-					<AnchoredMenu
-						anchor={moreRef}
-						bind:panel={labelPickerRef}
-						extraClass="label-picker"
-						role="dialog"
-						label={msg.mail_reader_edit_labels()}
-					>
-						<div class="menu-lbl">{msg.mail_list_labels()}</div>
-						{#each labelOptions as l (l.id)}
-							{@const on = currentLabels.includes(l.id)}
-							<button
-								type="button"
-								class="mitem lp-row"
-								class:on
-								aria-pressed={on}
-								disabled={labelSaving}
-								onclick={() => void toggleLabel(l.id)}
-							>
-								<span class="lp-indent" style:width={indentFor(l)}></span>
-								<span class="lp-dot" style:background={collectionColor(l.color)}></span>
-								<span class="lp-name">{l.name}</span>
-								{#if on}
-									<span class="mck"><MailOpen size={14} /></span>
-								{/if}
-							</button>
-						{/each}
-						{#if labelError}
-							<div class="lp-err" role="alert">{labelError}</div>
-						{/if}
-						{#if labelOptions.length > 0}
-							<div class="msep"></div>
-						{/if}
-						{#if creatingLabel}
-							<CollectionCreate kind="label" onCreated={labelCreated} />
-						{:else}
-							<button type="button" class="mitem" onclick={() => (creatingLabel = true)}>
-								<Plus size={17} />{msg.mail_collection_new_label()}
-							</button>
-						{/if}
-					</AnchoredMenu>
-				{/if}
-				{#if movePickerOpen && m}
-					<AnchoredMenu
-						anchor={moreRef}
-						bind:panel={movePickerRef}
-						extraClass="label-picker move-picker"
-						role="dialog"
-						label={msg.mail_reader_move_to_folder()}
-					>
-						<div class="menu-lbl">{msg.mail_reader_move_to()}</div>
-						{#each moveTargets as t (t.id)}
-							{@const Icon = t.icon}
-							<button type="button" class="mitem" onclick={() => moveTo(t.id)}>
-								<Icon size={17} />{t.label}
-							</button>
-						{/each}
-						{#if folderTargets.length > 0}
-							<div class="msep"></div>
-							<div class="menu-lbl">{msg.mail_collection_folders()}</div>
-							{#each folderTargets as f (f.id)}
-								<button type="button" class="mitem lp-row" onclick={() => moveToFolder(f.id)}>
-									<span class="lp-indent" style:width={indentFor(f)}></span>
-									<FolderIcon size={17} color={f.color ? collectionColor(f.color) : 'currentColor'} />
-									<span class="lp-name">{f.name}</span>
-								</button>
-							{/each}
-						{/if}
-						{#if creatingFolder}
-							<CollectionCreate kind="folder" onCreated={folderCreated} />
-						{:else}
-							<button type="button" class="mitem" onclick={() => (creatingFolder = true)}>
-								<Plus size={17} />{msg.mail_collection_new_folder()}
-							</button>
-						{/if}
-						{#if labelOptions.length > 0}
-							<div class="msep"></div>
-							<div class="menu-lbl">{msg.mail_reader_label_and_archive()}</div>
-							{#each labelOptions as l (l.id)}
-								<button type="button" class="mitem lp-row" onclick={() => moveToLabel(l.id)}>
-									<span class="lp-indent" style:width={indentFor(l)}></span>
-									<span class="lp-dot" style:background={collectionColor(l.color)}></span>
-									<span class="lp-name">{l.name}</span>
-								</button>
-							{/each}
 						{/if}
 					</AnchoredMenu>
 				{/if}

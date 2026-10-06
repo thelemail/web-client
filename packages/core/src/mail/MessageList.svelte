@@ -12,6 +12,7 @@
 	import Star from '@lucide/svelte/icons/star';
 	import Tag from '@lucide/svelte/icons/tag';
 	import Folder from '@lucide/svelte/icons/folder';
+	import FolderInput from '@lucide/svelte/icons/folder-input';
 	import User from '@lucide/svelte/icons/user';
 	import Type from '@lucide/svelte/icons/type';
 	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
@@ -63,6 +64,8 @@
 		onToggleRead: (id: string) => void;
 		onToggleAll: () => void;
 		onBulk: (action: BulkAction) => void;
+		onPicker?: (kind: 'move' | 'labels', anchor: HTMLElement) => void;
+		openPicker?: string | null;
 		onSort: (id: SortId) => void;
 		onSetFilters: (next: ListFilters) => void;
 		onRefresh?: () => Promise<void>;
@@ -105,6 +108,8 @@
 		onToggleRead,
 		onToggleAll,
 		onBulk,
+		onPicker,
+		openPicker = null,
 		onSort,
 		onSetFilters,
 		onRefresh,
@@ -294,6 +299,34 @@
 			{#if caps.showArchive}
 				<button class="lh-btn" data-mutates title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
 					<Archive size={16} />
+				</button>
+			{/if}
+			{#if caps.showMove && onPicker}
+				<button
+					class="lh-btn"
+					class:on={openPicker === 'bulk-move'}
+					data-mutates
+					data-picker="bulk-move"
+					title={msg.mail_reader_move_to()}
+					aria-haspopup="dialog"
+					aria-expanded={openPicker === 'bulk-move'}
+					onclick={(e) => onPicker('move', e.currentTarget)}
+				>
+					<FolderInput size={16} />
+				</button>
+			{/if}
+			{#if caps.showLabels && onPicker}
+				<button
+					class="lh-btn"
+					class:on={openPicker === 'bulk-labels'}
+					data-mutates
+					data-picker="bulk-labels"
+					title={msg.mail_list_labels()}
+					aria-haspopup="dialog"
+					aria-expanded={openPicker === 'bulk-labels'}
+					onclick={(e) => onPicker('labels', e.currentTarget)}
+				>
+					<Tag size={16} />
 				</button>
 			{/if}
 			{#if caps.showSpam}
