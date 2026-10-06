@@ -13,6 +13,7 @@
 	import CreditCard from '@lucide/svelte/icons/credit-card';
 	import Upload from '@lucide/svelte/icons/upload';
 	import UserX from '@lucide/svelte/icons/user-x';
+	import FolderTree from '@lucide/svelte/icons/folder-tree';
 	import Info from '@lucide/svelte/icons/info';
 	import { page } from '$app/state';
 	import { SECTIONS, sectionIdFromPath } from './data';
@@ -40,6 +41,7 @@
 		'credit-card': CreditCard,
 		upload: Upload,
 		'user-x': UserX,
+		'folder-tree': FolderTree,
 		info: Info
 	};
 
