@@ -8,6 +8,7 @@ export type SectionId =
 	| 'reading'
 	| 'security'
 	| 'blocked'
+	| 'collections'
 	| 'import'
 	| 'notify'
 	| 'region'
@@ -29,6 +30,7 @@ export const SECTIONS: SectionMeta[] = [
 	{ id: 'reading', icon: 'mail-open', label: m.settings_nav_reading },
 	{ id: 'security', icon: 'shield-check', label: m.settings_nav_security },
 	{ id: 'blocked', icon: 'user-x', label: m.settings_nav_blocked },
+	{ id: 'collections', icon: 'folder-tree', label: m.settings_nav_collections },
 	{ id: 'import', icon: 'upload', label: m.settings_nav_import },
 	{ id: 'notify', icon: 'bell', label: m.settings_nav_notify },
 	{ id: 'region', icon: 'globe', label: m.settings_nav_region },

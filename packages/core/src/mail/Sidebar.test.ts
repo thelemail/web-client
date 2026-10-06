@@ -15,7 +15,11 @@ const { mailCollections, accountSettings, goto, ACME } = vi.hoisted(() => ({
 		byId: vi.fn(),
 		hasChildren: vi.fn(),
 		setFavorite: vi.fn(async () => {}),
-		reorder: vi.fn(async () => {})
+		reorder: vi.fn(async () => {}),
+		edit: vi.fn(async () => {}),
+		recolor: vi.fn(async () => {}),
+		moveTo: vi.fn(async () => {}),
+		remove: vi.fn(async () => {})
 	},
 	accountSettings: {
 		mailSidebar: { expanded: [] as string[], collapsed: [] as string[], showMore: false },
@@ -163,5 +167,72 @@ describe('mail sidebar', () => {
 
 		await fireEvent.keyDown(input, { key: 'Escape' });
 		expect(input.value).toBe('');
+	});
+
+	async function openMenu(container: HTMLElement, tree: string, id: string) {
+		const row = container.querySelector(`[role="tree"][aria-label="${tree}"] a[data-id="${id}"]`)!;
+		await fireEvent.click(row.closest('li')!.querySelector<HTMLButtonElement>('button.ctree-more')!);
+	}
+
+	it('renames from the row menu and refuses a sibling name inline', async () => {
+		const { container, findByRole, getByLabelText, findByText } = await renderSidebar();
+		await openMenu(container, 'Folders', 'home');
+		await fireEvent.click(await findByRole('menuitem', { name: 'Rename…' }));
+
+		const input = getByLabelText('Folder name') as HTMLInputElement;
+		expect(input.value).toBe('Home');
+		await fireEvent.input(input, { target: { value: ' CLIENTS ' } });
+		expect(await findByText('There is already a folder with this name here.')).toBeTruthy();
+		expect(input.getAttribute('aria-invalid')).toBe('true');
+		await fireEvent.submit(input.form!);
+		expect(mailCollections.edit).not.toHaveBeenCalled();
+
+		await fireEvent.input(input, { target: { value: 'Family' } });
+		await fireEvent.submit(input.form!);
+		await waitFor(() => expect(mailCollections.edit).toHaveBeenCalledWith('home', { name: 'Family', color: null }));
+	});
+
+	it('recolors from the swatches in the row menu', async () => {
+		const { container, findByRole } = await renderSidebar();
+		await openMenu(container, 'Labels', 'tax');
+		await fireEvent.click(await findByRole('menuitemradio', { name: 'Red' }));
+		await waitFor(() => expect(mailCollections.recolor).toHaveBeenCalledWith('tax', 'danger'));
+	});
+
+	it('moves a folder through the menu instead of dragging', async () => {
+		const { container, findByRole, getByRole } = await renderSidebar();
+		await openMenu(container, 'Folders', 'home');
+		await fireEvent.click(await findByRole('menuitem', { name: 'Move to…' }));
+
+		const top = getByRole('radio', { name: /Top level/ }) as HTMLInputElement;
+		expect(top.disabled).toBe(true);
+		const home = getByRole('radio', { name: /^Home/ }) as HTMLInputElement;
+		expect(home.disabled).toBe(true);
+		await fireEvent.click(getByRole('radio', { name: /^Clients/ }));
+		await fireEvent.click(getByRole('button', { name: 'Move here' }));
+		await waitFor(() => expect(mailCollections.moveTo).toHaveBeenCalledWith('home', 'clients'));
+	});
+
+	it('will not delete a folder with subfolders until they are moved out', async () => {
+		const { container, findByRole, getByRole, findByText } = await renderSidebar();
+		await openMenu(container, 'Folders', 'clients');
+		await fireEvent.click(await findByRole('menuitem', { name: 'Delete folder…' }));
+
+		expect(await findByText(/This folder has a subfolder/)).toBeTruthy();
+		expect((getByRole('button', { name: 'Delete folder' }) as HTMLButtonElement).disabled).toBe(true);
+		await fireEvent.click(getByRole('button', { name: 'Move up to the top level' }));
+		await waitFor(() => expect(mailCollections.moveTo).toHaveBeenCalledWith(ACME, null));
+		expect(mailCollections.remove).not.toHaveBeenCalled();
+	});
+
+	it('deletes the open folder into the chosen place and follows its mail there', async () => {
+		const { container, findByRole, getByRole } = await renderSidebar();
+		await openMenu(container, 'Folders', ACME);
+		await fireEvent.click(await findByRole('menuitem', { name: 'Delete folder…' }));
+
+		await fireEvent.click(getByRole('radio', { name: 'Inbox' }));
+		await fireEvent.click(getByRole('button', { name: 'Delete folder' }));
+		await waitFor(() => expect(mailCollections.remove).toHaveBeenCalledWith(ACME, { kind: 'inbox' }));
+		await waitFor(() => expect(goto).toHaveBeenCalledWith('/u/0/mail/inbox'));
 	});
 });

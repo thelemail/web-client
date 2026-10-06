@@ -16,6 +16,7 @@
 		disabled?: boolean;
 		error?: string | null;
 		body?: Snippet;
+		extraClass?: string;
 		onConfirm: () => void;
 		onCancel?: () => void;
 		onClose: () => void;
@@ -32,6 +33,7 @@
 		disabled = false,
 		error = null,
 		body,
+		extraClass = '',
 		onConfirm,
 		onCancel,
 		onClose
@@ -64,7 +66,7 @@
 <svelte:document onkeydowncapture={handleKey} />
 
 <div
-	class="cfd-scrim"
+	class="cfd-scrim {extraClass}"
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby={titleId}
