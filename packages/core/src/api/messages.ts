@@ -3,6 +3,7 @@ import { ApiCallError } from './types';
 import type {
 	AttachmentUploadUrlsRequest,
 	BatchMessageResponse,
+	BatchLabelMessagesRequest,
 	BatchMoveMessagesRequest,
 	AttachmentUploadUrlsResponse,
 	ClientInboundImportRequest,
@@ -239,6 +240,10 @@ export function moveMessage(messageId: string, body: MoveMessageRequest): Promis
 
 export function batchMoveMessages(body: BatchMoveMessagesRequest): Promise<BatchMessageResponse> {
 	return apiFetch<BatchMessageResponse>('/v1/mail/batch/move', { method: 'POST', body });
+}
+
+export function batchLabelMessages(body: BatchLabelMessagesRequest): Promise<BatchMessageResponse> {
+	return apiFetch<BatchMessageResponse>('/v1/mail/batch/labels', { method: 'POST', body });
 }
 
 export async function moveMessageToInbox(messageId: string): Promise<MessageState> {

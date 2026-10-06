@@ -217,6 +217,12 @@ export interface BatchMoveMessagesRequest {
 	folderId?: string;
 }
 
+export interface BatchLabelMessagesRequest {
+	messageIds: string[];
+	add?: string[];
+	remove?: string[];
+}
+
 export type BatchOutcome = 'ok' | 'not_found' | 'too_many_labels';
 
 export interface BatchMessageResult {
