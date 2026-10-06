@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { nextPosition, orderTree, type CollectionNode } from './tree';
+import {
+	ancestorIds,
+	filterEntries,
+	moveAmongSiblings,
+	nextPosition,
+	orderTree,
+	siblingIds,
+	visibleEntries,
+	type CollectionNode
+} from './tree';
 
 function node(id: string, parentId: string | null, position: number, name = id): CollectionNode {
-	return { id, kind: 'folder', parentId, position, rev: 1, name, color: null, sealed: false };
+	return { id, kind: 'folder', parentId, position, rev: 1, name, color: null, favorite: false, sealed: false };
 }
 
 describe('orderTree', () => {
@@ -53,5 +62,55 @@ describe('nextPosition', () => {
 		expect(nextPosition(nodes, null)).toBe(5120);
 		expect(nextPosition(nodes, 'a')).toBe(11023);
 		expect(nextPosition(nodes, 'b')).toBe(1024);
+	});
+});
+
+describe('sidebar tree helpers', () => {
+	const entries = orderTree([
+		node('clients', null, 1024, 'Clients'),
+		node('acme', 'clients', 1024, 'Acme'),
+		node('invoices', 'acme', 1024, 'Invoices'),
+		node('beta', 'clients', 2048, 'Beta'),
+		node('home', null, 2048, 'Home'),
+		node('travel', 'home', 1024, 'Travel')
+	]);
+
+	it('hides the descendants of collapsed parents only', () => {
+		expect(visibleEntries(entries, new Set()).map((e) => e.id)).toEqual(['clients', 'home']);
+		expect(visibleEntries(entries, new Set(['clients'])).map((e) => e.id)).toEqual([
+			'clients',
+			'acme',
+			'beta',
+			'home'
+		]);
+		expect(visibleEntries(entries, new Set(['acme'])).map((e) => e.id)).toEqual(['clients', 'home']);
+		expect(visibleEntries(entries, new Set(['clients', 'acme', 'home'])).map((e) => e.id)).toEqual([
+			'clients',
+			'acme',
+			'invoices',
+			'beta',
+			'home',
+			'travel'
+		]);
+	});
+
+	it('lists siblings in display order and moves one within them', () => {
+		expect(siblingIds(entries, 'beta')).toEqual(['acme', 'beta']);
+		expect(siblingIds(entries, 'home')).toEqual(['clients', 'home']);
+		expect(moveAmongSiblings(['a', 'b', 'c'], 'c', 0)).toEqual(['c', 'a', 'b']);
+		expect(moveAmongSiblings(['a', 'b', 'c'], 'a', 9)).toEqual(['b', 'c', 'a']);
+		expect(moveAmongSiblings(['a', 'b'], 'x', 0)).toEqual(['a', 'b']);
+	});
+
+	it('walks ancestors from the nearest parent up', () => {
+		expect(ancestorIds(entries, 'invoices')).toEqual(['acme', 'clients']);
+		expect(ancestorIds(entries, 'home')).toEqual([]);
+	});
+
+	it('filters by name and keeps the path to every match', () => {
+		expect(filterEntries(entries, 'inv').map((e) => e.id)).toEqual(['clients', 'acme', 'invoices']);
+		expect(filterEntries(entries, 'TRAV').map((e) => e.id)).toEqual(['home', 'travel']);
+		expect(filterEntries(entries, '  ')).toHaveLength(entries.length);
+		expect(filterEntries(entries, 'nothing')).toEqual([]);
 	});
 });

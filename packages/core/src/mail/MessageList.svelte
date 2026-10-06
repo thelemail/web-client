@@ -314,7 +314,12 @@
 		</div>
 	{:else}
 		<div class="list-h">
-			<button class="lh-nav" title={msg.mail_menu()} onclick={() => (mailNav.open = !mailNav.open)}>
+			<button
+				class="lh-nav"
+				title={msg.mail_menu()}
+				aria-expanded={mailNav.open}
+				onclick={(e) => mailNav.toggle(e.currentTarget)}
+			>
 				<Menu size={18} />
 			</button>
 			<div class="ttl-block">

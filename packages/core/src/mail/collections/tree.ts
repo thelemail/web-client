@@ -8,6 +8,7 @@ export interface CollectionNode {
 	rev: number;
 	name: string;
 	color: string | null;
+	favorite: boolean;
 	sealed: boolean;
 }
 
@@ -16,7 +17,7 @@ export interface CollectionEntry extends CollectionNode {
 	path: string;
 }
 
-const POSITION_STEP = 1024;
+export const POSITION_STEP = 1024;
 
 export function orderTree(nodes: CollectionNode[]): CollectionEntry[] {
 	const byParent = new Map<string | null, CollectionNode[]>();
@@ -76,4 +77,60 @@ export function subtreeIds(nodes: readonly CollectionNode[], id: string): string
 		}
 	}
 	return out;
+}
+
+export function visibleEntries(
+	entries: readonly CollectionEntry[],
+	expanded: ReadonlySet<string>
+): CollectionEntry[] {
+	const out: CollectionEntry[] = [];
+	let hiddenBelow = Infinity;
+	for (const e of entries) {
+		if (e.depth > hiddenBelow) continue;
+		hiddenBelow = expanded.has(e.id) ? Infinity : e.depth;
+		out.push(e);
+	}
+	return out;
+}
+
+export function siblingIds(entries: readonly CollectionEntry[], id: string): string[] {
+	const self = entries.find((e) => e.id === id);
+	if (!self) return [];
+	return entries
+		.filter((e) => e.depth === self.depth && (e.parentId ?? null) === (self.parentId ?? null))
+		.map((e) => e.id);
+}
+
+export function moveAmongSiblings(ids: readonly string[], id: string, toIndex: number): string[] {
+	const from = ids.indexOf(id);
+	if (from < 0) return [...ids];
+	const next = ids.filter((x) => x !== id);
+	const at = Math.max(0, Math.min(toIndex, next.length));
+	next.splice(at, 0, id);
+	return next;
+}
+
+export function ancestorIds(entries: readonly CollectionEntry[], id: string): string[] {
+	const byId = new Map(entries.map((e) => [e.id, e]));
+	const out: string[] = [];
+	const seen = new Set<string>([id]);
+	let cur = byId.get(id)?.parentId ?? null;
+	while (cur && byId.has(cur) && !seen.has(cur)) {
+		seen.add(cur);
+		out.push(cur);
+		cur = byId.get(cur)?.parentId ?? null;
+	}
+	return out;
+}
+
+export function filterEntries(entries: readonly CollectionEntry[], query: string): CollectionEntry[] {
+	const q = query.trim().toLocaleLowerCase();
+	if (!q) return [...entries];
+	const keep = new Set<string>();
+	for (const e of entries) {
+		if (!e.name.toLocaleLowerCase().includes(q)) continue;
+		keep.add(e.id);
+		for (const a of ancestorIds(entries, e.id)) keep.add(a);
+	}
+	return entries.filter((e) => keep.has(e.id));
 }

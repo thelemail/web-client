@@ -4,6 +4,7 @@ import type {
 	FolderDestination,
 	MailCollectionListResponse,
 	MailCollectionRecord,
+	ReorderMailCollectionsRequest,
 	UpdateMailCollectionRequest
 } from './types';
 
@@ -30,6 +31,13 @@ export function updateMailCollection(
 		body,
 		accountId
 	});
+}
+
+export function reorderMailCollections(
+	accountId: string,
+	body: ReorderMailCollectionsRequest
+): Promise<MailCollectionListResponse> {
+	return apiFetch<MailCollectionListResponse>(`${BASE}/order`, { method: 'PUT', body, accountId });
 }
 
 export function deleteMailCollection(

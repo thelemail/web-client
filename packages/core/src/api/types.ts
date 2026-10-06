@@ -272,6 +272,12 @@ export interface UpdateMailCollectionRequest {
 	baseRev: number;
 }
 
+export interface ReorderMailCollectionsRequest {
+	kind: MailCollectionKind;
+	parentId: string | null;
+	items: { id: string; baseRev: number }[];
+}
+
 export type FolderDestination = 'inbox' | 'archive' | 'folder';
 
 export type MessageReportKind = 'spam' | 'phishing';

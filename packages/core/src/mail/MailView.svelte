@@ -2,6 +2,7 @@
 	import { m as msg } from '$paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { isListShortcut } from './shortcuts';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import SystemAlerts from './SystemAlerts.svelte';
 	import UpdateBanner from './UpdateBanner.svelte';
@@ -893,6 +894,7 @@
 	}
 
 	function handleKey(e: KeyboardEvent) {
+		if (!isListShortcut(e)) return;
 		if (isTypingTarget(e.target)) return;
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 		if (composeStore.open) return;

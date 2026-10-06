@@ -1,11 +1,12 @@
 import { b64ToBytes, bytesToB64 } from '$core/keys/encode';
 import { keystore } from '$core/keystore/keystore-client';
 
-export const COLLECTION_META_VERSION = 1;
+export const COLLECTION_META_VERSION = 2;
 
 export interface CollectionMeta {
 	name: string;
 	color: string | null;
+	favorite?: boolean;
 }
 
 export interface SealedCollectionMeta {
@@ -30,7 +31,11 @@ export async function sealCollectionMeta(
 	const res = await keystore.encrypt({
 		accountId,
 		recipientPublicKeyArmored: key.publicKeyArmored,
-		plaintext: new TextEncoder().encode(JSON.stringify({ n: meta.name, c: meta.color }))
+		plaintext: new TextEncoder().encode(
+			JSON.stringify(
+				meta.favorite ? { n: meta.name, c: meta.color, f: true } : { n: meta.name, c: meta.color }
+			)
+		)
 	});
 	if (!res.ok) throw new CollectionSealError(res.code === 'locked' ? 'locked' : 'failed');
 	return {
@@ -53,9 +58,13 @@ export async function openCollectionMeta(
 	const res = await keystore.decrypt({ accountId, ciphertextBinary: bytes });
 	if (!res.ok || !('plaintext' in res)) return null;
 	try {
-		const parsed = JSON.parse(res.plaintext) as { n?: unknown; c?: unknown };
+		const parsed = JSON.parse(res.plaintext) as { n?: unknown; c?: unknown; f?: unknown };
 		if (typeof parsed.n !== 'string' || !parsed.n.trim()) return null;
-		return { name: parsed.n, color: typeof parsed.c === 'string' ? parsed.c : null };
+		return {
+			name: parsed.n,
+			color: typeof parsed.c === 'string' ? parsed.c : null,
+			favorite: parsed.f === true
+		};
 	} catch {
 		return null;
 	}
