@@ -29,7 +29,9 @@
 .mail-app .fgroup span { flex: 1; }
 .mail-app .fgroup .addbtn { width: 20px; height: 20px; border-radius: 5px; border: none; background: none; color: var(--fg-faint); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .mail-app .fgroup .addbtn:hover { background: var(--paper-100); color: var(--fg-strong); }
-.mail-app .rail-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; margin: 0 -4px; padding: 0 4px; }
+.mail-app .rail-nav { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.mail-app .rail-nav > :not(.rail-scroll) { flex: 0 0 auto; }
+.mail-app .rail-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px 8px; }
 .mail-app .rail-scroll::-webkit-scrollbar { width: 6px; }
 .mail-app .rail-scroll::-webkit-scrollbar-thumb { background: var(--paper-200); border: none; }
 .mail-app .nav-list { display: flex; flex-direction: column; gap: 1px; }
@@ -1089,15 +1091,29 @@
 .mail-app .ctree-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 7px 6px; color: inherit; text-decoration: none; border-radius: 6px; -webkit-touch-callout: none; user-select: none; }
 .mail-app .rail .ctree-link:focus-visible { outline: none; }
 .mail-app .ctree-row:has(> .ctree-link:focus-visible) { box-shadow: inset 0 0 0 2px var(--pine-600); }
-.mail-app .ctree-chev, .mail-app .ctree-more { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border: none; background: none; padding: 0; border-radius: 5px; color: var(--fg-faint); }
-.mail-app .ctree-chev { width: 16px; height: 22px; }
-.mail-app .ctree-more { width: 24px; height: 24px; opacity: 0; transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
+.mail-app .ctree-chev, .mail-app .ctree-more { display: flex; align-items: center; justify-content: center; border: none; background: none; padding: 0; border-radius: 5px; color: var(--fg-faint); }
+.mail-app .ctree-chev { position: absolute; z-index: 1; top: 50%; left: calc(6px + var(--depth, 0) * 14px); width: 22px; height: 22px; transform: translateY(-50%); opacity: 0; transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
+.mail-app .ctree-chev:hover { background: var(--paper-200); }
+.mail-app .ctree-ico { width: 16px; height: 16px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; transition: opacity var(--dur-fast) var(--ease); }
+.mail-app .ctree-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--fld-tint, var(--fg-faint)); }
+.mail-app .ctree-more { flex: 0 0 auto; width: 24px; height: 24px; transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease); }
+.mail-app .ctree-row.kids:is(:hover, .menu-on, :has(> .ctree-link:focus-visible)) .ctree-chev { opacity: 1; }
+.mail-app .ctree-row.kids:is(:hover, .menu-on, :has(> .ctree-link:focus-visible)) .ctree-link > .ctree-ico { opacity: 0; }
+@media (hover: hover) {
+	.mail-app .ctree-more { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); opacity: 0; }
+	.mail-app .ctree-row:is(:hover, .menu-on, :focus-within) .ctree-more { opacity: 1; }
+	.mail-app .ctree-row:is(:hover, .menu-on, :focus-within) .ctree-link { padding-right: 30px; }
+	.mail-app .ctree-row:is(:hover, .menu-on, :focus-within) .ct { visibility: hidden; }
+}
+@media (hover: none) {
+	.mail-app .ctree-row.kids .ctree-chev { opacity: 1; }
+	.mail-app .ctree-row.kids .ctree-link > .ctree-ico { opacity: 0; }
+}
 .mail-app .fld.custom .ctree-chev svg, .mail-app .fld.custom .ctree-more svg { width: 14px; height: 14px; color: var(--fg-faint); }
 .mail-app .fld.custom .ctree-chev:hover svg, .mail-app .fld.custom .ctree-more:hover svg { color: var(--fg-strong); }
 .mail-app .ctree-chev svg { transition: transform var(--dur-fast) var(--ease); }
 .mail-app .ctree-chev.open svg { transform: rotate(90deg); }
 .mail-app .ctree-more:hover { background: var(--paper-200); }
-.mail-app .ctree-row:hover .ctree-more, .mail-app .ctree-row:focus-within .ctree-more, .mail-app .ctree-row.menu-on .ctree-more { opacity: 1; }
 .mail-app .ctree-row.menu-on { background: var(--paper-100); }
 .mail-app .ctree-row.active.menu-on { background: var(--chip-bg); }
 .mail-app .ctree-row.dragging { opacity: .45; }
@@ -1118,6 +1134,5 @@
 .mail-app .coll-menu .mitem[data-disabled] { opacity: .45; pointer-events: none; }
 .mail-app .menu-portal.coll-create { z-index: 240; width: 270px; }
 @media (max-width: 1000px) {
-	.mail-app .ctree-more { opacity: 1; }
 	.mail-app .fld, .mail-app .ctree-row { min-height: 40px; }
 }

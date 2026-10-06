@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
-	import { Folder, FolderOpen, Tag } from 'lucide';
+	import { Folder, FolderOpen } from 'lucide';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import NavMorph from '$core/components/NavMorph.svelte';
@@ -322,6 +322,7 @@
 			role="none"
 			class="fld custom ctree-row"
 			class:active={on}
+			class:kids={hasKids && !filtering}
 			class:unread={!!b}
 			class:menu-on={menuFor === e.id}
 			class:dragging={dragId === e.id}
@@ -331,6 +332,20 @@
 			style:--depth={flat || filtering ? 0 : e.depth}
 			style:--fld-tint={e.color ? collectionColor(e.color) : undefined}
 		>
+			{#if hasKids && !filtering}
+				<button
+					type="button"
+					class="ctree-chev"
+					class:open
+					tabindex="-1"
+					aria-label={open
+						? m.mail_sidebar_collapse_item({ name: e.path })
+						: m.mail_sidebar_expand_item({ name: e.path })}
+					onclick={() => onToggle(e.id, !open)}
+				>
+					<ChevronRight />
+				</button>
+			{/if}
 			<a
 				class="ctree-link"
 				role="treeitem"
@@ -354,28 +369,16 @@
 				onpointerup={onPointerUp}
 				onpointercancel={endPress}
 			>
-				<NavMorph icon={e.kind === 'label' ? Tag : open || on ? FolderOpen : Folder} />
+				<span class="ctree-ico" aria-hidden="true">
+					{#if e.kind === 'label'}
+						<span class="ctree-dot"></span>
+					{:else}
+						<NavMorph icon={open || on ? FolderOpen : Folder} />
+					{/if}
+				</span>
 				<span class="lbl">{e.name}</span>
 				{#if b}<span class="ct" aria-hidden="true">{b.count}</span>{/if}
 			</a>
-			{#if !flat && !filtering}
-				{#if hasKids}
-					<button
-						type="button"
-						class="ctree-chev"
-						class:open
-						tabindex="-1"
-						aria-label={open
-							? m.mail_sidebar_collapse_item({ name: e.path })
-							: m.mail_sidebar_expand_item({ name: e.path })}
-						onclick={() => onToggle(e.id, !open)}
-					>
-						<ChevronRight />
-					</button>
-				{:else}
-					<span class="ctree-chev" aria-hidden="true"></span>
-				{/if}
-			{/if}
 			<button
 				type="button"
 				class="ctree-more"

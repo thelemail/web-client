@@ -297,7 +297,7 @@
 		void tick().then(() => {
 			const target =
 				rail?.querySelector<HTMLElement>('[aria-current="page"]') ??
-				rail?.querySelector<HTMLElement>('.rail-scroll a');
+				rail?.querySelector<HTMLElement>('.rail-nav a');
 			target?.focus({ preventScroll: false });
 		});
 	});
@@ -387,7 +387,7 @@
 
 	<RailSearch />
 
-	<nav class="rail-scroll" aria-label={m.mail_sidebar_navigation()}>
+	<nav class="rail-nav" aria-label={m.mail_sidebar_navigation()}>
 		<div class="fgroup">{m.mail_sidebar_mailbox()}</div>
 		<div class="nav-list">
 			{#each primary as f (f.id)}
@@ -438,13 +438,6 @@
 			</button>
 		</div>
 
-		{#if favorites.length > 0 && !filtering}
-			{@render sectionHead('favorites', m.mail_sidebar_favorites())}
-			{#if !collapsed.has('favorites')}
-				{@render tree(m.mail_sidebar_favorites(), favorites, allCustom, true)}
-			{/if}
-		{/if}
-
 		{#if showFilter}
 			<label class="rail-find">
 				<Search size={14} />
@@ -458,23 +451,32 @@
 			</label>
 		{/if}
 
-		{#if !filtering || shownFolders.length > 0}
-			{@render sectionHead('folders', m.mail_collection_folders(), 'folder')}
-			{#if !collapsed.has('folders') || filtering}
-				{@render tree(m.mail_collection_folders(), shownFolders, customFolders, false)}
+		<div class="rail-scroll">
+			{#if favorites.length > 0 && !filtering}
+				{@render sectionHead('favorites', m.mail_sidebar_favorites())}
+				{#if !collapsed.has('favorites')}
+					{@render tree(m.mail_sidebar_favorites(), favorites, allCustom, true)}
+				{/if}
 			{/if}
-		{/if}
 
-		{#if !filtering || shownLabels.length > 0}
-			{@render sectionHead('labels', m.mail_collection_labels(), 'label')}
-			{#if !collapsed.has('labels') || filtering}
-				{@render tree(m.mail_collection_labels(), shownLabels, customLabels, false)}
+			{#if !filtering || shownFolders.length > 0}
+				{@render sectionHead('folders', m.mail_collection_folders(), 'folder')}
+				{#if !collapsed.has('folders') || filtering}
+					{@render tree(m.mail_collection_folders(), shownFolders, customFolders, false)}
+				{/if}
 			{/if}
-		{/if}
 
-		{#if filtering && shownFolders.length === 0 && shownLabels.length === 0}
-			<p class="rail-find-empty">{m.mail_sidebar_find_empty()}</p>
-		{/if}
+			{#if !filtering || shownLabels.length > 0}
+				{@render sectionHead('labels', m.mail_collection_labels(), 'label')}
+				{#if !collapsed.has('labels') || filtering}
+					{@render tree(m.mail_collection_labels(), shownLabels, customLabels, false)}
+				{/if}
+			{/if}
+
+			{#if filtering && shownFolders.length === 0 && shownLabels.length === 0}
+				<p class="rail-find-empty">{m.mail_sidebar_find_empty()}</p>
+			{/if}
+		</div>
 	</nav>
 
 	{#if storageLimit > 0}
