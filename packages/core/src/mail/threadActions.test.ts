@@ -20,7 +20,7 @@ import {
 	trashMessage
 } from '$core/api/messages';
 import type { MailboxState, MessageDetail } from '$core/api/types';
-import { applyToThread } from './threadActions';
+import { applyToThread, threadMessageIds } from './threadActions';
 
 const getThread = vi.mocked(getMessageThread);
 const archive = vi.mocked(archiveMessage);
@@ -125,5 +125,21 @@ describe('applyToThread', () => {
 		getThread.mockRejectedValue(new Error('not found'));
 		await expect(applyToThread('latest', 'latest', 'archive')).rejects.toThrow('not found');
 		await expect(applyToThread('latest', undefined, 'archive')).rejects.toThrow('not found');
+	});
+});
+
+describe('threadMessageIds', () => {
+	it('lists every message in the thread', async () => {
+		thread(item('a', 'inbox'), item('b', 'trash'), item('c', 'folder'));
+		await expect(threadMessageIds('c', 'a')).resolves.toEqual(['a', 'b', 'c']);
+	});
+
+	it('falls back to the root when the latest id is gone', async () => {
+		getThread.mockRejectedValueOnce(new Error('gone')).mockResolvedValueOnce({
+			threadRootId: 'root',
+			items: [item('root', 'inbox'), item('x', 'archive')]
+		});
+		await expect(threadMessageIds('x', 'root')).resolves.toEqual(['root', 'x']);
+		expect(getThread).toHaveBeenLastCalledWith('root');
 	});
 });

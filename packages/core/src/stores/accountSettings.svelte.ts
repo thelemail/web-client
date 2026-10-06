@@ -126,6 +126,31 @@ export function parseMailSidebar(raw: unknown): MailSidebarSettings {
 	return next;
 }
 
+export type MailRecentKind = 'move' | 'labels';
+
+export interface MailRecents {
+	move: string[];
+	labels: string[];
+}
+
+const MAX_RECENTS = 6;
+
+function recentIds(raw: unknown): string[] {
+	if (!Array.isArray(raw)) return [];
+	const ids = raw.filter((x): x is string => typeof x === 'string' && x.length > 0 && x.length <= 64);
+	return [...new Set(ids)].slice(0, MAX_RECENTS);
+}
+
+export function parseMailRecents(raw: unknown): MailRecents {
+	if (!raw || typeof raw !== 'object') return { move: [], labels: [] };
+	const v = raw as Record<string, unknown>;
+	return { move: recentIds(v.move), labels: recentIds(v.labels) };
+}
+
+export function pushRecents(list: readonly string[], used: readonly string[]): string[] {
+	return recentIds([...[...used].reverse(), ...list]);
+}
+
 class AccountSettingsStore {
 	hydrated = $state(false);
 	readingOpenMessage = $state<OpenMessageSettings>({ ...DEFAULTS });
@@ -134,8 +159,10 @@ class AccountSettingsStore {
 	appearance = $state<AppearanceSettings>({ ...APPEARANCE_DEFAULTS });
 	calendar = $state<CalendarSettings>({ ...CALENDAR_DEFAULTS });
 	mailSidebar = $state<MailSidebarSettings>(parseMailSidebar(null));
+	mailRecents = $state<MailRecents>(parseMailRecents(null));
 	#accountId: string | null = null;
 	#sidebarTimer: ReturnType<typeof setTimeout> | null = null;
+	#recentsTimer: ReturnType<typeof setTimeout> | null = null;
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -149,6 +176,9 @@ class AccountSettingsStore {
 		this.mailSidebar = parseMailSidebar(null);
 		if (this.#sidebarTimer) clearTimeout(this.#sidebarTimer);
 		this.#sidebarTimer = null;
+		this.mailRecents = parseMailRecents(null);
+		if (this.#recentsTimer) clearTimeout(this.#recentsTimer);
+		this.#recentsTimer = null;
 		locale.reset();
 	}
 
@@ -261,6 +291,10 @@ class AccountSettingsStore {
 				this.mailSidebar = parseMailSidebar(sections['mail_sidebar']);
 			}
 
+			if (sections['mail_recents'] !== undefined && !this.#recentsTimer) {
+				this.mailRecents = parseMailRecents(sections['mail_recents']);
+			}
+
 			const l = sections['localization'];
 			if (l && typeof l === 'object') {
 				const next: LocaleSettings = { ...locale.value };
@@ -336,6 +370,21 @@ class AccountSettingsStore {
 				expanded: this.mailSidebar.expanded,
 				collapsed: this.mailSidebar.collapsed,
 				showMore: this.mailSidebar.showMore
+			}).catch(() => {});
+		}, SIDEBAR_PERSIST_DELAY_MS);
+	}
+
+	recordRecents(kind: MailRecentKind, used: readonly string[]): void {
+		if (used.length === 0) return;
+		this.mailRecents = { ...this.mailRecents, [kind]: pushRecents(this.mailRecents[kind], used) };
+		const acct = this.#accountId;
+		if (this.#recentsTimer) clearTimeout(this.#recentsTimer);
+		this.#recentsTimer = setTimeout(() => {
+			this.#recentsTimer = null;
+			if (this.#accountId !== acct) return;
+			void putAccountSettingsSection('mail_recents', {
+				move: this.mailRecents.move,
+				labels: this.mailRecents.labels
 			}).catch(() => {});
 		}, SIDEBAR_PERSIST_DELAY_MS);
 	}

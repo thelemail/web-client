@@ -60,19 +60,26 @@ function actionFor(verb: ThreadVerb, folderId?: string): (id: string) => Promise
 	}
 }
 
+async function threadItems(latestId: string, rootId: string | undefined): Promise<MessageDetail[]> {
+	try {
+		return (await getMessageThread(latestId)).items;
+	} catch (err) {
+		if (!rootId || rootId === latestId) throw err;
+		return (await getMessageThread(rootId)).items;
+	}
+}
+
+export async function threadMessageIds(latestId: string, rootId: string | undefined): Promise<string[]> {
+	return (await threadItems(latestId, rootId)).map((item) => item.id);
+}
+
 export async function applyToThread(
 	latestId: string,
 	rootId: string | undefined,
 	verb: ThreadVerb,
 	folderId?: string
 ): Promise<ThreadActionResult> {
-	let items: MessageDetail[];
-	try {
-		items = (await getMessageThread(latestId)).items;
-	} catch (err) {
-		if (!rootId || rootId === latestId) throw err;
-		items = (await getMessageThread(rootId)).items;
-	}
+	const items = await threadItems(latestId, rootId);
 	const action = actionFor(verb, folderId);
 	const targets = items.filter((item) => eligible(item, verb, folderId)).map((item) => item.id);
 	if (targets.length === 0) return { total: 0, failed: 0 };
