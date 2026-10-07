@@ -11,6 +11,7 @@
 </script>
 
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { m } from '$paraglide/messages.js';
 	import FolderIcon from '@lucide/svelte/icons/folder';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
@@ -22,6 +23,7 @@
 
 	interface Props {
 		anchor: HTMLElement | undefined;
+		header?: Snippet;
 		systemTargets: SystemTarget[];
 		currentFolders: ReadonlySet<string>;
 		onSystem: (id: SystemTargetId) => void;
@@ -30,8 +32,16 @@
 		onClose: () => void;
 	}
 
-	let { anchor, systemTargets, currentFolders, onSystem, onFolder, onLabelArchive, onClose }: Props =
-		$props();
+	let {
+		anchor,
+		header,
+		systemTargets,
+		currentFolders,
+		onSystem,
+		onFolder,
+		onLabelArchive,
+		onClose
+	}: Props = $props();
 
 	const RECENT_LIMIT = 5;
 
@@ -138,6 +148,7 @@
 
 <CollectionPicker
 	{anchor}
+	{header}
 	label={m.mail_reader_move_to()}
 	placeholder={m.mail_collection_move_find_folder()}
 	bind:query

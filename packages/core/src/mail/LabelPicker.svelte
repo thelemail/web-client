@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { m } from '$paraglide/messages.js';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
@@ -18,12 +19,13 @@
 
 	interface Props {
 		anchor: HTMLElement | undefined;
+		header?: Snippet;
 		initial: ReadonlyMap<string, CheckState>;
 		onApply: (add: string[], remove: string[]) => void;
 		onClose: () => void;
 	}
 
-	let { anchor, initial, onApply, onClose }: Props = $props();
+	let { anchor, header, initial, onApply, onClose }: Props = $props();
 
 	const RECENT_LIMIT = 5;
 
@@ -96,6 +98,7 @@
 
 <CollectionPicker
 	{anchor}
+	{header}
 	label={m.mail_list_labels()}
 	placeholder={m.mail_collection_move_find_label()}
 	bind:query

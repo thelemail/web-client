@@ -27,3 +27,16 @@ export function collectionColor(key: string | null | undefined): string {
 		? COLLECTION_COLORS[key as CollectionColor]
 		: COLLECTION_COLORS.ink;
 }
+
+const CHIP_TONES: Record<CollectionColor, { bg: string; fg: string }> = {
+	pine: { bg: 'var(--pine-100)', fg: 'var(--pine-700)' },
+	brass: { bg: 'var(--brass-100)', fg: 'var(--brass-700)' },
+	info: { bg: 'var(--info-100)', fg: 'var(--info-700)' },
+	warning: { bg: 'var(--warning-100)', fg: 'var(--warning-700)' },
+	danger: { bg: 'var(--danger-100)', fg: 'var(--danger-700)' },
+	ink: { bg: 'var(--paper-100)', fg: 'var(--ink-700)' }
+};
+
+export function collectionChip(key: string | null | undefined): { bg: string; fg: string } {
+	return key && key in CHIP_TONES ? CHIP_TONES[key as CollectionColor] : CHIP_TONES.ink;
+}

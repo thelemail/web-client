@@ -63,6 +63,8 @@ export interface ThreadEntry {
 	externalMessageId?: string;
 	inReplyTo?: string;
 	sentBy?: SentBy;
+	labels?: string[];
+	folder?: string;
 }
 
 export type RsvpStatus = 'accepted' | 'tentative' | 'declined';
@@ -83,6 +85,7 @@ export interface Message {
 	fg: string;
 	subj: string;
 	labels: string[];
+	labelCounts?: Record<string, number>;
 	folderId?: string | null;
 	returnsToArchive?: boolean;
 	unread: boolean;

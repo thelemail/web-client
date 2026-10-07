@@ -73,6 +73,16 @@ export async function threadMessageIds(latestId: string, rootId: string | undefi
 	return (await threadItems(latestId, rootId)).map((item) => item.id);
 }
 
+export async function threadTargets(
+	latestId: string,
+	rootId: string | undefined,
+	verb: ThreadVerb,
+	folderId?: string
+): Promise<string[]> {
+	const items = await threadItems(latestId, rootId);
+	return items.filter((item) => eligible(item, verb, folderId)).map((item) => item.id);
+}
+
 export async function applyToThread(
 	latestId: string,
 	rootId: string | undefined,

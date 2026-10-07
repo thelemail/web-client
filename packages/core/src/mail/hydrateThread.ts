@@ -22,7 +22,7 @@ import type { MessagePreview } from '$core/mail/preview';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { initialChips } from '$core/mail/attachments';
-import { type ThreadEntry, type Message } from '$core/mail/data';
+import { folderFromServer, type ThreadEntry, type Message } from '$core/mail/data';
 import { sentByFrom } from '$core/mail/sentBy';
 import { auth } from '$core/stores/auth.svelte';
 import { addresses } from '$core/stores/addresses.svelte';
@@ -125,7 +125,9 @@ function previewEntry({ item, preview }: EntrySource): ThreadEntry {
 		attachments: initialChips(item.attachments ?? []),
 		externalMessageId: item.externalMessageId ?? undefined,
 		inReplyTo: item.inReplyTo ?? undefined,
-		sentBy: sentByFrom(item)
+		sentBy: sentByFrom(item),
+		labels: item.labelIds ?? [],
+		folder: folderFromServer(item.mailboxState, item.direction, item.folderId)
 	};
 }
 

@@ -5,8 +5,10 @@ import {
 	hasExactName,
 	labelChanges,
 	labelStates,
+	labelStatesFromTallies,
 	nextCheckState,
 	searchEntries,
+	tallyOf,
 	type CheckState
 } from './picker';
 import { orderTree, type CollectionNode } from './tree';
@@ -117,5 +119,26 @@ describe('label states', () => {
 	it('chunks into fixed sizes', () => {
 		expect(chunk([1, 2, 3, 4, 5], 2)).toEqual([[1, 2], [3, 4], [5]]);
 		expect(chunk([], 3)).toEqual([]);
+	});
+});
+
+describe('labelStatesFromTallies', () => {
+	it('marks a label on only when every message in every conversation carries it', () => {
+		const states = labelStatesFromTallies([
+			{ counts: { paid: 3, client: 1 }, total: 3 },
+			tallyOf(['paid'])
+		]);
+		expect(states.get('paid')).toBe('on');
+		expect(states.get('client')).toBe('mixed');
+		expect(states.has('other')).toBe(false);
+	});
+
+	it('treats a conversation with the label on some messages as mixed', () => {
+		expect(labelStatesFromTallies([{ counts: { paid: 1 }, total: 4 }]).get('paid')).toBe('mixed');
+	});
+
+	it('ignores empty tallies', () => {
+		expect(labelStatesFromTallies([{ counts: { paid: 0 }, total: 2 }]).size).toBe(0);
+		expect(labelStatesFromTallies([]).size).toBe(0);
 	});
 });

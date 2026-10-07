@@ -21,6 +21,7 @@
 		multi?: boolean;
 		createKind: MailCollectionKind;
 		create: { text: string; name: string; parent: string | null } | null;
+		header?: Snippet;
 		footer?: Snippet;
 		onCreated: (entry: CollectionEntry) => void;
 		onCancel: () => void;
@@ -37,6 +38,7 @@
 		multi = false,
 		createKind,
 		create,
+		header,
 		footer,
 		onCreated,
 		onCancel,
@@ -172,6 +174,7 @@
 			</div>
 			<CollectionCreate kind={createKind} name={creating.name} parent={creating.parent} onCreated={created} />
 		{:else}
+			{@render header?.()}
 			<label class="pk-find">
 				<Search size={14} />
 				<input

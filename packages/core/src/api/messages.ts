@@ -14,13 +14,18 @@ import type {
 	ResolveBimiResponse,
 	InternalSendRequest,
 	InternalSendResponse,
+	LabelMailSelectionRequest,
 	MailboxCounts,
+	MailSelectionCount,
+	MailSelectionProgress,
+	MailSelector,
 	MailboxState,
 	MessageDetail,
 	MessageDirection,
 	MessageChangesResponse,
 	MessageListResponse,
 	MessageState,
+	MoveMailSelectionRequest,
 	MoveMessageRequest,
 	ReplyPresenceResponse,
 	ReplyPresenceStarted,
@@ -244,6 +249,18 @@ export function batchMoveMessages(body: BatchMoveMessagesRequest): Promise<Batch
 
 export function batchLabelMessages(body: BatchLabelMessagesRequest): Promise<BatchMessageResponse> {
 	return apiFetch<BatchMessageResponse>('/v1/mail/batch/labels', { method: 'POST', body });
+}
+
+export function countMailSelection(selector: MailSelector): Promise<MailSelectionCount> {
+	return apiFetch<MailSelectionCount>('/v1/mail/selection/count', { method: 'POST', body: selector });
+}
+
+export function moveMailSelection(body: MoveMailSelectionRequest): Promise<MailSelectionProgress> {
+	return apiFetch<MailSelectionProgress>('/v1/mail/selection/move', { method: 'POST', body });
+}
+
+export function labelMailSelection(body: LabelMailSelectionRequest): Promise<MailSelectionProgress> {
+	return apiFetch<MailSelectionProgress>('/v1/mail/selection/labels', { method: 'POST', body });
 }
 
 export async function moveMessageToInbox(messageId: string): Promise<MessageState> {

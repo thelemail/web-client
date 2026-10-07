@@ -22,7 +22,13 @@ import { initialsFor } from '$core/mail/initials';
 import { platform } from '$platform';
 import type { MirrorRow } from '$core/platform/types';
 import { queryMatches } from '$core/mail/match';
-import { ApiCallError, type MailboxCounts, type MessageListItem, type ThreadListItem } from '$core/api/types';
+import {
+	ApiCallError,
+	type MailboxCounts,
+	type MailSelector,
+	type MessageListItem,
+	type ThreadListItem
+} from '$core/api/types';
 import { DEFAULT_QUERY, type Query } from '$core/mail/url';
 import type { RealtimeHint } from '$core/realtime/types';
 import { auth } from './auth.svelte';
@@ -176,6 +182,20 @@ function threadOptionsFor(q: Query): ListThreadsOptions | null {
 	return withViewFilters(base, q);
 }
 
+export function selectorFor(q: Query): MailSelector | null {
+	const opts = threadOptionsFor(q);
+	if (!opts || q.folder === 'trash' || q.folder === 'spam' || q.folder === 'snoozed') return null;
+	const selector: MailSelector = { unit: 'threads' };
+	if (opts.mailbox === 'inbox' || opts.mailbox === 'archive') selector.mailbox = opts.mailbox;
+	if (opts.folderId) selector.folderId = opts.folderId;
+	if (opts.labelIds?.length) selector.labelIds = opts.labelIds.slice();
+	if (opts.descendants === false) selector.descendants = false;
+	if (opts.starred) selector.starred = true;
+	if (opts.unread) selector.unread = true;
+	if (opts.hasAttachments) selector.hasAttachments = true;
+	return selector;
+}
+
 function isThreaded(q: Query): boolean {
 	return threadOptionsFor(q) !== null;
 }
@@ -195,6 +215,7 @@ function withThreadAggregates(m: Message, t: ThreadListItem): Message {
 		starred: m.starred || t.starred,
 		threadCount: t.messageCount > 1 ? t.messageCount : undefined,
 		threadRootId: t.threadKey,
+		labelCounts: t.messageCount > 1 ? t.labelCounts : undefined,
 		attachments:
 			m.attachments ?? (t.hasAttachments ? [{ name: 'attachment', size: '' }] : undefined)
 	};
@@ -666,14 +687,16 @@ class MailboxStore {
 		return this.#threadTicks.get(threadRootId) ?? 0;
 	}
 
+	touchThread(threadRootId: string): void {
+		const map = new Map(this.#threadTicks);
+		map.set(threadRootId, (map.get(threadRootId) ?? 0) + 1);
+		this.#threadTicks = map;
+	}
+
 	applyRealtime(hint: RealtimeHint): void {
 		if (hint.accountId !== this.#accountId) return;
 		if (!auth.canEnterApp) return;
-		if (hint.thread_id) {
-			const map = new Map(this.#threadTicks);
-			map.set(hint.thread_id, (map.get(hint.thread_id) ?? 0) + 1);
-			this.#threadTicks = map;
-		}
+		if (hint.thread_id) this.touchThread(hint.thread_id);
 		if (!hint.id) return;
 		if (hint.kind === 'message.deleted') {
 			this.#removeMessage(hint.id);
