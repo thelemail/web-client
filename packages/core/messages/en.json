@@ -2925,7 +2925,6 @@
 	],
 	"mail_row_invitation": "Invitation",
 	"mail_row_attached_count": "{count} attached",
-	"mail_row_labels_more": "{count} more",
 	"mail_row_comes_back": "Comes back {when}",
 	"mail_action_star": "Star",
 	"mail_action_unstar": "Unstar",
@@ -3708,7 +3707,6 @@
 	"mail_bulk_reported": "{count} reported as spam",
 	"mail_bulk_reported_partial": "{ok} reported as spam, {failed} failed",
 	"mail_bulk_report_failed": "Report failed",
-	"mail_err_archive_message": "Could not archive message",
 	"mail_err_trash_message": "Could not trash message",
 	"mail_bulk_archived": "{count} archived",
 	"mail_bulk_archived_partial": "{ok} archived, {failed} failed",
@@ -4549,5 +4547,92 @@
 	"cal_op_cancellation": "Cancellation · {title}",
 	"mailbox_event_when": "{weekday}, {date}, {time}",
 	"cal_fmt_all_day": "{date} · all day",
-	"cal_default_calendar_name": "My calendar"
+	"cal_default_calendar_name": "My calendar",
+	"mail_label_chip_partial": "{label}, on some messages",
+	"mail_label_chip_remove": "Remove label {label}",
+	"mail_location_in": "In {place}",
+	"mail_row_labels_more_named": "Also labeled {labels}",
+	"mail_list_clear_selection": "Clear selection",
+	"mail_list_selected_all_matching": "All {count} in {view}",
+	"mail_selection_all_matching": "All {count} conversations in {view} are selected.",
+	"mail_selection_loaded_all": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "The {count} conversation on screen is selected.",
+				"countPlural=*": "All {count} conversations on screen are selected."
+			}
+		}
+	],
+	"mail_selection_counting": "Counting the rest…",
+	"mail_selection_select_matching": "Select all {count} in {view}",
+	"mail_selection_search_loaded": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Only the result shown is selected.",
+				"countPlural=*": "Only the {count} results shown are selected."
+			}
+		}
+	],
+	"mail_selection_failed": "Couldn't finish. {done} of {total} done.",
+	"mail_selection_stopped": "Stopped after {done} of {total}.",
+	"mail_selection_some_failed": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "1 message couldn't be changed",
+				"countPlural=*": "{count} messages couldn't be changed"
+			}
+		}
+	],
+	"mail_selection_retry": "Retry",
+	"mail_job_moving": "Moving {done} of {total}",
+	"mail_job_archiving": "Archiving {done} of {total}",
+	"mail_job_labelling": "Labeling {done} of {total}",
+	"mail_job_stop": "Stop",
+	"mail_scope_label": "Apply to",
+	"mail_scope_conversation": "All {count} messages",
+	"mail_scope_latest": "Latest message",
+	"mail_scope_message": "Applies to this message only.",
+	"mail_scope_query": "Applies to all {count} conversations in {view}.",
+	"mail_scope_bulk": "Applies to {count} conversations, {messages} messages in all.",
+	"mail_scope_future": "Replies that arrive later won't get these labels.",
+	"mail_bulk_labels_partial": [
+		{
+			"declarations": [
+				"input failed",
+				"local failedPlural = failed: plural"
+			],
+			"selectors": [
+				"failedPlural"
+			],
+			"match": {
+				"failedPlural=one": "1 message couldn't be labeled",
+				"failedPlural=*": "{failed} messages couldn't be labeled"
+			}
+		}
+	],
+	"mail_bulk_moved_inbox": "{count} moved to Inbox",
+	"mail_toast_label_removed": "Removed {label}",
+	"mail_entry_move": "Move this message",
+	"mail_entry_labels": "Label this message"
 }

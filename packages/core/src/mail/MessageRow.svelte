@@ -23,7 +23,10 @@
 	import { sentByName } from './sentBy';
 	import { auth } from '$core/stores/auth.svelte';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
-	import { collectionColor } from './collections/palette';
+	import LabelChip from './collections/LabelChip.svelte';
+	import LocationChip from './collections/LocationChip.svelte';
+	import { customLabelId } from './folderRoute';
+	import { locationFor } from './location';
 	import type { CollectionEntry } from './collections/tree';
 
 	interface Props {
@@ -32,7 +35,10 @@
 		checked: boolean;
 		anyChecked: boolean;
 		caps: MailActionCaps;
+		viewFolder: string;
+		searching?: boolean;
 		onOpen: (m: Message) => void;
+		onSelect?: (id: string, range: boolean) => void;
 		onToggleStar: (id: string) => void;
 		onToggleCheck: (id: string) => void;
 		onArchive: (id: string) => void;
@@ -49,7 +55,10 @@
 		checked,
 		anyChecked,
 		caps,
+		viewFolder,
+		searching = false,
 		onOpen,
+		onSelect,
 		onToggleStar,
 		onToggleCheck,
 		onArchive,
@@ -63,21 +72,31 @@
 	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
 	const byName = $derived(m.sentBy ? sentByName(m.sentBy, auth.accountId) : null);
 
-	const knownLabels = $derived(
-		(m.labels ?? [])
-			.map((id) => mailCollections.label(id))
-			.filter((l): l is CollectionEntry => !!l && !l.sealed)
-	);
-	const labelChips = $derived(knownLabels.slice(0, 2));
-	const labelOverflow = $derived(Math.max(0, knownLabels.length - labelChips.length));
+	const CHIP_LIMIT = 2;
 	const threadCount = $derived(m.threadCount ?? m.thread?.length ?? 0);
+	const viewLabelId = $derived(customLabelId(viewFolder));
+	const labelChips = $derived.by(() => {
+		const counts = m.labelCounts;
+		const ids = counts ? Object.keys(counts) : (m.labels ?? []);
+		const total = Math.max(1, threadCount);
+		return ids
+			.filter((id) => id !== viewLabelId)
+			.map((id) => ({ entry: mailCollections.label(id), partial: !!counts && counts[id] < total }))
+			.filter((c): c is { entry: CollectionEntry; partial: boolean } => !!c.entry && !c.entry.sealed)
+			.sort((a, b) => a.entry.path.localeCompare(b.entry.path));
+	});
+	const shownChips = $derived(labelChips.slice(0, CHIP_LIMIT));
+	const hiddenChips = $derived(labelChips.slice(CHIP_LIMIT));
+	const location = $derived(locationFor(m.folder, viewFolder, searching));
 	const hasEvent = $derived(!!m.event);
 	const nonIcsAttachments = $derived(
 		(m.attachments ?? []).filter((a) => !/\.ics$/i.test(a.name))
 	);
-	const showMeta = $derived(
-		labelChips.length > 0 || hasEvent || nonIcsAttachments.length > 0
-	);
+	function select(range: boolean) {
+		if (onSelect) onSelect(m.id, range);
+		else onToggleCheck(m.id);
+	}
+
 	const wakeAt = $derived.by<Date | null>(() => {
 		if (m.folder !== 'snoozed' || !m.snoozedUntil) return null;
 		const t = Date.parse(m.snoozedUntil);
@@ -108,13 +127,13 @@
 		aria-label={msg.mail_row_select()}
 		onclick={(e) => {
 			e.stopPropagation();
-			onToggleCheck(m.id);
+			select(e.shiftKey);
 		}}
 		onkeydown={(e) => {
 			if (e.key === 'Enter' || e.key === ' ') {
 				e.preventDefault();
 				e.stopPropagation();
-				onToggleCheck(m.id);
+				select(e.shiftKey);
 			}
 		}}
 	>
@@ -131,9 +150,11 @@
 		<button
 			class="row-ck"
 			class:on={checked}
+			aria-label={msg.mail_row_select()}
+			aria-pressed={checked}
 			onclick={(e) => {
 				e.stopPropagation();
-				onToggleCheck(m.id);
+				select(e.shiftKey);
 			}}
 		>
 			<Check size={13} />
@@ -158,12 +179,6 @@
 					<Paperclip size={12} />{nonIcsAttachments.length}
 				</span>
 			{/if}
-			{#each labelChips as label (label.id)}
-				<span class="lbl" title={label.path} style:background={collectionColor(label.color)}></span>
-			{/each}
-			{#if labelOverflow > 0}
-				<span class="lbl-more" title={msg.mail_row_labels_more({ count: labelOverflow })}>+{labelOverflow}</span>
-			{/if}
 			{#if wakeAt}
 				<span class="time wake" title={msg.mail_row_comes_back({ when: formatWhenLong(wakeAt) })}>
 					{formatRowTime(wakeAt)}
@@ -186,6 +201,34 @@
 			{/if}
 		</div>
 		<div class="r2">
+			{#if location || shownChips.length > 0}
+				<span class="row-chips">
+					{#if location}
+						<LocationChip {location} />
+					{/if}
+					{#each shownChips as chip (chip.entry.id)}
+						<LabelChip
+							name={chip.entry.name}
+							path={chip.entry.path}
+							color={chip.entry.color}
+							partial={chip.partial}
+						/>
+					{/each}
+					{#if hiddenChips.length > 0}
+						<span
+							class="lchip-more"
+							title={hiddenChips.map((c) => c.entry.path).join(', ')}
+						>
+							<span aria-hidden="true">+{hiddenChips.length}</span>
+							<span class="sr-only">
+								{msg.mail_row_labels_more_named({
+									labels: hiddenChips.map((c) => c.entry.path).join(', ')
+								})}
+							</span>
+						</span>
+					{/if}
+				</span>
+			{/if}
 			<span class="stxt">{plainSubject(m.subj)}</span>
 			<span class="prev">{m.prev}</span>
 		</div>

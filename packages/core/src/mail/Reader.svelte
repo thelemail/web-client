@@ -70,6 +70,11 @@
 	import { replyingLine } from './presence';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { replyPresence } from '$core/stores/replyPresence.svelte';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import LabelChip from './collections/LabelChip.svelte';
+	import LocationChip from './collections/LocationChip.svelte';
+	import { locationFor } from './location';
+	import type { CollectionEntry } from './collections/tree';
 	import Users from '@lucide/svelte/icons/users';
 
 	interface Props {
@@ -83,6 +88,10 @@
 		onMarkRead?: (id: string) => void;
 		onMarkUnread?: (id: string) => void;
 		onPicker?: (kind: 'move' | 'labels', id: string, anchor: HTMLElement) => void;
+		onEntryPicker?: (kind: 'move' | 'labels', entry: ThreadEntry, rootId: string, anchor: HTMLElement) => void;
+		onRemoveLabel?: (id: string, labelId: string) => void;
+		viewFolder?: string;
+		searching?: boolean;
 		openPicker?: string | null;
 		onSnooze?: (id: string, until: Date) => void;
 		onUnsnooze?: (id: string) => void;
@@ -106,6 +115,10 @@
 		onMarkRead,
 		onMarkUnread,
 		onPicker,
+		onEntryPicker,
+		onRemoveLabel,
+		viewFolder = 'inbox',
+		searching = false,
 		openPicker = null,
 		onSnooze,
 		onUnsnooze,
@@ -323,6 +336,31 @@
 			recipients: meta.recipients ?? m.recipients
 		};
 	});
+
+	const conversationLabels = $derived.by(() => {
+		if (!m) return [];
+		const entries =
+			threadMeta?.id === m.id
+				? threadMeta.entries.filter((e) => e.id && e.folder !== 'trash' && e.folder !== 'spam')
+				: [];
+		let counts: Record<string, number> = {};
+		let total = 1;
+		if (entries.length > 0) {
+			total = entries.length;
+			for (const e of entries) for (const id of e.labels ?? []) counts[id] = (counts[id] ?? 0) + 1;
+		} else if (m.labelCounts && m.threadCount) {
+			counts = m.labelCounts;
+			total = m.threadCount;
+		} else {
+			for (const id of m.labels ?? []) counts[id] = 1;
+		}
+		return Object.entries(counts)
+			.map(([id, n]) => ({ entry: mailCollections.label(id), partial: n < total }))
+			.filter((c): c is { entry: CollectionEntry; partial: boolean } => !!c.entry && !c.entry.sealed)
+			.sort((a, b) => a.entry.path.localeCompare(b.entry.path));
+	});
+
+	const readerLocation = $derived(m ? locationFor(m.folder, viewFolder, searching) : null);
 
 	const deliveredLine = $derived.by(() => {
 		const d = enriched?.deliveredTo?.trim().toLowerCase();
@@ -816,6 +854,24 @@
 							</button>
 						{/if}
 					</h1>
+					{#if readerLocation || conversationLabels.length > 0}
+						<div class="reader-chips">
+							{#if readerLocation}
+								<LocationChip location={readerLocation} />
+							{/if}
+							{#each conversationLabels as chip (chip.entry.id)}
+								<LabelChip
+									name={chip.entry.name}
+									path={chip.entry.path}
+									color={chip.entry.color}
+									partial={chip.partial}
+									onRemove={caps.showLabels && onRemoveLabel
+										? () => onRemoveLabel(m.id, chip.entry.id)
+										: undefined}
+								/>
+							{/each}
+						</div>
+					{/if}
 				</div>
 
 				{#if othersReplying}
@@ -846,6 +902,12 @@
 						entries={threadMeta.entries}
 						focusId={threadMeta.focusId}
 						initialOpen={threadMeta.initialOpen}
+						baseFolder={m.folder}
+						canMove={caps.showMove && !!onEntryPicker}
+						canLabel={caps.showLabels && !!onEntryPicker}
+						{openPicker}
+						onPicker={(kind, entry, anchor) =>
+							onEntryPicker?.(kind, entry, m.threadRootId ?? m.id, anchor)}
 						onNeed={loadEntry}
 						onConfirmKeyChange={confirmKeyChange}
 						onUnsubscribe={openUnsubscribe}

@@ -236,6 +236,48 @@ export interface BatchMessageResponse {
 	results: BatchMessageResult[];
 }
 
+export type MailSelectorUnit = 'messages' | 'threads';
+
+export interface MailSelector {
+	unit: MailSelectorUnit;
+	mailbox?: BatchMoveDestination;
+	folderId?: string;
+	labelIds?: string[];
+	descendants?: boolean;
+	starred?: boolean;
+	unread?: boolean;
+	hasAttachments?: boolean;
+	asOf?: string;
+}
+
+export interface MailSelectionCount {
+	units: number;
+	messages: number;
+	labelCounts: Record<string, number>;
+	asOf: string;
+}
+
+export interface MoveMailSelectionRequest {
+	selector: MailSelector;
+	cursor?: string;
+	destination: BatchMoveDestination;
+	folderId?: string;
+}
+
+export interface LabelMailSelectionRequest {
+	selector: MailSelector;
+	cursor?: string;
+	add?: string[];
+	remove?: string[];
+}
+
+export interface MailSelectionProgress {
+	units: number;
+	messages: number;
+	failures: BatchMessageResult[];
+	nextCursor?: string | null;
+}
+
 export type MailCollectionKind = 'folder' | 'label';
 
 export interface MailCollectionRecord {
@@ -326,6 +368,7 @@ export interface ThreadListItem {
 	unreadCount: number;
 	hasAttachments: boolean;
 	starred: boolean;
+	labelCounts: Record<string, number>;
 }
 
 export interface ThreadListResponse {

@@ -13,6 +13,13 @@
 	import { sentByLabel } from './sentBy';
 	import { auth } from '$core/stores/auth.svelte';
 	import { unsubscribeMethod } from './unsubscribe';
+	import FolderInput from '@lucide/svelte/icons/folder-input';
+	import Tag from '@lucide/svelte/icons/tag';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import LabelChip from './collections/LabelChip.svelte';
+	import LocationChip from './collections/LocationChip.svelte';
+	import { locationFor } from './location';
+	import type { CollectionEntry } from './collections/tree';
 
 	interface Props {
 		e: ThreadEntry;
@@ -20,9 +27,37 @@
 		onToggle: () => void;
 		onConfirmKeyChange?: (address: string) => void | Promise<void>;
 		onUnsubscribe?: (e: ThreadEntry) => void;
+		baseFolder?: string;
+		canMove?: boolean;
+		canLabel?: boolean;
+		openPicker?: string | null;
+		onPicker?: (kind: 'move' | 'labels', entry: ThreadEntry, anchor: HTMLElement) => void;
 	}
 
-	let { e, isOpen, onToggle, onConfirmKeyChange, onUnsubscribe }: Props = $props();
+	let {
+		e,
+		isOpen,
+		onToggle,
+		onConfirmKeyChange,
+		onUnsubscribe,
+		baseFolder,
+		canMove = false,
+		canLabel = false,
+		openPicker = null,
+		onPicker
+	}: Props = $props();
+
+	const entryLabels = $derived(
+		(e.labels ?? [])
+			.map((id) => mailCollections.label(id))
+			.filter((l): l is CollectionEntry => !!l && !l.sealed)
+			.sort((a, b) => a.path.localeCompare(b.path))
+	);
+	const entryLocation = $derived(
+		e.folder && baseFolder ? locationFor(e.folder, baseFolder, false) : null
+	);
+	const moveKey = $derived(`entry-move-${e.id ?? ''}`);
+	const labelsKey = $derived(`entry-labels-${e.id ?? ''}`);
 
 	const canUnsubscribe = $derived(!!onUnsubscribe && !!e.id && !e.me && unsubscribeMethod(e.unsubscribe) !== null);
 
@@ -144,7 +179,51 @@
 				</div>
 			</div>
 			<div class="prov">
-				<div class="when">{when}</div>
+				<div class="when">
+					{#if e.id && onPicker && (canMove || canLabel)}
+						<span class="entry-acts">
+							{#if canMove}
+								<button
+									type="button"
+									class="entry-act"
+									class:on={openPicker === moveKey}
+									data-picker={moveKey}
+									title={m.mail_entry_move()}
+									aria-label={m.mail_entry_move()}
+									aria-haspopup="dialog"
+									aria-expanded={openPicker === moveKey}
+									onclick={(ev) => {
+										ev.stopPropagation();
+										onPicker?.('move', e, ev.currentTarget);
+									}}
+									onkeydown={(ev) => ev.stopPropagation()}
+								>
+									<FolderInput size={14} />
+								</button>
+							{/if}
+							{#if canLabel}
+								<button
+									type="button"
+									class="entry-act"
+									class:on={openPicker === labelsKey}
+									data-picker={labelsKey}
+									title={m.mail_entry_labels()}
+									aria-label={m.mail_entry_labels()}
+									aria-haspopup="dialog"
+									aria-expanded={openPicker === labelsKey}
+									onclick={(ev) => {
+										ev.stopPropagation();
+										onPicker?.('labels', e, ev.currentTarget);
+									}}
+									onkeydown={(ev) => ev.stopPropagation()}
+								>
+									<Tag size={14} />
+								</button>
+							{/if}
+						</span>
+					{/if}
+					{when}
+				</div>
 				{#if e.trust}
 					<TrustMark
 						trust={e.trust}
@@ -157,6 +236,16 @@
 			</div>
 		</div>
 		<div class="tmsg-body">
+			{#if entryLocation || entryLabels.length > 0}
+				<div class="entry-chips">
+					{#if entryLocation}
+						<LocationChip location={entryLocation} />
+					{/if}
+					{#each entryLabels as label (label.id)}
+						<LabelChip name={label.name} path={label.path} color={label.color} />
+					{/each}
+				</div>
+			{/if}
 			<div class="email-sheet flush">
 				{#if e.srcDoc}
 					<EmailBody srcDoc={e.srcDoc} />

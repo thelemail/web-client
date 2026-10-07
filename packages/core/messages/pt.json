@@ -2925,7 +2925,6 @@
 	],
 	"mail_row_invitation": "Convite",
 	"mail_row_attached_count": "Anexos: {count}",
-	"mail_row_labels_more": "mais {count}",
 	"mail_row_comes_back": "Volta {when}",
 	"mail_action_star": "Marcar com estrela",
 	"mail_action_unstar": "Remover estrela",
@@ -3708,7 +3707,6 @@
 	"mail_bulk_reported": "Mensagens denunciadas como spam: {count}",
 	"mail_bulk_reported_partial": "{ok} denunciados como spam, {failed} falharam",
 	"mail_bulk_report_failed": "A denúncia falhou",
-	"mail_err_archive_message": "Não foi possível arquivar a mensagem",
 	"mail_err_trash_message": "Não foi possível mover a mensagem para o lixo",
 	"mail_bulk_archived": "Mensagens arquivadas: {count}",
 	"mail_bulk_archived_partial": "{ok} arquivados, {failed} falharam",
@@ -4549,5 +4547,92 @@
 	"cal_op_cancellation": "Cancelamento · {title}",
 	"mailbox_event_when": "{weekday}, {date}, {time}",
 	"cal_fmt_all_day": "{date} · todo o dia",
-	"cal_default_calendar_name": "O meu calendário"
+	"cal_default_calendar_name": "O meu calendário",
+	"mail_label_chip_partial": "{label}, em algumas mensagens",
+	"mail_label_chip_remove": "Remover etiqueta {label}",
+	"mail_location_in": "Em {place}",
+	"mail_row_labels_more_named": "Também: {labels}",
+	"mail_list_clear_selection": "Limpar seleção",
+	"mail_list_selected_all_matching": "Todas as {count} em {view}",
+	"mail_selection_all_matching": "Todas as {count} conversas em {view} estão selecionadas.",
+	"mail_selection_loaded_all": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "A conversa visível está selecionada.",
+				"countPlural=*": "Todas as {count} conversas visíveis estão selecionadas."
+			}
+		}
+	],
+	"mail_selection_counting": "A contar as restantes…",
+	"mail_selection_select_matching": "Selecionar todas as {count} em {view}",
+	"mail_selection_search_loaded": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Só o resultado visível está selecionado.",
+				"countPlural=*": "Só os {count} resultados visíveis estão selecionados."
+			}
+		}
+	],
+	"mail_selection_failed": "Não foi possível concluir. {done} de {total} feitos.",
+	"mail_selection_stopped": "Parado após {done} de {total}.",
+	"mail_selection_some_failed": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Não foi possível alterar 1 mensagem",
+				"countPlural=*": "Não foi possível alterar {count} mensagens"
+			}
+		}
+	],
+	"mail_selection_retry": "Tentar de novo",
+	"mail_job_moving": "A mover {done} de {total}",
+	"mail_job_archiving": "A arquivar {done} de {total}",
+	"mail_job_labelling": "A etiquetar {done} de {total}",
+	"mail_job_stop": "Parar",
+	"mail_scope_label": "Aplicar a",
+	"mail_scope_conversation": "Todas as {count} mensagens",
+	"mail_scope_latest": "Mensagem mais recente",
+	"mail_scope_message": "Aplica-se só a esta mensagem.",
+	"mail_scope_query": "Aplica-se a todas as {count} conversas em {view}.",
+	"mail_scope_bulk": "Aplica-se a {count} conversas, {messages} mensagens no total.",
+	"mail_scope_future": "As respostas que chegarem depois não recebem estas etiquetas.",
+	"mail_bulk_labels_partial": [
+		{
+			"declarations": [
+				"input failed",
+				"local failedPlural = failed: plural"
+			],
+			"selectors": [
+				"failedPlural"
+			],
+			"match": {
+				"failedPlural=one": "Não foi possível etiquetar 1 mensagem",
+				"failedPlural=*": "Não foi possível etiquetar {failed} mensagens"
+			}
+		}
+	],
+	"mail_bulk_moved_inbox": "{count} movidas para a Caixa de entrada",
+	"mail_toast_label_removed": "{label} removida",
+	"mail_entry_move": "Mover esta mensagem",
+	"mail_entry_labels": "Etiquetar esta mensagem"
 }

@@ -2925,7 +2925,6 @@
 	],
 	"mail_row_invitation": "Einladung",
 	"mail_row_attached_count": "{count} angehängt",
-	"mail_row_labels_more": "{count} weitere",
 	"mail_row_comes_back": "Erscheint wieder: {when}",
 	"mail_action_star": "Mit Stern markieren",
 	"mail_action_unstar": "Stern entfernen",
@@ -3708,7 +3707,6 @@
 	"mail_bulk_reported": "{count} als Spam gemeldet",
 	"mail_bulk_reported_partial": "{ok} als Spam gemeldet, {failed} fehlgeschlagen",
 	"mail_bulk_report_failed": "Meldung fehlgeschlagen",
-	"mail_err_archive_message": "Nachricht konnte nicht archiviert werden",
 	"mail_err_trash_message": "Nachricht konnte nicht in den Papierkorb verschoben werden",
 	"mail_bulk_archived": "{count} archiviert",
 	"mail_bulk_archived_partial": "{ok} archiviert, {failed} fehlgeschlagen",
@@ -4549,5 +4547,92 @@
 	"cal_op_cancellation": "Absage · {title}",
 	"mailbox_event_when": "{weekday}, {date}, {time}",
 	"cal_fmt_all_day": "{date} · ganztägig",
-	"cal_default_calendar_name": "Mein Kalender"
+	"cal_default_calendar_name": "Mein Kalender",
+	"mail_label_chip_partial": "{label}, nur bei einigen Nachrichten",
+	"mail_label_chip_remove": "Label {label} entfernen",
+	"mail_location_in": "In {place}",
+	"mail_row_labels_more_named": "Außerdem: {labels}",
+	"mail_list_clear_selection": "Auswahl aufheben",
+	"mail_list_selected_all_matching": "Alle {count} in {view}",
+	"mail_selection_all_matching": "Alle {count} Unterhaltungen in {view} sind ausgewählt.",
+	"mail_selection_loaded_all": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Die angezeigte Unterhaltung ist ausgewählt.",
+				"countPlural=*": "Alle {count} angezeigten Unterhaltungen sind ausgewählt."
+			}
+		}
+	],
+	"mail_selection_counting": "Der Rest wird gezählt…",
+	"mail_selection_select_matching": "Alle {count} in {view} auswählen",
+	"mail_selection_search_loaded": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "Nur das angezeigte Ergebnis ist ausgewählt.",
+				"countPlural=*": "Nur die {count} angezeigten Ergebnisse sind ausgewählt."
+			}
+		}
+	],
+	"mail_selection_failed": "Nicht abgeschlossen. {done} von {total} erledigt.",
+	"mail_selection_stopped": "Nach {done} von {total} angehalten.",
+	"mail_selection_some_failed": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "1 Nachricht konnte nicht geändert werden",
+				"countPlural=*": "{count} Nachrichten konnten nicht geändert werden"
+			}
+		}
+	],
+	"mail_selection_retry": "Erneut versuchen",
+	"mail_job_moving": "{done} von {total} werden verschoben",
+	"mail_job_archiving": "{done} von {total} werden archiviert",
+	"mail_job_labelling": "Labels für {done} von {total} werden gesetzt",
+	"mail_job_stop": "Anhalten",
+	"mail_scope_label": "Anwenden auf",
+	"mail_scope_conversation": "Alle {count} Nachrichten",
+	"mail_scope_latest": "Neueste Nachricht",
+	"mail_scope_message": "Gilt nur für diese Nachricht.",
+	"mail_scope_query": "Gilt für alle {count} Unterhaltungen in {view}.",
+	"mail_scope_bulk": "Gilt für {count} Unterhaltungen mit insgesamt {messages} Nachrichten.",
+	"mail_scope_future": "Spätere Antworten erhalten diese Labels nicht.",
+	"mail_bulk_labels_partial": [
+		{
+			"declarations": [
+				"input failed",
+				"local failedPlural = failed: plural"
+			],
+			"selectors": [
+				"failedPlural"
+			],
+			"match": {
+				"failedPlural=one": "1 Nachricht konnte kein Label erhalten",
+				"failedPlural=*": "{failed} Nachrichten konnten kein Label erhalten"
+			}
+		}
+	],
+	"mail_bulk_moved_inbox": "{count} in den Posteingang verschoben",
+	"mail_toast_label_removed": "{label} entfernt",
+	"mail_entry_move": "Diese Nachricht verschieben",
+	"mail_entry_labels": "Labels für diese Nachricht"
 }

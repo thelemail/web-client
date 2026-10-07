@@ -38,6 +38,8 @@ class MailCollectionsStore {
 	favorites = $derived<CollectionEntry[]>(
 		[...this.folders, ...this.labels].filter((c) => c.favorite && !c.sealed)
 	);
+	#folderIndex = $derived(new Map(this.folders.map((c) => [c.id, c])));
+	#labelIndex = $derived(new Map(this.labels.map((c) => [c.id, c])));
 
 	#accountId: string | null = null;
 	#ready: Promise<void> | null = null;
@@ -111,15 +113,15 @@ class MailCollectionsStore {
 
 	byId(id: string | null | undefined): CollectionEntry | undefined {
 		if (!id) return undefined;
-		return this.folders.find((c) => c.id === id) ?? this.labels.find((c) => c.id === id);
+		return this.#folderIndex.get(id) ?? this.#labelIndex.get(id);
 	}
 
 	folder(id: string | null | undefined): CollectionEntry | undefined {
-		return id ? this.folders.find((c) => c.id === id) : undefined;
+		return id ? this.#folderIndex.get(id) : undefined;
 	}
 
 	label(id: string | null | undefined): CollectionEntry | undefined {
-		return id ? this.labels.find((c) => c.id === id) : undefined;
+		return id ? this.#labelIndex.get(id) : undefined;
 	}
 
 	subtree = (id: string): string[] => subtreeIds(this.nodes, id);

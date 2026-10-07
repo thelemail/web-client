@@ -2925,7 +2925,6 @@
   ],
   "mail_row_invitation": "Invitation",
   "mail_row_attached_count": "Pièces jointes : {count}",
-  "mail_row_labels_more": "{count} de plus",
   "mail_row_comes_back": "Réapparaît {when}",
   "mail_action_star": "Ajouter aux favoris",
   "mail_action_unstar": "Retirer des favoris",
@@ -3708,7 +3707,6 @@
   "mail_bulk_reported": "Signalements comme indésirables : {count}",
   "mail_bulk_reported_partial": "Signalements comme indésirables : {ok}, échecs : {failed}",
   "mail_bulk_report_failed": "Échec du signalement",
-  "mail_err_archive_message": "Impossible d’archiver le message",
   "mail_err_trash_message": "Impossible de mettre le message à la corbeille",
   "mail_bulk_archived": "Messages archivés : {count}",
   "mail_bulk_archived_partial": "Messages archivés : {ok}, échecs : {failed}",
@@ -4549,5 +4547,92 @@
   "cal_op_cancellation": "Annulation · {title}",
   "mailbox_event_when": "{weekday}, {date}, {time}",
   "cal_fmt_all_day": "{date} · toute la journée",
-  "cal_default_calendar_name": "Mon calendrier"
+  "cal_default_calendar_name": "Mon calendrier",
+  "mail_label_chip_partial": "{label}, sur certains messages",
+  "mail_label_chip_remove": "Retirer le libellé {label}",
+  "mail_location_in": "Dans {place}",
+  "mail_row_labels_more_named": "Aussi : {labels}",
+  "mail_list_clear_selection": "Effacer la sélection",
+  "mail_list_selected_all_matching": "Les {count} de {view}",
+  "mail_selection_all_matching": "Les {count} conversations de {view} sont sélectionnées.",
+  "mail_selection_loaded_all": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "La conversation affichée est sélectionnée.",
+        "countPlural=*": "Les {count} conversations affichées sont sélectionnées."
+      }
+    }
+  ],
+  "mail_selection_counting": "Comptage du reste…",
+  "mail_selection_select_matching": "Sélectionner les {count} de {view}",
+  "mail_selection_search_loaded": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "Seul le résultat affiché est sélectionné.",
+        "countPlural=*": "Seuls les {count} résultats affichés sont sélectionnés."
+      }
+    }
+  ],
+  "mail_selection_failed": "Interrompu. {done} sur {total} traités.",
+  "mail_selection_stopped": "Arrêté après {done} sur {total}.",
+  "mail_selection_some_failed": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "1 message n'a pas pu être modifié",
+        "countPlural=*": "{count} messages n'ont pas pu être modifiés"
+      }
+    }
+  ],
+  "mail_selection_retry": "Réessayer",
+  "mail_job_moving": "Déplacement : {done} sur {total}",
+  "mail_job_archiving": "Archivage : {done} sur {total}",
+  "mail_job_labelling": "Libellés : {done} sur {total}",
+  "mail_job_stop": "Arrêter",
+  "mail_scope_label": "Appliquer à",
+  "mail_scope_conversation": "Les {count} messages",
+  "mail_scope_latest": "Dernier message",
+  "mail_scope_message": "S'applique à ce message uniquement.",
+  "mail_scope_query": "S'applique aux {count} conversations de {view}.",
+  "mail_scope_bulk": "S'applique à {count} conversations, {messages} messages au total.",
+  "mail_scope_future": "Les réponses à venir ne recevront pas ces libellés.",
+  "mail_bulk_labels_partial": [
+    {
+      "declarations": [
+        "input failed",
+        "local failedPlural = failed: plural"
+      ],
+      "selectors": [
+        "failedPlural"
+      ],
+      "match": {
+        "failedPlural=one": "1 message n'a pas pu recevoir le libellé",
+        "failedPlural=*": "{failed} messages n'ont pas pu recevoir le libellé"
+      }
+    }
+  ],
+  "mail_bulk_moved_inbox": "{count} déplacés vers la boîte de réception",
+  "mail_toast_label_removed": "{label} retiré",
+  "mail_entry_move": "Déplacer ce message",
+  "mail_entry_labels": "Libellés de ce message"
 }

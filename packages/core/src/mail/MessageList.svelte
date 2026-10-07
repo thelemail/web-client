@@ -63,6 +63,14 @@
 		onSpam?: (id: string) => void;
 		onToggleRead: (id: string) => void;
 		onToggleAll: () => void;
+		onSelect?: (id: string, range: boolean) => void;
+		viewFolder: string;
+		querySelected?: number | null;
+		matchingTotal?: number | null;
+		onSelectMatching?: () => void;
+		onClearSelection?: () => void;
+		job?: { text: string; stopping: boolean } | null;
+		onStopJob?: () => void;
 		onBulk: (action: BulkAction) => void;
 		onPicker?: (kind: 'move' | 'labels', anchor: HTMLElement) => void;
 		openPicker?: string | null;
@@ -107,6 +115,14 @@
 		onSpam,
 		onToggleRead,
 		onToggleAll,
+		onSelect,
+		viewFolder,
+		querySelected = null,
+		matchingTotal,
+		onSelectMatching,
+		onClearSelection,
+		job = null,
+		onStopJob,
 		onBulk,
 		onPicker,
 		openPicker = null,
@@ -132,7 +148,9 @@
 		showScope = false
 	}: Props = $props();
 
-	const anyChecked = $derived(checked.size > 0);
+	const inQuery = $derived(querySelected !== null);
+	const anyChecked = $derived(checked.size > 0 || inQuery);
+	const fmt = (n: number) => new Intl.NumberFormat().format(n);
 	const activeFilters = $derived(countActiveFilters(filters));
 
 	const counted = $derived(new Intl.NumberFormat().format(searchIndexed));
@@ -283,15 +301,24 @@
 <section class="list">
 	{#if anyChecked}
 		<div class="bulk">
-			<button class="ck" class:on={allChecked} onclick={onToggleAll}><Check size={12} /></button>
-			<span class="cnt">{msg.mail_list_selected({ count: checked.size })}</span>
+			<button
+				class="ck"
+				class:on={allChecked || inQuery}
+				aria-label={allChecked || inQuery ? msg.mail_list_clear_selection() : msg.mail_list_select_all()}
+				onclick={onToggleAll}><Check size={12} /></button
+			>
+			<span class="cnt">
+				{inQuery
+					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: folderLabel })
+					: msg.mail_list_selected({ count: checked.size })}
+			</span>
 			<div class="grow"></div>
-			{#if caps.showMarkRead}
+			{#if caps.showMarkRead && !inQuery}
 				<button class="lh-btn" title={msg.mail_list_mark_read()} onclick={() => onBulk('read')}>
 					<MailOpen size={16} />
 				</button>
 			{/if}
-			{#if caps.showRestore}
+			{#if caps.showRestore && !inQuery}
 				<button class="lh-btn" data-mutates title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
 					<Undo2 size={16} />
 				</button>
@@ -329,17 +356,17 @@
 					<Tag size={16} />
 				</button>
 			{/if}
-			{#if caps.showSpam}
+			{#if caps.showSpam && !inQuery}
 				<button class="lh-btn" title={msg.mail_action_report_spam()} onclick={() => onBulk('spam')}>
 					<ShieldAlert size={16} />
 				</button>
 			{/if}
-			{#if caps.showTrash}
+			{#if caps.showTrash && !inQuery}
 				<button class="lh-btn" data-mutates title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
 					<Trash2 size={16} />
 				</button>
 			{/if}
-			{#if caps.showDelete}
+			{#if caps.showDelete && !inQuery}
 				<button class="lh-btn lh-btn-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
 					<Trash2 size={16} />
 				</button>
@@ -516,6 +543,46 @@
 			</div>
 		</div>
 	{/if}
+	{#if job}
+		<div class="sel-strip job" role="status">
+			<span class="lf-spin"></span>
+			<span class="sel-text">{job.text}</span>
+			{#if onStopJob}
+				<button type="button" class="sel-act" disabled={job.stopping} onclick={onStopJob}>
+					{msg.mail_job_stop()}
+				</button>
+			{/if}
+		</div>
+	{:else if inQuery}
+		<div class="sel-strip" role="status">
+			<span class="sel-text">
+				{msg.mail_selection_all_matching({ count: fmt(querySelected ?? 0), view: folderLabel })}
+			</span>
+			{#if onClearSelection}
+				<button type="button" class="sel-act" onclick={onClearSelection}>{msg.mail_list_clear_selection()}</button>
+			{/if}
+		</div>
+	{:else if allChecked && matchingTotal !== undefined && checked.size > 0}
+		<div class="sel-strip" role="status">
+			<span class="sel-text">{msg.mail_selection_loaded_all({ count: checked.size })}</span>
+			{#if onSelectMatching}
+				<button
+					type="button"
+					class="sel-act"
+					disabled={matchingTotal === null}
+					onclick={onSelectMatching}
+				>
+					{matchingTotal === null
+						? msg.mail_selection_counting()
+						: msg.mail_selection_select_matching({ count: fmt(matchingTotal), view: folderLabel })}
+				</button>
+			{/if}
+		</div>
+	{:else if searchActive && checked.size > 0}
+		<div class="sel-strip" role="status">
+			<span class="sel-text">{msg.mail_selection_search_loaded({ count: checked.size })}</span>
+		</div>
+	{/if}
 	<div class="scroll" bind:this={scrollEl}>
 		{#if pendingCount > 0}
 			<button type="button" class="new-strip" onclick={onFlushPending}>
@@ -563,10 +630,13 @@
 					<MessageRow
 						{m}
 						active={activeId === m.id}
-						checked={checked.has(m.id)}
+						checked={inQuery || checked.has(m.id)}
 						{anyChecked}
 						{caps}
+						{viewFolder}
+						searching={searchActive}
 						{onOpen}
+						{onSelect}
 						{onToggleStar}
 						{onToggleCheck}
 						{onArchive}

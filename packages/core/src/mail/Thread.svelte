@@ -14,9 +14,26 @@
 		onNeed?: (id: string) => void;
 		onConfirmKeyChange?: (address: string) => void | Promise<void>;
 		onUnsubscribe?: (e: ThreadEntry) => void;
+		baseFolder?: string;
+		canMove?: boolean;
+		canLabel?: boolean;
+		openPicker?: string | null;
+		onPicker?: (kind: 'move' | 'labels', entry: ThreadEntry, anchor: HTMLElement) => void;
 	}
 
-	let { entries, focusId, initialOpen, onNeed, onConfirmKeyChange, onUnsubscribe }: Props = $props();
+	let {
+		entries,
+		focusId,
+		initialOpen,
+		onNeed,
+		onConfirmKeyChange,
+		onUnsubscribe,
+		baseFolder,
+		canMove = false,
+		canLabel = false,
+		openPicker = null,
+		onPicker
+	}: Props = $props();
 
 	const FOCUS_GAP = 12;
 	const SETTLE_MS = 400;
@@ -144,6 +161,11 @@
 					onToggle={() => toggle(e.id)}
 					{onConfirmKeyChange}
 					{onUnsubscribe}
+					{baseFolder}
+					{canMove}
+					{canLabel}
+					{openPicker}
+					{onPicker}
 				/>
 			{:else}
 				<button type="button" class="thr-fold" onclick={() => (revealed = true)}>

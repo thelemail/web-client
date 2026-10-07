@@ -79,6 +79,32 @@ export function labelStates(labelSets: readonly (readonly string[])[]): Map<stri
 	return out;
 }
 
+export interface LabelTally {
+	counts: Readonly<Record<string, number>>;
+	total: number;
+}
+
+export function labelStatesFromTallies(tallies: readonly LabelTally[]): Map<string, CheckState> {
+	const counts = new Map<string, number>();
+	let total = 0;
+	for (const t of tallies) {
+		total += t.total;
+		for (const [id, n] of Object.entries(t.counts)) counts.set(id, (counts.get(id) ?? 0) + n);
+	}
+	const out = new Map<string, CheckState>();
+	for (const [id, n] of counts) {
+		if (n <= 0) continue;
+		out.set(id, n >= total ? 'on' : 'mixed');
+	}
+	return out;
+}
+
+export function tallyOf(labels: readonly string[]): LabelTally {
+	const counts: Record<string, number> = {};
+	for (const id of labels) counts[id] = 1;
+	return { counts, total: 1 };
+}
+
 export function nextCheckState(current: CheckState, initial: CheckState): CheckState {
 	if (current === 'mixed') return 'on';
 	if (current === 'on') return 'off';
