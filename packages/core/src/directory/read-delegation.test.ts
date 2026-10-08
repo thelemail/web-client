@@ -17,7 +17,9 @@ vi.mock('./tlog/state-idb', () => ({ tlogStateStore: {} }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
 import type { ReadDelegate } from '$core/api/types';
+import type { TlogRuntimePolicy } from './tlog/policy';
 import { generateForwardingKey } from '$core/keys/forwardingKey';
+import { DirectoryVerificationError } from './errors';
 import {
 	canonicaliseReadDelegation,
 	parseReadDelegationStatement,
@@ -40,6 +42,16 @@ const GO_CANONICAL =
 	'"version":1}';
 
 let signer: openpgp.PrivateKey;
+
+const PINNED_LOG: TlogRuntimePolicy = {
+	origin: 'thelemail.com/keys',
+	logVerifierKey: 'thelemail.com/keys+76ead63c+ASduViYkPgYHzuTuDnuTdEkjR/DIprnavuFA3vom4YZT',
+	vrfPublicKey: 'AFye6B/Tm9oZVs25OmoSyDWn16PFdnIhG2vpOJGSzEE=',
+	witnessVerifierKeys: null,
+	witnessThreshold: 0,
+	maxCosignatureAgeSeconds: 86400,
+	mode: 'enforce'
+};
 
 beforeAll(async () => {
 	const generated = await openpgp.generateKey({
@@ -157,5 +169,23 @@ describe('verifyReadDelegate', () => {
 		const d = await delegate('contact@example.com');
 		d.id = '00000000-0000-0000-0000-000000000000';
 		await expectCode(verifyReadDelegate(d, 'contact@example.com'), 'delegation_mismatch');
+	});
+
+	it('rejects a delegate without a log proof when the policy enforces', async () => {
+		const d = await delegate('contact@example.com');
+		const err = await verifyReadDelegate(d, 'contact@example.com', { tlogPolicy: PINNED_LOG }).then(
+			() => null,
+			(e: unknown) => e
+		);
+		expect(err).toBeInstanceOf(DirectoryVerificationError);
+		expect((err as DirectoryVerificationError).code).toBe('tlog_proof_missing');
+	});
+
+	it('accepts a delegate without a log proof when the policy only monitors', async () => {
+		const d = await delegate('contact@example.com');
+		const statement = await verifyReadDelegate(d, 'contact@example.com', {
+			tlogPolicy: { ...PINNED_LOG, mode: 'monitor' }
+		});
+		expect(statement.readDelegationId).toBe(d.id);
 	});
 });
