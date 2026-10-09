@@ -1830,9 +1830,21 @@
 		gap: 6px;
 	}
 	.auth .otpgrid input {
-		width: 42px;
+		flex: 1 1 0;
+		min-width: 0;
+		max-width: 48px;
+		width: auto;
 		height: 50px;
 		font-size: 20px;
+	}
+}
+
+@media (max-width: 420px) {
+	.auth .stagebody {
+		padding: 32px 16px 48px;
+	}
+	.auth .card-surface {
+		padding: 26px 20px 22px;
 	}
 }
 
