@@ -29,5 +29,8 @@ export function announce(text: string): void {
 	el.textContent = '';
 	pending = setTimeout(() => {
 		el.textContent = text;
+		pending = setTimeout(() => {
+			el.textContent = '';
+		}, 7000);
 	}, 100);
 }
