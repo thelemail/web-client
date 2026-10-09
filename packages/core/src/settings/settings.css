@@ -12,9 +12,6 @@
 	* {
 		box-sizing: border-box;
 	}
-	:focus-visible {
-		outline: none;
-	}
 	button {
 		font-family: inherit;
 		cursor: pointer;

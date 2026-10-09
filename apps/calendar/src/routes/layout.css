@@ -56,7 +56,7 @@
 	--fg:               var(--ink-800);
 	--fg-strong:        var(--ink-900);
 	--fg-muted:         var(--ink-500);
-	--fg-faint:         var(--ink-400);
+	--fg-faint:         #6F7664;
 	--fg-on-pine:       #EDF1E9;
 	--fg-on-pine-muted: #A9B8A8;
 
@@ -69,7 +69,7 @@
 	--primary-fg:       #F4F7EF;
 	--link:             var(--pine-600);
 
-	--focus-ring:       color-mix(in oklch, var(--pine-500) 55%, transparent);
+	--focus-ring:       var(--pine-500);
 	--selection:        var(--pine-100);
 
 	--background:            var(--paper-0);
@@ -226,7 +226,7 @@
 	--fg:               var(--ink-800);
 	--fg-strong:        var(--ink-900);
 	--fg-muted:         var(--ink-500);
-	--fg-faint:         var(--ink-400);
+	--fg-faint:         #87907B;
 
 	--border-soft:      var(--paper-150);
 	--border-strong:    var(--paper-200);
@@ -236,7 +236,7 @@
 	--primary-press:    #315A44;
 	--link:             var(--pine-300);
 
-	--focus-ring:       color-mix(in oklch, var(--pine-300) 45%, transparent);
+	--focus-ring:       var(--pine-300);
 	--selection:        #33523F;
 
 	--shadow-xs:    0 1px 1px rgba(0, 0, 0, 0.3);
@@ -650,7 +650,7 @@
 		background: var(--selection);
 	}
 	:focus-visible {
-		outline: 3px solid var(--focus-ring);
+		outline: 2px solid var(--focus-ring);
 		outline-offset: 2px;
 	}
 }

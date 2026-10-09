@@ -1,5 +1,4 @@
 .mail-app * { box-sizing: border-box; }
-.mail-app :focus-visible { outline: none; }
 
 :is(.mail-scrim, .mail-app .replybox) .recip-input:focus,
 :is(.mail-scrim, .mail-app .replybox) .cfield.subj input:focus {
