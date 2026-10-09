@@ -2297,6 +2297,7 @@
 	"mail_recip_cleartext": "No encryption key — sent unencrypted",
 	"mail_recip_add_people": "Add people…",
 	"mail_recip_remove_field": "Remove {field}",
+	"mail_recip_remove_chip": "Remove {address}",
 	"mail_dirfail_error_code": "Error code",
 	"mail_dirfail_address": "Address",
 	"mail_dirfail_trusted_signer": "Trusted signer",

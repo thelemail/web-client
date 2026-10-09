@@ -2297,6 +2297,7 @@
   "mail_recip_cleartext": "Aucune clé de chiffrement — envoyé sans chiffrement",
   "mail_recip_add_people": "Ajouter des personnes…",
   "mail_recip_remove_field": "Supprimer {field}",
+  "mail_recip_remove_chip": "Retirer {address}",
   "mail_dirfail_error_code": "Code d’erreur",
   "mail_dirfail_address": "Adresse",
   "mail_dirfail_trusted_signer": "Signataire de confiance",

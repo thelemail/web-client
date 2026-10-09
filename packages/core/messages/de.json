@@ -2297,6 +2297,7 @@
 	"mail_recip_cleartext": "Kein Verschlüsselungsschlüssel – unverschlüsselt gesendet",
 	"mail_recip_add_people": "Personen hinzufügen…",
 	"mail_recip_remove_field": "{field} entfernen",
+	"mail_recip_remove_chip": "{address} entfernen",
 	"mail_dirfail_error_code": "Fehlercode",
 	"mail_dirfail_address": "Adresse",
 	"mail_dirfail_trusted_signer": "Vertrauenswürdiger Unterzeichner",

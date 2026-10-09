@@ -2297,6 +2297,7 @@
 	"mail_recip_cleartext": "Sem chave de cifragem — enviada sem cifragem",
 	"mail_recip_add_people": "Adicionar pessoas…",
 	"mail_recip_remove_field": "Remover {field}",
+	"mail_recip_remove_chip": "Remover {address}",
 	"mail_dirfail_error_code": "Código de erro",
 	"mail_dirfail_address": "Endereço",
 	"mail_dirfail_trusted_signer": "Signatário de confiança",

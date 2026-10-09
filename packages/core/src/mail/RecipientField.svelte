@@ -42,6 +42,7 @@
 
 	let text = $state('');
 	let hi = $state(0);
+	const uid = $props.id();
 	let focused = $state(false);
 	let inputRef: HTMLInputElement | undefined = $state();
 
@@ -145,7 +146,7 @@
 </script>
 
 <div class="recip-row" onmousedown={rowMouseDown} role="presentation">
-	<span class="recip-label">{labelText}</span>
+	<span class="recip-label" id="{uid}-label">{labelText}</span>
 	<div class="recip-box" class:focus={focused} onmousedown={boxMouseDown} role="presentation">
 		{#each chips as c, i (i)}
 			<span class="rchip" class:bad={!c.valid} title={c.email}>
@@ -165,10 +166,12 @@
 				{#if c.valid && encStatusFor}
 					{@const es = encStatusFor(c.email)}
 					{#if es === 'encrypted' || es === 'internal'}
-						<span class="renc ok" title={m.mail_recip_encrypted()}><Lock size={11} /></span>
+						<span class="renc ok" title={m.mail_recip_encrypted()}
+							><Lock size={11} aria-hidden="true" /><span class="sr-only">{m.mail_recip_encrypted()}</span></span
+						>
 					{:else if es === 'cleartext'}
 						<span class="renc warn" title={m.mail_recip_cleartext()}
-							><LockOpen size={11} /></span
+							><LockOpen size={11} aria-hidden="true" /><span class="sr-only">{m.mail_recip_cleartext()}</span></span
 						>
 					{/if}
 				{/if}
@@ -176,6 +179,7 @@
 					type="button"
 					class="rm"
 					title={m.common_remove()}
+					aria-label={m.mail_recip_remove_chip({ address: c.email })}
 					onclick={(e) => {
 						e.stopPropagation();
 						removeChip(i);
@@ -188,6 +192,12 @@
 		<input
 			bind:this={inputRef}
 			class="recip-input"
+			role="combobox"
+			aria-labelledby="{uid}-label"
+			aria-autocomplete="list"
+			aria-expanded={focused && suggestions.length > 0}
+			aria-controls="{uid}-list"
+			aria-activedescendant={focused && suggestions[hi] ? `${uid}-opt-${hi}` : undefined}
 			bind:value={text}
 			placeholder={chips.length ? '' : label === 'To' ? 'name@domain.com' : m.mail_recip_add_people()}
 			oninput={() => (hi = 0)}
@@ -197,12 +207,15 @@
 			onblur={onBlur}
 		/>
 		{#if focused && suggestions.length > 0}
-			<div class="ac-menu">
+			<div class="ac-menu" role="listbox" id="{uid}-list" aria-labelledby="{uid}-label">
 				{#each suggestions as c, i (c.email)}
-					<button
-						type="button"
+					<div
 						class="ac-item"
 						class:active={i === hi}
+						role="option"
+						id="{uid}-opt-{i}"
+						aria-selected={i === hi}
+						tabindex="-1"
 						onmousedown={(e) => {
 							e.preventDefault();
 							commit(c);
@@ -219,7 +232,7 @@
 							fit="cover"
 						/>
 						<span class="ac-tx"><b>{c.name}</b><span>{c.email}</span></span>
-					</button>
+					</div>
 				{/each}
 			</div>
 		{/if}
