@@ -299,6 +299,21 @@
 .mail-app .mrow.unread::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--pine-600); }
 .mail-app .mrow.active::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--brass-500); }
 
+.mail-app .mrow { touch-action: pan-y; }
+.mail-app .mrow.swiping { overflow: hidden; }
+.mail-app .mrow.swiping .qa { opacity: 0; pointer-events: none; }
+.mail-app .mrow.swiping > :not(.swipe-under, .qa) { transform: translateX(var(--sx, 0)); }
+.mail-app .mrow.settling > :not(.swipe-under, .qa) { transition: transform 180ms var(--ease-out); }
+.mail-app .mrow .swipe-under { position: absolute; top: 0; bottom: 0; z-index: 3; display: flex; align-items: center; padding: 0 22px; overflow: hidden; color: var(--on-fill); background: var(--info-700); }
+.mail-app .mrow .swipe-under.to-right { left: 0; justify-content: flex-start; }
+.mail-app .mrow .swipe-under.to-left { right: 0; justify-content: flex-end; background: var(--primary); }
+.mail-app .mrow .swipe-under.to-left.trash { background: var(--danger-700); }
+.mail-app .mrow .swipe-under svg { flex: 0 0 auto; transition: transform var(--dur-fast) var(--ease-out); }
+.mail-app .mrow .swipe-under.armed svg { transform: scale(1.18); }
+.mail-app .mrow.settling .swipe-under { transition: width 180ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) {
+	.mail-app .mrow.settling > :not(.swipe-under, .qa), .mail-app .mrow.settling .swipe-under, .mail-app .mrow .swipe-under svg { transition: none; }
+}
 .mail-app .mrow .mrow-open { position: absolute; inset: 0; z-index: 1; width: 100%; padding: 0; border: none; border-radius: 0; background: none; cursor: pointer; }
 .mail-app .mrow .mrow-open:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .mail-app .mrow .lead { position: relative; z-index: 2; width: 22px; height: 22px; margin-top: 1px; }
