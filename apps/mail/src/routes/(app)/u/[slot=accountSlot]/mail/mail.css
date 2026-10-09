@@ -299,17 +299,21 @@
 .mail-app .mrow.unread::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--pine-600); }
 .mail-app .mrow.active::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--brass-500); }
 
-.mail-app .mrow .lead { position: relative; width: 22px; height: 22px; margin-top: 1px; }
+.mail-app .mrow .mrow-open { position: absolute; inset: 0; z-index: 1; width: 100%; padding: 0; border: none; border-radius: 0; background: none; cursor: pointer; }
+.mail-app .mrow .mrow-open:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.mail-app .mrow .lead { position: relative; z-index: 2; width: 22px; height: 22px; margin-top: 1px; }
 .mail-app .mrow .seal { width: 22px; height: 22px; font-size: 9px; font-weight: 600; border-radius: var(--radius-avatar); }
-.mail-app .mrow .row-ck { position: absolute; inset: 0; width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1.5px solid var(--border-strong); padding: 0; opacity: 0; pointer-events: none; transform: scale(.86); transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease-out); }
+.mail-app .mrow .row-ck { position: absolute; inset: 0; width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1.5px solid var(--border-strong); padding: 0; opacity: 0; transform: scale(.86); transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease-out); }
 .mail-app .mrow .row-ck svg { width: 13px; height: 13px; color: var(--ink-500); }
 .mail-app .mrow .row-ck.on { background: var(--pine-700); border-color: var(--pine-700); }
 .mail-app .mrow .row-ck.on svg { color: var(--paper-0); }
 .mail-app .mrow:hover .row-ck,
-.mail-app .mrow.checking .row-ck { opacity: 1; pointer-events: auto; transform: none; }
+.mail-app .mrow.checking .row-ck,
+.mail-app .mrow .row-ck:focus-visible { opacity: 1; pointer-events: auto; transform: none; }
 .mail-app .mrow .seal { transition: opacity var(--dur-fast) var(--ease); }
 .mail-app .mrow:hover .seal,
-.mail-app .mrow.checking .seal { opacity: 0; }
+.mail-app .mrow.checking .seal,
+.mail-app .mrow .lead:has(.row-ck:focus-visible) .seal { opacity: 0; }
 
 .mail-app .mrow .rowmain { min-width: 0; }
 .mail-app .mrow .r1 { display: flex; align-items: center; gap: 7px; min-width: 0; }
@@ -343,14 +347,15 @@
 .mail-app .locchip { background: none; color: var(--fg-muted); box-shadow: inset 0 0 0 1px var(--border-strong); max-width: 150px; }
 .mail-app .lchip-more { background: var(--paper-100); color: var(--ink-600); font-family: var(--font-mono); flex: 0 0 auto; }
 
-.mail-app .mrow .r1 .star { flex: 0 0 auto; border: none; background: none; padding: 0; display: flex; color: var(--ink-300); opacity: 0; pointer-events: none; transition: opacity var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.mail-app .mrow .r1 .star { position: relative; z-index: 2; flex: 0 0 auto; border: none; background: none; padding: 0; display: flex; color: var(--ink-300); opacity: 0; pointer-events: none; transition: opacity var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .mail-app .mrow:hover .r1 .star { opacity: 1; pointer-events: auto; }
 .mail-app .mrow .r1 .star:hover { color: var(--brass-500); }
 .mail-app .mrow .r1 .star.on { opacity: 1; pointer-events: auto; color: var(--brass-500); }
 .mail-app .mrow .r1 .star.on svg { fill: var(--brass-500); }
 
-.mail-app .qa { position: absolute; right: 10px; top: 50%; display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); box-shadow: var(--shadow-md); padding: 2px; opacity: 0; pointer-events: none; transform: translate(6px, -50%); transition: opacity var(--dur-fast) var(--ease), transform var(--dur) var(--ease-out); }
-.mail-app .mrow:hover .qa { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
+.mail-app .qa { position: absolute; z-index: 2; right: 10px; top: 50%; display: flex; gap: 2px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); box-shadow: var(--shadow-md); padding: 2px; opacity: 0; pointer-events: none; transform: translate(6px, -50%); transition: opacity var(--dur-fast) var(--ease), transform var(--dur) var(--ease-out); }
+.mail-app .mrow:hover .qa,
+.mail-app .mrow:has(:focus-visible) .qa { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
 .mail-app .mrow.checking .qa { opacity: 0; pointer-events: none; }
 .mail-app .qa button { width: 26px; height: 26px; border-radius: 6px; border: none; background: none; color: var(--fg-muted); display: flex; align-items: center; justify-content: center; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .mail-app .qa button:hover { background: var(--paper-100); color: var(--fg-strong); }
@@ -1020,7 +1025,7 @@
 
 	.mail-app .mrow:hover .seal { opacity: 1; }
 	.mail-app .mrow.checking .seal { opacity: 0; }
-	.mail-app .mrow:hover .row-ck { opacity: 0; pointer-events: none; }
+	.mail-app .mrow:hover .row-ck { opacity: 0; }
 	.mail-app .mrow.checking .row-ck { opacity: 1; pointer-events: auto; transform: none; }
 	.mail-app .mrow:hover .qa { opacity: 0; pointer-events: none; }
 	.mail-app .mrow:hover .r1 .star { opacity: 0; pointer-events: none; }

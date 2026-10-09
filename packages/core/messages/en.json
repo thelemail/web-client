@@ -2908,6 +2908,8 @@
 	"settings_domains_remove_keep": "Keep this domain",
 	"settings_domains_removing": "Removing…",
 	"mail_row_select": "Select message",
+	"mail_row_unread": "Unread",
+	"mail_row_starred": "Starred",
 	"mail_row_thread_count": [
 		{
 			"declarations": [
