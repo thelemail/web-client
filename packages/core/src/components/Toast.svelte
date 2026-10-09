@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { m } from '$paraglide/messages.js';
+	import { announce } from '$core/announce';
 
 	interface Props {
 		text: string;
@@ -10,6 +11,8 @@
 	}
 
 	let { text, undoLabel, onUndo, shift = 0 }: Props = $props();
+
+	$effect(() => announce(text));
 </script>
 
 <div class="toast" style:--toast-shift="{shift}px">

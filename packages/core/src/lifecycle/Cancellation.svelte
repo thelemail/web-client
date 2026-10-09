@@ -17,6 +17,7 @@
 	import type { LifecycleContext, RetentionOffer } from './types';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
+	import { announce } from '$core/announce';
 	import Rich from '$core/i18n/Rich.svelte';
 
 	let { ctx, offer = 'cheaper' }: { ctx: LifecycleContext; offer?: RetentionOffer } = $props();
@@ -47,6 +48,7 @@
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
 	function flash(message: string) {
 		toast = message;
+		announce(message);
 		if (toastTimer) clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
 	}
