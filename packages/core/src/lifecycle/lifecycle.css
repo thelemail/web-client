@@ -639,7 +639,7 @@
 	width: 20px;
 	height: 20px;
 	border-radius: var(--radius-sm);
-	border: 1.5px solid var(--border-strong);
+	border: 1.5px solid var(--border-control);
 	background: var(--surface);
 	box-shadow: var(--shadow-inset);
 	display: flex;

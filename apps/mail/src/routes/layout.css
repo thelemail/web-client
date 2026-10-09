@@ -62,6 +62,7 @@
 
 	--border-soft:      var(--paper-150);
 	--border-strong:    var(--paper-200);
+	--border-control:   #8F8B7A;
 	--border-dark:      #2C3A2E;
 
 	--primary-press:    var(--pine-800);
@@ -90,7 +91,7 @@
 	--destructive:           var(--danger-500);
 	--destructive-foreground:#FFFFFF;
 	--border:                var(--paper-150);
-	--input:                 var(--paper-200);
+	--input:                 var(--border-control);
 	--ring:                  var(--pine-500);
 
 	--chart-1: var(--pine-500);
@@ -231,6 +232,7 @@
 
 	--border-soft:      var(--paper-150);
 	--border-strong:    var(--paper-200);
+	--border-control:   #6B7768;
 	--border-dark:      #2E3D30;
 
 	--primary-hover:    #477A5F;
@@ -264,7 +266,7 @@
 	--destructive:           var(--danger-500);
 	--destructive-foreground:var(--on-fill);
 	--border:                var(--paper-150);
-	--input:                 var(--paper-200);
+	--input:                 var(--border-control);
 	--ring:                  var(--pine-500);
 
 	--chart-1: var(--pine-300);

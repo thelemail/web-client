@@ -113,13 +113,13 @@
 .settings-app .seg button.on { background: var(--surface); color: var(--pine-800); font-weight: 600; box-shadow: var(--shadow-xs); }
 
 .settings-app .sel { position: relative; display: inline-flex; align-items: center; }
-.settings-app .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
+.settings-app .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
 .settings-app .sel select:hover { border-color: var(--ink-300); }
 .settings-app .sel select:focus-visible { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
 .settings-app .sel .chev { position: absolute; right: 11px; display: flex; color: var(--ink-400); pointer-events: none; }
 
 .settings-app .tin,
-.cer-scrim .tin { font-family: inherit; font-size: 13.5px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 9px 13px; width: 100%; box-shadow: var(--shadow-xs); transition: border-color var(--dur), box-shadow var(--dur); }
+.cer-scrim .tin { font-family: inherit; font-size: 13.5px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 9px 13px; width: 100%; box-shadow: var(--shadow-xs); transition: border-color var(--dur), box-shadow var(--dur); }
 .settings-app .tin:hover,
 .cer-scrim .tin:hover { border-color: var(--ink-300); }
 .settings-app .tin:focus,
@@ -157,7 +157,7 @@
 .settings-app .sig-tools button svg { width: 16px; height: 16px; }
 .settings-app .sig-tools button:hover { background: var(--paper-100); color: var(--ink-900); }
 .settings-app .sig-tools .divr { width: 1px; height: 18px; background: var(--border-strong); margin: 0 5px; }
-.settings-app .sig-edit { border: 1px solid var(--border-strong); border-radius: 0 0 var(--radius-control) var(--radius-control); padding: 15px 16px; min-height: 104px; font-size: 14px; line-height: 1.6; color: var(--ink-700); outline: none; background: var(--surface); }
+.settings-app .sig-edit { border: 1px solid var(--border-control); border-radius: 0 0 var(--radius-control) var(--radius-control); padding: 15px 16px; min-height: 104px; font-size: 14px; line-height: 1.6; color: var(--ink-700); outline: none; background: var(--surface); }
 .settings-app .sig-edit:focus { border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
 .settings-app .sig-edit .sig-name { font-family: var(--font-sans); font-feature-settings: normal; font-size: 16px; color: var(--fg-strong); font-weight: 500; }
 .settings-app .sig-edit .sig-line { color: var(--ink-500); font-size: 13px; }
@@ -708,7 +708,7 @@
 .settings-app .alias-compose .sel,
 .cer-scrim .alias-compose .sel { flex: 0 0 auto; }
 .cer-scrim .sel { position: relative; display: inline-flex; align-items: center; }
-.cer-scrim .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
+.cer-scrim .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
 .cer-scrim .sel select:hover { border-color: var(--ink-300); }
 .cer-scrim .sel select:focus-visible { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
 .cer-scrim .sel select:disabled { cursor: default; padding-right: 13px; background: var(--paper-50); box-shadow: none; }

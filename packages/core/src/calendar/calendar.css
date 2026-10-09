@@ -2145,7 +2145,7 @@ button.create {
 .cal-surface .cal-form select,
 .cal-surface .cal-form textarea {
 	width: 100%;
-	border: 1px solid var(--border-strong);
+	border: 1px solid var(--border-control);
 	border-radius: var(--radius-sm);
 	background: var(--surface);
 	color: var(--fg-strong);
