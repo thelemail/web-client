@@ -17,6 +17,29 @@ const FOCUSABLE = [
 const LAYER = '[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]';
 
 const stack: HTMLElement[] = [];
+const recent: HTMLElement[] = [];
+
+if (typeof document !== 'undefined') {
+	document.addEventListener(
+		'focusin',
+		(e) => {
+			if (!(e.target instanceof HTMLElement)) return;
+			recent.push(e.target);
+			if (recent.length > 8) recent.shift();
+		},
+		true
+	);
+}
+
+function openerFor(node: HTMLElement): HTMLElement | null {
+	const active = document.activeElement;
+	if (active instanceof HTMLElement && active !== document.body && !node.contains(active)) return active;
+	for (let i = recent.length - 1; i >= 0; i--) {
+		const el = recent[i];
+		if (el.isConnected && !node.contains(el)) return el;
+	}
+	return null;
+}
 
 function focusables(root: HTMLElement): HTMLElement[] {
 	return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
@@ -34,7 +57,7 @@ function initialTarget(root: HTMLElement): HTMLElement {
 
 export const trapFocus: Action<HTMLElement, TrapFocusOptions | undefined> = (node, options) => {
 	let opts = options ?? {};
-	const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+	const previous = openerFor(node);
 	if (!node.hasAttribute('tabindex')) node.setAttribute('tabindex', '-1');
 	stack.push(node);
 
