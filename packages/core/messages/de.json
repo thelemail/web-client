@@ -2842,6 +2842,7 @@
 	"auth_2fa_title": "Bestätigen Sie Ihre Identität",
 	"auth_2fa_lede": "<addr>{email}</addr> erfordert einen zweiten Faktor.",
 	"auth_2fa_code_label": "6-stelliger Code",
+	"auth_2fa_digit_label": "Ziffer {n} von {total}",
 	"auth_2fa_code_mismatch": "Dieser Code stimmt nicht. Codes wechseln alle 30 Sekunden – versuchen Sie den aktuellen.",
 	"auth_2fa_code_hint": "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den Code für <addr>{email}</addr> ein.",
 	"auth_2fa_checking": "Wird geprüft…",

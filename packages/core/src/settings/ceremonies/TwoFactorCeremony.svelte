@@ -420,7 +420,7 @@
 				{/each}
 			</div>
 			{#if setupError}
-				<span class="errtext"><CircleAlert size={13} /><span>{setupError}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1 && !unlocked && !confirmed}
@@ -498,10 +498,10 @@
 				</Button>
 			{/if}
 			{#if noUsableFactor}
-				<span class="errtext"><CircleAlert size={13} /><span>{m.settings_ceremony_twofa_confirm_no_method()}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{m.settings_ceremony_twofa_confirm_no_method()}</span></span>
 			{/if}
 			{#if confirmError}
-				<span class="errtext"><CircleAlert size={13} /><span>{confirmError}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{confirmError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1}
@@ -551,7 +551,7 @@
 						/>
 					</div>
 					{#if setupError}
-						<span class="errtext"><CircleAlert size={13} /><span>{setupError}</span></span>
+						<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
 					{/if}
 				</div>
 			</div>
@@ -587,7 +587,7 @@
 					</Button>
 				{/if}
 				{#if setupError}
-					<span class="errtext"><CircleAlert size={13} /><span>{setupError}</span></span>
+					<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
 				{/if}
 			</div>
 		{/if}

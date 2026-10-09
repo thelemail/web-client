@@ -10,7 +10,9 @@
 		placeholder,
 		autocomplete,
 		aux,
-		onEnter
+		onEnter,
+		invalid = false,
+		describedby
 	}: {
 		label: string;
 		value: string;
@@ -18,6 +20,8 @@
 		autocomplete?: 'current-password' | 'new-password' | 'off';
 		aux?: Snippet;
 		onEnter?: () => void;
+		invalid?: boolean;
+		describedby?: string;
 	} = $props();
 
 	let show = $state(false);
@@ -37,6 +41,8 @@
 			bind:value
 			{placeholder}
 			autocomplete={autocomplete ?? 'off'}
+			aria-invalid={invalid || undefined}
+			aria-describedby={describedby}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' && onEnter) onEnter();
 			}}

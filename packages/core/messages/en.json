@@ -2842,6 +2842,7 @@
 	"auth_2fa_title": "Confirm it’s you",
 	"auth_2fa_lede": "<addr>{email}</addr> asks for a second factor.",
 	"auth_2fa_code_label": "6-digit code",
+	"auth_2fa_digit_label": "Digit {n} of {total}",
 	"auth_2fa_code_mismatch": "That code didn’t match. Codes rotate every 30 seconds — try the current one.",
 	"auth_2fa_code_hint": "Open your authenticator app and enter the code for <addr>{email}</addr>.",
 	"auth_2fa_checking": "Checking…",

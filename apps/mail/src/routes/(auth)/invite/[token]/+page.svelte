@@ -344,9 +344,11 @@
 				onEnter={() => {
 					if (passwordReady) submitRegistration();
 				}}
+				invalid={mismatch}
+				describedby={mismatch ? 'invite-confirm-msg' : undefined}
 			/>
 			{#if mismatch}
-				<span class="errtext" style="margin-top:-8px">
+				<span class="errtext" role="alert" id="invite-confirm-msg" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
@@ -357,7 +359,7 @@
 				</span>
 			{/if}
 			{#if submitError}
-				<span class="errtext" style="margin-top:-4px">
+				<span class="errtext" role="alert" style="margin-top:-4px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{submitError}</span>
 				</span>

@@ -184,7 +184,7 @@
 		</ul>
 
 		{#if joinError}
-			<div class="form-error" style="margin-top:16px">
+			<div class="form-error" role="alert" style="margin-top:16px">
 				<CircleAlert size={15} />{joinError}
 			</div>
 		{/if}

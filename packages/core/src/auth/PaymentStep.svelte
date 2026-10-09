@@ -94,7 +94,7 @@
 		</div>
 
 		{#if error}
-			<span class="errtext">
+			<span class="errtext" role="alert">
 				<CircleAlert size={13} strokeWidth={1.75} />
 				<span>{error}</span>
 			</span>

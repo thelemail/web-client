@@ -447,6 +447,8 @@
 				<label for="cur-pw">{m.settings_ceremony_password_current()}</label>
 				<input
 					id="cur-pw"
+					aria-invalid={!!verifyError || undefined}
+					aria-describedby={verifyError ? 'cur-pw-err' : undefined}
 					class="tin"
 					type="password"
 					bind:value={cur}
@@ -459,7 +461,7 @@
 				/>
 			</div>
 			{#if verifyError}
-				<span class="errtext"><CircleAlert size={13} /><span>{verifyError}</span></span>
+				<span class="errtext" role="alert" id="cur-pw-err"><CircleAlert size={13} /><span>{verifyError}</span></span>
 			{/if}
 		</div>
 	{:else if phase === 'twofa'}
@@ -518,7 +520,7 @@
 				</Button>
 			{/if}
 			{#if twoFaError}
-				<span class="errtext"><CircleAlert size={13} /><span>{twoFaError}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{twoFaError}</span></span>
 			{/if}
 		</div>
 	{:else if phase === 'newpw'}
@@ -566,6 +568,8 @@
 				<label for="new-pw2">{m.settings_ceremony_password_confirm()}</label>
 				<input
 					id="new-pw2"
+					aria-invalid={(pw2.length > 0 && !match) || undefined}
+					aria-describedby={pw2.length > 0 && !match ? 'new-pw2-err' : undefined}
 					class="tin"
 					type="password"
 					bind:value={pw2}
@@ -577,7 +581,7 @@
 				/>
 			</div>
 			{#if pw2.length > 0 && !match}
-				<span class="errtext"><CircleAlert size={13} /><span>{m.settings_ceremony_password_mismatch()}</span></span>
+				<span class="errtext" role="alert" id="new-pw2-err"><CircleAlert size={13} /><span>{m.settings_ceremony_password_mismatch()}</span></span>
 			{/if}
 			<div class="inline-warn">
 				<KeyRound size={15} />
@@ -588,7 +592,7 @@
 		<div class="cer-pane">
 			<ProgressRun label={m.settings_ceremony_password_progress()} lines={RUN_LINES} progress={runProgress} />
 			{#if runError}
-				<span class="errtext"><CircleAlert size={13} /><span>{runError}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{runError}</span></span>
 			{/if}
 		</div>
 	{:else}

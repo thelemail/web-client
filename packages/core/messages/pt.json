@@ -2842,6 +2842,7 @@
 	"auth_2fa_title": "Confirme a sua identidade",
 	"auth_2fa_lede": "<addr>{email}</addr> requer um segundo fator.",
 	"auth_2fa_code_label": "Código de 6 dígitos",
+	"auth_2fa_digit_label": "Dígito {n} de {total}",
 	"auth_2fa_code_mismatch": "Esse código não corresponde. Os códigos mudam a cada 30 segundos — tente o atual.",
 	"auth_2fa_code_hint": "Abra a aplicação de autenticação e introduza o código de <addr>{email}</addr>.",
 	"auth_2fa_checking": "A verificar…",
