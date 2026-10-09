@@ -70,6 +70,38 @@
 	}: Props = $props();
 
 	const uid = $props.id();
+	let rowEl: HTMLDivElement | undefined = $state();
+	let droppedFocusAt = -Infinity;
+	let neighbours: HTMLElement[] = [];
+
+	function rowsAround(el: HTMLElement): HTMLElement[] {
+		const rows = [...(el.parentElement?.querySelectorAll<HTMLElement>('.mrow') ?? [])];
+		const i = rows.indexOf(el);
+		return i < 0 ? [] : [...rows.slice(i + 1), ...rows.slice(0, i).reverse()];
+	}
+
+	function onFocusOut(e: FocusEvent) {
+		if (e.relatedTarget || !rowEl) return;
+		droppedFocusAt = performance.now();
+		neighbours = rowsAround(rowEl);
+	}
+
+	$effect(() => {
+		const el = rowEl;
+		return () => {
+			if (!el) return;
+			const active = document.activeElement;
+			const held = el.contains(active);
+			const dropped = (!active || active === document.body) && performance.now() - droppedFocusAt < 10000;
+			if (!held && !dropped) return;
+			const candidates = held && el.isConnected ? rowsAround(el) : neighbours;
+			queueMicrotask(() => {
+				const next = candidates.find((r) => r.isConnected);
+				next?.querySelector<HTMLElement>('.mrow-open')?.focus();
+			});
+		};
+	});
+
 	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
 	const rowState = $derived(
 		[m.unread ? msg.mail_row_unread() : '', m.starred ? msg.mail_row_starred() : '']
@@ -111,7 +143,9 @@
 </script>
 
 <div
+	bind:this={rowEl}
 	class="mrow"
+	onfocusout={onFocusOut}
 	class:unread={m.unread}
 	class:active
 	class:sel={checked}
