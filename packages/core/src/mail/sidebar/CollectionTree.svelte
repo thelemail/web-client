@@ -284,6 +284,12 @@
 		endPress();
 	}
 
+	function cancelPress() {
+		if (!press) return;
+		if (dragId) suppressClick = true;
+		endPress();
+	}
+
 	function onClick(ev: MouseEvent) {
 		if (suppressClick) {
 			suppressClick = false;
@@ -309,7 +315,7 @@
 	}
 </script>
 
-<svelte:window onkeydown={onDragKey} />
+<svelte:window onkeydown={onDragKey} onblur={cancelPress} />
 
 <ul class="nav-list ctree" role="tree" aria-label={label} bind:this={list} onkeydown={onKeydown}>
 	{#each rows as e, i (e.id)}
@@ -368,6 +374,7 @@
 				onpointermove={onPointerMove}
 				onpointerup={onPointerUp}
 				onpointercancel={endPress}
+				onlostpointercapture={(ev) => ev.pointerId === press?.pointerId && cancelPress()}
 			>
 				<span class="ctree-ico" aria-hidden="true">
 					{#if e.kind === 'label'}
