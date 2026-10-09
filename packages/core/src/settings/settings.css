@@ -473,7 +473,7 @@
 .settings-app .ba-x:hover { background: var(--danger-100); color: var(--danger-700); }
 
 .cer-scrim { position: fixed; inset: 0; z-index: 1000; background: color-mix(in oklch, var(--pine-950) 45%, transparent); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; padding: 28px; opacity: 1; font-family: var(--font-sans); color: var(--fg); }
-.cer-scrim .cer-panel { width: 600px; max-width: 100%; max-height: 90vh; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; opacity: 1; animation: cerrise var(--dur) var(--ease-out) both; }
+.cer-scrim .cer-panel { width: 600px; max-width: 100%; max-height: 90dvh; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; opacity: 1; animation: cerrise var(--dur) var(--ease-out) both; }
 @keyframes cerrise { from { transform: translateY(8px); } to { transform: translateY(0); } }
 
 .cer-scrim .cer-head { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
@@ -922,7 +922,7 @@
 	.cer-scrim .crypto-pay { flex-direction: column; }
 	.cer-scrim .cp-qr { align-self: center; }
 	.cer-scrim { padding: 0; align-items: flex-end; }
-	.cer-scrim .cer-panel { max-height: 94vh; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+	.cer-scrim .cer-panel { max-height: 94dvh; border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
 	.cer-scrim .cer-body { padding: 18px; }
 	.cer-scrim .cer-head, .cer-scrim .cer-foot, .cer-scrim .cer-steps { padding-left: 16px; padding-right: 16px; }
 	.cer-scrim .phrase-grid { grid-template-columns: repeat(2, 1fr); }

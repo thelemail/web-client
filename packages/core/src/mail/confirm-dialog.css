@@ -1,5 +1,5 @@
 .cfd-scrim { position: fixed; inset: 0; z-index: 122; background: rgba(20, 39, 30, .44); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: cfd-fade var(--dur); font-family: var(--font-sans); color: var(--fg); }
-.cfd-scrim .cfd-modal { width: 486px; max-width: 100%; max-height: 90vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--pine-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 20px 22px 18px; animation: cfd-pop var(--dur-slow) var(--ease-out); }
+.cfd-scrim .cfd-modal { width: 486px; max-width: 100%; max-height: 90dvh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-top: 3px solid var(--pine-600); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 20px 22px 18px; animation: cfd-pop var(--dur-slow) var(--ease-out); }
 .cfd-scrim .cfd-modal.danger { border-top-color: var(--danger-500); }
 .cfd-scrim .cfd-head { display: flex; align-items: flex-start; gap: 12px; }
 .cfd-scrim .cfd-ic { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--pine-100); color: var(--pine-700); flex: 0 0 auto; }

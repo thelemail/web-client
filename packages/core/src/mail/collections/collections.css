@@ -21,7 +21,7 @@
 .cfd-scrim .cm-find { display: flex; align-items: center; gap: 7px; margin: 2px 0 10px; padding: 0 10px; height: 34px; border: 1px solid var(--border-control); border-radius: var(--radius-md); color: var(--fg-faint); }
 .cfd-scrim .cm-find:focus-within { border-color: var(--pine-600); box-shadow: 0 0 0 3px var(--pine-100); }
 .cfd-scrim .cm-find input { flex: 1; min-width: 0; border: none; background: none; outline: none; font: inherit; font-size: 13px; color: var(--fg); }
-.cfd-scrim .cm-list { display: flex; flex-direction: column; gap: 1px; max-height: min(46vh, 380px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 2px 0; }
+.cfd-scrim .cm-list { display: flex; flex-direction: column; gap: 1px; max-height: min(46dvh, 380px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 2px 0; }
 .cfd-scrim .cm-opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px 8px calc(10px + var(--depth, 0) * 16px); border-radius: var(--radius-md); cursor: pointer; }
 .cfd-scrim .cm-opt:hover { background: var(--paper-100); }
 .cfd-scrim .cm-opt:has(input:checked) { background: var(--pine-100); }
