@@ -400,7 +400,7 @@
 .mail-app .rec-eyebrow .tag { color: var(--accent-quiet); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .mail-app .rec-eyebrow .ln { flex: 1; height: 1px; background: var(--border-strong); }
 
-.mail-app .reader-h h1 { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -.022em; color: var(--fg-strong); margin: 0; font-variant-emoji: text; }
+.mail-app .reader-h h1 { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -.022em; color: var(--fg-strong); margin: 0; font-variant-emoji: text; overflow-wrap: anywhere; }
 .mail-app .reader-h h1 .star-big { vertical-align: middle; border: none; background: none; color: var(--ink-300); padding: 0; margin-left: 9px; transition: color var(--dur-fast) var(--ease); }
 .mail-app .reader-h h1 .star-big:hover { color: var(--brass-500); }
 .mail-app .reader-h h1 .star-big.on { color: var(--brass-500); }
