@@ -1212,7 +1212,7 @@
 }
 
 @media (pointer: coarse) {
-	.mail-app .rb-ico, .mail-app .lh-btn { width: 40px; height: 40px; }
+	.mail-app .rb-ico, .mail-app .lh-btn { flex: 0 0 auto; width: 40px; height: 40px; }
 	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .list-h .list-sub-x, .fgroup .addbtn) { position: relative; }
 	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .list-h .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
 }
