@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import type { Snippet, Component } from 'svelte';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
@@ -46,6 +47,7 @@
 		class={'cer-panel' + (tone ? ' tone-' + tone : '')}
 		role="dialog"
 		aria-modal="true"
+		use:trapFocus
 		aria-label={title}
 		tabindex="-1"
 		onmousedown={(e) => e.stopPropagation()}

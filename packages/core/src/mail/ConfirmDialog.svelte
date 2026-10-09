@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import X from '@lucide/svelte/icons/x';
 	import './confirm-dialog.css';
@@ -69,6 +70,7 @@
 	class="cfd-scrim {extraClass}"
 	role="dialog"
 	aria-modal="true"
+	use:trapFocus
 	aria-labelledby={titleId}
 	tabindex="-1"
 	onmousedown={scrimMouseDown}

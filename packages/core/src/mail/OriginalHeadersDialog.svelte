@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import Code from '@lucide/svelte/icons/code';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -96,6 +97,7 @@
 	class="oh-scrim"
 	role="dialog"
 	aria-modal="true"
+	use:trapFocus
 	aria-labelledby="oh-title"
 	tabindex="-1"
 	onmousedown={scrimMouseDown}

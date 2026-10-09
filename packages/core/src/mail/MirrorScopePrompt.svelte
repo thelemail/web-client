@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import { platform } from '$platform';
 	import { Button } from '$core/components/ui/button';
@@ -45,7 +46,7 @@
 </script>
 
 {#if asking}
-	<div class="msp-scrim" role="dialog" aria-modal="true" aria-labelledby="msp-title">
+	<div class="msp-scrim" role="dialog" aria-modal="true" use:trapFocus aria-labelledby="msp-title">
 		<div class="msp-modal">
 			<h2 id="msp-title">{m.mail_mirror_scope_title()}</h2>
 			<p>{m.mail_mirror_scope_body()}</p>

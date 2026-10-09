@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Lock from '@lucide/svelte/icons/lock';
@@ -160,6 +161,7 @@
 	class="dv-scrim"
 	role="alertdialog"
 	aria-modal="true"
+	use:trapFocus
 	aria-labelledby="dv-title"
 	tabindex="-1"
 	onmousedown={scrimMouseDown}

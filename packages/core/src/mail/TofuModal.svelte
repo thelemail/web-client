@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
@@ -48,6 +49,7 @@
 	class="tofu-scrim"
 	role="alertdialog"
 	aria-modal="true"
+	use:trapFocus
 	aria-labelledby="tofu-title"
 	tabindex="-1"
 	onmousedown={scrimMouseDown}
