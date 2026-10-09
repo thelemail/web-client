@@ -542,11 +542,11 @@
 
 :is(.mail-scrim, .mail-app .replybox) .from-row { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 11px 17px; border-bottom: 1px solid var(--border); }
 :is(.mail-scrim, .mail-app .replybox) .from-row .recip-label { padding-top: 8px; }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 5px 11px 5px 6px; cursor: pointer; font-size: 13px; color: var(--fg); transition: background var(--dur-fast), border-color var(--dur-fast); }
+:is(.mail-scrim, .mail-app .replybox) .from-trigger { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 5px 11px 5px 6px; cursor: pointer; font-size: 13px; color: var(--fg); transition: background var(--dur-fast), border-color var(--dur-fast); }
 :is(.mail-scrim, .mail-app .replybox) .from-trigger:hover { background: var(--paper-100); }
 :is(.mail-scrim, .mail-app .replybox) .from-trigger.open { border-color: var(--pine-500); background: var(--paper-100); }
 :is(.mail-scrim, .mail-app .replybox) .from-trigger .ft-name { font-weight: 600; white-space: nowrap; }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger .ft-email { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(.mail-scrim, .mail-app .replybox) .from-trigger .ft-email { flex: 0 1 auto; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :is(.mail-scrim, .mail-app .replybox) .from-trigger svg { width: 15px; height: 15px; color: var(--fg-muted); flex: 0 0 auto; }
 :is(.mail-scrim, .mail-app .replybox) .from-menu { position: absolute; top: calc(100% - 2px); left: 58px; z-index: 30; width: 360px; max-width: calc(100% - 70px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 6px; animation: mail-slideup var(--dur) var(--ease-out); }
 :is(.mail-scrim, .mail-app .replybox) .fm-h { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint); padding: 7px 9px 5px; }
