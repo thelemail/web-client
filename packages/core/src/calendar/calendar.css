@@ -810,6 +810,7 @@ button.create {
 	box-shadow: var(--shadow-xs);
 	transition: filter var(--dur-fast), box-shadow var(--dur-fast);
 }
+[data-theme='dark'] .cal-app .ev { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .ev:hover { filter: brightness(0.98); box-shadow: var(--shadow-sm); z-index: 8; }
 .cal-app .ev .ev-t {
 	font-size: 12px;
@@ -858,6 +859,7 @@ button.create {
 	border-left: 3px solid var(--c);
 	color: color-mix(in oklch, var(--c) 70%, var(--ink-900));
 }
+[data-theme='dark'] .cal-app .ev.k-task { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .ev.k-task .tk-box {
 	width: 13px;
 	height: 13px;
@@ -925,6 +927,7 @@ button.create {
 	color: color-mix(in oklch, var(--c) 72%, var(--ink-900));
 	border: 1px solid color-mix(in oklch, var(--c) 32%, transparent);
 }
+[data-theme='dark'] .cal-app .adev { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .adev:hover { filter: brightness(0.98); }
 .cal-app .adev.solid { background: var(--c); color: var(--paper-0); border-color: transparent; }
 .cal-app .adev .ad-t {
@@ -1056,6 +1059,7 @@ button.create {
 	text-overflow: ellipsis;
 	color: color-mix(in oklch, var(--c) 68%, var(--ink-900));
 }
+[data-theme='dark'] .cal-app .mv-mev { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .mv-mev .mev-dot {
 	width: 7px;
 	height: 7px;
