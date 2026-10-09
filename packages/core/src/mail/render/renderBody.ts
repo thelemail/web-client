@@ -30,10 +30,12 @@ const BASE_STYLE = [
 	'a{color:#234132}',
 	'blockquote{margin:0 0 16px;padding-left:14px;border-left:2px solid #DCD4BE;color:#515845}',
 	'pre{white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}',
-	':root[data-theme="dark"]{color-scheme:dark}',
-	':root[data-theme="dark"] body{color:#DDE0D2}',
-	':root[data-theme="dark"] a{color:#9EC4AC}',
-	':root[data-theme="dark"] blockquote{border-left-color:#3E4A3C;color:#A9B09D}'
+	':root[data-theme="dark"]:not(.html){color-scheme:dark}',
+	':root[data-theme="dark"]:not(.html) body{color:#DDE0D2}',
+	':root[data-theme="dark"]:not(.html) a{color:#9EC4AC}',
+	':root[data-theme="dark"]:not(.html) blockquote{border-left-color:#3E4A3C;color:#A9B09D}',
+	':root[data-theme="dark"].html{color-scheme:light;background:#fff}',
+	':root[data-theme="dark"].html body{padding:16px 18px}'
 ].join('');
 
 const CSP =
@@ -55,7 +57,7 @@ function escapeForAttribute(s: string): string {
 export function buildSrcDoc(bodyHtml: string, wrapPlain: boolean): string {
 	const content = wrapPlain ? `<div class="plain">${bodyHtml}</div>` : bodyHtml;
 	return (
-		'<!doctype html><html><head><meta charset="utf-8">' +
+		`<!doctype html><html${wrapPlain ? '' : ' class="html"'}><head><meta charset="utf-8">` +
 		`<meta http-equiv="Content-Security-Policy" content="${escapeForAttribute(CSP)}">` +
 		'<base target="_blank">' +
 		`<style>${BASE_STYLE}</style></head><body>${content}</body></html>`
@@ -120,6 +122,7 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 		}
 	} else {
 		body = '<p style="color:#9a9a90;font-style:italic">(no body)</p>';
+		wrapPlain = true;
 	}
 
 	const srcDoc = buildSrcDoc(body, wrapPlain);

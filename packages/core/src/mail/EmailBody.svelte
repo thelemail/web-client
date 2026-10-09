@@ -11,6 +11,7 @@
 	let frame: HTMLIFrameElement | undefined = $state();
 	let observer: ResizeObserver | null = null;
 	let refit = 0;
+	let paper = $state(false);
 
 	const writeFrameDoc = platform.writeFrameDoc === true;
 
@@ -70,6 +71,7 @@
 	function ready() {
 		const doc = frame?.contentDocument;
 		if (!doc) return;
+		paper = doc.documentElement.classList.contains('html');
 		applyTheme();
 		fit();
 		interceptLinks(doc);
@@ -100,6 +102,7 @@
 	<iframe
 		bind:this={frame}
 		class="email-frame"
+		class:paper
 		title={m.mail_body_frame_title()}
 		sandbox={platform.interceptFrameLinks ? 'allow-same-origin' : 'allow-same-origin allow-popups'}
 		srcdoc={writeFrameDoc ? undefined : srcDoc}
