@@ -645,7 +645,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #fff;
+	color: var(--on-fill);
 	flex: 0 0 auto;
 	transition:
 		background var(--dur),
@@ -694,9 +694,6 @@
 	font-size: 12px;
 	color: var(--fg-muted);
 	font-family: var(--font-mono);
-}
-[data-theme='dark'] .lc-check input:checked + .bx {
-	color: #10150f;
 }
 .lc-fmt-note {
 	display: flex;
@@ -1525,7 +1522,7 @@
 	height: 40px;
 	border-radius: var(--radius-pill);
 	background: var(--pine-700);
-	color: var(--primary-fg);
+	color: var(--on-fill);
 	border: none;
 	box-shadow: var(--shadow-md);
 	cursor: pointer;
@@ -1554,7 +1551,7 @@
 }
 .lc-switcher-seg button.on {
 	background: var(--pine-700);
-	color: var(--primary-fg);
+	color: var(--on-fill);
 	border-color: var(--pine-700);
 }
 

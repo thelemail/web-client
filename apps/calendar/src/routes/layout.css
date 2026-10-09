@@ -67,6 +67,7 @@
 	--primary-press:    var(--pine-800);
 	--primary-hover:    var(--pine-600);
 	--primary-fg:       #F4F7EF;
+	--on-fill:          #F4F7EF;
 	--link:             var(--pine-600);
 
 	--focus-ring:       var(--pine-500);
@@ -234,6 +235,7 @@
 
 	--primary-hover:    #477A5F;
 	--primary-press:    #315A44;
+	--on-fill:          #10150F;
 	--link:             var(--pine-300);
 
 	--focus-ring:       var(--pine-300);
@@ -260,7 +262,7 @@
 	--accent:                var(--pine-50);
 	--accent-foreground:     var(--pine-700);
 	--destructive:           var(--danger-500);
-	--destructive-foreground:#FFFFFF;
+	--destructive-foreground:var(--on-fill);
 	--border:                var(--paper-150);
 	--input:                 var(--paper-200);
 	--ring:                  var(--pine-500);
@@ -573,7 +575,7 @@
 }
 .btn.btn-danger-solid {
 	background: var(--danger-700);
-	color: #fff;
+	color: var(--on-fill);
 	border-color: var(--danger-700);
 }
 .btn.btn-danger-solid:hover {

@@ -490,7 +490,7 @@
 .cer-scrim .cer-step { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
 .cer-scrim .cer-step:last-child { flex: 0 0 auto; }
 .cer-scrim .cs-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--paper-200); color: var(--ink-500); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; font-family: var(--font-mono); transition: background var(--dur), color var(--dur); }
-.cer-scrim .cer-step.on .cs-dot { background: var(--pine-700); color: #fff; }
+.cer-scrim .cer-step.on .cs-dot { background: var(--pine-700); color: var(--on-fill); }
 .cer-scrim .cer-step.done .cs-dot { background: var(--success-500); color: #fff; }
 .cer-scrim .cs-dot svg { width: 13px; height: 13px; }
 .cer-scrim .cs-lbl { font-size: 11.5px; font-weight: 500; color: var(--fg-muted); white-space: nowrap; }
@@ -940,7 +940,7 @@
 .settings-app .dw-step:last-child { flex: 0 0 auto; }
 .settings-app .dw-step:disabled { cursor: default; }
 .settings-app .dw-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--paper-200); color: var(--ink-500); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; font-family: var(--font-mono); transition: background var(--dur), color var(--dur); }
-.settings-app .dw-step.on .dw-dot { background: var(--pine-700); color: #fff; }
+.settings-app .dw-step.on .dw-dot { background: var(--pine-700); color: var(--on-fill); }
 .settings-app .dw-step.done .dw-dot { background: var(--success-500); color: #fff; }
 .settings-app .dw-step.run .dw-dot { background: var(--pine-100); color: var(--pine-700); }
 .settings-app .dw-dot svg { width: 13px; height: 13px; }
@@ -1123,7 +1123,7 @@
 .settings-app .scard.menus .rec-row:last-child { border-radius: 0 0 var(--radius-surface) var(--radius-surface); }
 
 .cer-scrim .choice-mark { width: 18px; height: 18px; border-width: 1.5px; border-color: var(--ink-300); background: var(--surface); box-shadow: none; }
-.cer-scrim .choice-mark[data-state='checked'] { border-color: var(--pine-600); background: var(--pine-600); color: #fff; }
+.cer-scrim .choice-mark[data-state='checked'] { border-color: var(--pine-600); background: var(--pine-600); color: var(--on-fill); }
 .cer-scrim .choice-mark[data-state='checked'] svg { width: 12px; height: 12px; stroke-width: 2.5; }
 .cer-scrim .choice-mark:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
 
