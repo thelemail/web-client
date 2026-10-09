@@ -245,7 +245,7 @@
 		flex: 0 0 auto;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--brass-600);
+		color: var(--accent-quiet);
 	}
 	.sch-subj {
 		font-size: 13px;

@@ -466,7 +466,7 @@
 	.t-eyebrow { font-family: var(--font-sans); font-weight: var(--w-semibold);
 		font-size: var(--text-xs); line-height: var(--lh-xs);
 		letter-spacing: var(--track-caps); text-transform: uppercase;
-		color: var(--brass-600); }
+		color: var(--accent-quiet); }
 	.t-label   { font-family: var(--font-sans); font-weight: var(--w-medium);
 		font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--fg); }
 	.t-mono    { font-family: var(--font-mono); font-weight: var(--w-regular);
@@ -586,14 +586,18 @@
 	background: var(--danger-700);
 }
 .btn.btn-caution {
-	background: var(--brass-600);
+	background: var(--brass-700);
 	color: #fff;
 }
 .btn.btn-caution:hover {
-	background: var(--brass-700);
+	background: #6E4F18;
 }
 [data-theme='dark'] .btn.btn-caution {
+	background: var(--brass-600);
 	color: #241A06;
+}
+[data-theme='dark'] .btn.btn-caution:hover {
+	background: var(--brass-700);
 }
 
 .errtext {

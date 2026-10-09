@@ -70,7 +70,7 @@
 	font-size: 10px;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	line-height: 1;
 	padding-top: 1px;
 }
@@ -278,7 +278,7 @@ button.create {
 .cal-app .cal-badge {
 	font-family: var(--font-mono);
 	font-size: 10.5px;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	flex: 0 0 auto;
 }
 
@@ -689,7 +689,7 @@ button.create {
 	text-transform: uppercase;
 	color: var(--fg-muted);
 }
-.cal-app .tg-dh.is-today .tg-dow { color: var(--brass-600); }
+.cal-app .tg-dh.is-today .tg-dow { color: var(--accent-quiet); }
 .cal-app .tg-dh.is-weekend .tg-dow { color: var(--fg-faint); }
 .cal-app .tg-dnum {
 	width: 36px;
@@ -879,7 +879,7 @@ button.create {
 	color: var(--brass-700);
 	box-shadow: none;
 }
-.cal-app .ev.k-prop .ev-w { color: var(--brass-600); opacity: 1; }
+.cal-app .ev.k-prop .ev-w { color: var(--accent-quiet); opacity: 1; }
 .cal-app .ev-buf {
 	position: absolute;
 	top: var(--top);
@@ -1210,7 +1210,7 @@ button.create {
 	font-weight: 600;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -1517,7 +1517,7 @@ button.create {
 	flex: 0 0 auto;
 }
 .cal-app .tkpane-h .tt { font-size: 14px; font-weight: 560; color: var(--fg-strong); flex: 1; }
-.cal-app .tkpane-h .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--brass-600); }
+.cal-app .tkpane-h .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--accent-quiet); }
 .cal-app .tk-x { width: 30px; height: 30px; }
 .cal-app .tkr-t { cursor: pointer; }
 .cal-app .tkpane-scroll {
@@ -1872,7 +1872,7 @@ button.create {
 	font-size: 9.5px;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	margin-bottom: 7px;
 }
 .cal-surface .rblock .rl {
