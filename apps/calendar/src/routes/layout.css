@@ -22,7 +22,7 @@
 	--ink-800: #1D2019;
 	--ink-700: #333829;
 	--ink-600: #4E5544;
-	--ink-500: #6A725F;
+	--ink-500: #5F6754;
 	--ink-400: #8B927F;
 	--ink-300: #AFB5A5;
 
@@ -56,7 +56,7 @@
 	--fg:               var(--ink-800);
 	--fg-strong:        var(--ink-900);
 	--fg-muted:         var(--ink-500);
-	--fg-faint:         #6F7664;
+	--fg-faint:         #666E5B;
 	--fg-on-pine:       #EDF1E9;
 	--fg-on-pine-muted: #A9B8A8;
 
@@ -228,7 +228,7 @@
 	--fg:               var(--ink-800);
 	--fg-strong:        var(--ink-900);
 	--fg-muted:         var(--ink-500);
-	--fg-faint:         #87907B;
+	--fg-faint:         #909883;
 
 	--border-soft:      var(--paper-150);
 	--border-strong:    var(--paper-200);
