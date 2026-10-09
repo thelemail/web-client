@@ -284,6 +284,8 @@
 				placeholder={m.auth_login_password_placeholder()}
 				autocomplete="current-password"
 				onEnter={submit}
+				invalid={!!loginError}
+				describedby={loginError ? 'login-err' : undefined}
 			>
 				{#snippet aux()}
 					<a
@@ -295,7 +297,7 @@
 				{/snippet}
 			</PasswordField>
 			{#if loginError}
-				<span class="errtext" style="margin-top:-8px">
+				<span class="errtext" role="alert" id="login-err" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{loginError}</span>
 				</span>

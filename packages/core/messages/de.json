@@ -2297,6 +2297,7 @@
 	"mail_recip_cleartext": "Kein Verschlüsselungsschlüssel – unverschlüsselt gesendet",
 	"mail_recip_add_people": "Personen hinzufügen…",
 	"mail_recip_remove_field": "{field} entfernen",
+	"mail_recip_remove_chip": "{address} entfernen",
 	"mail_dirfail_error_code": "Fehlercode",
 	"mail_dirfail_address": "Adresse",
 	"mail_dirfail_trusted_signer": "Vertrauenswürdiger Unterzeichner",
@@ -2842,6 +2843,7 @@
 	"auth_2fa_title": "Bestätigen Sie Ihre Identität",
 	"auth_2fa_lede": "<addr>{email}</addr> erfordert einen zweiten Faktor.",
 	"auth_2fa_code_label": "6-stelliger Code",
+	"auth_2fa_digit_label": "Ziffer {n} von {total}",
 	"auth_2fa_code_mismatch": "Dieser Code stimmt nicht. Codes wechseln alle 30 Sekunden – versuchen Sie den aktuellen.",
 	"auth_2fa_code_hint": "Öffnen Sie Ihre Authentifizierungs-App und geben Sie den Code für <addr>{email}</addr> ein.",
 	"auth_2fa_checking": "Wird geprüft…",
@@ -2908,6 +2910,8 @@
 	"settings_domains_remove_keep": "Diese Domain behalten",
 	"settings_domains_removing": "Wird entfernt…",
 	"mail_row_select": "Nachricht auswählen",
+	"mail_row_unread": "Ungelesen",
+	"mail_row_starred": "Mit Stern markiert",
 	"mail_row_thread_count": [
 		{
 			"declarations": [

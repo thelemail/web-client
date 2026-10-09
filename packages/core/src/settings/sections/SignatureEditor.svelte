@@ -362,8 +362,8 @@
 	.sig-edit-mount {
 		min-height: 130px;
 		padding: 12px 14px;
-		background: var(--paper-50, #fbf6e8);
-		border: 1px solid var(--paper-200, #d6cbb6);
+		background: var(--paper-50);
+		border: 1px solid var(--paper-200);
 		border-radius: 8px;
 		font-size: 14px;
 		line-height: 1.55;
@@ -383,7 +383,7 @@
 		height: auto;
 	}
 	.sig-edit-mount :global(.sig-body a) {
-		color: var(--link, #2b5aa3);
+		color: var(--link);
 		text-decoration: underline;
 	}
 	.hidden-input {
@@ -395,18 +395,18 @@
 		gap: 6px;
 		margin-bottom: 10px;
 		font-size: 12.5px;
-		color: var(--fg-muted, #6b6455);
+		color: var(--fg-muted);
 	}
 	.sig-note {
 		margin-top: 8px;
 		font-size: 12.5px;
-		color: var(--fg-muted, #6b6455);
+		color: var(--fg-muted);
 	}
 	.linky {
 		background: none;
 		border: none;
 		padding: 0 0 0 4px;
-		color: var(--link, #2b5aa3);
+		color: var(--link);
 		text-decoration: underline;
 		cursor: pointer;
 		font: inherit;

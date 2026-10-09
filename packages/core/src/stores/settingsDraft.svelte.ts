@@ -10,6 +10,7 @@ import { workspaces } from './workspaces.svelte';
 import { twofactor } from './twofactor.svelte';
 import { auth } from './auth.svelte';
 import { m } from '$paraglide/messages.js';
+import { announce } from '$core/announce';
 
 const OPEN_MESSAGE_SECTION = 'reading_open_message';
 const PRIVACY_SECTION = 'privacy';
@@ -239,6 +240,7 @@ class SettingsDraftStore {
 
 	flash = (text: string): void => {
 		this.toastText = text;
+		announce(text);
 		clearTimeout(this.#toastTimer);
 		this.#toastTimer = setTimeout(() => (this.toastText = null), TOAST_DELAY);
 	};

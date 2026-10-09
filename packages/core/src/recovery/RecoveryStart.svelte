@@ -253,7 +253,7 @@
 				</div>
 
 				{#if saveError}
-					<span class="rk-err"><CircleAlert size={13} /><span>{saveError}</span></span>
+					<span class="rk-err" role="alert"><CircleAlert size={13} /><span>{saveError}</span></span>
 				{/if}
 
 				<div class="rk-ack">
@@ -270,7 +270,7 @@
 						{/if}
 					</Button>
 					{#if submitError}
-						<span class="rk-err rk-center"><CircleAlert size={13} /><span>{submitError}</span></span>
+						<span class="rk-err rk-center" role="alert"><CircleAlert size={13} /><span>{submitError}</span></span>
 					{:else if !revealed && material}
 						<p class="rk-hint">{m.recovery_start_hint_reveal()}</p>
 					{:else if revealed && !anySaved}
@@ -455,7 +455,7 @@
 		font-family: var(--font-mono);
 		font-size: 13.5px;
 		font-weight: 500;
-		color: var(--pine-800);
+		color: var(--accent-foreground);
 		white-space: nowrap;
 	}
 	:global([data-theme='dark']) .rk-w {

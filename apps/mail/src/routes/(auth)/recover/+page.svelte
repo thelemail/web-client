@@ -393,12 +393,14 @@
 							oninput={(e) => setWord(i, e.currentTarget.value)}
 							onpaste={(e) => onPhrasePaste(i, e)}
 							onkeydown={(e) => onPhraseKey(i, e)}
+							aria-invalid={wrong || undefined}
+							aria-describedby={phraseStatus === 'bad' ? 'recover-phrase-err' : undefined}
 						/>
 					</label>
 				{/each}
 			</div>
 			{#if phraseStatus === 'bad'}
-				<span class="errtext">
+				<span class="errtext" role="alert" id="recover-phrase-err">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{phraseError}</span>
 				</span>
@@ -510,9 +512,11 @@
 				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
 				onEnter={startRekey}
+				invalid={mismatch}
+				describedby={mismatch ? 'recover-confirm-msg' : undefined}
 			/>
 			{#if mismatch}
-				<span class="errtext" style="margin-top:-8px">
+				<span class="errtext" role="alert" id="recover-confirm-msg" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
@@ -563,7 +567,7 @@
 				{/each}
 			</ul>
 			{#if workError}
-				<span class="errtext" style="margin-top:16px">
+				<span class="errtext" role="alert" style="margin-top:16px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{workError}</span>
 				</span>

@@ -349,6 +349,8 @@
 				>
 					<input
 						id="register-handle"
+						aria-invalid={status === 'invalid' || status === 'taken' || undefined}
+						aria-describedby="register-handle-msg"
 						bind:value={handle}
 						oninput={(e) =>
 							(handle = e.currentTarget.value.toLowerCase().replace(/\s+/g, ''))}
@@ -386,21 +388,21 @@
 					</span>
 				</div>
 				{#if status === 'idle'}
-					<span class="hint">{m.auth_register_handle_hint()}</span>
+					<span class="hint" id="register-handle-msg">{m.auth_register_handle_hint()}</span>
 				{:else if status === 'invalid'}
-					<span class="errtext">
+					<span class="errtext" role="alert" id="register-handle-msg">
 						<CircleAlert size={13} strokeWidth={1.75} />
 						<span>{m.auth_register_handle_invalid()}</span>
 					</span>
 				{:else if status === 'checking'}
-					<span class="hint">{m.auth_register_handle_checking()}</span>
+					<span class="hint" id="register-handle-msg">{m.auth_register_handle_checking()}</span>
 				{:else if status === 'taken'}
-					<span class="errtext">
+					<span class="errtext" role="alert" id="register-handle-msg">
 						<CircleAlert size={13} strokeWidth={1.75} />
 						<span>{m.auth_register_handle_taken()}</span>
 					</span>
 				{:else if status === 'available'}
-					<span class="hint">
+					<span class="hint" id="register-handle-msg">
 						<Rich
 							text={m.auth_register_handle_available({ address })}
 							tags={{ b: bold }}
@@ -449,10 +451,12 @@
 				bind:value={confirm}
 				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
+				invalid={mismatch}
+				describedby={mismatch ? 'register-confirm-msg' : undefined}
 				onEnter={continueFromPassword}
 			/>
 			{#if mismatch}
-				<span class="errtext" style="margin-top:-8px">
+				<span class="errtext" role="alert" id="register-confirm-msg" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
@@ -463,7 +467,7 @@
 				</span>
 			{/if}
 			{#if submitError}
-				<span class="errtext" style="margin-top:-4px">
+				<span class="errtext" role="alert" style="margin-top:-4px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{submitError}</span>
 				</span>

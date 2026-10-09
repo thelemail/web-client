@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
@@ -782,6 +783,8 @@
 		class="mail-scrim"
 		role="dialog"
 		aria-modal="true"
+		aria-label={m.mail_compose_new_message()}
+		use:trapFocus
 		tabindex="-1"
 		onmousedown={scrimMouseDown}
 	>

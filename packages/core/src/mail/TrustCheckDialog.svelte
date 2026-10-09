@@ -75,7 +75,7 @@
 	.tcd {
 		width: 100%;
 		max-width: 420px;
-		max-height: calc(100vh - 40px);
+		max-height: calc(100dvh - 40px);
 		overflow-y: auto;
 		background: var(--surface);
 		border: 1px solid var(--border-strong);

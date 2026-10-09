@@ -331,7 +331,7 @@
 					</Button>
 				{/if}
 				{#if verifyError}
-					<span class="errtext"><CircleAlert size={13} /><span>{verifyError}</span></span>
+					<span class="errtext" role="alert"><CircleAlert size={13} /><span>{verifyError}</span></span>
 				{/if}
 			</div>
 		{/if}

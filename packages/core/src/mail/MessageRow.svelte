@@ -12,6 +12,8 @@
 	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import Avatar from '$core/components/Avatar.svelte';
+	import { swipe, swipeThreshold, type SwipeDirection } from '$core/actions/swipe';
+	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import {
 		plainSubject,
 		formatRowTime,
@@ -69,7 +71,80 @@
 		onToggleRead
 	}: Props = $props();
 
+	const uid = $props.id();
+	let rowEl: HTMLDivElement | undefined = $state();
+	let droppedFocusAt = -Infinity;
+	let neighbours: HTMLElement[] = [];
+
+	function rowsAround(el: HTMLElement): HTMLElement[] {
+		const rows = [...(el.parentElement?.querySelectorAll<HTMLElement>('.mrow') ?? [])];
+		const i = rows.indexOf(el);
+		return i < 0 ? [] : [...rows.slice(i + 1), ...rows.slice(0, i).reverse()];
+	}
+
+	function onFocusOut(e: FocusEvent) {
+		if (e.relatedTarget || !rowEl) return;
+		droppedFocusAt = performance.now();
+		neighbours = rowsAround(rowEl);
+	}
+
+	$effect(() => {
+		const el = rowEl;
+		return () => {
+			if (!el) return;
+			const active = document.activeElement;
+			const held = el.contains(active);
+			const dropped = (!active || active === document.body) && performance.now() - droppedFocusAt < 10000;
+			if (!held && !dropped) return;
+			const candidates = held && el.isConnected ? rowsAround(el) : neighbours;
+			queueMicrotask(() => {
+				const next = candidates.find((r) => r.isConnected);
+				next?.querySelector<HTMLElement>('.mrow-open')?.focus();
+			});
+		};
+	});
+
+	let sx = $state(0);
+	let settling = $state(false);
+	let settleTimer: ReturnType<typeof setTimeout> | undefined;
+	const leftAction = $derived(
+		lifecycle.readOnly ? null : caps.showArchive ? 'archive' : caps.showTrash ? 'trash' : null
+	);
+	const rightAction = $derived(caps.showMarkRead ? 'read' : null);
+	const armed = $derived(rowEl ? Math.abs(sx) >= swipeThreshold(rowEl.clientWidth) : false);
+
+	function settle(to: number, then?: () => void) {
+		clearTimeout(settleTimer);
+		settling = true;
+		sx = to;
+		settleTimer = setTimeout(() => {
+			settling = false;
+			then?.();
+		}, 180);
+	}
+
+	function commitSwipe(dir: SwipeDirection) {
+		if (dir === 'right') {
+			onToggleRead(m.id);
+			settle(0);
+			return;
+		}
+		const action = leftAction;
+		settle(-(rowEl?.clientWidth ?? 0), () => {
+			if (action === 'archive') onArchive(m.id);
+			else if (action === 'trash') onTrash(m.id);
+			settle(0);
+		});
+	}
+
+	$effect(() => () => clearTimeout(settleTimer));
+
 	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
+	const rowState = $derived(
+		[m.unread ? msg.mail_row_unread() : '', m.starred ? msg.mail_row_starred() : '']
+			.filter(Boolean)
+			.join(', ')
+	);
 	const byName = $derived(m.sentBy ? sentByName(m.sentBy, auth.accountId) : null);
 
 	const CHIP_LIMIT = 2;
@@ -105,38 +180,57 @@
 </script>
 
 <div
+	bind:this={rowEl}
 	class="mrow"
+	onfocusout={onFocusOut}
 	class:unread={m.unread}
 	class:active
 	class:sel={checked}
 	class:checking={anyChecked}
-	onclick={() => onOpen(m)}
-	onkeydown={(e) => {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			onOpen(m);
-		}
+	class:swiping={sx !== 0}
+	class:settling
+	style:--sx={sx ? `${sx}px` : undefined}
+	use:swipe={{
+		enabled: !anyChecked,
+		left: !!leftAction,
+		right: !!rightAction,
+		onDrag: (dx) => {
+			clearTimeout(settleTimer);
+			settling = false;
+			sx = dx;
+		},
+		onCommit: commitSwipe,
+		onCancel: () => settle(0)
 	}}
-	role="button"
-	tabindex="0"
 >
-	<div
-		class="lead"
-		role="button"
-		tabindex="-1"
-		aria-label={msg.mail_row_select()}
-		onclick={(e) => {
-			e.stopPropagation();
-			select(e.shiftKey);
-		}}
-		onkeydown={(e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault();
-				e.stopPropagation();
-				select(e.shiftKey);
-			}
-		}}
-	>
+	{#if sx !== 0}
+		<div
+			class="swipe-under"
+			class:to-left={sx < 0}
+			class:to-right={sx > 0}
+			class:trash={sx < 0 && leftAction === 'trash'}
+			class:armed
+			style:width="{Math.abs(sx)}px"
+			aria-hidden="true"
+		>
+			{#if sx < 0}
+				{#if leftAction === 'trash'}<Trash2 size={18} />{:else}<Archive size={18} />{/if}
+			{:else if m.unread}
+				<MailOpen size={18} />
+			{:else}
+				<Mail size={18} />
+			{/if}
+		</div>
+	{/if}
+	<button
+		type="button"
+		class="mrow-open"
+		aria-current={active ? 'true' : undefined}
+		aria-labelledby="{uid}-st {uid}-from {uid}-subj"
+		aria-describedby="{uid}-time {uid}-prev"
+		onclick={() => onOpen(m)}
+	></button>
+	<div class="lead">
 		<Avatar
 			initials={m.init}
 			bg={m.bg}
@@ -148,6 +242,7 @@
 			imgBg={img.imgBg}
 		/>
 		<button
+			type="button"
 			class="row-ck"
 			class:on={checked}
 			aria-label={msg.mail_row_select()}
@@ -162,7 +257,8 @@
 	</div>
 	<div class="rowmain">
 		<div class="r1">
-			<span class="from">{m.from}</span>
+			<span class="sr-only" id="{uid}-st">{rowState}</span>
+			<span class="from" id="{uid}-from">{m.from}</span>
 			{#if byName}
 				<span class="by">{msg.mail_sent_by({ name: byName })}</span>
 			{/if}
@@ -180,16 +276,19 @@
 				</span>
 			{/if}
 			{#if wakeAt}
-				<span class="time wake" title={msg.mail_row_comes_back({ when: formatWhenLong(wakeAt) })}>
+				<span class="time wake" id="{uid}-time" title={msg.mail_row_comes_back({ when: formatWhenLong(wakeAt) })}>
 					{formatRowTime(wakeAt)}
 				</span>
 			{:else}
-				<span class="time">{formatRowTime(new Date(m.epoch))}</span>
+				<span class="time" id="{uid}-time">{formatRowTime(new Date(m.epoch))}</span>
 			{/if}
 			{#if caps.showStar}
 				<button
+					type="button"
 					class="star"
 					class:on={m.starred}
+					tabindex="-1"
+					aria-hidden="true"
 					title={m.starred ? msg.mail_action_unstar() : msg.mail_action_star()}
 					onclick={(e) => {
 						e.stopPropagation();
@@ -229,16 +328,18 @@
 					{/if}
 				</span>
 			{/if}
-			<span class="stxt">{plainSubject(m.subj)}</span>
-			<span class="prev">{m.prev}</span>
+			<span class="stxt" id="{uid}-subj">{plainSubject(m.subj)}</span>
+			<span class="prev" id="{uid}-prev">{m.prev}</span>
 		</div>
 	</div>
 	<div class="qa">
 		{#if caps.showStar}
 			<button
+				type="button"
 				class="star"
 				class:on={m.starred}
-				title={msg.mail_action_star()}
+				aria-pressed={m.starred}
+				title={m.starred ? msg.mail_action_unstar() : msg.mail_action_star()}
 				onclick={(e) => {
 					e.stopPropagation();
 					onToggleStar(m.id);

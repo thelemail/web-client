@@ -70,7 +70,7 @@
 	font-size: 10px;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	line-height: 1;
 	padding-top: 1px;
 }
@@ -185,7 +185,7 @@ button.create {
 .cal-app .mini-day.out { color: var(--ink-300); }
 .cal-app .mini-day:hover { background: var(--paper-100); color: var(--fg-strong); }
 .cal-app .mini-day.inweek { background: var(--chip-bg); color: var(--fg-strong); }
-.cal-app .mini-day.today { background: var(--pine-700); color: var(--paper-0); font-weight: 600; }
+.cal-app .mini-day.today { background: var(--pine-700); color: var(--on-fill); font-weight: 600; }
 .cal-app .mini-day .hasdot {
 	position: absolute;
 	bottom: 3px;
@@ -278,7 +278,7 @@ button.create {
 .cal-app .cal-badge {
 	font-family: var(--font-mono);
 	font-size: 10.5px;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	flex: 0 0 auto;
 }
 
@@ -689,7 +689,7 @@ button.create {
 	text-transform: uppercase;
 	color: var(--fg-muted);
 }
-.cal-app .tg-dh.is-today .tg-dow { color: var(--brass-600); }
+.cal-app .tg-dh.is-today .tg-dow { color: var(--accent-quiet); }
 .cal-app .tg-dh.is-weekend .tg-dow { color: var(--fg-faint); }
 .cal-app .tg-dnum {
 	width: 36px;
@@ -703,7 +703,7 @@ button.create {
 	border-radius: 50%;
 	line-height: 1;
 }
-.cal-app .tg-dh.is-today .tg-dnum { background: var(--pine-700); color: var(--primary-fg); }
+.cal-app .tg-dh.is-today .tg-dnum { background: var(--pine-700); color: var(--on-fill); }
 
 .cal-app .tg-allday {
 	display: grid;
@@ -810,6 +810,7 @@ button.create {
 	box-shadow: var(--shadow-xs);
 	transition: filter var(--dur-fast), box-shadow var(--dur-fast);
 }
+[data-theme='dark'] .cal-app .ev { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .ev:hover { filter: brightness(0.98); box-shadow: var(--shadow-sm); z-index: 8; }
 .cal-app .ev .ev-t {
 	font-size: 12px;
@@ -858,6 +859,7 @@ button.create {
 	border-left: 3px solid var(--c);
 	color: color-mix(in oklch, var(--c) 70%, var(--ink-900));
 }
+[data-theme='dark'] .cal-app .ev.k-task { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .ev.k-task .tk-box {
 	width: 13px;
 	height: 13px;
@@ -879,7 +881,7 @@ button.create {
 	color: var(--brass-700);
 	box-shadow: none;
 }
-.cal-app .ev.k-prop .ev-w { color: var(--brass-600); opacity: 1; }
+.cal-app .ev.k-prop .ev-w { color: var(--accent-quiet); opacity: 1; }
 .cal-app .ev-buf {
 	position: absolute;
 	top: var(--top);
@@ -925,6 +927,7 @@ button.create {
 	color: color-mix(in oklch, var(--c) 72%, var(--ink-900));
 	border: 1px solid color-mix(in oklch, var(--c) 32%, transparent);
 }
+[data-theme='dark'] .cal-app .adev { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .adev:hover { filter: brightness(0.98); }
 .cal-app .adev.solid { background: var(--c); color: var(--paper-0); border-color: transparent; }
 .cal-app .adev .ad-t {
@@ -1040,7 +1043,7 @@ button.create {
 	justify-content: center;
 	border-radius: 50%;
 }
-.cal-app .mv-cell.is-today .mv-dnum { background: var(--pine-700); color: var(--primary-fg); font-weight: 600; }
+.cal-app .mv-cell.is-today .mv-dnum { background: var(--pine-700); color: var(--on-fill); font-weight: 600; }
 .cal-app .mv-mev,
 .cal-app .mv-more { flex: 0 0 auto; }
 .cal-app .mv-mev {
@@ -1056,6 +1059,7 @@ button.create {
 	text-overflow: ellipsis;
 	color: color-mix(in oklch, var(--c) 68%, var(--ink-900));
 }
+[data-theme='dark'] .cal-app .mv-mev { color: color-mix(in oklch, var(--c) 55%, var(--ink-900)); }
 .cal-app .mv-mev .mev-dot {
 	width: 7px;
 	height: 7px;
@@ -1210,7 +1214,7 @@ button.create {
 	font-weight: 600;
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	display: flex;
 	align-items: center;
 	gap: 10px;
@@ -1517,7 +1521,7 @@ button.create {
 	flex: 0 0 auto;
 }
 .cal-app .tkpane-h .tt { font-size: 14px; font-weight: 560; color: var(--fg-strong); flex: 1; }
-.cal-app .tkpane-h .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--brass-600); }
+.cal-app .tkpane-h .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--accent-quiet); }
 .cal-app .tk-x { width: 30px; height: 30px; }
 .cal-app .tkr-t { cursor: pointer; }
 .cal-app .tkpane-scroll {
@@ -1872,7 +1876,7 @@ button.create {
 	font-size: 9.5px;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
-	color: var(--brass-600);
+	color: var(--accent-quiet);
 	margin-bottom: 7px;
 }
 .cal-surface .rblock .rl {
@@ -2145,7 +2149,7 @@ button.create {
 .cal-surface .cal-form select,
 .cal-surface .cal-form textarea {
 	width: 100%;
-	border: 1px solid var(--border-strong);
+	border: 1px solid var(--border-control);
 	border-radius: var(--radius-sm);
 	background: var(--surface);
 	color: var(--fg-strong);
@@ -2211,7 +2215,7 @@ button.create {
 	color: var(--fg-muted);
 	cursor: pointer;
 }
-.cal-surface .rec-days button.on { background: var(--pine-700); color: var(--primary-fg); border-color: var(--pine-700); }
+.cal-surface .rec-days button.on { background: var(--pine-700); color: var(--on-fill); border-color: var(--pine-700); }
 .cal-surface .rec-row { display: flex; align-items: center; gap: 10px; font-size: 13px; flex-wrap: wrap; }
 .cal-surface .rec-row label { display: inline-flex; align-items: center; gap: 6px; }
 .cal-surface .rec-row input[type='number'] { width: 64px; }
@@ -2304,7 +2308,7 @@ button.create {
 	text-align: center;
 }
 .cal-app .avail-dh.is-today { color: var(--pine-700); font-weight: 600; }
-.cal-app .avail-dh.is-weekend { background: var(--surface-sunk); border-radius: var(--radius-sm); }
+.cal-app .avail-dh.is-weekend { background: var(--bg-sunken); border-radius: var(--radius-sm); }
 .cal-app .avail-who { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 4px; }
 .cal-app .avail-nm { display: flex; flex-direction: column; min-width: 0; }
 .cal-app .avail-nm .an-t { font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2316,7 +2320,7 @@ button.create {
 	border-radius: var(--radius-sm);
 	background: var(--surface);
 }
-.cal-app .avail-day.is-weekend { background: var(--surface-sunk); }
+.cal-app .avail-day.is-weekend { background: var(--bg-sunken); }
 .cal-app .avail-blk {
 	position: absolute;
 	top: 3px;

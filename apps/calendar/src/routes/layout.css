@@ -7,10 +7,10 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-@font-face{font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("/fonts/geist-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
-@font-face{font-family:"Geist";font-style:normal;font-weight:100 900;font-display:swap;src:url("/fonts/geist-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
-@font-face{font-family:"Geist Mono";font-style:normal;font-weight:100 900;font-display:swap;src:url("/fonts/geist-mono-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
-@font-face{font-family:"Geist Mono";font-style:normal;font-weight:100 900;font-display:swap;src:url("/fonts/geist-mono-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"Hanken Grotesk";font-style:normal;font-weight:100 900;font-display:swap;size-adjust:106%;src:url("/fonts/hanken-grotesk-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"Hanken Grotesk";font-style:normal;font-weight:100 900;font-display:swap;size-adjust:106%;src:url("/fonts/hanken-grotesk-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"Red Hat Mono";font-style:normal;font-weight:300 700;font-display:swap;size-adjust:104%;src:url("/fonts/red-hat-mono-latin.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"Red Hat Mono";font-style:normal;font-weight:300 700;font-display:swap;size-adjust:104%;src:url("/fonts/red-hat-mono-latin-ext.woff2") format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
 :root {
 	--paper-0:   #FDFCF9;
 	--paper-50:  #F6F4EE;
@@ -22,7 +22,7 @@
 	--ink-800: #1D2019;
 	--ink-700: #333829;
 	--ink-600: #4E5544;
-	--ink-500: #6A725F;
+	--ink-500: #5F6754;
 	--ink-400: #8B927F;
 	--ink-300: #AFB5A5;
 
@@ -56,20 +56,22 @@
 	--fg:               var(--ink-800);
 	--fg-strong:        var(--ink-900);
 	--fg-muted:         var(--ink-500);
-	--fg-faint:         var(--ink-400);
+	--fg-faint:         #666E5B;
 	--fg-on-pine:       #EDF1E9;
 	--fg-on-pine-muted: #A9B8A8;
 
 	--border-soft:      var(--paper-150);
 	--border-strong:    var(--paper-200);
+	--border-control:   #8F8B7A;
 	--border-dark:      #2C3A2E;
 
 	--primary-press:    var(--pine-800);
 	--primary-hover:    var(--pine-600);
 	--primary-fg:       #F4F7EF;
+	--on-fill:          #F4F7EF;
 	--link:             var(--pine-600);
 
-	--focus-ring:       color-mix(in oklch, var(--pine-500) 55%, transparent);
+	--focus-ring:       var(--pine-500);
 	--selection:        var(--pine-100);
 
 	--background:            var(--paper-0);
@@ -89,7 +91,7 @@
 	--destructive:           var(--danger-500);
 	--destructive-foreground:#FFFFFF;
 	--border:                var(--paper-150);
-	--input:                 var(--paper-200);
+	--input:                 var(--border-control);
 	--ring:                  var(--pine-500);
 
 	--chart-1: var(--pine-500);
@@ -110,8 +112,8 @@
 	--brand-pine:  var(--pine-700);
 	--brand-brass: var(--brass-600);
 
-	--font-sans:  "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-	--font-mono:  "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	--font-sans:  "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+	--font-mono:  "Red Hat Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
 	--w-regular: 400;
 	--w-medium:  500;
@@ -226,17 +228,19 @@
 	--fg:               var(--ink-800);
 	--fg-strong:        var(--ink-900);
 	--fg-muted:         var(--ink-500);
-	--fg-faint:         var(--ink-400);
+	--fg-faint:         #909883;
 
 	--border-soft:      var(--paper-150);
 	--border-strong:    var(--paper-200);
+	--border-control:   #6B7768;
 	--border-dark:      #2E3D30;
 
 	--primary-hover:    #477A5F;
 	--primary-press:    #315A44;
+	--on-fill:          #10150F;
 	--link:             var(--pine-300);
 
-	--focus-ring:       color-mix(in oklch, var(--pine-300) 45%, transparent);
+	--focus-ring:       var(--pine-300);
 	--selection:        #33523F;
 
 	--shadow-xs:    0 1px 1px rgba(0, 0, 0, 0.3);
@@ -260,9 +264,9 @@
 	--accent:                var(--pine-50);
 	--accent-foreground:     var(--pine-700);
 	--destructive:           var(--danger-500);
-	--destructive-foreground:#FFFFFF;
+	--destructive-foreground:var(--on-fill);
 	--border:                var(--paper-150);
-	--input:                 var(--paper-200);
+	--input:                 var(--border-control);
 	--ring:                  var(--pine-500);
 
 	--chart-1: var(--pine-300);
@@ -464,7 +468,7 @@
 	.t-eyebrow { font-family: var(--font-sans); font-weight: var(--w-semibold);
 		font-size: var(--text-xs); line-height: var(--lh-xs);
 		letter-spacing: var(--track-caps); text-transform: uppercase;
-		color: var(--brass-600); }
+		color: var(--accent-quiet); }
 	.t-label   { font-family: var(--font-sans); font-weight: var(--w-medium);
 		font-size: var(--text-sm); line-height: var(--lh-sm); color: var(--fg); }
 	.t-mono    { font-family: var(--font-mono); font-weight: var(--w-regular);
@@ -573,7 +577,7 @@
 }
 .btn.btn-danger-solid {
 	background: var(--danger-700);
-	color: #fff;
+	color: var(--on-fill);
 	border-color: var(--danger-700);
 }
 .btn.btn-danger-solid:hover {
@@ -584,14 +588,18 @@
 	background: var(--danger-700);
 }
 .btn.btn-caution {
-	background: var(--brass-600);
+	background: var(--brass-700);
 	color: #fff;
 }
 .btn.btn-caution:hover {
-	background: var(--brass-700);
+	background: #6E4F18;
 }
 [data-theme='dark'] .btn.btn-caution {
+	background: var(--brass-600);
 	color: #241A06;
+}
+[data-theme='dark'] .btn.btn-caution:hover {
+	background: var(--brass-700);
 }
 
 .errtext {
@@ -639,7 +647,6 @@
 		background-color: var(--background);
 		color: var(--foreground);
 		font-family: var(--font-sans);
-		font-feature-settings: "ss01", "cv11";
 		-webkit-font-smoothing: antialiased;
 		text-rendering: optimizeLegibility;
 	}
@@ -650,7 +657,22 @@
 		background: var(--selection);
 	}
 	:focus-visible {
-		outline: 3px solid var(--focus-ring);
+		outline: 2px solid var(--focus-ring);
 		outline-offset: 2px;
+	}
+}
+
+@media (pointer: coarse) {
+	input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']),
+	select,
+	textarea,
+	[contenteditable='true'] {
+		font-size: max(16px, 1em) !important;
+	}
+	.btn {
+		min-height: 44px;
+	}
+	.btn-sm {
+		min-height: 36px;
 	}
 }

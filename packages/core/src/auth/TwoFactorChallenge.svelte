@@ -197,11 +197,14 @@
 	<div class="form">
 		{#if method === 'app'}
 			<div class="field">
-				<div class="lab"><label for="otp-0">{m.auth_2fa_code_label()}</label></div>
-				<div class="otpgrid" class:shake={showBad}>
+				<div class="lab"><label for="otp-0" id="otp-label">{m.auth_2fa_code_label()}</label></div>
+				<div class="otpgrid" class:shake={showBad} role="group" aria-labelledby="otp-label">
 					{#each digits as d, i (i)}
 						<input
 							id={'otp-' + i}
+							aria-label={m.auth_2fa_digit_label({ n: i + 1, total: digits.length })}
+							aria-invalid={showBad || undefined}
+							aria-describedby="otp-msg"
 							bind:this={otpRefs[i]}
 							value={d}
 							class:err={showBad}
@@ -217,12 +220,12 @@
 					{/each}
 				</div>
 				{#if showBad}
-					<span class="errtext">
+					<span class="errtext" role="alert" id="otp-msg">
 						<CircleAlert size={13} strokeWidth={1.75} />
 						<span>{m.auth_2fa_code_mismatch()}</span>
 					</span>
 				{:else}
-					<span class="hint">
+					<span class="hint" id="otp-msg">
 						<Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr: addrHint }} />
 					</span>
 				{/if}
@@ -255,6 +258,8 @@
 				<div class="lab"><label for="twofa-backup">{m.auth_2fa_method_backup()}</label></div>
 				<input
 					id="twofa-backup"
+					aria-invalid={showBad || undefined}
+					aria-describedby="twofa-backup-msg"
 					class="inp mono"
 					class:err={showBad}
 					value={bcode}
@@ -274,12 +279,12 @@
 					}}
 				/>
 				{#if showBad}
-					<span class="errtext">
+					<span class="errtext" role="alert" id="twofa-backup-msg">
 						<CircleAlert size={13} strokeWidth={1.75} />
 						<span>{m.auth_2fa_backup_invalid()}</span>
 					</span>
 				{:else}
-					<span class="hint">{m.auth_2fa_backup_hint()}</span>
+					<span class="hint" id="twofa-backup-msg">{m.auth_2fa_backup_hint()}</span>
 				{/if}
 			</div>
 			<div class="actions">

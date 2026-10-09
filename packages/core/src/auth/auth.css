@@ -1,5 +1,6 @@
 .auth {
 	min-height: 100vh;
+	min-height: 100dvh;
 	display: flex;
 	flex-direction: column;
 	position: relative;
@@ -159,7 +160,7 @@
 	font-size: 14.5px;
 	color: var(--fg);
 	background: var(--surface);
-	border: 1px solid var(--border-strong);
+	border: 1px solid var(--border-control);
 	border-radius: var(--radius-control);
 	padding: 11px 13px;
 	box-shadow: var(--shadow-xs);
@@ -376,7 +377,7 @@
 	font-weight: 600;
 	font-size: 13.5px;
 	color: #fff;
-	background: radial-gradient(circle at 34% 30%, var(--pine-600), var(--pine-800));
+	background: radial-gradient(circle at 34% 30%, #2C5340, var(--pine-800));
 	box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.18);
 }
 .auth .invite .itext {
@@ -558,7 +559,7 @@
 .auth .stepper .node.cur .dot {
 	border-color: var(--pine-600);
 	background: var(--pine-700);
-	color: #fff;
+	color: var(--on-fill);
 	box-shadow: 0 0 0 4px var(--pine-50);
 }
 .auth .stepper .node.cur .lbl {
@@ -567,7 +568,7 @@
 .auth .stepper .node.done .dot {
 	border-color: var(--pine-600);
 	background: var(--pine-600);
-	color: #fff;
+	color: var(--on-fill);
 }
 .auth .stepper .node.done .lbl {
 	color: var(--ink-600);
@@ -744,6 +745,9 @@
 .auth .accept a:hover {
 	color: var(--pine-900);
 }
+[data-theme='dark'] .auth .accept a:hover {
+	color: var(--pine-300);
+}
 
 .auth .welcome {
 	text-align: center;
@@ -893,7 +897,7 @@
 .auth .periodtab.cur {
 	background: var(--pine-600);
 	border-color: var(--pine-600);
-	color: var(--paper-0);
+	color: var(--on-fill);
 }
 .auth .periodtab:focus-visible {
 	outline: 2px solid var(--focus-ring);
@@ -1082,7 +1086,7 @@
 .auth .tiercard.sel .tc-pick {
 	border-color: var(--pine-600);
 	background: var(--pine-700);
-	color: #fff;
+	color: var(--on-fill);
 }
 .auth .tiercard .tc-name {
 	font-size: 14px;
@@ -1350,13 +1354,13 @@
 	width: 18px;
 	height: 18px;
 	border-radius: var(--radius-sm);
-	border: 1px solid var(--border-strong);
+	border: 1px solid var(--border-control);
 	background: var(--surface);
 	box-shadow: var(--shadow-xs);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #fff;
+	color: var(--on-fill);
 	flex: 0 0 auto;
 	transition:
 		background var(--dur),
@@ -1672,7 +1676,7 @@
 	font-size: 22px;
 	color: var(--fg-strong);
 	background: var(--surface);
-	border: 1px solid var(--border-strong);
+	border: 1px solid var(--border-control);
 	border-radius: var(--radius-control);
 	box-shadow: var(--shadow-xs);
 	outline: none;
@@ -1830,9 +1834,21 @@
 		gap: 6px;
 	}
 	.auth .otpgrid input {
-		width: 42px;
+		flex: 1 1 0;
+		min-width: 0;
+		max-width: 48px;
+		width: auto;
 		height: 50px;
 		font-size: 20px;
+	}
+}
+
+@media (max-width: 420px) {
+	.auth .stagebody {
+		padding: 32px 16px 48px;
+	}
+	.auth .card-surface {
+		padding: 26px 20px 22px;
 	}
 }
 

@@ -32,7 +32,6 @@
     "turndown": "^7.2.4"
   },
   "devDependencies": {
-    "@fontsource-variable/inter": "^5.2.8",
     "@inlang/plugin-message-format": "^4.4.4",
     "@lucide/svelte": "^1.39.0",
     "@sveltejs/adapter-static": "^3.0.10",

@@ -2297,6 +2297,7 @@
 	"mail_recip_cleartext": "Sem chave de cifragem — enviada sem cifragem",
 	"mail_recip_add_people": "Adicionar pessoas…",
 	"mail_recip_remove_field": "Remover {field}",
+	"mail_recip_remove_chip": "Remover {address}",
 	"mail_dirfail_error_code": "Código de erro",
 	"mail_dirfail_address": "Endereço",
 	"mail_dirfail_trusted_signer": "Signatário de confiança",
@@ -2842,6 +2843,7 @@
 	"auth_2fa_title": "Confirme a sua identidade",
 	"auth_2fa_lede": "<addr>{email}</addr> requer um segundo fator.",
 	"auth_2fa_code_label": "Código de 6 dígitos",
+	"auth_2fa_digit_label": "Dígito {n} de {total}",
 	"auth_2fa_code_mismatch": "Esse código não corresponde. Os códigos mudam a cada 30 segundos — tente o atual.",
 	"auth_2fa_code_hint": "Abra a aplicação de autenticação e introduza o código de <addr>{email}</addr>.",
 	"auth_2fa_checking": "A verificar…",
@@ -2908,6 +2910,8 @@
 	"settings_domains_remove_keep": "Manter este domínio",
 	"settings_domains_removing": "A remover…",
 	"mail_row_select": "Selecionar mensagem",
+	"mail_row_unread": "Não lida",
+	"mail_row_starred": "Com estrela",
 	"mail_row_thread_count": [
 		{
 			"declarations": [

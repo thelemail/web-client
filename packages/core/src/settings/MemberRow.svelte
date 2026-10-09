@@ -210,8 +210,8 @@
 		flex-direction: column;
 		min-width: 200px;
 		padding: 4px;
-		background: var(--paper-0);
-		border: 1px solid var(--paper-300);
+		background: var(--surface);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 		box-shadow:
 			0 4px 16px rgba(0, 0, 0, 0.08),
@@ -234,7 +234,7 @@
 		background: var(--paper-200);
 	}
 	.mbr-menu-item.danger {
-		color: var(--danger-600, #b91c1c);
+		color: var(--danger-700);
 	}
 	.mbr-confirm {
 		font-size: 13px;

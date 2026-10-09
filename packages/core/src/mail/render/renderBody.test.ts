@@ -76,4 +76,19 @@ describe('renderBody', () => {
 		expect(htmlOnly.contentHtml).toContain('rich body');
 		expect(htmlOnly.contentText).toBeUndefined();
 	});
+
+	it('keeps HTML mail on its own light page in dark mode and themes only plain text', async () => {
+		const doc = (srcDoc: string, theme: string) => {
+			const d = new DOMParser().parseFromString(srcDoc, 'text/html');
+			d.documentElement.setAttribute('data-theme', theme);
+			return d;
+		};
+		const html = doc((await renderBody({ html: '<table bgcolor="#ffffff"><tr><td>Sale</td></tr></table>' })).srcDoc, 'dark');
+		const plain = doc((await renderBody({ text: 'hello' })).srcDoc, 'dark');
+		expect(html.documentElement.matches('[data-theme="dark"].html')).toBe(true);
+		expect(plain.documentElement.matches('[data-theme="dark"]:not(.html)')).toBe(true);
+		const css = html.querySelector('style')!.textContent!;
+		expect(css).toContain(':root[data-theme="dark"].html{color-scheme:light;background:#fff}');
+		expect(css).not.toMatch(/:root\[data-theme="dark"\] body\{/);
+	});
 });

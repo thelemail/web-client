@@ -543,15 +543,15 @@
 		width: 22px;
 		height: 22px;
 		border-radius: 50%;
-		background: var(--paper, #f6efde);
-		border: 1px solid var(--paper-200, #d6cbb6);
+		background: var(--bg-raised);
+		border: 1px solid var(--border-strong);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
 	}
 	.pf-error {
-		color: var(--warn, #b25030);
+		color: var(--warning-700);
 		margin-top: 6px;
 		font-size: 12.5px;
 	}
@@ -567,6 +567,6 @@
 		}
 	}
 	.muted {
-		color: var(--ink-faint, #9a8f7d);
+		color: var(--fg-faint);
 	}
 </style>

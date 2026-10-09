@@ -2297,6 +2297,7 @@
 	"mail_recip_cleartext": "No encryption key — sent unencrypted",
 	"mail_recip_add_people": "Add people…",
 	"mail_recip_remove_field": "Remove {field}",
+	"mail_recip_remove_chip": "Remove {address}",
 	"mail_dirfail_error_code": "Error code",
 	"mail_dirfail_address": "Address",
 	"mail_dirfail_trusted_signer": "Trusted signer",
@@ -2842,6 +2843,7 @@
 	"auth_2fa_title": "Confirm it’s you",
 	"auth_2fa_lede": "<addr>{email}</addr> asks for a second factor.",
 	"auth_2fa_code_label": "6-digit code",
+	"auth_2fa_digit_label": "Digit {n} of {total}",
 	"auth_2fa_code_mismatch": "That code didn’t match. Codes rotate every 30 seconds — try the current one.",
 	"auth_2fa_code_hint": "Open your authenticator app and enter the code for <addr>{email}</addr>.",
 	"auth_2fa_checking": "Checking…",
@@ -2908,6 +2910,8 @@
 	"settings_domains_remove_keep": "Keep this domain",
 	"settings_domains_removing": "Removing…",
 	"mail_row_select": "Select message",
+	"mail_row_unread": "Unread",
+	"mail_row_starred": "Starred",
 	"mail_row_thread_count": [
 		{
 			"declarations": [

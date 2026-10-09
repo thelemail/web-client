@@ -849,7 +849,15 @@
 					<h1>
 						{plainSubject(m.subj)}
 						{#if caps.showStar}
-							<button class="star-big" class:on={m.starred} onclick={() => onToggleStar(m.id)}>
+							<button
+								type="button"
+								class="star-big"
+								class:on={m.starred}
+								aria-pressed={m.starred}
+								aria-label={msg.mail_action_star()}
+								title={m.starred ? msg.mail_action_unstar() : msg.mail_action_star()}
+								onclick={() => onToggleStar(m.id)}
+							>
 								<Star size={20} />
 							</button>
 						{/if}

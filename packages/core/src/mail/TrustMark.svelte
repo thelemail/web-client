@@ -277,7 +277,7 @@
 		z-index: 81;
 		width: 320px;
 		max-width: calc(100vw - 24px);
-		max-height: calc(100vh - 24px);
+		max-height: calc(100dvh - 24px);
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		background: var(--surface);

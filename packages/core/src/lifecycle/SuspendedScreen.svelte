@@ -17,6 +17,7 @@
 	import type { LifecycleContext } from './types';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
+	import { announce } from '$core/announce';
 
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
@@ -26,6 +27,7 @@
 	let toastTimer: ReturnType<typeof setTimeout> | null = null;
 	function flash(text: string) {
 		toast = text;
+		announce(text);
 		if (toastTimer) clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
 	}

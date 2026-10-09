@@ -229,7 +229,7 @@
 	<div class="card-surface screen-fade">
 		<Stepper step={0} labels={inviteLabels} />
 		{#if auth.email}
-			<div class="invite" style="background:var(--paper-100);border:1px solid var(--ink-200);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+			<div class="invite" style="background:var(--paper-100);border:1px solid var(--border-strong);border-radius:8px;padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
 					<span class="iname"
 						><Rich text={m.auth_invite_signed_in_as({ email: auth.email })} tags={{ b: bold }} /></span
@@ -344,9 +344,11 @@
 				onEnter={() => {
 					if (passwordReady) submitRegistration();
 				}}
+				invalid={mismatch}
+				describedby={mismatch ? 'invite-confirm-msg' : undefined}
 			/>
 			{#if mismatch}
-				<span class="errtext" style="margin-top:-8px">
+				<span class="errtext" role="alert" id="invite-confirm-msg" style="margin-top:-8px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
@@ -357,7 +359,7 @@
 				</span>
 			{/if}
 			{#if submitError}
-				<span class="errtext" style="margin-top:-4px">
+				<span class="errtext" role="alert" style="margin-top:-4px">
 					<CircleAlert size={13} strokeWidth={1.75} />
 					<span>{submitError}</span>
 				</span>

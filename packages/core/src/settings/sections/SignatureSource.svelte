@@ -54,17 +54,17 @@
 		width: 100%;
 		min-height: 150px;
 		padding: 12px 14px;
-		background: var(--paper-50, #fbf6e8);
-		border: 1px solid var(--paper-200, #d6cbb6);
+		background: var(--paper-50);
+		border: 1px solid var(--paper-200);
 		border-radius: 8px;
 		font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 		font-size: 12.5px;
 		line-height: 1.6;
-		color: var(--fg, #1f221b);
+		color: var(--fg);
 		resize: vertical;
 	}
 	.sig-source:focus {
-		outline: 2px solid var(--ring, #7d8a5c);
+		outline: 2px solid var(--ring);
 		outline-offset: -1px;
 	}
 	.sig-preview-lbl {
@@ -72,12 +72,12 @@
 		font-size: 11.5px;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: var(--fg-faint, #9a8f7d);
+		color: var(--fg-faint);
 	}
 	.sig-preview {
 		min-height: 60px;
 		padding: 12px 14px;
-		border: 1px dashed var(--paper-200, #d6cbb6);
+		border: 1px dashed var(--paper-200);
 		border-radius: 8px;
 		font-size: 14px;
 		line-height: 1.55;
@@ -88,7 +88,7 @@
 		height: auto;
 	}
 	.sig-preview :global(a) {
-		color: var(--link, #2b5aa3);
+		color: var(--link);
 		text-decoration: underline;
 	}
 	.sig-preview :global(p) {

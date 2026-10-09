@@ -300,9 +300,9 @@
 <style>
 	.evt {
 		margin-top: 22px;
-		border: 1px solid var(--border-strong, #cfc4ad);
+		border: 1px solid var(--border-strong);
 		border-radius: 12px;
-		background: var(--surface, #faf7eb);
+		background: var(--surface);
 		overflow: hidden;
 	}
 	.evt-top {
@@ -314,16 +314,16 @@
 	.evt-cal {
 		width: 54px;
 		flex: 0 0 auto;
-		border: 1px solid var(--border-strong, #cfc4ad);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 		overflow: hidden;
 		text-align: center;
-		background: var(--surface, #faf7eb);
+		background: var(--surface);
 	}
 	.evt-cal .m {
 		display: block;
-		background: var(--pine-700, #234132);
-		color: var(--fg-on-pine, #eef2ea);
+		background: var(--pine-700);
+		color: var(--fg-on-pine);
 		font: 600 10px/1 var(--font-sans, system-ui, sans-serif);
 		letter-spacing: 0.07em;
 		padding: 6px 0;
@@ -334,7 +334,7 @@
 		font-family: var(--font-sans);
 		font-size: 25px;
 		font-weight: 500;
-		color: var(--fg-strong, #1f221b);
+		color: var(--fg-strong);
 		padding: 7px 0 9px;
 		line-height: 1;
 	}
@@ -351,7 +351,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--ink-500, #6b7360);
+		color: var(--ink-500);
 	}
 	.evt-kicker :global(svg) {
 		width: 13px;
@@ -362,7 +362,7 @@
 		font-family: var(--font-sans);
 		font-size: 19px;
 		font-weight: 500;
-		color: var(--fg-strong, #1f221b);
+		color: var(--fg-strong);
 		line-height: 1.25;
 		letter-spacing: -0.01em;
 	}
@@ -377,13 +377,13 @@
 		align-items: center;
 		gap: 8px;
 		font-size: 12.5px;
-		color: var(--ink-600, #4a4d3f);
+		color: var(--ink-600);
 		min-width: 0;
 	}
 	.evt-meta :global(svg) {
 		width: 14px;
 		height: 14px;
-		color: var(--ink-400, #8e8e7d);
+		color: var(--ink-400);
 		flex: 0 0 auto;
 	}
 	.mono {
@@ -391,7 +391,7 @@
 		font-size: 12px;
 	}
 	.evt-link {
-		color: var(--link, #2b5aa3);
+		color: var(--link);
 		text-decoration: none;
 	}
 	.evt-link:hover {
@@ -403,8 +403,8 @@
 		align-items: center;
 		gap: 12px;
 		padding: 12px 18px;
-		border-top: 1px solid var(--border, #e6dfcd);
-		background: var(--paper-50, #f6f1e3);
+		border-top: 1px solid var(--border);
+		background: var(--paper-50);
 	}
 	.evt-faces {
 		display: flex;
@@ -418,11 +418,11 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-avatar);
-		background: var(--paper-200, #e0d6bf);
-		color: var(--ink-700, #43473a);
+		background: var(--paper-200);
+		color: var(--ink-700);
 		font-size: 11.5px;
 		font-weight: 600;
-		box-shadow: 0 0 0 2px var(--paper-50, #f6f1e3);
+		box-shadow: 0 0 0 2px var(--paper-50);
 		margin-left: -7px;
 	}
 	.evt-faces .av:first-child {
@@ -435,16 +435,16 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-avatar);
-		background: var(--paper-200, #e0d6bf);
-		color: var(--ink-700, #43473a);
+		background: var(--paper-200);
+		color: var(--ink-700);
 		font-size: 11px;
 		font-weight: 600;
-		box-shadow: 0 0 0 2px var(--paper-50, #f6f1e3);
+		box-shadow: 0 0 0 2px var(--paper-50);
 		margin-left: -7px;
 	}
 	.evt-who {
 		font-size: 12px;
-		color: var(--fg-muted, #5a5d4e);
+		color: var(--fg-muted);
 	}
 
 	.evt-cal-row {
@@ -454,7 +454,7 @@
 		padding: 11px 18px 0;
 	}
 	.evt-cal-row .evt-opt.add {
-		border: 1px solid var(--border-strong, #cfc4ad);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 	}
 	.evt-rsvp {
@@ -462,16 +462,16 @@
 		align-items: center;
 		gap: 11px;
 		padding: 13px 18px;
-		border-top: 1px solid var(--border, #e6dfcd);
+		border-top: 1px solid var(--border);
 	}
 	.evt-q {
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--fg-strong, #1f221b);
+		color: var(--fg-strong);
 	}
 	.evt-seg {
 		display: inline-flex;
-		border: 1px solid var(--border-strong, #cfc4ad);
+		border: 1px solid var(--border-strong);
 		border-radius: 8px;
 		overflow: hidden;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -482,11 +482,11 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--ink-700, #43473a);
+		color: var(--ink-700);
 		padding: 8px 13px;
-		background: var(--surface, #faf7eb);
+		background: var(--surface);
 		border: none;
-		border-right: 1px solid var(--border, #e6dfcd);
+		border-right: 1px solid var(--border);
 		cursor: pointer;
 	}
 	.evt-opt:last-child {
@@ -495,32 +495,32 @@
 	.evt-opt :global(svg) {
 		width: 15px;
 		height: 15px;
-		color: var(--ink-400, #8e8e7d);
+		color: var(--ink-400);
 	}
 	.evt-opt:disabled {
 		opacity: 0.55;
 		cursor: not-allowed;
 	}
 	.evt-opt.yes:hover:not(:disabled) {
-		background: var(--pine-50, #ebf1ec);
-		color: var(--pine-700, #234132);
+		background: var(--pine-50);
+		color: var(--pine-700);
 	}
 	.evt-opt.yes:hover:not(:disabled) :global(svg) {
-		color: var(--pine-600, #2e5440);
+		color: var(--pine-600);
 	}
 	.evt-opt.maybe:hover:not(:disabled) {
-		background: var(--brass-100, #f2e6cd);
-		color: var(--brass-700, #7e5b27);
+		background: var(--brass-100);
+		color: var(--brass-700);
 	}
 	.evt-opt.maybe:hover:not(:disabled) :global(svg) {
-		color: var(--brass-600, #a87c3d);
+		color: var(--brass-600);
 	}
 	.evt-opt.no:hover:not(:disabled) {
-		background: var(--danger-100, #f5d6d2);
-		color: var(--danger-700, #872820);
+		background: var(--danger-100);
+		color: var(--danger-700);
 	}
 	.evt-opt.no:hover:not(:disabled) :global(svg) {
-		color: var(--danger-500, #b5453a);
+		color: var(--danger-500);
 	}
 	.evt-ack {
 		display: inline-flex;
@@ -528,7 +528,7 @@
 		gap: 8px;
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--fg-strong, #1f221b);
+		color: var(--fg-strong);
 	}
 	.evt-ack :global(svg) {
 		width: 15px;
@@ -539,7 +539,7 @@
 		margin-left: 4px;
 		border: none;
 		background: none;
-		color: var(--link, #2b5aa3);
+		color: var(--link);
 		font-size: 12.5px;
 		font-weight: 600;
 		cursor: pointer;
@@ -547,29 +547,29 @@
 		border-radius: 4px;
 	}
 	.evt-change:hover {
-		background: var(--paper-100, #efe8d5);
+		background: var(--paper-100);
 	}
 
 	.r-yes {
-		border-color: var(--success-500, #3f8c57);
+		border-color: var(--success-500);
 	}
 	.r-yes .evt-cal .m {
-		background: var(--success-700, #1f5a36);
+		background: var(--success-700);
 	}
 	.r-yes .evt-ack :global(svg) {
-		color: var(--success-700, #1f5a36);
+		color: var(--success-700);
 	}
 	.r-maybe .evt-ack :global(svg) {
-		color: var(--brass-600, #a87c3d);
+		color: var(--brass-600);
 	}
 	.r-no .evt-ack :global(svg) {
-		color: var(--danger-500, #b5453a);
+		color: var(--danger-500);
 	}
 
 	.evt-err {
 		padding: 8px 18px 13px;
 		font-size: 12px;
-		color: var(--danger-700, #872820);
+		color: var(--danger-700);
 	}
 
 	:global([data-theme='dark']) .evt-cal .m {

@@ -177,7 +177,7 @@
 				<label for="recovery-ack">{m.settings_ceremony_recovery_ack()}</label>
 			</div>
 			{#if generateError}
-				<span class="errtext"><CircleAlert size={13} /><span>{generateError}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{generateError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1 && setup}
@@ -239,7 +239,7 @@
 				<Eye size={14} />{m.settings_ceremony_recovery_show_again()}
 			</button>
 			{#if submitError}
-				<span class="errtext"><CircleAlert size={13} /><span>{submitError}</span></span>
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{submitError}</span></span>
 			{/if}
 		</div>
 	{:else}
