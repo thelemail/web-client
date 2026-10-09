@@ -12,6 +12,18 @@
 	let observer: ResizeObserver | null = null;
 	let refit = 0;
 	let paper = $state(false);
+	let fittedWidth = -1;
+
+	function fitWidth(d: Document) {
+		if (!frame || !paper) return;
+		const avail = frame.clientWidth;
+		if (avail === fittedWidth || avail === 0) return;
+		const root = d.documentElement;
+		root.style.zoom = '';
+		const natural = root.scrollWidth;
+		root.style.zoom = natural > avail + 1 ? String(avail / natural) : '';
+		fittedWidth = avail;
+	}
 
 	const writeFrameDoc = platform.writeFrameDoc === true;
 
@@ -29,6 +41,7 @@
 		try {
 			const d = frame.contentDocument;
 			if (!d) return;
+			fitWidth(d);
 			const next = Math.max(60, d.documentElement.scrollHeight) + 'px';
 			if (frame.style.height !== next) frame.style.height = next;
 			frame.dataset.fitted = '1';
@@ -72,6 +85,7 @@
 		const doc = frame?.contentDocument;
 		if (!doc) return;
 		paper = doc.documentElement.classList.contains('html');
+		fittedWidth = -1;
 		applyTheme();
 		fit();
 		interceptLinks(doc);
