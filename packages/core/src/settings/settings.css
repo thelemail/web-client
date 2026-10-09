@@ -1142,3 +1142,8 @@
 	.settings-app .ad-person { flex-wrap: wrap; }
 	.settings-app .ad-person-role { width: 100%; padding-left: 40px; }
 }
+
+@media (pointer: coarse) {
+	.settings-app .rowmenu { position: relative; }
+	.settings-app .rowmenu.sm::after { content: ""; position: absolute; inset: -9px; }
+}

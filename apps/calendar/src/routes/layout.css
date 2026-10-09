@@ -662,3 +662,18 @@
 		outline-offset: 2px;
 	}
 }
+
+@media (pointer: coarse) {
+	input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']),
+	select,
+	textarea,
+	[contenteditable='true'] {
+		font-size: max(16px, 1em) !important;
+	}
+	.btn {
+		min-height: 44px;
+	}
+	.btn-sm {
+		min-height: 36px;
+	}
+}
