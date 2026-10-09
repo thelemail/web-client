@@ -210,7 +210,7 @@
 .mail-app .empty-clear:hover { background: var(--paper-100); border-color: var(--border-strong); }
 
 .mail-app .bulk { height: 52px; flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); background: var(--pine-50); }
-.mail-app .bulk .cnt { font-size: 13px; font-weight: 600; color: var(--pine-800); margin-right: 6px; }
+.mail-app .bulk .cnt { font-size: 13px; font-weight: 600; color: var(--accent-foreground); margin-right: 6px; }
 .mail-app .bulk .grow { flex: 1; }
 
 .mail-app .scroll { flex: 1; overflow: auto; }
@@ -950,6 +950,7 @@
 .mail-app .replybox .rq .rq-rm:hover { background: var(--paper-100); color: var(--ink-700); }
 .mail-app .replybox .rq-view { margin: 0 15px 12px; padding-left: 12px; border-left: 2px solid var(--border-strong); }
 
+[data-theme='dark'] :is(.mail-scrim, .replybox) .att-drop { color: var(--pine-700); }
 [data-theme='dark'] .mail-app .compose { background: #ECEFE2; color: var(--pine-950); }
 [data-theme='dark'] .mail-app .compose:hover { background: #F8FAF0; }
 

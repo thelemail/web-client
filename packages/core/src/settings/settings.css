@@ -110,7 +110,7 @@
 .settings-app .seg button { border: none; background: none; font-size: 12.5px; font-weight: 500; color: var(--ink-600); padding: 6px 13px; border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: background var(--dur-fast), color var(--dur-fast); cursor: pointer; }
 .settings-app .seg button svg { width: 15px; height: 15px; }
 .settings-app .seg button:hover { color: var(--ink-800); }
-.settings-app .seg button.on { background: var(--surface); color: var(--pine-800); font-weight: 600; box-shadow: var(--shadow-xs); }
+.settings-app .seg button.on { background: var(--surface); color: var(--accent-foreground); font-weight: 600; box-shadow: var(--shadow-xs); }
 
 .settings-app .sel { position: relative; display: inline-flex; align-items: center; }
 .settings-app .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink-800); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
@@ -546,7 +546,7 @@
 .cer-scrim .phrase-grid .pw { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
 .cer-scrim .phrase-grid.shown .pw { background: var(--pine-50); border-color: var(--pine-300); }
 .cer-scrim .pw-n { font-family: var(--font-mono); font-size: 10px; color: var(--fg-faint); width: 14px; flex: 0 0 auto; }
-.cer-scrim .pw-w { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--pine-800); filter: blur(5px); transition: filter var(--dur); }
+.cer-scrim .pw-w { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--accent-foreground); filter: blur(5px); transition: filter var(--dur); }
 .cer-scrim .phrase-grid.shown .pw-w { filter: none; }
 [data-theme='dark'] .cer-scrim .pw-w { color: var(--pine-700); }
 .cer-scrim .phrase-cover { position: absolute; inset: 0; border: none; background: color-mix(in oklch, var(--surface) 70%, transparent); backdrop-filter: blur(2px); border-radius: var(--radius-control); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--pine-700); cursor: pointer; }
@@ -604,7 +604,7 @@
 .cer-scrim .backup-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
 .cer-scrim .bc { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-control); font-family: var(--font-mono); }
 .cer-scrim .bc-n { font-size: 10px; color: var(--fg-faint); width: 14px; flex: 0 0 auto; text-align: right; }
-.cer-scrim .bc-c { font-size: 13px; font-weight: 500; color: var(--pine-800); letter-spacing: .04em; white-space: nowrap; }
+.cer-scrim .bc-c { font-size: 13px; font-weight: 500; color: var(--accent-foreground); letter-spacing: .04em; white-space: nowrap; }
 @media (max-width: 420px) { .cer-scrim .bc-c { font-size: 11.5px; letter-spacing: 0; } }
 
 .cer-scrim .cer-progress { padding: 8px 0; }

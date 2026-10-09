@@ -455,7 +455,7 @@
 		font-family: var(--font-mono);
 		font-size: 13.5px;
 		font-weight: 500;
-		color: var(--pine-800);
+		color: var(--accent-foreground);
 		white-space: nowrap;
 	}
 	:global([data-theme='dark']) .rk-w {

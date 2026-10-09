@@ -745,6 +745,9 @@
 .auth .accept a:hover {
 	color: var(--pine-900);
 }
+[data-theme='dark'] .auth .accept a:hover {
+	color: var(--pine-300);
+}
 
 .auth .welcome {
 	text-align: center;
