@@ -164,7 +164,9 @@
 .settings-app .sig-edit .sig-mono { font-family: var(--font-mono); font-size: 12.5px; color: var(--pine-600); }
 .settings-app .sig-hint { font-size: 12px; color: var(--fg-faint); margin-top: 9px; display: flex; align-items: center; gap: 7px; }
 .settings-app .sig-hint svg { width: 13px; height: 13px; }
-.settings-app .scard-h .sig-picker { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.settings-app .scard-h .sig-picker { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.settings-app .scard-h .sig-picker .sel { min-width: 0; }
+.settings-app .scard-h .sig-picker select { max-width: 100%; }
 .settings-app .sig-picker-lbl { font-size: 11.5px; font-weight: 600; color: var(--fg-muted); }
 .settings-app .sig-idnote { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--fg-muted); padding: 0 0 12px; }
 .settings-app .sig-idnote svg { width: 13px; height: 13px; color: var(--ink-400); flex: 0 0 auto; }
