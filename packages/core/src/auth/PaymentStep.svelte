@@ -134,9 +134,9 @@
 		flex-direction: column;
 		gap: 12px;
 		padding: 16px;
-		border: 1px solid var(--line-strong, rgba(0, 0, 0, 0.12));
+		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md, 8px);
-		background: var(--paper-50, #f7f3e9);
+		background: var(--paper-50);
 	}
 	.handoff-lead {
 		display: flex;
@@ -144,13 +144,13 @@
 		align-items: flex-start;
 		margin: 0;
 		font-size: var(--text-sm, 13px);
-		color: var(--ink-700, #3a4032);
+		color: var(--ink-700);
 		line-height: 1.5;
 	}
 	.handoff-lead :global(svg) {
 		flex-shrink: 0;
 		margin-top: 2px;
-		color: var(--pine-700, #234132);
+		color: var(--pine-700);
 	}
 	.handoff-methods {
 		display: flex;
@@ -161,10 +161,10 @@
 		align-items: center;
 		gap: 6px;
 		padding: 4px 10px;
-		border: 1px solid var(--line, rgba(0, 0, 0, 0.08));
+		border: 1px solid var(--border);
 		border-radius: var(--radius-pill, 999px);
-		background: var(--paper-0, #fcfaf4);
+		background: var(--paper-0);
 		font-size: var(--text-xs, 12px);
-		color: var(--ink-500, #6b7360);
+		color: var(--ink-500);
 	}
 </style>

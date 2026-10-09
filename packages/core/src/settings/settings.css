@@ -983,7 +983,7 @@
 .settings-app .dw-ac-domain { font-family: var(--font-mono); font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
 
 .settings-app .dw-ladder { display: flex; align-items: center; gap: 5px; }
-.settings-app .dw-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--paper-300, var(--paper-200)); }
+.settings-app .dw-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--paper-200); }
 .settings-app .dw-pip.on { background: var(--success-500); }
 .settings-app .dw-pip.fail { background: var(--warning-700); }
 .settings-app .dw-note.ok { background: var(--success-100); color: var(--success-700); }

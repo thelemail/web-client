@@ -177,8 +177,8 @@
 .mail-app .lh-btn { width: 31px; height: 31px; border-radius: var(--radius-control); border: none; background: none; color: var(--ink-500); display: flex; align-items: center; justify-content: center; position: relative; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
 .mail-app .lh-btn:hover { background: var(--paper-100); color: var(--ink-700); }
 .mail-app .lh-btn.on { background: var(--paper-100); color: var(--ink-700); }
-.mail-app .lh-btn.lh-btn-danger { color: var(--danger-600, #8E2F26); }
-.mail-app .lh-btn.lh-btn-danger:hover { background: var(--danger-50, #fff2f0); color: var(--danger-700, #6E1F18); }
+.mail-app .lh-btn.lh-btn-danger { color: var(--danger-700); }
+.mail-app .lh-btn.lh-btn-danger:hover { background: var(--danger-100); color: var(--danger-700, #6E1F18); }
 
 .mail-app .lh-sort { position: relative; display: flex; }
 .mail-app .sort-menu { width: 226px; right: 0; top: calc(100% + 8px); }
@@ -385,8 +385,8 @@
 
 .mail-app .rb-more { position: relative; display: flex; }
 .mail-app .rb-ico.on { background: var(--paper-100); color: var(--ink-700); }
-.mail-app .rb-ico.rb-ico-danger { color: var(--danger-600, #8E2F26); }
-.mail-app .rb-ico.rb-ico-danger:hover { background: var(--danger-50, #fff2f0); color: var(--danger-700, #6E1F18); }
+.mail-app .rb-ico.rb-ico-danger { color: var(--danger-700); }
+.mail-app .rb-ico.rb-ico-danger:hover { background: var(--danger-100); color: var(--danger-700, #6E1F18); }
 .mail-app .more-menu { width: 236px; right: 0; top: calc(100% + 8px); }
 .mail-app .more-menu .mitem { white-space: nowrap; }
 .mail-app .more-menu .rt { letter-spacing: .02em; }
@@ -455,10 +455,10 @@
 .mail-app .att-card .dl:disabled { opacity: .45; cursor: default; }
 .mail-app .att-card .dl:disabled:hover { background: none; color: var(--ink-500); }
 .mail-app .att-card .dl.busy svg { animation: att-spin 1s linear infinite; }
-.mail-app .att-card.err { border-color: var(--danger-100); background: var(--danger-50, #fff2f0); }
+.mail-app .att-card.err { border-color: var(--danger-100); background: var(--danger-100); }
 .mail-app .att-card.err .nm { color: var(--danger-700); font-weight: 500; }
 .mail-app .att-card.err .ic { color: var(--danger-500); border-color: var(--danger-100); }
-.mail-app .att-card.err .dl { color: var(--danger-600, #8E2F26); }
+.mail-app .att-card.err .dl { color: var(--danger-700); }
 .mail-app .att-card .nm-skel, .mail-app .att-card .sz-skel { border-radius: 3px; background: var(--paper-100); animation: att-pulse 1.4s var(--ease) infinite; }
 .mail-app .att-card .nm-skel { width: 124px; height: 11px; }
 .mail-app .att-card .sz-skel { width: 52px; height: 9px; margin-top: 5px; }
@@ -906,7 +906,7 @@
 .mail-scrim .att-hidden-input { display: none; }
 .mail-scrim .att-list { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 0; }
 .mail-scrim .att-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--paper-200); border-radius: var(--radius-sm); background: var(--paper-50); }
-.mail-scrim .att-chip.err { border-color: var(--danger-300); background: var(--danger-50); }
+.mail-scrim .att-chip.err { border-color: var(--danger-500); background: var(--danger-100); }
 .mail-scrim .att-chip .ic { color: var(--ink-500); display: flex; align-items: center; justify-content: center; }
 .mail-scrim .att-chip .info { flex: 1; min-width: 0; }
 .mail-scrim .att-chip .nm { font-size: 13px; color: var(--ink-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

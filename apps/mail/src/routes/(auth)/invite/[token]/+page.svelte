@@ -229,7 +229,7 @@
 	<div class="card-surface screen-fade">
 		<Stepper step={0} labels={inviteLabels} />
 		{#if auth.email}
-			<div class="invite" style="background:var(--paper-100);border:1px solid var(--ink-200);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+			<div class="invite" style="background:var(--paper-100);border:1px solid var(--border-strong);border-radius:8px;padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
 					<span class="iname"
 						><Rich text={m.auth_invite_signed_in_as({ email: auth.email })} tags={{ b: bold }} /></span

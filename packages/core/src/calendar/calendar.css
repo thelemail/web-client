@@ -2304,7 +2304,7 @@ button.create {
 	text-align: center;
 }
 .cal-app .avail-dh.is-today { color: var(--pine-700); font-weight: 600; }
-.cal-app .avail-dh.is-weekend { background: var(--surface-sunk); border-radius: var(--radius-sm); }
+.cal-app .avail-dh.is-weekend { background: var(--bg-sunken); border-radius: var(--radius-sm); }
 .cal-app .avail-who { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 6px 4px; }
 .cal-app .avail-nm { display: flex; flex-direction: column; min-width: 0; }
 .cal-app .avail-nm .an-t { font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2316,7 +2316,7 @@ button.create {
 	border-radius: var(--radius-sm);
 	background: var(--surface);
 }
-.cal-app .avail-day.is-weekend { background: var(--surface-sunk); }
+.cal-app .avail-day.is-weekend { background: var(--bg-sunken); }
 .cal-app .avail-blk {
 	position: absolute;
 	top: 3px;

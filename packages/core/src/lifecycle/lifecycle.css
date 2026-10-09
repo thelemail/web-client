@@ -249,7 +249,7 @@
 	font-size: 12px;
 }
 .lc-phase.ok svg {
-	color: var(--success-600, var(--success-700));
+	color: var(--success-700);
 }
 .lc-phase.ok {
 	border-color: color-mix(in oklch, var(--success-500) 32%, var(--border));

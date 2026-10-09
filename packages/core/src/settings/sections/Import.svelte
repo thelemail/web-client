@@ -197,24 +197,24 @@
 		padding: 30px 18px;
 		border: 1.5px dashed var(--border);
 		border-radius: 12px;
-		color: var(--text-2, var(--muted-700));
-		background: var(--surface-2, transparent);
+		color: var(--fg-muted);
+		background: var(--bg-raised);
 		cursor: pointer;
 		text-align: center;
 		transition: border-color 0.15s, background 0.15s;
 	}
 	.dropzone:hover,
 	.dropzone:focus-visible {
-		border-color: var(--accent-600, var(--accent));
+		border-color: var(--pine-600);
 		outline: none;
 	}
 	.dropzone.drag {
-		border-color: var(--accent-600, var(--accent));
-		background: var(--accent-50, rgba(0, 0, 0, 0.03));
+		border-color: var(--pine-600);
+		background: var(--pine-50);
 	}
 	.dz-t {
 		font-weight: 600;
-		color: var(--text-1, inherit);
+		color: var(--fg);
 	}
 	.dz-d {
 		font-size: 0.82rem;
@@ -235,13 +235,13 @@
 		color: var(--success-700);
 	}
 	.imp-stat.dup {
-		color: var(--muted-700, var(--text-2));
+		color: var(--fg-muted);
 	}
 	.imp-stat.failed {
 		color: var(--danger-700);
 	}
 	.imp-stat.pending {
-		color: var(--text-2, var(--muted-700));
+		color: var(--fg-muted);
 	}
 	.imp-spacer {
 		flex: 1;
@@ -267,7 +267,7 @@
 	}
 	.imp-ic {
 		display: inline-flex;
-		color: var(--text-2, var(--muted-700));
+		color: var(--fg-muted);
 	}
 	.imp-row.done .imp-ic {
 		color: var(--success-700);
@@ -287,14 +287,14 @@
 	}
 	.imp-meta {
 		font-size: 0.8rem;
-		color: var(--text-2, var(--muted-700));
+		color: var(--fg-muted);
 	}
 	.notelink {
 		background: none;
 		border: none;
 		padding: 0;
 		font: inherit;
-		color: var(--accent-700, var(--accent));
+		color: var(--link);
 		font-weight: 600;
 		text-decoration: underline;
 		text-underline-offset: 2px;
