@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import { realtime } from '$core/realtime/realtime.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
@@ -16,6 +17,12 @@
 
 	$effect(() => {
 		lifecycle.setAccount(data.accountId);
+	});
+
+	$effect(() => {
+		if (!auth.sessionLost(data.accountId)) return;
+		const want = untrack(() => encodeURIComponent(page.url.pathname + page.url.search));
+		void goto(`/login?slot=${data.slot}&redirect=${want}`);
 	});
 
 	onMount(() => realtime.start());

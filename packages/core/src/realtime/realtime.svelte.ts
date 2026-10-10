@@ -96,7 +96,8 @@ class RealtimeStore {
 				accountId: id,
 				open: platform.openEventSource,
 				onHint: (hint) => this.#onHint(hint),
-				onState: (state, downMs) => this.#onConnState(id, state, downMs)
+				onState: (state, downMs) => this.#onConnState(id, state, downMs),
+				onUnauthorized: () => this.#drop(id, conn)
 			});
 			this.#connections.set(id, conn);
 			conn.start();
@@ -152,6 +153,12 @@ class RealtimeStore {
 			if (changed && !full) void mailbox.refreshLoaded();
 		});
 		notifyCalendarResync(full);
+	}
+
+	#drop(id: string, conn: RealtimeConnection): void {
+		if (this.#connections.get(id) !== conn) return;
+		this.#connections.delete(id);
+		this.#removeState(id);
 	}
 
 	#setState(id: string, state: ConnectionState): void {

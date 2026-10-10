@@ -114,6 +114,7 @@ class AuthStore {
 	#profiles = $state(new Map<string, ProfileSnapshot>());
 	#currentId = $state<string | null>(null);
 	#refreshing = new Map<string, Promise<boolean>>();
+	#lost = $state(new Set<string>());
 	#refreshTimer: ReturnType<typeof setTimeout> | null = null;
 	sessionRotations = $state(0);
 
@@ -238,12 +239,14 @@ class AuthStore {
 				this.#dropToken(msg.accountId);
 			} else if (msg.type === 'cleared') {
 				this.#dropToken(msg.accountId);
+				this.#unmarkLost(msg.accountId);
 				const m = new Map(this.#profiles);
 				m.delete(msg.accountId);
 				this.#profiles = m;
 				if (this.#currentId === msg.accountId) this.#currentId = null;
 			} else if (msg.type === 'clearedAll') {
 				this.#tokens = new Map();
+				this.#lost = new Set();
 				this.#profiles = new Map();
 				this.#currentId = null;
 			} else if (msg.type === 'persistentDisabled') {
@@ -260,6 +263,7 @@ class AuthStore {
 	}
 
 	activate(accountId: string): void {
+		this.#unmarkLost(accountId);
 		this.#currentId = accountId;
 		broadcastAccountToStores(accountId);
 		this.#scheduleProactiveRefresh();
@@ -273,7 +277,29 @@ class AuthStore {
 		this.#tokens = m;
 	}
 
+	sessionLost(accountId: string | null): boolean {
+		const id = accountId ?? this.#currentId;
+		return id !== null && this.#lost.has(id);
+	}
+
+	#markLost(accountId: string): void {
+		this.#dropToken(accountId);
+		if (this.#lost.has(accountId)) return;
+		const s = new Set(this.#lost);
+		s.add(accountId);
+		this.#lost = s;
+	}
+
+	#unmarkLost(accountId: string): boolean {
+		if (!this.#lost.has(accountId)) return false;
+		const s = new Set(this.#lost);
+		s.delete(accountId);
+		this.#lost = s;
+		return true;
+	}
+
 	addSession(accessToken: string, expiresInSeconds: number, accountId: string): void {
+		const revived = this.#unmarkLost(accountId);
 		const m = new Map(this.#tokens);
 		m.set(accountId, {
 			accessToken,
@@ -282,6 +308,7 @@ class AuthStore {
 		this.#tokens = m;
 		this.#getOrCreateProfile(accountId);
 		if (accountId === this.#currentId) this.#scheduleProactiveRefresh();
+		if (revived) void realtime.sync();
 	}
 
 	async adoptSteppedUpToken(session: RefreshResponse): Promise<void> {
@@ -323,6 +350,7 @@ class AuthStore {
 	async tryRefresh(accountId?: string): Promise<boolean> {
 		const id = accountId ?? this.#currentId;
 		if (!id) return false;
+		if (this.#lost.has(id)) return false;
 		const inflight = this.#refreshing.get(id);
 		if (inflight) return inflight;
 		const p = (async () => {
@@ -330,7 +358,8 @@ class AuthStore {
 				const res = await refreshSession(id);
 				this.addSession(res.accessToken, res.expiresInSeconds, res.accountId);
 				return true;
-			} catch {
+			} catch (err) {
+				if (err instanceof ApiCallError && err.status === 401) this.#markLost(id);
 				return false;
 			}
 		})();
@@ -455,6 +484,7 @@ class AuthStore {
 		} catch {
 		}
 		this.#dropToken(accountId);
+		this.#unmarkLost(accountId);
 		await keystore.clear({ accountId });
 		await forgetAccountAvatar(accountId);
 		if (platform.session) {
@@ -485,6 +515,7 @@ class AuthStore {
 		} catch {
 		}
 		this.#tokens = new Map();
+		this.#lost = new Set();
 		await keystore.clearAll();
 		await forgetAllAvatars();
 		if (platform.session) {
@@ -510,6 +541,7 @@ if (browser) {
 		currentAccountId: () => auth.accountId,
 		getAccessToken: (accountId) => auth.getAccessToken(accountId),
 		ensureFreshToken: (accountId) => auth.ensureFreshToken(accountId),
+		isSessionLost: (accountId) => auth.sessionLost(accountId),
 		onUnauthorized: (accountId) => auth.tryRefresh(accountId ?? undefined)
 	});
 

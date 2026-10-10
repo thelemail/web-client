@@ -22,7 +22,21 @@ vi.mock('$core/keystore/keystore-client', () => ({
 	}
 }));
 
+vi.mock('./accounts.svelte', () => ({
+	accounts: {
+		list: [],
+		byId: () => null,
+		remove: vi.fn(),
+		clear: vi.fn(),
+		load: vi.fn(),
+		touch: vi.fn(),
+		upsert: vi.fn(),
+		allocateSlot: () => 1
+	}
+}));
+
 import { auth } from './auth.svelte';
+import { ApiCallError } from '$core/api/types';
 
 function grant(accountId: string, expiresInSeconds = 3600) {
 	return { accessToken: `tok-${accountId}-${Math.random()}`, expiresInSeconds, accountId };
@@ -87,5 +101,54 @@ describe('auth token refresh', () => {
 
 		expect(await auth.tryRefresh(id)).toBe(false);
 		expect(keystoreClear).not.toHaveBeenCalled();
+	});
+
+	it('a 401 refresh marks the session lost and stops further refreshes', async () => {
+		const id = freshId();
+		auth.addSession('stale', -10, id);
+		refreshSession.mockRejectedValue(new ApiCallError(401, null, 'HTTP 401'));
+
+		expect(await auth.tryRefresh(id)).toBe(false);
+		expect(auth.sessionLost(id)).toBe(true);
+		expect(auth.getAccessToken(id)).toBeNull();
+
+		await auth.ensureFreshToken(id);
+		expect(await auth.tryRefresh(id)).toBe(false);
+		expect(refreshSession).toHaveBeenCalledTimes(1);
+		expect(keystoreClear).not.toHaveBeenCalled();
+	});
+
+	it('a 500 refresh stays retryable', async () => {
+		const id = freshId();
+		refreshSession.mockRejectedValue(new ApiCallError(500, null, 'HTTP 500'));
+
+		expect(await auth.tryRefresh(id)).toBe(false);
+		expect(auth.sessionLost(id)).toBe(false);
+		expect(await auth.tryRefresh(id)).toBe(false);
+		expect(refreshSession).toHaveBeenCalledTimes(2);
+	});
+
+	it('a new session clears the lost mark', async () => {
+		const id = freshId();
+		refreshSession.mockRejectedValueOnce(new ApiCallError(401, null, 'HTTP 401'));
+		await auth.tryRefresh(id);
+		expect(auth.sessionLost(id)).toBe(true);
+
+		auth.addSession('fresh', 3600, id);
+		expect(auth.sessionLost(id)).toBe(false);
+		refreshSession.mockResolvedValue(grant(id));
+		expect(await auth.tryRefresh(id)).toBe(true);
+	});
+
+	it('activating the account allows one more refresh attempt', async () => {
+		const id = freshId();
+		refreshSession.mockRejectedValue(new ApiCallError(401, null, 'HTTP 401'));
+		await auth.tryRefresh(id);
+
+		auth.activate(id);
+		expect(auth.sessionLost(id)).toBe(false);
+		expect(await auth.tryRefresh(id)).toBe(false);
+		expect(refreshSession).toHaveBeenCalledTimes(2);
+		expect(auth.sessionLost(id)).toBe(true);
 	});
 });

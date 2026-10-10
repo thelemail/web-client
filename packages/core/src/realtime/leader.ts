@@ -20,19 +20,24 @@ export function electLeader(name: string, onLead: () => () => void): LeaderHandl
 
 	let leading = false;
 	let cleanup: (() => void) | null = null;
+	let release: (() => void) | null = null;
 	const controller = new AbortController();
 
 	navigator.locks
 		.request(name, { mode: 'exclusive', signal: controller.signal }, () => {
 			leading = true;
 			cleanup = onLead();
-			return new Promise<void>(() => {});
+			return new Promise<void>((resolve) => {
+				release = resolve;
+			});
 		})
 		.catch(() => {});
 
 	return {
 		stop() {
 			controller.abort();
+			release?.();
+			release = null;
 			if (cleanup) {
 				cleanup();
 				cleanup = null;

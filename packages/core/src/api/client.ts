@@ -15,6 +15,7 @@ export interface AuthRouter {
 	currentAccountId(): string | null;
 	getAccessToken(accountId: string | null): string | null;
 	ensureFreshToken?(accountId: string | null): Promise<void>;
+	isSessionLost?(accountId: string | null): boolean;
 	onUnauthorized(accountId: string | null): Promise<boolean>;
 }
 
@@ -96,6 +97,7 @@ export async function submissionUpload<T>(
 	const accountId = resolveAccountId(opts.accountId);
 	if (accountId) headers['X-Account-Id'] = accountId;
 	if (authRouter) {
+		if (authRouter.isSessionLost?.(accountId)) throw new ApiCallError(401, null, 'HTTP 401');
 		await authRouter.ensureFreshToken?.(accountId);
 		const token = authRouter.getAccessToken(accountId);
 		if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -149,6 +151,7 @@ async function doFetch<T>(
 	}
 	headers['X-Device-Id'] = deviceId();
 	if (!opts.skipAuth && authRouter) {
+		if (authRouter.isSessionLost?.(accountId)) throw new ApiCallError(401, null, 'HTTP 401');
 		await authRouter.ensureFreshToken?.(accountId);
 		const token = authRouter.getAccessToken(accountId);
 		if (token) {
