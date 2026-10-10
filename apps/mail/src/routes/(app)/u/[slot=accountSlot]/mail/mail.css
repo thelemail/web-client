@@ -64,7 +64,7 @@
 .mail-app .search { display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 0 11px; height: 34px; color: var(--fg-faint); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
 .mail-app .search svg { flex: 0 0 auto; }
 .mail-app .search:hover { border-color: var(--border-strong); }
-.mail-app .search:focus-within { border-color: var(--border-strong); }
+.mail-app .search:focus-within { border-color: var(--pine-500); box-shadow: 0 0 0 3px color-mix(in oklch, var(--focus-ring) 50%, transparent); }
 .mail-app .search input { border: none; background: none; outline: none; font-size: 13px; color: var(--fg); width: 100%; min-width: 0; letter-spacing: var(--track-snug); }
 .mail-app .search input:focus, .mail-app .search input:focus-visible { outline: none; box-shadow: none; }
 .mail-app .search input::placeholder { color: var(--fg-faint); }
@@ -77,8 +77,6 @@
 .mail-app .srch-ops { position: absolute; z-index: 40; top: calc(100% + 5px); left: 0; right: 0; display: flex; flex-wrap: wrap; gap: 4px; padding: 7px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); box-shadow: var(--shadow-md, 0 6px 20px rgb(0 0 0 / 0.10)); }
 .mail-app .srch-op { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-muted); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 2px 6px; background: var(--paper-50); cursor: pointer; }
 .mail-app .srch-op:hover { border-color: var(--border-strong); color: var(--fg-strong); background: var(--paper-100); }
-
-.mail-app .rail > .searchwrap { margin: 0 2px; }
 
 .mail-app .rail-acct { position: relative; margin-top: 12px; }
 .mail-app .acct-btn { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 6px 8px; border: 1px solid transparent; border-radius: var(--radius-control); background: none; cursor: pointer; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
@@ -162,16 +160,16 @@
 .mail-app .mailbody { flex: 1; display: flex; min-height: 0; }
 
 .mail-app .list { width: 468px; flex: 0 0 auto; border-right: 1px solid var(--border); background: var(--bg); display: flex; flex-direction: column; min-width: 0; }
-.mail-app .list-h { min-height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 6px 9px 6px 15px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.mail-app .list-h { min-height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 6px 9px 6px 10px; border-bottom: 1px solid var(--border); background: var(--bg); }
 .mail-app .list-h .ttl-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.mail-app .list-h .ttl { font-family: var(--font-sans); font-feature-settings: normal; font-size: 17px; font-weight: 580; color: var(--fg-strong); display: flex; align-items: baseline; gap: 8px; letter-spacing: var(--track-tight); line-height: 1.1; }
-.mail-app .list-h .ttl .n { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; color: var(--accent-quiet); font-variant-numeric: tabular-nums; }
-.mail-app .list-h .grow { flex: 1; }
-.mail-app .list-h .list-sub { display: flex; align-items: center; gap: 4px; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-500); white-space: nowrap; }
-.mail-app .list-h .list-sub .list-sub-dot { color: var(--fg-faint); padding: 0 2px; }
-.mail-app .list-h .list-sub-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: none; background: none; border-radius: 50%; color: var(--ink-400); cursor: pointer; }
-.mail-app .list-h .list-sub-x:hover { background: var(--paper-100); color: var(--pine-700); }
-.mail-app .list-h .list-sub-x svg { width: 11px; height: 11px; }
+.mail-app .list-h .ttl { font-family: var(--font-sans); font-feature-settings: normal; font-size: 17px; font-weight: 580; color: var(--fg-strong); display: flex; align-items: baseline; gap: 8px; letter-spacing: var(--track-tight); line-height: 1.1; padding-left: 5px; }
+.mail-app .list-h .searchwrap { flex: 1; min-width: 0; }
+.mail-app .list-h .lh-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; padding-left: 4px; }
+.mail-app .view-strip { display: flex; align-items: center; gap: 4px; padding: 7px 15px; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-500); background: var(--bg-raised); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; }
+.mail-app .view-strip .list-sub-dot { color: var(--fg-faint); padding: 0 2px; }
+.mail-app .view-strip .list-sub-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: none; background: none; border-radius: 50%; color: var(--ink-400); cursor: pointer; }
+.mail-app .view-strip .list-sub-x:hover { background: var(--paper-100); color: var(--pine-700); }
+.mail-app .view-strip .list-sub-x svg { width: 11px; height: 11px; }
 .mail-app .lh-btn.refreshing svg { animation: mail-svspin .8s linear infinite; }
 .mail-app .lh-btn:disabled { cursor: default; opacity: .6; }
 .mail-app .lh-btn { width: 31px; height: 31px; border-radius: var(--radius-control); border: none; background: none; color: var(--ink-500); display: flex; align-items: center; justify-content: center; position: relative; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
@@ -1057,7 +1055,8 @@
 	.mail-app .sysalert { padding: 6px 10px; min-height: 42px; gap: 9px; }
 	.mail-app .sysalert .sa-act { height: 27px; padding: 0 10px; }
 
-	.mail-app .list-h { padding: 0 8px 0 14px; }
+	.mail-app .list-h { padding: 6px 8px 6px 12px; }
+	.mail-app .view-strip { padding: 7px 14px; }
 	.mail-app .bulk { padding: 0 8px 0 12px; }
 	.mail-app .mrow { padding: 12px 12px 12px 10px; }
 	.mail-app .daygrp { padding: 12px 14px 7px; }
@@ -1214,6 +1213,6 @@
 
 @media (pointer: coarse) {
 	.mail-app .rb-ico, .mail-app .lh-btn { flex: 0 0 auto; width: 40px; height: 40px; }
-	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .list-h .list-sub-x, .fgroup .addbtn) { position: relative; }
-	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .list-h .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
+	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn) { position: relative; }
+	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
 }

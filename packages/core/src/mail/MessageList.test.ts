@@ -145,3 +145,39 @@ describe('MessageList search states', () => {
 		expect(container.querySelector('.empty-clear')?.textContent).toContain('Clear search');
 	});
 });
+
+describe('MessageList header', () => {
+	it('puts the search box where the folder title was', () => {
+		const { container } = mount({ list: [message('m1')] });
+		const header = container.querySelector('.list-h');
+		expect(header?.querySelector('.search input')).not.toBeNull();
+		expect(header?.querySelector('.ttl')).toBeNull();
+	});
+
+	it('shows no view strip for the default sort without filters', () => {
+		const { container } = mount({ list: [message('m1')] });
+		expect(container.querySelector('.view-strip')).toBeNull();
+	});
+
+	it('shows the sort below the header and resets it', async () => {
+		const onSort = vi.fn();
+		const { container } = mount({ list: [message('m1')], sort: 'oldest', onSort });
+		const strip = container.querySelector('.view-strip');
+		expect(strip).not.toBeNull();
+		(strip?.querySelector('.list-sub-x') as HTMLButtonElement).click();
+		expect(onSort).toHaveBeenCalledWith('newest');
+	});
+
+	it('shows active filters below the header and clears them', () => {
+		const onSetFilters = vi.fn();
+		const { container } = mount({
+			list: [message('m1')],
+			filters: { ...EMPTY_FILTERS, unread: true },
+			onSetFilters
+		});
+		const strip = container.querySelector('.view-strip');
+		expect(strip?.textContent).toContain('1');
+		(strip?.querySelector('.list-sub-x') as HTMLButtonElement).click();
+		expect(onSetFilters).toHaveBeenCalledWith({ ...EMPTY_FILTERS });
+	});
+});

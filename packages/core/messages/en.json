@@ -449,6 +449,8 @@
 	],
 	"mail_search_placeholder": "Search mail",
 	"mail_search_clear": "Clear",
+	"mail_search_drafts": "Search drafts",
+	"mail_search_scheduled": "Search scheduled",
 	"mail_block_unlock_required": "Unlock this account to block a sender.",
 	"mail_block_failed": "The sender could not be blocked.",
 	"mail_block_title": "Block this sender",

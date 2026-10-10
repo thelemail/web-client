@@ -13,6 +13,7 @@
 	import { mailNav } from '$core/stores/nav.svelte';
 	import Compose from './Compose.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
+	import ListSearch from './ListSearch.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { scheduled, type ScheduledRow } from '$core/stores/scheduled.svelte';
@@ -102,13 +103,12 @@
 			>
 				<Menu size={18} />
 			</button>
-			<div class="ttl-block">
-				<span class="ttl">{m.mail_scheduled_heading()}<span class="n">{scheduled.items.length}</span></span>
+			<ListSearch placeholder={m.mail_search_scheduled()} operators={false} />
+			<div class="lh-actions">
+				<button class="lh-btn" title={m.mail_refresh()} onclick={() => scheduled.refresh()}>
+					<RefreshCw size={16} />
+				</button>
 			</div>
-			<div class="grow"></div>
-			<button class="lh-btn" title={m.mail_refresh()} onclick={() => scheduled.refresh()}>
-				<RefreshCw size={16} />
-			</button>
 		</div>
 		<div class="scroll">
 			{#if scheduled.loading && list.length === 0}
