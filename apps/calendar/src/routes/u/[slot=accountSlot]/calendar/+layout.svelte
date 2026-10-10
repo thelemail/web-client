@@ -16,10 +16,15 @@
 	import { calendarStore } from '$core/calendar/store.svelte';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { auth } from '$core/stores/auth.svelte';
+	import { handOffToApp } from '$core/products';
 	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	let { children } = $props();
+
+	$effect(() => {
+		if (auth.sessionLost(auth.accountId)) handOffToApp();
+	});
 
 	$effect(() => {
 		const accountId = auth.accountId;
