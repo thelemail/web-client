@@ -68,6 +68,27 @@ describe('electLeader', () => {
 		void released;
 	});
 
+	it('releases the held lock on stop() so a later election can lead', async () => {
+		let held: Promise<unknown> | null = null;
+		stubLocks(
+			vi.fn((...args: unknown[]) => {
+				const cb = args[2] as (lock: Lock) => Promise<unknown>;
+				held = cb({ name: 'test-lock', mode: 'exclusive' } as Lock);
+				return held;
+			})
+		);
+		const handle = electLeader('test-lock', () => vi.fn());
+		await Promise.resolve();
+		expect(handle.isLeader).toBe(true);
+
+		const settled = vi.fn();
+		void held!.then(settled);
+		handle.stop();
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(settled).toHaveBeenCalledTimes(1);
+	});
+
 	it('runs onLead immediately when navigator.locks is unsupported, and is always leader', () => {
 		clearLocks();
 		const cleanup = vi.fn();

@@ -14,6 +14,7 @@ export interface ConnectionOptions {
 	accountId: string;
 	onHint: (hint: RealtimeHint) => void;
 	onState?: (state: ConnectionState, downMs: number) => void;
+	onUnauthorized?: () => void;
 	open?: (url: string, accountId: string) => EventSourceLike;
 	mint?: (accountId: string) => Promise<RealtimeTicketResponse>;
 }
@@ -91,9 +92,11 @@ export class RealtimeConnection {
 			ticket = await mint(this.#opts.accountId);
 		} catch (err) {
 			if (this.#stopped || seq !== this.#connectSeq) return;
-			if (isNotFound(err)) {
+			const status = errorStatus(err);
+			if (status === 404 || status === 401) {
 				this.#stopped = true;
 				this.#setState('stopped');
+				if (status === 401) this.#opts.onUnauthorized?.();
 				return;
 			}
 			this.#scheduleReconnect();
@@ -149,6 +152,6 @@ export class RealtimeConnection {
 	}
 }
 
-function isNotFound(err: unknown): boolean {
-	return typeof err === 'object' && err !== null && 'status' in err && (err as { status: unknown }).status === 404;
+function errorStatus(err: unknown): unknown {
+	return typeof err === 'object' && err !== null && 'status' in err ? (err as { status: unknown }).status : undefined;
 }

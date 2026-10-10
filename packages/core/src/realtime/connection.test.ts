@@ -198,6 +198,35 @@ describe('RealtimeConnection', () => {
 		expect(open).not.toHaveBeenCalled();
 	});
 
+	it('gives up after a 401 from mint and reports it', async () => {
+		const mint = vi.fn().mockRejectedValue(statusError(401));
+		const open = vi.fn();
+		const onUnauthorized = vi.fn();
+		const conn = new RealtimeConnection({ accountId: 'acc-1', onHint: vi.fn(), mint, open, onUnauthorized });
+
+		conn.start();
+		await vi.waitFor(() => expect(conn.state).toBe('stopped'));
+		expect(onUnauthorized).toHaveBeenCalledTimes(1);
+
+		conn.kick();
+		await vi.advanceTimersByTimeAsync(120000);
+		expect(mint).toHaveBeenCalledTimes(1);
+		expect(open).not.toHaveBeenCalled();
+	});
+
+	it('keeps retrying after a transient mint failure', async () => {
+		const mint = vi.fn().mockRejectedValue(statusError(503));
+		const onUnauthorized = vi.fn();
+		const conn = new RealtimeConnection({ accountId: 'acc-1', onHint: vi.fn(), mint, open: vi.fn(), onUnauthorized });
+
+		conn.start();
+		await vi.waitFor(() => expect(conn.state).toBe('reconnecting'));
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(mint.mock.calls.length).toBeGreaterThan(1);
+		expect(onUnauthorized).not.toHaveBeenCalled();
+		conn.stop();
+	});
+
 	it('dispatches a received hint with the account id attached', async () => {
 		const mint = vi.fn().mockResolvedValue({ ticket: 't1', expiresAt: '2026-01-01T00:00:00Z' });
 		const sources: FakeEventSource[] = [];
