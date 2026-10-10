@@ -7,7 +7,10 @@ interface BimiLogoResponse {
 
 export async function fetchBimiLogo(domain: string): Promise<string | null> {
 	try {
-		const res = await apiFetch<BimiLogoResponse>(`/v1/bimi/${encodeURIComponent(domain)}`);
+		const res = await apiFetch<BimiLogoResponse>('/v1/bimi/logo', {
+			method: 'POST',
+			body: { domain }
+		});
 		return typeof res?.svg === 'string' && res.svg ? res.svg : null;
 	} catch (err) {
 		if (err instanceof ApiCallError && err.status === 404) return null;
