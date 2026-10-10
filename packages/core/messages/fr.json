@@ -449,6 +449,8 @@
   ],
   "mail_search_placeholder": "Rechercher des e-mails",
   "mail_search_clear": "Effacer",
+  "mail_search_drafts": "Rechercher dans les brouillons",
+  "mail_search_scheduled": "Rechercher dans les envois programmés",
   "mail_block_unlock_required": "Déverrouillez ce compte pour bloquer un expéditeur.",
   "mail_block_failed": "Impossible de bloquer l’expéditeur.",
   "mail_block_title": "Bloquer cet expéditeur",

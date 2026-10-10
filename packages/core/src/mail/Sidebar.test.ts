@@ -32,7 +32,6 @@ vi.mock('$app/state', () => ({ page: { params: { slot: '0', folder: `f-${ACME}` 
 vi.mock('$core/stores/mailCollections.svelte', () => ({ mailCollections }));
 vi.mock('$core/stores/accountSettings.svelte', () => ({ accountSettings }));
 vi.mock('$core/stores/billing.svelte', () => ({ billing: { subscription: null } }));
-vi.mock('./RailSearch.svelte', () => ({ default: () => {} }));
 vi.mock('./RailAccount.svelte', () => ({ default: () => {} }));
 
 import Sidebar from './Sidebar.svelte';

@@ -449,6 +449,8 @@
 	],
 	"mail_search_placeholder": "E-Mails durchsuchen",
 	"mail_search_clear": "Leeren",
+	"mail_search_drafts": "Entwürfe durchsuchen",
+	"mail_search_scheduled": "Geplante durchsuchen",
 	"mail_block_unlock_required": "Entsperren Sie dieses Konto, um einen Absender zu blockieren.",
 	"mail_block_failed": "Der Absender konnte nicht blockiert werden.",
 	"mail_block_title": "Diesen Absender blockieren",

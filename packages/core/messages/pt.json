@@ -449,6 +449,8 @@
 	],
 	"mail_search_placeholder": "Pesquisar mensagens",
 	"mail_search_clear": "Limpar",
+	"mail_search_drafts": "Pesquisar rascunhos",
+	"mail_search_scheduled": "Pesquisar agendadas",
 	"mail_block_unlock_required": "Desbloqueie esta conta para bloquear um remetente.",
 	"mail_block_failed": "Não foi possível bloquear o remetente.",
 	"mail_block_title": "Bloquear este remetente",

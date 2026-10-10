@@ -26,6 +26,7 @@
 	import Search from '@lucide/svelte/icons/search';
 	import { mailNav } from '$core/stores/nav.svelte';
 	import MessageRow from './MessageRow.svelte';
+	import ListSearch from './ListSearch.svelte';
 	import {
 		bucketFromEpoch,
 		dayBucketLabel,
@@ -382,165 +383,154 @@
 			>
 				<Menu size={18} />
 			</button>
-			<div class="ttl-block">
-				<span class="ttl">{folderLabel}{#if list.length}<span class="n">{list.length}</span>{/if}</span>
-				{#if sort !== 'newest' || activeFilters > 0}
-					<div class="list-sub">
-						{#if sort !== 'newest'}
-							<span>{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}</span>
-							<button
-								type="button"
-								class="list-sub-x"
-								title={msg.mail_list_reset_sort()}
-								onclick={() => onSort('newest')}
-							>
-								<X size={11} />
-							</button>
-						{/if}
-						{#if sort !== 'newest' && activeFilters > 0}
-							<span class="list-sub-dot">·</span>
-						{/if}
-						{#if activeFilters > 0}
-							<span>{msg.mail_list_filters_active({ count: activeFilters })}</span>
-							<button
-								type="button"
-								class="list-sub-x"
-								title={msg.mail_list_clear_filters()}
-								onclick={clearFilters}
-							>
-								<X size={11} />
-							</button>
-						{/if}
-					</div>
+			<ListSearch />
+			<div class="lh-actions">
+				{#if onRefresh}
+					<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
+						<RefreshCw size={16} />
+					</button>
 				{/if}
-			</div>
-			<div class="grow"></div>
-			{#if onRefresh}
-				<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
-					<RefreshCw size={16} />
+				<button class="lh-btn" title={msg.mail_list_select_all()} onclick={onToggleAll}>
+					<SquareCheck size={16} />
 				</button>
-			{/if}
-			<button class="lh-btn" title={msg.mail_list_select_all()} onclick={onToggleAll}>
-				<SquareCheck size={16} />
-			</button>
-			<div class="lh-sort" bind:this={sortRef}>
-				<button
-					class="lh-btn"
-					class:on={sortOpen}
-					title={msg.mail_list_sort()}
-					aria-haspopup="menu"
-					aria-expanded={sortOpen}
-					onclick={() => (sortOpen = !sortOpen)}
-				>
-					<ArrowDownUp size={16} />
-				</button>
-				{#if sortOpen}
-					<div class="menu sort-menu" role="menu">
-						<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
-						{#each SORT_OPTIONS as o (o.id)}
-							{@const SIcon = sortIcons[o.icon] ?? ArrowDown}
-							<button
-								class="mitem"
-								class:active={sort === o.id}
-								role="menuitemradio"
-								aria-checked={sort === o.id}
-								onclick={() => pickSort(o.id)}
-							>
-								<SIcon size={16} />{o.label}
-								{#if sort === o.id}
-									<span class="mck"><Check size={16} /></span>
-								{/if}
-							</button>
-						{/each}
-					</div>
-				{/if}
-			</div>
-			<div class="lh-filter" bind:this={filterRef}>
-				<button
-					class="lh-btn"
-					class:on={filterOpen || activeFilters > 0}
-					title={msg.mail_list_filter()}
-					aria-haspopup="dialog"
-					aria-expanded={filterOpen}
-					onclick={() => (filterOpen = !filterOpen)}
-				>
-					<SlidersHorizontal size={16} />
-					{#if activeFilters > 0}
-						<span class="fbadge">{activeFilters}</span>
-					{/if}
-				</button>
-				{#if filterOpen}
-					<div class="menu filter-menu" role="dialog" aria-label={msg.mail_list_filter_aria()}>
-						<div class="fm-head">
-							<span class="menu-lbl">{msg.mail_list_filter()}</span>
-							{#if activeFilters > 0}
-								<button class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
-							{/if}
-						</div>
-						<div class="fm-cap">{msg.mail_list_show_only()}</div>
-						<div class="fm-chips">
-							<button
-								class="fchip"
-								class:on={filters.unread}
-								aria-pressed={filters.unread}
-								onclick={() => toggleFlag('unread')}
-							>
-								<Mail size={15} />{msg.mail_list_filter_unread()}
-							</button>
-							<button
-								class="fchip"
-								class:on={filters.starred}
-								aria-pressed={filters.starred}
-								onclick={() => toggleFlag('starred')}
-							>
-								<Star size={15} />{msg.mail_list_filter_starred()}
-							</button>
-							<button
-								class="fchip"
-								class:on={filters.attach}
-								aria-pressed={filters.attach}
-								onclick={() => toggleFlag('attach')}
-							>
-								<Paperclip size={15} />{msg.mail_list_filter_attach()}
-							</button>
-							{#if collectionKind && (showScope || filters.direct)}
+				<div class="lh-sort" bind:this={sortRef}>
+					<button
+						class="lh-btn"
+						class:on={sortOpen}
+						title={msg.mail_list_sort()}
+						aria-haspopup="menu"
+						aria-expanded={sortOpen}
+						onclick={() => (sortOpen = !sortOpen)}
+					>
+						<ArrowDownUp size={16} />
+					</button>
+					{#if sortOpen}
+						<div class="menu sort-menu" role="menu">
+							<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
+							{#each SORT_OPTIONS as o (o.id)}
+								{@const SIcon = sortIcons[o.icon] ?? ArrowDown}
 								<button
-									class="fchip"
-									class:on={!!filters.direct}
-									aria-pressed={!!filters.direct}
-									onclick={() => toggleFlag('direct')}
+									class="mitem"
+									class:active={sort === o.id}
+									role="menuitemradio"
+									aria-checked={sort === o.id}
+									onclick={() => pickSort(o.id)}
 								>
-									{#if collectionKind === 'label'}
-										<Tag size={15} />{msg.mail_view_only_label()}
-									{:else}
-										<Folder size={15} />{msg.mail_view_only_folder()}
+									<SIcon size={16} />{o.label}
+									{#if sort === o.id}
+										<span class="mck"><Check size={16} /></span>
 									{/if}
 								</button>
-							{/if}
+							{/each}
 						</div>
-						{#if collectionKind !== 'label'}
-							<div class="msep"></div>
-							<div class="fm-cap">{msg.mail_list_labels()}</div>
+					{/if}
+				</div>
+				<div class="lh-filter" bind:this={filterRef}>
+					<button
+						class="lh-btn"
+						class:on={filterOpen || activeFilters > 0}
+						title={msg.mail_list_filter()}
+						aria-haspopup="dialog"
+						aria-expanded={filterOpen}
+						onclick={() => (filterOpen = !filterOpen)}
+					>
+						<SlidersHorizontal size={16} />
+						{#if activeFilters > 0}
+							<span class="fbadge">{activeFilters}</span>
+						{/if}
+					</button>
+					{#if filterOpen}
+						<div class="menu filter-menu" role="dialog" aria-label={msg.mail_list_filter_aria()}>
+							<div class="fm-head">
+								<span class="menu-lbl">{msg.mail_list_filter()}</span>
+								{#if activeFilters > 0}
+									<button class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
+								{/if}
+							</div>
+							<div class="fm-cap">{msg.mail_list_show_only()}</div>
 							<div class="fm-chips">
-								{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
-									{@const on = filters.labels.includes(l.id)}
+								<button
+									class="fchip"
+									class:on={filters.unread}
+									aria-pressed={filters.unread}
+									onclick={() => toggleFlag('unread')}
+								>
+									<Mail size={15} />{msg.mail_list_filter_unread()}
+								</button>
+								<button
+									class="fchip"
+									class:on={filters.starred}
+									aria-pressed={filters.starred}
+									onclick={() => toggleFlag('starred')}
+								>
+									<Star size={15} />{msg.mail_list_filter_starred()}
+								</button>
+								<button
+									class="fchip"
+									class:on={filters.attach}
+									aria-pressed={filters.attach}
+									onclick={() => toggleFlag('attach')}
+								>
+									<Paperclip size={15} />{msg.mail_list_filter_attach()}
+								</button>
+								{#if collectionKind && (showScope || filters.direct)}
 									<button
 										class="fchip"
-										class:on
-										aria-pressed={on}
-										title={l.path}
-										onclick={() => toggleLabel(l.id)}
+										class:on={!!filters.direct}
+										aria-pressed={!!filters.direct}
+										onclick={() => toggleFlag('direct')}
 									>
-										<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
+										{#if collectionKind === 'label'}
+											<Tag size={15} />{msg.mail_view_only_label()}
+										{:else}
+											<Folder size={15} />{msg.mail_view_only_folder()}
+										{/if}
 									</button>
-								{:else}
-									<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
-								{/each}
+								{/if}
 							</div>
-						{/if}
-					</div>
-				{/if}
+							{#if collectionKind !== 'label'}
+								<div class="msep"></div>
+								<div class="fm-cap">{msg.mail_list_labels()}</div>
+								<div class="fm-chips">
+									{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
+										{@const on = filters.labels.includes(l.id)}
+										<button
+											class="fchip"
+											class:on
+											aria-pressed={on}
+											title={l.path}
+											onclick={() => toggleLabel(l.id)}
+										>
+											<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
+										</button>
+									{:else}
+										<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
+									{/each}
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
+		</div>
+	{/if}
+	{#if !anyChecked && (sort !== 'newest' || activeFilters > 0)}
+		<div class="view-strip">
+			{#if sort !== 'newest'}
+				<span>{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}</span>
+				<button type="button" class="list-sub-x" title={msg.mail_list_reset_sort()} onclick={() => onSort('newest')}>
+					<X size={11} />
+				</button>
+			{/if}
+			{#if sort !== 'newest' && activeFilters > 0}
+				<span class="list-sub-dot">·</span>
+			{/if}
+			{#if activeFilters > 0}
+				<span>{msg.mail_list_filters_active({ count: activeFilters })}</span>
+				<button type="button" class="list-sub-x" title={msg.mail_list_clear_filters()} onclick={clearFilters}>
+					<X size={11} />
+				</button>
+			{/if}
 		</div>
 	{/if}
 	{#if job}

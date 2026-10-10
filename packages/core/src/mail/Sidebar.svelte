@@ -29,7 +29,6 @@
 	import NavMorph from '$core/components/NavMorph.svelte';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import Toast from '$core/components/Toast.svelte';
-	import RailSearch from './RailSearch.svelte';
 	import RailAccount from './RailAccount.svelte';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -417,8 +416,6 @@
 	<button class="compose" onclick={onCompose}>
 		<PenLine size={17} />{m.mail_sidebar_compose()}
 	</button>
-
-	<RailSearch />
 
 	<nav class="rail-nav" aria-label={m.mail_sidebar_navigation()}>
 		<div class="fgroup">{m.mail_sidebar_mailbox()}</div>
