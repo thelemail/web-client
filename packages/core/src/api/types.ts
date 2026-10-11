@@ -1021,6 +1021,7 @@ export type SecurityEventAction =
 	| 'signed_out'
 	| 'session_revoked'
 	| 'other_sessions_revoked'
+	| 'session_reuse_detected'
 	| 'password_changed'
 	| 'recovery_phrase_set'
 	| 'account_recovered'

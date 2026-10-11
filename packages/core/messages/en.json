@@ -2523,6 +2523,7 @@
 	"settings_security_log_signed_out": "Signed out",
 	"settings_security_log_session_revoked": "Session signed out",
 	"settings_security_log_other_sessions_revoked": "Signed out other sessions",
+	"settings_security_log_session_reuse_detected": "Signed out everywhere: session used in two places",
 	"settings_security_log_password_changed": "Password changed",
 	"settings_security_log_recovery_phrase_set": "Recovery phrase set",
 	"settings_security_log_account_recovered": "Account recovered",
