@@ -311,13 +311,6 @@ class AuthStore {
 		if (revived) void realtime.sync();
 	}
 
-	async adoptSteppedUpToken(session: RefreshResponse): Promise<void> {
-		const { accessToken, expiresInSeconds, accountId } = session;
-		this.addSession(accessToken, expiresInSeconds, accountId);
-		const mirror = platform.mirror;
-		if (mirror) await mirror.setToken(accountId, accessToken).catch(() => {});
-	}
-
 	async adoptRotatedSession(session: RefreshResponse): Promise<void> {
 		const { accessToken, expiresInSeconds, accountId } = session;
 		this.addSession(accessToken, expiresInSeconds, accountId);

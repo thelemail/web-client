@@ -71,7 +71,7 @@
 						: m.settings_ceremony_twofa_err_password();
 				return;
 			}
-			await auth.adoptSteppedUpToken(res.session);
+			await auth.adoptRotatedSession(res.session);
 			reauth.settle(true);
 		} catch (err) {
 			if (isWebauthnCancelled(err)) return;
