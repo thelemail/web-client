@@ -9,9 +9,9 @@
 	--radius-check: var(--radius-xs);
 	--radius-control-compact: var(--radius-xs);
 	--radius-control: var(--radius-sm);
-	--radius-menu: var(--radius-lg);
-	--radius-surface: var(--radius-xl);
-	--radius-panel: 22px;
+	--radius-menu: var(--radius-md);
+	--radius-surface: var(--radius-lg);
+	--radius-panel: var(--radius-xl);
 	--radius-avatar: 22%;
 	--radius: var(--radius-control);
 }
