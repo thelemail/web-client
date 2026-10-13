@@ -290,7 +290,7 @@
 		height: 28px;
 		border: none;
 		background: none;
-		border-radius: 8px;
+		border-radius: var(--radius-control-compact);
 		color: var(--ink-400);
 		cursor: pointer;
 		opacity: 0;
@@ -347,7 +347,7 @@
 		color: var(--pine-700);
 		background: none;
 		border: 1px solid var(--border);
-		border-radius: 8px;
+		border-radius: var(--radius-control-compact);
 		padding: 6px 14px;
 		cursor: pointer;
 	}

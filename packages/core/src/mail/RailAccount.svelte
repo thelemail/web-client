@@ -23,7 +23,7 @@
 	import { tick } from 'svelte';
 	import NavMorph from '$core/components/NavMorph.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
-	import logoMark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { auth } from '$core/stores/auth.svelte';
@@ -333,7 +333,7 @@
 {#if switching}
 	<div class="sw-ovl" use:portal>
 		<div class="sw-card">
-			<img class="sw-logo" src={logoMark} alt="" width="40" height="40" />
+			<Wordmark class="sw-logo" />
 			{#if switchDone}
 				<span class="sw-ok"><Check size={16} /></span>
 			{:else}

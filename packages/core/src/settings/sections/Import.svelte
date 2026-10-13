@@ -196,7 +196,7 @@
 		gap: 6px;
 		padding: 30px 18px;
 		border: 1.5px dashed var(--border);
-		border-radius: 12px;
+		border-radius: var(--radius-control);
 		color: var(--fg-muted);
 		background: var(--bg-raised);
 		cursor: pointer;
@@ -253,7 +253,7 @@
 		max-height: 360px;
 		overflow-y: auto;
 		border: 1px solid var(--border);
-		border-radius: 10px;
+		border-radius: var(--radius-surface);
 	}
 	.imp-row {
 		display: flex;

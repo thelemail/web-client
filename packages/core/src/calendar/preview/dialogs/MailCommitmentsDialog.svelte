@@ -140,7 +140,7 @@
 						id="prop-{proposal.key}"
 						checked={on}
 						onCheckedChange={() => cal.toggleMailProposal(proposal.key)}
-						class="mt-0.5 size-[18px] rounded-[5px]"
+						class="mt-0.5 size-[18px]"
 						aria-label={proposal.title}
 					/>
 					<div class="pr-main">

@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import Stepper from '$core/auth/Stepper.svelte';
-	import brandmark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -229,7 +229,7 @@
 	<div class="card-surface screen-fade">
 		<Stepper step={0} labels={inviteLabels} />
 		{#if auth.email}
-			<div class="invite" style="background:var(--paper-100);border:1px solid var(--border-strong);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+			<div class="invite" style="background:var(--paper-100);border:1px solid var(--border-strong);padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
 					<span class="iname"
 						><Rich text={m.auth_invite_signed_in_as({ email: auth.email })} tags={{ b: bold }} /></span
@@ -383,7 +383,7 @@
 {:else}
 	<div class="card-surface screen-fade">
 		<div class="welcome">
-			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
+			<Wordmark class="brandmark brandmark-lg" size="large" />
 			<h1>{m.auth_invite_done_title()}</h1>
 			<p>{m.auth_invite_done_body({ workspace: invite.workspaceName })}</p>
 			<div class="addrcard">

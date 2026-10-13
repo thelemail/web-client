@@ -79,7 +79,7 @@
 		overflow-y: auto;
 		background: var(--surface);
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-panel);
 		box-shadow: var(--shadow-lg);
 		padding: 20px 22px 18px;
 	}
@@ -170,7 +170,7 @@
 		color: var(--fg-strong);
 		background: var(--surface-muted);
 		border: 1px solid var(--border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-control);
 		cursor: pointer;
 	}
 	.tcd-close:hover {

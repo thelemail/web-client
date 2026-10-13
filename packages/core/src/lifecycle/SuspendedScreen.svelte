@@ -2,7 +2,7 @@
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import wordmark from '$core/assets/logo-wordmark-inverse.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import Lock from '@lucide/svelte/icons/lock';
 	import CornerUpLeft from '@lucide/svelte/icons/corner-up-left';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
@@ -62,7 +62,7 @@
 {#snippet mono(text: string)}<span class="mono">{text}</span>{/snippet}
 
 <div class="lc-gate">
-	<div class="lc-gate-top"><img class="wm" src={wordmark} alt="Thelemail" /></div>
+	<div class="lc-gate-top"><Wordmark size="large" /></div>
 	<div class="lc-gate-body">
 		<div class="lc-gate-card">
 			<div class="lc-gate-seal"><Lock size={26} /></div>

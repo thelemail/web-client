@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import mark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Send from '@lucide/svelte/icons/send';
 	import Forward from '@lucide/svelte/icons/forward';
@@ -55,7 +55,7 @@
 
 <div class="card lc-mid">
 	<div class="card-surface screen-fade">
-		<img class="lc-mark" src={mark} alt="Thelemail" />
+		<Wordmark size="large" class="lc-mark" />
 		<div class="card-head">
 			<p class="eyebrow">{m.lc_expiry_eyebrow()}</p>
 			<h1>{m.lc_expiry_title()}</h1>

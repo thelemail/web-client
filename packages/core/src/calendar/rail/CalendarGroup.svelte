@@ -49,7 +49,7 @@
 				id="cal-{entry.id}"
 				checked={entry.on}
 				onCheckedChange={() => cal.toggleCalendar(entry.id)}
-				class="size-[17px] rounded-[5px] border-(--cc) data-[state=checked]:border-(--cc) data-[state=checked]:bg-(--cc) data-[state=checked]:text-(--paper-0)"
+				class="size-[17px] border-(--cc) data-[state=checked]:border-(--cc) data-[state=checked]:bg-(--cc) data-[state=checked]:text-(--paper-0)"
 			/>
 			<Label for="cal-{entry.id}" class="cal-nm {group === 'role' ? 'role' : ''}">{entry.name}</Label>
 			{#if entry.badge === 'key'}

@@ -22,7 +22,7 @@
 		checked={task.done}
 		aria-label={m.cal_task_complete_aria({ title: task.title })}
 		onCheckedChange={() => cal.toggleTask(task.entry)}
-		class="mt-0.5 size-[18px] rounded-[5px]"
+		class="mt-0.5 size-[18px]"
 	/>
 	<div class="tkr-main">
 		<button

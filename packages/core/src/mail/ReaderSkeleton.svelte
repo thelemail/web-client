@@ -104,12 +104,12 @@
 	}
 	.sk-bar .sk-pill {
 		height: 33px;
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 	}
 	.sk-bar .sk-sq {
 		width: 35px;
 		height: 35px;
-		border-radius: 8px;
+		border-radius: var(--radius-control-compact);
 	}
 
 	.sk-status {

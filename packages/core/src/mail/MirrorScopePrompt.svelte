@@ -84,7 +84,7 @@
 		background: var(--surface);
 		border: 1px solid var(--border);
 		border-top: 3px solid var(--pine-600);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-panel);
 		box-shadow: var(--shadow-lg);
 		padding: 22px 24px 18px;
 	}

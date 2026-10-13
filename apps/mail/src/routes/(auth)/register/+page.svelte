@@ -22,7 +22,7 @@
 	import { resolveReturnTo } from '$core/auth/return-to';
 	import { createCheckoutSession, type PlanCode } from '$core/api/billing';
 	import { changeMyWorkspaceType } from '$core/api/workspaces';
-	import brandmark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -527,7 +527,7 @@
 {:else}
 	<div class="card-surface screen-fade">
 		<div class="welcome">
-			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
+			<Wordmark class="brandmark brandmark-lg" size="large" />
 			<h1>{m.auth_register_submitted_title()}</h1>
 			<p>
 				<Rich

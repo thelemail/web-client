@@ -56,7 +56,7 @@
 		padding: 12px 14px;
 		background: var(--paper-50);
 		border: 1px solid var(--paper-200);
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 		font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 		font-size: 12.5px;
 		line-height: 1.6;
@@ -78,7 +78,7 @@
 		min-height: 60px;
 		padding: 12px 14px;
 		border: 1px dashed var(--paper-200);
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 		font-size: 14px;
 		line-height: 1.55;
 		overflow-x: auto;

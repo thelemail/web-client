@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
 	import { page } from '$app/state';
-	import mark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import Database from '@lucide/svelte/icons/database';
 	import Check from '@lucide/svelte/icons/check';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -307,7 +307,7 @@
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
 			<div class="welcome">
-				<img class="brandmark brandmark-lg" src={mark} alt="Thelemail" />
+				<Wordmark size="large" class="brandmark brandmark-lg" />
 				<h1>{m.lc_restore_welcome_title()}</h1>
 				<p>{m.lc_restore_welcome_intro()}</p>
 			</div>

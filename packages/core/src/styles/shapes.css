@@ -1,0 +1,26 @@
+:root {
+	--radius-xs: 4px;
+	--radius-sm: 6px;
+	--radius-md: 8px;
+	--radius-lg: 12px;
+	--radius-xl: 16px;
+	--radius-pill: 999px;
+
+	--radius-check: var(--radius-xs);
+	--radius-control-compact: var(--radius-xs);
+	--radius-control: var(--radius-sm);
+	--radius-menu: var(--radius-md);
+	--radius-surface: var(--radius-lg);
+	--radius-panel: var(--radius-xl);
+	--radius-avatar: 22%;
+	--radius: var(--radius-control);
+}
+
+@theme inline {
+	--radius-check: var(--radius-check);
+	--radius-control-compact: var(--radius-control-compact);
+	--radius-control: var(--radius-control);
+	--radius-menu: var(--radius-menu);
+	--radius-surface: var(--radius-surface);
+	--radius-panel: var(--radius-panel);
+}

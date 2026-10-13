@@ -301,7 +301,7 @@
 	.evt {
 		margin-top: 22px;
 		border: 1px solid var(--border-strong);
-		border-radius: 12px;
+		border-radius: var(--radius-surface);
 		background: var(--surface);
 		overflow: hidden;
 	}
@@ -455,7 +455,7 @@
 	}
 	.evt-cal-row .evt-opt.add {
 		border: 1px solid var(--border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 	}
 	.evt-rsvp {
 		display: flex;
@@ -472,7 +472,7 @@
 	.evt-seg {
 		display: inline-flex;
 		border: 1px solid var(--border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 		overflow: hidden;
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 	}
@@ -544,7 +544,7 @@
 		font-weight: 600;
 		cursor: pointer;
 		padding: 2px 4px;
-		border-radius: 4px;
+		border-radius: var(--radius-control-compact);
 	}
 	.evt-change:hover {
 		background: var(--paper-100);

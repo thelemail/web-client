@@ -364,7 +364,7 @@
 		padding: 12px 14px;
 		background: var(--paper-50);
 		border: 1px solid var(--paper-200);
-		border-radius: 8px;
+		border-radius: var(--radius-control);
 		font-size: 14px;
 		line-height: 1.55;
 	}
