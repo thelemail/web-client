@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import { page } from '$app/state';
 	import { m } from '$paraglide/messages.js';
 	import CalendarGroup from './CalendarGroup.svelte';
@@ -12,7 +13,7 @@
 
 <div class="rail">
 	<a class="brand" href="/u/{slot}/mail/inbox">
-		<span class="wm">Thelemail</span>
+		<Wordmark />
 		<span class="wm-sub">{m.cal_rail_subtitle()}</span>
 	</a>
 

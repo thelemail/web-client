@@ -23,7 +23,7 @@
 	import { isWebauthnCancelled } from '$core/auth/webauthn';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
-	import brandmark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import KeyRound from '@lucide/svelte/icons/key-round';
@@ -583,7 +583,7 @@
 {:else}
 	<div class="card-surface screen-fade">
 		<div class="welcome">
-			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
+			<Wordmark class="brandmark brandmark-lg" size="large" />
 			<h1>{m.auth_recover_done_title()}</h1>
 			<p>{m.auth_recover_done_lede()}</p>
 			<div class="addrcard">

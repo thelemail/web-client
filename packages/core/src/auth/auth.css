@@ -20,22 +20,13 @@
 }
 
 .auth .pagebrand {
-	display: block;
+	display: flex;
+	align-items: center;
 	width: fit-content;
+	min-height: 42px;
 	margin: 0 auto 26px;
-}
-.auth .pagebrand img {
-	height: 42px;
-	display: block;
-}
-.auth .pagebrand .wm-dark {
-	display: none;
-}
-[data-theme='dark'] .auth .pagebrand .wm-light {
-	display: none;
-}
-[data-theme='dark'] .auth .pagebrand .wm-dark {
-	display: block;
+	color: var(--fg-strong);
+	text-decoration: none;
 }
 
 .auth .stagebody {
@@ -71,19 +62,12 @@
 }
 
 .auth .brandmark {
-	width: 52px;
-	height: 52px;
 	display: block;
+	width: fit-content;
 	margin: 0 auto 18px;
-	border-radius: 13px;
-	box-shadow:
-		0 1px 3px rgba(20, 39, 30, 0.18),
-		0 0 0 1px rgba(20, 39, 30, 0.04);
+	color: var(--fg-strong);
 }
 .auth .brandmark-lg {
-	width: 60px;
-	height: 60px;
-	border-radius: 15px;
 	margin-bottom: 22px;
 }
 

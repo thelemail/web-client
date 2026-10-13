@@ -1,8 +1,7 @@
 <script lang="ts">
 	import '$core/auth/auth.css';
 	import type { Snippet } from 'svelte';
-	import wordmark from '$core/assets/logo-wordmark.svg';
-	import wordmarkInverse from '$core/assets/logo-wordmark-inverse.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import SignedInStrip from './SignedInStrip.svelte';
 	import StorageNotice from './StorageNotice.svelte';
 	import LanguagePicker from '$core/i18n/LanguagePicker.svelte';
@@ -14,8 +13,7 @@
 	<div class="langbar"><LanguagePicker /></div>
 	<div class="stagebody">
 		<a class="pagebrand" href="/" aria-label="Thelemail">
-			<img class="wm-light" src={wordmark} alt="Thelemail" />
-			<img class="wm-dark" src={wordmarkInverse} alt="" aria-hidden="true" />
+			<Wordmark size="large" />
 		</a>
 		<StorageNotice />
 		{#if strip}<SignedInStrip />{/if}

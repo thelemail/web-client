@@ -57,14 +57,10 @@
 }
 
 .lc-mark {
-	width: 52px;
-	height: 52px;
+	width: fit-content;
 	display: block;
 	margin: 0 auto 20px;
-	border-radius: 13px;
-	box-shadow:
-		0 1px 3px rgba(20, 39, 30, 0.18),
-		0 0 0 1px rgba(20, 39, 30, 0.04);
+	color: var(--fg-strong);
 }
 .lc-reassure {
 	display: flex;
@@ -351,9 +347,6 @@
 	padding: 0 24px;
 	position: relative;
 	z-index: 1;
-}
-.lc-gate-top .wm {
-	height: 26px;
 }
 .lc-gate-body {
 	flex: 1;

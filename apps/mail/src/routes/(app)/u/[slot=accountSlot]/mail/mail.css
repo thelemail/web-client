@@ -17,7 +17,6 @@
 
 .mail-app .rail { width: 248px; flex: 0 0 auto; background: var(--bg-raised); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 0 10px 12px; position: relative; }
 .mail-app .rail .brand { display: flex; align-items: center; height: 54px; flex: 0 0 auto; white-space: nowrap; padding: 0 18px; margin: 0 -10px 14px; border-bottom: 1px solid var(--border); color: var(--fg-strong); text-decoration: none; }
-.mail-app .rail .brand .wm { font-size: 13.5px; font-weight: 680; letter-spacing: .22em; text-transform: uppercase; line-height: 1; }
 
 
 .mail-app .compose { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--primary); color: var(--primary-fg); font-weight: 550; font-size: 14px; letter-spacing: var(--track-snug); border: none; border-radius: var(--radius-control); padding: 10px 16px; box-shadow: var(--shadow-sm); transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur-fast) var(--ease); margin: 0 2px 8px; }

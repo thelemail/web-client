@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import Stepper from '$core/auth/Stepper.svelte';
-	import brandmark from '$core/assets/logo-mark.svg';
+	import Wordmark from '$core/components/Wordmark.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
@@ -383,7 +383,7 @@
 {:else}
 	<div class="card-surface screen-fade">
 		<div class="welcome">
-			<img class="brandmark brandmark-lg" src={brandmark} alt="Thelemail" />
+			<Wordmark class="brandmark brandmark-lg" size="large" />
 			<h1>{m.auth_invite_done_title()}</h1>
 			<p>{m.auth_invite_done_body({ workspace: invite.workspaceName })}</p>
 			<div class="addrcard">
