@@ -385,6 +385,7 @@ jobs:
           client-id: ${{ secrets.DEPLOY_APP_CLIENT_ID }}
           private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
           owner: thelemail
+          repositories: ${{ secrets.DEPLOY_APP_REPOSITORY }}
           permission-actions: write
 
       - name: Ask for promotion
