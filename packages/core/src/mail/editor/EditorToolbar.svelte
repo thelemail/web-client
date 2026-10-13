@@ -141,7 +141,7 @@
 		justify-content: center;
 		background: none;
 		border: none;
-		border-radius: 4px;
+		border-radius: var(--radius-control-compact);
 		color: var(--ink-600, #4a4d3f);
 		cursor: pointer;
 		font-size: 14px;

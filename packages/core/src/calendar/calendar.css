@@ -147,7 +147,7 @@ button.create {
 .cal-app .mini-h button {
 	width: 26px;
 	height: 26px;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	border: none;
 	background: none;
 	color: var(--fg-faint);
@@ -215,7 +215,7 @@ button.create {
 .cal-app .cal-group .gh .addbtn {
 	width: 20px;
 	height: 20px;
-	border-radius: 5px;
+	border-radius: var(--radius-control-compact);
 	border: none;
 	background: none;
 	color: var(--fg-faint);
@@ -237,7 +237,7 @@ button.create {
 	border: none;
 	background: none;
 	padding: 7px 9px;
-	border-radius: 7px;
+	border-radius: var(--radius-control-compact);
 	color: var(--fg-muted);
 	font-size: 13.5px;
 	font-weight: 450;
@@ -310,7 +310,7 @@ button.create {
 	text-align: left;
 	padding: 6px 8px;
 	border: 1px solid transparent;
-	border-radius: var(--radius-control);
+	border-radius: var(--radius-control-compact);
 	background: none;
 	cursor: pointer;
 	transition: background var(--dur-fast) var(--ease);
@@ -353,7 +353,7 @@ button.create {
 .cal-app .icon-btn {
 	width: 34px;
 	height: 34px;
-	border-radius: var(--radius-control);
+	border-radius: var(--radius-control-compact);
 	border: 1px solid transparent;
 	background: transparent;
 	color: var(--ink-600);
@@ -384,7 +384,7 @@ button.create {
 .cal-app .nav-arrows button {
 	width: 32px;
 	height: 32px;
-	border-radius: var(--radius-control);
+	border-radius: var(--radius-control-compact);
 	border: none;
 	background: none;
 	color: var(--ink-600);
@@ -441,7 +441,7 @@ button.create {
 	padding: 0 13px;
 	border: 1px solid var(--border-strong);
 	background: var(--surface);
-	border-radius: var(--radius-control);
+	border-radius: var(--radius-control-compact);
 	font-size: 13.5px;
 	font-weight: 600;
 	color: var(--ink-700);
@@ -475,7 +475,7 @@ button.create {
 .cal-app .sysbar .sb-a {
 	border: 1px solid currentColor;
 	background: none;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	height: 26px;
 	padding: 0 11px;
 	font-size: 12px;
@@ -624,7 +624,7 @@ button.create {
 	gap: 6px;
 	height: 28px;
 	padding: 0 11px;
-	border-radius: var(--radius-pill);
+	border-radius: var(--radius-control-compact);
 	border: 1px solid var(--border-strong);
 	background: var(--surface);
 	font-size: 11.5px;
@@ -797,7 +797,7 @@ button.create {
 	left: calc(var(--inset) * 1% + 2px);
 	width: calc((100 - var(--inset)) * 1% - 5px);
 	z-index: calc(2 + var(--depth));
-	border-radius: 6px;
+	border-radius: var(--radius-control-compact);
 	padding: 3px 7px;
 	overflow: hidden;
 	cursor: pointer;
@@ -863,7 +863,7 @@ button.create {
 .cal-app .ev.k-task .tk-box {
 	width: 13px;
 	height: 13px;
-	border-radius: 4px;
+	border-radius: var(--radius-check);
 	border: 1.5px solid currentColor;
 	display: inline-flex;
 	align-items: center;
@@ -917,7 +917,7 @@ button.create {
 	gap: 5px;
 	height: 24px;
 	padding: 0 9px;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	font-size: 11.5px;
 	font-weight: 600;
 	cursor: pointer;
@@ -1051,7 +1051,7 @@ button.create {
 	align-items: center;
 	gap: 6px;
 	padding: 1px 6px;
-	border-radius: 4px;
+	border-radius: var(--radius-control-compact);
 	font-size: 11px;
 	line-height: 1.35;
 	overflow: hidden;
@@ -1086,7 +1086,7 @@ button.create {
 	font-weight: 600;
 	color: var(--fg-muted);
 	padding: 1px 6px;
-	border-radius: 4px;
+	border-radius: var(--radius-control-compact);
 	text-align: left;
 	border: none;
 	background: none;
@@ -1245,7 +1245,7 @@ button.create {
 .cal-surface .card {
 	background: var(--surface);
 	border: 1px solid var(--border);
-	border-radius: var(--radius-lg);
+	border-radius: var(--radius-surface);
 	box-shadow: var(--shadow-xs);
 	overflow: hidden;
 	margin-bottom: 18px;
@@ -1292,7 +1292,7 @@ button.create {
 .cal-app .pcard {
 	text-align: left;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-surface);
 	background: var(--surface);
 	padding: 14px;
 	display: flex;
@@ -1423,7 +1423,7 @@ button.create {
 .cal-app .bk-day {
 	flex: 1;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	background: var(--surface);
 	padding: 9px 4px;
 	text-align: center;
@@ -1448,7 +1448,7 @@ button.create {
 .cal-app .bk-slot {
 	height: 42px;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	background: var(--surface);
 	font-family: var(--font-mono);
 	font-size: 13px;
@@ -1844,7 +1844,7 @@ button.create {
 	color: var(--ink-400);
 	display: flex;
 	padding: 4px;
-	border-radius: var(--radius-xs);
+	border-radius: var(--radius-control-compact);
 	cursor: pointer;
 }
 .cal-surface .sl-x:hover { background: var(--paper-100); color: var(--danger-700); }
@@ -1968,7 +1968,7 @@ button.create {
 .cal-surface .sysbar .sb-a {
 	border: 1px solid currentColor;
 	background: none;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	height: 26px;
 	padding: 0 11px;
 	font-size: 12px;
@@ -1985,7 +1985,7 @@ button.create {
 .cal-pop .evpop-ic {
 	width: 32px;
 	height: 32px;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	border: none;
 	background: none;
 	color: var(--ink-500);
@@ -2028,7 +2028,7 @@ button.create {
 .cal-pop .evpop-rsvp button {
 	flex: 1;
 	height: 34px;
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control-compact);
 	border: 1px solid var(--border-strong);
 	background: var(--surface);
 	font-size: 13px;
@@ -2150,7 +2150,7 @@ button.create {
 .cal-surface .cal-form textarea {
 	width: 100%;
 	border: 1px solid var(--border-control);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control);
 	background: var(--surface);
 	color: var(--fg-strong);
 	font-size: 13.5px;
@@ -2164,7 +2164,7 @@ button.create {
 .cal-surface .cal-check { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--fg); }
 .cal-surface .cal-inline { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .cal-surface .cal-inline select.tz { width: auto; max-width: 260px; padding: 5px 8px; font-size: 12.5px; }
-.cal-surface .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); }
+.cal-surface .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }
 .cal-surface .seg button {
 	border: none;
 	background: none;
@@ -2227,7 +2227,7 @@ button.create {
 	gap: 6px;
 	align-items: center;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control);
 	background: var(--surface);
 	padding: 6px 8px;
 }
@@ -2253,7 +2253,7 @@ button.create {
 	z-index: 5;
 	background: var(--surface);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-menu);
 	box-shadow: var(--shadow-lg);
 	display: flex;
 	flex-direction: column;

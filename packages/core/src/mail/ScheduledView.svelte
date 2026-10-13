@@ -277,7 +277,7 @@
 		color: var(--ink-600);
 		background: none;
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control-compact);
 		padding: 5px 11px;
 		cursor: pointer;
 	}
@@ -335,7 +335,7 @@
 		color: var(--pine-700);
 		background: none;
 		border: 1px solid var(--border);
-		border-radius: 8px;
+		border-radius: var(--radius-control-compact);
 		padding: 6px 14px;
 		cursor: pointer;
 	}

@@ -244,7 +244,7 @@
 		gap: 12px;
 		padding: 15px 16px;
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-surface);
 		background: var(--surface);
 	}
 	.cd-row.live {
@@ -321,7 +321,7 @@
 		justify-content: center;
 		width: 30px;
 		height: 30px;
-		border-radius: var(--radius-control);
+		border-radius: var(--radius-control-compact);
 		background: transparent;
 		border: 1px solid transparent;
 		color: var(--ink-600);
@@ -341,7 +341,7 @@
 		padding: 4px;
 		background: var(--surface);
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-menu);
 		box-shadow: var(--shadow-lg);
 	}
 	.cd-menu-item {
@@ -354,7 +354,7 @@
 		text-align: left;
 		background: transparent;
 		border: none;
-		border-radius: var(--radius-control);
+		border-radius: var(--radius-control-compact);
 		color: var(--ink-700);
 		cursor: pointer;
 	}

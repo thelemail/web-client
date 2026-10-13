@@ -2,6 +2,7 @@
 @source '../../../../packages/core/src';
 @import "tw-animate-css";
 @import "shadcn-svelte/tailwind.css";
+@import '../../../../packages/core/src/styles/shapes.css';
 
 @custom-variant dark (&:is([data-theme='dark'] *));
 @plugin '@tailwindcss/forms';
@@ -142,14 +143,6 @@
 	--space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px;
 	--space-32: 128px;
 
-	--radius-xs:   4px;
-	--radius-sm:   6px;
-	--radius-md:   8px;
-	--radius-lg:   12px;
-	--radius-xl:   16px;
-	--radius-pill: 999px;
-	--radius:      0.625rem;
-
 	--hairline: 1px solid var(--border-soft);
 	--rule:     1px solid var(--border-strong);
 
@@ -177,10 +170,6 @@
 	--tint-border:    color-mix(in oklab, var(--pine-500) 14%, transparent);
 
 	--track-display:  -0.035em;
-	--radius-control: 10px;
-	--radius-surface: 16px;
-	--radius-panel:   22px;
-	--radius-avatar:  22%;
 
 }
 
@@ -526,6 +515,7 @@
 	height: 17px;
 }
 .btn-sm {
+	border-radius: var(--radius-control-compact);
 	font-size: 12.5px;
 	padding: 7px 11px;
 }

@@ -455,7 +455,7 @@
 	gap: 9px;
 	font-weight: 600;
 	font-size: 14.5px;
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	padding: 13px 16px;
 	border: 1px solid transparent;
 	transition:
@@ -493,7 +493,7 @@
 	margin-top: 14px;
 	padding: 16px;
 	text-align: left;
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	background: rgba(255, 255, 255, 0.05);
 	border: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -533,7 +533,7 @@
 	color: #eaf0e6;
 	background: rgba(255, 255, 255, 0.06);
 	border: 1px solid rgba(255, 255, 255, 0.16);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	padding: 12px 14px;
 }
 .lc-email-input::placeholder {
@@ -617,7 +617,7 @@
 	align-items: center;
 	gap: 12px;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	background: var(--surface);
 	padding: 13px 15px;
 	cursor: pointer;
@@ -638,7 +638,7 @@
 .lc-check .bx {
 	width: 20px;
 	height: 20px;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-check);
 	border: 1.5px solid var(--border-control);
 	background: var(--surface);
 	box-shadow: var(--shadow-inset);
@@ -843,7 +843,7 @@
 	color: var(--pine-700);
 	border: 1px solid var(--border-strong);
 	background: var(--surface);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	padding: 6px 11px;
 	flex: 0 0 auto;
 	cursor: pointer;
@@ -1047,7 +1047,7 @@
 	gap: 12px;
 	text-align: left;
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-md);
+	border-radius: var(--radius-control);
 	background: var(--surface);
 	padding: 13px 15px;
 	box-shadow: var(--shadow-xs);
@@ -1215,7 +1215,7 @@
 	justify-content: center;
 	width: 27px;
 	height: 27px;
-	border-radius: 50%;
+	border-radius: var(--radius-control-compact);
 	border: none;
 	background: none;
 	color: var(--ink-500);
@@ -1446,7 +1446,7 @@
 	padding: 14px;
 	background: var(--surface);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-lg);
+	border-radius: var(--radius-menu);
 	box-shadow: var(--shadow-lg);
 	font-family: var(--font-sans);
 }
@@ -1477,7 +1477,7 @@
 	cursor: pointer;
 	display: flex;
 	padding: 2px;
-	border-radius: var(--radius-xs);
+	border-radius: var(--radius-control-compact);
 }
 .lc-switcher-h button:hover {
 	color: var(--fg-strong);
@@ -1498,7 +1498,7 @@
 	color: var(--fg);
 	background: var(--paper-50);
 	border: 1px solid transparent;
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	padding: 7px 10px;
 	cursor: pointer;
 	transition:
@@ -1545,7 +1545,7 @@
 	color: var(--ink-600);
 	background: var(--paper-50);
 	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-control-compact);
 	padding: 6px 0;
 	cursor: pointer;
 }

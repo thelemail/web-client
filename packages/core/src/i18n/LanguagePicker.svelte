@@ -41,7 +41,7 @@
 		gap: 6px;
 		height: 32px;
 		padding: 0 10px;
-		border-radius: var(--radius-control);
+		border-radius: var(--radius-control-compact);
 		border: 1px solid transparent;
 		background: transparent;
 		color: var(--fg-muted);

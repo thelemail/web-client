@@ -282,7 +282,7 @@
 		overscroll-behavior: contain;
 		background: var(--surface);
 		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-lg);
+		border-radius: var(--radius-menu);
 		box-shadow: var(--shadow-lg);
 		padding: 14px 16px 15px;
 		color: var(--fg);
@@ -368,7 +368,7 @@
 		padding: 4px 6px;
 		margin: 0 -6px;
 		border: none;
-		border-radius: var(--radius-sm);
+		border-radius: var(--radius-control-compact);
 		background: none;
 		color: inherit;
 		font: inherit;
@@ -423,7 +423,7 @@
 		font-size: 12.5px;
 		font-weight: 560;
 		padding: 7px 10px;
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-control);
 		cursor: pointer;
 	}
 	.tpop-act:disabled {

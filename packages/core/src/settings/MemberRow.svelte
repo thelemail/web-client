@@ -192,7 +192,7 @@
 		justify-content: center;
 		width: 28px;
 		height: 28px;
-		border-radius: 6px;
+		border-radius: var(--radius-control-compact);
 		background: transparent;
 		border: 1px solid transparent;
 		color: var(--ink-600);
@@ -212,7 +212,7 @@
 		padding: 4px;
 		background: var(--surface);
 		border: 1px solid var(--border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius-menu);
 		box-shadow:
 			0 4px 16px rgba(0, 0, 0, 0.08),
 			0 0 0 1px rgba(0, 0, 0, 0.02);
@@ -226,7 +226,7 @@
 		text-align: left;
 		background: transparent;
 		border: none;
-		border-radius: 6px;
+		border-radius: var(--radius-control-compact);
 		color: var(--ink-700);
 		cursor: pointer;
 	}
