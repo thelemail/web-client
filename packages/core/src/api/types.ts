@@ -428,9 +428,30 @@ export interface SendEnvelope {
 	attachments: AttachmentDescriptor[];
 }
 
+export type DraftAttachmentsAction = 'keep' | 'replace' | 'clear';
+
+export interface DraftAttachmentsChange {
+	action: DraftAttachmentsAction;
+	uploadId?: string;
+	count?: number;
+}
+
 export interface DraftRequest {
 	schemaVersion: number;
 	sealed: SendEnvelope;
+	attachments?: DraftAttachmentsChange;
+}
+
+export interface DraftAttachmentUploadRequest {
+	ciphertextSizeBytes: number;
+	ciphertextSha256: string;
+	keyFingerprint: string;
+}
+
+export interface DraftAttachmentUploadGrant {
+	uploadId: string;
+	putUrl: string;
+	expiresAt: string;
 }
 
 export interface DraftSummary {
@@ -460,7 +481,7 @@ export interface DraftDetail {
 	previewKeyFingerprint?: string;
 	schemaVersion: number;
 	body: PresignedPointer;
-	attachments: AttachmentDetail[];
+	attachmentsBundle?: PresignedPointer;
 }
 
 export interface SendRecipient {

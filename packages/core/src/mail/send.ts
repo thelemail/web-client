@@ -354,12 +354,12 @@ async function resolveRecipient(
 	};
 }
 
-async function sha256B64(bytes: Uint8Array): Promise<string> {
+export async function sha256B64(bytes: Uint8Array): Promise<string> {
 	const digest = await crypto.subtle.digest('SHA-256', bytes as BufferSource);
 	return bytesToB64(new Uint8Array(digest));
 }
 
-async function encryptTo(
+export async function encryptTo(
 	accountId: string,
 	plaintext: Uint8Array,
 	recipientArmored: string
