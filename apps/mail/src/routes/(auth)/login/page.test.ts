@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import { m } from '$paraglide/messages.js';
+import { ApiCallError, type ErrorCode } from '$core/api/types';
 import LoginPage from './+page.svelte';
 
 const login = vi.hoisted(() => {
@@ -43,6 +44,16 @@ async function reachTwoFactor() {
 	await fireEvent.input(document.querySelector('input[type="password"]')!, { target: { value: 'hunter22' } });
 	await fireEvent.keyDown(document.querySelector('#login-email')!, { key: 'Enter' });
 	await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
+}
+
+async function submitCredentials() {
+	await fireEvent.input(document.querySelector('#login-email')!, { target: { value: 'r@thelemail.com' } });
+	await fireEvent.input(document.querySelector('input[type="password"]')!, { target: { value: 'hunter22' } });
+	await fireEvent.keyDown(document.querySelector('#login-email')!, { key: 'Enter' });
+}
+
+function rejection(status: number, code: ErrorCode) {
+	return new ApiCallError(status, { error: { code, message: code } }, code);
 }
 
 async function submitCode() {
@@ -161,5 +172,57 @@ describe('login page two-factor step', () => {
 		unmount();
 
 		expect(login.abandonTwoFactorLogin).not.toHaveBeenCalled();
+	});
+});
+
+describe('login page errors and proof of work', () => {
+	it.each([
+		[429, 'rate_limited', () => m.auth_login_rate_limited()],
+		[503, 'server_busy', () => m.auth_login_busy()],
+		[422, 'proof_required', () => m.auth_proof_failed()],
+		[422, 'proof_invalid', () => m.auth_proof_failed()],
+		[401, 'invalid_credentials', () => m.auth_login_wrong_credentials()]
+	] as const)('shows a plain message for HTTP %s %s', async (status, code, message) => {
+		login.performLogin.mockRejectedValue(rejection(status, code));
+		render(LoginPage);
+
+		await submitCredentials();
+
+		await vi.waitFor(() => expect(document.querySelector('#login-err')?.textContent?.trim()).toBe(message()));
+		expect(document.body.textContent).not.toContain('HTTP');
+	});
+
+	it('says it is checking the browser while the proof is solved', async () => {
+		let finishSolve!: () => void;
+		login.performLogin.mockImplementation(
+			async ({ onVerifying }: { onVerifying: (active: boolean) => void }) => {
+				onVerifying(true);
+				await new Promise<void>((resolve) => (finishSolve = resolve));
+				onVerifying(false);
+				return { status: 'twoFactorRequired', pending };
+			}
+		);
+		render(LoginPage);
+
+		await submitCredentials();
+
+		await vi.waitFor(() => expect(button(m.auth_login_verifying())).toBeDefined());
+		finishSolve();
+		await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
+	});
+
+	it('aborts a running solve when the page goes away', async () => {
+		let signal!: AbortSignal;
+		login.performLogin.mockImplementation(async (input: { signal: AbortSignal }) => {
+			signal = input.signal;
+			return new Promise(() => {});
+		});
+		const { unmount } = render(LoginPage);
+
+		await submitCredentials();
+		await vi.waitFor(() => expect(signal).toBeDefined());
+		unmount();
+
+		expect(signal.aborted).toBe(true);
 	});
 });

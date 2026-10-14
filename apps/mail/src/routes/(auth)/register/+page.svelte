@@ -18,7 +18,7 @@
 		type PlanSelection
 	} from '$core/auth/plans';
 	import { performLogin } from '$core/auth/perform-login';
-	import { createRegistrationProof, withRegistrationProof } from '$core/auth/registration-proof';
+	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import { resolveReturnTo } from '$core/auth/return-to';
 	import { createCheckoutSession, type PlanCode } from '$core/api/billing';
 	import { changeMyWorkspaceType } from '$core/api/workspaces';
@@ -76,7 +76,7 @@
 
 	let status = $state<'idle' | 'invalid' | 'checking' | 'taken' | 'available'>('idle');
 
-	const proof = createRegistrationProof();
+	const proof = createProofOfWork();
 
 	$effect(() => {
 		if (step === 1) untrack(() => proof.prepare());
@@ -192,7 +192,7 @@
 		const plan = paid ? planCodeFor(sel) : null;
 		try {
 			const start = await keystore.opaqueStartRegistration({ email, password });
-			const init = await withRegistrationProof(proof, (payload) =>
+			const init = await withProofOfWork(proof, (payload) =>
 				registrationInit({ email, registrationRequest: start.registrationRequest, proof: payload })
 			);
 			const finish = await keystore.opaqueFinishRegistration({

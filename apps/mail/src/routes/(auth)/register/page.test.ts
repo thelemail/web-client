@@ -17,9 +17,9 @@ const keystore = vi.hoisted(() => ({
 }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore }));
 
-vi.mock('$core/auth/registration-proof', () => ({
-	createRegistrationProof: () => ({ prepare: vi.fn(), dispose: vi.fn() }),
-	withRegistrationProof: (_proof: unknown, run: (payload: undefined) => unknown) => run(undefined)
+vi.mock('$core/auth/proof-of-work', () => ({
+	createProofOfWork: () => ({ prepare: vi.fn(), dispose: vi.fn() }),
+	withProofOfWork: (_proof: unknown, run: (payload: undefined) => unknown) => run(undefined)
 }));
 vi.mock('$core/auth/perform-login', () => ({ performLogin: vi.fn() }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: null } }));

@@ -1,7 +1,7 @@
 import 'altcha/external';
 import Pbkdf2Worker from 'altcha/workers/pbkdf2?worker';
 import type { AltchaWidgetElement } from 'altcha/types/generic';
-import type { RegistrationChallenge } from '$core/api/types';
+import type { ProofChallenge } from '$core/api/types';
 import { m } from '$paraglide/messages.js';
 
 const ALGORITHM = 'PBKDF2/SHA-256';
@@ -25,7 +25,7 @@ async function mounted(widget: AltchaWidgetElement) {
 }
 
 export async function solveWithAltcha(
-	challenge: RegistrationChallenge,
+	challenge: ProofChallenge,
 	signal: AbortSignal
 ): Promise<string> {
 	signal.throwIfAborted();

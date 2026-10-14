@@ -24,6 +24,7 @@ import type {
 	PasswordChangeVerifyRequest,
 	PasswordChangeVerifyResponse,
 	PersistentHalfResponse,
+	ProofChallenge,
 	RecoveryCompleteRequest,
 	RecoveryCompleteResponse,
 	RecoveryInitRequest,
@@ -44,7 +45,6 @@ import type {
 	RefreshResponse,
 	RegisterRequest,
 	RegisterResponse,
-	RegistrationChallenge,
 	RegistrationInitRequest,
 	RegistrationInitResponse,
 	SecurityEventListResponse,
@@ -84,7 +84,7 @@ export function checkAddressAvailability(localPart: string, signupSession?: stri
 }
 
 export function registrationChallenge() {
-	return apiFetch<RegistrationChallenge>('/v1/auth/registration/challenge', {
+	return apiFetch<ProofChallenge>('/v1/auth/registration/challenge', {
 		method: 'GET',
 		skipAuth: true
 	});

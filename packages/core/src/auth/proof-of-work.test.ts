@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiCallError, type ErrorCode, type RegistrationChallenge } from '$core/api/types';
+import { ApiCallError, type ErrorCode, type ProofChallenge } from '$core/api/types';
 import {
-	createRegistrationProof,
+	createProofOfWork,
 	isRetryableProofError,
-	withRegistrationProof,
+	withProofOfWork,
 	type ProofSolver
-} from './registration-proof';
+} from './proof-of-work';
 
 const NOW = 1_900_000_000_000;
 
-function challenge(id: number, expiresInMs = 600_000): RegistrationChallenge {
+function challenge(id: number, expiresInMs = 600_000): ProofChallenge {
 	return {
 		parameters: {
 			algorithm: 'PBKDF2/SHA-256',
@@ -35,11 +35,11 @@ function harness(expiries: number[] = []) {
 		return challenge(issued, expiries[issued - 1]);
 	});
 	const solve = vi.fn<ProofSolver>(async (c) => `proof:${c.signature}`);
-	const proof = createRegistrationProof({ fetchChallenge, solve, now: () => NOW });
+	const proof = createProofOfWork({ fetchChallenge, solve, now: () => NOW });
 	return { proof, fetchChallenge, solve };
 }
 
-describe('createRegistrationProof', () => {
+describe('createProofOfWork', () => {
 	it('solves ahead of time and hands the prepared proof out once', async () => {
 		const { proof, fetchChallenge } = harness();
 		proof.prepare();
@@ -78,7 +78,7 @@ describe('createRegistrationProof', () => {
 
 	it('aborts in-flight work on dispose', async () => {
 		let seen: AbortSignal | undefined;
-		const proof = createRegistrationProof({
+		const proof = createProofOfWork({
 			fetchChallenge: async () => challenge(1),
 			solve: (_c, signal) => {
 				seen = signal;
@@ -95,7 +95,7 @@ describe('createRegistrationProof', () => {
 	});
 });
 
-describe('withRegistrationProof', () => {
+describe('withProofOfWork', () => {
 	it.each(['proof_expired', 'proof_reused', 'proof_invalid'] as const)(
 		'retries once with a fresh proof after %s',
 		async (code) => {
@@ -104,7 +104,7 @@ describe('withRegistrationProof', () => {
 				.fn<(payload: string) => Promise<string>>()
 				.mockRejectedValueOnce(rejection(code))
 				.mockResolvedValueOnce('ok');
-			expect(await withRegistrationProof(proof, run)).toBe('ok');
+			expect(await withProofOfWork(proof, run)).toBe('ok');
 			expect(run.mock.calls).toEqual([['proof:sig-1'], ['proof:sig-2']]);
 		}
 	);
@@ -114,7 +114,7 @@ describe('withRegistrationProof', () => {
 		const run = vi.fn(async () => {
 			throw rejection('proof_expired');
 		});
-		await expect(withRegistrationProof(proof, run)).rejects.toBeInstanceOf(ApiCallError);
+		await expect(withProofOfWork(proof, run)).rejects.toBeInstanceOf(ApiCallError);
 		expect(run).toHaveBeenCalledTimes(2);
 	});
 
@@ -123,7 +123,7 @@ describe('withRegistrationProof', () => {
 		const run = vi.fn(async () => {
 			throw rejection('rate_limited', 429);
 		});
-		await expect(withRegistrationProof(proof, run)).rejects.toBeInstanceOf(ApiCallError);
+		await expect(withProofOfWork(proof, run)).rejects.toBeInstanceOf(ApiCallError);
 		expect(run).toHaveBeenCalledTimes(1);
 	});
 
