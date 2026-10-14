@@ -53,7 +53,17 @@
 		hasSignature
 	} from './signatureRegion';
 	import { getDraft, putDraft, deleteDraft } from '$core/api/drafts';
-	import { buildDraftEnvelope, loadDraftDoc, restoreAttachmentFile, type DraftDoc } from './draft';
+	import {
+		buildDraftEnvelope,
+		loadDraftDoc,
+		packDraftBundle,
+		uploadDraftBundle,
+		restoreDraftAttachments,
+		DRAFT_DOC_VERSION,
+		type DraftAttachmentMeta,
+		type DraftDoc
+	} from './draft';
+	import type { DraftAttachmentsChange } from '$core/api/types';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
 	import { holdRestart } from '$core/stores/restartGuard';
 	import { onMount } from 'svelte';
@@ -183,7 +193,10 @@
 	let savedDraftId = $state<string | null>(draftId);
 	let draftStatus = $state<'idle' | 'saving' | 'saved'>(isDraftEdit ? 'saved' : 'idle');
 	let hydrating = $state(isDraftEdit);
-	let lastSavedJson = '';
+	let lastSavedKey = '';
+	let bundled: { sig: string; metas: DraftAttachmentMeta[] } = { sig: '', metas: [] };
+	let saving: Promise<void> | null = null;
+	let saveAgain = false;
 	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function chipsToRecipients(chips: RecipientChip[]) {
@@ -192,9 +205,9 @@
 			.map((c) => ({ name: c.name || undefined, address: c.email }));
 	}
 
-	function currentDoc(): DraftDoc {
+	function currentDoc(metas: DraftAttachmentMeta[]): DraftDoc {
 		return {
-			v: 1,
+			v: DRAFT_DOC_VERSION,
 			from: { email: ident.email, name: ident.name },
 			to: chipsToRecipients(to),
 			cc: chipsToRecipients(cc),
@@ -202,21 +215,16 @@
 			subject,
 			bodyHtml,
 			bodyText,
-			attachments: attachments
-				.filter((a) => a.senderDescriptor)
-				.map((a, i) => ({
-					ordinal: i,
-					objectKey: a.senderDescriptor!.objectKey,
-					ciphertextSizeBytes: a.senderDescriptor!.ciphertextSizeBytes,
-					ciphertextSha256: a.senderDescriptor!.ciphertextSha256,
-					keyFingerprint: a.senderDescriptor!.keyFingerprint,
-					filename: a.file.name,
-					mime: a.file.type || 'application/octet-stream',
-					size: a.file.size,
-					disposition: a.disposition,
-					contentId: a.contentId
-				}))
+			attachments: metas
 		};
+	}
+
+	function attachmentSig(list: ComposeAttachment[]): string {
+		return list.map((a) => `${a.id}:${a.disposition}:${a.contentId ?? ''}`).join('|');
+	}
+
+	function draftKey(list: ComposeAttachment[]): string {
+		return `${JSON.stringify(currentDoc([]))}|${attachmentSig(list)}`;
 	}
 
 	function isWorthSaving(doc: DraftDoc): boolean {
@@ -225,8 +233,7 @@
 			doc.cc.length > 0 ||
 			doc.bcc.length > 0 ||
 			doc.subject.trim() !== '' ||
-			doc.bodyText.trim() !== '' ||
-			doc.attachments.length > 0
+			doc.bodyText.trim() !== ''
 		);
 	}
 
@@ -257,22 +264,55 @@
 		);
 	}
 
-	async function saveDraft(): Promise<void> {
+	function saveDraft(): Promise<void> {
+		if (saving) {
+			saveAgain = true;
+			return saving;
+		}
+		saving = persistDraft().finally(() => {
+			saving = null;
+			if (saveAgain) {
+				saveAgain = false;
+				void saveDraft();
+			}
+		});
+		return saving;
+	}
+
+	async function persistDraft(): Promise<void> {
 		if (hydrating || status === 'sending') return;
-		if (uploadsInFlight()) return;
 		const accountId = auth.accountId;
 		if (!accountId) return;
-		const doc = currentDoc();
-		if (!savedDraftId && !isWorthSaving(doc)) return;
-		const json = JSON.stringify(doc);
-		if (json === lastSavedJson) return;
+		const snapshot = attachments;
+		const key = draftKey(snapshot);
+		if (key === lastSavedKey) return;
+		if (!savedDraftId && snapshot.length === 0 && !isWorthSaving(currentDoc([]))) return;
 		const id = savedDraftId ?? crypto.randomUUID();
 		savedDraftId = id;
 		draftStatus = 'saving';
 		try {
-			const req = await buildDraftEnvelope(accountId, doc);
+			const sig = attachmentSig(snapshot);
+			let metas = bundled.metas;
+			let change: DraftAttachmentsChange | undefined;
+			if (sig !== bundled.sig) {
+				if (snapshot.length === 0) {
+					metas = [];
+					change = { action: 'clear' };
+				} else {
+					const packed = await packDraftBundle(
+						accountId,
+						snapshot.map((a) => ({ file: a.file, disposition: a.disposition, contentId: a.contentId }))
+					);
+					const uploadId = await uploadDraftBundle(id, packed);
+					metas = packed.metas;
+					change = { action: 'replace', uploadId, count: metas.length };
+				}
+			}
+			const doc = currentDoc(metas);
+			const req = await buildDraftEnvelope(accountId, doc, change);
 			await putDraft(id, req);
-			lastSavedJson = json;
+			bundled = { sig, metas };
+			lastSavedKey = key;
 			draftStatus = 'saved';
 			drafts.upsertLocal(draftRowFromDoc(id, doc));
 		} catch {
@@ -312,7 +352,7 @@
 		void bcc;
 		void subject;
 		void bodyHtml;
-		void attachments.map((a) => `${a.id}:${a.status}:${a.senderDescriptor?.objectKey ?? ''}`).join('|');
+		void attachmentSig(attachments);
 		if (hydrating || status === 'sending') return;
 		scheduleSave();
 	});
@@ -323,9 +363,8 @@
 		if (hydrating) return null;
 		clearTimeout(saveTimer);
 		await saveDraft();
-		const doc = currentDoc();
-		if (!savedDraftId && !isWorthSaving(doc)) return null;
-		return JSON.stringify(doc) === lastSavedJson ? null : m.mail_compose_hold_draft_unsaved();
+		if (!savedDraftId && attachments.length === 0 && !isWorthSaving(currentDoc([]))) return null;
+		return draftKey(attachments) === lastSavedKey ? null : m.mail_compose_hold_draft_unsaved();
 	}
 
 	onMount(() => {
@@ -356,26 +395,27 @@
 			subject = doc.subject;
 			bodyHtml = doc.bodyHtml;
 			bodyText = doc.bodyText;
-			for (let i = 0; i < doc.attachments.length; i++) {
-				const meta = doc.attachments[i];
-				const ptr = detail.attachments[i]?.pointer;
-				if (!ptr) continue;
+			if (doc.attachments.length > 0 && detail.attachmentsBundle) {
 				try {
-					const file = await restoreAttachmentFile(accountId, ptr);
-					const att: ComposeAttachment = {
+					const restored = await restoreDraftAttachments(accountId, doc, detail.attachmentsBundle);
+					const added: ComposeAttachment[] = restored.map((r) => ({
 						id: crypto.randomUUID(),
-						file,
+						file: r.file,
 						status: 'queued',
 						progress: 0,
-						disposition: meta.disposition,
-						contentId: meta.contentId
-					};
-					attachments = [...attachments, att];
-					startUpload(att);
+						disposition: r.disposition,
+						contentId: r.contentId
+					}));
+					attachments = [...attachments, ...added];
+					for (const att of added) startUpload(att);
+					bundled = { sig: attachmentSig(attachments), metas: doc.attachments };
 				} catch {
-					attErr = m.mail_compose_restore_att_failed({ name: meta.filename });
+					attErr = m.mail_compose_restore_att_failed({
+						name: doc.attachments.map((a) => a.filename).join(', ')
+					});
 				}
 			}
+			lastSavedKey = draftKey(attachments);
 		} catch {
 			err = new SendError('unknown', m.mail_compose_open_draft_failed());
 		} finally {

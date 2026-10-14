@@ -1,5 +1,13 @@
 import { apiFetch } from './client';
-import type { DraftDetail, DraftListResponse, DraftRequest, DraftSummary, SortOrder } from './types';
+import type {
+	DraftAttachmentUploadGrant,
+	DraftAttachmentUploadRequest,
+	DraftDetail,
+	DraftListResponse,
+	DraftRequest,
+	DraftSummary,
+	SortOrder
+} from './types';
 
 export interface ListDraftsOptions {
 	sort?: SortOrder;
@@ -25,6 +33,16 @@ export function putDraft(draftId: string, req: DraftRequest): Promise<DraftSumma
 		method: 'PUT',
 		body: req
 	});
+}
+
+export function issueDraftAttachmentUpload(
+	draftId: string,
+	req: DraftAttachmentUploadRequest
+): Promise<DraftAttachmentUploadGrant> {
+	return apiFetch<DraftAttachmentUploadGrant>(
+		`/v1/drafts/${encodeURIComponent(draftId)}/attachments/upload`,
+		{ method: 'POST', body: req }
+	);
 }
 
 export function deleteDraft(draftId: string): Promise<void> {
