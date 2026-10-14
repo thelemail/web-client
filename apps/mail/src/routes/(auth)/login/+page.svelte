@@ -50,6 +50,7 @@
 	let view = $state<'main' | 'sso'>('main');
 	let ssoDomain = $state('');
 	let busy = $state(false);
+	let verifying = $state(false);
 	let loginError = $state<string | null>(null);
 	let rememberMe = $state(false);
 	let pendingTwoFactor = $state.raw<PendingTwoFactorLogin | null>(null);
@@ -63,11 +64,25 @@
 		if (!busy && pw.length === 0) email = next;
 	});
 
+	const solving = new AbortController();
+	$effect(() => () => solving.abort());
+
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
 	const canSignIn = $derived(emailValid && pw.length >= 1);
 
 	async function navigateAfterLogin(slot: number) {
 		await goto(resolveReturnTo(page.url.searchParams.get('redirect'), slot));
+	}
+
+	function loginErrorMessage(err: unknown): string {
+		if (err instanceof ApiCallError) {
+			if (err.status === 401) return m.auth_login_wrong_credentials();
+			if (err.status === 429) return m.auth_login_rate_limited();
+			if (err.status === 503) return m.auth_login_busy();
+			if (err.status === 422 && err.envelope?.error.code.startsWith('proof_')) return m.auth_proof_failed();
+			return m.auth_login_failed_http({ status: err.status });
+		}
+		return err instanceof Error ? err.message : m.auth_login_failed();
 	}
 
 	async function submit() {
@@ -76,7 +91,13 @@
 		loginError = null;
 		const password = pw;
 		try {
-			const outcome = await performLogin({ email, password, rememberMe });
+			const outcome = await performLogin({
+				email,
+				password,
+				rememberMe,
+				signal: solving.signal,
+				onVerifying: (active) => (verifying = active)
+			});
 			pw = '';
 			if (outcome.status === 'twoFactorRequired') {
 				heldTwoFactor = outcome.pending;
@@ -89,15 +110,10 @@
 			await navigateAfterLogin(outcome.result.slot);
 		} catch (err) {
 			console.error('login failed', err);
-			if (err instanceof ApiCallError) {
-				loginError =
-					err.status === 401
-						? m.auth_login_wrong_credentials()
-						: m.auth_login_failed_http({ status: err.status });
-			} else {
-				loginError = err instanceof Error ? err.message : m.auth_login_failed();
-			}
+			loginError = loginErrorMessage(err);
 			busy = false;
+		} finally {
+			verifying = false;
 		}
 	}
 
@@ -310,7 +326,7 @@
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!canSignIn || busy} onclick={submit}>
 					{#if busy}
-						<span class="spinner"></span>{m.auth_login_signing_in()}
+						<span class="spinner"></span>{verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
 					{:else}
 						{m.auth_sign_in()}
 					{/if}

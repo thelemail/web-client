@@ -684,7 +684,7 @@ export interface ModulusResponse {
 	modulus: string;
 }
 
-export interface RegistrationChallenge {
+export interface ProofChallenge {
 	parameters: {
 		algorithm: string;
 		nonce: string;
@@ -763,6 +763,7 @@ export interface LoginInitResponse {
 	srpParamsVersion?: number;
 	accountId?: string;
 	ke2?: string;
+	proofChallenge?: ProofChallenge;
 }
 
 export interface LoginCompleteRequest {
@@ -771,6 +772,7 @@ export interface LoginCompleteRequest {
 	clientProof?: string;
 	ke3?: string;
 	enrollPersistentSession?: boolean;
+	proof?: string;
 }
 
 export type TwoFactorMethod = 'totp' | 'webauthn' | 'backupCode';

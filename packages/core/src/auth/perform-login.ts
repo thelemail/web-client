@@ -11,7 +11,13 @@ import {
 	verify2faTotp,
 	verify2faWebauthn
 } from '$core/api/twofactor';
-import { ApiCallError, type LoginSessionGrant, type TwoFactorMethod } from '$core/api/types';
+import {
+	ApiCallError,
+	type LoginInitResponse,
+	type LoginSessionGrant,
+	type TwoFactorMethod
+} from '$core/api/types';
+import { isRestartableLoginProofError, solveProof } from '$core/auth/proof-of-work';
 import { getAssertion } from '$core/auth/webauthn';
 import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$core/stores/auth.svelte';
@@ -24,6 +30,8 @@ export interface PerformLoginInput {
 	email: string;
 	password: string;
 	rememberMe?: boolean;
+	signal?: AbortSignal;
+	onVerifying?: (active: boolean) => void;
 }
 
 export interface PerformLoginResult {
@@ -116,10 +124,25 @@ async function stageMigrationIfGranted(
 	}
 }
 
+type LoginProofSolver = (init: LoginInitResponse) => Promise<string | undefined>;
+
+function loginProofSolver(input: PerformLoginInput): LoginProofSolver {
+	return async (init) => {
+		if (!init.proofChallenge) return undefined;
+		input.onVerifying?.(true);
+		try {
+			return await solveProof(init.proofChallenge, input.signal ?? new AbortController().signal);
+		} finally {
+			input.onVerifying?.(false);
+		}
+	};
+}
+
 async function tryOpaqueLogin(
 	email: string,
 	password: string,
-	rememberMe: boolean
+	rememberMe: boolean,
+	proofFor: LoginProofSolver
 ): Promise<PerformLoginOutcome | null> {
 	const start = await keystore.opaqueStartAuth({ password, email });
 	try {
@@ -128,6 +151,7 @@ async function tryOpaqueLogin(
 			await keystore.opaqueAbandonOperation({ operationId: start.operationId });
 			return null;
 		}
+		const proof = await proofFor(init);
 		const finish = await keystore.opaqueFinishAuth({
 			operationId: start.operationId,
 			accountId: init.accountId,
@@ -140,7 +164,8 @@ async function tryOpaqueLogin(
 		const complete = await loginComplete({
 			challengeId: init.challengeId,
 			ke3: finish.ke3,
-			enrollPersistentSession: rememberMe
+			enrollPersistentSession: rememberMe,
+			proof
 		});
 
 		if (complete.twoFactor) {
@@ -174,16 +199,27 @@ async function abandonOpaqueOperation(operationId: string): Promise<void> {
 }
 
 export async function performLogin(input: PerformLoginInput): Promise<PerformLoginOutcome> {
+	try {
+		return await attemptLogin(input);
+	} catch (err) {
+		if (!isRestartableLoginProofError(err)) throw err;
+		return attemptLogin(input);
+	}
+}
+
+async function attemptLogin(input: PerformLoginInput): Promise<PerformLoginOutcome> {
 	const { email, rememberMe = false } = input;
 	let password = input.password;
+	const proofFor = loginProofSolver(input);
 
-	const opaqueOutcome = await tryOpaqueLogin(email, password, rememberMe);
+	const opaqueOutcome = await tryOpaqueLogin(email, password, rememberMe, proofFor);
 	if (opaqueOutcome) {
 		password = '';
 		return opaqueOutcome;
 	}
 
 	const init = await loginInit({ email });
+	const proof = await proofFor(init);
 	const proofs = await keystore.prepareLogin({
 		email,
 		password,
@@ -196,7 +232,8 @@ export async function performLogin(input: PerformLoginInput): Promise<PerformLog
 		challengeId: init.challengeId,
 		clientPublicEphemeral: proofs.clientPublicEphemeral,
 		clientProof: proofs.clientProof,
-		enrollPersistentSession: rememberMe
+		enrollPersistentSession: rememberMe,
+		proof
 	});
 
 	const verified = await keystore.verifyLoginProof({ serverProof: complete.serverProof as string });

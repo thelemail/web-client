@@ -1,46 +1,51 @@
 import { registrationChallenge } from '$core/api/auth';
-import { ApiCallError, type RegistrationChallenge } from '$core/api/types';
+import { ApiCallError, type ProofChallenge } from '$core/api/types';
 
 const RENEW_MARGIN_MS = 60_000;
 const RETRYABLE = new Set(['proof_invalid', 'proof_expired', 'proof_reused']);
+const RESTARTABLE = new Set(['proof_required', 'proof_expired']);
 
-export type ProofSolver = (challenge: RegistrationChallenge, signal: AbortSignal) => Promise<string>;
+export type ProofSolver = (challenge: ProofChallenge, signal: AbortSignal) => Promise<string>;
 
 interface SolvedProof {
 	payload: string;
 	expiresAt: number;
 }
 
-export interface RegistrationProofOptions {
-	fetchChallenge?: () => Promise<RegistrationChallenge>;
+export interface ProofOfWorkOptions {
+	fetchChallenge?: () => Promise<ProofChallenge>;
 	solve?: ProofSolver;
 	now?: () => number;
 }
 
-export interface RegistrationProof {
+export interface ProofOfWork {
 	prepare(): void;
 	take(): Promise<string>;
 	dispose(): void;
 }
 
-async function solveWithWidget(challenge: RegistrationChallenge, signal: AbortSignal) {
+export async function solveProof(challenge: ProofChallenge, signal: AbortSignal): Promise<string> {
 	const { solveWithAltcha } = await import('./altcha-solver');
 	return solveWithAltcha(challenge, signal);
 }
 
-export function isRetryableProofError(err: unknown): boolean {
-	return (
-		err instanceof ApiCallError &&
-		err.status === 422 &&
-		RETRYABLE.has(err.envelope?.error.code ?? '')
-	);
+function hasProofCode(err: unknown, codes: Set<string>): boolean {
+	return err instanceof ApiCallError && err.status === 422 && codes.has(err.envelope?.error.code ?? '');
 }
 
-export function createRegistrationProof({
+export function isRetryableProofError(err: unknown): boolean {
+	return hasProofCode(err, RETRYABLE);
+}
+
+export function isRestartableLoginProofError(err: unknown): boolean {
+	return hasProofCode(err, RESTARTABLE);
+}
+
+export function createProofOfWork({
 	fetchChallenge = registrationChallenge,
-	solve = solveWithWidget,
+	solve = solveProof,
 	now = Date.now
-}: RegistrationProofOptions = {}): RegistrationProof {
+}: ProofOfWorkOptions = {}): ProofOfWork {
 	let controller = new AbortController();
 	let ready: Promise<SolvedProof> | null = null;
 
@@ -91,8 +96,8 @@ export function createRegistrationProof({
 	};
 }
 
-export async function withRegistrationProof<T>(
-	proof: RegistrationProof,
+export async function withProofOfWork<T>(
+	proof: ProofOfWork,
 	run: (payload: string) => Promise<T>
 ): Promise<T> {
 	try {

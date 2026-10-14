@@ -20,7 +20,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import JoinFamilyInvite from '$core/auth/JoinFamilyInvite.svelte';
-	import { createRegistrationProof, withRegistrationProof } from '$core/auth/registration-proof';
+	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import { Button } from '$core/components/ui/button';
 	import { strengthLabel } from '$core/auth/password-policy';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -57,7 +57,7 @@
 
 	const nameReady = $derived(name.trim().length >= 2);
 
-	const proof = createRegistrationProof();
+	const proof = createProofOfWork();
 
 	$effect(() => {
 		if (step === 1) untrack(() => proof.prepare());
@@ -126,7 +126,7 @@
 		try {
 			const email = invite.inviteeEmail;
 			const start = await keystore.opaqueStartRegistration({ email, password });
-			const init = await withRegistrationProof(proof, (payload) =>
+			const init = await withProofOfWork(proof, (payload) =>
 				registrationInit({ email, registrationRequest: start.registrationRequest, proof: payload })
 			);
 			const finish = await keystore.opaqueFinishRegistration({
