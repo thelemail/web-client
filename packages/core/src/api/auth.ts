@@ -316,7 +316,8 @@ export function refreshSession(accountId: string) {
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
-		accountId
+		accountId,
+		headers: { 'X-Refresh-Rotation': '1' }
 	});
 }
 
