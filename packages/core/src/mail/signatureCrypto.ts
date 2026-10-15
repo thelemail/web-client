@@ -1,6 +1,7 @@
 import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, b64ToBytes, b64ToHex } from '$core/keys/encode';
 import * as attframe from '$core/mail/attframe';
+import { sanitizeSignatureHtml } from '$core/mail/render/sanitizeSignature';
 import type { SignatureRecord, UpsertSignatureInput } from '$core/api/signatures';
 
 export type SignatureMode = 'rich' | 'html' | 'markdown';
@@ -26,8 +27,13 @@ export function emptyDoc(): SignatureDoc {
 	return { v: 1, mode: 'rich', source: '', bodyHtml: '', images: [] };
 }
 
+function clean(html: string): string {
+	return sanitizeSignatureHtml(html, { keepRemoteImages: true });
+}
+
 export function legacyDoc(bodyHtml: string): SignatureDoc {
-	return { v: 1, mode: 'rich', source: bodyHtml, bodyHtml, images: [] };
+	const html = clean(bodyHtml);
+	return { v: 1, mode: 'rich', source: html, bodyHtml: html, images: [] };
 }
 
 function normalize(raw: unknown, fallbackHtml: string): SignatureDoc {
@@ -35,7 +41,7 @@ function normalize(raw: unknown, fallbackHtml: string): SignatureDoc {
 	const d = raw as Partial<SignatureDoc>;
 	const mode: SignatureMode =
 		d.mode === 'html' || d.mode === 'markdown' || d.mode === 'rich' ? d.mode : 'rich';
-	const bodyHtml = typeof d.bodyHtml === 'string' ? d.bodyHtml : '';
+	const bodyHtml = typeof d.bodyHtml === 'string' ? clean(d.bodyHtml) : '';
 	return {
 		v: 1,
 		mode,
