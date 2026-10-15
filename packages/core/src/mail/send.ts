@@ -229,7 +229,7 @@ function normaliseEmail(s: string): string {
 	return s.trim().toLowerCase();
 }
 
-interface ResolveOptions {
+export interface ResolveOptions {
 	acceptKeyChange?: boolean;
 }
 
@@ -284,7 +284,7 @@ interface VerifiedReadDelegate {
 	publicKeyArmored: string;
 }
 
-interface ResolvedRecipient {
+export interface ResolvedRecipient {
 	accountId: string;
 	key: KeyMaterial;
 	fullName: string;
@@ -307,7 +307,7 @@ async function verifiedReadDelegates(
 	return out;
 }
 
-async function resolveRecipient(
+export async function resolveRecipient(
 	emailAddress: string,
 	opts: ResolveOptions = {}
 ): Promise<ResolvedRecipient> {
@@ -539,7 +539,7 @@ export async function sendInternalMessage(
 			const list: AttachmentDescriptor[] = [];
 			for (let i = 0; i < input.attachments.length; i++) {
 				const rec = input.attachments[i].recipientDescriptors?.get(acct);
-				if (!rec) {
+				if (!rec || rec.keyFingerprint !== keyByAccount.get(acct)!.fingerprintB64) {
 					throw new SendError('encrypt', m.send_error_attachments_uploading_recipient());
 				}
 				list.push({ ...rec, ordinal: i });

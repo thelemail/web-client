@@ -1,13 +1,15 @@
-import * as openpgp from 'openpgp';
 import { platform } from '$platform';
-import { keystore } from '$core/keystore/keystore-client';
-import { bytesToB64, hexToBytes } from '$core/crypto';
-import { lookupAccount } from '$core/api/accounts';
-import { ApiCallError } from '$core/api/types';
+import { bytesToB64 } from '$core/crypto';
 import { issueAttachmentUploadUrls } from '$core/api/messages';
 import { build as buildAttFrame } from '$core/mail/attframe';
-import { canonicalRecipient } from './recipientAddress';
-import { senderKey, SendError, type KeyMaterial } from './send';
+import {
+	encryptTo,
+	resolveRecipient,
+	senderKey,
+	sha256B64,
+	SendError,
+	type KeyMaterial
+} from './send';
 import type {
 	AttachmentDescriptor,
 	AttachmentUploadGrant,
@@ -41,36 +43,15 @@ export interface Attachment {
 
 interface RecipientResolution {
 	accountId: string;
-	publicKeyArmored: string;
-	fingerprintB64: string;
+	key: KeyMaterial;
 }
 
-async function recipientForAddress(address: string): Promise<RecipientResolution> {
-	const lookup = await lookupAccount(canonicalRecipient(address));
-	const k = await openpgp.readKey({ armoredKey: lookup.publicKeyArmored });
-	const fp = k.getFingerprint();
-	const bytes = typeof fp === 'string' ? hexToBytes(fp) : new Uint8Array(fp as ArrayLike<number>);
-	return {
-		accountId: lookup.accountId,
-		publicKeyArmored: lookup.publicKeyArmored,
-		fingerprintB64: bytesToB64(bytes)
-	};
+interface EnvOptions {
+	acceptKeyChange?: boolean;
+	strict?: boolean;
 }
 
-async function encryptToArmored(
-	accountId: string,
-	plaintext: Uint8Array,
-	armored: string
-): Promise<Uint8Array> {
-	const r = await keystore.encrypt({ accountId, recipientPublicKeyArmored: armored, plaintext });
-	if (!r.ok) throw new SendError('encrypt', `keystore.encrypt: ${r.code}`);
-	return r.ciphertext;
-}
-
-async function sha256B64(bytes: Uint8Array): Promise<string> {
-	const digest = await crypto.subtle.digest('SHA-256', bytes as BufferSource);
-	return bytesToB64(new Uint8Array(digest));
-}
+const UNVERIFIED = new Set(['tofu', 'directory_verification_failed']);
 
 async function putWithProgress(grant: AttachmentUploadGrant, body: Uint8Array, signal: AbortSignal, onProgress: (n: number) => void): Promise<void> {
 	const ab = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
@@ -116,32 +97,42 @@ export class UploadOrchestrator {
 		this.prepared.clear();
 	}
 
-	async ensureEnv(recipientAddresses: string[]): Promise<UploadEnv> {
+	private async ensureEnv(recipientAddresses: string[], opts: EnvOptions = {}): Promise<UploadEnv> {
 		const sender = await senderKey(this.accountId);
-		const recipients = this.env?.recipients ?? new Map<string, RecipientResolution>();
+		const recipients =
+			(!opts.strict && this.env?.recipients) || new Map<string, RecipientResolution>();
 		for (const addr of recipientAddresses) {
 			if (recipients.has(addr)) continue;
 			try {
-				recipients.set(addr, await recipientForAddress(addr));
+				const r = await resolveRecipient(addr, { acceptKeyChange: opts.acceptKeyChange });
+				recipients.set(addr, { accountId: r.accountId, key: r.key });
 			} catch (e) {
-				if (!(e instanceof ApiCallError && e.status === 404)) throw e;
+				if (!(e instanceof SendError)) throw e;
+				if (e.code === 'recipient_unknown') continue;
+				if (!opts.strict && UNVERIFIED.has(e.code)) continue;
+				throw e;
 			}
 		}
 		this.env = { sender, recipients };
 		return this.env;
 	}
 
-	async ensureRecipientCopies(atts: Attachment[], recipientAddresses: string[]): Promise<void> {
+	async ensureRecipientCopies(
+		atts: Attachment[],
+		recipientAddresses: string[],
+		opts: { acceptKeyChange?: boolean } = {}
+	): Promise<void> {
 		const ready = atts.filter((a) => a.status === 'ready' && a.senderDescriptor);
 		if (ready.length === 0) return;
-		const env = await this.ensureEnv(recipientAddresses);
+		const env = await this.ensureEnv(recipientAddresses, { ...opts, strict: true });
 		for (const att of ready) {
 			const ordinal = atts.indexOf(att);
 			const have = att.recipientDescriptors ?? new Map<string, AttachmentDescriptor>();
 			const missing: RecipientResolution[] = [];
 			const seen = new Set<string>();
 			for (const rec of env.recipients.values()) {
-				if (have.has(rec.accountId) || seen.has(rec.accountId)) continue;
+				if (seen.has(rec.accountId)) continue;
+				if (have.get(rec.accountId)?.keyFingerprint === rec.key.fingerprintB64) continue;
 				seen.add(rec.accountId);
 				missing.push(rec);
 			}
@@ -155,7 +146,7 @@ export class UploadOrchestrator {
 
 			const ciphers: { rec: RecipientResolution; cipher: Uint8Array; sha: string }[] = [];
 			for (const rec of missing) {
-				const cipher = await encryptToArmored(this.accountId, framed, rec.publicKeyArmored);
+				const cipher = await encryptTo(this.accountId, framed, rec.key.publicKeyArmored);
 				ciphers.push({ rec, cipher, sha: await sha256B64(cipher) });
 			}
 
@@ -166,7 +157,7 @@ export class UploadOrchestrator {
 				ordinal,
 				ciphertextSizeBytes: c.cipher.length,
 				ciphertextSha256: c.sha,
-				keyFingerprint: c.rec.fingerprintB64
+				keyFingerprint: c.rec.key.fingerprintB64
 			}));
 			const grants = await issueAttachmentUploadUrls({ slots: slotReqs });
 			const grantBySlot = new Map(grants.slots.map((g) => [g.slotId, g]));
@@ -181,7 +172,7 @@ export class UploadOrchestrator {
 					objectKey: grant.objectKey,
 					ciphertextSizeBytes: ciphers[i].cipher.length,
 					ciphertextSha256: ciphers[i].sha,
-					keyFingerprint: ciphers[i].rec.fingerprintB64
+					keyFingerprint: ciphers[i].rec.key.fingerprintB64
 				});
 			}
 			att.recipientDescriptors = next;
@@ -203,14 +194,15 @@ export class UploadOrchestrator {
 				this.prepared.set(att.id, framed);
 			}
 
-			const senderCipher = await encryptToArmored(this.accountId, framed, env.sender.publicKeyArmored);
+			const senderCipher = await encryptTo(this.accountId, framed, env.sender.publicKeyArmored);
 			const senderSha = await sha256B64(senderCipher);
 
 			const recipientCiphers = new Map<string, { cipher: Uint8Array; sha: string; fp: string }>();
 			for (const [, rec] of env.recipients) {
-				const cipher = await encryptToArmored(this.accountId, framed, rec.publicKeyArmored);
+				if (recipientCiphers.has(rec.accountId)) continue;
+				const cipher = await encryptTo(this.accountId, framed, rec.key.publicKeyArmored);
 				const sha = await sha256B64(cipher);
-				recipientCiphers.set(rec.accountId, { cipher, sha, fp: rec.fingerprintB64 });
+				recipientCiphers.set(rec.accountId, { cipher, sha, fp: rec.key.fingerprintB64 });
 			}
 
 			const slotReqs: AttachmentUploadSlotRequest[] = [

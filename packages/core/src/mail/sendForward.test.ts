@@ -69,8 +69,14 @@ vi.mock('$core/api/messages', () => ({
 }));
 
 import { sendInternalMessage } from './send';
+import { bytesToB64, hexToBytes } from '$core/crypto';
 
 const party = (address: string) => ({ display: '', address });
+
+function copyFor(accountId: string) {
+	const hex = `key-${accountId}`.replace(/[^0-9a-f]/g, '').padEnd(40, '0').slice(0, 40);
+	return { ordinal: 0, keyFingerprint: bytesToB64(hexToBytes(hex)) };
+}
 
 function delegate(id: string) {
 	return { id, publicKeyArmored: `delegate-key-${id}`, statement: '', statementSignature: '' };
@@ -103,8 +109,8 @@ describe('internal send to an address with read delegates', () => {
 					disposition: 'attachment',
 					senderDescriptor: { ordinal: 0 } as never,
 					recipientDescriptors: new Map([
-						['acct-contact', { ordinal: 0 } as never],
-						['acct-secret', { ordinal: 0 } as never]
+						['acct-contact', copyFor('acct-contact')],
+						['acct-secret', copyFor('acct-secret')]
 					])
 				} as never
 			]
@@ -142,5 +148,41 @@ describe('internal send to an address with read delegates', () => {
 		h.delegates['contact@acme.test'] = [delegate('d1')];
 		await sendInternalMessage({ to: [party('contact@acme.test')], cc: [party('contact+x@acme.test')], subject: 's', body: 'b' });
 		expect(h.requests[0].forwardCopies).toHaveLength(1);
+	});
+});
+
+describe('internal send with attachments', () => {
+	function withCopy(keyFingerprint: string) {
+		return {
+			id: 'a1',
+			file: new File([new Uint8Array([1])], 'a.bin'),
+			status: 'ready',
+			progress: 1,
+			disposition: 'attachment',
+			senderDescriptor: { ordinal: 0 } as never,
+			recipientDescriptors: new Map([['acct-ada', { ordinal: 0, keyFingerprint } as never]])
+		} as never;
+	}
+
+	it('refuses a recipient copy made to a key other than the verified one', async () => {
+		await expect(
+			sendInternalMessage({
+				to: [party('ada@thelemail.test')],
+				subject: 's',
+				body: 'b',
+				attachments: [withCopy(copyFor('acct-mallory').keyFingerprint)]
+			})
+		).rejects.toMatchObject({ code: 'encrypt' });
+		expect(h.requests).toHaveLength(0);
+	});
+
+	it('sends a recipient copy made to the verified key', async () => {
+		await sendInternalMessage({
+			to: [party('ada@thelemail.test')],
+			subject: 's',
+			body: 'b',
+			attachments: [withCopy(copyFor('acct-ada').keyFingerprint)]
+		});
+		expect(h.requests).toHaveLength(1);
 	});
 });
