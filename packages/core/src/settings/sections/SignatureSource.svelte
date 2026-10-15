@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { signatures } from '$core/stores/signatures.svelte';
 	import { SIGNATURE_IMAGE_ATTR } from '$core/mail/editor/signatureImage';
+	import { sanitizeSignatureHtml } from '$core/mail/render/sanitizeSignature';
 
 	interface Props {
 		value: string;
@@ -19,7 +20,7 @@
 		const html = previewHtml;
 		const el = previewEl;
 		if (!el) return;
-		el.innerHTML = html;
+		el.innerHTML = sanitizeSignatureHtml(html, { keepRemoteImages: true });
 		for (const img of Array.from(el.querySelectorAll<HTMLImageElement>(`img[${SIGNATURE_IMAGE_ATTR}]`))) {
 			const key = img.getAttribute(SIGNATURE_IMAGE_ATTR);
 			if (!key) continue;
