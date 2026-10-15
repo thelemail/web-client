@@ -7,8 +7,15 @@ export interface UpdateMeInput {
 	clearDefaultReply?: boolean;
 }
 
+export interface AvatarUploadUrlInput {
+	sizeBytes: number;
+	sha256: string;
+	contentType: string;
+}
+
 export interface AvatarUploadGrant {
 	uploadUrl: string;
+	uploadHeaders: Record<string, string>;
 	objectKey: string;
 	expiresAt: string;
 	maxBytes: number;
@@ -19,8 +26,8 @@ export function updateMe(input: UpdateMeInput): Promise<MeResponse> {
 	return apiFetch('/v1/me', { method: 'PATCH', body: input });
 }
 
-export function requestAvatarUploadUrl(): Promise<AvatarUploadGrant> {
-	return apiFetch('/v1/me/avatar/upload-url', { method: 'POST' });
+export function requestAvatarUploadUrl(input: AvatarUploadUrlInput): Promise<AvatarUploadGrant> {
+	return apiFetch('/v1/me/avatar/upload-url', { method: 'POST', body: input });
 }
 
 export function commitAvatar(objectKey: string): Promise<MeResponse> {

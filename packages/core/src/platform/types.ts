@@ -213,7 +213,7 @@ export interface Platform {
 	blobPut: (
 		url: string,
 		body: Blob,
-		contentType?: string,
+		headers?: Record<string, string>,
 		opts?: BlobPutOptions
 	) => Promise<Response>;
 	submissionUpload: (

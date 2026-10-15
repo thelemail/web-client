@@ -19,11 +19,11 @@ export const platform: Platform = {
 	transport: undefined,
 	openEventSource: undefined,
 	blobFetch: (url, init) => fetch(url, init),
-	blobPut: (url, body, contentType, opts) =>
+	blobPut: (url, body, headers, opts) =>
 		new Promise<Response>((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
 			xhr.open('PUT', url, true);
-			if (contentType) xhr.setRequestHeader('Content-Type', contentType);
+			for (const [name, value] of Object.entries(headers ?? {})) xhr.setRequestHeader(name, value);
 			xhr.upload.onprogress = (e) => {
 				if (e.lengthComputable && e.total > 0) opts?.onProgress?.(e.loaded / e.total);
 			};

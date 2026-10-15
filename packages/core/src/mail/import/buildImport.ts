@@ -6,6 +6,7 @@ import { buildMIME } from '../mime';
 import { build as buildAttFrame } from '$core/mail/attframe';
 import { issueAttachmentUploadUrls, importMessage } from '$core/api/messages';
 import type {
+	AttachmentUploadGrant,
 	AttachmentUploadSlotRequest,
 	ClientInboundImportRequest,
 	ClientInboundImportResponse,
@@ -86,7 +87,7 @@ async function uploadBody(key: KeyMaterial, cipher: Uint8Array, sha: string): Pr
 	const grants = await issueAttachmentUploadUrls({ slots });
 	const grant = grants.slots.find((g) => g.slotId === slotId);
 	if (!grant) throw new Error('missing body upload grant');
-	await putCiphertext(grant.putUrl, cipher);
+	await putCiphertext(grant, cipher);
 	return grant.objectKey;
 }
 
@@ -104,12 +105,12 @@ async function encryptToSelf(
 	return r.ciphertext;
 }
 
-function putCiphertext(url: string, cipher: Uint8Array): Promise<void> {
+function putCiphertext(grant: AttachmentUploadGrant, cipher: Uint8Array): Promise<void> {
 	const ab = cipher.buffer.slice(
 		cipher.byteOffset,
 		cipher.byteOffset + cipher.byteLength
 	) as ArrayBuffer;
-	return platform.blobPut(url, new Blob([ab])).then((res) => {
+	return platform.blobPut(grant.putUrl, new Blob([ab]), grant.putHeaders).then((res) => {
 		if (!res.ok) throw new Error(`attachment PUT ${res.status}`);
 	});
 }
@@ -168,7 +169,7 @@ async function uploadAttachments(
 		const p = prepared[i];
 		const grant = grantBySlot.get(slots[i].slotId);
 		if (!grant) throw new Error('missing upload grant');
-		await putCiphertext(grant.putUrl, p.cipher);
+		await putCiphertext(grant, p.cipher);
 		out.push({
 			ordinal: p.ordinal,
 			objectKey: grant.objectKey,

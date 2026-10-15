@@ -159,7 +159,7 @@ export async function uploadDraftBundle(draftId: string, packed: PackedDraftBund
 		ciphertextSha256: packed.sha256B64,
 		keyFingerprint: packed.fingerprintB64
 	});
-	const resp = await platform.blobPut(grant.putUrl, new Blob([packed.ciphertext as BlobPart]));
+	const resp = await platform.blobPut(grant.putUrl, new Blob([packed.ciphertext as BlobPart]), grant.putHeaders);
 	if (!resp.ok) throw new Error(`PUT ${resp.status}`);
 	return grant.uploadId;
 }

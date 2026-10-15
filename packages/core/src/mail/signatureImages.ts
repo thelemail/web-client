@@ -13,6 +13,7 @@ import { m } from '$paraglide/messages.js';
 
 export const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 export const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_SEALED_IMAGE_BYTES = 2162688;
 const MAX_REMOTE_FETCH = 20;
 const CONCURRENCY = 4;
 
@@ -36,14 +37,18 @@ export async function uploadSignatureImage(
 	if (!target) throw new Error('no active account');
 
 	const sealedImage = await sealSignatureImage(target, bytes, meta);
-	const grant = await requestSignatureImageUploadUrl(addressId);
-	if (sealedImage.ciphertext.byteLength > grant.maxBytes) {
+	if (sealedImage.ciphertext.byteLength > MAX_SEALED_IMAGE_BYTES) {
 		throw new Error(m.mailbox_sigimg_too_large_encrypted());
 	}
+	const grant = await requestSignatureImageUploadUrl({
+		addressId,
+		ciphertextSizeBytes: sealedImage.ciphertext.byteLength,
+		ciphertextSha256: sealedImage.ciphertextSha256
+	});
 	const put = await platform.blobPut(
 		grant.uploadUrl,
-		new Blob([sealedImage.ciphertext as BlobPart], { type: 'application/octet-stream' }),
-		'application/octet-stream'
+		new Blob([sealedImage.ciphertext as BlobPart]),
+		grant.uploadHeaders
 	);
 	if (!put.ok) throw new Error(`upload failed (${put.status})`);
 
