@@ -7,13 +7,14 @@ vi.mock('$env/static/public', () => ({
 vi.mock('$platform', () => ({ platform: {} }));
 vi.mock('$core/realtime/device', () => ({ deviceId: () => 'device-1' }));
 
+import { refreshSession } from './auth';
 import { apiFetch, registerAuthRouter, registerTransport } from './client';
 import { ApiCallError } from './types';
 
 const ACCOUNT = 'acct-1';
 
 let lost = false;
-const transport = vi.fn(async () => new Response(null, { status: 204 }));
+const transport = vi.fn(async (_url: string, _init: RequestInit) => new Response(null, { status: 204 }));
 const ensureFreshToken = vi.fn(async () => {});
 const onUnauthorized = vi.fn(async () => false);
 
@@ -58,5 +59,19 @@ describe('apiFetch with a lost session', () => {
 
 		expect(ensureFreshToken).toHaveBeenCalledTimes(1);
 		expect(transport).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe('refreshSession', () => {
+	it('opts into rotation for the account it refreshes', async () => {
+		transport.mockResolvedValueOnce(new Response('{}', { status: 200 }));
+
+		await refreshSession(ACCOUNT);
+
+		expect(transport).toHaveBeenCalledTimes(1);
+		const [url, init] = transport.mock.calls[0];
+		expect(url).toBe('https://api.test/v1/auth/refresh');
+		expect(init.credentials).toBe('include');
+		expect(init.headers).toMatchObject({ 'X-Refresh-Rotation': '1', 'X-Account-Id': ACCOUNT });
 	});
 });

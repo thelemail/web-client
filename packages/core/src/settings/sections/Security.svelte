@@ -305,6 +305,7 @@
 		signed_out: { icon: LogOut, label: () => m.settings_security_log_signed_out() },
 		session_revoked: { icon: LogOut, label: () => m.settings_security_log_session_revoked() },
 		other_sessions_revoked: { icon: LogOut, label: () => m.settings_security_log_other_sessions_revoked() },
+		session_reuse_detected: { icon: TriangleAlert, label: () => m.settings_security_log_session_reuse_detected() },
 		password_changed: { icon: KeyRound, label: () => m.settings_security_log_password_changed() },
 		recovery_phrase_set: { icon: LifeBuoy, label: () => m.settings_security_log_recovery_phrase_set() },
 		account_recovered: { icon: LifeBuoy, label: () => m.settings_security_log_account_recovered() },
