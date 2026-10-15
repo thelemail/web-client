@@ -69,8 +69,14 @@ vi.mock('$core/api/messages', () => ({
 }));
 
 import { sendInternalMessage } from './send';
+import { bytesToB64, hexToBytes } from '$core/crypto';
 
 const party = (address: string) => ({ display: '', address });
+
+function copyFor(accountId: string) {
+	const hex = `key-${accountId}`.replace(/[^0-9a-f]/g, '').padEnd(40, '0').slice(0, 40);
+	return { ordinal: 0, keyFingerprint: bytesToB64(hexToBytes(hex)) } as never;
+}
 
 function delegate(id: string) {
 	return { id, publicKeyArmored: `delegate-key-${id}`, statement: '', statementSignature: '' };
@@ -103,8 +109,8 @@ describe('internal send to an address with read delegates', () => {
 					disposition: 'attachment',
 					senderDescriptor: { ordinal: 0 } as never,
 					recipientDescriptors: new Map([
-						['acct-contact', { ordinal: 0 } as never],
-						['acct-secret', { ordinal: 0 } as never]
+						['acct-contact', copyFor('acct-contact')],
+						['acct-secret', copyFor('acct-secret')]
 					])
 				} as never
 			]
