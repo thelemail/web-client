@@ -133,6 +133,7 @@ describe('draft attachment bundle', () => {
 		vi.mocked(issueDraftAttachmentUpload).mockResolvedValue({
 			uploadId: 'up-1',
 			putUrl: 'https://store.example/put',
+			putHeaders: { 'x-amz-content-sha256': 'abc' },
 			expiresAt: '2026-10-14T00:00:00Z'
 		});
 		vi.mocked(platform.blobPut).mockResolvedValue(new Response(null, { status: 200 }));
@@ -144,14 +145,16 @@ describe('draft attachment bundle', () => {
 			ciphertextSha256: packed.sha256B64,
 			keyFingerprint: 'own-fp'
 		});
-		const sent = vi.mocked(platform.blobPut).mock.calls[0][1] as Blob;
-		expect(sent.size).toBe(packed.ciphertext.byteLength);
+		const [, sent, headers] = vi.mocked(platform.blobPut).mock.calls[0];
+		expect((sent as Blob).size).toBe(packed.ciphertext.byteLength);
+		expect(headers).toEqual({ 'x-amz-content-sha256': 'abc' });
 	});
 
 	it('fails the upload when storage refuses the bundle', async () => {
 		vi.mocked(issueDraftAttachmentUpload).mockResolvedValue({
 			uploadId: 'up-1',
 			putUrl: 'https://store.example/put',
+			putHeaders: { 'x-amz-content-sha256': 'abc' },
 			expiresAt: '2026-10-14T00:00:00Z'
 		});
 		vi.mocked(platform.blobPut).mockResolvedValue(new Response(null, { status: 403 }));

@@ -72,9 +72,9 @@ async function sha256B64(bytes: Uint8Array): Promise<string> {
 	return bytesToB64(new Uint8Array(digest));
 }
 
-async function putWithProgress(url: string, body: Uint8Array, signal: AbortSignal, onProgress: (n: number) => void): Promise<void> {
+async function putWithProgress(grant: AttachmentUploadGrant, body: Uint8Array, signal: AbortSignal, onProgress: (n: number) => void): Promise<void> {
 	const ab = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
-	const res = await platform.blobPut(url, new Blob([ab]), undefined, { signal, onProgress });
+	const res = await platform.blobPut(grant.putUrl, new Blob([ab]), grant.putHeaders, { signal, onProgress });
 	if (!res.ok) {
 		throw new Error(`PUT ${res.status}: ${res.statusText}`);
 	}
@@ -175,7 +175,7 @@ export class UploadOrchestrator {
 			for (let i = 0; i < ciphers.length; i++) {
 				const grant = grantBySlot.get(slotReqs[i].slotId);
 				if (!grant) throw new SendError('network', 'attachment upload grant missing');
-				await putWithProgress(grant.putUrl, ciphers[i].cipher, this.abort.signal, () => {});
+				await putWithProgress(grant, ciphers[i].cipher, this.abort.signal, () => {});
 				next.set(ciphers[i].rec.accountId, {
 					ordinal,
 					objectKey: grant.objectKey,
@@ -248,7 +248,7 @@ export class UploadOrchestrator {
 			const senderGrant = grantBySlot.get(slotReqs[0].slotId)!;
 			let totalSteps = 1 + recOrder.length;
 			let stepsDone = 0;
-			await putWithProgress(senderGrant.putUrl, senderCipher, this.abort.signal, (p) => {
+			await putWithProgress(senderGrant, senderCipher, this.abort.signal, (p) => {
 				att.progress = (stepsDone + p) / totalSteps;
 				this.onChange(att);
 			});
@@ -266,7 +266,7 @@ export class UploadOrchestrator {
 				const accountId = recOrder[i];
 				const grant = grantBySlot.get(slotReqs[1 + i].slotId)!;
 				const r = recipientCiphers.get(accountId)!;
-				await putWithProgress(grant.putUrl, r.cipher, this.abort.signal, (p) => {
+				await putWithProgress(grant, r.cipher, this.abort.signal, (p) => {
 					att.progress = (stepsDone + p) / totalSteps;
 					this.onChange(att);
 				});

@@ -21,6 +21,7 @@
 	import { hostSignatureImages } from '$core/mail/signatureImages';
 	import { hasRenderableHtml } from '$core/mail/signatureRegion';
 	import { initialsFor } from '$core/mail/initials';
+	import { sha256B64 } from '$core/mail/send';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { replyChoices, sendingChoices } from '../addressModel';
@@ -290,8 +291,13 @@
 		}
 		avatarBusy = true;
 		try {
-			const grant = await requestAvatarUploadUrl();
-			const put = await platform.blobPut(grant.uploadUrl, file, file.type);
+			const bytes = new Uint8Array(await file.arrayBuffer());
+			const grant = await requestAvatarUploadUrl({
+				sizeBytes: bytes.byteLength,
+				sha256: await sha256B64(bytes),
+				contentType: file.type
+			});
+			const put = await platform.blobPut(grant.uploadUrl, new Blob([bytes as BlobPart]), grant.uploadHeaders);
 			if (!put.ok) {
 				throw new Error(`upload failed (${put.status})`);
 			}

@@ -42,6 +42,7 @@ export interface SignatureImage {
 
 export interface SignatureImageUploadGrant {
 	uploadUrl: string;
+	uploadHeaders: Record<string, string>;
 	objectKey: string;
 	expiresAt: string;
 	maxBytes: number;
@@ -75,13 +76,16 @@ export function deleteSignature(addressId: string): Promise<void> {
 	return apiFetch(`/v1/me/addresses/${addressId}/signature`, { method: 'DELETE' });
 }
 
+export interface SignatureImageUploadUrlInput {
+	addressId: string;
+	ciphertextSizeBytes: number;
+	ciphertextSha256: string;
+}
+
 export function requestSignatureImageUploadUrl(
-	addressId: string
+	input: SignatureImageUploadUrlInput
 ): Promise<SignatureImageUploadGrant> {
-	return apiFetch('/v1/me/signature-images/upload-url', {
-		method: 'POST',
-		body: { addressId }
-	});
+	return apiFetch('/v1/me/signature-images/upload-url', { method: 'POST', body: input });
 }
 
 export function commitSignatureImage(input: CommitSignatureImageInput): Promise<SignatureImage> {

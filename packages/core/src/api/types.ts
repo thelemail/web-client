@@ -407,6 +407,7 @@ export interface AttachmentUploadGrant {
 	slotId: string;
 	objectKey: string;
 	putUrl: string;
+	putHeaders: Record<string, string>;
 	expiresAt: string;
 }
 
@@ -451,6 +452,7 @@ export interface DraftAttachmentUploadRequest {
 export interface DraftAttachmentUploadGrant {
 	uploadId: string;
 	putUrl: string;
+	putHeaders: Record<string, string>;
 	expiresAt: string;
 }
 
