@@ -587,7 +587,7 @@
 			}
 			const headers = replyThreadHeaders(ids);
 			if (attachments.length > 0) {
-				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses());
+				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses(), { acceptKeyChange });
 			}
 			const bodyStr = text.trim();
 			const htmlHasContent = !!bodyStr || hasRenderableHtml(html);

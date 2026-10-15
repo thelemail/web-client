@@ -623,7 +623,7 @@
 		const chip = (c: RecipientChip) => ({ display: c.name, address: c.email });
 		try {
 			if (attachments.length > 0) {
-				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses());
+				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses(), { acceptKeyChange });
 			}
 			await dispatchSend(
 				{
