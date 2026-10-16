@@ -93,15 +93,8 @@ export async function submissionUpload<T>(
 	if (!path.startsWith('/') || path.startsWith('//')) {
 		throw new Error('submission upload path must be relative to the submission origin');
 	}
-	const headers: Record<string, string> = { 'Content-Type': contentType, 'X-Device-Id': deviceId() };
 	const accountId = resolveAccountId(opts.accountId);
-	if (accountId) headers['X-Account-Id'] = accountId;
-	if (authRouter) {
-		if (authRouter.isSessionLost?.(accountId)) throw new ApiCallError(401, null, 'HTTP 401');
-		await authRouter.ensureFreshToken?.(accountId);
-		const token = authRouter.getAccessToken(accountId);
-		if (token) headers['Authorization'] = `Bearer ${token}`;
-	}
+	const headers = { 'Content-Type': contentType, ...(await authHeaders(accountId, true)) };
 	const resp = await platform.submissionUpload(base + path, body, headers, {
 		signal: opts.signal,
 		onProgress: opts.onProgress
@@ -126,6 +119,108 @@ function resolveAccountId(explicit: string | undefined): string | null {
 	return authRouter?.currentAccountId() ?? null;
 }
 
+async function authHeaders(accountId: string | null, withAuth: boolean): Promise<Record<string, string>> {
+	const headers: Record<string, string> = { 'X-Device-Id': deviceId() };
+	if (accountId) headers['X-Account-Id'] = accountId;
+	if (withAuth && authRouter) {
+		if (authRouter.isSessionLost?.(accountId)) throw new ApiCallError(401, null, 'HTTP 401');
+		await authRouter.ensureFreshToken?.(accountId);
+		const token = authRouter.getAccessToken(accountId);
+		if (token) headers['Authorization'] = `Bearer ${token}`;
+	}
+	return headers;
+}
+
+export function apiUrl(path: string): string {
+	if (!path.startsWith('/') || path.startsWith('//')) {
+		throw new Error('api path must be relative to the api origin');
+	}
+	return PUBLIC_API_BASE_URL.replace(/\/$/, '') + path;
+}
+
+export function blobRequestHeaders(accountId?: string): Promise<Record<string, string>> {
+	return authHeaders(resolveAccountId(accountId), true);
+}
+
+async function errorFrom(resp: Response): Promise<ApiCallError> {
+	const parsed = (resp.headers.get('content-type') ?? '').includes('application/json')
+		? ((await resp.json().catch(() => null)) as ErrorEnvelope | null)
+		: null;
+	return new ApiCallError(resp.status, parsed, parsed?.error?.message ?? `HTTP ${resp.status}`);
+}
+
+export interface BlobFetchOptions {
+	accountId?: string;
+	signal?: AbortSignal;
+}
+
+export async function apiBlobFetch(path: string, opts: BlobFetchOptions = {}, retried = false): Promise<Response> {
+	const accountId = resolveAccountId(opts.accountId);
+	const headers = await authHeaders(accountId, true);
+	const resp = await transport(
+		apiUrl(path),
+		{ method: 'GET', credentials: 'include', headers, signal: opts.signal },
+		'api'
+	);
+	recordServerDate(resp.headers.get('date'));
+	if (resp.ok) return resp;
+	if (resp.status === 401 && !retried && authRouter && (await authRouter.onUnauthorized(accountId))) {
+		return apiBlobFetch(path, opts, true);
+	}
+	throw await errorFrom(resp);
+}
+
+const blobPutRetryable = new Set([429, 503]);
+const blobPutAttempts = 5;
+
+function retryDelay(resp: Response, attempt: number): number {
+	const after = Number(resp.headers.get('retry-after'));
+	if (Number.isFinite(after) && after > 0) return Math.min(after, 30) * 1000;
+	return Math.min(1000 * 2 ** attempt, 8000);
+}
+
+function pause(ms: number, signal?: AbortSignal): Promise<void> {
+	return new Promise((resolve, reject) => {
+		if (signal?.aborted) return reject(new DOMException('aborted', 'AbortError'));
+		const timer = setTimeout(resolve, ms);
+		signal?.addEventListener(
+			'abort',
+			() => {
+				clearTimeout(timer);
+				reject(new DOMException('aborted', 'AbortError'));
+			},
+			{ once: true }
+		);
+	});
+}
+
+export async function apiBlobPut(path: string, body: Blob, opts: UploadOptions = {}): Promise<void> {
+	const accountId = resolveAccountId(opts.accountId);
+	const url = apiUrl(path);
+	let refreshed = false;
+	for (let attempt = 0; ; attempt++) {
+		const headers = {
+			'Content-Type': 'application/octet-stream',
+			...(await authHeaders(accountId, true))
+		};
+		const resp = await platform.blobPut(url, body, headers, {
+			signal: opts.signal,
+			onProgress: opts.onProgress
+		});
+		recordServerDate(resp.headers.get('date'));
+		if (resp.ok) return;
+		if (resp.status === 401 && !refreshed && authRouter && (await authRouter.onUnauthorized(accountId))) {
+			refreshed = true;
+			continue;
+		}
+		if (blobPutRetryable.has(resp.status) && attempt + 1 < blobPutAttempts) {
+			await pause(retryDelay(resp, attempt), opts.signal);
+			continue;
+		}
+		throw await errorFrom(resp);
+	}
+}
+
 async function doFetch<T>(
 	path: string,
 	opts: FetchOptions,
@@ -146,18 +241,7 @@ async function doFetch<T>(
 	}
 	if (opts.keepalive) init.keepalive = true;
 	const accountId = resolveAccountId(opts.accountId);
-	if (accountId) {
-		headers['X-Account-Id'] = accountId;
-	}
-	headers['X-Device-Id'] = deviceId();
-	if (!opts.skipAuth && authRouter) {
-		if (authRouter.isSessionLost?.(accountId)) throw new ApiCallError(401, null, 'HTTP 401');
-		await authRouter.ensureFreshToken?.(accountId);
-		const token = authRouter.getAccessToken(accountId);
-		if (token) {
-			headers['Authorization'] = `Bearer ${token}`;
-		}
-	}
+	Object.assign(headers, await authHeaders(accountId, !opts.skipAuth));
 
 	const kind = base === PUBLIC_SUBMISSION_BASE_URL.replace(/\/$/, '') ? 'submission' : 'api';
 	const resp = await transport(url, init, kind);

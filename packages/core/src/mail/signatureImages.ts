@@ -1,4 +1,4 @@
-import { platform } from '$platform';
+import { apiBlobPut } from '$core/api/client';
 import { fetchRemoteImages } from '$core/api/messages';
 import {
 	requestSignatureImageUploadUrl,
@@ -45,12 +45,7 @@ export async function uploadSignatureImage(
 		ciphertextSizeBytes: sealedImage.ciphertext.byteLength,
 		ciphertextSha256: sealedImage.ciphertextSha256
 	});
-	const put = await platform.blobPut(
-		grant.uploadUrl,
-		new Blob([sealedImage.ciphertext as BlobPart]),
-		grant.uploadHeaders
-	);
-	if (!put.ok) throw new Error(`upload failed (${put.status})`);
+	await apiBlobPut(grant.uploadPath, new Blob([sealedImage.ciphertext as BlobPart]));
 
 	const committed: SignatureImage = await commitSignatureImage({
 		addressId,

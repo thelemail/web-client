@@ -3,29 +3,21 @@ import { inlineScriptHashes, resolveOrigins } from '../../../scripts/csp.ts';
 
 const complete = {
 	PUBLIC_API_BASE_URL: 'https://api.thelemail.com/',
-	PUBLIC_SUBMISSION_BASE_URL: 'https://submission.thelemail.com',
-	PUBLIC_BLOB_ORIGIN: 'https://fsn1.your-objectstorage.com'
+	PUBLIC_SUBMISSION_BASE_URL: 'https://submission.thelemail.com'
 };
 
 describe('resolveOrigins', () => {
 	it('reduces configured urls to origins', () => {
-		expect(resolveOrigins(complete)).toEqual([
-			'https://api.thelemail.com',
-			'https://submission.thelemail.com',
-			'https://fsn1.your-objectstorage.com'
-		]);
-	});
-
-	it('accepts several storage origins', () => {
-		const origins = resolveOrigins({
-			...complete,
-			PUBLIC_BLOB_ORIGIN: 'https://fsn1.your-objectstorage.com https://nbg1.your-objectstorage.com'
-		});
-		expect(origins).toContain('https://nbg1.your-objectstorage.com');
+		expect(resolveOrigins(complete)).toEqual(['https://api.thelemail.com', 'https://submission.thelemail.com']);
 	});
 
 	it('collapses duplicates', () => {
-		const origins = resolveOrigins({ ...complete, PUBLIC_BLOB_ORIGIN: 'https://api.thelemail.com' });
+		const origins = resolveOrigins({ ...complete, PUBLIC_SUBMISSION_BASE_URL: 'https://api.thelemail.com/submit' });
+		expect(origins).toEqual(['https://api.thelemail.com']);
+	});
+
+	it('never lets an object-store origin into the policy', () => {
+		const origins = resolveOrigins({ ...complete, PUBLIC_BLOB_ORIGIN: 'https://fsn1.your-objectstorage.com' });
 		expect(origins).toEqual(['https://api.thelemail.com', 'https://submission.thelemail.com']);
 	});
 
@@ -36,8 +28,8 @@ describe('resolveOrigins', () => {
 	}
 
 	it('rejects a value that is not an absolute url', () => {
-		expect(() => resolveOrigins({ ...complete, PUBLIC_BLOB_ORIGIN: 'fsn1.your-objectstorage.com' })).toThrow(
-			'PUBLIC_BLOB_ORIGIN'
+		expect(() => resolveOrigins({ ...complete, PUBLIC_SUBMISSION_BASE_URL: 'submission.thelemail.com' })).toThrow(
+			'PUBLIC_SUBMISSION_BASE_URL'
 		);
 	});
 });

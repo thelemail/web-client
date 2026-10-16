@@ -1,4 +1,4 @@
-import { platform } from '$platform';
+import { apiBlobPut } from '$core/api/client';
 import { bytesToB64 } from '$core/crypto';
 import { issueAttachmentUploadUrls } from '$core/api/messages';
 import { build as buildAttFrame } from '$core/mail/attframe';
@@ -55,10 +55,7 @@ const UNVERIFIED = new Set(['tofu', 'directory_verification_failed']);
 
 async function putWithProgress(grant: AttachmentUploadGrant, body: Uint8Array, signal: AbortSignal, onProgress: (n: number) => void): Promise<void> {
 	const ab = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
-	const res = await platform.blobPut(grant.putUrl, new Blob([ab]), grant.putHeaders, { signal, onProgress });
-	if (!res.ok) {
-		throw new Error(`PUT ${res.status}: ${res.statusText}`);
-	}
+	await apiBlobPut(grant.putPath, new Blob([ab]), { signal, onProgress });
 }
 
 interface UploadEnv {

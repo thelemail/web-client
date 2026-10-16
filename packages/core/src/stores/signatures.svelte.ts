@@ -1,10 +1,10 @@
 import { browser } from '$app/environment';
-import { platform } from '$platform';
+import { apiBlobFetch } from '$core/api/client';
 import {
 	listSignatures,
 	upsertSignature,
 	deleteSignature,
-	getSignatureImageDownloadUrl,
+	signatureImageContentPath,
 	type SignatureRecord
 } from '$core/api/signatures';
 import { aliasKeys } from './aliasKeys.svelte';
@@ -282,13 +282,9 @@ class SignaturesStore {
 		if (cached) return cached;
 		const addressId = this.#addressFor(objectKey);
 		if (!addressId) throw new Error('signature image is not referenced by any signature');
-		const grant = await getSignatureImageDownloadUrl(addressId, objectKey);
-		const resp = await platform.blobFetch(grant.downloadUrl);
-		if (!resp.ok) {
-			throw new Error(`failed to fetch signature image: HTTP ${resp.status}`);
-		}
 		const acct = this.#accountId;
 		if (!acct) throw new Error('no active account');
+		const resp = await apiBlobFetch(signatureImageContentPath(addressId, objectKey), { accountId: acct });
 		const ciphertext = new Uint8Array(await resp.arrayBuffer());
 		const opened = await openSignatureImage(acct, ciphertext);
 		const blob = new Blob([opened.bytes as BlobPart], { type: opened.contentType });

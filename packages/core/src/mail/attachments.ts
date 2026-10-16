@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { platform } from '$platform';
 import { keystore } from '$core/keystore/keystore-client';
+import { apiUrl, blobRequestHeaders } from '$core/api/client';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import type { AttachmentFailureCode } from '$core/keystore/protocol';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
@@ -99,6 +100,13 @@ function subscribeOnce(): void {
 }
 subscribeOnce();
 
+async function attachmentSource(
+	accountId: string,
+	pointer: PresignedPointer
+): Promise<{ url: string; headers: Record<string, string> }> {
+	return { url: apiUrl(pointer.path), headers: await blobRequestHeaders(accountId) };
+}
+
 async function withFreshPointer<T>(
 	chip: AttachmentChip,
 	refresh: PointerRefresh | undefined,
@@ -132,7 +140,7 @@ export async function loadAttachmentHeader(
 			async (pointer) => {
 				const res = await keystore.attachmentHeader({
 					accountId,
-					url: pointer.url,
+					...(await attachmentSource(accountId, pointer)),
 					keyFingerprintHex: pointer.keyFingerprint
 				});
 				return res.ok ? { ok: true, value: res.header } : { ok: false, code: res.code };
@@ -165,7 +173,7 @@ async function attachmentBytes(
 		const dec = await withFreshPointer<DecryptedAttachment>(chip, refresh, async (pointer) => {
 			const res = await keystore.attachmentBytes({
 				accountId,
-				url: pointer.url,
+				...(await attachmentSource(accountId, pointer)),
 				attachmentId: chip.id,
 				keyFingerprintHex: pointer.keyFingerprint
 			});
@@ -197,7 +205,7 @@ export async function decryptAttachmentFull(
 	await aliasKeys.ready(accountId);
 	const res = await keystore.attachmentBytes({
 		accountId,
-		url: pointer.url,
+		...(await attachmentSource(accountId, pointer)),
 		keyFingerprintHex: pointer.keyFingerprint
 	});
 	if (!res.ok) throw new AttachmentError(res.code);

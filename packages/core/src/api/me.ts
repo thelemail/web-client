@@ -15,6 +15,7 @@ export interface AvatarUploadUrlInput {
 
 export interface AvatarUploadGrant {
 	uploadUrl: string;
+	uploadPath: string;
 	uploadHeaders: Record<string, string>;
 	objectKey: string;
 	expiresAt: string;

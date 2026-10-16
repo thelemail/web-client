@@ -11,10 +11,7 @@ function originsOf(value: string | undefined): string[] {
 	return out;
 }
 
-const allowed = new Set([
-	...originsOf(import.meta.env.PUBLIC_API_BASE_URL),
-	...originsOf(import.meta.env.PUBLIC_BLOB_ORIGIN)
-]);
+const allowed = new Set(originsOf(import.meta.env.PUBLIC_API_BASE_URL));
 
 export function isAllowedBlobUrl(url: string): boolean {
 	let parsed: URL;

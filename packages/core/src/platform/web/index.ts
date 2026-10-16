@@ -2,6 +2,20 @@ import type { Platform } from '../types';
 import { readLocaleCookie, writeLocaleCookie } from '../../i18n/cookie';
 import { m } from '$paraglide/messages.js';
 
+function exposedHeaders(xhr: XMLHttpRequest): Headers {
+	const headers = new Headers();
+	for (const line of xhr.getAllResponseHeaders().split(/\r?\n/)) {
+		const at = line.indexOf(':');
+		if (at <= 0) continue;
+		try {
+			headers.append(line.slice(0, at).trim(), line.slice(at + 1).trim());
+		} catch {
+			continue;
+		}
+	}
+	return headers;
+}
+
 export const platform: Platform = {
 	reportError: undefined,
 	interceptFrameLinks: false,
@@ -18,7 +32,6 @@ export const platform: Platform = {
 	keystoreChannel: undefined,
 	transport: undefined,
 	openEventSource: undefined,
-	blobFetch: (url, init) => fetch(url, init),
 	blobPut: (url, body, headers, opts) =>
 		new Promise<Response>((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
@@ -27,7 +40,13 @@ export const platform: Platform = {
 			xhr.upload.onprogress = (e) => {
 				if (e.lengthComputable && e.total > 0) opts?.onProgress?.(e.loaded / e.total);
 			};
-			xhr.onload = () => resolve(new Response(null, { status: xhr.status }));
+			xhr.onload = () =>
+				resolve(
+					new Response(xhr.status === 204 ? null : xhr.responseText, {
+						status: xhr.status,
+						headers: exposedHeaders(xhr)
+					})
+				);
 			xhr.onerror = () => reject(new Error(m.platform_upload_network_error()));
 			xhr.onabort = () => reject(new DOMException('aborted', 'AbortError'));
 			opts?.signal?.addEventListener('abort', () => xhr.abort(), { once: true });

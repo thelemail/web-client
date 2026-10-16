@@ -73,17 +73,15 @@ vi.mock('$core/api/messages', () => ({
 				slotId: s.slotId,
 				objectKey: `obj-${s.slotId}`,
 				putUrl: `https://blob.test/${s.slotId}`,
+				putPath: `/v1/attachments/uploads?objectKey=obj-${s.slotId}`,
 				putHeaders: {}
 			}))
 		};
 	}
 }));
-vi.mock('$platform', () => ({
-	platform: {
-		blobPut: async (url: string) => {
-			h.puts.push(url);
-			return { ok: true, status: 200, statusText: 'OK' };
-		}
+vi.mock('$core/api/client', () => ({
+	apiBlobPut: async (path: string) => {
+		h.puts.push(path);
 	}
 }));
 
@@ -156,6 +154,8 @@ describe('recipient attachment copies', () => {
 			{ role: 'recipient', recipientAccountId: 'acct-ada', keyFingerprint: fingerprintOf('key-ada-1') }
 		]);
 		expect(att.recipientDescriptors?.get('acct-ada')?.keyFingerprint).toBe(fingerprintOf('key-ada-1'));
+		expect(h.puts.length).toBeGreaterThan(0);
+		expect(h.puts.every((path) => path.startsWith('/v1/attachments/uploads?objectKey='))).toBe(true);
 	});
 
 	it('uploads only the sender copy when a recipient does not verify at attach time', async () => {

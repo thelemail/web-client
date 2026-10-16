@@ -15,7 +15,6 @@ vi.mock('$platform', () => ({
 			forget: vi.fn()
 		},
 		transport: {},
-		blobFetch: vi.fn(),
 		blobPut: vi.fn(),
 		returnOrigin: () => 'tauri://localhost',
 		openExternal: vi.fn(),

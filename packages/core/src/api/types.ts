@@ -142,6 +142,7 @@ export interface MessageChangesResponse {
 
 export interface PresignedPointer {
 	url: string;
+	path: string;
 	expiresAt: string;
 	sizeBytes: number;
 	sha256?: string;
@@ -407,6 +408,7 @@ export interface AttachmentUploadGrant {
 	slotId: string;
 	objectKey: string;
 	putUrl: string;
+	putPath: string;
 	putHeaders: Record<string, string>;
 	expiresAt: string;
 }
@@ -452,6 +454,7 @@ export interface DraftAttachmentUploadRequest {
 export interface DraftAttachmentUploadGrant {
 	uploadId: string;
 	putUrl: string;
+	putPath: string;
 	putHeaders: Record<string, string>;
 	expiresAt: string;
 }
@@ -1188,6 +1191,7 @@ export interface MeResponse {
 	createdAt: string;
 	recoveryEnabled?: boolean;
 	avatarUrl?: string | null;
+	avatarPath?: string | null;
 	defaultReplyAddressId?: string | null;
 	deletion?: DeletionStatus | null;
 	lifecycle?: LifecycleInfo | null;
@@ -1235,6 +1239,7 @@ export interface TlogConsistencyProof {
 export interface AddressAvatar {
 	address: string;
 	avatarUrl: string;
+	avatarPath: string;
 }
 
 export interface ResolveAvatarsResponse {

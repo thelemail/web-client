@@ -33,7 +33,7 @@ describe('personAvatars', () => {
 
 	it('batches every address read in one pass into a single request', async () => {
 		resolveAvatars.mockResolvedValue({
-			avatars: [{ address: 'bob@example.com', avatarUrl: 'https://blob/bob' }]
+			avatars: [{ address: 'bob@example.com', avatarUrl: 'https://blob/bob', avatarPath: '/v1/avatars/acct-9/bob.png' }]
 		});
 
 		expect(personAvatars.avatarUrl('bob@example.com')).toBeNull();
@@ -45,16 +45,28 @@ describe('personAvatars', () => {
 		expect(personAvatars.avatarUrl('bob@example.com')).toBe('blob:bob@example.com');
 	});
 
-	it('fetches the image bytes through the cache instead of exposing the presigned url', async () => {
+	it('fetches the image bytes through the api instead of exposing the presigned url', async () => {
 		resolveAvatars.mockResolvedValue({
-			avatars: [{ address: 'bob@example.com', avatarUrl: 'https://blob/bob?sig=1' }]
+			avatars: [{ address: 'bob@example.com', avatarUrl: 'https://blob/bob?sig=1', avatarPath: '/v1/avatars/acct-9/bob.png' }]
 		});
 
 		personAvatars.avatarUrl('bob@example.com');
 		await settle();
 
-		expect(cachePersonAvatar).toHaveBeenCalledWith('acct-1', 'bob@example.com', 'https://blob/bob?sig=1');
+		expect(cachePersonAvatar).toHaveBeenCalledWith('acct-1', 'bob@example.com', '/v1/avatars/acct-9/bob.png');
 		expect(personAvatars.avatarUrl('bob@example.com')).not.toContain('https://');
+	});
+
+	it('treats an avatar the api cannot serve as no avatar', async () => {
+		resolveAvatars.mockResolvedValue({
+			avatars: [{ address: 'news@example.com', avatarUrl: 'https://blob/logo', avatarPath: '' }]
+		});
+
+		personAvatars.avatarUrl('news@example.com');
+		await settle();
+
+		expect(cachePersonAvatar).not.toHaveBeenCalled();
+		expect(personAvatars.avatarUrl('news@example.com')).toBeNull();
 	});
 
 	it('caches a miss so an address without an avatar is asked for once', async () => {
@@ -85,7 +97,7 @@ describe('personAvatars', () => {
 
 	it('keys on the lowercased address', async () => {
 		resolveAvatars.mockResolvedValue({
-			avatars: [{ address: 'Bob@Example.com', avatarUrl: 'https://blob/bob' }]
+			avatars: [{ address: 'Bob@Example.com', avatarUrl: 'https://blob/bob', avatarPath: '/v1/avatars/acct-9/bob.png' }]
 		});
 
 		personAvatars.avatarUrl('BOB@example.com');
@@ -109,7 +121,7 @@ describe('personAvatars', () => {
 
 	it('forgets everything when the account changes', async () => {
 		resolveAvatars.mockResolvedValue({
-			avatars: [{ address: 'bob@example.com', avatarUrl: 'https://blob/bob' }]
+			avatars: [{ address: 'bob@example.com', avatarUrl: 'https://blob/bob', avatarPath: '/v1/avatars/acct-9/bob.png' }]
 		});
 		personAvatars.avatarUrl('bob@example.com');
 		await settle();

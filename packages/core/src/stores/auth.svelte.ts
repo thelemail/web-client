@@ -87,7 +87,7 @@ interface ProfileSnapshot {
 	email: string | null;
 	serverEmail: string | null;
 	fullName: string | null;
-	avatarUrl: string | null;
+	avatarPath: string | null;
 	defaultReplyAddressId: string | null;
 	hasPersistent: boolean;
 	vaultUnlocked: boolean;
@@ -100,7 +100,7 @@ const emptyProfile = (): ProfileSnapshot => ({
 	email: null,
 	serverEmail: null,
 	fullName: null,
-	avatarUrl: null,
+	avatarPath: null,
 	defaultReplyAddressId: null,
 	hasPersistent: false,
 	vaultUnlocked: false,
@@ -412,13 +412,13 @@ class AuthStore {
 			email: me.email,
 			serverEmail: me.email,
 			fullName: me.fullName,
-			avatarUrl: me.avatarUrl ?? null,
+			avatarPath: me.avatarPath || null,
 			defaultReplyAddressId: me.defaultReplyAddressId ?? null,
 			recoveryEnabled: me.recoveryEnabled ?? null,
 			deletion: me.deletion ?? null,
 			lifecycle: me.lifecycle ?? null
 		}));
-		void cacheAccountAvatar(id, me.avatarUrl ?? null);
+		void cacheAccountAvatar(id, me.avatarPath || null);
 		const slot = accounts.byId(id);
 		if (slot && slot.email !== me.email) void accounts.setEmail(id, me.email);
 	}
@@ -434,10 +434,7 @@ class AuthStore {
 	}
 
 	avatarUrlFor(accountId: string): string | null {
-		const cached = cachedAvatarUrl(accountId);
-		if (cached) return cached;
-		if (platform.transport) return null;
-		return this.#profiles.get(accountId)?.avatarUrl ?? null;
+		return cachedAvatarUrl(accountId);
 	}
 
 	markRecoveryEnabled(accountId: string): void {

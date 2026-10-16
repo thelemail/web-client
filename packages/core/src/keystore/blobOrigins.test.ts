@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { isAllowedBlobUrl } from './blobOrigins';
 
 describe('isAllowedBlobUrl', () => {
-	it('accepts the configured blob origin', () => {
-		expect(isAllowedBlobUrl('https://blob.test.thelemail.local/thelemail/att/abc')).toBe(true);
+	it('rejects the object store', () => {
+		expect(isAllowedBlobUrl('https://fsn1.your-objectstorage.com/thelemail/m/a/att-0.pgp')).toBe(false);
 	});
 
 	it('accepts the API origin', () => {

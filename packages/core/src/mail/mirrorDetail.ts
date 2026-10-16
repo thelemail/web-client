@@ -3,6 +3,7 @@ import type { MirrorMessage } from '$core/platform/types';
 
 const ABSENT_POINTER = {
 	url: '',
+	path: '',
 	expiresAt: new Date(0).toISOString(),
 	sizeBytes: 0
 };

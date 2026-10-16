@@ -40,8 +40,7 @@ export default mergeConfig(
 		plugins: [submissionProbe()],
 		test: {
 			env: {
-				PUBLIC_API_BASE_URL: 'https://api.test.thelemail.local',
-				PUBLIC_BLOB_ORIGIN: 'https://blob.test.thelemail.local'
+				PUBLIC_API_BASE_URL: 'https://api.test.thelemail.local'
 			},
 			include: ['../../packages/*/src/**/*.browser.test.ts'],
 			browser: {

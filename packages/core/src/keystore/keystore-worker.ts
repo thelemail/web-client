@@ -1548,12 +1548,13 @@ class AttachmentNetworkError extends Error {}
 
 async function openAttachmentStream(
 	url: string,
+	headers: Record<string, string> | undefined,
 	signal: AbortSignal
 ): Promise<ReadableStream<Uint8Array>> {
 	if (!isAllowedBlobUrl(url)) throw new AttachmentNetworkError('blocked origin');
 	let resp: Response;
 	try {
-		resp = await fetch(url, { signal });
+		resp = await fetch(url, { signal, headers });
 	} catch (err) {
 		throw new AttachmentNetworkError(err instanceof Error ? err.message : 'fetch failed');
 	}
@@ -1583,12 +1584,13 @@ function truncateStream(
 async function decryptAttachmentStream(
 	v: VaultState,
 	url: string,
+	headers: Record<string, string> | undefined,
 	keyFingerprintHex: string | undefined,
 	signal: AbortSignal,
 	allowUnauthenticated: boolean,
 	ciphertextLimit?: number
 ): Promise<ReadableStreamDefaultReader<Uint8Array>> {
-	const fetched = await openAttachmentStream(url, signal);
+	const fetched = await openAttachmentStream(url, headers, signal);
 	const body = ciphertextLimit ? truncateStream(fetched, ciphertextLimit) : fetched;
 	const message = await openpgp.readMessage({ binaryMessage: body });
 	const { data } = await openpgp.decrypt({
@@ -1631,6 +1633,7 @@ async function peekAttachmentHeader(
 		reader = await decryptAttachmentStream(
 			v,
 			args.url,
+			args.headers,
 			args.keyFingerprintHex,
 			abort.signal,
 			true,
@@ -1685,6 +1688,7 @@ async function handleAttachmentBytes(args: AttachmentBytesArgs): Promise<Attachm
 		const reader = await decryptAttachmentStream(
 			v,
 			args.url,
+			args.headers,
 			args.keyFingerprintHex,
 			abort.signal,
 			false

@@ -1,5 +1,5 @@
 import { keystore } from '$core/keystore/keystore-client';
-import { platform } from '$platform';
+import { apiBlobPut } from '$core/api/client';
 import { bytesToB64 } from '$core/crypto';
 import { senderKey, SendError, type KeyMaterial } from '../send';
 import { buildMIME } from '../mime';
@@ -110,9 +110,7 @@ function putCiphertext(grant: AttachmentUploadGrant, cipher: Uint8Array): Promis
 		cipher.byteOffset,
 		cipher.byteOffset + cipher.byteLength
 	) as ArrayBuffer;
-	return platform.blobPut(grant.putUrl, new Blob([ab]), grant.putHeaders).then((res) => {
-		if (!res.ok) throw new Error(`attachment PUT ${res.status}`);
-	});
+	return apiBlobPut(grant.putPath, new Blob([ab]));
 }
 
 async function uploadAttachments(

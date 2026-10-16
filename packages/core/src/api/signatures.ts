@@ -42,15 +42,11 @@ export interface SignatureImage {
 
 export interface SignatureImageUploadGrant {
 	uploadUrl: string;
+	uploadPath: string;
 	uploadHeaders: Record<string, string>;
 	objectKey: string;
 	expiresAt: string;
 	maxBytes: number;
-}
-
-export interface SignatureImageDownload {
-	downloadUrl: string;
-	expiresAt: string;
 }
 
 export interface CommitSignatureImageInput {
@@ -92,10 +88,7 @@ export function commitSignatureImage(input: CommitSignatureImageInput): Promise<
 	return apiFetch('/v1/me/signature-images', { method: 'POST', body: input });
 }
 
-export function getSignatureImageDownloadUrl(
-	addressId: string,
-	objectKey: string
-): Promise<SignatureImageDownload> {
+export function signatureImageContentPath(addressId: string, objectKey: string): string {
 	const params = new URLSearchParams({ addressId, objectKey });
-	return apiFetch(`/v1/me/signature-images/download-url?${params.toString()}`);
+	return `/v1/me/signature-images/content?${params.toString()}`;
 }
