@@ -11,6 +11,10 @@ vi.mock('$core/keystore/keystore-client', () => ({
 		subscribe: vi.fn((fn: (msg: { type: string; accountId?: string }) => void) => listeners.push(fn))
 	}
 }));
+vi.mock('$core/api/client', () => ({
+	apiUrl: (path: string) => `https://api.test${path}`,
+	blobRequestHeaders: async () => ({ Authorization: 'Bearer tok' })
+}));
 vi.mock('$core/stores/aliasKeys.svelte', () => ({
 	aliasKeys: { ready: vi.fn().mockResolvedValue(undefined), refresh: vi.fn() }
 }));
@@ -37,18 +41,18 @@ const header = {
 	plaintextSize: 8
 };
 
-function chip(id: string, url = `https://blob/${id}`) {
+function chip(id: string) {
 	return {
 		id,
 		ordinal: 0,
-		pointer: { url, expiresAt: '', sizeBytes: 64 } as PresignedPointer,
+		pointer: { url: `https://blob/${id}`, path: `/v1/attachments/${id}`, expiresAt: '', sizeBytes: 64 } as PresignedPointer,
 		state: 'loading' as const
 	};
 }
 
 function att(overrides: Partial<AttachmentDetail> & Pick<AttachmentDetail, 'id' | 'ordinal'>): AttachmentDetail {
 	return {
-		pointer: { url: `https://blob/${overrides.id}`, expiresAt: '', sizeBytes: 0 },
+		pointer: { url: `https://blob/${overrides.id}`, path: `/v1/attachments/${overrides.id}`, expiresAt: '', sizeBytes: 0 },
 		isInline: false,
 		...overrides
 	};
@@ -73,7 +77,7 @@ describe('initialChips', () => {
 		]);
 		expect(chips.map((c) => c.id)).toEqual(['x', 'y']);
 		expect(chips.map((c) => c.ordinal)).toEqual([3, 5]);
-		expect(chips[0].pointer.url).toBe('https://blob/x');
+		expect(chips[0].pointer.path).toBe('/v1/attachments/x');
 	});
 
 	it('returns nothing when every part is inline', () => {
@@ -105,6 +109,16 @@ describe('loadAttachmentHeader', () => {
 		expect(attachmentHeader).toHaveBeenCalledTimes(1);
 	});
 
+	it('has the worker read the attachment through the api with the bearer token', async () => {
+		attachmentHeader.mockResolvedValue({ ok: true, header });
+
+		await loadAttachmentHeader('acct', chip('via-api'));
+		const args = attachmentHeader.mock.calls[0][0];
+		expect(args.url).toBe('https://api.test/v1/attachments/via-api');
+		expect(args.headers).toEqual({ Authorization: 'Bearer tok' });
+		expect(JSON.stringify(args)).not.toContain('https://blob/');
+	});
+
 	it('passes the pointer key fingerprint through as a decryption hint', async () => {
 		attachmentHeader.mockResolvedValue({ ok: true, header });
 		const c = chip('hinted');
@@ -113,7 +127,8 @@ describe('loadAttachmentHeader', () => {
 		await loadAttachmentHeader('acct', c);
 		expect(attachmentHeader).toHaveBeenCalledWith({
 			accountId: 'acct',
-			url: 'https://blob/hinted',
+			url: 'https://api.test/v1/attachments/hinted',
+			headers: { Authorization: 'Bearer tok' },
 			keyFingerprintHex: 'abc123'
 		});
 	});
@@ -124,6 +139,7 @@ describe('loadAttachmentHeader', () => {
 			.mockResolvedValueOnce({ ok: true, header });
 		const refresh = vi.fn().mockResolvedValue({
 			url: 'https://blob/fresh',
+			path: '/v1/attachments/fresh',
 			expiresAt: '',
 			sizeBytes: 64
 		} as PresignedPointer);
@@ -132,7 +148,7 @@ describe('loadAttachmentHeader', () => {
 		expect(got.filename).toBe('q3-plan.docx');
 		expect(refresh).toHaveBeenCalledTimes(1);
 		expect(refresh).toHaveBeenCalledWith('expired');
-		expect(attachmentHeader).toHaveBeenNthCalledWith(2, expect.objectContaining({ url: 'https://blob/fresh' }));
+		expect(attachmentHeader).toHaveBeenNthCalledWith(2, expect.objectContaining({ url: 'https://api.test/v1/attachments/fresh' }));
 	});
 
 	it('does not retry failures that a fresh pointer cannot fix', async () => {

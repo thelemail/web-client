@@ -61,6 +61,7 @@ export type AttachmentFailureCode =
 
 export interface AttachmentHeaderArgs extends AccountScopedArgs {
 	url: string;
+	headers?: Record<string, string>;
 	keyFingerprintHex?: string;
 }
 
@@ -70,6 +71,7 @@ export type AttachmentHeaderResponse =
 
 export interface AttachmentBytesArgs extends AccountScopedArgs {
 	url: string;
+	headers?: Record<string, string>;
 	attachmentId?: string;
 	keyFingerprintHex?: string;
 }
