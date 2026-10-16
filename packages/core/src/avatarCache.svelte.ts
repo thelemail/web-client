@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { SvelteMap } from 'svelte/reactivity';
-import { platform } from '$platform';
+import { apiBlobFetch } from '$core/api/client';
 import { openDatabase } from '$core/idb-open';
 
 const DB_NAME = 'thelemail-avatars';
@@ -114,9 +114,9 @@ export function sourcePath(url: string): string {
 	}
 }
 
-async function fetchImage(url: string): Promise<Blob | null> {
-	const res = await platform.blobFetch(url);
-	if (!res.ok) return null;
+async function fetchImage(accountId: string, path: string): Promise<Blob | null> {
+	const res = await apiBlobFetch(path, { accountId }).catch(() => null);
+	if (!res) return null;
 	const buf = await res.arrayBuffer();
 	if (buf.byteLength === 0 || buf.byteLength > MAX_BYTES) return null;
 	const type = imageMimeFromBytes(new Uint8Array(buf));
@@ -159,17 +159,17 @@ export async function hydrateAvatarCache(): Promise<void> {
 	}
 }
 
-export async function cacheAccountAvatar(accountId: string, url: string | null): Promise<void> {
+export async function cacheAccountAvatar(accountId: string, path: string | null): Promise<void> {
 	if (!browser) return;
-	if (!url) {
+	if (!path) {
 		await forgetAccountAvatar(accountId);
 		return;
 	}
-	if (accountUrls.has(accountId) && accountSources.get(accountId) === sourcePath(url)) return;
+	if (accountUrls.has(accountId) && accountSources.get(accountId) === sourcePath(path)) return;
 	try {
-		const blob = await fetchImage(url);
+		const blob = await fetchImage(accountId, path);
 		if (!blob) return;
-		const rec: AvatarRecord = { accountId, blob, sourceUrl: url, updatedAt: Date.now() };
+		const rec: AvatarRecord = { accountId, blob, sourceUrl: path, updatedAt: Date.now() };
 		const store = await txn(ACCOUNT_STORE, 'readwrite');
 		await reqAsPromise(store.put(rec));
 		adoptAccount(rec);
@@ -200,21 +200,21 @@ export async function hydratePersonAvatars(
 export async function cachePersonAvatar(
 	accountId: string,
 	address: string,
-	url: string
+	path: string
 ): Promise<string | null> {
 	if (!browser) return null;
 	const key = personKey(accountId, address);
 	const existing = personUrls.get(key);
-	if (existing && personSources.get(key) === sourcePath(url)) return existing;
+	if (existing && personSources.get(key) === sourcePath(path)) return existing;
 	try {
-		const blob = await fetchImage(url);
+		const blob = await fetchImage(accountId, path);
 		if (!blob) return null;
 		const rec: PersonRecord = {
 			key,
 			accountId,
 			address,
 			blob,
-			sourceUrl: url,
+			sourceUrl: path,
 			updatedAt: Date.now()
 		};
 		const store = await txn(PEOPLE_STORE, 'readwrite');

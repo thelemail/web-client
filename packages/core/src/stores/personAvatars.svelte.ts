@@ -73,7 +73,7 @@ class PersonAvatarStore {
 			let found: Map<string, string>;
 			try {
 				const res = await resolveAvatars(chunk);
-				found = new Map(res.avatars.map((a) => [a.address.trim().toLowerCase(), a.avatarUrl]));
+				found = new Map(res.avatars.filter((a) => a.avatarPath).map((a) => [a.address.trim().toLowerCase(), a.avatarPath]));
 			} catch {
 				for (const key of chunk) this.#inflight.delete(key);
 				continue;
