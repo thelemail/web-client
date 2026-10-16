@@ -42,6 +42,7 @@ export interface SignatureImage {
 
 export interface SignatureImageUploadGrant {
 	uploadUrl: string;
+	uploadPath: string;
 	uploadHeaders: Record<string, string>;
 	objectKey: string;
 	expiresAt: string;
@@ -50,6 +51,7 @@ export interface SignatureImageUploadGrant {
 
 export interface SignatureImageDownload {
 	downloadUrl: string;
+	downloadPath: string;
 	expiresAt: string;
 }
 
