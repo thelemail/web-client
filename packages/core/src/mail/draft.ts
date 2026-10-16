@@ -1,8 +1,9 @@
-import { platform } from '$platform';
 import { keystore } from '$core/keystore/keystore-client';
 import { issueDraftAttachmentUpload } from '$core/api/drafts';
+import { apiBlobFetch, apiBlobPut } from '$core/api/client';
+import { ApiCallError } from '$core/api/types';
 import { senderKey, buildEnvelope, encryptTo, sha256B64 } from './send';
-import { decryptBodyFromUrl, DecryptionError } from './decrypt';
+import { decryptBody, DecryptionError } from './decrypt';
 import { decryptAttachmentFull } from './attachments';
 import { snippetSource } from './quote';
 import * as attframe from './attframe';
@@ -99,7 +100,7 @@ export async function buildDraftEnvelope(
 }
 
 export async function loadDraftDoc(accountId: string, detail: DraftDetail): Promise<DraftDoc> {
-	const { plaintext } = await decryptBodyFromUrl(accountId, detail.body.url);
+	const { plaintext } = await decryptBody(accountId, detail.body);
 	const doc = JSON.parse(plaintext) as DraftDoc;
 	if (doc.v !== DRAFT_DOC_VERSION || !Array.isArray(doc.attachments)) doc.attachments = [];
 	return doc;
@@ -159,8 +160,7 @@ export async function uploadDraftBundle(draftId: string, packed: PackedDraftBund
 		ciphertextSha256: packed.sha256B64,
 		keyFingerprint: packed.fingerprintB64
 	});
-	const resp = await platform.blobPut(grant.putUrl, new Blob([packed.ciphertext as BlobPart]), grant.putHeaders);
-	if (!resp.ok) throw new Error(`PUT ${resp.status}`);
+	await apiBlobPut(grant.putPath, new Blob([packed.ciphertext as BlobPart]));
 	return grant.uploadId;
 }
 
@@ -169,8 +169,10 @@ export async function restoreDraftAttachments(
 	doc: DraftDoc,
 	pointer: PresignedPointer
 ): Promise<RestoredDraftAttachment[]> {
-	const resp = await platform.blobFetch(pointer.url);
-	if (!resp.ok) throw new DecryptionError('unknown', `fetch attachments ${resp.status}`);
+	const resp = await apiBlobFetch(pointer.path, { accountId }).catch((err) => {
+		if (err instanceof ApiCallError) throw new DecryptionError('unknown', `fetch attachments ${err.status}`);
+		throw err;
+	});
 	const ciphertext = new Uint8Array(await resp.arrayBuffer());
 	if (pointer.sha256 && (await sha256B64(ciphertext)) !== pointer.sha256) {
 		throw new DecryptionError('invalid_ciphertext', 'attachments checksum mismatch');

@@ -3,7 +3,8 @@ import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
-import { platform } from '$platform';
+import { apiBlobFetch } from '$core/api/client';
+import { ApiCallError, type PresignedPointer } from '$core/api/types';
 
 export type { SignatureVerdict } from '$core/keystore/protocol';
 
@@ -116,16 +117,22 @@ export async function unwrapPgpMime(
 	return { plaintext: current, signature };
 }
 
-export async function decryptBodyFromUrl(
+async function fetchBody(accountId: string, pointer: PresignedPointer): Promise<Uint8Array> {
+	try {
+		const resp = await apiBlobFetch(pointer.path, { accountId });
+		return new Uint8Array(await resp.arrayBuffer());
+	} catch (err) {
+		if (err instanceof ApiCallError) throw new DecryptionError('unknown', `fetch body ${err.status}`);
+		throw err;
+	}
+}
+
+export async function decryptBody(
 	accountId: string,
-	url: string,
+	pointer: PresignedPointer,
 	verificationKeysArmored?: string[]
 ): Promise<DecryptedText> {
-	const resp = await platform.blobFetch(url);
-	if (!resp.ok) {
-		throw new DecryptionError('unknown', `fetch body ${resp.status}`);
-	}
-	const buf = new Uint8Array(await resp.arrayBuffer());
+	const buf = await fetchBody(accountId, pointer);
 	return withAliasKeys(accountId, async () => {
 		const res = await keystore.decrypt({
 			accountId,

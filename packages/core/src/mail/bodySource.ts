@@ -3,7 +3,7 @@ import { bytesToB64 } from '$core/crypto';
 import { platform } from '$platform';
 import type { MessageDetail } from '$core/api/types';
 import type { MirrorMessage } from '$core/platform/types';
-import { decryptBodyFromUrl, unwrapPgpMime } from './decrypt';
+import { decryptBody, unwrapPgpMime } from './decrypt';
 import { getCachedRender, putCachedRender, renderBody, type CachedRender } from './render';
 import { detailFromMirror } from './mirrorDetail';
 import { m } from '$paraglide/messages.js';
@@ -41,11 +41,7 @@ export async function renderDetail(
 		return entry;
 	}
 
-	const outer = await decryptBodyFromUrl(
-		accountId,
-		detail.body.url,
-		opts.verificationKeysArmored
-	);
+	const outer = await decryptBody(accountId, detail.body, opts.verificationKeysArmored);
 	const { plaintext: mime, signature } = await unwrapPgpMime(
 		accountId,
 		outer,

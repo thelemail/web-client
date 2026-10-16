@@ -6,11 +6,9 @@ vi.mock('$core/keystore/keystore-client', () => ({
 	}
 }));
 
-vi.mock('$platform', () => ({
-	platform: {
-		blobFetch: vi.fn(),
-		blobPut: vi.fn()
-	}
+vi.mock('$core/api/client', () => ({
+	apiBlobFetch: vi.fn(),
+	apiBlobPut: vi.fn()
 }));
 
 vi.mock('$core/api/drafts', () => ({
@@ -25,7 +23,7 @@ vi.mock('./decrypt', () => {
 			this.code = code;
 		}
 	}
-	return { DecryptionError, decryptBodyFromUrl: vi.fn() };
+	return { DecryptionError, decryptBody: vi.fn() };
 });
 
 vi.mock('./attachments', () => ({
@@ -51,9 +49,9 @@ vi.mock('./send', () => ({
 }));
 
 import { keystore } from '$core/keystore/keystore-client';
-import { platform } from '$platform';
+import { apiBlobFetch, apiBlobPut } from '$core/api/client';
 import { issueDraftAttachmentUpload } from '$core/api/drafts';
-import { decryptBodyFromUrl } from './decrypt';
+import { decryptBody } from './decrypt';
 import { encryptTo } from './send';
 import {
 	buildDraftEnvelope,
@@ -133,10 +131,11 @@ describe('draft attachment bundle', () => {
 		vi.mocked(issueDraftAttachmentUpload).mockResolvedValue({
 			uploadId: 'up-1',
 			putUrl: 'https://store.example/put',
+			putPath: '/v1/drafts/draft-1/attachments/uploads/up-1',
 			putHeaders: { 'x-amz-content-sha256': 'abc' },
 			expiresAt: '2026-10-14T00:00:00Z'
 		});
-		vi.mocked(platform.blobPut).mockResolvedValue(new Response(null, { status: 200 }));
+		vi.mocked(apiBlobPut).mockResolvedValue(undefined);
 		const packed = await packDraftBundle('acct', [{ file: file('a.txt', 'aaa'), disposition: 'attachment' }]);
 
 		await expect(uploadDraftBundle('draft-1', packed)).resolves.toBe('up-1');
@@ -145,29 +144,31 @@ describe('draft attachment bundle', () => {
 			ciphertextSha256: packed.sha256B64,
 			keyFingerprint: 'own-fp'
 		});
-		const [, sent, headers] = vi.mocked(platform.blobPut).mock.calls[0];
+		const [path, sent] = vi.mocked(apiBlobPut).mock.calls[0];
+		expect(path).toBe('/v1/drafts/draft-1/attachments/uploads/up-1');
 		expect((sent as Blob).size).toBe(packed.ciphertext.byteLength);
-		expect(headers).toEqual({ 'x-amz-content-sha256': 'abc' });
 	});
 
-	it('fails the upload when storage refuses the bundle', async () => {
+	it('fails the upload when the api refuses the bundle', async () => {
 		vi.mocked(issueDraftAttachmentUpload).mockResolvedValue({
 			uploadId: 'up-1',
 			putUrl: 'https://store.example/put',
+			putPath: '/v1/drafts/draft-1/attachments/uploads/up-1',
 			putHeaders: { 'x-amz-content-sha256': 'abc' },
 			expiresAt: '2026-10-14T00:00:00Z'
 		});
-		vi.mocked(platform.blobPut).mockResolvedValue(new Response(null, { status: 403 }));
+		vi.mocked(apiBlobPut).mockRejectedValue(new Error('HTTP 400'));
 		const packed = await packDraftBundle('acct', [{ file: file('a.txt', 'aaa'), disposition: 'attachment' }]);
 		await expect(uploadDraftBundle('draft-1', packed)).rejects.toThrow();
 	});
 
 	it('restores attachments after checking the downloaded bundle', async () => {
 		const packed = await packDraftBundle('acct', [{ file: file('a.txt', 'hello'), disposition: 'attachment' }]);
-		vi.mocked(platform.blobFetch).mockResolvedValue(new Response(packed.ciphertext as BodyInit));
+		vi.mocked(apiBlobFetch).mockResolvedValue(new Response(packed.ciphertext as BodyInit));
 		vi.mocked(keystore.decrypt).mockResolvedValue({ ok: true, plaintextBinary: unxor(packed.ciphertext) });
 		const pointer: PresignedPointer = {
 			url: 'https://store.example/get',
+			path: '/v1/drafts/draft-1/attachments-bundle',
 			expiresAt: '2026-10-14T00:00:00Z',
 			sizeBytes: packed.ciphertext.byteLength,
 			sha256: packed.sha256B64
@@ -175,14 +176,16 @@ describe('draft attachment bundle', () => {
 
 		const restored = await restoreDraftAttachments('acct', { ...baseDoc(), attachments: packed.metas }, pointer);
 		expect(await restored[0].file.text()).toBe('hello');
+		expect(apiBlobFetch).toHaveBeenCalledWith('/v1/drafts/draft-1/attachments-bundle', { accountId: 'acct' });
 		expect(vi.mocked(keystore.decrypt).mock.calls[0][0]).toMatchObject({ accountId: 'acct', binary: true });
 	});
 
 	it('refuses a downloaded bundle whose checksum does not match', async () => {
 		const packed = await packDraftBundle('acct', [{ file: file('a.txt', 'hello'), disposition: 'attachment' }]);
-		vi.mocked(platform.blobFetch).mockResolvedValue(new Response(new Uint8Array([1, 2, 3]) as BodyInit));
+		vi.mocked(apiBlobFetch).mockResolvedValue(new Response(new Uint8Array([1, 2, 3]) as BodyInit));
 		const pointer: PresignedPointer = {
 			url: 'https://store.example/get',
+			path: '/v1/drafts/draft-1/attachments-bundle',
 			expiresAt: '2026-10-14T00:00:00Z',
 			sizeBytes: 3,
 			sha256: packed.sha256B64
@@ -211,8 +214,8 @@ describe('draft envelope', () => {
 			v: 1,
 			attachments: [{ ordinal: 0, objectKey: 'm/x/y/att-0.pgp', filename: 'old.pdf' }]
 		};
-		vi.mocked(decryptBodyFromUrl).mockResolvedValue({ plaintext: JSON.stringify(legacy) });
-		const detail = { body: { url: 'https://store.example/body' } } as DraftDetail;
+		vi.mocked(decryptBody).mockResolvedValue({ plaintext: JSON.stringify(legacy) });
+		const detail = { body: { url: 'https://store.example/body', path: '/v1/drafts/d1/body' } } as DraftDetail;
 
 		const doc = await loadDraftDoc('acct', detail);
 		expect(doc.subject).toBe('Hi');
