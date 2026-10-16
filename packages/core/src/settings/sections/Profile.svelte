@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Camera from '@lucide/svelte/icons/camera';
-	import { platform } from '$platform';
+	import { apiBlobPut } from '$core/api/client';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import PenLine from '@lucide/svelte/icons/pen-line';
@@ -297,10 +297,7 @@
 				sha256: await sha256B64(bytes),
 				contentType: file.type
 			});
-			const put = await platform.blobPut(grant.uploadUrl, new Blob([bytes as BlobPart]), grant.uploadHeaders);
-			if (!put.ok) {
-				throw new Error(`upload failed (${put.status})`);
-			}
+			await apiBlobPut(grant.uploadPath, new Blob([bytes as BlobPart]));
 			const me = await commitAvatar(grant.objectKey);
 			auth.applyMe(me);
 		} catch (err) {
