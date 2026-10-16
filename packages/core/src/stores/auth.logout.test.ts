@@ -20,7 +20,6 @@ vi.mock('$platform', () => ({
 			forget: (...a: unknown[]) => sessionForget(...a)
 		},
 		transport: {},
-		blobFetch: vi.fn(),
 		blobPut: vi.fn(),
 		returnOrigin: () => 'tauri://localhost',
 		openExternal: vi.fn(),

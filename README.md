@@ -69,7 +69,6 @@ All configuration is build-time. Changing any of these requires a rebuild.
 | `PUBLIC_SUBMISSION_BASE_URL` | Base URL of the mail submission service |
 | `PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED` | Armored OpenPGP public key of the directory signer. Required; the app refuses to start without it |
 | `PUBLIC_TLOG_POLICY` | JSON transparency log policy (origin, verifier key, VRF key, witness threshold, `monitor` or `enforce`). Optional; log verification is skipped when unset |
-| `CSP_BLOB_ORIGIN` | Origin of the object storage the API issues presigned URLs for. Required; it has to be in the Content-Security-Policy or message bodies and attachments will not load. Accepts a space-separated list |
 
 Two build details that are not obvious from the source:
 

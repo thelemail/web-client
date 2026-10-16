@@ -18,7 +18,6 @@ export const platform: Platform = {
 	keystoreChannel: undefined,
 	transport: undefined,
 	openEventSource: undefined,
-	blobFetch: (url, init) => fetch(url, init),
 	blobPut: (url, body, headers, opts) =>
 		new Promise<Response>((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
