@@ -17,7 +17,7 @@ import {
 	type DirectoryTrust
 } from '$core/mail/senderVerify';
 import { keyIdHex } from '$core/directory/format';
-import { signedWhileCurrent } from '$core/directory/retired';
+import { beforeRetirement, signedWhileCurrent } from '$core/directory/retired';
 import { deriveTrust, type ServerSignature, type TrustFacts } from '$core/mail/trust';
 import { b64ToHex } from '$core/keys/encode';
 import { renderBody, type RenderResult } from '$core/mail/render';
@@ -169,9 +169,10 @@ async function verifyWithPreviousKey(
 	const sig = rendered?.signature;
 	if (!sig || sig.keyFingerprintHex?.toLowerCase() !== previous.fingerprintHex) return null;
 	if (sig.state !== 'valid') return sig;
-	if (!signedWhileCurrent(Date.parse(item.storedAt), sig.signedAtMillis, previous.retiredAtMillis)) {
+	if (!beforeRetirement(sig.signedAtMillis, previous.retiredAtMillis)) {
 		return { state: 'invalid', keyFingerprintHex: sig.keyFingerprintHex, signedAtMillis: sig.signedAtMillis };
 	}
+	if (!signedWhileCurrent(Date.parse(item.storedAt), sig.signedAtMillis, previous.retiredAtMillis)) return null;
 	return { ...sig, previousKeyRetiredAtMillis: previous.retiredAtMillis };
 }
 

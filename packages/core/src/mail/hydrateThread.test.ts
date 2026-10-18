@@ -240,7 +240,7 @@ describe('signatures from a sender\u2019s previous key', () => {
 		});
 	});
 
-	it('rejects a backdated previous-key signature the server stored after the window', async () => {
+	it('leaves a previous-key signature the server stored after the window unverified', async () => {
 		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6));
 		previousSenderKey.mockResolvedValue({
 			fingerprintHex: PREVIOUS_V6,
@@ -252,11 +252,7 @@ describe('signatures from a sender\u2019s previous key', () => {
 			{ state: 'valid', keyFingerprintHex: PREVIOUS_V6, signedAtMillis: RETIRED_AT - 60_000 }
 		);
 		const entry = await loaded('2026-10-01T00:05:00Z');
-		expect(entry?.trust?.facts.signature).toEqual({
-			state: 'invalid',
-			keyFingerprintHex: PREVIOUS_V6,
-			signedAtMillis: RETIRED_AT - 60_000
-		});
+		expect(entry?.trust?.facts.signature?.state).toBe('unknown_key');
 	});
 
 	it('ignores a previous key the sender\u2019s statement does not list', async () => {
