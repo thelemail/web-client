@@ -19,6 +19,7 @@
 			case 'confirmation_link_expired':
 				return 'expired';
 			case 'confirmation_link_invalid':
+			case 'invalid_request':
 				return 'invalid';
 			default:
 				return 'error';

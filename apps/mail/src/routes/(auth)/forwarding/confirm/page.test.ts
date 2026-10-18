@@ -70,6 +70,7 @@ describe('forwarding confirm page', () => {
 	it.each([
 		[410, 'confirmation_link_expired', 'This link has expired'],
 		[404, 'confirmation_link_invalid', 'This link cannot be used'],
+		[400, 'invalid_request', 'This link cannot be used'],
 		[409, 'forwarding_source_unavailable', 'This address is not receiving mail']
 	] as const)('explains a %i %s', async (status, code, title) => {
 		api.confirmForwarding.mockRejectedValue(failure(status, code));

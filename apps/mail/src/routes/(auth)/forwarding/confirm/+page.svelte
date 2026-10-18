@@ -18,6 +18,7 @@
 			case 'confirmation_link_expired':
 				return 'expired';
 			case 'confirmation_link_invalid':
+			case 'invalid_request':
 				return 'invalid';
 			case 'forwarding_source_unavailable':
 				return 'unavailable';
