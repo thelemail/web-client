@@ -316,3 +316,37 @@ describe('signed key rotation', () => {
 		expect(h.seen.get(ADDRESS)?.accountId).toBe(ACCOUNT);
 	});
 });
+
+describe('checking a statement without pinning it', () => {
+	it('leaves the pins alone on first contact and after a key change', async () => {
+		const res = await verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false });
+		expect(res.statement.keyFingerprint).toBe(CURRENT.fingerprint);
+		expect(h.seen.size).toBe(0);
+		pin(UNRELATED.fingerprint, 6);
+		const changed = await verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false });
+		expect(changed.statement.keyFingerprint).toBe(CURRENT.fingerprint);
+		expect(h.seen.get(ADDRESS)).toMatchObject({ keyFingerprint: UNRELATED.fingerprint, version: 6 });
+	});
+
+	it('still refuses a rolled back statement', async () => {
+		pin(CURRENT.fingerprint, rotated.version + 1);
+		const err = await failure(verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false }));
+		expect(err.code).toBe('version_rolled_back');
+	});
+
+	it('still refuses a statement with a bad signature', async () => {
+		const good = await lookup(statement());
+		const other = await lookup(statement({ version: rotated.version + 1 }));
+		const err = await failure(
+			verifyDirectoryLookup({ ...good, directorySignature: other.directorySignature }, ADDRESS, { pin: false })
+		);
+		expect(err.code).toBe('signature_invalid');
+	});
+
+	it('fails an enforced log check', async () => {
+		h.policy.value = { ...POLICY, mode: 'enforce' };
+		h.tlogFailure.value = new DirectoryVerificationError('tlog_proof_missing', 'no proof');
+		const err = await failure(verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false }));
+		expect(err.code).toBe('tlog_proof_missing');
+	});
+});

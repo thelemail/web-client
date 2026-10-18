@@ -70,6 +70,7 @@ export interface DirectoryVerificationResult {
 
 export interface VerifyOptions {
 	acceptFingerprint?: string;
+	pin?: boolean;
 }
 
 function parseRaw(raw: string | undefined, requestedAddress: string): {
@@ -294,6 +295,7 @@ export async function verifyDirectoryLookup(
 
 	const { outcome: tlog, enforced } = await checkTlog(lookup, raw, requested);
 	try {
+		if (opts.pin === false) return await checkWithoutPin(lookup, stmt, address, requested, tlog, enforced);
 		return await settlePin(lookup, stmt, address, requested, tlog, enforced, opts);
 	} catch (e) {
 		if (e instanceof DirectoryVerificationError && !e.tlog) e.tlog = tlog;
@@ -301,16 +303,9 @@ export async function verifyDirectoryLookup(
 	}
 }
 
-async function settlePin(
-	lookup: LookupInputForVerification,
-	stmt: DirectoryStatement,
-	address: string,
-	requested: string,
-	tlog: TlogOutcome,
-	enforced: DirectoryVerificationError | null,
-	opts: VerifyOptions
-): Promise<DirectoryVerificationResult> {
-	const seen = await getSeen(address);
+type SeenRecord = Awaited<ReturnType<typeof getSeen>>;
+
+function refuseRollback(seen: SeenRecord, stmt: DirectoryStatement, requested: string): void {
 	const pinned = seen?.keyFingerprint.toLowerCase();
 	const changed = seen != null && pinned !== stmt.keyFingerprint;
 	if (seen && (stmt.version < seen.version || (changed && stmt.version === seen.version))) {
@@ -326,6 +321,41 @@ async function settlePin(
 			}
 		);
 	}
+}
+
+async function checkWithoutPin(
+	lookup: LookupInputForVerification,
+	stmt: DirectoryStatement,
+	address: string,
+	requested: string,
+	tlog: TlogOutcome,
+	enforced: DirectoryVerificationError | null
+): Promise<DirectoryVerificationResult> {
+	const seen = await getSeen(address);
+	refuseRollback(seen, stmt, requested);
+	if (enforced) throw enforced;
+	return {
+		statement: stmt,
+		publicKeyArmored: lookup.publicKeyArmored,
+		verifiedAt: new Date(),
+		firstContact: seen == null,
+		tlog
+	};
+}
+
+async function settlePin(
+	lookup: LookupInputForVerification,
+	stmt: DirectoryStatement,
+	address: string,
+	requested: string,
+	tlog: TlogOutcome,
+	enforced: DirectoryVerificationError | null,
+	opts: VerifyOptions
+): Promise<DirectoryVerificationResult> {
+	const seen = await getSeen(address);
+	const pinned = seen?.keyFingerprint.toLowerCase();
+	const changed = seen != null && pinned !== stmt.keyFingerprint;
+	refuseRollback(seen, stmt, requested);
 
 	let transition: KeyTransitionResult | undefined;
 	if (seen && pinned && changed) {
