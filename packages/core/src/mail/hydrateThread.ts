@@ -169,7 +169,7 @@ async function verifyWithPreviousKey(
 	const sig = rendered?.signature;
 	if (!sig || sig.keyFingerprintHex?.toLowerCase() !== previous.fingerprintHex) return null;
 	if (sig.state !== 'valid') return sig;
-	if (!signedWhileCurrent(sig.signedAtMillis, previous.retiredAtMillis)) {
+	if (!signedWhileCurrent(Date.parse(item.storedAt), sig.signedAtMillis, previous.retiredAtMillis)) {
 		return { state: 'invalid', keyFingerprintHex: sig.keyFingerprintHex, signedAtMillis: sig.signedAtMillis };
 	}
 	return { ...sig, previousKeyRetiredAtMillis: previous.retiredAtMillis };

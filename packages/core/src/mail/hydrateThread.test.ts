@@ -137,8 +137,8 @@ describe('signatures from a sender\u2019s previous key', () => {
 	const PREVIOUS_V4 = 'b4'.repeat(20);
 	const RETIRED_AT = Date.parse('2026-10-01T00:00:00Z');
 
-	function internal(id: string) {
-		return { ...item(id), source: 'internal' };
+	function internal(id: string, storedAt = '2026-10-01T00:01:00Z') {
+		return { ...item(id), source: 'internal', storedAt };
 	}
 
 	function trustWith(...previous: string[]) {
@@ -173,8 +173,8 @@ describe('signatures from a sender\u2019s previous key', () => {
 		}));
 	}
 
-	async function loaded() {
-		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: [internal('a')] });
+	async function loaded(storedAt?: string) {
+		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: [internal('a', storedAt)] });
 		const thread = await hydrateThread('a');
 		return thread!.load('a');
 	}
@@ -237,6 +237,25 @@ describe('signatures from a sender\u2019s previous key', () => {
 			state: 'invalid',
 			keyFingerprintHex: PREVIOUS_V6,
 			signedAtMillis: RETIRED_AT + 5 * 60_000
+		});
+	});
+
+	it('rejects a backdated previous-key signature the server stored after the window', async () => {
+		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6));
+		previousSenderKey.mockResolvedValue({
+			fingerprintHex: PREVIOUS_V6,
+			publicKeyArmored: 'previous-armored',
+			retiredAtMillis: RETIRED_AT
+		});
+		signedBy(
+			{ state: 'unknown_key', issuerFingerprintHex: PREVIOUS_V6 },
+			{ state: 'valid', keyFingerprintHex: PREVIOUS_V6, signedAtMillis: RETIRED_AT - 60_000 }
+		);
+		const entry = await loaded('2026-10-01T00:05:00Z');
+		expect(entry?.trust?.facts.signature).toEqual({
+			state: 'invalid',
+			keyFingerprintHex: PREVIOUS_V6,
+			signedAtMillis: RETIRED_AT - 60_000
 		});
 	});
 

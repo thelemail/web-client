@@ -30,6 +30,7 @@ export interface VerifyBusyInput {
 	publicKeyArmored: string;
 	directoryKeyFingerprintHex: string;
 	previousKey?: BusyPreviousKey | null;
+	updatedAtMillis?: number;
 }
 
 function unverified(trust: BusyTrust): BusyVerdict {
@@ -67,7 +68,10 @@ export async function verifyBusyWindows(input: VerifyBusyInput): Promise<BusyVer
 		await signatures[0].verified;
 		const created = await signatures[0].signature;
 		const signedAtMillis = created.packets[0]?.created?.getTime() ?? null;
-		if (previous && !signedWhileCurrent(signedAtMillis ?? undefined, previous.retiredAtMillis)) {
+		if (
+			previous &&
+			!signedWhileCurrent(input.updatedAtMillis, signedAtMillis ?? undefined, previous.retiredAtMillis)
+		) {
 			return unverified('signature_failed');
 		}
 		return { trust: 'verified', signedAtMillis };

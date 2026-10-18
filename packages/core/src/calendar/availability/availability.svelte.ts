@@ -108,7 +108,8 @@ class AvailabilityStore {
 					signerKeyFingerprint: item.signerKeyFingerprint,
 					publicKeyArmored: key.publicKeyArmored,
 					directoryKeyFingerprintHex: key.fingerprintHex,
-					previousKey
+					previousKey,
+					updatedAtMillis: Date.parse(item.updatedAt)
 				});
 				out.set(cacheKey, verdict.trust);
 			}
