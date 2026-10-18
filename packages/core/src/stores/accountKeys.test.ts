@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Broadcast } from '$core/keystore/protocol';
 
 const me = vi.hoisted(() => ({ listMyKeys: vi.fn() }));
+const dir = vi.hoisted(() => ({ lookup: vi.fn(), verify: vi.fn() }));
 const ks = vi.hoisted(() => ({
 	listeners: [] as ((b: unknown) => void)[],
 	status: vi.fn(),
@@ -13,6 +14,11 @@ const ks = vi.hoisted(() => ({
 vi.mock('$app/environment', () => ({ browser: true }));
 vi.mock('$core/products', () => ({ isProductVault: false }));
 vi.mock('$core/api/me', () => me);
+vi.mock('$core/directory/lookup', () => ({ lookupDirectory: (...a: unknown[]) => dir.lookup(...a) }));
+vi.mock('$core/directory/verify', async () => ({
+	...(await import('$core/directory/errors')),
+	verifyDirectoryLookup: (...a: unknown[]) => dir.verify(...a)
+}));
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		subscribe: (fn: (b: unknown) => void) => {
@@ -28,11 +34,14 @@ vi.mock('$core/keystore/keystore-client', () => ({
 
 import { accountKeys } from './accountKeys.svelte';
 import { ApiCallError } from '$core/api/types';
+import { DirectoryVerificationError } from '$core/directory/errors';
 
 const ACCOUNT = 'acc-1';
 const CURRENT = 'aa'.repeat(32);
 const EARLIER = 'bb'.repeat(32);
+const OTHER = 'cc'.repeat(32);
 const SIGNATURE = Uint8Array.from([0xc2, 0x02, 0x01, 0x02]);
+const ADDRESS = 'nora@thelemail.test';
 
 function hexBytes(hex: string): Uint8Array {
 	return Uint8Array.from(hex.match(/../g)!.map((b) => parseInt(b, 16)));
@@ -54,6 +63,10 @@ function serverKeys() {
 	};
 }
 
+function statement(keyFingerprint = CURRENT, accountId = ACCOUNT, tlog: unknown = { state: 'verified' }) {
+	return { statement: { accountId, keyFingerprint, address: ADDRESS }, tlog };
+}
+
 function emit(b: Broadcast) {
 	for (const fn of ks.listeners) fn(b);
 }
@@ -67,9 +80,11 @@ describe('account keys store', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		ks.status.mockResolvedValue({
-			accounts: [{ accountId: ACCOUNT, unlocked: true, authScheme: 'opaque_v1' }]
+			accounts: [{ accountId: ACCOUNT, email: 'Nora@thelemail.test', unlocked: true, authScheme: 'opaque_v1' }]
 		});
-		ks.loadAccountKeys.mockResolvedValue({ ok: true, loaded: [CURRENT, EARLIER], failed: [] });
+		ks.loadAccountKeys.mockResolvedValue({ ok: true, loaded: [CURRENT, EARLIER], failed: [], unverified: [] });
+		dir.lookup.mockResolvedValue({ publicKeyArmored: 'public-2' });
+		dir.verify.mockResolvedValue(statement());
 		ks.getPublicKey.mockResolvedValue({
 			ok: true,
 			fingerprint: hexBytes(CURRENT),
@@ -87,6 +102,7 @@ describe('account keys store', () => {
 		me.listMyKeys.mockResolvedValue(serverKeys());
 		accountKeys.setAccount(null);
 		accountKeys.setAccount(ACCOUNT);
+		emit({ type: 'clearedAll' });
 	});
 
 	it('hands every server key to the vault and exposes the current one', async () => {
@@ -138,7 +154,7 @@ describe('account keys store', () => {
 	});
 
 	it('flags keys the vault could not unlock', async () => {
-		ks.loadAccountKeys.mockResolvedValue({ ok: true, loaded: [CURRENT], failed: [1] });
+		ks.loadAccountKeys.mockResolvedValue({ ok: true, loaded: [CURRENT], failed: [1], unverified: [] });
 		await accountKeys.load(ACCOUNT);
 		expect(accountKeys.error).toBe('history_incomplete');
 	});
@@ -194,5 +210,85 @@ describe('account keys store', () => {
 		await settle();
 		expect(ks.getPublicKey).toHaveBeenCalledWith({ accountId: 'acc-2' });
 		expect(me.listMyKeys).not.toHaveBeenCalled();
+	});
+
+	it('checks its own directory statement without pinning it', async () => {
+		await accountKeys.load(ACCOUNT);
+		expect(dir.lookup).toHaveBeenCalledWith(ADDRESS);
+		expect(dir.verify).toHaveBeenCalledWith({ publicKeyArmored: 'public-2' }, ADDRESS, { pin: false });
+		expect(accountKeys.verification).toBe('verified');
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(false);
+	});
+
+	it('looks up the primary address the profile reported', async () => {
+		accountKeys.noteServerKey(ACCOUNT, CURRENT, 2, 'Primary@thelemail.test');
+		await accountKeys.load(ACCOUNT);
+		expect(dir.lookup).toHaveBeenCalledWith('primary@thelemail.test');
+	});
+
+	it('marks the account unverified when the directory names another key after a reload', async () => {
+		dir.verify.mockResolvedValue(statement(OTHER));
+		await accountKeys.load(ACCOUNT);
+		expect(me.listMyKeys).toHaveBeenCalledTimes(2);
+		expect(accountKeys.verification).toBe('unverified');
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(true);
+	});
+
+	it('clears a mismatch the reload resolves', async () => {
+		dir.verify.mockResolvedValueOnce(statement(OTHER)).mockResolvedValue(statement());
+		await accountKeys.load(ACCOUNT);
+		expect(me.listMyKeys).toHaveBeenCalledTimes(2);
+		expect(accountKeys.verification).toBe('verified');
+	});
+
+	it('marks the account unverified when the statement belongs to another account', async () => {
+		dir.verify.mockResolvedValue(statement(CURRENT, 'acc-other'));
+		await accountKeys.load(ACCOUNT);
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(true);
+	});
+
+	it('marks the account unverified when the statement fails verification', async () => {
+		dir.verify.mockRejectedValue(new DirectoryVerificationError('signature_invalid', 'bad'));
+		await accountKeys.load(ACCOUNT);
+		expect(accountKeys.verification).toBe('unverified');
+	});
+
+	it('checks the directory even when the vault refuses the key list', async () => {
+		ks.loadAccountKeys.mockResolvedValue({ ok: false, code: 'key_list_invalid' });
+		dir.verify.mockResolvedValue(statement(OTHER));
+		await accountKeys.load(ACCOUNT);
+		expect(accountKeys.error).toBe('history_incomplete');
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(true);
+	});
+
+	it('retries a statement whose proof is not logged yet without blocking', async () => {
+		vi.useFakeTimers();
+		try {
+			dir.verify.mockResolvedValueOnce(statement(CURRENT, ACCOUNT, { state: 'failed', code: 'tlog_proof_missing' }));
+			await accountKeys.load(ACCOUNT);
+			expect(accountKeys.verification).toBe('pending');
+			expect(accountKeys.isUnverified(ACCOUNT)).toBe(false);
+			await vi.advanceTimersByTimeAsync(30_000);
+			expect(dir.verify).toHaveBeenCalledTimes(2);
+			expect(accountKeys.verification).toBe('verified');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('retries after a network failure without blocking', async () => {
+		dir.lookup.mockRejectedValue(new ApiCallError(503, null, 'down'));
+		await accountKeys.load(ACCOUNT);
+		expect(accountKeys.verification).toBe('pending');
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(false);
+	});
+
+	it('forgets the result when the vault locks', async () => {
+		dir.verify.mockResolvedValue(statement(OTHER));
+		await accountKeys.load(ACCOUNT);
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(true);
+		emit({ type: 'locked', accountId: ACCOUNT });
+		expect(accountKeys.isUnverified(ACCOUNT)).toBe(false);
+		expect(accountKeys.verification).toBe('unknown');
 	});
 });

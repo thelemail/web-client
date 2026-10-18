@@ -424,7 +424,7 @@ class AuthStore {
 			lifecycle: me.lifecycle ?? null,
 			keyRotationBlocker: me.keyRotationBlocker ?? null
 		}));
-		accountKeys.noteServerKey(id, me.keyFingerprint, me.keyVersion);
+		accountKeys.noteServerKey(id, me.keyFingerprint, me.keyVersion, me.email);
 		void cacheAccountAvatar(id, me.avatarPath || null);
 		const slot = accounts.byId(id);
 		if (slot && slot.email !== me.email) void accounts.setEmail(id, me.email);
