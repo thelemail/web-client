@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const h = vi.hoisted(() => ({
+	block: null as 'unverified' | 'unreachable' | null,
 	lookups: [] as string[],
 	verified: [] as string[],
 	requests: [] as {
@@ -33,10 +34,10 @@ vi.mock('$core/directory/lookup', async () => {
 	};
 });
 vi.mock('$core/directory/verify', () => ({
-	verifyDirectoryLookup: async (lookup: { email: string }, requested: string) => {
+	verifyDirectoryLookup: async (lookup: { email: string; accountId: string }, requested: string) => {
 		h.verified.push(requested);
 		if (lookup.email !== requested) throw new Error('address_mismatch');
-		return {};
+		return { statement: { accountId: lookup.accountId } };
 	},
 	DirectoryVerificationError: class extends Error {}
 }));
@@ -51,6 +52,9 @@ vi.mock('$core/keystore/keystore-client', () => ({
 }));
 vi.mock('$core/stores/auth.svelte', () => ({
 	auth: { accountId: 'acct-me', email: 'me@thelemail.test', fullName: 'Me' }
+}));
+vi.mock('$core/stores/accountKeys.svelte', () => ({
+	accountKeys: { confirm: async (accountId: string) => (accountId === 'acct-me' ? h.block : null) }
 }));
 vi.mock('./signaturePack', () => ({
 	packBodyForSend: async (bodyHtml: string | undefined) => ({ bodyHtml, relatedParts: [] })
@@ -75,6 +79,7 @@ function party(address: string) {
 }
 
 beforeEach(() => {
+	h.block = null;
 	h.lookups.length = 0;
 	h.verified.length = 0;
 	h.requests.length = 0;
@@ -170,5 +175,25 @@ describe('internal send addressing fields', () => {
 		expect(req.from).toBe('me@thelemail.test');
 		expect(req.recipients).toHaveLength(1);
 		expect(req.recipients[0]).toMatchObject({ accountId: 'acct-ada', address: 'ada@thelemail.test' });
+	});
+});
+
+describe('an unconfirmed own key', () => {
+	it('refuses to send', async () => {
+		h.block = 'unverified';
+		const err = await sendInternalMessage({ to: [party('ada@thelemail.test')], subject: 's', body: 'b' }).catch(
+			(e: unknown) => e
+		);
+		expect(err).toMatchObject({ code: 'account_key_unverified' });
+		expect(h.requests).toEqual([]);
+	});
+
+	it('refuses to send while the directory cannot confirm it', async () => {
+		h.block = 'unreachable';
+		const err = await sendInternalMessage({ to: [party('ada@thelemail.test')], subject: 's', body: 'b' }).catch(
+			(e: unknown) => e
+		);
+		expect(err).toMatchObject({ code: 'account_key_unchecked' });
+		expect(h.requests).toEqual([]);
 	});
 });

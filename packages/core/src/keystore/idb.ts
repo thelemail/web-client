@@ -10,11 +10,20 @@ export interface VaultRecord {
 	masterKeyId?: string;
 	opaqueParamsVersion?: number;
 	armoredEncryptedPrivateKey: string;
+	accountKeys?: StoredAccountKey[];
+	keyVersion?: number;
 	updatedAt: number;
 	wrappedPrivateKey?: Uint8Array;
 	wrapIv?: Uint8Array;
 	localHalfKey?: CryptoKey;
 	wrapPayloadVersion?: 1 | 2;
+}
+
+export interface StoredAccountKey {
+	keyVersion: number;
+	fingerprintHex: string;
+	armoredEncryptedPrivateKey: string;
+	provisional?: boolean;
 }
 
 export interface AccountSlotRecord {

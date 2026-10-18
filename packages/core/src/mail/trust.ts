@@ -3,7 +3,7 @@ import type { DirectoryTrust, ExternalKeyState } from './senderVerify';
 import type { AuthState, MessagePreviewAuth } from './preview';
 import type { OfficialFacts } from './officialSender';
 import type { DelegatedSignerTrust } from './senderVerify';
-import { formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
+import { formatDay, formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
 import type { SignatureStatus } from '$core/api/types';
 import { m } from '$paraglide/messages.js';
 
@@ -81,6 +81,7 @@ function tlogAttack(dir?: DirectoryTrust | null): boolean {
 
 const BLOCKING_DIRECTORY_CODES = new Set([
 	'version_rolled_back',
+	'key_transition_invalid',
 	'tlog_tree_rolled_back',
 	'tlog_checkpoint_conflict',
 	'tlog_consistency_invalid',
@@ -97,6 +98,8 @@ const FAILURE_HEADLINES: Record<string, () => string> = {
 	signing_key_mismatch: () => m.trust_failure_signing_key_mismatch(),
 	statement_malformed: () => m.trust_failure_statement_malformed(),
 	version_rolled_back: () => m.trust_failure_version_rolled_back(),
+	key_transition_invalid: () => m.trust_failure_key_transition_invalid(),
+	tlog_pending: () => m.trust_failure_tlog_pending(),
 	tlog_proof_missing: () => m.trust_failure_tlog_proof_missing(),
 	tlog_proof_malformed: () => m.trust_failure_tlog_proof_malformed(),
 	tlog_checkpoint_unverified: () => m.trust_failure_tlog_checkpoint_unverified(),
@@ -144,6 +147,18 @@ function keyRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	return rows;
 }
 
+function rotationRows(dir: DirectoryTrust): TrustTechnicalRow[] {
+	const rows = keyRows(dir);
+	if (dir.transition) {
+		rows.push({
+			label: m.trust_row_previous_key(),
+			value: formatFingerprintHex(dir.transition.previousFingerprint)
+		});
+		rows.push({ label: m.trust_row_retired(), value: formatDay(dir.transition.retiredAtMillis) });
+	}
+	return rows;
+}
+
 function changeRows(dir?: DirectoryTrust | null): TrustTechnicalRow[] {
 	if (!dir?.details) return [];
 	const d = dir.details;
@@ -172,6 +187,9 @@ function signatureRows(sig?: SignatureVerdict): TrustTechnicalRow[] {
 	}
 	if (sig.signedAtMillis) {
 		rows.push({ label: m.trust_row_signed_at(), value: new Date(sig.signedAtMillis).toISOString() });
+	}
+	if (sig.previousKeyRetiredAtMillis !== undefined) {
+		rows.push({ label: m.trust_row_retired(), value: formatDay(sig.previousKeyRetiredAtMillis) });
 	}
 	return rows;
 }
@@ -287,9 +305,14 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 			? {
 					id: 'signature',
 					state: 'pass',
-					label: m.trust_signature_is_valid(),
+					label:
+						facts.signature?.previousKeyRetiredAtMillis !== undefined
+							? m.trust_signed_with_their_previous_key()
+							: m.trust_signature_is_valid(),
 					explain:
-						m.trust_explain_this_device_checked_the_signature_on(),
+						facts.signature?.previousKeyRetiredAtMillis !== undefined
+							? m.trust_explain_signed_with_their_previous_key()
+							: m.trust_explain_this_device_checked_the_signature_on(),
 					rows: signatureRows(facts.signature)
 				}
 			: sig === 'invalid'
@@ -409,7 +432,15 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 				rows: []
 			}
 		: dir.ok
-		? dir.firstContact
+		? dir.transition
+			? {
+					id: 'keychange',
+					state: 'pass',
+					label: m.trust_key_rotated_signed_by_previous(),
+					explain: m.trust_explain_key_rotated_signed_by_previous(),
+					rows: rotationRows(dir)
+				}
+			: dir.firstContact
 			? {
 					id: 'keychange',
 					state: 'absent',
@@ -425,6 +456,22 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 					explain:
 						m.trust_explain_the_key_matches_the_one_this(),
 					rows: keyRows(dir)
+				}
+		: dir?.code === 'key_transition_invalid'
+			? {
+					id: 'keychange',
+					state: 'fail',
+					label: m.trust_key_change_endorsement_invalid(),
+					explain: m.trust_explain_key_change_endorsement_invalid(),
+					rows: changeRows(dir)
+				}
+		: dir?.code === 'tlog_pending'
+			? {
+					id: 'keychange',
+					state: 'absent',
+					label: m.trust_key_change_waiting_for_log(),
+					explain: m.trust_explain_key_change_waiting_for_log(),
+					rows: changeRows(dir)
 				}
 		: dir?.code === 'version_rolled_back'
 			? {
@@ -556,12 +603,15 @@ function serverSignatureCheck(sig: ServerSignature): TrustCheck {
 function externalEncryptedChecks(facts: TrustFacts): TrustCheck[] {
 	const key = facts.externalKey;
 	const rows: TrustTechnicalRow[] = [];
-	if (key?.fingerprint) {
-		rows.push({ label: m.trust_row_key(), value: formatFingerprintHex(key.fingerprint) });
+	if (key?.fingerprintHex) {
+		rows.push({ label: m.trust_row_key(), value: formatFingerprintHex(key.fingerprintHex) });
 	}
 	if (key?.source) rows.push({ label: m.trust_row_found_via(), value: key.source });
 	if (key?.firstSeenAtMillis) {
-		rows.push({ label: m.trust_row_first_seen(), value: new Date(key.firstSeenAtMillis).toISOString() });
+		rows.push({ label: m.trust_row_first_seen(), value: formatDay(key.firstSeenAtMillis) });
+	}
+	if (key?.status === 'changed' && key.previousFingerprintHex) {
+		rows.push({ label: m.trust_row_key_you_saw(), value: formatFingerprintHex(key.previousFingerprintHex) });
 	}
 
 	const continuity: TrustCheck =
@@ -817,8 +867,8 @@ function derive(facts: TrustFacts): MessageTrust {
 			label: m.trust_key_changed(),
 			headline: m.trust_this_senders_encryption_key_has_changed(),
 			checks: externalEncryptedChecks(facts),
-			footnote: facts.externalKey.fingerprint
-				? m.trust_new_key({ fingerprint: formatFingerprintHex(facts.externalKey.fingerprint) })
+			footnote: facts.externalKey.fingerprintHex
+				? m.trust_new_key({ fingerprint: formatFingerprintHex(facts.externalKey.fingerprintHex) })
 				: undefined,
 			action: 'confirm_key_change'
 		};
@@ -867,8 +917,8 @@ function derive(facts: TrustFacts): MessageTrust {
 			headline: m.trust_end_to_end_encrypted(),
 			checks: external ? externalEncryptedChecks(facts) : internalChecks(facts),
 			footnote: external
-				? facts.externalKey?.fingerprint
-					? m.trust_key_remembered({ fingerprint: formatFingerprintHex(facts.externalKey.fingerprint) })
+				? facts.externalKey?.fingerprintHex
+					? m.trust_key_remembered({ fingerprint: formatFingerprintHex(facts.externalKey.fingerprintHex) })
 					: m.trust_key_remembered_on_this_device()
 				: dir?.verifiedAtMillis
 					? m.trust_verified_on_device({ when: relativeTime(dir.verifiedAtMillis, facts.nowMillis) })

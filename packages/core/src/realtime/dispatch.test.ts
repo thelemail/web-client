@@ -56,6 +56,11 @@ vi.mock('$core/stores/mailCollections.svelte', () => ({
 	mailCollections: { applyHint: (h: unknown) => mailCollectionsHint(h) }
 }));
 
+const accountKeysLoad = vi.fn();
+vi.mock('$core/stores/accountKeys.svelte', () => ({
+	accountKeys: { load: (...a: unknown[]) => accountKeysLoad(...a) }
+}));
+
 const authState = vi.hoisted(() => ({ accountId: 'acc-1' as string | null }));
 const authLoadProfile = vi.fn();
 vi.mock('$core/stores/auth.svelte', () => ({
@@ -138,6 +143,12 @@ describe('applyHint', () => {
 		applyHint(hint({ kind: 'lifecycle.updated' }));
 		applyHint(hint({ accountId: 'acc-2', kind: 'subscription.updated' }));
 		expect(authLoadProfile).toHaveBeenCalledWith('acc-1');
+		expect(authLoadProfile).toHaveBeenCalledWith('acc-2');
+	});
+
+	it('reloads the account keys and profile when the account key changes', () => {
+		applyHint(hint({ accountId: 'acc-2', kind: 'account_keys.updated' }));
+		expect(accountKeysLoad).toHaveBeenCalledWith('acc-2');
 		expect(authLoadProfile).toHaveBeenCalledWith('acc-2');
 	});
 

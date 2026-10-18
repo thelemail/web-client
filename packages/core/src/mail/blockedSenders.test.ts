@@ -7,6 +7,11 @@ vi.mock('$core/api/blockedSenders', () => ({
 	addBlockedSender: vi.fn()
 }));
 
+const own = vi.hoisted(() => ({ require: vi.fn() }));
+vi.mock('$core/stores/accountKeys.svelte', () => ({
+	requireConfirmedOwnKey: (...a: unknown[]) => own.require(...a)
+}));
+
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		getPublicKey: vi.fn(),
@@ -26,6 +31,7 @@ const decrypt = vi.mocked(keystore.decrypt);
 
 beforeEach(() => {
 	vi.resetAllMocks();
+	own.require.mockResolvedValue(undefined);
 	getPublicKey.mockResolvedValue({
 		ok: true,
 		publicKeyArmored: 'PUB',
@@ -81,6 +87,16 @@ describe('blockSender', () => {
 	it('does not block when the label cannot be sealed', async () => {
 		encrypt.mockResolvedValue({ ok: false, code: 'unknown' });
 		await expect(blockSender('acc', 'spoof@evil.example')).rejects.toThrow('could not be encrypted');
+		expect(add).not.toHaveBeenCalled();
+	});
+});
+
+describe('an unconfirmed own key', () => {
+	it('seals nothing and blocks nobody', async () => {
+		own.require.mockRejectedValue(new Error('key not confirmed'));
+		await expect(blockSender('acc', 'Spoof@Evil.Example')).rejects.toThrow('key not confirmed');
+		expect(own.require).toHaveBeenCalledWith('acc');
+		expect(encrypt).not.toHaveBeenCalled();
 		expect(add).not.toHaveBeenCalled();
 	});
 });

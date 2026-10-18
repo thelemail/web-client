@@ -45,6 +45,9 @@ export interface SignatureVerdict {
 	state: SignatureState;
 	keyFingerprintHex?: string;
 	signedAtMillis?: number;
+	issuerKeyIdHex?: string;
+	issuerFingerprintHex?: string;
+	previousKeyRetiredAtMillis?: number;
 }
 
 export type DecryptResponse =
@@ -85,8 +88,92 @@ export interface GetPublicKeyArgs extends AccountScopedArgs {
 }
 
 export type GetPublicKeyResponse =
-	| { ok: true; publicKeyArmored: string; fingerprint: Uint8Array }
+	| { ok: true; publicKeyArmored: string; fingerprint: Uint8Array; keyVersion?: number }
 	| { ok: false; code: 'locked' };
+
+export interface AccountKeyTransitionInput {
+	previousKeyFingerprintHex: string;
+	signature: Uint8Array;
+}
+
+export interface AccountKeyInput {
+	keyVersion: number;
+	fingerprintHex: string;
+	encryptedPrivateKeyArmored: string;
+	isCurrent: boolean;
+	transitions: AccountKeyTransitionInput[];
+}
+
+export interface LoadAccountKeysArgs extends AccountScopedArgs {
+	currentVersion: number;
+	keys: AccountKeyInput[];
+}
+
+export type LoadAccountKeysFailureCode = 'locked' | 'not_opaque' | 'key_list_invalid';
+
+export type LoadAccountKeysResponse =
+	| {
+			ok: true;
+			loaded: string[];
+			failed: number[];
+			unverified: number[];
+			currentFingerprintHex: string;
+			keyVersion: number;
+			currentChanged: boolean;
+	  }
+	| { ok: false; code: LoadAccountKeysFailureCode };
+
+export interface AccountKeySummary {
+	fingerprintHex: string;
+	keyVersion: number;
+	isCurrent: boolean;
+}
+
+export type ListAccountKeysArgs = AccountScopedArgs;
+
+export type ListAccountKeysResponse =
+	| { ok: true; keys: AccountKeySummary[]; keyVersion: number }
+	| { ok: false; code: 'locked' };
+
+export interface PrepareKeyRotationArgs extends AccountScopedArgs {
+	emails: string[];
+	expectedKeyVersion: number;
+	serverClockOffsetMs?: number;
+}
+
+export interface PreparedKeyTransition {
+	previousKeyFingerprintHex: string;
+	signature: Uint8Array;
+}
+
+export type PrepareKeyRotationFailureCode =
+	| 'locked'
+	| 'not_opaque'
+	| 'no_emails'
+	| 'stale_key_version'
+	| 'key_history_incomplete'
+	| 'unknown';
+
+export type PrepareKeyRotationResponse =
+	| {
+			ok: true;
+			publicKeyArmored: string;
+			encryptedPrivateKey: string;
+			fingerprintHex: string;
+			keyVersion: number;
+			transitions: PreparedKeyTransition[];
+	  }
+	| { ok: false; code: PrepareKeyRotationFailureCode };
+
+export interface CommitKeyRotationArgs extends AccountScopedArgs {
+	fingerprintHex: string;
+}
+
+export type CommitKeyRotationResponse =
+	| { ok: true; keyVersion: number }
+	| { ok: false; code: 'locked' | 'no_pending_rotation' };
+
+export type AbandonKeyRotationArgs = AccountScopedArgs;
 
 export interface ReformatKeyWithUidsArgs extends AccountScopedArgs {
 	emails: string[];
@@ -369,13 +456,23 @@ export interface AliasKeysChangedBroadcast {
 	fingerprints: string[];
 }
 
+export interface AccountKeysChangedBroadcast {
+	type: 'accountKeysChanged';
+	accountId: string;
+	fingerprints: string[];
+	currentFingerprintHex: string;
+	keyVersion: number;
+	currentChanged: boolean;
+}
+
 export type Broadcast =
 	| VaultChangedBroadcast
 	| LockedBroadcast
 	| ClearedBroadcast
 	| ClearedAllBroadcast
 	| PersistentDisabledBroadcast
-	| AliasKeysChangedBroadcast;
+	| AliasKeysChangedBroadcast
+	| AccountKeysChangedBroadcast;
 
 export interface OpaqueStartRegistrationArgs {
 	email: string;
@@ -551,7 +648,7 @@ export type OpaqueFinishAmkRotationResponse =
 			opaqueParamsVersion: number;
 			encryptedPrivateKey: string;
 	  }
-	| { ok: false; code: 'no_pending_reset' | 'no_pending_operation' };
+	| { ok: false; code: 'no_pending_reset' | 'no_pending_operation' | 'key_history_present' };
 
 export interface OpaquePasswordChangeStartArgs extends AccountScopedArgs {
 	newPassword: string;
@@ -587,6 +684,7 @@ export interface AliasKeyGrantInput {
 	aliasKeyFingerprintHex: string;
 	wrappedPrivateKeyArmored: string;
 	isCurrent: boolean;
+	memberKeyFingerprintHex?: string;
 }
 
 export interface LoadAliasKeysArgs extends AccountScopedArgs {
@@ -696,6 +794,11 @@ export type KeystoreCommand =
 	| 'createAliasKey'
 	| 'createSigningDelegationKey'
 	| 'getPublicKey'
+	| 'loadAccountKeys'
+	| 'listAccountKeys'
+	| 'prepareKeyRotation'
+	| 'commitKeyRotation'
+	| 'abandonKeyRotation'
 	| 'reformatKeyWithUids'
 	| 'commitReformattedKey'
 	| 'encrypt'
@@ -760,6 +863,11 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	createAliasKey: ['account'],
 	createSigningDelegationKey: ['account'],
 	getPublicKey: ['account', 'product'],
+	loadAccountKeys: ['account'],
+	listAccountKeys: ['account'],
+	prepareKeyRotation: ['account'],
+	commitKeyRotation: ['account'],
+	abandonKeyRotation: ['account'],
 	reformatKeyWithUids: ['account'],
 	commitReformattedKey: ['account'],
 	encrypt: ['account', 'product'],

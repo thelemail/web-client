@@ -1,3 +1,4 @@
+import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, b64ToBytes, b64ToHex } from '$core/keys/encode';
 import * as attframe from '$core/mail/attframe';
@@ -85,6 +86,7 @@ export interface SealTarget {
 }
 
 async function targetKey(target: SealTarget): Promise<{ armored: string; fingerprintB64: string }> {
+	await requireConfirmedOwnKey(target.accountId);
 	const r = await keystore.getPublicKey({
 		accountId: target.accountId,
 		aliasId: target.aliasId

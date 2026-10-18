@@ -1,5 +1,6 @@
 import { m } from '$paraglide/messages.js';
 import { ApiCallError, type FolderDestination, type MailCollectionKind } from '$core/api/types';
+import { OwnKeyUnconfirmedError } from '$core/stores/accountKeys.svelte';
 import { CollectionSealError } from './seal';
 import { subtreeIds, type CollectionEntry, type CollectionNode } from './tree';
 
@@ -142,6 +143,7 @@ export function ruleText(kind: MailCollectionKind, problem: RuleProblem): string
 export function collectionErrorText(err: unknown, kind: MailCollectionKind, fallback: string): string {
 	if (err instanceof CollectionRuleError) return ruleText(kind, err.problem);
 	if (err instanceof CollectionSealError && err.code === 'locked') return m.mail_collection_unlock_required();
+	if (err instanceof OwnKeyUnconfirmedError) return err.message;
 	if (err instanceof ApiCallError) {
 		const text = (err.envelope?.error?.message ?? '').toLowerCase();
 		if (err.status === 404 || text === 'invalid parent') return ruleText(kind, 'missing');

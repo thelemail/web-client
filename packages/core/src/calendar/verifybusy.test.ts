@@ -135,4 +135,74 @@ describe('busy window verification', () => {
 		});
 		expect(verdict.trust).toBe('key_unresolved');
 	});
+
+	it('accepts a signature from a previous key made before it was retired', async () => {
+		const verdict = await verifyBusyWindows({
+			statement,
+			signature,
+			signerKeyFingerprint: hexToB64(fingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: { fingerprintHex, publicKeyArmored, retiredAtMillis: Date.now() + 60_000 },
+			updatedAtMillis: Date.now()
+		});
+		expect(verdict.trust).toBe('verified');
+	});
+
+	it('rejects a previous key signature made after it was retired', async () => {
+		const verdict = await verifyBusyWindows({
+			statement,
+			signature,
+			signerKeyFingerprint: hexToB64(fingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: { fingerprintHex, publicKeyArmored, retiredAtMillis: Date.now() - 60 * 60_000 },
+			updatedAtMillis: Date.now()
+		});
+		expect(verdict.trust).toBe('signature_failed');
+	});
+
+	it('rejects a backdated previous key signature the server stored after the window', async () => {
+		const retiredAtMillis = Date.now() - 60 * 60_000;
+		const old = await openpgp.generateKey({
+			userIDs: [{ name: 'Signer', email: 'signer@thelemail.test' }],
+			date: new Date(retiredAtMillis - 60 * 60_000),
+			format: 'object'
+		});
+		const backdated = await openpgp.sign({
+			message: await openpgp.createMessage({ binary: canonicalise(statement) }),
+			signingKeys: old.privateKey,
+			detached: true,
+			format: 'binary',
+			date: new Date(retiredAtMillis - 60_000)
+		});
+		const oldFingerprintHex = old.publicKey.getFingerprint().toLowerCase();
+		const input = {
+			statement,
+			signature: toB64(backdated as Uint8Array),
+			signerKeyFingerprint: hexToB64(oldFingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: { fingerprintHex: oldFingerprintHex, publicKeyArmored: old.publicKey.armor(), retiredAtMillis }
+		};
+		expect((await verifyBusyWindows({ ...input, updatedAtMillis: retiredAtMillis + 60_000 })).trust).toBe('verified');
+		expect((await verifyBusyWindows({ ...input, updatedAtMillis: Date.now() })).trust).toBe('signature_failed');
+		expect((await verifyBusyWindows(input)).trust).toBe('signature_failed');
+	});
+
+	it('ignores a previous key the signature does not name', async () => {
+		const verdict = await verifyBusyWindows({
+			statement,
+			signature,
+			signerKeyFingerprint: hexToB64(fingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: {
+				fingerprintHex: otherFingerprintHex,
+				publicKeyArmored: otherPublicKeyArmored,
+				retiredAtMillis: Date.now() + 60_000
+			}
+		});
+		expect(verdict.trust).toBe('key_mismatch');
+	});
 });

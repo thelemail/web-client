@@ -26,26 +26,13 @@ vi.mock('./tlog/policy', () => ({ TLOG_POLICY: null }));
 vi.mock('./tlog/state-idb', () => ({ tlogStateStore: {} }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
-import { verifyDirectoryLookup, type DirectoryStatement } from './verify';
+import { signStatement, statementBytes, toBase64, type StatementFields as DirectoryStatement } from './fixtures/signedStatement';
+import { verifyDirectoryLookup } from './verify';
 import { DirectoryVerificationError } from './errors';
 import { canonicalRecipient } from '$core/mail/recipientAddress';
 
 let signer: openpgp.PrivateKey;
 const keys: { armored: string; fingerprint: string }[] = [];
-
-function canonical(s: DirectoryStatement): Uint8Array {
-	return new TextEncoder().encode(
-		JSON.stringify({
-			accountId: s.accountId,
-			address: s.address,
-			issuedAt: s.issuedAt,
-			keyAlgorithm: s.keyAlgorithm,
-			keyFingerprint: s.keyFingerprint.toLowerCase(),
-			signingKeyFingerprint: s.signingKeyFingerprint.toLowerCase(),
-			version: s.version
-		})
-	);
-}
 
 async function lookupFor(address: string, keyIndex: number, version: number) {
 	const key = keys[keyIndex];
@@ -58,16 +45,11 @@ async function lookupFor(address: string, keyIndex: number, version: number) {
 		issuedAt: '2026-09-01T00:00:00Z',
 		signingKeyFingerprint: h.signerFingerprint
 	};
-	const sig = await openpgp.sign({
-		message: await openpgp.createMessage({ binary: canonical(statement) }),
-		signingKeys: signer,
-		detached: true,
-		format: 'binary'
-	});
+	const signed = await signStatement(signer, statement);
 	return {
 		publicKeyArmored: key.armored,
-		directoryStatement: statement,
-		directorySignature: btoa(String.fromCharCode(...(sig as Uint8Array)))
+		...signed,
+		statement
 	};
 }
 
@@ -141,7 +123,7 @@ describe('directory verification for plus-tagged recipients', () => {
 
 	it('rejects a forged signature for a tagged recipient', async () => {
 		const lookup = await lookupFor('vlad@thelemail.test', 0, 1);
-		lookup.directoryStatement = { ...lookup.directoryStatement, version: 9 };
+		lookup.directoryStatementRaw = toBase64(statementBytes({ ...lookup.statement, version: 9 }));
 		expect(await failure(verifyDirectoryLookup(lookup, canonicalRecipient('vlad+x@thelemail.test')))).toBe(
 			'signature_invalid'
 		);

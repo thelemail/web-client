@@ -11,6 +11,7 @@ import {
 import {
 	ApiCallError,
 	type DeletionStatus,
+	type KeyRotationBlocker,
 	type LifecycleInfo,
 	type MeResponse,
 	type RefreshResponse
@@ -31,6 +32,7 @@ import { workspaces } from './workspaces.svelte';
 import { aliases } from './aliases.svelte';
 import { workspaceAddresses } from './workspaceAddresses.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
+import { accountKeys } from './accountKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
 import { composeStore } from './compose.svelte';
 import { preferences } from './preferences.svelte';
@@ -64,6 +66,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	workspaces.setAccount(accountId);
 	aliases.setAccount(accountId);
 	workspaceAddresses.setAccount(accountId);
+	accountKeys.setAccount(accountId);
 	aliasKeys.setAccount(accountId);
 	delegations.setAccount(accountId);
 	readDelegations.setAccount(accountId);
@@ -94,6 +97,7 @@ interface ProfileSnapshot {
 	recoveryEnabled: boolean | null;
 	deletion: DeletionStatus | null;
 	lifecycle: LifecycleInfo | null;
+	keyRotationBlocker: KeyRotationBlocker | null;
 }
 
 const emptyProfile = (): ProfileSnapshot => ({
@@ -106,7 +110,8 @@ const emptyProfile = (): ProfileSnapshot => ({
 	vaultUnlocked: false,
 	recoveryEnabled: null,
 	deletion: null,
-	lifecycle: null
+	lifecycle: null,
+	keyRotationBlocker: null
 });
 
 class AuthStore {
@@ -416,8 +421,10 @@ class AuthStore {
 			defaultReplyAddressId: me.defaultReplyAddressId ?? null,
 			recoveryEnabled: me.recoveryEnabled ?? null,
 			deletion: me.deletion ?? null,
-			lifecycle: me.lifecycle ?? null
+			lifecycle: me.lifecycle ?? null,
+			keyRotationBlocker: me.keyRotationBlocker ?? null
 		}));
+		accountKeys.noteServerKey(id, me.keyFingerprint, me.keyVersion, me.email);
 		void cacheAccountAvatar(id, me.avatarPath || null);
 		const slot = accounts.byId(id);
 		if (slot && slot.email !== me.email) void accounts.setEmail(id, me.email);
@@ -439,6 +446,10 @@ class AuthStore {
 
 	markRecoveryEnabled(accountId: string): void {
 		this.#mutateProfile(accountId, (p) => ({ ...p, recoveryEnabled: true }));
+	}
+
+	keyRotationBlockerFor(accountId: string): KeyRotationBlocker | null {
+		return this.#profiles.get(accountId)?.keyRotationBlocker ?? null;
 	}
 
 	fullNameFor(accountId: string): string | null {

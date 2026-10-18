@@ -15,7 +15,15 @@ import {
 	type SubmitMessageResponse,
 	type SubmitOutcome
 } from '$core/api/types';
-import { SendError, sendErrorFromApi, senderKey, releaseDate, buildEnvelope, buildPreview } from './send';
+import {
+	SendError,
+	sendErrorFromApi,
+	senderKey,
+	releaseDate,
+	buildEnvelope,
+	buildPreview,
+	externalKeyChangePayload
+} from './send';
 import {
 	buildMIME,
 	composeBodyEntityBytes,
@@ -113,7 +121,7 @@ async function resolveExternalKeys(
 					'external_key_change',
 					m.send_error_external_key_changed({ address: r.address }),
 					undefined,
-					{ kind: 'external-key-change', address: r.address, currentFingerprint: trust.fingerprint }
+					externalKeyChangePayload(r.address, trust)
 				);
 			}
 			if (!trust.armoredKey) {

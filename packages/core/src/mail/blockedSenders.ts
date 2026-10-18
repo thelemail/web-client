@@ -2,6 +2,7 @@ import { addBlockedSender } from '$core/api/blockedSenders';
 import type { BlockedSender } from '$core/api/types';
 import { b64ToBytes, bytesToB64 } from '$core/crypto';
 import { keystore } from '$core/keystore/keystore-client';
+import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { m } from '$paraglide/messages.js';
 
 export function normalizeAddress(address: string): string {
@@ -9,6 +10,7 @@ export function normalizeAddress(address: string): string {
 }
 
 export async function sealAddress(accountId: string, address: string): Promise<string> {
+	await requireConfirmedOwnKey(accountId);
 	const key = await keystore.getPublicKey({ accountId });
 	if (!key.ok) {
 		throw new Error(m.mailbox_block_unlock_required());

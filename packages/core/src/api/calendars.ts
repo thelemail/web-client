@@ -139,6 +139,7 @@ export interface CalendarItemRevisionRow {
 export interface CalendarBusyItem {
 	itemId: string;
 	rev: number;
+	updatedAt: string;
 	privacy: CalendarPrivacy;
 	signerAccountId: string;
 	signerKeyFingerprint: string;

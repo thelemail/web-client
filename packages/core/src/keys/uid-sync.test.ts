@@ -15,7 +15,9 @@ const behaviour = vi.hoisted(() => ({
 		publicKeyArmored: 'pub',
 		encryptedPrivateKey: 'enc'
 	}),
-	updateGate: null as null | { promise: Promise<void>; release: () => void }
+	updateGate: null as null | { promise: Promise<void>; release: () => void },
+	staleOnce: false,
+	reloads: [] as string[]
 }));
 
 vi.mock('$core/api/addresses', () => ({
@@ -29,7 +31,24 @@ vi.mock('$core/api/me', () => ({
 	updateKeys: async (input: Record<string, unknown>, accountId?: string) => {
 		calls.update.push({ input, accountId });
 		if (behaviour.updateGate) await behaviour.updateGate.promise;
+		if (behaviour.staleOnce) {
+			behaviour.staleOnce = false;
+			const { ApiCallError } = await import('$core/api/types');
+			throw new ApiCallError(
+				409,
+				{ error: { code: 'account_key_stale', message: 'stale' } },
+				'stale'
+			);
+		}
 		return {};
+	}
+}));
+
+vi.mock('$core/stores/accountKeys.svelte', () => ({
+	accountKeys: {
+		load: async (accountId: string) => {
+			behaviour.reloads.push(accountId);
+		}
 	}
 }));
 
@@ -46,7 +65,7 @@ vi.mock('$core/keystore/keystore-client', () => ({
 	}
 }));
 
-const { syncAddressUids } = await import('./uid-sync');
+const { syncAddressUids, withKeyLock } = await import('./uid-sync');
 
 function gate() {
 	let release!: () => void;
@@ -63,6 +82,8 @@ beforeEach(() => {
 	calls.commit.length = 0;
 	behaviour.addresses = {};
 	behaviour.updateGate = null;
+	behaviour.staleOnce = false;
+	behaviour.reloads = [];
 	behaviour.reformat = () => ({
 		ok: true,
 		unchanged: false,
@@ -165,5 +186,32 @@ describe('syncAddressUids', () => {
 			{ accountId: 'acct-b', emails: ['b@thelemail.com'] },
 			{ accountId: 'acct-b', emails: ['b@thelemail.com', 'role@thelemail.com'] }
 		]);
+	});
+
+	it('refreshes the account keys and retries once when the server says the key is stale', async () => {
+		behaviour.staleOnce = true;
+
+		await syncAddressUids('acct-b', ['b@thelemail.com']);
+
+		expect(behaviour.reloads).toEqual(['acct-b']);
+		expect(calls.reformat).toHaveLength(2);
+		expect(calls.update).toHaveLength(2);
+		expect(calls.commit).toEqual([{ accountId: 'acct-b', encryptedPrivateKey: 'enc' }]);
+	});
+
+	it('waits for a key rotation holding the same lock', async () => {
+		const g = gate();
+		const order: string[] = [];
+		const rotation = withKeyLock('acct-b', async () => {
+			order.push('rotation start');
+			await g.promise;
+			order.push('rotation end');
+		});
+		const sync = syncAddressUids('acct-b', ['b@thelemail.com']).then(() => order.push('sync'));
+		await Promise.resolve();
+		expect(calls.reformat).toHaveLength(0);
+		g.release();
+		await Promise.all([rotation, sync]);
+		expect(order).toEqual(['rotation start', 'rotation end', 'sync']);
 	});
 });

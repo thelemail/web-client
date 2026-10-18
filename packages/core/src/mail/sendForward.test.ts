@@ -30,7 +30,9 @@ vi.mock('$core/directory/lookup', () => ({
 	}
 }));
 vi.mock('$core/directory/verify', () => ({
-	verifyDirectoryLookup: async () => ({}),
+	verifyDirectoryLookup: async (lookup: { accountId: string }) => ({
+		statement: { accountId: lookup.accountId }
+	}),
 	DirectoryVerificationError: class extends Error {}
 }));
 vi.mock('$core/directory/read-delegation', () => ({
@@ -55,6 +57,7 @@ vi.mock('$core/keystore/keystore-client', () => ({
 		}
 	}
 }));
+vi.mock('$core/stores/accountKeys.svelte', () => ({ accountKeys: { confirm: async () => null } }));
 vi.mock('$core/stores/auth.svelte', () => ({
 	auth: { accountId: 'acct-me', email: 'me@thelemail.test', fullName: 'Me' }
 }));

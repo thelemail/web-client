@@ -11,6 +11,7 @@ import {
 	selfSignaturesPostdateCreation
 } from '$core/keys/pgpKeys';
 import { isAllowedBlobUrl } from './blobOrigins';
+import { keyTransitionPayload, verifyKeyTransition } from '$core/directory/key-transition';
 import {
 	OPAQUE_OP_TTL_MS,
 	OpaqueOperations,
@@ -167,6 +168,15 @@ import type {
 	OpenProductForkArgs,
 	OpenProductForkResponse,
 	VerifyRecoveryProofResponse,
+	AbandonKeyRotationArgs,
+	CommitKeyRotationArgs,
+	CommitKeyRotationResponse,
+	ListAccountKeysArgs,
+	ListAccountKeysResponse,
+	LoadAccountKeysArgs,
+	LoadAccountKeysResponse,
+	PrepareKeyRotationArgs,
+	PrepareKeyRotationResponse,
 	KeystoreCommand,
 	VaultMode
 } from './protocol';
@@ -188,9 +198,29 @@ interface VaultState {
 	privateKey: openpgp.PrivateKey;
 	keyPassword: string;
 	wrapKey?: CryptoKey;
+	accountKeys: Map<string, AccountKeyEntry>;
+	keyVersion: number;
 	aliasKeys: Map<string, AliasKeyEntry>;
 	aliasCurrent: Map<string, string>;
 }
+
+interface AccountKeyEntry {
+	keyVersion: number;
+	fingerprintHex: string;
+	privateKey: openpgp.PrivateKey;
+	armoredEncrypted: string;
+	provisional?: boolean;
+}
+
+interface PendingRotation {
+	fingerprintHex: string;
+	keyVersion: number;
+	privateKey: openpgp.PrivateKey;
+	armoredEncrypted: string;
+	expiresAt: number;
+}
+
+const MAX_ENDORSEMENTS = 16;
 
 interface AliasKeyEntry {
 	aliasId: string;
@@ -240,6 +270,7 @@ interface PendingPasswordChange {
 const vaults = new Map<string, VaultState>();
 const indexKeys = new Map<string, CryptoKey>();
 const cachedRecords = new Map<string, VaultRecord>();
+const pendingRotations = new Map<string, PendingRotation>();
 let pendingLogin: PendingLogin | null = null;
 let pendingRecoveryLogin: PendingRecoveryLogin | null = null;
 let pendingReset: PendingReset | null = null;
@@ -409,9 +440,12 @@ async function handleCompleteLoginUnlock(
 			armoredEncryptedPrivateKey: armored,
 			privateKey: unlocked,
 			keyPassword: passphrase,
+			accountKeys: new Map(),
+			keyVersion: 1,
 			aliasKeys: new Map(),
 			aliasCurrent: new Map()
 		};
+		await seedAccountKeys(v);
 		vaults.set(args.accountId, v);
 
 		wipe(pending.password);
@@ -751,6 +785,7 @@ function handleAbandonPasswordChange(): void {
 
 async function handleClear(args: ClearArgs): Promise<void> {
 	vaults.delete(args.accountId);
+	pendingRotations.delete(args.accountId);
 	indexKeys.delete(args.accountId);
 	cachedRecords.delete(args.accountId);
 	await deleteVault(args.accountId);
@@ -761,6 +796,7 @@ async function handleClearAll(): Promise<void> {
 	vaults.clear();
 	indexKeys.clear();
 	cachedRecords.clear();
+	pendingRotations.clear();
 	pendingLogin = null;
 	pendingRecoveryLogin = null;
 	pendingReset = null;
@@ -772,6 +808,7 @@ async function handleClearAll(): Promise<void> {
 
 function handleLock(args: LockArgs): void {
 	indexKeys.delete(args.accountId);
+	pendingRotations.delete(args.accountId);
 	if (vaults.delete(args.accountId)) {
 		broadcast({ type: 'locked', accountId: args.accountId });
 	}
@@ -914,6 +951,7 @@ async function handleEnrollPersistent(args: EnrollPersistentArgs): Promise<void>
 		masterKeyId: v.masterKeyId,
 		opaqueParamsVersion: v.opaqueParamsVersion,
 		armoredEncryptedPrivateKey: v.armoredEncryptedPrivateKey,
+		...storedAccountKeys(v),
 		updatedAt: Date.now(),
 		wrappedPrivateKey,
 		wrapIv,
@@ -969,9 +1007,12 @@ async function handleTryRestoreFromPersistent(
 				privateKey: unlocked,
 				keyPassword,
 				wrapKey,
+				accountKeys: new Map(),
+				keyVersion: 1,
 				aliasKeys: new Map(),
 				aliasCurrent: new Map()
 			};
+			await seedAccountKeys(v, rec);
 			vaults.set(rec.accountId, v);
 			broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
 			return { ok: true, accountId: v.accountId, email: v.email };
@@ -1002,9 +1043,12 @@ async function handleTryRestoreFromPersistent(
 			privateKey,
 			keyPassword,
 			wrapKey,
+			accountKeys: new Map(),
+			keyVersion: 1,
 			aliasKeys: new Map(),
 			aliasCurrent: new Map()
 		};
+		await seedAccountKeys(v);
 		vaults.set(rec.accountId, v);
 		broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
 		return { ok: true, accountId: v.accountId, email: v.email };
@@ -1061,13 +1105,8 @@ async function handleLoadAliasKeys(args: LoadAliasKeysArgs): Promise<LoadAliasKe
 			continue;
 		}
 		try {
-			const message = await openpgp.readMessage({ armoredMessage: g.wrappedPrivateKeyArmored });
-			const { data } = await openpgp.decrypt({
-				message,
-				decryptionKeys: v.privateKey,
-				expectSigned: false
-			});
-			if (typeof data !== 'string') {
+			const data = await unwrapWithAccountKeys(v, g.wrappedPrivateKeyArmored, g.memberKeyFingerprintHex);
+			if (data === null) {
 				failed.push({ aliasId: g.aliasId, keyVersion: g.keyVersion });
 				continue;
 			}
@@ -1199,8 +1238,418 @@ async function handleGetPublicKey(args: GetPublicKeyArgs): Promise<GetPublicKeyR
 	return {
 		ok: true,
 		publicKeyArmored: pub.armor(),
-		fingerprint
+		fingerprint,
+		keyVersion: args.aliasId ? undefined : v.keyVersion
 	};
+}
+
+function storedAccountKeys(v: VaultState): Pick<VaultRecord, 'accountKeys' | 'keyVersion'> {
+	return {
+		accountKeys: [...v.accountKeys.values()]
+			.sort((a, b) => b.keyVersion - a.keyVersion)
+			.map((e) => ({
+				keyVersion: e.keyVersion,
+				fingerprintHex: e.fingerprintHex,
+				armoredEncryptedPrivateKey: e.armoredEncrypted,
+				...(e.provisional ? { provisional: true } : {})
+			})),
+		keyVersion: v.keyVersion
+	};
+}
+
+function knowsKeyHistory(accountId: string): boolean {
+	const v = vaults.get(accountId);
+	if (v && (v.accountKeys.size > 1 || v.keyVersion > 1)) return true;
+	const rec = cachedRecords.get(accountId);
+	return !!rec && ((rec.accountKeys?.length ?? 0) > 1 || (rec.keyVersion ?? 1) > 1);
+}
+
+async function unlockAccountKey(
+	armored: string,
+	passphrase: string
+): Promise<{ privateKey: openpgp.PrivateKey; fingerprintHex: string } | null> {
+	try {
+		const locked = await openpgp.readPrivateKey({ armoredKey: armored });
+		const privateKey = await openpgp.decryptKey({ privateKey: locked, passphrase });
+		return { privateKey, fingerprintHex: fingerprintHexOf(privateKey) };
+	} catch {
+		return null;
+	}
+}
+
+async function seedAccountKeys(v: VaultState, rec?: VaultRecord): Promise<void> {
+	const loginFp = fingerprintHexOf(v.privateKey);
+	const stored = rec?.accountKeys ?? [];
+	const known = stored.find((k) => k.fingerprintHex === loginFp);
+	const login: AccountKeyEntry = {
+		keyVersion:
+			known?.keyVersion ??
+			(stored.length
+				? Math.max(...stored.map((k) => k.keyVersion), rec?.keyVersion ?? 1) + 1
+				: (rec?.keyVersion ?? 1)),
+		fingerprintHex: loginFp,
+		privateKey: v.privateKey,
+		armoredEncrypted: v.armoredEncryptedPrivateKey,
+		...(known && !known.provisional ? {} : { provisional: true })
+	};
+	v.accountKeys = new Map();
+	if (v.authScheme === 'opaque_v1' && v.keyPassword) {
+		for (const k of stored) {
+			if (k.fingerprintHex === loginFp) continue;
+			const unlocked = await unlockAccountKey(k.armoredEncryptedPrivateKey, v.keyPassword);
+			if (!unlocked || unlocked.fingerprintHex !== k.fingerprintHex) {
+				console.warn('keystore: stored account key did not unlock', k.keyVersion);
+				continue;
+			}
+			v.accountKeys.set(k.fingerprintHex, {
+				keyVersion: k.keyVersion,
+				fingerprintHex: k.fingerprintHex,
+				privateKey: unlocked.privateKey,
+				armoredEncrypted: k.armoredEncryptedPrivateKey,
+				...(k.provisional ? { provisional: true } : {})
+			});
+		}
+	}
+	let best: AccountKeyEntry | undefined = login.provisional ? undefined : login;
+	for (const entry of v.accountKeys.values()) {
+		if (!entry.provisional && (!best || entry.keyVersion > best.keyVersion)) best = entry;
+	}
+	if (!best || best === login || !login.provisional || known) v.accountKeys.set(loginFp, login);
+	makeCurrent(v, best ?? login);
+}
+
+async function persistAccountKeys(v: VaultState): Promise<void> {
+	const prev = cachedRecords.get(v.accountId);
+	if (!prev) return;
+	const updated: VaultRecord = {
+		...prev,
+		armoredEncryptedPrivateKey: v.armoredEncryptedPrivateKey,
+		...storedAccountKeys(v),
+		updatedAt: Date.now()
+	};
+	await putVault(updated);
+	cachedRecords.set(v.accountId, updated);
+}
+
+function announceAccountKeys(v: VaultState, currentChanged: boolean): void {
+	broadcast({
+		type: 'accountKeysChanged',
+		accountId: v.accountId,
+		fingerprints: [...v.accountKeys.keys()],
+		currentFingerprintHex: fingerprintHexOf(v.privateKey),
+		keyVersion: v.keyVersion,
+		currentChanged
+	});
+}
+
+function makeCurrent(v: VaultState, entry: AccountKeyEntry): void {
+	v.privateKey = entry.privateKey;
+	v.armoredEncryptedPrivateKey = entry.armoredEncrypted;
+	v.keyVersion = entry.keyVersion;
+}
+
+const KEY_FINGERPRINT_HEX = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
+
+interface ListedAccountKey {
+	keyVersion: number;
+	fingerprintHex: string;
+	armored: string;
+	transitions: { previousKeyFingerprintHex: string; signature: Uint8Array }[];
+}
+
+function validKeyList(args: LoadAccountKeysArgs): ListedAccountKey[] | null {
+	const count = args.currentVersion;
+	if (!Number.isSafeInteger(count) || count < 1 || !Array.isArray(args.keys) || args.keys.length !== count) {
+		return null;
+	}
+	const listed: (ListedAccountKey | undefined)[] = new Array(count);
+	const seen = new Set<string>();
+	for (const k of args.keys) {
+		if (!k || !Number.isSafeInteger(k.keyVersion) || k.keyVersion < 1 || k.keyVersion > count) return null;
+		if (listed[k.keyVersion - 1] || k.isCurrent !== (k.keyVersion === count)) return null;
+		const fingerprintHex = typeof k.fingerprintHex === 'string' ? k.fingerprintHex.toLowerCase() : '';
+		if (!KEY_FINGERPRINT_HEX.test(fingerprintHex) || seen.has(fingerprintHex)) return null;
+		if (typeof k.encryptedPrivateKeyArmored !== 'string') return null;
+		if (!Array.isArray(k.transitions) || k.transitions.length > MAX_ENDORSEMENTS) return null;
+		const transitions = [];
+		for (const t of k.transitions) {
+			const previous = typeof t?.previousKeyFingerprintHex === 'string' ? t.previousKeyFingerprintHex.toLowerCase() : '';
+			if (!KEY_FINGERPRINT_HEX.test(previous) || previous === fingerprintHex) return null;
+			if (!(t.signature instanceof Uint8Array)) return null;
+			transitions.push({ previousKeyFingerprintHex: previous, signature: t.signature });
+		}
+		seen.add(fingerprintHex);
+		listed[k.keyVersion - 1] = {
+			keyVersion: k.keyVersion,
+			fingerprintHex,
+			armored: k.encryptedPrivateKeyArmored,
+			transitions
+		};
+	}
+	return listed as ListedAccountKey[];
+}
+
+function listAgreesWithVault(
+	v: VaultState,
+	current: AccountKeyEntry,
+	listed: ListedAccountKey[],
+	byFingerprint: Map<string, ListedAccountKey>
+): boolean {
+	for (const entry of v.accountKeys.values()) {
+		const same = byFingerprint.get(entry.fingerprintHex);
+		if (entry.provisional) {
+			if (!same && entry === current) return false;
+			continue;
+		}
+		if (same && same.keyVersion !== entry.keyVersion) return false;
+		const slot = listed[entry.keyVersion - 1];
+		if (slot && slot.fingerprintHex !== entry.fingerprintHex) return false;
+	}
+	return true;
+}
+
+async function endorsedBy(
+	accountId: string,
+	key: ListedAccountKey,
+	previous: AccountKeyEntry
+): Promise<boolean> {
+	const transition = key.transitions.find((t) => t.previousKeyFingerprintHex === previous.fingerprintHex);
+	if (!transition) return false;
+	try {
+		await verifyKeyTransition({
+			accountId,
+			newKeyFingerprint: key.fingerprintHex,
+			previousKeyFingerprint: previous.fingerprintHex,
+			signature: transition.signature,
+			previousPublicKeyArmored: previous.privateKey.toPublic().armor()
+		});
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+async function handleLoadAccountKeys(args: LoadAccountKeysArgs): Promise<LoadAccountKeysResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+	if (v.authScheme !== 'opaque_v1' || !v.keyPassword) return { ok: false, code: 'not_opaque' };
+	const start = v.accountKeys.get(fingerprintHexOf(v.privateKey));
+	if (!start) return { ok: false, code: 'not_opaque' };
+	const listed = validKeyList(args);
+	if (!listed) return { ok: false, code: 'key_list_invalid' };
+	const byFingerprint = new Map(listed.map((k) => [k.fingerprintHex, k]));
+	if (!listAgreesWithVault(v, start, listed, byFingerprint)) return { ok: false, code: 'key_list_invalid' };
+
+	const startVersion = byFingerprint.get(start.fingerprintHex)?.keyVersion ?? start.keyVersion;
+	const held = new Set<string>();
+	for (const entry of v.accountKeys.values()) {
+		const same = byFingerprint.get(entry.fingerprintHex);
+		if (!entry.provisional || !same) continue;
+		if (entry === start || same.keyVersion < startVersion) {
+			entry.keyVersion = same.keyVersion;
+			delete entry.provisional;
+		} else {
+			held.add(entry.fingerprintHex);
+		}
+	}
+
+	const loaded: string[] = [];
+	const failed: number[] = [];
+	const unverified: number[] = [];
+	const candidates = new Map<number, AccountKeyEntry>();
+	for (const k of listed) {
+		const mine = v.accountKeys.get(k.fingerprintHex);
+		if (mine && held.has(k.fingerprintHex)) {
+			candidates.set(k.keyVersion, {
+				keyVersion: k.keyVersion,
+				fingerprintHex: k.fingerprintHex,
+				privateKey: mine.privateKey,
+				armoredEncrypted: mine.armoredEncrypted
+			});
+			continue;
+		}
+		if (mine) {
+			loaded.push(k.fingerprintHex);
+			continue;
+		}
+		const unlocked = await unlockAccountKey(k.armored, v.keyPassword);
+		if (!unlocked || unlocked.fingerprintHex !== k.fingerprintHex) {
+			failed.push(k.keyVersion);
+			continue;
+		}
+		candidates.set(k.keyVersion, {
+			keyVersion: k.keyVersion,
+			fingerprintHex: k.fingerprintHex,
+			privateKey: unlocked.privateKey,
+			armoredEncrypted: k.armored
+		});
+	}
+
+	let trusted = start;
+	for (let version = start.keyVersion + 1; version <= listed.length; version++) {
+		const next = candidates.get(version);
+		if (!next || !(await endorsedBy(v.accountId, listed[version - 1], trusted))) break;
+		candidates.delete(version);
+		v.accountKeys.set(next.fingerprintHex, next);
+		loaded.push(next.fingerprintHex);
+		trusted = next;
+	}
+	for (const [version, entry] of candidates) {
+		if (version < trusted.keyVersion) {
+			v.accountKeys.set(entry.fingerprintHex, entry);
+			loaded.push(entry.fingerprintHex);
+		} else {
+			unverified.push(version);
+		}
+	}
+
+	const currentChanged = trusted.fingerprintHex !== start.fingerprintHex;
+	makeCurrent(v, trusted);
+	await persistAccountKeys(v);
+	announceAccountKeys(v, currentChanged);
+	return {
+		ok: true,
+		loaded,
+		failed,
+		unverified: unverified.sort((a, b) => a - b),
+		currentFingerprintHex: trusted.fingerprintHex,
+		keyVersion: v.keyVersion,
+		currentChanged
+	};
+}
+
+function handleListAccountKeys(args: ListAccountKeysArgs): ListAccountKeysResponse {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+	const currentFp = fingerprintHexOf(v.privateKey);
+	return {
+		ok: true,
+		keyVersion: v.keyVersion,
+		keys: [...v.accountKeys.values()]
+			.sort((a, b) => b.keyVersion - a.keyVersion)
+			.map((e) => ({
+				fingerprintHex: e.fingerprintHex,
+				keyVersion: e.keyVersion,
+				isCurrent: e.fingerprintHex === currentFp
+			}))
+	};
+}
+
+async function endorse(
+	key: openpgp.PrivateKey,
+	payload: Uint8Array,
+	date: Date
+): Promise<Uint8Array> {
+	const signature = await openpgp.sign({
+		message: await openpgp.createMessage({ binary: payload }),
+		signingKeys: key,
+		signingKeyIDs: key.getKeyID(),
+		detached: true,
+		format: 'binary',
+		date
+	});
+	return signature as Uint8Array;
+}
+
+async function handlePrepareKeyRotation(
+	args: PrepareKeyRotationArgs
+): Promise<PrepareKeyRotationResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+	if (v.authScheme !== 'opaque_v1' || !v.keyPassword) return { ok: false, code: 'not_opaque' };
+	if (
+		args.expectedKeyVersion !== v.keyVersion ||
+		v.accountKeys.get(fingerprintHexOf(v.privateKey))?.provisional === true
+	) {
+		return { ok: false, code: 'stale_key_version' };
+	}
+	const { emails } = planUids(args.emails, []);
+	if (emails.length === 0) return { ok: false, code: 'no_emails' };
+	const required = [...v.accountKeys.values()]
+		.sort((a, b) => b.keyVersion - a.keyVersion)
+		.slice(0, MAX_ENDORSEMENTS);
+	const versions = new Set(required.map((e) => e.keyVersion));
+	for (let version = v.keyVersion; version > Math.max(0, v.keyVersion - MAX_ENDORSEMENTS); version--) {
+		if (!versions.has(version)) return { ok: false, code: 'key_history_incomplete' };
+	}
+	try {
+		const now = Date.now() + (args.serverClockOffsetMs ?? 0);
+		const generated = await generateCurve25519Key({
+			userIDs: emails.map((email) => ({ email })),
+			date: keyCreationDate(now)
+		});
+		const fingerprintHex = fingerprintHexOf(generated.privateKey);
+		if (v.accountKeys.has(fingerprintHex)) return { ok: false, code: 'unknown' };
+		const locked = await lockKey(generated.privateKey, v.keyPassword);
+		const armoredEncrypted = locked.armor();
+		const publicKeyArmored = generated.publicKey.armor();
+		const transitions = [];
+		for (const entry of required) {
+			const signature = await endorse(
+				entry.privateKey,
+				keyTransitionPayload(args.accountId, fingerprintHex, entry.fingerprintHex),
+				new Date(now)
+			);
+			await verifyKeyTransition({
+				accountId: args.accountId,
+				newKeyFingerprint: fingerprintHex,
+				previousKeyFingerprint: entry.fingerprintHex,
+				signature,
+				previousPublicKeyArmored: entry.privateKey.toPublic().armor()
+			});
+			transitions.push({ previousKeyFingerprintHex: entry.fingerprintHex, signature });
+		}
+		pendingRotations.set(args.accountId, {
+			fingerprintHex,
+			keyVersion: v.keyVersion + 1,
+			privateKey: generated.privateKey,
+			armoredEncrypted,
+			expiresAt: Date.now() + PENDING_LOGIN_TTL_MS
+		});
+		return {
+			ok: true,
+			publicKeyArmored,
+			encryptedPrivateKey: armoredEncrypted,
+			fingerprintHex,
+			keyVersion: v.keyVersion + 1,
+			transitions
+		};
+	} catch (err) {
+		console.warn('keystore: prepareKeyRotation failed', err);
+		return { ok: false, code: 'unknown' };
+	}
+}
+
+async function handleCommitKeyRotation(
+	args: CommitKeyRotationArgs
+): Promise<CommitKeyRotationResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) return { ok: false, code: 'locked' };
+	const pending = pendingRotations.get(args.accountId);
+	if (
+		!pending ||
+		pending.expiresAt < Date.now() ||
+		pending.fingerprintHex !== args.fingerprintHex.toLowerCase()
+	) {
+		return { ok: false, code: 'no_pending_rotation' };
+	}
+	pendingRotations.delete(args.accountId);
+	const entry: AccountKeyEntry = {
+		keyVersion: v.accountKeys.get(pending.fingerprintHex)?.keyVersion ?? pending.keyVersion,
+		fingerprintHex: pending.fingerprintHex,
+		privateKey: pending.privateKey,
+		armoredEncrypted: pending.armoredEncrypted
+	};
+	v.accountKeys.set(entry.fingerprintHex, entry);
+	makeCurrent(v, entry);
+	await persistAccountKeys(v);
+	announceAccountKeys(v, true);
+	broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
+	return { ok: true, keyVersion: v.keyVersion };
+}
+
+function handleAbandonKeyRotation(args: AbandonKeyRotationArgs): void {
+	pendingRotations.delete(args.accountId);
 }
 
 async function handleReformatKeyWithUids(
@@ -1273,6 +1722,14 @@ async function handleCommitReformattedKey(
 
 		v.privateKey = unlocked;
 		v.armoredEncryptedPrivateKey = args.encryptedPrivateKey;
+		const currentFp = fingerprintHexOf(unlocked);
+		const entry = v.accountKeys.get(currentFp);
+		v.accountKeys.set(currentFp, {
+			keyVersion: entry?.keyVersion ?? v.keyVersion,
+			fingerprintHex: currentFp,
+			privateKey: unlocked,
+			armoredEncrypted: args.encryptedPrivateKey
+		});
 
 		const prev = cachedRecords.get(args.accountId);
 		if (prev) {
@@ -1293,6 +1750,7 @@ async function handleCommitReformattedKey(
 			const updated: VaultRecord = {
 				...prev,
 				armoredEncryptedPrivateKey: args.encryptedPrivateKey,
+				...storedAccountKeys(v),
 				wrappedPrivateKey,
 				wrapIv,
 				updatedAt: Date.now()
@@ -1416,14 +1874,14 @@ async function verdictFor(
 	keys: openpgp.PublicKey[]
 ): Promise<SignatureVerdict> {
 	if (signatures.length === 0) return { state: 'none' };
-	let sawUnknownKey = false;
+	let unknown: SignatureVerdict | null = null;
 	for (const sig of signatures) {
 		const keyID = sig.keyID.toHex().toLowerCase();
 		const match = keys.find((k) =>
 			k.getKeys().some((sub) => sub.getKeyID().toHex().toLowerCase() === keyID)
 		);
 		if (!match) {
-			sawUnknownKey = true;
+			if (!unknown) unknown = { state: 'unknown_key', issuerKeyIdHex: keyID, ...(await issuerOf(sig)) };
 			continue;
 		}
 		try {
@@ -1444,21 +1902,63 @@ async function verdictFor(
 			signedAtMillis
 		};
 	}
-	return sawUnknownKey ? { state: 'unknown_key' } : { state: 'none' };
+	return unknown ?? { state: 'none' };
+}
+
+async function issuerOf(sig: PgpVerification): Promise<Pick<SignatureVerdict, 'issuerFingerprintHex' | 'signedAtMillis'>> {
+	try {
+		const packet = (await sig.signature).packets[0];
+		const fp = packet?.issuerFingerprint;
+		return {
+			issuerFingerprintHex: fp && fp.length ? [...fp].map((b) => b.toString(16).padStart(2, '0')).join('') : undefined,
+			signedAtMillis: packet?.created?.getTime()
+		};
+	} catch {
+		return {};
+	}
+}
+
+function accountKeysByVersion(v: VaultState): openpgp.PrivateKey[] {
+	const current = fingerprintHexOf(v.privateKey);
+	const older = [...v.accountKeys.values()]
+		.filter((e) => e.fingerprintHex !== current)
+		.sort((a, b) => b.keyVersion - a.keyVersion)
+		.map((e) => e.privateKey);
+	return [v.privateKey, ...older];
 }
 
 function decryptionKeysFor(
 	v: VaultState,
 	keyFingerprintHex?: string
 ): openpgp.PrivateKey | openpgp.PrivateKey[] {
-	if (!v.aliasKeys.size) return v.privateKey;
 	const hint = keyFingerprintHex?.toLowerCase();
-	const hinted = hint ? v.aliasKeys.get(hint) : undefined;
-	if (hinted) return hinted.privateKey;
-	if (!hint || hint !== fingerprintHexOf(v.privateKey)) {
-		return [v.privateKey, ...[...v.aliasKeys.values()].map((e) => e.privateKey)];
+	if (hint) {
+		if (hint === fingerprintHexOf(v.privateKey)) return v.privateKey;
+		const hinted = v.accountKeys.get(hint) ?? v.aliasKeys.get(hint);
+		if (hinted) return hinted.privateKey;
 	}
-	return v.privateKey;
+	return [...accountKeysByVersion(v), ...[...v.aliasKeys.values()].map((e) => e.privateKey)];
+}
+
+async function unwrapWithAccountKeys(
+	v: VaultState,
+	armored: string,
+	memberFingerprintHex?: string
+): Promise<string | null> {
+	const message = await openpgp.readMessage({ armoredMessage: armored });
+	const hint = memberFingerprintHex?.toLowerCase();
+	const hinted = hint ? v.accountKeys.get(hint)?.privateKey : undefined;
+	const attempts = hinted ? [hinted, accountKeysByVersion(v)] : [accountKeysByVersion(v)];
+	let lastError: unknown = null;
+	for (const decryptionKeys of attempts) {
+		try {
+			const { data } = await openpgp.decrypt({ message, decryptionKeys, expectSigned: false });
+			return typeof data === 'string' ? data : null;
+		} catch (err) {
+			lastError = err;
+		}
+	}
+	throw lastError;
 }
 
 async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse> {
@@ -1750,6 +2250,8 @@ async function handleDisablePersistent(args: DisablePersistentArgs): Promise<voi
 		masterKeyId: rec.masterKeyId,
 		opaqueParamsVersion: rec.opaqueParamsVersion,
 		armoredEncryptedPrivateKey: rec.armoredEncryptedPrivateKey,
+		accountKeys: rec.accountKeys,
+		keyVersion: rec.keyVersion,
 		updatedAt: Date.now()
 	};
 	await putVault(updated);
@@ -1889,9 +2391,12 @@ async function handleOpaqueFinalizeRegister(
 			armoredEncryptedPrivateKey: op.armoredEncryptedPrivateKey,
 			privateKey: op.privateKeyObj,
 			keyPassword: await derivePgpPassphrase(op.amk as Uint8Array),
+			accountKeys: new Map(),
+			keyVersion: 1,
 			aliasKeys: new Map(),
 			aliasCurrent: new Map()
 		};
+		await seedAccountKeys(v);
 		vaults.set(args.accountId, v);
 
 		broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
@@ -1973,6 +2478,7 @@ async function handleOpaqueCompleteLoginUnlock(
 		const privateKey = await openpgp.readPrivateKey({ armoredKey: args.encryptedPrivateKey });
 		const unlocked = await openpgp.decryptKey({ privateKey, passphrase: pgpPassphrase });
 
+		const previous = cachedRecords.get(args.accountId) ?? (await getVault(args.accountId)) ?? undefined;
 		const record: VaultRecord = {
 			accountId: args.accountId,
 			email: op.email ?? '',
@@ -1981,10 +2487,10 @@ async function handleOpaqueCompleteLoginUnlock(
 			masterKeyId: args.masterKeyId,
 			opaqueParamsVersion: args.opaqueParamsVersion,
 			armoredEncryptedPrivateKey: args.encryptedPrivateKey,
+			accountKeys: previous?.accountKeys,
+			keyVersion: previous?.keyVersion,
 			updatedAt: Date.now()
 		};
-		await putVault(record);
-		cachedRecords.set(args.accountId, record);
 
 		const v: VaultState = {
 			accountId: args.accountId,
@@ -1997,9 +2503,19 @@ async function handleOpaqueCompleteLoginUnlock(
 			armoredEncryptedPrivateKey: args.encryptedPrivateKey,
 			privateKey: unlocked,
 			keyPassword: pgpPassphrase,
+			accountKeys: new Map(),
+			keyVersion: 1,
 			aliasKeys: new Map(),
 			aliasCurrent: new Map()
 		};
+		await seedAccountKeys(v, record);
+		const persisted: VaultRecord = {
+			...record,
+			armoredEncryptedPrivateKey: v.armoredEncryptedPrivateKey,
+			...storedAccountKeys(v)
+		};
+		await putVault(persisted);
+		cachedRecords.set(args.accountId, persisted);
 		vaults.set(args.accountId, v);
 		handedOver = true;
 
@@ -2254,6 +2770,11 @@ async function handleOpaqueFinishAmkRotation(
 		opaqueOps.delete(args.operationId);
 		return { ok: false, code: 'no_pending_reset' };
 	}
+	if (knowsKeyHistory(op.accountId)) {
+		wipeOpaqueOperation(op);
+		opaqueOps.delete(args.operationId);
+		return { ok: false, code: 'key_history_present' };
+	}
 	const p = pendingReset;
 
 	await opaqueReady;
@@ -2483,13 +3004,8 @@ async function handleSealProductFork(args: SealProductForkArgs): Promise<SealPro
 	const keys: ForkPayload['keys'] = [];
 	for (const g of args.grants) {
 		try {
-			const message = await openpgp.readMessage({ armoredMessage: g.wrappedPrivateKeyArmored });
-			const { data } = await openpgp.decrypt({
-				message,
-				decryptionKeys: v.privateKey,
-				expectSigned: false
-			});
-			if (typeof data !== 'string') continue;
+			const data = await unwrapWithAccountKeys(v, g.wrappedPrivateKeyArmored, g.memberKeyFingerprintHex);
+			if (data === null) continue;
 			const privateKey = await openpgp.readPrivateKey({ armoredKey: data });
 			const got = fingerprintHexOf(privateKey);
 			if (got !== g.aliasKeyFingerprintHex.toLowerCase()) continue;
@@ -2595,6 +3111,8 @@ async function handleOpenProductFork(args: OpenProductForkArgs): Promise<OpenPro
 		armoredEncryptedPrivateKey: '',
 		privateKey: primary,
 		keyPassword: `${args.product}:${args.accountId}`,
+		accountKeys: new Map(),
+		keyVersion: 1,
 		aliasKeys,
 		aliasCurrent: new Map()
 	};
@@ -2884,6 +3402,22 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'getPublicKey':
 				respond(port, msg.id, await handleGetPublicKey(msg.args as GetPublicKeyArgs));
+				break;
+			case 'loadAccountKeys':
+				respond(port, msg.id, await handleLoadAccountKeys(msg.args as LoadAccountKeysArgs));
+				break;
+			case 'listAccountKeys':
+				respond(port, msg.id, handleListAccountKeys(msg.args as ListAccountKeysArgs));
+				break;
+			case 'prepareKeyRotation':
+				respond(port, msg.id, await handlePrepareKeyRotation(msg.args as PrepareKeyRotationArgs));
+				break;
+			case 'commitKeyRotation':
+				respond(port, msg.id, await handleCommitKeyRotation(msg.args as CommitKeyRotationArgs));
+				break;
+			case 'abandonKeyRotation':
+				handleAbandonKeyRotation(msg.args as AbandonKeyRotationArgs);
+				respond(port, msg.id, undefined);
 				break;
 			case 'reformatKeyWithUids':
 				respond(

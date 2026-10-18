@@ -9,6 +9,7 @@ import { mailSearch } from '$core/stores/search.svelte';
 import { auth } from '$core/stores/auth.svelte';
 import { billing } from '$core/stores/billing.svelte';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
+import { accountKeys } from '$core/stores/accountKeys.svelte';
 import { replyPresence } from '$core/stores/replyPresence.svelte';
 import { mailCollections } from '$core/stores/mailCollections.svelte';
 import { coalesce } from './coalesce';
@@ -90,6 +91,13 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) void accountSettings.refresh();
 			return;
 		case 'lifecycle':
+			void auth.loadProfile(hint.accountId);
+			return;
+		case 'account':
+			void auth.loadProfile(hint.accountId);
+			return;
+		case 'account_keys':
+			void accountKeys.load(hint.accountId);
 			void auth.loadProfile(hint.accountId);
 			return;
 		case 'subscription':

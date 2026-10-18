@@ -455,6 +455,9 @@
 
 	const INLINE_CODES = new Set<SendError['code']>([
 		'recipient_unknown',
+		'account_key_stale',
+		'account_key_unverified',
+		'account_key_unchecked',
 		'locked',
 		'no_account',
 		'encrypt',
@@ -559,7 +562,9 @@
 		clearErr();
 	}
 
-	async function performSend(acceptKeyChange: boolean, after: SendAfter = 'none') {
+	const acceptedKeys = new Map<string, string>();
+
+	async function performSend(after: SendAfter = 'none') {
 		if (!canSend) {
 			warn = true;
 			return;
@@ -587,7 +592,7 @@
 			}
 			const headers = replyThreadHeaders(ids);
 			if (attachments.length > 0) {
-				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses(), { acceptKeyChange });
+				await orchestrator.ensureRecipientCopies(attachments, recipientAddresses(), { acceptedKeys });
 			}
 			const bodyStr = text.trim();
 			const htmlHasContent = !!bodyStr || hasRenderableHtml(html);
@@ -609,7 +614,7 @@
 					fromName: ident.name,
 					fromAliasId: ident.aliasId
 				},
-				{ acceptKeyChange }
+				{ acceptedKeys }
 			);
 			status = 'idle';
 			attempts = 0;
@@ -680,21 +685,25 @@
 		guardedRun = null;
 	}
 
-	const runSend = () => guardedSend(() => performSend(false, 'none'));
-	const sendAndArchive = () => guardedSend(() => performSend(false, 'archive'));
-	const retrySend = () => performSend(false, pendingAfter);
-	const trustAndSend = () => performSend(true, pendingAfter);
+	const runSend = () => guardedSend(() => performSend('none'));
+	const sendAndArchive = () => guardedSend(() => performSend('archive'));
+	const retrySend = () => performSend(pendingAfter);
+	const trustAndSend = () => {
+		const payload = err?.payload;
+		if (payload?.kind === 'tofu') acceptedKeys.set(payload.address, payload.currentFingerprintHex);
+		return performSend(pendingAfter);
+	};
 	async function acceptExternalAndSend() {
 		const payload = err?.payload;
 		if (payload?.kind === 'external-key-change') {
 			try {
-				await acceptExternalKey(payload.address, payload.currentFingerprint);
+				await acceptExternalKey(payload.address, payload.currentFingerprintB64);
 			} catch {
 				err = new SendError('unknown', msg.mail_compose_accept_key_failed());
 				return;
 			}
 		}
-		await performSend(false, pendingAfter);
+		await performSend(pendingAfter);
 	}
 
 	onMount(() => {
@@ -1050,7 +1059,7 @@
 
 {#if err && err.code === 'directory_verification_failed' && err.payload?.kind === 'directory'}
 	<DirectoryFailModal
-		inner={err.inner ?? 'address_mismatch'}
+		inner={err.inner ?? 'unknown'}
 		recipient={modalRecip}
 		requestedAddress={err.payload.requestedAddress}
 		statementAddress={err.payload.statementAddress}
@@ -1058,16 +1067,13 @@
 		servedKeyFingerprint={err.payload.servedKeyFingerprint}
 		expectedSignerFingerprint={err.payload.expectedSignerFingerprint}
 		actualSignerFingerprint={err.payload.actualSignerFingerprint}
+		previousFingerprint={err.payload.previousFingerprint}
+		currentFingerprint={err.payload.currentFingerprint}
+		keyAlgorithm={err.payload.keyAlgorithm}
+		servedKeyAlgorithm={err.payload.servedKeyAlgorithm}
+		statementField={err.payload.statementField}
 		seenVersion={err.payload.seenVersion}
 		servedVersion={err.payload.servedVersion}
-		onEditRecipient={editRecipient}
-		onRetry={retrySend}
-		onCancel={clearErr}
-	/>
-{:else if err && err.code === 'directory_verification_failed'}
-	<DirectoryFailModal
-		inner={err.inner ?? 'address_mismatch'}
-		recipient={modalRecip}
 		onEditRecipient={editRecipient}
 		onRetry={retrySend}
 		onCancel={clearErr}
@@ -1077,20 +1083,24 @@
 {#if err && err.code === 'tofu' && err.payload?.kind === 'tofu'}
 	<TofuModal
 		recipient={modalRecip}
-		previousPinned={err.payload.previousPinned}
-		previousVerifiedAt={err.payload.previousVerifiedAt}
+		previousFingerprint={err.payload.previousFingerprint}
+		previousLastSeen={err.payload.previousLastSeen}
+		previousFirstSeen={null}
 		currentFingerprint={err.payload.currentFingerprint}
+		shared={err.payload.shared}
 		onSendAnyway={trustAndSend}
 		onCancel={clearErr}
 	/>
-{:else if err && err.code === 'tofu'}
-	<TofuModal recipient={modalRecip} onSendAnyway={trustAndSend} onCancel={clearErr} />
 {/if}
 
 {#if err && err.code === 'external_key_change' && err.payload?.kind === 'external-key-change'}
 	<TofuModal
 		recipient={{ name: '', email: err.payload.address }}
+		previousFingerprint={err.payload.previousFingerprint}
+		previousLastSeen={null}
+		previousFirstSeen={err.payload.previousFirstSeen}
 		currentFingerprint={err.payload.currentFingerprint}
+		shared={false}
 		onSendAnyway={acceptExternalAndSend}
 		onCancel={clearErr}
 	/>

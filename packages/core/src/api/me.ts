@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { MeResponse } from './types';
+import type { AccountKeyListResponse, KeyRotationRequest, MeResponse } from './types';
 
 export interface UpdateMeInput {
 	fullName?: string;
@@ -46,4 +46,12 @@ export interface UpdateKeysInput {
 
 export function updateKeys(input: UpdateKeysInput, accountId?: string): Promise<MeResponse> {
 	return apiFetch('/v1/me/keys', { method: 'PUT', body: input, accountId });
+}
+
+export function listMyKeys(accountId?: string): Promise<AccountKeyListResponse> {
+	return apiFetch('/v1/me/keys', { accountId });
+}
+
+export function rotateAccountKey(input: KeyRotationRequest, accountId?: string): Promise<unknown> {
+	return apiFetch('/v1/me/keys/rotations', { method: 'POST', body: input, accountId });
 }

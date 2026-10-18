@@ -43,3 +43,9 @@ export function b64ToBytes(b64: string): Uint8Array {
 	for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
 	return out;
 }
+
+export function bytesToHex(bytes: Uint8Array): string {
+	let out = '';
+	for (const b of bytes) out += b.toString(16).padStart(2, '0');
+	return out;
+}

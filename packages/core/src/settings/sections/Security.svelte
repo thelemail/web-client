@@ -19,7 +19,6 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import KeySquare from '@lucide/svelte/icons/key-square';
-	import Copy from '@lucide/svelte/icons/copy';
 	import Upload from '@lucide/svelte/icons/upload';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ScrollText from '@lucide/svelte/icons/scroll-text';
@@ -31,6 +30,11 @@
 	import Toggle from '../Toggle.svelte';
 	import CardHead from '../CardHead.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
+	import CopyBtn from '../CopyBtn.svelte';
+	import ImportKeyDialog from '../ImportKeyDialog.svelte';
+	import { accountKeys } from '$core/stores/accountKeys.svelte';
+	import { formatFingerprintHex, formatKeyId } from '$core/directory/format';
+	import { platform } from '$platform';
 	import type { DeviceIcon } from '../types';
 	import { auth } from '$core/stores/auth.svelte';
 	import { twofactor } from '$core/stores/twofactor.svelte';
@@ -65,6 +69,28 @@
 	let { s, set, launch }: Props = $props();
 
 	const recoverySet = $derived(auth.recoveryEnabled === true);
+
+	const ownKey = $derived(accountKeys.current);
+	const earlierKeys = $derived(accountKeys.history);
+	let importOpen = $state(false);
+
+	$effect(() => {
+		if (auth.accountId) void accountKeys.ready(auth.accountId);
+	});
+
+	const rotationBlocker = $derived(
+		accountKeys.authScheme === 'srp_v1'
+			? 'sign_in_upgrade_required'
+			: auth.accountId
+				? auth.keyRotationBlockerFor(auth.accountId)
+				: null
+	);
+
+	async function exportPublicKey() {
+		if (!ownKey) return;
+		const blob = new Blob([ownKey.publicKeyArmored], { type: 'application/pgp-keys' });
+		await platform.saveBlob(blob, `${auth.email ?? 'thelemail'}.asc`);
+	}
 
 	$effect(() => {
 		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
@@ -590,24 +616,73 @@
 	<CardHead icon={KeySquare} title={m.settings_security_keys_title()}>
 		{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	</CardHead>
+	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
+		{@const accountId = auth.accountId}
+		{@const mismatch = accountKeys.verification === 'unverified'}
+		<div class="key-unverified" role="alert">
+			<TriangleAlert size={16} />
+			<div class="key-unverified-body">
+				<div class="key-unverified-t">
+					{mismatch ? m.settings_security_key_unverified_title() : m.settings_security_key_unchecked_title()}
+				</div>
+				<p>{mismatch ? m.settings_security_key_unverified() : m.settings_security_key_unchecked()}</p>
+				<Button variant="secondary" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
+			</div>
+		</div>
+	{/if}
 	<Row
 		col
 		t={m.settings_security_fingerprint()}
 		d={m.settings_security_fingerprint_desc()}
 	>
-		<div class="codeblock">
-			<span class="v">4F2A 9C71 B0E3 5D88 · 19FE 4B0C 2D71 88AC</span>
-			<button type="button" class="cp" title={m.common_copy()}><Copy size={15} /></button>
-		</div>
+		{#if ownKey}
+			<div class="codeblock">
+				<span class="v">{formatFingerprintHex(ownKey.fingerprintHex)}</span>
+				<CopyBtn text={ownKey.fingerprintHex} small />
+			</div>
+			<div class="key-meta">
+				{m.settings_security_key_version({ version: String(ownKey.keyVersion) })}
+			</div>
+			{#if earlierKeys.length}
+				<div class="key-meta">
+					{m.settings_security_earlier_keys()}
+					{#each earlierKeys as k (k.fingerprintHex)}
+						<span class="key-earlier">v{k.keyVersion} · {formatKeyId(k.fingerprintHex)}</span>
+					{/each}
+				</div>
+			{/if}
+		{:else}
+			<div class="key-meta">{m.settings_security_fingerprint_locked()}</div>
+		{/if}
+		{#if accountKeys.error && auth.accountId}
+			{@const accountId = auth.accountId}
+			<div class="key-meta key-warn">
+				<span>{m.settings_security_keys_incomplete()}</span>
+				<Button variant="ghost" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
+			</div>
+		{/if}
 	</Row>
 	<div class="cer-rows tight">
-		<CeremonyRow
-			icon={RefreshCw}
-			title={m.settings_security_rotate_title()}
-			desc={m.settings_security_rotate_desc()}
-			cta={m.settings_security_rotate_cta()}
-			onLaunch={() => launch('keys')}
-		/>
+		{#if rotationBlocker}
+			<div class="setrow">
+				<div class="info">
+					<div class="t">{m.settings_security_rotate_title()}</div>
+					<div class="d">
+						{rotationBlocker === 'recovery_upgrade_required'
+							? m.settings_security_rotate_blocked_recovery()
+							: m.settings_security_rotate_blocked_sign_in()}
+					</div>
+				</div>
+			</div>
+		{:else}
+			<CeremonyRow
+				icon={RefreshCw}
+				title={m.settings_security_rotate_title()}
+				desc={m.settings_security_rotate_desc()}
+				cta={m.settings_security_rotate_cta()}
+				onLaunch={() => launch('keys')}
+			/>
+		{/if}
 	</div>
 	<div class="setrow">
 		<div class="info">
@@ -615,15 +690,19 @@
 			<div class="d">{m.settings_security_import_export_desc()}</div>
 		</div>
 		<div class="ctl">
-			<Button variant="secondary" size="sm">
+			<Button variant="secondary" size="sm" onclick={() => (importOpen = true)}>
 				<Upload size={14} />{m.settings_security_import()}
 			</Button>
-			<Button variant="secondary" size="sm">
+			<Button variant="secondary" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
 				<Download size={14} />{m.settings_security_export_key()}
 			</Button>
 		</div>
 	</div>
 </div>
+
+{#if importOpen}
+	<ImportKeyDialog onClose={() => (importOpen = false)} />
+{/if}
 
 <div class="scard">
 	<CardHead icon={ScrollText} title={m.settings_security_log()} />
@@ -660,6 +739,57 @@
 </div>
 
 <style>
+	.key-meta {
+		margin-top: 6px;
+		font-size: 12.5px;
+		color: var(--ink-600);
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 10px;
+	}
+
+	.key-earlier {
+		font-family: var(--font-mono);
+		color: var(--ink-700);
+	}
+
+	.key-warn {
+		align-items: center;
+		color: var(--warning-700);
+	}
+
+	.key-unverified {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+		padding: 14px 18px;
+		border-bottom: 1px solid var(--border);
+		background: var(--danger-100);
+		color: var(--danger-700);
+		font-size: 13px;
+		line-height: 1.5;
+	}
+
+	.key-unverified :global(svg) {
+		flex: 0 0 auto;
+		margin-top: 2px;
+	}
+
+	.key-unverified-body {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.key-unverified-t {
+		font-weight: 600;
+	}
+
+	.key-unverified p {
+		margin: 0;
+	}
+
 	.notelink {
 		background: none;
 		border: none;

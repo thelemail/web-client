@@ -230,7 +230,7 @@ describe('deriveTrust', () => {
 		const trust = deriveTrust(
 			gmail({
 				e2e: true,
-				externalKey: { status: 'pinned', fingerprint: 'cd'.repeat(20), source: 'wkd' }
+				externalKey: { status: 'pinned', fingerprintHex: 'cd'.repeat(20), source: 'wkd' }
 			})
 		);
 		expect(trust.tier).toBe('encrypted');
@@ -240,7 +240,7 @@ describe('deriveTrust', () => {
 
 	it('asks for confirmation when an external key changes', () => {
 		const trust = deriveTrust(
-			gmail({ e2e: true, externalKey: { status: 'changed', fingerprint: 'ef'.repeat(20) } })
+			gmail({ e2e: true, externalKey: { status: 'changed', fingerprintHex: 'ef'.repeat(20) } })
 		);
 		expect(trust.tier).toBe('attention');
 		expect(trust.action).toBe('confirm_key_change');
@@ -531,7 +531,7 @@ describe('signed external mail', () => {
 
 	it('leaves external encrypted mail on the key-continuity checks', () => {
 		const trust = deriveTrust(
-			proton({ e2e: true, externalKey: { status: 'pinned', fingerprint: FP, source: 'wkd' } })
+			proton({ e2e: true, externalKey: { status: 'pinned', fingerprintHex: FP, source: 'wkd' } })
 		);
 		expect(trust.tier).toBe('encrypted');
 		expect(trust.checks.some((c) => c.id === 'signature')).toBe(false);

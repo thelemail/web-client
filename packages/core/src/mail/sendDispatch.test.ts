@@ -6,7 +6,9 @@ const calls = vi.hoisted(() => ({
 	lookups: [] as string[],
 	staleInternal: 0,
 	staleExternal: 0,
-	aliasKeyLoads: [] as string[]
+	staleAccount: 0,
+	aliasKeyLoads: [] as string[],
+	accountKeyLoads: [] as string[]
 }));
 
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'acct-me' } }));
@@ -15,6 +17,14 @@ vi.mock('$core/stores/aliasKeys.svelte', () => ({
 	aliasKeys: {
 		load: async (accountId: string) => {
 			calls.aliasKeyLoads.push(accountId);
+		}
+	}
+}));
+
+vi.mock('$core/stores/accountKeys.svelte', () => ({
+	accountKeys: {
+		load: async (accountId: string) => {
+			calls.accountKeyLoads.push(accountId);
 		}
 	}
 }));
@@ -40,6 +50,10 @@ vi.mock('./send', () => {
 			if (calls.staleInternal > 0) {
 				calls.staleInternal--;
 				throw new SendError('alias_key_stale', 'stale');
+			}
+			if (calls.staleAccount > 0) {
+				calls.staleAccount--;
+				throw new SendError('account_key_stale', 'stale');
 			}
 			if (input.scheduledAt) {
 				return { messageId: undefined as unknown as string, storedAt: '' };
@@ -87,7 +101,9 @@ beforeEach(() => {
 	calls.lookups.length = 0;
 	calls.staleInternal = 0;
 	calls.staleExternal = 0;
+	calls.staleAccount = 0;
 	calls.aliasKeyLoads.length = 0;
+	calls.accountKeyLoads.length = 0;
 });
 
 describe('dispatchSend scheduling', () => {
@@ -212,5 +228,12 @@ describe('dispatchSend with a shared address key that just rotated', () => {
 		expect((err as SendError).code).toBe('alias_key_stale');
 		expect(calls.internal).toHaveLength(1);
 		expect(calls.aliasKeyLoads).toHaveLength(0);
+	});
+
+	it('reloads the account keys and retries once when the own key went stale', async () => {
+		calls.staleAccount = 1;
+		await dispatchSend({ to: [party('friend@thelemail.test')], subject: 'hi', body: 'hello' });
+		expect(calls.accountKeyLoads).toEqual(['acct-me']);
+		expect(calls.internal).toHaveLength(2);
 	});
 });

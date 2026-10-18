@@ -3,7 +3,6 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Users from '@lucide/svelte/icons/users';
-	import { lookupDirectory } from '$core/directory/lookup';
 	import {
 		createCalendar,
 		rotateCalendarMembers,
@@ -14,7 +13,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import * as Dialog from '$core/components/ui/dialog';
-	import { verifyDirectoryLookup } from '$core/directory/verify';
+	import { verifiedMemberKey } from '$core/directory/memberKey';
 	import { hexToB64, textToB64 } from '$core/keys/encode';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { senderKey } from '$core/mail/send';
@@ -124,9 +123,8 @@
 			const role = roles[member.accountId];
 			if (!role) continue;
 			progress = m.cal_caldlg_verifying({ email: member.email });
-			const lookup = await lookupDirectory(member.email);
-			await verifyDirectoryLookup(lookup, member.email.trim().toLowerCase());
-			out.push({ accountId: member.accountId, publicKeyArmored: lookup.publicKeyArmored, role });
+			const publicKeyArmored = await verifiedMemberKey(member.email, member.accountId);
+			out.push({ accountId: member.accountId, publicKeyArmored, role });
 		}
 		if (!out.length) throw new Error(m.cal_caldlg_pick_member());
 		if (!out.some((r) => r.role === 'owner')) throw new Error(m.cal_caldlg_needs_owner());

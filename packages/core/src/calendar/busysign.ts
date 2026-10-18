@@ -1,5 +1,6 @@
 import { bytesToB64 } from '$core/crypto';
 import { hexToB64 } from '$core/keys/encode';
+import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { m } from '$paraglide/messages.js';
 import { canonicalise, type BusyStatement } from './busycanon';
@@ -14,6 +15,7 @@ export async function signBusyWindows(
 	accountId: string,
 	statement: BusyStatement
 ): Promise<BusySignature> {
+	await requireConfirmedOwnKey(accountId);
 	const res = await keystore.signDetached({ accountId, data: canonicalise(statement) });
 	if (!res.ok) {
 		throw new SealError(

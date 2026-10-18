@@ -119,10 +119,10 @@ describe('loadAttachmentHeader', () => {
 		expect(JSON.stringify(args)).not.toContain('https://blob/');
 	});
 
-	it('passes the pointer key fingerprint through as a decryption hint', async () => {
+	it('passes the pointer key fingerprint through as a hex decryption hint', async () => {
 		attachmentHeader.mockResolvedValue({ ok: true, header });
 		const c = chip('hinted');
-		c.pointer.keyFingerprint = 'abc123';
+		c.pointer.keyFingerprint = btoa(String.fromCharCode(0xab, 0xc1, 0x23));
 
 		await loadAttachmentHeader('acct', c);
 		expect(attachmentHeader).toHaveBeenCalledWith({
