@@ -1279,7 +1279,11 @@ async function seedAccountKeys(v: VaultState, rec?: VaultRecord): Promise<void> 
 	const currentFp = fingerprintHexOf(v.privateKey);
 	const stored = rec?.accountKeys ?? [];
 	const known = stored.find((k) => k.fingerprintHex === currentFp);
-	v.keyVersion = known?.keyVersion ?? (stored.length ? 1 : (rec?.keyVersion ?? 1));
+	v.keyVersion =
+		known?.keyVersion ??
+		(stored.length
+			? Math.max(...stored.map((k) => k.keyVersion), rec?.keyVersion ?? 1) + 1
+			: (rec?.keyVersion ?? 1));
 	v.accountKeys = new Map([
 		[
 			currentFp,
