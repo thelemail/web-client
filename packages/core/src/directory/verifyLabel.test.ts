@@ -26,25 +26,12 @@ vi.mock('./tlog/policy', () => ({ TLOG_POLICY: null }));
 vi.mock('./tlog/state-idb', () => ({ tlogStateStore: {} }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
-import { verifyDirectoryLookup, type DirectoryStatement } from './verify';
+import { signStatement, type StatementFields as DirectoryStatement } from './fixtures/signedStatement';
+import { verifyDirectoryLookup } from './verify';
 import { DirectoryVerificationError } from './errors';
 import { generateCurve25519Key } from '$core/keys/pgpKeys';
 
 let signer: openpgp.PrivateKey;
-
-function canonical(s: DirectoryStatement): Uint8Array {
-	return new TextEncoder().encode(
-		JSON.stringify({
-			accountId: s.accountId,
-			address: s.address,
-			issuedAt: s.issuedAt,
-			keyAlgorithm: s.keyAlgorithm,
-			keyFingerprint: s.keyFingerprint.toLowerCase(),
-			signingKeyFingerprint: s.signingKeyFingerprint.toLowerCase(),
-			version: s.version
-		})
-	);
-}
 
 async function signedLookup(key: openpgp.PublicKey, keyAlgorithm: string, issuedAt: string) {
 	const statement: DirectoryStatement = {
@@ -56,16 +43,10 @@ async function signedLookup(key: openpgp.PublicKey, keyAlgorithm: string, issued
 		issuedAt,
 		signingKeyFingerprint: h.signerFingerprint
 	};
-	const sig = await openpgp.sign({
-		message: await openpgp.createMessage({ binary: canonical(statement) }),
-		signingKeys: signer,
-		detached: true,
-		format: 'binary'
-	});
+	const signed = await signStatement(signer, statement);
 	return {
 		publicKeyArmored: key.armor(),
-		directoryStatement: statement,
-		directorySignature: btoa(String.fromCharCode(...(sig as Uint8Array)))
+		...signed
 	};
 }
 

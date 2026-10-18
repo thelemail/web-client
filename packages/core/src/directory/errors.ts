@@ -1,3 +1,7 @@
+import type { StatementErrorKind } from './statement';
+import type { KeyTransitionErrorCode } from './key-transition';
+import type { TlogProofDetails } from './tlog/verify-tlog';
+
 export type DirectoryVerificationCode =
 	| 'signature_invalid'
 	| 'address_mismatch'
@@ -6,6 +10,8 @@ export type DirectoryVerificationCode =
 	| 'signing_key_mismatch'
 	| 'version_rolled_back'
 	| 'fingerprint_changed'
+	| 'key_transition_invalid'
+	| 'tlog_pending'
 	| 'statement_malformed'
 	| 'tlog_proof_missing'
 	| 'tlog_proof_malformed'
@@ -20,6 +26,8 @@ export type DirectoryVerificationCode =
 	| 'tlog_consistency_unavailable'
 	| 'tlog_consistency_invalid';
 
+export type KeyTransitionState = 'absent' | 'account_changed' | 'previous_key_unavailable';
+
 export interface DirectoryVerificationDetails {
 	statementAddress?: string;
 	requestedAddress?: string;
@@ -33,6 +41,13 @@ export interface DirectoryVerificationDetails {
 	currentVersion?: number;
 	previousVerifiedAtMillis?: number;
 	keyAlgorithm?: string;
+	servedKeyAlgorithm?: string;
+	statementError?: StatementErrorKind | 'missing';
+	statementField?: string;
+	transition?: KeyTransitionState;
+	transitionError?: KeyTransitionErrorCode;
+	retiredAtMillis?: number;
+	tlogCode?: DirectoryVerificationCode;
 	logOrigin?: string;
 	treeSize?: number;
 	previousTreeSize?: number;
@@ -42,9 +57,19 @@ export interface DirectoryVerificationDetails {
 	cosignatureTimestamp?: number;
 }
 
+export type TlogOutcome =
+	| ({ state: 'verified' } & TlogProofDetails)
+	| { state: 'not_configured' }
+	| {
+			state: 'failed';
+			code: DirectoryVerificationCode;
+			details: DirectoryVerificationDetails;
+	  };
+
 export class DirectoryVerificationError extends Error {
 	code: DirectoryVerificationCode;
 	details: DirectoryVerificationDetails;
+	tlog?: TlogOutcome;
 	constructor(
 		code: DirectoryVerificationCode,
 		message?: string,

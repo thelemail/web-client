@@ -1,5 +1,6 @@
 import { lookupAccount } from '$core/api/accounts';
 import type { AccountLookupResponse } from '$core/api/types';
+import { getSeen } from './seen-idb';
 import { TLOG_POLICY } from './tlog/policy';
 import { tlogStateStore } from './tlog/state-idb';
 
@@ -12,6 +13,25 @@ async function acceptedTreeSize(): Promise<number | undefined> {
 	}
 }
 
-export async function lookupDirectory(email: string): Promise<AccountLookupResponse> {
-	return lookupAccount(email, await acceptedTreeSize());
+async function pinnedFingerprint(email: string): Promise<string | undefined> {
+	try {
+		return (await getSeen(email.trim().toLowerCase()))?.keyFingerprint.toLowerCase();
+	} catch {
+		return undefined;
+	}
+}
+
+export interface LookupDirectoryOptions {
+	previousKeyFingerprint?: string;
+}
+
+export async function lookupDirectory(
+	email: string,
+	opts: LookupDirectoryOptions = {}
+): Promise<AccountLookupResponse> {
+	const [since, previous] = await Promise.all([
+		acceptedTreeSize(),
+		opts.previousKeyFingerprint ? Promise.resolve(opts.previousKeyFingerprint) : pinnedFingerprint(email)
+	]);
+	return lookupAccount(email, since, previous);
 }

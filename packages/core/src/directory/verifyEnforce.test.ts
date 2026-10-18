@@ -32,7 +32,8 @@ vi.mock('./tlog/policy', () => ({
 vi.mock('./tlog/state-idb', () => ({ tlogStateStore: {} }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
-import { verifyDirectoryLookup, type DirectoryStatement, type LookupInputForVerification } from './verify';
+import { signStatement, type StatementFields as DirectoryStatement } from './fixtures/signedStatement';
+import { verifyDirectoryLookup, type LookupInputForVerification } from './verify';
 import { DirectoryVerificationError } from './errors';
 
 const PINNED: Omit<TlogRuntimePolicy, 'mode'> = {
@@ -51,20 +52,6 @@ const PINNED: Omit<TlogRuntimePolicy, 'mode'> = {
 let signer: openpgp.PrivateKey;
 let key: { armored: string; fingerprint: string };
 
-function canonical(s: DirectoryStatement): Uint8Array {
-	return new TextEncoder().encode(
-		JSON.stringify({
-			accountId: s.accountId,
-			address: s.address,
-			issuedAt: s.issuedAt,
-			keyAlgorithm: s.keyAlgorithm,
-			keyFingerprint: s.keyFingerprint.toLowerCase(),
-			signingKeyFingerprint: s.signingKeyFingerprint.toLowerCase(),
-			version: s.version
-		})
-	);
-}
-
 async function signedLookup(tlogProof?: string): Promise<LookupInputForVerification> {
 	const statement: DirectoryStatement = {
 		address: 'vlad@thelemail.test',
@@ -75,16 +62,10 @@ async function signedLookup(tlogProof?: string): Promise<LookupInputForVerificat
 		issuedAt: '2026-09-01T00:00:00Z',
 		signingKeyFingerprint: h.signerFingerprint
 	};
-	const sig = await openpgp.sign({
-		message: await openpgp.createMessage({ binary: canonical(statement) }),
-		signingKeys: signer,
-		detached: true,
-		format: 'binary'
-	});
+	const signed = await signStatement(signer, statement);
 	return {
 		publicKeyArmored: key.armored,
-		directoryStatement: statement,
-		directorySignature: btoa(String.fromCharCode(...(sig as Uint8Array))),
+		...signed,
 		tlogProof
 	};
 }

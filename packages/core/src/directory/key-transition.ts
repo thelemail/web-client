@@ -54,7 +54,7 @@ export interface KeyTransitionInput {
 	previousPublicKeyArmored: string;
 }
 
-export function fingerprintHexOf(key: openpgp.Key | openpgp.PublicKeyPacket): string {
+export function fingerprintHexOf(key: { getFingerprint(): string | ArrayLike<number> }): string {
 	const fp = key.getFingerprint();
 	if (typeof fp === 'string') return fp.toLowerCase();
 	return Array.from(new Uint8Array(fp as ArrayLike<number>), (b) => b.toString(16).padStart(2, '0')).join('');

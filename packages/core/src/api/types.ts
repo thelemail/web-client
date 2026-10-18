@@ -26,6 +26,9 @@ export type ErrorCode =
 	| 'migration_conflict'
 	| 'stale_revision'
 	| 'shared_alias_key_stale'
+	| 'account_key_stale'
+	| 'key_rotation_unavailable'
+	| 'key_transition_invalid'
 	| 'invitee_not_found'
 	| 'invitee_plan_conflict'
 	| 'invitee_store_billed'
@@ -675,6 +678,8 @@ export interface ExternalKeyTrust {
 	source: 'wkd' | 'keyserver' | 'manual';
 	status: 'pinned' | 'changed' | 'unverified';
 	firstSeenAt: string;
+	previousFingerprint?: string;
+	previousFirstSeenAt?: string;
 }
 
 export interface ApiError {
@@ -1198,6 +1203,39 @@ export interface MeResponse {
 	defaultReplyAddressId?: string | null;
 	deletion?: DeletionStatus | null;
 	lifecycle?: LifecycleInfo | null;
+	keyFingerprint: string;
+	keyVersion: number;
+	keyRotationBlocker?: KeyRotationBlocker;
+}
+
+export type KeyRotationBlocker = 'sign_in_upgrade_required' | 'recovery_upgrade_required';
+
+export interface AccountKey {
+	keyVersion: number;
+	keyFingerprint: string;
+	keyAlgorithm: string;
+	publicKeyArmored: string;
+	encryptedPrivateKey: string;
+	isCurrent: boolean;
+	activatedAt?: string;
+	retiredAt?: string;
+}
+
+export interface AccountKeyListResponse {
+	currentVersion: number;
+	keys: AccountKey[];
+}
+
+export interface KeyRotationTransition {
+	previousKeyFingerprint: string;
+	signature: string;
+}
+
+export interface KeyRotationRequest {
+	expectedKeyVersion: number;
+	publicKeyArmored: string;
+	encryptedPrivateKey: string;
+	transitions: KeyRotationTransition[];
 }
 
 export interface DirectoryStatementWire {
@@ -1210,6 +1248,11 @@ export interface DirectoryStatementWire {
 	signingKeyFingerprint: string;
 }
 
+export interface AccountLookupPreviousKey {
+	fingerprint: string;
+	publicKeyArmored: string;
+}
+
 export interface AccountLookupResponse {
 	accountId: string;
 	email: string;
@@ -1218,7 +1261,9 @@ export interface AccountLookupResponse {
 	shared?: boolean;
 	publicKeyArmored: string;
 	directoryStatement: DirectoryStatementWire;
+	directoryStatementRaw?: string;
 	directorySignature: string;
+	previousKey?: AccountLookupPreviousKey;
 	tlogProof?: string;
 	tlogConsistency?: TlogConsistencyProof;
 	delegations?: SigningDelegation[];

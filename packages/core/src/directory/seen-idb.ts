@@ -4,6 +4,7 @@ export interface SeenRecord {
 	address: string;
 	version: number;
 	keyFingerprint: string;
+	accountId?: string;
 	firstSeenAt: number;
 	lastSeenAt: number;
 }
