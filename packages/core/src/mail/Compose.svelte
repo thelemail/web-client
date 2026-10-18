@@ -522,6 +522,7 @@
 	const INLINE_CODES = new Set<SendError['code']>([
 		'recipient_unknown',
 		'account_key_stale',
+		'account_key_unverified',
 		'locked',
 		'no_account',
 		'encrypt',

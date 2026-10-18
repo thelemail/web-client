@@ -616,6 +616,17 @@
 	<CardHead icon={KeySquare} title={m.settings_security_keys_title()}>
 		{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	</CardHead>
+	{#if accountKeys.verification === 'unverified' && auth.accountId}
+		{@const accountId = auth.accountId}
+		<div class="key-unverified" role="alert">
+			<TriangleAlert size={16} />
+			<div class="key-unverified-body">
+				<div class="key-unverified-t">{m.settings_security_key_unverified_title()}</div>
+				<p>{m.settings_security_key_unverified()}</p>
+				<Button variant="secondary" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
+			</div>
+		</div>
+	{/if}
 	<Row
 		col
 		t={m.settings_security_fingerprint()}
@@ -742,6 +753,38 @@
 	.key-warn {
 		align-items: center;
 		color: var(--warning-700);
+	}
+
+	.key-unverified {
+		display: flex;
+		gap: 10px;
+		align-items: flex-start;
+		padding: 14px 18px;
+		border-bottom: 1px solid var(--border);
+		background: var(--danger-100);
+		color: var(--danger-700);
+		font-size: 13px;
+		line-height: 1.5;
+	}
+
+	.key-unverified :global(svg) {
+		flex: 0 0 auto;
+		margin-top: 2px;
+	}
+
+	.key-unverified-body {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 8px;
+	}
+
+	.key-unverified-t {
+		font-weight: 600;
+	}
+
+	.key-unverified p {
+		margin: 0;
 	}
 
 	.notelink {

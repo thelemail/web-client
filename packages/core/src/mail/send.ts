@@ -1,6 +1,7 @@
 import * as openpgp from 'openpgp';
 import { auth } from '$core/stores/auth.svelte';
 import { keystore } from '$core/keystore/keystore-client';
+import { accountKeys } from '$core/stores/accountKeys.svelte';
 import { bytesToB64, hexToBytes } from '$core/crypto';
 import { sendInternal } from '$core/api/messages';
 import { lookupDirectory } from '$core/directory/lookup';
@@ -65,6 +66,7 @@ export type SendErrorCode =
 	| 'rate_limited'
 	| 'alias_key_stale'
 	| 'account_key_stale'
+	| 'account_key_unverified'
 	| 'schedule_unsupported'
 	| 'malware_blocked'
 	| 'rejected'
@@ -205,6 +207,9 @@ if (typeof window !== 'undefined') {
 }
 
 export async function senderKey(accountId: string, aliasId?: string): Promise<KeyMaterial> {
+	if (accountKeys.isUnverified(accountId)) {
+		throw new SendError('account_key_unverified', m.send_error_account_key_unverified());
+	}
 	const cacheKey = `${accountId}:${aliasId ?? ''}`;
 	const existing = cachedSenderKeys.get(cacheKey);
 	if (existing) return existing;
