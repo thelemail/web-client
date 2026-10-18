@@ -340,12 +340,15 @@ async function settlePin(
 		const accepted = opts.acceptFingerprint?.toLowerCase() === stmt.keyFingerprint;
 		if (!accepted) {
 			const element = transitionFrom(stmt, pinned);
-			const prompt = (state: DirectoryVerificationDetails['transition']) => {
+			const prompt = (
+				state: DirectoryVerificationDetails['transition'],
+				tlogCode?: DirectoryVerificationCode
+			) => {
 				if (enforced) return enforced;
 				return new DirectoryVerificationError(
 					'fingerprint_changed',
 					`statement key fp ${stmt.keyFingerprint} != last pinned ${pinned}`,
-					{ ...changeDetails, transition: state }
+					{ ...changeDetails, transition: state, tlogCode }
 				);
 			};
 			if (!element) throw prompt('absent');
@@ -372,9 +375,7 @@ async function settlePin(
 			}
 			if (tlog.state !== 'verified') {
 				const tlogCode = tlog.state === 'failed' ? tlog.code : undefined;
-				if (tlogCode && !PENDING_TLOG_CODES.has(tlogCode)) {
-					throw enforced ?? new DirectoryVerificationError(tlogCode, 'log check failed', tlog.state === 'failed' ? tlog.details : {});
-				}
+				if (!tlogCode || !PENDING_TLOG_CODES.has(tlogCode)) throw prompt('log_unverified', tlogCode);
 				throw new DirectoryVerificationError('tlog_pending', 'the key change is not logged yet', {
 					...changeDetails,
 					retiredAtMillis: element.retiredAtMillis,

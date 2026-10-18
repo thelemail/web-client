@@ -26,7 +26,11 @@ export type DirectoryVerificationCode =
 	| 'tlog_consistency_unavailable'
 	| 'tlog_consistency_invalid';
 
-export type KeyTransitionState = 'absent' | 'account_changed' | 'previous_key_unavailable';
+export type KeyTransitionState =
+	| 'absent'
+	| 'account_changed'
+	| 'previous_key_unavailable'
+	| 'log_unverified';
 
 export interface DirectoryVerificationDetails {
 	statementAddress?: string;

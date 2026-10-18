@@ -251,18 +251,43 @@ describe('signed key rotation', () => {
 		expect(err.code).toBe('tlog_pending');
 	});
 
-	it('never moves a pin without a log policy', async () => {
+	it('prompts instead of moving a pin without a log policy', async () => {
 		pin(V6_B.fingerprint, 6);
 		h.policy.value = null;
 		const err = await failure(verifyDirectoryLookup(await lookup(statement(), served(V6_B)), ADDRESS));
-		expect(err.code).toBe('tlog_pending');
+		expect(err.code).toBe('fingerprint_changed');
+		expect(err.details.transition).toBe('log_unverified');
+		expect(err.details.tlogCode).toBeUndefined();
+		expect(h.seen.get(ADDRESS)?.keyFingerprint).toBe(V6_B.fingerprint);
 	});
 
-	it('surfaces a broken log proof rather than moving the pin', async () => {
+	it('prompts on a broken log proof in monitor mode', async () => {
 		pin(V6_B.fingerprint, 6);
 		h.tlogFailure.value = new DirectoryVerificationError('tlog_inclusion_invalid', 'bad path');
 		const err = await failure(verifyDirectoryLookup(await lookup(statement(), served(V6_B)), ADDRESS));
+		expect(err.code).toBe('fingerprint_changed');
+		expect(err.details.transition).toBe('log_unverified');
+		expect(err.details.tlogCode).toBe('tlog_inclusion_invalid');
+		expect(h.seen.get(ADDRESS)?.keyFingerprint).toBe(V6_B.fingerprint);
+	});
+
+	it('fails on a broken log proof in enforce mode', async () => {
+		pin(V6_B.fingerprint, 6);
+		h.policy.value = { ...POLICY, mode: 'enforce' };
+		h.tlogFailure.value = new DirectoryVerificationError('tlog_inclusion_invalid', 'bad path');
+		const err = await failure(verifyDirectoryLookup(await lookup(statement(), served(V6_B)), ADDRESS));
 		expect(err.code).toBe('tlog_inclusion_invalid');
+		expect(h.seen.get(ADDRESS)?.keyFingerprint).toBe(V6_B.fingerprint);
+	});
+
+	it('lets the user accept a change the log could not confirm', async () => {
+		pin(V6_B.fingerprint, 6);
+		h.tlogFailure.value = new DirectoryVerificationError('tlog_inclusion_invalid', 'bad path');
+		const res = await verifyDirectoryLookup(await lookup(statement(), served(V6_B)), ADDRESS, {
+			acceptFingerprint: CURRENT.fingerprint
+		});
+		expect(res.transition).toBeUndefined();
+		expect(h.seen.get(ADDRESS)?.keyFingerprint).toBe(CURRENT.fingerprint);
 	});
 
 	it('accepts only the exact fingerprint the user confirmed', async () => {
