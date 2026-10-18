@@ -616,13 +616,16 @@
 	<CardHead icon={KeySquare} title={m.settings_security_keys_title()}>
 		{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	</CardHead>
-	{#if accountKeys.verification === 'unverified' && auth.accountId}
+	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
 		{@const accountId = auth.accountId}
+		{@const mismatch = accountKeys.verification === 'unverified'}
 		<div class="key-unverified" role="alert">
 			<TriangleAlert size={16} />
 			<div class="key-unverified-body">
-				<div class="key-unverified-t">{m.settings_security_key_unverified_title()}</div>
-				<p>{m.settings_security_key_unverified()}</p>
+				<div class="key-unverified-t">
+					{mismatch ? m.settings_security_key_unverified_title() : m.settings_security_key_unchecked_title()}
+				</div>
+				<p>{mismatch ? m.settings_security_key_unverified() : m.settings_security_key_unchecked()}</p>
 				<Button variant="secondary" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
 			</div>
 		</div>

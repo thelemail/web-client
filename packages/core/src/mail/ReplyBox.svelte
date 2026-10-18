@@ -457,6 +457,7 @@
 		'recipient_unknown',
 		'account_key_stale',
 		'account_key_unverified',
+		'account_key_unchecked',
 		'locked',
 		'no_account',
 		'encrypt',
