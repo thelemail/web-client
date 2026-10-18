@@ -17,8 +17,12 @@ vi.mock('$core/mail/bodySource', () => ({
 	renderDetail: (...a: unknown[]) => renderDetail(...a)
 }));
 
+const directoryTrust = vi.fn();
+const previousSenderKey = vi.fn();
+
 vi.mock('$core/mail/senderVerify', () => ({
-	directoryTrust: vi.fn(async () => null),
+	directoryTrust: (...a: unknown[]) => directoryTrust(...a),
+	previousSenderKey: (...a: unknown[]) => previousSenderKey(...a),
 	externalKeyState: vi.fn(async () => null),
 	delegatedSignerTrust: vi.fn(async () => null)
 }));
@@ -54,6 +58,10 @@ function item(id: string, read = true) {
 }
 
 beforeEach(() => {
+	directoryTrust.mockReset();
+	directoryTrust.mockResolvedValue(null);
+	previousSenderKey.mockReset();
+	previousSenderKey.mockResolvedValue(null);
 	getMessageThread.mockReset();
 	decryptPreview.mockReset();
 	renderDetail.mockReset();
@@ -120,5 +128,139 @@ describe('hydrateThread', () => {
 		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: [item('a')] });
 		const thread = await hydrateThread('a');
 		await expect(thread!.load('zzz')).resolves.toBeNull();
+	});
+});
+
+describe('signatures from a sender\u2019s previous key', () => {
+	const CURRENT_FP = 'c1'.repeat(32);
+	const PREVIOUS_V6 = 'a6'.repeat(32);
+	const PREVIOUS_V4 = 'b4'.repeat(20);
+	const RETIRED_AT = Date.parse('2026-10-01T00:00:00Z');
+
+	function internal(id: string) {
+		return { ...item(id), source: 'internal' };
+	}
+
+	function trustWith(...previous: string[]) {
+		return {
+			ok: true,
+			firstContact: false,
+			sameWorkspace: false,
+			tlog: { state: 'not_configured' },
+			publicKeyArmored: 'current-armored',
+			statement: {
+				accountId: 'acc-2',
+				address: 'a@example.org',
+				issuedAt: '2026-10-02T00:00:00Z',
+				keyAlgorithm: 'ed25519',
+				signingKeyFingerprint: 'e5'.repeat(32),
+				version: 3,
+				keyFingerprint: CURRENT_FP,
+				keyTransitions: previous.map((fp) => ({
+					previousKeyFingerprint: fp,
+					retiredAt: '2026-10-01T00:00:00Z',
+					retiredAtMillis: RETIRED_AT,
+					signature: new Uint8Array()
+				}))
+			}
+		};
+	}
+
+	function signedBy(first: Record<string, unknown>, second?: Record<string, unknown>) {
+		renderDetail.mockImplementation(async (_a: string, detail: { id: string }, opts: { verificationKeysArmored?: string[] }) => ({
+			render: { srcDoc: `<p>${detail.id}</p>` },
+			signature: opts.verificationKeysArmored?.includes('previous-armored') ? second : first
+		}));
+	}
+
+	async function loaded() {
+		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: [internal('a')] });
+		const thread = await hydrateThread('a');
+		return thread!.load('a');
+	}
+
+	it('verifies against the listed previous key fetched by fingerprint', async () => {
+		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6));
+		previousSenderKey.mockResolvedValue({
+			fingerprintHex: PREVIOUS_V6,
+			publicKeyArmored: 'previous-armored',
+			retiredAtMillis: RETIRED_AT
+		});
+		signedBy(
+			{ state: 'unknown_key', issuerFingerprintHex: PREVIOUS_V6.toUpperCase() },
+			{ state: 'valid', keyFingerprintHex: PREVIOUS_V6, signedAtMillis: RETIRED_AT - 60_000 }
+		);
+		const entry = await loaded();
+		expect(previousSenderKey).toHaveBeenCalledWith('acc-1', 'a@example.org', PREVIOUS_V6);
+		expect(renderDetail).toHaveBeenLastCalledWith(
+			'acc-1',
+			expect.objectContaining({ id: 'a' }),
+			expect.objectContaining({ verificationKeysArmored: ['current-armored', 'previous-armored'] })
+		);
+		expect(entry?.trust?.facts.signature).toEqual({
+			state: 'valid',
+			keyFingerprintHex: PREVIOUS_V6,
+			signedAtMillis: RETIRED_AT - 60_000,
+			previousKeyRetiredAtMillis: RETIRED_AT
+		});
+	});
+
+	it('matches a signature that only names the issuer key ID', async () => {
+		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6, PREVIOUS_V4));
+		previousSenderKey.mockResolvedValue({
+			fingerprintHex: PREVIOUS_V4,
+			publicKeyArmored: 'previous-armored',
+			retiredAtMillis: RETIRED_AT
+		});
+		signedBy(
+			{ state: 'unknown_key', issuerKeyIdHex: PREVIOUS_V4.slice(-16).toUpperCase() },
+			{ state: 'valid', keyFingerprintHex: PREVIOUS_V4, signedAtMillis: RETIRED_AT }
+		);
+		const entry = await loaded();
+		expect(previousSenderKey).toHaveBeenCalledWith('acc-1', 'a@example.org', PREVIOUS_V4);
+		expect(entry?.trust?.facts.signature?.state).toBe('valid');
+	});
+
+	it('rejects a previous-key signature made after the key was retired', async () => {
+		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6));
+		previousSenderKey.mockResolvedValue({
+			fingerprintHex: PREVIOUS_V6,
+			publicKeyArmored: 'previous-armored',
+			retiredAtMillis: RETIRED_AT
+		});
+		signedBy(
+			{ state: 'unknown_key', issuerFingerprintHex: PREVIOUS_V6 },
+			{ state: 'valid', keyFingerprintHex: PREVIOUS_V6, signedAtMillis: RETIRED_AT + 5 * 60_000 }
+		);
+		const entry = await loaded();
+		expect(entry?.trust?.facts.signature).toEqual({
+			state: 'invalid',
+			keyFingerprintHex: PREVIOUS_V6,
+			signedAtMillis: RETIRED_AT + 5 * 60_000
+		});
+	});
+
+	it('ignores a previous key the sender\u2019s statement does not list', async () => {
+		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6));
+		signedBy({ state: 'unknown_key', issuerFingerprintHex: 'dd'.repeat(32) });
+		const entry = await loaded();
+		expect(previousSenderKey).not.toHaveBeenCalled();
+		expect(renderDetail).toHaveBeenCalledTimes(1);
+		expect(entry?.trust?.facts.signature?.state).toBe('unknown_key');
+	});
+
+	it('keeps the original verdict when the previous key signature belongs to another key', async () => {
+		directoryTrust.mockResolvedValue(trustWith(PREVIOUS_V6));
+		previousSenderKey.mockResolvedValue({
+			fingerprintHex: PREVIOUS_V6,
+			publicKeyArmored: 'previous-armored',
+			retiredAtMillis: RETIRED_AT
+		});
+		signedBy(
+			{ state: 'unknown_key', issuerFingerprintHex: PREVIOUS_V6 },
+			{ state: 'valid', keyFingerprintHex: CURRENT_FP, signedAtMillis: RETIRED_AT }
+		);
+		const entry = await loaded();
+		expect(entry?.trust?.facts.signature?.state).toBe('unknown_key');
 	});
 });
