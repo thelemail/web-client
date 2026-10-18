@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/svelte';
-import { ApiCallError } from '$core/api/types';
+import { ApiCallError, type ErrorCode } from '$core/api/types';
 import ConfirmPage from './+page.svelte';
 
 const api = vi.hoisted(() => ({ confirmForwarding: vi.fn() }));
@@ -9,7 +9,7 @@ vi.mock('$core/api/readDelegations', () => api);
 const state = vi.hoisted(() => ({ page: { url: new URL('https://app.test/forwarding/confirm?token=tok1') } }));
 vi.mock('$app/state', () => state);
 
-function failure(status: number, code: string) {
+function failure(status: number, code: ErrorCode) {
 	return new ApiCallError(status, { error: { code, message: code } }, code);
 }
 
@@ -71,7 +71,7 @@ describe('forwarding confirm page', () => {
 		[410, 'confirmation_link_expired', 'This link has expired'],
 		[404, 'confirmation_link_invalid', 'This link cannot be used'],
 		[409, 'forwarding_source_unavailable', 'This address is not receiving mail']
-	])('explains a %i %s', async (status, code, title) => {
+	] as const)('explains a %i %s', async (status, code, title) => {
 		api.confirmForwarding.mockRejectedValue(failure(status, code));
 		await confirm();
 
