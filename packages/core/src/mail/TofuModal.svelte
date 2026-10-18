@@ -14,20 +14,22 @@
 
 	interface Props {
 		recipient: Recipient;
-		previousPinned?: string;
-		previousVerifiedAt?: string;
-		currentFingerprint?: string;
-		shared?: boolean;
+		previousFingerprint: string | null;
+		previousLastSeen: string | null;
+		previousFirstSeen: string | null;
+		currentFingerprint: string;
+		shared: boolean;
 		onSendAnyway: () => void;
 		onCancel: () => void;
 	}
 
 	let {
 		recipient,
-		previousPinned = '3E81 9A04 C2F7 5B16 88D0 · 7A23 1E69 4C0B F582 90AD',
-		previousVerifiedAt = '14 Feb 2026 · v6',
-		currentFingerprint = 'F70B 4A29 D183 6C95 22E1 · 8B40 3F7C 19A5 0D6E C214',
-		shared = false,
+		previousFingerprint,
+		previousLastSeen,
+		previousFirstSeen,
+		currentFingerprint,
+		shared,
 		onSendAnyway,
 		onCancel
 	}: Props = $props();
@@ -69,14 +71,24 @@
 		</p>
 
 		<div class="tofu-fp">
-			<div class="tofu-fprow">
-				<span class="tofu-fk">{m.mail_tofu_last_verified()}</span>
-				<span class="tofu-fv">{previousVerifiedAt}</span>
-			</div>
-			<div class="tofu-fprow">
-				<span class="tofu-fk">{m.mail_tofu_previously_pinned()}</span>
-				<span class="tofu-fv mono">{previousPinned}</span>
-			</div>
+			{#if previousLastSeen}
+				<div class="tofu-fprow">
+					<span class="tofu-fk">{m.mail_tofu_last_seen()}</span>
+					<span class="tofu-fv">{previousLastSeen}</span>
+				</div>
+			{/if}
+			{#if previousFirstSeen}
+				<div class="tofu-fprow">
+					<span class="tofu-fk">{m.mail_tofu_first_seen()}</span>
+					<span class="tofu-fv">{previousFirstSeen}</span>
+				</div>
+			{/if}
+			{#if previousFingerprint}
+				<div class="tofu-fprow">
+					<span class="tofu-fk">{m.mail_tofu_previously_pinned()}</span>
+					<span class="tofu-fv mono">{previousFingerprint}</span>
+				</div>
+			{/if}
 			<div class="tofu-fprow now">
 				<span class="tofu-fk">{m.mail_tofu_now()}</span>
 				<span class="tofu-fv mono">{currentFingerprint}</span>

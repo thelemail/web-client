@@ -33,10 +33,10 @@ vi.mock('$core/directory/lookup', async () => {
 	};
 });
 vi.mock('$core/directory/verify', () => ({
-	verifyDirectoryLookup: async (lookup: { email: string }, requested: string) => {
+	verifyDirectoryLookup: async (lookup: { email: string; accountId: string }, requested: string) => {
 		h.verified.push(requested);
 		if (lookup.email !== requested) throw new Error('address_mismatch');
-		return {};
+		return { statement: { accountId: lookup.accountId } };
 	},
 	DirectoryVerificationError: class extends Error {}
 }));

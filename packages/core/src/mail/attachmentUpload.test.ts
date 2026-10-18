@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const h = vi.hoisted(() => ({
 	keys: {} as Record<string, string>,
 	failures: {} as Record<string, string>,
-	accepted: [] as { email: string; acceptKeyChange?: boolean }[],
+	accepted: [] as { email: string; acceptFingerprint?: string }[],
 	encrypted: [] as string[],
 	slots: [] as { role: string; recipientAccountId?: string; keyFingerprint: string }[],
 	puts: [] as string[]
@@ -37,13 +37,17 @@ vi.mock('$core/directory/verify', () => {
 	}
 	return {
 		DirectoryVerificationError,
-		verifyDirectoryLookup: async (lookup: { email: string }, _: string, opts: { acceptKeyChange?: boolean } = {}) => {
-			h.accepted.push({ email: lookup.email, acceptKeyChange: opts.acceptKeyChange });
+		verifyDirectoryLookup: async (
+			lookup: { email: string; accountId: string; publicKeyArmored: string },
+			_: string,
+			opts: { acceptFingerprint?: string } = {}
+		) => {
+			h.accepted.push({ email: lookup.email, acceptFingerprint: opts.acceptFingerprint });
 			const code = h.failures[lookup.email];
-			if (code && !(code === 'fingerprint_changed' && opts.acceptKeyChange)) {
+			if (code && !(code === 'fingerprint_changed' && opts.acceptFingerprint === lookup.publicKeyArmored)) {
 				throw new DirectoryVerificationError(code);
 			}
-			return {};
+			return { statement: { accountId: lookup.accountId } };
 		}
 	};
 });
@@ -148,7 +152,9 @@ describe('recipient attachment copies', () => {
 		expect(h.encrypted).toEqual([]);
 		expect(h.puts).toEqual([]);
 
-		await orchestrator.ensureRecipientCopies([att], ['ada@thelemail.test'], { acceptKeyChange: true });
+		await orchestrator.ensureRecipientCopies([att], ['ada@thelemail.test'], {
+			acceptedKeys: new Map([['ada@thelemail.test', 'key-ada-1']])
+		});
 		expect(h.encrypted).toEqual(['key-ada-1']);
 		expect(h.slots).toMatchObject([
 			{ role: 'recipient', recipientAccountId: 'acct-ada', keyFingerprint: fingerprintOf('key-ada-1') }

@@ -1,4 +1,10 @@
-import { sendInternalMessage, SendError, sendErrorFromApi, type ComposeInput } from './send';
+import {
+	sendInternalMessage,
+	SendError,
+	sendErrorFromApi,
+	type AcceptedKeys,
+	type ComposeInput
+} from './send';
 import { sendExternalMessage } from './sendExternal';
 import type { ReplyParty } from './replyRecipients';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
@@ -6,6 +12,7 @@ import { lookupAccount } from '$core/api/accounts';
 import { ApiCallError } from '$core/api/types';
 import { canonicalRecipient } from './recipientAddress';
 import { auth } from '$core/stores/auth.svelte';
+import { accountKeys } from '$core/stores/accountKeys.svelte';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -61,7 +68,7 @@ export interface DispatchInput {
 }
 
 export interface DispatchOptions {
-	acceptKeyChange?: boolean;
+	acceptedKeys?: AcceptedKeys;
 }
 
 function party(r: DispatchRecipient): ReplyParty {
@@ -105,7 +112,7 @@ async function sendMixed(
 		[...classes].filter(([, cls]) => cls === 'internal').map(([addr]) => addr)
 	);
 	const sent = await sendInternalMessage(toComposeInput(input), {
-		acceptKeyChange: opts.acceptKeyChange,
+		acceptedKeys: opts.acceptedKeys,
 		deliverOnly: internalAddresses
 	});
 	const externalOnly = (list: DispatchRecipient[] | undefined) =>
@@ -142,10 +149,14 @@ export async function dispatchSend(
 		await dispatchOnce(input, opts);
 	} catch (e) {
 		const accountId = auth.accountId;
-		if (!(e instanceof SendError) || e.code !== 'alias_key_stale' || !input.fromAliasId || !accountId) {
+		if (!(e instanceof SendError) || !accountId) throw e;
+		if (e.code === 'alias_key_stale' && input.fromAliasId) {
+			await aliasKeys.load(accountId);
+		} else if (e.code === 'account_key_stale') {
+			await accountKeys.load(accountId);
+		} else {
 			throw e;
 		}
-		await aliasKeys.load(accountId);
 		await dispatchOnce(input, opts);
 	}
 }
@@ -188,5 +199,5 @@ async function dispatchOnce(input: DispatchInput, opts: DispatchOptions): Promis
 		return;
 	}
 
-	await sendInternalMessage(toComposeInput(input), { acceptKeyChange: opts.acceptKeyChange });
+	await sendInternalMessage(toComposeInput(input), { acceptedKeys: opts.acceptedKeys });
 }

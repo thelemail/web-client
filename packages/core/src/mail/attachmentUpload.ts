@@ -8,6 +8,7 @@ import {
 	senderKey,
 	sha256B64,
 	SendError,
+	type AcceptedKeys,
 	type KeyMaterial
 } from './send';
 import type {
@@ -47,7 +48,7 @@ interface RecipientResolution {
 }
 
 interface EnvOptions {
-	acceptKeyChange?: boolean;
+	acceptedKeys?: AcceptedKeys;
 	strict?: boolean;
 }
 
@@ -101,7 +102,7 @@ export class UploadOrchestrator {
 		for (const addr of recipientAddresses) {
 			if (recipients.has(addr)) continue;
 			try {
-				const r = await resolveRecipient(addr, { acceptKeyChange: opts.acceptKeyChange });
+				const r = await resolveRecipient(addr, { acceptedKeys: opts.acceptedKeys });
 				recipients.set(addr, { accountId: r.accountId, key: r.key });
 			} catch (e) {
 				if (!(e instanceof SendError)) throw e;
@@ -117,7 +118,7 @@ export class UploadOrchestrator {
 	async ensureRecipientCopies(
 		atts: Attachment[],
 		recipientAddresses: string[],
-		opts: { acceptKeyChange?: boolean } = {}
+		opts: { acceptedKeys?: AcceptedKeys } = {}
 	): Promise<void> {
 		const ready = atts.filter((a) => a.status === 'ready' && a.senderDescriptor);
 		if (ready.length === 0) return;

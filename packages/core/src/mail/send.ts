@@ -4,7 +4,8 @@ import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, hexToBytes } from '$core/crypto';
 import { sendInternal } from '$core/api/messages';
 import { lookupDirectory } from '$core/directory/lookup';
-import { ApiCallError, type ErrorCode } from '$core/api/types';
+import { ApiCallError, type ErrorCode, type ExternalKeyTrust } from '$core/api/types';
+import { b64ToHex } from '$core/keys/encode';
 import type {
 	AttachmentDescriptor,
 	ForwardCopy,
@@ -18,7 +19,7 @@ import { verifyDirectoryLookup, DirectoryVerificationError } from '$core/directo
 import { verifyReadDelegate } from '$core/directory/read-delegation';
 import type { DirectoryVerificationCode } from '$core/directory/verify';
 import { DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX } from '$core/directory/signing-key';
-import { formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
+import { formatDay, formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
 import type { MessagePreview, MessagePreviewRecipient } from './preview';
 import type { ReplyParty } from './replyRecipients';
 import { packBodyForSend } from './signaturePack';
@@ -63,6 +64,7 @@ export type SendErrorCode =
 	| 'encrypt'
 	| 'rate_limited'
 	| 'alias_key_stale'
+	| 'account_key_stale'
 	| 'schedule_unsupported'
 	| 'malware_blocked'
 	| 'rejected'
@@ -74,15 +76,19 @@ export type SendErrorPayload =
 	| {
 			kind: 'tofu';
 			address: string;
-			previousPinned: string;
-			previousVerifiedAt: string;
+			previousFingerprint: string | null;
+			previousLastSeen: string | null;
 			currentFingerprint: string;
+			currentFingerprintHex: string;
 			shared: boolean;
 	  }
 	| {
 			kind: 'external-key-change';
 			address: string;
+			previousFingerprint: string | null;
+			previousFirstSeen: string | null;
 			currentFingerprint: string;
+			currentFingerprintB64: string;
 	  }
 	| {
 			kind: 'directory';
@@ -93,6 +99,11 @@ export type SendErrorPayload =
 			servedKeyFingerprint?: string;
 			expectedSignerFingerprint?: string;
 			actualSignerFingerprint?: string;
+			previousFingerprint?: string;
+			currentFingerprint?: string;
+			keyAlgorithm?: string;
+			servedKeyAlgorithm?: string;
+			statementField?: string;
 			seenVersion?: number;
 			servedVersion?: number;
 	  }
@@ -141,6 +152,9 @@ export function sendErrorFromApi(e: unknown, fallback: string): SendError {
 		if (e.envelope?.error?.code === 'shared_alias_key_stale') {
 			return new SendError('alias_key_stale', m.send_error_alias_key_changed());
 		}
+		if (e.envelope?.error?.code === 'account_key_stale') {
+			return new SendError('account_key_stale', m.send_error_account_key_changed());
+		}
 		const refusal = e.envelope?.error?.code ? SENDER_REFUSALS[e.envelope.error.code] : undefined;
 		if (refusal) return new SendError('rejected', refusal());
 		const message = e.envelope?.error?.message ?? m.send_error_http({ reason: fallback, status: e.status });
@@ -179,7 +193,9 @@ if (typeof window !== 'undefined') {
 			msg.type === 'locked' ||
 			msg.type === 'cleared' ||
 			msg.type === 'persistentDisabled' ||
-			msg.type === 'aliasKeysChanged'
+			msg.type === 'aliasKeysChanged' ||
+			msg.type === 'accountKeysChanged' ||
+			msg.type === 'vaultChanged'
 		) {
 			for (const key of [...cachedSenderKeys.keys()]) {
 				if (key.startsWith(`${msg.accountId}:`)) cachedSenderKeys.delete(key);
@@ -229,8 +245,10 @@ function normaliseEmail(s: string): string {
 	return s.trim().toLowerCase();
 }
 
+export type AcceptedKeys = ReadonlyMap<string, string>;
+
 export interface ResolveOptions {
-	acceptKeyChange?: boolean;
+	acceptedKeys?: AcceptedKeys;
 }
 
 function directoryPayload(
@@ -250,31 +268,52 @@ function directoryPayload(
 			d.expectedSignerFingerprint ?? DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX
 		),
 		actualSignerFingerprint: fmt(d.actualSignerFingerprint),
+		previousFingerprint: fmt(d.previousFingerprint),
+		currentFingerprint: fmt(d.currentFingerprint),
+		keyAlgorithm: d.keyAlgorithm,
+		servedKeyAlgorithm: d.servedKeyAlgorithm,
+		statementField: d.statementField,
 		seenVersion: d.previousVersion,
 		servedVersion: d.currentVersion
 	};
 }
 
-function tofuPayload(
-	e: DirectoryVerificationError,
-	address: string,
-	shared = false
-): SendErrorPayload | null {
+export function externalKeyChangePayload(address: string, trust: ExternalKeyTrust): SendErrorPayload {
+	const firstSeen = trust.previousFirstSeenAt ? Date.parse(trust.previousFirstSeenAt) : NaN;
+	return {
+		kind: 'external-key-change',
+		address,
+		previousFingerprint: trust.previousFingerprint
+			? formatFingerprintHex(b64ToHex(trust.previousFingerprint))
+			: null,
+		previousFirstSeen: Number.isNaN(firstSeen) ? null : formatDay(firstSeen),
+		currentFingerprint: formatFingerprintHex(b64ToHex(trust.fingerprint)),
+		currentFingerprintB64: trust.fingerprint
+	};
+}
+
+export function unverifiedRecipientPayload(requestedAddress: string): SendErrorPayload {
+	return {
+		kind: 'directory',
+		address: requestedAddress,
+		requestedAddress,
+		expectedSignerFingerprint: formatFingerprintHex(DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX)
+	};
+}
+
+function tofuPayload(e: DirectoryVerificationError, address: string, shared: boolean): SendErrorPayload {
 	const d = e.details;
-	if (
-		!d.previousFingerprint ||
-		!d.currentFingerprint ||
-		typeof d.previousVersion !== 'number' ||
-		typeof d.previousVerifiedAtMillis !== 'number'
-	) {
-		return null;
-	}
+	const current = d.currentFingerprint ?? '';
 	return {
 		kind: 'tofu',
 		address,
-		previousPinned: formatFingerprintHex(d.previousFingerprint),
-		previousVerifiedAt: formatVerifiedAt(d.previousVerifiedAtMillis, d.previousVersion),
-		currentFingerprint: formatFingerprintHex(d.currentFingerprint),
+		previousFingerprint: d.previousFingerprint ? formatFingerprintHex(d.previousFingerprint) : null,
+		previousLastSeen:
+			typeof d.previousVerifiedAtMillis === 'number' && typeof d.previousVersion === 'number'
+				? formatVerifiedAt(d.previousVerifiedAtMillis, d.previousVersion)
+				: null,
+		currentFingerprint: formatFingerprintHex(current),
+		currentFingerprintHex: current,
 		shared
 	};
 }
@@ -322,32 +361,41 @@ export async function resolveRecipient(
 		throw sendErrorFromApi(e, m.send_error_recipient_lookup_failed());
 	}
 
+	let verified;
 	try {
-		await verifyDirectoryLookup(lookup, normalised, { acceptKeyChange: opts.acceptKeyChange });
+		verified = await verifyDirectoryLookup(lookup, normalised, {
+			acceptFingerprint: opts.acceptedKeys?.get(normalised)
+		});
 	} catch (e) {
 		if (e instanceof DirectoryVerificationError) {
 			if (e.code === 'fingerprint_changed') {
-				const payload = tofuPayload(e, normalised, lookup.shared === true);
 				throw new SendError(
 					'tofu',
 					m.send_error_recipient_key_changed(),
 					e.code,
-					payload ?? undefined
+					tofuPayload(e, normalised, lookup.shared === true)
 				);
 			}
 			throw new SendError(
 				'directory_verification_failed',
-				m.send_error_directory_failed({ address: emailAddress, code: e.code }),
+				e.code === 'tlog_pending'
+					? m.send_error_recipient_key_pending({ address: emailAddress })
+					: m.send_error_directory_failed({ address: emailAddress, code: e.code }),
 				e.code,
 				directoryPayload(e, normalised)
 			);
 		}
-		throw new SendError('directory_verification_failed', e instanceof Error ? e.message : 'verify');
+		throw new SendError(
+			'directory_verification_failed',
+			e instanceof Error ? e.message : 'verify',
+			undefined,
+			unverifiedRecipientPayload(normalised)
+		);
 	}
 
 	const fingerprintB64 = await fingerprintFromArmored(lookup.publicKeyArmored);
 	return {
-		accountId: lookup.accountId,
+		accountId: verified.statement.accountId,
 		fullName: lookup.fullName,
 		key: { publicKeyArmored: lookup.publicKeyArmored, fingerprintB64 },
 		readDelegates: await verifiedReadDelegates(lookup.readDelegates, normalised)
@@ -427,7 +475,7 @@ export function buildPreview(
 }
 
 export interface InternalSendOptions {
-	acceptKeyChange?: boolean;
+	acceptedKeys?: AcceptedKeys;
 	deliverOnly?: ReadonlySet<string>;
 }
 
@@ -467,7 +515,7 @@ export async function sendInternalMessage(
 		const addr = canonicalRecipient(p.address);
 		let r = resolutions.get(addr);
 		if (!r) {
-			r = await resolveRecipient(p.address, { acceptKeyChange: opts.acceptKeyChange });
+			r = await resolveRecipient(p.address, { acceptedKeys: opts.acceptedKeys });
 			resolutions.set(addr, r);
 		}
 		const typed = normaliseEmail(p.address);

@@ -9,6 +9,11 @@
 	import Pencil from '@lucide/svelte/icons/pencil';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import type { DirectoryVerificationCode } from '$core/directory/verify';
+	import {
+		LABEL_CURVE25519_LEGACY,
+		LABEL_CURVE25519_V4,
+		LABEL_CURVE25519_V6
+	} from '$core/directory/keyLabel';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 
@@ -18,7 +23,7 @@
 	}
 
 	interface Props {
-		inner: DirectoryVerificationCode;
+		inner: DirectoryVerificationCode | 'unknown';
 		recipient: Recipient;
 		requestedAddress?: string;
 		statementAddress?: string;
@@ -26,6 +31,11 @@
 		servedKeyFingerprint?: string;
 		expectedSignerFingerprint?: string;
 		actualSignerFingerprint?: string;
+		previousFingerprint?: string;
+		currentFingerprint?: string;
+		keyAlgorithm?: string;
+		servedKeyAlgorithm?: string;
+		statementField?: string;
 		seenVersion?: number;
 		servedVersion?: number;
 		onEditRecipient: () => void;
@@ -42,6 +52,11 @@
 		servedKeyFingerprint,
 		expectedSignerFingerprint,
 		actualSignerFingerprint,
+		previousFingerprint,
+		currentFingerprint,
+		keyAlgorithm,
+		servedKeyAlgorithm,
+		statementField,
 		seenVersion,
 		servedVersion,
 		onEditRecipient,
@@ -52,98 +67,99 @@
 	let tech = $state(false);
 	let what = $state(false);
 
-	const FP = {
-		expectedSigner: 'D41E 7F09 2B6A C835 11E0 · 9A7C 6F2D 4B18 0C53 A9E2',
-		actualSigner: '6B22 0CF4 8E19 77A3 D5B0 · 1F4E 9C28 33A1 7E60 B8D9',
-		signed: 'A93C 1E07 5F2B 88D4 6A1F · 0C73 E912 4B58 9D20 7AE6',
-		served: 'F70B 4A29 D183 6C95 22E1 · 8B40 3F7C 19A5 0D6E C214'
-	};
+	const ACCEPTED_LABELS = [LABEL_CURVE25519_V6, LABEL_CURVE25519_V4, LABEL_CURVE25519_LEGACY].join(', ');
 
-	type Row = [string, string];
+	type Row = [string, string | undefined];
 
-	const finding = $derived.by<{ plain: string; rows: Row[] }>(() => {
-		const addr = requestedAddress ?? recipient.email;
-		switch (inner) {
+	const version = (v: number | undefined) => (v === undefined ? undefined : `v${v}`);
+
+	function plainFor(code: Props['inner']): string {
+		switch (code) {
 			case 'signature_invalid':
-				return {
-					plain: m.mail_dirfail_plain_signature_invalid(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'signature_invalid'],
-						[m.mail_dirfail_address(), addr],
-						[m.mail_dirfail_trusted_signer(), expectedSignerFingerprint ?? FP.expectedSigner]
-					]
-				};
+				return m.mail_dirfail_plain_signature_invalid();
 			case 'signing_key_mismatch':
-				return {
-					plain: m.mail_dirfail_plain_signing_key_mismatch(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'signing_key_mismatch'],
-						[m.mail_dirfail_expected_signer(), expectedSignerFingerprint ?? FP.expectedSigner],
-						[m.mail_dirfail_statement_signed_by(), actualSignerFingerprint ?? FP.actualSigner]
-					]
-				};
+				return m.mail_dirfail_plain_signing_key_mismatch();
 			case 'address_mismatch':
-				return {
-					plain: m.mail_dirfail_plain_address_mismatch(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'address_mismatch'],
-						[m.mail_dirfail_you_addressed(), addr],
-						[m.mail_dirfail_record_is_for(), statementAddress ?? m.mail_dirfail_different_address()]
-					]
-				};
+				return m.mail_dirfail_plain_address_mismatch();
 			case 'fingerprint_mismatch':
-				return {
-					plain: m.mail_dirfail_plain_fingerprint_mismatch(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'fingerprint_mismatch'],
-						[m.mail_dirfail_directory_signed(), signedKeyFingerprint ?? FP.signed],
-						[m.mail_dirfail_server_returned(), servedKeyFingerprint ?? FP.served]
-					]
-				};
+				return m.mail_dirfail_plain_fingerprint_mismatch();
 			case 'algorithm_mismatch':
-				return {
-					plain: m.mail_dirfail_plain_algorithm_mismatch(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'algorithm_mismatch'],
-						[m.mail_dirfail_record_claims(), 'ecdh-x448'],
-						[m.mail_dirfail_accepted_here(), 'ed25519, rsa ≥ 3072']
-					]
-				};
+				return m.mail_dirfail_plain_algorithm_mismatch();
 			case 'version_rolled_back':
-				return {
-					plain: m.mail_dirfail_plain_version_rolled_back(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'version_rolled_back'],
-						[m.mail_dirfail_verified_before(), seenVersion !== undefined ? `v${seenVersion}` : 'v7'],
-						[m.mail_dirfail_server_now_serves(), servedVersion !== undefined ? `v${servedVersion}` : 'v5']
-					]
-				};
+				return m.mail_dirfail_plain_version_rolled_back();
 			case 'fingerprint_changed':
-				return {
-					plain: m.mail_dirfail_plain_fingerprint_changed(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'fingerprint_changed'],
-						[m.mail_dirfail_previously_pinned(), signedKeyFingerprint ?? FP.signed],
-						[m.mail_dirfail_now_serves(), servedKeyFingerprint ?? FP.served]
-					]
-				};
+				return m.mail_dirfail_plain_fingerprint_changed();
+			case 'key_transition_invalid':
+				return m.mail_dirfail_plain_key_transition_invalid();
+			case 'tlog_pending':
+				return m.mail_dirfail_plain_tlog_pending();
 			case 'statement_malformed':
-				return {
-					plain: m.mail_dirfail_plain_statement_malformed(),
-					rows: [
-						[m.mail_dirfail_error_code(), 'statement_malformed'],
-						[m.mail_dirfail_missing_fields(), 'signingKeyFingerprint, version']
-					]
-				};
+				return m.mail_dirfail_plain_statement_malformed();
+			case 'unknown':
+				return m.mail_dirfail_plain_unknown();
 			default:
-				return {
-					plain: m.mail_dirfail_plain_default(),
-					rows: [
-						[m.mail_dirfail_error_code(), inner],
-						[m.mail_dirfail_address(), addr]
-					]
-				};
+				return m.mail_dirfail_plain_default();
 		}
+	}
+
+	function rowsFor(code: Props['inner'], addr: string): Row[] {
+		switch (code) {
+			case 'signature_invalid':
+				return [
+					[m.mail_dirfail_address(), addr],
+					[m.mail_dirfail_trusted_signer(), expectedSignerFingerprint]
+				];
+			case 'signing_key_mismatch':
+				return [
+					[m.mail_dirfail_expected_signer(), expectedSignerFingerprint],
+					[m.mail_dirfail_statement_signed_by(), actualSignerFingerprint]
+				];
+			case 'address_mismatch':
+				return [
+					[m.mail_dirfail_you_addressed(), addr],
+					[m.mail_dirfail_record_is_for(), statementAddress]
+				];
+			case 'fingerprint_mismatch':
+				return [
+					[m.mail_dirfail_directory_signed(), signedKeyFingerprint],
+					[m.mail_dirfail_server_returned(), servedKeyFingerprint]
+				];
+			case 'algorithm_mismatch':
+				return [
+					[m.mail_dirfail_record_claims(), keyAlgorithm],
+					[m.mail_dirfail_served_key_is(), servedKeyAlgorithm],
+					[m.mail_dirfail_accepted_here(), ACCEPTED_LABELS]
+				];
+			case 'version_rolled_back':
+				return [
+					[m.mail_dirfail_verified_before(), version(seenVersion)],
+					[m.mail_dirfail_server_now_serves(), version(servedVersion)]
+				];
+			case 'fingerprint_changed':
+			case 'key_transition_invalid':
+			case 'tlog_pending':
+				return [
+					[m.mail_dirfail_previously_pinned(), previousFingerprint],
+					[m.mail_dirfail_now_serves(), currentFingerprint],
+					[m.mail_dirfail_verified_before(), version(seenVersion)],
+					[m.mail_dirfail_server_now_serves(), version(servedVersion)]
+				];
+			case 'statement_malformed':
+				return [
+					[m.mail_dirfail_address(), addr],
+					[m.mail_dirfail_invalid_field(), statementField]
+				];
+			default:
+				return [[m.mail_dirfail_address(), addr]];
+		}
+	}
+
+	const finding = $derived.by<{ plain: string; rows: [string, string][] }>(() => {
+		const addr = requestedAddress ?? recipient.email;
+		const rows = [[m.mail_dirfail_error_code(), inner] as Row, ...rowsFor(inner, addr)].filter(
+			(r): r is [string, string] => typeof r[1] === 'string' && r[1].length > 0
+		);
+		return { plain: plainFor(inner), rows };
 	});
 
 	function handleKey(e: KeyboardEvent) {
