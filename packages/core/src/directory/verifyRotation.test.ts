@@ -62,7 +62,7 @@ import {
 } from './verify';
 import { DirectoryVerificationError } from './errors';
 import { signStatement, type StatementFields } from './fixtures/signedStatement';
-import { the168, vectorKey } from './fixtures/the168';
+import { rotationVectors, vectorKey } from './fixtures/rotation';
 
 const POLICY: TlogRuntimePolicy = {
 	origin: 'thelemail.com/keys',
@@ -74,13 +74,13 @@ const POLICY: TlogRuntimePolicy = {
 	mode: 'monitor'
 };
 
-const rotated = the168.statements.find((s) => s.name === 'transitions-three-mixed')!.expected!;
+const rotated = rotationVectors.statements.find((s) => s.name === 'transitions-three-mixed')!.expected!;
 const ADDRESS = rotated.address;
 const ACCOUNT = rotated.accountId;
 const CURRENT = vectorKey(rotated.keyFingerprint);
 const V6_B = vectorKey(rotated.keyTransitions![0].previousKeyFingerprint);
 const V4 = vectorKey(rotated.keyTransitions![2].previousKeyFingerprint);
-const UNRELATED = the168.keys.find((k) => k.name === 'unrelated')!;
+const UNRELATED = rotationVectors.keys.find((k) => k.name === 'unrelated')!;
 
 let signer: openpgp.PrivateKey;
 

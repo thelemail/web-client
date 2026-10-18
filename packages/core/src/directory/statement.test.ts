@@ -1,14 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import { parseStatementBytes, StatementParseError } from './statement';
-import { the168, vectorBytes } from './fixtures/the168';
+import { rotationVectors, vectorBytes } from './fixtures/rotation';
 
 describe('strict directory statement parse', () => {
 	it('uses the shared schema', () => {
-		expect(the168.schema).toBe('thelemail-the168-vectors/v1');
+		expect(rotationVectors.schema).toBe('thelemail-rotation-vectors/v1');
 	});
 
-	for (const v of the168.statements.filter((s) => s.valid)) {
+	for (const v of rotationVectors.statements.filter((s) => s.valid)) {
 		it(`accepts ${v.name}`, () => {
 			const stmt = parseStatementBytes(vectorBytes(v.raw));
 			const e = v.expected!;
@@ -32,7 +32,7 @@ describe('strict directory statement parse', () => {
 		});
 	}
 
-	for (const v of the168.statements.filter((s) => !s.valid)) {
+	for (const v of rotationVectors.statements.filter((s) => !s.valid)) {
 		it(`rejects ${v.name} as ${v.error}`, () => {
 			let err: unknown;
 			try {

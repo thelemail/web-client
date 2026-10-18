@@ -6,10 +6,10 @@ import {
 	verifyKeyTransition
 } from './key-transition';
 import { parseStatementBytes } from './statement';
-import { the168, vectorBytes, vectorKey } from './fixtures/the168';
+import { rotationVectors, vectorBytes, vectorKey } from './fixtures/rotation';
 
 describe('key transition endorsements', () => {
-	for (const v of the168.transitions) {
+	for (const v of rotationVectors.transitions) {
 		it(`${v.valid ? 'accepts' : 'rejects'} ${v.name}${v.error ? ` as ${v.error}` : ''}`, async () => {
 			const payload = keyTransitionPayload(v.accountId, v.newKeyFingerprint, v.previousKeyFingerprint);
 			expect(new TextDecoder().decode(payload)).toBe(v.payload);
@@ -33,7 +33,7 @@ describe('key transition endorsements', () => {
 		});
 	}
 
-	for (const v of the168.statements.filter((s) => s.valid && s.expected?.keyTransitions)) {
+	for (const v of rotationVectors.statements.filter((s) => s.valid && s.expected?.keyTransitions)) {
 		it(`verifies every endorsement in ${v.name}`, async () => {
 			const stmt = parseStatementBytes(vectorBytes(v.raw));
 			expect(stmt.keyTransitions.length).toBeGreaterThan(0);

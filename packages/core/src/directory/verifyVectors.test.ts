@@ -6,10 +6,10 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('./signing-key', async () => {
-	const { the168 } = await import('./fixtures/the168');
+	const { rotationVectors } = await import('./fixtures/rotation');
 	return {
-		DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: the168.directorySigningKey.publicKeyArmored,
-		DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX: the168.directorySigningKey.fingerprint
+		DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: rotationVectors.directorySigningKey.publicKeyArmored,
+		DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX: rotationVectors.directorySigningKey.fingerprint
 	};
 });
 vi.mock('./seen-idb', () => ({
@@ -24,14 +24,14 @@ vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
 import { verifyDirectoryLookup } from './verify';
 import { DirectoryVerificationError } from './errors';
-import { the168, vectorKey } from './fixtures/the168';
+import { rotationVectors, vectorKey } from './fixtures/rotation';
 
 const FALLBACK_ADDRESS = 'nora@thelemail.test';
 
 beforeEach(() => h.seen.clear());
 
 describe('directory verification over the shared vectors', () => {
-	for (const v of the168.statements.filter((s) => s.valid)) {
+	for (const v of rotationVectors.statements.filter((s) => s.valid)) {
 		it(`verifies ${v.name}`, async () => {
 			const e = v.expected!;
 			const res = await verifyDirectoryLookup(
@@ -52,11 +52,11 @@ describe('directory verification over the shared vectors', () => {
 		});
 	}
 
-	for (const v of the168.statements.filter((s) => !s.valid)) {
+	for (const v of rotationVectors.statements.filter((s) => !s.valid)) {
 		it(`refuses ${v.name} before trusting any field`, async () => {
 			const err = await verifyDirectoryLookup(
 				{
-					publicKeyArmored: the168.keys[0].publicKeyArmored,
+					publicKeyArmored: rotationVectors.keys[0].publicKeyArmored,
 					directoryStatementRaw: v.raw,
 					directorySignature: v.signature
 				},
@@ -73,9 +73,9 @@ describe('directory verification over the shared vectors', () => {
 	}
 
 	it('refuses a lookup without statement bytes', async () => {
-		const v = the168.statements[0];
+		const v = rotationVectors.statements[0];
 		const err = await verifyDirectoryLookup(
-			{ publicKeyArmored: the168.keys[0].publicKeyArmored, directorySignature: v.signature },
+			{ publicKeyArmored: rotationVectors.keys[0].publicKeyArmored, directorySignature: v.signature },
 			FALLBACK_ADDRESS
 		).then(
 			() => null,
@@ -86,7 +86,7 @@ describe('directory verification over the shared vectors', () => {
 	});
 
 	it('rejects a signature made over other bytes', async () => {
-		const [a, b] = the168.statements.filter((s) => s.valid);
+		const [a, b] = rotationVectors.statements.filter((s) => s.valid);
 		const err = await verifyDirectoryLookup(
 			{
 				publicKeyArmored: vectorKey(a.expected!.keyFingerprint).publicKeyArmored,
@@ -102,8 +102,8 @@ describe('directory verification over the shared vectors', () => {
 	});
 
 	it('rejects a served key the statement does not name', async () => {
-		const v = the168.statements.find((s) => s.name === 'plain-v1')!;
-		const other = the168.keys.find((k) => k.fingerprint !== v.expected!.keyFingerprint && k.keyVersion === 6)!;
+		const v = rotationVectors.statements.find((s) => s.name === 'plain-v1')!;
+		const other = rotationVectors.keys.find((k) => k.fingerprint !== v.expected!.keyFingerprint && k.keyVersion === 6)!;
 		const err = await verifyDirectoryLookup(
 			{
 				publicKeyArmored: other.publicKeyArmored,

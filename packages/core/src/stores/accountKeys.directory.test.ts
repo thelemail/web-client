@@ -64,9 +64,9 @@ vi.mock('$core/keystore/keystore-client', () => ({
 import { accountKeys } from './accountKeys.svelte';
 import { DirectoryVerificationError } from '$core/directory/errors';
 import { signStatement, type StatementFields } from '$core/directory/fixtures/signedStatement';
-import { the168, vectorKey } from '$core/directory/fixtures/the168';
+import { rotationVectors, vectorKey } from '$core/directory/fixtures/rotation';
 
-const rotated = the168.statements.find((s) => s.name === 'transitions-three-mixed')!.expected!;
+const rotated = rotationVectors.statements.find((s) => s.name === 'transitions-three-mixed')!.expected!;
 const ADDRESS = rotated.address;
 const ACCOUNT = rotated.accountId;
 const CURRENT = vectorKey(rotated.keyFingerprint);

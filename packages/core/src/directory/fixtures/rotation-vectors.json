@@ -1,5 +1,5 @@
 {
-  "schema": "thelemail-the168-vectors/v1",
+  "schema": "thelemail-rotation-vectors/v1",
   "directorySigningKey": {
     "name": "directory",
     "fingerprint": "7cb2f6323a7fbcc2ebfcd1f75f69476193b3945531fa2d7dc665400b8b0cf121",

@@ -1,4 +1,4 @@
-import vectors from './the168-vectors.json';
+import vectors from './rotation-vectors.json';
 import type { StatementErrorKind } from '../statement';
 import type { KeyTransitionErrorCode } from '../key-transition';
 
@@ -39,7 +39,7 @@ export interface VectorTransition {
 	error?: KeyTransitionErrorCode;
 }
 
-export interface The168Vectors {
+export interface RotationVectors {
 	schema: string;
 	directorySigningKey: VectorKey;
 	keys: VectorKey[];
@@ -47,7 +47,7 @@ export interface The168Vectors {
 	transitions: VectorTransition[];
 }
 
-export const the168 = vectors as The168Vectors;
+export const rotationVectors = vectors as RotationVectors;
 
 export function vectorBytes(b64: string): Uint8Array {
 	const bin = atob(b64);
@@ -57,7 +57,7 @@ export function vectorBytes(b64: string): Uint8Array {
 }
 
 export function vectorKey(fingerprint: string): VectorKey {
-	const key = the168.keys.find((k) => k.fingerprint === fingerprint);
+	const key = rotationVectors.keys.find((k) => k.fingerprint === fingerprint);
 	if (!key) throw new Error(`no vector key ${fingerprint}`);
 	return key;
 }
