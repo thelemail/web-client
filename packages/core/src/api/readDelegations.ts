@@ -99,3 +99,7 @@ export function revokeReadDelegation(addressId: string, id: string): Promise<Rea
 export function resendReadDelegationConfirmation(addressId: string, id: string): Promise<void> {
 	return apiFetch(`${base(addressId)}/${id}/resend-confirmation`, { method: 'POST' });
 }
+
+export function confirmForwarding(token: string): Promise<{ alreadyConfirmed: boolean }> {
+	return apiFetch('/v1/forwarding/confirm', { method: 'POST', body: { token }, skipAuth: true });
+}

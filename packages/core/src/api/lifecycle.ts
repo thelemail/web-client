@@ -31,8 +31,8 @@ export function setNotificationEmail(input: { email: string }): Promise<void> {
 	return apiFetch('/v1/me/notification-email', { method: 'PUT', body: input });
 }
 
-export function verifyNotificationEmail(input: { token: string }): Promise<void> {
-	return apiFetch('/v1/me/notification-email/verify', { method: 'POST', body: input });
+export function confirmNotificationEmail(token: string): Promise<{ alreadyConfirmed: boolean }> {
+	return apiFetch('/v1/notification-email/confirm', { method: 'POST', body: { token }, skipAuth: true });
 }
 
 export function resendNotificationEmail(): Promise<void> {
