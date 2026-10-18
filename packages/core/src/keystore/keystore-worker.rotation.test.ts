@@ -16,8 +16,12 @@ import {
 import { verifyKeyTransition } from '$core/directory/key-transition';
 import { generateCurve25519Key, lockKey } from '$core/keys/pgpKeys';
 
-vi.mock('@protontech/crypto', () => ({ CryptoProxy: {} }));
-vi.mock('@protontech/crypto/proxy/endpoint/api.ts', () => ({ Api: class {} }));
+vi.mock('@protontech/crypto', () => ({ CryptoProxy: { setEndpoint() {} } }));
+vi.mock('@protontech/crypto/proxy/endpoint/api.ts', () => ({
+	Api: class {
+		static init() {}
+	}
+}));
 vi.mock('@protontech/crypto/srp', () => ({}));
 
 vi.mock('./idb', () => ({
@@ -285,6 +289,17 @@ describe('account key rotation in the keystore', () => {
 		});
 		expect(res.loaded).toEqual([fpHex(alias.privateKey)]);
 		expect(res.failed).toEqual([]);
+	});
+
+	it('restores every key from the persistent vault after a rotation', async () => {
+		const serverHalf = bytesToBase64(crypto.getRandomValues(new Uint8Array(32)));
+		await call('enrollPersistent', { accountId: ACCOUNT, serverHalf });
+		await call('lock', { accountId: ACCOUNT });
+		expect(await decrypt(oldMail)).toMatchObject({ ok: false });
+		expect(await call('tryRestoreFromPersistent', { accountId: ACCOUNT, serverHalf })).toMatchObject({ ok: true });
+		expect(await currentFingerprint()).toEqual({ hex: rotatedFp, keyVersion: 2 });
+		expect(await decrypt(oldMail)).toMatchObject({ ok: true, plaintext: 'before the rotation' });
+		expect(await decrypt(oldMail, fpHex(account.original))).toMatchObject({ ok: true });
 	});
 
 	it('adopts a newer key another device published, and skips keys it cannot unlock', async () => {
