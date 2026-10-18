@@ -18,6 +18,7 @@ export type RealtimeKind =
 	| 'signature.deleted'
 	| 'settings.updated'
 	| 'account.updated'
+	| 'account_keys.updated'
 	| 'lifecycle.updated'
 	| 'subscription.updated'
 	| 'blocked_sender.created'

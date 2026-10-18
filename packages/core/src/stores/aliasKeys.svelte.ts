@@ -1,6 +1,7 @@
 import { browser } from '$app/environment';
 import { listMyAliasKeys } from '$core/api/aliases';
 import { keystore } from '$core/keystore/keystore-client';
+import { accountKeys } from './accountKeys.svelte';
 import { b64ToHex, b64ToText } from '$core/keys/encode';
 
 const REFRESH_INTERVAL_MS = 30_000;
@@ -32,7 +33,10 @@ class AliasKeysStore {
 				this.clear();
 				return;
 			}
-			if (b.type === 'vaultChanged' && b.accountId === this.#accountId) {
+			if (
+				(b.type === 'vaultChanged' || b.type === 'accountKeysChanged') &&
+				b.accountId === this.#accountId
+			) {
 				void this.load(b.accountId);
 			}
 		});
@@ -62,6 +66,7 @@ class AliasKeysStore {
 		if (!browser) return;
 		this.#lastRefresh = Date.now();
 		try {
+			await accountKeys.ready(accountId);
 			const { keys } = await listMyAliasKeys(accountId);
 			if (this.#accountId !== accountId) return;
 			if (!keys.length) {
