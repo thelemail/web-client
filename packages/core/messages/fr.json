@@ -1333,7 +1333,7 @@
   "trust_key_change_waiting_for_log": "Le changement de clé attend le journal de transparence",
   "trust_explain_key_change_waiting_for_log": "La nouvelle clé est signée par la précédente, mais le journal ne l’inclut pas encore. Vérifiez à nouveau dans une minute.",
   "trust_signed_with_their_previous_key": "Signé avec sa clé précédente",
-  "trust_explain_signed_with_their_previous_key": "Ce message a été signé avant que l’expéditeur ne renouvelle sa clé. Sa clé actuelle garantit celle qui l’a signé.",
+  "trust_explain_signed_with_their_previous_key": "Ce message a été signé avant que l’expéditeur ne renouvelle sa clé. La clé qui l’a signé figure dans son entrée actuelle de l’annuaire.",
   "trust_the_senders_key_has_changed_since_you": "La clé de l’expéditeur a changé depuis la dernière fois",
   "trust_could_not_verify": "Vérification impossible",
   "trust_authentication_failed": "Échec de l’authentification",

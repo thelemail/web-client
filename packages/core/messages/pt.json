@@ -1333,7 +1333,7 @@
 	"trust_key_change_waiting_for_log": "A alteração de chave aguarda o registo de transparência",
 	"trust_explain_key_change_waiting_for_log": "A chave nova está assinada pela anterior, mas o registo ainda não a inclui. Verifique novamente dentro de um minuto.",
 	"trust_signed_with_their_previous_key": "Assinada com a chave anterior",
-	"trust_explain_signed_with_their_previous_key": "Esta mensagem foi assinada antes de o remetente renovar a chave. A chave atual garante a chave que a assinou.",
+	"trust_explain_signed_with_their_previous_key": "Esta mensagem foi assinada antes de o remetente renovar a chave. A chave que a assinou consta do registo atual do remetente no diretório.",
 	"trust_the_senders_key_has_changed_since_you": "A chave do remetente mudou desde a última vez que a viu",
 	"trust_could_not_verify": "Não foi possível verificar",
 	"trust_authentication_failed": "A autenticação falhou",

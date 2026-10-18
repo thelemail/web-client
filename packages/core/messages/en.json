@@ -1333,7 +1333,7 @@
 	"trust_key_change_waiting_for_log": "The key change is waiting for the transparency log",
 	"trust_explain_key_change_waiting_for_log": "The new key is signed by the previous one, but the log hasn’t included it yet. Check again in a minute.",
 	"trust_signed_with_their_previous_key": "Signed with their previous key",
-	"trust_explain_signed_with_their_previous_key": "This message was signed before the sender rotated their key. Their current key vouches for the one that signed it.",
+	"trust_explain_signed_with_their_previous_key": "This message was signed before the sender rotated their key. The key that signed it is listed in their current directory record.",
 	"trust_the_senders_key_has_changed_since_you": "The sender's key has changed since you last saw it",
 	"trust_could_not_verify": "Could not verify",
 	"trust_authentication_failed": "Authentication failed",

@@ -1333,7 +1333,7 @@
 	"trust_key_change_waiting_for_log": "Die Schlüsseländerung wartet auf das Transparenzprotokoll",
 	"trust_explain_key_change_waiting_for_log": "Der neue Schlüssel ist mit dem bisherigen signiert, aber das Protokoll enthält ihn noch nicht. Prüfen Sie es in einer Minute erneut.",
 	"trust_signed_with_their_previous_key": "Mit dem bisherigen Schlüssel signiert",
-	"trust_explain_signed_with_their_previous_key": "Diese Nachricht wurde signiert, bevor der Absender seinen Schlüssel erneuert hat. Sein aktueller Schlüssel bürgt für den Schlüssel, der sie signiert hat.",
+	"trust_explain_signed_with_their_previous_key": "Diese Nachricht wurde signiert, bevor der Absender seinen Schlüssel erneuert hat. Der Schlüssel, der sie signiert hat, steht in seinem aktuellen Verzeichniseintrag.",
 	"trust_the_senders_key_has_changed_since_you": "Der Absenderschlüssel hat sich seit der letzten Prüfung geändert",
 	"trust_could_not_verify": "Verifizierung nicht möglich",
 	"trust_authentication_failed": "Authentifizierung fehlgeschlagen",
