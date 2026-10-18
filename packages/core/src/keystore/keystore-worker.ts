@@ -1314,7 +1314,7 @@ async function seedAccountKeys(v: VaultState, rec?: VaultRecord): Promise<void> 
 	for (const entry of v.accountKeys.values()) {
 		if (!entry.provisional && (!best || entry.keyVersion > best.keyVersion)) best = entry;
 	}
-	if (!best || best === login || !login.provisional) v.accountKeys.set(loginFp, login);
+	if (!best || best === login || !login.provisional || known) v.accountKeys.set(loginFp, login);
 	makeCurrent(v, best ?? login);
 }
 
@@ -1440,11 +1440,16 @@ async function handleLoadAccountKeys(args: LoadAccountKeysArgs): Promise<LoadAcc
 	const byFingerprint = new Map(listed.map((k) => [k.fingerprintHex, k]));
 	if (!listAgreesWithVault(v, start, listed, byFingerprint)) return { ok: false, code: 'key_list_invalid' };
 
+	const startVersion = byFingerprint.get(start.fingerprintHex)?.keyVersion ?? start.keyVersion;
+	const held = new Set<string>();
 	for (const entry of v.accountKeys.values()) {
 		const same = byFingerprint.get(entry.fingerprintHex);
-		if (entry.provisional && same) {
+		if (!entry.provisional || !same) continue;
+		if (entry === start || same.keyVersion < startVersion) {
 			entry.keyVersion = same.keyVersion;
 			delete entry.provisional;
+		} else {
+			held.add(entry.fingerprintHex);
 		}
 	}
 
@@ -1453,7 +1458,17 @@ async function handleLoadAccountKeys(args: LoadAccountKeysArgs): Promise<LoadAcc
 	const unverified: number[] = [];
 	const candidates = new Map<number, AccountKeyEntry>();
 	for (const k of listed) {
-		if (v.accountKeys.has(k.fingerprintHex)) {
+		const mine = v.accountKeys.get(k.fingerprintHex);
+		if (mine && held.has(k.fingerprintHex)) {
+			candidates.set(k.keyVersion, {
+				keyVersion: k.keyVersion,
+				fingerprintHex: k.fingerprintHex,
+				privateKey: mine.privateKey,
+				armoredEncrypted: mine.armoredEncrypted
+			});
+			continue;
+		}
+		if (mine) {
 			loaded.push(k.fingerprintHex);
 			continue;
 		}

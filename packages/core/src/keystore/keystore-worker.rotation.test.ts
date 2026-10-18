@@ -615,3 +615,42 @@ describe('a fresh sign-in on a rotated account', () => {
 		expect(await currentFingerprint(FRESH)).toEqual({ hex: fpHex(chain[2].key), keyVersion: 1 });
 	});
 });
+
+describe('two sign-ins before any key list arrives', () => {
+	const TWICE = '9d3f1a20-4c5e-4f6a-9b7c-2d3e4f5a6b7c';
+	const TWICE_EMAIL = 'odile@thelemail.test';
+	let twice: Account;
+	let retired: ServerKey;
+	let current: ServerKey;
+
+	beforeAll(async () => {
+		twice = await register(TWICE, TWICE_EMAIL);
+		retired = { key: twice.original, armored: twice.encryptedPrivateKey, transitions: [] };
+		const middle = await rotatedOnAnotherDevice(TWICE, twice.passphrase, [twice.original]);
+		current = await rotatedOnAnotherDevice(TWICE, twice.passphrase, [middle.key, twice.original]);
+	}, 60_000);
+
+	it('never makes the earlier sign-in key current through a relabelled list', async () => {
+		await unlock(twice, TWICE, TWICE_EMAIL);
+		await unlock(twice, TWICE, TWICE_EMAIL, current.armored);
+		expect((await currentFingerprint(TWICE)).hex).toBe(fpHex(current.key));
+		const swapped = keyList(TWICE, [current, retired]);
+		const res = await load(swapped);
+		expect(res).toMatchObject({
+			ok: true,
+			unverified: [2],
+			currentChanged: false,
+			keyVersion: 1,
+			currentFingerprintHex: fpHex(current.key)
+		});
+		await unlock(twice, TWICE, TWICE_EMAIL, current.armored);
+		expect(await currentFingerprint(TWICE)).toEqual({ hex: fpHex(current.key), keyVersion: 1 });
+		await unlock(twice, TWICE, TWICE_EMAIL);
+		expect((await currentFingerprint(TWICE)).hex).toBe(fpHex(current.key));
+		const mail = await encryptTo(retired.key, 'mail to the retired key');
+		expect(await call('decrypt', { accountId: TWICE, ciphertextBinary: mail })).toMatchObject({
+			ok: true,
+			plaintext: 'mail to the retired key'
+		});
+	});
+});
