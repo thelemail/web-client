@@ -15,8 +15,8 @@ import { platformDomains } from '$core/stores/platformDomains.svelte';
 
 const keys = vi.hoisted(() => ({ createAliasKey: vi.fn() }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: keys }));
-vi.mock('$core/directory/lookup', () => ({
-	lookupDirectory: vi.fn().mockResolvedValue({ publicKeyArmored: 'member-key' })
+vi.mock('$core/directory/memberKey', () => ({
+	verifiedMemberKey: vi.fn().mockResolvedValue('member-key')
 }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me' } }));
 const aliasApi = vi.hoisted(() => ({ createWorkspaceAlias: vi.fn() }));
@@ -34,7 +34,6 @@ vi.mock('$core/api/auth', async (importOriginal) => ({
 	checkAddressAvailability: authApi.checkAddressAvailability
 }));
 vi.mock('$core/directory/verify', () => ({
-	verifyDirectoryLookup: vi.fn(),
 	DirectoryVerificationError: class extends Error {}
 }));
 

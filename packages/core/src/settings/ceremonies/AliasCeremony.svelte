@@ -20,8 +20,8 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { hexToB64, textToB64 } from '$core/keys/encode';
-	import { lookupDirectory } from '$core/directory/lookup';
-	import { verifyDirectoryLookup, DirectoryVerificationError } from '$core/directory/verify';
+	import { DirectoryVerificationError } from '$core/directory/verify';
+	import { verifiedMemberKey } from '$core/directory/memberKey';
 	import { createWorkspaceAlias } from '$core/api/aliases';
 	import type { SharedAlias, SharedAliasMemberGrant } from '$core/api/aliases';
 	import { Checkbox } from '$core/components/ui/checkbox';
@@ -148,9 +148,7 @@
 		const out = [];
 		for (const target of emails) {
 			progress = m.settings_ceremony_alias_progress_verifying({ email: target.email });
-			const lookup = await lookupDirectory(target.email);
-			await verifyDirectoryLookup(lookup, target.email.trim().toLowerCase());
-			out.push({ accountId: target.accountId, publicKeyArmored: lookup.publicKeyArmored });
+			out.push({ accountId: target.accountId, publicKeyArmored: await verifiedMemberKey(target.email, target.accountId) });
 		}
 		return out;
 	}
