@@ -5,13 +5,8 @@ import { keystore } from '$core/keystore/keystore-client';
 import type { AccountKeySummary } from '$core/keystore/protocol';
 import { bytesToHex } from '$core/keys/encode';
 import { isProductVault } from '$core/products';
-import { lookupDirectory } from '$core/directory/lookup';
 import { decodeStrictBase64 } from '$core/directory/statement';
-import {
-	DirectoryVerificationError,
-	verifyDirectoryLookup,
-	type DirectoryVerificationCode
-} from '$core/directory/verify';
+import { DirectoryVerificationError, type DirectoryVerificationCode } from '$core/directory/errors';
 
 export interface CurrentAccountKey {
 	fingerprintHex: string;
@@ -182,6 +177,10 @@ class AccountKeysStore {
 		if (!pub?.ok) return null;
 		const local = bytesToHex(pub.fingerprint);
 		try {
+			const [{ lookupDirectory }, { verifyDirectoryLookup }] = await Promise.all([
+				import('$core/directory/lookup'),
+				import('$core/directory/verify')
+			]);
 			const lookup = await lookupDirectory(address);
 			const { statement, tlog } = await verifyDirectoryLookup(lookup, address, { pin: false });
 			if (statement.accountId !== accountId || statement.keyFingerprint !== local) return 'unverified';

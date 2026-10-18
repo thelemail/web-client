@@ -15,8 +15,7 @@ vi.mock('$app/environment', () => ({ browser: true }));
 vi.mock('$core/products', () => ({ isProductVault: false }));
 vi.mock('$core/api/me', () => me);
 vi.mock('$core/directory/lookup', () => ({ lookupDirectory: (...a: unknown[]) => dir.lookup(...a) }));
-vi.mock('$core/directory/verify', async () => ({
-	...(await import('$core/directory/errors')),
+vi.mock('$core/directory/verify', () => ({
 	verifyDirectoryLookup: (...a: unknown[]) => dir.verify(...a)
 }));
 vi.mock('$core/keystore/keystore-client', () => ({
