@@ -33,7 +33,12 @@ const keyIssuingCommands: KeystoreCommand[] = [
 	'reformatKeyWithUids',
 	'commitReformattedKey',
 	'loadAliasKeys',
-	'unloadAliasKeys'
+	'unloadAliasKeys',
+	'loadAccountKeys',
+	'listAccountKeys',
+	'prepareKeyRotation',
+	'commitKeyRotation',
+	'abandonKeyRotation'
 ];
 
 describe('commandVaultModes', () => {
@@ -64,6 +69,18 @@ describe('commandVaultModes', () => {
 			expect(commandVaultModes[cmd], `${cmd} must not reach a product vault`).not.toContain(
 				'product'
 			);
+		}
+	});
+
+	it('keeps account key history and rotation inside the account vault', () => {
+		for (const cmd of [
+			'loadAccountKeys',
+			'listAccountKeys',
+			'prepareKeyRotation',
+			'commitKeyRotation',
+			'abandonKeyRotation'
+		] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account']);
 		}
 	});
 

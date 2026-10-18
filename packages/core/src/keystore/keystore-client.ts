@@ -40,6 +40,15 @@ import type {
 	EnrollPersistentArgs,
 	GetPublicKeyArgs,
 	GetPublicKeyResponse,
+	AbandonKeyRotationArgs,
+	CommitKeyRotationArgs,
+	CommitKeyRotationResponse,
+	ListAccountKeysArgs,
+	ListAccountKeysResponse,
+	LoadAccountKeysArgs,
+	LoadAccountKeysResponse,
+	PrepareKeyRotationArgs,
+	PrepareKeyRotationResponse,
 	ReformatKeyWithUidsArgs,
 	ReformatKeyWithUidsResponse,
 	CommitReformattedKeyArgs,
@@ -190,7 +199,8 @@ function getSingleton(): KeystoreSingleton {
 			data.type === 'cleared' ||
 			data.type === 'clearedAll' ||
 			data.type === 'persistentDisabled' ||
-			data.type === 'aliasKeysChanged'
+			data.type === 'aliasKeysChanged' ||
+			data.type === 'accountKeysChanged'
 		) {
 			for (const cb of listeners) cb(data as Broadcast);
 		}
@@ -229,6 +239,7 @@ function broadcastAccountId(b: Broadcast): string | null {
 		case 'cleared':
 		case 'persistentDisabled':
 		case 'aliasKeysChanged':
+		case 'accountKeysChanged':
 			return b.accountId;
 		case 'clearedAll':
 			return null;
@@ -334,6 +345,19 @@ export const keystore = {
 			CRYPTO_TIMEOUT_MS
 		),
 	getPublicKey: (args: GetPublicKeyArgs) => call<GetPublicKeyResponse>('getPublicKey', args),
+	loadAccountKeys: (args: LoadAccountKeysArgs) =>
+		call<LoadAccountKeysResponse>('loadAccountKeys', args, CRYPTO_TIMEOUT_MS),
+	listAccountKeys: (args: ListAccountKeysArgs) =>
+		call<ListAccountKeysResponse>('listAccountKeys', args),
+	prepareKeyRotation: (args: Omit<PrepareKeyRotationArgs, 'serverClockOffsetMs'>) =>
+		call<PrepareKeyRotationResponse>(
+			'prepareKeyRotation',
+			{ ...args, serverClockOffsetMs: serverClockOffsetMs() },
+			CRYPTO_TIMEOUT_MS
+		),
+	commitKeyRotation: (args: CommitKeyRotationArgs) =>
+		call<CommitKeyRotationResponse>('commitKeyRotation', args),
+	abandonKeyRotation: (args: AbandonKeyRotationArgs) => call<void>('abandonKeyRotation', args),
 	reformatKeyWithUids: (args: ReformatKeyWithUidsArgs) =>
 		call<ReformatKeyWithUidsResponse>('reformatKeyWithUids', args, CRYPTO_TIMEOUT_MS),
 	commitReformattedKey: (args: CommitReformattedKeyArgs) =>
