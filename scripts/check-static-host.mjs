@@ -46,7 +46,9 @@ const SHELL_200 = [
 	'/u/0/mail/inbox',
 	'/u/0/mail/inbox/9b2f3c1e-1111-4a2b-9c3d-123456789abc',
 	'/u/0/calendar',
-	'/invite/abc_-XYZ'
+	'/invite/abc_-XYZ',
+	'/forwarding/confirm?token=abc_-XYZ',
+	'/notification-email/confirm?token=abc_-XYZ'
 ];
 
 const FILES_200 = [
