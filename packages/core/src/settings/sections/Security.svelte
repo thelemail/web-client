@@ -640,6 +640,13 @@
 		{:else}
 			<div class="key-meta">{m.settings_security_fingerprint_locked()}</div>
 		{/if}
+		{#if accountKeys.error && auth.accountId}
+			{@const accountId = auth.accountId}
+			<div class="key-meta key-warn">
+				<span>{m.settings_security_keys_incomplete()}</span>
+				<Button variant="ghost" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
+			</div>
+		{/if}
 	</Row>
 	<div class="cer-rows tight">
 		{#if rotationBlocker}
@@ -730,6 +737,11 @@
 	.key-earlier {
 		font-family: var(--font-mono);
 		color: var(--ink-700);
+	}
+
+	.key-warn {
+		align-items: center;
+		color: var(--warning-700);
 	}
 
 	.notelink {

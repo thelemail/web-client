@@ -1,5 +1,6 @@
 import { browser } from '$app/environment';
 import { listMyKeys } from '$core/api/me';
+import { ApiCallError, type AccountKeyListResponse } from '$core/api/types';
 import { keystore } from '$core/keystore/keystore-client';
 import type { AccountKeySummary } from '$core/keystore/protocol';
 import { bytesToHex } from '$core/keys/encode';
@@ -15,7 +16,7 @@ class AccountKeysStore {
 	current = $state<CurrentAccountKey | null>(null);
 	history = $state<AccountKeySummary[]>([]);
 	authScheme = $state<'srp_v1' | 'opaque_v1' | null>(null);
-	error = $state<string | null>(null);
+	error = $state<'history_incomplete' | 'account_keys_unavailable' | null>(null);
 	#accountId: string | null = null;
 	#ready = new Map<string, Promise<void>>();
 	#unsubscribe: (() => void) | null = null;
@@ -89,8 +90,9 @@ class AccountKeysStore {
 			const status = await keystore.status();
 			const account = status.accounts.find((a) => a.accountId === accountId);
 			if (!account?.unlocked) return;
-			if (account.authScheme === 'opaque_v1' && !isProductVault) {
-				const { keys } = await listMyKeys(accountId);
+			const keys =
+				account.authScheme === 'opaque_v1' && !isProductVault ? await this.#serverKeys(accountId) : null;
+			if (keys) {
 				const res = await keystore.loadAccountKeys({
 					accountId,
 					keys: keys.map((k) => ({
@@ -108,9 +110,18 @@ class AccountKeysStore {
 			await this.#refreshLocal(accountId);
 		} catch (err) {
 			if (accountId === this.#accountId) {
-				this.error = err instanceof Error ? err.message : 'account_keys_unavailable';
+				this.error = 'account_keys_unavailable';
 			}
 			await this.#refreshLocal(accountId);
+		}
+	}
+
+	async #serverKeys(accountId: string): Promise<AccountKeyListResponse['keys'] | null> {
+		try {
+			return (await listMyKeys(accountId)).keys;
+		} catch (err) {
+			if (err instanceof ApiCallError && err.status === 404) return null;
+			throw err;
 		}
 	}
 

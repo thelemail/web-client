@@ -2625,6 +2625,7 @@
   "settings_security_key_version": "Version de clé {version}",
   "settings_security_earlier_keys": "Clés précédentes :",
   "settings_security_fingerprint_locked": "Déverrouillez votre coffre pour voir votre empreinte.",
+  "settings_security_keys_incomplete": "Certaines de vos clés précédentes n’ont pas pu être chargées sur cet appareil. Vos anciens messages risquent de ne pas s’ouvrir.",
   "settings_security_rotate_title": "Renouveler votre clé",
   "settings_security_rotate_desc": "Génère une nouvelle paire de clés et conserve vos clés précédentes : les anciens e-mails restent lisibles.",
   "settings_security_rotate_cta": "Renouveler",

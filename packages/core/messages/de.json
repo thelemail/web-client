@@ -2625,6 +2625,7 @@
 	"settings_security_key_version": "Schlüsselversion {version}",
 	"settings_security_earlier_keys": "Frühere Schlüssel:",
 	"settings_security_fingerprint_locked": "Entsperren Sie Ihren Tresor, um Ihren Fingerabdruck zu sehen.",
+	"settings_security_keys_incomplete": "Einige Ihrer früheren Schlüssel konnten auf diesem Gerät nicht geladen werden. Ältere E-Mails lassen sich deshalb möglicherweise nicht öffnen.",
 	"settings_security_rotate_title": "Ihren Schlüssel erneuern",
 	"settings_security_rotate_desc": "Erstellt ein neues Schlüsselpaar und behält Ihre früheren Schlüssel, damit alte E-Mails lesbar bleiben.",
 	"settings_security_rotate_cta": "Erneuern",

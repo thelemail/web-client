@@ -2625,6 +2625,7 @@
 	"settings_security_key_version": "Key version {version}",
 	"settings_security_earlier_keys": "Earlier keys:",
 	"settings_security_fingerprint_locked": "Unlock your vault to see your fingerprint.",
+	"settings_security_keys_incomplete": "Some of your earlier keys could not be loaded on this device, so older mail may not open.",
 	"settings_security_rotate_title": "Rotate your key",
 	"settings_security_rotate_desc": "Issues a new key pair and keeps your earlier keys, so old mail stays readable.",
 	"settings_security_rotate_cta": "Rotate",

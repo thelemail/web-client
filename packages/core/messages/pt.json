@@ -2625,6 +2625,7 @@
 	"settings_security_key_version": "Versão da chave {version}",
 	"settings_security_earlier_keys": "Chaves anteriores:",
 	"settings_security_fingerprint_locked": "Desbloqueie o seu cofre para ver a sua impressão digital.",
+	"settings_security_keys_incomplete": "Não foi possível carregar algumas das suas chaves anteriores neste dispositivo, pelo que o correio mais antigo pode não abrir.",
 	"settings_security_rotate_title": "Renovar a sua chave",
 	"settings_security_rotate_desc": "Gera um novo par de chaves e guarda as chaves anteriores, para que as mensagens antigas continuem legíveis.",
 	"settings_security_rotate_cta": "Renovar",
