@@ -111,6 +111,7 @@
   "settings_ceremony_keys_rotate": "Renouveler la clé",
   "settings_ceremony_keys_err_failed": "La clé n’a pas pu être renouvelée. Rien n’a changé. Réessayez.",
   "settings_ceremony_keys_err_history": "Il manque une de vos clés précédentes sur cet appareil. Rechargez Thelemail et réessayez.",
+  "settings_ceremony_keys_err_not_saved": "Votre nouvelle clé a été publiée, mais cet appareil n’a pas pu l’enregistrer. Rechargez Thelemail pour terminer.",
   "settings_ceremony_keys_err_locked": "Déverrouillez votre coffre, puis réessayez.",
   "settings_ceremony_keys_err_too_soon": "Vous avez renouvelé votre clé il y a peu. Réessayez plus tard.",
   "settings_ceremony_keys_err_unavailable": "Le renouvellement de clé n’est pas encore disponible pour ce compte.",

@@ -130,8 +130,11 @@
 			return 'done';
 		}
 		progress = 3;
-		await keystore.commitKeyRotation({ accountId, fingerprintHex: prepared.fingerprintHex });
+		const committed = await keystore.commitKeyRotation({ accountId, fingerprintHex: prepared.fingerprintHex });
 		await accountKeys.load(accountId);
+		if (!committed.ok && accountKeys.current?.fingerprintHex !== prepared.fingerprintHex) {
+			throw new Error(m.settings_ceremony_keys_err_not_saved());
+		}
 		result = { previous, current: prepared.fingerprintHex };
 		progress = 4;
 		return 'done';

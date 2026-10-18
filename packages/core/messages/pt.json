@@ -111,6 +111,7 @@
 	"settings_ceremony_keys_rotate": "Renovar chave",
 	"settings_ceremony_keys_err_failed": "Não foi possível renovar a chave. Nada foi alterado. Tente novamente.",
 	"settings_ceremony_keys_err_history": "Falta uma das suas chaves anteriores neste dispositivo. Recarregue o Thelemail e tente novamente.",
+	"settings_ceremony_keys_err_not_saved": "A sua nova chave foi publicada, mas este dispositivo não a conseguiu guardar. Recarregue o Thelemail para concluir.",
 	"settings_ceremony_keys_err_locked": "Desbloqueie o seu cofre e tente novamente.",
 	"settings_ceremony_keys_err_too_soon": "Renovou a sua chave há pouco tempo. Tente novamente mais tarde.",
 	"settings_ceremony_keys_err_unavailable": "A renovação de chaves ainda não está disponível para esta conta.",

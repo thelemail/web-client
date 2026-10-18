@@ -111,6 +111,7 @@
 	"settings_ceremony_keys_rotate": "Rotate key",
 	"settings_ceremony_keys_err_failed": "The key could not be rotated. Nothing changed. Try again.",
 	"settings_ceremony_keys_err_history": "This device is missing one of your earlier keys. Reload Thelemail and try again.",
+	"settings_ceremony_keys_err_not_saved": "Your new key was published, but this device could not save it. Reload Thelemail to finish.",
 	"settings_ceremony_keys_err_locked": "Unlock your vault, then try again.",
 	"settings_ceremony_keys_err_too_soon": "You rotated your key a short while ago. Try again later.",
 	"settings_ceremony_keys_err_unavailable": "Key rotation isn’t available for this account yet.",

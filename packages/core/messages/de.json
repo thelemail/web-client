@@ -111,6 +111,7 @@
 	"settings_ceremony_keys_rotate": "Schlüssel erneuern",
 	"settings_ceremony_keys_err_failed": "Der Schlüssel konnte nicht erneuert werden. Es wurde nichts geändert. Versuchen Sie es erneut.",
 	"settings_ceremony_keys_err_history": "Auf diesem Gerät fehlt einer Ihrer früheren Schlüssel. Laden Sie Thelemail neu und versuchen Sie es erneut.",
+	"settings_ceremony_keys_err_not_saved": "Ihr neuer Schlüssel wurde veröffentlicht, aber dieses Gerät konnte ihn nicht speichern. Laden Sie Thelemail neu, um den Vorgang abzuschließen.",
 	"settings_ceremony_keys_err_locked": "Entsperren Sie Ihren Tresor und versuchen Sie es dann erneut.",
 	"settings_ceremony_keys_err_too_soon": "Sie haben Ihren Schlüssel erst vor Kurzem erneuert. Versuchen Sie es später erneut.",
 	"settings_ceremony_keys_err_unavailable": "Die Schlüsselerneuerung ist für dieses Konto noch nicht verfügbar.",
