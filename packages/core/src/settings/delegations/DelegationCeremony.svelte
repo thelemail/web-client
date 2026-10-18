@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatFingerprintHex } from '$core/directory/format';
 	import { platform } from '$platform';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Copy from '@lucide/svelte/icons/copy';
@@ -154,7 +155,7 @@
 
 			<div class="field">
 				<span class="field-lbl">{m.settings_forwarding_fingerprint()}</span>
-				<div class="mono fp">{fingerprint}</div>
+				<div class="mono fp">{formatFingerprintHex(fingerprint)}</div>
 			</div>
 
 			<textarea class="tin mono keyblock" readonly rows="8" value={privateKeyArmored}></textarea>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatKeyId } from '$core/directory/format';
 	import Forward from '@lucide/svelte/icons/forward';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
@@ -45,13 +46,10 @@
 		void readDelegations.load(addressId);
 	});
 
-	function shortFingerprint(fp: string): string {
-		return fp.slice(0, 16).replace(/(.{4})/g, '$1 ').trim().toUpperCase();
-	}
 
 	function keyLine(d: ReadDelegation): string {
 		if (d.mode === 'plain') return m.settings_forwarding_key_plain();
-		return d.encryptionKeyFingerprint ? shortFingerprint(d.encryptionKeyFingerprint) : '';
+		return d.encryptionKeyFingerprint ? formatKeyId(d.encryptionKeyFingerprint) : '';
 	}
 
 	function deliveryText(d: ReadDelegation): string {

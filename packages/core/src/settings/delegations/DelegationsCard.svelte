@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatKeyId } from '$core/directory/format';
 	import { i18n } from '$core/i18n/locale.svelte';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -39,10 +40,6 @@
 		const on = new Date(iso);
 		if (Number.isNaN(on.getTime())) return iso;
 		return on.toLocaleDateString(i18n.tag, { year: 'numeric', month: 'short', day: 'numeric' });
-	}
-
-	function shortFingerprint(fp: string): string {
-		return fp.slice(0, 16).replace(/(.{4})/g, '$1 ').trim().toUpperCase();
 	}
 </script>
 
@@ -87,7 +84,7 @@
 					{/if}
 				</div>
 				<div class="rec-meta">
-					<span class="mono">{shortFingerprint(d.signerFingerprint)}</span>
+					<span class="mono">{formatKeyId(d.signerFingerprint)}</span>
 					<span>
 						{#if d.revokedAt}
 							{m.settings_delegation_revoked_on({ date: fmtDate(d.revokedAt) })}

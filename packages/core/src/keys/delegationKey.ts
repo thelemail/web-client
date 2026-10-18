@@ -39,7 +39,7 @@ export async function generateDelegationKey({
 		publicKeyArmored: generated.publicKey.armor(),
 		revokedPublicKeyArmored: revoked.armor(),
 		privateKeyArmored: generated.privateKey.armor(),
-		keyFingerprintHex: generated.publicKey.getFingerprint(),
+		keyFingerprintHex: generated.publicKey.getFingerprint().toLowerCase(),
 		notAfter: new Date(date.getTime() + keyExpirationTime * 1000).toISOString()
 	};
 }
