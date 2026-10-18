@@ -14,6 +14,7 @@ import {
 	wrapMasterKey
 } from './opaque-params';
 import type { VaultRecord } from './idb';
+import { keyTransitionPayload } from '$core/directory/key-transition';
 
 const RECOVERY_PASSPHRASE = 'recovery key password';
 const SERVER_PROOF = btoa('server proof');
@@ -175,40 +176,103 @@ beforeAll(async () => {
 	(self as unknown as { onconnect: (ev: { ports: unknown[] }) => void }).onconnect({ ports: [port] });
 }, 60_000);
 
+async function signIn(encryptedPrivateKey: string): Promise<void> {
+	const start = await call<{ operationId: string; ke1: string }>('opaqueStartAuth', {
+		password: PASSWORD,
+		email: EMAIL
+	});
+	const { loginResponse } = server.startLogin({
+		serverSetup: account.serverSetup,
+		userIdentifier: ACCOUNT,
+		registrationRecord: account.registrationRecord,
+		startLoginRequest: toWire(start.ke1),
+		identifiers
+	});
+	await call('opaqueFinishAuth', {
+		operationId: start.operationId,
+		accountId: ACCOUNT,
+		ke2: fromWire(loginResponse)
+	});
+	const res = await call<{ ok: boolean }>('opaqueCompleteLoginUnlock', {
+		operationId: start.operationId,
+		accountId: ACCOUNT,
+		encryptedPrivateKey,
+		wrappedMasterKey: account.wrappedMasterKey,
+		masterKeyId: account.masterKeyId,
+		opaqueParamsVersion: 1,
+		serverAuthScheme: 'opaque_v1'
+	});
+	expect(res.ok).toBe(true);
+}
+
+function listed() {
+	return call<{ keyVersion: number; keys: { fingerprintHex: string; keyVersion: number; isCurrent: boolean }[] }>(
+		'listAccountKeys',
+		{ accountId: ACCOUNT }
+	);
+}
+
+async function endorsement(by: openpgp.PrivateKey, next: openpgp.Key) {
+	const signature = (await openpgp.sign({
+		message: await openpgp.createMessage({ binary: keyTransitionPayload(ACCOUNT, fpHex(next), fpHex(by)) }),
+		signingKeys: by,
+		detached: true,
+		format: 'binary'
+	})) as Uint8Array;
+	return { previousKeyFingerprintHex: fpHex(by), signature };
+}
+
 describe('key history across devices', () => {
-	it('places a key rotated on another device above the stored history', async () => {
-		const start = await call<{ operationId: string; ke1: string }>('opaqueStartAuth', {
-			password: PASSWORD,
-			email: EMAIL
-		});
-		const { loginResponse } = server.startLogin({
-			serverSetup: account.serverSetup,
-			userIdentifier: ACCOUNT,
-			registrationRecord: account.registrationRecord,
-			startLoginRequest: toWire(start.ke1),
-			identifiers
-		});
-		await call('opaqueFinishAuth', {
-			operationId: start.operationId,
-			accountId: ACCOUNT,
-			ke2: fromWire(loginResponse)
-		});
-		const res = await call<{ ok: boolean }>('opaqueCompleteLoginUnlock', {
-			operationId: start.operationId,
-			accountId: ACCOUNT,
-			encryptedPrivateKey: third.armored,
-			wrappedMasterKey: account.wrappedMasterKey,
-			masterKeyId: account.masterKeyId,
-			opaqueParamsVersion: 1,
-			serverAuthScheme: 'opaque_v1'
-		});
-		expect(res.ok).toBe(true);
-		const listed = await call<{ keyVersion: number; keys: { fingerprintHex: string; keyVersion: number; isCurrent: boolean }[] }>(
-			'listAccountKeys',
-			{ accountId: ACCOUNT }
+	it('keeps the stored current key when sign-in hands back a retired one', async () => {
+		await signIn(account.encryptedPrivateKey);
+		const keys = await listed();
+		expect(keys.keyVersion).toBe(2);
+		expect(keys.keys.map((k) => [k.fingerprintHex, k.keyVersion, k.isCurrent])).toEqual([
+			[fpHex(second.privateKey), 2, true],
+			[fpHex(account.original), 1, false]
+		]);
+		await call('lock', { accountId: ACCOUNT });
+	});
+
+	it('adopts a key rotated on another device only once the stored key endorses it', async () => {
+		await signIn(third.armored);
+		const before = await listed();
+		expect(before.keyVersion).toBe(2);
+		expect(before.keys.map((k) => k.fingerprintHex)).toEqual([fpHex(second.privateKey), fpHex(account.original)]);
+		const res = await call<{ ok: boolean; currentChanged: boolean; keyVersion: number; unverified: number[] }>(
+			'loadAccountKeys',
+			{
+				accountId: ACCOUNT,
+				currentVersion: 3,
+				keys: [
+					{
+						keyVersion: 1,
+						fingerprintHex: fpHex(account.original),
+						encryptedPrivateKeyArmored: account.encryptedPrivateKey,
+						isCurrent: false,
+						transitions: []
+					},
+					{
+						keyVersion: 2,
+						fingerprintHex: fpHex(second.privateKey),
+						encryptedPrivateKeyArmored: second.armored,
+						isCurrent: false,
+						transitions: [await endorsement(account.original, second.privateKey)]
+					},
+					{
+						keyVersion: 3,
+						fingerprintHex: fpHex(third.privateKey),
+						encryptedPrivateKeyArmored: third.armored,
+						isCurrent: true,
+						transitions: [await endorsement(second.privateKey, third.privateKey)]
+					}
+				]
+			}
 		);
-		expect(listed.keyVersion).toBe(3);
-		expect(listed.keys.map((k) => [k.fingerprintHex, k.keyVersion, k.isCurrent])).toEqual([
+		expect(res).toMatchObject({ ok: true, currentChanged: true, keyVersion: 3, unverified: [] });
+		const after = await listed();
+		expect(after.keyVersion).toBe(3);
+		expect(after.keys.map((k) => [k.fingerprintHex, k.keyVersion, k.isCurrent])).toEqual([
 			[fpHex(third.privateKey), 3, true],
 			[fpHex(second.privateKey), 2, false],
 			[fpHex(account.original), 1, false]

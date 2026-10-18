@@ -32,6 +32,7 @@ import { ApiCallError } from '$core/api/types';
 const ACCOUNT = 'acc-1';
 const CURRENT = 'aa'.repeat(32);
 const EARLIER = 'bb'.repeat(32);
+const SIGNATURE = Uint8Array.from([0xc2, 0x02, 0x01, 0x02]);
 
 function hexBytes(hex: string): Uint8Array {
 	return Uint8Array.from(hex.match(/../g)!.map((b) => parseInt(b, 16)));
@@ -41,8 +42,14 @@ function serverKeys() {
 	return {
 		currentVersion: 2,
 		keys: [
-			{ keyVersion: 2, keyFingerprint: CURRENT.toUpperCase(), encryptedPrivateKey: 'armored-2', isCurrent: true },
-			{ keyVersion: 1, keyFingerprint: EARLIER, encryptedPrivateKey: 'armored-1', isCurrent: false }
+			{
+				keyVersion: 2,
+				keyFingerprint: CURRENT.toUpperCase(),
+				encryptedPrivateKey: 'armored-2',
+				isCurrent: true,
+				transitions: [{ previousKeyFingerprint: EARLIER.toUpperCase(), signature: 'wgIBAg==' }]
+			},
+			{ keyVersion: 1, keyFingerprint: EARLIER, encryptedPrivateKey: 'armored-1', isCurrent: false, transitions: [] }
 		]
 	};
 }
@@ -86,9 +93,22 @@ describe('account keys store', () => {
 		await accountKeys.load(ACCOUNT);
 		expect(ks.loadAccountKeys).toHaveBeenCalledWith({
 			accountId: ACCOUNT,
+			currentVersion: 2,
 			keys: [
-				{ keyVersion: 2, fingerprintHex: CURRENT, encryptedPrivateKeyArmored: 'armored-2', isCurrent: true },
-				{ keyVersion: 1, fingerprintHex: EARLIER, encryptedPrivateKeyArmored: 'armored-1', isCurrent: false }
+				{
+					keyVersion: 2,
+					fingerprintHex: CURRENT,
+					encryptedPrivateKeyArmored: 'armored-2',
+					isCurrent: true,
+					transitions: [{ previousKeyFingerprintHex: EARLIER, signature: SIGNATURE }]
+				},
+				{
+					keyVersion: 1,
+					fingerprintHex: EARLIER,
+					encryptedPrivateKeyArmored: 'armored-1',
+					isCurrent: false,
+					transitions: []
+				}
 			]
 		});
 		expect(accountKeys.current).toEqual({ fingerprintHex: CURRENT, keyVersion: 2, publicKeyArmored: 'public-2' });

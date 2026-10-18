@@ -23,6 +23,7 @@ export interface StoredAccountKey {
 	keyVersion: number;
 	fingerprintHex: string;
 	armoredEncryptedPrivateKey: string;
+	provisional?: boolean;
 }
 
 export interface AccountSlotRecord {

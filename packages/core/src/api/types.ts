@@ -1219,6 +1219,7 @@ export interface AccountKey {
 	isCurrent: boolean;
 	activatedAt?: string;
 	retiredAt?: string;
+	transitions: KeyRotationTransition[];
 }
 
 export interface AccountKeyListResponse {

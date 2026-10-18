@@ -5,6 +5,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import type { AccountKeySummary } from '$core/keystore/protocol';
 import { bytesToHex } from '$core/keys/encode';
 import { isProductVault } from '$core/products';
+import { decodeStrictBase64 } from '$core/directory/statement';
 
 export interface CurrentAccountKey {
 	fingerprintHex: string;
@@ -90,16 +91,21 @@ class AccountKeysStore {
 			const status = await keystore.status();
 			const account = status.accounts.find((a) => a.accountId === accountId);
 			if (!account?.unlocked) return;
-			const keys =
+			const list =
 				account.authScheme === 'opaque_v1' && !isProductVault ? await this.#serverKeys(accountId) : null;
-			if (keys) {
+			if (list) {
 				const res = await keystore.loadAccountKeys({
 					accountId,
-					keys: keys.map((k) => ({
+					currentVersion: list.currentVersion,
+					keys: list.keys.map((k) => ({
 						keyVersion: k.keyVersion,
 						fingerprintHex: k.keyFingerprint.toLowerCase(),
 						encryptedPrivateKeyArmored: k.encryptedPrivateKey,
-						isCurrent: k.isCurrent
+						isCurrent: k.isCurrent,
+						transitions: (k.transitions ?? []).map((t) => ({
+							previousKeyFingerprintHex: t.previousKeyFingerprint.toLowerCase(),
+							signature: decodeStrictBase64(t.signature) ?? new Uint8Array(0)
+						}))
 					}))
 				});
 				if (!res.ok && res.code === 'locked') return;
@@ -116,9 +122,9 @@ class AccountKeysStore {
 		}
 	}
 
-	async #serverKeys(accountId: string): Promise<AccountKeyListResponse['keys'] | null> {
+	async #serverKeys(accountId: string): Promise<AccountKeyListResponse | null> {
 		try {
-			return (await listMyKeys(accountId)).keys;
+			return await listMyKeys(accountId);
 		} catch (err) {
 			if (err instanceof ApiCallError && err.status === 404) return null;
 			throw err;

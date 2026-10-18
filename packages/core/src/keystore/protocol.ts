@@ -91,27 +91,37 @@ export type GetPublicKeyResponse =
 	| { ok: true; publicKeyArmored: string; fingerprint: Uint8Array; keyVersion?: number }
 	| { ok: false; code: 'locked' };
 
+export interface AccountKeyTransitionInput {
+	previousKeyFingerprintHex: string;
+	signature: Uint8Array;
+}
+
 export interface AccountKeyInput {
 	keyVersion: number;
 	fingerprintHex: string;
 	encryptedPrivateKeyArmored: string;
 	isCurrent: boolean;
+	transitions: AccountKeyTransitionInput[];
 }
 
 export interface LoadAccountKeysArgs extends AccountScopedArgs {
+	currentVersion: number;
 	keys: AccountKeyInput[];
 }
+
+export type LoadAccountKeysFailureCode = 'locked' | 'not_opaque' | 'key_list_invalid';
 
 export type LoadAccountKeysResponse =
 	| {
 			ok: true;
 			loaded: string[];
 			failed: number[];
+			unverified: number[];
 			currentFingerprintHex: string;
 			keyVersion: number;
 			currentChanged: boolean;
 	  }
-	| { ok: false; code: 'locked' | 'not_opaque' };
+	| { ok: false; code: LoadAccountKeysFailureCode };
 
 export interface AccountKeySummary {
 	fingerprintHex: string;
