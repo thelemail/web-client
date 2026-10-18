@@ -54,7 +54,12 @@ vi.mock('./tlog/verify-tlog', () => ({
 }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
-import { verifyDirectoryLookup, type LookupInputForVerification } from './verify';
+import {
+	ownBaselineKey,
+	verifyDirectoryLookup,
+	verifyOwnStatement,
+	type LookupInputForVerification
+} from './verify';
 import { DirectoryVerificationError } from './errors';
 import { signStatement, type StatementFields } from './fixtures/signedStatement';
 import { the168, vectorKey } from './fixtures/the168';
@@ -317,36 +322,91 @@ describe('signed key rotation', () => {
 	});
 });
 
-describe('checking a statement without pinning it', () => {
-	it('leaves the pins alone on first contact and after a key change', async () => {
-		const res = await verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false });
-		expect(res.statement.keyFingerprint).toBe(CURRENT.fingerprint);
-		expect(h.seen.size).toBe(0);
+describe('checking the account its own statement', () => {
+	const own = { accountId: ACCOUNT, keyFingerprint: CURRENT.fingerprint };
+	const baseline = () => h.seen.get(ownBaselineKey(ACCOUNT, ADDRESS));
+
+	it('verifies a matching statement, records a baseline and leaves the pins alone', async () => {
+		const res = await verifyOwnStatement(await lookup(statement()), ADDRESS, own);
+		expect(res.state).toBe('verified');
+		expect(h.seen.has(ADDRESS)).toBe(false);
+		expect(baseline()).toMatchObject({ version: rotated.version, keyFingerprint: CURRENT.fingerprint });
 		pin(UNRELATED.fingerprint, 6);
-		const changed = await verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false });
-		expect(changed.statement.keyFingerprint).toBe(CURRENT.fingerprint);
+		await verifyOwnStatement(await lookup(statement()), ADDRESS, own);
 		expect(h.seen.get(ADDRESS)).toMatchObject({ keyFingerprint: UNRELATED.fingerprint, version: 6 });
 	});
 
-	it('still refuses a rolled back statement', async () => {
+	it('refuses a statement for another key or another account', async () => {
+		const other = await verifyOwnStatement(await lookup(statement()), ADDRESS, {
+			accountId: ACCOUNT,
+			keyFingerprint: V6_B.fingerprint
+		});
+		expect(other).toMatchObject({ state: 'unverified', code: 'fingerprint_changed' });
+		const foreign = await verifyOwnStatement(await lookup(statement()), ADDRESS, {
+			accountId: '00000000-0000-4000-8000-000000000000',
+			keyFingerprint: CURRENT.fingerprint
+		});
+		expect(foreign).toMatchObject({ state: 'unverified', code: 'fingerprint_changed' });
+		expect(baseline()).toBeUndefined();
+	});
+
+	it('refuses a mismatch even when the log proof was stripped', async () => {
+		h.policy.value = { ...POLICY, mode: 'enforce' };
+		h.tlogFailure.value = new DirectoryVerificationError('tlog_proof_missing', 'no proof');
+		const res = await verifyOwnStatement(await lookup(statement()), ADDRESS, {
+			accountId: ACCOUNT,
+			keyFingerprint: V6_B.fingerprint
+		});
+		expect(res).toMatchObject({ state: 'unverified', code: 'fingerprint_changed' });
+	});
+
+	it('treats a matching statement without a log proof as pending and records no baseline', async () => {
+		h.policy.value = { ...POLICY, mode: 'enforce' };
+		h.tlogFailure.value = new DirectoryVerificationError('tlog_proof_missing', 'no proof');
+		const res = await verifyOwnStatement(await lookup(statement()), ADDRESS, own);
+		expect(res).toMatchObject({ state: 'pending', code: 'tlog_proof_missing' });
+		expect(baseline()).toBeUndefined();
+	});
+
+	it('refuses an older statement replayed after a newer one was seen', async () => {
+		await verifyOwnStatement(await lookup(statement({ version: rotated.version + 1 })), ADDRESS, own);
+		const replay = await verifyOwnStatement(await lookup(statement()), ADDRESS, own);
+		expect(replay).toMatchObject({ state: 'unverified', code: 'version_rolled_back' });
+		expect(baseline()).toMatchObject({ version: rotated.version + 1 });
+	});
+
+	it('refuses an older statement for the retired key once the new one was seen', async () => {
+		await verifyOwnStatement(await lookup(statement({ version: rotated.version + 1 })), ADDRESS, own);
+		const retired = await verifyOwnStatement(
+			{
+				...(await lookup(statement({ keyFingerprint: V6_B.fingerprint, keyTransitions: undefined }))),
+				publicKeyArmored: V6_B.publicKeyArmored
+			},
+			ADDRESS,
+			{ accountId: ACCOUNT, keyFingerprint: V6_B.fingerprint }
+		);
+		expect(retired).toMatchObject({ state: 'unverified', code: 'version_rolled_back' });
+	});
+
+	it('refuses a statement older than a contact pin on the address', async () => {
 		pin(CURRENT.fingerprint, rotated.version + 1);
-		const err = await failure(verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false }));
-		expect(err.code).toBe('version_rolled_back');
+		const res = await verifyOwnStatement(await lookup(statement()), ADDRESS, own);
+		expect(res).toMatchObject({ state: 'unverified', code: 'version_rolled_back' });
 	});
 
 	it('still refuses a statement with a bad signature', async () => {
 		const good = await lookup(statement());
 		const other = await lookup(statement({ version: rotated.version + 1 }));
 		const err = await failure(
-			verifyDirectoryLookup({ ...good, directorySignature: other.directorySignature }, ADDRESS, { pin: false })
+			verifyOwnStatement({ ...good, directorySignature: other.directorySignature }, ADDRESS, own)
 		);
 		expect(err.code).toBe('signature_invalid');
 	});
 
-	it('fails an enforced log check', async () => {
+	it('fails an enforced log check that is not a missing proof', async () => {
 		h.policy.value = { ...POLICY, mode: 'enforce' };
-		h.tlogFailure.value = new DirectoryVerificationError('tlog_proof_missing', 'no proof');
-		const err = await failure(verifyDirectoryLookup(await lookup(statement()), ADDRESS, { pin: false }));
-		expect(err.code).toBe('tlog_proof_missing');
+		h.tlogFailure.value = new DirectoryVerificationError('tlog_inclusion_invalid', 'bad proof');
+		const err = await failure(verifyOwnStatement(await lookup(statement()), ADDRESS, own));
+		expect(err.code).toBe('tlog_inclusion_invalid');
 	});
 });

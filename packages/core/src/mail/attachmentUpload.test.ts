@@ -63,6 +63,7 @@ vi.mock('$core/keystore/keystore-client', () => ({
 		}
 	}
 }));
+vi.mock('$core/stores/accountKeys.svelte', () => ({ accountKeys: { confirm: async () => null } }));
 vi.mock('$core/stores/auth.svelte', () => ({
 	auth: { accountId: 'acct-me', email: 'me@thelemail.test', fullName: 'Me' }
 }));

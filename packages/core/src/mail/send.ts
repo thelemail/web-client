@@ -67,6 +67,7 @@ export type SendErrorCode =
 	| 'alias_key_stale'
 	| 'account_key_stale'
 	| 'account_key_unverified'
+	| 'account_key_unchecked'
 	| 'schedule_unsupported'
 	| 'malware_blocked'
 	| 'rejected'
@@ -207,9 +208,11 @@ if (typeof window !== 'undefined') {
 }
 
 export async function senderKey(accountId: string, aliasId?: string): Promise<KeyMaterial> {
-	if (accountKeys.isUnverified(accountId)) {
+	const block = await accountKeys.confirm(accountId);
+	if (block === 'unverified') {
 		throw new SendError('account_key_unverified', m.send_error_account_key_unverified());
 	}
+	if (block) throw new SendError('account_key_unchecked', m.send_error_account_key_unchecked());
 	const cacheKey = `${accountId}:${aliasId ?? ''}`;
 	const existing = cachedSenderKeys.get(cacheKey);
 	if (existing) return existing;

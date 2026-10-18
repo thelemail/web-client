@@ -70,7 +70,6 @@ export interface DirectoryVerificationResult {
 
 export interface VerifyOptions {
 	acceptFingerprint?: string;
-	pin?: boolean;
 }
 
 function parseRaw(raw: string | undefined, requestedAddress: string): {
@@ -240,12 +239,17 @@ export async function verifiedPreviousKey(
 	return { publicKeyArmored: armored, transition };
 }
 
-export async function verifyDirectoryLookup(
+interface CheckedStatement {
+	stmt: DirectoryStatement;
+	address: string;
+	tlog: TlogOutcome;
+	enforced: DirectoryVerificationError | null;
+}
+
+async function checkStatement(
 	lookup: LookupInputForVerification,
-	requestedAddressNormalised: string,
-	opts: VerifyOptions = {}
-): Promise<DirectoryVerificationResult> {
-	const requested = requestedAddressNormalised;
+	requested: string
+): Promise<CheckedStatement> {
 	const { bytes: raw, statement: stmt } = parseRaw(lookup.directoryStatementRaw, requested);
 
 	if (stmt.signingKeyFingerprint !== DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX.toLowerCase()) {
@@ -294,8 +298,17 @@ export async function verifyDirectoryLookup(
 	}
 
 	const { outcome: tlog, enforced } = await checkTlog(lookup, raw, requested);
+	return { stmt, address, tlog, enforced };
+}
+
+export async function verifyDirectoryLookup(
+	lookup: LookupInputForVerification,
+	requestedAddressNormalised: string,
+	opts: VerifyOptions = {}
+): Promise<DirectoryVerificationResult> {
+	const requested = requestedAddressNormalised;
+	const { stmt, address, tlog, enforced } = await checkStatement(lookup, requested);
 	try {
-		if (opts.pin === false) return await checkWithoutPin(lookup, stmt, address, requested, tlog, enforced);
 		return await settlePin(lookup, stmt, address, requested, tlog, enforced, opts);
 	} catch (e) {
 		if (e instanceof DirectoryVerificationError && !e.tlog) e.tlog = tlog;
@@ -303,12 +316,64 @@ export async function verifyDirectoryLookup(
 	}
 }
 
+export interface OwnKeyExpectation {
+	accountId: string;
+	keyFingerprint: string;
+}
+
+export type OwnStatementResult =
+	| { state: 'verified'; statement: DirectoryStatement }
+	| { state: 'pending'; statement: DirectoryStatement; code: DirectoryVerificationCode }
+	| { state: 'unverified'; statement: DirectoryStatement; code: 'fingerprint_changed' | 'version_rolled_back' };
+
+export function ownBaselineKey(accountId: string, address: string): string {
+	return `own:${accountId}:${address}`;
+}
+
+export async function verifyOwnStatement(
+	lookup: LookupInputForVerification,
+	requestedAddressNormalised: string,
+	expected: OwnKeyExpectation
+): Promise<OwnStatementResult> {
+	const requested = requestedAddressNormalised;
+	const { stmt, address, tlog, enforced } = await checkStatement(lookup, requested);
+	if (stmt.accountId !== expected.accountId || stmt.keyFingerprint !== expected.keyFingerprint.toLowerCase()) {
+		return { state: 'unverified', statement: stmt, code: 'fingerprint_changed' };
+	}
+	const baselineKey = ownBaselineKey(expected.accountId, address);
+	const [pinned, baseline] = await Promise.all([getSeen(address), getSeen(baselineKey)]);
+	if (rolledBack(pinned, stmt) || rolledBack(baseline, stmt)) {
+		return { state: 'unverified', statement: stmt, code: 'version_rolled_back' };
+	}
+	if (tlog.state === 'failed' && PENDING_TLOG_CODES.has(tlog.code)) {
+		return { state: 'pending', statement: stmt, code: tlog.code };
+	}
+	if (enforced) throw enforced;
+	const now = Date.now();
+	await upsertSeen({
+		address: baselineKey,
+		version: Math.max(stmt.version, baseline?.version ?? 0),
+		keyFingerprint: stmt.keyFingerprint,
+		accountId: stmt.accountId,
+		firstSeenAt: baseline?.firstSeenAt ?? now,
+		lastSeenAt: now
+	});
+	return { state: 'verified', statement: stmt };
+}
+
 type SeenRecord = Awaited<ReturnType<typeof getSeen>>;
 
+function rolledBack(seen: SeenRecord, stmt: DirectoryStatement): boolean {
+	if (!seen) return false;
+	return (
+		stmt.version < seen.version ||
+		(stmt.version === seen.version && seen.keyFingerprint.toLowerCase() !== stmt.keyFingerprint)
+	);
+}
+
 function refuseRollback(seen: SeenRecord, stmt: DirectoryStatement, requested: string): void {
-	const pinned = seen?.keyFingerprint.toLowerCase();
-	const changed = seen != null && pinned !== stmt.keyFingerprint;
-	if (seen && (stmt.version < seen.version || (changed && stmt.version === seen.version))) {
+	if (seen && rolledBack(seen, stmt)) {
+		const pinned = seen.keyFingerprint.toLowerCase();
 		throw new DirectoryVerificationError(
 			'version_rolled_back',
 			`statement version ${stmt.version} does not supersede last seen ${seen.version}`,
@@ -321,26 +386,6 @@ function refuseRollback(seen: SeenRecord, stmt: DirectoryStatement, requested: s
 			}
 		);
 	}
-}
-
-async function checkWithoutPin(
-	lookup: LookupInputForVerification,
-	stmt: DirectoryStatement,
-	address: string,
-	requested: string,
-	tlog: TlogOutcome,
-	enforced: DirectoryVerificationError | null
-): Promise<DirectoryVerificationResult> {
-	const seen = await getSeen(address);
-	refuseRollback(seen, stmt, requested);
-	if (enforced) throw enforced;
-	return {
-		statement: stmt,
-		publicKeyArmored: lookup.publicKeyArmored,
-		verifiedAt: new Date(),
-		firstContact: seen == null,
-		tlog
-	};
 }
 
 async function settlePin(

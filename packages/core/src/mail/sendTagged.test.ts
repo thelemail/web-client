@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const h = vi.hoisted(() => ({
-	unverified: false,
+	block: null as 'unverified' | 'unreachable' | null,
 	lookups: [] as string[],
 	verified: [] as string[],
 	requests: [] as {
@@ -54,7 +54,7 @@ vi.mock('$core/stores/auth.svelte', () => ({
 	auth: { accountId: 'acct-me', email: 'me@thelemail.test', fullName: 'Me' }
 }));
 vi.mock('$core/stores/accountKeys.svelte', () => ({
-	accountKeys: { isUnverified: (accountId: string) => h.unverified && accountId === 'acct-me' }
+	accountKeys: { confirm: async (accountId: string) => (accountId === 'acct-me' ? h.block : null) }
 }));
 vi.mock('./signaturePack', () => ({
 	packBodyForSend: async (bodyHtml: string | undefined) => ({ bodyHtml, relatedParts: [] })
@@ -79,7 +79,7 @@ function party(address: string) {
 }
 
 beforeEach(() => {
-	h.unverified = false;
+	h.block = null;
 	h.lookups.length = 0;
 	h.verified.length = 0;
 	h.requests.length = 0;
@@ -180,11 +180,20 @@ describe('internal send addressing fields', () => {
 
 describe('an unconfirmed own key', () => {
 	it('refuses to send', async () => {
-		h.unverified = true;
+		h.block = 'unverified';
 		const err = await sendInternalMessage({ to: [party('ada@thelemail.test')], subject: 's', body: 'b' }).catch(
 			(e: unknown) => e
 		);
 		expect(err).toMatchObject({ code: 'account_key_unverified' });
+		expect(h.requests).toEqual([]);
+	});
+
+	it('refuses to send while the directory cannot confirm it', async () => {
+		h.block = 'unreachable';
+		const err = await sendInternalMessage({ to: [party('ada@thelemail.test')], subject: 's', body: 'b' }).catch(
+			(e: unknown) => e
+		);
+		expect(err).toMatchObject({ code: 'account_key_unchecked' });
 		expect(h.requests).toEqual([]);
 	});
 });
