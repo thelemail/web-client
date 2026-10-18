@@ -360,6 +360,39 @@ describe('account key rotation in the keystore', () => {
 		).toEqual({ ok: false, code: 'no_pending_rotation' });
 	});
 
+	it('keeps the server version when a reload lands before the commit', async () => {
+		const prepared = await call<{
+			ok: boolean;
+			fingerprintHex: string;
+			encryptedPrivateKey: string;
+			keyVersion: number;
+		}>('prepareKeyRotation', { accountId: ACCOUNT, emails: [EMAIL], expectedKeyVersion: 3 });
+		expect(prepared).toMatchObject({ ok: true, keyVersion: 4 });
+		const loaded = await call<{ ok: boolean; keyVersion: number; currentChanged: boolean }>('loadAccountKeys', {
+			accountId: ACCOUNT,
+			keys: [
+				{
+					keyVersion: 4,
+					fingerprintHex: prepared.fingerprintHex,
+					encryptedPrivateKeyArmored: prepared.encryptedPrivateKey,
+					isCurrent: true
+				}
+			]
+		});
+		expect(loaded).toMatchObject({ ok: true, keyVersion: 4, currentChanged: true });
+		expect(
+			await call('commitKeyRotation', { accountId: ACCOUNT, fingerprintHex: prepared.fingerprintHex })
+		).toEqual({ ok: true, keyVersion: 4 });
+		expect(await currentFingerprint()).toEqual({ hex: prepared.fingerprintHex, keyVersion: 4 });
+		const next = await call<{ ok: boolean; keyVersion: number }>('prepareKeyRotation', {
+			accountId: ACCOUNT,
+			emails: [EMAIL],
+			expectedKeyVersion: 4
+		});
+		expect(next).toMatchObject({ ok: true, keyVersion: 5 });
+		await call('abandonKeyRotation', { accountId: ACCOUNT });
+	});
+
 	it('refuses to rotate when a recent key is missing from the vault', async () => {
 		const gap = await lockedKey(EMAIL, account.passphrase);
 		await call('loadAccountKeys', {

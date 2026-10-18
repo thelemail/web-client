@@ -1352,9 +1352,8 @@ async function handleLoadAccountKeys(args: LoadAccountKeysArgs): Promise<LoadAcc
 			failed.push(k.keyVersion);
 			continue;
 		}
-		const existing = v.accountKeys.get(claimed);
 		const entry: AccountKeyEntry = {
-			keyVersion: Math.max(existing?.keyVersion ?? 0, k.keyVersion),
+			keyVersion: k.keyVersion,
 			fingerprintHex: claimed,
 			privateKey: unlocked.privateKey,
 			armoredEncrypted: k.encryptedPrivateKeyArmored
@@ -1493,7 +1492,7 @@ async function handleCommitKeyRotation(
 	}
 	pendingRotations.delete(args.accountId);
 	const entry: AccountKeyEntry = {
-		keyVersion: Math.max(pending.keyVersion, v.keyVersion + 1),
+		keyVersion: v.accountKeys.get(pending.fingerprintHex)?.keyVersion ?? pending.keyVersion,
 		fingerprintHex: pending.fingerprintHex,
 		privateKey: pending.privateKey,
 		armoredEncrypted: pending.armoredEncrypted
