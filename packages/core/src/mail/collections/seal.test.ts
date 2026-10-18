@@ -6,15 +6,28 @@ const keystore = vi.hoisted(() => ({
 	decrypt: vi.fn()
 }));
 
+const own = vi.hoisted(() => ({ require: vi.fn() }));
+
 vi.mock('$core/keystore/keystore-client', () => ({ keystore }));
+vi.mock('$core/stores/accountKeys.svelte', () => ({
+	requireConfirmedOwnKey: (...a: unknown[]) => own.require(...a)
+}));
 
 import { CollectionSealError, openCollectionMeta, sealCollectionMeta } from './seal';
 
 describe('collection metadata sealing', () => {
 	beforeEach(() => {
+		own.require.mockReset();
+		own.require.mockResolvedValue(undefined);
 		keystore.getPublicKey.mockReset();
 		keystore.encrypt.mockReset();
 		keystore.decrypt.mockReset();
+	});
+
+	it('seals nothing while the own key is not confirmed', async () => {
+		own.require.mockRejectedValue(new Error('key not confirmed'));
+		await expect(sealCollectionMeta('acc', { name: 'Clients', color: 'pine' })).rejects.toThrow('key not confirmed');
+		expect(keystore.encrypt).not.toHaveBeenCalled();
 	});
 
 	it('encrypts name and color to the account key and reports its fingerprint', async () => {

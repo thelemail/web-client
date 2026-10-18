@@ -1,6 +1,7 @@
 import { m } from '$paraglide/messages.js';
 import { serverNow } from '$core/api/serverclock';
 import { bytesToB64 } from '$core/crypto';
+import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import type { ReadDelegationMode } from '$core/api/readDelegations';
 import {
@@ -38,6 +39,7 @@ export async function prepareForwarding(
 	destination: string,
 	mode: ReadDelegationMode = 'encrypted'
 ): Promise<PreparedForwarding> {
+	await requireConfirmedOwnKey(accountId);
 	const own = await keystore.getPublicKey({ accountId });
 	if (!own.ok) {
 		throw new ForwardingSetupError('locked', m.settings_forwarding_err_unlock());

@@ -1,4 +1,5 @@
 import { b64ToBytes, bytesToB64 } from '$core/keys/encode';
+import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 
 export const COLLECTION_META_VERSION = 2;
@@ -26,6 +27,7 @@ export async function sealCollectionMeta(
 	accountId: string,
 	meta: CollectionMeta
 ): Promise<SealedCollectionMeta> {
+	await requireConfirmedOwnKey(accountId);
 	const key = await keystore.getPublicKey({ accountId });
 	if (!key.ok) throw new CollectionSealError('locked');
 	const res = await keystore.encrypt({
