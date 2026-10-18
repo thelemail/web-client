@@ -11,3 +11,10 @@ export function acceptExternalKey(address: string, keyFingerprint: string): Prom
 		body: { address, keyFingerprint }
 	});
 }
+
+export function importExternalKey(address: string, armoredKey: string): Promise<ExternalKeyTrust> {
+	return apiFetch('/v1/external-keys', {
+		method: 'POST',
+		body: { address, armoredKey }
+	});
+}
