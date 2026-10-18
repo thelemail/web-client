@@ -135,4 +135,44 @@ describe('busy window verification', () => {
 		});
 		expect(verdict.trust).toBe('key_unresolved');
 	});
+
+	it('accepts a signature from a previous key made before it was retired', async () => {
+		const verdict = await verifyBusyWindows({
+			statement,
+			signature,
+			signerKeyFingerprint: hexToB64(fingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: { fingerprintHex, publicKeyArmored, retiredAtMillis: Date.now() + 60_000 }
+		});
+		expect(verdict.trust).toBe('verified');
+	});
+
+	it('rejects a previous key signature made after it was retired', async () => {
+		const verdict = await verifyBusyWindows({
+			statement,
+			signature,
+			signerKeyFingerprint: hexToB64(fingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: { fingerprintHex, publicKeyArmored, retiredAtMillis: Date.now() - 60 * 60_000 }
+		});
+		expect(verdict.trust).toBe('signature_failed');
+	});
+
+	it('ignores a previous key the signature does not name', async () => {
+		const verdict = await verifyBusyWindows({
+			statement,
+			signature,
+			signerKeyFingerprint: hexToB64(fingerprintHex),
+			publicKeyArmored: otherPublicKeyArmored,
+			directoryKeyFingerprintHex: otherFingerprintHex,
+			previousKey: {
+				fingerprintHex: otherFingerprintHex,
+				publicKeyArmored: otherPublicKeyArmored,
+				retiredAtMillis: Date.now() + 60_000
+			}
+		});
+		expect(verdict.trust).toBe('key_mismatch');
+	});
 });

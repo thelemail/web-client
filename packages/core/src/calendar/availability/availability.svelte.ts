@@ -1,10 +1,11 @@
 import { listCalendarBusy, type CalendarBusyEntry } from '$core/api/calendars';
-import { directoryTrust } from '$core/mail/senderVerify';
+import { directoryTrust, previousSenderKey } from '$core/mail/senderVerify';
+import { b64ToHex } from '$core/keys/encode';
 import { auth } from '$core/stores/auth.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import { m } from '$paraglide/messages.js';
 import { calendarStore } from '../store.svelte';
-import { verifyBusyWindows, type BusyTrust } from '../verifybusy';
+import { verifyBusyWindows, type BusyPreviousKey, type BusyTrust } from '../verifybusy';
 import { buildBoard, type Board, type BoardDay, type BoardOwner, type BoardWindow } from './board';
 
 const CACHE_TTL_MS = 60_000;
@@ -14,6 +15,12 @@ interface CacheEntry {
 	at: number;
 	entries: CalendarBusyEntry[];
 	trust: Map<string, BusyTrust>;
+}
+
+interface SignerKey {
+	publicKeyArmored: string;
+	fingerprintHex: string;
+	retiredFingerprints: string[];
 }
 
 function trustKey(itemId: string, rev: number): string {
@@ -69,7 +76,7 @@ class AvailabilityStore {
 
 	async #verify(accountId: string, entries: CalendarBusyEntry[]): Promise<Map<string, BusyTrust>> {
 		const out = new Map<string, BusyTrust>();
-		const keys = new Map<string, { publicKeyArmored: string; fingerprintHex: string } | null>();
+		const keys = new Map<string, SignerKey | null>();
 		for (const entry of entries) {
 			for (const item of entry.items ?? []) {
 				const cacheKey = trustKey(item.itemId, item.rev);
@@ -83,6 +90,11 @@ class AvailabilityStore {
 					out.set(cacheKey, member ? 'key_unresolved' : 'signer_unknown');
 					continue;
 				}
+				const claimed = item.signerKeyFingerprint ? b64ToHex(item.signerKeyFingerprint).toLowerCase() : '';
+				const previousKey =
+					claimed && claimed !== key.fingerprintHex && key.retiredFingerprints.includes(claimed)
+						? await this.#previousKeyFor(accountId, item.signerAccountId, claimed)
+						: null;
 				const verdict = await verifyBusyWindows({
 					statement: {
 						calendarId: entry.calendarId,
@@ -95,7 +107,8 @@ class AvailabilityStore {
 					signature: item.signature,
 					signerKeyFingerprint: item.signerKeyFingerprint,
 					publicKeyArmored: key.publicKeyArmored,
-					directoryKeyFingerprintHex: key.fingerprintHex
+					directoryKeyFingerprintHex: key.fingerprintHex,
+					previousKey
 				});
 				out.set(cacheKey, verdict.trust);
 			}
@@ -103,10 +116,17 @@ class AvailabilityStore {
 		return out;
 	}
 
-	async #keyFor(
+	async #previousKeyFor(
 		accountId: string,
-		signerAccountId: string
-	): Promise<{ publicKeyArmored: string; fingerprintHex: string } | null> {
+		signerAccountId: string,
+		fingerprintHex: string
+	): Promise<BusyPreviousKey | null> {
+		const member = workspaces.members.find((m) => m.accountId === signerAccountId);
+		if (!member) return null;
+		return previousSenderKey(accountId, member.email, fingerprintHex).catch(() => null);
+	}
+
+	async #keyFor(accountId: string, signerAccountId: string): Promise<SignerKey | null> {
 		const member = workspaces.members.find((m) => m.accountId === signerAccountId);
 		if (!member) return null;
 		try {
@@ -114,7 +134,8 @@ class AvailabilityStore {
 			if (!trust?.ok || !trust.publicKeyArmored || !trust.statement) return null;
 			return {
 				publicKeyArmored: trust.publicKeyArmored,
-				fingerprintHex: trust.statement.keyFingerprint
+				fingerprintHex: trust.statement.keyFingerprint,
+				retiredFingerprints: trust.statement.keyTransitions.map((t) => t.previousKeyFingerprint)
 			};
 		} catch {
 			return null;

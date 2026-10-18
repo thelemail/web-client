@@ -2,6 +2,7 @@ import * as openpgp from 'openpgp';
 import { b64ToBytes } from '$core/crypto';
 import { b64ToHex } from '$core/keys/encode';
 import { canonicalise, type BusyStatement } from './busycanon';
+import { signedWhileCurrent } from '$core/directory/retired';
 
 export type BusyTrust =
 	| 'verified'
@@ -16,12 +17,19 @@ export interface BusyVerdict {
 	signedAtMillis: number | null;
 }
 
+export interface BusyPreviousKey {
+	fingerprintHex: string;
+	publicKeyArmored: string;
+	retiredAtMillis: number;
+}
+
 export interface VerifyBusyInput {
 	statement: BusyStatement;
 	signature: string;
 	signerKeyFingerprint: string;
 	publicKeyArmored: string;
 	directoryKeyFingerprintHex: string;
+	previousKey?: BusyPreviousKey | null;
 }
 
 function unverified(trust: BusyTrust): BusyVerdict {
@@ -33,14 +41,16 @@ export async function verifyBusyWindows(input: VerifyBusyInput): Promise<BusyVer
 	if (!input.publicKeyArmored) return unverified('key_unresolved');
 
 	const claimed = b64ToHex(input.signerKeyFingerprint).toLowerCase();
-	if (claimed !== input.directoryKeyFingerprintHex.toLowerCase()) {
+	const previous =
+		input.previousKey && input.previousKey.fingerprintHex.toLowerCase() === claimed ? input.previousKey : null;
+	if (claimed !== input.directoryKeyFingerprintHex.toLowerCase() && !previous) {
 		return unverified('key_mismatch');
 	}
 
 	let publicKey: openpgp.Key;
 	let signature: openpgp.Signature;
 	try {
-		publicKey = await openpgp.readKey({ armoredKey: input.publicKeyArmored });
+		publicKey = await openpgp.readKey({ armoredKey: previous ? previous.publicKeyArmored : input.publicKeyArmored });
 		signature = await openpgp.readSignature({ binarySignature: b64ToBytes(input.signature) });
 	} catch {
 		return unverified('signature_failed');
@@ -56,10 +66,11 @@ export async function verifyBusyWindows(input: VerifyBusyInput): Promise<BusyVer
 		if (!signatures.length) return unverified('signature_failed');
 		await signatures[0].verified;
 		const created = await signatures[0].signature;
-		return {
-			trust: 'verified',
-			signedAtMillis: created.packets[0]?.created?.getTime() ?? null
-		};
+		const signedAtMillis = created.packets[0]?.created?.getTime() ?? null;
+		if (previous && !signedWhileCurrent(signedAtMillis ?? undefined, previous.retiredAtMillis)) {
+			return unverified('signature_failed');
+		}
+		return { trust: 'verified', signedAtMillis };
 	} catch {
 		return unverified('signature_failed');
 	}

@@ -9,7 +9,15 @@ import {
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { isOfficialAddress, OFFICIAL_KEYS_ARMORED } from '$core/directory/official';
 import { officialFacts } from './officialSender';
-import { delegatedSignerTrust, directoryTrust, externalKeyState } from '$core/mail/senderVerify';
+import {
+	delegatedSignerTrust,
+	directoryTrust,
+	externalKeyState,
+	previousSenderKey,
+	type DirectoryTrust
+} from '$core/mail/senderVerify';
+import { keyIdHex } from '$core/directory/format';
+import { signedWhileCurrent } from '$core/directory/retired';
 import { deriveTrust, type ServerSignature, type TrustFacts } from '$core/mail/trust';
 import { b64ToHex } from '$core/keys/encode';
 import { renderBody, type RenderResult } from '$core/mail/render';
@@ -131,6 +139,42 @@ function previewEntry({ item, preview }: EntrySource): ThreadEntry {
 	};
 }
 
+function previousSignerFingerprint(
+	signature: SignatureVerdict | undefined,
+	directory: DirectoryTrust | null
+): string | null {
+	if (signature?.state !== 'unknown_key' || !directory?.ok || !directory.statement) return null;
+	const issuerFp = signature.issuerFingerprintHex?.toLowerCase();
+	const issuerId = signature.issuerKeyIdHex?.toLowerCase();
+	const match = directory.statement.keyTransitions.find((t) =>
+		issuerFp ? t.previousKeyFingerprint === issuerFp : !!issuerId && keyIdHex(t.previousKeyFingerprint) === issuerId
+	);
+	return match?.previousKeyFingerprint ?? null;
+}
+
+async function verifyWithPreviousKey(
+	accountId: string,
+	item: MessageDetail,
+	senderAddress: string,
+	directory: DirectoryTrust,
+	fingerprint: string,
+	stripTracking: boolean
+): Promise<SignatureVerdict | null> {
+	const previous = await previousSenderKey(accountId, senderAddress, fingerprint).catch(() => null);
+	if (!previous || !directory.publicKeyArmored) return null;
+	const rendered = await renderDetail(accountId, item, {
+		stripTracking,
+		verificationKeysArmored: [directory.publicKeyArmored, previous.publicKeyArmored]
+	}).catch(() => null);
+	const sig = rendered?.signature;
+	if (!sig || sig.keyFingerprintHex?.toLowerCase() !== previous.fingerprintHex) return null;
+	if (sig.state !== 'valid') return sig;
+	if (!signedWhileCurrent(sig.signedAtMillis, previous.retiredAtMillis)) {
+		return { state: 'invalid', keyFingerprintHex: sig.keyFingerprintHex, signedAtMillis: sig.signedAtMillis };
+	}
+	return { ...sig, previousKeyRetiredAtMillis: previous.retiredAtMillis };
+}
+
 async function fullEntry(
 	accountId: string,
 	source: EntrySource,
@@ -169,6 +213,18 @@ async function fullEntry(
 			render = rendered.render;
 			signature = rendered.signature;
 			signedMime = rendered.mime;
+			const previousFp = claimsOfficial ? null : previousSignerFingerprint(signature, directory);
+			if (previousFp && directory) {
+				signature =
+					(await verifyWithPreviousKey(
+						accountId,
+						item,
+						senderAddress,
+						directory,
+						previousFp,
+						stripTracking
+					)) ?? signature;
+			}
 		} catch (err) {
 			if (err instanceof DecryptionError) {
 				bodyLines = ['(Could not decrypt this message.)'];

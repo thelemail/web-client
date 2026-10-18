@@ -6,6 +6,7 @@ import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import type { AttachmentFailureCode } from '$core/keystore/protocol';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 import type { AttachmentDetail, PresignedPointer } from '$core/api/types';
+import { b64ToHex } from '$core/keys/encode';
 
 export type AttachmentDecryptError = AttachmentFailureCode;
 
@@ -21,6 +22,10 @@ export class AttachmentError extends Error {
 export interface DecryptedAttachment {
 	header: DecryptedAttachmentHeader;
 	blob: Blob;
+}
+
+function pointerKeyHint(pointer: PresignedPointer): string | undefined {
+	return pointer.keyFingerprint ? b64ToHex(pointer.keyFingerprint) : undefined;
 }
 
 export type PointerRefresh = (attachmentId: string) => Promise<PresignedPointer | null>;
@@ -141,7 +146,7 @@ export async function loadAttachmentHeader(
 				const res = await keystore.attachmentHeader({
 					accountId,
 					...(await attachmentSource(accountId, pointer)),
-					keyFingerprintHex: pointer.keyFingerprint
+					keyFingerprintHex: pointerKeyHint(pointer)
 				});
 				return res.ok ? { ok: true, value: res.header } : { ok: false, code: res.code };
 			}
@@ -175,7 +180,7 @@ async function attachmentBytes(
 				accountId,
 				...(await attachmentSource(accountId, pointer)),
 				attachmentId: chip.id,
-				keyFingerprintHex: pointer.keyFingerprint
+				keyFingerprintHex: pointerKeyHint(pointer)
 			});
 			return res.ok
 				? { ok: true, value: { header: res.header, blob: res.payload } }
@@ -206,7 +211,7 @@ export async function decryptAttachmentFull(
 	const res = await keystore.attachmentBytes({
 		accountId,
 		...(await attachmentSource(accountId, pointer)),
-		keyFingerprintHex: pointer.keyFingerprint
+		keyFingerprintHex: pointerKeyHint(pointer)
 	});
 	if (!res.ok) throw new AttachmentError(res.code);
 	return { header: res.header, blob: res.payload };
