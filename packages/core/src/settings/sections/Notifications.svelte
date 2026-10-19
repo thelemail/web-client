@@ -3,12 +3,14 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import CardHead from '../CardHead.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import type { NotificationStatus } from '$core/platform/types';
 	import { platform } from '$platform';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 	import { Button } from '$core/components/ui/button';
 	import {
 		reminderPermission,
@@ -45,9 +47,7 @@
 	function setReminderDefault(key: string) {
 		const choice = REMINDER_CHOICES.find((minutes) => reminderKey(minutes) === key);
 		if (choice === undefined) return;
-		void accountSettings
-			.persistCalendar({ ...accountSettings.calendar, defaultReminderMinutes: choice })
-			.catch(() => {});
+		settingsDraft.setReminderDefault(choice);
 	}
 
 	let status = $state<NotificationStatus | null>(null);
@@ -157,17 +157,19 @@
 			<Button variant="secondary" size="sm" onclick={enableReminders}>{m.settings_notify_reminders_allow()}</Button>
 		{/if}
 	</Row>
-	<Row
-		t={m.settings_notify_reminder_default()}
-		d={m.settings_notify_reminder_default_desc()}
-	>
-		<Select
-			value={reminderDefault}
-			options={reminderOptions}
-			onChange={setReminderDefault}
-			ariaLabel={m.settings_notify_reminder_default_aria()}
-		/>
-	</Row>
+	<SettingsGate controls={['select']}>
+		<Row
+			t={m.settings_notify_reminder_default()}
+			d={m.settings_notify_reminder_default_desc()}
+		>
+			<Select
+				value={reminderDefault}
+				options={reminderOptions}
+				onChange={setReminderDefault}
+				ariaLabel={m.settings_notify_reminder_default_aria()}
+			/>
+		</Row>
+	</SettingsGate>
 </div>
 
 {#snippet desc()}

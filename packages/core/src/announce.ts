@@ -1,13 +1,18 @@
-let region: HTMLElement | null = null;
-let pending: ReturnType<typeof setTimeout> | undefined;
+interface Region {
+	el: HTMLElement | null;
+	pending: ReturnType<typeof setTimeout> | undefined;
+}
 
-function liveRegion(): HTMLElement {
-	if (region?.isConnected) return region;
-	region = document.createElement('div');
-	region.setAttribute('role', 'status');
-	region.setAttribute('aria-live', 'polite');
-	region.setAttribute('aria-atomic', 'true');
-	Object.assign(region.style, {
+const polite: Region = { el: null, pending: undefined };
+const assertive: Region = { el: null, pending: undefined };
+
+function liveRegion(region: Region, urgent: boolean): HTMLElement {
+	if (region.el?.isConnected) return region.el;
+	const el = document.createElement('div');
+	el.setAttribute('role', urgent ? 'alert' : 'status');
+	el.setAttribute('aria-live', urgent ? 'assertive' : 'polite');
+	el.setAttribute('aria-atomic', 'true');
+	Object.assign(el.style, {
 		position: 'absolute',
 		width: '1px',
 		height: '1px',
@@ -18,18 +23,21 @@ function liveRegion(): HTMLElement {
 		whiteSpace: 'nowrap',
 		border: '0'
 	});
-	document.body.appendChild(region);
-	return region;
+	document.body.appendChild(el);
+	region.el = el;
+	return el;
 }
 
-export function announce(text: string): void {
+export function announce(text: string, opts: { assertive?: boolean } = {}): void {
 	if (typeof document === 'undefined') return;
-	const el = liveRegion();
-	clearTimeout(pending);
+	const urgent = opts.assertive === true;
+	const region = urgent ? assertive : polite;
+	const el = liveRegion(region, urgent);
+	clearTimeout(region.pending);
 	el.textContent = '';
-	pending = setTimeout(() => {
+	region.pending = setTimeout(() => {
 		el.textContent = text;
-		pending = setTimeout(() => {
+		region.pending = setTimeout(() => {
 			el.textContent = '';
 		}, 7000);
 	}, 100);

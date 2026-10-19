@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import CardHead from '../CardHead.svelte';
@@ -22,13 +23,15 @@
 
 <div class="scard">
 	<CardHead title={m.settings_reading_open_title()} />
-	<Row t={m.settings_reading_mark_read()}>
-		<Select
-			value={s.markRead}
-			options={labelled(MARK_READ_LABELS)}
-			onChange={(v) => {
-				if (isMarkReadOption(v)) set('markRead', v);
-			}}
-		/>
-	</Row>
+	<SettingsGate controls={['select']}>
+		<Row t={m.settings_reading_mark_read()}>
+			<Select
+				value={s.markRead}
+				options={labelled(MARK_READ_LABELS)}
+				onChange={(v) => {
+					if (isMarkReadOption(v)) set('markRead', v);
+				}}
+			/>
+		</Row>
+	</SettingsGate>
 </div>

@@ -3,6 +3,7 @@
 	import '$core/lifecycle/lifecycle.css';
 	import Check from '@lucide/svelte/icons/check';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { page } from '$app/state';
 	import { afterNavigate, beforeNavigate, replaceState } from '$app/navigation';
@@ -65,6 +66,14 @@
 						<span class="as-spin"></span><span class="as-tx">{m.settings_autosave_saving()}</span>
 					{:else if settingsDraft.saveState === 'saved'}
 						<Check size={14} /><span class="as-tx">{m.settings_autosave_saved()}</span>
+					{:else if settingsDraft.saveState === 'error'}
+						<CircleAlert size={14} /><span class="as-tx">{m.settings_autosave_failed()}</span>
+						<button
+							type="button"
+							class="as-retry"
+							aria-label="{m.settings_autosave_failed()}, {m.common_retry()}"
+							onclick={settingsDraft.retrySave}>{m.common_retry()}</button
+						>
 					{/if}
 				</div>
 			</header>
@@ -76,8 +85,11 @@
 	</div>
 </div>
 
-{#if settingsDraft.toastText}
-	<div class="set-toast"><CircleCheck size={16} />{settingsDraft.toastText}</div>
+{#if settingsDraft.toast}
+	<div class="set-toast" class:err={settingsDraft.toast.kind === 'error'}>
+		{#if settingsDraft.toast.kind === 'error'}<CircleAlert size={16} />{:else}<CircleCheck size={16} />{/if}
+		{settingsDraft.toast.text}
+	</div>
 {/if}
 
 <Ceremonies

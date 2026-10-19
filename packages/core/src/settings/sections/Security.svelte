@@ -25,6 +25,7 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Badge from '../Badge.svelte';
 	import Toggle from '../Toggle.svelte';
@@ -410,18 +411,20 @@
 	>
 		<span class="t-mono-xs" style="color: var(--success-700)">{m.settings_security_always_proxied()}</span>
 	</Row>
-	<Row
-		t={m.settings_security_strip_tracking()}
-		d={m.settings_security_strip_tracking_desc()}
-	>
-		<Toggle on={s.stripTrack} onChange={(v) => set('stripTrack', v)} />
-	</Row>
-	<Row
-		t={m.settings_security_spam_headers()}
-		d={m.settings_security_spam_headers_desc()}
-	>
-		<Toggle on={s.shareSpamHeaders} onChange={(v) => set('shareSpamHeaders', v)} />
-	</Row>
+	<SettingsGate controls={['toggle', 'toggle']}>
+		<Row
+			t={m.settings_security_strip_tracking()}
+			d={m.settings_security_strip_tracking_desc()}
+		>
+			<Toggle on={s.stripTrack} onChange={(v) => set('stripTrack', v)} />
+		</Row>
+		<Row
+			t={m.settings_security_spam_headers()}
+			d={m.settings_security_spam_headers_desc()}
+		>
+			<Toggle on={s.shareSpamHeaders} onChange={(v) => set('shareSpamHeaders', v)} />
+		</Row>
+	</SettingsGate>
 </div>
 
 <div class="scard flat">
