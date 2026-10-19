@@ -53,21 +53,14 @@ export type CeremonyKind =
 	| 'family';
 
 export interface SettingsState {
-	composeFormat: 'rich' | 'plain';
-	composeFont: string;
-	undo: '0' | '5' | '10' | '30';
-	autosave: string;
 	replyDefault: 'reply' | 'all';
 	confirmExternal: boolean;
 	confirmSubject: boolean;
 	confirmUnencrypted: boolean;
-	extEncrypt: 'auto' | 'ask' | 'off';
 
 	density: 'comfortable' | 'compact';
 	markRead: string;
 	swipe: string;
-	requestReceipts: boolean;
-	sendReceipts: string;
 
 	stripTrack: boolean;
 	shareSpamHeaders: boolean;
@@ -81,21 +74,14 @@ export interface SettingsState {
 }
 
 export const SETTINGS_DEFAULTS: SettingsState = {
-	composeFormat: 'rich',
-	composeFont: 'Hanken Grotesk',
-	undo: '10',
-	autosave: 'Every few seconds',
 	replyDefault: 'reply',
 	confirmExternal: true,
 	confirmSubject: true,
 	confirmUnencrypted: true,
-	extEncrypt: 'ask',
 
 	density: 'comfortable',
 	markRead: 'After 2 seconds',
 	swipe: 'Archive',
-	requestReceipts: false,
-	sendReceipts: 'Always ask me',
 
 	stripTrack: true,
 	shareSpamHeaders: false,
@@ -109,14 +95,7 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 };
 
 export const UNRELEASED = {
-	composeFormat: false,
-	composeFont: false,
-	undoSend: false,
-	draftAutosave: false,
-	externalEncryptionPolicy: false,
-	swipeAction: false,
-	requestReceipts: false,
-	respondReceipts: false
+	swipeAction: false
 } as const;
 
 export function sectionIdFromPath(pathname: string): string {
