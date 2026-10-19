@@ -7,7 +7,6 @@
 	import { scheduled } from '$core/stores/scheduled.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { mailNav } from '$core/stores/nav.svelte';
-	import { preferences } from '$core/stores/preferences.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { DEFAULT_QUERY } from '$core/mail/url';
@@ -55,7 +54,6 @@
 	class="mail-app"
 	class:nav-open={mailNav.open}
 	class:lc-ro={lifecycle.readOnly}
-	data-density={preferences.density}
 >
 	{#if mailNav.open}
 		<button class="rail-scrim" aria-label={m.mail_close_menu()} onclick={() => mailNav.close(true)}

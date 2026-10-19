@@ -57,7 +57,6 @@ export interface SettingsState {
 	confirmSubject: boolean;
 	confirmUnencrypted: boolean;
 
-	density: 'comfortable' | 'compact';
 	markRead: string;
 	swipe: string;
 
@@ -74,7 +73,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	confirmSubject: true,
 	confirmUnencrypted: true,
 
-	density: 'comfortable',
 	markRead: 'After 2 seconds',
 	swipe: 'Archive',
 
