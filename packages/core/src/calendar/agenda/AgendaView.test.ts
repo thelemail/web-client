@@ -10,7 +10,11 @@ import AgendaView from './AgendaView.svelte';
 vi.mock('../store.svelte', () => ({ calendarStore: {} }));
 vi.mock('../state.svelte', () => ({ cal: { agendaDays: [], title: 'September' } }));
 vi.mock('$core/api/auth', () => ({
-	getPlatformDomains: vi.fn().mockResolvedValue({ domains: ['temail.org', 'thelemail.com'], default: 'temail.org' })
+	getPlatformDomains: vi.fn().mockResolvedValue({
+		domains: ['temail.org'],
+		hosted: ['temail.org', 'thelemail.com'],
+		default: 'temail.org'
+	})
 }));
 
 beforeAll(() => platformDomains.load());
