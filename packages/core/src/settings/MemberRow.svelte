@@ -7,6 +7,7 @@
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import { m } from '$paraglide/messages.js';
 	import type { AccountMember } from './types';
+	import { memberRoleLabel } from './memberRole';
 	import { Button } from '$core/components/ui/button';
 
 	export type MemberRowAction =
@@ -47,15 +48,7 @@
 			(canPromote || canDemote || canRemove || canRevoke || canResend)
 	);
 
-	const roleLabel = $derived(
-		member.role === 'owner'
-			? m.settings_member_role_owner()
-			: member.role === 'admin'
-				? m.settings_member_role_admin()
-				: member.role === 'member'
-					? m.settings_member_role_member()
-					: member.role
-	);
+	const roleLabel = $derived(memberRoleLabel(member.role));
 
 	function toggleMenu() {
 		menuOpen = !menuOpen;
