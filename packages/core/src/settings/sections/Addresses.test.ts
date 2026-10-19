@@ -3,7 +3,9 @@ import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
+import type { Subscription } from '$core/api/billing';
 import { addresses } from '$core/stores/addresses.svelte';
+import { billing } from '$core/stores/billing.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import Addresses from './Addresses.svelte';
 
@@ -12,7 +14,12 @@ vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$core/stores/auth.svelte', () => ({
 	auth: { accountId: 'me', fullName: 'Ada Lovelace', email: 'ada@thelemail.com' }
 }));
-vi.mock('../permissions', () => ({ canManageWorkspace: () => false, isWorkspaceOwner: () => false }));
+const perms = vi.hoisted(() => ({ manage: false }));
+
+vi.mock('../permissions', () => ({
+	canManageWorkspace: () => perms.manage,
+	isWorkspaceOwner: () => false
+}));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: {} }));
 vi.mock('$core/directory/lookup', () => ({ lookupDirectory: vi.fn() }));
 vi.mock('$core/directory/verify', () => ({
@@ -80,6 +87,8 @@ afterEach(() => {
 	addresses.items = [];
 	addresses.mySharedAliases = [];
 	customDomains.clear();
+	billing.subscription = null;
+	perms.manage = false;
 });
 
 describe('Addresses', () => {
@@ -127,5 +136,27 @@ describe('Addresses', () => {
 		const shared = rowOf('support@acme.co.uk');
 		expect(shared.querySelector('.addr-used-tx')?.textContent).toBe('You and 1 other');
 		expect(shared.querySelectorAll('.avstack > *')).toHaveLength(2);
+	});
+
+	it('tells a free family manager only about the shared alias', () => {
+		perms.manage = true;
+		billing.subscription = { planCode: 'free_family' } as Subscription;
+		customDomains.items = [];
+		addresses.items = [address('p', 'ada@thelemail.com', { isPrimary: true })];
+		render(Addresses, { props: { launch: () => {} } });
+		const note = document.querySelector('.addr-plan')?.textContent ?? '';
+		expect(note).toContain('one shared alias');
+		expect(note).not.toContain('domain you own');
+		expect(document.querySelector('.addr-intro-act')?.textContent).toContain('Add an alias');
+	});
+
+	it('leaves the upgrade nudge as the only plan message on free', () => {
+		perms.manage = true;
+		billing.subscription = { planCode: 'free' } as Subscription;
+		render(Addresses, { props: { launch: () => {} } });
+		expect(document.querySelector('.addr-plan')).toBeNull();
+		expect(document.querySelector('.upgrade-list')?.textContent).toContain(
+			'More addresses come with a paid plan'
+		);
 	});
 });

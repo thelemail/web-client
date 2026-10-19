@@ -15,10 +15,13 @@ import {
 	groupByDomain,
 	dedupeAddresses,
 	ledeFor,
+	planNote,
 	usedByLabel,
 	type ModelContext
 } from './addressModel';
 import { domainBadge } from './domains/steps';
+import { allowsCustomDomains } from './entitlements';
+import type { PlanCode } from '$core/api/billing';
 
 const ME = 'acct-me';
 const OTHER = 'acct-other';
@@ -512,5 +515,38 @@ describe('address pickers', () => {
 	it('leaves suspended addresses out of reply-to unless already chosen', () => {
 		expect(replyChoices([primary, pending, gone], null).map((a) => a.id)).toEqual(['p', 'o']);
 		expect(replyChoices([primary, pending, gone], 's').map((a) => a.id)).toEqual(['p', 'o', 's']);
+	});
+});
+
+describe('planNote', () => {
+	const domain = 'thelemail.com';
+	const own = 'Unlimited aliases on any domain you own.';
+	const sharedUsed = 'Your plan includes one shared alias on thelemail.com, and it is in use.';
+	const sharedFree = 'Your plan includes one shared alias on thelemail.com.';
+	const paidUsed = `${own} ${sharedUsed}`;
+	const paidFree = `${own} Your plan also includes one shared alias on thelemail.com.`;
+	const cases: [PlanCode, string | null, string | null][] = [
+		['free', null, null],
+		['free_family', sharedUsed, sharedFree],
+		['personal', own, own],
+		['personal_plus', own, own],
+		['family', paidUsed, paidFree],
+		['business', paidUsed, paidFree]
+	];
+
+	it.each(cases)('describes what %s allows', (code, used, free) => {
+		expect(planNote(code, true, domain)).toBe(used);
+		expect(planNote(code, false, domain)).toBe(free);
+	});
+
+	it.each(cases.map(([code]) => code))('only claims owned domains when %s allows them', (code) => {
+		for (const slot of [true, false]) {
+			const note = planNote(code, slot, domain) ?? '';
+			expect(note.includes('domain you own')).toBe(allowsCustomDomains(code));
+		}
+	});
+
+	it('says nothing before the plan is known', () => {
+		expect(planNote(null, false, domain)).toBeNull();
 	});
 });
