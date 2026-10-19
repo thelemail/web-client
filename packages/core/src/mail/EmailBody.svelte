@@ -118,7 +118,9 @@
 		class="email-frame"
 		class:paper
 		title={m.mail_body_frame_title()}
-		sandbox={platform.interceptFrameLinks ? 'allow-same-origin' : 'allow-same-origin allow-popups'}
+		sandbox={platform.interceptFrameLinks
+			? 'allow-same-origin'
+			: 'allow-same-origin allow-popups allow-popups-to-escape-sandbox'}
 		srcdoc={writeFrameDoc ? undefined : srcDoc}
 		onload={writeFrameDoc ? fit : ready}
 	></iframe>
