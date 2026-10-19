@@ -5,15 +5,7 @@
 	import Row from '../Row.svelte';
 	import Seg from '../Seg.svelte';
 	import CardHead from '../CardHead.svelte';
-	import type { SettingsState } from '../data';
 	import { m } from '$paraglide/messages.js';
-
-	interface Props {
-		s: SettingsState;
-		set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
-	}
-
-	let { s, set }: Props = $props();
 </script>
 
 <SecHead desc={m.settings_appearance_desc()} />

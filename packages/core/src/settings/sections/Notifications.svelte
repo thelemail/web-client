@@ -6,7 +6,6 @@
 	import CardHead from '../CardHead.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
-	import type { SettingsState } from '../data';
 	import type { NotificationStatus } from '$core/platform/types';
 	import { platform } from '$platform';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
@@ -17,13 +16,6 @@
 		type ReminderPermission
 	} from '$core/calendar/reminders';
 	import { m } from '$paraglide/messages.js';
-
-	interface Props {
-		s: SettingsState;
-		set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
-	}
-
-	let { s, set }: Props = $props();
 
 	const SYSTEM_SETTINGS_URL = 'x-apple.systempreferences:com.apple.Notifications-Settings.extension';
 

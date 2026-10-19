@@ -24,7 +24,7 @@
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
 
-	import type { CeremonyKind, SettingsState } from '../data';
+	import type { CeremonyKind } from '../data';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { aliases } from '$core/stores/aliases.svelte';
 	import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
@@ -48,8 +48,6 @@
 	} from '../addressModel';
 
 	interface Props {
-		s: SettingsState;
-		set: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 		launch: (k: CeremonyKind) => void;
 	}
 
