@@ -1,6 +1,7 @@
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias, SharedAliasMember } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
+import type { PlanCode } from '$core/api/billing';
 import {
 	canSend,
 	domainBadge,
@@ -14,6 +15,7 @@ import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
 import { formatList } from '$core/stores/platformDomains.svelte';
 import { m } from '$paraglide/messages.js';
+import { allowsCustomDomains, allowsSharedDomainAlias } from './entitlements';
 
 export type AddressKind = 'mailbox' | 'alias' | 'shared';
 
@@ -323,10 +325,25 @@ export function ledeFor(ctx: ModelContext, row: AddressRow): string {
 	return m.settings_address_lede_other_alias({ domain: row.domain, name: owner.name });
 }
 
-export function planNote(sharedSlotUsed: boolean, domain: string): string {
-	return sharedSlotUsed
-		? m.settings_address_plan_note_used({ domain })
-		: m.settings_address_plan_note_free({ domain });
+export function planNote(
+	code: PlanCode | null | undefined,
+	sharedSlotUsed: boolean,
+	domain: string
+): string | null {
+	const domains = allowsCustomDomains(code);
+	const shared = allowsSharedDomainAlias(code);
+	if (domains && shared) {
+		return sharedSlotUsed
+			? m.settings_address_plan_note_used({ domain })
+			: m.settings_address_plan_note_free({ domain });
+	}
+	if (domains) return m.settings_address_plan_note_domains();
+	if (shared) {
+		return sharedSlotUsed
+			? m.settings_address_plan_note_shared_used({ domain })
+			: m.settings_address_plan_note_shared_free({ domain });
+	}
+	return null;
 }
 
 export function initialsOf(fullName: string, email: string): string {
