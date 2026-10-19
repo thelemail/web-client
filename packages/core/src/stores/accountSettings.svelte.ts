@@ -18,16 +18,8 @@ export const MARK_READ_LABELS: Record<string, () => string> = {
 	'Never automatically': () => m.settings_reading_mark_read_never()
 };
 
-export const SWIPE_LABELS: Record<string, () => string> = {
-	Archive: () => m.settings_reading_swipe_archive(),
-	Delete: () => m.settings_reading_swipe_delete(),
-	'Mark read': () => m.settings_reading_swipe_mark_read(),
-	Snooze: () => m.settings_reading_swipe_snooze()
-};
-
 export interface OpenMessageSettings {
 	markRead: string;
-	swipe: string;
 }
 
 export interface PrivacySettings {
@@ -47,9 +39,24 @@ export interface AppearanceSettings {
 }
 
 const DEFAULTS: OpenMessageSettings = {
-	markRead: 'After 2 seconds',
-	swipe: 'Archive'
+	markRead: 'After 2 seconds'
 };
+
+function parseReadingOpenMessage(raw: Record<string, unknown>): OpenMessageSettings {
+	const markRead = raw.markRead;
+	if (typeof markRead === 'string' && Object.hasOwn(MARK_READ_DELAYS, markRead)) {
+		return { markRead };
+	}
+	if (typeof markRead === 'number' || markRead === null) {
+		const label = Object.keys(MARK_READ_DELAYS).find((k) => MARK_READ_DELAYS[k] === markRead);
+		if (label) return { markRead: label };
+	}
+	return { ...DEFAULTS };
+}
+
+function readingSection(raw: unknown): Record<string, unknown> {
+	return raw && typeof raw === 'object' && !Array.isArray(raw) ? { ...raw } : {};
+}
 
 const PRIVACY_DEFAULTS: PrivacySettings = {
 	stripTrackingParams: true,
@@ -158,6 +165,7 @@ class AccountSettingsStore {
 	mailSidebar = $state<MailSidebarSettings>(parseMailSidebar(null));
 	mailRecents = $state<MailRecents>(parseMailRecents(null));
 	#accountId: string | null = null;
+	#rawReadingOpenMessage: Record<string, unknown> | null = null;
 	#sidebarTimer: ReturnType<typeof setTimeout> | null = null;
 	#recentsTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -166,6 +174,7 @@ class AccountSettingsStore {
 		this.#accountId = accountId;
 		this.hydrated = false;
 		this.readingOpenMessage = { ...DEFAULTS };
+		this.#rawReadingOpenMessage = null;
 		this.privacy = { ...PRIVACY_DEFAULTS };
 		this.composing = { ...COMPOSING_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
@@ -206,13 +215,8 @@ class AccountSettingsStore {
 			if (this.#accountId !== acct) return;
 			const sections = data.sections ?? {};
 
-			const v = sections['reading_open_message'];
-			if (v && typeof v === 'object') {
-				const next: OpenMessageSettings = { ...DEFAULTS };
-				if (typeof v.markRead === 'string') next.markRead = v.markRead;
-				if (typeof v.swipe === 'string') next.swipe = v.swipe;
-				this.readingOpenMessage = next;
-			}
+			this.#rawReadingOpenMessage = readingSection(sections['reading_open_message']);
+			this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
 
 			const p = sections['privacy'];
 			if (p && typeof p === 'object') {
@@ -308,8 +312,19 @@ class AccountSettingsStore {
 		await this.hydrate();
 	}
 
-	setReadingOpenMessage(value: OpenMessageSettings): void {
-		this.readingOpenMessage = { ...value };
+	async persistReadingOpenMessage(markRead: string): Promise<void> {
+		const acct = this.#accountId;
+		let raw = this.#rawReadingOpenMessage;
+		if (!raw) {
+			const data = await getAccountSettings();
+			if (this.#accountId !== acct) return;
+			raw = readingSection(data.sections?.['reading_open_message']);
+		}
+		const body = { ...raw, markRead: MARK_READ_DELAYS[markRead] ?? null };
+		await putAccountSettingsSection('reading_open_message', body);
+		if (this.#accountId !== acct) return;
+		this.#rawReadingOpenMessage = body;
+		this.readingOpenMessage = parseReadingOpenMessage(body);
 	}
 
 	setPrivacy(value: PrivacySettings): void {

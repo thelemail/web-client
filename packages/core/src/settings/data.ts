@@ -58,7 +58,6 @@ export interface SettingsState {
 	confirmUnencrypted: boolean;
 
 	markRead: string;
-	swipe: string;
 
 	stripTrack: boolean;
 	shareSpamHeaders: boolean;
@@ -74,7 +73,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	confirmUnencrypted: true,
 
 	markRead: 'After 2 seconds',
-	swipe: 'Archive',
 
 	stripTrack: true,
 	shareSpamHeaders: false,
@@ -82,10 +80,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	dateFmt: 'dmy',
 	timeFmt: '24'
 };
-
-export const UNRELEASED = {
-	swipeAction: false
-} as const;
 
 export function sectionIdFromPath(pathname: string): string {
 	const parts = pathname.split('/').filter(Boolean);

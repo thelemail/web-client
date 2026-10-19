@@ -12,7 +12,6 @@ import { auth } from './auth.svelte';
 import { m } from '$paraglide/messages.js';
 import { announce } from '$core/announce';
 
-const OPEN_MESSAGE_SECTION = 'reading_open_message';
 const PRIVACY_SECTION = 'privacy';
 const LOCALIZATION_SECTION = 'localization';
 const COMPOSING_SECTION = 'composing';
@@ -20,7 +19,7 @@ const AUTOSAVE_DELAY = 600;
 const SAVED_SETTLE_DELAY = 2200;
 const TOAST_DELAY = 2400;
 
-const OPEN_MESSAGE_KEYS = ['markRead', 'swipe'] as const satisfies ReadonlyArray<keyof SettingsState>;
+const OPEN_MESSAGE_KEYS = ['markRead'] as const satisfies ReadonlyArray<keyof SettingsState>;
 const PRIVACY_KEYS = ['stripTrack', 'shareSpamHeaders'] as const satisfies ReadonlyArray<keyof SettingsState>;
 const LOCALIZATION_KEYS = ['dateFmt', 'timeFmt'] as const satisfies ReadonlyArray<
 	keyof SettingsState
@@ -90,7 +89,6 @@ class SettingsDraftStore {
 		await accountSettings.hydrate();
 		const open = accountSettings.readingOpenMessage;
 		this.s.markRead = open.markRead;
-		this.s.swipe = open.swipe;
 		this.s.stripTrack = accountSettings.privacy.stripTrackingParams;
 		this.s.shareSpamHeaders = accountSettings.privacy.shareSpamHeaders === true;
 		const loc = accountSettings.localization;
@@ -144,9 +142,7 @@ class SettingsDraftStore {
 			return;
 		}
 		this.#flushing = true;
-		const openMessageBody = this.#dirtyOpenMessage
-			? { markRead: this.s.markRead, swipe: this.s.swipe }
-			: null;
+		const openMessageMarkRead = this.#dirtyOpenMessage ? this.s.markRead : null;
 		const privacyBody = this.#dirtyPrivacy
 			? {
 					stripTrackingParams: this.s.stripTrack,
@@ -169,8 +165,8 @@ class SettingsDraftStore {
 		const profileNeedsSave = this.profileDirty;
 		try {
 			const tasks: Promise<unknown>[] = [];
-			if (openMessageBody) {
-				tasks.push(putAccountSettingsSection(OPEN_MESSAGE_SECTION, openMessageBody));
+			if (openMessageMarkRead !== null) {
+				tasks.push(accountSettings.persistReadingOpenMessage(openMessageMarkRead));
 			}
 			if (privacyBody) {
 				tasks.push(putAccountSettingsSection(PRIVACY_SECTION, privacyBody));
@@ -185,8 +181,7 @@ class SettingsDraftStore {
 				tasks.push(this.profileSave());
 			}
 			await Promise.all(tasks);
-			if (openMessageBody) {
-				accountSettings.setReadingOpenMessage(openMessageBody);
+			if (openMessageMarkRead !== null) {
 				this.#dirtyOpenMessage = false;
 			}
 			if (privacyBody) {
