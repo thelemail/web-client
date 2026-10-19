@@ -144,7 +144,7 @@ class SettingsDraftStore {
 		}
 		this.#flushing = true;
 		const openMessageBody = this.#dirtyOpenMessage
-			? { markRead: this.s.markRead }
+			? accountSettings.readingOpenMessageBody(this.s.markRead)
 			: null;
 		const privacyBody = this.#dirtyPrivacy
 			? {

@@ -42,6 +42,18 @@ const DEFAULTS: OpenMessageSettings = {
 	markRead: 'After 2 seconds'
 };
 
+function parseReadingOpenMessage(raw: Record<string, unknown>): OpenMessageSettings {
+	const markRead = raw.markRead;
+	if (typeof markRead === 'string' && Object.hasOwn(MARK_READ_DELAYS, markRead)) {
+		return { markRead };
+	}
+	if (typeof markRead === 'number' || markRead === null) {
+		const label = Object.keys(MARK_READ_DELAYS).find((k) => MARK_READ_DELAYS[k] === markRead);
+		if (label) return { markRead: label };
+	}
+	return { ...DEFAULTS };
+}
+
 const PRIVACY_DEFAULTS: PrivacySettings = {
 	stripTrackingParams: true,
 	shareSpamHeaders: null
@@ -149,6 +161,7 @@ class AccountSettingsStore {
 	mailSidebar = $state<MailSidebarSettings>(parseMailSidebar(null));
 	mailRecents = $state<MailRecents>(parseMailRecents(null));
 	#accountId: string | null = null;
+	#rawReadingOpenMessage: Record<string, unknown> = {};
 	#sidebarTimer: ReturnType<typeof setTimeout> | null = null;
 	#recentsTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -157,6 +170,7 @@ class AccountSettingsStore {
 		this.#accountId = accountId;
 		this.hydrated = false;
 		this.readingOpenMessage = { ...DEFAULTS };
+		this.#rawReadingOpenMessage = {};
 		this.privacy = { ...PRIVACY_DEFAULTS };
 		this.composing = { ...COMPOSING_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
@@ -199,9 +213,8 @@ class AccountSettingsStore {
 
 			const v = sections['reading_open_message'];
 			if (v && typeof v === 'object') {
-				const next: OpenMessageSettings = { ...DEFAULTS };
-				if (typeof v.markRead === 'string') next.markRead = v.markRead;
-				this.readingOpenMessage = next;
+				this.#rawReadingOpenMessage = { ...v };
+				this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
 			}
 
 			const p = sections['privacy'];
@@ -298,8 +311,13 @@ class AccountSettingsStore {
 		await this.hydrate();
 	}
 
-	setReadingOpenMessage(value: OpenMessageSettings): void {
-		this.readingOpenMessage = { ...value };
+	readingOpenMessageBody(markRead: string): Record<string, unknown> {
+		return { ...this.#rawReadingOpenMessage, markRead: MARK_READ_DELAYS[markRead] ?? null };
+	}
+
+	setReadingOpenMessage(body: Record<string, unknown>): void {
+		this.#rawReadingOpenMessage = { ...body };
+		this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
 	}
 
 	setPrivacy(value: PrivacySettings): void {
