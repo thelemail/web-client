@@ -2,10 +2,11 @@
 	import Check from '@lucide/svelte/icons/check';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Popover from '$core/components/ui/popover';
+	import { auth } from '$core/stores/auth.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { inboundLive, ownershipProven } from '$core/settings/domains/steps';
-	import { platformDomains } from '$core/stores/platformDomains.svelte';
+	import { domainOf, platformDomains } from '$core/stores/platformDomains.svelte';
 	import { m } from '$paraglide/messages.js';
 	import EventPopover from '../EventPopover.svelte';
 	import PrivacyChip from '../PrivacyChip.svelte';
@@ -13,10 +14,11 @@
 
 	let openKey = $state<string | null>(null);
 
+	const ownDomain = $derived(domainOf(auth.email ?? ''));
 	const memberCount = $derived(workspaces.members.length);
 	const domain = $derived(
 		(customDomains.items.find(inboundLive) ?? customDomains.items.find(ownershipProven))?.domain ??
-			platformDomains.default
+			(platformDomains.includes(ownDomain) ? ownDomain : platformDomains.default)
 	);
 	const heroSub = $derived(
 		memberCount > 1

@@ -8,6 +8,9 @@ import { platformDomains } from '$core/stores/platformDomains.svelte';
 import AgendaView from './AgendaView.svelte';
 
 vi.mock('../store.svelte', () => ({ calendarStore: {} }));
+const session = vi.hoisted(() => ({ email: null as string | null }));
+
+vi.mock('$core/stores/auth.svelte', () => ({ auth: session }));
 vi.mock('../state.svelte', () => ({ cal: { agendaDays: [], title: 'September' } }));
 vi.mock('$core/api/auth', () => ({
 	getPlatformDomains: vi.fn().mockResolvedValue({
@@ -52,6 +55,7 @@ afterEach(() => {
 	customDomains.clear();
 	workspaces.workspace = null;
 	workspaces.members = [];
+	session.email = null;
 });
 
 describe('AgendaView hero', () => {
@@ -74,6 +78,21 @@ describe('AgendaView hero', () => {
 			domain('d1', 'pending.test'),
 			domain('d2', 'paused.test', { ...live, dormantAt: at })
 		];
+		render(AgendaView);
+
+		expect(hero()).toContain('behind temail.org.');
+	});
+
+	it('names the hosted domain the signed-in account lives on', () => {
+		session.email = 'anna@thelemail.com';
+		render(AgendaView);
+
+		expect(hero()).toContain('behind thelemail.com.');
+		expect(hero()).not.toContain('temail.org');
+	});
+
+	it('ignores an own domain the platform does not host', () => {
+		session.email = 'anna@elsewhere.test';
 		render(AgendaView);
 
 		expect(hero()).toContain('behind temail.org.');
