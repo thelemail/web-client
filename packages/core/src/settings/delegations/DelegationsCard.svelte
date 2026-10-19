@@ -11,6 +11,7 @@
 	import CardHead from '../CardHead.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
 	import RevokeDelegationDialog from './RevokeDelegationDialog.svelte';
+	import { delegationStatus } from './status';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { billing } from '$core/stores/billing.svelte';
@@ -30,7 +31,11 @@
 	let flash = $state<string | null>(null);
 
 	const items = $derived(delegations.for(address.id));
-	const active = $derived(items.filter((d) => !d.revokedAt));
+	const rows = $derived.by(() => {
+		const now = Date.now();
+		return items.map((d) => ({ d, status: delegationStatus(d, now) }));
+	});
+	const active = $derived(rows.filter((r) => r.status === 'active'));
 
 	$effect(() => {
 		void delegations.load(address.id);
@@ -72,13 +77,15 @@
 		<div class="card-flash"><Check size={14} />{flash}</div>
 	{/if}
 
-	{#each items as d (d.id)}
+	{#each rows as { d, status } (d.id)}
 		<div class="rec-row">
 			<div class="rec-main">
 				<div class="rec-title">
 					<span class="rec-label">{d.label}</span>
-					{#if d.revokedAt}
+					{#if status === 'revoked'}
 						<Badge kind="warn" dot>{m.settings_delegation_badge_revoked()}</Badge>
+					{:else if status === 'expired'}
+						<Badge kind="neutral" dot>{m.settings_delegation_badge_expired()}</Badge>
 					{:else}
 						<Badge kind="ok" dot>{m.settings_delegation_badge_active()}</Badge>
 					{/if}
@@ -86,15 +93,17 @@
 				<div class="rec-meta">
 					<span class="mono">{formatKeyId(d.signerFingerprint)}</span>
 					<span>
-						{#if d.revokedAt}
-							{m.settings_delegation_revoked_on({ date: fmtDate(d.revokedAt) })}
+						{#if status === 'revoked'}
+							{m.settings_delegation_revoked_on({ date: fmtDate(d.revokedAt ?? '') })}
+						{:else if status === 'expired'}
+							{m.settings_delegation_expired_on({ date: fmtDate(d.notAfter) })}
 						{:else}
 							{m.settings_delegation_expires_on({ date: fmtDate(d.notAfter) })}
 						{/if}
 					</span>
 				</div>
 			</div>
-			{#if !d.revokedAt}
+			{#if status === 'active'}
 				<Button variant="ghost" size="sm" onclick={() => (revoking = d)}>{m.settings_delegation_revoke()}</Button>
 			{/if}
 		</div>
