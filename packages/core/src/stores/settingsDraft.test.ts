@@ -25,7 +25,6 @@ const SECTION_BY_KEY: Partial<Record<keyof SettingsState, string>> = {
 	confirmSubject: 'composing',
 	confirmUnencrypted: 'composing',
 	markRead: 'reading_open_message',
-	swipe: 'reading_open_message',
 	stripTrack: 'privacy',
 	shareSpamHeaders: 'privacy',
 	dateFmt: 'localization',

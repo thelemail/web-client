@@ -20,7 +20,7 @@ const AUTOSAVE_DELAY = 600;
 const SAVED_SETTLE_DELAY = 2200;
 const TOAST_DELAY = 2400;
 
-const OPEN_MESSAGE_KEYS = ['markRead', 'swipe'] as const satisfies ReadonlyArray<keyof SettingsState>;
+const OPEN_MESSAGE_KEYS = ['markRead'] as const satisfies ReadonlyArray<keyof SettingsState>;
 const PRIVACY_KEYS = ['stripTrack', 'shareSpamHeaders'] as const satisfies ReadonlyArray<keyof SettingsState>;
 const LOCALIZATION_KEYS = ['dateFmt', 'timeFmt'] as const satisfies ReadonlyArray<
 	keyof SettingsState
@@ -90,7 +90,6 @@ class SettingsDraftStore {
 		await accountSettings.hydrate();
 		const open = accountSettings.readingOpenMessage;
 		this.s.markRead = open.markRead;
-		this.s.swipe = open.swipe;
 		this.s.stripTrack = accountSettings.privacy.stripTrackingParams;
 		this.s.shareSpamHeaders = accountSettings.privacy.shareSpamHeaders === true;
 		const loc = accountSettings.localization;
@@ -145,7 +144,7 @@ class SettingsDraftStore {
 		}
 		this.#flushing = true;
 		const openMessageBody = this.#dirtyOpenMessage
-			? { markRead: this.s.markRead, swipe: this.s.swipe }
+			? { markRead: this.s.markRead }
 			: null;
 		const privacyBody = this.#dirtyPrivacy
 			? {

@@ -18,16 +18,8 @@ export const MARK_READ_LABELS: Record<string, () => string> = {
 	'Never automatically': () => m.settings_reading_mark_read_never()
 };
 
-export const SWIPE_LABELS: Record<string, () => string> = {
-	Archive: () => m.settings_reading_swipe_archive(),
-	Delete: () => m.settings_reading_swipe_delete(),
-	'Mark read': () => m.settings_reading_swipe_mark_read(),
-	Snooze: () => m.settings_reading_swipe_snooze()
-};
-
 export interface OpenMessageSettings {
 	markRead: string;
-	swipe: string;
 }
 
 export interface PrivacySettings {
@@ -47,8 +39,7 @@ export interface AppearanceSettings {
 }
 
 const DEFAULTS: OpenMessageSettings = {
-	markRead: 'After 2 seconds',
-	swipe: 'Archive'
+	markRead: 'After 2 seconds'
 };
 
 const PRIVACY_DEFAULTS: PrivacySettings = {
@@ -210,7 +201,6 @@ class AccountSettingsStore {
 			if (v && typeof v === 'object') {
 				const next: OpenMessageSettings = { ...DEFAULTS };
 				if (typeof v.markRead === 'string') next.markRead = v.markRead;
-				if (typeof v.swipe === 'string') next.swipe = v.swipe;
 				this.readingOpenMessage = next;
 			}
 

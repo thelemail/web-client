@@ -3,8 +3,8 @@
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import CardHead from '../CardHead.svelte';
-	import { UNRELEASED, type SettingsState } from '../data';
-	import { MARK_READ_LABELS, SWIPE_LABELS } from '$core/stores/accountSettings.svelte';
+	import type { SettingsState } from '../data';
+	import { MARK_READ_LABELS } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -29,13 +29,4 @@
 			onChange={(v) => set('markRead', v)}
 		/>
 	</Row>
-	{#if UNRELEASED.swipeAction}
-		<Row t={m.settings_reading_swipe()}>
-			<Select
-				value={s.swipe}
-				options={labelled(SWIPE_LABELS)}
-				onChange={(v) => set('swipe', v)}
-			/>
-		</Row>
-	{/if}
 </div>
