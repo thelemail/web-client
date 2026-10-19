@@ -197,4 +197,16 @@ describe('AddressDetail', () => {
 		expect(text()).not.toContain('0 people');
 		expect(button('Change people')).toBeUndefined();
 	});
+
+	it('leaves out the head count when the shared alias did not load', () => {
+		perm.manage = false;
+		setup(
+			acme('ready'),
+			sales({ id: 'sup', email: 'support@acme.co.uk', localPart: 'support', shared: true, sharedAliasId: 'sa1' })
+		);
+		expect(document.querySelector('.card-meta')).toBeNull();
+		expect(document.querySelectorAll('.ad-person')).toHaveLength(0);
+		expect(text()).toContain('You are on this shared address.');
+		expect(text()).not.toContain('0 people');
+	});
 });
