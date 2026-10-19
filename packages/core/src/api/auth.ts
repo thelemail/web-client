@@ -64,7 +64,7 @@ export function getOpaqueParameters() {
 }
 
 export function getPlatformDomains() {
-	return apiFetch<{ domains: string[]; default: string }>('/v1/auth/platform-domains', {
+	return apiFetch<{ domains: string[]; hosted: string[]; default: string }>('/v1/auth/platform-domains', {
 		method: 'GET',
 		skipAuth: true
 	});

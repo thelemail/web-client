@@ -81,7 +81,11 @@ function continueButton(container: HTMLElement) {
 }
 
 beforeAll(async () => {
-	authApi.getPlatformDomains.mockResolvedValue({ domains: ['temail.org', 'thelemail.com'], default: 'temail.org' });
+	authApi.getPlatformDomains.mockResolvedValue({
+		domains: ['temail.org'],
+		hosted: ['temail.org', 'thelemail.com'],
+		default: 'temail.org'
+	});
 	await platformDomains.load();
 });
 
@@ -145,12 +149,12 @@ describe('AliasCeremony with a preset domain', () => {
 });
 
 describe('AliasCeremony without a preset domain', () => {
-	it('offers only domains that can send, plus every platform domain', () => {
+	it('offers only domains that can send, plus the signup domain', () => {
 		customDomains.items = [domain('d0', 'other.test', 'ready'), domain('d1', 'acme.test', 'owned')];
 		const { container } = open(null);
 
 		expect(selectValues(container)).toEqual([
-			{ value: 'other.test', options: ['other.test', 'temail.org', 'thelemail.com'], disabled: false }
+			{ value: 'other.test', options: ['other.test', 'temail.org'], disabled: false }
 		]);
 	});
 
@@ -161,7 +165,7 @@ describe('AliasCeremony without a preset domain', () => {
 		];
 		const { container } = open(null);
 
-		expect(selectValues(container)[0].options).toEqual(['other.test', 'temail.org', 'thelemail.com']);
+		expect(selectValues(container)[0].options).toEqual(['other.test', 'temail.org']);
 	});
 
 	it('leaves domains with a missing ownership record out', () => {
@@ -171,7 +175,7 @@ describe('AliasCeremony without a preset domain', () => {
 		];
 		const { container } = open(null);
 
-		expect(selectValues(container)[0].options).toEqual(['other.test', 'temail.org', 'thelemail.com']);
+		expect(selectValues(container)[0].options).toEqual(['other.test', 'temail.org']);
 	});
 
 	it('asks for a domain that can send when none is left', () => {
@@ -267,19 +271,18 @@ describe('AliasCeremony on a platform domain', () => {
 		return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
 	}
 
-	it('defaults to the first platform domain', () => {
+	it('offers only the signup domain', () => {
 		const { container } = open(null);
 		expect(selectValues(container)[0]).toEqual({
 			value: 'temail.org',
-			options: ['temail.org', 'thelemail.com'],
+			options: ['temail.org'],
 			disabled: false
 		});
+		expect(container.ownerDocument.body.textContent).not.toContain('thelemail.com');
 	});
 
-	it('creates the address on the platform domain that was picked', async () => {
-		const { container } = open(null);
-		const select = container.ownerDocument.querySelector('select')!;
-		await fireEvent.change(select, { target: { value: 'thelemail.com' } });
+	it('creates the address on the signup domain', async () => {
+		open(null);
 		await fireEvent.input(document.querySelector('#alias-name')!, { target: { value: 'Household' } });
 		await fireEvent.input(document.querySelector('#alias-local')!, { target: { value: 'home' } });
 		await fireEvent.click(button('Continue')!);
@@ -287,10 +290,10 @@ describe('AliasCeremony on a platform domain', () => {
 		await vi.waitFor(() => expect(aliases.create).toHaveBeenCalled());
 
 		expect(authApi.checkAddressAvailability).toHaveBeenCalledWith('home');
-		expect(keys.createAliasKey).toHaveBeenCalledWith(expect.objectContaining({ email: 'home@thelemail.com' }));
+		expect(keys.createAliasKey).toHaveBeenCalledWith(expect.objectContaining({ email: 'home@temail.org' }));
 		expect(aliases.create).toHaveBeenCalledWith(
 			'w1',
-			expect.objectContaining({ customDomainId: undefined, domain: 'thelemail.com', localPart: 'home' })
+			expect.objectContaining({ customDomainId: undefined, domain: 'temail.org', localPart: 'home' })
 		);
 	});
 });

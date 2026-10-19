@@ -349,5 +349,5 @@ export function serializeState(state: MemberState): string {
 }
 
 export function newUid(id: string, domain: string): string {
-	return `${id}@${domain || 'thelemail.com'}`;
+	return `${id}@${domain}`;
 }

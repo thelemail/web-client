@@ -1,11 +1,10 @@
 import type { Subscription } from '$core/api/billing';
 import type { LifecycleInfo } from '$core/api/types';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 import { m } from '$paraglide/messages.js';
 import { daysBetween, ladderFor } from './dates';
 import type { LifecycleContext, LifecycleStage, LifecyclePlan } from './types';
 
-const DEFAULT_EMAIL = 'you@thelemail.com';
-const DEFAULT_DOMAIN = 'thelemail.com';
 const DEFAULT_MAILBOX_GB = 15;
 
 export function deriveStage(info: LifecycleInfo | null): LifecycleStage {
@@ -31,7 +30,7 @@ export interface ServerContextInput {
 export function buildContextFromServer(input: ServerContextInput): LifecycleContext {
 	const now = new Date();
 	const email = input.email;
-	const domain = email.includes('@') ? email.slice(email.indexOf('@') + 1) : DEFAULT_DOMAIN;
+	const domain = email.includes('@') ? email.slice(email.indexOf('@') + 1) : platformDomains.default;
 	const info = input.info;
 	const day0 = info ? new Date(info.day0) : now;
 	const dates = {
@@ -63,7 +62,11 @@ export function planFrom(sub: Subscription | null): LifecyclePlan {
 }
 
 export const contextDefaults = {
-	email: DEFAULT_EMAIL,
-	domain: DEFAULT_DOMAIN,
+	get email(): string {
+		return `you@${platformDomains.default}`;
+	},
+	get domain(): string {
+		return platformDomains.default;
+	},
 	mailboxGB: DEFAULT_MAILBOX_GB
 };

@@ -7,6 +7,7 @@
 	import * as Dialog from '$core/components/ui/dialog';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { auth } from '$core/stores/auth.svelte';
+	import { domainOf, platformDomains } from '$core/stores/platformDomains.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
@@ -249,7 +250,7 @@
 			sourceMessageId: base?.sourceMessageId ?? request.prefill?.sourceMessageId,
 			threadSubject: base?.threadSubject ?? request.prefill?.threadSubject,
 			reminders: reminders.length ? reminders.map((minutes): Reminder => ({ minutesBefore: minutes })) : undefined,
-			uid: base?.uid ?? newUid(id, (auth.email ?? 'x@thelemail.com').split('@')[1] ?? 'thelemail.com'),
+			uid: base?.uid ?? newUid(id, domainOf(auth.email ?? '') || platformDomains.default),
 			sequence: base ? base.sequence + (invitationChanged(base, { ...base, title, start: when.start, end: when.end } as CalendarItem) ? 1 : 0) : 0,
 			createdAt: base?.createdAt ?? now,
 			updatedAt: now

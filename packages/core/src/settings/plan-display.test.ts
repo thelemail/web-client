@@ -1,5 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 import { planLabel, seatLimitFor, isInvitable, seatsFullNote, freeNote } from './plan-display';
+
+vi.mock('$core/api/auth', () => ({
+	getPlatformDomains: vi.fn().mockResolvedValue({
+		domains: ['temail.org'],
+		hosted: ['temail.org', 'thelemail.com'],
+		default: 'temail.org'
+	})
+}));
+
+beforeAll(() => platformDomains.load());
 
 describe('planLabel', () => {
 	it('names the two free tiers apart', () => {
@@ -47,10 +58,16 @@ describe('seatsFullNote', () => {
 
 describe('freeNote', () => {
 	it('describes a family as six accounts', () => {
-		expect(freeNote('family', 'free_family')).toMatch(/6 accounts/);
+		const note = freeNote('family', 'free_family');
+		expect(note).toMatch(/6 accounts/);
+		expect(note).toContain('an address on temail.org');
+		expect(note).not.toContain('thelemail.com');
 	});
 
 	it('describes a personal free account as one person', () => {
-		expect(freeNote('personal', 'free')).toMatch(/one person/);
+		const note = freeNote('personal', 'free');
+		expect(note).toMatch(/one person/);
+		expect(note).toContain('an address on temail.org');
+		expect(note).not.toContain('thelemail.com');
 	});
 });

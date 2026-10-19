@@ -35,7 +35,7 @@
 	import { ApiCallError } from '$core/api/types';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
-	import { formatList, platformDomains } from '$core/stores/platformDomains.svelte';
+	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -61,10 +61,9 @@
 	let handle = $state('');
 	let pickedDomain = $state<string | null>(null);
 	const mailDomain = $derived(
-		pickedDomain && platformDomains.includes(pickedDomain) ? pickedDomain : platformDomains.default
+		pickedDomain && platformDomains.offers(pickedDomain) ? pickedDomain : platformDomains.default
 	);
 	const address = $derived(`${handle}@${mailDomain}`);
-	const companions = $derived(platformDomains.addressesFor(handle, mailDomain).slice(1));
 	let pw = $state('');
 	let confirm = $state('');
 	let sel = $state<PlanSelection>(
@@ -408,11 +407,6 @@
 							tags={{ b: bold }}
 						/>
 					</span>
-					{#if companions.length > 0}
-						<span class="hint">
-							{m.auth_register_handle_companions({ addresses: formatList(companions, 'conjunction') })}
-						</span>
-					{/if}
 				{/if}
 			</div>
 			<div class="actions">

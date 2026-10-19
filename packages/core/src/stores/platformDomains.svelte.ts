@@ -23,6 +23,7 @@ const RETRY_AFTER_MS = 5000;
 
 class PlatformDomainsStore {
 	#domains = $state<string[]>([]);
+	#hosted = $state<string[]>([]);
 	#default = $state('');
 	#inflight: Promise<void> | null = null;
 	#failedAt = 0;
@@ -30,6 +31,11 @@ class PlatformDomainsStore {
 	get list(): string[] {
 		this.#ensure();
 		return this.#domains;
+	}
+
+	get hosted(): string[] {
+		this.#ensure();
+		return this.#hosted;
 	}
 
 	get default(): string {
@@ -43,26 +49,32 @@ class PlatformDomainsStore {
 	}
 
 	includes(domain: string): boolean {
+		return this.hosted.includes(domain.trim().toLowerCase());
+	}
+
+	offers(domain: string): boolean {
 		return this.list.includes(domain.trim().toLowerCase());
 	}
 
 	isPlatformAddress(email: string): boolean {
-		return isPlatformAddress(email, this.list);
-	}
-
-	addressesFor(handle: string, primary: string): string[] {
-		return [primary, ...this.list.filter((d) => d !== primary)].map((d) => `${handle}@${d}`);
+		return isPlatformAddress(email, this.hosted);
 	}
 
 	display(type: 'conjunction' | 'disjunction' = 'disjunction'): string {
 		return formatList(this.list, type);
 	}
 
+	displayHosted(type: 'conjunction' | 'disjunction' = 'disjunction'): string {
+		return formatList(this.hosted, type);
+	}
+
 	load(): Promise<void> {
 		if (this.#domains.length > 0) return Promise.resolve();
 		this.#inflight ??= getPlatformDomains()
 			.then((res) => {
-				const domains = res.domains.map((d) => d.trim().toLowerCase()).filter(Boolean);
+				const normalize = (list: string[]) => list.map((d) => d.trim().toLowerCase()).filter(Boolean);
+				const domains = normalize(res.domains);
+				this.#hosted = normalize(res.hosted);
 				this.#domains = domains;
 				this.#default = domains.includes(res.default) ? res.default : (domains[0] ?? '');
 			})

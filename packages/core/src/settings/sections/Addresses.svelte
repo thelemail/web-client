@@ -69,13 +69,15 @@
 		managingId ? (aliases.items.find((a) => a.id === managingId) ?? null) : null
 	);
 
-	const sharedSlotUsed = $derived(
-		rows.some((r) => r.kind === 'shared' && platformDomains.includes(r.domain))
+	const sharedSlotDomain = $derived(
+		rows.find((r) => r.kind === 'shared' && platformDomains.includes(r.domain))?.domain
 	);
+	const sharedSlotUsed = $derived(sharedSlotDomain !== undefined);
+	const slotDomain = $derived(sharedSlotDomain ?? platformDomains.display());
 	const canAddMore = $derived(billing.canAddDomains || !sharedSlotUsed);
 	const canAdd = $derived(manage && billing.canAddSharedAddresses && canAddMore);
 	const note = $derived(
-		manage ? planNote(billing.planCode, sharedSlotUsed, platformDomains.display()) : null
+		manage ? planNote(billing.planCode, sharedSlotUsed, slotDomain) : null
 	);
 
 	const delegableIds = $derived(
@@ -320,7 +322,7 @@
 {:else if manage && !canAddMore}
 	<div class="upgrade-list">
 		<UpgradeNudge
-			title={m.settings_address_nudge_shared_title({ domain: platformDomains.display() })}
+			title={m.settings_address_nudge_shared_title({ domain: slotDomain })}
 			desc={m.settings_address_nudge_shared_desc()}
 		/>
 	</div>
