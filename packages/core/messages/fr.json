@@ -3894,7 +3894,6 @@
   "auth_register_name_hint": "Affiché aux personnes à qui vous écrivez.",
   "auth_register_handle_placeholder": "françois",
   "auth_register_domain_label": "Domaine de l’adresse",
-  "auth_register_handle_companions": "Les messages envoyés à {addresses} vous parviennent aussi.",
   "auth_register_handle_hint": "Lettres, chiffres, points, tirets. De 3 à 30 caractères.",
   "auth_register_handle_invalid": "Utilisez de 3 à 30 lettres, chiffres, points ou tirets.",
   "auth_register_handle_checking": "Vérification de la disponibilité…",

@@ -40,9 +40,26 @@ async function typeAddress(handle: string) {
 	await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: handle } });
 }
 
+async function continueToPassword(handle: string) {
+	await typeAddress(handle);
+	await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
+	await fireEvent.click(button('Continue')!);
+}
+
+async function submitPassword() {
+	const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
+	await fireEvent.input(pw, { target: { value: 'Quiet-harbour-lantern-47' } });
+	await fireEvent.input(confirm, { target: { value: 'Quiet-harbour-lantern-47' } });
+	await fireEvent.click(button('Create my mailbox')!);
+}
+
 beforeEach(() => {
 	for (const fn of [...Object.values(authApi), ...Object.values(keystore)]) fn.mockReset();
-	authApi.getPlatformDomains.mockResolvedValue({ domains: ['temail.org', 'thelemail.com'], default: 'temail.org' });
+	authApi.getPlatformDomains.mockResolvedValue({
+		domains: ['temail.org'],
+		hosted: ['temail.org', 'thelemail.com'],
+		default: 'temail.org'
+	});
 	authApi.checkAddressAvailability.mockResolvedValue({ available: true });
 });
 
@@ -51,43 +68,34 @@ afterEach(() => {
 });
 
 describe('register page', () => {
-	it('offers every platform domain and starts on the default one', async () => {
+	it('shows a fixed suffix when only one domain is offered', async () => {
 		render(RegisterPage);
 
-		await vi.waitFor(() => expect(select()).not.toBeNull());
-		expect(select()!.value).toBe('temail.org');
-		expect([...select()!.options].map((o) => o.value)).toEqual(['temail.org', 'thelemail.com']);
+		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		expect(select()).toBeNull();
 	});
 
-	it('checks the handle once for every platform domain and names the other address', async () => {
+	it('checks the handle once and names only the new address', async () => {
 		render(RegisterPage);
-		await vi.waitFor(() => expect(select()).not.toBeNull());
 
 		await typeAddress('camille');
 		await vi.waitFor(() => expect(authApi.checkAddressAvailability).toHaveBeenCalledWith('camille', expect.stringMatching(/^[0-9a-f]{32}$/)));
-		await vi.waitFor(() => expect(document.body.textContent).toContain('Mail to camille@thelemail.com reaches you too.'));
-
-		await fireEvent.change(select()!, { target: { value: 'thelemail.com' } });
-		await vi.waitFor(() => expect(document.body.textContent).toContain('Mail to camille@temail.org reaches you too.'));
+		await vi.waitFor(() => expect(document.body.textContent).toContain('camille@temail.org'));
+		expect(document.body.textContent).not.toContain('thelemail.com');
 		expect(authApi.checkAddressAvailability).toHaveBeenCalledTimes(1);
 	});
 
-	it('registers the address on the picked domain', async () => {
+	it('registers on the offered domain and keeps the legal line to it', async () => {
 		keystore.opaqueStartRegistration.mockRejectedValue(new Error('stop'));
 		render(RegisterPage);
-		await vi.waitFor(() => expect(select()).not.toBeNull());
+		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
 
-		await fireEvent.change(select()!, { target: { value: 'thelemail.com' } });
-		await typeAddress('camille');
-		await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
-		await fireEvent.click(button('Continue')!);
-
-		const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
-		await fireEvent.input(pw, { target: { value: 'Quiet-harbour-lantern-47' } });
-		await fireEvent.input(confirm, { target: { value: 'Quiet-harbour-lantern-47' } });
-		await fireEvent.click(button('Create my mailbox')!);
+		await continueToPassword('camille');
+		expect(document.querySelector('.legal')?.textContent).toContain('temail.org');
+		expect(document.querySelector('.legal')?.textContent).not.toContain('thelemail.com');
+		await submitPassword();
 
 		await vi.waitFor(() => expect(keystore.opaqueStartRegistration).toHaveBeenCalled());
-		expect(keystore.opaqueStartRegistration.mock.calls[0][0].email).toBe('camille@thelemail.com');
+		expect(keystore.opaqueStartRegistration.mock.calls[0][0].email).toBe('camille@temail.org');
 	});
 });

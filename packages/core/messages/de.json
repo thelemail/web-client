@@ -3894,7 +3894,6 @@
 	"auth_register_name_hint": "Wird den Personen angezeigt, denen Sie schreiben.",
 	"auth_register_handle_placeholder": "françois",
 	"auth_register_domain_label": "Domain der Adresse",
-	"auth_register_handle_companions": "E-Mails an {addresses} erreichen Sie ebenfalls.",
 	"auth_register_handle_hint": "Buchstaben, Zahlen, Punkte, Bindestriche. 3–30 Zeichen.",
 	"auth_register_handle_invalid": "Verwenden Sie 3–30 Buchstaben, Zahlen, Punkte oder Bindestriche.",
 	"auth_register_handle_checking": "Verfügbarkeit wird geprüft…",

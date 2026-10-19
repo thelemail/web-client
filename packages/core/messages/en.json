@@ -3894,7 +3894,6 @@
 	"auth_register_name_hint": "Shown to people you write to.",
 	"auth_register_handle_placeholder": "françois",
 	"auth_register_domain_label": "Address domain",
-	"auth_register_handle_companions": "Mail to {addresses} reaches you too.",
 	"auth_register_handle_hint": "Letters, numbers, dots, hyphens. 3–30 characters.",
 	"auth_register_handle_invalid": "Use 3–30 letters, numbers, dots or hyphens.",
 	"auth_register_handle_checking": "Checking availability…",

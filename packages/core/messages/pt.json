@@ -3894,7 +3894,6 @@
 	"auth_register_name_hint": "Mostrado às pessoas a quem escreve.",
 	"auth_register_handle_placeholder": "françois",
 	"auth_register_domain_label": "Domínio do endereço",
-	"auth_register_handle_companions": "O correio enviado para {addresses} também chega até si.",
 	"auth_register_handle_hint": "Letras, números, pontos e hífenes. 3–30 carateres.",
 	"auth_register_handle_invalid": "Use 3–30 letras, números, pontos ou hífenes.",
 	"auth_register_handle_checking": "A verificar disponibilidade…",
