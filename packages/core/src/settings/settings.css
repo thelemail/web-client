@@ -204,10 +204,6 @@
 .settings-app .scard.danger .scard-h svg { color: var(--danger-700); }
 .settings-app .scard.danger .scard-h h3 { color: var(--danger-700); }
 
-.settings-app[data-accent="subtle"] { --accent-marker: var(--pine-500); }
-.settings-app[data-accent="subtle"] .set-nav .nav-eyebrow { color: var(--ink-500); }
-.settings-app[data-accent="bold"] { --accent-marker: var(--brass-500); }
-
 .set-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--pine-900); color: var(--fg-on-pine); font-size: 13px; font-weight: 500; padding: 12px 17px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; z-index: 100; animation: set-toastin var(--dur) var(--ease-out); font-family: var(--font-sans); }
 @keyframes set-toastin { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
 [data-theme='dark'] .set-toast { border: 1px solid var(--border-dark); }

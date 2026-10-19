@@ -52,7 +52,6 @@
 
 <div
 	class="settings-app"
-	data-accent={preferences.accent}
 	data-density={preferences.density}
 >
 	<div class="settings-body">

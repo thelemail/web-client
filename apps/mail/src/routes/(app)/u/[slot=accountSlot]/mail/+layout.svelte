@@ -55,7 +55,6 @@
 	class="mail-app"
 	class:nav-open={mailNav.open}
 	class:lc-ro={lifecycle.readOnly}
-	data-accent={preferences.accent}
 	data-density={preferences.density}
 >
 	{#if mailNav.open}

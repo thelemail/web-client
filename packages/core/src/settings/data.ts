@@ -39,7 +39,6 @@ export const SECTIONS: SectionMeta[] = [
 	{ id: 'about', icon: 'info', label: m.settings_nav_about }
 ];
 
-export type AccentIntensity = 'subtle' | 'standard' | 'bold';
 export type TwoFaSetupMethod = 'totp' | 'key' | 'device';
 export type CeremonyKind =
 	| 'recovery'
