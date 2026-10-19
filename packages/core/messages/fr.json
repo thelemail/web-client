@@ -230,8 +230,6 @@
       }
     }
   ],
-  "settings_address_group_own_domain": "Votre domaine · vérifié",
-  "settings_address_group_suspended": "Ne reçoit pas d’e-mails",
   "settings_address_group_included": "Inclus dans votre offre",
   "settings_address_group_count": [
     {

@@ -1,7 +1,14 @@
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias, SharedAliasMember } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
-import { canSend, isDormant, ownershipLapsing, ownershipProven, usable } from '$core/settings/domains/steps';
+import {
+	canSend,
+	domainBadge,
+	isDormant,
+	ownershipLapsing,
+	usable,
+	type BadgeKind
+} from '$core/settings/domains/steps';
 import type { WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import type { ReadDelegation } from '$core/api/readDelegations';
 import type { SigningDelegation } from '$core/api/delegations';
@@ -49,8 +56,8 @@ export interface AddressRow {
 export interface AddressGroup {
 	domain: string;
 	ownDomain: boolean;
-	badge: string;
-	badgeTone: 'pine' | 'neutral' | 'warn';
+	badge?: string;
+	badgeTone?: 'pine' | 'neutral' | 'warn';
 	count: string;
 	rows: AddressRow[];
 }
@@ -268,21 +275,29 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 		return {
 			domain: ownDomain ? key : formatList(ctx.platformDomains, 'conjunction'),
 			ownDomain,
-			...groupBadge(ownDomain, row),
+			...groupBadge(ownDomain, row, list.length),
 			count: m.settings_address_group_count({ count: list.length }),
 			rows: list
 		} satisfies AddressGroup;
 	});
 }
 
+const GROUP_TONE: Record<BadgeKind, NonNullable<AddressGroup['badgeTone']>> = {
+	ok: 'pine',
+	warn: 'warn',
+	info: 'neutral',
+	neutral: 'neutral'
+};
+
 function groupBadge(
 	ownDomain: boolean,
-	row: CustomDomain | undefined
-): { badge: string; badgeTone: AddressGroup['badgeTone'] } {
+	row: CustomDomain | undefined,
+	listed: number
+): Pick<AddressGroup, 'badge' | 'badgeTone'> {
 	if (!ownDomain) return { badge: m.settings_address_group_included(), badgeTone: 'neutral' };
-	if (row && isDormant(row)) return { badge: m.settings_domains_status_paused(), badgeTone: 'warn' };
-	if (row && !ownershipProven(row)) return { badge: m.settings_address_group_suspended(), badgeTone: 'warn' };
-	return { badge: m.settings_address_group_own_domain(), badgeTone: 'pine' };
+	if (!row) return {};
+	const { label, kind } = domainBadge({ ...row, addressCount: Math.max(row.addressCount, listed) });
+	return { badge: label, badgeTone: GROUP_TONE[kind] };
 }
 
 export function dedupeAddresses(lists: AccountAddress[][]): AccountAddress[] {

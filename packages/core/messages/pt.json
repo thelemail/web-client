@@ -230,8 +230,6 @@
 			}
 		}
 	],
-	"settings_address_group_own_domain": "O seu domínio · verificado",
-	"settings_address_group_suspended": "Não recebe correio",
 	"settings_address_group_included": "Incluído no seu plano",
 	"settings_address_group_count": [
 		{

@@ -230,8 +230,6 @@
 			}
 		}
 	],
-	"settings_address_group_own_domain": "Ihre Domain · verifiziert",
-	"settings_address_group_suspended": "Kein E-Mail-Empfang",
 	"settings_address_group_included": "In Ihrem Tarif enthalten",
 	"settings_address_group_count": [
 		{

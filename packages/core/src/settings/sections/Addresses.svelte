@@ -217,7 +217,7 @@
 		<div class="scard-h addr-group-h">
 			<Globe size={16} />
 			<h3 class="addr-domain">{g.domain}</h3>
-			<Badge kind={g.badgeTone}>{g.badge}</Badge>
+			{#if g.badge}<Badge kind={g.badgeTone}>{g.badge}</Badge>{/if}
 			<span class="addr-count">{g.count}</span>
 		</div>
 		<div class="addr-cols">

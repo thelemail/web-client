@@ -230,8 +230,6 @@
 			}
 		}
 	],
-	"settings_address_group_own_domain": "Your domain · verified",
-	"settings_address_group_suspended": "Not receiving mail",
 	"settings_address_group_included": "Included with your plan",
 	"settings_address_group_count": [
 		{
