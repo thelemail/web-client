@@ -66,7 +66,7 @@ function parseReadingOpenMessage(raw: Record<string, unknown>): OpenMessageSetti
 	return { ...DEFAULTS };
 }
 
-function readingSection(raw: unknown): Record<string, unknown> {
+function sectionRecord(raw: unknown): Record<string, unknown> {
 	return raw && typeof raw === 'object' && !Array.isArray(raw) ? { ...raw } : {};
 }
 
@@ -167,8 +167,11 @@ export function pushRecents(list: readonly string[], used: readonly string[]): s
 	return recentIds([...[...used].reverse(), ...list]);
 }
 
+export type AccountSettingsStatus = 'idle' | 'loading' | 'ready' | 'error';
+
 class AccountSettingsStore {
-	hydrated = $state(false);
+	status = $state<AccountSettingsStatus>('idle');
+	error = $state<unknown>(null);
 	readingOpenMessage = $state<OpenMessageSettings>({ ...DEFAULTS });
 	privacy = $state<PrivacySettings>({ ...PRIVACY_DEFAULTS });
 	composing = $state<ComposingSettings>({ ...COMPOSING_DEFAULTS });
@@ -177,16 +180,20 @@ class AccountSettingsStore {
 	mailSidebar = $state<MailSidebarSettings>(parseMailSidebar(null));
 	mailRecents = $state<MailRecents>(parseMailRecents(null));
 	#accountId: string | null = null;
-	#rawReadingOpenMessage: Record<string, unknown> | null = null;
+	#raw = new Map<string, Record<string, unknown>>();
+	#loading: Promise<void> | null = null;
+	#loadedListeners = new Set<() => void>();
 	#sidebarTimer: ReturnType<typeof setTimeout> | null = null;
 	#recentsTimer: ReturnType<typeof setTimeout> | null = null;
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
 		this.#accountId = accountId;
-		this.hydrated = false;
+		this.status = 'idle';
+		this.error = null;
+		this.#loading = null;
 		this.readingOpenMessage = { ...DEFAULTS };
-		this.#rawReadingOpenMessage = null;
+		this.#raw = new Map();
 		this.privacy = { ...PRIVACY_DEFAULTS };
 		this.composing = { ...COMPOSING_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
@@ -198,6 +205,14 @@ class AccountSettingsStore {
 		if (this.#recentsTimer) clearTimeout(this.#recentsTimer);
 		this.#recentsTimer = null;
 		locale.reset();
+	}
+
+	get accountId(): string | null {
+		return this.#accountId;
+	}
+
+	get hydrated(): boolean {
+		return this.status === 'ready';
 	}
 
 	#applyAppearance(): void {
@@ -215,153 +230,197 @@ class AccountSettingsStore {
 	markReadDelayMs = $derived<number | null>(MARK_READ_DELAYS[this.readingOpenMessage.markRead]);
 
 	async hydrate(): Promise<void> {
-		if (this.hydrated) return;
+		if (this.status === 'ready') return;
 		if (!auth.canEnterApp) return;
-		const acct = this.#accountId;
+		if (this.#loading) return this.#loading;
+		this.status = 'loading';
+		this.error = null;
+		const load = this.#load(false);
+		this.#loading = load;
 		try {
-			const data = await getAccountSettings();
-			if (this.#accountId !== acct) return;
-			const sections = data.sections ?? {};
-
-			this.#rawReadingOpenMessage = readingSection(sections['reading_open_message']);
-			this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
-
-			const p = sections['privacy'];
-			if (p && typeof p === 'object') {
-				const next: PrivacySettings = { ...PRIVACY_DEFAULTS };
-				if (typeof p.stripTrackingParams === 'boolean') {
-					next.stripTrackingParams = p.stripTrackingParams;
-				}
-				if (typeof p.shareSpamHeaders === 'boolean') {
-					next.shareSpamHeaders = p.shareSpamHeaders;
-				}
-				this.privacy = next;
-			}
-
-			const cmp = sections['composing'];
-			if (cmp && typeof cmp === 'object') {
-				const next: ComposingSettings = { ...COMPOSING_DEFAULTS };
-				if (typeof cmp.confirmExternal === 'boolean') next.confirmExternal = cmp.confirmExternal;
-				if (typeof cmp.confirmSubject === 'boolean') next.confirmSubject = cmp.confirmSubject;
-				if (typeof cmp.confirmUnencrypted === 'boolean') {
-					next.confirmUnencrypted = cmp.confirmUnencrypted;
-				}
-				if (cmp.replyDefault === 'reply' || cmp.replyDefault === 'all') {
-					next.replyDefault = cmp.replyDefault;
-				}
-				this.composing = next;
-			}
-
-			const a = sections['appearance'];
-			if (a && typeof a === 'object') {
-				const next: AppearanceSettings = { ...APPEARANCE_DEFAULTS };
-				if (a.theme === 'light' || a.theme === 'dark' || a.theme === 'auto') {
-					next.theme = a.theme;
-				}
-				this.appearance = next;
-				this.#applyAppearance();
-			}
-
-			const c = sections['calendar'];
-			if (c && typeof c === 'object') {
-				const next: CalendarSettings = { ...CALENDAR_DEFAULTS };
-				if (Array.isArray(c.hidden)) {
-					next.hidden = c.hidden.filter((x): x is string => typeof x === 'string');
-				}
-				if (typeof c.defaultCalendarId === 'string') next.defaultCalendarId = c.defaultCalendarId;
-				if (
-					c.defaultPrivacy === 'private' ||
-					c.defaultPrivacy === 'busy' ||
-					c.defaultPrivacy === 'shared'
-				) {
-					next.defaultPrivacy = c.defaultPrivacy;
-				}
-				if (c.defaultReminderMinutes === null) {
-					next.defaultReminderMinutes = null;
-				} else if (
-					typeof c.defaultReminderMinutes === 'number' &&
-					c.defaultReminderMinutes >= 0 &&
-					c.defaultReminderMinutes <= MAX_REMINDER_MINUTES
-				) {
-					next.defaultReminderMinutes = Math.round(c.defaultReminderMinutes);
-				}
-				if (c.weekStartsOn === 0 || c.weekStartsOn === 1) next.weekStartsOn = c.weekStartsOn;
-				if (typeof c.startHour === 'number' && c.startHour >= 0 && c.startHour <= 12) {
-					next.startHour = Math.round(c.startHour);
-				}
-				this.calendar = next;
-			}
-
-			if (sections['mail_sidebar'] !== undefined && !this.#sidebarTimer) {
-				this.mailSidebar = parseMailSidebar(sections['mail_sidebar']);
-			}
-
-			if (sections['mail_recents'] !== undefined && !this.#recentsTimer) {
-				this.mailRecents = parseMailRecents(sections['mail_recents']);
-			}
-
-			const l = sections['localization'];
-			if (l && typeof l === 'object') {
-				const next: LocaleSettings = { ...locale.value };
-				if (l.dateFormat === 'dmy' || l.dateFormat === 'mdy' || l.dateFormat === 'iso') {
-					next.dateFormat = l.dateFormat;
-				}
-				if (l.timeFormat === '24' || l.timeFormat === '12') {
-					next.timeFormat = l.timeFormat;
-				}
-				locale.set(next);
-			}
-		} catch {}
-		if (this.#accountId === acct) this.hydrated = true;
+			await load;
+		} finally {
+			if (this.#loading === load) this.#loading = null;
+		}
 	}
 
 	async refresh(): Promise<void> {
-		this.hydrated = false;
-		await this.hydrate();
+		if (this.status !== 'ready') return this.hydrate();
+		if (!auth.canEnterApp) return;
+		await this.#load(true);
+	}
+
+	async #load(silent: boolean): Promise<void> {
+		const acct = this.#accountId;
+		let data: Awaited<ReturnType<typeof getAccountSettings>>;
+		try {
+			data = await getAccountSettings();
+		} catch (err) {
+			if (this.#accountId !== acct || silent) return;
+			this.error = err;
+			this.status = 'error';
+			return;
+		}
+		if (this.#accountId !== acct) return;
+		this.#apply(data);
+		this.status = 'ready';
+		for (const listener of this.#loadedListeners) listener();
+	}
+
+	onLoaded(listener: () => void): () => void {
+		this.#loadedListeners.add(listener);
+		return () => this.#loadedListeners.delete(listener);
+	}
+
+	#apply(data: Awaited<ReturnType<typeof getAccountSettings>>): void {
+		const sections = data.sections ?? {};
+		this.#raw = new Map(Object.entries(sections).map(([k, v]) => [k, sectionRecord(v)]));
+
+		this.readingOpenMessage = parseReadingOpenMessage(this.#section('reading_open_message'));
+
+		const p = sections['privacy'];
+		if (p && typeof p === 'object') {
+			const next: PrivacySettings = { ...PRIVACY_DEFAULTS };
+			if (typeof p.stripTrackingParams === 'boolean') {
+				next.stripTrackingParams = p.stripTrackingParams;
+			}
+			if (typeof p.shareSpamHeaders === 'boolean') {
+				next.shareSpamHeaders = p.shareSpamHeaders;
+			}
+			this.privacy = next;
+		}
+
+		const cmp = sections['composing'];
+		if (cmp && typeof cmp === 'object') {
+			const next: ComposingSettings = { ...COMPOSING_DEFAULTS };
+			if (typeof cmp.confirmExternal === 'boolean') next.confirmExternal = cmp.confirmExternal;
+			if (typeof cmp.confirmSubject === 'boolean') next.confirmSubject = cmp.confirmSubject;
+			if (typeof cmp.confirmUnencrypted === 'boolean') {
+				next.confirmUnencrypted = cmp.confirmUnencrypted;
+			}
+			if (cmp.replyDefault === 'reply' || cmp.replyDefault === 'all') {
+				next.replyDefault = cmp.replyDefault;
+			}
+			this.composing = next;
+		}
+
+		const a = sections['appearance'];
+		if (a && typeof a === 'object') {
+			const next: AppearanceSettings = { ...APPEARANCE_DEFAULTS };
+			if (a.theme === 'light' || a.theme === 'dark' || a.theme === 'auto') {
+				next.theme = a.theme;
+			}
+			this.appearance = next;
+			this.#applyAppearance();
+		}
+
+		const c = sections['calendar'];
+		if (c && typeof c === 'object') {
+			const next: CalendarSettings = { ...CALENDAR_DEFAULTS };
+			if (Array.isArray(c.hidden)) {
+				next.hidden = c.hidden.filter((x): x is string => typeof x === 'string');
+			}
+			if (typeof c.defaultCalendarId === 'string') next.defaultCalendarId = c.defaultCalendarId;
+			if (
+				c.defaultPrivacy === 'private' ||
+				c.defaultPrivacy === 'busy' ||
+				c.defaultPrivacy === 'shared'
+			) {
+				next.defaultPrivacy = c.defaultPrivacy;
+			}
+			if (c.defaultReminderMinutes === null) {
+				next.defaultReminderMinutes = null;
+			} else if (
+				typeof c.defaultReminderMinutes === 'number' &&
+				c.defaultReminderMinutes >= 0 &&
+				c.defaultReminderMinutes <= MAX_REMINDER_MINUTES
+			) {
+				next.defaultReminderMinutes = Math.round(c.defaultReminderMinutes);
+			}
+			if (c.weekStartsOn === 0 || c.weekStartsOn === 1) next.weekStartsOn = c.weekStartsOn;
+			if (typeof c.startHour === 'number' && c.startHour >= 0 && c.startHour <= 12) {
+				next.startHour = Math.round(c.startHour);
+			}
+			this.calendar = next;
+		}
+
+		if (sections['mail_sidebar'] !== undefined && !this.#sidebarTimer) {
+			this.mailSidebar = parseMailSidebar(sections['mail_sidebar']);
+		}
+
+		if (sections['mail_recents'] !== undefined && !this.#recentsTimer) {
+			this.mailRecents = parseMailRecents(sections['mail_recents']);
+		}
+
+		const l = sections['localization'];
+		if (l && typeof l === 'object') {
+			const next: LocaleSettings = { ...locale.value };
+			if (l.dateFormat === 'dmy' || l.dateFormat === 'mdy' || l.dateFormat === 'iso') {
+				next.dateFormat = l.dateFormat;
+			}
+			if (l.timeFormat === '24' || l.timeFormat === '12') {
+				next.timeFormat = l.timeFormat;
+			}
+			locale.set(next);
+		}
+	}
+
+	#section(name: string): Record<string, unknown> {
+		return this.#raw.get(name) ?? {};
+	}
+
+	async putSection(
+		name: string,
+		patch: Record<string, unknown>,
+		merge = true
+	): Promise<Record<string, unknown> | null> {
+		if (this.status !== 'ready') throw new Error('account settings are not loaded');
+		const acct = this.#accountId;
+		const body = merge ? { ...this.#section(name), ...patch } : { ...patch };
+		await putAccountSettingsSection(name, body);
+		if (this.#accountId !== acct) return null;
+		this.#raw.set(name, body);
+		return body;
 	}
 
 	async persistReadingOpenMessage(markRead: MarkReadOption): Promise<void> {
-		const acct = this.#accountId;
-		let raw = this.#rawReadingOpenMessage;
-		if (!raw) {
-			const data = await getAccountSettings();
-			if (this.#accountId !== acct) return;
-			raw = readingSection(data.sections?.['reading_open_message']);
-		}
-		const body = { ...raw, markRead: MARK_READ_DELAYS[markRead] };
-		await putAccountSettingsSection('reading_open_message', body);
-		if (this.#accountId !== acct) return;
-		this.#rawReadingOpenMessage = body;
-		this.readingOpenMessage = parseReadingOpenMessage(body);
+		const body = await this.putSection('reading_open_message', {
+			markRead: MARK_READ_DELAYS[markRead]
+		});
+		if (body) this.readingOpenMessage = parseReadingOpenMessage(body);
 	}
 
-	setPrivacy(value: PrivacySettings): void {
-		this.privacy = { ...value };
+	async persistPrivacy(next: PrivacySettings): Promise<void> {
+		const body = await this.putSection('privacy', { ...next });
+		if (body) this.privacy = { ...next };
 	}
 
 	async persistShareSpamHeaders(share: boolean): Promise<void> {
-		const next: PrivacySettings = { ...this.privacy, shareSpamHeaders: share };
-		await putAccountSettingsSection('privacy', { ...next });
-		this.privacy = next;
+		await this.persistPrivacy({ ...this.privacy, shareSpamHeaders: share });
 	}
 
-	setComposing(value: ComposingSettings): void {
-		this.composing = { ...value };
+	async persistComposing(next: ComposingSettings): Promise<void> {
+		const body = await this.putSection('composing', { ...next });
+		if (body) this.composing = { ...next };
 	}
 
-	setLocalization(value: LocaleSettings): void {
-		locale.set(value);
+	async persistLocalization(next: LocaleSettings): Promise<void> {
+		const body = await this.putSection('localization', { ...next });
+		if (body) locale.set({ ...next });
 	}
 
-	persistAppearance(next: AppearanceSettings): Promise<unknown> {
-		this.appearance = { ...next };
+	applyTheme(pref: ThemePref): void {
+		this.appearance = { ...this.appearance, theme: pref };
 		this.#applyAppearance();
-		return putAccountSettingsSection('appearance', { theme: next.theme });
 	}
 
-	persistCalendar(next: CalendarSettings): Promise<unknown> {
+	async persistAppearance(next: AppearanceSettings): Promise<void> {
+		await this.putSection('appearance', { theme: next.theme }, false);
+	}
+
+	async persistCalendar(next: CalendarSettings): Promise<void> {
 		this.calendar = { ...next, hidden: [...next.hidden] };
-		return putAccountSettingsSection('calendar', {
+		await this.putSection('calendar', {
 			hidden: next.hidden,
 			defaultCalendarId: next.defaultCalendarId,
 			defaultPrivacy: next.defaultPrivacy,
@@ -389,7 +448,10 @@ class AccountSettingsStore {
 
 	recordRecents(kind: MailRecentKind, used: readonly string[]): void {
 		if (used.length === 0) return;
-		this.mailRecents = { ...this.mailRecents, [kind]: pushRecents(this.mailRecents[kind], used) };
+		this.mailRecents = {
+			...this.mailRecents,
+			[kind]: pushRecents(this.mailRecents[kind], used)
+		};
 		const acct = this.#accountId;
 		if (this.#recentsTimer) clearTimeout(this.#recentsTimer);
 		this.#recentsTimer = setTimeout(() => {
@@ -400,10 +462,6 @@ class AccountSettingsStore {
 				labels: this.mailRecents.labels
 			}).catch(() => {});
 		}, SIDEBAR_PERSIST_DELAY_MS);
-	}
-
-	setTheme(pref: ThemePref): void {
-		void this.persistAppearance({ ...this.appearance, theme: pref }).catch(() => {});
 	}
 }
 

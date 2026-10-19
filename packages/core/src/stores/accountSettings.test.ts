@@ -38,7 +38,7 @@ describe('appearance settings', () => {
 
 	it('saves the theme as the whole appearance section', async () => {
 		await hydrateWith({ appearance: { theme: 'light', density: 'compact' } });
-		accountSettings.setTheme('auto');
+		await accountSettings.persistAppearance({ theme: 'auto' });
 		expect(putAccountSettingsSection).toHaveBeenCalledTimes(1);
 		expect(putAccountSettingsSection).toHaveBeenCalledWith('appearance', { theme: 'auto' });
 	});
