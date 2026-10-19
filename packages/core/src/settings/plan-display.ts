@@ -74,7 +74,7 @@ export function personalNote(): string {
 
 export function freeNote(type?: WorkspaceType | null, planCode?: PlanCode | null): string {
 	if (planCode === 'free_family' || (type === 'family' && planCode !== 'free')) {
-		return m.settings_plan_free_family_note({ domains: platformDomains.display('conjunction') });
+		return m.settings_plan_free_family_note({ domain: platformDomains.default });
 	}
-	return m.settings_plan_free_note({ domains: platformDomains.display('conjunction') });
+	return m.settings_plan_free_note({ domain: platformDomains.default });
 }
