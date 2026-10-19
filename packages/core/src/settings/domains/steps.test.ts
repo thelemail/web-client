@@ -11,6 +11,7 @@ import {
 	canSend,
 	checkRunning,
 	domainBadge,
+	domainState,
 	inboundLive,
 	ownershipLapsing,
 	ownershipProven,
@@ -24,6 +25,7 @@ import {
 	stepRunning,
 	usable,
 	type CheckStage,
+	type DomainState,
 	type DomainStep
 } from './steps';
 
@@ -124,16 +126,18 @@ describe('stepReachable', () => {
 		['live', live, ALL],
 		['sendingLost', sendingLost, ['ownership', 'sending']],
 		['mxLost', mxLost, ['ownership', 'sending', 'recipients', 'routing']],
-		['lapsing', lapsing, ALL],
-		['pausedLive', pausedLive, ALL]
+		['lapsing', lapsing, ['ownership', 'sending', 'recipients', 'routing']],
+		['pausedLive', pausedLive, ALL],
+		['liveWithoutAddresses', domain({ ...live, addressCount: 0 }), ALL]
 	] as const)('opens only the steps a domain has earned: %s', (_, d, steps) => {
 		expect(DOMAIN_STEPS.filter((s) => stepReachable(d, s))).toEqual(steps);
 	});
 
-	it('holds back the done step until the domain is live with addresses', () => {
+	it('holds back the done step until the domain is live', () => {
 		expect(stepReachable(owned, 'done')).toBe(false);
-		expect(stepReachable(domain({ ...live, addressCount: 0 }), 'done')).toBe(false);
 		expect(stepReachable(domain({ ...live, mxVerifiedAt: null }), 'done')).toBe(false);
+		expect(stepReachable(lapsing, 'done')).toBe(false);
+		expect(stepReachable(domain({ ...live, addressCount: 0 }), 'done')).toBe(true);
 		expect(stepReachable(live, 'done')).toBe(true);
 	});
 });
@@ -167,6 +171,7 @@ describe('resumeStep', () => {
 		['ready', ready, 'recipients'],
 		['readyWithAddresses', readyWithAddresses, 'routing'],
 		['live', live, 'done'],
+		['liveWithoutAddresses', domain({ ...live, addressCount: 0 }), 'done'],
 		['sendingLost', sendingLost, 'sending'],
 		['mxLost', mxLost, 'routing'],
 		['lapsing', lapsing, 'ownership'],
@@ -308,6 +313,7 @@ describe('canRequestCheck', () => {
 describe('domainBadge', () => {
 	it('names the stage being verified', () => {
 		expect(domainBadge(withCheck(owned, 'sending', 'running'))).toEqual({
+			state: 'verifying',
 			label: 'Verifying sending',
 			kind: 'info'
 		});
@@ -317,6 +323,7 @@ describe('domainBadge', () => {
 
 	it('flags an expired check', () => {
 		expect(domainBadge(withCheck(fresh, 'ownership', 'expired'))).toEqual({
+			state: 'expired',
 			label: 'Check expired',
 			kind: 'warn'
 		});
@@ -324,18 +331,48 @@ describe('domainBadge', () => {
 
 	it('puts a missing ownership record first', () => {
 		expect(domainBadge(domain({ ...lapsing, dormantAt: iso(-HOUR) }))).toEqual({
+			state: 'lapsing',
 			label: 'Ownership record missing',
 			kind: 'warn'
 		});
 	});
 
 	it('says a paused domain is paused', () => {
-		expect(domainBadge(pausedLive)).toEqual({ label: 'Paused', kind: 'warn' });
+		expect(domainBadge(pausedLive)).toEqual({ state: 'paused', label: 'Paused', kind: 'warn' });
 	});
 
-	it('falls back to the setup status', () => {
-		expect(domainBadge(live)).toEqual({ label: 'Live', kind: 'ok' });
-		expect(domainBadge(fresh)).toEqual({ label: 'Not started', kind: 'neutral' });
+	it('ignores a server status the records do not back', () => {
+		expect(domainBadge(domain({ ...readyWithAddresses, status: 'active' })).label).toBe('Not receiving mail');
+	});
+});
+
+const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
+
+describe('domainState', () => {
+	it.each([
+		['fresh', fresh, 'not_started', 'Not started', 'neutral'],
+		['owned', owned, 'owned', 'Ownership verified', 'info'],
+		['ownedWithAddresses', ownedWithAddresses, 'not_receiving', 'Not receiving mail', 'warn'],
+		['ready', ready, 'ready', 'Ready to send', 'info'],
+		['readyWithAddresses', readyWithAddresses, 'not_receiving', 'Not receiving mail', 'warn'],
+		['pendingWithAddresses', domain({ addressCount: 1 }), 'not_receiving', 'Not receiving mail', 'warn'],
+		['liveWithoutAddresses', domain({ ...live, addressCount: 0 }), 'live', 'Live', 'ok'],
+		['live', live, 'live', 'Live', 'ok'],
+		['sendingLost', sendingLost, 'failed', 'Needs attention', 'warn'],
+		['mxLost', mxLost, 'failed', 'Needs attention', 'warn'],
+		['lapsing', lapsing, 'lapsing', 'Ownership record missing', 'warn'],
+		['pausedLive', pausedLive, 'paused', 'Paused', 'warn'],
+		['running', withCheck(readyWithAddresses, 'routing', 'running'), 'verifying', 'Verifying MX', 'info'],
+		['expired', withCheck(readyWithAddresses, 'routing', 'expired'), 'expired', 'Check expired', 'warn']
+	] as const)('derives %s', (_, d, state: DomainState, label, kind) => {
+		expect(domainState(d)).toBe(state);
+		expect(domainBadge(d)).toEqual({ state, label, kind });
+		const left = LADDER.filter((s) => !stepComplete(d, s)).length;
+		if (kind === 'ok') {
+			expect(left).toBe(0);
+			expect(stepComplete(d, 'done')).toBe(true);
+		}
+		if (left > 0) expect(kind).not.toBe('ok');
 	});
 });
 

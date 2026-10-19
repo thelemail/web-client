@@ -138,12 +138,13 @@
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
-				{@const live = stepComplete(d, 'done')}
+				{@const badge = domainBadge(d)}
+				{@const live = badge.state === 'live'}
 				{@const why = reason(d)}
 				<div class="cd-row" class:live>
 					<div class="cd-main">
 						<span class="cd-name mono">{d.domain}</span>
-						<Badge kind={domainBadge(d).kind} dot>{domainBadge(d).label}</Badge>
+						<Badge kind={badge.kind} dot>{badge.label}</Badge>
 					</div>
 
 					<div class="cd-progress" aria-label={m.settings_domains_progress_aria()}>

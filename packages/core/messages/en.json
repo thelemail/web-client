@@ -230,8 +230,6 @@
 			}
 		}
 	],
-	"settings_address_group_own_domain": "Your domain · verified",
-	"settings_address_group_suspended": "Not receiving mail",
 	"settings_address_group_included": "Included with your plan",
 	"settings_address_group_count": [
 		{
@@ -328,10 +326,10 @@
 	"settings_copy_to_clipboard": "Copy to clipboard",
 	"settings_record_host": "Host",
 	"settings_record_ttl": "TTL",
-	"settings_dns_ok": "OK",
-	"settings_dns_warn": "WARN",
-	"settings_dns_fail": "FAIL",
-	"settings_dns_pending": "PENDING",
+	"settings_dns_found": "Found",
+	"settings_dns_wrong_value": "Wrong value",
+	"settings_dns_not_found": "Not found",
+	"settings_dns_waiting": "Waiting",
 	"settings_member_seat_meter": [
 		{
 			"declarations": [
@@ -2686,6 +2684,7 @@
 	"settings_domains_status_verifying_ownership": "Verifying ownership",
 	"settings_domains_status_verifying_sending": "Verifying sending",
 	"settings_domains_status_verifying_routing": "Verifying MX",
+	"settings_domains_status_not_receiving": "Not receiving mail",
 	"settings_domains_status_expired": "Check expired",
 	"settings_domains_status_lapsing": "Ownership record missing",
 	"settings_domains_reason_ownership_missing": "The last check did not find the ownership TXT record.",

@@ -230,8 +230,6 @@
 			}
 		}
 	],
-	"settings_address_group_own_domain": "Ihre Domain · verifiziert",
-	"settings_address_group_suspended": "Kein E-Mail-Empfang",
 	"settings_address_group_included": "In Ihrem Tarif enthalten",
 	"settings_address_group_count": [
 		{
@@ -328,10 +326,10 @@
 	"settings_copy_to_clipboard": "In die Zwischenablage kopieren",
 	"settings_record_host": "Host",
 	"settings_record_ttl": "TTL",
-	"settings_dns_ok": "OK",
-	"settings_dns_warn": "WARNUNG",
-	"settings_dns_fail": "FEHLER",
-	"settings_dns_pending": "AUSSTEHEND",
+	"settings_dns_found": "Gefunden",
+	"settings_dns_wrong_value": "Falscher Wert",
+	"settings_dns_not_found": "Nicht gefunden",
+	"settings_dns_waiting": "Ausstehend",
 	"settings_member_seat_meter": [
 		{
 			"declarations": [
@@ -2686,6 +2684,7 @@
 	"settings_domains_status_verifying_ownership": "Inhaberschaft wird geprüft",
 	"settings_domains_status_verifying_sending": "Versand wird geprüft",
 	"settings_domains_status_verifying_routing": "MX wird geprüft",
+	"settings_domains_status_not_receiving": "Kein E-Mail-Empfang",
 	"settings_domains_status_expired": "Prüfung abgelaufen",
 	"settings_domains_status_lapsing": "Inhaberschaftseintrag fehlt",
 	"settings_domains_reason_ownership_missing": "Bei der letzten Prüfung wurde der TXT-Eintrag für die Inhaberschaft nicht gefunden.",

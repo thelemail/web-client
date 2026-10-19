@@ -230,8 +230,6 @@
 			}
 		}
 	],
-	"settings_address_group_own_domain": "O seu domínio · verificado",
-	"settings_address_group_suspended": "Não recebe correio",
 	"settings_address_group_included": "Incluído no seu plano",
 	"settings_address_group_count": [
 		{
@@ -328,10 +326,10 @@
 	"settings_copy_to_clipboard": "Copiar para a área de transferência",
 	"settings_record_host": "Anfitrião",
 	"settings_record_ttl": "TTL",
-	"settings_dns_ok": "OK",
-	"settings_dns_warn": "AVISO",
-	"settings_dns_fail": "FALHA",
-	"settings_dns_pending": "PENDENTE",
+	"settings_dns_found": "Encontrado",
+	"settings_dns_wrong_value": "Valor incorreto",
+	"settings_dns_not_found": "Não encontrado",
+	"settings_dns_waiting": "A aguardar",
 	"settings_member_seat_meter": [
 		{
 			"declarations": [
@@ -2686,6 +2684,7 @@
 	"settings_domains_status_verifying_ownership": "A verificar a propriedade",
 	"settings_domains_status_verifying_sending": "A verificar o envio",
 	"settings_domains_status_verifying_routing": "A verificar o MX",
+	"settings_domains_status_not_receiving": "Não recebe correio",
 	"settings_domains_status_expired": "Verificação expirada",
 	"settings_domains_status_lapsing": "Registo de propriedade em falta",
 	"settings_domains_reason_ownership_missing": "A última verificação não encontrou o registo TXT de propriedade.",

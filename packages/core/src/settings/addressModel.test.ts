@@ -18,6 +18,7 @@ import {
 	usedByLabel,
 	type ModelContext
 } from './addressModel';
+import { domainBadge } from './domains/steps';
 
 const ME = 'acct-me';
 const OTHER = 'acct-other';
@@ -59,12 +60,33 @@ function sharedAlias(over: Partial<SharedAlias> & { id: string; addressId: strin
 	};
 }
 
+const VERIFIED_AT = '2026-09-01T00:00:00Z';
+
+function liveDomain(over: Partial<CustomDomain> = {}): CustomDomain {
+	return {
+		id: OWN_DOMAIN_ID,
+		workspaceId: 'w1',
+		domain: 'abbaye.example',
+		status: 'active',
+		addressCount: 2,
+		actionableStage: null,
+		ownershipVerifiedAt: VERIFIED_AT,
+		dkimVerifiedAt: VERIFIED_AT,
+		spfVerifiedAt: VERIFIED_AT,
+		dmarcVerifiedAt: VERIFIED_AT,
+		mxVerifiedAt: VERIFIED_AT,
+		createdAt: VERIFIED_AT,
+		updatedAt: VERIFIED_AT,
+		...over
+	};
+}
+
 function ctx(over: Partial<ModelContext> = {}): ModelContext {
 	return {
 		accountId: ME,
 		manage: true,
 		members: [member(ME, 'Gargantua', 'gargantua@abbaye.example'), member(OTHER, 'Panurge', 'panurge@abbaye.example')],
-		domains: [{ domain: 'abbaye.example', status: 'active', ownershipVerifiedAt: '2026-09-01T00:00:00Z' } as CustomDomain],
+		domains: [liveDomain()],
 		platformDomains: ['temail.org', 'thelemail.com'],
 		sharedAliases: [],
 		fullName: 'Gargantua',
@@ -184,7 +206,8 @@ describe('groupByDomain', () => {
 		];
 		const groups = groupByDomain(c, rows);
 		expect(groups.map((g) => g.domain)).toEqual(['abbaye.example', 'temail.org and thelemail.com']);
-		expect(groups[0].badge).toBe('Your domain · verified');
+		expect(groups[0].badge).toBe('Live');
+		expect(groups[0].badgeTone).toBe('pine');
 		expect(groups[0].count).toBe('2 addresses');
 		expect(groups[1].badge).toBe('Included with your plan');
 		expect(groups[1].count).toBe('1 address');
@@ -231,27 +254,66 @@ describe('groupByDomain', () => {
 		expect(custom.canRemove).toBe(true);
 	});
 
-	it('marks a domain group that no longer receives mail', () => {
-		const c = ctx({ domains: [{ domain: 'abbaye.example', status: 'pending', ownershipVerifiedAt: null } as CustomDomain] });
+	function badgeFor(d: CustomDomain | null) {
+		const c = ctx({ domains: d ? [d] : [] });
 		const [group] = groupByDomain(c, [buildRow(c, address({ id: 'a2', email: 'abbot@abbaye.example' }))]);
-		expect(group.badge).toBe('Not receiving mail');
-		expect(group.badgeTone).toBe('warn');
+		return { badge: group.badge, badgeTone: group.badgeTone };
+	}
+
+	it('marks a domain group that no longer receives mail', () => {
+		const d = liveDomain({ status: 'pending', ownershipVerifiedAt: null, actionableStage: 'ownership' });
+		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warn' });
 	});
 
 	it('marks a paused domain group', () => {
-		const c = ctx({
-			domains: [
-				{
-					domain: 'abbaye.example',
-					status: 'active',
-					ownershipVerifiedAt: '2026-09-01T00:00:00Z',
-					dormantAt: '2026-09-10T00:00:00Z'
-				} as CustomDomain
-			]
-		});
-		const [group] = groupByDomain(c, [buildRow(c, address({ id: 'a2', email: 'abbot@abbaye.example' }))]);
-		expect(group.badge).toBe('Paused');
-		expect(group.badgeTone).toBe('warn');
+		expect(badgeFor(liveDomain({ dormantAt: '2026-09-10T00:00:00Z' }))).toEqual({ badge: 'Paused', badgeTone: 'warn' });
+	});
+
+	it('flags a domain whose ownership record went missing', () => {
+		const d = liveDomain({ ownershipMissingSince: '2026-09-10T00:00:00Z', actionableStage: 'ownership' });
+		expect(badgeFor(d)).toEqual({ badge: 'Ownership record missing', badgeTone: 'warn' });
+	});
+
+	it('says a domain without verified MX is not receiving mail', () => {
+		const d = liveDomain({ status: 'ready', mxVerifiedAt: null, actionableStage: 'routing' });
+		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warn' });
+	});
+
+	it('counts the listed addresses even when the domain row lags behind', () => {
+		const d = liveDomain({ status: 'ready', mxVerifiedAt: null, addressCount: 0, actionableStage: 'routing' });
+		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warn' });
+	});
+
+	it('makes no claim about a domain it has no row for', () => {
+		expect(badgeFor(null)).toEqual({ badge: undefined, badgeTone: undefined });
+	});
+
+	it.each([
+		['ready', liveDomain({ status: 'ready', mxVerifiedAt: null, actionableStage: 'routing' })],
+		['failed', liveDomain({ status: 'failed', mxVerifiedAt: null, actionableStage: 'routing' })],
+		[
+			'expired',
+			liveDomain({
+				status: 'ready',
+				mxVerifiedAt: null,
+				actionableStage: 'routing',
+				check: {
+					stage: 'routing',
+					state: 'expired',
+					startedAt: '2026-09-08T00:00:00Z',
+					deadlineAt: '2026-09-10T00:00:00Z',
+					attempts: 4,
+					lastCheckedAt: '2026-09-10T00:00:00Z',
+					nextCheckAt: null,
+					result: null
+				}
+			})
+		],
+		['live', liveDomain()]
+	] as const)('uses the Domains badge for a %s domain', (_, d) => {
+		const { label, kind } = domainBadge(d);
+		const tone = kind === 'ok' ? 'pine' : kind === 'warn' ? 'warn' : 'neutral';
+		expect(badgeFor(d)).toEqual({ badge: label, badgeTone: tone });
 	});
 });
 

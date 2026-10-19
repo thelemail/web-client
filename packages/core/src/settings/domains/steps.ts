@@ -1,10 +1,21 @@
-import type { CustomDomain, CustomDomainStatus, DNSRecordPhase } from '$core/api/customDomains';
+import type { CustomDomain, DNSRecordPhase } from '$core/api/customDomains';
 import { m } from '$paraglide/messages.js';
 
 export type DomainStep = 'ownership' | 'sending' | 'recipients' | 'routing' | 'done';
 export type CheckStage = DNSRecordPhase;
 export type StageCheckState = 'idle' | 'running' | 'expired' | 'verified';
 export type BadgeKind = 'ok' | 'warn' | 'info' | 'neutral';
+export type DomainState =
+	| 'lapsing'
+	| 'paused'
+	| 'verifying'
+	| 'expired'
+	| 'live'
+	| 'failed'
+	| 'not_receiving'
+	| 'ready'
+	| 'owned'
+	| 'not_started';
 
 export const DOMAIN_STEPS: DomainStep[] = ['ownership', 'sending', 'recipients', 'routing', 'done'];
 
@@ -75,7 +86,7 @@ export function usable(d: CustomDomain): boolean {
 export function resumeStep(d: CustomDomain): DomainStep {
 	if (!stepComplete(d, 'ownership')) return 'ownership';
 	if (!sendingVerified(d)) return 'sending';
-	if (d.addressCount === 0) return 'recipients';
+	if (!stepComplete(d, 'recipients')) return 'recipients';
 	if (!d.mxVerifiedAt) return 'routing';
 	return 'done';
 }
@@ -87,11 +98,11 @@ export function stepComplete(d: CustomDomain, step: DomainStep): boolean {
 		case 'sending':
 			return sendingVerified(d);
 		case 'recipients':
-			return sendingVerified(d) && d.addressCount > 0;
+			return sendingVerified(d) && (d.addressCount > 0 || routingVerified(d));
 		case 'routing':
 			return routingVerified(d);
 		case 'done':
-			return routingVerified(d) && d.addressCount > 0;
+			return routingVerified(d) && !ownershipLapsing(d);
 	}
 }
 
@@ -104,7 +115,7 @@ export function stepReachable(d: CustomDomain, step: DomainStep): boolean {
 		case 'recipients':
 			return sendingVerified(d);
 		case 'routing':
-			return sendingVerified(d) && d.addressCount > 0;
+			return stepComplete(d, 'recipients');
 		case 'done':
 			return stepComplete(d, 'done');
 	}
@@ -206,35 +217,6 @@ export function reasonMessage(code: string | null | undefined): string | null {
 	}
 }
 
-export function statusLabel(s: CustomDomainStatus): string {
-	switch (s) {
-		case 'pending':
-			return m.settings_domains_status_pending();
-		case 'owned':
-			return m.settings_domains_status_owned();
-		case 'ready':
-			return m.settings_domains_status_ready();
-		case 'active':
-			return m.settings_domains_status_active();
-		case 'failed':
-			return m.settings_domains_status_failed();
-	}
-}
-
-export function statusKind(s: CustomDomainStatus): BadgeKind {
-	switch (s) {
-		case 'active':
-			return 'ok';
-		case 'ready':
-		case 'owned':
-			return 'info';
-		case 'failed':
-			return 'warn';
-		case 'pending':
-			return 'neutral';
-	}
-}
-
 export function isDormant(d: { dormantAt?: string | null }): boolean {
 	return !!d.dormantAt;
 }
@@ -245,10 +227,58 @@ const VERIFYING: Record<CheckStage, () => string> = {
 	routing: () => m.settings_domains_status_verifying_routing()
 };
 
-export function domainBadge(d: CustomDomain): { label: string; kind: BadgeKind } {
-	if (ownershipLapsing(d)) return { label: m.settings_domains_status_lapsing(), kind: 'warn' };
-	if (isDormant(d)) return { label: m.settings_domains_status_paused(), kind: 'warn' };
-	if (d.check?.state === 'running') return { label: VERIFYING[d.check.stage](), kind: 'info' };
-	if (d.check?.state === 'expired') return { label: m.settings_domains_status_expired(), kind: 'warn' };
-	return { label: statusLabel(d.status), kind: statusKind(d.status) };
+export function domainState(d: CustomDomain): DomainState {
+	if (ownershipLapsing(d)) return 'lapsing';
+	if (isDormant(d)) return 'paused';
+	if (d.check?.state === 'running') return 'verifying';
+	if (d.check?.state === 'expired') return 'expired';
+	if (routingVerified(d)) return 'live';
+	if (d.status === 'failed') return 'failed';
+	if (d.addressCount > 0) return 'not_receiving';
+	if (sendingVerified(d)) return 'ready';
+	if (ownershipVerified(d)) return 'owned';
+	return 'not_started';
+}
+
+const STATE_KIND: Record<DomainState, BadgeKind> = {
+	lapsing: 'warn',
+	paused: 'warn',
+	verifying: 'info',
+	expired: 'warn',
+	live: 'ok',
+	failed: 'warn',
+	not_receiving: 'warn',
+	ready: 'info',
+	owned: 'info',
+	not_started: 'neutral'
+};
+
+function stateLabel(d: CustomDomain, state: DomainState): string {
+	switch (state) {
+		case 'lapsing':
+			return m.settings_domains_status_lapsing();
+		case 'paused':
+			return m.settings_domains_status_paused();
+		case 'verifying':
+			return VERIFYING[d.check?.stage ?? 'ownership']();
+		case 'expired':
+			return m.settings_domains_status_expired();
+		case 'live':
+			return m.settings_domains_status_active();
+		case 'failed':
+			return m.settings_domains_status_failed();
+		case 'not_receiving':
+			return m.settings_domains_status_not_receiving();
+		case 'ready':
+			return m.settings_domains_status_ready();
+		case 'owned':
+			return m.settings_domains_status_owned();
+		case 'not_started':
+			return m.settings_domains_status_pending();
+	}
+}
+
+export function domainBadge(d: CustomDomain): { state: DomainState; label: string; kind: BadgeKind } {
+	const state = domainState(d);
+	return { state, label: stateLabel(d, state), kind: STATE_KIND[state] };
 }

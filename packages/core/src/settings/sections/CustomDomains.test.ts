@@ -211,6 +211,22 @@ describe('CustomDomains list', () => {
 		expect(document.querySelector('.cd-row')?.classList.contains('live')).toBe(true);
 	});
 
+	it('reads a live domain without addresses as live with nothing left to do', () => {
+		open(domain({ ...live, addressCount: 0 }));
+
+		expect(document.querySelector('.cd-main')?.textContent).toContain('Live');
+		expect(text()).toContain('Checked 2 hours ago');
+		expect(text()).not.toMatch(/steps? left/);
+		expect(document.querySelector('.cd-row')?.classList.contains('live')).toBe(true);
+		expect([...document.querySelectorAll('.cd-stage')].every((s) => s.classList.contains('done'))).toBe(true);
+	});
+
+	it('never marks a lapsing domain live', () => {
+		open(lapsing);
+
+		expect(document.querySelector('.cd-row')?.classList.contains('live')).toBe(false);
+	});
+
 	it('polls the list only while a check runs and the tab is visible', async () => {
 		api.listWorkspaceDomains.mockResolvedValue({ domains: [withCheck(fresh, 'ownership', 'running')] });
 		open(withCheck(fresh, 'ownership', 'running'));

@@ -230,8 +230,6 @@
       }
     }
   ],
-  "settings_address_group_own_domain": "Votre domaine · vérifié",
-  "settings_address_group_suspended": "Ne reçoit pas d’e-mails",
   "settings_address_group_included": "Inclus dans votre offre",
   "settings_address_group_count": [
     {
@@ -328,10 +326,10 @@
   "settings_copy_to_clipboard": "Copier dans le presse-papiers",
   "settings_record_host": "Hôte",
   "settings_record_ttl": "TTL",
-  "settings_dns_ok": "OK",
-  "settings_dns_warn": "AVERTISSEMENT",
-  "settings_dns_fail": "ÉCHEC",
-  "settings_dns_pending": "EN ATTENTE",
+  "settings_dns_found": "Trouvé",
+  "settings_dns_wrong_value": "Valeur incorrecte",
+  "settings_dns_not_found": "Introuvable",
+  "settings_dns_waiting": "En attente",
   "settings_member_seat_meter": [
     {
       "declarations": [
@@ -2686,6 +2684,7 @@
   "settings_domains_status_verifying_ownership": "Vérification de la propriété",
   "settings_domains_status_verifying_sending": "Vérification de l’envoi",
   "settings_domains_status_verifying_routing": "Vérification du MX",
+  "settings_domains_status_not_receiving": "Ne reçoit pas d’e-mails",
   "settings_domains_status_expired": "Vérification expirée",
   "settings_domains_status_lapsing": "Enregistrement de propriété absent",
   "settings_domains_reason_ownership_missing": "La dernière vérification n’a pas trouvé l’enregistrement TXT de propriété.",
