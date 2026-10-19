@@ -983,8 +983,6 @@
   "settings_profile_desc": "Votre nom, votre signature et votre adresse d’expédition par défaut. Votre domaine, votre identité.",
   "settings_profile_change_photo": "Changer la photo",
   "settings_profile_remove_avatar": "Supprimer l’avatar",
-  "settings_profile_owner": "Propriétaire",
-  "settings_profile_verified_domain": "Domaine vérifié",
   "settings_profile_display_name": "Nom affiché",
   "settings_profile_display_name_desc": "Affiché sur les e-mails que vous envoyez et dans les archives.",
   "settings_profile_sending_identity": "Identité d’expédition par défaut",

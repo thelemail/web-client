@@ -983,8 +983,6 @@
 	"settings_profile_desc": "O seu nome e assinatura e o endereço de envio predefinido. O seu domínio, a sua identidade.",
 	"settings_profile_change_photo": "Alterar fotografia",
 	"settings_profile_remove_avatar": "Remover avatar",
-	"settings_profile_owner": "Proprietário",
-	"settings_profile_verified_domain": "Domínio verificado",
 	"settings_profile_display_name": "Nome de apresentação",
 	"settings_profile_display_name_desc": "Apresentado nas mensagens que envia e em todo o arquivo.",
 	"settings_profile_sending_identity": "Identidade de envio predefinida",
