@@ -2686,6 +2686,7 @@
 	"settings_domains_status_verifying_ownership": "A verificar a propriedade",
 	"settings_domains_status_verifying_sending": "A verificar o envio",
 	"settings_domains_status_verifying_routing": "A verificar o MX",
+	"settings_domains_status_not_receiving": "Não recebe correio",
 	"settings_domains_status_expired": "Verificação expirada",
 	"settings_domains_status_lapsing": "Registo de propriedade em falta",
 	"settings_domains_reason_ownership_missing": "A última verificação não encontrou o registo TXT de propriedade.",

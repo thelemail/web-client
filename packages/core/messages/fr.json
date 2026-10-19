@@ -2686,6 +2686,7 @@
   "settings_domains_status_verifying_ownership": "Vérification de la propriété",
   "settings_domains_status_verifying_sending": "Vérification de l’envoi",
   "settings_domains_status_verifying_routing": "Vérification du MX",
+  "settings_domains_status_not_receiving": "Ne reçoit pas d’e-mails",
   "settings_domains_status_expired": "Vérification expirée",
   "settings_domains_status_lapsing": "Enregistrement de propriété absent",
   "settings_domains_reason_ownership_missing": "La dernière vérification n’a pas trouvé l’enregistrement TXT de propriété.",

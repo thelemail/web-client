@@ -2686,6 +2686,7 @@
 	"settings_domains_status_verifying_ownership": "Verifying ownership",
 	"settings_domains_status_verifying_sending": "Verifying sending",
 	"settings_domains_status_verifying_routing": "Verifying MX",
+	"settings_domains_status_not_receiving": "Not receiving mail",
 	"settings_domains_status_expired": "Check expired",
 	"settings_domains_status_lapsing": "Ownership record missing",
 	"settings_domains_reason_ownership_missing": "The last check did not find the ownership TXT record.",
