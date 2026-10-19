@@ -68,4 +68,16 @@ describe('sanitizeHtml', () => {
 		expect(out).toContain('target="_blank"');
 		expect(out).toContain('rel="noopener noreferrer"');
 	});
+
+	it('gives image-map areas the same link treatment as anchors', () => {
+		const out = sanitizeHtml(
+			'<map name="m"><area shape="default" rel="opener" href="https://example.com/?utm_source=a&id=1"></map>',
+			{ inlineImages: {} }
+		);
+		expect(out).toContain('rel="noopener noreferrer"');
+		expect(out).toContain('target="_blank"');
+		expect(out).not.toContain('opener"');
+		expect(out).not.toContain('utm_source');
+		expect(out).toContain('id=1');
+	});
 });

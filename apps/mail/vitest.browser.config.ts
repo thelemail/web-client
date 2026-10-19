@@ -69,9 +69,9 @@ const linkProbeOrigin: BrowserCommand<[]> = async () => {
 	return `http://127.0.0.1:${port}`;
 };
 
-const clickMailLink: BrowserCommand<[text: string]> = async (ctx, text) => {
+const clickMailLink: BrowserCommand<[selector: string]> = async (ctx, selector) => {
 	const opened = ctx.context.waitForEvent('page', { timeout: 3000 }).catch(() => null);
-	await ctx.iframe.frameLocator('iframe.email-frame').getByRole('link', { name: text, exact: true }).click();
+	await ctx.iframe.frameLocator('iframe.email-frame').locator(selector).click();
 	const tab = await opened;
 	if (!tab) return null;
 	await tab

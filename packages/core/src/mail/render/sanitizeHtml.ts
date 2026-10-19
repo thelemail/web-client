@@ -81,7 +81,7 @@ export function sanitizeHtml(raw: string, opts: SanitizeOptions): string {
 			return;
 		}
 
-		if (name === 'href' && tag === 'a') {
+		if (name === 'href' && (tag === 'a' || tag === 'area')) {
 			const v = data.attrValue.trim();
 			if (/^javascript:/i.test(v) || /^vbscript:/i.test(v) || /^data:/i.test(v)) {
 				data.keepAttr = false;
@@ -95,7 +95,7 @@ export function sanitizeHtml(raw: string, opts: SanitizeOptions): string {
 	};
 
 	const onAfterAttributes = (node: Element) => {
-		if (node.tagName === 'A' && node.hasAttribute('href')) {
+		if ((node.tagName === 'A' || node.tagName === 'AREA') && node.hasAttribute('href')) {
 			if (opts.stripTracking !== false) {
 				const href = node.getAttribute('href') ?? '';
 				const cleaned = stripTrackingParams(href);

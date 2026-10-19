@@ -7,7 +7,7 @@ import EmailBody from './EmailBody.svelte';
 declare module 'vitest/browser' {
 	interface BrowserCommands {
 		linkProbeOrigin: () => Promise<string>;
-		clickMailLink: (text: string) => Promise<{ url: string; title: string } | null>;
+		clickMailLink: (selector: string) => Promise<{ url: string; title: string } | null>;
 	}
 }
 
@@ -17,7 +17,7 @@ async function show(html: string) {
 	const { srcDoc } = await renderBody({ html });
 	const { container } = render(EmailBody, { srcDoc });
 	const frame = container.querySelector('iframe.email-frame') as HTMLIFrameElement;
-	await vi.waitFor(() => expect(frame.contentDocument?.body?.querySelector('a')).toBeTruthy());
+	await vi.waitFor(() => expect(frame.contentDocument?.body?.querySelector('a, area')).toBeTruthy());
 	return frame;
 }
 
@@ -33,22 +33,34 @@ describe('EmailBody links', () => {
 	it('opens a link back to the app, which sets COOP', async () => {
 		const app = `${location.origin}/__link-probe/coop?invite=tok-123`;
 		await show(`<p><a href="${app}">join</a></p>`);
-		const tab = await commands.clickMailLink('join');
+		const tab = await commands.clickMailLink('a:text-is("join")');
 		expect(tab?.url).toBe(app);
 		expect(tab?.title).toBe(clean);
 	});
 
 	it('opens an external page as a working tab without opener or referrer', async () => {
 		await show(`<p><a href="${external}/page">external</a></p>`);
-		const tab = await commands.clickMailLink('external');
+		const tab = await commands.clickMailLink('a:text-is("external")');
 		expect(tab?.url).toBe(`${external}/page`);
 		expect(tab?.title).toBe(clean);
 	});
 
 	it('opens an external page that sets COOP', async () => {
 		await show(`<p><a href="${external}/coop">isolated</a></p>`);
-		const tab = await commands.clickMailLink('isolated');
+		const tab = await commands.clickMailLink('a:text-is("isolated")');
 		expect(tab?.url).toBe(`${external}/coop`);
+		expect(tab?.title).toBe(clean);
+	});
+
+	it('opens an image-map area without opener or referrer', async () => {
+		const pixel =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+		await show(
+			`<img src="${pixel}" width="200" height="100" usemap="#m">` +
+				`<map name="m"><area shape="default" alt="banner" rel="opener" href="${external}/page"></map>`
+		);
+		const tab = await commands.clickMailLink('img[usemap]');
+		expect(tab?.url).toBe(`${external}/page`);
 		expect(tab?.title).toBe(clean);
 	});
 
