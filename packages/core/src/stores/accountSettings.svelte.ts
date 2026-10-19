@@ -1,7 +1,6 @@
 import { getAccountSettings, putAccountSettingsSection } from '$core/api/accountSettings';
 import { locale, type LocaleSettings } from '$core/mail/locale.svelte';
 import { theme, type ThemePref } from './theme.svelte';
-import { preferences } from './preferences.svelte';
 import { auth } from './auth.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -45,7 +44,6 @@ export interface ComposingSettings {
 
 export interface AppearanceSettings {
 	theme: ThemePref;
-	density: 'comfortable' | 'compact';
 }
 
 const DEFAULTS: OpenMessageSettings = {
@@ -66,8 +64,7 @@ const COMPOSING_DEFAULTS: ComposingSettings = {
 };
 
 const APPEARANCE_DEFAULTS: AppearanceSettings = {
-	theme: 'light',
-	density: 'comfortable'
+	theme: 'light'
 };
 
 export type CalendarPrivacyDefault = 'private' | 'busy' | 'shared';
@@ -184,7 +181,6 @@ class AccountSettingsStore {
 
 	#applyAppearance(): void {
 		theme.set(this.appearance.theme);
-		preferences.density = this.appearance.density;
 	}
 
 	get localization(): LocaleSettings {
@@ -249,9 +245,6 @@ class AccountSettingsStore {
 				const next: AppearanceSettings = { ...APPEARANCE_DEFAULTS };
 				if (a.theme === 'light' || a.theme === 'dark' || a.theme === 'auto') {
 					next.theme = a.theme;
-				}
-				if (a.density === 'comfortable' || a.density === 'compact') {
-					next.density = a.density;
 				}
 				this.appearance = next;
 				this.#applyAppearance();
@@ -340,10 +333,7 @@ class AccountSettingsStore {
 	persistAppearance(next: AppearanceSettings): Promise<unknown> {
 		this.appearance = { ...next };
 		this.#applyAppearance();
-		return putAccountSettingsSection('appearance', {
-			theme: next.theme,
-			density: next.density
-		});
+		return putAccountSettingsSection('appearance', { theme: next.theme });
 	}
 
 	persistCalendar(next: CalendarSettings): Promise<unknown> {

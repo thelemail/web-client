@@ -12,7 +12,6 @@
 	import Ceremonies from '$core/settings/ceremonies/Ceremonies.svelte';
 	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 	import { ensureAccountData } from '$core/stores/accountData';
-	import { preferences } from '$core/stores/preferences.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { m } from '$paraglide/messages.js';
 
@@ -33,10 +32,6 @@
 	});
 
 	$effect(() => {
-		preferences.density = settingsDraft.s.density;
-	});
-
-	$effect(() => {
 		void page.url.pathname;
 		scrollRef?.scrollTo({ top: 0 });
 	});
@@ -50,11 +45,7 @@
 	});
 </script>
 
-<div
-	class="settings-app"
-	data-accent={preferences.accent}
-	data-density={preferences.density}
->
+<div class="settings-app">
 	<div class="settings-body">
 		<SettingsNav />
 

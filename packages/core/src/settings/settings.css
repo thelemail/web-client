@@ -204,10 +204,6 @@
 .settings-app .scard.danger .scard-h svg { color: var(--danger-700); }
 .settings-app .scard.danger .scard-h h3 { color: var(--danger-700); }
 
-.settings-app[data-accent="subtle"] { --accent-marker: var(--pine-500); }
-.settings-app[data-accent="subtle"] .set-nav .nav-eyebrow { color: var(--ink-500); }
-.settings-app[data-accent="bold"] { --accent-marker: var(--brass-500); }
-
 .set-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--pine-900); color: var(--fg-on-pine); font-size: 13px; font-weight: 500; padding: 12px 17px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; z-index: 100; animation: set-toastin var(--dur) var(--ease-out); font-family: var(--font-sans); }
 @keyframes set-toastin { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
 [data-theme='dark'] .set-toast { border: 1px solid var(--border-dark); }
@@ -333,16 +329,6 @@
 .settings-app .es-t { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); }
 .settings-app .es-d { font-size: 12.5px; color: var(--fg-muted); margin-top: 3px; line-height: 1.5; }
 .settings-app .es-d .mono { font-family: var(--font-mono); color: var(--ink-600); }
-
-.settings-app .scale-ctl { gap: 12px; }
-.settings-app .scale-min, .settings-app .scale-max { color: var(--ink-500); font-weight: 600; }
-.settings-app .scale-min { font-size: 12px; }
-.settings-app .scale-max { font-size: 19px; }
-.settings-app .scale-val { font-family: var(--font-mono); font-size: 12px; color: var(--ink-600); width: 38px; text-align: right; }
-.settings-app .rng { -webkit-appearance: none; appearance: none; width: 160px; height: 4px; border-radius: 999px; background: var(--paper-200); outline: none; }
-.settings-app .rng::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--pine-600); border: 2px solid var(--surface); box-shadow: var(--shadow-sm); cursor: pointer; }
-.settings-app .rng::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--pine-600); border: 2px solid var(--surface); box-shadow: var(--shadow-sm); cursor: pointer; }
-.settings-app .rng:focus-visible { box-shadow: 0 0 0 3px var(--focus-ring); }
 
 .settings-app .plan-card { overflow: hidden; }
 .settings-app .plan-top { display: flex; align-items: flex-start; gap: 16px; padding: 20px 18px; background: linear-gradient(160deg, var(--pine-800), var(--pine-950)); color: var(--fg-on-pine); }

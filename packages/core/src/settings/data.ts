@@ -39,7 +39,6 @@ export const SECTIONS: SectionMeta[] = [
 	{ id: 'about', icon: 'info', label: m.settings_nav_about }
 ];
 
-export type AccentIntensity = 'subtle' | 'standard' | 'bold';
 export type TwoFaSetupMethod = 'totp' | 'key' | 'device';
 export type CeremonyKind =
 	| 'recovery'
@@ -58,7 +57,6 @@ export interface SettingsState {
 	confirmSubject: boolean;
 	confirmUnencrypted: boolean;
 
-	density: 'comfortable' | 'compact';
 	markRead: string;
 	swipe: string;
 
@@ -75,7 +73,6 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	confirmSubject: true,
 	confirmUnencrypted: true,
 
-	density: 'comfortable',
 	markRead: 'After 2 seconds',
 	swipe: 'Archive',
 

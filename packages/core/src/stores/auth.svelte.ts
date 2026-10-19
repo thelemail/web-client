@@ -35,7 +35,6 @@ import { aliasKeys } from './aliasKeys.svelte';
 import { accountKeys } from './accountKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
 import { composeStore } from './compose.svelte';
-import { preferences } from './preferences.svelte';
 import { billing } from './billing.svelte';
 import { twofactor } from './twofactor.svelte';
 import { bimi } from './bimi.svelte';
@@ -73,7 +72,6 @@ function broadcastAccountToStores(accountId: string | null): void {
 	calendarKeys.setAccount(accountId);
 	billing.setAccount(accountId);
 	composeStore.setAccount(accountId);
-	preferences.setAccount(accountId);
 	twofactor.setAccount(accountId);
 	bimi.setAccount(accountId);
 	personAvatars.setAccount(accountId);

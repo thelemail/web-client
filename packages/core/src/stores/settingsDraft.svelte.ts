@@ -25,7 +25,6 @@ const PRIVACY_KEYS = ['stripTrack', 'shareSpamHeaders'] as const satisfies Reado
 const LOCALIZATION_KEYS = ['dateFmt', 'timeFmt'] as const satisfies ReadonlyArray<
 	keyof SettingsState
 >;
-const APPEARANCE_KEYS = ['density'] as const satisfies ReadonlyArray<keyof SettingsState>;
 const COMPOSING_KEYS = [
 	'confirmExternal',
 	'confirmSubject',
@@ -63,7 +62,6 @@ class SettingsDraftStore {
 	#dirtyPrivacy = false;
 	#shareSpamHeadersTouched = false;
 	#dirtyLocalization = false;
-	#dirtyAppearance = false;
 	#dirtyComposing = false;
 	#saveTimer: ReturnType<typeof setTimeout> | undefined;
 	#settleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -85,7 +83,6 @@ class SettingsDraftStore {
 		this.#dirtyPrivacy = false;
 		this.#shareSpamHeadersTouched = false;
 		this.#dirtyLocalization = false;
-		this.#dirtyAppearance = false;
 		this.#dirtyComposing = false;
 	}
 
@@ -99,7 +96,6 @@ class SettingsDraftStore {
 		const loc = accountSettings.localization;
 		this.s.dateFmt = loc.dateFormat;
 		this.s.timeFmt = loc.timeFormat;
-		this.s.density = accountSettings.appearance.density;
 		const composing = accountSettings.composing;
 		this.s.confirmExternal = composing.confirmExternal;
 		this.s.confirmSubject = composing.confirmSubject;
@@ -114,7 +110,6 @@ class SettingsDraftStore {
 		if (includesKey(PRIVACY_KEYS, key)) persisted = this.#dirtyPrivacy = true;
 		if (key === 'shareSpamHeaders') this.#shareSpamHeadersTouched = true;
 		if (includesKey(LOCALIZATION_KEYS, key)) persisted = this.#dirtyLocalization = true;
-		if (includesKey(APPEARANCE_KEYS, key)) persisted = this.#dirtyAppearance = true;
 		if (includesKey(COMPOSING_KEYS, key)) persisted = this.#dirtyComposing = true;
 		if (!persisted) return;
 		this.scheduleAutosave();
@@ -138,7 +133,6 @@ class SettingsDraftStore {
 			this.#dirtyOpenMessage ||
 			this.#dirtyPrivacy ||
 			this.#dirtyLocalization ||
-			this.#dirtyAppearance ||
 			this.#dirtyComposing ||
 			this.profileDirty
 		);
@@ -172,18 +166,9 @@ class SettingsDraftStore {
 					replyDefault: this.s.replyDefault
 				}
 			: null;
-		const appearanceDirty = this.#dirtyAppearance;
 		const profileNeedsSave = this.profileDirty;
 		try {
 			const tasks: Promise<unknown>[] = [];
-			if (appearanceDirty) {
-				tasks.push(
-					accountSettings.persistAppearance({
-						...accountSettings.appearance,
-						density: this.s.density
-					})
-				);
-			}
 			if (openMessageBody) {
 				tasks.push(putAccountSettingsSection(OPEN_MESSAGE_SECTION, openMessageBody));
 			}
@@ -215,9 +200,6 @@ class SettingsDraftStore {
 			if (composingBody) {
 				accountSettings.setComposing(composingBody);
 				this.#dirtyComposing = false;
-			}
-			if (appearanceDirty) {
-				this.#dirtyAppearance = false;
 			}
 			if (!this.#flushAgain) {
 				this.saveState = 'saved';
