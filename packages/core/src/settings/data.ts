@@ -53,120 +53,41 @@ export type CeremonyKind =
 	| 'family';
 
 export interface SettingsState {
-	displayName: string;
-	defaultFrom: string;
-	replyTo: string;
-	sigReplies: boolean;
-
-	catchAll: boolean;
-	catchAllTarget: string;
-
-	composeFormat: 'rich' | 'plain';
-	composeFont: string;
-	undo: '0' | '5' | '10' | '30';
-	autosave: string;
 	replyDefault: 'reply' | 'all';
 	confirmExternal: boolean;
 	confirmSubject: boolean;
 	confirmUnencrypted: boolean;
-	extEncrypt: 'auto' | 'ask' | 'off';
 
 	density: 'comfortable' | 'compact';
 	markRead: string;
 	swipe: string;
-	requestReceipts: boolean;
-	sendReceipts: string;
 
 	stripTrack: boolean;
 	shareSpamHeaders: boolean;
-	rememberDevice: boolean;
 
-	desktop: boolean;
-	notifyFor: string;
-	notifyContent: 'full' | 'generic';
-	sound: boolean;
-	badge: boolean;
-	digest: boolean;
-	digestTime: string;
-	quiet: boolean;
-	quietFrom: string;
-	quietTo: string;
-
-	tzAuto: boolean;
-	tz: string;
 	dateFmt: 'dmy' | 'mdy' | 'iso';
 	timeFmt: '24' | '12';
-	weekStart: 'mon' | 'sun';
-	numFmt: string;
-
-	textScale: number;
-	readFont: 'sans' | 'serif';
-	highContrast: boolean;
-	reduceMotion: boolean;
 }
 
 export const SETTINGS_DEFAULTS: SettingsState = {
-	displayName: '',
-	defaultFrom: '',
-	replyTo: 'Same as sending identity',
-	sigReplies: false,
-
-	catchAll: false,
-	catchAllTarget: '',
-
-	composeFormat: 'rich',
-	composeFont: 'Hanken Grotesk',
-	undo: '10',
-	autosave: 'Every few seconds',
 	replyDefault: 'reply',
 	confirmExternal: true,
 	confirmSubject: true,
 	confirmUnencrypted: true,
-	extEncrypt: 'ask',
 
 	density: 'comfortable',
 	markRead: 'After 2 seconds',
 	swipe: 'Archive',
-	requestReceipts: false,
-	sendReceipts: 'Always ask me',
 
 	stripTrack: true,
 	shareSpamHeaders: false,
-	rememberDevice: true,
 
-	desktop: true,
-	notifyFor: 'Important & known senders',
-	notifyContent: 'full',
-	sound: false,
-	badge: true,
-	digest: false,
-	digestTime: '08:00',
-	quiet: true,
-	quietFrom: '22:00',
-	quietTo: '07:00',
-
-	tzAuto: true,
-	tz: 'UTC',
 	dateFmt: 'dmy',
-	timeFmt: '24',
-	weekStart: 'mon',
-	numFmt: '1,234.56 (English)',
-
-	textScale: 100,
-	readFont: 'sans',
-	highContrast: false,
-	reduceMotion: false
+	timeFmt: '24'
 };
 
 export const UNRELEASED = {
-	composeFormat: false,
-	composeFont: false,
-	undoSend: false,
-	draftAutosave: false,
-	externalEncryptionPolicy: false,
-	swipeAction: false,
-	requestReceipts: false,
-	respondReceipts: false
+	swipeAction: false
 } as const;
 
 export function sectionIdFromPath(pathname: string): string {

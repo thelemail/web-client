@@ -82,7 +82,7 @@ afterEach(() => {
 
 describe('Addresses', () => {
 	it('badges a suspended address and says why', () => {
-		render(Addresses, { props: { s: {} as never, set: () => {}, launch: () => {} } });
+		render(Addresses, { props: { launch: () => {} } });
 		const suspended = rowOf('sales@acme.co.uk').textContent ?? '';
 		expect(suspended).toContain('Suspended');
 		expect(suspended).toContain('Cannot send or receive mail until acme.co.uk is verified again.');
@@ -90,7 +90,7 @@ describe('Addresses', () => {
 	});
 
 	it('leaves make primary out of the menu for a suspended address', async () => {
-		render(Addresses, { props: { s: {} as never, set: () => {}, launch: () => {} } });
+		render(Addresses, { props: { launch: () => {} } });
 		expect(await menuOf('sales@acme.co.uk')).not.toContain('Make primary');
 		expect(await menuOf('hello@thelemail.com')).toContain('Make primary');
 	});

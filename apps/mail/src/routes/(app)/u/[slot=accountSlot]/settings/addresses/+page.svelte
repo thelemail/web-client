@@ -6,4 +6,4 @@
 
 <svelte:head><title>{m.settings_page_title({ page: m.settings_nav_addresses() })}</title></svelte:head>
 
-<Addresses s={settingsDraft.s} set={settingsDraft.set} launch={settingsDraft.launch} />
+<Addresses launch={settingsDraft.launch} />
