@@ -74,6 +74,9 @@
 	);
 	const canAddMore = $derived(billing.canAddDomains || !sharedSlotUsed);
 	const canAdd = $derived(manage && billing.canAddSharedAddresses && canAddMore);
+	const note = $derived(
+		manage ? planNote(billing.planCode, sharedSlotUsed, platformDomains.display()) : null
+	);
 
 	const delegableIds = $derived(
 		source
@@ -182,8 +185,8 @@
 		<p class="addr-lede">
 			{m.settings_address_list_lede()}
 		</p>
-		{#if manage}
-			<p class="addr-plan">{planNote(sharedSlotUsed, platformDomains.display())}</p>
+		{#if note}
+			<p class="addr-plan">{note}</p>
 		{/if}
 	</div>
 	{#if canAdd}
