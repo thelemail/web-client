@@ -538,6 +538,7 @@
 	"settings_address_primary_title": "Endereço principal",
 	"settings_address_primary_desc": "O remetente predefinido e o email com que inicia sessão. Um endereço de cada vez.",
 	"settings_address_belongs_to": "Este endereço pertence a {name}. O nome, a assinatura e o reencaminhamento são geridos nas definições dessa pessoa.",
+	"settings_address_shared_member_note": "Faz parte deste endereço partilhado. Um administrador do espaço de trabalho escolhe o nome e quem faz parte dele.",
 	"settings_address_another_member_lower": "outro membro",
 	"settings_address_people": "Pessoas",
 	"settings_address_change_people": "Alterar membros",

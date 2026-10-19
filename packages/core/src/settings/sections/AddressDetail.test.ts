@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/svelte';
 import type { AccountAddress } from '$core/api/addresses';
+import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Subscription } from '$core/api/billing';
 import { addresses } from '$core/stores/addresses.svelte';
@@ -84,6 +85,29 @@ function setup(domain: CustomDomain, address: AccountAddress) {
 	return render(AddressDetail, { props: { addressId: address.id } });
 }
 
+function support(): SharedAlias {
+	return {
+		id: 'sa1',
+		workspaceId: 'w1',
+		addressId: 'sup',
+		customDomainId: 'd1',
+		email: 'support@acme.co.uk',
+		localPart: 'support',
+		name: 'Support',
+		keyVersion: 1,
+		aliasPublicKeyArmored: '',
+		keyAlgorithm: 'openpgp-ed25519',
+		memberCount: 2,
+		rotationRequired: false,
+		members: [
+			{ accountId: 'me', email: 'ada@acme.co.uk', fullName: 'Ada Lovelace', canSend: true, grantedKeyVersion: 1 },
+			{ accountId: 'grace', email: 'grace@acme.co.uk', fullName: 'Grace Hopper', canSend: true, grantedKeyVersion: 1 }
+		],
+		createdAt: at,
+		updatedAt: at
+	};
+}
+
 function button(label: string): HTMLButtonElement | undefined {
 	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
 }
@@ -100,6 +124,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	addresses.items = [];
+	addresses.mySharedAliases = [];
 	customDomains.clear();
 	billing.subscription = null;
 });
@@ -154,5 +179,34 @@ describe('AddressDetail', () => {
 		setup(acme('ready'), sales());
 		expect(text()).not.toContain('This address is suspended.');
 		expect(button('Make primary')?.disabled).toBe(false);
+	});
+
+	it('shows a member the people on their shared address', () => {
+		perm.manage = false;
+		const alias = support();
+		addresses.mySharedAliases = [alias];
+		setup(
+			acme('ready'),
+			sales({ id: 'sup', email: alias.email, localPart: 'support', shared: true, sharedAliasId: alias.id })
+		);
+		const people = [...document.querySelectorAll('.ad-person-name')].map((n) => n.textContent?.trim());
+		expect(people).toEqual(['Ada Lovelace you', 'Grace Hopper']);
+		expect(text()).toContain('2 people');
+		expect(text()).toContain('You are on this shared address.');
+		expect(text()).not.toContain('belongs to');
+		expect(text()).not.toContain('0 people');
+		expect(button('Change people')).toBeUndefined();
+	});
+
+	it('leaves out the head count when the shared alias did not load', () => {
+		perm.manage = false;
+		setup(
+			acme('ready'),
+			sales({ id: 'sup', email: 'support@acme.co.uk', localPart: 'support', shared: true, sharedAliasId: 'sa1' })
+		);
+		expect(document.querySelector('.card-meta')).toBeNull();
+		expect(document.querySelectorAll('.ad-person')).toHaveLength(0);
+		expect(text()).toContain('You are on this shared address.');
+		expect(text()).not.toContain('0 people');
 	});
 });

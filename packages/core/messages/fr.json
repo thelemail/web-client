@@ -538,6 +538,7 @@
   "settings_address_primary_title": "Adresse principale",
   "settings_address_primary_desc": "Votre adresse d’expédition par défaut et votre adresse de connexion. Une seule adresse à la fois.",
   "settings_address_belongs_to": "Cette adresse appartient à {name}. Son nom, les autorisations de signature et les transferts se gèrent dans ses propres paramètres.",
+  "settings_address_shared_member_note": "Vous faites partie de cette adresse partagée. Un administrateur de l’espace de travail choisit son nom et ses membres.",
   "settings_address_another_member_lower": "un autre membre",
   "settings_address_people": "Membres",
   "settings_address_change_people": "Modifier les membres",

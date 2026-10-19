@@ -7,7 +7,7 @@ import {
 	type AccountAddress,
 	type UpdateAddressInput
 } from '$core/api/addresses';
-import { listMySharedAliases, type SharedAliasMember } from '$core/api/aliases';
+import { listMySharedAliases, type SharedAlias, type SharedAliasMember } from '$core/api/aliases';
 import { syncAddressUids } from '$core/keys/uid-sync';
 import { canonicalRecipient } from '$core/mail/recipientAddress';
 import { m } from '$paraglide/messages.js';
@@ -22,6 +22,7 @@ export function personalEmailsPrimaryFirst(items: readonly AccountAddress[]): st
 class AddressesStore {
 	items = $state<AccountAddress[]>([]);
 	aliasMembers = $state<Record<string, SharedAliasMember[]>>({});
+	mySharedAliases = $state<SharedAlias[]>([]);
 	loading = $state(false);
 	error = $state<string | null>(null);
 	#accountId: string | null = null;
@@ -52,6 +53,7 @@ class AddressesStore {
 				listMySharedAliases().catch(() => ({ sharedAliases: [] }))
 			]);
 			if (this.#accountId !== acct) return;
+			this.mySharedAliases = shared.sharedAliases;
 			this.aliasMembers = Object.fromEntries(shared.sharedAliases.map((a) => [a.id, a.members ?? []]));
 			this.items = [
 				...addresses,
@@ -137,6 +139,7 @@ class AddressesStore {
 	clear(): void {
 		this.items = [];
 		this.aliasMembers = {};
+		this.mySharedAliases = [];
 		this.error = null;
 	}
 }

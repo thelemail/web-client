@@ -162,6 +162,36 @@ describe('buildRow', () => {
 		expect(row.canForward).toBe(true);
 	});
 
+	it("lists the people on a member's own shared alias without manage rights", () => {
+		const alias = sharedAlias({
+			id: 's2',
+			addressId: 'a7',
+			members: [
+				{ accountId: ME, email: 'gargantua@abbaye.example', fullName: 'Gargantua', canSend: true, grantedKeyVersion: 1 },
+				{ accountId: OTHER, email: 'panurge@abbaye.example', fullName: 'Panurge', canSend: true, grantedKeyVersion: 1 }
+			]
+		});
+		const row = buildRow(
+			ctx({ manage: false, members: [], sharedAliases: [alias] }),
+			address({ id: 'a7', email: 'support@abbaye.example', shared: true, sharedAliasId: 's2' })
+		);
+		expect(row.kind).toBe('shared');
+		expect(row.people.map((p) => p.name)).toEqual(['Gargantua', 'Panurge']);
+		expect(row.usedBy).toBe('You and 1 other');
+		expect(row.canManagePeople).toBe(false);
+		expect(row.canRename).toBe(false);
+	});
+
+	it('makes no head count for a shared address it has no alias for', () => {
+		const row = buildRow(
+			ctx({ manage: false }),
+			address({ id: 'a8', email: 'support@abbaye.example', shared: true, sharedAliasId: 'missing' })
+		);
+		expect(row.kind).toBe('shared');
+		expect(row.people).toEqual([]);
+		expect(row.usedBy).toBe('');
+	});
+
 	it('summarises signing and forwarding for the row', () => {
 		const delegations = [
 			{ revokedAt: null } as SigningDelegation,

@@ -27,23 +27,19 @@
 	import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
-	import { delegations } from '$core/stores/delegations.svelte';
-	import { readDelegations } from '$core/stores/readDelegations.svelte';
 	import { personAvatars } from '$core/stores/personAvatars.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { canManageWorkspace } from '../permissions';
 	import { settingsPageTitle } from '../pageTitle.svelte';
 	import { resumeStep } from '../domains/steps';
 	import Rich from '$core/i18n/Rich.svelte';
-	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import {
 		buildRow,
-		dedupeAddresses,
 		initialsOf,
 		ledeFor,
-		setupBlockedNote,
-		type ModelContext
+		setupBlockedNote
 	} from '../addressModel';
+	import { addressContext, addressSource } from '../addressContext';
 
 	interface Props {
 		addressId: string;
@@ -64,27 +60,12 @@
 	const base = $derived(`/u/${slot}/settings/addresses`);
 	const manage = $derived(canManageWorkspace());
 
-	const ctx = $derived<ModelContext>({
-		accountId: auth.accountId,
-		manage,
-		members: workspaces.members,
-		domains: customDomains.items,
-		platformDomains: platformDomains.list,
-		sharedAliases: manage ? aliases.items : [],
-		fullName: auth.fullName,
-		delegationsFor: (id) => delegations.for(id),
-		forwardingFor: (id) => readDelegations.for(id)
-	});
-
-	const source = $derived(
-		manage
-			? dedupeAddresses([addresses.items, workspaceAddresses.items])
-			: dedupeAddresses([addresses.items])
-	);
+	const ctx = $derived(addressContext(manage));
+	const source = $derived(addressSource(manage));
 	const address = $derived(source.find((a) => a.id === addressId) ?? null);
 	const row = $derived(address ? buildRow(ctx, address) : null);
 	const alias = $derived(
-		row?.sharedAliasId ? (aliases.items.find((a) => a.id === row.sharedAliasId) ?? null) : null
+		row?.sharedAliasId ? (ctx.sharedAliases.find((a) => a.id === row.sharedAliasId) ?? null) : null
 	);
 	const ownDomain = $derived(Boolean(row?.customDomainId));
 	const setupNote = $derived(row ? setupBlockedNote(row) : null);
@@ -282,7 +263,11 @@
 		<div class="ad-note">
 			<Info size={14} />
 			<span>
-				{m.settings_address_belongs_to({ name: row.people[0]?.name ?? m.settings_address_another_member_lower() })}
+				{#if row.kind === 'shared'}
+					{m.settings_address_shared_member_note()}
+				{:else}
+					{m.settings_address_belongs_to({ name: row.people[0]?.name ?? m.settings_address_another_member_lower() })}
+				{/if}
 			</span>
 		</div>
 	{/if}
@@ -291,9 +276,11 @@
 		<div class="scard">
 			<CardHead icon={Users} title={m.settings_address_people()}>
 				{#snippet right()}
-					<span class="card-meta">
-						{m.settings_address_used_people({ count: row.people.length })}
-					</span>
+					{#if row.usedBy}
+						<span class="card-meta">
+							{m.settings_address_used_people({ count: row.people.length })}
+						</span>
+					{/if}
 					{#if row.canManagePeople}
 						<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
 							<Users size={13} />{m.settings_address_change_people()}

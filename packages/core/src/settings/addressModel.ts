@@ -218,7 +218,7 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 		canDelegate: ownDomain && own,
 		canForward: ownDomain && (own || (kind === 'shared' && ctx.manage))
 	};
-	row.usedBy = usedByLabel(ctx, row);
+	row.usedBy = kind === 'shared' && !alias ? '' : usedByLabel(ctx, row);
 	return row;
 }
 

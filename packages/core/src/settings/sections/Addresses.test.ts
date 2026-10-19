@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import type { AccountAddress } from '$core/api/addresses';
+import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
 import { addresses } from '$core/stores/addresses.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
@@ -77,6 +78,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	addresses.items = [];
+	addresses.mySharedAliases = [];
 	customDomains.clear();
 });
 
@@ -93,5 +95,37 @@ describe('Addresses', () => {
 		render(Addresses, { props: { launch: () => {} } });
 		expect(await menuOf('sales@acme.co.uk')).not.toContain('Make primary');
 		expect(await menuOf('hello@thelemail.com')).toContain('Make primary');
+	});
+
+	it('counts the people on a shared address the member is on', () => {
+		const alias: SharedAlias = {
+			id: 'sa1',
+			workspaceId: 'w1',
+			addressId: 'sup',
+			customDomainId: 'd1',
+			email: 'support@acme.co.uk',
+			localPart: 'support',
+			name: 'Support',
+			keyVersion: 1,
+			aliasPublicKeyArmored: '',
+			keyAlgorithm: 'openpgp-ed25519',
+			memberCount: 2,
+			rotationRequired: false,
+			members: [
+				{ accountId: 'me', email: 'ada@acme.co.uk', fullName: 'Ada Lovelace', canSend: true, grantedKeyVersion: 1 },
+				{ accountId: 'grace', email: 'grace@acme.co.uk', fullName: 'Grace Hopper', canSend: true, grantedKeyVersion: 1 }
+			],
+			createdAt: at,
+			updatedAt: at
+		};
+		addresses.mySharedAliases = [alias];
+		addresses.items = [
+			...addresses.items,
+			address('sup', alias.email, { customDomainId: 'd1', shared: true, sharedAliasId: alias.id })
+		];
+		render(Addresses, { props: { launch: () => {} } });
+		const shared = rowOf('support@acme.co.uk');
+		expect(shared.querySelector('.addr-used-tx')?.textContent).toBe('You and 1 other');
+		expect(shared.querySelectorAll('.avstack > *')).toHaveLength(2);
 	});
 });
