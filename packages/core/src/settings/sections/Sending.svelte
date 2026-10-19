@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Seg from '../Seg.svelte';
 	import Toggle from '../Toggle.svelte';
@@ -18,6 +19,7 @@
 
 <SecHead desc={m.settings_sending_desc()} />
 
+<SettingsGate rows={4}>
 <div class="scard">
 	<CardHead title={m.settings_sending_compose_title()} />
 	<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
@@ -50,3 +52,4 @@
 		<Toggle on={s.confirmUnencrypted} onChange={(v) => set('confirmUnencrypted', v)} />
 	</Row>
 </div>
+</SettingsGate>

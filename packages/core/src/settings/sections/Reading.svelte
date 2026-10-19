@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import CardHead from '../CardHead.svelte';
@@ -20,6 +21,7 @@
 
 <SecHead desc={m.settings_reading_desc()} />
 
+<SettingsGate rows={1}>
 <div class="scard">
 	<CardHead title={m.settings_reading_open_title()} />
 	<Row t={m.settings_reading_mark_read()}>
@@ -32,3 +34,4 @@
 		/>
 	</Row>
 </div>
+</SettingsGate>

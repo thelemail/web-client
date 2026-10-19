@@ -3,12 +3,14 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import CardHead from '../CardHead.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import type { NotificationStatus } from '$core/platform/types';
 	import { platform } from '$platform';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
+	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 	import { Button } from '$core/components/ui/button';
 	import {
 		reminderPermission,
@@ -45,9 +47,7 @@
 	function setReminderDefault(key: string) {
 		const choice = REMINDER_CHOICES.find((minutes) => reminderKey(minutes) === key);
 		if (choice === undefined) return;
-		void accountSettings
-			.persistCalendar({ ...accountSettings.calendar, defaultReminderMinutes: choice })
-			.catch(() => {});
+		settingsDraft.setReminderDefault(choice);
 	}
 
 	let status = $state<NotificationStatus | null>(null);
@@ -150,6 +150,7 @@
 	</div>
 {/if}
 
+<SettingsGate rows={2}>
 <div class="scard">
 	<CardHead title={m.settings_notify_reminders_title()} />
 	<Row t={m.settings_notify_reminders_browser()} d={reminderSummary}>
@@ -169,6 +170,7 @@
 		/>
 	</Row>
 </div>
+</SettingsGate>
 
 {#snippet desc()}
 	<span>{summary}</span>

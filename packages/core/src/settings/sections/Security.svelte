@@ -25,6 +25,7 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Badge from '../Badge.svelte';
 	import Toggle from '../Toggle.svelte';
@@ -402,6 +403,7 @@
 	{/if}
 </div>
 
+<SettingsGate rows={3}>
 <div class="scard">
 	<CardHead icon={EyeOff} title={m.settings_security_privacy()} />
 	<Row
@@ -423,6 +425,7 @@
 		<Toggle on={s.shareSpamHeaders} onChange={(v) => set('shareSpamHeaders', v)} />
 	</Row>
 </div>
+</SettingsGate>
 
 <div class="scard flat">
 	<CardHead icon={KeyRound} title={m.settings_security_signin_title()}>

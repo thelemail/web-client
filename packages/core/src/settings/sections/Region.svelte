@@ -2,6 +2,7 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import Languages from '@lucide/svelte/icons/languages';
 	import SecHead from '../SecHead.svelte';
+	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Seg from '../Seg.svelte';
 	import CardHead from '../CardHead.svelte';
@@ -51,6 +52,7 @@
 	</Row>
 </div>
 
+<SettingsGate rows={3}>
 <div class="scard">
 	<CardHead icon={Clock} title={m.settings_region_time_title()} />
 	<Row t={m.settings_region_time_zone()} d={m.settings_region_time_zone_desc()}>
@@ -78,3 +80,4 @@
 		/>
 	</Row>
 </div>
+</SettingsGate>
