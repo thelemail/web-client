@@ -538,6 +538,7 @@
 	"settings_address_primary_title": "Primäre Adresse",
 	"settings_address_primary_desc": "Ihre standardmäßige Absenderadresse und die E-Mail-Adresse für die Anmeldung. Es kann immer nur eine primäre Adresse geben.",
 	"settings_address_belongs_to": "Diese Adresse gehört {name}. Name, Signierung und Weiterleitung werden in den eigenen Einstellungen dieser Person verwaltet.",
+	"settings_address_shared_member_note": "Sie sind dieser gemeinsamen Adresse zugeordnet. Ihren Namen und wer ihr zugeordnet ist, legt die Administration des Arbeitsbereichs fest.",
 	"settings_address_another_member_lower": "ein anderes Mitglied",
 	"settings_address_people": "Personen",
 	"settings_address_change_people": "Personen ändern",

@@ -538,6 +538,7 @@
 	"settings_address_primary_title": "Primary address",
 	"settings_address_primary_desc": "Your default From and the email you sign in with. One address at a time.",
 	"settings_address_belongs_to": "This address belongs to {name}. Its name, signing and forwarding are managed from their own settings.",
+	"settings_address_shared_member_note": "You are on this shared address. A workspace admin chooses its name and who is on it.",
 	"settings_address_another_member_lower": "another member",
 	"settings_address_people": "People",
 	"settings_address_change_people": "Change people",

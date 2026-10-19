@@ -29,7 +29,6 @@
 	import { aliases } from '$core/stores/aliases.svelte';
 	import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
-	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { delegations } from '$core/stores/delegations.svelte';
 	import { readDelegations } from '$core/stores/readDelegations.svelte';
 	import { personAvatars } from '$core/stores/personAvatars.svelte';
@@ -40,12 +39,11 @@
 	import {
 		buildRow,
 		groupByDomain,
-		dedupeAddresses,
 		initialsOf,
 		planNote,
-		type AddressRow,
-		type ModelContext
+		type AddressRow
 	} from '../addressModel';
+	import { addressContext, addressSource } from '../addressContext';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -63,23 +61,8 @@
 	const manage = $derived(canManageWorkspace());
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
 
-	const ctx = $derived<ModelContext>({
-		accountId: auth.accountId,
-		manage,
-		members: workspaces.members,
-		domains: customDomains.items,
-		platformDomains: platformDomains.list,
-		sharedAliases: manage ? aliases.items : [],
-		fullName: auth.fullName,
-		delegationsFor: (id) => delegations.for(id),
-		forwardingFor: (id) => readDelegations.for(id)
-	});
-
-	const source = $derived(
-		manage
-			? dedupeAddresses([addresses.items, workspaceAddresses.items])
-			: dedupeAddresses([addresses.items])
-	);
+	const ctx = $derived(addressContext(manage));
+	const source = $derived(addressSource(manage));
 	const rows = $derived(source.map((a) => buildRow(ctx, a)));
 	const groups = $derived(groupByDomain(ctx, rows));
 	const managing = $derived(
