@@ -274,8 +274,9 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 		});
 		const ownDomain = key !== PLATFORM_GROUP;
 		const row = ctx.domains.find((d) => d.domain.toLowerCase() === key);
+		const present = ctx.platformDomains.filter((d) => list.some((r) => r.domain === d));
 		return {
-			domain: ownDomain ? key : formatList(ctx.platformDomains, 'conjunction'),
+			domain: ownDomain ? key : formatList(present, 'conjunction'),
 			ownDomain,
 			...groupBadge(ownDomain, row, list.length),
 			count: m.settings_address_group_count({ count: list.length }),

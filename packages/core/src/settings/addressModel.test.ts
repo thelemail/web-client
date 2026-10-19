@@ -238,7 +238,7 @@ describe('groupByDomain', () => {
 			buildRow(c, address({ id: 'a3', email: 'gargantua@abbaye.example', isPrimary: true }))
 		];
 		const groups = groupByDomain(c, rows);
-		expect(groups.map((g) => g.domain)).toEqual(['abbaye.example', 'temail.org and thelemail.com']);
+		expect(groups.map((g) => g.domain)).toEqual(['abbaye.example', 'thelemail.com']);
 		expect(groups[0].badge).toBe('Live');
 		expect(groups[0].badgeTone).toBe('pine');
 		expect(groups[0].count).toBe('2 addresses');
@@ -263,6 +263,18 @@ describe('groupByDomain', () => {
 			'gargantua@thelemail.com',
 			'panurge@temail.org'
 		]);
+	});
+
+	it('names only the platform domains the group holds', () => {
+		const c = ctx();
+		const groups = groupByDomain(c, [
+			buildRow(c, address({ id: 'a1', email: 'gargantua@temail.org', customDomainId: null, isPrimary: true })),
+			buildRow(c, address({ id: 'a2', email: 'panurge@temail.org', customDomainId: null, accountId: OTHER }))
+		]);
+		expect(groups).toHaveLength(1);
+		expect(groups[0].domain).toBe('temail.org');
+		expect(groups[0].ownDomain).toBe(false);
+		expect(groups[0].badge).toBe('Included with your plan');
 	});
 
 	it('lists the primary handle on every domain before other handles', () => {

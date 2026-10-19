@@ -23,7 +23,7 @@ export function addressContext(manage: boolean): ModelContext {
 		manage,
 		members: workspaces.members,
 		domains: customDomains.items,
-		platformDomains: platformDomains.list,
+		platformDomains: platformDomains.hosted,
 		sharedAliases: visibleSharedAliases(manage),
 		fullName: auth.fullName,
 		delegationsFor: (id) => delegations.for(id),
