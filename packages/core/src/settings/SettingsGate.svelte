@@ -7,34 +7,36 @@
 	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 	import { m } from '$paraglide/messages.js';
 
+	type Control = 'select' | 'toggle';
+
 	interface Props {
-		rows?: number;
+		controls: Control[];
 		children: Snippet;
 	}
 
-	let { rows = 2, children }: Props = $props();
+	let { controls, children }: Props = $props();
 </script>
 
 {#if accountSettings.status === 'ready'}
 	{@render children()}
 {:else if accountSettings.status === 'error'}
-	<div class="scard set-loaderr" role="alert">
-		<CircleAlert size={18} />
+	<div class="setrow set-loaderr" role="alert">
+		<CircleAlert size={16} />
 		<p>{m.settings_load_failed()}</p>
 		<Button variant="secondary" size="sm" onclick={settingsDraft.retryLoad}>
 			<RefreshCw />{m.common_retry()}
 		</Button>
 	</div>
 {:else}
-	<div class="scard set-skel" aria-busy="true">
+	<div class="set-skel" aria-busy="true">
 		<span class="sr-only">{m.common_loading()}</span>
-		{#each { length: rows }, i (i)}
+		{#each controls as control, i (i)}
 			<div class="setrow" aria-hidden="true">
 				<div class="info">
 					<span class="sk-bar sk-t"></span>
 					<span class="sk-bar sk-d"></span>
 				</div>
-				<div class="ctl"><span class="sk-bar sk-c"></span></div>
+				<div class="ctl"><span class="sk-bar sk-c {control}"></span></div>
 			</div>
 		{/each}
 	</div>

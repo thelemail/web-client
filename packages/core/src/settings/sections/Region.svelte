@@ -52,32 +52,32 @@
 	</Row>
 </div>
 
-<SettingsGate rows={3}>
 <div class="scard">
 	<CardHead icon={Clock} title={m.settings_region_time_title()} />
 	<Row t={m.settings_region_time_zone()} d={m.settings_region_time_zone_desc()}>
 		<span class="ctl-aux">{accountSettings.timeZone}</span>
 	</Row>
-	<Row t={m.settings_region_date_format()}>
-		<Seg
-			value={s.dateFmt}
-			options={[
-				{ v: 'dmy', l: sample('dmy') },
-				{ v: 'mdy', l: sample('mdy') },
-				{ v: 'iso', l: sample('iso') }
-			]}
-			onChange={(v) => set('dateFmt', v)}
-		/>
-	</Row>
-	<Row t={m.settings_region_time_format()}>
-		<Seg
-			value={s.timeFmt}
-			options={[
-				{ v: '24', l: m.settings_region_time_24h() },
-				{ v: '12', l: m.settings_region_time_12h() }
-			]}
-			onChange={(v) => set('timeFmt', v)}
-		/>
-	</Row>
+	<SettingsGate controls={['select', 'select']}>
+		<Row t={m.settings_region_date_format()}>
+			<Seg
+				value={s.dateFmt}
+				options={[
+					{ v: 'dmy', l: sample('dmy') },
+					{ v: 'mdy', l: sample('mdy') },
+					{ v: 'iso', l: sample('iso') }
+				]}
+				onChange={(v) => set('dateFmt', v)}
+			/>
+		</Row>
+		<Row t={m.settings_region_time_format()}>
+			<Seg
+				value={s.timeFmt}
+				options={[
+					{ v: '24', l: m.settings_region_time_24h() },
+					{ v: '12', l: m.settings_region_time_12h() }
+				]}
+				onChange={(v) => set('timeFmt', v)}
+			/>
+		</Row>
+	</SettingsGate>
 </div>
-</SettingsGate>

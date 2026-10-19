@@ -21,17 +21,17 @@
 
 <SecHead desc={m.settings_reading_desc()} />
 
-<SettingsGate rows={1}>
 <div class="scard">
 	<CardHead title={m.settings_reading_open_title()} />
-	<Row t={m.settings_reading_mark_read()}>
-		<Select
-			value={s.markRead}
-			options={labelled(MARK_READ_LABELS)}
-			onChange={(v) => {
-				if (isMarkReadOption(v)) set('markRead', v);
-			}}
-		/>
-	</Row>
+	<SettingsGate controls={['select']}>
+		<Row t={m.settings_reading_mark_read()}>
+			<Select
+				value={s.markRead}
+				options={labelled(MARK_READ_LABELS)}
+				onChange={(v) => {
+					if (isMarkReadOption(v)) set('markRead', v);
+				}}
+			/>
+		</Row>
+	</SettingsGate>
 </div>
-</SettingsGate>

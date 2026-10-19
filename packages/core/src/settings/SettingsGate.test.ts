@@ -31,16 +31,19 @@ afterEach(() => cleanup());
 
 describe('settings gate', () => {
 	it('holds the controls back behind skeleton rows while loading', () => {
-		const { container } = render(SettingsGate, { props: { rows: 3, children } });
+		const { container } = render(SettingsGate, {
+			props: { controls: ['select', 'toggle', 'toggle'], children }
+		});
 		const skel = container.querySelector('.set-skel')!;
 		expect(skel.getAttribute('aria-busy')).toBe('true');
 		expect(skel.querySelectorAll('.setrow')).toHaveLength(3);
+		expect(skel.querySelectorAll('.sk-c.toggle')).toHaveLength(2);
 		expect(container.querySelector('.gated')).toBeNull();
 	});
 
 	it('shows the load failure with a retry that loads the controls', async () => {
 		getAccountSettings.mockRejectedValueOnce(new Error('offline'));
-		const { container } = render(SettingsGate, { props: { children } });
+		const { container } = render(SettingsGate, { props: { controls: ['select'], children } });
 		await settingsDraft.hydrate();
 		await tick();
 		expect(screen.getByRole('alert').textContent).toContain('Could not load your settings.');

@@ -215,17 +215,18 @@
 .set-toast.err { background: var(--danger-100); color: var(--danger-700); border: 1px solid color-mix(in oklab, var(--danger-500) 45%, transparent); }
 .set-toast.err svg { color: var(--danger-500); flex: 0 0 auto; }
 
-.settings-app .set-skel .setrow { min-height: 64px; }
-.settings-app .set-skel .sk-bar { display: block; border-radius: var(--radius-xs); background: var(--paper-100); animation: sk-pulse 1.4s ease-in-out infinite; }
-.settings-app .set-skel .sk-t { width: min(44%, 220px); height: 12px; }
-.settings-app .set-skel .sk-d { width: min(70%, 340px); height: 9px; margin-top: 9px; opacity: .7; }
-.settings-app .set-skel .sk-c { width: 132px; height: 30px; border-radius: var(--radius-control); }
-@keyframes sk-pulse { 50% { opacity: .45; } }
+.settings-app .set-skel .setrow { min-height: 60px; }
+.settings-app .set-skel .sk-bar { display: block; border-radius: var(--radius-xs); background: color-mix(in oklab, var(--fg-strong) 8%, transparent); animation: sk-pulse 1.4s ease-in-out infinite; }
+.settings-app .set-skel .sk-t { width: min(44%, 200px); height: 11px; }
+.settings-app .set-skel .sk-d { width: min(72%, 320px); height: 8px; margin-top: 9px; opacity: .65; }
+.settings-app .set-skel .sk-c.select { width: 148px; height: 34px; border-radius: var(--radius-control); }
+.settings-app .set-skel .sk-c.toggle { width: 42px; height: 24px; border-radius: 999px; }
+@keyframes sk-pulse { 50% { opacity: .5; } }
 @media (prefers-reduced-motion: reduce) { .settings-app .set-skel .sk-bar { animation: none; } }
 
-.settings-app .set-loaderr { display: flex; align-items: center; gap: 12px; padding: 16px 18px; border-color: color-mix(in oklab, var(--danger-500) 35%, var(--border)); }
+.settings-app .set-loaderr { gap: 10px; background: color-mix(in oklab, var(--danger-100) 45%, transparent); }
 .settings-app .set-loaderr > svg { color: var(--danger-500); flex: 0 0 auto; }
-.settings-app .set-loaderr p { flex: 1; min-width: 0; margin: 0; font-size: 14px; font-weight: 500; color: var(--fg-strong); line-height: 1.45; }
+.settings-app .set-loaderr p { flex: 1; min-width: 0; margin: 0; font-size: 13.5px; font-weight: 500; color: var(--danger-700); line-height: 1.45; }
 
 .settings-app .setrow .t { font-size: 14px; }
 .settings-app .setrow .d { font-size: 12.5px; }
@@ -886,8 +887,8 @@
 @media (max-width: 560px) {
 	.settings-app .set-head { padding: 0 16px; }
 	.settings-app .set-head .autosave .as-tx { display: none; }
-	.settings-app .set-loaderr { flex-wrap: wrap; }
-	.settings-app .setrow .ctl .sk-c { width: 100%; }
+	.settings-app .setrow.set-loaderr { flex-wrap: nowrap; }
+	.settings-app .setrow .ctl .sk-c.select { width: 100%; }
 	.settings-app .set-content { padding: 20px 14px 96px; }
 	.settings-app .setrow.col, .settings-app .setrow { gap: 10px 14px; }
 	.settings-app .setrow .ctl { width: 100%; justify-content: flex-start; flex-wrap: wrap; }

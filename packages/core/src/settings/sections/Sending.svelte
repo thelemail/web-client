@@ -19,37 +19,39 @@
 
 <SecHead desc={m.settings_sending_desc()} />
 
-<SettingsGate rows={4}>
 <div class="scard">
 	<CardHead title={m.settings_sending_compose_title()} />
-	<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
-		<Seg
-			value={s.replyDefault}
-			options={[
-				{ v: 'reply', l: m.settings_sending_reply() },
-				{ v: 'all', l: m.settings_sending_reply_all() }
-			]}
-			onChange={(v) => set('replyDefault', v)}
-		/>
-	</Row>
+	<SettingsGate controls={['select']}>
+		<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
+			<Seg
+				value={s.replyDefault}
+				options={[
+					{ v: 'reply', l: m.settings_sending_reply() },
+					{ v: 'all', l: m.settings_sending_reply_all() }
+				]}
+				onChange={(v) => set('replyDefault', v)}
+			/>
+		</Row>
+	</SettingsGate>
 </div>
 
 <div class="scard">
 	<CardHead icon={ShieldAlert} title={m.settings_sending_before_title()} />
-	<Row
-		t={m.settings_sending_confirm_external()}
-		d={m.settings_sending_confirm_external_desc()}
-	>
-		<Toggle on={s.confirmExternal} onChange={(v) => set('confirmExternal', v)} />
-	</Row>
-	<Row t={m.settings_sending_warn_subject()}>
-		<Toggle on={s.confirmSubject} onChange={(v) => set('confirmSubject', v)} />
-	</Row>
-	<Row
-		t={m.settings_sending_warn_unencrypted()}
-		d={m.settings_sending_warn_unencrypted_desc()}
-	>
-		<Toggle on={s.confirmUnencrypted} onChange={(v) => set('confirmUnencrypted', v)} />
-	</Row>
+	<SettingsGate controls={['toggle', 'toggle', 'toggle']}>
+		<Row
+			t={m.settings_sending_confirm_external()}
+			d={m.settings_sending_confirm_external_desc()}
+		>
+			<Toggle on={s.confirmExternal} onChange={(v) => set('confirmExternal', v)} />
+		</Row>
+		<Row t={m.settings_sending_warn_subject()}>
+			<Toggle on={s.confirmSubject} onChange={(v) => set('confirmSubject', v)} />
+		</Row>
+		<Row
+			t={m.settings_sending_warn_unencrypted()}
+			d={m.settings_sending_warn_unencrypted_desc()}
+		>
+			<Toggle on={s.confirmUnencrypted} onChange={(v) => set('confirmUnencrypted', v)} />
+		</Row>
+	</SettingsGate>
 </div>
-</SettingsGate>

@@ -150,7 +150,6 @@
 	</div>
 {/if}
 
-<SettingsGate rows={2}>
 <div class="scard">
 	<CardHead title={m.settings_notify_reminders_title()} />
 	<Row t={m.settings_notify_reminders_browser()} d={reminderSummary}>
@@ -158,19 +157,20 @@
 			<Button variant="secondary" size="sm" onclick={enableReminders}>{m.settings_notify_reminders_allow()}</Button>
 		{/if}
 	</Row>
-	<Row
-		t={m.settings_notify_reminder_default()}
-		d={m.settings_notify_reminder_default_desc()}
-	>
-		<Select
-			value={reminderDefault}
-			options={reminderOptions}
-			onChange={setReminderDefault}
-			ariaLabel={m.settings_notify_reminder_default_aria()}
-		/>
-	</Row>
+	<SettingsGate controls={['select']}>
+		<Row
+			t={m.settings_notify_reminder_default()}
+			d={m.settings_notify_reminder_default_desc()}
+		>
+			<Select
+				value={reminderDefault}
+				options={reminderOptions}
+				onChange={setReminderDefault}
+				ariaLabel={m.settings_notify_reminder_default_aria()}
+			/>
+		</Row>
+	</SettingsGate>
 </div>
-</SettingsGate>
 
 {#snippet desc()}
 	<span>{summary}</span>
