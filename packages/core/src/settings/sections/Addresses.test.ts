@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias } from '$core/api/aliases';
@@ -7,8 +7,17 @@ import type { Subscription } from '$core/api/billing';
 import { addresses } from '$core/stores/addresses.svelte';
 import { billing } from '$core/stores/billing.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
+import { platformDomains } from '$core/stores/platformDomains.svelte';
 import Addresses from './Addresses.svelte';
 
+vi.mock('$core/api/auth', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$core/api/auth')>()),
+	getPlatformDomains: vi.fn().mockResolvedValue({
+		domains: ['temail.org'],
+		hosted: ['temail.org', 'thelemail.com'],
+		default: 'temail.org'
+	})
+}));
 vi.mock('$app/state', () => ({ page: { params: { slot: '0' } } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$core/stores/auth.svelte', () => ({
@@ -34,6 +43,8 @@ vi.mock('$core/api/readDelegations', () => ({
 }));
 
 const at = '2026-09-21T12:00:00Z';
+
+beforeAll(() => platformDomains.load());
 
 function address(id: string, email: string, over: Partial<AccountAddress> = {}): AccountAddress {
 	return {
@@ -157,6 +168,23 @@ describe('Addresses', () => {
 		expect(document.querySelector('.addr-plan')).toBeNull();
 		expect(document.querySelector('.upgrade-list')?.textContent).toContain(
 			'More addresses come with a paid plan'
+		);
+	});
+
+	it('counts a legacy shared alias against the slot and names its domain', () => {
+		perms.manage = true;
+		billing.subscription = { planCode: 'free_family' } as Subscription;
+		customDomains.items = [];
+		addresses.items = [
+			address('p', 'ada@thelemail.com', { isPrimary: true }),
+			address('fam', 'family@thelemail.com', { shared: true })
+		];
+		render(Addresses, { props: { launch: () => {} } });
+		const note = document.querySelector('.addr-plan')?.textContent ?? '';
+		expect(note).toContain('one shared alias on thelemail.com, and it is in use');
+		expect(note).not.toContain('temail.org');
+		expect(document.querySelector('.upgrade-list')?.textContent).toContain(
+			'One shared address on thelemail.com'
 		);
 	});
 });
