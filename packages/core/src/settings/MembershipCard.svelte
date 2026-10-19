@@ -252,7 +252,7 @@
 			</Button>
 			{#if mode === 'existing-account'}
 				<span class="mbr-note">
-					{m.settings_member_seats_free_existing({ left: seatsLeft ?? 0, total: seatsTotal ?? 0, domains: platformDomains.display() })}
+					{m.settings_member_seats_free_existing({ left: seatsLeft ?? 0, total: seatsTotal ?? 0, domains: platformDomains.displayHosted() })}
 				</span>
 			{:else if seatsTotal != null}
 				{#if type === 'business' && seatsUsed >= seatsTotal}

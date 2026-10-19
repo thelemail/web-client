@@ -16,7 +16,7 @@ export function familyInviteError(err: unknown, email: string): string {
 		case 'invitee_has_custom_domain':
 			return m.settings_family_invite_err_custom_domain({ email });
 		case 'invitee_domain_not_shared':
-			return m.settings_family_invite_err_domain_not_shared({ email, domain: platformDomains.display() });
+			return m.settings_family_invite_err_domain_not_shared({ email, domain: platformDomains.displayHosted() });
 		case 'family_full':
 			return m.settings_family_invite_err_full();
 		case 'rate_limited':

@@ -46,7 +46,7 @@
 		if (trimmed.length === 0) return null;
 		if (!looksLikeEmail) return m.settings_ceremony_family_invite_err_full_address({ domain: platformDomains.default });
 		if (platformDomains.loaded && !platformDomains.isPlatformAddress(trimmed)) {
-			return m.settings_ceremony_family_invite_err_shared_only({ domain: platformDomains.display() });
+			return m.settings_ceremony_family_invite_err_shared_only({ domain: platformDomains.displayHosted() });
 		}
 		if (auth.email && trimmed === auth.email.toLowerCase()) return m.settings_ceremony_family_invite_err_own();
 		if (workspaces.members.some((m) => m.email.toLowerCase() === trimmed)) {
@@ -111,7 +111,7 @@
 					<div class="field-hint bad"><CircleAlert size={13} />{localProblem}</div>
 				{:else}
 					<div class="field-hint">
-						{m.settings_ceremony_family_invite_email_hint({ domain: platformDomains.display() })}
+						{m.settings_ceremony_family_invite_email_hint({ domain: platformDomains.displayHosted() })}
 					</div>
 				{/if}
 			</div>
