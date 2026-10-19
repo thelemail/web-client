@@ -34,9 +34,6 @@
 
 	$effect(() => {
 		preferences.density = settingsDraft.s.density;
-		preferences.highContrast = settingsDraft.s.highContrast;
-		preferences.reduceMotion = settingsDraft.s.reduceMotion;
-		preferences.textScale = settingsDraft.s.textScale;
 	});
 
 	$effect(() => {
@@ -57,8 +54,6 @@
 	class="settings-app"
 	data-accent={preferences.accent}
 	data-density={preferences.density}
-	data-contrast={preferences.highContrast ? 'high' : 'normal'}
-	data-motion={preferences.reduceMotion ? 'reduced' : 'full'}
 >
 	<div class="settings-body">
 		<SettingsNav />
@@ -83,7 +78,7 @@
 				</div>
 			</header>
 
-			<div class="set-scroll" bind:this={scrollRef} style:--tscale={settingsDraft.s.textScale / 100}>
+			<div class="set-scroll" bind:this={scrollRef}>
 				<div class="set-content">{@render children()}</div>
 			</div>
 		</div>

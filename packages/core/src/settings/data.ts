@@ -67,10 +67,6 @@ export interface SettingsState {
 
 	dateFmt: 'dmy' | 'mdy' | 'iso';
 	timeFmt: '24' | '12';
-
-	textScale: number;
-	highContrast: boolean;
-	reduceMotion: boolean;
 }
 
 export const SETTINGS_DEFAULTS: SettingsState = {
@@ -87,11 +83,7 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	shareSpamHeaders: false,
 
 	dateFmt: 'dmy',
-	timeFmt: '24',
-
-	textScale: 100,
-	highContrast: false,
-	reduceMotion: false
+	timeFmt: '24'
 };
 
 export const UNRELEASED = {

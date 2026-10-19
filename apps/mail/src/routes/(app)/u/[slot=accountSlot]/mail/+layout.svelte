@@ -57,8 +57,6 @@
 	class:lc-ro={lifecycle.readOnly}
 	data-accent={preferences.accent}
 	data-density={preferences.density}
-	data-contrast={preferences.highContrast ? 'high' : 'normal'}
-	data-motion={preferences.reduceMotion ? 'reduced' : 'full'}
 >
 	{#if mailNav.open}
 		<button class="rail-scrim" aria-label={m.mail_close_menu()} onclick={() => mailNav.close(true)}
