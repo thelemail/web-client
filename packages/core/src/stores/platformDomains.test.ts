@@ -1,5 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { domainOf, isPlatformAddress } from './platformDomains.svelte';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
+import { domainOf, isPlatformAddress, platformDomains } from './platformDomains.svelte';
+
+vi.mock('$core/api/auth', () => ({
+	getPlatformDomains: vi.fn().mockResolvedValue({
+		domains: ['temail.org'],
+		hosted: ['temail.org', 'Thelemail.com'],
+		default: 'temail.org'
+	})
+}));
 
 const DOMAINS = ['temail.org', 'thelemail.com'];
 
@@ -25,5 +33,27 @@ describe('domainOf', () => {
 	it('lowercases the part after the last @', () => {
 		expect(domainOf('a@b@TEmail.org')).toBe('temail.org');
 		expect(domainOf('nobody')).toBe('');
+	});
+});
+
+describe('platformDomains', () => {
+	beforeAll(() => platformDomains.load());
+
+	it('hosts the legacy domain without offering it', () => {
+		expect(platformDomains.includes('thelemail.com')).toBe(true);
+		expect(platformDomains.offers('thelemail.com')).toBe(false);
+		expect(platformDomains.includes('temail.org')).toBe(true);
+		expect(platformDomains.offers('temail.org')).toBe(true);
+	});
+
+	it('treats a legacy address as a platform address', () => {
+		expect(platformDomains.isPlatformAddress('anna@thelemail.com')).toBe(true);
+		expect(platformDomains.isPlatformAddress('anna@example.com')).toBe(false);
+	});
+
+	it('offers only the signup domains', () => {
+		expect(platformDomains.list).toEqual(['temail.org']);
+		expect(platformDomains.hosted).toEqual(['temail.org', 'thelemail.com']);
+		expect(platformDomains.default).toBe('temail.org');
 	});
 });
