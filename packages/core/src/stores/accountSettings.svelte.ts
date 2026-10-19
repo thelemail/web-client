@@ -4,22 +4,32 @@ import { theme, type ThemePref } from './theme.svelte';
 import { auth } from './auth.svelte';
 import { m } from '$paraglide/messages.js';
 
-export const MARK_READ_DELAYS: Record<string, number | null> = {
-	'Immediately on open': 0,
-	'After 2 seconds': 2000,
-	'After 5 seconds': 5000,
-	'Never automatically': null
+export type MarkReadOption = 'immediately' | 'after_2s' | 'never';
+
+export const MARK_READ_DELAYS: Record<MarkReadOption, number | null> = {
+	immediately: 0,
+	after_2s: 2000,
+	never: null
 };
 
-export const MARK_READ_LABELS: Record<string, () => string> = {
-	'Immediately on open': () => m.settings_reading_mark_read_immediately(),
-	'After 2 seconds': () => m.settings_reading_mark_read_2s(),
-	'After 5 seconds': () => m.settings_reading_mark_read_5s(),
-	'Never automatically': () => m.settings_reading_mark_read_never()
+export const MARK_READ_LABELS: Record<MarkReadOption, () => string> = {
+	immediately: () => m.settings_reading_mark_read_immediately(),
+	after_2s: () => m.settings_reading_mark_read_2s(),
+	never: () => m.settings_reading_mark_read_never()
 };
+
+const LEGACY_MARK_READ: Record<string, MarkReadOption> = {
+	'Immediately on open': 'immediately',
+	'After 2 seconds': 'after_2s',
+	'Never automatically': 'never'
+};
+
+export function isMarkReadOption(v: string): v is MarkReadOption {
+	return Object.hasOwn(MARK_READ_DELAYS, v);
+}
 
 export interface OpenMessageSettings {
-	markRead: string;
+	markRead: MarkReadOption;
 }
 
 export interface PrivacySettings {
@@ -39,17 +49,19 @@ export interface AppearanceSettings {
 }
 
 const DEFAULTS: OpenMessageSettings = {
-	markRead: 'After 2 seconds'
+	markRead: 'after_2s'
 };
 
 function parseReadingOpenMessage(raw: Record<string, unknown>): OpenMessageSettings {
 	const markRead = raw.markRead;
-	if (typeof markRead === 'string' && Object.hasOwn(MARK_READ_DELAYS, markRead)) {
-		return { markRead };
-	}
 	if (typeof markRead === 'number' || markRead === null) {
-		const label = Object.keys(MARK_READ_DELAYS).find((k) => MARK_READ_DELAYS[k] === markRead);
-		if (label) return { markRead: label };
+		const id = (Object.keys(MARK_READ_DELAYS) as MarkReadOption[]).find(
+			(k) => MARK_READ_DELAYS[k] === markRead
+		);
+		if (id) return { markRead: id };
+	}
+	if (typeof markRead === 'string' && Object.hasOwn(LEGACY_MARK_READ, markRead)) {
+		return { markRead: LEGACY_MARK_READ[markRead] };
 	}
 	return { ...DEFAULTS };
 }
@@ -200,11 +212,7 @@ class AccountSettingsStore {
 		return locale.timeZone;
 	}
 
-	markReadDelayMs = $derived<number | null>(
-		this.readingOpenMessage.markRead in MARK_READ_DELAYS
-			? MARK_READ_DELAYS[this.readingOpenMessage.markRead]
-			: null
-	);
+	markReadDelayMs = $derived<number | null>(MARK_READ_DELAYS[this.readingOpenMessage.markRead]);
 
 	async hydrate(): Promise<void> {
 		if (this.hydrated) return;
@@ -312,7 +320,7 @@ class AccountSettingsStore {
 		await this.hydrate();
 	}
 
-	async persistReadingOpenMessage(markRead: string): Promise<void> {
+	async persistReadingOpenMessage(markRead: MarkReadOption): Promise<void> {
 		const acct = this.#accountId;
 		let raw = this.#rawReadingOpenMessage;
 		if (!raw) {
@@ -320,7 +328,7 @@ class AccountSettingsStore {
 			if (this.#accountId !== acct) return;
 			raw = readingSection(data.sections?.['reading_open_message']);
 		}
-		const body = { ...raw, markRead: MARK_READ_DELAYS[markRead] ?? null };
+		const body = { ...raw, markRead: MARK_READ_DELAYS[markRead] };
 		await putAccountSettingsSection('reading_open_message', body);
 		if (this.#accountId !== acct) return;
 		this.#rawReadingOpenMessage = body;
