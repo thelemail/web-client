@@ -176,7 +176,7 @@ describe('reading open message', () => {
 		expect(accountSettings.markReadDelayMs).toBe(2000);
 	});
 
-	it('reloads the section before saving when hydrate failed', async () => {
+	it('saves over the stored section once a failed load is retried', async () => {
 		account += 1;
 		getAccountSettings.mockRejectedValueOnce(new Error('offline'));
 		accountSettings.setAccount(`acc-${account}`);
@@ -186,7 +186,12 @@ describe('reading open message', () => {
 			sections: { reading_open_message: { markRead: 2000, images: 'ask' } }
 		});
 		putAccountSettingsSection.mockClear();
-		expect(await saveMarkRead('after_2s')).toEqual([{ markRead: 2000, images: 'ask' }]);
+		expect(await saveMarkRead('immediately')).toEqual([]);
+		await settingsDraft.retryLoad();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(putAccountSettingsSection.mock.calls).toEqual([
+			['reading_open_message', { markRead: 0, images: 'ask' }]
+		]);
 	});
 
 	it('does not save when the section cannot be loaded', async () => {
@@ -197,15 +202,10 @@ describe('reading open message', () => {
 		await settingsDraft.hydrate();
 		putAccountSettingsSection.mockClear();
 		expect(await saveMarkRead('after_2s')).toEqual([]);
-		getAccountSettings.mockResolvedValue({
-			sections: { reading_open_message: { images: 'always' } }
-		});
 		settingsDraft.flushPending();
 		await vi.advanceTimersByTimeAsync(0);
-		expect(putAccountSettingsSection).toHaveBeenCalledWith('reading_open_message', {
-			markRead: 2000,
-			images: 'always'
-		});
+		expect(putAccountSettingsSection).not.toHaveBeenCalled();
+		expect(settingsDraft.saveState).toBe('error');
 	});
 
 	it('keeps other keys when the change lands before hydrate', async () => {
@@ -215,9 +215,13 @@ describe('reading open message', () => {
 		});
 		accountSettings.setAccount(`acc-${account}`);
 		settingsDraft.setAccount(`acc-${account}`);
-		expect(await saveMarkRead('immediately')).toEqual([
-			{ markRead: 0, images: 'contacts' }
+		expect(await saveMarkRead('immediately')).toEqual([]);
+		await settingsDraft.hydrate();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(putAccountSettingsSection.mock.calls).toEqual([
+			['reading_open_message', { markRead: 0, images: 'contacts' }]
 		]);
+		expect(settingsDraft.s.markRead).toBe('immediately');
 	});
 
 	it('does not carry a section into the next account', async () => {
@@ -242,5 +246,234 @@ describe('reading open message', () => {
 		await hydrateReading({ markRead: 0, images: 'always' });
 		await hydrateReading(undefined);
 		expect(await saveMarkRead('after_2s')).toEqual([{ markRead: 2000 }]);
+	});
+});
+
+function deferred<T>() {
+	let resolve: (v: T) => void = () => {};
+	let reject: (e: unknown) => void = () => {};
+	const promise = new Promise<T>((res, rej) => {
+		resolve = res;
+		reject = rej;
+	});
+	return { promise, resolve, reject };
+}
+
+async function hydrateSections(sections: Record<string, Record<string, unknown>>) {
+	account += 1;
+	getAccountSettings.mockResolvedValue({ sections });
+	accountSettings.setAccount(`acc-${account}`);
+	settingsDraft.setAccount(`acc-${account}`);
+	await settingsDraft.hydrate();
+	putAccountSettingsSection.mockClear();
+}
+
+function putsFor(section: string) {
+	return putAccountSettingsSection.mock.calls
+		.filter(([name]) => name === section)
+		.map(([, body]) => body);
+}
+
+describe('settings load state', () => {
+	it('stays unloaded with the error after a failed load, and a retry loads it', async () => {
+		account += 1;
+		const offline = new Error('offline');
+		getAccountSettings.mockRejectedValueOnce(offline);
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		await settingsDraft.hydrate();
+		expect(accountSettings.status).toBe('error');
+		expect(accountSettings.hydrated).toBe(false);
+		expect(accountSettings.error).toBe(offline);
+
+		getAccountSettings.mockResolvedValue({ sections: { localization: { timeFormat: '12' } } });
+		await settingsDraft.retryLoad();
+		expect(accountSettings.status).toBe('ready');
+		expect(settingsDraft.s.timeFmt).toBe('12');
+	});
+
+	it('retries the load when the browser comes back online', async () => {
+		account += 1;
+		getAccountSettings.mockRejectedValueOnce(new Error('offline'));
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		await settingsDraft.hydrate();
+		getAccountSettings.mockResolvedValue({ sections: {} });
+		window.dispatchEvent(new Event('online'));
+		await vi.advanceTimersByTimeAsync(0);
+		expect(accountSettings.status).toBe('ready');
+	});
+
+	it('sends no defaults for sibling keys when a change lands before the load resolves', async () => {
+		account += 1;
+		const load = deferred<unknown>();
+		getAccountSettings.mockReturnValue(load.promise);
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		const hydrating = settingsDraft.hydrate();
+		settingsDraft.set('dateFmt', 'iso');
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(putAccountSettingsSection).not.toHaveBeenCalled();
+
+		load.resolve({ sections: { localization: { dateFormat: 'dmy', timeFormat: '12' } } });
+		await hydrating;
+		await vi.advanceTimersByTimeAsync(0);
+		expect(putsFor('localization')).toEqual([{ dateFormat: 'iso', timeFormat: '12' }]);
+		expect(settingsDraft.s.dateFmt).toBe('iso');
+		expect(settingsDraft.s.timeFmt).toBe('12');
+	});
+
+	it('does not put a section after a failed load', async () => {
+		account += 1;
+		getAccountSettings.mockRejectedValue(new Error('offline'));
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		await settingsDraft.hydrate();
+		settingsDraft.set('confirmSubject', false);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(putAccountSettingsSection).not.toHaveBeenCalled();
+	});
+
+	it('keeps an edit made while the load is in flight and persists it', async () => {
+		account += 1;
+		const load = deferred<unknown>();
+		getAccountSettings.mockReturnValue(load.promise);
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		const hydrating = settingsDraft.hydrate();
+		settingsDraft.set('replyDefault', 'all');
+		load.resolve({
+			sections: {
+				composing: {
+					replyDefault: 'reply',
+					confirmExternal: false,
+					confirmSubject: true,
+					confirmUnencrypted: true
+				}
+			}
+		});
+		await hydrating;
+		expect(settingsDraft.s.replyDefault).toBe('all');
+		expect(settingsDraft.s.confirmExternal).toBe(false);
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(putsFor('composing')).toEqual([
+			{ replyDefault: 'all', confirmExternal: false, confirmSubject: true, confirmUnencrypted: true }
+		]);
+	});
+});
+
+describe('refresh while saving', () => {
+	it('keeps an edit whose save is still in flight when settings refresh', async () => {
+		await hydrateSections({ localization: { dateFormat: 'dmy', timeFormat: '24' } });
+		const put = deferred<unknown>();
+		putAccountSettingsSection.mockReturnValueOnce(put.promise);
+		settingsDraft.set('timeFmt', '12');
+		await vi.advanceTimersByTimeAsync(700);
+		getAccountSettings.mockResolvedValue({
+			sections: { localization: { dateFormat: 'mdy', timeFormat: '24' } }
+		});
+		await accountSettings.refresh();
+		expect(settingsDraft.s.timeFmt).toBe('12');
+		expect(settingsDraft.s.dateFmt).toBe('mdy');
+		put.resolve({});
+		await vi.advanceTimersByTimeAsync(0);
+		expect(settingsDraft.saveState).toBe('saved');
+	});
+});
+
+describe('section bodies', () => {
+	it.each([
+		['privacy', { stripTrackingParams: true, shareSpamHeaders: true, future: 1 }, 'stripTrack', false],
+		['composing', { replyDefault: 'reply', future: 1 }, 'replyDefault', 'all'],
+		['localization', { dateFormat: 'dmy', timeFormat: '12', future: 1 }, 'dateFmt', 'iso']
+	] as const)('keeps a %s key the client does not edit', async (section, stored, key, value) => {
+		await hydrateSections({ [section]: { ...stored } });
+		settingsDraft.set(key, value as never);
+		await vi.advanceTimersByTimeAsync(1000);
+		const [body] = putsFor(section);
+		expect(body).toMatchObject({ future: 1 });
+	});
+
+	it('keeps other calendar keys when the reminder default changes', async () => {
+		await hydrateSections({
+			calendar: { hidden: ['c1'], weekStartsOn: 0, startHour: 8, future: 1 }
+		});
+		settingsDraft.setReminderDefault(30);
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(putsFor('calendar')).toEqual([
+			expect.objectContaining({
+				hidden: ['c1'],
+				weekStartsOn: 0,
+				startHour: 8,
+				defaultReminderMinutes: 30,
+				future: 1
+			})
+		]);
+	});
+});
+
+describe('save feedback', () => {
+	it('shows saving, then saved, then idle on success', async () => {
+		await hydrateSections({});
+		settingsDraft.set('timeFmt', '12');
+		expect(settingsDraft.saveState).toBe('saving');
+		await vi.advanceTimersByTimeAsync(700);
+		expect(settingsDraft.saveState).toBe('saved');
+		await vi.advanceTimersByTimeAsync(3000);
+		expect(settingsDraft.saveState).toBe('idle');
+		expect(settingsDraft.toast).toBeNull();
+	});
+
+	it('sets the error state and an error toast when a save fails', async () => {
+		await hydrateSections({});
+		putAccountSettingsSection.mockRejectedValue(new Error('500'));
+		settingsDraft.set('timeFmt', '12');
+		await vi.advanceTimersByTimeAsync(700);
+		expect(settingsDraft.saveState).toBe('error');
+		expect(settingsDraft.toast?.kind).toBe('error');
+		expect(settingsDraft.s.timeFmt).toBe('12');
+	});
+
+	it('retries on a backoff timer and clears the error once a retry succeeds', async () => {
+		await hydrateSections({ localization: { dateFormat: 'mdy' } });
+		putAccountSettingsSection.mockRejectedValueOnce(new Error('500'));
+		putAccountSettingsSection.mockRejectedValueOnce(new Error('500'));
+		settingsDraft.set('timeFmt', '12');
+		await vi.advanceTimersByTimeAsync(700);
+		expect(putAccountSettingsSection).toHaveBeenCalledTimes(1);
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(putAccountSettingsSection).toHaveBeenCalledTimes(2);
+		expect(settingsDraft.saveState).toBe('error');
+		await vi.advanceTimersByTimeAsync(3899);
+		expect(putAccountSettingsSection).toHaveBeenCalledTimes(2);
+		await vi.advanceTimersByTimeAsync(1);
+		expect(putAccountSettingsSection).toHaveBeenCalledTimes(3);
+		expect(putsFor('localization').at(-1)).toEqual({ dateFormat: 'mdy', timeFormat: '12' });
+		expect(settingsDraft.saveState).toBe('saved');
+	});
+
+	it('retries a failed save when the browser comes back online', async () => {
+		await hydrateSections({});
+		putAccountSettingsSection.mockRejectedValueOnce(new Error('offline'));
+		settingsDraft.set('confirmExternal', false);
+		await vi.advanceTimersByTimeAsync(700);
+		expect(settingsDraft.saveState).toBe('error');
+		window.dispatchEvent(new Event('online'));
+		await vi.advanceTimersByTimeAsync(0);
+		expect(putAccountSettingsSection).toHaveBeenCalledTimes(2);
+		expect(settingsDraft.saveState).toBe('saved');
+	});
+
+	it('saves the theme through the indicator and keeps an unsaved theme marked as not saved', async () => {
+		await hydrateSections({ appearance: { theme: 'light' } });
+		putAccountSettingsSection.mockRejectedValueOnce(new Error('500'));
+		settingsDraft.setTheme('dark');
+		expect(settingsDraft.saveState).toBe('saving');
+		await vi.advanceTimersByTimeAsync(700);
+		expect(settingsDraft.saveState).toBe('error');
+		expect(accountSettings.appearance.theme).toBe('dark');
+		await vi.advanceTimersByTimeAsync(2000);
+		expect(putsFor('appearance')).toEqual([{ theme: 'dark' }, { theme: 'dark' }]);
+		expect(settingsDraft.saveState).toBe('saved');
 	});
 });
