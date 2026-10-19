@@ -1,4 +1,5 @@
 import { m } from '$paraglide/messages.js';
+import type { MarkReadOption } from '$core/stores/accountSettings.svelte';
 
 export type SectionId =
 	| 'profile'
@@ -57,7 +58,7 @@ export interface SettingsState {
 	confirmSubject: boolean;
 	confirmUnencrypted: boolean;
 
-	markRead: string;
+	markRead: MarkReadOption;
 
 	stripTrack: boolean;
 	shareSpamHeaders: boolean;
@@ -72,7 +73,7 @@ export const SETTINGS_DEFAULTS: SettingsState = {
 	confirmSubject: true,
 	confirmUnencrypted: true,
 
-	markRead: 'After 2 seconds',
+	markRead: 'after_2s',
 
 	stripTrack: true,
 	shareSpamHeaders: false,

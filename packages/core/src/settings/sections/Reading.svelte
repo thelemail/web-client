@@ -4,7 +4,7 @@
 	import Select from '../Select.svelte';
 	import CardHead from '../CardHead.svelte';
 	import type { SettingsState } from '../data';
-	import { MARK_READ_LABELS } from '$core/stores/accountSettings.svelte';
+	import { MARK_READ_LABELS, isMarkReadOption } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -26,7 +26,9 @@
 		<Select
 			value={s.markRead}
 			options={labelled(MARK_READ_LABELS)}
-			onChange={(v) => set('markRead', v)}
+			onChange={(v) => {
+				if (isMarkReadOption(v)) set('markRead', v);
+			}}
 		/>
 	</Row>
 </div>
