@@ -12,7 +12,6 @@ import { auth } from './auth.svelte';
 import { m } from '$paraglide/messages.js';
 import { announce } from '$core/announce';
 
-const OPEN_MESSAGE_SECTION = 'reading_open_message';
 const PRIVACY_SECTION = 'privacy';
 const LOCALIZATION_SECTION = 'localization';
 const COMPOSING_SECTION = 'composing';
@@ -143,9 +142,7 @@ class SettingsDraftStore {
 			return;
 		}
 		this.#flushing = true;
-		const openMessageBody = this.#dirtyOpenMessage
-			? accountSettings.readingOpenMessageBody(this.s.markRead)
-			: null;
+		const openMessageMarkRead = this.#dirtyOpenMessage ? this.s.markRead : null;
 		const privacyBody = this.#dirtyPrivacy
 			? {
 					stripTrackingParams: this.s.stripTrack,
@@ -168,8 +165,8 @@ class SettingsDraftStore {
 		const profileNeedsSave = this.profileDirty;
 		try {
 			const tasks: Promise<unknown>[] = [];
-			if (openMessageBody) {
-				tasks.push(putAccountSettingsSection(OPEN_MESSAGE_SECTION, openMessageBody));
+			if (openMessageMarkRead !== null) {
+				tasks.push(accountSettings.persistReadingOpenMessage(openMessageMarkRead));
 			}
 			if (privacyBody) {
 				tasks.push(putAccountSettingsSection(PRIVACY_SECTION, privacyBody));
@@ -184,8 +181,7 @@ class SettingsDraftStore {
 				tasks.push(this.profileSave());
 			}
 			await Promise.all(tasks);
-			if (openMessageBody) {
-				accountSettings.setReadingOpenMessage(openMessageBody);
+			if (openMessageMarkRead !== null) {
 				this.#dirtyOpenMessage = false;
 			}
 			if (privacyBody) {

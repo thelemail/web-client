@@ -158,6 +158,68 @@ describe('reading open message', () => {
 		expect(accountSettings.markReadDelayMs).toBe(2000);
 	});
 
+	it('reloads the section before saving when hydrate failed', async () => {
+		account += 1;
+		getAccountSettings.mockRejectedValueOnce(new Error('offline'));
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		await settingsDraft.hydrate();
+		getAccountSettings.mockResolvedValue({
+			sections: { reading_open_message: { markRead: 2000, images: 'ask' } }
+		});
+		putAccountSettingsSection.mockClear();
+		expect(await saveMarkRead('After 5 seconds')).toEqual([{ markRead: 5000, images: 'ask' }]);
+	});
+
+	it('does not save when the section cannot be loaded', async () => {
+		account += 1;
+		getAccountSettings.mockRejectedValue(new Error('offline'));
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		await settingsDraft.hydrate();
+		putAccountSettingsSection.mockClear();
+		expect(await saveMarkRead('After 5 seconds')).toEqual([]);
+		getAccountSettings.mockResolvedValue({
+			sections: { reading_open_message: { images: 'always' } }
+		});
+		settingsDraft.flushPending();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(putAccountSettingsSection).toHaveBeenCalledWith('reading_open_message', {
+			markRead: 5000,
+			images: 'always'
+		});
+	});
+
+	it('keeps other keys when the change lands before hydrate', async () => {
+		account += 1;
+		getAccountSettings.mockResolvedValue({
+			sections: { reading_open_message: { markRead: 2000, images: 'contacts' } }
+		});
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		expect(await saveMarkRead('Immediately on open')).toEqual([
+			{ markRead: 0, images: 'contacts' }
+		]);
+	});
+
+	it('does not carry a section into the next account', async () => {
+		await hydrateReading({ markRead: 0, images: 'always' });
+		let finish: (v: unknown) => void = () => {};
+		putAccountSettingsSection.mockImplementationOnce(() => new Promise((r) => (finish = r)));
+		settingsDraft.set('markRead', 'After 5 seconds');
+		await vi.advanceTimersByTimeAsync(1000);
+		account += 1;
+		getAccountSettings.mockResolvedValue({ sections: {} });
+		accountSettings.setAccount(`acc-${account}`);
+		settingsDraft.setAccount(`acc-${account}`);
+		await settingsDraft.hydrate();
+		finish({});
+		await vi.advanceTimersByTimeAsync(0);
+		putAccountSettingsSection.mockClear();
+		expect(await saveMarkRead('Never automatically')).toEqual([{ markRead: null }]);
+		expect(settingsDraft.s.markRead).toBe('Never automatically');
+	});
+
 	it('forgets the previous account section on switch', async () => {
 		await hydrateReading({ markRead: 0, images: 'always' });
 		await hydrateReading(undefined);

@@ -54,6 +54,10 @@ function parseReadingOpenMessage(raw: Record<string, unknown>): OpenMessageSetti
 	return { ...DEFAULTS };
 }
 
+function readingSection(raw: unknown): Record<string, unknown> {
+	return raw && typeof raw === 'object' && !Array.isArray(raw) ? { ...raw } : {};
+}
+
 const PRIVACY_DEFAULTS: PrivacySettings = {
 	stripTrackingParams: true,
 	shareSpamHeaders: null
@@ -161,7 +165,7 @@ class AccountSettingsStore {
 	mailSidebar = $state<MailSidebarSettings>(parseMailSidebar(null));
 	mailRecents = $state<MailRecents>(parseMailRecents(null));
 	#accountId: string | null = null;
-	#rawReadingOpenMessage: Record<string, unknown> = {};
+	#rawReadingOpenMessage: Record<string, unknown> | null = null;
 	#sidebarTimer: ReturnType<typeof setTimeout> | null = null;
 	#recentsTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -170,7 +174,7 @@ class AccountSettingsStore {
 		this.#accountId = accountId;
 		this.hydrated = false;
 		this.readingOpenMessage = { ...DEFAULTS };
-		this.#rawReadingOpenMessage = {};
+		this.#rawReadingOpenMessage = null;
 		this.privacy = { ...PRIVACY_DEFAULTS };
 		this.composing = { ...COMPOSING_DEFAULTS };
 		this.appearance = { ...APPEARANCE_DEFAULTS };
@@ -211,11 +215,8 @@ class AccountSettingsStore {
 			if (this.#accountId !== acct) return;
 			const sections = data.sections ?? {};
 
-			const v = sections['reading_open_message'];
-			if (v && typeof v === 'object') {
-				this.#rawReadingOpenMessage = { ...v };
-				this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
-			}
+			this.#rawReadingOpenMessage = readingSection(sections['reading_open_message']);
+			this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
 
 			const p = sections['privacy'];
 			if (p && typeof p === 'object') {
@@ -311,13 +312,19 @@ class AccountSettingsStore {
 		await this.hydrate();
 	}
 
-	readingOpenMessageBody(markRead: string): Record<string, unknown> {
-		return { ...this.#rawReadingOpenMessage, markRead: MARK_READ_DELAYS[markRead] ?? null };
-	}
-
-	setReadingOpenMessage(body: Record<string, unknown>): void {
-		this.#rawReadingOpenMessage = { ...body };
-		this.readingOpenMessage = parseReadingOpenMessage(this.#rawReadingOpenMessage);
+	async persistReadingOpenMessage(markRead: string): Promise<void> {
+		const acct = this.#accountId;
+		let raw = this.#rawReadingOpenMessage;
+		if (!raw) {
+			const data = await getAccountSettings();
+			if (this.#accountId !== acct) return;
+			raw = readingSection(data.sections?.['reading_open_message']);
+		}
+		const body = { ...raw, markRead: MARK_READ_DELAYS[markRead] ?? null };
+		await putAccountSettingsSection('reading_open_message', body);
+		if (this.#accountId !== acct) return;
+		this.#rawReadingOpenMessage = body;
+		this.readingOpenMessage = parseReadingOpenMessage(body);
 	}
 
 	setPrivacy(value: PrivacySettings): void {
