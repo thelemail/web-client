@@ -983,8 +983,6 @@
 	"settings_profile_desc": "Your name and signature, and the address you send from by default. Your domain, your identity.",
 	"settings_profile_change_photo": "Change photo",
 	"settings_profile_remove_avatar": "Remove avatar",
-	"settings_profile_owner": "Owner",
-	"settings_profile_verified_domain": "Verified domain",
 	"settings_profile_display_name": "Display name",
 	"settings_profile_display_name_desc": "Shown on mail you send and across the archive.",
 	"settings_profile_sending_identity": "Default sending identity",

@@ -3,7 +3,6 @@
 	import Camera from '@lucide/svelte/icons/camera';
 	import { apiBlobPut } from '$core/api/client';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import Info from '@lucide/svelte/icons/info';
 	import UserRound from '@lucide/svelte/icons/user-round';
@@ -15,6 +14,7 @@
 	import Toggle from '../Toggle.svelte';
 	import Badge from '../Badge.svelte';
 	import CardHead from '../CardHead.svelte';
+	import { memberRoleLabel } from '../memberRole';
 	import SignatureEditor from './SignatureEditor.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
 	import type { SignatureMode, SignatureDocImage } from '$core/mail/signatureCrypto';
@@ -79,7 +79,11 @@
 
 	const identities = $derived(addresses.items);
 	const primary = $derived(identities.find((a) => a.isPrimary) ?? identities[0] ?? null);
-	const isWorkspaceOwner = $derived(workspaces.isOwner(auth.accountId));
+	const roleLabel = $derived.by(() => {
+		const type = workspaces.workspace?.type;
+		if (type !== 'family' && type !== 'business') return null;
+		return workspaces.myRole ? memberRoleLabel(workspaces.myRole) : null;
+	});
 
 	let sigForAddressId = $state<string | null>(null);
 	$effect(() => {
@@ -321,7 +325,6 @@
 	}
 
 	const initials = $derived(initialsFor(displayName || auth.fullName, email));
-	const ownerBadge = $derived(isWorkspaceOwner);
 
 	function collectSignatureImages(html: string): SignatureDocImage[] {
 		if (!html || typeof DOMParser === 'undefined') return [];
@@ -406,12 +409,11 @@
 		<div class="pf-info">
 			<div class="pf-name">{displayName || email}</div>
 			<div class="pf-mail">{email}</div>
-			<div class="pf-tags">
-				{#if ownerBadge}
-					<Badge kind="pine" dot>{m.settings_profile_owner()}</Badge>
-				{/if}
-				<span class="badge b-ok"><ShieldCheck size={12} />{m.settings_profile_verified_domain()}</span>
-			</div>
+			{#if roleLabel}
+				<div class="pf-tags">
+					<Badge kind="pine" dot>{roleLabel}</Badge>
+				</div>
+			{/if}
 			{#if avatarError}
 				<div class="pf-error">{avatarError}</div>
 			{/if}
