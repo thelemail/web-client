@@ -326,10 +326,10 @@
   "settings_copy_to_clipboard": "Copier dans le presse-papiers",
   "settings_record_host": "Hôte",
   "settings_record_ttl": "TTL",
-  "settings_dns_ok": "OK",
-  "settings_dns_warn": "AVERTISSEMENT",
-  "settings_dns_fail": "ÉCHEC",
-  "settings_dns_pending": "EN ATTENTE",
+  "settings_dns_found": "Trouvé",
+  "settings_dns_wrong_value": "Valeur incorrecte",
+  "settings_dns_not_found": "Introuvable",
+  "settings_dns_waiting": "En attente",
   "settings_member_seat_meter": [
     {
       "declarations": [

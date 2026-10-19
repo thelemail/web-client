@@ -1,7 +1,8 @@
 <script lang="ts">
 	import CopyBtn from '../CopyBtn.svelte';
 	import DnsChip from '../DnsChip.svelte';
-	import type { DNSRecordKind, DNSRecordStatus, RequiredDNSRecord } from '$core/api/customDomains';
+	import type { DNSRecordKind, RequiredDNSRecord } from '$core/api/customDomains';
+	import type { DnsState } from '../types';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { timeSince } from '$core/i18n/relative';
 	import { m } from '$paraglide/messages.js';
@@ -36,10 +37,16 @@
 		new Set(records.map((r) => records.find((c) => c.kind === r.kind)?.host + '|' + r.kind))
 	);
 
-	function chipKind(s: DNSRecordStatus): 'ok' | 'warn' | 'fail' | 'pending' {
-		if (s === 'ok') return 'ok';
-		if (s === 'mismatch') return 'fail';
-		return missing;
+	function chipKind(r: RequiredDNSRecord): DnsState {
+		if (r.status === 'ok') return 'ok';
+		if (!r.required) return 'warn';
+		return r.status === 'mismatch' ? 'fail' : missing;
+	}
+
+	function chipLabel(r: RequiredDNSRecord): string {
+		if (r.status === 'ok') return m.settings_dns_found();
+		if (r.status === 'mismatch') return m.settings_dns_wrong_value();
+		return chipKind(r) === 'pending' ? m.settings_dns_waiting() : m.settings_dns_not_found();
 	}
 </script>
 
@@ -56,7 +63,7 @@
 				{#if r.status === 'ok' && r.verifiedAt}
 					<span class="dw-rec-when">{m.settings_domains_record_verified({ when: timeSince(r.verifiedAt, now) })}</span>
 				{/if}
-				<DnsChip kind={chipKind(r.status)} />
+				<DnsChip kind={chipKind(r)} label={chipLabel(r)} />
 			</div>
 			{#if firstOfKind.has(r.host + '|' + r.kind)}
 				<p class="dw-rec-why">{PURPOSE[r.kind]}</p>

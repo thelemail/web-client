@@ -326,10 +326,10 @@
 	"settings_copy_to_clipboard": "Copiar para a área de transferência",
 	"settings_record_host": "Anfitrião",
 	"settings_record_ttl": "TTL",
-	"settings_dns_ok": "OK",
-	"settings_dns_warn": "AVISO",
-	"settings_dns_fail": "FALHA",
-	"settings_dns_pending": "PENDENTE",
+	"settings_dns_found": "Encontrado",
+	"settings_dns_wrong_value": "Valor incorreto",
+	"settings_dns_not_found": "Não encontrado",
+	"settings_dns_waiting": "A aguardar",
 	"settings_member_seat_meter": [
 		{
 			"declarations": [

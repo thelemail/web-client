@@ -326,10 +326,10 @@
 	"settings_copy_to_clipboard": "In die Zwischenablage kopieren",
 	"settings_record_host": "Host",
 	"settings_record_ttl": "TTL",
-	"settings_dns_ok": "OK",
-	"settings_dns_warn": "WARNUNG",
-	"settings_dns_fail": "FEHLER",
-	"settings_dns_pending": "AUSSTEHEND",
+	"settings_dns_found": "Gefunden",
+	"settings_dns_wrong_value": "Falscher Wert",
+	"settings_dns_not_found": "Nicht gefunden",
+	"settings_dns_waiting": "Ausstehend",
 	"settings_member_seat_meter": [
 		{
 			"declarations": [
