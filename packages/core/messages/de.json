@@ -1421,7 +1421,7 @@
 	"settings_ceremony_delete_ack_exported": "Ich habe alles exportiert, was ich behalten möchte.",
 	"settings_ceremony_delete_type_to_confirm": "Geben Sie zur Bestätigung <addr>{email}</addr> ein",
 	"settings_ceremony_delete_workspace_lede": "Dieses Konto besitzt einen Arbeitsbereich mit weiteren Mitgliedern. Entfernen Sie diese, bevor Sie das Konto löschen.",
-	"settings_ceremony_delete_workspace_point": "Mitglieder entfernen Sie im Bereich Mitglieder auf der Seite Konto & Tarif.",
+	"settings_ceremony_delete_workspace_point": "Mitglieder entfernen Sie auf der Seite Konto & Tarif.",
 	"settings_ceremony_delete_verify_lede": "Bestätigen Sie Ihre Identität. Die Sitzungen dieses Geräts werden danach unwiderruflich beendet.",
 	"settings_ceremony_delete_current_password": "Aktuelles Passwort",
 	"settings_ceremony_delete_current_password_placeholder": "Aktuelles Passwort eingeben",

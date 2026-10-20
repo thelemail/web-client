@@ -457,7 +457,7 @@
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
-				name={sigIdentity.name}
+				name={sigIdentity.shared ? sigIdentity.name : sigIdentity.name || auth.fullName}
 				email={sigIdentity.email}
 				mode={signatureMode}
 				source={signatureSource}

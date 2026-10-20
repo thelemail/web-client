@@ -1421,7 +1421,7 @@
 	"settings_ceremony_delete_ack_exported": "Exportei tudo o que quero guardar.",
 	"settings_ceremony_delete_type_to_confirm": "Escreva <addr>{email}</addr> para confirmar",
 	"settings_ceremony_delete_workspace_lede": "Esta conta é proprietária de um espaço de trabalho que ainda tem outros membros. Remova-os antes de eliminar a conta.",
-	"settings_ceremony_delete_workspace_point": "Pode remover membros na secção Membros da página Conta e plano.",
+	"settings_ceremony_delete_workspace_point": "Pode remover membros na página Conta e plano.",
 	"settings_ceremony_delete_verify_lede": "Confirme que é mesmo quem diz ser. Este é o ponto sem retorno para as sessões deste dispositivo.",
 	"settings_ceremony_delete_current_password": "Palavra-passe atual",
 	"settings_ceremony_delete_current_password_placeholder": "Introduza a palavra-passe atual",

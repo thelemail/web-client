@@ -1421,7 +1421,7 @@
 	"settings_ceremony_delete_ack_exported": "I have exported anything I want to keep.",
 	"settings_ceremony_delete_type_to_confirm": "Type <addr>{email}</addr> to confirm",
 	"settings_ceremony_delete_workspace_lede": "This account owns a workspace that still has other members. Remove them before you delete the account.",
-	"settings_ceremony_delete_workspace_point": "You can remove members under Members on the Account & plan page.",
+	"settings_ceremony_delete_workspace_point": "You can remove members on the Account & plan page.",
 	"settings_ceremony_delete_verify_lede": "Confirm it’s really you. This is the point of no return for this device’s sessions.",
 	"settings_ceremony_delete_current_password": "Current password",
 	"settings_ceremony_delete_current_password_placeholder": "Enter current password",
