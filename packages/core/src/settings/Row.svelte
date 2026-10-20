@@ -19,8 +19,7 @@
 		{#if descSnippet}
 			<div class="d">{@render descSnippet()}</div>
 		{:else if d}
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			<div class="d">{@html d}</div>
+			<div class="d">{d}</div>
 		{/if}
 	</div>
 	{#if children}<div class="ctl">{@render children()}</div>{/if}

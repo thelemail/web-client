@@ -4,31 +4,13 @@
 	interface Props {
 		label: string;
 		lines: string[];
-		onDone?: () => void;
-		progress?: number;
+		progress: number;
 	}
 
-	let { label, lines, onDone, progress }: Props = $props();
+	let { label, lines, progress }: Props = $props();
 
-	let auto = $state(0);
-	const controlled = $derived(progress !== undefined);
-
-	$effect(() => {
-		if (controlled) return;
-		const current = auto;
-		if (current >= lines.length) {
-			if (!onDone) return;
-			const t = setTimeout(onDone, 500);
-			return () => clearTimeout(t);
-		}
-		const t = setTimeout(() => {
-			auto = current + 1;
-		}, 700);
-		return () => clearTimeout(t);
-	});
-
-	const i = $derived(controlled ? Math.min(progress ?? 0, lines.length) : auto);
-	const pct = $derived(Math.min(100, Math.round((i / lines.length) * 100)));
+	const i = $derived(Math.max(0, Math.min(progress, lines.length)));
+	const pct = $derived(lines.length ? Math.min(100, Math.round((i / lines.length) * 100)) : 0);
 </script>
 
 <div class="cer-progress">
