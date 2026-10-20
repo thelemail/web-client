@@ -578,6 +578,9 @@
 						{m.settings_ceremony_twofa_device_instruct()}
 					{/if}
 				</div>
+				{#if isKey}
+					<div class="cer-instruct center key-chooser">{m.settings_ceremony_twofa_key_chooser()}</div>
+				{/if}
 				<div class="field key-name">
 					<label for="twofa-key-name">{m.settings_ceremony_twofa_key_name_label()}</label>
 					<input
@@ -715,6 +718,11 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <style>
+	.cer-instruct.key-chooser {
+		max-width: 340px;
+		margin-top: -8px;
+		font-size: 12px;
+	}
 	.key-name {
 		width: 100%;
 		max-width: 340px;
