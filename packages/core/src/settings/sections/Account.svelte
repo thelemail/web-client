@@ -26,6 +26,8 @@
 	import { Button } from '$core/components/ui/button';
 	import { entryPointVisible, scheduledLine, storeStep } from '$core/lifecycle/downgrade';
 	import { m } from '$paraglide/messages.js';
+	import Download from '@lucide/svelte/icons/download';
+	import { EXPORT_TOOL_URL } from '../exportTool';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -242,6 +244,15 @@
 		{/if}
 	{/if}
 {/if}
+
+<div class="scard">
+	<CardHead icon={Download} title={m.settings_account_export_title()} />
+	<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
+		<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
+			{m.settings_account_export_button()}<ExternalLink size={14} />
+		</Button>
+	</Row>
+</div>
 
 <div class="scard danger">
 	<CardHead icon={CircleAlert} title={m.settings_account_delete_title()} />
