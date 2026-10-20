@@ -93,10 +93,13 @@ interface ProfileSnapshot {
 	hasPersistent: boolean;
 	vaultUnlocked: boolean;
 	recoveryEnabled: boolean | null;
+	profileLoadFailed: boolean;
 	deletion: DeletionStatus | null;
 	lifecycle: LifecycleInfo | null;
 	keyRotationBlocker: KeyRotationBlocker | null;
 }
+
+export type RecoveryState = 'unknown' | 'error' | 'set' | 'unset';
 
 const emptyProfile = (): ProfileSnapshot => ({
 	email: null,
@@ -107,6 +110,7 @@ const emptyProfile = (): ProfileSnapshot => ({
 	hasPersistent: false,
 	vaultUnlocked: false,
 	recoveryEnabled: null,
+	profileLoadFailed: false,
 	deletion: null,
 	lifecycle: null,
 	keyRotationBlocker: null
@@ -135,6 +139,11 @@ class AuthStore {
 	vaultUnlocked = $derived<boolean>(this.#currentProfile().vaultUnlocked);
 	hasPersistent = $derived<boolean>(this.#currentProfile().hasPersistent);
 	recoveryEnabled = $derived<boolean | null>(this.#currentProfile().recoveryEnabled);
+	recoveryState = $derived.by<RecoveryState>(() => {
+		const p = this.#currentProfile();
+		if (p.recoveryEnabled !== null) return p.recoveryEnabled ? 'set' : 'unset';
+		return p.profileLoadFailed ? 'error' : 'unknown';
+	});
 	deletion = $derived<DeletionStatus | null>(this.#currentProfile().deletion);
 	lifecycle = $derived<LifecycleInfo | null>(this.#currentProfile().lifecycle);
 
@@ -404,6 +413,7 @@ class AuthStore {
 			this.applyMe(me);
 			return true;
 		} catch {
+			this.#mutateProfile(id, (p) => ({ ...p, profileLoadFailed: true }));
 			return false;
 		}
 	}
@@ -418,6 +428,7 @@ class AuthStore {
 			avatarPath: me.avatarPath || null,
 			defaultReplyAddressId: me.defaultReplyAddressId ?? null,
 			recoveryEnabled: me.recoveryEnabled ?? null,
+			profileLoadFailed: false,
 			deletion: me.deletion ?? null,
 			lifecycle: me.lifecycle ?? null,
 			keyRotationBlocker: me.keyRotationBlocker ?? null

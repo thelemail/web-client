@@ -109,9 +109,7 @@
 		open = !open;
 		if (open) {
 			view = 'main';
-			if (auth.accountId && twofactor.status === null && !twofactor.loading) {
-				void twofactor.load();
-			}
+			if (auth.accountId) twofactor.ensure(auth.accountId);
 		}
 	}
 

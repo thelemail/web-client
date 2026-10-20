@@ -58,9 +58,7 @@
 	]);
 
 	$effect(() => {
-		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
-			void twofactor.load();
-		}
+		if (auth.accountId) twofactor.ensure(auth.accountId);
 	});
 
 	const methods = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));

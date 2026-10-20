@@ -23,15 +23,16 @@ vi.mock('$core/api/auth', () => ({
 	revokeSession: vi.fn(),
 	revokeOtherSessions: vi.fn()
 }));
-vi.mock('$core/stores/auth.svelte', () => ({
-	auth: {
-		accountId: 'me',
-		recoveryEnabled: true,
-		sessionRotations: 0,
-		keyRotationBlockerFor: () => null,
-		adoptRotatedSession: vi.fn()
-	}
+const auth = vi.hoisted(() => ({
+	accountId: 'me',
+	recoveryEnabled: true as boolean | null,
+	recoveryState: 'set' as 'unknown' | 'error' | 'set' | 'unset',
+	sessionRotations: 0,
+	keyRotationBlockerFor: () => null,
+	adoptRotatedSession: vi.fn(),
+	loadProfile: vi.fn()
 }));
+vi.mock('$core/stores/auth.svelte', () => ({ auth }));
 vi.mock('$core/stores/accountKeys.svelte', () => ({
 	accountKeys: { current: null, history: [], authScheme: 'opaque', ready: vi.fn() }
 }));
@@ -60,14 +61,16 @@ function open() {
 }
 
 beforeEach(() => {
+	auth.recoveryState = 'set';
 	twofactor.status = status('Security key · Oct 19, 2026');
+	twofactor.phase = 'ready';
 	api.getTwoFactorStatus.mockResolvedValue(status('Desk YubiKey'));
 	api.webauthnRename.mockResolvedValue({ id: 'k1', name: 'Desk YubiKey', createdAt: at });
 });
 
 afterEach(() => {
 	cleanup();
-	twofactor.status = null;
+	twofactor.setAccount(null);
 	vi.clearAllMocks();
 });
 
@@ -97,5 +100,98 @@ describe('Security key rename', () => {
 		await fireEvent.input(document.querySelector('.cfd-input')!, { target: { value: '   ' } });
 		expect(button('Save')?.disabled).toBe(true);
 		expect(api.webauthnRename).not.toHaveBeenCalled();
+	});
+});
+
+describe('Security layout', () => {
+	it('groups every block under a heading', () => {
+		open();
+		const groups = [...document.querySelectorAll('section.sec-group')].map((g) => ({
+			heading: g.querySelector('h2')?.textContent,
+			cards: [...g.querySelectorAll('.scard-h h3, .cr-title')].map((h) => h.textContent?.trim())
+		}));
+		expect(groups.map((g) => g.heading)).toEqual(['Access', 'Encryption', 'Privacy & activity']);
+		expect(groups[0].cards.join('|')).toMatch(/Account recovery.*Sign-in.*Active sessions/);
+		expect(groups[1].cards.join('|')).toMatch(/Encryption keys.*Contact keys/);
+		expect(groups[2].cards.join('|')).toMatch(/Privacy.*Security log/);
+	});
+
+	it('names every button and switch', () => {
+		open();
+		for (const el of document.querySelectorAll('button, [role="switch"]')) {
+			const name = el.getAttribute('aria-label') ?? el.textContent?.trim();
+			expect(name, el.outerHTML).toBeTruthy();
+		}
+	});
+});
+
+describe('recovery status', () => {
+	it('shows the setup hero only when the server says recovery is off', () => {
+		auth.recoveryState = 'unset';
+		open();
+		expect(document.querySelector('.recovery-hero')).not.toBeNull();
+		expect(document.body.textContent).toContain('Not set up');
+	});
+
+	it('shows a compact row when recovery is set', () => {
+		open();
+		expect(document.querySelector('.recovery-hero')).toBeNull();
+		expect(button('Regenerate recovery phrase')).toBeTruthy();
+		expect(document.body.textContent).not.toContain('Not set up');
+	});
+
+	it('claims nothing while recovery status is unknown', () => {
+		auth.recoveryState = 'unknown';
+		open();
+		expect(document.querySelector('.recovery-hero')).toBeNull();
+		expect(document.body.textContent).not.toContain('Not set up');
+		expect(document.body.textContent).not.toContain('Action recommended');
+		expect(document.body.textContent).toContain('Checking account recovery');
+	});
+
+	it('offers a retry when recovery status failed to load', async () => {
+		auth.recoveryState = 'error';
+		open();
+		expect(document.body.textContent).not.toContain('Not set up');
+		expect(document.body.textContent).toContain('Couldn’t check whether account recovery is set up.');
+		await fireEvent.click(button('Try again')!);
+		expect(auth.loadProfile).toHaveBeenCalled();
+	});
+});
+
+describe('two-factor status', () => {
+	function badge() {
+		return [...document.querySelectorAll('.scard-h')]
+			.find((h) => h.textContent?.includes('Sign-in'))
+			?.querySelector('.badge')?.textContent?.trim();
+	}
+
+	it('says checking while the status loads', () => {
+		twofactor.status = null;
+		twofactor.phase = 'loading';
+		open();
+		expect(badge()).toBe('Checking');
+		expect(document.body.textContent).not.toContain('2FA off');
+		expect(api.getTwoFactorStatus).not.toHaveBeenCalled();
+	});
+
+	it('shows an error with retry and does not reload on its own', async () => {
+		twofactor.status = null;
+		twofactor.phase = 'error';
+		open();
+		expect(badge()).toBe('Status unknown');
+		expect(document.body.textContent).toContain('Couldn’t load your two-factor methods.');
+		await new Promise((r) => setTimeout(r, 20));
+		expect(api.getTwoFactorStatus).not.toHaveBeenCalled();
+
+		await fireEvent.click(button('Try again')!);
+		await vi.waitFor(() => expect(badge()).toBe('2FA on'));
+		expect(api.getTwoFactorStatus).toHaveBeenCalledTimes(1);
+	});
+
+	it('says 2FA off only when the server said so', () => {
+		twofactor.status = { enabled: false, totp: null, webauthnCredentials: [] } as unknown as TwoFactorStatus;
+		open();
+		expect(badge()).toBe('2FA off');
 	});
 });

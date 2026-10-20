@@ -114,9 +114,7 @@
 	const unlocked = $derived(grant !== '' && grantAction === action);
 
 	$effect(() => {
-		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
-			void twofactor.load(auth.accountId);
-		}
+		if (auth.accountId) twofactor.ensure(auth.accountId);
 	});
 
 	const existing = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));

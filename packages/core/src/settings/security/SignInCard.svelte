@@ -12,6 +12,7 @@
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import Plus from '@lucide/svelte/icons/plus';
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CardHead from '../CardHead.svelte';
 	import Badge from '../Badge.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
@@ -37,9 +38,7 @@
 	let { launch }: Props = $props();
 
 	$effect(() => {
-		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
-			void twofactor.load();
-		}
+		if (auth.accountId) twofactor.ensure(auth.accountId);
 	});
 
 	type FactorAction =
@@ -130,7 +129,6 @@
 				newCodes = res.backupCodes ?? [];
 			}
 			factorAction = null;
-			twofactor.invalidate();
 			void twofactor.load(accountId);
 			securityActivity.touch();
 		} catch (err) {
@@ -163,10 +161,16 @@
 <div class="scard flat">
 	<CardHead icon={KeyRound} title={m.settings_security_signin_title()}>
 		{#snippet right()}
-			{#if twofactor.enabled}
-				<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
+			{#if tfStatus}
+				{#if tfStatus.enabled}
+					<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
+				{:else}
+					<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
+				{/if}
+			{:else if twofactor.phase === 'error'}
+				<Badge kind="neutral">{m.settings_security_2fa_unknown()}</Badge>
 			{:else}
-				<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
+				<Badge kind="neutral">{m.settings_security_2fa_checking()}</Badge>
 			{/if}
 		{/snippet}
 	</CardHead>
@@ -183,114 +187,137 @@
 		<ShieldCheckIcon size={13} />{m.settings_security_2fa_methods()}
 		<span class="tfa-sub-note">{m.settings_security_2fa_methods_note()}</span>
 	</div>
-	{#each tfStatus?.webauthnCredentials ?? [] as cred (cred.id)}
-		<div class="tfa-row">
-			<span class="tfa-ic">
-				{#if cred.backupState}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
-			</span>
-			<div class="tfa-info">
-				<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
-				<div class="tfa-d">
-					{keyMeta(cred)}
-				</div>
-				{#if cred.userVerified === false}
-					<div class="tfa-d tfa-warn">
-						<TriangleAlert size={12} />{m.settings_security_key_no_pin()}
+	{#if twofactor.phase === 'error'}
+		<div class="setrow set-loaderr" role="alert">
+			<CircleAlert size={16} />
+			<p>{m.settings_security_2fa_load_failed()}</p>
+			<Button variant="secondary" size="sm" onclick={() => void twofactor.load(auth.accountId)}>
+				<RefreshCw />{m.common_retry()}
+			</Button>
+		</div>
+	{/if}
+	{#if tfStatus}
+		{#each tfStatus.webauthnCredentials as cred (cred.id)}
+			<div class="tfa-row">
+				<span class="tfa-ic">
+					{#if cred.backupState}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
+				</span>
+				<div class="tfa-info">
+					<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+					<div class="tfa-d">
+						{keyMeta(cred)}
 					</div>
-				{/if}
-			</div>
-			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'renameKey', id: cred.id, name: cred.name })}>
-					{m.settings_security_key_rename()}
-				</Button>
-				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'deleteKey', id: cred.id, name: cred.name })}>
-					{m.common_remove()}
-				</Button>
-			</div>
-		</div>
-	{/each}
-	{#if webauthnSupported()}
-		<div class="tfa-row off">
-			<span class="tfa-ic"><Fingerprint size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_this_device()}</div>
-				<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
-			</div>
-			<div class="tfa-act">
-				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
-					<Plus size={14} />{m.settings_security_setup()}
-				</Button>
-			</div>
-		</div>
-		<div class="tfa-row off">
-			<span class="tfa-ic"><Usb size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_key()}</div>
-				<div class="tfa-d">{m.settings_security_key_desc()}</div>
-			</div>
-			<div class="tfa-act">
-				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
-					<Plus size={14} />{m.settings_security_setup()}
-				</Button>
-			</div>
-		</div>
-	{/if}
-	{#if tfStatus?.totp?.active}
-		<div class="tfa-row">
-			<span class="tfa-ic"><Smartphone size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_totp()}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
-				<div class="tfa-d">
-					{m.settings_security_totp_meta({ date: fmtDate(tfStatus.totp.createdAt) })}
+					{#if cred.userVerified === false}
+						<div class="tfa-d tfa-warn">
+							<TriangleAlert size={12} />{m.settings_security_key_no_pin()}
+						</div>
+					{/if}
+				</div>
+				<div class="tfa-act">
+					<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'renameKey', id: cred.id, name: cred.name })}>
+						{m.settings_security_key_rename()}
+					</Button>
+					<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'deleteKey', id: cred.id, name: cred.name })}>
+						{m.common_remove()}
+					</Button>
 				</div>
 			</div>
-			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'disableTotp' })}>
-					{m.common_remove()}
-				</Button>
-			</div>
-		</div>
-	{:else}
-		<div class="tfa-row off">
-			<span class="tfa-ic"><Smartphone size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_totp()}</div>
-				<div class="tfa-d">{m.settings_security_totp_desc()}</div>
-			</div>
-			<div class="tfa-act">
-				<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
-					<Plus size={14} />{m.settings_security_setup()}
-				</Button>
-			</div>
-		</div>
-	{/if}
-	{#if tfStatus?.enabled}
-		<div class="tfa-row backup">
-			<span class="tfa-ic"><LifeBuoy size={18} /></span>
-			<div class="tfa-info">
-				<div class="tfa-t">{m.settings_security_backup_codes()}</div>
-				<div class="tfa-d">
-					{m.settings_security_backup_codes_meta({ count: tfStatus.backupCodes?.remaining ?? 0 })}
+		{/each}
+		{#if webauthnSupported()}
+			<div class="tfa-row off">
+				<span class="tfa-ic"><Fingerprint size={18} /></span>
+				<div class="tfa-info">
+					<div class="tfa-t">{m.settings_security_this_device()}</div>
+					<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
+				</div>
+				<div class="tfa-act">
+					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
+						<Plus size={14} />{m.settings_security_setup()}
+					</Button>
 				</div>
 			</div>
-			<div class="tfa-act">
-				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'regenCodes' })}>
-					<RefreshCw size={14} />{m.settings_security_backup_regen()}
-				</Button>
-			</div>
-		</div>
-		{#if tfStatus.backupCodes?.outdated}
-			<div class="card-note warn">
-				<TriangleAlert size={13} />
-				<span>{m.settings_security_backup_outdated()}</span>
+			<div class="tfa-row off">
+				<span class="tfa-ic"><Usb size={18} /></span>
+				<div class="tfa-info">
+					<div class="tfa-t">{m.settings_security_key()}</div>
+					<div class="tfa-d">{m.settings_security_key_desc()}</div>
+				</div>
+				<div class="tfa-act">
+					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
+						<Plus size={14} />{m.settings_security_setup()}
+					</Button>
+				</div>
 			</div>
 		{/if}
-	{:else if tfStatus}
-		<div class="card-note warn">
-			<TriangleAlert size={13} />
-			<span>
-				<Rich text={m.settings_security_2fa_off_note()} tags={{ link: turnOnLink }} />
-			</span>
+		{#if tfStatus?.totp?.active}
+			<div class="tfa-row">
+				<span class="tfa-ic"><Smartphone size={18} /></span>
+				<div class="tfa-info">
+					<div class="tfa-t">{m.settings_security_totp()}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+					<div class="tfa-d">
+						{m.settings_security_totp_meta({ date: fmtDate(tfStatus.totp.createdAt) })}
+					</div>
+				</div>
+				<div class="tfa-act">
+					<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'disableTotp' })}>
+						{m.common_remove()}
+					</Button>
+				</div>
+			</div>
+		{:else}
+			<div class="tfa-row off">
+				<span class="tfa-ic"><Smartphone size={18} /></span>
+				<div class="tfa-info">
+					<div class="tfa-t">{m.settings_security_totp()}</div>
+					<div class="tfa-d">{m.settings_security_totp_desc()}</div>
+				</div>
+				<div class="tfa-act">
+					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
+						<Plus size={14} />{m.settings_security_setup()}
+					</Button>
+				</div>
+			</div>
+		{/if}
+		{#if tfStatus?.enabled}
+			<div class="tfa-row backup">
+				<span class="tfa-ic"><LifeBuoy size={18} /></span>
+				<div class="tfa-info">
+					<div class="tfa-t">{m.settings_security_backup_codes()}</div>
+					<div class="tfa-d">
+						{m.settings_security_backup_codes_meta({ count: tfStatus.backupCodes?.remaining ?? 0 })}
+					</div>
+				</div>
+				<div class="tfa-act">
+					<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'regenCodes' })}>
+						<RefreshCw size={14} />{m.settings_security_backup_regen()}
+					</Button>
+				</div>
+			</div>
+			{#if tfStatus.backupCodes?.outdated}
+				<div class="card-note warn">
+					<TriangleAlert size={13} />
+					<span>{m.settings_security_backup_outdated()}</span>
+				</div>
+			{/if}
+		{:else}
+			<div class="card-note warn">
+				<TriangleAlert size={13} />
+				<span>
+					<Rich text={m.settings_security_2fa_off_note()} tags={{ link: turnOnLink }} />
+				</span>
+			</div>
+		{/if}
+	{:else if twofactor.phase !== 'error'}
+		<div class="set-skel" aria-busy="true">
+			<span class="sr-only">{m.settings_security_2fa_loading()}</span>
+			{#each [0, 1] as i (i)}
+				<div class="setrow" aria-hidden="true">
+					<div class="info">
+						<span class="sk-bar sk-t"></span>
+						<span class="sk-bar sk-d"></span>
+					</div>
+				</div>
+			{/each}
 		</div>
 	{/if}
 </div>

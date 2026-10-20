@@ -13,7 +13,7 @@ const authState = vi.hoisted(() => ({
 	email: 'ada@thelemail.com',
 	adoptRotatedSession: vi.fn()
 }));
-const tfState = vi.hoisted(() => ({ status: null as unknown, loading: false, load: vi.fn() }));
+const tfState = vi.hoisted(() => ({ status: null as unknown, phase: 'unknown', load: vi.fn(), ensure: vi.fn() }));
 
 vi.mock('$platform', () => ({ platform: {} }));
 vi.mock('$core/api/twofactor', () => api);

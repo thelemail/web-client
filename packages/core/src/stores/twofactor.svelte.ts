@@ -1,37 +1,42 @@
 import { getTwoFactorStatus } from '$core/api/twofactor';
 import type { TwoFactorStatus } from '$core/api/types';
-import { m } from '$paraglide/messages.js';
+
+export type TwoFactorPhase = 'unknown' | 'loading' | 'error' | 'ready';
 
 class TwoFactorStore {
 	status = $state<TwoFactorStatus | null>(null);
-	loading = $state(false);
-	error = $state<string | null>(null);
+	phase = $state<TwoFactorPhase>('unknown');
 
 	enabled = $derived(this.status?.enabled === true);
+	loading = $derived(this.phase === 'loading');
 
-	async load(accountId?: string): Promise<void> {
-		if (this.loading) return;
-		this.loading = true;
-		this.error = null;
+	#accountId: string | null = null;
+	#seq = 0;
+
+	ensure(accountId?: string | null): void {
+		if (this.phase === 'unknown') void this.load(accountId);
+	}
+
+	async load(accountId?: string | null): Promise<void> {
+		const seq = ++this.#seq;
+		this.phase = 'loading';
 		try {
-			this.status = await getTwoFactorStatus(accountId);
+			const status = await getTwoFactorStatus(accountId ?? this.#accountId ?? undefined);
+			if (seq !== this.#seq) return;
+			this.status = status;
+			this.phase = 'ready';
 		} catch (err) {
+			if (seq !== this.#seq) return;
 			console.warn('twofactor: status load failed', err);
-			this.error = err instanceof Error ? err.message : m.store_twofactor_load_failed();
-		} finally {
-			this.loading = false;
+			this.phase = 'error';
 		}
 	}
 
-	invalidate(): void {
-		this.status = null;
-	}
-
 	setAccount(accountId: string | null): void {
-		void accountId;
+		this.#accountId = accountId;
+		this.#seq++;
 		this.status = null;
-		this.error = null;
-		this.loading = false;
+		this.phase = 'unknown';
 	}
 }
 
