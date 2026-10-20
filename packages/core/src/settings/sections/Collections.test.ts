@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { orderTree, type CollectionNode } from '$core/mail/collections/tree';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const { mailCollections } = vi.hoisted(() => ({
 	mailCollections: {
@@ -152,5 +153,21 @@ describe('folders and labels settings', () => {
 		await waitFor(() =>
 			expect(mailCollections.remove).toHaveBeenCalledWith('empty', { kind: 'folder', folderId: 'h-misc' })
 		);
+	});
+
+	it('names its controls and keeps heading order, delete dialog included', async () => {
+		const { container, findByRole, getByRole } = await renderPage();
+		await fireEvent.click(getByRole('button', { name: 'New folder' }));
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
+
+		await fireEvent.click(container.querySelector<HTMLButtonElement>('button[aria-label="Actions for Empty"]')!);
+		await fireEvent.click(await findByRole('menuitem', { name: 'Delete folder…' }));
+		await fireEvent.click(getByRole('radio', { name: 'Another folder' }));
+		const dialog = getByRole('dialog');
+
+		expect(unnamedControls(dialog)).toEqual([]);
+		expect(headingJumps(dialog, 1)).toEqual([]);
 	});
 });

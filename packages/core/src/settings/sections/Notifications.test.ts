@@ -19,6 +19,7 @@ vi.mock('$core/calendar/reminders', () => ({
 import Notifications from './Notifications.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { settingsDraft } from '$core/stores/settingsDraft.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 let account = 0;
 
@@ -59,5 +60,12 @@ describe('notifications section', () => {
 			expect.objectContaining({ defaultReminderMinutes: 30, hidden: ['c1'] })
 		);
 		expect(settingsDraft.saveState).toBe('saved');
+	});
+
+	it('names its controls and keeps heading order under the page h1', () => {
+		const { container } = render(Notifications);
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });

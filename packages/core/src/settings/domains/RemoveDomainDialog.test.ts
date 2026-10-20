@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Workspace } from '$core/api/workspaces';
 import { customDomains } from '$core/stores/customDomains.svelte';
@@ -8,6 +8,8 @@ import { aliases } from '$core/stores/aliases.svelte';
 import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import RemoveDomainDialog from './RemoveDomainDialog.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 const api = vi.hoisted(() => ({
 	listWorkspaceDomains: vi.fn(),
@@ -100,5 +102,13 @@ describe('RemoveDomainDialog', () => {
 
 		expect(reloads.aliases).not.toHaveBeenCalled();
 		expect(reloads.workspace).not.toHaveBeenCalled();
+	});
+
+	it('is a named dialog with named controls', () => {
+		render(RemoveDomainDialog, { props: { domain, onClose: vi.fn(), onRemoved: vi.fn() } });
+		const dialog = screen.getByRole('dialog', { name: m.settings_domains_remove_title({ domain: 'acme.test' }) });
+
+		expect(unnamedControls(dialog)).toEqual([]);
+		expect(headingJumps(dialog, 1)).toEqual([]);
 	});
 });

@@ -6,6 +6,7 @@ import { workspaces } from '$core/stores/workspaces.svelte';
 import type { Plan, Subscription } from '$core/api/billing';
 import type { Workspace, WorkspaceInvite, WorkspaceMember } from '$core/api/workspaces';
 import { ApiCallError } from '$core/api/types';
+import { headingJumps, unnamedControls } from './a11yAssert';
 
 vi.mock('$platform', () => ({ platform: { returnOrigin: () => 'https://mail.test' } }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me' } }));
@@ -85,6 +86,17 @@ describe('MembershipCard', () => {
 
 		expect(document.querySelectorAll('.seat-dot')).toHaveLength(0);
 		expect(document.body.textContent).not.toMatch(/\b6\b/);
+	});
+
+	it('names every control and keeps heading order under the page h1', () => {
+		workspaces.members = [0, 1].map(member);
+		workspaces.invites = [
+			{ id: 'i1', workspaceId: 'w1', kind: 'family', email: 'new@temail.org', role: 'member', createdAt: at, expiresAt: at }
+		];
+		const { container } = render(MembershipCard, { props: { launch: () => {} } });
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });
 

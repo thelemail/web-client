@@ -7,6 +7,7 @@ import { addresses } from '$core/stores/addresses.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import CatchAllCard from './CatchAllCard.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const at = '2026-09-20T12:00:00Z';
 
@@ -97,5 +98,16 @@ describe('CatchAllCard', () => {
 
 		expect(text()).not.toContain(NEED_ADDRESS);
 		expect(document.querySelector('[role="switch"]')?.getAttribute('aria-checked')).toBe('true');
+	});
+
+	it('names its controls and keeps heading order under the page h1', () => {
+		customDomains.items = [domain('d1')];
+		addresses.items = [address('x1', 'd1')];
+		workspaces.workspace = workspace('x1');
+		const { container } = render(CatchAllCard);
+
+		expect(document.querySelector('[role="switch"]')).not.toBeNull();
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });

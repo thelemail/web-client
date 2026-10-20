@@ -338,9 +338,10 @@
 					</div>
 				{:else}
 					<div class="field">
-						<span class="field-lbl">{m.settings_ceremony_alias_who_uses()}</span>
+						<span class="field-lbl" id="alias-kind-lbl">{m.settings_ceremony_alias_who_uses()}</span>
 						<RadioGroup
 							class="choice-set two"
+							aria-labelledby="alias-kind-lbl"
 							value={shared ? 'shared' : 'single'}
 							onValueChange={(v) => (sharedPicked = v === 'shared')}
 						>
@@ -379,7 +380,7 @@
 	{:else if step === peopleStep}
 		<div class="cer-pane">
 			<div class="cer-lede">
-				<p>
+				<p id="alias-people-lbl">
 					{#if shared}
 						<Rich text={m.settings_ceremony_alias_people_shared({ email: full })} tags={{ addr: mono }} />
 					{:else}
@@ -408,6 +409,7 @@
 			{:else}
 				<RadioGroup
 					class="choice-set"
+					aria-labelledby="alias-people-lbl"
 					value={picked[0] ?? ''}
 					onValueChange={(v) => (picked = v ? [v] : [])}
 				>

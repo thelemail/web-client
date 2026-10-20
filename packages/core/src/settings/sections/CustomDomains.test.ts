@@ -11,6 +11,7 @@ import { customDomains } from '$core/stores/customDomains.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import CustomDomains from './CustomDomains.svelte';
 import type { CheckStage } from '$core/settings/domains/steps';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const api = vi.hoisted(() => ({
 	listWorkspaceDomains: vi.fn(),
@@ -260,5 +261,16 @@ describe('CustomDomains list', () => {
 		await vi.advanceTimersByTimeAsync(5 * MIN);
 
 		expect(api.listWorkspaceDomains).toHaveBeenCalledTimes(1);
+	});
+
+	it('names every control and keeps heading order under the page h1', () => {
+		const { container } = open(
+			withCheck(fresh, 'ownership', 'running'),
+			{ ...live, id: 'd2', domain: 'live.test' },
+			{ ...lapsing, id: 'd3', domain: 'lapsing.test' }
+		);
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });

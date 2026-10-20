@@ -5,6 +5,7 @@ import type { Subscription } from '$core/api/billing';
 import type { SigningDelegation } from '$core/api/delegations';
 import { billing } from '$core/stores/billing.svelte';
 import DelegationsCard from './DelegationsCard.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: {} }));
 const { listSigningDelegations } = vi.hoisted(() => ({
@@ -121,5 +122,16 @@ describe('DelegationsCard', () => {
 		expect(boundary.querySelector('.b-ok')).toBeNull();
 		expect(boundary.textContent).toContain('Expired Sep 21, 2026');
 		expect(revokeButton(boundary)).toBeUndefined();
+	});
+
+	it('names every control and keeps heading order under the page h1', async () => {
+		listSigningDelegations.mockResolvedValueOnce({
+			delegations: [delegation('a', 'Billing', '2099-09-21T12:00:00Z')]
+		});
+		const { container } = render(DelegationsCard, { props: { address: address('s3') } });
+		await screen.findByText('Billing');
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });

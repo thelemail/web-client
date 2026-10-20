@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import TwoFactorCeremony from './TwoFactorCeremony.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 const webauthn = vi.hoisted(() => ({ supported: true, platform: true }));
 
@@ -58,6 +60,16 @@ describe('TwoFactorCeremony', () => {
 		const titles = [...document.querySelectorAll('.method-opt .mo-t')].map((n) => n.textContent?.trim() ?? '');
 		expect(titles[0]).toMatch(/^This device/);
 		expect(titles[2]).toMatch(/^Authenticator app/);
+	});
+
+	it('is a named dialog with named controls and one current step', async () => {
+		Object.assign(webauthn, { supported: true, platform: true });
+		await selected();
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_twofa_title() });
+
+		expect(unnamedControls(dialog)).toEqual([]);
+		expect(headingJumps(dialog, 1)).toEqual([]);
+		expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
 	});
 });
 
@@ -120,5 +132,14 @@ describe('TwoFactorCeremony key names', () => {
 
 		expect(document.body.textContent).toContain('Give this key a name.');
 		expect(button(/Touch the key/)?.disabled).toBe(true);
+	});
+
+	it('keeps the key-name step named and on one current step', async () => {
+		await unlock('key');
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_twofa_add_key() });
+
+		expect(unnamedControls(dialog)).toEqual([]);
+		expect(headingJumps(dialog, 1)).toEqual([]);
+		expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
 	});
 });

@@ -16,6 +16,7 @@ import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import DomainWizard from './DomainWizard.svelte';
 import type { CheckStage, DomainStep } from './steps';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const api = vi.hoisted(() => ({
 	listWorkspaceDomains: vi.fn(),
@@ -484,5 +485,19 @@ describe('DomainWizard states', () => {
 
 		expect(text()).not.toContain('The last check did not find the DKIM records.');
 		expect(document.querySelector('.dw-note.warn')).toBeNull();
+	});
+
+	it.each<[CustomDomain, DomainStep]>([
+		[withCheck(fresh, 'ownership', 'running'), 'ownership'],
+		[owned, 'sending'],
+		[readyWithAddresses, 'recipients'],
+		[readyWithAddresses, 'routing'],
+		[live, 'done']
+	])('names every control and keeps heading order on step %#', (d, step) => {
+		workspaceAddresses.items = [address('bob@acme.test', 'd1')];
+		const { container } = open(d, step);
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });

@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import RecoveryCeremony from './RecoveryCeremony.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 const recovery = vi.hoisted(() => ({
 	prepareRecovery: vi.fn(),
@@ -53,5 +55,21 @@ describe('RecoveryCeremony close', () => {
 		await vi.waitFor(() => expect(saveBlob).toHaveBeenCalled());
 		await fireEvent.keyDown(document, { key: 'Escape' });
 		expect(onClose).toHaveBeenCalledTimes(1);
+	});
+
+	it('is a named dialog with named controls and one current step through the word quiz', async () => {
+		await toPhraseStep();
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_recovery_title() });
+		const check = () => {
+			expect(unnamedControls(dialog)).toEqual([]);
+			expect(headingJumps(dialog, 1)).toEqual([]);
+			expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
+		};
+
+		check();
+		await fireEvent.click(screen.getByRole('button', { name: /Reveal phrase/ }));
+		await fireEvent.click(screen.getByRole('button', { name: m.settings_ceremony_recovery_written_down() }));
+		expect(dialog.querySelectorAll('.quiz-row input').length).toBeGreaterThan(0);
+		check();
 	});
 });

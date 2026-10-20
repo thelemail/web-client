@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import AliasCeremony from './AliasCeremony.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { billing } from '$core/stores/billing.svelte';
@@ -12,6 +12,8 @@ import type { CustomDomain } from '$core/api/customDomains';
 import type { Subscription } from '$core/api/billing';
 import type { SharedAlias } from '$core/api/aliases';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 const keys = vi.hoisted(() => ({ createAliasKey: vi.fn() }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: keys }));
@@ -252,6 +254,26 @@ describe('AliasCeremony done screen', () => {
 		await create('shared');
 
 		expect(body()).toContain('Mail sent here reaches everyone on it.');
+	});
+
+	it('is a named dialog with named controls and one current step on each step', async () => {
+		customDomains.items = [domain('d1', 'acme.test', 'ready')];
+		open('d1');
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_alias_title_create() });
+		const check = () => {
+			expect(headingJumps(dialog, 1)).toEqual([]);
+			expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
+		};
+
+		check();
+		expect(unnamedControls(dialog)).toEqual([]);
+		await fireEvent.input(document.querySelector('#alias-name')!, { target: { value: 'Support' } });
+		await fireEvent.input(document.querySelector('#alias-local')!, { target: { value: 'support' } });
+		await fireEvent.click(document.querySelector('#alias-kind-shared')!);
+		await fireEvent.click(button('Continue')!);
+		check();
+		expect(dialog.querySelectorAll('[role="checkbox"]').length).toBeGreaterThan(0);
+		expect(unnamedControls(dialog)).toEqual([]);
 	});
 });
 
