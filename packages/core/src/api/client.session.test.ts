@@ -62,6 +62,19 @@ describe('apiFetch with a lost session', () => {
 	});
 });
 
+describe('apiFetch after the session was revoked elsewhere', () => {
+	it('tries one refresh, then surfaces the 401 without retrying', async () => {
+		transport.mockResolvedValue(new Response('{"code":"unauthorized"}', { status: 401 }));
+
+		const err = await apiFetch('/v1/messages/counts').catch((e) => e);
+
+		expect(onUnauthorized).toHaveBeenCalledTimes(1);
+		expect(onUnauthorized).toHaveBeenCalledWith(ACCOUNT);
+		expect(transport).toHaveBeenCalledTimes(1);
+		expect((err as ApiCallError).status).toBe(401);
+	});
+});
+
 describe('refreshSession', () => {
 	it('opts into rotation for the account it refreshes', async () => {
 		transport.mockResolvedValueOnce(new Response('{}', { status: 200 }));
