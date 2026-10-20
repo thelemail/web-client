@@ -157,3 +157,12 @@ describe('Account plan price', () => {
 		expect(document.querySelector('.plan-price')?.textContent).not.toMatch(/[€$]/);
 	});
 });
+
+describe('Account data export', () => {
+	it('links Download your data to the Export Tool', () => {
+		render(Account, { props: { launch: () => {} } });
+		const link = [...document.querySelectorAll('a')].find((a) => a.textContent?.includes('Get the Export Tool'));
+		expect(document.body.textContent).toContain('Download your data');
+		expect(link?.getAttribute('href')).toBe('https://github.com/thelemail/export-tool');
+	});
+});

@@ -35,7 +35,7 @@ vi.mock('$app/state', () => ({
 vi.mock('$core/stores/auth.svelte', () => ({ auth }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts }));
 vi.mock('$core/stores/twofactor.svelte', () => ({
-	twofactor: { status: {}, loading: false, load: vi.fn() }
+	twofactor: { status: {}, phase: 'ready', load: vi.fn(), ensure: vi.fn() }
 }));
 vi.mock('$core/stores/unread.svelte', () => ({ unread: { countsFor: () => null } }));
 vi.mock('$core/handoff', () => ({ openCalendar: vi.fn() }));

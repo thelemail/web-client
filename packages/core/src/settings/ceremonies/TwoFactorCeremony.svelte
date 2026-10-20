@@ -13,6 +13,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from '../CeremonyShell.svelte';
+	import SecretLeaveConfirm from '../SecretLeaveConfirm.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import { defaultKeyName, KEY_NAME_MAX_LENGTH } from '../keyName';
 	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$core/api/twofactor';
@@ -114,9 +115,7 @@
 	const unlocked = $derived(grant !== '' && grantAction === action);
 
 	$effect(() => {
-		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
-			void twofactor.load(auth.accountId);
-		}
+		if (auth.accountId) twofactor.ensure(auth.accountId);
 	});
 
 	const existing = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
@@ -367,18 +366,29 @@
 		}
 	}
 
+	let copyFailed = $state(false);
+	let leaving = $state(false);
+
+	function requestClose() {
+		if (step === 2 && !saved) leaving = true;
+		else onClose();
+	}
+
 	async function copyCodes() {
 		try {
 			await navigator.clipboard.writeText(backupCodes.join('\n'));
 			saved = true;
+			copyFailed = false;
 		} catch (err) {
 			console.warn('twofa: clipboard write failed', err);
+			copyFailed = true;
 		}
 	}
 
 	async function downloadCodes() {
 		await platform.saveBlob(backupCodesFile(backupCodes, auth.email ?? ''), 'thelemail-backup-codes.txt');
 		saved = true;
+		copyFailed = false;
 	}
 
 	function finish() {
@@ -394,7 +404,7 @@
 	title={initialMethod ? addTitle(initialMethod) : m.settings_ceremony_twofa_title()}
 	{steps}
 	{step}
-	{onClose}
+	onClose={requestClose}
 >
 	{#if step === 0}
 		<div class="cer-pane">
@@ -638,6 +648,9 @@
 				</Button>
 				{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_ceremony_twofa_saved()}</span>{/if}
 			</div>
+			{#if copyFailed}
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{m.settings_secret_copy_failed()}</span></span>
+			{/if}
 		</div>
 	{:else}
 		<DoneScreen
@@ -700,6 +713,10 @@
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#if leaving}
+	<SecretLeaveConfirm desc={m.settings_secret_leave_twofa_codes()} onStay={() => (leaving = false)} onLeave={onClose} />
+{/if}
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 

@@ -14,6 +14,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from '../CeremonyShell.svelte';
+	import SecretLeaveConfirm from '../SecretLeaveConfirm.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import {
@@ -102,13 +103,23 @@
 		}
 	}
 
+	let copyFailed = $state(false);
+	let leaving = $state(false);
+
+	function requestClose() {
+		if (setup && step === 1 && revealed && !saved) leaving = true;
+		else onClose();
+	}
+
 	async function copyPhrase() {
 		if (!setup) return;
 		try {
 			await navigator.clipboard.writeText(setup.phrase.join(' '));
 			saved = true;
+			copyFailed = false;
 		} catch (err) {
 			console.warn('recovery: clipboard write failed', err);
+			copyFailed = true;
 		}
 	}
 
@@ -116,6 +127,7 @@
 		if (!setup) return;
 		await platform.saveBlob(recoveryKitBlob(setup.phrase, auth.email ?? ''), RECOVERY_KIT_FILENAME);
 		saved = true;
+		copyFailed = false;
 	}
 
 	async function confirmAndStore() {
@@ -148,7 +160,7 @@
 	title={m.settings_ceremony_recovery_title()}
 	{steps}
 	{step}
-	{onClose}
+	onClose={requestClose}
 >
 	{#if step === 0}
 		<div class="cer-pane">
@@ -208,6 +220,9 @@
 				</Button>
 				{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_ceremony_recovery_saved()}</span>{/if}
 			</div>
+			{#if copyFailed}
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{m.settings_secret_copy_failed_phrase()}</span></span>
+			{/if}
 		</div>
 	{:else if step === 2}
 		<div class="cer-pane">
@@ -287,5 +302,9 @@
 		{/if}
 	{/snippet}
 </CeremonyShell>
+
+{#if leaving}
+	<SecretLeaveConfirm desc={m.settings_secret_leave_recovery()} onStay={() => (leaving = false)} onLeave={onClose} />
+{/if}
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}

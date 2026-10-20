@@ -5,7 +5,9 @@
 	import Copy from '@lucide/svelte/icons/copy';
 	import Download from '@lucide/svelte/icons/download';
 	import Check from '@lucide/svelte/icons/check';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from './CeremonyShell.svelte';
+	import SecretLeaveConfirm from './SecretLeaveConfirm.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { backupCodesFile } from '$core/auth/backup-codes';
@@ -18,19 +20,29 @@
 	let { codes, onClose }: Props = $props();
 
 	let saved = $state(false);
+	let copyFailed = $state(false);
+	let leaving = $state(false);
+
+	function requestClose() {
+		if (saved) onClose();
+		else leaving = true;
+	}
 
 	async function copyCodes() {
 		try {
 			await navigator.clipboard.writeText(codes.join('\n'));
 			saved = true;
+			copyFailed = false;
 		} catch (err) {
 			console.warn('twofa: clipboard write failed', err);
+			copyFailed = true;
 		}
 	}
 
 	async function downloadCodes() {
 		await platform.saveBlob(backupCodesFile(codes, auth.email ?? ''), 'thelemail-backup-codes.txt');
 		saved = true;
+		copyFailed = false;
 	}
 </script>
 
@@ -38,7 +50,7 @@
 	icon={ShieldCheck}
 	eyebrow={m.settings_security_eyebrow()}
 	title={m.settings_security_backup_new_title()}
-	{onClose}
+	onClose={requestClose}
 >
 	<div class="cer-pane">
 		<div class="cer-instruct">
@@ -61,6 +73,9 @@
 			</Button>
 			{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_security_backup_saved()}</span>{/if}
 		</div>
+		{#if copyFailed}
+			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{m.settings_secret_copy_failed()}</div>
+		{/if}
 	</div>
 
 	{#snippet footer()}
@@ -69,3 +84,7 @@
 		</Button>
 	{/snippet}
 </CeremonyShell>
+
+{#if leaving}
+	<SecretLeaveConfirm desc={m.settings_secret_leave_backup_codes()} onStay={() => (leaving = false)} onLeave={onClose} />
+{/if}

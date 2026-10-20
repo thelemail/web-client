@@ -2,9 +2,13 @@
 	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
 	import Copy from '@lucide/svelte/icons/copy';
 	import Check from '@lucide/svelte/icons/check';
+	import CopyBtn from './CopyBtn.svelte';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import UserRound from '@lucide/svelte/icons/user-round';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Info from '@lucide/svelte/icons/info';
+	import X from '@lucide/svelte/icons/x';
 	import { m } from '$paraglide/messages.js';
 	import type { AccountMember } from './types';
 	import { memberRoleLabel } from './memberRole';
@@ -17,6 +21,8 @@
 		| { kind: 'revoke' }
 		| { kind: 'resend' };
 
+	export type MemberRowFeedback = { kind: 'error' | 'notice'; text: string; link?: string };
+
 	interface Props {
 		m: AccountMember;
 		canPromote?: boolean;
@@ -25,7 +31,9 @@
 		canRevoke?: boolean;
 		canResend?: boolean;
 		busy?: boolean;
-		onAction?: (a: MemberRowAction) => void | Promise<void>;
+		feedback?: MemberRowFeedback | null;
+		onDismiss?: () => void;
+		onAction?: (a: MemberRowAction) => boolean | Promise<boolean>;
 	}
 
 	let {
@@ -36,12 +44,13 @@
 		canRevoke = false,
 		canResend = false,
 		busy = false,
+		feedback = null,
+		onDismiss,
 		onAction
 	}: Props = $props();
 
 	let menuOpen = $state(false);
 	let mode = $state<'idle' | 'confirm-remove' | 'confirm-revoke'>('idle');
-	let copied = $state(false);
 
 	const hasActions = $derived(
 		Boolean(onAction) &&
@@ -57,14 +66,7 @@
 	async function resend() {
 		if (!canResend || !onAction) return;
 		menuOpen = false;
-		try {
-			await onAction({ kind: 'resend' });
-			copied = true;
-			setTimeout(() => (copied = false), 1500);
-		} catch {
-			copied = false;
-		}
-		menuOpen = false;
+		await onAction({ kind: 'resend' });
 	}
 
 	function startRemove() {
@@ -129,11 +131,7 @@
 					<div class="mbr-menu" role="menu">
 						{#if canResend}
 							<button type="button" class="mbr-menu-item" onclick={resend}>
-								{#if copied}
-									<Check size={14} strokeWidth={1.75} />{m.settings_member_link_copied()}
-								{:else}
-									<Copy size={14} strokeWidth={1.75} />{m.settings_member_resend()}
-								{/if}
+								<Copy size={14} strokeWidth={1.75} />{m.settings_member_resend()}
 							</button>
 						{/if}
 						{#if canPromote}
@@ -170,6 +168,22 @@
 		</div>
 	{/if}
 </div>
+{#if feedback}
+	<div class="mbr-feedback" class:err={feedback.kind === 'error'} role={feedback.kind === 'error' ? 'alert' : 'status'}>
+		{#if feedback.kind === 'error'}<CircleAlert size={14} />{:else if feedback.link}<Info size={14} />{:else}<Check size={14} />{/if}
+		<div class="mbr-fb-body">
+			<span>{feedback.text}</span>
+			{#if feedback.link}
+				<span class="mbr-fb-link"><span class="mono">{feedback.link}</span><CopyBtn text={feedback.link} small /></span>
+			{/if}
+		</div>
+		{#if onDismiss}
+			<button type="button" class="mbr-fb-x" aria-label={m.settings_member_dismiss()} onclick={onDismiss}>
+				<X size={14} />
+			</button>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	.mbr-actions {
@@ -228,6 +242,67 @@
 	}
 	.mbr-menu-item.danger {
 		color: var(--danger-700);
+	}
+	.mbr-feedback {
+		display: flex;
+		align-items: flex-start;
+		gap: 9px;
+		padding: 10px 18px;
+		border-bottom: 1px solid var(--border);
+		background: var(--paper-50);
+		font-size: 12.5px;
+		line-height: 1.5;
+		color: var(--ink-700);
+	}
+	.mbr-feedback :global(svg) {
+		flex: 0 0 auto;
+		margin-top: 2px;
+		color: var(--success-700);
+	}
+	.mbr-feedback.err {
+		background: color-mix(in oklab, var(--danger-100) 45%, transparent);
+		color: var(--danger-700);
+	}
+	.mbr-feedback.err :global(svg) {
+		color: var(--danger-500);
+	}
+	.mbr-fb-body {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.mbr-fb-link {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+	}
+	.mbr-fb-link .mono {
+		font-family: var(--font-mono);
+		font-size: 12px;
+		overflow-wrap: anywhere;
+		user-select: all;
+	}
+	.mbr-fb-x {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 24px;
+		height: 24px;
+		border: none;
+		border-radius: var(--radius-control-compact);
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+	}
+	.mbr-fb-x:hover {
+		background: var(--paper-200);
+	}
+	.mbr-fb-x :global(svg) {
+		margin: 0;
+		color: inherit;
 	}
 	.mbr-confirm {
 		font-size: 13px;

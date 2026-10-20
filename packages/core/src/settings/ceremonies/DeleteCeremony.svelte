@@ -27,6 +27,8 @@
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
+	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import { EXPORT_TOOL_URL } from '../exportTool';
 
 	interface Props {
 		onClose: () => void;
@@ -58,9 +60,7 @@
 	]);
 
 	$effect(() => {
-		if (auth.accountId && twofactor.status === null && !twofactor.loading) {
-			void twofactor.load();
-		}
+		if (auth.accountId) twofactor.ensure(auth.accountId);
 	});
 
 	const methods = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
@@ -221,7 +221,9 @@
 			<div class="export-nudge">
 				<Download size={17} />
 				<div><Rich text={m.settings_ceremony_delete_export_nudge()} tags={{ b: bold }} /></div>
-				<Button variant="secondary" size="sm">{m.settings_ceremony_delete_export_archive()}</Button>
+				<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
+					{m.settings_ceremony_delete_export_archive()}<ExternalLink size={14} />
+				</Button>
 			</div>
 		</div>
 	{:else if step === 1}

@@ -7,6 +7,7 @@ import { workspaces } from '$core/stores/workspaces.svelte';
 import type { CreateWorkspaceInviteResult, Workspace, WorkspaceInvite } from '$core/api/workspaces';
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Subscription } from '$core/api/billing';
+import { ApiCallError } from '$core/api/types';
 
 vi.mock('$platform', () => ({ platform: { returnOrigin: () => 'https://mail.test' } }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me' } }));
@@ -95,5 +96,20 @@ describe('AddMemberCeremony', () => {
 		expect(document.body.textContent).toContain('Invitation created');
 		expect(document.body.textContent).toContain('camille@acme.test is set up once they accept.');
 		expect(document.body.textContent).toContain('https://mail.test/invite/tok');
+	});
+
+	it('shows translated copy instead of the server message when inviting fails', async () => {
+		vi.spyOn(workspaces, 'invite').mockRejectedValue(
+			new ApiCallError(409, { error: { code: 'conflict', message: 'that address already has an invitation' } }, 'that address already has an invitation')
+		);
+		await typeLocal('camille');
+		await fireEvent.click(button('Add member')!);
+
+		await vi.waitFor(() =>
+			expect(document.querySelector('[role="alert"]')?.textContent).toContain(
+				'That address already has an invitation, or this workspace can’t take more right now.'
+			)
+		);
+		expect(document.body.textContent).not.toContain('that address already has an invitation');
 	});
 });

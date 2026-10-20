@@ -7,6 +7,7 @@
 		placeholder?: string;
 		type?: 'text' | 'email' | 'password' | 'date';
 		disabled?: boolean;
+		id?: string;
 	}
 
 	let {
@@ -16,13 +17,15 @@
 		w,
 		placeholder,
 		type = 'text',
-		disabled = false
+		disabled = false,
+		id
 	}: Props = $props();
 
 	const classes = $derived(['tin', mono && 'mono', w && 'w-' + w].filter(Boolean).join(' '));
 </script>
 
 <input
+	{id}
 	class={classes}
 	{type}
 	{value}

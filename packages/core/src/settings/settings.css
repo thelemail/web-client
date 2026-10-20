@@ -87,6 +87,11 @@
 .settings-app .sec:last-child { margin-bottom: 0; }
 .settings-app .sec-h { margin-bottom: 20px; }
 .settings-app .sec-h p { font-size: 13.5px; color: var(--fg-muted); margin: 0; line-height: 1.55; max-width: 64ch; }
+.settings-app .sec-group { display: flex; flex-direction: column; gap: 16px; }
+.settings-app .sec-group + .sec-group { margin-top: 36px; }
+.settings-app .sec-group > .scard + .scard,
+.settings-app .sec-group > .recovery-hero { margin: 0; }
+.settings-app .sec-group-h { font-size: 15px; font-weight: 600; color: var(--fg-strong); margin: 0 0 -4px; letter-spacing: -.005em; }
 
 .settings-app .scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: var(--shadow-xs); overflow: hidden; }
 .settings-app .scard + .scard { margin-top: 16px; }
@@ -421,6 +426,7 @@
 .settings-app .ceremony-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
 .settings-app .ceremony-row + .ceremony-row { border-top: 1px solid var(--border); }
 .settings-app .cer-rows.tight .ceremony-row { border-top: 1px solid var(--border); }
+.settings-app .cer-rows.tight + .setrow { border-top: 1px solid var(--border); }
 .settings-app .cr-ic { width: 40px; height: 40px; border-radius: var(--radius-control); background: var(--pine-50); color: var(--pine-600); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .settings-app .ceremony-row.tone-danger .cr-ic { background: var(--danger-100); color: var(--danger-700); }
 .settings-app .cr-body { flex: 1; min-width: 0; }

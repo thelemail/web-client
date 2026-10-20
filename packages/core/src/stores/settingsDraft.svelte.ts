@@ -384,10 +384,7 @@ class SettingsDraftStore {
 
 	complete = async (kind: CeremonyKind): Promise<void> => {
 		if (kind === 'recovery') void auth.loadProfile();
-		if (kind === 'twofa') {
-			twofactor.invalidate();
-			void twofactor.load();
-		}
+		if (kind === 'twofa') void twofactor.load();
 		let msg = CEREMONY_MESSAGES[kind]();
 		if (kind === 'member') {
 			msg =
