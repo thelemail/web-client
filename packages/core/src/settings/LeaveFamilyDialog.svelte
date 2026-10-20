@@ -7,6 +7,7 @@
 	import UserRound from '@lucide/svelte/icons/user-round';
 
 	import { m } from '$paraglide/messages.js';
+	import { workspaceErrorText } from './member-errors';
 	import CeremonyShell from './CeremonyShell.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -34,7 +35,7 @@
 			onClose();
 		} catch (err) {
 			if (isReauthenticationRequired(err)) return;
-			error = err instanceof Error ? err.message : m.settings_family_leave_failed();
+			error = workspaceErrorText(err, m.settings_family_leave_failed);
 		} finally {
 			busy = false;
 		}
@@ -62,7 +63,7 @@
 		</ul>
 
 		{#if error}
-			<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
 		{/if}
 	</div>
 

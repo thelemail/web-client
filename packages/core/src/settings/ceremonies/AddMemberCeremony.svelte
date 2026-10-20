@@ -26,6 +26,7 @@
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
+	import { workspaceErrorText } from '../member-errors';
 
 	interface Props {
 		onClose: () => void;
@@ -131,7 +132,9 @@
 			invitedAddress = result.invite.email;
 			step = 1;
 		} catch (err) {
-			submitError = err instanceof Error ? err.message : m.settings_ceremony_member_error();
+			submitError = workspaceErrorText(err, m.settings_ceremony_member_error, {
+				conflict: m.settings_member_err_invite_conflict
+			});
 		} finally {
 			submitting = false;
 		}
@@ -233,7 +236,7 @@
 			</div>
 
 			{#if submitError}
-				<div class="field-hint bad" style="margin-top:8px">
+				<div class="field-hint bad" role="alert" style="margin-top:8px">
 					<CircleAlert size={13} />{submitError}
 				</div>
 			{/if}

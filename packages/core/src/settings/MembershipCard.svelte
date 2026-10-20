@@ -11,7 +11,9 @@
 	import Rich from '$core/i18n/Rich.svelte';
 	import Badge from './Badge.svelte';
 	import CardHead from './CardHead.svelte';
-	import MemberRow from './MemberRow.svelte';
+	import MemberRow, { type MemberRowAction, type MemberRowFeedback } from './MemberRow.svelte';
+	import { memberActionError } from './member-errors';
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import SeatMeter from './SeatMeter.svelte';
 	import type { CeremonyKind } from './data';
 	import type { AccountMember } from './types';
@@ -122,6 +124,7 @@
 	let busyId = $state<string | null>(null);
 	let leaving = $state(false);
 	let removing = $state<{ accountId: string; name: string; email: string } | null>(null);
+	let feedback = $state<(MemberRowFeedback & { addr: string }) | null>(null);
 
 	function inviteLinkFor(token: string): string {
 		return `${platform.returnOrigin().replace(/\/$/, '')}/invite/${token}`;
@@ -135,30 +138,48 @@
 		return workspaces.invites.find((wm) => wm.email === addr) ?? null;
 	}
 
-	async function handleAction(
-		p: AccountMember,
-		action: { kind: 'promote' | 'demote' | 'remove' | 'revoke' | 'resend' }
-	) {
+	function fail(p: AccountMember, action: MemberRowAction, err: unknown) {
+		if (isReauthenticationRequired(err)) return;
+		feedback = { addr: p.addr, kind: 'error', text: memberActionError(err, action.kind, p.name) };
+	}
+
+	async function copyInviteLink(p: AccountMember, link: string): Promise<boolean> {
+		try {
+			await navigator.clipboard.writeText(link);
+			return true;
+		} catch {
+			feedback = { addr: p.addr, kind: 'notice', text: m.settings_member_resend_copy_failed(), link };
+			return false;
+		}
+	}
+
+	async function handleAction(p: AccountMember, action: MemberRowAction): Promise<boolean> {
+		feedback = null;
 		const inv = lookupInviteByEmail(p.addr);
 		if (inv && (action.kind === 'revoke' || action.kind === 'resend')) {
 			busyId = inv.id;
 			try {
 				if (action.kind === 'revoke') {
 					await workspaces.revokeInvite(inv.id);
-				} else {
-					const result = await workspaces.resendInvite(inv.id);
-					await navigator.clipboard.writeText(inviteLinkFor(result.token));
+					return true;
 				}
+				const result = await workspaces.resendInvite(inv.id);
+				const link = inviteLinkFor(result.token);
+				if (!(await copyInviteLink(p, link))) return false;
+				feedback = { addr: p.addr, kind: 'notice', text: m.settings_member_link_copied() };
+				return true;
+			} catch (err) {
+				fail(p, action, err);
+				return false;
 			} finally {
 				busyId = null;
 			}
-			return;
 		}
 		const member = lookupMemberByEmail(p.addr);
-		if (!member) return;
+		if (!member) return false;
 		if (action.kind === 'remove' && isFreeFamily) {
 			removing = { accountId: member.accountId, name: p.name, email: p.addr };
-			return;
+			return true;
 		}
 		busyId = member.accountId;
 		try {
@@ -169,6 +190,10 @@
 			} else if (action.kind === 'demote') {
 				await workspaces.changeRole(member.accountId, 'member');
 			}
+			return true;
+		} catch (err) {
+			fail(p, action, err);
+			return false;
 		} finally {
 			busyId = null;
 		}
@@ -228,6 +253,8 @@
 			canRevoke={rp.canRevoke}
 			canResend={rp.canResend}
 			busy={rp.busy}
+			feedback={feedback?.addr === p.addr ? feedback : null}
+			onDismiss={() => (feedback = null)}
 			onAction={(a) => handleAction(p, a)}
 		/>
 	{/each}
@@ -241,6 +268,8 @@
 			canRevoke={rp.canRevoke}
 			canResend={rp.canResend}
 			busy={rp.busy}
+			feedback={feedback?.addr === p.addr ? feedback : null}
+			onDismiss={() => (feedback = null)}
 			onAction={(a) => handleAction(p, a)}
 		/>
 	{/each}

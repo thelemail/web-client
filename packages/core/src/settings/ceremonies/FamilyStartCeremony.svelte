@@ -10,6 +10,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { formatBytes } from '$core/lifecycle/downgrade';
 	import { m } from '$paraglide/messages.js';
+	import { workspaceErrorText } from '../member-errors';
 
 	interface Props {
 		onClose: () => void;
@@ -48,7 +49,7 @@
 			onComplete('family');
 			onClose();
 		} catch (err) {
-			error = err instanceof Error ? err.message : m.settings_ceremony_family_start_error();
+			error = workspaceErrorText(err, m.settings_ceremony_family_start_error);
 		} finally {
 			busy = false;
 		}
@@ -81,7 +82,7 @@
 		</div>
 
 		{#if error}
-			<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
 		{/if}
 
 		{#if freeFamily?.maxSeats}
