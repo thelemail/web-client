@@ -100,6 +100,42 @@ describe('MembershipCard', () => {
 	});
 });
 
+describe('MembershipCard roles', () => {
+	function actions(addr: string): string[] {
+		const r = [...document.querySelectorAll('.mbr-row')].find((x) => x.textContent?.includes(addr)) as HTMLElement;
+		return [...r.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') ?? b.textContent?.trim() ?? '');
+	}
+
+	async function menuItems(addr: string): Promise<string[]> {
+		const r = [...document.querySelectorAll('.mbr-row')].find((x) => x.textContent?.includes(addr)) as HTMLElement;
+		await fireEvent.click(within(r).getByRole('button', { name: 'Actions' }));
+		return [...document.querySelectorAll('[role="menu"] button, .mbr-menu button')].map((b) => b.textContent?.trim() ?? '');
+	}
+
+	it('lets the owner change roles', async () => {
+		workspaces.workspace = { ...workspaces.workspace!, type: 'business' };
+		workspaces.members = [0, 1].map(member);
+		render(MembershipCard, { props: { launch: () => {} } });
+
+		expect((await menuItems('p1@temail.org')).join('|')).toMatch(/Make admin/);
+	});
+
+	it('lets an admin remove members but not change roles', async () => {
+		workspaces.workspace = { ...workspaces.workspace!, type: 'business', ownerAccountId: 'boss' };
+		workspaces.members = [
+			{ ...member(1), accountId: 'boss', email: 'boss@acme.test', role: 'owner' },
+			{ ...member(0), role: 'admin' },
+			member(2)
+		];
+		render(MembershipCard, { props: { launch: () => {} } });
+
+		const items = (await menuItems('p2@temail.org')).join('|');
+		expect(items).not.toMatch(/Make admin|Make member/);
+		expect(items).toMatch(/Remove/);
+		expect(actions('boss@acme.test')).not.toContain('Actions');
+	});
+});
+
 describe('MembershipCard action errors', () => {
 	const invite: WorkspaceInvite = {
 		id: 'i1',

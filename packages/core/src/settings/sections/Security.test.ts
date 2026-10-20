@@ -63,7 +63,7 @@ function status(name: string): TwoFactorStatus {
 	return {
 		enabled: true,
 		totp: null,
-		webauthnCredentials: [{ id: 'k1', name, createdAt: at, backupState: false, userVerified: true }]
+		webauthnCredentials: [{ id: 'k1', name, createdAt: at, kind: 'security_key', backupState: false, userVerified: true }]
 	} as unknown as TwoFactorStatus;
 }
 
@@ -119,6 +119,25 @@ describe('Security key rename', () => {
 		await fireEvent.input(document.querySelector('.cfd-input')!, { target: { value: '   ' } });
 		expect(button('Save')?.disabled).toBe(true);
 		expect(api.webauthnRename).not.toHaveBeenCalled();
+	});
+});
+
+describe('Security key list', () => {
+	it('picks the icon from the authenticator kind, not from sync state', () => {
+		twofactor.status = {
+			enabled: true,
+			totp: null,
+			webauthnCredentials: [
+				{ id: 'p1', name: 'Windows Hello', createdAt: at, kind: 'platform', backupState: false, userVerified: true },
+				{ id: 'k1', name: 'Desk YubiKey', createdAt: at, kind: 'security_key', backupState: false, userVerified: false }
+			]
+		} as unknown as TwoFactorStatus;
+		open();
+		const rows = [...document.querySelectorAll('.tfa-row:not(.off)')].slice(0, 2);
+		expect(rows[0].querySelector('.tfa-ic svg')?.getAttribute('class')).toContain('lucide-fingerprint');
+		expect(rows[1].querySelector('.tfa-ic svg')?.getAttribute('class')).toContain('lucide-usb');
+		expect(rows[0].textContent).not.toContain('synced passkey');
+		expect(rows[1].textContent).toContain("This key doesn't ask for a PIN");
 	});
 });
 

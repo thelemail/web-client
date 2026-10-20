@@ -180,7 +180,7 @@
 	);
 
 	function identityLabel(name: string | null | undefined, addr: string): string {
-		if (name && name.trim()) return `${name.trim()} — ${addr}`;
+		if (name && name.trim()) return `${name.trim()} <${addr}>`;
 		return addr;
 	}
 
@@ -457,6 +457,8 @@
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
+				name={sigIdentity.shared ? sigIdentity.name : sigIdentity.name || auth.fullName}
+				email={sigIdentity.email}
 				mode={signatureMode}
 				source={signatureSource}
 				bodyHtml={signatureBodyHtml}

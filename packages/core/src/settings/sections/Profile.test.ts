@@ -107,6 +107,7 @@ describe('profile header', () => {
 		setWorkspace('personal', 'owner');
 		const { container } = renderProfile();
 		expect(container.textContent).not.toMatch(verifiedPattern);
+		expect(container.textContent).not.toMatch(/your domain/i);
 		expect(container.querySelector('.pf-tags')).toBeNull();
 	});
 

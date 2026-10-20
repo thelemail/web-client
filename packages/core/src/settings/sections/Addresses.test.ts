@@ -9,6 +9,8 @@ import { billing } from '$core/stores/billing.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
 import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
+import { workspaces } from '$core/stores/workspaces.svelte';
+import type { Workspace } from '$core/api/workspaces';
 import Addresses from './Addresses.svelte';
 
 vi.mock('$core/api/auth', async (importOriginal) => ({
@@ -102,6 +104,7 @@ afterEach(() => {
 	customDomains.clear();
 	billing.subscription = null;
 	perms.manage = false;
+	workspaces.workspace = null;
 });
 
 describe('Addresses', () => {
@@ -181,6 +184,16 @@ describe('Addresses', () => {
 		const shared = rowOf('support@acme.co.uk');
 		expect(shared.querySelector('.addr-used-tx')?.textContent).toBe('You and 1 other');
 		expect(shared.querySelectorAll('.avstack > *')).toHaveLength(2);
+	});
+
+	it.each([
+		['shows', 'me'],
+		['hides', 'boss']
+	])('%s the catch-all card when the owner is %s', (verb, owner) => {
+		perms.manage = true;
+		workspaces.workspace = { id: 'w1', ownerAccountId: owner, name: 'Acme', type: 'business' } as Workspace;
+		render(Addresses, { props: { launch: () => {} } });
+		expect(document.querySelector('.addr-catchall') !== null).toBe(verb === 'shows');
 	});
 
 	it('tells a free family manager only about the shared alias', () => {

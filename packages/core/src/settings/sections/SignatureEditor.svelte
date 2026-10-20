@@ -34,6 +34,8 @@
 
 	interface Props {
 		addressId: string;
+		name?: string | null;
+		email: string;
 		mode: SignatureMode;
 		source: string;
 		bodyHtml: string;
@@ -41,7 +43,7 @@
 		onChange: (next: { mode: SignatureMode; source: string; bodyHtml: string }) => void;
 	}
 
-	let { addressId, mode, source, bodyHtml, locked = false, onChange }: Props = $props();
+	let { addressId, name = null, email, mode, source, bodyHtml, locked = false, onChange }: Props = $props();
 
 	let mountEl: HTMLDivElement | undefined = $state();
 	let editor: Editor | null = $state(null);
@@ -58,11 +60,17 @@
 		{ v: 'markdown', l: 'Markdown' }
 	]);
 
-	const sourcePlaceholder = $derived(
-		mode === 'markdown'
-			? '**Ada Lovelace**\nAnalytical Engines — [thelemail.com](https://thelemail.com)'
-			: '<p><strong>Ada Lovelace</strong></p>'
-	);
+	const sourcePlaceholder = $derived.by(() => {
+		const signer = name?.trim();
+		if (mode === 'markdown') {
+			return signer
+				? m.settings_signature_placeholder_markdown({ name: signer, email })
+				: m.settings_signature_placeholder_markdown_noname({ email });
+		}
+		return signer
+			? m.settings_signature_placeholder_html({ name: signer, email })
+			: m.settings_signature_placeholder_html_noname({ email });
+	});
 
 	function emit(next: Partial<{ mode: SignatureMode; source: string; bodyHtml: string }>) {
 		onChange({

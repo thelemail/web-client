@@ -49,6 +49,7 @@
 	const Icon = $derived(isPersonal ? UserRound : Users);
 	const callerAccountId = $derived(auth.accountId);
 	const canManage = $derived(workspaces.canManage(callerAccountId));
+	const canChangeRoles = $derived(workspaces.isOwner(callerAccountId));
 	const seatsTotal = $derived(seatLimitFor(billing.plan, billing.subscription?.seats ?? null));
 	const title = $derived(membershipTitle(type));
 	const addLabel = $derived(addMemberLabel(type));
@@ -208,8 +209,8 @@
 		return {
 			canRevoke: isPending && canManage,
 			canResend: !!inv && browser && canResendInvite(inv, customDomains.items),
-			canPromote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'member',
-			canDemote: !isPending && canManage && !isOwner && !isSelf && member?.role === 'admin',
+			canPromote: !isPending && canChangeRoles && !isOwner && !isSelf && member?.role === 'member',
+			canDemote: !isPending && canChangeRoles && !isOwner && !isSelf && member?.role === 'admin',
 			canRemove: !isPending && !isOwner && canManage && !isSelf,
 			busy:
 				(member && busyId === member.accountId) || (inv && busyId === inv.id) ? true : false
@@ -219,7 +220,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Card icon={Icon} {title}>
+<Card id="members" tabindex={-1} icon={Icon} {title}>
 	{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
 
 	{#if !isPersonal}
