@@ -18,6 +18,7 @@
 		methods: TwoFactorMethod[];
 		busy: boolean;
 		error: string | null;
+		keyNotice?: string | null;
 		eyebrow?: string;
 		lede?: Snippet;
 		top?: Snippet;
@@ -33,6 +34,7 @@
 		methods,
 		busy,
 		error,
+		keyNotice = null,
 		eyebrow,
 		lede,
 		top,
@@ -249,6 +251,8 @@
 					<span><Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} /></span>
 				{:else if showBad}
 					<span><Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} /></span>
+				{:else if keyNotice}
+					<span role="alert"><Rich text={m.auth_2fa_key_notice({ notice: keyNotice })} tags={{ retry }} /></span>
 				{:else}
 					<span><Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} /></span>
 				{/if}

@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import TwoFactorCeremony from './TwoFactorCeremony.svelte';
 import { headingJumps, unnamedControls } from '../a11yAssert';
+import { WebAuthnError } from '@simplewebauthn/browser';
 import { m } from '$paraglide/messages.js';
 
 const webauthn = vi.hoisted(() => ({ supported: true, platform: true }));
@@ -20,9 +21,9 @@ const tfState = vi.hoisted(() => ({ status: null as unknown, phase: 'unknown', l
 vi.mock('$platform', () => ({ platform: {} }));
 vi.mock('$core/api/twofactor', () => api);
 vi.mock('$core/auth/enrollment-step-up', () => stepUp);
-vi.mock('$core/auth/webauthn', () => ({
+vi.mock('$core/auth/webauthn', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$core/auth/webauthn')>()),
 	createCredential,
-	isWebauthnCancelled: () => false,
 	webauthnSupported: () => webauthn.supported,
 	platformAuthenticatorAvailable: () => Promise.resolve(webauthn.platform)
 }));
@@ -82,13 +83,14 @@ describe('TwoFactorCeremony key names', () => {
 		vi.unstubAllGlobals();
 		authState.accountId = null;
 		tfState.status = null;
+		vi.clearAllMocks();
 	});
 
 	function button(label: RegExp) {
 		return [...document.querySelectorAll('button')].find((b) => label.test(b.textContent?.trim() ?? ''));
 	}
 
-	async function unlock(method: 'device' | 'key') {
+	async function unlock(method: 'device' | 'key', onClose = vi.fn(), onComplete = vi.fn()) {
 		vi.stubGlobal('navigator', { ...navigator, userAgent: macSafari });
 		Object.assign(webauthn, { supported: true, platform: true });
 		authState.accountId = 'me';
@@ -97,7 +99,7 @@ describe('TwoFactorCeremony key names', () => {
 		api.webauthnEnrollInit.mockResolvedValue({ registrationId: 'r1', publicKey: {} });
 		createCredential.mockResolvedValue({ id: 'cred' });
 		api.webauthnActivate.mockResolvedValue({ credential: {}, session: {} });
-		render(TwoFactorCeremony, { onClose: vi.fn(), onComplete: vi.fn(), initialMethod: method });
+		render(TwoFactorCeremony, { onClose, onComplete, initialMethod: method });
 		await tick();
 		await fireEvent.input(document.querySelector('#twofa-pw')!, { target: { value: 'pw' } });
 		await fireEvent.click(button(/^Confirm/)!);
@@ -142,5 +144,98 @@ describe('TwoFactorCeremony key names', () => {
 		expect(unnamedControls(dialog)).toEqual([]);
 		expect(headingJumps(dialog, 1)).toEqual([]);
 		expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
+	});
+
+	function browserError(name: string, code = 'ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY') {
+		return new WebAuthnError({ message: 'browser said no', code, cause: new DOMException('browser said no', name) });
+	}
+
+	const codes = ['AAAA-BBBB-CCCC-DDDD-EEEE-FFFF-GGGG', 'HHHH-JJJJ-KKKK-MMMM-NNNN-PPPP-QQQQ'];
+
+	async function register(onClose = vi.fn(), onComplete = vi.fn()) {
+		await unlock('key', onClose, onComplete);
+		tfState.load.mockClear();
+		await fireEvent.click(button(/Touch the key/)!);
+	}
+
+	it('shows new backup codes as soon as the key is registered', async () => {
+		api.webauthnActivate.mockResolvedValueOnce({ credential: {}, session: {}, backupCodes: codes });
+		await register();
+
+		await vi.waitFor(() => expect(document.querySelectorAll('.bc')).toHaveLength(2));
+		expect(document.body.textContent).toContain('Key registered.');
+		expect(tfState.load).toHaveBeenCalledWith('me');
+		expect(createCredential.mock.calls.at(-1)![1]).toEqual(['security-key']);
+	});
+
+	it('asks before any exit throws away unsaved backup codes', async () => {
+		const onClose = vi.fn();
+		api.webauthnActivate.mockResolvedValueOnce({ credential: {}, session: {}, backupCodes: codes });
+		await register(onClose);
+		await vi.waitFor(() => expect(document.querySelectorAll('.bc')).toHaveLength(2));
+		const leaveTitle = () => screen.queryByRole('dialog', { name: m.settings_secret_leave_title() });
+
+		await fireEvent.click(screen.getByRole('button', { name: m.common_close() }));
+		expect(leaveTitle()).not.toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: m.settings_secret_leave_stay() }));
+		await tick();
+		expect(leaveTitle()).toBeNull();
+
+		await fireEvent.keyDown(document, { key: 'Escape' });
+		expect(leaveTitle()).not.toBeNull();
+		await fireEvent.click(screen.getByRole('button', { name: m.settings_secret_leave_stay() }));
+		await tick();
+
+		await fireEvent.mouseDown(document.querySelector('.cer-scrim')!);
+		expect(leaveTitle()).not.toBeNull();
+		expect(onClose).not.toHaveBeenCalled();
+		expect(button(/^Back$|^Cancel$/)).toBeUndefined();
+	});
+
+	it('finishes the setup when closed on the done step', async () => {
+		const onClose = vi.fn();
+		const onComplete = vi.fn();
+		await register(onClose, onComplete);
+		await vi.waitFor(() => expect(tfState.load).toHaveBeenCalled());
+
+		await fireEvent.click(screen.getByRole('button', { name: m.common_close() }));
+		expect(onComplete).toHaveBeenCalledWith('twofa');
+		expect(onClose).toHaveBeenCalled();
+	});
+
+	it('keeps the key step open and retryable after the prompt closes', async () => {
+		createCredential.mockRejectedValueOnce(browserError('NotAllowedError'));
+		await register();
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.auth_webauthn_err_not_allowed()));
+		expect(api.webauthnActivate).not.toHaveBeenCalled();
+		expect(button(/Touch the key/)?.disabled).toBe(false);
+		await fireEvent.click(button(/Touch the key/)!);
+		await vi.waitFor(() => expect(api.webauthnActivate).toHaveBeenCalled());
+	});
+
+	it('names a key that is already registered', async () => {
+		createCredential.mockRejectedValueOnce(browserError('InvalidStateError', 'ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED'));
+		await register();
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.auth_webauthn_err_duplicate()));
+	});
+
+	it('asks for a key that can verify the user', async () => {
+		createCredential.mockRejectedValueOnce(
+			browserError('ConstraintError', 'ERROR_AUTHENTICATOR_MISSING_USER_VERIFICATION_SUPPORT')
+		);
+		await register();
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.auth_webauthn_err_no_verification()));
+	});
+
+	it('says nothing when the ceremony was replaced', async () => {
+		createCredential.mockRejectedValueOnce(browserError('AbortError', 'ERROR_CEREMONY_ABORTED'));
+		await register();
+		await tick();
+
+		expect(document.querySelector('.errtext')).toBeNull();
+		expect(button(/Touch the key/)?.disabled).toBe(false);
 	});
 });

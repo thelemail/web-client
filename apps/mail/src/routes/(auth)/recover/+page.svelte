@@ -20,7 +20,7 @@
 	} from '$core/auth/perform-recovery';
 	import { TwoFactorExpiredError, TwoFactorRejectedError } from '$core/auth/perform-login';
 	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
-	import { isWebauthnCancelled } from '$core/auth/webauthn';
+	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
 	import Wordmark from '$core/components/Wordmark.svelte';
@@ -70,6 +70,7 @@
 	let pendingTwoFactor = $state.raw<PendingTwoFactorRecovery | null>(null);
 	let twoFaBusy = $state(false);
 	let twoFaError = $state<string | null>(null);
+	let twoFaKeyNotice = $state<string | null>(null);
 	let twoFaFailures = $state(0);
 	let hadTwoFa = $state(false);
 	const recLabels = $derived(hadTwoFa ? recLabels2fa : recLabelsBase);
@@ -161,6 +162,7 @@
 				heldOperation = outcome.pending.opaqueOperationId;
 				pendingTwoFactor = outcome.pending;
 				twoFaError = null;
+				twoFaKeyNotice = null;
 				twoFaFailures = 0;
 				hadTwoFa = true;
 				step = 'twofa';
@@ -191,6 +193,7 @@
 		pendingTwoFactor = null;
 		twoFaBusy = false;
 		twoFaError = null;
+		twoFaKeyNotice = null;
 		twoFaFailures = 0;
 		phraseStatus = message ? 'bad' : 'idle';
 		phraseError = message;
@@ -208,6 +211,7 @@
 		}
 		twoFaBusy = true;
 		twoFaError = null;
+		twoFaKeyNotice = null;
 		try {
 			const res = await fn(pending);
 			twoFaBusy = false;
@@ -227,12 +231,14 @@
 				resetToPhraseStep(m.auth_recover_2fa_expired());
 				return;
 			}
-			if (isWebauthnCancelled(err)) {
+			const failure = webauthnFailure(err);
+			if (failure) {
+				if (failure !== 'aborted') twoFaKeyNotice = webauthnFailureMessage(failure);
 				twoFaBusy = false;
 				return;
 			}
 			console.error('recovery two-factor failed', err);
-			twoFaError = err instanceof Error ? err.message : m.auth_login_2fa_failed();
+			twoFaError = m.auth_login_2fa_failed();
 			twoFaBusy = false;
 		}
 	}
@@ -473,6 +479,7 @@
 				methods={pendingTwoFactor.methods}
 				busy={twoFaBusy}
 				error={twoFaError}
+				keyNotice={twoFaKeyNotice}
 				eyebrow={m.auth_recover_eyebrow()}
 				backLabel={m.common_back()}
 				onTotp={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorTotp(p, code))}

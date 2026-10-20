@@ -31,7 +31,7 @@
 		type TwoFactorPending,
 		type TwoFactorVerifyResponse
 	} from '$core/api/types';
-	import { getAssertion, isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import { getAssertion, webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { strengthLabel, passwordReqs, scorePassword } from '$core/auth/password-policy';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
@@ -247,7 +247,12 @@
 			pending2fa = null;
 			phase = 'newpw';
 		} catch (err) {
-			if (isWebauthnCancelled(err)) return;
+			const failure = webauthnFailure(err);
+			if (failure === 'aborted') return;
+			if (failure) {
+				twoFaError = webauthnFailureMessage(failure);
+				return;
+			}
 			console.warn('password change: two-factor failed', err);
 			twoFaCode = '';
 			twoFaError =

@@ -20,7 +20,7 @@
 		type PendingTwoFactorLogin
 	} from '$core/auth/perform-login';
 	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
-	import { isWebauthnCancelled } from '$core/auth/webauthn';
+	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
 	import { resolveReturnTo } from '$core/auth/return-to';
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
@@ -56,6 +56,7 @@
 	let pendingTwoFactor = $state.raw<PendingTwoFactorLogin | null>(null);
 	let twoFaBusy = $state(false);
 	let twoFaError = $state<string | null>(null);
+	let twoFaKeyNotice = $state<string | null>(null);
 	let twoFaFailures = $state(0);
 	let heldTwoFactor: PendingTwoFactorLogin | null = null;
 
@@ -103,6 +104,7 @@
 				heldTwoFactor = outcome.pending;
 				pendingTwoFactor = outcome.pending;
 				twoFaError = null;
+				twoFaKeyNotice = null;
 				twoFaFailures = 0;
 				busy = false;
 				return;
@@ -123,6 +125,7 @@
 		if (held) await abandonTwoFactorLogin(held);
 		pendingTwoFactor = null;
 		twoFaError = null;
+		twoFaKeyNotice = null;
 		twoFaFailures = 0;
 		twoFaBusy = false;
 		loginError = message;
@@ -137,6 +140,7 @@
 		}
 		twoFaBusy = true;
 		twoFaError = null;
+		twoFaKeyNotice = null;
 		try {
 			const { slot } = await fn(pending);
 			if (heldTwoFactor === pending) heldTwoFactor = null;
@@ -156,12 +160,14 @@
 				await resetToPasswordStep(m.auth_login_2fa_expired());
 				return;
 			}
-			if (isWebauthnCancelled(err)) {
+			const failure = webauthnFailure(err);
+			if (failure) {
+				if (failure !== 'aborted') twoFaKeyNotice = webauthnFailureMessage(failure);
 				twoFaBusy = false;
 				return;
 			}
 			console.error('two-factor failed', err);
-			twoFaError = err instanceof Error ? err.message : m.auth_login_2fa_failed();
+			twoFaError = m.auth_login_2fa_failed();
 			twoFaBusy = false;
 		}
 	}
@@ -250,6 +256,7 @@
 			methods={pendingTwoFactor.methods}
 			busy={twoFaBusy}
 			error={twoFaError}
+			keyNotice={twoFaKeyNotice}
 			onTotp={(code) => runTwoFactor((p) => submitTwoFactorTotp(p, code))}
 			onBackupCode={(code) => runTwoFactor((p) => submitTwoFactorBackupCode(p, code))}
 			onWebauthn={() => runTwoFactor((p) => submitTwoFactorWebauthn(p))}

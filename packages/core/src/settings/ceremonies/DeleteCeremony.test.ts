@@ -20,7 +20,7 @@ vi.mock('$core/keystore/keystore-client', () => ({
 		status: vi.fn(async () => ({ accounts: [{ accountId: 'me', authScheme: 'srp_v1' }] }))
 	}
 }));
-vi.mock('$core/auth/webauthn', () => ({ webauthnSupported: () => false, isWebauthnCancelled: () => false }));
+vi.mock('$core/auth/webauthn', () => ({ webauthnSupported: () => false, webauthnFailure: () => null, webauthnFailureMessage: () => '' }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: { list: [] } }));
 vi.mock('$core/stores/twofactor.svelte', () => ({ twofactor: { status: null, phase: 'ready', ensure: vi.fn() } }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me', email: 'ada@thelemail.com' } }));

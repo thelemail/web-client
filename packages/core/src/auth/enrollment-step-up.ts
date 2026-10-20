@@ -15,14 +15,13 @@ export async function enrollmentStepUp(args: {
 	const res = await opaqueStepUp({
 		accountId: args.accountId,
 		password: args.password,
+		proof: args.proof,
 		init: (ke1) => stepUpOpaqueInit({ ke1, action: args.action }, args.accountId),
-		confirm: async (challengeId, ke3) => {
-			const proof = await args.proof();
-			return stepUpOpaqueConfirm(
+		confirm: (challengeId, ke3, proof) =>
+			stepUpOpaqueConfirm(
 				{ challengeId, ke3, action: args.action, ...(proof ? { proof } : {}) },
 				args.accountId
-			);
-		}
+			)
 	});
 	return res.ok ? { ok: true, grant: res.value.grant } : res;
 }

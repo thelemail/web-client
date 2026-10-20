@@ -18,7 +18,7 @@
 	import { confirmDeletion, confirmDeletionOpaque, initDeletion, initDeletionOpaque } from '$core/api/deletion';
 	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
 	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
-	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import { webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -112,6 +112,8 @@
 		try {
 			const status = await keystore.status();
 			const scheme = status.accounts.find((a) => a.accountId === accountId)?.authScheme ?? 'srp_v1';
+			const proof = await getProof();
+			proofSent = proof !== null;
 			if (scheme === 'opaque_v1') {
 				const start = await keystore.opaqueStartAuth({ password: cur });
 				const init = await initDeletionOpaque({ ke1: start.ke1 }, accountId);
@@ -124,8 +126,6 @@
 					verifyError = m.settings_ceremony_delete_err_password();
 					return;
 				}
-				const proof = await getProof();
-				proofSent = proof !== null;
 				const res = await confirmDeletionOpaque(
 					{ challengeId: init.challengeId, ke3: finish.ke3, ...(proof ? { proof } : {}) },
 					accountId
@@ -146,8 +146,6 @@
 				verifyError = m.settings_ceremony_delete_err_locked();
 				return;
 			}
-			const proof = await getProof();
-			proofSent = proof !== null;
 			const res = await confirmDeletion(
 				{
 					challengeId: init.challengeId,
@@ -164,7 +162,12 @@
 			purgeAt = res.purgeAt;
 			step = 3;
 		} catch (err) {
-			if (isWebauthnCancelled(err)) return;
+			const failure = webauthnFailure(err);
+			if (failure === 'aborted') return;
+			if (failure) {
+				verifyError = webauthnFailureMessage(failure);
+				return;
+			}
 			console.warn('account deletion: confirm failed', err);
 			if (err instanceof ApiCallError) {
 				const code = err.envelope?.error?.code;

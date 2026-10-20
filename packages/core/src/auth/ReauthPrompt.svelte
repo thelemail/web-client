@@ -8,7 +8,7 @@
 	import { getTwoFactorStatus } from '$core/api/twofactor';
 	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
 	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
-	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import { webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
@@ -74,7 +74,12 @@
 			await auth.adoptRotatedSession(res.session);
 			reauth.settle(true);
 		} catch (err) {
-			if (isWebauthnCancelled(err)) return;
+			const failure = webauthnFailure(err);
+			if (failure === 'aborted') return;
+			if (failure) {
+				error = webauthnFailureMessage(failure);
+				return;
+			}
 			console.warn('reauth: step-up failed', err);
 			if (err instanceof ApiCallError && err.status === 401) {
 				error = proofSent

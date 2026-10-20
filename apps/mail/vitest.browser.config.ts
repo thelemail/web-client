@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createServer, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { CDPSession } from 'playwright';
 import type { Plugin } from 'vite';
 import type { BrowserCommand } from 'vitest/node';
 import { defineConfig, mergeConfig } from 'vitest/config';
@@ -82,6 +83,48 @@ const clickMailLink: BrowserCommand<[selector: string]> = async (ctx, selector) 
 	return result;
 };
 
+interface VirtualAuthenticator {
+	transport: 'usb' | 'internal';
+	hasUserVerification: boolean;
+	isUserVerified: boolean;
+}
+
+const cdpSessions = new Map<string, Promise<CDPSession>>();
+
+function cdp(ctx: Parameters<BrowserCommand<[]>>[0]): Promise<CDPSession> {
+	let session = cdpSessions.get(ctx.sessionId);
+	if (!session) {
+		session = ctx.page
+			.context()
+			.newCDPSession(ctx.page)
+			.then(async (s) => {
+				await s.send('WebAuthn.enable', { enableUI: false });
+				return s;
+			});
+		cdpSessions.set(ctx.sessionId, session);
+	}
+	return session;
+}
+
+const addVirtualAuthenticator: BrowserCommand<[options: VirtualAuthenticator]> = async (ctx, options) => {
+	const session = await cdp(ctx);
+	const { authenticatorId } = await session.send('WebAuthn.addVirtualAuthenticator', {
+		options: {
+			protocol: 'ctap2',
+			ctap2Version: 'ctap2_1',
+			hasResidentKey: true,
+			automaticPresenceSimulation: true,
+			...options
+		}
+	});
+	return authenticatorId;
+};
+
+const removeVirtualAuthenticator: BrowserCommand<[authenticatorId: string]> = async (ctx, authenticatorId) => {
+	const session = await cdp(ctx);
+	await session.send('WebAuthn.removeVirtualAuthenticator', { authenticatorId });
+};
+
 export default mergeConfig(
 	viteConfig,
 	defineConfig({
@@ -93,7 +136,7 @@ export default mergeConfig(
 			include: ['../../packages/*/src/**/*.browser.test.ts'],
 			browser: {
 				enabled: true,
-				commands: { linkProbeOrigin, clickMailLink },
+				commands: { linkProbeOrigin, clickMailLink, addVirtualAuthenticator, removeVirtualAuthenticator },
 				headless: true,
 				provider: playwright(),
 				instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }]

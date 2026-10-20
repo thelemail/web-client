@@ -1,17 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import type { TwoFactorMethod } from '$core/api/types';
 import TwoFactorChallenge from './TwoFactorChallenge.svelte';
 
 vi.mock('$core/auth/webauthn', () => ({ webauthnSupported: () => true }));
 
-function mount(methods: TwoFactorMethod[], error: string | null = null) {
+function mount(methods: TwoFactorMethod[], error: string | null = null, keyNotice: string | null = null) {
 	const onWebauthn = vi.fn();
 	render(TwoFactorChallenge, {
 		email: 'ada@thelemail.com',
 		methods,
 		busy: false,
 		error,
+		keyNotice,
 		onTotp: vi.fn(),
 		onBackupCode: vi.fn(),
 		onWebauthn,
@@ -45,5 +46,13 @@ describe('TwoFactorChallenge', () => {
 			expect(input.getAttribute('aria-invalid')).toBe('true');
 			expect(input.getAttribute('aria-describedby')).toBe(alert!.id);
 		}
+	});
+
+	it('explains a key prompt that closed and offers it again', async () => {
+		const onWebauthn = mount(['webauthn', 'backupCode'], null, 'The browser closed the request.');
+		const alert = screen.getByRole('alert');
+		expect(alert.textContent).toContain('The browser closed the request.');
+		await fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+		expect(onWebauthn).toHaveBeenCalledTimes(2);
 	});
 });
