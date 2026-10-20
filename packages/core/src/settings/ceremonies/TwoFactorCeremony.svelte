@@ -14,6 +14,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
+	import { defaultKeyName, KEY_NAME_MAX_LENGTH } from '../keyName';
 	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$core/api/twofactor';
 	import {
 		createCredential,
@@ -92,6 +93,8 @@
 	let method = $derived<TwoFaSetupMethod>(initialMethod ?? preferred);
 	let busy = $state(false);
 	let setupError = $state('');
+	let keyName = $derived(method === 'totp' ? '' : defaultKeyName(method));
+	const keyNameOk = $derived(keyName.trim().length > 0);
 	let confirmed = $state(false);
 
 	let otpauthUrl = $state('');
@@ -295,7 +298,7 @@
 	}
 
 	async function registerKey() {
-		if (busy || confirmed) return;
+		if (busy || confirmed || !keyNameOk) return;
 		busy = true;
 		setupError = '';
 		try {
@@ -311,7 +314,7 @@
 				{
 					registrationId: init.registrationId,
 					credential,
-					name: method === 'device' ? 'This device' : 'Security key',
+					name: keyName.trim(),
 					grant
 				},
 				auth.accountId ?? undefined
@@ -577,7 +580,25 @@
 					{/if}
 				</div>
 				{#if !confirmed}
-					<Button variant="secondary" disabled={busy} onclick={registerKey}>
+					<div class="field key-name">
+						<label for="twofa-key-name">{m.settings_ceremony_twofa_key_name_label()}</label>
+						<input
+							id="twofa-key-name"
+							class="tin"
+							bind:value={keyName}
+							maxlength={KEY_NAME_MAX_LENGTH}
+							autocomplete="off"
+							disabled={busy}
+						/>
+						{#if keyNameOk}
+							<div class="field-hint">{m.settings_ceremony_twofa_key_name_hint()}</div>
+						{:else}
+							<div class="field-hint bad">
+								<CircleAlert size={13} />{m.settings_ceremony_twofa_key_name_required()}
+							</div>
+						{/if}
+					</div>
+					<Button variant="secondary" disabled={busy || !keyNameOk} onclick={registerKey}>
 						{#if isKey}<Pointer size={15} />{:else}<ScanFace size={15} />{/if}
 						{#if busy}
 							{m.settings_ceremony_twofa_waiting()}
@@ -683,6 +704,11 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <style>
+	.key-name {
+		width: 100%;
+		max-width: 340px;
+		text-align: left;
+	}
 	.linklike {
 		background: none;
 		border: none;

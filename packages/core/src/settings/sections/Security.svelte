@@ -7,6 +7,7 @@
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Pencil from '@lucide/svelte/icons/pencil';
 	import Download from '@lucide/svelte/icons/download';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import EyeOff from '@lucide/svelte/icons/eye-off';
@@ -42,8 +43,10 @@
 	import {
 		regenerateBackupCodes,
 		totpDisable,
-		webauthnDelete
+		webauthnDelete,
+		webauthnRename
 	} from '$core/api/twofactor';
+	import { KEY_NAME_MAX_LENGTH } from '$core/settings/keyName';
 	import { listSessions, listSecurityEvents, revokeSession, revokeOtherSessions } from '$core/api/auth';
 	import type {
 		SecurityEventAction,
@@ -102,12 +105,18 @@
 	type FactorAction =
 		| { kind: 'disableTotp' }
 		| { kind: 'deleteKey'; id: string; name: string }
+		| { kind: 'renameKey'; id: string; name: string }
 		| { kind: 'regenCodes' };
 
 	let factorAction = $state<FactorAction | null>(null);
 	let factorBusy = $state(false);
 	let factorError = $state<string | null>(null);
 	let newCodes = $state<string[] | null>(null);
+	let renameValue = $state('');
+	const renameReady = $derived(
+		factorAction?.kind !== 'renameKey' ||
+			(renameValue.trim().length > 0 && renameValue.trim() !== factorAction.name)
+	);
 
 	const tfStatus = $derived(twofactor.status);
 
@@ -137,6 +146,13 @@
 					confirmLabel: m.settings_security_key_remove_confirm(),
 					danger: true
 				};
+			case 'renameKey':
+				return {
+					title: m.settings_security_key_rename_title({ name: a.name }),
+					desc: m.settings_security_key_rename_desc(),
+					confirmLabel: m.common_save(),
+					danger: false
+				};
 			case 'regenCodes':
 				return {
 					title: m.settings_security_backup_regen_title(),
@@ -149,12 +165,13 @@
 
 	function openFactorAction(a: FactorAction) {
 		factorError = null;
+		if (a.kind === 'renameKey') renameValue = a.name;
 		factorAction = a;
 	}
 
 	async function confirmFactorAction() {
 		const a = factorAction;
-		if (!a || factorBusy) return;
+		if (!a || factorBusy || !renameReady) return;
 		const accountId = auth.accountId ?? undefined;
 		factorBusy = true;
 		factorError = null;
@@ -165,6 +182,8 @@
 			} else if (a.kind === 'deleteKey') {
 				const res = await webauthnDelete(a.id, accountId);
 				await auth.adoptRotatedSession(res.session);
+			} else if (a.kind === 'renameKey') {
+				await webauthnRename(a.id, renameValue.trim(), accountId);
 			} else {
 				const res = await regenerateBackupCodes(accountId);
 				await auth.adoptRotatedSession(res.session);
@@ -184,6 +203,11 @@
 		} finally {
 			factorBusy = false;
 		}
+	}
+
+	function selectOnMount(node: HTMLInputElement) {
+		node.focus();
+		node.select();
 	}
 
 	function fmtDate(iso: string | undefined): string {
@@ -467,6 +491,9 @@
 				{/if}
 			</div>
 			<div class="tfa-act">
+				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'renameKey', id: cred.id, name: cred.name })}>
+					{m.settings_security_key_rename()}
+				</Button>
 				<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'deleteKey', id: cred.id, name: cred.name })}>
 					{m.common_remove()}
 				</Button>
@@ -561,15 +588,35 @@
 
 {#snippet factorBody()}
 	<p class="cfd-p">{factorCopy.desc}</p>
+	{#if factorAction?.kind === 'renameKey'}
+		<label class="cfd-field">
+			<span class="cfd-label">{m.settings_ceremony_twofa_key_name_label()}</span>
+			<input
+				{@attach selectOnMount}
+				bind:value={renameValue}
+				class="cfd-input"
+				maxlength={KEY_NAME_MAX_LENGTH}
+				autocomplete="off"
+				spellcheck={false}
+				onkeydown={(e) => {
+					if (e.key === 'Enter') {
+						e.preventDefault();
+						void confirmFactorAction();
+					}
+				}}
+			/>
+		</label>
+	{/if}
 {/snippet}
 
 {#if factorAction}
 	<ConfirmDialog
-		icon={factorCopy.danger ? ShieldOff : RefreshCw}
+		icon={factorCopy.danger ? ShieldOff : factorAction.kind === 'renameKey' ? Pencil : RefreshCw}
 		tone={factorCopy.danger ? 'danger' : 'neutral'}
 		title={factorCopy.title}
 		confirmLabel={factorCopy.confirmLabel}
 		busy={factorBusy}
+		disabled={!renameReady}
 		error={factorError}
 		body={factorBody}
 		onConfirm={() => void confirmFactorAction()}

@@ -15,6 +15,7 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import Select from '../Select.svelte';
+	import { isValidLocalPart } from '../localPart';
 	import CopyBtn from '../CopyBtn.svelte';
 	import type { CeremonyKind } from '../data';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -47,7 +48,6 @@
 		fam ? m.settings_ceremony_member_step_invite() : m.settings_ceremony_member_step_seat_invite()
 	]);
 	let step = $state(0);
-	let name = $state('');
 	let local = $state('');
 	let customDomainId = $state<string>('');
 	let email = $state('');
@@ -62,6 +62,7 @@
 	let submitError = $state<string | null>(null);
 	let inviteLink = $state<string | null>(null);
 	let sentToEmail = $state<string | null>(null);
+	let invitedAddress = $state('');
 
 	$effect(() => {
 		if (usableDomains.length === 0) {
@@ -78,8 +79,7 @@
 	);
 	const selectedDomainName = $derived(selectedDomain?.domain ?? '');
 
-	const nameOk = $derived(name.trim().length > 1);
-	const localOk = $derived(/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i.test(local.trim()));
+	const localOk = $derived(isValidLocalPart(local));
 	const emailOk = $derived(
 		email.trim() === '' || /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email.trim())
 	);
@@ -101,7 +101,7 @@
 	const addrConflict = $derived(memberConflict || inviteConflict);
 
 	const hasDomain = $derived(usableDomains.length > 0 && customDomainId !== '');
-	const ready = $derived(nameOk && localOk && emailOk && hasDomain && !addrConflict);
+	const ready = $derived(localOk && emailOk && hasDomain && !addrConflict);
 
 	function selectDomainByName(name: string) {
 		const match = usableDomains.find((d) => d.domain === name);
@@ -124,6 +124,7 @@
 			const base = browser ? platform.returnOrigin().replace(/\/$/, '') : '';
 			inviteLink = `${base}/invite/${result.token}`;
 			sentToEmail = result.invite.deliverTo ?? null;
+			invitedAddress = result.invite.email;
 			step = 1;
 		} catch (err) {
 			submitError = err instanceof Error ? err.message : m.settings_ceremony_member_error();
@@ -149,19 +150,6 @@
 						? m.settings_ceremony_member_lede_family()
 						: m.settings_ceremony_member_lede_org()}
 				</p>
-			</div>
-
-			<div class="field">
-				<label for="add-mem-name">{m.settings_ceremony_member_name_label()}</label>
-				<input
-					id="add-mem-name"
-					class="tin"
-					bind:value={name}
-					placeholder={fam
-						? m.settings_ceremony_member_name_placeholder_family()
-						: m.settings_ceremony_member_name_placeholder_org()}
-					autocomplete="off"
-				/>
 			</div>
 
 			<div class="field">
@@ -194,7 +182,7 @@
 					</div>
 				{:else if local.length > 0 && !localOk}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />{m.settings_ceremony_member_local_invalid()}
+						<CircleAlert size={13} />{m.settings_local_part_invalid()}
 					</div>
 				{:else if addrConflict}
 					<div class="field-hint bad">
@@ -273,10 +261,10 @@
 		<DoneScreen
 			icon={UserCheck}
 			title={m.settings_ceremony_member_done_title()}
-			desc={m.settings_ceremony_member_done_desc({ name: name.trim() })}
+			desc={m.settings_ceremony_member_done_desc({ address: invitedAddress })}
 		>
 			<div class="done-pill">
-				<b>{name.trim()}</b><span class="dp-sep">·</span><span class="mono">{newAddr}</span>
+				<span class="mono">{invitedAddress}</span>
 				{#if !fam}<span class="dp-tag">{roleLabel}</span>{/if}
 			</div>
 

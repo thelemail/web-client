@@ -7,6 +7,7 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import Select from '../Select.svelte';
+	import { isValidLocalPart } from '../localPart';
 	import type { CeremonyKind } from '../data';
 	import { customDomains } from '$core/stores/customDomains.svelte';
 	import { billing } from '$core/stores/billing.svelte';
@@ -95,7 +96,7 @@
 	);
 	const receiving = $derived(!addressDomain || inboundLive(addressDomain));
 
-	const localOk = $derived(/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i.test(local.trim()));
+	const localOk = $derived(isValidLocalPart(local));
 	const nameOk = $derived(name.trim().length > 0);
 	const full = $derived(
 		createdEmail ??
@@ -326,7 +327,7 @@
 					</div>
 					{#if local.length > 0 && !localOk}
 						<div class="field-hint bad">
-							<CircleAlert size={13} />{m.settings_ceremony_alias_local_invalid()}
+							<CircleAlert size={13} />{m.settings_local_part_invalid()}
 						</div>
 					{/if}
 				</div>

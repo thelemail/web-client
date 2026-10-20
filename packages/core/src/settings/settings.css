@@ -674,6 +674,8 @@
 .cer-scrim .copy-btn.sm svg { width: 13px; height: 13px; }
 .settings-app .copy-btn.done,
 .cer-scrim .copy-btn.done { color: var(--success-700); border-color: var(--success-500); background: var(--success-100); }
+.settings-app .copy-btn.failed,
+.cer-scrim .copy-btn.failed { color: var(--danger-700); border-color: var(--danger-500); background: var(--danger-100); }
 
 .cer-scrim .rec-list { display: flex; flex-direction: column; gap: 10px; }
 .cer-scrim .rec-row { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }
@@ -851,7 +853,12 @@
 .settings-app .card-note.warn svg { color: var(--warning-500); }
 .settings-app .card-note.warn a { color: var(--warning-700); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 .cer-scrim .webauthn.ok { background: var(--success-100); color: var(--success-700); }
-@media (max-width: 560px) { .settings-app .tfa-sub-note { display: none; } }
+@media (max-width: 560px) {
+	.settings-app .tfa-sub-note { display: none; }
+	.settings-app .tfa-row { flex-wrap: wrap; row-gap: 4px; }
+	.settings-app .tfa-info { flex: 1 1 130px; }
+	.settings-app .tfa-act { margin-left: auto; }
+}
 
 @media (max-width: 900px) {
 	.settings-app .settings-body { flex-direction: column; }
