@@ -87,6 +87,11 @@
 .settings-app .sec:last-child { margin-bottom: 0; }
 .settings-app .sec-h { margin-bottom: 20px; }
 .settings-app .sec-h p { font-size: 13.5px; color: var(--fg-muted); margin: 0; line-height: 1.55; max-width: 64ch; }
+.settings-app .sec-group { display: flex; flex-direction: column; gap: 16px; }
+.settings-app .sec-group + .sec-group { margin-top: 36px; }
+.settings-app .sec-group > .scard + .scard,
+.settings-app .sec-group > .recovery-hero { margin: 0; }
+.settings-app .sec-group-h { font-size: 15px; font-weight: 600; color: var(--fg-strong); margin: 0 0 -4px; letter-spacing: -.005em; }
 
 .settings-app .scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: var(--shadow-xs); overflow: hidden; }
 .settings-app .scard + .scard { margin-top: 16px; }

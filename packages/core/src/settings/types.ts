@@ -8,7 +8,6 @@ export interface NewRecord {
 	value: string;
 }
 
-export type DeviceIcon = 'monitor' | 'smartphone' | 'globe';
 
 export interface Person {
 	name: string;
