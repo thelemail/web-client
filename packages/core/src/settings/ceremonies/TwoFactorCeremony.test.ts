@@ -22,7 +22,8 @@ vi.mock('$core/api/twofactor', () => api);
 vi.mock('$core/auth/enrollment-step-up', () => stepUp);
 vi.mock('$core/auth/webauthn', () => ({
 	createCredential,
-	isWebauthnCancelled: () => false,
+	webauthnFailure: () => null,
+	webauthnFailureMessage: () => '',
 	webauthnSupported: () => webauthn.supported,
 	platformAuthenticatorAvailable: () => Promise.resolve(webauthn.platform)
 }));

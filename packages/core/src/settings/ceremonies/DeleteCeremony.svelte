@@ -18,7 +18,7 @@
 	import { confirmDeletion, confirmDeletionOpaque, initDeletion, initDeletionOpaque } from '$core/api/deletion';
 	import { ApiCallError, type TwoFactorMethod, type TwoFactorProof } from '$core/api/types';
 	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
-	import { isWebauthnCancelled, webauthnSupported } from '$core/auth/webauthn';
+	import { webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -164,7 +164,12 @@
 			purgeAt = res.purgeAt;
 			step = 3;
 		} catch (err) {
-			if (isWebauthnCancelled(err)) return;
+			const failure = webauthnFailure(err);
+			if (failure === 'aborted') return;
+			if (failure) {
+				verifyError = webauthnFailureMessage(failure);
+				return;
+			}
 			console.warn('account deletion: confirm failed', err);
 			if (err instanceof ApiCallError) {
 				const code = err.envelope?.error?.code;

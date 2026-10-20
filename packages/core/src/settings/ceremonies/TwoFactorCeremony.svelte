@@ -19,8 +19,9 @@
 	import { totpEnrollInit, totpActivate, webauthnEnrollInit, webauthnActivate } from '$core/api/twofactor';
 	import {
 		createCredential,
-		isWebauthnCancelled,
 		platformAuthenticatorAvailable,
+		webauthnFailure,
+		webauthnFailureMessage,
 		webauthnSupported
 	} from '$core/auth/webauthn';
 	import { enrollmentStepUp } from '$core/auth/enrollment-step-up';
@@ -241,7 +242,12 @@
 			password = '';
 			twoFaCode = '';
 		} catch (err) {
-			if (isWebauthnCancelled(err)) return;
+			const failure = webauthnFailure(err);
+			if (failure === 'aborted') return;
+			if (failure) {
+				confirmError = webauthnFailureMessage(failure);
+				return;
+			}
 			console.warn('twofa: step-up failed', err);
 			if (err instanceof ApiCallError && err.status === 401) {
 				confirmError = proofSent
@@ -308,7 +314,10 @@
 				...selection,
 				authenticatorAttachment: method === 'device' ? 'platform' : 'cross-platform'
 			};
-			const credential = await createCredential(options);
+			const credential = await createCredential(
+				options,
+				method === 'device' ? ['client-device'] : ['security-key']
+			);
 			const res = await webauthnActivate(
 				{
 					registrationId: init.registrationId,
@@ -323,8 +332,10 @@
 			confirmed = true;
 			backupCodes = res.backupCodes ?? [];
 		} catch (err) {
-			if (isWebauthnCancelled(err)) {
-				busy = false;
+			const failure = webauthnFailure(err);
+			if (failure === 'aborted') return;
+			if (failure) {
+				setupError = webauthnFailureMessage(failure);
 				return;
 			}
 			console.warn('twofa: webauthn activate failed', err);
@@ -335,7 +346,9 @@
 			setupError =
 				err instanceof ApiCallError && err.status === 409
 					? m.settings_ceremony_twofa_err_key_registered()
-					: m.settings_ceremony_twofa_err_register();
+					: err instanceof ApiCallError && err.status === 401
+						? m.settings_ceremony_twofa_err_key_not_verified()
+						: m.settings_ceremony_twofa_err_register();
 		} finally {
 			busy = false;
 		}
