@@ -1,5 +1,7 @@
 import { m } from '$paraglide/messages.js';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
+import { i18n } from '$core/i18n/locale.svelte';
+import type { Plan, Subscription } from '$core/api/billing';
 
 export type ProductId = 'personal' | 'family' | 'business';
 
@@ -244,18 +246,66 @@ export function selectionForCode(
 	return null;
 }
 
-export function planLabelFor(planCode: string, seats: number, period: BillingPeriod = 'year'): string {
-	const sel = selectionForCode(planCode, seats, period);
-	if (!sel) return planCode.replace(/_/g, ' ');
-	const { tier } = findPlan(sel);
-	if (!tier) return planCode.replace(/_/g, ' ');
-	return m.auth_plan_label({ plan: tier.name, price: pricePerPeriod(planTotal(sel), period) });
+export function pricePerPeriod(amount: number, period: BillingPeriod): string {
+	return perPeriod(eur(amount), period);
 }
 
-export function pricePerPeriod(amount: number, period: BillingPeriod): string {
+function perPeriod(price: string, period: BillingPeriod): string {
 	return period === 'month'
-		? m.auth_price_per_month({ price: eur(amount) })
-		: m.auth_price_per_year({ price: eur(amount) });
+		? m.auth_price_per_month({ price })
+		: m.auth_price_per_year({ price });
+}
+
+export function money(cents: number, currency: string): string {
+	return new Intl.NumberFormat(i18n.tag, {
+		style: 'currency',
+		currency: currency.toUpperCase(),
+		minimumFractionDigits: cents % 100 === 0 ? 0 : 2
+	}).format(cents / 100);
+}
+
+export interface SubscriptionPrice {
+	unit: string;
+	total: string;
+	seats: number;
+	period: BillingPeriod;
+	perMailbox: boolean;
+}
+
+export function subscriptionPrice(
+	plan: Plan | null | undefined,
+	sub: Subscription | null | undefined
+): SubscriptionPrice | null {
+	if (!plan || !sub?.interval || plan.code !== sub.planCode) return null;
+	if (sub.provider === 'apple' || sub.provider === 'google_play') return null;
+	const period = sub.interval;
+	const cents = period === 'month' ? plan.monthlyAmountCents : plan.yearlyAmountCents;
+	const perMailbox = plan.pricingModel === 'per_mailbox';
+	const seats = perMailbox ? (sub.seats ?? plan.minSeats) : 1;
+	return {
+		unit: money(cents, plan.currency),
+		total: money(cents * seats, plan.currency),
+		seats,
+		period,
+		perMailbox
+	};
+}
+
+export function planNameFor(planCode: string, plan?: Plan | null): string {
+	const sel = selectionForCode(planCode, 1, 'year');
+	const tier = sel ? findPlan(sel).tier : null;
+	return tier?.name ?? plan?.displayName ?? planCode.replace(/_/g, ' ');
+}
+
+export function subscriptionPlanLabel(
+	plan: Plan | null | undefined,
+	sub: Subscription | null | undefined
+): string | null {
+	if (!sub?.planCode) return null;
+	const name = planNameFor(sub.planCode, plan);
+	const price = subscriptionPrice(plan, sub);
+	if (!price) return name;
+	return m.auth_plan_label({ plan: name, price: perPeriod(price.total, price.period) });
 }
 
 export function planTotal(sel: PlanSelection): number {

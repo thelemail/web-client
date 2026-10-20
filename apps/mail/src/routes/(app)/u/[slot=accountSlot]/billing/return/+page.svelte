@@ -4,7 +4,7 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
-	import { planLabelFor } from '$core/auth/plans';
+	import { subscriptionPlanLabel } from '$core/auth/plans';
 	import Mail from '@lucide/svelte/icons/mail';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { Button } from '$core/components/ui/button';
@@ -17,10 +17,10 @@
 	let phase = $state<'confirming' | 'active' | 'slow'>('confirming');
 	let polls = $state(0);
 
-	const planLabel = $derived.by(() => {
-		const sub = billing.subscription;
-		if (!sub?.planCode) return null;
-		return planLabelFor(sub.planCode, sub.seats ?? 1, sub.interval ?? 'year');
+	const planLabel = $derived(subscriptionPlanLabel(billing.plan, billing.subscription));
+
+	$effect(() => {
+		void billing.ensureCatalog();
 	});
 
 	$effect(() => {

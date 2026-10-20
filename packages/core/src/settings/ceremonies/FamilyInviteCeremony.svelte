@@ -16,6 +16,7 @@
 	import { seatLimitFor } from '../plan-display';
 	import { auth } from '$core/stores/auth.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
+	import { billing } from '$core/stores/billing.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -27,10 +28,14 @@
 
 	let { onClose, onComplete }: Props = $props();
 
-	const seatsTotal = $derived(seatLimitFor(workspaces.workspace?.type ?? null));
+	const seatsTotal = $derived(seatLimitFor(billing.plan, billing.subscription?.seats ?? null));
 	const seatsUsed = $derived(workspaces.members.length + workspaces.invites.length);
 	const seatsLeft = $derived(seatsTotal == null ? null : seatsTotal - seatsUsed);
 	const familyName = $derived(workspaces.workspace?.name ?? m.settings_ceremony_family_invite_family_fallback());
+
+	$effect(() => {
+		void billing.ensureCatalog();
+	});
 
 	let step = $state(0);
 	let email = $state('');
@@ -74,7 +79,7 @@
 			invited = trimmed;
 			step = 1;
 		} catch (err) {
-			submitError = familyInviteError(err, trimmed);
+			submitError = familyInviteError(err, trimmed, seatsTotal);
 		} finally {
 			submitting = false;
 		}

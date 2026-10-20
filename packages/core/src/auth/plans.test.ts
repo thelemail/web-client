@@ -5,11 +5,13 @@ import {
 	findPlan,
 	periodFromQuery,
 	planFromQuery,
-	planLabelFor,
 	planTotal,
 	PRODUCTS,
-	selectionForCode
+	selectionForCode,
+	subscriptionPlanLabel,
+	subscriptionPrice
 } from './plans';
+import type { Plan, Subscription } from '$core/api/billing';
 
 describe('planFromQuery', () => {
 	it('maps every pricing id to its product and tier', () => {
@@ -130,15 +132,84 @@ describe('annualSavingPercent', () => {
 	});
 });
 
-describe('planLabelFor', () => {
-	it('labels the plan with its billing period', () => {
-		expect(planLabelFor('family', 1, 'year')).toBe('Family · €60 / year');
-		expect(planLabelFor('family', 1, 'month')).toBe('Family · €6.50 / month');
+function plan(over: Partial<Plan> = {}): Plan {
+	return {
+		code: 'family',
+		workspaceType: 'family',
+		displayName: 'Family',
+		pricingModel: 'flat',
+		currency: 'eur',
+		yearlyAmountCents: 7200,
+		monthlyAmountCents: 750,
+		minSeats: 1,
+		maxSeats: 6,
+		storageBytesPerMailbox: 10 * 1024 ** 3,
+		customDomainsLimit: 2,
+		auditRetentionDays: 30,
+		prioritySupport: 'none',
+		...over
+	};
+}
+
+function sub(over: Partial<Subscription> = {}): Subscription {
+	return {
+		status: 'active',
+		entitled: true,
+		planCode: 'family',
+		interval: 'year',
+		cancelAtPeriodEnd: false,
+		provider: 'stripe',
+		...over
+	};
+}
+
+const team = plan({
+	code: 'team',
+	workspaceType: 'business',
+	displayName: 'Team',
+	pricingModel: 'per_mailbox',
+	yearlyAmountCents: 6000,
+	monthlyAmountCents: 650,
+	minSeats: 3,
+	maxSeats: undefined
+});
+
+describe('subscriptionPrice', () => {
+	it('prices a flat plan from the catalog for each interval', () => {
+		expect(subscriptionPrice(plan(), sub())).toMatchObject({ total: '€72', period: 'year', perMailbox: false });
+		expect(subscriptionPrice(plan(), sub({ interval: 'month' }))).toMatchObject({ total: '€7.50', period: 'month' });
 	});
 
-	it('defaults to annual and degrades on unknown codes', () => {
-		expect(planLabelFor('family', 1)).toBe('Family · €60 / year');
-		expect(planLabelFor('enterprise_max', 1)).toBe('enterprise max');
+	it('multiplies per-mailbox plans by the subscribed seats only', () => {
+		const price = subscriptionPrice(team, sub({ planCode: 'team', seats: 4 }));
+		expect(price).toEqual({ unit: '€60', total: '€240', seats: 4, period: 'year', perMailbox: true });
+		expect(subscriptionPrice(plan(), sub({ seats: 4 }))?.total).toBe('€72');
+	});
+
+	it('formats in the currency the server returns', () => {
+		expect(subscriptionPrice(plan({ currency: 'usd' }), sub())?.total).toBe('$72');
+	});
+
+	it('shows nothing it cannot back with catalog data', () => {
+		expect(subscriptionPrice(null, sub())).toBeNull();
+		expect(subscriptionPrice(plan({ code: 'family_plus' }), sub())).toBeNull();
+		expect(subscriptionPrice(plan(), sub({ interval: undefined }))).toBeNull();
+		expect(subscriptionPrice(plan(), sub({ provider: 'apple' }))).toBeNull();
+		expect(subscriptionPrice(plan(), sub({ provider: 'google_play' }))).toBeNull();
+	});
+});
+
+describe('subscriptionPlanLabel', () => {
+	it('labels the plan with the catalog price and period', () => {
+		expect(subscriptionPlanLabel(plan(), sub())).toBe('Family · €72 / year');
+		expect(subscriptionPlanLabel(plan(), sub({ interval: 'month' }))).toBe('Family · €7.50 / month');
+	});
+
+	it('falls back to the name when there is no price', () => {
+		expect(subscriptionPlanLabel(null, sub())).toBe('Family');
+		expect(subscriptionPlanLabel(plan(), sub({ provider: 'apple' }))).toBe('Family');
+		expect(subscriptionPlanLabel(null, sub({ planCode: 'enterprise_max' as never }))).toBe('enterprise max');
+		expect(subscriptionPlanLabel(null, sub({ planCode: undefined }))).toBeNull();
 	});
 });
 

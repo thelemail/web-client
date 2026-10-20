@@ -19,11 +19,12 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { createBillingPortalSession } from '$core/api/billing';
-	import { PRODUCTS, eur } from '$core/auth/plans';
+	import { ApiCallError } from '$core/api/types';
+	import { planNameFor, subscriptionPrice } from '$core/auth/plans';
 	import { planLabel, freeNote } from '../plan-display';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import { Button } from '$core/components/ui/button';
-	import { entryPointVisible, scheduledLine } from '$core/lifecycle/downgrade';
+	import { entryPointVisible, scheduledLine, storeStep } from '$core/lifecycle/downgrade';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -45,6 +46,7 @@
 	const isOwner = $derived(workspaces.isOwner(auth.accountId));
 	const canMoveToFree = $derived(isOwner && entryPointVisible(sub));
 	const pendingLine = $derived(scheduledLine(sub));
+	const store = $derived(storeStep(sub));
 	const slot = $derived(page.params.slot ?? '0');
 	const PlanIcon = $derived(
 		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
@@ -52,36 +54,25 @@
 
 	$effect(() => {
 		void billing.refresh();
-	});
-
-	const tierInfo = $derived.by(() => {
-		const code = sub?.planCode;
-		if (!code) return null;
-		const tierId = code.replace(/_/g, '-');
-		for (const product of PRODUCTS) {
-			const tier = product.tiers.find((t) => t.id === tierId);
-			if (tier) return { product, tier };
-		}
-		return null;
+		void billing.ensureCatalog();
 	});
 
 	const planName = $derived(
-		isFree ? planLabel(type, sub?.planCode) : (tierInfo?.tier.name ?? planLabel(type))
+		isFree || !sub?.planCode ? planLabel(type, sub?.planCode) : planNameFor(sub.planCode, billing.plan)
 	);
 
 	const priceLine = $derived.by(() => {
-		if (!tierInfo || !sub) return null;
-		const period = sub.interval ?? 'year';
-		const price = tierInfo.tier.prices[period];
-		if (tierInfo.product.perMailbox) {
-			const seats = sub.seats ?? 1;
-			return period === 'month'
-				? m.settings_account_price_seats_month({ price: eur(price), count: seats, total: eur(price * seats) })
-				: m.settings_account_price_seats_year({ price: eur(price), count: seats, total: eur(price * seats) });
+		const price = subscriptionPrice(billing.plan, sub);
+		if (!price) return null;
+		if (price.perMailbox) {
+			const args = { price: price.unit, count: price.seats, total: price.total };
+			return price.period === 'month'
+				? m.settings_account_price_seats_month(args)
+				: m.settings_account_price_seats_year(args);
 		}
-		return period === 'month'
-			? m.settings_account_price_month({ price: eur(price) })
-			: m.settings_account_price_year({ price: eur(price) });
+		return price.period === 'month'
+			? m.settings_account_price_month({ price: price.total })
+			: m.settings_account_price_year({ price: price.total });
 	});
 
 	const renewalLine = $derived.by(() => {
@@ -94,8 +85,21 @@
 			: m.settings_account_renews({ date });
 	});
 
+	function portalErrorMessage(err: unknown): string {
+		if (err instanceof ApiCallError) {
+			if (err.status === 409) return m.settings_account_portal_store_managed();
+			if (err.status === 404) return m.settings_account_portal_no_subscription();
+		}
+		return m.settings_account_portal_failed();
+	}
+
 	async function openPortal() {
 		if (portalBusy) return;
+		if (store) {
+			portalError = null;
+			platform.openExternal(store.url);
+			return;
+		}
 		portalBusy = true;
 		portalError = null;
 		try {
@@ -107,7 +111,7 @@
 			platform.openExternal(url);
 		} catch (err) {
 			portalBusy = false;
-			portalError = err instanceof Error ? err.message : m.settings_account_portal_failed();
+			portalError = portalErrorMessage(err);
 		}
 	}
 
@@ -140,7 +144,7 @@
 				</div>
 				<div class="plan-price">
 					{#if isFree}
-						{freeNote(type, sub?.planCode)}
+						{freeNote(type, sub?.planCode, billing.plan)}
 					{:else if priceLine}
 						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
 					{:else if isPersonal}
@@ -171,7 +175,11 @@
 						{/if}
 						<Button variant="ghost" size="sm" disabled={portalBusy} onclick={openPortal}>
 							<ExternalLink size={14} />
-							{portalBusy ? m.settings_account_opening() : m.settings_account_manage_billing()}
+							{portalBusy
+								? m.settings_account_opening()
+								: store
+									? m.settings_account_manage_in_store({ store: store.label })
+									: m.settings_account_manage_billing()}
 						</Button>
 						{#if canMoveToFree}
 							<Button variant="ghost" size="sm" href={`/u/${slot}/lifecycle/downgrade`}>

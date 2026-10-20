@@ -2,7 +2,9 @@ import { browser } from '$app/environment';
 import {
 	getMySubscription,
 	getPlans,
+	type Plan,
 	type PlanCatalog,
+	type PlanCode,
 	type Subscription
 } from '$core/api/billing';
 import {
@@ -21,6 +23,7 @@ class BillingStore {
 	error = $state<string | null>(null);
 	#accountId: string | null = null;
 	#loadedFor: string | null = null;
+	#catalogLoad: Promise<PlanCatalog | null> | null = null;
 
 	setAccount(accountId: string | null): void {
 		if (this.#accountId === accountId) return;
@@ -37,6 +40,7 @@ class BillingStore {
 	});
 
 	planCode = $derived(this.subscription?.planCode ?? null);
+	plan = $derived(this.planFor(this.planCode));
 	isFree = $derived(isFreePlan(this.planCode));
 	isFreeFamily = $derived(isFreeFamily(this.planCode));
 	canAddDomains = $derived(allowsCustomDomains(this.planCode));
@@ -74,13 +78,19 @@ class BillingStore {
 	async ensureCatalog(): Promise<PlanCatalog | null> {
 		if (!browser) return null;
 		if (this.catalog) return this.catalog;
-		try {
-			this.catalog = await getPlans();
-			return this.catalog;
-		} catch (err) {
-			this.error = err instanceof Error ? err.message : 'failed to load plans';
-			return null;
-		}
+		this.#catalogLoad ??= getPlans()
+			.then((catalog) => (this.catalog = catalog))
+			.catch((err) => {
+				this.error = err instanceof Error ? err.message : 'failed to load plans';
+				return null;
+			})
+			.finally(() => (this.#catalogLoad = null));
+		return this.#catalogLoad;
+	}
+
+	planFor(code: PlanCode | null | undefined): Plan | null {
+		if (!code) return null;
+		return this.catalog?.plans.find((p) => p.code === code) ?? null;
 	}
 }
 

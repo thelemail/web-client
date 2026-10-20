@@ -47,7 +47,7 @@
 	const Icon = $derived(isPersonal ? UserRound : Users);
 	const callerAccountId = $derived(auth.accountId);
 	const canManage = $derived(workspaces.canManage(callerAccountId));
-	const seatsTotal = $derived(seatLimitFor(type, billing.subscription?.seats ?? null));
+	const seatsTotal = $derived(seatLimitFor(billing.plan, billing.subscription?.seats ?? null));
 	const title = $derived(membershipTitle(type));
 	const addLabel = $derived(addMemberLabel(type));
 
@@ -109,6 +109,12 @@
 	);
 	const domainGated = $derived(mode === 'domain' && hasRoom && usableDomainCount === 0);
 	const seatsLeft = $derived(seatsTotal == null ? null : seatsTotal - seatsUsed);
+	const fullNote = $derived(seatsFullNote(type, seatsTotal, planCode));
+
+	$effect(() => {
+		void billing.ensureCatalog();
+	});
+
 	const myMember = $derived(workspaces.members.find((wm) => wm.accountId === callerAccountId) ?? null);
 	const isWorkspaceOwner = $derived(myMember?.role === 'owner');
 	const canLeave = $derived(isFreeFamily && !!myMember && !isWorkspaceOwner);
@@ -251,9 +257,11 @@
 				<UserPlus size={14} />{addLabel}
 			</Button>
 			{#if mode === 'existing-account'}
-				<span class="mbr-note">
-					{m.settings_member_seats_free_existing({ left: seatsLeft ?? 0, total: seatsTotal ?? 0, domains: platformDomains.displayHosted() })}
-				</span>
+				{#if seatsTotal != null && seatsLeft != null}
+					<span class="mbr-note">
+						{m.settings_member_seats_free_existing({ left: seatsLeft, total: seatsTotal, domains: platformDomains.displayHosted() })}
+					</span>
+				{/if}
 			{:else if seatsTotal != null}
 				{#if type === 'business' && seatsUsed >= seatsTotal}
 					<span class="mbr-note">{m.settings_member_seats_prorated()}</span>
@@ -285,9 +293,9 @@
 				<Info size={15} />
 				<span>{m.settings_member_domain_gate()}</span>
 			</div>
-		{:else if !hasRoom || canManage}
+		{:else if (!hasRoom || canManage) && fullNote}
 			<div class="seat-full">
-				<Info size={15} /><span>{seatsFullNote(type, seatsTotal, planCode)}</span>
+				<Info size={15} /><span>{fullNote}</span>
 			</div>
 		{/if}
 		{#if canLeave}

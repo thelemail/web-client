@@ -19,9 +19,16 @@ const CODES: ErrorCode[] = [
 ];
 
 describe('familyInviteError', () => {
+	it('names the seat limit the plan allows', () => {
+		expect(familyInviteError(apiError('family_full'), 'a@b.com', 4)).toMatch(/4 accounts/);
+		const unknown = familyInviteError(apiError('family_full'), 'a@b.com', null);
+		expect(unknown).toMatch(/family is full/);
+		expect(unknown).not.toMatch(/null|undefined|\d/);
+	});
+
 	it('has copy for every eligibility failure the API can return', () => {
 		for (const code of CODES) {
-			const msg = familyInviteError(apiError(code), 'anna@thelemail.com');
+			const msg = familyInviteError(apiError(code), 'anna@thelemail.com', 6);
 			expect(msg).not.toMatch(/undefined/);
 			expect(msg.length).toBeGreaterThan(20);
 			expect(msg).not.toBe('Could not send the invitation. Try again.');
@@ -29,33 +36,33 @@ describe('familyInviteError', () => {
 	});
 
 	it('explains an invitation the server refused as a conflict', () => {
-		expect(familyInviteError(apiError('conflict'), 'anna@thelemail.com')).toContain(
+		expect(familyInviteError(apiError('conflict'), 'anna@thelemail.com', 6)).toContain(
 			'anna@thelemail.com'
 		);
 	});
 
 	it('names the person in the message where it helps', () => {
-		expect(familyInviteError(apiError('invitee_not_found'), 'anna@thelemail.com')).toContain(
+		expect(familyInviteError(apiError('invitee_not_found'), 'anna@thelemail.com', 6)).toContain(
 			'anna@thelemail.com'
 		);
 	});
 
 	it('tells a paid invitee who cancels and that nothing is refunded', () => {
-		const msg = familyInviteError(apiError('invitee_plan_conflict'), 'anna@thelemail.com');
+		const msg = familyInviteError(apiError('invitee_plan_conflict'), 'anna@thelemail.com', 6);
 		expect(msg).toMatch(/themselves/);
 		expect(msg).toMatch(/Account & plan/);
 		expect(msg).toMatch(/not refund/);
 	});
 
 	it('sends store subscribers to the store', () => {
-		expect(familyInviteError(apiError('invitee_store_billed'), 'a@b.com')).toMatch(/App Store/);
+		expect(familyInviteError(apiError('invitee_store_billed'), 'a@b.com', 6)).toMatch(/App Store/);
 	});
 
 	it('falls back sanely on an unknown or non-API error', () => {
-		expect(familyInviteError(new Error('boom'), 'a@b.com')).toBe(
+		expect(familyInviteError(new Error('boom'), 'a@b.com', 6)).toBe(
 			'Could not send the invitation. Try again.'
 		);
-		expect(familyInviteError(null, 'a@b.com')).not.toMatch(/undefined/);
+		expect(familyInviteError(null, 'a@b.com', 6)).not.toMatch(/undefined/);
 	});
 });
 
