@@ -1412,16 +1412,16 @@
   "settings_ceremony_delete_eyebrow": "Compte · procédure",
   "settings_ceremony_delete_title": "Supprimer le compte",
   "settings_ceremony_delete_lede": "La suppression de <addr>{email}</addr> désactive immédiatement le compte et efface tout après un délai de grâce de 30 jours. Vos e-mails étant chiffrés au repos, leur suppression est définitive : ni vous ni nous ne pourrons les récupérer.",
-  "settings_ceremony_delete_point_erased": "Tous les messages, alias et contacts de ce compte seront effacés.",
+  "settings_ceremony_delete_point_erased": "Tous les e-mails, contacts, agendas et adresses de ce compte seront effacés.",
   "settings_ceremony_delete_point_domains": "Vos domaines vous appartiennent toujours, mais les e-mails ne seront plus acheminés tant que vous ne les reconnectez pas.",
-  "settings_ceremony_delete_point_signed_out": "Vous êtes immédiatement déconnecté de tous les appareils. Vous pouvez changer d’avis en vous reconnectant sous 30 jours.",
+  "settings_ceremony_delete_point_signed_out": "Dès la confirmation, vous serez déconnecté de tous les appareils. Pour conserver le compte, reconnectez-vous sous 30 jours et annulez la suppression.",
   "settings_ceremony_delete_export_nudge": "<b>Exportez d’abord vos données.</b> L’outil d’exportation Thelemail s’exécute sur votre ordinateur et enregistre une copie déchiffrée de vos e-mails avant leur suppression.",
   "settings_ceremony_delete_export_archive": "Obtenir l’outil d’exportation",
   "settings_ceremony_delete_ack_destroyed": "Je comprends que mes e-mails sont chiffrés et seront définitivement détruits après le délai de grâce.",
   "settings_ceremony_delete_ack_exported": "J’ai exporté tout ce que je souhaite conserver.",
   "settings_ceremony_delete_type_to_confirm": "Saisissez <addr>{email}</addr> pour confirmer",
-  "settings_ceremony_delete_workspace_lede": "Ce compte possède un espace de travail qui contient encore d’autres membres. Transférez la propriété à un autre membre, ou retirez les autres membres, avant de supprimer le compte.",
-  "settings_ceremony_delete_workspace_point": "Gérez les membres et la propriété dans Paramètres → Compte et offre.",
+  "settings_ceremony_delete_workspace_lede": "Ce compte possède un espace de travail qui contient encore d’autres membres. Retirez-les avant de supprimer le compte.",
+  "settings_ceremony_delete_workspace_point": "Vous pouvez retirer des membres dans la section Membres de la page Compte et offre.",
   "settings_ceremony_delete_verify_lede": "Confirmez votre identité. Les sessions de cet appareil seront alors définitivement fermées.",
   "settings_ceremony_delete_current_password": "Mot de passe actuel",
   "settings_ceremony_delete_current_password_placeholder": "Saisissez le mot de passe actuel",
@@ -1431,9 +1431,9 @@
   "settings_ceremony_delete_use_authenticator": "Utiliser un code de l’application d’authentification",
   "settings_ceremony_delete_use_security_key": "Utiliser une clé de sécurité ou une clé d’accès",
   "settings_ceremony_delete_done_title": "Suppression du compte programmée",
-  "settings_ceremony_delete_done_desc": "Vous avez été déconnecté de tous les appareils. Tout sera définitivement effacé le {date}. D’ici là, vous pouvez annuler en vous reconnectant. Nous sommes désolés de vous voir partir.",
+  "settings_ceremony_delete_done_desc": "Vous avez été déconnecté de tous les appareils. Tout sera définitivement effacé le {date}. D’ici là, vous pouvez vous reconnecter et annuler la suppression.",
   "settings_ceremony_delete_keep": "Conserver mon compte",
-  "settings_ceremony_delete_open_settings": "Ouvrir les paramètres",
+  "settings_ceremony_delete_open_settings": "Gérer les membres",
   "settings_ceremony_delete_verifying": "Vérification…",
   "settings_ceremony_delete_submit": "Supprimer définitivement le compte",
   "settings_ceremony_delete_signing_out": "Déconnexion…",
@@ -1639,7 +1639,7 @@
   "settings_account_nudge_family_desc": "L’offre payante Family conserve les six places et ajoute les domaines personnalisés, davantage de stockage et des adresses que vous créez vous-même.",
   "settings_account_delete_title": "Supprimer le compte",
   "settings_account_delete_row": "Supprimer définitivement ce compte",
-  "settings_account_delete_desc": "Désactive le compte immédiatement et efface chaque boîte mail, adresse et message après un délai de grâce de 30 jours. Une fois supprimées, les données chiffrées sont définitivement perdues. Téléchargez d’abord vos données.",
+  "settings_account_delete_desc": "Désactive le compte immédiatement et efface tous ses e-mails, contacts, agendas et adresses après un délai de grâce de 30 jours. Une fois supprimées, les données chiffrées sont définitivement perdues. Téléchargez d’abord vos données.",
   "settings_account_delete_button": "Supprimer le compte…",
   "settings_account_export_title": "Vos données",
   "settings_account_export_row": "Télécharger vos données",
@@ -1916,7 +1916,7 @@
   "lc_badge_export": "Exporter",
   "lc_badge_restore": "Réactiver",
   "lc_deletion_title": "Suppression programmée",
-  "lc_deletion_body": "La suppression de ce compte a été demandée le <b>{requested}</b>. Tout son contenu — chaque boîte mail, alias et message — sera définitivement effacé le <b>{purge}</b>.",
+  "lc_deletion_body": "La suppression de ce compte a été demandée le <b>{requested}</b>. Tous ses e-mails, contacts, agendas et adresses seront définitivement effacés le <b>{purge}</b>.",
   "lc_deletion_body_days": [
     {
       "declarations": [
@@ -1929,8 +1929,8 @@
         "countPlural"
       ],
       "match": {
-        "countPlural=one": "La suppression de ce compte a été demandée le <b>{requested}</b>. Tout son contenu — chaque boîte mail, alias et message — sera définitivement effacé le <b>{purge}</b> ({count} jour restant).",
-        "countPlural=*": "La suppression de ce compte a été demandée le <b>{requested}</b>. Tout son contenu — chaque boîte mail, alias et message — sera définitivement effacé le <b>{purge}</b> ({count} jours restants)."
+        "countPlural=one": "La suppression de ce compte a été demandée le <b>{requested}</b>. Tous ses e-mails, contacts, agendas et adresses seront définitivement effacés le <b>{purge}</b> ({count} jour restant).",
+        "countPlural=*": "La suppression de ce compte a été demandée le <b>{requested}</b>. Tous ses e-mails, contacts, agendas et adresses seront définitivement effacés le <b>{purge}</b> ({count} jours restants)."
       }
     }
   ],

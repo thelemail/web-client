@@ -1412,16 +1412,16 @@
 	"settings_ceremony_delete_eyebrow": "Konto · Bestätigung",
 	"settings_ceremony_delete_title": "Konto löschen",
 	"settings_ceremony_delete_lede": "Wenn Sie <addr>{email}</addr> löschen, wird es sofort deaktiviert und nach einer 30-tägigen Schonfrist vollständig gelöscht. Da Ihre E-Mails verschlüsselt gespeichert sind, sind sie nach dem endgültigen Löschen verloren – weder wir noch Sie können sie wiederherstellen.",
-	"settings_ceremony_delete_point_erased": "Alle Nachrichten, Aliasse und Kontakte dieses Kontos werden gelöscht.",
+	"settings_ceremony_delete_point_erased": "Alle E-Mails, Kontakte, Kalender und Adressen dieses Kontos werden gelöscht.",
 	"settings_ceremony_delete_point_domains": "Die Domains bleiben Ihr Eigentum, empfangen aber keine E-Mails mehr, bis Sie sie erneut verbinden.",
-	"settings_ceremony_delete_point_signed_out": "Sie werden jetzt überall abgemeldet. Sie können Ihre Entscheidung rückgängig machen, indem Sie sich innerhalb von 30 Tagen wieder anmelden.",
+	"settings_ceremony_delete_point_signed_out": "Wenn Sie bestätigen, werden Sie überall abgemeldet. Um das Konto zu behalten, melden Sie sich innerhalb von 30 Tagen an und brechen die Löschung ab.",
 	"settings_ceremony_delete_export_nudge": "<b>Zuerst exportieren.</b> Das Thelemail Export Tool läuft auf Ihrem Computer und speichert eine entschlüsselte Kopie Ihrer E-Mails, bevor sie gelöscht werden.",
 	"settings_ceremony_delete_export_archive": "Export Tool herunterladen",
 	"settings_ceremony_delete_ack_destroyed": "Ich verstehe, dass meine E-Mails verschlüsselt sind und nach der Schonfrist endgültig vernichtet werden.",
 	"settings_ceremony_delete_ack_exported": "Ich habe alles exportiert, was ich behalten möchte.",
 	"settings_ceremony_delete_type_to_confirm": "Geben Sie zur Bestätigung <addr>{email}</addr> ein",
-	"settings_ceremony_delete_workspace_lede": "Dieses Konto besitzt einen Arbeitsbereich mit weiteren Mitgliedern. Übertragen Sie die Inhaberschaft auf ein anderes Mitglied oder entfernen Sie die übrigen Mitglieder, bevor Sie das Konto löschen.",
-	"settings_ceremony_delete_workspace_point": "Verwalten Sie Mitglieder und Inhaberschaft unter Einstellungen → Konto & Tarif.",
+	"settings_ceremony_delete_workspace_lede": "Dieses Konto besitzt einen Arbeitsbereich mit weiteren Mitgliedern. Entfernen Sie diese, bevor Sie das Konto löschen.",
+	"settings_ceremony_delete_workspace_point": "Mitglieder entfernen Sie im Bereich Mitglieder auf der Seite Konto & Tarif.",
 	"settings_ceremony_delete_verify_lede": "Bestätigen Sie Ihre Identität. Die Sitzungen dieses Geräts werden danach unwiderruflich beendet.",
 	"settings_ceremony_delete_current_password": "Aktuelles Passwort",
 	"settings_ceremony_delete_current_password_placeholder": "Aktuelles Passwort eingeben",
@@ -1431,9 +1431,9 @@
 	"settings_ceremony_delete_use_authenticator": "Stattdessen einen Authentifizierungscode verwenden",
 	"settings_ceremony_delete_use_security_key": "Sicherheitsschlüssel oder Passkey verwenden",
 	"settings_ceremony_delete_done_title": "Kontolöschung geplant",
-	"settings_ceremony_delete_done_desc": "Sie wurden überall abgemeldet. Am {date} wird alles endgültig gelöscht. Bis dahin können Sie den Vorgang durch eine erneute Anmeldung abbrechen. Schade, dass Sie gehen.",
+	"settings_ceremony_delete_done_desc": "Sie wurden überall abgemeldet. Am {date} wird alles endgültig gelöscht. Bis dahin können Sie sich anmelden und die Löschung abbrechen.",
 	"settings_ceremony_delete_keep": "Mein Konto behalten",
-	"settings_ceremony_delete_open_settings": "Einstellungen öffnen",
+	"settings_ceremony_delete_open_settings": "Mitglieder verwalten",
 	"settings_ceremony_delete_verifying": "Wird verifiziert…",
 	"settings_ceremony_delete_submit": "Konto endgültig löschen",
 	"settings_ceremony_delete_signing_out": "Abmeldung läuft…",
@@ -1639,7 +1639,7 @@
 	"settings_account_nudge_family_desc": "Der kostenpflichtige Family-Tarif behält die sechs Plätze bei und ergänzt eigene Domains, mehr Speicherplatz und selbst erstellte Adressen.",
 	"settings_account_delete_title": "Konto löschen",
 	"settings_account_delete_row": "Dieses Konto endgültig löschen",
-	"settings_account_delete_desc": "Deaktiviert das Konto sofort und löscht nach einer 30-tägigen Schonfrist alle Postfächer, Adressen und Nachrichten. Endgültig gelöschte verschlüsselte Daten lassen sich nicht wiederherstellen. Laden Sie Ihre Daten vorher herunter.",
+	"settings_account_delete_desc": "Deaktiviert das Konto sofort und löscht nach einer 30-tägigen Schonfrist alle E-Mails, Kontakte, Kalender und Adressen darin. Endgültig gelöschte verschlüsselte Daten lassen sich nicht wiederherstellen. Laden Sie Ihre Daten vorher herunter.",
 	"settings_account_delete_button": "Konto löschen…",
 	"settings_account_export_title": "Ihre Daten",
 	"settings_account_export_row": "Ihre Daten herunterladen",
@@ -1916,7 +1916,7 @@
 	"lc_badge_export": "Exportieren",
 	"lc_badge_restore": "Wiederherstellen",
 	"lc_deletion_title": "Löschung geplant",
-	"lc_deletion_body": "Die Löschung dieses Kontos wurde am <b>{requested}</b> angefordert. Alle Inhalte – jedes Postfach, jeder Alias und jede Nachricht – werden am <b>{purge}</b> endgültig gelöscht.",
+	"lc_deletion_body": "Die Löschung dieses Kontos wurde am <b>{requested}</b> angefordert. Alle E-Mails, Kontakte, Kalender und Adressen darin werden am <b>{purge}</b> endgültig gelöscht.",
 	"lc_deletion_body_days": [
 		{
 			"declarations": [
@@ -1929,8 +1929,8 @@
 				"countPlural"
 			],
 			"match": {
-				"countPlural=one": "Die Löschung dieses Kontos wurde am <b>{requested}</b> angefordert. Alle Inhalte – jedes Postfach, jeder Alias und jede Nachricht – werden am <b>{purge}</b> endgültig gelöscht (noch {count} Tag).",
-				"countPlural=*": "Die Löschung dieses Kontos wurde am <b>{requested}</b> angefordert. Alle Inhalte – jedes Postfach, jeder Alias und jede Nachricht – werden am <b>{purge}</b> endgültig gelöscht (noch {count} Tage)."
+				"countPlural=one": "Die Löschung dieses Kontos wurde am <b>{requested}</b> angefordert. Alle E-Mails, Kontakte, Kalender und Adressen darin werden am <b>{purge}</b> endgültig gelöscht (noch {count} Tag).",
+				"countPlural=*": "Die Löschung dieses Kontos wurde am <b>{requested}</b> angefordert. Alle E-Mails, Kontakte, Kalender und Adressen darin werden am <b>{purge}</b> endgültig gelöscht (noch {count} Tage)."
 			}
 		}
 	],

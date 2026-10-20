@@ -11,6 +11,7 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Fingerprint from '@lucide/svelte/icons/fingerprint';
 	import LogOut from '@lucide/svelte/icons/log-out';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -22,6 +23,7 @@
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { twofactor } from '$core/stores/twofactor.svelte';
+	import { workspaces } from '$core/stores/workspaces.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
@@ -50,6 +52,10 @@
 	let purgeAt = $state('');
 	let signingOut = $state(false);
 
+	const ownsSharedWorkspace = $derived(
+		workspaces.isOwner(auth.accountId) && workspaces.members.length > 1
+	);
+	const blocked = $derived(workspaceBlocked || ownsSharedWorkspace);
 	const target = $derived(auth.email ?? '');
 	const canContinue = $derived(target !== '' && confirmText.trim() === target && ackA && ackB);
 	const steps = $derived([
@@ -62,6 +68,18 @@
 	$effect(() => {
 		if (auth.accountId) twofactor.ensure(auth.accountId);
 	});
+
+	onMount(() => {
+		if (!workspaces.workspace) void workspaces.load(auth.accountId);
+	});
+
+	async function openMembers() {
+		onClose();
+		await tick();
+		const card = document.getElementById('members');
+		card?.scrollIntoView({ block: 'start' });
+		card?.focus({ preventScroll: true });
+	}
 
 	const methods = $derived<TwoFactorMethod[]>(enrolledMethods(twofactor.status));
 	const hasTotp = $derived(methods.includes('totp'));
@@ -206,7 +224,16 @@
 	{step}
 	onClose={step === 3 ? signOutDeleted : onClose}
 >
-	{#if step === 0}
+	{#if blocked && step < 3}
+		<div class="cer-pane">
+			<div class="cer-lede">
+				<p>{m.settings_ceremony_delete_workspace_lede()}</p>
+			</div>
+			<ul class="cer-points danger">
+				<li><Users size={16} /><span>{m.settings_ceremony_delete_workspace_point()}</span></li>
+			</ul>
+		</div>
+	{:else if step === 0}
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
@@ -253,90 +280,79 @@
 			</div>
 		</div>
 	{:else if step === 2}
-		{#if workspaceBlocked}
-			<div class="cer-pane">
-				<div class="cer-lede">
-					<p>{m.settings_ceremony_delete_workspace_lede()}</p>
-				</div>
-				<ul class="cer-points danger">
-					<li><Users size={16} /><span>{m.settings_ceremony_delete_workspace_point()}</span></li>
-				</ul>
+		<div class="cer-pane">
+			<div class="cer-lede">
+				<p>{m.settings_ceremony_delete_verify_lede()}</p>
 			</div>
-		{:else}
-			<div class="cer-pane">
-				<div class="cer-lede">
-					<p>{m.settings_ceremony_delete_verify_lede()}</p>
-				</div>
+			<div class="field">
+				<label for="del-pw">{m.settings_ceremony_delete_current_password()}</label>
+				<input
+					id="del-pw"
+					class="tin"
+					type="password"
+					bind:value={cur}
+					placeholder={m.settings_ceremony_delete_current_password_placeholder()}
+					autocomplete="current-password"
+					disabled={busy}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && canSubmit) submit();
+					}}
+				/>
+			</div>
+			{#if needsCode}
 				<div class="field">
-					<label for="del-pw">{m.settings_ceremony_delete_current_password()}</label>
+					<label for="del-2fa-code">
+						{twoFaMode === 'totp'
+							? m.settings_ceremony_delete_authenticator_code()
+							: m.settings_ceremony_delete_backup_code()}
+					</label>
 					<input
-						id="del-pw"
-						class="tin"
-						type="password"
-						bind:value={cur}
-						placeholder={m.settings_ceremony_delete_current_password_placeholder()}
-						autocomplete="current-password"
+						id="del-2fa-code"
+						class="tin mono"
+						class:otp={twoFaMode === 'totp'}
+						class:bcode={twoFaMode !== 'totp'}
+						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
+						inputmode={twoFaMode === 'totp' ? 'numeric' : 'text'}
+						autocomplete={twoFaMode === 'totp' ? 'one-time-code' : 'off'}
+						spellcheck={false}
 						disabled={busy}
+						value={twoFaCode}
+						oninput={(e) => {
+							const v = (e.currentTarget as HTMLInputElement).value;
+							twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v.toUpperCase();
+						}}
 						onkeydown={(e) => {
 							if (e.key === 'Enter' && canSubmit) submit();
 						}}
+						placeholder={twoFaMode === 'totp' ? '000000' : BACKUP_CODE_PLACEHOLDER}
 					/>
 				</div>
-				{#if needsCode}
-					<div class="field">
-						<label for="del-2fa-code">
-							{twoFaMode === 'totp'
-								? m.settings_ceremony_delete_authenticator_code()
-								: m.settings_ceremony_delete_backup_code()}
-						</label>
-						<input
-							id="del-2fa-code"
-							class="tin mono"
-							class:otp={twoFaMode === 'totp'}
-							class:bcode={twoFaMode !== 'totp'}
-							maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
-							inputmode={twoFaMode === 'totp' ? 'numeric' : 'text'}
-							autocomplete={twoFaMode === 'totp' ? 'one-time-code' : 'off'}
-							spellcheck={false}
-							disabled={busy}
-							value={twoFaCode}
-							oninput={(e) => {
-								const v = (e.currentTarget as HTMLInputElement).value;
-								twoFaCode = twoFaMode === 'totp' ? v.replace(/\D/g, '') : v.toUpperCase();
-							}}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' && canSubmit) submit();
-							}}
-							placeholder={twoFaMode === 'totp' ? '000000' : BACKUP_CODE_PLACEHOLDER}
-						/>
-					</div>
-				{/if}
-				{#if hasTotp && hasBackup}
-					<button
-						type="button"
-						class="linklike"
-						disabled={busy}
-						onclick={() => {
-							twoFaMode = twoFaMode === 'totp' ? 'backup' : 'totp';
-							twoFaCode = '';
-							verifyError = '';
-						}}
-					>
-						{twoFaMode === 'totp'
-							? m.settings_ceremony_delete_use_backup()
-							: m.settings_ceremony_delete_use_authenticator()}
-					</button>
-				{/if}
-				{#if hasWebauthn}
-					<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
-						<Fingerprint size={14} />{m.settings_ceremony_delete_use_security_key()}
-					</Button>
-				{/if}
-				{#if verifyError}
-					<span class="errtext" role="alert"><CircleAlert size={13} /><span>{verifyError}</span></span>
-				{/if}
-			</div>
-		{/if}
+			{/if}
+			{#if hasTotp && hasBackup}
+				<button
+					type="button"
+					class="linklike"
+					disabled={busy}
+					onclick={() => {
+						twoFaMode = twoFaMode === 'totp' ? 'backup' : 'totp';
+						twoFaCode = '';
+						verifyError = '';
+					}}
+				>
+					{twoFaMode === 'totp'
+						? m.settings_ceremony_delete_use_backup()
+						: m.settings_ceremony_delete_use_authenticator()}
+				</button>
+			{/if}
+			{#if hasWebauthn}
+				<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
+					<Fingerprint size={14} />{m.settings_ceremony_delete_use_security_key()}
+				</Button>
+			{/if}
+			{#if verifyError}
+				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{verifyError}</span></span>
+			{/if}
+		</div>
 	{:else}
 		<DoneScreen
 			icon={CircleCheck}
@@ -346,7 +362,10 @@
 	{/if}
 
 	{#snippet footer()}
-		{#if step === 0}
+		{#if blocked && step < 3}
+			<Button variant="ghost" onclick={onClose}>{m.common_close()}</Button>
+			<Button variant="primary" onclick={openMembers}>{m.settings_ceremony_delete_open_settings()}</Button>
+		{:else if step === 0}
 			<Button variant="ghost" onclick={onClose}>{m.settings_ceremony_delete_keep()}</Button>
 			<Button variant="danger" onclick={() => (step = 1)}>
 				{m.common_continue()}<ArrowRight size={15} />
@@ -359,20 +378,16 @@
 				{m.common_continue()}<ArrowRight size={15} />
 			</Button>
 		{:else if step === 2}
-			{#if workspaceBlocked}
-				<Button variant="primary" onclick={onClose}>{m.settings_ceremony_delete_open_settings()}</Button>
-			{:else}
-				<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
-					<ArrowLeft size={15} />{m.common_back()}
-				</Button>
-				<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>
-					{#if busy}
-						{m.settings_ceremony_delete_verifying()}
-					{:else}
-						<Trash2 size={15} />{m.settings_ceremony_delete_submit()}
-					{/if}
-				</Button>
-			{/if}
+			<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
+				<ArrowLeft size={15} />{m.common_back()}
+			</Button>
+			<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>
+				{#if busy}
+					{m.settings_ceremony_delete_verifying()}
+				{:else}
+					<Trash2 size={15} />{m.settings_ceremony_delete_submit()}
+				{/if}
+			</Button>
 		{:else}
 			<Button variant="primary" disabled={signingOut} onclick={signOutDeleted}>
 				<LogOut size={15} />{signingOut

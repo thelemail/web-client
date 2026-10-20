@@ -219,7 +219,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Card icon={Icon} {title}>
+<Card id="members" tabindex={-1} icon={Icon} {title}>
 	{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
 
 	{#if !isPersonal}

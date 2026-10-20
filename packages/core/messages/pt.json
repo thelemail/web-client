@@ -1411,17 +1411,17 @@
 	"settings_ceremony_delete_err_network": "Não foi possível contactar o servidor — verifique a ligação e tente novamente.",
 	"settings_ceremony_delete_eyebrow": "Conta · procedimento",
 	"settings_ceremony_delete_title": "Eliminar conta",
-	"settings_ceremony_delete_lede": "Eliminar <addr>{email}</addr> desativa a conta de imediato e apaga tudo após um período de tolerância de 30 dias. Como as mensagens são cifradas em repouso, depois de apagadas não podem ser recuperadas — nem por nós nem por si.",
-	"settings_ceremony_delete_point_erased": "Todas as mensagens, aliases e contactos desta conta serão apagados.",
-	"settings_ceremony_delete_point_domains": "Os domínios continuam a ser seus — mas o encaminhamento de correio para até os voltar a ligar.",
-	"settings_ceremony_delete_point_signed_out": "As sessões são terminadas em todo o lado agora. Pode mudar de ideias ao voltar a iniciar sessão no prazo de 30 dias.",
+	"settings_ceremony_delete_lede": "Eliminar <addr>{email}</addr> desativa a conta de imediato e apaga tudo após um período de tolerância de 30 dias. Como as mensagens são cifradas em repouso, depois de apagadas não podem ser recuperadas, nem por nós nem por si.",
+	"settings_ceremony_delete_point_erased": "Todas as mensagens, contactos, calendários e endereços desta conta serão apagados.",
+	"settings_ceremony_delete_point_domains": "Os domínios continuam a ser seus, mas deixam de receber correio até os voltar a ligar.",
+	"settings_ceremony_delete_point_signed_out": "Ao confirmar, as sessões são terminadas em todo o lado. Para manter a conta, inicie sessão no prazo de 30 dias e cancele a eliminação.",
 	"settings_ceremony_delete_export_nudge": "<b>Exporte primeiro.</b> A ferramenta de exportação do Thelemail é executada no seu computador e guarda uma cópia decifrada das suas mensagens antes de desaparecerem.",
 	"settings_ceremony_delete_export_archive": "Obter a ferramenta de exportação",
 	"settings_ceremony_delete_ack_destroyed": "Compreendo que as minhas mensagens estão cifradas e serão destruídas permanentemente após o período de tolerância.",
 	"settings_ceremony_delete_ack_exported": "Exportei tudo o que quero guardar.",
 	"settings_ceremony_delete_type_to_confirm": "Escreva <addr>{email}</addr> para confirmar",
-	"settings_ceremony_delete_workspace_lede": "Esta conta é proprietária de um espaço de trabalho que ainda tem outros membros. Transfira a propriedade para outro membro — ou remova-os — antes de eliminar a conta.",
-	"settings_ceremony_delete_workspace_point": "Pode gerir membros e propriedade em Definições → Conta e plano.",
+	"settings_ceremony_delete_workspace_lede": "Esta conta é proprietária de um espaço de trabalho que ainda tem outros membros. Remova-os antes de eliminar a conta.",
+	"settings_ceremony_delete_workspace_point": "Pode remover membros na secção Membros da página Conta e plano.",
 	"settings_ceremony_delete_verify_lede": "Confirme que é mesmo quem diz ser. Este é o ponto sem retorno para as sessões deste dispositivo.",
 	"settings_ceremony_delete_current_password": "Palavra-passe atual",
 	"settings_ceremony_delete_current_password_placeholder": "Introduza a palavra-passe atual",
@@ -1431,9 +1431,9 @@
 	"settings_ceremony_delete_use_authenticator": "Usar um código da aplicação de autenticação",
 	"settings_ceremony_delete_use_security_key": "Usar chave de segurança ou chave de acesso",
 	"settings_ceremony_delete_done_title": "Eliminação da conta agendada",
-	"settings_ceremony_delete_done_desc": "As suas sessões foram terminadas em todo o lado. Tudo será apagado permanentemente em {date}. Até lá, pode cancelar ao voltar a iniciar sessão. Lamentamos a sua partida.",
+	"settings_ceremony_delete_done_desc": "As suas sessões foram terminadas em todo o lado. Tudo será apagado permanentemente em {date}. Até lá, pode iniciar sessão e cancelar a eliminação.",
 	"settings_ceremony_delete_keep": "Manter a minha conta",
-	"settings_ceremony_delete_open_settings": "Abrir definições",
+	"settings_ceremony_delete_open_settings": "Gerir membros",
 	"settings_ceremony_delete_verifying": "A verificar…",
 	"settings_ceremony_delete_submit": "Eliminar conta permanentemente",
 	"settings_ceremony_delete_signing_out": "A terminar sessão…",
@@ -1639,7 +1639,7 @@
 	"settings_account_nudge_family_desc": "O plano pago Family mantém os mesmos seis lugares e acrescenta domínios personalizados, mais armazenamento e endereços criados por si.",
 	"settings_account_delete_title": "Eliminar conta",
 	"settings_account_delete_row": "Eliminar esta conta permanentemente",
-	"settings_account_delete_desc": "Desativa a conta agora e apaga todas as caixas de correio, endereços e mensagens após um período de tolerância de 30 dias. Depois de apagados, os dados cifrados perdem-se para sempre. Transfira primeiro os seus dados.",
+	"settings_account_delete_desc": "Desativa a conta agora e apaga todas as mensagens, contactos, calendários e endereços nela após um período de tolerância de 30 dias. Depois de apagados, os dados cifrados perdem-se para sempre. Transfira primeiro os seus dados.",
 	"settings_account_delete_button": "Eliminar conta…",
 	"settings_account_export_title": "Os seus dados",
 	"settings_account_export_row": "Transferir os seus dados",
@@ -1916,7 +1916,7 @@
 	"lc_badge_export": "Exportar",
 	"lc_badge_restore": "Reativar",
 	"lc_deletion_title": "Eliminação agendada",
-	"lc_deletion_body": "A eliminação desta conta foi agendada em <b>{requested}</b>. Tudo o que contém — todas as caixas de correio, aliases e mensagens — será apagado permanentemente em <b>{purge}</b>.",
+	"lc_deletion_body": "A eliminação desta conta foi agendada em <b>{requested}</b>. Todas as mensagens, contactos, calendários e endereços nela serão apagados permanentemente em <b>{purge}</b>.",
 	"lc_deletion_body_days": [
 		{
 			"declarations": [
@@ -1929,8 +1929,8 @@
 				"count"
 			],
 			"match": {
-				"count=1": "A eliminação desta conta foi agendada em <b>{requested}</b>. Tudo o que contém — todas as caixas de correio, aliases e mensagens — será apagado permanentemente em <b>{purge}</b> (falta {count} dia).",
-				"count=*": "A eliminação desta conta foi agendada em <b>{requested}</b>. Tudo o que contém — todas as caixas de correio, aliases e mensagens — será apagado permanentemente em <b>{purge}</b> (faltam {count} dias)."
+				"count=1": "A eliminação desta conta foi agendada em <b>{requested}</b>. Todas as mensagens, contactos, calendários e endereços nela serão apagados permanentemente em <b>{purge}</b> (falta {count} dia).",
+				"count=*": "A eliminação desta conta foi agendada em <b>{requested}</b>. Todas as mensagens, contactos, calendários e endereços nela serão apagados permanentemente em <b>{purge}</b> (faltam {count} dias)."
 			}
 		}
 	],
