@@ -16,17 +16,14 @@
 	import FolderTree from '@lucide/svelte/icons/folder-tree';
 	import Info from '@lucide/svelte/icons/info';
 	import { page } from '$app/state';
-	import { SECTIONS, sectionIdFromPath } from './data';
+	import { visibleGroups, sectionIdFromPath } from './data';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 
-	const sections = SECTIONS.filter(
-		(sec) =>
-			(sec.id !== 'notify' || platform.notifications) && (sec.id !== 'about' || platform.updates)
-	);
+	const groups = visibleGroups(platform);
 
 	const icons: Record<string, typeof Settings> = {
 		'user-round': UserRound,
@@ -50,24 +47,70 @@
 	const accountEmail = $derived(auth.email ?? '');
 	const accountDomain = $derived(accountEmail.includes('@') ? accountEmail.split('@')[1] : '');
 	const workspaceName = $derived(workspaces.workspace?.name ?? '');
+
+	let strip: HTMLElement | undefined = $state();
+	let moreStart = $state(false);
+	let moreEnd = $state(false);
+
+	const EDGE = 28;
+
+	function measure() {
+		if (!strip) return;
+		const max = strip.scrollWidth - strip.clientWidth;
+		moreStart = max > 1 && strip.scrollLeft > 1;
+		moreEnd = max > 1 && strip.scrollLeft < max - 1;
+	}
+
+	function reveal(el: HTMLElement) {
+		if (!strip || strip.scrollWidth <= strip.clientWidth) return;
+		const left = el.offsetLeft;
+		const right = left + el.offsetWidth;
+		if (left < strip.scrollLeft + EDGE) strip.scrollLeft = Math.max(0, left - EDGE);
+		else if (right > strip.scrollLeft + strip.clientWidth - EDGE) strip.scrollLeft = right - strip.clientWidth + EDGE;
+	}
+
+	$effect(() => {
+		void current;
+		const el = strip?.querySelector<HTMLElement>('[aria-current="page"]');
+		if (el) reveal(el);
+		measure();
+	});
 </script>
 
-<nav class="set-nav">
+<svelte:window onresize={measure} />
+
+<nav class="set-nav" aria-label={m.settings_nav_aria()}>
 	<a class="set-back" href={`/u/${slot}/mail/inbox`}>
 		<ArrowLeft size={16} /><span class="lbl">{m.settings_nav_back_to_inbox()}</span>
 	</a>
-	<div class="nav-eyebrow">{m.settings_nav_eyebrow()}</div>
-	{#each sections as sec (sec.id)}
-		{@const Icon = icons[sec.icon] ?? UserRound}
-		<a
-			class="snav"
-			class:active={current === sec.id}
-			href={`/u/${slot}/settings/${sec.id}`}
-			aria-current={current === sec.id ? 'page' : undefined}
-		>
-			<Icon size={17} /><span class="lbl">{sec.label()}</span>
-		</a>
-	{/each}
+	<div
+		class="nav-groups"
+		bind:this={strip}
+		onscroll={measure}
+		data-more-start={moreStart || undefined}
+		data-more-end={moreEnd || undefined}
+	>
+		{#each groups as group (group.id)}
+			<div class="nav-group">
+				<div class="nav-eyebrow" id="snav-{group.id}">{group.label()}</div>
+				<ul aria-labelledby="snav-{group.id}">
+					{#each group.sections as sec (sec.id)}
+						{@const Icon = icons[sec.icon] ?? UserRound}
+						<li>
+							<a
+								class="snav"
+								class:active={current === sec.id}
+								href={`/u/${slot}/settings/${sec.id}`}
+								aria-current={current === sec.id ? 'page' : undefined}
+							>
+								<Icon size={17} /><span class="lbl">{sec.label()}</span>
+							</a>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/each}
+	</div>
 	<div class="nav-foot">
 		<Rich text={m.settings_nav_signed_in_as({ email: accountEmail })} tags={{ b: bold }} /><br />{workspaceName} · {accountDomain}
 	</div>

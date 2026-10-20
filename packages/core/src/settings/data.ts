@@ -23,22 +23,63 @@ export interface SectionMeta {
 	label: () => string;
 }
 
-export const SECTIONS: SectionMeta[] = [
-	{ id: 'profile', icon: 'user-round', label: m.settings_nav_profile },
-	{ id: 'addresses', icon: 'at-sign', label: m.settings_nav_addresses },
-	{ id: 'domains', icon: 'globe-2', label: m.settings_nav_domains },
-	{ id: 'sending', icon: 'send', label: m.settings_nav_sending },
-	{ id: 'reading', icon: 'mail-open', label: m.settings_nav_reading },
-	{ id: 'security', icon: 'shield-check', label: m.settings_nav_security },
-	{ id: 'blocked', icon: 'user-x', label: m.settings_nav_blocked },
-	{ id: 'collections', icon: 'folder-tree', label: m.settings_nav_collections },
-	{ id: 'import', icon: 'upload', label: m.settings_nav_import },
-	{ id: 'notify', icon: 'bell', label: m.settings_nav_notify },
-	{ id: 'region', icon: 'globe', label: m.settings_nav_region },
-	{ id: 'appearance', icon: 'palette', label: m.settings_nav_appearance },
-	{ id: 'account', icon: 'credit-card', label: m.settings_nav_account },
-	{ id: 'about', icon: 'info', label: m.settings_nav_about }
+export type SectionGroupId = 'account' | 'mail' | 'app';
+
+export interface SectionGroup {
+	id: SectionGroupId;
+	label: () => string;
+	sections: SectionMeta[];
+}
+
+export const SECTION_GROUPS: SectionGroup[] = [
+	{
+		id: 'account',
+		label: m.settings_nav_group_account,
+		sections: [
+			{ id: 'profile', icon: 'user-round', label: m.settings_nav_profile },
+			{ id: 'addresses', icon: 'at-sign', label: m.settings_nav_addresses },
+			{ id: 'domains', icon: 'globe-2', label: m.settings_nav_domains },
+			{ id: 'account', icon: 'credit-card', label: m.settings_nav_account },
+			{ id: 'security', icon: 'shield-check', label: m.settings_nav_security }
+		]
+	},
+	{
+		id: 'mail',
+		label: m.settings_nav_group_mail,
+		sections: [
+			{ id: 'sending', icon: 'send', label: m.settings_nav_sending },
+			{ id: 'reading', icon: 'mail-open', label: m.settings_nav_reading },
+			{ id: 'collections', icon: 'folder-tree', label: m.settings_nav_collections },
+			{ id: 'blocked', icon: 'user-x', label: m.settings_nav_blocked },
+			{ id: 'import', icon: 'upload', label: m.settings_nav_import }
+		]
+	},
+	{
+		id: 'app',
+		label: m.settings_nav_group_app,
+		sections: [
+			{ id: 'notify', icon: 'bell', label: m.settings_nav_notify },
+			{ id: 'region', icon: 'globe', label: m.settings_nav_region },
+			{ id: 'appearance', icon: 'palette', label: m.settings_nav_appearance },
+			{ id: 'about', icon: 'info', label: m.settings_nav_about }
+		]
+	}
 ];
+
+export const SECTIONS: SectionMeta[] = SECTION_GROUPS.flatMap((g) => g.sections);
+
+export interface NavPlatform {
+	notifications?: unknown;
+	updates?: unknown;
+}
+
+export function visibleGroups(platform: NavPlatform): SectionGroup[] {
+	const shown = (id: SectionId) =>
+		(id !== 'notify' || !!platform.notifications) && (id !== 'about' || !!platform.updates);
+	return SECTION_GROUPS.map((g) => ({ ...g, sections: g.sections.filter((sec) => shown(sec.id)) })).filter(
+		(g) => g.sections.length > 0
+	);
+}
 
 export type TwoFaSetupMethod = 'totp' | 'key' | 'device';
 export type CeremonyKind =
