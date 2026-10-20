@@ -81,12 +81,51 @@ describe('enrollmentStepUp', () => {
 
 	it('stops before confirming when the password is wrong', async () => {
 		state.finishOk = false;
-		const proof = vi.fn(async () => null);
-		const res = await enrollmentStepUp({ accountId: ACCOUNT, password: 'nope', action: 'totp_enroll', proof });
+		const res = await enrollmentStepUp({
+			accountId: ACCOUNT,
+			password: 'nope',
+			action: 'totp_enroll',
+			proof: async () => null
+		});
 		expect(res).toEqual({ ok: false, reason: 'password' });
-		expect(proof).not.toHaveBeenCalled();
 		expect(state.confirmCalls).toEqual([]);
 		expect(state.abandoned).toEqual(['op-1']);
+	});
+
+	it('waits for the security key before opening the password challenge', async () => {
+		let release: () => void = () => {};
+		const touched = new Promise<void>((resolve) => (release = resolve));
+		const pending = enrollmentStepUp({
+			accountId: ACCOUNT,
+			password: 'pw',
+			action: 'webauthn_enroll',
+			proof: async () => {
+				await touched;
+				return { method: 'webauthn', proofToken: 'pt-1', credential: {} };
+			}
+		});
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(state.initCalls).toEqual([]);
+		release();
+		expect(await pending).toEqual({ ok: true, grant: 'grant-1' });
+		expect(state.initCalls).toHaveLength(1);
+		expect(state.confirmCalls).toHaveLength(1);
+	});
+
+	it('never opens a password challenge when the key prompt fails', async () => {
+		const cancelled = new DOMException('closed', 'NotAllowedError');
+		await expect(
+			enrollmentStepUp({
+				accountId: ACCOUNT,
+				password: 'pw',
+				action: 'webauthn_enroll',
+				proof: async () => {
+					throw cancelled;
+				}
+			})
+		).rejects.toBe(cancelled);
+		expect(state.initCalls).toEqual([]);
+		expect(state.abandoned).toEqual([]);
 	});
 
 	it('refuses SRP accounts without contacting the server', async () => {

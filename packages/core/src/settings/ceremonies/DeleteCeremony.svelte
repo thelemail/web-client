@@ -112,6 +112,8 @@
 		try {
 			const status = await keystore.status();
 			const scheme = status.accounts.find((a) => a.accountId === accountId)?.authScheme ?? 'srp_v1';
+			const proof = await getProof();
+			proofSent = proof !== null;
 			if (scheme === 'opaque_v1') {
 				const start = await keystore.opaqueStartAuth({ password: cur });
 				const init = await initDeletionOpaque({ ke1: start.ke1 }, accountId);
@@ -124,8 +126,6 @@
 					verifyError = m.settings_ceremony_delete_err_password();
 					return;
 				}
-				const proof = await getProof();
-				proofSent = proof !== null;
 				const res = await confirmDeletionOpaque(
 					{ challengeId: init.challengeId, ke3: finish.ke3, ...(proof ? { proof } : {}) },
 					accountId
@@ -146,8 +146,6 @@
 				verifyError = m.settings_ceremony_delete_err_locked();
 				return;
 			}
-			const proof = await getProof();
-			proofSent = proof !== null;
 			const res = await confirmDeletion(
 				{
 					challengeId: init.challengeId,
