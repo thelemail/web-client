@@ -60,7 +60,8 @@
 	const proof = createProofOfWork();
 
 	$effect(() => {
-		if (step === 1) untrack(() => proof.prepare());
+		const email = invite?.inviteeEmail;
+		if (step === 1 && email) untrack(() => proof.prepare(email));
 	});
 
 	$effect(() => () => proof.dispose());
@@ -126,7 +127,7 @@
 		try {
 			const email = invite.inviteeEmail;
 			const start = await keystore.opaqueStartRegistration({ email, password });
-			const init = await withProofOfWork(proof, (payload) =>
+			const init = await withProofOfWork(proof, email, (payload) =>
 				registrationInit({ email, registrationRequest: start.registrationRequest, proof: payload })
 			);
 			const finish = await keystore.opaqueFinishRegistration({

@@ -78,7 +78,7 @@
 	const proof = createProofOfWork();
 
 	$effect(() => {
-		if (step === 1) untrack(() => proof.prepare());
+		if (step === 1) untrack(() => proof.prepare(address));
 	});
 
 	$effect(() => () => proof.dispose());
@@ -191,7 +191,7 @@
 		const plan = paid ? planCodeFor(sel) : null;
 		try {
 			const start = await keystore.opaqueStartRegistration({ email, password });
-			const init = await withProofOfWork(proof, (payload) =>
+			const init = await withProofOfWork(proof, email, (payload) =>
 				registrationInit({ email, registrationRequest: start.registrationRequest, proof: payload })
 			);
 			const finish = await keystore.opaqueFinishRegistration({

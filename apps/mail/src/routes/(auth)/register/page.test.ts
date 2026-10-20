@@ -17,9 +17,13 @@ const keystore = vi.hoisted(() => ({
 }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore }));
 
+const pow = vi.hoisted(() => ({ prepare: vi.fn(), dispose: vi.fn(), take: vi.fn() }));
 vi.mock('$core/auth/proof-of-work', () => ({
-	createProofOfWork: () => ({ prepare: vi.fn(), dispose: vi.fn() }),
-	withProofOfWork: (_proof: unknown, run: (payload: undefined) => unknown) => run(undefined)
+	createProofOfWork: () => pow,
+	withProofOfWork: (_proof: unknown, email: string, run: (payload: undefined) => unknown) => {
+		pow.take(email);
+		return run(undefined);
+	}
 }));
 vi.mock('$core/auth/perform-login', () => ({ performLogin: vi.fn() }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: null } }));
@@ -54,7 +58,7 @@ async function submitPassword() {
 }
 
 beforeEach(() => {
-	for (const fn of [...Object.values(authApi), ...Object.values(keystore)]) fn.mockReset();
+	for (const fn of [...Object.values(authApi), ...Object.values(keystore), ...Object.values(pow)]) fn.mockReset();
 	authApi.getPlatformDomains.mockResolvedValue({
 		domains: ['temail.org'],
 		hosted: ['temail.org', 'thelemail.com'],
@@ -97,5 +101,21 @@ describe('register page', () => {
 
 		await vi.waitFor(() => expect(keystore.opaqueStartRegistration).toHaveBeenCalled());
 		expect(keystore.opaqueStartRegistration.mock.calls[0][0].email).toBe('camille@temail.org');
+	});
+
+	it('binds the proof of work to the chosen address', async () => {
+		authApi.registrationInit.mockRejectedValue(new Error('stop'));
+		keystore.opaqueStartRegistration.mockResolvedValue({ operationId: 'op1', registrationRequest: 'req' });
+		render(RegisterPage);
+		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+
+		await continueToPassword('camille');
+		await vi.waitFor(() => expect(pow.prepare).toHaveBeenLastCalledWith('camille@temail.org'));
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('.btn-back')!);
+		await continueToPassword('camilla');
+		await vi.waitFor(() => expect(pow.prepare).toHaveBeenLastCalledWith('camilla@temail.org'));
+
+		await submitPassword();
+		await vi.waitFor(() => expect(pow.take).toHaveBeenCalledWith('camilla@temail.org'));
 	});
 });

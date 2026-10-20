@@ -19,7 +19,7 @@ vi.mock('$core/keystore/keystore-client', () => ({ keystore }));
 
 vi.mock('$core/auth/proof-of-work', () => ({
 	createProofOfWork: () => ({ prepare: vi.fn(), dispose: vi.fn() }),
-	withProofOfWork: (_proof: unknown, run: (payload: undefined) => unknown) => run(undefined)
+	withProofOfWork: (_proof: unknown, _email: string, run: (payload: undefined) => unknown) => run(undefined)
 }));
 vi.mock('$core/auth/perform-login', () => ({ performLogin: vi.fn() }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: null } }));

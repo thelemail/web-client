@@ -1,7 +1,7 @@
 import { registrationChallenge } from '$core/api/auth';
 import { ApiCallError, type ProofChallenge } from '$core/api/types';
 
-const RENEW_MARGIN_MS = 60_000;
+const RENEW_MARGIN_MS = 20_000;
 const RETRYABLE = new Set(['proof_invalid', 'proof_expired', 'proof_reused']);
 const RESTARTABLE = new Set(['proof_required', 'proof_expired']);
 
@@ -12,15 +12,20 @@ interface SolvedProof {
 	expiresAt: number;
 }
 
+interface PendingProof {
+	email: string;
+	run: Promise<SolvedProof>;
+}
+
 export interface ProofOfWorkOptions {
-	fetchChallenge?: () => Promise<ProofChallenge>;
+	fetchChallenge?: (email: string) => Promise<ProofChallenge>;
 	solve?: ProofSolver;
 	now?: () => number;
 }
 
 export interface ProofOfWork {
-	prepare(): void;
-	take(): Promise<string>;
+	prepare(email: string): void;
+	take(email: string): Promise<string>;
 	dispose(): void;
 }
 
@@ -47,63 +52,71 @@ export function createProofOfWork({
 	now = Date.now
 }: ProofOfWorkOptions = {}): ProofOfWork {
 	let controller = new AbortController();
-	let ready: Promise<SolvedProof> | null = null;
+	let ready: PendingProof | null = null;
 
-	function solveFresh(): Promise<SolvedProof> {
+	function reset() {
+		controller.abort();
+		controller = new AbortController();
+		ready = null;
+	}
+
+	function solveFresh(email: string): PendingProof {
 		const { signal } = controller;
 		const run = (async () => {
-			const challenge = await fetchChallenge();
+			const challenge = await fetchChallenge(email);
 			signal.throwIfAborted();
 			const payload = await solve(challenge, signal);
 			signal.throwIfAborted();
 			return { payload, expiresAt: challenge.parameters.expiresAt * 1000 };
 		})();
+		const pending = { email, run };
 		run.catch(() => {
-			if (ready === run) ready = null;
+			if (ready === pending) ready = null;
 		});
-		return run;
+		return pending;
 	}
 
-	async function claim(): Promise<SolvedProof> {
+	async function claim(email: string): Promise<SolvedProof> {
 		const pending = ready;
 		ready = null;
-		if (pending) {
+		if (pending?.email === email) {
 			try {
-				return await pending;
+				return await pending.run;
 			} catch (err) {
 				if (controller.signal.aborted) throw err;
 			}
+		} else if (pending) {
+			reset();
 		}
-		return solveFresh();
+		return solveFresh(email).run;
 	}
 
 	return {
-		prepare() {
-			if (!ready) ready = solveFresh();
+		prepare(email) {
+			if (ready?.email === email) return;
+			if (ready) reset();
+			ready = solveFresh(email);
 		},
-		async take() {
-			let proof = await claim();
+		async take(email) {
+			let proof = await claim(email);
 			if (proof.expiresAt - now() < RENEW_MARGIN_MS) {
-				proof = await solveFresh();
+				proof = await solveFresh(email).run;
 			}
 			return proof.payload;
 		},
-		dispose() {
-			controller.abort();
-			controller = new AbortController();
-			ready = null;
-		}
+		dispose: reset
 	};
 }
 
 export async function withProofOfWork<T>(
 	proof: ProofOfWork,
+	email: string,
 	run: (payload: string) => Promise<T>
 ): Promise<T> {
 	try {
-		return await run(await proof.take());
+		return await run(await proof.take(email));
 	} catch (err) {
 		if (!isRetryableProofError(err)) throw err;
-		return run(await proof.take());
+		return run(await proof.take(email));
 	}
 }
