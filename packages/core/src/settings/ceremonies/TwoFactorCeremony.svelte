@@ -97,7 +97,6 @@
 	let setupError = $state('');
 	let keyName = $derived(method === 'totp' ? '' : defaultKeyName(method));
 	const keyNameOk = $derived(keyName.trim().length > 0);
-	let confirmed = $state(false);
 
 	let otpauthUrl = $state('');
 	let qrPngBase64 = $state('');
@@ -187,7 +186,6 @@
 	function beginSetup() {
 		if (busy) return;
 		setupError = '';
-		confirmed = false;
 		step = 1;
 	}
 
@@ -282,7 +280,6 @@
 		setupError = '';
 		try {
 			const res = await totpActivate({ code, grant }, auth.accountId ?? undefined);
-			grant = '';
 			await auth.adoptRotatedSession(res.session);
 			finishActivation(res.backupCodes);
 		} catch (err) {
@@ -303,7 +300,7 @@
 	}
 
 	async function registerKey() {
-		if (busy || confirmed || !keyNameOk) return;
+		if (busy || !keyNameOk) return;
 		busy = true;
 		setupError = '';
 		try {
@@ -327,10 +324,8 @@
 				},
 				auth.accountId ?? undefined
 			);
-			grant = '';
 			await auth.adoptRotatedSession(res.session);
-			confirmed = true;
-			backupCodes = res.backupCodes ?? [];
+			finishActivation(res.backupCodes);
 		} catch (err) {
 			const failure = webauthnFailure(err);
 			if (failure === 'aborted') return;
@@ -354,21 +349,8 @@
 		}
 	}
 
-	function advanceFromVerify() {
-		if (method === 'totp') {
-			void activateTotp();
-			return;
-		}
-		void twofactor.load(auth.accountId ?? undefined);
-		if (backupCodes.length > 0) {
-			saved = false;
-			step = 2;
-		} else {
-			step = 3;
-		}
-	}
-
 	function finishActivation(codes: string[] | undefined) {
+		grant = '';
 		void twofactor.load(auth.accountId ?? undefined);
 		if (codes && codes.length > 0) {
 			backupCodes = codes;
@@ -383,7 +365,9 @@
 	let leaving = $state(false);
 
 	function requestClose() {
+		if (busy && unlocked) return;
 		if (step === 2 && !saved) leaving = true;
+		else if (step === 3) finish();
 		else onClose();
 	}
 
@@ -449,7 +433,7 @@
 				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
 			{/if}
 		</div>
-	{:else if step === 1 && !unlocked && !confirmed}
+	{:else if step === 1 && !unlocked}
 		<div class="cer-pane">
 			<div class="cer-lede">
 				<p>
@@ -584,52 +568,42 @@
 		{:else}
 			{@const isKey = method === 'key'}
 			<div class="cer-pane center">
-				<div class="webauthn" class:ok={confirmed}>
-					{#if confirmed}<Check size={40} />
-					{:else if isKey}<Usb size={40} />
-					{:else}<Fingerprint size={40} />{/if}
+				<div class="webauthn">
+					{#if isKey}<Usb size={40} />{:else}<Fingerprint size={40} />{/if}
 				</div>
 				<div class="cer-instruct center">
-					{#if confirmed}
-						{#if isKey}
-							<span><Rich text={m.settings_ceremony_twofa_key_registered()} tags={{ b: bold }} /></span>
-						{:else}
-							<span><Rich text={m.settings_ceremony_twofa_device_registered()} tags={{ b: bold }} /></span>
-						{/if}
-					{:else if isKey}
+					{#if isKey}
 						{m.settings_ceremony_twofa_key_instruct()}
 					{:else}
 						{m.settings_ceremony_twofa_device_instruct()}
 					{/if}
 				</div>
-				{#if !confirmed}
-					<div class="field key-name">
-						<label for="twofa-key-name">{m.settings_ceremony_twofa_key_name_label()}</label>
-						<input
-							id="twofa-key-name"
-							class="tin"
-							bind:value={keyName}
-							maxlength={KEY_NAME_MAX_LENGTH}
-							autocomplete="off"
-							disabled={busy}
-						/>
-						{#if keyNameOk}
-							<div class="field-hint">{m.settings_ceremony_twofa_key_name_hint()}</div>
-						{:else}
-							<div class="field-hint bad">
-								<CircleAlert size={13} />{m.settings_ceremony_twofa_key_name_required()}
-							</div>
-						{/if}
-					</div>
-					<Button variant="secondary" disabled={busy || !keyNameOk} onclick={registerKey}>
-						{#if isKey}<Pointer size={15} />{:else}<ScanFace size={15} />{/if}
-						{#if busy}
-							{m.settings_ceremony_twofa_waiting()}
-						{:else}
-							{isKey ? m.settings_ceremony_twofa_touch_key() : m.settings_ceremony_twofa_use_touch_id()}
-						{/if}
-					</Button>
-				{/if}
+				<div class="field key-name">
+					<label for="twofa-key-name">{m.settings_ceremony_twofa_key_name_label()}</label>
+					<input
+						id="twofa-key-name"
+						class="tin"
+						bind:value={keyName}
+						maxlength={KEY_NAME_MAX_LENGTH}
+						autocomplete="off"
+						disabled={busy}
+					/>
+					{#if keyNameOk}
+						<div class="field-hint">{m.settings_ceremony_twofa_key_name_hint()}</div>
+					{:else}
+						<div class="field-hint bad">
+							<CircleAlert size={13} />{m.settings_ceremony_twofa_key_name_required()}
+						</div>
+					{/if}
+				</div>
+				<Button variant="secondary" disabled={busy || !keyNameOk} onclick={registerKey}>
+					{#if isKey}<Pointer size={15} />{:else}<ScanFace size={15} />{/if}
+					{#if busy}
+						{m.settings_ceremony_twofa_waiting()}
+					{:else}
+						{isKey ? m.settings_ceremony_twofa_touch_key() : m.settings_ceremony_twofa_use_touch_id()}
+					{/if}
+				</Button>
 				{#if setupError}
 					<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
 				{/if}
@@ -638,6 +612,11 @@
 	{:else if step === 2}
 		<div class="cer-pane">
 			<div class="cer-instruct">
+				{#if method === 'key'}
+					<Rich text={m.settings_ceremony_twofa_key_registered()} tags={{ b: bold }} />
+				{:else if method === 'device'}
+					<Rich text={m.settings_ceremony_twofa_device_registered()} tags={{ b: bold }} />
+				{/if}
 				{method === 'totp'
 					? m.settings_ceremony_twofa_backup_instruct_totp()
 					: method === 'key'
@@ -687,7 +666,7 @@
 					{m.common_continue()}<ArrowRight size={15} />
 				{/if}
 			</Button>
-		{:else if step === 1 && !unlocked && !confirmed}
+		{:else if step === 1 && !unlocked}
 			<Button variant="ghost" disabled={busy} onclick={() => (initialMethod ? onClose() : (step = 0))}>
 				{#if initialMethod}
 					{m.common_cancel()}
@@ -710,13 +689,15 @@
 					<ArrowLeft size={15} />{m.common_back()}
 				{/if}
 			</Button>
-			<Button variant="primary" disabled={busy || (method === 'totp' ? code.length < 6 : !confirmed)} onclick={advanceFromVerify}>
-				{#if busy}
-					{m.settings_ceremony_twofa_verifying()}
-				{:else}
-					{m.settings_ceremony_twofa_verify()}<ArrowRight size={15} />
-				{/if}
-			</Button>
+			{#if method === 'totp'}
+				<Button variant="primary" disabled={busy || code.length < 6} onclick={activateTotp}>
+					{#if busy}
+						{m.settings_ceremony_twofa_verifying()}
+					{:else}
+						{m.settings_ceremony_twofa_verify()}<ArrowRight size={15} />
+					{/if}
+				</Button>
+			{/if}
 		{:else if step === 2}
 			<Button variant="primary" disabled={!saved} onclick={() => (step = 3)}>
 				{m.settings_ceremony_twofa_saved_them()}<Check size={15} />
