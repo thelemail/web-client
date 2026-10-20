@@ -109,7 +109,8 @@ describe('TwoFactorCeremony key names', () => {
 		const field = await unlock('device');
 
 		expect(field.value).toMatch(/^Mac, Safari · /);
-		await fireEvent.click(button(/Touch ID/)!);
+		expect(document.body.textContent).not.toMatch(/Touch ID|Face ID|Windows Hello/);
+		await fireEvent.click(button(/^Use this device$/)!);
 		await vi.waitFor(() => expect(api.webauthnActivate).toHaveBeenCalled());
 		const name = api.webauthnActivate.mock.calls.at(-1)![0].name;
 		expect(name).toMatch(/^Mac, Safari · /);

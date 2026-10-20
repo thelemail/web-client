@@ -947,6 +947,7 @@ export interface TwoFactorWebauthnCredential {
 	name: string;
 	createdAt: string;
 	lastUsedAt?: string;
+	kind: 'platform' | 'security_key';
 	backupState?: boolean;
 	userVerified?: boolean;
 }

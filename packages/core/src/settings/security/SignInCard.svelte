@@ -198,7 +198,7 @@
 		{#each tfStatus.webauthnCredentials as cred (cred.id)}
 			<div class="tfa-row">
 				<span class="tfa-ic">
-					{#if cred.backupState}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
+					{#if cred.kind === 'platform'}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
 				</span>
 				<div class="tfa-info">
 					<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
