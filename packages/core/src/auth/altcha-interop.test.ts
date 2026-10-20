@@ -5,6 +5,7 @@ import vectors from './fixtures/altcha_interop_vectors.json';
 describe('altcha PBKDF2 solver', () => {
 	it('finds the same solution as the platform for every vector', async () => {
 		expect(vectors.length).toBeGreaterThan(0);
+		expect(vectors.some((v) => 'data' in v.challenge.parameters)).toBe(true);
 		for (const v of vectors) {
 			const solution = await solveChallenge({ challenge: v.challenge, deriveKey: pbkdf2.deriveKey });
 			expect(solution?.counter, v.challenge.parameters.nonce).toBe(v.counter);

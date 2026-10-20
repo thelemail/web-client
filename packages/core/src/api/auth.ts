@@ -83,9 +83,10 @@ export function checkAddressAvailability(localPart: string, signupSession?: stri
 	});
 }
 
-export function registrationChallenge() {
+export function registrationChallenge(email: string) {
 	return apiFetch<ProofChallenge>('/v1/auth/registration/challenge', {
-		method: 'GET',
+		method: 'POST',
+		body: { email },
 		skipAuth: true
 	});
 }

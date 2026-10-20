@@ -706,6 +706,7 @@ export interface ProofChallenge {
 		keyLength: number;
 		keyPrefix: string;
 		expiresAt: number;
+		data: Record<string, string>;
 	};
 	signature: string;
 }
