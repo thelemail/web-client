@@ -623,6 +623,8 @@
 	"settings_forwarding_revoke_busy": "Turning off…",
 	"settings_signature_preview": "Preview",
 	"settings_signature_mode_rich": "Rich",
+	"settings_signature_mode_aria": "Editor mode",
+	"settings_signature_source_aria": "Signature HTML",
 	"settings_signature_images_copied": [
 		{
 			"declarations": [
@@ -2000,6 +2002,7 @@
 	"settings_blocked_unblock": "Unblock",
 	"settings_blocked_block": "Block",
 	"settings_blocked_add": "Block an address",
+	"settings_blocked_add_aria": "Address to block",
 	"settings_blocked_unblock_body": "Their mail will reach your inbox again.",
 	"settings_blocked_unblock_title": "Unblock this sender?",
 	"settings_blocked_sealed_address": "Sealed address",
@@ -2026,6 +2029,10 @@
 	"settings_ceremony_recovery_saved": "Saved",
 	"settings_ceremony_recovery_instruct_confirm": "Confirm you’ve stored the phrase by filling in these words.",
 	"settings_ceremony_recovery_word_n": "Word {n}",
+	"settings_ceremony_domain_aria": "Domain",
+	"settings_key_block_aria": "Private key",
+	"settings_step_completed": "Completed",
+	"settings_step_running": "In progress",
 	"settings_ceremony_recovery_show_again": "Show me the phrase again",
 	"settings_ceremony_recovery_done_title": "Recovery is set up",
 	"settings_ceremony_recovery_done_desc": "Your spare key is yours alone. Keep the twelve words offline and safe — you won’t be shown them again.",

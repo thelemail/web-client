@@ -169,6 +169,7 @@
 				<input
 					class="tin mono"
 					type="email"
+					aria-label={m.settings_blocked_add_aria()}
 					placeholder="name@example.com"
 					bind:value={newAddress}
 					disabled={addBusy}

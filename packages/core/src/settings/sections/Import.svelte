@@ -129,6 +129,8 @@
 		accept=".eml,message/rfc822"
 		multiple
 		class="hidden-input"
+		aria-hidden="true"
+		tabindex="-1"
 		onchange={onPick}
 	/>
 

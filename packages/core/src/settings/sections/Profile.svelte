@@ -11,6 +11,7 @@
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
+	import TextInput from '../TextInput.svelte';
 	import Toggle from '../Toggle.svelte';
 	import Badge from '../Badge.svelte';
 	import Card from '../Card.svelte';
@@ -420,11 +421,11 @@
 		</div>
 	</div>
 	<Row t={m.settings_profile_display_name()} d={m.settings_profile_display_name_desc()}>
-		<input
-			class="tin w-mid"
+		<TextInput
+			w="mid"
 			value={displayName}
-			oninput={(e) => {
-				displayName = (e.currentTarget as HTMLInputElement).value;
+			onChange={(v) => {
+				displayName = v;
 				onEdit?.();
 			}}
 		/>

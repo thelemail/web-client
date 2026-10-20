@@ -321,6 +321,7 @@
 						<Select
 							value={selectedDomainName}
 							options={domainOptions}
+							ariaLabel={m.settings_ceremony_domain_aria()}
 							onChange={pickDomain}
 							disabled={!!presetDomainId}
 						/>

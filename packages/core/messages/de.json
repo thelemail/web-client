@@ -623,6 +623,8 @@
 	"settings_forwarding_revoke_busy": "Wird deaktiviert…",
 	"settings_signature_preview": "Vorschau",
 	"settings_signature_mode_rich": "Formatiert",
+	"settings_signature_mode_aria": "Editormodus",
+	"settings_signature_source_aria": "Signatur-HTML",
 	"settings_signature_images_copied": [
 		{
 			"declarations": [
@@ -2000,6 +2002,7 @@
 	"settings_blocked_unblock": "Blockierung aufheben",
 	"settings_blocked_block": "Blockieren",
 	"settings_blocked_add": "Adresse blockieren",
+	"settings_blocked_add_aria": "Zu blockierende Adresse",
 	"settings_blocked_unblock_body": "Die E-Mails dieses Absenders erreichen wieder Ihren Posteingang.",
 	"settings_blocked_unblock_title": "Diesen Absender wieder freigeben?",
 	"settings_blocked_sealed_address": "Verschlüsselte Adresse",
@@ -2026,6 +2029,10 @@
 	"settings_ceremony_recovery_saved": "Gespeichert",
 	"settings_ceremony_recovery_instruct_confirm": "Bestätigen Sie durch Eingabe dieser Wörter, dass Sie die Phrase aufbewahrt haben.",
 	"settings_ceremony_recovery_word_n": "Wort {n}",
+	"settings_ceremony_domain_aria": "Domain",
+	"settings_key_block_aria": "Privater Schlüssel",
+	"settings_step_completed": "Abgeschlossen",
+	"settings_step_running": "Läuft",
 	"settings_ceremony_recovery_show_again": "Phrase erneut anzeigen",
 	"settings_ceremony_recovery_done_title": "Wiederherstellung eingerichtet",
 	"settings_ceremony_recovery_done_desc": "Ihr Ersatzschlüssel gehört nur Ihnen. Bewahren Sie die zwölf Wörter sicher und offline auf – sie werden nicht erneut angezeigt.",

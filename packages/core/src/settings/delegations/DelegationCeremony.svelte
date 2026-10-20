@@ -140,8 +140,8 @@
 			</div>
 
 			<div class="field">
-				<span class="field-lbl">{m.settings_delegation_expiry_label()}</span>
-				<Seg value={expiry} options={expiryChoices} onChange={(v) => (expiry = v)} />
+				<span class="field-lbl" id="delegation-expiry-lbl">{m.settings_delegation_expiry_label()}</span>
+				<Seg value={expiry} options={expiryChoices} labelledby="delegation-expiry-lbl" onChange={(v) => (expiry = v)} />
 				<div class="field-hint">{m.settings_delegation_expiry_hint()}</div>
 			</div>
 
@@ -158,7 +158,13 @@
 				<div class="mono fp">{formatFingerprintHex(fingerprint)}</div>
 			</div>
 
-			<textarea class="tin mono keyblock" readonly rows="8" value={privateKeyArmored}></textarea>
+			<textarea
+				class="tin mono keyblock"
+				aria-label={m.settings_key_block_aria()}
+				readonly
+				rows="8"
+				value={privateKeyArmored}
+			></textarea>
 
 			<div class="key-actions">
 				<Button variant="ghost" onclick={copyKey}>

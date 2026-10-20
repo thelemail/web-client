@@ -623,6 +623,8 @@
 	"settings_forwarding_revoke_busy": "A desativar…",
 	"settings_signature_preview": "Pré-visualização",
 	"settings_signature_mode_rich": "Formatado",
+	"settings_signature_mode_aria": "Modo de edição",
+	"settings_signature_source_aria": "HTML da assinatura",
 	"settings_signature_images_copied": [
 		{
 			"declarations": [
@@ -2000,6 +2002,7 @@
 	"settings_blocked_unblock": "Desbloquear",
 	"settings_blocked_block": "Bloquear",
 	"settings_blocked_add": "Bloquear um endereço",
+	"settings_blocked_add_aria": "Endereço a bloquear",
 	"settings_blocked_unblock_body": "As mensagens voltarão a chegar à sua caixa de entrada.",
 	"settings_blocked_unblock_title": "Desbloquear este remetente?",
 	"settings_blocked_sealed_address": "Endereço cifrado",
@@ -2026,6 +2029,10 @@
 	"settings_ceremony_recovery_saved": "Guardado",
 	"settings_ceremony_recovery_instruct_confirm": "Confirme que guardou a frase preenchendo estas palavras.",
 	"settings_ceremony_recovery_word_n": "Palavra {n}",
+	"settings_ceremony_domain_aria": "Domínio",
+	"settings_key_block_aria": "Chave privada",
+	"settings_step_completed": "Concluído",
+	"settings_step_running": "Em curso",
 	"settings_ceremony_recovery_show_again": "Mostrar a frase novamente",
 	"settings_ceremony_recovery_done_title": "Recuperação configurada",
 	"settings_ceremony_recovery_done_desc": "A chave de reserva é só sua. Guarde as doze palavras em segurança, sem ligação à rede — não voltarão a ser mostradas.",

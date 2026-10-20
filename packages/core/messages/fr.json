@@ -623,6 +623,8 @@
   "settings_forwarding_revoke_busy": "Désactivation…",
   "settings_signature_preview": "Aperçu",
   "settings_signature_mode_rich": "Texte enrichi",
+  "settings_signature_mode_aria": "Mode d’édition",
+  "settings_signature_source_aria": "HTML de la signature",
   "settings_signature_images_copied": [
     {
       "declarations": [
@@ -2000,6 +2002,7 @@
   "settings_blocked_unblock": "Débloquer",
   "settings_blocked_block": "Bloquer",
   "settings_blocked_add": "Bloquer une adresse",
+  "settings_blocked_add_aria": "Adresse à bloquer",
   "settings_blocked_unblock_body": "Ses e-mails arriveront à nouveau dans votre boîte de réception.",
   "settings_blocked_unblock_title": "Débloquer cet expéditeur ?",
   "settings_blocked_sealed_address": "Adresse chiffrée",
@@ -2026,6 +2029,10 @@
   "settings_ceremony_recovery_saved": "Enregistré",
   "settings_ceremony_recovery_instruct_confirm": "Confirmez que vous avez conservé la phrase en saisissant ces mots.",
   "settings_ceremony_recovery_word_n": "Mot {n}",
+  "settings_ceremony_domain_aria": "Domaine",
+  "settings_key_block_aria": "Clé privée",
+  "settings_step_completed": "Terminé",
+  "settings_step_running": "En cours",
   "settings_ceremony_recovery_show_again": "Afficher à nouveau la phrase",
   "settings_ceremony_recovery_done_title": "La récupération est configurée",
   "settings_ceremony_recovery_done_desc": "Votre clé de secours n’appartient qu’à vous. Conservez les douze mots hors ligne et en lieu sûr : ils ne vous seront plus affichés.",

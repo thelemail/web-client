@@ -41,6 +41,7 @@
 
 <textarea
 	class="sig-source"
+	aria-label={m.settings_signature_source_aria()}
 	spellcheck="false"
 	{placeholder}
 	{disabled}

@@ -175,6 +175,7 @@
 						<Select
 							value={selectedDomainName}
 							options={domainNames}
+							ariaLabel={m.settings_ceremony_domain_aria()}
 							onChange={(v) => selectDomainByName(v)}
 						/>
 					{:else if usableDomains.length === 1}
@@ -201,7 +202,7 @@
 			{#if !fam}
 				<div class="field">
 					<label for="add-mem-role">{m.settings_ceremony_member_role_label()}</label>
-					<Select value={role} options={roleOptions} onChange={(v) => (role = v)} />
+					<Select id="add-mem-role" value={role} options={roleOptions} onChange={(v) => (role = v)} />
 					<div class="field-hint">
 						<Info size={13} />
 						{role === 'Admin'
