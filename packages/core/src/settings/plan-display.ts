@@ -1,5 +1,6 @@
 import { m } from '$paraglide/messages.js';
-import type { PlanCode } from '$core/api/billing';
+import type { Plan, PlanCode } from '$core/api/billing';
+import { formatBytes } from '$core/lifecycle/downgrade';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
 import type { WorkspaceType } from '$core/api/workspaces';
 
@@ -19,19 +20,12 @@ export function planLabel(type: WorkspaceType | undefined | null, planCode?: str
 }
 
 export function seatLimitFor(
-	type: WorkspaceType | undefined | null,
+	plan: Plan | null | undefined,
 	subscribedSeats: number | null = null
 ): number | null {
-	switch (type) {
-		case 'personal':
-			return 1;
-		case 'family':
-			return 6;
-		case 'business':
-			return subscribedSeats;
-		default:
-			return null;
-	}
+	if (!plan) return null;
+	if (plan.pricingModel === 'per_mailbox') return subscribedSeats;
+	return plan.maxSeats ?? null;
 }
 
 export function isInvitable(type: WorkspaceType | undefined | null): boolean {
@@ -57,13 +51,12 @@ export function seatsFullNote(
 	type: WorkspaceType | undefined | null,
 	total: number | null,
 	planCode?: PlanCode | null
-): string {
-	void total;
-	if (type === 'family' && planCode === 'free_family') {
-		return m.settings_member_seats_full_free_family();
-	}
+): string | null {
 	if (type === 'family') {
-		return m.settings_member_seats_full_family();
+		if (total == null) return null;
+		return planCode === 'free_family'
+			? m.settings_member_seats_full_free_family({ seats: total })
+			: m.settings_member_seats_full_family({ seats: total });
 	}
 	return m.settings_member_seats_prorated();
 }
@@ -72,9 +65,17 @@ export function personalNote(): string {
 	return m.settings_member_personal_note();
 }
 
-export function freeNote(type?: WorkspaceType | null, planCode?: PlanCode | null): string {
+export function freeNote(
+	type: WorkspaceType | null | undefined,
+	planCode: PlanCode | null | undefined,
+	plan: Plan | null | undefined
+): string | null {
+	if (!plan) return null;
+	const storage = formatBytes(plan.storageBytesPerMailbox);
+	const domain = platformDomains.default;
 	if (planCode === 'free_family' || (type === 'family' && planCode !== 'free')) {
-		return m.settings_plan_free_family_note({ domain: platformDomains.default });
+		if (plan.maxSeats == null) return null;
+		return m.settings_plan_free_family_note({ seats: plan.maxSeats, domain, storage });
 	}
-	return m.settings_plan_free_note({ domain: platformDomains.default });
+	return m.settings_plan_free_note({ domain, storage });
 }

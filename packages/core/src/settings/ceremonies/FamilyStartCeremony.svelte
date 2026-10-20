@@ -8,6 +8,7 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { formatBytes } from '$core/lifecycle/downgrade';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -23,6 +24,12 @@
 			? m.settings_ceremony_family_start_default_name({ first })
 			: m.settings_ceremony_family_start_default_name_fallback();
 	}
+
+	const freeFamily = $derived(billing.planFor('free_family'));
+
+	$effect(() => {
+		void billing.ensureCatalog();
+	});
 
 	let name = $state(suggestedName());
 	let busy = $state(false);
@@ -55,9 +62,11 @@
 	{onClose}
 >
 	<div class="cer-pane">
-		<div class="cer-lede">
-			<p>{m.settings_ceremony_family_start_lede()}</p>
-		</div>
+		{#if freeFamily?.maxSeats}
+			<div class="cer-lede">
+				<p>{m.settings_ceremony_family_start_lede({ seats: freeFamily.maxSeats })}</p>
+			</div>
+		{/if}
 
 		<div class="field">
 			<label for="fam-start-name">{m.settings_ceremony_family_start_name_label()}</label>
@@ -75,13 +84,18 @@
 			<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
 		{/if}
 
-		<div class="seat-callout ok">
-			<Users size={17} />
-			<div>
-				<b>{m.settings_ceremony_family_start_callout_title()}</b>
-				{m.settings_ceremony_family_start_callout_body()}
+		{#if freeFamily?.maxSeats}
+			<div class="seat-callout ok">
+				<Users size={17} />
+				<div>
+					<b>{m.settings_ceremony_family_start_callout_title({
+						seats: freeFamily.maxSeats,
+						storage: formatBytes(freeFamily.storageBytesPerMailbox)
+					})}</b>
+					{m.settings_ceremony_family_start_callout_body()}
+				</div>
 			</div>
-		</div>
+		{/if}
 	</div>
 
 	{#snippet footer()}

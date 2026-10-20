@@ -2,7 +2,7 @@ import { m } from '$paraglide/messages.js';
 import { ApiCallError } from '$core/api/types';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
 
-export function familyInviteError(err: unknown, email: string): string {
+export function familyInviteError(err: unknown, email: string, seats: number | null): string {
 	const code = err instanceof ApiCallError ? err.envelope?.error?.code : null;
 	switch (code) {
 		case 'invitee_not_found':
@@ -18,7 +18,9 @@ export function familyInviteError(err: unknown, email: string): string {
 		case 'invitee_domain_not_shared':
 			return m.settings_family_invite_err_domain_not_shared({ email, domain: platformDomains.displayHosted() });
 		case 'family_full':
-			return m.settings_family_invite_err_full();
+			return seats == null
+				? m.settings_family_invite_err_full_generic()
+				: m.settings_family_invite_err_full({ seats });
 		case 'rate_limited':
 			return m.settings_family_invite_err_rate_limited();
 		case 'conflict':

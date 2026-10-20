@@ -36,7 +36,7 @@
 
 	const wsType = $derived(workspaces.workspace?.type ?? null);
 	const fam = $derived(wsType === 'family');
-	const seatsTotal = $derived(seatLimitFor(wsType, billing.subscription?.seats ?? null));
+	const seatsTotal = $derived(seatLimitFor(billing.plan, billing.subscription?.seats ?? null));
 	const seatsUsed = $derived(workspaces.members.length + workspaces.invites.length);
 	const seatsLeft = $derived(seatsTotal != null ? seatsTotal - seatsUsed : null);
 
@@ -47,6 +47,10 @@
 		m.settings_ceremony_member_step_person(),
 		fam ? m.settings_ceremony_member_step_invite() : m.settings_ceremony_member_step_seat_invite()
 	]);
+	$effect(() => {
+		void billing.ensureCatalog();
+	});
+
 	let step = $state(0);
 	let local = $state('');
 	let customDomainId = $state<string>('');
