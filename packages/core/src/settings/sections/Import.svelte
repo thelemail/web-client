@@ -166,7 +166,7 @@
 					<div class="imp-info">
 						<div class="imp-name">{item.name}</div>
 						<div class="imp-meta">
-							{fmtSize(item.size)} · {meta.label()}{item.error ? ` — ${item.error}` : ''}
+							{fmtSize(item.size)} · {meta.label()}{item.error ? ` · ${item.error}` : ''}
 						</div>
 					</div>
 				</div>

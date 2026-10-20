@@ -180,7 +180,7 @@
 	);
 
 	function identityLabel(name: string | null | undefined, addr: string): string {
-		if (name && name.trim()) return `${name.trim()} — ${addr}`;
+		if (name && name.trim()) return `${name.trim()} <${addr}>`;
 		return addr;
 	}
 

@@ -33,7 +33,7 @@
 	const value = $derived(currentTarget ? identityLabel(currentTarget.name, currentTarget.email) : '');
 
 	function identityLabel(name: string | null | undefined, email: string): string {
-		if (name && name.trim()) return `${name.trim()} — ${email}`;
+		if (name && name.trim()) return `${name.trim()} <${email}>`;
 		return email;
 	}
 
