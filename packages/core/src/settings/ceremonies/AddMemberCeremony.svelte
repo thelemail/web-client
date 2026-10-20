@@ -15,6 +15,7 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import Select from '../Select.svelte';
+	import { isValidLocalPart } from '../localPart';
 	import CopyBtn from '../CopyBtn.svelte';
 	import type { CeremonyKind } from '../data';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -79,7 +80,7 @@
 	const selectedDomainName = $derived(selectedDomain?.domain ?? '');
 
 	const nameOk = $derived(name.trim().length > 1);
-	const localOk = $derived(/^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$/i.test(local.trim()));
+	const localOk = $derived(isValidLocalPart(local));
 	const emailOk = $derived(
 		email.trim() === '' || /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(email.trim())
 	);
@@ -194,7 +195,7 @@
 					</div>
 				{:else if local.length > 0 && !localOk}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />{m.settings_ceremony_member_local_invalid()}
+						<CircleAlert size={13} />{m.settings_local_part_invalid()}
 					</div>
 				{:else if addrConflict}
 					<div class="field-hint bad">

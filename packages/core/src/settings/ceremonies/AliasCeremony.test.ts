@@ -297,3 +297,29 @@ describe('AliasCeremony on a platform domain', () => {
 		);
 	});
 });
+
+describe('AliasCeremony local part rule', () => {
+	const hint = 'Use letters, numbers, dots, underscores or hyphens, starting and ending with a letter or number.';
+
+	async function typeLocal(value: string) {
+		customDomains.items = [domain('d1', 'acme.test', 'ready')];
+		const { container } = open('d1');
+		await fireEvent.input(document.querySelector('#alias-name')!, { target: { value: 'Support' } });
+		await fireEvent.input(document.querySelector('#alias-local')!, { target: { value } });
+		return container;
+	}
+
+	it.each(['a+b', '.a', 'a-'])('rejects %s with the rule as the hint', async (value) => {
+		const container = await typeLocal(value);
+
+		expect(document.body.textContent).toContain(hint);
+		expect(continueButton(container)?.disabled).toBe(true);
+	});
+
+	it.each(['a_b', 'a.b-c'])('accepts %s', async (value) => {
+		const container = await typeLocal(value);
+
+		expect(document.body.textContent).not.toContain(hint);
+		expect(continueButton(container)?.disabled).toBe(false);
+	});
+});
