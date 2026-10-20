@@ -97,7 +97,7 @@
 .settings-app .scard + .scard { margin-top: 16px; }
 .settings-app .scard-h { display: flex; align-items: center; gap: 10px; padding: 14px 18px 13px; border-bottom: 1px solid var(--border); background: none; }
 .settings-app .scard-h svg { width: 16px; height: 16px; color: var(--ink-500); }
-.settings-app .scard-h h3 { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); margin: 0; white-space: nowrap; }
+.settings-app .scard-h .scard-title { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); margin: 0; white-space: nowrap; }
 .settings-app .scard-h .badge { margin-left: auto; }
 
 .settings-app .setrow { display: flex; align-items: center; gap: 18px; padding: 15px 18px; border-bottom: 1px solid var(--border); }
@@ -120,6 +120,7 @@
 .settings-app .seg button { border: none; background: none; font-size: 12.5px; font-weight: 500; color: var(--ink-600); padding: 6px 13px; border-radius: var(--radius-control-compact); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; transition: background var(--dur-fast), color var(--dur-fast); cursor: pointer; }
 .settings-app .seg button svg { width: 15px; height: 15px; }
 .settings-app .seg button:hover { color: var(--ink-800); }
+.settings-app .seg button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
 .settings-app .seg button.on { background: var(--surface); color: var(--accent-foreground); font-weight: 600; box-shadow: var(--shadow-xs); }
 
 .settings-app .sel { position: relative; display: inline-flex; align-items: center; }
@@ -212,7 +213,7 @@
 .settings-app .scard.danger { border-color: var(--danger-100); }
 .settings-app .scard.danger .scard-h { background: var(--danger-100); border-color: transparent; }
 .settings-app .scard.danger .scard-h svg { color: var(--danger-700); }
-.settings-app .scard.danger .scard-h h3 { color: var(--danger-700); }
+.settings-app .scard.danger .scard-h .scard-title { color: var(--danger-700); }
 
 .set-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--pine-900); color: var(--fg-on-pine); font-size: 13px; font-weight: 500; padding: 12px 17px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; z-index: 100; animation: set-toastin var(--dur) var(--ease-out); font-family: var(--font-sans); width: max-content; max-width: calc(100vw - 32px); }
 @keyframes set-toastin { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
@@ -227,7 +228,6 @@
 .settings-app .set-skel .sk-c.select { width: 148px; height: 34px; border-radius: var(--radius-control); }
 .settings-app .set-skel .sk-c.toggle { width: 42px; height: 24px; border-radius: 999px; }
 @keyframes sk-pulse { 50% { opacity: .5; } }
-@media (prefers-reduced-motion: reduce) { .settings-app .set-skel .sk-bar { animation: none; } }
 
 .settings-app .set-loaderr { gap: 10px; background: color-mix(in oklab, var(--danger-100) 45%, transparent); }
 .settings-app .set-loaderr > svg { color: var(--danger-500); flex: 0 0 auto; }
@@ -917,7 +917,7 @@
 	.cer-scrim .order-sum { flex-direction: column; align-items: flex-start; gap: 10px; }
 	.cer-scrim .os-total { align-self: flex-end; }
 	.settings-app .bill-row { column-gap: 10px; }
-	.settings-app .scard-h h3 { white-space: normal; }
+	.settings-app .scard-h .scard-title { white-space: normal; }
 }
 
 .settings-app .dw-rail { display: flex; align-items: center; padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--paper-50); margin-bottom: 18px; gap: 0; }
@@ -1131,4 +1131,24 @@
 @media (pointer: coarse) {
 	.settings-app .rowmenu { position: relative; }
 	.settings-app .rowmenu.sm::after { content: ""; position: absolute; inset: -9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.settings-app .set-skel .sk-bar,
+	.settings-app .set-head .autosave.saved svg,
+	.settings-app .set-head .autosave.error svg,
+	.set-toast,
+	.cer-scrim .cer-panel { animation: none; }
+	.settings-app .set-head .autosave .as-spin,
+	.cer-scrim .cpl-ic .spin { animation-duration: 1.6s; }
+	.settings-app .set-back svg,
+	.settings-app .dom-caret,
+	.settings-app .upgrade-nudge,
+	.settings-app .upgrade-nudge > svg,
+	.cer-scrim .mo-radio span,
+	.cer-scrim .pw-w,
+	.cer-scrim .cp-bar i { transition: none; }
+	.settings-app .set-back:hover svg,
+	.settings-app .upgrade-nudge:hover,
+	.settings-app .upgrade-nudge:hover > svg { transform: none; }
 }
