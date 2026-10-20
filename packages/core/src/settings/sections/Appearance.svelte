@@ -5,14 +5,13 @@
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Seg from '../Seg.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import { m } from '$paraglide/messages.js';
 </script>
 
 <SecHead desc={m.settings_appearance_desc()} />
 
-<div class="scard">
-	<CardHead title={m.settings_appearance_theme_title()} />
+<Card title={m.settings_appearance_theme_title()}>
 	<SettingsGate controls={['select']}>
 		<Row t={m.settings_appearance_colour_mode()} d={m.settings_appearance_colour_mode_desc()}>
 			<Seg
@@ -26,4 +25,4 @@
 			/>
 		</Row>
 	</SettingsGate>
-</div>
+</Card>

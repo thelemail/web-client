@@ -10,7 +10,7 @@
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 	import Badge from './Badge.svelte';
-	import CardHead from './CardHead.svelte';
+	import Card from './Card.svelte';
 	import MemberRow, { type MemberRowAction, type MemberRowFeedback } from './MemberRow.svelte';
 	import { memberActionError } from './member-errors';
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
@@ -219,10 +219,8 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<div class="scard">
-	<CardHead icon={Icon} {title}>
-		{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
-	</CardHead>
+<Card icon={Icon} {title}>
+	{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
 
 	{#if !isPersonal}
 		<div class="seat-bar">
@@ -331,7 +329,7 @@
 			<Button variant="ghost" size="sm" onclick={() => (leaving = true)}>{m.settings_family_leave()}</Button>
 		{/if}
 	</div>
-</div>
+</Card>
 
 {#if leaving}
 	<LeaveFamilyDialog

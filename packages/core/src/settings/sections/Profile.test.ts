@@ -167,3 +167,29 @@ describe('profile header', () => {
 		expect(container.querySelector('.pf-tags')).toBeNull();
 	});
 });
+
+describe('profile sending identity', () => {
+	it('shows the primary address as text and sends changes to Addresses', () => {
+		addresses.items = [
+			address('p', 'ada@thelemail.com', { isPrimary: true, name: 'Ada' }),
+			address('h', 'hello@thelemail.com')
+		];
+		setWorkspace('personal', 'owner');
+		const { container } = renderProfile();
+		const row = [...container.querySelectorAll('.setrow')].find((r) =>
+			r.textContent?.includes(m.settings_profile_sending_identity())
+		)!;
+		expect(row.querySelector('select')).toBeNull();
+		expect(row.textContent).toContain('ada@thelemail.com');
+		expect(row.textContent).not.toContain('hello@thelemail.com');
+		const link = row.querySelector('a')!;
+		expect(link.textContent).toBe(m.settings_profile_sending_identity_change());
+		expect(link.getAttribute('href')).toBe('/u/0/settings/addresses');
+	});
+
+	it('says there is no sending identity yet when no address exists', () => {
+		setWorkspace('personal', 'owner');
+		const { container } = renderProfile();
+		expect(container.textContent).toContain(m.settings_profile_sending_identity_empty());
+	});
+});

@@ -4,6 +4,7 @@ import type { ReadDelegation } from '$core/api/readDelegations';
 import type { Subscription } from '$core/api/billing';
 import { billing } from '$core/stores/billing.svelte';
 import ForwardingCard from './ForwardingCard.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const api = vi.hoisted(() => ({ listReadDelegations: vi.fn() }));
 vi.mock('$core/api/readDelegations', () => api);
@@ -86,5 +87,14 @@ describe('ForwardingCard', () => {
 		const menu = await menuText();
 		expect(menu).toContain('Turn off');
 		expect(menu).toContain('Replace the key');
+	});
+
+	it('names every control and keeps heading order under the page h1', async () => {
+		await mount('live');
+		await menuText();
+		const root = document.body;
+
+		expect(unnamedControls(root)).toEqual([]);
+		expect(headingJumps(root, 1)).toEqual([]);
 	});
 });

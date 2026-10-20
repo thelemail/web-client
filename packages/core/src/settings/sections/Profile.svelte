@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
+	import { page } from '$app/state';
 	import Camera from '@lucide/svelte/icons/camera';
 	import { apiBlobPut } from '$core/api/client';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -11,9 +12,10 @@
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
+	import TextInput from '../TextInput.svelte';
 	import Toggle from '../Toggle.svelte';
 	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import { memberRoleLabel } from '../memberRole';
 	import SignatureEditor from './SignatureEditor.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -23,8 +25,7 @@
 	import { initialsFor } from '$core/mail/initials';
 	import { sha256B64 } from '$core/mail/send';
 	import { addresses } from '$core/stores/addresses.svelte';
-	import { customDomains } from '$core/stores/customDomains.svelte';
-	import { replyChoices, sendingChoices } from '../addressModel';
+	import { replyChoices } from '../addressModel';
 	import { signatures } from '$core/stores/signatures.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -167,12 +168,8 @@
 		}))
 	]);
 
-	const sendingOptions = $derived(
-		sendingChoices(ownIdentities, customDomains.items).map((a) => ({
-			id: a.id,
-			label: identityLabel(a.name, a.email)
-		}))
-	);
+	const sendingAddress = $derived(ownIdentities.find((a) => a.isPrimary) ?? null);
+	const addressesHref = $derived(`/u/${page.params.slot ?? '0'}/settings/addresses`);
 
 	const signatureOptions = $derived(
 		identities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
@@ -180,9 +177,6 @@
 
 	const replyValueLabel = $derived(
 		replyOptions.find((o) => o.id === defaultReplyAddressId)?.label ?? m.settings_profile_reply_same()
-	);
-	const sendingValueLabel = $derived(
-		sendingOptions.find((o) => o.id === primary?.id)?.label ?? sendingOptions[0]?.label ?? ''
 	);
 
 	function identityLabel(name: string | null | undefined, addr: string): string {
@@ -248,27 +242,11 @@
 		save = flushSave;
 	});
 
-	async function onSendingChange(addrId: string) {
-		const target = addresses.getById(addrId);
-		if (!target || target.isPrimary || target.shared) return;
-		try {
-			await addresses.setPrimary(addrId);
-		} catch (err) {
-			console.warn('set primary failed', err);
-		}
-	}
-
 	async function onReplyChange(label: string) {
 		const option = replyOptions.find((o) => o.label === label);
 		if (!option) return;
 		defaultReplyAddressId = option.id;
 		onEdit?.();
-	}
-
-	async function onSendingLabelChange(label: string) {
-		const option = sendingOptions.find((o) => o.label === label);
-		if (!option) return;
-		await onSendingChange(option.id);
 	}
 
 	let avatarBusy = $state(false);
@@ -362,7 +340,7 @@
 
 <SecHead desc={m.settings_profile_desc()} />
 
-<div class="scard">
+<Card>
 	<div class="profile">
 		<div class="pf-avwrap">
 			<Avatar
@@ -420,24 +398,23 @@
 		</div>
 	</div>
 	<Row t={m.settings_profile_display_name()} d={m.settings_profile_display_name_desc()}>
-		<input
-			class="tin w-mid"
+		<TextInput
+			w="mid"
 			value={displayName}
-			oninput={(e) => {
-				displayName = (e.currentTarget as HTMLInputElement).value;
+			onChange={(v) => {
+				displayName = v;
 				onEdit?.();
 			}}
 		/>
 	</Row>
 	<Row t={m.settings_profile_sending_identity()} d={m.settings_profile_sending_identity_desc()}>
-		{#if sendingOptions.length === 0}
-			<span class="muted">{m.settings_profile_sending_identity_empty()}</span>
+		{#if sendingAddress}
+			<span class="pf-sending">
+				<span class="pf-sending-addr">{identityLabel(sendingAddress.name, sendingAddress.email)}</span>
+				<a class="pf-sending-link" href={addressesHref}>{m.settings_profile_sending_identity_change()}</a>
+			</span>
 		{:else}
-			<Select
-				value={sendingValueLabel}
-				options={sendingOptions.map((o) => o.label)}
-				onChange={onSendingLabelChange}
-			/>
+			<span class="muted">{m.settings_profile_sending_identity_empty()}</span>
 		{/if}
 	</Row>
 	<Row t={m.settings_profile_reply_address()} d={m.settings_profile_reply_address_desc()}>
@@ -447,30 +424,28 @@
 			onChange={onReplyChange}
 		/>
 	</Row>
-</div>
+</Card>
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<div class="scard">
-	<CardHead icon={PenLine} title={m.settings_profile_signature()}>
-		{#snippet right()}
-			<span class="sig-picker">
-				<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
-				{#if signatureOptions.length > 0}
-					<Select
-						narrow
-						value={sigIdentity ? identityLabel(sigIdentity.name, sigIdentity.email) : ''}
-						options={signatureOptions.map((o) => o.label)}
-						onChange={(label) => {
-							const opt = signatureOptions.find((o) => o.label === label);
-							if (opt) sigForAddressId = opt.id;
-						}}
-						ariaLabel={m.settings_profile_signature_identity()}
-					/>
-				{/if}
-			</span>
-		{/snippet}
-	</CardHead>
+<Card icon={PenLine} title={m.settings_profile_signature()}>
+	{#snippet right()}
+		<span class="sig-picker">
+			<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
+			{#if signatureOptions.length > 0}
+				<Select
+					narrow
+					value={sigIdentity ? identityLabel(sigIdentity.name, sigIdentity.email) : ''}
+					options={signatureOptions.map((o) => o.label)}
+					onChange={(label) => {
+						const opt = signatureOptions.find((o) => o.label === label);
+						if (opt) sigForAddressId = opt.id;
+					}}
+					ariaLabel={m.settings_profile_signature_identity()}
+				/>
+			{/if}
+		</span>
+	{/snippet}
 	<div class="sig-wrap">
 		{#if sigIdentity}
 			<div class="sig-idnote">
@@ -531,7 +506,7 @@
 			<div class="muted">{m.settings_profile_signature_empty()}</div>
 		{/if}
 	</div>
-</div>
+</Card>
 
 <style>
 	.hidden-input {
@@ -573,5 +548,25 @@
 	}
 	.muted {
 		color: var(--fg-faint);
+	}
+	.pf-sending {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: flex-end;
+		gap: 4px 14px;
+		font-size: 13px;
+	}
+	.pf-sending-addr {
+		color: var(--fg-strong);
+		overflow-wrap: anywhere;
+	}
+	.pf-sending-link {
+		color: var(--accent-foreground);
+		font-weight: 600;
+		white-space: nowrap;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		text-decoration-thickness: 1px;
 	}
 </style>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Inbox from '@lucide/svelte/icons/inbox';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import Toggle from '../Toggle.svelte';
 	import Select from '../Select.svelte';
@@ -74,8 +74,7 @@
 	}
 </script>
 
-<div class="scard">
-	<CardHead icon={Inbox} title={m.settings_catchall_title()} />
+<Card icon={Inbox} title={m.settings_catchall_title()}>
 	{#if eligibleAddresses.length === 0 && !enabled}
 		<div class="setrow">
 			<div class="info">
@@ -101,7 +100,7 @@
 	{#if error}
 		<div class="setrow"><div class="info"><div class="ca-err"><CircleAlert size={14} />{error}</div></div></div>
 	{/if}
-</div>
+</Card>
 
 <style>
 	.ca-err {

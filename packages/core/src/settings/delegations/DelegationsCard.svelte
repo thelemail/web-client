@@ -8,7 +8,8 @@
 
 	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
+	import RecordRow from '../RecordRow.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
 	import RevokeDelegationDialog from './RevokeDelegationDialog.svelte';
 	import { delegationStatus } from './status';
@@ -48,22 +49,20 @@
 	}
 </script>
 
-<div class="scard">
-	<CardHead icon={KeyRound} title={m.settings_delegation_title()}>
-		{#snippet right()}
-			<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
-			{#if billing.canAddDomains}
-				<Button
-					variant="secondary"
-					size="sm"
-					disabled={!!blocked}
-					onclick={() => (creating = true)}
-				>
-					<Plus size={13} />{m.settings_delegation_authorize()}
-				</Button>
-			{/if}
-		{/snippet}
-	</CardHead>
+<Card icon={KeyRound} title={m.settings_delegation_title()}>
+	{#snippet right()}
+		<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
+		{#if billing.canAddDomains}
+			<Button
+				variant="secondary"
+				size="sm"
+				disabled={!!blocked}
+				onclick={() => (creating = true)}
+			>
+				<Plus size={13} />{m.settings_delegation_authorize()}
+			</Button>
+		{/if}
+	{/snippet}
 
 	<div class="card-lede">
 		{m.settings_delegation_card_lede({ email: address.email })}
@@ -78,35 +77,34 @@
 	{/if}
 
 	{#each rows as { d, status } (d.id)}
-		<div class="rec-row">
-			<div class="rec-main">
-				<div class="rec-title">
-					<span class="rec-label">{d.label}</span>
+		<RecordRow label={d.label}>
+			{#snippet badges()}
+				{#if status === 'revoked'}
+					<Badge kind="warn" dot>{m.settings_delegation_badge_revoked()}</Badge>
+				{:else if status === 'expired'}
+					<Badge kind="neutral" dot>{m.settings_delegation_badge_expired()}</Badge>
+				{:else}
+					<Badge kind="ok" dot>{m.settings_delegation_badge_active()}</Badge>
+				{/if}
+			{/snippet}
+			<div class="rec-meta">
+				<span class="mono">{formatKeyId(d.signerFingerprint)}</span>
+				<span>
 					{#if status === 'revoked'}
-						<Badge kind="warn" dot>{m.settings_delegation_badge_revoked()}</Badge>
+						{m.settings_delegation_revoked_on({ date: fmtDate(d.revokedAt ?? '') })}
 					{:else if status === 'expired'}
-						<Badge kind="neutral" dot>{m.settings_delegation_badge_expired()}</Badge>
+						{m.settings_delegation_expired_on({ date: fmtDate(d.notAfter) })}
 					{:else}
-						<Badge kind="ok" dot>{m.settings_delegation_badge_active()}</Badge>
+						{m.settings_delegation_expires_on({ date: fmtDate(d.notAfter) })}
 					{/if}
-				</div>
-				<div class="rec-meta">
-					<span class="mono">{formatKeyId(d.signerFingerprint)}</span>
-					<span>
-						{#if status === 'revoked'}
-							{m.settings_delegation_revoked_on({ date: fmtDate(d.revokedAt ?? '') })}
-						{:else if status === 'expired'}
-							{m.settings_delegation_expired_on({ date: fmtDate(d.notAfter) })}
-						{:else}
-							{m.settings_delegation_expires_on({ date: fmtDate(d.notAfter) })}
-						{/if}
-					</span>
-				</div>
+				</span>
 			</div>
-			{#if status === 'active'}
-				<Button variant="ghost" size="sm" onclick={() => (revoking = d)}>{m.settings_delegation_revoke()}</Button>
-			{/if}
-		</div>
+			{#snippet actions()}
+				{#if status === 'active'}
+					<Button variant="ghost" size="sm" onclick={() => (revoking = d)}>{m.settings_delegation_revoke()}</Button>
+				{/if}
+			{/snippet}
+		</RecordRow>
 	{/each}
 
 	{#if items.length === 0 && !delegations.loading}
@@ -123,7 +121,7 @@
 			desc={m.settings_delegation_upgrade_desc()}
 		/>
 	{/if}
-</div>
+</Card>
 
 {#if creating}
 	<DelegationCeremony {address} onClose={() => (creating = false)} />

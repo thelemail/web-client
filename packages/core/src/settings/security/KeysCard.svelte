@@ -4,7 +4,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Download from '@lucide/svelte/icons/download';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import Badge from '../Badge.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
@@ -44,10 +44,8 @@
 	}
 </script>
 
-<div class="scard">
-	<CardHead icon={KeySquare} title={m.settings_security_keys_title()}>
-		{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
-	</CardHead>
+<Card icon={KeySquare} title={m.settings_security_keys_title()}>
+	{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
 		{@const accountId = auth.accountId}
 		{@const mismatch = accountKeys.verification === 'unverified'}
@@ -121,7 +119,7 @@
 			<Download size={14} />{m.settings_security_export_key()}
 		</Button>
 	</Row>
-</div>
+</Card>
 
 <style>
 	.key-meta {

@@ -17,6 +17,7 @@
 	import { page } from '$app/state';
 
 	import Badge from '../Badge.svelte';
+	import Card from '../Card.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import CatchAllCard from './CatchAllCard.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
@@ -44,6 +45,7 @@
 		type AddressRow
 	} from '../addressModel';
 	import { addressContext, addressSource } from '../addressContext';
+	import { makePrimary } from '../primaryAddress';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -56,6 +58,7 @@
 	let pendingRemoval = $state<{ email: string; run: () => Promise<void> } | null>(null);
 	let removalBusy = $state(false);
 	let removalError = $state<string | null>(null);
+	let promoteFailedId = $state<string | null>(null);
 
 	const slot = $derived(page.params.slot ?? '0');
 	const manage = $derived(canManageWorkspace());
@@ -120,12 +123,11 @@
 
 	async function promote(row: AddressRow) {
 		menuFor = null;
+		promoteFailedId = null;
 		try {
-			await addresses.setPrimary(row.id);
-			await addresses.load();
-			await workspaceAddresses.reload();
-		} catch (err) {
-			console.warn('set primary failed', err);
+			await makePrimary(row.id);
+		} catch {
+			promoteFailedId = row.id;
 		}
 	}
 
@@ -201,13 +203,11 @@
 </div>
 
 {#each groups as g (g.domain)}
-	<section class="scard addr-group">
-		<div class="scard-h addr-group-h">
-			<Globe size={16} />
-			<h3 class="addr-domain">{g.domain}</h3>
+	<Card as="section" class="addr-group" headClass="addr-group-h" titleClass="addr-domain" icon={Globe} title={g.domain}>
+		{#snippet right()}
 			{#if g.badge}<Badge kind={g.badgeTone}>{g.badge}</Badge>{/if}
 			<span class="addr-count">{g.count}</span>
-		</div>
+		{/snippet}
 		<div class="addr-cols">
 			<span>{m.settings_address_col_address()}</span><span>{m.settings_address_col_used_by()}</span><span></span>
 		</div>
@@ -298,8 +298,11 @@
 					{/if}
 				</div>
 			</div>
+			{#if promoteFailedId === row.id}
+				<div class="card-empty err" role="alert">{m.settings_address_promote_failed()}</div>
+			{/if}
 		{/each}
-	</section>
+	</Card>
 {/each}
 
 {#if addresses.loading && rows.length === 0}

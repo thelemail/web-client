@@ -4,14 +4,14 @@
 	import { DropdownMenu } from 'bits-ui';
 	import FolderIcon from '@lucide/svelte/icons/folder';
 	import TagIcon from '@lucide/svelte/icons/tag';
-	import Plus from '@lucide/svelte/icons/plus';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import StarIcon from '@lucide/svelte/icons/star';
 	import StarOff from '@lucide/svelte/icons/star-off';
 	import FolderPlus from '@lucide/svelte/icons/folder-plus';
 	import SecHead from '../SecHead.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
+	import AddRow from '../AddRow.svelte';
 	import { Button } from '$core/components/ui/button';
 	import type { MailCollectionKind } from '$core/api/types';
 	import { auth } from '$core/stores/auth.svelte';
@@ -99,16 +99,14 @@
 {#snippet card(kind: MailCollectionKind)}
 	{@const entries = all(kind)}
 	{@const folder = kind === 'folder'}
-	<div class="scard">
-		<CardHead icon={folder ? FolderIcon : TagIcon} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
-			{#snippet right()}
-				<span class="card-meta">
-					{folder
-						? m.settings_collections_folder_count({ count: entries.length })
-						: m.settings_collections_label_count({ count: entries.length })}
-				</span>
-			{/snippet}
-		</CardHead>
+	<Card icon={folder ? FolderIcon : TagIcon} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
+		{#snippet right()}
+			<span class="card-meta">
+				{folder
+					? m.settings_collections_folder_count({ count: entries.length })
+					: m.settings_collections_label_count({ count: entries.length })}
+			</span>
+		{/snippet}
 
 		{#if !mailCollections.loaded}
 			<div class="coll-set-empty">{m.common_loading()}</div>
@@ -162,11 +160,12 @@
 				<Button variant="ghost" size="sm" onclick={() => (creating = null)}>{m.common_cancel()}</Button>
 			</div>
 		{:else}
-			<button type="button" class="addrow" onclick={() => startCreate(kind, null)}>
-				<Plus size={16} />{folder ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
-			</button>
+			<AddRow
+				label={folder ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
+				onClick={() => startCreate(kind, null)}
+			/>
 		{/if}
-	</div>
+	</Card>
 {/snippet}
 
 {#if mailCollections.locked}

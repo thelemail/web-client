@@ -1,9 +1,11 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import type { Workspace, WorkspaceMember } from '$core/api/workspaces';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import FamilyInviteCeremony from './FamilyInviteCeremony.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me', email: 'ada@temail.org' } }));
 vi.mock('$core/api/auth', async (importOriginal) => ({
@@ -64,5 +66,15 @@ describe('FamilyInviteCeremony', () => {
 		expect(problem).toContain('temail.org');
 		expect(problem).toContain('thelemail.com');
 		expect(sendButton()?.disabled).toBe(true);
+	});
+
+	it('is a named dialog with named controls and one current step', async () => {
+		open();
+		await enter('jules@temail.org');
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_family_invite_title({ family: 'Lovelace' }) });
+
+		expect(unnamedControls(dialog)).toEqual([]);
+		expect(headingJumps(dialog, 1)).toEqual([]);
+		expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
 	});
 });

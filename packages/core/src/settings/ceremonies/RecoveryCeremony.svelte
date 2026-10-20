@@ -233,9 +233,10 @@
 					{@const ok = val.trim().toLowerCase() === q.word}
 					{@const bad = val.length > 0 && !ok}
 					<div class="quiz-row" class:ok class:bad>
-						<span class="quiz-n">{m.settings_ceremony_recovery_word_n({ n: q.i + 1 })}</span>
+						<span class="quiz-n" id="quiz-word-{q.i}">{m.settings_ceremony_recovery_word_n({ n: q.i + 1 })}</span>
 						<input
 							class="tin mono"
+							aria-labelledby="quiz-word-{q.i}"
 							value={val}
 							placeholder="…"
 							autocomplete="off"

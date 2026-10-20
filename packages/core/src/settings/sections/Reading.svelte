@@ -2,8 +2,9 @@
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
+	import Seg from '../Seg.svelte';
 	import Select from '../Select.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import type { SettingsState } from '../data';
 	import { MARK_READ_LABELS, isMarkReadOption } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -21,9 +22,8 @@
 
 <SecHead desc={m.settings_reading_desc()} />
 
-<div class="scard">
-	<CardHead title={m.settings_reading_open_title()} />
-	<SettingsGate controls={['select']}>
+<Card title={m.settings_reading_open_title()}>
+	<SettingsGate controls={['select', 'select']}>
 		<Row t={m.settings_reading_mark_read()}>
 			<Select
 				value={s.markRead}
@@ -33,5 +33,15 @@
 				}}
 			/>
 		</Row>
+		<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
+			<Seg
+				value={s.replyDefault}
+				options={[
+					{ v: 'reply', l: m.settings_sending_reply() },
+					{ v: 'all', l: m.settings_sending_reply_all() }
+				]}
+				onChange={(v) => set('replyDefault', v)}
+			/>
+		</Row>
 	</SettingsGate>
-</div>
+</Card>

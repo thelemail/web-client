@@ -297,7 +297,7 @@
 </script>
 
 <div class="sig-modes">
-	<Seg value={mode} options={modeOptions} onChange={switchMode} />
+	<Seg value={mode} options={modeOptions} label={m.settings_signature_mode_aria()} onChange={switchMode} />
 </div>
 
 {#if locked}
@@ -339,6 +339,8 @@
 	accept="image/jpeg,image/png,image/gif,image/webp"
 	onchange={onImagePicked}
 	class="hidden-input"
+	aria-hidden="true"
+	tabindex="-1"
 />
 
 {#if pasteUndo !== null}

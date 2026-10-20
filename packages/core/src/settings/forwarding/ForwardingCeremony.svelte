@@ -157,8 +157,13 @@
 				</div>
 
 				<div class="field">
-					<span class="field-lbl">{m.settings_forwarding_where()}</span>
-					<Seg value={mode} options={modeChoices} onChange={(v) => (mode = v as ReadDelegationMode)} />
+					<span class="field-lbl" id="forwarding-mode-lbl">{m.settings_forwarding_where()}</span>
+					<Seg
+						value={mode}
+						options={modeChoices}
+						labelledby="forwarding-mode-lbl"
+						onChange={(v) => (mode = v as ReadDelegationMode)}
+					/>
 					<div class="field-hint">
 						{#if plain}
 							{m.settings_forwarding_plain_hint()}
@@ -259,7 +264,13 @@
 				<div class="mono fp">{formatFingerprintHex(fingerprint)}</div>
 			</div>
 
-			<textarea class="tin mono keyblock" readonly rows="8" value={privateKeyArmored}></textarea>
+			<textarea
+				class="tin mono keyblock"
+				aria-label={m.settings_key_block_aria()}
+				readonly
+				rows="8"
+				value={privateKeyArmored}
+			></textarea>
 
 			<div class="key-actions">
 				<Button variant="ghost" onclick={copyKey}>

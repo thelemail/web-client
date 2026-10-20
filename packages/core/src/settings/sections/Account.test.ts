@@ -6,6 +6,7 @@ import { workspaces } from '$core/stores/workspaces.svelte';
 import { ApiCallError } from '$core/api/types';
 import type { Plan, Subscription } from '$core/api/billing';
 import type { Workspace } from '$core/api/workspaces';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const api = vi.hoisted(() => ({
 	createBillingPortalSession: vi.fn(),
@@ -155,6 +156,14 @@ describe('Account plan price', () => {
 		render(Account, { props: { launch: () => {} } });
 		await waitFor(() => expect(api.getMySubscription).toHaveBeenCalled());
 		expect(document.querySelector('.plan-price')?.textContent).not.toMatch(/[€$]/);
+	});
+
+	it('names every control and keeps heading order under the page h1', async () => {
+		const { container } = render(Account, { props: { launch: () => {} } });
+		await waitFor(() => expect(document.querySelector('.plan-price')?.textContent).toContain('$31 / year'));
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });
 

@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
@@ -8,6 +8,7 @@ import { addresses } from '$core/stores/addresses.svelte';
 import { billing } from '$core/stores/billing.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
+import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 import Addresses from './Addresses.svelte';
 
 vi.mock('$core/api/auth', async (importOriginal) => ({
@@ -95,6 +96,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	cleanup();
+	vi.restoreAllMocks();
 	addresses.items = [];
 	addresses.mySharedAliases = [];
 	customDomains.clear();
@@ -115,6 +117,38 @@ describe('Addresses', () => {
 		render(Addresses, { props: { launch: () => {} } });
 		expect(await menuOf('sales@acme.co.uk')).not.toContain('Make primary');
 		expect(await menuOf('hello@thelemail.com')).toContain('Make primary');
+	});
+
+	it('makes an address primary from the menu and refreshes both lists', async () => {
+		const setPrimary = vi.spyOn(addresses, 'setPrimary').mockResolvedValue();
+		const load = vi.spyOn(addresses, 'load').mockResolvedValue();
+		const reload = vi.spyOn(workspaceAddresses, 'reload').mockResolvedValue();
+		render(Addresses, { props: { launch: () => {} } });
+		await menuOf('hello@thelemail.com');
+		await fireEvent.click(screen.getByRole('button', { name: /make primary/i }));
+		await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
+		expect(setPrimary).toHaveBeenCalledWith('h');
+		expect(load).toHaveBeenCalledOnce();
+		expect(screen.queryByRole('alert')).toBeNull();
+	});
+
+	it('shows a failed promotion next to the address', async () => {
+		vi.spyOn(addresses, 'setPrimary').mockRejectedValue(new Error('boom'));
+		render(Addresses, { props: { launch: () => {} } });
+		await menuOf('hello@thelemail.com');
+		await fireEvent.click(screen.getByRole('button', { name: /make primary/i }));
+		const alert = await screen.findByRole('alert');
+		expect(alert.textContent).toBe('Could not make this the primary address.');
+		expect(alert.previousElementSibling).toBe(rowOf('hello@thelemail.com'));
+	});
+
+	it('never offers a shared address as primary', async () => {
+		addresses.items = [
+			...addresses.items,
+			address('sh', 'team@thelemail.com', { shared: true })
+		];
+		render(Addresses, { props: { launch: () => {} } });
+		expect(await menuOf('team@thelemail.com')).not.toContain('Make primary');
 	});
 
 	it('counts the people on a shared address the member is on', () => {

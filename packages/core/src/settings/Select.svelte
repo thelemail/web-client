@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import { getRowNames } from './a11y';
 
 	interface Props {
 		value: string;
@@ -8,15 +9,21 @@
 		narrow?: boolean;
 		ariaLabel?: string;
 		disabled?: boolean;
+		id?: string;
 	}
 
-	let { value, options, onChange, narrow = false, ariaLabel, disabled = false }: Props = $props();
+	let { value, options, onChange, narrow = false, ariaLabel, disabled = false, id }: Props = $props();
+
+	const row = getRowNames();
 </script>
 
 <span class="sel">
 	<select
+		{id}
 		{value}
 		aria-label={ariaLabel}
+		aria-labelledby={ariaLabel || id ? undefined : row?.labelId}
+		aria-describedby={row?.descId}
 		{disabled}
 		style:min-width={narrow ? '0' : undefined}
 		onchange={(e) => onChange((e.currentTarget as HTMLSelectElement).value)}

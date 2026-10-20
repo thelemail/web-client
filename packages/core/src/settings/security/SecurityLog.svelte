@@ -11,7 +11,7 @@
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
 	import { untrack } from 'svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import LoadState from './LoadState.svelte';
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { securityActionError } from './errors';
@@ -133,8 +133,7 @@
 	}
 </script>
 
-<div class="scard">
-	<CardHead icon={ScrollText} title={m.settings_security_log()} />
+<Card icon={ScrollText} title={m.settings_security_log()}>
 	{#if secEvents === null}
 		{#if secLoadFailed}
 			<LoadState
@@ -189,7 +188,7 @@
 			</div>
 		{/if}
 	{/if}
-</div>
+</Card>
 
 <style>
 	.log-more {

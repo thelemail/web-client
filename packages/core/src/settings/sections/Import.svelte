@@ -8,7 +8,7 @@
 	import Clock from '@lucide/svelte/icons/clock';
 	import Lock from '@lucide/svelte/icons/lock';
 	import SecHead from '../SecHead.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { DEFAULT_QUERY } from '$core/mail/url';
@@ -91,9 +91,7 @@
 
 <SecHead desc={m.settings_import_desc()} />
 
-<div class="scard">
-	<CardHead icon={Upload} title={m.settings_import_title()} />
-
+<Card icon={Upload} title={m.settings_import_title()}>
 	{#if importBatch.locked}
 		<div class="card-note warn">
 			<Lock size={13} />
@@ -131,6 +129,8 @@
 		accept=".eml,message/rfc822"
 		multiple
 		class="hidden-input"
+		aria-hidden="true"
+		tabindex="-1"
 		onchange={onPick}
 	/>
 
@@ -173,7 +173,7 @@
 			{/each}
 		</div>
 	{/if}
-</div>
+</Card>
 
 {#snippet resumeLink(t: string)}<button type="button" class="notelink" onclick={startRun}>{t}</button>{/snippet}
 

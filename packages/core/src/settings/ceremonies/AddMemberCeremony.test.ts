@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import AddMemberCeremony from './AddMemberCeremony.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { billing } from '$core/stores/billing.svelte';
@@ -8,6 +8,8 @@ import type { CreateWorkspaceInviteResult, Workspace, WorkspaceInvite } from '$c
 import type { CustomDomain } from '$core/api/customDomains';
 import type { Subscription } from '$core/api/billing';
 import { ApiCallError } from '$core/api/types';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 vi.mock('$platform', () => ({ platform: { returnOrigin: () => 'https://mail.test' } }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me' } }));
@@ -111,5 +113,14 @@ describe('AddMemberCeremony', () => {
 			)
 		);
 		expect(document.body.textContent).not.toContain('that address already has an invitation');
+	});
+
+	it('is a named dialog with named controls and one current step', async () => {
+		await typeLocal('camille');
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_member_title_org() });
+
+		expect(unnamedControls(dialog)).toEqual([]);
+		expect(headingJumps(dialog, 1)).toEqual([]);
+		expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
 	});
 });

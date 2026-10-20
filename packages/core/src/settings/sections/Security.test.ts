@@ -6,6 +6,7 @@ import { securityActivity } from '../security/activity.svelte';
 import { ApiCallError } from '$core/api/types';
 import { SETTINGS_DEFAULTS } from '../data';
 import type { TwoFactorStatus } from '$core/api/types';
+import { headingJumps, unnamedControls } from '../a11yAssert';
 
 const api = vi.hoisted(() => ({
 	getTwoFactorStatus: vi.fn(),
@@ -140,6 +141,20 @@ describe('Security layout', () => {
 			const name = el.getAttribute('aria-label') ?? el.textContent?.trim();
 			expect(name, el.outerHTML).toBeTruthy();
 		}
+	});
+
+	it('names every control and keeps heading order under the page h1', async () => {
+		authApi.listSessions.mockResolvedValue({ sessions: [current, phone] });
+		authApi.listSecurityEvents.mockResolvedValue({ events: [event('e1')] });
+		const { container } = open();
+		await vi.waitFor(() => expect(authApi.listSecurityEvents).toHaveBeenCalled());
+
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
+
+		await fireEvent.click(button('Rename')!);
+		expect(document.querySelector('.cfd-input')).not.toBeNull();
+		expect(unnamedControls(container)).toEqual([]);
 	});
 });
 

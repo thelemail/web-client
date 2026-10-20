@@ -3,7 +3,7 @@
 	import MonitorSmartphone from '@lucide/svelte/icons/monitor-smartphone';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import { untrack } from 'svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import LoadState from './LoadState.svelte';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -124,8 +124,7 @@
 	}
 </script>
 
-<div class="scard">
-	<CardHead icon={MonitorSmartphone} title={m.settings_security_sessions()} />
+<Card icon={MonitorSmartphone} title={m.settings_security_sessions()}>
 	{#if sessions === null}
 		{#if loadFailed}
 			<LoadState
@@ -182,7 +181,7 @@
 			</div>
 		{/if}
 	{/if}
-</div>
+</Card>
 
 {#snippet revokeAllBody()}<p class="cfd-p">{m.settings_security_revoke_all_desc()}</p>{/snippet}
 

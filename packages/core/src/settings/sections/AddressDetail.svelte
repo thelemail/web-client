@@ -12,7 +12,7 @@
 	import { page } from '$app/state';
 
 	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import TextInput from '../TextInput.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -37,9 +37,12 @@
 		buildRow,
 		initialsOf,
 		ledeFor,
+		primaryBlock,
+		primaryBlockNote,
 		setupBlockedNote
 	} from '../addressModel';
 	import { addressContext, addressSource } from '../addressContext';
+	import { makePrimary } from '../primaryAddress';
 
 	interface Props {
 		addressId: string;
@@ -51,6 +54,8 @@
 	let nameSeeded = $state('');
 	let saving = $state(false);
 	let nameError = $state<string | null>(null);
+	let promoteError = $state<string | null>(null);
+	let promoting = $state(false);
 	let managingPeople = $state(false);
 	let removing = $state(false);
 	let removalBusy = $state(false);
@@ -117,13 +122,15 @@
 	}
 
 	async function promote() {
-		if (!row) return;
+		if (!row || promoting) return;
+		promoting = true;
+		promoteError = null;
 		try {
-			await addresses.setPrimary(row.id);
-			await addresses.load();
-			await workspaceAddresses.reload();
-		} catch (err) {
-			nameError = err instanceof Error ? err.message : m.settings_address_promote_failed();
+			await makePrimary(row.id);
+		} catch {
+			promoteError = m.settings_address_promote_failed();
+		} finally {
+			promoting = false;
 		}
 	}
 
@@ -211,8 +218,7 @@
 	{/if}
 
 	{#if row.canRename || row.isOwnPersonal}
-	<div class="scard">
-		<CardHead icon={AtSign} title={m.settings_address_identity()} />
+	<Card icon={AtSign} title={m.settings_address_identity()}>
 		{#if row.canRename}
 			<Row
 				t={m.settings_address_display_name()}
@@ -237,11 +243,13 @@
 					</Button>
 				</span>
 			</Row>
+			{#if nameError}<div class="card-empty err" role="alert">{nameError}</div>{/if}
 		{/if}
 		{#if row.isOwnPersonal}
+			{@const blockNote = primaryBlockNote(primaryBlock(row), row.domain)}
 			<Row
 				t={m.settings_address_primary_title()}
-				d={m.settings_address_primary_desc()}
+				d={blockNote ? `${m.settings_address_primary_desc()} ${blockNote}` : m.settings_address_primary_desc()}
 			>
 				{#if row.isPrimary}
 					<Badge kind="pine">{m.settings_address_primary()}</Badge>
@@ -249,16 +257,16 @@
 					<Button
 						variant="secondary"
 						size="sm"
-						disabled={!row.canPromote}
+						disabled={!row.canPromote || promoting}
 						onclick={() => void promote()}
 					>
 						<Star size={14} />{m.settings_address_make_primary()}
 					</Button>
 				{/if}
 			</Row>
+			{#if promoteError}<div class="card-empty err" role="alert">{promoteError}</div>{/if}
 		{/if}
-		{#if nameError}<div class="card-empty err">{nameError}</div>{/if}
-	</div>
+	</Card>
 	{:else}
 		<div class="ad-note">
 			<Info size={14} />
@@ -273,21 +281,19 @@
 	{/if}
 
 	{#if row.kind === 'shared'}
-		<div class="scard">
-			<CardHead icon={Users} title={m.settings_address_people()}>
-				{#snippet right()}
-					{#if row.usedBy}
-						<span class="card-meta">
-							{m.settings_address_used_people({ count: row.people.length })}
-						</span>
-					{/if}
-					{#if row.canManagePeople}
-						<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
-							<Users size={13} />{m.settings_address_change_people()}
-						</Button>
-					{/if}
-				{/snippet}
-			</CardHead>
+		<Card icon={Users} title={m.settings_address_people()}>
+			{#snippet right()}
+				{#if row.usedBy}
+					<span class="card-meta">
+						{m.settings_address_used_people({ count: row.people.length })}
+					</span>
+				{/if}
+				{#if row.canManagePeople}
+					<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
+						<Users size={13} />{m.settings_address_change_people()}
+					</Button>
+				{/if}
+			{/snippet}
 			{#each row.people as p (p.accountId)}
 				<div class="ad-person">
 					<Avatar
@@ -312,7 +318,7 @@
 					{m.settings_address_people_note()}
 				</span>
 			</div>
-		</div>
+		</Card>
 	{/if}
 
 	{#if !ownDomain}
@@ -333,8 +339,7 @@
 	{/if}
 
 	{#if row.canRemove}
-		<div class="scard danger">
-			<CardHead icon={TriangleAlert} title={m.settings_address_remove_card()} />
+		<Card icon={TriangleAlert} title={m.settings_address_remove_card()} variant="danger">
 			<Row
 				t={row.kind === 'shared'
 					? m.settings_address_remove_shared()
@@ -349,7 +354,7 @@
 					<Trash2 size={14} />{m.settings_address_remove()}
 				</Button>
 			</Row>
-		</div>
+		</Card>
 	{/if}
 
 	{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}

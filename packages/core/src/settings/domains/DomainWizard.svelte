@@ -11,6 +11,7 @@
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	import Card from '../Card.svelte';
+	import Heading from '../Heading.svelte';
 	import CheckStatus from './CheckStatus.svelte';
 	import RecordList from './RecordList.svelte';
 	import WizardRail from './WizardRail.svelte';
@@ -71,6 +72,13 @@
 	let addingAlias = $state(false);
 
 	const phase = $derived(STEP_PHASE[step]);
+	const stepHead = $derived.by(() => {
+		if (step === 'ownership') return { icon: Info, title: m.settings_domains_wizard_ownership_title({ domain: domain.domain }) };
+		if (step === 'sending') return { icon: Info, title: m.settings_domains_wizard_sending_title({ domain: domain.domain }) };
+		if (step === 'recipients') return { icon: AtSign, title: m.settings_domains_wizard_recipients_title() };
+		if (step === 'routing') return { icon: TriangleAlert, title: m.settings_domains_wizard_routing_title() };
+		return { icon: CircleCheck, title: m.settings_domains_wizard_done_title() };
+	});
 	const phaseRecords = $derived(phase ? records.filter((r) => r.phase === phase) : []);
 	const manage = $derived(canManageWorkspace());
 	const domainId = $derived(domain.id);
@@ -141,20 +149,7 @@
 	onSelect={onStep}
 />
 
-<Card>
-	{#snippet head()}
-		{#if step === 'ownership'}
-			<Info size={16} /><h3>{m.settings_domains_wizard_ownership_title({ domain: domain.domain })}</h3>
-		{:else if step === 'sending'}
-			<Info size={16} /><h3>{m.settings_domains_wizard_sending_title({ domain: domain.domain })}</h3>
-		{:else if step === 'recipients'}
-			<AtSign size={16} /><h3>{m.settings_domains_wizard_recipients_title()}</h3>
-		{:else if step === 'routing'}
-			<TriangleAlert size={16} /><h3>{m.settings_domains_wizard_routing_title()}</h3>
-		{:else}
-			<CircleCheck size={16} /><h3>{m.settings_domains_wizard_done_title()}</h3>
-		{/if}
-	{/snippet}
+<Card icon={stepHead.icon} title={stepHead.title}>
 
 	<div class="dw-pane">
 		{#if lapsing && domain.ownershipMissingSince && domain.releaseAt}
@@ -226,7 +221,7 @@
 		{:else}
 			<div class="dw-done">
 				<span class="dw-done-ic"><CircleCheck size={34} strokeWidth={1.6} /></span>
-				<h4 class="dw-done-title">{m.settings_domains_wizard_live({ domain: domain.domain })}</h4>
+				<Heading class="dw-done-title">{m.settings_domains_wizard_live({ domain: domain.domain })}</Heading>
 				<p class="dw-done-desc">
 					{m.settings_domains_wizard_done_desc()}
 				</p>

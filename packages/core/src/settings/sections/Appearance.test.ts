@@ -37,7 +37,7 @@ describe('appearance section', () => {
 	it('marks a theme the server refused as not saved and retries it', async () => {
 		putAccountSettingsSection.mockRejectedValueOnce(new Error('500'));
 		render(Appearance);
-		await fireEvent.click(screen.getByRole('button', { name: /inkwell/i }));
+		await fireEvent.click(screen.getByRole('radio', { name: /inkwell/i }));
 		expect(theme.pref).toBe('dark');
 		expect(settingsDraft.saveState).toBe('saving');
 

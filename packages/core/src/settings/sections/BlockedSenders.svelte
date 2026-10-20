@@ -3,9 +3,9 @@
 	import UserX from '@lucide/svelte/icons/user-x';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Lock from '@lucide/svelte/icons/lock';
-	import Plus from '@lucide/svelte/icons/plus';
 	import SecHead from '../SecHead.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
+	import AddRow from '../AddRow.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { deleteBlockedSender, listBlockedSenders } from '$core/api/blockedSenders';
 	import { blockSender, unsealAddress } from '$core/mail/blockedSenders';
@@ -114,12 +114,10 @@
 
 <SecHead desc={m.settings_blocked_desc()} />
 
-<div class="scard">
-	<CardHead icon={UserX} title={m.settings_blocked_title()}>
-		{#snippet right()}
-			<span class="card-meta">{m.settings_blocked_count({ count: entries.length })}</span>
-		{/snippet}
-	</CardHead>
+<Card icon={UserX} title={m.settings_blocked_title()}>
+	{#snippet right()}
+		<span class="card-meta">{m.settings_blocked_count({ count: entries.length })}</span>
+	{/snippet}
 
 	{#if sealedHidden}
 		<div class="card-note">
@@ -171,6 +169,7 @@
 				<input
 					class="tin mono"
 					type="email"
+					aria-label={m.settings_blocked_add_aria()}
 					placeholder="name@example.com"
 					bind:value={newAddress}
 					disabled={addBusy}
@@ -196,11 +195,9 @@
 			</Button>
 		</div>
 	{:else}
-		<button type="button" class="addrow" onclick={() => (adding = true)}>
-			<Plus size={16} />{m.settings_blocked_add()}
-		</button>
+		<AddRow label={m.settings_blocked_add()} onClick={() => (adding = true)} />
 	{/if}
-</div>
+</Card>
 
 {#snippet unblockBody()}
 	<p class="cfd-p">{m.settings_blocked_unblock_body()}</p>

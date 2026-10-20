@@ -125,11 +125,7 @@
 
 <SecHead desc={m.settings_domains_desc()} />
 
-<Card>
-	{#snippet head()}
-		<Globe2 size={16} />
-		<h3>{m.settings_domains_title()}</h3>
-	{/snippet}
+<Card icon={Globe2} title={m.settings_domains_title()}>
 
 	{#if store.loading && items.length === 0}
 		<div class="cd-empty">{m.settings_domains_loading()}</div>

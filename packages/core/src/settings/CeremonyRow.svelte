@@ -2,6 +2,7 @@
 	import type { Component } from 'svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { Button } from '$core/components/ui/button';
+	import Heading from './Heading.svelte';
 
 	interface Props {
 		icon: Component;
@@ -30,7 +31,7 @@
 	<span class="cr-ic"><IconComponent size={20} /></span>
 	<div class="cr-body">
 		<div class="cr-title">
-			{title}
+			<Heading>{title}</Heading>
 			{#if status}<span class={'cr-status s-' + statusKind}>{status}</span>{/if}
 		</div>
 		<div class="cr-desc">{desc}</div>

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import type { AccountAddress } from '$core/api/addresses';
 import type { SharedAlias } from '$core/api/aliases';
 import type { CustomDomain } from '$core/api/customDomains';
@@ -7,6 +7,7 @@ import type { Subscription } from '$core/api/billing';
 import { addresses } from '$core/stores/addresses.svelte';
 import { customDomains } from '$core/stores/customDomains.svelte';
 import { billing } from '$core/stores/billing.svelte';
+import { workspaceAddresses } from '$core/stores/workspaceAddresses.svelte';
 import AddressDetail from './AddressDetail.svelte';
 
 const perm = vi.hoisted(() => ({ manage: true }));
@@ -123,6 +124,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	cleanup();
+	vi.restoreAllMocks();
 	addresses.items = [];
 	addresses.mySharedAliases = [];
 	customDomains.clear();
@@ -179,6 +181,37 @@ describe('AddressDetail', () => {
 		setup(acme('ready'), sales());
 		expect(text()).not.toContain('This address is suspended.');
 		expect(button('Make primary')?.disabled).toBe(false);
+	});
+
+	it('says why an address cannot become primary', () => {
+		setup(acme('owned'), sales());
+		expect(button('Make primary')?.disabled).toBe(true);
+		const row = screen.getByRole('button', { name: /make primary/i }).closest('.setrow')!;
+		expect(row.textContent).toContain(
+			'This can be your primary address once the sending records of acme.co.uk are verified.'
+		);
+	});
+
+	it('makes an address primary and refreshes both lists', async () => {
+		const setPrimary = vi.spyOn(addresses, 'setPrimary').mockResolvedValue();
+		const load = vi.spyOn(addresses, 'load').mockResolvedValue();
+		const reload = vi.spyOn(workspaceAddresses, 'reload').mockResolvedValue();
+		setup(acme('ready'), sales());
+		await fireEvent.click(button('Make primary')!);
+		await vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
+		expect(setPrimary).toHaveBeenCalledWith('s');
+		expect(load).toHaveBeenCalledOnce();
+		expect(screen.queryByRole('alert')).toBeNull();
+	});
+
+	it('shows a failed promotion in its own slot, apart from the name', async () => {
+		vi.spyOn(addresses, 'setPrimary').mockRejectedValue(new Error('boom'));
+		setup(acme('ready'), sales());
+		await fireEvent.click(button('Make primary')!);
+		const alert = await screen.findByRole('alert');
+		expect(alert.textContent).toBe('Could not make this the primary address.');
+		expect(alert.previousElementSibling?.textContent).toContain('Primary address');
+		expect(text()).not.toContain('boom');
 	});
 
 	it('shows a member the people on their shared address', () => {

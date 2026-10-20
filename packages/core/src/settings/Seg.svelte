@@ -7,6 +7,7 @@
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import Type from '@lucide/svelte/icons/type';
 	import Pilcrow from '@lucide/svelte/icons/pilcrow';
+	import { getRowNames } from './a11y';
 
 	type IconName =
 		| 'panel-right'
@@ -28,9 +29,33 @@
 		value: T;
 		options: SegOption[];
 		onChange: (value: T) => void;
+		label?: string;
+		labelledby?: string;
 	}
 
-	let { value, options, onChange }: Props = $props();
+	let { value, options, onChange, label, labelledby }: Props = $props();
+
+	const row = getRowNames();
+	const buttons: HTMLButtonElement[] = $state([]);
+	const focusIndex = $derived(Math.max(0, options.findIndex((o) => o.v === value)));
+
+	const KEYS: Record<string, (i: number, n: number) => number> = {
+		ArrowRight: (i, n) => (i + 1) % n,
+		ArrowDown: (i, n) => (i + 1) % n,
+		ArrowLeft: (i, n) => (i - 1 + n) % n,
+		ArrowUp: (i, n) => (i - 1 + n) % n,
+		Home: () => 0,
+		End: (_, n) => n - 1
+	};
+
+	function onKey(e: KeyboardEvent, i: number) {
+		const step = KEYS[e.key];
+		if (!step) return;
+		e.preventDefault();
+		const next = step(i, options.length);
+		onChange(options[next].v);
+		buttons[next]?.focus();
+	}
 
 	const icons: Record<IconName, typeof PanelRight> = {
 		'panel-right': PanelRight,
@@ -44,11 +69,26 @@
 	};
 </script>
 
-<div class="seg">
-	{#each options as o (o.v)}
+<div
+	class="seg"
+	role="radiogroup"
+	aria-label={label}
+	aria-labelledby={label ? undefined : (labelledby ?? row?.labelId)}
+	aria-describedby={labelledby ? undefined : row?.descId}
+>
+	{#each options as o, i (o.v)}
 		{@const Icon = o.icon ? icons[o.icon] : null}
-		<button type="button" class:on={value === o.v} onclick={() => onChange(o.v)}>
-			{#if Icon}<Icon size={15} />{/if}{o.l}
+		<button
+			bind:this={buttons[i]}
+			type="button"
+			role="radio"
+			aria-checked={value === o.v}
+			tabindex={i === focusIndex ? 0 : -1}
+			class:on={value === o.v}
+			onclick={() => onChange(o.v)}
+			onkeydown={(e) => onKey(e, i)}
+		>
+			{#if Icon}<Icon size={15} aria-hidden="true" />{/if}{o.l}
 		</button>
 	{/each}
 </div>

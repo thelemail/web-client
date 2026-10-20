@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import DeleteCeremony from './DeleteCeremony.svelte';
+import { headingJumps, unnamedControls } from '../a11yAssert';
+import { m } from '$paraglide/messages.js';
 
 vi.mock('$platform', () => ({ platform: {} }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -51,5 +53,19 @@ describe('DeleteCeremony', () => {
 
 		await fireEvent.click(destroyed);
 		expect(continueButton().disabled).toBe(true);
+	});
+
+	it('is a named dialog with named controls and one current step on each step', async () => {
+		render(DeleteCeremony, { props: { onClose: vi.fn(), onComplete: vi.fn() } });
+		const dialog = screen.getByRole('dialog', { name: m.settings_ceremony_delete_title() });
+		const check = () => {
+			expect(unnamedControls(dialog)).toEqual([]);
+			expect(headingJumps(dialog, 1)).toEqual([]);
+			expect(dialog.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
+		};
+
+		check();
+		await fireEvent.click(continueButton());
+		check();
 	});
 });

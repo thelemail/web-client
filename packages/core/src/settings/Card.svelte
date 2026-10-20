@@ -1,31 +1,45 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { untrack, type Component, type Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
+	import Heading from './Heading.svelte';
+	import { getHeadingLevel, setHeadingLevel } from './a11y';
 
-	interface Props {
+	interface Props extends Omit<HTMLAttributes<HTMLElement>, 'title' | 'class'> {
 		title?: string;
-		danger?: boolean;
-		head?: Snippet;
-		badge?: Snippet;
+		icon?: Component<{ size?: number }>;
+		right?: Snippet;
+		variant?: 'flat' | 'menus' | 'danger';
+		as?: 'div' | 'section';
+		class?: string;
+		headClass?: string;
+		titleClass?: string;
 		children: Snippet;
 	}
 
-	let { title, danger = false, head, badge, children }: Props = $props();
-	const hasHeader = $derived(!!head || !!title);
+	let {
+		title,
+		icon: IconComponent,
+		right,
+		variant,
+		as = 'div',
+		class: extra,
+		headClass,
+		titleClass,
+		children,
+		...rest
+	}: Props = $props();
+
+	const level = getHeadingLevel();
+	setHeadingLevel(untrack(() => title) ? level + 1 : level);
 </script>
 
-<div class="scard" class:danger>
-	{#if hasHeader}
-		<div class="scard-h">
-			{#if head}{@render head()}{/if}
-			{#if title}<h3>{title}</h3>{/if}
-			{#if badge}<span class="badge-slot">{@render badge()}</span>{/if}
+<svelte:element this={as} {...rest} class={['scard', variant, extra]}>
+	{#if title}
+		<div class={['scard-h', headClass]}>
+			{#if IconComponent}<IconComponent size={16} />{/if}
+			<Heading {level} class={['scard-title', titleClass]}>{title}</Heading>
+			{#if right}{@render right()}{/if}
 		</div>
 	{/if}
 	{@render children()}
-</div>
-
-<style>
-	.badge-slot {
-		margin-left: auto;
-	}
-</style>
+</svelte:element>

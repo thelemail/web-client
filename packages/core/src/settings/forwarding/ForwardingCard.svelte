@@ -14,7 +14,8 @@
 
 	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
+	import RecordRow from '../RecordRow.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
 	import ForwardingCeremony from './ForwardingCeremony.svelte';
 	import RevokeForwardingDialog from './RevokeForwardingDialog.svelte';
@@ -101,24 +102,22 @@
 
 <svelte:window onclick={dismiss} />
 
-<div class="scard menus">
-	<CardHead icon={Forward} title={m.settings_forwarding_title()}>
-		{#snippet right()}
-			<span class="card-meta">
-				{m.settings_forwarding_destinations({ count: live.length })}
-			</span>
-			{#if billing.canAddDomains}
-				<Button
-					variant="secondary"
-					size="sm"
-					disabled={!!blocked}
-					onclick={() => (creating = true)}
-				>
-					<Plus size={13} />{m.settings_forwarding_add()}
-				</Button>
-			{/if}
-		{/snippet}
-	</CardHead>
+<Card icon={Forward} title={m.settings_forwarding_title()} variant="menus">
+	{#snippet right()}
+		<span class="card-meta">
+			{m.settings_forwarding_destinations({ count: live.length })}
+		</span>
+		{#if billing.canAddDomains}
+			<Button
+				variant="secondary"
+				size="sm"
+				disabled={!!blocked}
+				onclick={() => (creating = true)}
+			>
+				<Plus size={13} />{m.settings_forwarding_add()}
+			</Button>
+		{/if}
+	{/snippet}
 
 	<div class="card-lede">
 		{m.settings_forwarding_lede({ email })}
@@ -133,119 +132,118 @@
 	{/if}
 
 	{#each items as d (d.id)}
-		<div class="rec-row top">
-			<div class="rec-main">
-				<div class="rec-title">
-					<span class="rec-label">{d.label}</span>
-					{#if d.state === 'active'}
-						<Badge kind="ok" dot>{m.settings_forwarding_badge_active()}</Badge>
-					{:else if d.state === 'pending_verification'}
-						<Badge kind="info" dot>{m.settings_forwarding_badge_pending()}</Badge>
-					{:else if d.state === 'paused'}
-						<Badge kind="neutral" dot>{m.settings_forwarding_badge_paused()}</Badge>
-					{:else}
-						<Badge kind="warn" dot>{m.settings_forwarding_badge_off()}</Badge>
-					{/if}
-					{#if d.mode === 'plain'}<Badge kind="neutral">{m.settings_forwarding_badge_plain()}</Badge>{/if}
-				</div>
-				<div class="rec-dest">
-					<ArrowRight size={12} />
-					<span class="mono rec-to">{d.destination}</span>
-					{#if keyLine(d)}
-						<span class="rec-dot">·</span>
-						<span class="mono rec-key">{keyLine(d)}</span>
-					{/if}
-				</div>
-				{#if deliveryText(d)}
-					<div class="rec-delivery" style:color={deliveryColor(d)}>{deliveryText(d)}</div>
+		<RecordRow label={d.label} top>
+			{#snippet badges()}
+				{#if d.state === 'active'}
+					<Badge kind="ok" dot>{m.settings_forwarding_badge_active()}</Badge>
+				{:else if d.state === 'pending_verification'}
+					<Badge kind="info" dot>{m.settings_forwarding_badge_pending()}</Badge>
+				{:else if d.state === 'paused'}
+					<Badge kind="neutral" dot>{m.settings_forwarding_badge_paused()}</Badge>
+				{:else}
+					<Badge kind="warn" dot>{m.settings_forwarding_badge_off()}</Badge>
+				{/if}
+				{#if d.mode === 'plain'}<Badge kind="neutral">{m.settings_forwarding_badge_plain()}</Badge>{/if}
+			{/snippet}
+			<div class="rec-dest">
+				<ArrowRight size={12} />
+				<span class="mono rec-to">{d.destination}</span>
+				{#if keyLine(d)}
+					<span class="rec-dot">·</span>
+					<span class="mono rec-key">{keyLine(d)}</span>
 				{/if}
 			</div>
-			{#if d.state !== 'revoked'}
-				<div class="rec-actions">
-					{#if d.state === 'pending_verification'}
-						<Button
-							variant="ghost"
-							size="sm"
-							disabled={busyId === d.id || !!blocked}
-							onclick={() =>
-								run(
-									d,
-									() => readDelegations.resend(addressId, d.id),
-									m.settings_forwarding_resend_done({ destination: d.destination })
-								)}
-						>
-							<Mail size={13} />{m.settings_forwarding_resend()}
-						</Button>
-					{/if}
-					{#if d.state === 'active'}
-						<Button
-							variant="ghost"
-							size="sm"
-							disabled={busyId === d.id}
-							onclick={() =>
-								run(
-									d,
-									() => readDelegations.pause(addressId, d.id),
-									m.settings_forwarding_paused_done({ label: d.label })
-								)}
-						>
-							<Pause size={13} />{m.settings_forwarding_pause()}
-						</Button>
-					{:else if d.state === 'paused'}
-						<Button
-							variant="ghost"
-							size="sm"
-							disabled={busyId === d.id || !!blocked}
-							onclick={() =>
-								run(
-									d,
-									() => readDelegations.resume(addressId, d.id),
-									m.settings_forwarding_resumed_done({ label: d.label })
-								)}
-						>
-							<Play size={13} />{m.settings_forwarding_resume()}
-						</Button>
-					{/if}
-					<div class="addr-menu-wrap">
-						<button
-							type="button"
-							class="rowmenu"
-							aria-label={m.settings_forwarding_actions()}
-							aria-expanded={menuFor === d.id}
-							onclick={() => (menuFor = menuFor === d.id ? null : d.id)}
-						>
-							<Ellipsis size={16} />
-						</button>
-						{#if menuFor === d.id}
-							<div class="addr-menu" role="menu">
-								{#if d.mode !== 'plain' && !blocked}
+			{#if deliveryText(d)}
+				<div class="rec-delivery" style:color={deliveryColor(d)}>{deliveryText(d)}</div>
+			{/if}
+			{#snippet actions()}
+				{#if d.state !== 'revoked'}
+					<div class="rec-actions">
+						{#if d.state === 'pending_verification'}
+							<Button
+								variant="ghost"
+								size="sm"
+								disabled={busyId === d.id || !!blocked}
+								onclick={() =>
+									run(
+										d,
+										() => readDelegations.resend(addressId, d.id),
+										m.settings_forwarding_resend_done({ destination: d.destination })
+									)}
+							>
+								<Mail size={13} />{m.settings_forwarding_resend()}
+							</Button>
+						{/if}
+						{#if d.state === 'active'}
+							<Button
+								variant="ghost"
+								size="sm"
+								disabled={busyId === d.id}
+								onclick={() =>
+									run(
+										d,
+										() => readDelegations.pause(addressId, d.id),
+										m.settings_forwarding_paused_done({ label: d.label })
+									)}
+							>
+								<Pause size={13} />{m.settings_forwarding_pause()}
+							</Button>
+						{:else if d.state === 'paused'}
+							<Button
+								variant="ghost"
+								size="sm"
+								disabled={busyId === d.id || !!blocked}
+								onclick={() =>
+									run(
+										d,
+										() => readDelegations.resume(addressId, d.id),
+										m.settings_forwarding_resumed_done({ label: d.label })
+									)}
+							>
+								<Play size={13} />{m.settings_forwarding_resume()}
+							</Button>
+						{/if}
+						<div class="addr-menu-wrap">
+							<button
+								type="button"
+								class="rowmenu"
+								aria-label={m.settings_forwarding_actions()}
+								aria-expanded={menuFor === d.id}
+								onclick={() => (menuFor = menuFor === d.id ? null : d.id)}
+							>
+								<Ellipsis size={16} />
+							</button>
+							{#if menuFor === d.id}
+								<div class="addr-menu" role="menu">
+									{#if d.mode !== 'plain' && !blocked}
+										<button
+											type="button"
+											class="mitem"
+											onclick={() => {
+												menuFor = null;
+												rotating = d;
+											}}
+										>
+											<RotateCw size={15} />{m.settings_forwarding_replace_key()}
+										</button>
+									{/if}
 									<button
 										type="button"
-										class="mitem"
+										class="mitem danger"
 										onclick={() => {
 											menuFor = null;
-											rotating = d;
+											revoking = d;
 										}}
 									>
-										<RotateCw size={15} />{m.settings_forwarding_replace_key()}
+										<Trash2 size={15} />{m.settings_forwarding_turn_off()}
 									</button>
-								{/if}
-								<button
-									type="button"
-									class="mitem danger"
-									onclick={() => {
-										menuFor = null;
-										revoking = d;
-									}}
-								>
-									<Trash2 size={15} />{m.settings_forwarding_turn_off()}
-								</button>
-							</div>
-						{/if}
+								</div>
+							{/if}
+						</div>
 					</div>
-				</div>
-			{/if}
-		</div>
+				{/if}
+			{/snippet}
+		</RecordRow>
 	{/each}
 
 	{#if items.length === 0 && !readDelegations.loading}
@@ -262,7 +260,7 @@
 			desc={m.settings_forwarding_upgrade_desc()}
 		/>
 	{/if}
-</div>
+</Card>
 
 {#if creating}
 	<ForwardingCeremony {addressId} {email} onClose={() => (creating = false)} />
