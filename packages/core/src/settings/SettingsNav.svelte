@@ -61,23 +61,34 @@
 		moreEnd = max > 1 && strip.scrollLeft < max - 1;
 	}
 
-	function reveal(el: HTMLElement) {
-		if (!strip || strip.scrollWidth <= strip.clientWidth) return;
+	function reveal() {
+		const el = strip?.querySelector<HTMLElement>('[aria-current="page"]');
+		if (!strip || !el || strip.scrollWidth <= strip.clientWidth) return;
 		const left = el.offsetLeft;
 		const right = left + el.offsetWidth;
 		if (left < strip.scrollLeft + EDGE) strip.scrollLeft = Math.max(0, left - EDGE);
 		else if (right > strip.scrollLeft + strip.clientWidth - EDGE) strip.scrollLeft = right - strip.clientWidth + EDGE;
 	}
 
+	function settle() {
+		reveal();
+		measure();
+	}
+
 	$effect(() => {
 		void current;
-		const el = strip?.querySelector<HTMLElement>('[aria-current="page"]');
-		if (el) reveal(el);
-		measure();
+		settle();
+		let live = true;
+		const frame = requestAnimationFrame(settle);
+		void document.fonts?.ready.then(() => live && settle());
+		return () => {
+			live = false;
+			cancelAnimationFrame(frame);
+		};
 	});
 </script>
 
-<svelte:window onresize={measure} />
+<svelte:window onresize={settle} />
 
 <nav class="set-nav" aria-label={m.settings_nav_aria()}>
 	<a class="set-back" href={`/u/${slot}/mail/inbox`}>
