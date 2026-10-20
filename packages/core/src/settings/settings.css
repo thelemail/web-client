@@ -674,6 +674,8 @@
 .cer-scrim .copy-btn.sm svg { width: 13px; height: 13px; }
 .settings-app .copy-btn.done,
 .cer-scrim .copy-btn.done { color: var(--success-700); border-color: var(--success-500); background: var(--success-100); }
+.settings-app .copy-btn.failed,
+.cer-scrim .copy-btn.failed { color: var(--danger-700); border-color: var(--danger-500); background: var(--danger-100); }
 
 .cer-scrim .rec-list { display: flex; flex-direction: column; gap: 10px; }
 .cer-scrim .rec-row { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }

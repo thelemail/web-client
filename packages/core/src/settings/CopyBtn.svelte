@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Copy from '@lucide/svelte/icons/copy';
 	import Check from '@lucide/svelte/icons/check';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -11,29 +12,45 @@
 
 	let { text, small = false, label }: Props = $props();
 
-	let done = $state(false);
+	let result = $state<'idle' | 'copied' | 'failed'>('idle');
 	let timer: ReturnType<typeof setTimeout> | undefined;
 
-	async function copy() {
+	async function write(): Promise<boolean> {
+		if (typeof navigator === 'undefined' || typeof navigator.clipboard?.writeText !== 'function') return false;
 		try {
-			if (navigator?.clipboard) await navigator.clipboard.writeText(text);
+			await navigator.clipboard.writeText(text);
+			return true;
 		} catch {
+			return false;
 		}
-		done = true;
-		clearTimeout(timer);
-		timer = setTimeout(() => (done = false), 1300);
 	}
+
+	async function copy() {
+		const ok = await write();
+		result = ok ? 'copied' : 'failed';
+		clearTimeout(timer);
+		timer = setTimeout(() => (result = 'idle'), 1300);
+	}
+
+	const status = $derived(
+		result === 'copied' ? m.common_copied() : result === 'failed' ? m.common_copy_failed() : ''
+	);
+	const iconSize = $derived(small ? 13 : 14);
 </script>
 
 <button
 	type="button"
 	class="copy-btn"
 	class:sm={small}
-	class:done
+	class:done={result === 'copied'}
+	class:failed={result === 'failed'}
 	onclick={copy}
-	title={m.settings_copy_to_clipboard()}
-	aria-label={m.common_copy()}
+	title={result === 'failed' ? m.common_copy_failed() : m.settings_copy_to_clipboard()}
+	aria-label={label ?? m.common_copy()}
 >
-	{#if done}<Check size={small ? 13 : 14} />{:else}<Copy size={small ? 13 : 14} />{/if}
-	{#if !small}<span>{done ? m.common_copied() : (label ?? m.common_copy())}</span>{/if}
+	{#if result === 'copied'}<Check size={iconSize} />{:else if result === 'failed'}<CircleAlert
+			size={iconSize}
+		/>{:else}<Copy size={iconSize} />{/if}
+	{#if !small}<span aria-hidden="true">{status || (label ?? m.common_copy())}</span>{/if}
 </button>
+<span class="sr-only" aria-live="polite">{status}</span>

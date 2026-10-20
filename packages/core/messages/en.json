@@ -16,6 +16,7 @@
 	"common_edit": "Edit",
 	"common_copy": "Copy",
 	"common_copied": "Copied",
+	"common_copy_failed": "Couldn’t copy",
 	"common_retry": "Try again",
 	"common_loading": "Loading…",
 	"common_send": "Send",
