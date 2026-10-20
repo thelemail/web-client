@@ -853,7 +853,12 @@
 .settings-app .card-note.warn svg { color: var(--warning-500); }
 .settings-app .card-note.warn a { color: var(--warning-700); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 .cer-scrim .webauthn.ok { background: var(--success-100); color: var(--success-700); }
-@media (max-width: 560px) { .settings-app .tfa-sub-note { display: none; } }
+@media (max-width: 560px) {
+	.settings-app .tfa-sub-note { display: none; }
+	.settings-app .tfa-row { flex-wrap: wrap; row-gap: 4px; }
+	.settings-app .tfa-info { flex: 1 1 130px; }
+	.settings-app .tfa-act { margin-left: auto; }
+}
 
 @media (max-width: 900px) {
 	.settings-app .settings-body { flex-direction: column; }
