@@ -167,8 +167,32 @@ export function canResendInvite(
 	return !domain || usable(domain);
 }
 
-export function sendingChoices(own: AccountAddress[], domains: CustomDomain[]): AccountAddress[] {
-	return own.filter((a) => a.isPrimary || addressHealth(a, domains) === 'live');
+export type PrimaryBlock = 'already' | 'shared' | 'not_mine' | Exclude<AddressHealth, 'live'>;
+
+export function primaryBlock(
+	row: Pick<AddressRow, 'kind' | 'isMine' | 'isPrimary' | 'health'>
+): PrimaryBlock | null {
+	if (row.kind === 'shared') return 'shared';
+	if (!row.isMine) return 'not_mine';
+	if (row.isPrimary) return 'already';
+	return row.health === 'live' ? null : row.health;
+}
+
+export function primaryBlockNote(block: PrimaryBlock | null, domain: string): string | null {
+	switch (block) {
+		case 'shared':
+			return m.settings_address_primary_blocked_shared();
+		case 'suspended':
+			return m.settings_address_primary_blocked_suspended({ domain });
+		case 'paused':
+			return m.settings_address_primary_blocked_paused({ domain });
+		case 'sending_off':
+			return m.settings_address_primary_blocked_sending({ domain });
+		case 'lapsing':
+			return m.settings_address_primary_blocked_lapsing({ domain });
+		default:
+			return null;
+	}
 }
 
 export function replyChoices(own: AccountAddress[], keepId: string | null): AccountAddress[] {
@@ -213,13 +237,14 @@ export function buildRow(ctx: ModelContext, address: AccountAddress): AddressRow
 		signerSummary: signerSummary(delegations),
 		forwardSummary: forwardSummary(forwardings),
 		pendingSummary: pendingSummary(forwardings),
-		canPromote: own && !address.isPrimary && health === 'live',
+		canPromote: false,
 		canRename: own || (kind === 'shared' && ctx.manage),
 		canRemove: (ownDomain || kind === 'shared') && !address.isPrimary && (own || (kind !== 'mailbox' && ctx.manage)),
 		canManagePeople: kind === 'shared' && ctx.manage,
 		canDelegate: ownDomain && own,
 		canForward: ownDomain && (own || (kind === 'shared' && ctx.manage))
 	};
+	row.canPromote = primaryBlock(row) === null;
 	row.usedBy = kind === 'shared' && !alias ? '' : usedByLabel(ctx, row);
 	return row;
 }

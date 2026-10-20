@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
+	import { page } from '$app/state';
 	import Camera from '@lucide/svelte/icons/camera';
 	import { apiBlobPut } from '$core/api/client';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -24,8 +25,7 @@
 	import { initialsFor } from '$core/mail/initials';
 	import { sha256B64 } from '$core/mail/send';
 	import { addresses } from '$core/stores/addresses.svelte';
-	import { customDomains } from '$core/stores/customDomains.svelte';
-	import { replyChoices, sendingChoices } from '../addressModel';
+	import { replyChoices } from '../addressModel';
 	import { signatures } from '$core/stores/signatures.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -168,12 +168,8 @@
 		}))
 	]);
 
-	const sendingOptions = $derived(
-		sendingChoices(ownIdentities, customDomains.items).map((a) => ({
-			id: a.id,
-			label: identityLabel(a.name, a.email)
-		}))
-	);
+	const sendingAddress = $derived(ownIdentities.find((a) => a.isPrimary) ?? null);
+	const addressesHref = $derived(`/u/${page.params.slot ?? '0'}/settings/addresses`);
 
 	const signatureOptions = $derived(
 		identities.map((a) => ({ id: a.id, label: identityLabel(a.name, a.email) }))
@@ -181,9 +177,6 @@
 
 	const replyValueLabel = $derived(
 		replyOptions.find((o) => o.id === defaultReplyAddressId)?.label ?? m.settings_profile_reply_same()
-	);
-	const sendingValueLabel = $derived(
-		sendingOptions.find((o) => o.id === primary?.id)?.label ?? sendingOptions[0]?.label ?? ''
 	);
 
 	function identityLabel(name: string | null | undefined, addr: string): string {
@@ -249,27 +242,11 @@
 		save = flushSave;
 	});
 
-	async function onSendingChange(addrId: string) {
-		const target = addresses.getById(addrId);
-		if (!target || target.isPrimary || target.shared) return;
-		try {
-			await addresses.setPrimary(addrId);
-		} catch (err) {
-			console.warn('set primary failed', err);
-		}
-	}
-
 	async function onReplyChange(label: string) {
 		const option = replyOptions.find((o) => o.label === label);
 		if (!option) return;
 		defaultReplyAddressId = option.id;
 		onEdit?.();
-	}
-
-	async function onSendingLabelChange(label: string) {
-		const option = sendingOptions.find((o) => o.label === label);
-		if (!option) return;
-		await onSendingChange(option.id);
 	}
 
 	let avatarBusy = $state(false);
@@ -431,14 +408,13 @@
 		/>
 	</Row>
 	<Row t={m.settings_profile_sending_identity()} d={m.settings_profile_sending_identity_desc()}>
-		{#if sendingOptions.length === 0}
-			<span class="muted">{m.settings_profile_sending_identity_empty()}</span>
+		{#if sendingAddress}
+			<span class="pf-sending">
+				<span class="pf-sending-addr">{identityLabel(sendingAddress.name, sendingAddress.email)}</span>
+				<a class="pf-sending-link" href={addressesHref}>{m.settings_profile_sending_identity_change()}</a>
+			</span>
 		{:else}
-			<Select
-				value={sendingValueLabel}
-				options={sendingOptions.map((o) => o.label)}
-				onChange={onSendingLabelChange}
-			/>
+			<span class="muted">{m.settings_profile_sending_identity_empty()}</span>
 		{/if}
 	</Row>
 	<Row t={m.settings_profile_reply_address()} d={m.settings_profile_reply_address_desc()}>
@@ -572,5 +548,25 @@
 	}
 	.muted {
 		color: var(--fg-faint);
+	}
+	.pf-sending {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: flex-end;
+		gap: 4px 14px;
+		font-size: 13px;
+	}
+	.pf-sending-addr {
+		color: var(--fg-strong);
+		overflow-wrap: anywhere;
+	}
+	.pf-sending-link {
+		color: var(--accent-foreground);
+		font-weight: 600;
+		white-space: nowrap;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+		text-decoration-thickness: 1px;
 	}
 </style>

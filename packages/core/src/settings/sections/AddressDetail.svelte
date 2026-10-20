@@ -37,9 +37,12 @@
 		buildRow,
 		initialsOf,
 		ledeFor,
+		primaryBlock,
+		primaryBlockNote,
 		setupBlockedNote
 	} from '../addressModel';
 	import { addressContext, addressSource } from '../addressContext';
+	import { makePrimary } from '../primaryAddress';
 
 	interface Props {
 		addressId: string;
@@ -51,6 +54,8 @@
 	let nameSeeded = $state('');
 	let saving = $state(false);
 	let nameError = $state<string | null>(null);
+	let promoteError = $state<string | null>(null);
+	let promoting = $state(false);
 	let managingPeople = $state(false);
 	let removing = $state(false);
 	let removalBusy = $state(false);
@@ -117,13 +122,15 @@
 	}
 
 	async function promote() {
-		if (!row) return;
+		if (!row || promoting) return;
+		promoting = true;
+		promoteError = null;
 		try {
-			await addresses.setPrimary(row.id);
-			await addresses.load();
-			await workspaceAddresses.reload();
-		} catch (err) {
-			nameError = err instanceof Error ? err.message : m.settings_address_promote_failed();
+			await makePrimary(row.id);
+		} catch {
+			promoteError = m.settings_address_promote_failed();
+		} finally {
+			promoting = false;
 		}
 	}
 
@@ -236,11 +243,13 @@
 					</Button>
 				</span>
 			</Row>
+			{#if nameError}<div class="card-empty err" role="alert">{nameError}</div>{/if}
 		{/if}
 		{#if row.isOwnPersonal}
+			{@const blockNote = primaryBlockNote(primaryBlock(row), row.domain)}
 			<Row
 				t={m.settings_address_primary_title()}
-				d={m.settings_address_primary_desc()}
+				d={blockNote ? `${m.settings_address_primary_desc()} ${blockNote}` : m.settings_address_primary_desc()}
 			>
 				{#if row.isPrimary}
 					<Badge kind="pine">{m.settings_address_primary()}</Badge>
@@ -248,15 +257,15 @@
 					<Button
 						variant="secondary"
 						size="sm"
-						disabled={!row.canPromote}
+						disabled={!row.canPromote || promoting}
 						onclick={() => void promote()}
 					>
 						<Star size={14} />{m.settings_address_make_primary()}
 					</Button>
 				{/if}
 			</Row>
+			{#if promoteError}<div class="card-empty err" role="alert">{promoteError}</div>{/if}
 		{/if}
-		{#if nameError}<div class="card-empty err">{nameError}</div>{/if}
 	</Card>
 	{:else}
 		<div class="ad-note">

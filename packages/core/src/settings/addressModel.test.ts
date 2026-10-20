@@ -9,8 +9,9 @@ import {
 	addressHealth,
 	buildRow,
 	canResendInvite,
+	primaryBlock,
+	primaryBlockNote,
 	replyChoices,
-	sendingChoices,
 	setupBlockedNote,
 	groupByDomain,
 	dedupeAddresses,
@@ -440,6 +441,39 @@ describe('addressHealth', () => {
 	});
 });
 
+describe('primaryBlock', () => {
+	const live = { kind: 'alias', isMine: true, isPrimary: false, health: 'live' } as const;
+
+	it.each([
+		['a live address of my own', live, null],
+		['the current primary', { ...live, isPrimary: true }, 'already'],
+		['a shared address', { ...live, kind: 'shared' }, 'shared'],
+		['a shared address even when live and mine', { ...live, kind: 'shared', isMine: true }, 'shared'],
+		["someone else's mailbox", { ...live, kind: 'mailbox', isMine: false }, 'not_mine'],
+		['a suspended address', { ...live, health: 'suspended' }, 'suspended'],
+		['an address on a paused domain', { ...live, health: 'paused' }, 'paused'],
+		['an address whose domain cannot send', { ...live, health: 'sending_off' }, 'sending_off'],
+		['an address whose ownership record is missing', { ...live, health: 'lapsing' }, 'lapsing']
+	] as const)('decides %s', (_, row, expected) => {
+		expect(primaryBlock(row)).toBe(expected);
+	});
+
+	it('explains every block a person can act on and stays quiet otherwise', () => {
+		const domain = 'abbaye.example';
+		expect(primaryBlockNote('shared', domain)).toBe("Shared addresses can't be your primary address.");
+		for (const block of ['suspended', 'paused', 'sending_off', 'lapsing'] as const) {
+			expect(primaryBlockNote(block, domain)).toContain(domain);
+		}
+		expect(primaryBlockNote(null, domain)).toBeNull();
+		expect(primaryBlockNote('already', domain)).toBeNull();
+	});
+
+	it('is the rule behind canPromote', () => {
+		const ready = buildRow(ctx(), address({ id: 'p1', email: 'abbot@abbaye.example' }));
+		expect(ready.canPromote).toBe(primaryBlock(ready) === null);
+	});
+});
+
 describe('setupBlockedNote', () => {
 	it('names what holds setup back for each state', () => {
 		const domain = 'abbaye.example';
@@ -514,15 +548,6 @@ describe('address pickers', () => {
 	const platform = address({ id: 'x', email: 'garg@thelemail.com', customDomainId: null });
 	const pending = address({ id: 'o', email: 'abbot@abbaye.example' });
 	const gone = address({ id: 's', email: 'cellar@abbaye.example', suspended: true });
-
-	it('offers only live addresses as the default sender', () => {
-		expect(sendingChoices([primary, platform, pending, gone], [owned]).map((a) => a.id)).toEqual(['p', 'x']);
-	});
-
-	it('keeps a suspended primary in the sending list so it still reads correctly', () => {
-		const suspendedPrimary = { ...gone, isPrimary: true };
-		expect(sendingChoices([suspendedPrimary, platform], [owned]).map((a) => a.id)).toEqual(['s', 'x']);
-	});
 
 	it('leaves suspended addresses out of reply-to unless already chosen', () => {
 		expect(replyChoices([primary, pending, gone], null).map((a) => a.id)).toEqual(['p', 'o']);

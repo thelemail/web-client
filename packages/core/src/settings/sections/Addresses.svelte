@@ -45,6 +45,7 @@
 		type AddressRow
 	} from '../addressModel';
 	import { addressContext, addressSource } from '../addressContext';
+	import { makePrimary } from '../primaryAddress';
 
 	interface Props {
 		launch: (k: CeremonyKind) => void;
@@ -57,6 +58,7 @@
 	let pendingRemoval = $state<{ email: string; run: () => Promise<void> } | null>(null);
 	let removalBusy = $state(false);
 	let removalError = $state<string | null>(null);
+	let promoteFailedId = $state<string | null>(null);
 
 	const slot = $derived(page.params.slot ?? '0');
 	const manage = $derived(canManageWorkspace());
@@ -121,12 +123,11 @@
 
 	async function promote(row: AddressRow) {
 		menuFor = null;
+		promoteFailedId = null;
 		try {
-			await addresses.setPrimary(row.id);
-			await addresses.load();
-			await workspaceAddresses.reload();
-		} catch (err) {
-			console.warn('set primary failed', err);
+			await makePrimary(row.id);
+		} catch {
+			promoteFailedId = row.id;
 		}
 	}
 
@@ -297,6 +298,9 @@
 					{/if}
 				</div>
 			</div>
+			{#if promoteFailedId === row.id}
+				<div class="card-empty err" role="alert">{m.settings_address_promote_failed()}</div>
+			{/if}
 		{/each}
 	</Card>
 {/each}
