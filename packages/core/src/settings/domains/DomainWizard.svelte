@@ -11,6 +11,7 @@
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 
 	import Card from '../Card.svelte';
+	import Heading from '../Heading.svelte';
 	import CheckStatus from './CheckStatus.svelte';
 	import RecordList from './RecordList.svelte';
 	import WizardRail from './WizardRail.svelte';
@@ -220,7 +221,7 @@
 		{:else}
 			<div class="dw-done">
 				<span class="dw-done-ic"><CircleCheck size={34} strokeWidth={1.6} /></span>
-				<h4 class="dw-done-title">{m.settings_domains_wizard_live({ domain: domain.domain })}</h4>
+				<Heading class="dw-done-title">{m.settings_domains_wizard_live({ domain: domain.domain })}</Heading>
 				<p class="dw-done-desc">
 					{m.settings_domains_wizard_done_desc()}
 				</p>

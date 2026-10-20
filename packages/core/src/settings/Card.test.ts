@@ -22,7 +22,7 @@ describe('Card', () => {
 		const { container } = render(Card, { props: { title: 'Domains', icon: Globe, right, children } });
 		const head = container.querySelector('.scard > .scard-h')!;
 		expect(head.querySelector('svg')).not.toBeNull();
-		expect(head.querySelector('h3')!.textContent).toBe('Domains');
+		expect(head.querySelector('h2')!.textContent).toBe('Domains');
 		expect(head.lastElementChild!.classList.contains('card-meta')).toBe(true);
 	});
 
@@ -45,6 +45,6 @@ describe('Card', () => {
 		});
 		const card = container.querySelector('section.scard.addr-group')!;
 		expect(card.getAttribute('data-type')).toBe('family');
-		expect(card.querySelector('.scard-h.addr-group-h h3.addr-domain')!.textContent).toBe('example.com');
+		expect(card.querySelector('.scard-h.addr-group-h h2.addr-domain')!.textContent).toBe('example.com');
 	});
 });

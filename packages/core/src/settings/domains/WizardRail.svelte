@@ -27,10 +27,15 @@
 			disabled={!reachable(s)}
 			onclick={() => onSelect(s)}
 		>
-			<span class="dw-dot">
+			<span class="dw-dot" aria-hidden="true">
 				{#if done(s)}<Check size={13} strokeWidth={2} />{:else if running(s)}<Clock size={13} strokeWidth={2} />{:else}{i + 1}{/if}
 			</span>
 			<span class="dw-lbl">{STEP_LABELS[s]()}</span>
+			{#if done(s)}
+				<span class="sr-only">{m.settings_step_completed()}</span>
+			{:else if running(s)}
+				<span class="sr-only">{m.settings_step_running()}</span>
+			{/if}
 			{#if i < DOMAIN_STEPS.length - 1}
 				<span class="dw-line"></span>
 			{/if}

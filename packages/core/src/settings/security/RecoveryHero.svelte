@@ -9,6 +9,7 @@
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import Card from '../Card.svelte';
+	import Heading from '../Heading.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
@@ -40,7 +41,7 @@
 		</div>
 		<div class="rh-body">
 			<div class="rh-eyebrow">{m.settings_security_recovery_recommended()}</div>
-			<h3 class="rh-title">{m.settings_security_recovery_title()}</h3>
+			<Heading class="rh-title">{m.settings_security_recovery_title()}</Heading>
 			<p class="rh-desc">
 				<Rich text={m.settings_security_recovery_desc_unset()} tags={{ b: bold }} />
 			</p>

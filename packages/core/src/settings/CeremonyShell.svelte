@@ -4,6 +4,7 @@
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
 	import { m } from '$paraglide/messages.js';
+	import { setHeadingLevel, setRowNames } from './a11y';
 
 	interface Props {
 		icon: Component;
@@ -31,6 +32,11 @@
 		footer
 	}: Props = $props();
 
+	const uid = $props.id();
+
+	setRowNames(undefined);
+	setHeadingLevel(3);
+
 	function handleKey(e: KeyboardEvent) {
 		if (e.key === 'Escape') onClose();
 	}
@@ -48,7 +54,7 @@
 		role="dialog"
 		aria-modal="true"
 		use:trapFocus
-		aria-label={title}
+		aria-labelledby="{uid}-title"
 		tabindex="-1"
 		onmousedown={(e) => e.stopPropagation()}
 	>
@@ -56,7 +62,7 @@
 			<span class="cer-ic"><IconComponent size={19} /></span>
 			<div class="cer-htext">
 				<div class="cer-eyebrow">{eyebrow}</div>
-				<div class="cer-title">{title}</div>
+				<h2 class="cer-title" id="{uid}-title">{title}</h2>
 			</div>
 			<button type="button" class="cer-close" onclick={onClose} aria-label={m.common_close()}>
 				<X size={18} />
@@ -64,17 +70,21 @@
 		</header>
 
 		{#if steps && steps.length > 1}
-			<div class="cer-steps">
+			<ol class="cer-steps">
 				{#each steps as label, i (i)}
-					<div class={'cer-step' + (i === step ? ' on' : '') + (i < step ? ' done' : '')}>
-						<span class="cs-dot">
+					<li
+						class={'cer-step' + (i === step ? ' on' : '') + (i < step ? ' done' : '')}
+						aria-current={i === step ? 'step' : undefined}
+					>
+						<span class="cs-dot" aria-hidden="true">
 							{#if i < step}<Check size={12} />{:else}{i + 1}{/if}
 						</span>
 						<span class="cs-lbl">{label}</span>
+						{#if i < step}<span class="sr-only">{m.settings_step_completed()}</span>{/if}
 						{#if i < steps.length - 1}<span class="cs-line"></span>{/if}
-					</div>
+					</li>
 				{/each}
-			</div>
+			</ol>
 		{/if}
 
 		<div class="cer-body">{@render children()}</div>
