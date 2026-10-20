@@ -457,6 +457,8 @@
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
+				name={sigIdentity.name}
+				email={sigIdentity.email}
 				mode={signatureMode}
 				source={signatureSource}
 				bodyHtml={signatureBodyHtml}

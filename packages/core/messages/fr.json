@@ -663,6 +663,10 @@
     }
   ],
   "settings_signature_placeholder": "Rédigez votre signature…",
+  "settings_signature_placeholder_markdown": "**{name}**\n[{email}](mailto:{email})",
+  "settings_signature_placeholder_markdown_noname": "[{email}](mailto:{email})",
+  "settings_signature_placeholder_html": "<p><strong>{name}</strong><br><a href=\"mailto:{email}\">{email}</a></p>",
+  "settings_signature_placeholder_html_noname": "<p><a href=\"mailto:{email}\">{email}</a></p>",
   "settings_signature_body_label": "Contenu de la signature",
   "settings_signature_image_type": "Utilisez une image JPG, PNG, GIF ou WebP.",
   "settings_signature_image_size": "La taille maximale est de {size} Mo.",
