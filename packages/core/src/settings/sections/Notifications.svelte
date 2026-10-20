@@ -141,10 +141,7 @@
 	</Card>
 {:else}
 	<Card title={m.settings_notify_new_mail()}>
-		<Row
-			t={m.settings_notify_desktop()}
-			d={m.settings_notify_desktop_desc()}
-		/>
+		<p class="card-lede ntf-web">{m.settings_notify_desktop_only()}</p>
 	</Card>
 {/if}
 
@@ -177,6 +174,10 @@
 {/snippet}
 
 <style>
+	.ntf-web {
+		margin: 0;
+		border-bottom: none;
+	}
 	.ntf-actions {
 		display: flex;
 		gap: 6px;

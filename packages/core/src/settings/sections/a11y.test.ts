@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/svelte';
 
 const { getAccountSettings, putAccountSettingsSection } = vi.hoisted(() => ({
 	getAccountSettings: vi.fn(),
@@ -76,5 +76,53 @@ describe('settings sections accessibility', () => {
 	it('names the reading select by its row', () => {
 		render(Reading, { props: draft() });
 		screen.getByRole('combobox', { name: m.settings_reading_mark_read() });
+	});
+});
+
+describe('settings section content', () => {
+	function cardsWithoutContent(container: HTMLElement): string[] {
+		return [...container.querySelectorAll<HTMLElement>('.scard')]
+			.filter((card) => [...card.children].every((c) => c.classList.contains('scard-h')))
+			.map((card) => card.querySelector('.scard-title')?.textContent ?? '?');
+	}
+
+	it('puts the primary reply button under reading, where it still saves', async () => {
+		render(Reading, { props: draft() });
+		const group = screen.getByRole('radiogroup', { name: m.settings_sending_reply_button() });
+		await fireEvent.click(within(group).getByRole('radio', { name: m.settings_sending_reply_all() }));
+		expect(settingsDraft.s.replyDefault).toBe('all');
+	});
+
+	it('describes reading in a full sentence', () => {
+		const { container } = render(Reading, { props: draft() });
+		const desc = container.querySelector('.sec-h p')!.textContent!;
+		expect(desc).toBe(m.settings_reading_desc());
+		expect(desc.split(' ').length).toBeGreaterThan(6);
+	});
+
+	it('leaves only the safety checks under sending', () => {
+		const { container } = render(Sending, { props: draft() });
+		expect(screen.queryByRole('radiogroup', { name: m.settings_sending_reply_button() })).toBeNull();
+		expect(container.querySelectorAll('.scard')).toHaveLength(1);
+		expect(screen.getAllByRole('switch')).toHaveLength(3);
+	});
+
+	it('tells web visitors new mail alerts come from the desktop app, with no empty row', () => {
+		render(Notifications);
+		const heading = screen.getByRole('heading', { name: m.settings_notify_new_mail() });
+		const card = heading.closest('.scard')!;
+		expect(card.textContent).toContain(m.settings_notify_desktop_only());
+		expect(card.querySelector('.setrow')).toBeNull();
+	});
+
+	it.each([
+		['appearance', () => render(Appearance)],
+		['region', () => render(Region, { props: draft() })],
+		['sending', () => render(Sending, { props: draft() })],
+		['reading', () => render(Reading, { props: draft() })],
+		['notifications', () => render(Notifications)]
+	])('%s renders no empty card', (_, mount) => {
+		const { container } = mount();
+		expect(cardsWithoutContent(container)).toEqual([]);
 	});
 });

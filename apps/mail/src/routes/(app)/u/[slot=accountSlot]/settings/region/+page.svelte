@@ -4,6 +4,6 @@
 	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 </script>
 
-<svelte:head><title>{m.settings_page_title({ page: m.settings_page_region() })}</title></svelte:head>
+<svelte:head><title>{m.settings_page_title({ page: m.settings_nav_region() })}</title></svelte:head>
 
 <Region s={settingsDraft.s} set={settingsDraft.set} />
