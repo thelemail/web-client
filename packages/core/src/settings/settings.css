@@ -426,6 +426,7 @@
 .settings-app .ceremony-row { display: flex; align-items: center; gap: 14px; padding: 14px 18px; }
 .settings-app .ceremony-row + .ceremony-row { border-top: 1px solid var(--border); }
 .settings-app .cer-rows.tight .ceremony-row { border-top: 1px solid var(--border); }
+.settings-app .cer-rows.tight + .setrow { border-top: 1px solid var(--border); }
 .settings-app .cr-ic { width: 40px; height: 40px; border-radius: var(--radius-control); background: var(--pine-50); color: var(--pine-600); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .settings-app .ceremony-row.tone-danger .cr-ic { background: var(--danger-100); color: var(--danger-700); }
 .settings-app .cr-body { flex: 1; min-width: 0; }
