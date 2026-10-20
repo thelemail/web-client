@@ -22,6 +22,7 @@ const P = {
 	webauthnEnrollInit: '/v1/2fa/webauthn/init',
 	webauthnActivate: '/v1/2fa/webauthn/activate',
 	webauthnDelete: (id: string) => `/v1/2fa/webauthn/credentials/${id}/delete`,
+	webauthnRename: (id: string) => `/v1/2fa/webauthn/credentials/${id}/rename`,
 	webauthnProofInit: '/v1/2fa/proof/webauthn/init',
 	backupCodesRegenerate: '/v1/2fa/backup-codes/regenerate'
 } as const;
@@ -136,6 +137,14 @@ export function webauthnActivate(
 		session: RefreshResponse;
 		backupCodes?: string[];
 	}>(P.webauthnActivate, { method: 'POST', body: req, accountId });
+}
+
+export function webauthnRename(id: string, name: string, accountId?: string) {
+	return apiFetch<TwoFactorWebauthnCredential>(P.webauthnRename(id), {
+		method: 'POST',
+		body: { name },
+		accountId
+	});
 }
 
 export function webauthnDelete(id: string, accountId?: string) {
