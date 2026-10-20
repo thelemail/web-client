@@ -6,7 +6,7 @@
 	import { page } from '$app/state';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import PlanStep from '$core/auth/PlanStep.svelte';
-	import { findPlan, planLabelFor, selectionForCode, type PlanSelection } from '$core/auth/plans';
+	import { findPlan, selectionForCode, subscriptionPlanLabel, type PlanSelection } from '$core/auth/plans';
 	import { changePlan, createCheckoutSession, type PlanCode } from '$core/api/billing';
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -36,6 +36,7 @@
 	const canMoveToFree = $derived(isOwner && entryPointVisible(sub));
 
 	onMount(() => {
+		void billing.ensureCatalog();
 		void (async () => {
 			const fresh = await billing.refresh();
 			if (!workspaces.workspace) {
@@ -187,7 +188,7 @@
 						{#if sub?.planCode}
 							<Rich
 								text={m.billing_choose_switched_plan({
-									plan: planLabelFor(sub.planCode, sub.seats ?? 1, sub.interval ?? 'year')
+									plan: subscriptionPlanLabel(billing.plan, sub) ?? ''
 								})}
 								tags={{ b: bold }}
 							/>
