@@ -76,6 +76,19 @@ afterEach(() => {
 	workspaces.workspace = null;
 });
 
+describe('Account plan actions', () => {
+	it('shows no plan actions to an admin', () => {
+		workspaces.workspace = { id: 'w1', ownerAccountId: 'boss', name: 'Acme', type: 'business', createdAt: at, updatedAt: at } as Workspace;
+		render(Account, { props: { launch: vi.fn() } });
+		expect(document.querySelector('.plan-acts button, .plan-acts a')).toBeNull();
+	});
+
+	it('shows plan actions to the owner', () => {
+		render(Account, { props: { launch: vi.fn() } });
+		expect(document.querySelector('.plan-acts button, .plan-acts a')).not.toBeNull();
+	});
+});
+
 describe('Account billing management', () => {
 	it('sends App Store subscribers to the App Store', async () => {
 		subscribe({ provider: 'apple' });

@@ -898,7 +898,7 @@
 	"settings_ceremony_member_role_label": "Rolle",
 	"settings_ceremony_member_role_member": "Mitglied",
 	"settings_ceremony_member_role_admin": "Administrator",
-	"settings_ceremony_member_role_admin_hint": "Administratoren verwalten Mitglieder, Domains und Abrechnung.",
+	"settings_ceremony_member_role_admin_hint": "Administratoren können Mitglieder hinzufügen und entfernen sowie Domains und Adressen verwalten. Abrechnung und Rollen bleiben beim Inhaber.",
 	"settings_ceremony_member_role_member_hint": "Mitglieder verwalten nur ihr eigenes Postfach.",
 	"settings_ceremony_member_send_to_label": "Einladung senden an",
 	"settings_ceremony_member_optional": "optional",

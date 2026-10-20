@@ -90,7 +90,7 @@ describe('CatchAllCard', () => {
 		expect(text()).toContain(NEED_ADDRESS);
 	});
 
-	it('still lets an admin turn off a catch-all whose domain stopped being usable', () => {
+	it('still lets the owner turn off a catch-all whose domain stopped being usable', () => {
 		customDomains.items = [domain('d1', { dormantAt: at })];
 		addresses.items = [address('x1', 'd1')];
 		workspaces.workspace = workspace('x1');

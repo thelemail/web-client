@@ -898,7 +898,7 @@
   "settings_ceremony_member_role_label": "Rôle",
   "settings_ceremony_member_role_member": "Membre",
   "settings_ceremony_member_role_admin": "Administrateur",
-  "settings_ceremony_member_role_admin_hint": "Les administrateurs gèrent les membres, les domaines et la facturation.",
+  "settings_ceremony_member_role_admin_hint": "Les administrateurs peuvent ajouter et retirer des membres, et gérer les domaines et les adresses. La facturation et les rôles restent réservés au propriétaire.",
   "settings_ceremony_member_role_member_hint": "Les membres gèrent uniquement leur propre boîte mail.",
   "settings_ceremony_member_send_to_label": "Envoyer l’invitation à",
   "settings_ceremony_member_optional": "facultatif",

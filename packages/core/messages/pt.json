@@ -898,7 +898,7 @@
 	"settings_ceremony_member_role_label": "Função",
 	"settings_ceremony_member_role_member": "Membro",
 	"settings_ceremony_member_role_admin": "Administrador",
-	"settings_ceremony_member_role_admin_hint": "Os administradores gerem membros, domínios e faturação.",
+	"settings_ceremony_member_role_admin_hint": "Os administradores podem adicionar e remover membros e gerir domínios e endereços. A faturação e as funções ficam com o proprietário.",
 	"settings_ceremony_member_role_member_hint": "Os membros gerem apenas a própria caixa de correio.",
 	"settings_ceremony_member_send_to_label": "Enviar o convite para",
 	"settings_ceremony_member_optional": "opcional",

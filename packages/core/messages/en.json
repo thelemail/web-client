@@ -898,7 +898,7 @@
 	"settings_ceremony_member_role_label": "Role",
 	"settings_ceremony_member_role_member": "Member",
 	"settings_ceremony_member_role_admin": "Admin",
-	"settings_ceremony_member_role_admin_hint": "Admins manage members, domains, and billing.",
+	"settings_ceremony_member_role_admin_hint": "Admins can add and remove members and manage domains and addresses. Billing and member roles stay with the owner.",
 	"settings_ceremony_member_role_member_hint": "Members manage only their own mailbox.",
 	"settings_ceremony_member_send_to_label": "Send the invitation to",
 	"settings_ceremony_member_optional": "optional",
