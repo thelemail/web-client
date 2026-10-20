@@ -2,18 +2,28 @@
 	import { m } from '$paraglide/messages.js';
 	import MonitorSmartphone from '@lucide/svelte/icons/monitor-smartphone';
 	import LogOut from '@lucide/svelte/icons/log-out';
+	import { untrack } from 'svelte';
 	import CardHead from '../CardHead.svelte';
+	import LoadState from './LoadState.svelte';
+	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { timeSince } from '$core/i18n/relative';
 	import { auth } from '$core/stores/auth.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
+	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { listSessions, revokeSession, revokeOtherSessions } from '$core/api/auth';
 	import type { SessionInfo } from '$core/api/types';
 	import { fmtDate, sessionClientIcon, sessionClientName } from './format';
 	import { securityActivity } from './activity.svelte';
+	import { securityActionError } from './errors';
 
 	let sessions = $state<SessionInfo[] | null>(null);
-	let sessionsBusy = $state(false);
+	let loading = $state(false);
+	let loadFailed = $state(false);
+	let busy = $state(false);
+	let actionError = $state<string | null>(null);
+	let confirmAll = $state(false);
+	let seq = 0;
 
 	const sortedSessions = $derived.by(() => {
 		const list = sessions ?? [];
@@ -25,21 +35,40 @@
 		});
 	});
 
+	const hasOthers = $derived((sessions ?? []).some((s) => !s.current));
+
 	async function loadSessions() {
+		const mine = ++seq;
+		loading = true;
 		try {
 			const res = await listSessions();
+			if (mine !== seq) return;
 			sessions = res.sessions;
+			loadFailed = false;
 		} catch {
-			sessions = sessions ?? [];
+			if (mine !== seq) return;
+			loadFailed = true;
+		} finally {
+			if (mine === seq) loading = false;
 		}
 	}
 
 	$effect(() => {
-		if (auth.accountId) void loadSessions();
+		if (!auth.accountId) return;
+		sessions = null;
+		loadFailed = false;
+		actionError = null;
+		void loadSessions();
 	});
 
+	let primed = false;
 	$effect(() => {
-		if (auth.accountId && auth.sessionRotations > 0) void loadSessions();
+		void auth.sessionRotations;
+		if (!primed) {
+			primed = true;
+			return;
+		}
+		if (untrack(() => auth.accountId)) void loadSessions();
 	});
 
 	$effect(() => {
@@ -51,26 +80,36 @@
 	});
 
 	async function signOutSession(id: string) {
-		sessionsBusy = true;
+		busy = true;
+		actionError = null;
 		try {
 			await revokeSession(id);
-			await loadSessions();
 			securityActivity.touch();
-		} catch {
+			await loadSessions();
+		} catch (err) {
+			if (!isReauthenticationRequired(err)) {
+				actionError = securityActionError(err, m.settings_security_session_revoke_failed);
+			}
 		} finally {
-			sessionsBusy = false;
+			busy = false;
 		}
 	}
 
 	async function signOutOtherSessions() {
-		sessionsBusy = true;
+		busy = true;
+		actionError = null;
 		try {
 			await revokeOtherSessions();
-			await loadSessions();
+			confirmAll = false;
 			securityActivity.touch();
-		} catch {
+			await loadSessions();
+		} catch (err) {
+			confirmAll = false;
+			if (!isReauthenticationRequired(err)) {
+				actionError = securityActionError(err, m.settings_security_revoke_all_failed);
+			}
 		} finally {
-			sessionsBusy = false;
+			busy = false;
 		}
 	}
 
@@ -87,32 +126,75 @@
 
 <div class="scard">
 	<CardHead icon={MonitorSmartphone} title={m.settings_security_sessions()} />
-	{#each sortedSessions as d (d.id)}
-		{@const DevIcon = sessionClientIcon[d.client]}
-		<div class="devrow">
-			<span class="dv-ic"><DevIcon size={18} /></span>
-			<div class="dv-info">
-				<div class="dv-name">
-					{sessionClientName(d.client)}{#if d.current}<span class="this-dev">{m.settings_security_this_device()}</span
+	{#if sessions === null}
+		{#if loadFailed}
+			<LoadState
+				kind="error"
+				label={m.settings_security_sessions_load_failed()}
+				retrying={loading}
+				onRetry={() => void loadSessions()}
+			/>
+		{:else}
+			<LoadState kind="loading" label={m.settings_security_sessions_loading()} />
+		{/if}
+	{:else}
+		{#if loadFailed}
+			<LoadState
+				kind="error"
+				label={m.settings_security_sessions_refresh_failed()}
+				retrying={loading}
+				onRetry={() => void loadSessions()}
+			/>
+		{/if}
+		{#if actionError}
+			<LoadState kind="error" label={actionError} />
+		{/if}
+		{#each sortedSessions as d (d.id)}
+			{@const DevIcon = sessionClientIcon[d.client]}
+			<div class="devrow">
+				<span class="dv-ic"><DevIcon size={18} /></span>
+				<div class="dv-info">
+					<div class="dv-name">
+						{sessionClientName(d.client)}{#if d.current}<span class="this-dev">{m.settings_security_this_device()}</span
+							>{/if}
+					</div>
+					<div class="dv-meta">{sessionMeta(d)}</div>
+				</div>
+				<div class="dv-act">
+					{#if !d.current}<Button variant="ghost" size="sm" disabled={busy} onclick={() => signOutSession(d.id)}
+							>{m.settings_security_sign_out()}</Button
 						>{/if}
 				</div>
-				<div class="dv-meta">{sessionMeta(d)}</div>
 			</div>
-			<div class="dv-act">
-				{#if !d.current}<Button variant="ghost" size="sm" disabled={sessionsBusy} onclick={() => signOutSession(d.id)}>{m.settings_security_sign_out()}</Button>{/if}
+		{/each}
+		{#if hasOthers}
+			<div class="setrow">
+				<div class="info">
+					<div class="t" style:font-weight="600" style:color="var(--danger-700)">
+						{m.settings_security_sign_out_others()}
+					</div>
+				</div>
+				<div class="ctl">
+					<Button variant="danger" size="sm" disabled={busy} onclick={() => (confirmAll = true)}>
+						<LogOut size={14} />{m.settings_security_revoke_all()}
+					</Button>
+				</div>
 			</div>
-		</div>
-	{/each}
-	<div class="setrow">
-		<div class="info">
-			<div class="t" style:font-weight="600" style:color="var(--danger-700)">
-				{m.settings_security_sign_out_others()}
-			</div>
-		</div>
-		<div class="ctl">
-			<Button variant="danger" size="sm" disabled={sessionsBusy} onclick={signOutOtherSessions}>
-				<LogOut size={14} />{m.settings_security_revoke_all()}
-			</Button>
-		</div>
-	</div>
+		{/if}
+	{/if}
 </div>
+
+{#if confirmAll}
+	<ConfirmDialog
+		icon={LogOut}
+		tone="danger"
+		title={m.settings_security_revoke_all_title()}
+		sub={m.settings_security_revoke_all_desc()}
+		confirmLabel={m.settings_security_revoke_all_confirm()}
+		{busy}
+		onConfirm={() => void signOutOtherSessions()}
+		onClose={() => {
+			if (!busy) confirmAll = false;
+		}}
+	/>
+{/if}
