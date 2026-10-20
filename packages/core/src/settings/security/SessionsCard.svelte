@@ -184,12 +184,14 @@
 	{/if}
 </div>
 
+{#snippet revokeAllBody()}<p class="cfd-p">{m.settings_security_revoke_all_desc()}</p>{/snippet}
+
 {#if confirmAll}
 	<ConfirmDialog
 		icon={LogOut}
 		tone="danger"
 		title={m.settings_security_revoke_all_title()}
-		sub={m.settings_security_revoke_all_desc()}
+		body={revokeAllBody}
 		confirmLabel={m.settings_security_revoke_all_confirm()}
 		{busy}
 		onConfirm={() => void signOutOtherSessions()}
