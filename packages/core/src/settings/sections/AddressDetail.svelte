@@ -12,7 +12,7 @@
 	import { page } from '$app/state';
 
 	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import TextInput from '../TextInput.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -211,8 +211,7 @@
 	{/if}
 
 	{#if row.canRename || row.isOwnPersonal}
-	<div class="scard">
-		<CardHead icon={AtSign} title={m.settings_address_identity()} />
+	<Card icon={AtSign} title={m.settings_address_identity()}>
 		{#if row.canRename}
 			<Row
 				t={m.settings_address_display_name()}
@@ -258,7 +257,7 @@
 			</Row>
 		{/if}
 		{#if nameError}<div class="card-empty err">{nameError}</div>{/if}
-	</div>
+	</Card>
 	{:else}
 		<div class="ad-note">
 			<Info size={14} />
@@ -273,21 +272,19 @@
 	{/if}
 
 	{#if row.kind === 'shared'}
-		<div class="scard">
-			<CardHead icon={Users} title={m.settings_address_people()}>
-				{#snippet right()}
-					{#if row.usedBy}
-						<span class="card-meta">
-							{m.settings_address_used_people({ count: row.people.length })}
-						</span>
-					{/if}
-					{#if row.canManagePeople}
-						<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
-							<Users size={13} />{m.settings_address_change_people()}
-						</Button>
-					{/if}
-				{/snippet}
-			</CardHead>
+		<Card icon={Users} title={m.settings_address_people()}>
+			{#snippet right()}
+				{#if row.usedBy}
+					<span class="card-meta">
+						{m.settings_address_used_people({ count: row.people.length })}
+					</span>
+				{/if}
+				{#if row.canManagePeople}
+					<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
+						<Users size={13} />{m.settings_address_change_people()}
+					</Button>
+				{/if}
+			{/snippet}
 			{#each row.people as p (p.accountId)}
 				<div class="ad-person">
 					<Avatar
@@ -312,7 +309,7 @@
 					{m.settings_address_people_note()}
 				</span>
 			</div>
-		</div>
+		</Card>
 	{/if}
 
 	{#if !ownDomain}
@@ -333,8 +330,7 @@
 	{/if}
 
 	{#if row.canRemove}
-		<div class="scard danger">
-			<CardHead icon={TriangleAlert} title={m.settings_address_remove_card()} />
+		<Card icon={TriangleAlert} title={m.settings_address_remove_card()} variant="danger">
 			<Row
 				t={row.kind === 'shared'
 					? m.settings_address_remove_shared()
@@ -349,7 +345,7 @@
 					<Trash2 size={14} />{m.settings_address_remove()}
 				</Button>
 			</Row>
-		</div>
+		</Card>
 	{/if}
 
 	{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}

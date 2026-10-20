@@ -13,7 +13,7 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Badge from '../Badge.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
@@ -158,22 +158,20 @@
 
 {#snippet turnOnLink(t: string)}<button type="button" class="notelink" onclick={() => launch('twofa')}>{t}</button>{/snippet}
 
-<div class="scard flat">
-	<CardHead icon={KeyRound} title={m.settings_security_signin_title()}>
-		{#snippet right()}
-			{#if tfStatus}
-				{#if tfStatus.enabled}
-					<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
-				{:else}
-					<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
-				{/if}
-			{:else if twofactor.phase === 'error'}
-				<Badge kind="neutral">{m.settings_security_2fa_unknown()}</Badge>
+<Card icon={KeyRound} title={m.settings_security_signin_title()} variant="flat">
+	{#snippet right()}
+		{#if tfStatus}
+			{#if tfStatus.enabled}
+				<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
 			{:else}
-				<Badge kind="neutral">{m.settings_security_2fa_checking()}</Badge>
+				<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
 			{/if}
-		{/snippet}
-	</CardHead>
+		{:else if twofactor.phase === 'error'}
+			<Badge kind="neutral">{m.settings_security_2fa_unknown()}</Badge>
+		{:else}
+			<Badge kind="neutral">{m.settings_security_2fa_checking()}</Badge>
+		{/if}
+	{/snippet}
 	<div class="cer-rows">
 		<CeremonyRow
 			icon={Lock}
@@ -320,7 +318,7 @@
 			{/each}
 		</div>
 	{/if}
-</div>
+</Card>
 
 {#snippet factorBody()}
 	<p class="cfd-p">{factorCopy.desc}</p>

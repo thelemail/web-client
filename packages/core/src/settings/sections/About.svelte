@@ -5,7 +5,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Download from '@lucide/svelte/icons/download';
 	import SecHead from '../SecHead.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { platform } from '$platform';
@@ -51,8 +51,7 @@
 <SecHead desc={m.settings_about_desc()} />
 
 {#if platform.updates}
-	<div class="scard">
-		<CardHead title={m.settings_about_mac_title()} />
+	<Card title={m.settings_about_mac_title()}>
 		<Row t={m.settings_about_version()} d={status ? status.currentVersion : ''} />
 		<Row t={m.settings_about_updates()} descSnippet={desc}>
 			<div class="abt-actions">
@@ -85,15 +84,14 @@
 			t={m.settings_about_how_title()}
 			d={m.settings_about_how_desc()}
 		/>
-	</div>
+	</Card>
 {:else}
-	<div class="scard">
-		<CardHead title={m.settings_about_updates()} />
+	<Card title={m.settings_about_updates()}>
 		<Row
 			t={m.settings_about_web_title()}
 			d={m.settings_about_web_desc()}
 		/>
-	</div>
+	</Card>
 {/if}
 
 {#snippet desc()}

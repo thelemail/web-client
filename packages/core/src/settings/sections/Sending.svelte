@@ -5,7 +5,7 @@
 	import Row from '../Row.svelte';
 	import Seg from '../Seg.svelte';
 	import Toggle from '../Toggle.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import type { SettingsState } from '../data';
 	import { m } from '$paraglide/messages.js';
 
@@ -19,8 +19,7 @@
 
 <SecHead desc={m.settings_sending_desc()} />
 
-<div class="scard">
-	<CardHead title={m.settings_sending_compose_title()} />
+<Card title={m.settings_sending_compose_title()}>
 	<SettingsGate controls={['select']}>
 		<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
 			<Seg
@@ -33,10 +32,9 @@
 			/>
 		</Row>
 	</SettingsGate>
-</div>
+</Card>
 
-<div class="scard">
-	<CardHead icon={ShieldAlert} title={m.settings_sending_before_title()} />
+<Card icon={ShieldAlert} title={m.settings_sending_before_title()}>
 	<SettingsGate controls={['toggle', 'toggle', 'toggle']}>
 		<Row
 			t={m.settings_sending_confirm_external()}
@@ -54,4 +52,4 @@
 			<Toggle on={s.confirmUnencrypted} onChange={(v) => set('confirmUnencrypted', v)} />
 		</Row>
 	</SettingsGate>
-</div>
+</Card>

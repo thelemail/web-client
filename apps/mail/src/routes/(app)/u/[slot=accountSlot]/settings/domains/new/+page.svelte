@@ -70,11 +70,7 @@
 		/>
 	</div>
 {:else}
-<Card>
-	{#snippet head()}
-		<Globe size={16} />
-		<h3>{m.settings_domains_new_title()}</h3>
-	{/snippet}
+<Card icon={Globe} title={m.settings_domains_new_title()}>
 
 	<div class="dw-pane">
 		<div class="field">

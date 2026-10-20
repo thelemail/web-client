@@ -5,7 +5,7 @@
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Seg from '../Seg.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Select from '../Select.svelte';
 	import { formatDateLong } from '$core/mail/data';
 	import { m } from '$paraglide/messages.js';
@@ -40,8 +40,7 @@
 
 <SecHead desc={m.settings_region_desc()} />
 
-<div class="scard">
-	<CardHead icon={Languages} title={m.settings_region_language_title()} />
+<Card icon={Languages} title={m.settings_region_language_title()}>
 	<Row t={m.settings_region_language()} d={m.settings_region_language_desc()}>
 		<Select
 			value={i18n.explicit ? i18n.locale : 'auto'}
@@ -50,10 +49,9 @@
 			ariaLabel={m.settings_region_language()}
 		/>
 	</Row>
-</div>
+</Card>
 
-<div class="scard">
-	<CardHead icon={Clock} title={m.settings_region_time_title()} />
+<Card icon={Clock} title={m.settings_region_time_title()}>
 	<Row t={m.settings_region_time_zone()} d={m.settings_region_time_zone_desc()}>
 		<span class="ctl-aux">{accountSettings.timeZone}</span>
 	</Row>
@@ -80,4 +78,4 @@
 			/>
 		</Row>
 	</SettingsGate>
-</div>
+</Card>

@@ -13,7 +13,7 @@
 	import Select from '../Select.svelte';
 	import Toggle from '../Toggle.svelte';
 	import Badge from '../Badge.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import { memberRoleLabel } from '../memberRole';
 	import SignatureEditor from './SignatureEditor.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -362,7 +362,7 @@
 
 <SecHead desc={m.settings_profile_desc()} />
 
-<div class="scard">
+<Card>
 	<div class="profile">
 		<div class="pf-avwrap">
 			<Avatar
@@ -447,30 +447,28 @@
 			onChange={onReplyChange}
 		/>
 	</Row>
-</div>
+</Card>
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<div class="scard">
-	<CardHead icon={PenLine} title={m.settings_profile_signature()}>
-		{#snippet right()}
-			<span class="sig-picker">
-				<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
-				{#if signatureOptions.length > 0}
-					<Select
-						narrow
-						value={sigIdentity ? identityLabel(sigIdentity.name, sigIdentity.email) : ''}
-						options={signatureOptions.map((o) => o.label)}
-						onChange={(label) => {
-							const opt = signatureOptions.find((o) => o.label === label);
-							if (opt) sigForAddressId = opt.id;
-						}}
-						ariaLabel={m.settings_profile_signature_identity()}
-					/>
-				{/if}
-			</span>
-		{/snippet}
-	</CardHead>
+<Card icon={PenLine} title={m.settings_profile_signature()}>
+	{#snippet right()}
+		<span class="sig-picker">
+			<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
+			{#if signatureOptions.length > 0}
+				<Select
+					narrow
+					value={sigIdentity ? identityLabel(sigIdentity.name, sigIdentity.email) : ''}
+					options={signatureOptions.map((o) => o.label)}
+					onChange={(label) => {
+						const opt = signatureOptions.find((o) => o.label === label);
+						if (opt) sigForAddressId = opt.id;
+					}}
+					ariaLabel={m.settings_profile_signature_identity()}
+				/>
+			{/if}
+		</span>
+	{/snippet}
 	<div class="sig-wrap">
 		{#if sigIdentity}
 			<div class="sig-idnote">
@@ -531,7 +529,7 @@
 			<div class="muted">{m.settings_profile_signature_empty()}</div>
 		{/if}
 	</div>
-</div>
+</Card>
 
 <style>
 	.hidden-input {

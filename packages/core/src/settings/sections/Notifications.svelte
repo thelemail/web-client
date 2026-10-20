@@ -4,7 +4,7 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import type { NotificationStatus } from '$core/platform/types';
@@ -125,8 +125,7 @@
 <SecHead desc={m.settings_notify_desc()} />
 
 {#if platform.notifications}
-	<div class="scard">
-		<CardHead title={m.settings_notify_new_mail()} />
+	<Card title={m.settings_notify_new_mail()}>
 		<Row t={m.settings_notify_macos()} descSnippet={desc}>
 			<div class="ntf-actions">
 				<Button variant="ghost" size="sm" onclick={check} disabled={checking}>
@@ -139,19 +138,17 @@
 				{/if}
 			</div>
 		</Row>
-	</div>
+	</Card>
 {:else}
-	<div class="scard">
-		<CardHead title={m.settings_notify_new_mail()} />
+	<Card title={m.settings_notify_new_mail()}>
 		<Row
 			t={m.settings_notify_desktop()}
 			d={m.settings_notify_desktop_desc()}
 		/>
-	</div>
+	</Card>
 {/if}
 
-<div class="scard">
-	<CardHead title={m.settings_notify_reminders_title()} />
+<Card title={m.settings_notify_reminders_title()}>
 	<Row t={m.settings_notify_reminders_browser()} d={reminderSummary}>
 		{#if reminders === 'default'}
 			<Button variant="secondary" size="sm" onclick={enableReminders}>{m.settings_notify_reminders_allow()}</Button>
@@ -170,7 +167,7 @@
 			/>
 		</Row>
 	</SettingsGate>
-</div>
+</Card>
 
 {#snippet desc()}
 	<span>{summary}</span>

@@ -3,7 +3,7 @@
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import type { SettingsState } from '../data';
 	import { MARK_READ_LABELS, isMarkReadOption } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -21,8 +21,7 @@
 
 <SecHead desc={m.settings_reading_desc()} />
 
-<div class="scard">
-	<CardHead title={m.settings_reading_open_title()} />
+<Card title={m.settings_reading_open_title()}>
 	<SettingsGate controls={['select']}>
 		<Row t={m.settings_reading_mark_read()}>
 			<Select
@@ -34,4 +33,4 @@
 			/>
 		</Row>
 	</SettingsGate>
-</div>
+</Card>

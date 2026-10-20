@@ -683,16 +683,6 @@
 .settings-app .copy-btn.failed,
 .cer-scrim .copy-btn.failed { color: var(--danger-700); border-color: var(--danger-500); background: var(--danger-100); }
 
-.cer-scrim .rec-list { display: flex; flex-direction: column; gap: 10px; }
-.cer-scrim .rec-row { border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }
-.cer-scrim .rec-head { display: flex; align-items: center; gap: 9px; padding: 9px 11px; background: var(--paper-50); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-.cer-scrim .rec-type { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-sm); padding: 2px 7px; }
-.cer-scrim .rec-kind { font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; color: var(--ink-500); }
-.cer-scrim .rec-meta { font-size: 11.5px; color: var(--fg-muted); flex: 1; min-width: 0; }
-.cer-scrim .rec-meta code { font-family: var(--font-mono); color: var(--ink-700); background: var(--paper-100); border-radius: var(--radius-xs); padding: 1px 5px; }
-.cer-scrim .rec-row .copy-btn { flex: 0 0 auto; }
-.cer-scrim .rec-val { padding: 10px 12px; }
-.cer-scrim .rec-val code { font-family: var(--font-mono); font-size: 12px; line-height: 1.55; color: var(--ink-800); word-break: break-all; }
 
 .settings-app .dns-recmeta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
 .settings-app .dns-recmeta .dns-host { font-size: 11.5px; color: var(--fg-muted); }

@@ -329,8 +329,6 @@
 	"settings_load_failed": "Could not load your settings.",
 	"settings_save_failed": "Could not save your changes. Trying again.",
 	"settings_copy_to_clipboard": "Copy to clipboard",
-	"settings_record_host": "Host",
-	"settings_record_ttl": "TTL",
 	"settings_dns_found": "Found",
 	"settings_dns_wrong_value": "Wrong value",
 	"settings_dns_not_found": "Not found",

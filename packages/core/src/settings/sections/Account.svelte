@@ -9,7 +9,7 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
-	import CardHead from '../CardHead.svelte';
+	import Card from '../Card.svelte';
 	import Badge from '../Badge.svelte';
 	import MembershipCard from '../MembershipCard.svelte';
 	import type { CeremonyKind } from '../data';
@@ -125,15 +125,15 @@
 <SecHead desc={m.settings_account_desc()} />
 
 {#if !ws}
-	<div class="scard">
+	<Card>
 		<div class="plan-top">
 			<div class="plan-id">
 				<div class="plan-eyebrow">{m.settings_account_loading_plan()}</div>
 			</div>
 		</div>
-	</div>
+	</Card>
 {:else}
-	<div class="scard plan-card" data-type={type}>
+	<Card class="plan-card" data-type={type}>
 		<div class="plan-top">
 			<div class="plan-id">
 				<div class="plan-eyebrow">{m.settings_account_current_plan()}</div>
@@ -210,12 +210,11 @@
 				<a href={`/u/${slot}/lifecycle/downgrade`}>{m.settings_account_see_changes()}</a>
 			</div>
 		{/if}
-	</div>
+	</Card>
 
 	{#if isSoloFree}
 		{#if isOwner}
-			<div class="scard">
-				<CardHead icon={Users} title={m.settings_account_start_family()} />
+			<Card icon={Users} title={m.settings_account_start_family()}>
 				<Row
 					t={m.settings_account_start_family_row()}
 					d={m.settings_account_start_family_desc()}
@@ -224,7 +223,7 @@
 						<Users size={14} />{m.settings_account_start_family()}
 					</Button>
 				</Row>
-			</div>
+			</Card>
 		{/if}
 		<div class="upgrade-list">
 			<UpgradeNudge
@@ -245,17 +244,15 @@
 	{/if}
 {/if}
 
-<div class="scard">
-	<CardHead icon={Download} title={m.settings_account_export_title()} />
+<Card icon={Download} title={m.settings_account_export_title()}>
 	<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 		<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
 			{m.settings_account_export_button()}<ExternalLink size={14} />
 		</Button>
 	</Row>
-</div>
+</Card>
 
-<div class="scard danger">
-	<CardHead icon={CircleAlert} title={m.settings_account_delete_title()} />
+<Card icon={CircleAlert} title={m.settings_account_delete_title()} variant="danger">
 	<Row
 		t={m.settings_account_delete_row()}
 		d={m.settings_account_delete_desc()}
@@ -264,7 +261,7 @@
 			<Trash2 size={14} />{m.settings_account_delete_button()}
 		</Button>
 	</Row>
-</div>
+</Card>
 
 <style>
 	.plan-name {

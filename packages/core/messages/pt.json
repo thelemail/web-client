@@ -329,8 +329,6 @@
 	"settings_load_failed": "Não foi possível carregar as suas definições.",
 	"settings_save_failed": "Não foi possível guardar as suas alterações. A tentar novamente.",
 	"settings_copy_to_clipboard": "Copiar para a área de transferência",
-	"settings_record_host": "Anfitrião",
-	"settings_record_ttl": "TTL",
 	"settings_dns_found": "Encontrado",
 	"settings_dns_wrong_value": "Valor incorreto",
 	"settings_dns_not_found": "Não encontrado",
