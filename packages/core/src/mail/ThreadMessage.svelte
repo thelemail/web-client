@@ -61,7 +61,7 @@
 
 	const canUnsubscribe = $derived(!!onUnsubscribe && !!e.id && !e.me && unsubscribeMethod(e.unsubscribe) !== null);
 
-	const img = $derived(senderImage(e.fromAddr, e.bimiDomain));
+	const img = $derived(senderImage(e.fromAddr, e.bimiDomain, e.senderMismatch));
 
 	let showQuoted = $state(false);
 	$effect(() => {

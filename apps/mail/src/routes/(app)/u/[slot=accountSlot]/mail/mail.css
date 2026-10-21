@@ -343,6 +343,7 @@
 
 .mail-app .mrow .thr-ct,
 .mail-app .mrow .tick { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-faint); }
+.mail-app .mrow .tick.forged { color: var(--danger-700); }
 .mail-app .mrow .row-chips { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; max-width: 50%; overflow: hidden; align-self: center; }
 
 .mail-app .lchip,
