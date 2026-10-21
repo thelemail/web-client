@@ -17,8 +17,7 @@ import {
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { bimiDomainFromPreview, unsubscribeFromPreview } from '$core/mail/preview';
 import { sentByFrom } from '$core/mail/sentBy';
-import { paletteFor } from '$core/mail/avatarPalette';
-import { initialsFor } from '$core/mail/initials';
+import { senderFields } from '$core/mail/attestedSender';
 import { platform } from '$platform';
 import type { MirrorRow } from '$core/platform/types';
 import { queryMatches } from '$core/mail/match';
@@ -224,9 +223,7 @@ function withThreadAggregates(m: Message, t: ThreadListItem): Message {
 async function decryptItem(accountId: string, item: MessageListItem): Promise<Message> {
 	const preview = await decryptPreview(accountId, item.encryptedPreview);
 	const storedAt = new Date(item.storedAt);
-	const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
-	const init = initialsFor(fromDisplay, preview.sender.address);
-	const pal = paletteFor(preview.sender.address.toLowerCase());
+	const sender = senderFields(preview.sender, item.attestedSender?.address);
 	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 	const labels = item.labelIds ?? [];
 	return {
@@ -235,17 +232,13 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 		folderId: item.folderId ?? null,
 		returnsToArchive: item.returnsToArchive,
 		direction: item.direction,
-		from: fromDisplay,
-		fromAddr: preview.sender.address,
-		bimiDomain: bimiDomainFromPreview(preview),
+		...sender,
+		bimiDomain: sender.senderMismatch ? undefined : bimiDomainFromPreview(preview),
 		unsubscribe: item.direction === 'received' ? unsubscribeFromPreview(preview) : undefined,
 		calendarMethod:
 			typeof preview.flags?.calendar === 'string' ? preview.flags.calendar : undefined,
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 		recipients: preview.recipients,
-		init,
-		bg: pal.bg,
-		fg: pal.fg,
 		epoch: storedAt.getTime(),
 		subj: decodeWords(preview.subject || '') || '(no subject)',
 		labels,
@@ -309,7 +302,6 @@ function serverMailboxFor(folder: string): string | null {
 
 function mirrorRowToMessage(row: MirrorRow): Message {
 	const storedAt = new Date(row.storedAt);
-	const display = row.senderDisplay || row.senderAddress;
 	let recipients: string[] = [];
 	try {
 		recipients = JSON.parse(row.recipientsJson) as string[];
@@ -332,12 +324,12 @@ function mirrorRowToMessage(row: MirrorRow): Message {
 		folderId: row.folderId,
 		returnsToArchive: row.returnsToArchive,
 		direction: row.direction,
-		from: display,
-		fromAddr: row.senderAddress,
+		...senderFields(
+			{ display: row.senderDisplay, address: row.senderAddress },
+			row.attestedSenderAddress
+		),
 		to: recipients.join(', '),
 		recipients: [],
-		init: initialsFor(display, row.senderAddress),
-		...paletteFor(row.senderAddress.toLowerCase()),
 		epoch: Number.isNaN(storedAt.getTime()) ? 0 : storedAt.getTime(),
 		subj: row.subject,
 		labels,
@@ -601,7 +593,8 @@ class MailboxStore {
 				returnsToArchive: detail.returnsToArchive,
 				labelIds: detail.labelIds,
 				sentViaAliasId: detail.sentViaAliasId,
-				sentByAccountId: detail.sentByAccountId
+				sentByAccountId: detail.sentByAccountId,
+				attestedSender: detail.attestedSender
 			};
 			let msg: Message;
 			let locked = false;

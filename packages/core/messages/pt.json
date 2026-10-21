@@ -1303,6 +1303,15 @@
 	"trust_signature_invalid": "Assinatura inválida",
 	"trust_the_signature_on_this_message_is_not": "A assinatura desta mensagem não é válida",
 	"trust_explain_this_message_was_not_signed_by": "Esta mensagem não foi assinada pela chave publicada pelo diretório para o remetente.",
+	"trust_sender_forged": "Remetente falsificado",
+	"trust_this_message_claims_a_sender_it_was_not": "Esta mensagem indica um remetente que não a enviou",
+	"trust_explain_sender_forged": "O endereço mostrado é o que a Thelemail verificou na entrega. O remetente escreveu outro endereço De na mensagem. Tenha cuidado com links ou pedidos nela.",
+	"trust_sender_matches_delivery": "Endereço do remetente verificado na entrega",
+	"trust_explain_sender_matches_delivery": "A Thelemail confirmou na entrega que a mensagem veio do endereço mostrado.",
+	"trust_sender_does_not_match_delivery": "O endereço do remetente não corresponde à entrega",
+	"trust_explain_sender_does_not_match_delivery": "O endereço De dentro da mensagem não é o endereço a partir do qual a Thelemail a entregou.",
+	"trust_row_delivered_from": "Entregue a partir de",
+	"trust_row_claimed_from": "De na mensagem",
 	"trust_key_changed": "Chave alterada",
 	"trust_key_rotated_signed_by_previous": "Chave renovada, assinada pela chave anterior",
 	"trust_explain_key_rotated_signed_by_previous": "Este endereço tem uma chave nova. A chave que este dispositivo conhecia assinou a alteração, e o registo de transparência inclui-a.",
@@ -3013,6 +3022,7 @@
 	"mail_row_select": "Selecionar mensagem",
 	"mail_row_unread": "Não lida",
 	"mail_row_starred": "Com estrela",
+	"mail_row_sender_mismatch": "Endereço do remetente falsificado",
 	"mail_row_thread_count": [
 		{
 			"declarations": [

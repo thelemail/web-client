@@ -27,8 +27,7 @@ import { detailFromMirror } from '$core/mail/mirrorDetail';
 import { platform } from '$platform';
 import type { MirrorMessage } from '$core/platform/types';
 import type { MessagePreview } from '$core/mail/preview';
-import { initialsFor } from '$core/mail/initials';
-import { paletteFor } from '$core/mail/avatarPalette';
+import { senderFields } from '$core/mail/attestedSender';
 import { initialChips } from '$core/mail/attachments';
 import { folderFromServer, type ThreadEntry, type Message } from '$core/mail/data';
 import { sentByFrom } from '$core/mail/sentBy';
@@ -102,22 +101,22 @@ async function sourceFor(
 }
 
 function previewEntry({ item, preview }: EntrySource): ThreadEntry {
-	const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
-	const pal = paletteFor(preview.sender.address.toLowerCase());
+	const sender = senderFields(preview.sender, item.attestedSender?.address);
 	const me = item.direction === 'sent';
 	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 	return {
 		id: item.id,
-		from: me ? m.mailbox_sender_you() : fromDisplay,
-		fromAddr: preview.sender.address,
-		bimiDomain: bimiDomainFromPreview(preview),
+		from: me ? m.mailbox_sender_you() : sender.from,
+		fromAddr: sender.fromAddr,
+		bimiDomain: sender.senderMismatch ? undefined : bimiDomainFromPreview(preview),
+		senderMismatch: sender.senderMismatch,
 		unsubscribe: me ? undefined : unsubscribeFromPreview(preview),
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 		recipients: preview.recipients,
 		deliveredTo: typeof preview.delivered_to === 'string' ? preview.delivered_to : undefined,
-		init: initialsFor(fromDisplay, preview.sender.address),
-		bg: me ? 'var(--pine-700)' : pal.bg,
-		fg: me ? '#EEF2EA' : pal.fg,
+		init: sender.init,
+		bg: me ? 'var(--pine-700)' : sender.bg,
+		fg: me ? '#EEF2EA' : sender.fg,
 		epoch: new Date(item.storedAt).getTime(),
 		me,
 		unread: !item.read,
@@ -272,6 +271,7 @@ async function fullEntry(
 			official: officialFacts({ senderAddress, channel: item.source, signature, signedMime }),
 			delegatedSigner,
 			serverSignature,
+			attestedSender: item.attestedSender?.address,
 			nowMillis: Date.now()
 		};
 		const trust = me ? undefined : { ...deriveTrust(facts), facts };

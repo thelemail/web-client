@@ -1303,6 +1303,15 @@
 	"trust_signature_invalid": "Signature invalid",
 	"trust_the_signature_on_this_message_is_not": "The signature on this message is not valid",
 	"trust_explain_this_message_was_not_signed_by": "This message was not signed by the key the directory publishes for the sender.",
+	"trust_sender_forged": "Forged sender",
+	"trust_this_message_claims_a_sender_it_was_not": "This message names a sender it was not sent from",
+	"trust_explain_sender_forged": "The address shown is the one Thelemail checked when the message was delivered. The sender wrote a different From address into the message. Be careful with any links or requests in it.",
+	"trust_sender_matches_delivery": "Sender address checked on delivery",
+	"trust_explain_sender_matches_delivery": "Thelemail confirmed at delivery that the message came from the address shown.",
+	"trust_sender_does_not_match_delivery": "Sender address does not match delivery",
+	"trust_explain_sender_does_not_match_delivery": "The From address inside the message is not the address Thelemail delivered it from.",
+	"trust_row_delivered_from": "Delivered from",
+	"trust_row_claimed_from": "From in message",
 	"trust_key_changed": "Key changed",
 	"trust_key_rotated_signed_by_previous": "Key rotated, signed by their previous key",
 	"trust_explain_key_rotated_signed_by_previous": "This address has a new key. The key this device saw before signed the change, and the transparency log includes it.",
@@ -3013,6 +3022,7 @@
 	"mail_row_select": "Select message",
 	"mail_row_unread": "Unread",
 	"mail_row_starred": "Starred",
+	"mail_row_sender_mismatch": "Sender address forged",
 	"mail_row_thread_count": [
 		{
 			"declarations": [
