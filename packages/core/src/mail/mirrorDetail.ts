@@ -46,6 +46,9 @@ export function detailFromMirror(message: MirrorMessage): MessageDetail {
 		signatureStatus: (message.signatureStatus ?? undefined) as MessageDetail['signatureStatus'],
 		signerKeyFingerprint: message.signerKeyFingerprint ?? undefined,
 		signerDelegationId: message.signerDelegationId ?? undefined,
-		encrypted: message.encrypted
+		encrypted: message.encrypted,
+		attestedSender: message.attestedSenderAddress
+			? { address: message.attestedSenderAddress }
+			: undefined
 	};
 }
