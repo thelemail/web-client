@@ -141,4 +141,22 @@ describe('recover page OPAQUE cleanup', () => {
 		expect(recovery.discardRecovery).toHaveBeenCalledWith(OPERATION);
 		await vi.waitFor(() => expect(document.querySelector('#otp-0')).toBeNull());
 	});
+
+	it('refuses short and common passwords and accepts a plain long one', async () => {
+		render(RecoverPage);
+		await reachNewPassword();
+		const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
+		const fill = async (value: string) => {
+			await fireEvent.input(pw, { target: { value } });
+			await fireEvent.input(confirm, { target: { value } });
+		};
+		const submit = () => button(m.auth_recover_reset_password())?.disabled;
+
+		await fill('Password1234');
+		expect(submit()).toBe(true);
+		await fill('harbourlamp');
+		expect(submit()).toBe(true);
+		await fill('harbour lamp');
+		expect(submit()).toBe(false);
+	});
 });
