@@ -1303,6 +1303,15 @@
 	"trust_signature_invalid": "Signatur ungültig",
 	"trust_the_signature_on_this_message_is_not": "Die Signatur dieser Nachricht ist ungültig",
 	"trust_explain_this_message_was_not_signed_by": "Diese Nachricht wurde nicht mit dem im Verzeichnis veröffentlichten Absenderschlüssel signiert.",
+	"trust_sender_forged": "Gefälschter Absender",
+	"trust_this_message_claims_a_sender_it_was_not": "Diese Nachricht nennt einen Absender, von dem sie nicht stammt",
+	"trust_explain_sender_forged": "Angezeigt wird die Adresse, die Thelemail bei der Zustellung geprüft hat. Der Absender hat eine andere Von-Adresse in die Nachricht geschrieben. Seien Sie vorsichtig mit Links oder Anfragen darin.",
+	"trust_sender_matches_delivery": "Absenderadresse bei Zustellung geprüft",
+	"trust_explain_sender_matches_delivery": "Thelemail hat bei der Zustellung bestätigt, dass die Nachricht von der angezeigten Adresse kam.",
+	"trust_sender_does_not_match_delivery": "Absenderadresse passt nicht zur Zustellung",
+	"trust_explain_sender_does_not_match_delivery": "Die Von-Adresse in der Nachricht ist nicht die Adresse, von der Thelemail sie zugestellt hat.",
+	"trust_row_delivered_from": "Zugestellt von",
+	"trust_row_claimed_from": "Von in der Nachricht",
 	"trust_key_changed": "Schlüssel geändert",
 	"trust_key_rotated_signed_by_previous": "Schlüssel erneuert, signiert mit dem bisherigen Schlüssel",
 	"trust_explain_key_rotated_signed_by_previous": "Diese Adresse hat einen neuen Schlüssel. Der Schlüssel, den dieses Gerät zuvor kannte, hat die Änderung signiert, und das Transparenzprotokoll enthält sie.",
@@ -3013,6 +3022,7 @@
 	"mail_row_select": "Nachricht auswählen",
 	"mail_row_unread": "Ungelesen",
 	"mail_row_starred": "Mit Stern markiert",
+	"mail_row_sender_mismatch": "Absenderadresse gefälscht",
 	"mail_row_thread_count": [
 		{
 			"declarations": [

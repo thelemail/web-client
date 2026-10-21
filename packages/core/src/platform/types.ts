@@ -53,6 +53,7 @@ export interface MirrorRow {
 	folderId: string | null;
 	returnsToArchive: boolean;
 	labelsJson: string;
+	attestedSenderAddress: string | null;
 }
 
 export interface MirrorAttachment {
@@ -84,6 +85,7 @@ export interface MirrorMessage {
 	signerKeyFingerprint: string | null;
 	signerDelegationId: string | null;
 	encrypted: boolean;
+	attestedSenderAddress: string | null;
 	subject: string;
 	senderDisplay: string;
 	senderAddress: string;

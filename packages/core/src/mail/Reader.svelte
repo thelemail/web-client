@@ -131,7 +131,7 @@
 		onBack
 	}: Props = $props();
 
-	const img = $derived(senderImage(m?.fromAddr, m?.bimiDomain));
+	const img = $derived(senderImage(m?.fromAddr, m?.bimiDomain, m?.senderMismatch));
 	const sentByText = $derived(m ? sentByLabel(m.sentBy, auth.accountId) : null);
 	const othersReplying = $derived(replyingLine(replyPresence.replying));
 	const presenceId = $derived(m && addresses.shared.length > 0 ? m.id : null);

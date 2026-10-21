@@ -94,6 +94,10 @@ export type RsvpStatus = 'accepted' | 'tentative' | 'declined';
 
 export type SortOrder = 'newest' | 'oldest';
 
+export interface AttestedSender {
+	address: string;
+}
+
 export interface MessageListItem {
 	id: string;
 	ownerAccountId: string;
@@ -111,6 +115,7 @@ export interface MessageListItem {
 	signerDelegationId?: string;
 	sentViaAliasId?: string;
 	sentByAccountId?: string;
+	attestedSender?: AttestedSender;
 	schemaVersion: number;
 	mailboxState: MailboxState;
 	starred: boolean;
@@ -176,6 +181,7 @@ export interface MessageDetail {
 	signerDelegationId?: string;
 	sentViaAliasId?: string;
 	sentByAccountId?: string;
+	attestedSender?: AttestedSender;
 	schemaVersion: number;
 	body: PresignedPointer;
 	attachments: AttachmentDetail[];

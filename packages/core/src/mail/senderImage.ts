@@ -7,7 +7,8 @@ export interface SenderImage {
 	imgBg?: string;
 }
 
-export function senderImage(address?: string, bimiDomain?: string): SenderImage {
+export function senderImage(address?: string, bimiDomain?: string, mismatch?: boolean): SenderImage {
+	if (mismatch) return { src: null, fit: 'cover' };
 	const photo = personAvatars.avatarUrl(address);
 	if (photo) return { src: photo, fit: 'cover' };
 	return { src: bimi.logoUrl(bimiDomain), fit: 'contain', imgBg: '#fff' };

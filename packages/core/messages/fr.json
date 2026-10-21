@@ -1303,6 +1303,15 @@
   "trust_signature_invalid": "Signature invalide",
   "trust_the_signature_on_this_message_is_not": "La signature de ce message n’est pas valide",
   "trust_explain_this_message_was_not_signed_by": "Ce message n’a pas été signé par la clé publiée dans l’annuaire pour l’expéditeur.",
+  "trust_sender_forged": "Expéditeur usurpé",
+  "trust_this_message_claims_a_sender_it_was_not": "Ce message indique un expéditeur qui ne l’a pas envoyé",
+  "trust_explain_sender_forged": "L’adresse affichée est celle que Thelemail a vérifiée lors de la distribution. L’expéditeur a écrit une autre adresse De dans le message. Méfiez-vous des liens ou des demandes qu’il contient.",
+  "trust_sender_matches_delivery": "Adresse de l’expéditeur vérifiée à la distribution",
+  "trust_explain_sender_matches_delivery": "Thelemail a confirmé à la distribution que le message venait de l’adresse affichée.",
+  "trust_sender_does_not_match_delivery": "L’adresse de l’expéditeur ne correspond pas à la distribution",
+  "trust_explain_sender_does_not_match_delivery": "L’adresse De du message n’est pas celle depuis laquelle Thelemail l’a distribué.",
+  "trust_row_delivered_from": "Distribué depuis",
+  "trust_row_claimed_from": "De dans le message",
   "trust_key_changed": "Clé modifiée",
   "trust_key_rotated_signed_by_previous": "Clé renouvelée, signée par sa clé précédente",
   "trust_explain_key_rotated_signed_by_previous": "Cette adresse a une nouvelle clé. La clé que cet appareil connaissait a signé le changement, et le journal de transparence l’inclut.",
@@ -3013,6 +3022,7 @@
   "mail_row_select": "Sélectionner le message",
   "mail_row_unread": "Non lu",
   "mail_row_starred": "Favori",
+  "mail_row_sender_mismatch": "Adresse de l’expéditeur usurpée",
   "mail_row_thread_count": [
     {
       "declarations": [

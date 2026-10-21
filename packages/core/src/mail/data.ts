@@ -63,6 +63,7 @@ export interface ThreadEntry {
 	externalMessageId?: string;
 	inReplyTo?: string;
 	sentBy?: SentBy;
+	senderMismatch?: boolean;
 	labels?: string[];
 	folder?: string;
 }
@@ -107,6 +108,7 @@ export interface Message {
 	calendarMethod?: string;
 	event?: import('./render/icalParse').CalendarEvent | null;
 	sentBy?: SentBy;
+	senderMismatch?: boolean;
 	epoch: number;
 }
 

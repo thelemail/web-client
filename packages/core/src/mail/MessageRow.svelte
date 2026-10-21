@@ -139,9 +139,13 @@
 
 	$effect(() => () => clearTimeout(settleTimer));
 
-	const img = $derived(senderImage(m.fromAddr, m.bimiDomain));
+	const img = $derived(senderImage(m.fromAddr, m.bimiDomain, m.senderMismatch));
 	const rowState = $derived(
-		[m.unread ? msg.mail_row_unread() : '', m.starred ? msg.mail_row_starred() : '']
+		[
+			m.senderMismatch ? msg.mail_row_sender_mismatch() : '',
+			m.unread ? msg.mail_row_unread() : '',
+			m.starred ? msg.mail_row_starred() : ''
+		]
 			.filter(Boolean)
 			.join(', ')
 	);
@@ -259,6 +263,9 @@
 		<div class="r1">
 			<span class="sr-only" id="{uid}-st">{rowState}</span>
 			<span class="from" id="{uid}-from">{m.from}</span>
+			{#if m.senderMismatch}
+				<span class="tick forged" title={msg.mail_row_sender_mismatch()}><ShieldAlert size={12} /></span>
+			{/if}
 			{#if byName}
 				<span class="by">{msg.mail_sent_by({ name: byName })}</span>
 			{/if}

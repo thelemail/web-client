@@ -5,6 +5,7 @@ import type { OfficialFacts } from './officialSender';
 import type { DelegatedSignerTrust } from './senderVerify';
 import { formatDay, formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
 import type { SignatureStatus } from '$core/api/types';
+import { attestedMismatch } from './attestedSender';
 import { m } from '$paraglide/messages.js';
 
 export type TrustTier =
@@ -57,6 +58,7 @@ export interface TrustFacts {
 	official?: OfficialFacts;
 	delegatedSigner?: DelegatedSignerTrust | null;
 	serverSignature?: ServerSignature;
+	attestedSender?: string;
 	nowMillis: number;
 }
 
@@ -253,6 +255,31 @@ function witnessesMet(facts: TrustFacts): boolean {
 	const tlog = facts.directory?.tlog;
 	if (!tlog || tlog.state !== 'verified') return false;
 	return tlog.witnessThreshold >= 1 && tlog.validWitnessCount >= tlog.witnessThreshold;
+}
+
+function senderChecks(facts: TrustFacts): TrustCheck[] {
+	if (!facts.attestedSender) return [];
+	const delivered = { label: m.trust_row_delivered_from(), value: facts.attestedSender };
+	if (attestedMismatch(facts.attestedSender, facts.senderAddress)) {
+		return [
+			{
+				id: 'sender',
+				state: 'fail',
+				label: m.trust_sender_does_not_match_delivery(),
+				explain: m.trust_explain_sender_does_not_match_delivery(),
+				rows: [delivered, { label: m.trust_row_claimed_from(), value: facts.senderAddress }]
+			}
+		];
+	}
+	return [
+		{
+			id: 'sender',
+			state: 'pass',
+			label: m.trust_sender_matches_delivery(),
+			explain: m.trust_explain_sender_matches_delivery(),
+			rows: [delivered]
+		}
+	];
 }
 
 function internalChecks(facts: TrustFacts): TrustCheck[] {
@@ -491,7 +518,7 @@ function internalChecks(facts: TrustFacts): TrustCheck[] {
 					rows: changeRows(dir)
 				};
 
-	return [encryption, signature, binding, transparency, witnesses, continuity];
+	return [...senderChecks(facts), encryption, signature, binding, transparency, witnesses, continuity];
 }
 
 function externalAuthChecks(facts: TrustFacts): TrustCheck[] {
@@ -767,6 +794,18 @@ function officialChecks(facts: TrustFacts): TrustCheck[] {
 function derive(facts: TrustFacts): MessageTrust {
 	const base = { address: facts.senderAddress };
 	const dir = facts.directory;
+
+	const forged = attestedMismatch(facts.attestedSender, facts.senderAddress);
+	if (forged) {
+		return {
+			address: forged,
+			tier: 'failed',
+			label: m.trust_sender_forged(),
+			headline: m.trust_this_message_claims_a_sender_it_was_not(),
+			checks: internalChecks(facts),
+			footnote: m.trust_explain_sender_forged()
+		};
+	}
 
 	if (facts.official?.claimed) {
 		const o = facts.official;
