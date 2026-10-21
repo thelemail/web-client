@@ -565,14 +565,6 @@
 .cer-scrim .quiz-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--pine-700); cursor: pointer; }
 .cer-scrim .quiz-back svg { width: 14px; height: 14px; }
 
-.cer-scrim .pw-strength { display: flex; align-items: center; gap: 10px; margin-top: -6px; }
-.cer-scrim .pws-bars { display: flex; gap: 4px; }
-.cer-scrim .pws-bars span { width: 34px; height: 4px; border-radius: 999px; background: var(--paper-200); }
-.cer-scrim .pws-bars span.on { background: var(--warning-500); }
-.cer-scrim .pws-bars span.on.s3 { background: var(--success-500); }
-.cer-scrim .pws-bars span.on.s4 { background: var(--success-500); }
-.cer-scrim .pws-label { font-size: 11.5px; color: var(--fg-muted); font-weight: 500; }
-
 .cer-scrim .method-opts { display: flex; flex-direction: column; gap: 9px; }
 .cer-scrim .method-opt { display: flex; align-items: center; gap: 13px; padding: 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); text-align: left; transition: border-color var(--dur), background var(--dur); cursor: pointer; }
 .cer-scrim .method-opt > svg { width: 20px; height: 20px; color: var(--ink-500); flex: 0 0 auto; }
