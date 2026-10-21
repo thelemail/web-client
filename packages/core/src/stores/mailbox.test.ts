@@ -28,6 +28,9 @@ vi.mock('./auth.svelte', () => ({
 	auth: authState
 }));
 
+const platformState = vi.hoisted(() => ({ mirror: undefined as unknown }));
+vi.mock('$platform', () => ({ platform: platformState }));
+
 import { mailbox } from './mailbox.svelte';
 import { DecryptionError } from '$core/mail/decrypt';
 import type { Query } from '$core/mail/url';
@@ -798,5 +801,106 @@ describe('a thread appears once in a threaded stream', () => {
 		await flushAsync();
 
 		expect(ids(SENT_QUERY)).toEqual(['s2', 's1']);
+	});
+});
+
+describe('a received internal row is checked against its attested sender', () => {
+	const INBOX: Query = { folder: 'inbox', labels: [], unread: false, attach: false, sort: 'newest' };
+
+	function received(id: string, attested?: string) {
+		return {
+			...row(id, '2026-08-20T12:00:00Z'),
+			direction: 'received' as const,
+			...(attested ? { attestedSender: { address: attested } } : {})
+		};
+	}
+
+	function threadOf(latest: ReturnType<typeof received>) {
+		return { threadKey: latest.id, latest, messageCount: 1, unreadCount: 0, hasAttachments: false, starred: false };
+	}
+
+	async function load(item: ReturnType<typeof received>) {
+		listThreads.mockResolvedValueOnce({ items: [threadOf(item)], nextCursor: null });
+		await mailbox.ensureLoaded(INBOX);
+		return mailbox.streamFor(INBOX).msgs[0];
+	}
+
+	beforeEach(() => {
+		listThreads.mockReset();
+		decryptPreview.mockReset();
+		decryptPreview.mockImplementation(async () => ({
+			sender: { display: 'Chief Executive', address: 'ceo@acme.test' },
+			recipients: [{ kind: 'to', address: 'me@acme.test' }],
+			subject: 'Wire transfer',
+			snippet: 'Today please',
+			flags: { bimi_domain: 'acme.test' }
+		}));
+		platformState.mirror = undefined;
+		authState.canEnterApp = true;
+		authState.accountId = 'acc-1';
+		mailbox.setAccount(null);
+		mailbox.setAccount('acc-1');
+	});
+
+	it('shows the attested address when the preview names someone else', async () => {
+		const msg = await load(received('f1', 'mallory@acme.test'));
+
+		expect(msg.from).toBe('mallory@acme.test');
+		expect(msg.fromAddr).toBe('mallory@acme.test');
+		expect(msg.init).toBe('MA');
+		expect(msg.bimiDomain).toBeUndefined();
+		expect(msg.senderMismatch).toBe(true);
+	});
+
+	it('keeps the preview sender when the attestation matches apart from case', async () => {
+		const msg = await load(received('f2', 'CEO@Acme.test'));
+
+		expect(msg.from).toBe('Chief Executive');
+		expect(msg.fromAddr).toBe('ceo@acme.test');
+		expect(msg.bimiDomain).toBe('acme.test');
+		expect(msg.senderMismatch).toBeUndefined();
+	});
+
+	it('leaves rows without an attestation as they were', async () => {
+		const msg = await load(received('f3'));
+
+		expect(msg.from).toBe('Chief Executive');
+		expect(msg.fromAddr).toBe('ceo@acme.test');
+		expect(msg.bimiDomain).toBe('acme.test');
+		expect(msg.senderMismatch).toBeUndefined();
+	});
+
+	it('checks rows painted from the desktop mirror too', async () => {
+		const mirrorRow = (id: string, attestedSenderAddress: string | null) => ({
+			id,
+			direction: 'received',
+			mailboxState: 'inbox',
+			subject: 'Wire transfer',
+			senderDisplay: 'Chief Executive',
+			senderAddress: 'ceo@acme.test',
+			recipientsJson: '[]',
+			snippet: '',
+			displayDate: '',
+			storedAt: '2026-08-20T12:00:00Z',
+			read: true,
+			starred: false,
+			attachmentCount: 0,
+			threadRootId: null,
+			folderId: null,
+			returnsToArchive: false,
+			labelsJson: '[]',
+			attestedSenderAddress
+		});
+		platformState.mirror = {
+			list: vi.fn(async () => [mirrorRow('m1', 'mallory@acme.test'), mirrorRow('m2', 'ceo@acme.test'), mirrorRow('m3', null)])
+		};
+		listThreads.mockRejectedValueOnce(new Error('offline'));
+		await mailbox.ensureLoaded(INBOX);
+
+		const byId = new Map(mailbox.streamFor(INBOX).msgs.map((m) => [m.id, m]));
+		expect(byId.get('m1')).toMatchObject({ from: 'mallory@acme.test', senderMismatch: true });
+		expect(byId.get('m2')).toMatchObject({ from: 'Chief Executive', fromAddr: 'ceo@acme.test' });
+		expect(byId.get('m2')?.senderMismatch).toBeUndefined();
+		expect(byId.get('m3')?.senderMismatch).toBeUndefined();
 	});
 });

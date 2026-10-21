@@ -537,3 +537,44 @@ describe('signed external mail', () => {
 		expect(trust.checks.some((c) => c.id === 'signature')).toBe(false);
 	});
 });
+
+describe('attested sender', () => {
+	it('fails a message whose preview names an address it was not delivered from', () => {
+		const trust = deriveTrust(internal({ attestedSender: 'mallory@thelemail.com' }));
+		expect(trust.tier).toBe('failed');
+		expect(trust.label).toBe('Forged sender');
+		expect(trust.address).toBe('mallory@thelemail.com');
+		expect(trust.checks.find((c) => c.id === 'sender')?.state).toBe('fail');
+	});
+
+	it('outranks an official claim that would otherwise pass', () => {
+		const trust = deriveTrust(
+			internal({
+				senderAddress: 'team@thelemail.com',
+				attestedSender: 'mallory@thelemail.com',
+				official: { claimed: true, signedByOfficial: true, headerBound: true, channelOk: true }
+			})
+		);
+		expect(trust.tier).toBe('failed');
+		expect(trust.label).toBe('Forged sender');
+	});
+
+	it('outranks a directory failure', () => {
+		const trust = deriveTrust(
+			internal({
+				attestedSender: 'mallory@thelemail.com',
+				directory: directory({ ok: false, code: 'address_mismatch' })
+			})
+		);
+		expect(trust.label).toBe('Forged sender');
+	});
+
+	it('adds a passing check without changing the tier when the addresses match', () => {
+		const plain = deriveTrust(internal());
+		const trust = deriveTrust(internal({ attestedSender: 'Ada@thelemail.com' }));
+		expect(trust.tier).toBe(plain.tier);
+		expect(trust.headline).toBe(plain.headline);
+		expect(trust.checks.find((c) => c.id === 'sender')?.state).toBe('pass');
+		expect(plain.checks.find((c) => c.id === 'sender')).toBeUndefined();
+	});
+});

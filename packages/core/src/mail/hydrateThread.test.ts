@@ -35,7 +35,8 @@ vi.mock('$core/stores/accountSettings.svelte', () => ({
 	accountSettings: { privacy: { stripTrackingParams: false } }
 }));
 
-vi.mock('$platform', () => ({ platform: {} }));
+const platformState = vi.hoisted(() => ({ mirror: undefined as unknown }));
+vi.mock('$platform', () => ({ platform: platformState }));
 
 import { hydrateThread } from './hydrateThread';
 
@@ -54,6 +55,7 @@ function item(id: string, read = true) {
 }
 
 beforeEach(() => {
+	platformState.mirror = undefined;
 	directoryTrust.mockReset();
 	directoryTrust.mockResolvedValue(null);
 	previousSenderKey.mockReset();
@@ -311,5 +313,130 @@ describe('own messages', () => {
 		const entry = await thread!.load('a');
 		expect(directoryTrust).not.toHaveBeenCalled();
 		expect(entry?.trust).toBeUndefined();
+	});
+});
+
+describe('the preview sender against the attested sender', () => {
+	const KEY_FP = 'c1'.repeat(32);
+
+	function internalFrom(attested?: string) {
+		return {
+			...item('a'),
+			source: 'internal',
+			...(attested ? { attestedSender: { address: attested } } : {})
+		};
+	}
+
+	beforeEach(() => {
+		decryptPreview.mockResolvedValue({
+			sender: { display: 'Chief Executive', address: 'ceo@acme.test' },
+			recipients: [{ kind: 'to', address: 'me@example.org' }],
+			subject: 'Wire transfer',
+			snippet: 'Today please',
+			flags: { bimi_domain: 'acme.test' }
+		});
+		directoryTrust.mockResolvedValue({
+			ok: true,
+			firstContact: false,
+			sameWorkspace: true,
+			tlog: { state: 'not_configured' },
+			publicKeyArmored: 'current-armored',
+			statement: {
+				accountId: 'acc-2',
+				address: 'ceo@acme.test',
+				issuedAt: '2026-10-02T00:00:00Z',
+				keyAlgorithm: 'ed25519',
+				signingKeyFingerprint: 'e5'.repeat(32),
+				version: 3,
+				keyFingerprint: KEY_FP,
+				keyTransitions: []
+			}
+		});
+		renderDetail.mockImplementation(async (_a: string, detail: { id: string }) => ({
+			render: { srcDoc: `<p>${detail.id}</p>` },
+			signature: { state: 'valid', keyFingerprintHex: KEY_FP }
+		}));
+	});
+
+	async function open(attested?: string) {
+		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: [internalFrom(attested)] });
+		const thread = await hydrateThread('a');
+		return { preview: thread!.entries[0], full: await thread!.load('a') };
+	}
+
+	it('fails trust and shows the attested address when the preview names someone else', async () => {
+		const { preview, full } = await open('mallory@acme.test');
+
+		expect(preview).toMatchObject({ from: 'mallory@acme.test', fromAddr: 'mallory@acme.test', senderMismatch: true });
+		expect(preview.bimiDomain).toBeUndefined();
+		expect(full?.trust?.tier).toBe('failed');
+		expect(full?.trust?.label).toBe('Forged sender');
+		expect(full?.trust?.headline).toBe('This message names a sender it was not sent from');
+		expect(full?.trust?.address).toBe('mallory@acme.test');
+		const sender = full?.trust?.checks.find((c) => c.id === 'sender');
+		expect(sender?.state).toBe('fail');
+		expect(sender?.rows).toEqual([
+			{ label: 'Delivered from', value: 'mallory@acme.test' },
+			{ label: 'From in message', value: 'ceo@acme.test' }
+		]);
+	});
+
+	it('passes the sender check when the attestation matches apart from case', async () => {
+		const baseline = (await open()).full?.trust;
+		const { preview, full } = await open('CEO@acme.test');
+
+		expect(preview).toMatchObject({ from: 'Chief Executive', fromAddr: 'ceo@acme.test', bimiDomain: 'acme.test' });
+		expect(preview.senderMismatch).toBeUndefined();
+		expect(full?.trust?.tier).toBe(baseline?.tier);
+		expect(full?.trust?.checks.find((c) => c.id === 'sender')?.state).toBe('pass');
+	});
+
+	it('keeps the old verdict for mail delivered before attestation', async () => {
+		const { full } = await open();
+
+		expect(full?.trust?.tier).toBe('encrypted');
+		expect(full?.trust?.checks.map((c) => c.id)).not.toContain('sender');
+	});
+
+	it('checks threads read from the desktop mirror', async () => {
+		getMessageThread.mockRejectedValue(new Error('offline'));
+		platformState.mirror = {
+			thread: vi.fn(async () => [
+				{
+					id: 'a',
+					direction: 'received',
+					source: 'internal',
+					mailboxState: 'inbox',
+					storedAt: '2026-10-03T12:00:00Z',
+					read: true,
+					starred: false,
+					threadRootId: null,
+					folderId: null,
+					returnsToArchive: false,
+					externalMessageId: null,
+					inReplyTo: null,
+					labelsJson: '[]',
+					signatureStatus: null,
+					signerKeyFingerprint: null,
+					signerDelegationId: null,
+					encrypted: true,
+					subject: 'Wire transfer',
+					senderDisplay: 'Chief Executive',
+					senderAddress: 'ceo@acme.test',
+					recipientsJson: '[]',
+					snippet: '',
+					displayDate: '',
+					attachmentCount: 0,
+					mime: null,
+					attachments: [],
+					attestedSenderAddress: 'mallory@acme.test'
+				}
+			])
+		};
+		const thread = await hydrateThread('a');
+		const full = await thread!.load('a');
+
+		expect(thread!.entries[0]).toMatchObject({ fromAddr: 'mallory@acme.test', senderMismatch: true });
+		expect(full?.trust?.tier).toBe('failed');
 	});
 });
