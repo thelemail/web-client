@@ -50,10 +50,14 @@ async function continueToPassword(handle: string) {
 	await fireEvent.click(button('Continue')!);
 }
 
-async function submitPassword() {
+async function fillPassword(value: string) {
 	const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
-	await fireEvent.input(pw, { target: { value: 'Quiet-harbour-lantern-47' } });
-	await fireEvent.input(confirm, { target: { value: 'Quiet-harbour-lantern-47' } });
+	await fireEvent.input(pw, { target: { value } });
+	await fireEvent.input(confirm, { target: { value } });
+}
+
+async function submitPassword() {
+	await fillPassword('Quiet-harbour-lantern-47');
 	await fireEvent.click(button('Create my mailbox')!);
 }
 
@@ -117,5 +121,18 @@ describe('register page', () => {
 
 		await submitPassword();
 		await vi.waitFor(() => expect(pow.take).toHaveBeenCalledWith('camilla@temail.org'));
+	});
+
+	it('refuses short and common passwords and accepts a plain long one', async () => {
+		render(RegisterPage);
+		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await continueToPassword('camille');
+
+		await fillPassword('Password1234');
+		expect(button('Create my mailbox')?.disabled).toBe(true);
+		await fillPassword('harbourlamp');
+		expect(button('Create my mailbox')?.disabled).toBe(true);
+		await fillPassword('harbour lamp');
+		expect(button('Create my mailbox')?.disabled).toBe(false);
 	});
 });

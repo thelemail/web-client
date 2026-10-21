@@ -32,7 +32,7 @@
 		type TwoFactorVerifyResponse
 	} from '$core/api/types';
 	import { getAssertion, webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
-	import { strengthLabel, passwordReqs, scorePassword } from '$core/auth/password-policy';
+	import { passwordReqs } from '$core/auth/password-policy';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
 	import type { CeremonyKind } from '../data';
@@ -101,7 +101,6 @@
 		return i < 0 ? 0 : i;
 	});
 
-	const score = $derived(pw ? scorePassword(pw) : 0);
 	const reqs = $derived(passwordReqs(pw));
 	const allMet = $derived(reqs.every((r) => r.met));
 	const match = $derived(pw2.length > 0 && pw === pw2);
@@ -542,14 +541,6 @@
 				/>
 			</div>
 			{#if pw.length > 0}
-				<div class="pw-strength">
-					<div class="pws-bars">
-						{#each [0, 1, 2, 3] as i (i)}
-							<span class={i < score ? 'on s' + score : ''}></span>
-						{/each}
-					</div>
-					<span class="pws-label">{strengthLabel(score)}</span>
-				</div>
 				<div class="pwc-reqs">
 					{#each reqs as r (r.k)}
 						<span class="pwc-req" class:met={r.met}>

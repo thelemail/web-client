@@ -4,7 +4,7 @@
 	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
-	import PasswordStrength from '$core/auth/PasswordStrength.svelte';
+	import PasswordRequirements from '$core/auth/PasswordRequirements.svelte';
 	import { passwordReqs } from '$core/auth/password-policy';
 	import Stepper from '$core/auth/Stepper.svelte';
 	import PlanStep from '$core/auth/PlanStep.svelte';
@@ -439,7 +439,7 @@
 				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
 			/>
-			<PasswordStrength {pw} />
+			<PasswordRequirements {pw} />
 			<PasswordField
 				label={m.auth_register_confirm_label()}
 				bind:value={confirm}

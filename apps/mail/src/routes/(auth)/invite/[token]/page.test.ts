@@ -99,4 +99,26 @@ describe('invite page', () => {
 		expect(ws.registerAndAcceptInvite).toHaveBeenCalledTimes(1);
 		expect(text()).not.toContain('the domain for this invitation is not available');
 	});
+
+	it('refuses short and common passwords and accepts a plain long one', async () => {
+		ws.previewWorkspaceInvite.mockResolvedValue(preview);
+		render(InvitePage);
+
+		await vi.waitFor(() => expect(document.querySelector('#invite-name')).not.toBeNull());
+		await fireEvent.input(document.querySelector('#invite-name')!, { target: { value: 'Bob Builder' } });
+		await fireEvent.click(button('Continue')!);
+		await fireEvent.click(document.querySelector('input[type="checkbox"]')!);
+		const [pw, confirm] = [...document.querySelectorAll('input[type="password"]')];
+		const fill = async (value: string) => {
+			await fireEvent.input(pw, { target: { value } });
+			await fireEvent.input(confirm, { target: { value } });
+		};
+
+		await fill('Password1234');
+		expect(button('Create account')?.disabled).toBe(true);
+		await fill('harbourlamp');
+		expect(button('Create account')?.disabled).toBe(true);
+		await fill('harbour lamp');
+		expect(button('Create account')?.disabled).toBe(false);
+	});
 });

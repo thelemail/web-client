@@ -10,7 +10,6 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
 	import Lock from '@lucide/svelte/icons/lock';
 	import Mail from '@lucide/svelte/icons/mail';
 	import { registrationInit } from '$core/api/auth';
@@ -22,7 +21,8 @@
 	import JoinFamilyInvite from '$core/auth/JoinFamilyInvite.svelte';
 	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import { Button } from '$core/components/ui/button';
-	import { strengthLabel } from '$core/auth/password-policy';
+	import PasswordRequirements from '$core/auth/PasswordRequirements.svelte';
+	import { passwordReqs } from '$core/auth/password-policy';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
@@ -81,30 +81,7 @@
 		}
 	});
 
-	function scorePw(p: string): number {
-		let s = 0;
-		if (p.length >= 8) s++;
-		if (p.length >= 12) s++;
-		if (/[a-z]/.test(p) && /[A-Z]/.test(p)) s++;
-		if (/\d/.test(p) && /[^A-Za-z0-9]/.test(p)) s++;
-		return Math.min(s, 4);
-	}
-
-	const score = $derived(pw ? scorePw(pw) : 0);
-	const reqs = $derived([
-		{ k: 'len', label: m.auth_password_req_length(), met: pw.length >= 8 },
-		{
-			k: 'mix',
-			label: m.auth_password_req_mixed_case(),
-			met: /[a-z]/.test(pw) && /[A-Z]/.test(pw)
-		},
-		{
-			k: 'num',
-			label: m.auth_password_req_number_symbol(),
-			met: /\d/.test(pw) || /[^A-Za-z0-9]/.test(pw)
-		}
-	]);
-	const allMet = $derived(reqs.every((r) => r.met));
+	const allMet = $derived(passwordReqs(pw).every((r) => r.met));
 	const matches = $derived(confirm.length > 0 && confirm === pw);
 	const mismatch = $derived(confirm.length > 0 && confirm !== pw);
 	const passwordReady = $derived(allMet && matches);
@@ -315,28 +292,7 @@
 				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
 			/>
-			{#if pw}
-				<div class="strength">
-					<div class="strbar s{score}"><i></i><i></i><i></i><i></i></div>
-					<div class="strlab s{score}">
-						<Rich text={m.auth_password_strength({ label: strengthLabel(score) })} tags={{ b: bold }} />
-					</div>
-				</div>
-			{/if}
-			<div class="reqs">
-				{#each reqs as r (r.k)}
-					<div class="req" class:met={r.met}>
-						<span class="rk">
-							{#if r.met}
-								<Check size={11} strokeWidth={2.5} />
-							{:else}
-								<Minus size={11} strokeWidth={2.5} />
-							{/if}
-						</span>
-						{r.label}
-					</div>
-				{/each}
-			</div>
+			<PasswordRequirements {pw} />
 			<PasswordField
 				label={m.auth_register_confirm_label()}
 				bind:value={confirm}

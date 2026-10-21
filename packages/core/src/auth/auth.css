@@ -569,52 +569,6 @@
 	background: var(--pine-600);
 }
 
-.auth .strength {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	margin-top: 2px;
-}
-.auth .strbar {
-	display: flex;
-	gap: 5px;
-}
-.auth .strbar i {
-	flex: 1;
-	height: 5px;
-	border-radius: 99px;
-	background: var(--paper-200);
-	transition: background var(--dur);
-}
-.auth .strbar.s1 i:nth-child(1) {
-	background: var(--danger-500);
-}
-.auth .strbar.s2 i:nth-child(-n + 2) {
-	background: var(--warning-500);
-}
-.auth .strbar.s3 i:nth-child(-n + 3) {
-	background: var(--success-500);
-}
-.auth .strbar.s4 i {
-	background: var(--success-500);
-}
-.auth .strlab {
-	font-size: 12px;
-	color: var(--fg-muted);
-}
-.auth .strlab b {
-	font-weight: 600;
-}
-.auth .strlab.s1 b {
-	color: var(--danger-700);
-}
-.auth .strlab.s2 b {
-	color: var(--warning-700);
-}
-.auth .strlab.s3 b,
-.auth .strlab.s4 b {
-	color: var(--success-700);
-}
 .auth .reqs {
 	display: flex;
 	flex-direction: column;
