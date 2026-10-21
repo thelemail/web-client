@@ -33,7 +33,6 @@ import { initialChips } from '$core/mail/attachments';
 import { folderFromServer, type ThreadEntry, type Message } from '$core/mail/data';
 import { sentByFrom } from '$core/mail/sentBy';
 import { auth } from '$core/stores/auth.svelte';
-import { addresses } from '$core/stores/addresses.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -82,13 +81,6 @@ async function mapLimit<T, R>(
 	return results;
 }
 
-function isMine(address: string): boolean {
-	const key = address.trim().toLowerCase();
-	if (!key) return false;
-	if (auth.email && auth.email.toLowerCase() === key) return true;
-	return addresses.items.some((a) => !a.shared && a.email.toLowerCase() === key);
-}
-
 interface EntrySource {
 	item: MessageDetail;
 	preview: MessagePreview;
@@ -112,7 +104,7 @@ async function sourceFor(
 function previewEntry({ item, preview }: EntrySource): ThreadEntry {
 	const fromDisplay = preview.sender.display || preview.sender.address || m.mailbox_unknown_sender();
 	const pal = paletteFor(preview.sender.address.toLowerCase());
-	const me = isMine(preview.sender.address);
+	const me = item.direction === 'sent';
 	const toAddresses = preview.recipients.filter((r) => r.kind === 'to').map((r) => r.address);
 	return {
 		id: item.id,

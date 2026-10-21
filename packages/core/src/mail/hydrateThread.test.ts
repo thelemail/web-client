@@ -31,10 +31,6 @@ vi.mock('$core/stores/auth.svelte', () => ({
 	auth: { accountId: 'acc-1', email: 'me@example.org' }
 }));
 
-vi.mock('$core/stores/addresses.svelte', () => ({
-	addresses: { items: [] }
-}));
-
 vi.mock('$core/stores/accountSettings.svelte', () => ({
 	accountSettings: { privacy: { stripTrackingParams: false } }
 }));
@@ -277,5 +273,43 @@ describe('signatures from a sender\u2019s previous key', () => {
 		);
 		const entry = await loaded();
 		expect(entry?.trust?.facts.signature?.state).toBe('unknown_key');
+	});
+});
+
+describe('own messages', () => {
+	function fromMe(direction: 'sent' | 'received') {
+		decryptPreview.mockResolvedValue({
+			sender: { display: 'Me Myself', address: 'me@example.org' },
+			recipients: [{ kind: 'to', address: 'me@example.org' }],
+			subject: 'Subject',
+			snippet: 'Snippet'
+		});
+		getMessageThread.mockResolvedValue({
+			threadRootId: 'a',
+			items: [{ ...item('a'), direction, source: 'internal' }]
+		});
+	}
+
+	it('treats a received message from one of my addresses as received', async () => {
+		fromMe('received');
+		const thread = await hydrateThread('a');
+		expect(thread?.entries[0].me).toBe(false);
+		expect(thread?.entries[0].from).toBe('Me Myself');
+
+		const entry = await thread!.load('a');
+		expect(directoryTrust).toHaveBeenCalledWith('acc-1', 'me@example.org');
+		expect(entry?.me).toBe(false);
+		expect(entry?.trust).toBeDefined();
+	});
+
+	it('shows a sent message as mine without a trust evaluation', async () => {
+		fromMe('sent');
+		const thread = await hydrateThread('a');
+		expect(thread?.entries[0].me).toBe(true);
+		expect(thread?.entries[0].from).toBe('You');
+
+		const entry = await thread!.load('a');
+		expect(directoryTrust).not.toHaveBeenCalled();
+		expect(entry?.trust).toBeUndefined();
 	});
 });
