@@ -12,7 +12,8 @@
 		aux,
 		onEnter,
 		invalid = false,
-		describedby
+		describedby,
+		focusOnMount = false
 	}: {
 		label: string;
 		value: string;
@@ -22,6 +23,7 @@
 		onEnter?: () => void;
 		invalid?: boolean;
 		describedby?: string;
+		focusOnMount?: boolean;
 	} = $props();
 
 	let show = $state(false);
@@ -34,6 +36,7 @@
 		{#if aux}{@render aux()}{/if}
 	</div>
 	<div class="pw">
+		<!-- svelte-ignore a11y_autofocus -->
 		<input
 			{id}
 			class="inp"
@@ -43,6 +46,7 @@
 			autocomplete={autocomplete ?? 'off'}
 			aria-invalid={invalid || undefined}
 			aria-describedby={describedby}
+			autofocus={focusOnMount}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' && onEnter) onEnter();
 			}}

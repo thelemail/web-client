@@ -142,16 +142,20 @@ async function tryOpaqueLogin(
 	email: string,
 	password: string,
 	rememberMe: boolean,
-	proofFor: LoginProofSolver
+	proofFor: LoginProofSolver,
+	signal: AbortSignal | undefined
 ): Promise<PerformLoginOutcome | null> {
+	signal?.throwIfAborted();
 	const start = await keystore.opaqueStartAuth({ password, email });
 	try {
+		signal?.throwIfAborted();
 		const init = await loginInit({ email, ke1: start.ke1 });
 		if (!init.accountId || !init.ke2) {
 			await keystore.opaqueAbandonOperation({ operationId: start.operationId });
 			return null;
 		}
 		const proof = await proofFor(init);
+		signal?.throwIfAborted();
 		const finish = await keystore.opaqueFinishAuth({
 			operationId: start.operationId,
 			accountId: init.accountId,
@@ -161,12 +165,14 @@ async function tryOpaqueLogin(
 			return null;
 		}
 
+		signal?.throwIfAborted();
 		const complete = await loginComplete({
 			challengeId: init.challengeId,
 			ke3: finish.ke3,
 			enrollPersistentSession: rememberMe,
 			proof
 		});
+		signal?.throwIfAborted();
 
 		if (complete.twoFactor) {
 			return {
@@ -190,6 +196,14 @@ async function tryOpaqueLogin(
 	}
 }
 
+async function abandonSrpLogin(): Promise<void> {
+	try {
+		await keystore.abandonLogin();
+	} catch (err) {
+		console.warn('login: abandon failed (non-fatal)', err);
+	}
+}
+
 async function abandonOpaqueOperation(operationId: string): Promise<void> {
 	try {
 		await keystore.opaqueAbandonOperation({ operationId });
@@ -199,6 +213,15 @@ async function abandonOpaqueOperation(operationId: string): Promise<void> {
 }
 
 export async function performLogin(input: PerformLoginInput): Promise<PerformLoginOutcome> {
+	const outcome = await attemptLoginOnce(input);
+	if (outcome.status === 'twoFactorRequired' && input.signal?.aborted) {
+		await abandonTwoFactorLogin(outcome.pending);
+		input.signal.throwIfAborted();
+	}
+	return outcome;
+}
+
+async function attemptLoginOnce(input: PerformLoginInput): Promise<PerformLoginOutcome> {
 	try {
 		return await attemptLogin(input);
 	} catch (err) {
@@ -212,14 +235,16 @@ async function attemptLogin(input: PerformLoginInput): Promise<PerformLoginOutco
 	let password = input.password;
 	const proofFor = loginProofSolver(input);
 
-	const opaqueOutcome = await tryOpaqueLogin(email, password, rememberMe, proofFor);
+	const opaqueOutcome = await tryOpaqueLogin(email, password, rememberMe, proofFor, input.signal);
 	if (opaqueOutcome) {
 		password = '';
 		return opaqueOutcome;
 	}
 
+	input.signal?.throwIfAborted();
 	const init = await loginInit({ email });
 	const proof = await proofFor(init);
+	input.signal?.throwIfAborted();
 	const proofs = await keystore.prepareLogin({
 		email,
 		password,
@@ -228,17 +253,26 @@ async function attemptLogin(input: PerformLoginInput): Promise<PerformLoginOutco
 		serverPublicEphemeral: init.serverPublicEphemeral as string
 	});
 
-	const complete = await loginComplete({
-		challengeId: init.challengeId,
-		clientPublicEphemeral: proofs.clientPublicEphemeral,
-		clientProof: proofs.clientProof,
-		enrollPersistentSession: rememberMe,
-		proof
-	});
+	let complete: Awaited<ReturnType<typeof loginComplete>>;
+	try {
+		input.signal?.throwIfAborted();
+		complete = await loginComplete({
+			challengeId: init.challengeId,
+			clientPublicEphemeral: proofs.clientPublicEphemeral,
+			clientProof: proofs.clientProof,
+			enrollPersistentSession: rememberMe,
+			proof
+		});
+		input.signal?.throwIfAborted();
+	} catch (err) {
+		await abandonSrpLogin();
+		throw err;
+	}
 
 	const verified = await keystore.verifyLoginProof({ serverProof: complete.serverProof as string });
 	if (!verified.ok) {
 		password = '';
+		await abandonSrpLogin();
 		console.error('login: server proof verification failed', verified.code);
 		throw new Error(
 			verified.code === 'no_pending_login'
@@ -490,9 +524,5 @@ export async function abandonTwoFactorLogin(pending: PendingTwoFactorLogin): Pro
 		await abandonOpaqueOperation(pending.opaqueOperationId);
 		return;
 	}
-	try {
-		await keystore.abandonLogin();
-	} catch (err) {
-		console.warn('login: abandon failed (non-fatal)', err);
-	}
+	await abandonSrpLogin();
 }
