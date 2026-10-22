@@ -142,16 +142,20 @@ async function tryOpaqueLogin(
 	email: string,
 	password: string,
 	rememberMe: boolean,
-	proofFor: LoginProofSolver
+	proofFor: LoginProofSolver,
+	signal: AbortSignal | undefined
 ): Promise<PerformLoginOutcome | null> {
+	signal?.throwIfAborted();
 	const start = await keystore.opaqueStartAuth({ password, email });
 	try {
+		signal?.throwIfAborted();
 		const init = await loginInit({ email, ke1: start.ke1 });
 		if (!init.accountId || !init.ke2) {
 			await keystore.opaqueAbandonOperation({ operationId: start.operationId });
 			return null;
 		}
 		const proof = await proofFor(init);
+		signal?.throwIfAborted();
 		const finish = await keystore.opaqueFinishAuth({
 			operationId: start.operationId,
 			accountId: init.accountId,
@@ -161,6 +165,7 @@ async function tryOpaqueLogin(
 			return null;
 		}
 
+		signal?.throwIfAborted();
 		const complete = await loginComplete({
 			challengeId: init.challengeId,
 			ke3: finish.ke3,
@@ -199,6 +204,15 @@ async function abandonOpaqueOperation(operationId: string): Promise<void> {
 }
 
 export async function performLogin(input: PerformLoginInput): Promise<PerformLoginOutcome> {
+	const outcome = await attemptLoginOnce(input);
+	if (outcome.status === 'twoFactorRequired' && input.signal?.aborted) {
+		await abandonTwoFactorLogin(outcome.pending);
+		input.signal.throwIfAborted();
+	}
+	return outcome;
+}
+
+async function attemptLoginOnce(input: PerformLoginInput): Promise<PerformLoginOutcome> {
 	try {
 		return await attemptLogin(input);
 	} catch (err) {
@@ -212,14 +226,16 @@ async function attemptLogin(input: PerformLoginInput): Promise<PerformLoginOutco
 	let password = input.password;
 	const proofFor = loginProofSolver(input);
 
-	const opaqueOutcome = await tryOpaqueLogin(email, password, rememberMe, proofFor);
+	const opaqueOutcome = await tryOpaqueLogin(email, password, rememberMe, proofFor, input.signal);
 	if (opaqueOutcome) {
 		password = '';
 		return opaqueOutcome;
 	}
 
+	input.signal?.throwIfAborted();
 	const init = await loginInit({ email });
 	const proof = await proofFor(init);
+	input.signal?.throwIfAborted();
 	const proofs = await keystore.prepareLogin({
 		email,
 		password,
