@@ -12,7 +12,8 @@
 		aux,
 		onEnter,
 		invalid = false,
-		describedby
+		describedby,
+		focusOnMount = false
 	}: {
 		label: string;
 		value: string;
@@ -22,6 +23,7 @@
 		onEnter?: () => void;
 		invalid?: boolean;
 		describedby?: string;
+		focusOnMount?: boolean;
 	} = $props();
 
 	let show = $state(false);
@@ -43,6 +45,9 @@
 			autocomplete={autocomplete ?? 'off'}
 			aria-invalid={invalid || undefined}
 			aria-describedby={describedby}
+			{@attach (node) => {
+				if (focusOnMount) node.focus();
+			}}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' && onEnter) onEnter();
 			}}

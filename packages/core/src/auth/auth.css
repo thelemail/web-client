@@ -138,6 +138,11 @@
 .auth .field > .lab .aux:hover {
 	text-decoration: underline;
 }
+.auth .field > .lab .aux:disabled {
+	cursor: default;
+	opacity: 0.5;
+	text-decoration: none;
+}
 
 .auth .inp {
 	font-family: var(--font-sans);
@@ -153,6 +158,10 @@
 	transition:
 		border-color var(--dur),
 		box-shadow var(--dur);
+}
+.auth .inp[readonly] {
+	background: var(--surface-muted);
+	box-shadow: none;
 }
 .auth .inp::placeholder {
 	color: var(--fg-faint);
