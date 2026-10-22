@@ -9,7 +9,8 @@ const keystore = vi.hoisted(() => ({
 	opaqueFinishAuth: vi.fn(),
 	opaqueAbandonOperation: vi.fn(),
 	opaqueCompleteLoginUnlock: vi.fn(),
-	abandonLogin: vi.fn()
+	abandonLogin: vi.fn(),
+	prepareLogin: vi.fn()
 }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore }));
 
@@ -200,6 +201,37 @@ describe('cancelled login attempts', () => {
 
 		expect(api.loginComplete).not.toHaveBeenCalled();
 		expect(keystore.opaqueAbandonOperation).toHaveBeenCalledWith({ operationId: OPERATION });
+	});
+
+	it('does not sign in when cancelled after the server accepted the proof', async () => {
+		const attempt = new AbortController();
+		api.loginComplete.mockImplementation(async () => {
+			attempt.abort();
+			return grant;
+		});
+
+		await expect(
+			performLogin({ email: 'r@thelemail.com', password: 'pw', signal: attempt.signal })
+		).rejects.toThrow();
+
+		expect(session.addSession).not.toHaveBeenCalled();
+		expect(keystore.opaqueCompleteLoginUnlock).not.toHaveBeenCalled();
+		expect(keystore.opaqueAbandonOperation).toHaveBeenCalledWith({ operationId: OPERATION });
+	});
+
+	it('drops the pending password login when the fallback is rejected', async () => {
+		keystore.opaqueFinishAuth.mockResolvedValue({ ok: false });
+		keystore.prepareLogin.mockResolvedValue({ clientPublicEphemeral: 'A', clientProof: 'M1' });
+		api.loginInit
+			.mockResolvedValueOnce({ challengeId: 'ch-1', accountId: ACCOUNT, ke2: 'ke2' })
+			.mockResolvedValueOnce({ challengeId: 'ch-2', salt: 's', modulus: 'm', serverPublicEphemeral: 'B' });
+		api.loginComplete.mockRejectedValue(new ApiCallError(401, null, 'no'));
+
+		await expect(performLogin({ email: 'r@thelemail.com', password: 'pw' })).rejects.toBeInstanceOf(
+			ApiCallError
+		);
+
+		expect(keystore.abandonLogin).toHaveBeenCalledTimes(1);
 	});
 
 	it('abandons a two-factor step that arrives after the attempt was cancelled', async () => {

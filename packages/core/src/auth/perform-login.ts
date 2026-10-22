@@ -172,6 +172,7 @@ async function tryOpaqueLogin(
 			enrollPersistentSession: rememberMe,
 			proof
 		});
+		signal?.throwIfAborted();
 
 		if (complete.twoFactor) {
 			return {
@@ -192,6 +193,14 @@ async function tryOpaqueLogin(
 	} catch (err) {
 		await abandonOpaqueOperation(start.operationId);
 		throw err;
+	}
+}
+
+async function abandonSrpLogin(): Promise<void> {
+	try {
+		await keystore.abandonLogin();
+	} catch (err) {
+		console.warn('login: abandon failed (non-fatal)', err);
 	}
 }
 
@@ -244,17 +253,26 @@ async function attemptLogin(input: PerformLoginInput): Promise<PerformLoginOutco
 		serverPublicEphemeral: init.serverPublicEphemeral as string
 	});
 
-	const complete = await loginComplete({
-		challengeId: init.challengeId,
-		clientPublicEphemeral: proofs.clientPublicEphemeral,
-		clientProof: proofs.clientProof,
-		enrollPersistentSession: rememberMe,
-		proof
-	});
+	let complete: Awaited<ReturnType<typeof loginComplete>>;
+	try {
+		input.signal?.throwIfAborted();
+		complete = await loginComplete({
+			challengeId: init.challengeId,
+			clientPublicEphemeral: proofs.clientPublicEphemeral,
+			clientProof: proofs.clientProof,
+			enrollPersistentSession: rememberMe,
+			proof
+		});
+		input.signal?.throwIfAborted();
+	} catch (err) {
+		await abandonSrpLogin();
+		throw err;
+	}
 
 	const verified = await keystore.verifyLoginProof({ serverProof: complete.serverProof as string });
 	if (!verified.ok) {
 		password = '';
+		await abandonSrpLogin();
 		console.error('login: server proof verification failed', verified.code);
 		throw new Error(
 			verified.code === 'no_pending_login'
@@ -506,9 +524,5 @@ export async function abandonTwoFactorLogin(pending: PendingTwoFactorLogin): Pro
 		await abandonOpaqueOperation(pending.opaqueOperationId);
 		return;
 	}
-	try {
-		await keystore.abandonLogin();
-	} catch (err) {
-		console.warn('login: abandon failed (non-fatal)', err);
-	}
+	await abandonSrpLogin();
 }
