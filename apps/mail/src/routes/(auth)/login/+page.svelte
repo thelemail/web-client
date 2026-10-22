@@ -289,6 +289,7 @@
 			<form class="form" novalidate onsubmit={continueToPassword}>
 				<div class="field">
 					<div class="lab"><label for="login-email">{m.common_email_address()}</label></div>
+					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						id="login-email"
 						class={['inp', { err: !!identifyError }]}
@@ -303,7 +304,7 @@
 							touched = true;
 							identifyError = null;
 						}}
-						{@attach (node) => node.focus()}
+						autofocus
 					/>
 					{#if identifyError}
 						<span class="errtext" role="alert" id="login-email-err">

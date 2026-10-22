@@ -36,6 +36,7 @@
 		{#if aux}{@render aux()}{/if}
 	</div>
 	<div class="pw">
+		<!-- svelte-ignore a11y_autofocus -->
 		<input
 			{id}
 			class="inp"
@@ -45,9 +46,7 @@
 			autocomplete={autocomplete ?? 'off'}
 			aria-invalid={invalid || undefined}
 			aria-describedby={describedby}
-			{@attach (node) => {
-				if (focusOnMount) node.focus();
-			}}
+			autofocus={focusOnMount}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' && onEnter) onEnter();
 			}}
