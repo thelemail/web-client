@@ -21,9 +21,11 @@ vi.mock('$core/auth/perform-login', () => login);
 
 const nav = vi.hoisted(() => ({ goto: vi.fn() }));
 vi.mock('$app/navigation', () => nav);
-vi.mock('$app/state', () => ({ page: { params: {}, url: new URL('http://localhost/login') } }));
+const route = vi.hoisted(() => ({ page: { params: {}, url: new URL('http://localhost/login') } }));
+vi.mock('$app/state', () => route);
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: null } }));
-vi.mock('$core/stores/accounts.svelte', () => ({ accounts: { bySlot: () => undefined } }));
+const known = vi.hoisted(() => ({ bySlot: vi.fn() }));
+vi.mock('$core/stores/accounts.svelte', () => ({ accounts: known }));
 
 const OPERATION = 'op-1';
 let pending: {
@@ -39,17 +41,20 @@ function button(label: string) {
 	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
 }
 
-async function reachTwoFactor() {
-	await fireEvent.input(document.querySelector('#login-email')!, { target: { value: 'r@thelemail.com' } });
-	await fireEvent.input(document.querySelector('input[type="password"]')!, { target: { value: 'hunter22' } });
-	await fireEvent.keyDown(document.querySelector('#login-email')!, { key: 'Enter' });
-	await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
+async function enterEmail(value = 'r@thelemail.com') {
+	await fireEvent.input(document.querySelector('#login-email')!, { target: { value } });
+	await fireEvent.submit(document.querySelector('form')!);
 }
 
-async function submitCredentials() {
-	await fireEvent.input(document.querySelector('#login-email')!, { target: { value: 'r@thelemail.com' } });
+async function submitCredentials(email = 'r@thelemail.com') {
+	await enterEmail(email);
 	await fireEvent.input(document.querySelector('input[type="password"]')!, { target: { value: 'hunter22' } });
-	await fireEvent.keyDown(document.querySelector('#login-email')!, { key: 'Enter' });
+	await fireEvent.submit(document.querySelector('form')!);
+}
+
+async function reachTwoFactor() {
+	await submitCredentials();
+	await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
 }
 
 function rejection(status: number, code: ErrorCode) {
@@ -68,10 +73,12 @@ beforeEach(() => {
 		login.performLogin,
 		login.abandonTwoFactorLogin,
 		login.submitTwoFactorTotp,
-		nav.goto
+		nav.goto,
+		known.bySlot
 	]) {
 		fn.mockReset();
 	}
+	route.page.url = new URL('http://localhost/login');
 	pending = {
 		pendingToken: 'pt-1',
 		methods: ['totp'],
@@ -224,5 +231,132 @@ describe('login page errors and proof of work', () => {
 		unmount();
 
 		expect(signal.aborted).toBe(true);
+	});
+});
+
+describe('login page identifier step', () => {
+	it('moves to the password step without touching the network', async () => {
+		const fetchSpy = vi.spyOn(globalThis, 'fetch');
+		render(LoginPage);
+
+		await enterEmail('nobody-here@example.org');
+
+		expect(document.querySelector('#login-email')).toBeNull();
+		expect(document.querySelector<HTMLInputElement>('#login-identifier')!.value).toBe('nobody-here@example.org');
+		expect(fetchSpy).not.toHaveBeenCalled();
+		expect(login.performLogin).not.toHaveBeenCalled();
+		fetchSpy.mockRestore();
+	});
+
+	it('renders the same password step for any address', async () => {
+		const markup = (address: string) =>
+			document
+				.querySelector('.card-surface')!
+				.innerHTML.replaceAll(encodeURIComponent(address), 'ADDR')
+				.replaceAll(address, 'ADDR')
+				.replace(/"c\d+"/g, '"ID"');
+		render(LoginPage);
+		await enterEmail('r@thelemail.com');
+		const first = markup('r@thelemail.com');
+		cleanup();
+
+		render(LoginPage);
+		await enterEmail('ghost@nowhere.example');
+		const second = markup('ghost@nowhere.example');
+
+		expect(second).toBe(first);
+	});
+
+	it('flags a malformed address and stays on the email step', async () => {
+		render(LoginPage);
+
+		await enterEmail('not-an-address');
+
+		expect(document.querySelector('#login-email')).not.toBeNull();
+		expect(document.querySelector('#login-email-err')?.textContent?.trim()).toBe(m.auth_login_email_invalid());
+		expect(document.querySelector('#login-email')!.getAttribute('aria-invalid')).toBe('true');
+	});
+
+	it('pairs the address with the password for password managers', async () => {
+		render(LoginPage);
+
+		await enterEmail();
+
+		const username = document.querySelector<HTMLInputElement>('#login-identifier')!;
+		const password = document.querySelector<HTMLInputElement>('input[type="password"]')!;
+		expect(username.readOnly).toBe(true);
+		expect(username.autocomplete).toBe('username');
+		expect(password.autocomplete).toBe('current-password');
+		expect(username.form).toBe(password.form);
+		expect(document.activeElement).toBe(password);
+	});
+
+	it('signs in with the address committed on the first step', async () => {
+		render(LoginPage);
+
+		await submitCredentials('  r@thelemail.com ');
+
+		await vi.waitFor(() => expect(login.performLogin).toHaveBeenCalledTimes(1));
+		expect(login.performLogin.mock.calls[0][0]).toMatchObject({ email: 'r@thelemail.com', password: 'hunter22' });
+	});
+
+	it('clears the password when the email is changed', async () => {
+		render(LoginPage);
+		await enterEmail();
+		await fireEvent.input(document.querySelector('input[type="password"]')!, { target: { value: 'hunter22' } });
+
+		await fireEvent.click(button(m.auth_login_change_email())!);
+
+		const email = document.querySelector<HTMLInputElement>('#login-email')!;
+		expect(email.value).toBe('r@thelemail.com');
+		expect(document.activeElement).toBe(email);
+		await fireEvent.submit(document.querySelector('form')!);
+		expect(document.querySelector<HTMLInputElement>('input[type="password"]')!.value).toBe('');
+	});
+
+	it('does not let the email change while an attempt is running', async () => {
+		login.performLogin.mockImplementation(() => new Promise(() => {}));
+		render(LoginPage);
+
+		await submitCredentials();
+
+		await vi.waitFor(() => expect(button(m.auth_login_change_email())!.disabled).toBe(true));
+		await fireEvent.click(button(m.auth_login_change_email())!);
+		expect(document.querySelector('#login-email')).toBeNull();
+	});
+
+	it('abandons a two-factor step that lands after the page went away', async () => {
+		let land!: () => void;
+		login.performLogin.mockImplementation(
+			() => new Promise((resolve) => (land = () => resolve({ status: 'twoFactorRequired', pending })))
+		);
+		const { unmount } = render(LoginPage);
+		await submitCredentials();
+		await vi.waitFor(() => expect(land).toBeDefined());
+
+		unmount();
+		land();
+
+		await vi.waitFor(() => expect(login.abandonTwoFactorLogin).toHaveBeenCalledWith(pending));
+	});
+
+	it('opens straight on the password step to sign a known account back in', async () => {
+		route.page.url = new URL('http://localhost/login?slot=2');
+		known.bySlot.mockImplementation((slot: number) => (slot === 2 ? { email: 'kept@thelemail.com' } : undefined));
+
+		render(LoginPage);
+
+		expect(document.querySelector('#login-email')).toBeNull();
+		expect(document.querySelector<HTMLInputElement>('#login-identifier')!.value).toBe('kept@thelemail.com');
+		expect(document.body.textContent).toContain(m.auth_login_resume_title());
+	});
+
+	it('starts adding an account on an empty email step', async () => {
+		route.page.url = new URL('http://localhost/login?addAccount=1');
+
+		render(LoginPage);
+
+		expect(document.querySelector<HTMLInputElement>('#login-email')!.value).toBe('');
+		expect(document.body.textContent).toContain(m.auth_login_add_title());
 	});
 });
