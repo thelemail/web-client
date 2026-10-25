@@ -31,7 +31,7 @@ vi.mock('$core/stores/auth.svelte', () => ({ auth: session }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: {} }));
 vi.mock('$core/keys/uid-sync', () => ({ syncAddressUids: async () => undefined }));
 vi.mock('$platform', () => ({ platform: {} }));
-vi.mock('$app/navigation', () => ({ invalidateAll: vi.fn(), goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ refreshAll: vi.fn(), goto: vi.fn() }));
 
 const {
 	abandonTwoFactorLogin,

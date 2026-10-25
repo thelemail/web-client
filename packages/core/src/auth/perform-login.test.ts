@@ -15,7 +15,7 @@ function emit(b: KeystoreBroadcast): void {
 	for (const l of bus.listeners) l(b);
 }
 
-vi.mock('$app/navigation', () => ({ invalidateAll: vi.fn(), goto: vi.fn() }));
+vi.mock('$app/navigation', () => ({ refreshAll: vi.fn(), goto: vi.fn() }));
 
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {

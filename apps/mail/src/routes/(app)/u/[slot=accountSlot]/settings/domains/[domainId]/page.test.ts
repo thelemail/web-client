@@ -16,7 +16,7 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock('$core/api/customDomains', () => api);
 
-vi.mock('$app/navigation', () => ({ goto: vi.fn(), replaceState: vi.fn() }));
+vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 const nav = vi.hoisted(() => ({
 	page: {
 		params: { slot: '0', domainId: 'd1' },

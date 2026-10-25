@@ -6,7 +6,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import { page } from '$app/state';
-	import { afterNavigate, beforeNavigate, replaceState } from '$app/navigation';
+	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import SettingsNav from '$core/settings/SettingsNav.svelte';
 	import { sectionLabelFromPath } from '$core/settings/data';
 	import { settingsPageTitle } from '$core/settings/pageTitle.svelte';
@@ -37,12 +37,16 @@
 		scrollRef?.scrollTo({ top: 0 });
 	});
 
-	beforeNavigate(() => settingsDraft.flushPending());
+	beforeNavigate(({ shallow }) => {
+		if (shallow) return;
+		settingsDraft.flushPending();
+	});
 
-	afterNavigate(() => {
+	afterNavigate(({ shallow }) => {
+		if (shallow) return;
 		if (page.url.searchParams.get('ceremony') !== 'recovery') return;
 		settingsDraft.launch('recovery');
-		replaceState(page.url.pathname, {});
+		void goto(page.url.pathname, { shallow: true, replace: true, state: {} });
 	});
 </script>
 

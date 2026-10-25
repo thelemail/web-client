@@ -69,7 +69,7 @@ describe('new domain page', () => {
 
 		expect(api.createWorkspaceDomain).toHaveBeenCalledWith('w1', 'xn--bcher-kva.de');
 		await vi.waitFor(() =>
-			expect(nav.goto).toHaveBeenCalledWith('/u/0/settings/domains/d1?step=ownership', { replaceState: true })
+			expect(nav.goto).toHaveBeenCalledWith('/u/0/settings/domains/d1?step=ownership', { replace: true })
 		);
 	});
 
