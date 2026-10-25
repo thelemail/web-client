@@ -11,7 +11,7 @@ ENV CI=true
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/calendar/package.json apps/calendar/
 COPY packages/core/package.json packages/core/
-RUN corepack enable && corepack install
+RUN npm install -g corepack@0.36.0 && corepack enable && corepack install
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
