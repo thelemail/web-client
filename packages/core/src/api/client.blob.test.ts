@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const blobPut = vi.fn();
 
-vi.mock('$env/static/public', () => ({
+vi.mock('$app/env/public', () => ({
 	PUBLIC_API_BASE_URL: 'https://api.test/',
 	PUBLIC_SUBMISSION_BASE_URL: 'https://submit.test'
 }));

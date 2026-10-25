@@ -16,7 +16,6 @@ const api = vi.hoisted(() => ({
 	regenerateBackupCodes: vi.fn()
 }));
 
-vi.mock('$env/dynamic/public', () => ({ env: {} }));
 vi.mock('$platform', () => ({ platform: {} }));
 vi.mock('$core/mail/senderVerify', () => ({ forgetSenderTrust: vi.fn() }));
 vi.mock('$core/api/twofactor', () => api);

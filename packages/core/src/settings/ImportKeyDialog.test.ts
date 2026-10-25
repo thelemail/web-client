@@ -7,7 +7,6 @@ import { m } from '$paraglide/messages.js';
 const api = vi.hoisted(() => ({ importExternalKey: vi.fn() }));
 const armor = vi.hoisted(() => ({ inspectArmoredKey: vi.fn() }));
 
-vi.mock('$env/dynamic/public', () => ({ env: {} }));
 vi.mock('$core/api/externalKeys', () => api);
 vi.mock('$core/mail/senderVerify', () => ({ forgetSenderTrust: vi.fn() }));
 vi.mock('$core/auth/reauth.svelte', () => ({ isReauthenticationRequired: () => false }));

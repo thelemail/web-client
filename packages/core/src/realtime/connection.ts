@@ -1,4 +1,4 @@
-import { PUBLIC_API_BASE_URL } from '$env/static/public';
+import { PUBLIC_API_BASE_URL } from '$app/env/public';
 import { mintRealtimeTicket, type RealtimeTicketResponse } from '$core/api/realtime';
 import { nextDelay } from './backoff';
 import type { ConnectionState, RealtimeHint, WireHint } from './types';

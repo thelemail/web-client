@@ -1,4 +1,4 @@
-import { PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED } from '$env/static/public';
+import { PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED } from '$app/env/public';
 import * as openpgp from 'openpgp';
 
 if (!PUBLIC_DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED) {

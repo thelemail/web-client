@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { listMyKeys } from '$core/api/me';
 import { ApiCallError, type AccountKeyListResponse } from '$core/api/types';
 import { keystore } from '$core/keystore/keystore-client';

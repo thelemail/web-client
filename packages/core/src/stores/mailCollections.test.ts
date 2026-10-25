@@ -12,7 +12,7 @@ const seal = vi.hoisted(() => ({ sealCollectionMeta: vi.fn(), openCollectionMeta
 vi.mock('$core/api/mailCollections', () => api);
 vi.mock('$core/mail/collections/seal', () => seal);
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribe: vi.fn() } }));
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 
 import { mailCollections } from './mailCollections.svelte';
 import { ApiCallError } from '$core/api/types';

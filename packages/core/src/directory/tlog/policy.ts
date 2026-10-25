@@ -1,4 +1,4 @@
-import { env } from '$env/dynamic/public';
+import { PUBLIC_TLOG_POLICY } from '$app/env/public';
 import { bytesFromBase64 } from './bytes';
 import { parseWitnessPolicy } from './cosignature';
 import { parseVerifierKey } from './note';
@@ -19,7 +19,7 @@ export interface TlogRuntimePolicy extends TlogPolicy {
 }
 
 function loadPolicy(): TlogRuntimePolicy | null {
-	const raw = env.PUBLIC_TLOG_POLICY;
+	const raw = PUBLIC_TLOG_POLICY;
 	if (!raw) return null;
 	let parsed: unknown;
 	try {

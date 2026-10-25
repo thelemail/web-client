@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-vi.mock('$env/static/public', () => ({
+vi.mock('$app/env/public', () => ({
 	PUBLIC_API_BASE_URL: 'https://api.test.thelemail.local',
 	PUBLIC_SUBMISSION_BASE_URL: 'https://submit.test.thelemail.local',
 	PUBLIC_OFFICIAL_SENDER_POLICY: JSON.stringify({
@@ -8,10 +8,11 @@ vi.mock('$env/static/public', () => ({
 		keys: ['-----BEGIN PGP PUBLIC KEY BLOCK-----\ntest\n-----END PGP PUBLIC KEY BLOCK-----'],
 		fingerprints: ['6f5c52377a17d88b770cb6efbe39880b6d7b050ff4f4b88d401e320f4c268b6a'],
 		displayName: 'Thelemail'
-	})
+	}),
+	PUBLIC_TLOG_POLICY: undefined
 }));
 
-vi.mock('$app/environment', () => ({
+vi.mock('$app/env', () => ({
 	browser: true,
 	dev: true,
 	building: false,

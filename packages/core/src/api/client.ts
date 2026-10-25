@@ -1,4 +1,4 @@
-import { PUBLIC_API_BASE_URL, PUBLIC_SUBMISSION_BASE_URL } from '$env/static/public';
+import { PUBLIC_API_BASE_URL, PUBLIC_SUBMISSION_BASE_URL } from '$app/env/public';
 import { platform } from '$platform';
 import { deviceId } from '$core/realtime/device';
 import type { Transport } from '$core/platform/types';

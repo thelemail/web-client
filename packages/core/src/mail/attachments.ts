@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { platform } from '$platform';
 import { keystore } from '$core/keystore/keystore-client';
 import { apiUrl, blobRequestHeaders } from '$core/api/client';
