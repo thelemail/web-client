@@ -4,15 +4,20 @@ export function loadBuildEnv(root: string): Record<string, string> {
 	return loadEnv('production', root, ['PUBLIC_']);
 }
 
-function originOf(value: string, name: string): string {
+type Origin =
+	| `${string}://${string}.${string}`
+	| `${string}://localhost`
+	| `${string}://localhost:${number}`;
+
+function originOf(value: string, name: string): Origin {
 	try {
-		return new URL(value).origin;
+		return new URL(value).origin as Origin;
 	} catch {
 		throw new Error(`${name} is not a valid absolute URL: ${JSON.stringify(value)}`);
 	}
 }
 
-export function resolveOrigins(env: Record<string, string | undefined>): string[] {
+export function resolveOrigins(env: Record<string, string | undefined>): Origin[] {
 	const required: Record<string, string | undefined> = {
 		PUBLIC_API_BASE_URL: env.PUBLIC_API_BASE_URL,
 		PUBLIC_SUBMISSION_BASE_URL: env.PUBLIC_SUBMISSION_BASE_URL
@@ -30,7 +35,7 @@ export function resolveOrigins(env: Record<string, string | undefined>): string[
 		);
 	}
 
-	const origins = new Set<string>();
+	const origins = new Set<Origin>();
 	for (const [name, value] of Object.entries(required)) {
 		for (const item of String(value).split(/\s+/).filter(Boolean)) {
 			origins.add(originOf(item, name));
