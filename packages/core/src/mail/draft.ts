@@ -13,7 +13,7 @@ import type {
 	DraftAttachmentsChange,
 	DraftDetail,
 	DraftRequest,
-	PresignedPointer
+	BlobPointer
 } from '$core/api/types';
 
 export const DRAFT_SCHEMA_VERSION = 1;
@@ -167,7 +167,7 @@ export async function uploadDraftBundle(draftId: string, packed: PackedDraftBund
 export async function restoreDraftAttachments(
 	accountId: string,
 	doc: DraftDoc,
-	pointer: PresignedPointer
+	pointer: BlobPointer
 ): Promise<RestoredDraftAttachment[]> {
 	const resp = await apiBlobFetch(pointer.path, { accountId }).catch((err) => {
 		if (err instanceof ApiCallError) throw new DecryptionError('unknown', `fetch attachments ${err.status}`);
@@ -206,7 +206,7 @@ export function unpackDraftBundle(
 
 export async function restoreAttachmentFile(
 	accountId: string,
-	pointer: PresignedPointer
+	pointer: BlobPointer
 ): Promise<File> {
 	const dec = await decryptAttachmentFull(accountId, pointer);
 	return new File([dec.blob], dec.header.filename || 'attachment', {

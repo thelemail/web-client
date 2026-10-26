@@ -41,9 +41,7 @@ export interface SignatureImage {
 }
 
 export interface SignatureImageUploadGrant {
-	uploadUrl: string;
 	uploadPath: string;
-	uploadHeaders: Record<string, string>;
 	objectKey: string;
 	expiresAt: string;
 	maxBytes: number;

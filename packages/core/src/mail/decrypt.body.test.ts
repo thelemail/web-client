@@ -9,13 +9,11 @@ vi.mock('$core/stores/aliasKeys.svelte', () => ({
 	aliasKeys: { ready: async () => {}, refresh: async () => {} }
 }));
 
-import { ApiCallError, type PresignedPointer } from '$core/api/types';
+import { ApiCallError, type BlobPointer } from '$core/api/types';
 import { DecryptionError, decryptBody } from './decrypt';
 
-const pointer: PresignedPointer = {
-	url: 'https://fsn1.your-objectstorage.com/thelemail/m/a/b/body.pgp?X-Amz-Signature=s',
+const pointer: BlobPointer = {
 	path: '/v1/messages/m1/body',
-	expiresAt: '2026-10-16T12:00:00Z',
 	sizeBytes: 3
 };
 

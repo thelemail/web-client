@@ -5,7 +5,7 @@ import { apiUrl, blobRequestHeaders } from '$core/api/client';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import type { AttachmentFailureCode } from '$core/keystore/protocol';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
-import type { AttachmentDetail, PresignedPointer } from '$core/api/types';
+import type { AttachmentDetail, BlobPointer } from '$core/api/types';
 import { b64ToHex } from '$core/keys/encode';
 
 export type AttachmentDecryptError = AttachmentFailureCode;
@@ -24,11 +24,11 @@ export interface DecryptedAttachment {
 	blob: Blob;
 }
 
-function pointerKeyHint(pointer: PresignedPointer): string | undefined {
+function pointerKeyHint(pointer: BlobPointer): string | undefined {
 	return pointer.keyFingerprint ? b64ToHex(pointer.keyFingerprint) : undefined;
 }
 
-export type PointerRefresh = (attachmentId: string) => Promise<PresignedPointer | null>;
+export type PointerRefresh = (attachmentId: string) => Promise<BlobPointer | null>;
 
 const HEADER_CONCURRENCY = 2;
 const HEADER_CACHE_MAX = 500;
@@ -107,7 +107,7 @@ subscribeOnce();
 
 async function attachmentSource(
 	accountId: string,
-	pointer: PresignedPointer
+	pointer: BlobPointer
 ): Promise<{ url: string; headers: Record<string, string> }> {
 	return { url: apiUrl(pointer.path), headers: await blobRequestHeaders(accountId) };
 }
@@ -115,7 +115,7 @@ async function attachmentSource(
 async function withFreshPointer<T>(
 	chip: AttachmentChip,
 	refresh: PointerRefresh | undefined,
-	run: (pointer: PresignedPointer) => Promise<{ ok: true; value: T } | { ok: false; code: AttachmentDecryptError }>
+	run: (pointer: BlobPointer) => Promise<{ ok: true; value: T } | { ok: false; code: AttachmentDecryptError }>
 ): Promise<T> {
 	let result = await run(chip.pointer);
 	if (!result.ok && result.code === 'network' && refresh) {
@@ -205,7 +205,7 @@ export function loadAttachmentBytes(
 
 export async function decryptAttachmentFull(
 	accountId: string,
-	pointer: PresignedPointer
+	pointer: BlobPointer
 ): Promise<DecryptedAttachment> {
 	await aliasKeys.ready(accountId);
 	const res = await keystore.attachmentBytes({
@@ -230,7 +230,7 @@ export async function downloadAttachment(
 export type AttachmentChip = {
 	id: string;
 	ordinal: number;
-	pointer: PresignedPointer;
+	pointer: BlobPointer;
 	state: 'loading' | 'ready' | 'error';
 	header?: DecryptedAttachmentHeader;
 	error?: string;
