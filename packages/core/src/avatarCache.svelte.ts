@@ -105,15 +105,6 @@ export function imageMimeFromBytes(bytes: Uint8Array): string | null {
 	return null;
 }
 
-export function sourcePath(url: string): string {
-	try {
-		const u = new URL(url);
-		return `${u.origin}${u.pathname}`;
-	} catch {
-		return url;
-	}
-}
-
 async function fetchImage(accountId: string, path: string): Promise<Blob | null> {
 	const res = await apiBlobFetch(path, { accountId }).catch(() => null);
 	if (!res) return null;
@@ -132,7 +123,7 @@ function adoptAccount(rec: AvatarRecord): void {
 	const previous = accountUrls.get(rec.accountId);
 	if (previous) URL.revokeObjectURL(previous);
 	accountUrls.set(rec.accountId, URL.createObjectURL(rec.blob));
-	accountSources.set(rec.accountId, sourcePath(rec.sourceUrl));
+	accountSources.set(rec.accountId, rec.sourceUrl);
 }
 
 function adoptPerson(rec: PersonRecord): string {
@@ -140,7 +131,7 @@ function adoptPerson(rec: PersonRecord): string {
 	if (previous) URL.revokeObjectURL(previous);
 	const url = URL.createObjectURL(rec.blob);
 	personUrls.set(rec.key, url);
-	personSources.set(rec.key, sourcePath(rec.sourceUrl));
+	personSources.set(rec.key, rec.sourceUrl);
 	return url;
 }
 
@@ -165,7 +156,7 @@ export async function cacheAccountAvatar(accountId: string, path: string | null)
 		await forgetAccountAvatar(accountId);
 		return;
 	}
-	if (accountUrls.has(accountId) && accountSources.get(accountId) === sourcePath(path)) return;
+	if (accountUrls.has(accountId) && accountSources.get(accountId) === path) return;
 	try {
 		const blob = await fetchImage(accountId, path);
 		if (!blob) return;
@@ -205,7 +196,7 @@ export async function cachePersonAvatar(
 	if (!browser) return null;
 	const key = personKey(accountId, address);
 	const existing = personUrls.get(key);
-	if (existing && personSources.get(key) === sourcePath(path)) return existing;
+	if (existing && personSources.get(key) === path) return existing;
 	try {
 		const blob = await fetchImage(accountId, path);
 		if (!blob) return null;

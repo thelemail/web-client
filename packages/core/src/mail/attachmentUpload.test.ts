@@ -77,9 +77,7 @@ vi.mock('$core/api/messages', () => ({
 			slots: req.slots.map((s) => ({
 				slotId: s.slotId,
 				objectKey: `obj-${s.slotId}`,
-				putUrl: `https://blob.test/${s.slotId}`,
-				putPath: `/v1/attachments/uploads?objectKey=obj-${s.slotId}`,
-				putHeaders: {}
+				putPath: `/v1/attachments/uploads?objectKey=obj-${s.slotId}`
 			}))
 		};
 	}

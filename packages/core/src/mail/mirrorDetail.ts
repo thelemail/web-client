@@ -1,10 +1,8 @@
-import type { MessageDetail, AttachmentDetail } from '$core/api/types';
+import type { MessageDetail, AttachmentDetail, BlobPointer } from '$core/api/types';
 import type { MirrorMessage } from '$core/platform/types';
 
-const ABSENT_POINTER = {
-	url: '',
+const ABSENT_POINTER: BlobPointer = {
 	path: '',
-	expiresAt: new Date(0).toISOString(),
 	sizeBytes: 0
 };
 

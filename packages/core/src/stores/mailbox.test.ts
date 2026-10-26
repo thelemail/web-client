@@ -191,7 +191,7 @@ function detail(id: string, overrides: Partial<Record<string, unknown>> = {}) {
 		storedAt: '2026-08-20T12:00:00Z',
 		encryptedPreview: `enc-${id}`,
 		schemaVersion: 1,
-		body: { url: 'https://example.com/body', expiresAt: '2026-08-20T13:00:00Z' },
+		body: { path: `/v1/messages/${id}/body`, sizeBytes: 0 },
 		attachments: [],
 		mailboxState: 'inbox' as const,
 		starred: false,

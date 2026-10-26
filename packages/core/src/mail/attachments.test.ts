@@ -28,7 +28,7 @@ import {
 	loadAttachmentBytes,
 	loadAttachmentHeader
 } from './attachments';
-import type { AttachmentDetail, PresignedPointer } from '$core/api/types';
+import type { AttachmentDetail, BlobPointer } from '$core/api/types';
 
 const attachmentHeader = vi.mocked(keystore.attachmentHeader);
 const attachmentBytes = vi.mocked(keystore.attachmentBytes);
@@ -45,14 +45,14 @@ function chip(id: string) {
 	return {
 		id,
 		ordinal: 0,
-		pointer: { url: `https://blob/${id}`, path: `/v1/attachments/${id}`, expiresAt: '', sizeBytes: 64 } as PresignedPointer,
+		pointer: { path: `/v1/attachments/${id}`, sizeBytes: 64 } as BlobPointer,
 		state: 'loading' as const
 	};
 }
 
 function att(overrides: Partial<AttachmentDetail> & Pick<AttachmentDetail, 'id' | 'ordinal'>): AttachmentDetail {
 	return {
-		pointer: { url: `https://blob/${overrides.id}`, path: `/v1/attachments/${overrides.id}`, expiresAt: '', sizeBytes: 0 },
+		pointer: { path: `/v1/attachments/${overrides.id}`, sizeBytes: 0 },
 		isInline: false,
 		...overrides
 	};
@@ -138,11 +138,9 @@ describe('loadAttachmentHeader', () => {
 			.mockResolvedValueOnce({ ok: false, code: 'network' })
 			.mockResolvedValueOnce({ ok: true, header });
 		const refresh = vi.fn().mockResolvedValue({
-			url: 'https://blob/fresh',
 			path: '/v1/attachments/fresh',
-			expiresAt: '',
 			sizeBytes: 64
-		} as PresignedPointer);
+		} as BlobPointer);
 
 		const got = await loadAttachmentHeader('acct', chip('expired'), refresh);
 		expect(got.filename).toBe('q3-plan.docx');

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { imageMimeFromBytes, sourcePath } from './avatarCache.svelte';
+import { imageMimeFromBytes } from './avatarCache.svelte';
 
 function bytes(head: number[], length = 16): Uint8Array {
 	const out = new Uint8Array(length);
@@ -30,19 +30,5 @@ describe('imageMimeFromBytes', () => {
 	it('rejects anything else', () => {
 		expect(imageMimeFromBytes(bytes([0x3c, 0x73, 0x76, 0x67]))).toBeNull();
 		expect(imageMimeFromBytes(new Uint8Array(4))).toBeNull();
-	});
-});
-
-describe('sourcePath', () => {
-	it('drops the presigned query so a re-signed url still matches', () => {
-		expect(sourcePath('https://store.example/avatars/a/b.jpg?X-Amz-Signature=1')).toBe(
-			sourcePath('https://store.example/avatars/a/b.jpg?X-Amz-Signature=2')
-		);
-	});
-
-	it('differs when the object key differs', () => {
-		expect(sourcePath('https://store.example/avatars/a/b.jpg')).not.toBe(
-			sourcePath('https://store.example/avatars/a/c.jpg')
-		);
 	});
 });

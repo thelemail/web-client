@@ -4,7 +4,7 @@ import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
 import { apiBlobFetch } from '$core/api/client';
-import { ApiCallError, type PresignedPointer } from '$core/api/types';
+import { ApiCallError, type BlobPointer } from '$core/api/types';
 
 export type { SignatureVerdict } from '$core/keystore/protocol';
 
@@ -117,7 +117,7 @@ export async function unwrapPgpMime(
 	return { plaintext: current, signature };
 }
 
-async function fetchBody(accountId: string, pointer: PresignedPointer): Promise<Uint8Array> {
+async function fetchBody(accountId: string, pointer: BlobPointer): Promise<Uint8Array> {
 	try {
 		const resp = await apiBlobFetch(pointer.path, { accountId });
 		return new Uint8Array(await resp.arrayBuffer());
@@ -129,7 +129,7 @@ async function fetchBody(accountId: string, pointer: PresignedPointer): Promise<
 
 export async function decryptBody(
 	accountId: string,
-	pointer: PresignedPointer,
+	pointer: BlobPointer,
 	verificationKeysArmored?: string[]
 ): Promise<DecryptedText> {
 	const buf = await fetchBody(accountId, pointer);

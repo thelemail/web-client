@@ -63,7 +63,7 @@ import {
 	DRAFT_DOC_VERSION,
 	type DraftDoc
 } from './draft';
-import type { DraftDetail, PresignedPointer } from '$core/api/types';
+import type { DraftDetail, BlobPointer } from '$core/api/types';
 
 function unxor(bytes: Uint8Array): Uint8Array {
 	return bytes.map((b) => b ^ 0x5a);
@@ -130,9 +130,7 @@ describe('draft attachment bundle', () => {
 	it('uploads the bundle through a grant for exactly its size', async () => {
 		vi.mocked(issueDraftAttachmentUpload).mockResolvedValue({
 			uploadId: 'up-1',
-			putUrl: 'https://store.example/put',
 			putPath: '/v1/drafts/draft-1/attachments/uploads/up-1',
-			putHeaders: { 'x-amz-content-sha256': 'abc' },
 			expiresAt: '2026-10-14T00:00:00Z'
 		});
 		vi.mocked(apiBlobPut).mockResolvedValue(undefined);
@@ -152,9 +150,7 @@ describe('draft attachment bundle', () => {
 	it('fails the upload when the api refuses the bundle', async () => {
 		vi.mocked(issueDraftAttachmentUpload).mockResolvedValue({
 			uploadId: 'up-1',
-			putUrl: 'https://store.example/put',
 			putPath: '/v1/drafts/draft-1/attachments/uploads/up-1',
-			putHeaders: { 'x-amz-content-sha256': 'abc' },
 			expiresAt: '2026-10-14T00:00:00Z'
 		});
 		vi.mocked(apiBlobPut).mockRejectedValue(new Error('HTTP 400'));
@@ -166,10 +162,8 @@ describe('draft attachment bundle', () => {
 		const packed = await packDraftBundle('acct', [{ file: file('a.txt', 'hello'), disposition: 'attachment' }]);
 		vi.mocked(apiBlobFetch).mockResolvedValue(new Response(packed.ciphertext as BodyInit));
 		vi.mocked(keystore.decrypt).mockResolvedValue({ ok: true, plaintextBinary: unxor(packed.ciphertext) });
-		const pointer: PresignedPointer = {
-			url: 'https://store.example/get',
+		const pointer: BlobPointer = {
 			path: '/v1/drafts/draft-1/attachments-bundle',
-			expiresAt: '2026-10-14T00:00:00Z',
 			sizeBytes: packed.ciphertext.byteLength,
 			sha256: packed.sha256B64
 		};
@@ -183,10 +177,8 @@ describe('draft attachment bundle', () => {
 	it('refuses a downloaded bundle whose checksum does not match', async () => {
 		const packed = await packDraftBundle('acct', [{ file: file('a.txt', 'hello'), disposition: 'attachment' }]);
 		vi.mocked(apiBlobFetch).mockResolvedValue(new Response(new Uint8Array([1, 2, 3]) as BodyInit));
-		const pointer: PresignedPointer = {
-			url: 'https://store.example/get',
+		const pointer: BlobPointer = {
 			path: '/v1/drafts/draft-1/attachments-bundle',
-			expiresAt: '2026-10-14T00:00:00Z',
 			sizeBytes: 3,
 			sha256: packed.sha256B64
 		};
@@ -215,7 +207,7 @@ describe('draft envelope', () => {
 			attachments: [{ ordinal: 0, objectKey: 'm/x/y/att-0.pgp', filename: 'old.pdf' }]
 		};
 		vi.mocked(decryptBody).mockResolvedValue({ plaintext: JSON.stringify(legacy) });
-		const detail = { body: { url: 'https://store.example/body', path: '/v1/drafts/d1/body' } } as DraftDetail;
+		const detail = { body: { path: '/v1/drafts/d1/body' } } as DraftDetail;
 
 		const doc = await loadDraftDoc('acct', detail);
 		expect(doc.subject).toBe('Hi');

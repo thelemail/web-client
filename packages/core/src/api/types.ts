@@ -151,10 +151,8 @@ export interface MessageChangesResponse {
 	watermark: string;
 }
 
-export interface PresignedPointer {
-	url: string;
+export interface BlobPointer {
 	path: string;
-	expiresAt: string;
 	sizeBytes: number;
 	sha256?: string;
 	keyFingerprint?: string;
@@ -163,7 +161,7 @@ export interface PresignedPointer {
 export interface AttachmentDetail {
 	id: string;
 	ordinal: number;
-	pointer: PresignedPointer;
+	pointer: BlobPointer;
 	isInline: boolean;
 }
 
@@ -183,7 +181,7 @@ export interface MessageDetail {
 	sentByAccountId?: string;
 	attestedSender?: AttestedSender;
 	schemaVersion: number;
-	body: PresignedPointer;
+	body: BlobPointer;
 	attachments: AttachmentDetail[];
 	mailboxState: MailboxState;
 	starred: boolean;
@@ -419,9 +417,7 @@ export interface AttachmentUploadSlotRequest {
 export interface AttachmentUploadGrant {
 	slotId: string;
 	objectKey: string;
-	putUrl: string;
 	putPath: string;
-	putHeaders: Record<string, string>;
 	expiresAt: string;
 }
 
@@ -465,9 +461,7 @@ export interface DraftAttachmentUploadRequest {
 
 export interface DraftAttachmentUploadGrant {
 	uploadId: string;
-	putUrl: string;
 	putPath: string;
-	putHeaders: Record<string, string>;
 	expiresAt: string;
 }
 
@@ -497,8 +491,8 @@ export interface DraftDetail {
 	encryptedPreview: string;
 	previewKeyFingerprint?: string;
 	schemaVersion: number;
-	body: PresignedPointer;
-	attachmentsBundle?: PresignedPointer;
+	body: BlobPointer;
+	attachmentsBundle?: BlobPointer;
 }
 
 export interface SendRecipient {
@@ -1206,7 +1200,6 @@ export interface MeResponse {
 	status: 'active' | 'disabled' | 'suspended';
 	createdAt: string;
 	recoveryEnabled?: boolean;
-	avatarUrl?: string | null;
 	avatarPath?: string | null;
 	defaultReplyAddressId?: string | null;
 	deletion?: DeletionStatus | null;
@@ -1295,7 +1288,6 @@ export interface TlogConsistencyProof {
 
 export interface AddressAvatar {
 	address: string;
-	avatarUrl: string;
 	avatarPath: string;
 }
 
