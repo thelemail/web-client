@@ -44,7 +44,7 @@
 		try {
 			const created = await customDomains.create(ws, clean);
 			await goto(`${base}/${created.domain.id}?step=${resumeStep(created.domain)}`, {
-				replaceState: true
+				replace: true
 			});
 		} catch (err) {
 			error = createErrorMessage(err, serverNow());

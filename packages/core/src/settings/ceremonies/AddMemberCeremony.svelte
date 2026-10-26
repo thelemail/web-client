@@ -11,7 +11,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import UserCheck from '@lucide/svelte/icons/user-check';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import Select from '../Select.svelte';

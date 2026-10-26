@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { keystore } from '$core/keystore/keystore-client';
 import type { SignatureVerdict } from '$core/keystore/protocol';
 import type { RenderResult } from './renderBody';

@@ -1,13 +1,13 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { createRawSnippet, tick } from 'svelte';
+import { beforeNavigate } from '$app/navigation';
 import SettingsLayout from './+layout.svelte';
 import { settingsDraft } from '$core/stores/settingsDraft.svelte';
 
 vi.mock('$app/navigation', () => ({
 	afterNavigate: vi.fn(),
 	beforeNavigate: vi.fn(),
-	replaceState: vi.fn(),
 	goto: vi.fn()
 }));
 vi.mock('openpgp', () => ({}));
@@ -21,7 +21,6 @@ vi.mock('$core/directory/verify', () => ({
 	verifyDirectoryLookup: vi.fn(),
 	DirectoryVerificationError: class extends Error {}
 }));
-vi.mock('$env/dynamic/public', () => ({ env: {} }));
 vi.mock('$app/state', () => ({
 	page: { params: { slot: '0' }, url: new URL('http://localhost/u/0/settings/appearance') }
 }));
@@ -83,5 +82,16 @@ describe('settings layout', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /not saved, try again/i }));
 		expect(retry).toHaveBeenCalled();
 		retry.mockRestore();
+	});
+
+	it('flushes pending edits before leaving but not on a shallow url update', () => {
+		const flush = vi.spyOn(settingsDraft, 'flushPending').mockImplementation(() => {});
+		render(SettingsLayout, { props: { data: { accountId: 'acc-1', slot: 0 }, children } });
+		const onBefore = vi.mocked(beforeNavigate).mock.lastCall![0];
+		onBefore({ shallow: true } as Parameters<typeof onBefore>[0]);
+		expect(flush).not.toHaveBeenCalled();
+		onBefore({ shallow: false } as Parameters<typeof onBefore>[0]);
+		expect(flush).toHaveBeenCalledTimes(1);
+		flush.mockRestore();
 	});
 });

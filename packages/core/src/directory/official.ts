@@ -1,4 +1,4 @@
-import { PUBLIC_OFFICIAL_SENDER_POLICY } from '$env/static/public';
+import { PUBLIC_OFFICIAL_SENDER_POLICY } from '$app/env/public';
 
 interface OfficialSenderPolicy {
 	addresses: string[];

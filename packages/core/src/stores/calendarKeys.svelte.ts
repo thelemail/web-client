@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { listMyCalendarKeys, type CalendarKeyGrant } from '$core/api/calendars';
 import { keystore } from '$core/keystore/keystore-client';
 import { accountKeys } from './accountKeys.svelte';

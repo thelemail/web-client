@@ -17,6 +17,7 @@
     "http://example.com",
     "http://ns.adobe.com",
     "http://www.xfa.org",
-    "https://foo.bar"
+    "https://foo.bar",
+    "https://sveltekit-redirect.invalid"
   ]
 }

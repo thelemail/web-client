@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const apiBlobFetch = vi.fn();
 
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 vi.mock('$core/api/client', () => ({ apiBlobFetch: (...a: unknown[]) => apiBlobFetch(...a) }));
 
 import { cacheAccountAvatar, cachePersonAvatar } from './avatarCache.svelte';

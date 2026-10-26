@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { listMyAliasKeys } from '$core/api/aliases';
 import { keystore } from '$core/keystore/keystore-client';
 import { accountKeys } from './accountKeys.svelte';

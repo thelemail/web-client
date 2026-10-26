@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { listWorkspaceAliases } from '$core/api/aliases';
 import type { AccountAddress } from '$core/api/addresses';
 import { m } from '$paraglide/messages.js';

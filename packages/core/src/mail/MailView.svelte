@@ -156,7 +156,7 @@
 	}
 
 	function closeMessage(opts: { replace?: boolean } = {}) {
-		void goto(withSearch(basePath), { replaceState: opts.replace ?? false });
+		void goto(withSearch(basePath), { replace: opts.replace ?? false });
 	}
 
 
@@ -218,7 +218,7 @@
 		if (!snapshot.missing) return;
 		untrack(() => {
 			flash(msg.mail_view_collection_gone());
-			void goto(`/u/${page.params.slot ?? '0'}/mail/inbox`, { replaceState: true });
+			void goto(`/u/${page.params.slot ?? '0'}/mail/inbox`, { replace: true });
 		});
 	});
 
@@ -392,7 +392,7 @@
 	function advancePast(id: string) {
 		if (messageId !== id) return;
 		const nextId = nextAfter(id);
-		void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
+		void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replace: true });
 	}
 
 	const ARCHIVED: Partial<Message> = { folder: 'archive', folderId: null };
@@ -818,7 +818,7 @@
 
 	async function moveSelected(ids: string[], target: MoveTarget) {
 		if (messageId !== null && ids.includes(messageId)) {
-			void goto(withSearch(basePath), { replaceState: true });
+			void goto(withSearch(basePath), { replace: true });
 		}
 		checked = new Set();
 		const { ok, failed } = await moveMany(ids, target);
@@ -939,7 +939,7 @@
 		const sel = querySelection;
 		if (!sel || job) return;
 		const leaves = steps.some((s) => s.verb !== 'labels');
-		if (leaves && messageId !== null) void goto(withSearch(basePath), { replaceState: true });
+		if (leaves && messageId !== null) void goto(withSearch(basePath), { replace: true });
 		querySelection = null;
 		checked = new Set();
 		const total = sel.count.units;
@@ -1289,7 +1289,7 @@
 	function trashOne(id: string) {
 		if (messageId === id) {
 			const nextId = nextAfter(id);
-			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
+			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replace: true });
 		}
 		if (isThread(id)) {
 			void queueThreadUpdate(id, { folder: 'trash' }, 'trash', msg.mail_err_move_trash());
@@ -1304,7 +1304,7 @@
 		if (!current) return;
 		if (messageId === id) {
 			const nextId = nextAfter(id);
-			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
+			void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replace: true });
 		}
 		const home = homeOf(current);
 		const optimistic = { folder: home.route, returnsToArchive: false };
@@ -1334,7 +1334,7 @@
 		try {
 			if (messageId !== null && ids.includes(messageId)) {
 				const nextId = fromBulk ? null : nextAfter(messageId);
-				void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replaceState: true });
+				void goto(withSearch(nextId ? `${basePath}/${nextId}` : basePath), { replace: true });
 			}
 			if (fromBulk) checked = new Set();
 			const results = await Promise.allSettled(ids.map((id) => deleteMessage(id)));
@@ -1437,7 +1437,7 @@
 		}
 		if (action === 'restore') {
 			if (messageId !== null && ids.includes(messageId)) {
-				void goto(withSearch(basePath), { replaceState: true });
+				void goto(withSearch(basePath), { replace: true });
 			}
 			checked = new Set();
 			const results = await Promise.allSettled(
@@ -1469,7 +1469,7 @@
 			const share = await headersConsent();
 			if (share === null) return;
 			if (messageId !== null && ids.includes(messageId)) {
-				void goto(withSearch(basePath), { replaceState: true });
+				void goto(withSearch(basePath), { replace: true });
 			}
 			checked = new Set();
 			const results = await Promise.allSettled(ids.map((id) => reportAndSpam(id, share)));
@@ -1483,7 +1483,7 @@
 		const optimistic: Partial<Message> = { folder: 'trash' };
 		const errMsg = msg.mail_err_trash_message();
 		if (messageId !== null && ids.includes(messageId)) {
-			void goto(withSearch(basePath), { replaceState: true });
+			void goto(withSearch(basePath), { replace: true });
 		}
 		checked = new Set();
 		const results = await Promise.allSettled(

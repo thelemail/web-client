@@ -15,7 +15,7 @@ const h = vi.hoisted(() => ({
 	status: { value: [] as unknown[] }
 }));
 
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 vi.mock('$core/products', () => ({ isProductVault: false }));
 vi.mock('$core/api/me', () => ({ listMyKeys: async () => ({ currentVersion: 1, keys: [] }) }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));

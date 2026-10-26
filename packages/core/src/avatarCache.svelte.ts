@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { SvelteMap } from 'svelte/reactivity';
 import { apiBlobFetch } from '$core/api/client';
 import { openDatabase } from '$core/idb-open';

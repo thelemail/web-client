@@ -5,7 +5,7 @@
 	import UserPlus from '@lucide/svelte/icons/user-plus';
 	import Info from '@lucide/svelte/icons/info';
 	import Globe from '@lucide/svelte/icons/globe';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { page } from '$app/state';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';

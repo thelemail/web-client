@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 
 const COOKIE_NAME = 'thelemail_session';
 const APEX = 'thelemail.com';

@@ -8,11 +8,11 @@ Mail is encrypted and decrypted in the browser. Private keys are generated clien
 
 The SPA constraint is deliberate and load-bearing. A server-rendered page would need the decryption keys on the server, which would defeat the point. Three things enforce it:
 
-- `svelte.config.js` uses `@sveltejs/adapter-static` with `fallback: 'index.html'` and `strict: true`
+- each app's `vite.config.ts` passes `@sveltejs/adapter-static` with `fallback: 'index.html'` and `strict: true` to `sveltekit()`
 - `src/routes/+layout.ts` exports `ssr = false` and `prerender = false`, which cascade to every route
 - `package.json` lists no adapter other than `adapter-static`
 
-That means no `+page.server.ts`, no `+layout.server.ts`, no `+server.ts`, no `src/hooks.server.ts`, and no imports from `$env/static/private`, `$env/dynamic/private` or `$app/server`. Only `PUBLIC_*` environment variables exist at runtime, and they are inlined at build time.
+That means no `+page.server.ts`, no `+layout.server.ts`, no `+server.ts`, no `src/hooks.server.ts`, and no imports from `$app/env/private` or `$app/server`. Only `PUBLIC_*` environment variables exist at runtime. Each app declares them in `src/env.ts`, and they are inlined at build time.
 
 Layout:
 
@@ -42,7 +42,7 @@ Key lookups are verified against a signed directory and, where a transparency lo
 
 ## Development
 
-Requires Node 24 and pnpm. `.nvmrc` and the `packageManager` field pin the exact versions CI and the image use.
+Requires Node 26 and pnpm. `.nvmrc` and the `packageManager` field pin the exact versions CI and the image use.
 
 ```bash
 pnpm install
@@ -106,7 +106,7 @@ which are public:
 gh api repos/thelemail/web-client/deployments --jq '.[] | {sha, created_at, payload}'
 ```
 
-The browser security policy lives in two places. `svelte.config.js` builds the Content-Security-Policy
+The browser security policy lives in two places. Each app's `vite.config.ts` builds the Content-Security-Policy
 from the origins declared in `.github/build-config.env`, and `Caddyfile` carries the response headers
 the policy cannot express. `scripts/check-build-origins.mjs` runs during the image build and fails it
 if the bundle would load anything from a third party.

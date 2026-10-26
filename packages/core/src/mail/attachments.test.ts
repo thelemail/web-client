@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const listeners = vi.hoisted(() => [] as ((msg: { type: string; accountId?: string }) => void)[]);
 
-vi.mock('$app/environment', () => ({ browser: true }));
+vi.mock('$app/env', () => ({ browser: true }));
 vi.mock('$platform', () => ({ platform: { saveBlob: vi.fn().mockResolvedValue(undefined) } }));
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {

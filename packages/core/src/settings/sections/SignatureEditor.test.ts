@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render } from '@testing-library/svelte';
 
 vi.mock('$platform', () => ({ platform: {} }));
-vi.mock('$env/dynamic/public', () => ({ env: {} }));
 vi.mock('$core/stores/signatures.svelte', () => ({
 	signatures: {
 		objectUrl: (key: string) => `blob:${key}`,

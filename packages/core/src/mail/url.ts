@@ -1,3 +1,4 @@
+import type { ReadonlyURLSearchParams } from '$app/state';
 import { isCollectionId, isMailFolderRoute, type MailFolderRoute, type SortId } from './data';
 
 export interface Query {
@@ -42,7 +43,7 @@ function parseSort(raw: string | null): SortId {
 	return raw === 'oldest' ? 'oldest' : 'newest';
 }
 
-export function parseQuery(folderParam: string | undefined, sp: URLSearchParams): Query {
+export function parseQuery(folderParam: string | undefined, sp: ReadonlyURLSearchParams): Query {
 	const folder: MailFolderRoute =
 		folderParam && isMailFolderRoute(folderParam) ? folderParam : 'inbox';
 	return {
@@ -56,10 +57,10 @@ export function parseQuery(folderParam: string | undefined, sp: URLSearchParams)
 }
 
 function buildSearch(
-	sp: URLSearchParams,
+	sp: ReadonlyURLSearchParams,
 	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort' | 'direct'>>
 ): string {
-	const next = new URLSearchParams(sp);
+	const next = new URLSearchParams(sp.toString());
 
 	if ('labels' in patch) {
 		const labels = patch.labels ?? [];
@@ -88,20 +89,20 @@ function buildSearch(
 }
 
 export function withFilters(
-	sp: URLSearchParams,
+	sp: ReadonlyURLSearchParams,
 	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort' | 'direct'>>
 ): string {
 	return buildSearch(sp, patch);
 }
 
-export function toggleLabel(sp: URLSearchParams, label: string): string {
+export function toggleLabel(sp: ReadonlyURLSearchParams, label: string): string {
 	const current = parseLabels(sp.get('labels'));
 	const idx = current.indexOf(label);
 	const next = idx >= 0 ? current.filter((l) => l !== label) : [...current, label];
 	return buildSearch(sp, { labels: next });
 }
 
-export function clearFilters(sp: URLSearchParams): string {
+export function clearFilters(sp: ReadonlyURLSearchParams): string {
 	return buildSearch(sp, { labels: [], unread: false, attach: false });
 }
 

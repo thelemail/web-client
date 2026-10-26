@@ -1,5 +1,5 @@
-import { browser } from '$app/environment';
-import { invalidateAll } from '$app/navigation';
+import { browser } from '$app/env';
+import { refreshAll } from '$app/navigation';
 import { registerAuthRouter, registerLifecycleReconciler } from '$core/api/client';
 import {
 	refreshSession,
@@ -561,7 +561,7 @@ if (browser) {
 		onLifecycleError: (_code, accountId) => {
 			void (async () => {
 				if (accountId) await auth.loadProfile(accountId);
-				await invalidateAll();
+				await refreshAll();
 			})();
 		}
 	});

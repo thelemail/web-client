@@ -43,7 +43,7 @@
 			await rememberVault(adopted.accountId);
 			history.replaceState(null, '', '/fork');
 			const target = localForkPath(adopted.redirect, slot);
-			await goto(target, { replaceState: true });
+			await goto(target, { replace: true });
 		} catch (err) {
 			history.replaceState(null, '', '/fork');
 			error = err instanceof ForkError ? err.message : m.cal_fork_failed();

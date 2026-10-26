@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { platform } from '$platform';
 import type { KeystoreChannel } from '$core/platform/types';
 import { serverClockOffsetMs } from '$core/api/serverclock';

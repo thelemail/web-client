@@ -1,4 +1,4 @@
-import { browser } from '$app/environment';
+import { browser } from '$app/env';
 import { listMessages } from '$core/api/messages';
 import { decryptPreview } from '$core/mail/decrypt';
 import { initialsFor } from '$core/mail/initials';
