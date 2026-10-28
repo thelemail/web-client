@@ -438,8 +438,8 @@
 .mail-app .more-menu .mitem { white-space: nowrap; }
 .mail-app .more-menu .rt { letter-spacing: .02em; }
 
-.mail-app .reader-scroll { flex: 1; overflow: auto; padding: 0 32px; }
-.mail-app .reader-inner { max-width: 760px; margin: 30px auto 56px; }
+.mail-app .reader-scroll { flex: 1; overflow: auto; padding: 0 28px; }
+.mail-app .reader-inner { margin: 26px 0 48px; }
 @keyframes reader-content-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 .mail-app .reader-inner > * { animation: reader-content-in var(--dur) var(--ease-out) backwards; }
 .mail-app .reader-inner > :nth-child(n+2) { animation-delay: 40ms; }
@@ -1124,7 +1124,7 @@
 	.mail-app .daygrp { padding: 12px 14px 7px; }
 
 	.mail-app .reader-scroll { padding: 0 16px; }
-	.mail-app .reader-inner { margin: 18px auto 32px; }
+	.mail-app .reader-inner { margin: 18px 0 32px; }
 	.mail-app .reader-h h1 { font-size: 23px; }
 	.mail-app .rb-btn .rb-t { display: none; }
 	.mail-app .rb-btn { padding: 8px 11px; }
