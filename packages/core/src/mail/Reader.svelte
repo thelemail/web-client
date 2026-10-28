@@ -248,6 +248,7 @@
 		| { id: string; status: 'error'; error: string };
 
 	const BODY_MAX_ATTEMPTS = 3;
+	const SKELETON_DELAY_MS = 300;
 	const BODY_RETRY_BASE_MS = 800;
 
 	let bodyState = $state<BodyState | null>(null);
@@ -316,6 +317,7 @@
 		};
 	}
 
+	const trustPending = $derived(!!m && threadMeta?.id !== m.id && threadFailedFor !== m.id);
 	const readerTrust = $derived(
 		threadMeta && m && threadMeta.id === m.id
 			? threadMeta.entries.find((e) => e.id === m.id)?.trust
@@ -520,9 +522,8 @@
 		})();
 	});
 
-	const STATUS_SRCDOC: Record<'loading' | 'error', (error?: string) => string> = {
-		loading: () =>
-			`<!doctype html><html><body style="font-family:sans-serif;color:#6B7360;font-size:13px;padding:6px 2px">${escapeForHtml(msg.mail_reader_decrypting())}</body></html>`,
+	const STATUS_SRCDOC: Record<'pending' | 'error', (error?: string) => string> = {
+		pending: () => '<!doctype html><html><body></body></html>',
 		error: (error) =>
 			`<!doctype html><html><body style="font-family:sans-serif;color:#8E2F26;font-size:13px;padding:6px 2px">${escapeForHtml(msg.mail_reader_decrypt_failed({ error: error ?? '' }))}</body></html>`
 	};
@@ -532,8 +533,7 @@
 	}
 
 	const bodySrcDoc = $derived.by<string>(() => {
-		if (!bodyState) return STATUS_SRCDOC.loading();
-		if (bodyState.status === 'loading') return STATUS_SRCDOC.loading();
+		if (!bodyState || bodyState.status === 'loading') return STATUS_SRCDOC.pending();
 		if (bodyState.status === 'error') return STATUS_SRCDOC.error(bodyState.error);
 		return bodyState.render.srcDoc;
 	});
@@ -572,6 +572,17 @@
 	const threadPending = $derived(
 		!!m && isThreadView && threadMeta?.id !== m.id && threadFailedFor !== m.id
 	);
+	const bodyPending = $derived(
+		!!m && (!bodyState || bodyState.id !== m.id || bodyState.status === 'loading')
+	);
+	let slowFor = $state<string | null>(null);
+	$effect(() => {
+		const id = m?.id;
+		if (!id || !(bodyPending || threadPending)) return;
+		const timer = setTimeout(() => (slowFor = id), SKELETON_DELAY_MS);
+		return () => clearTimeout(timer);
+	});
+	const showSkeleton = $derived(!!m && (bodyPending || threadPending) && slowFor === m.id);
 
 	async function refreshPointer(attachmentId: string) {
 		const id = m?.id;
@@ -606,7 +617,7 @@
 				<span><kbd>C</kbd> {msg.mail_reader_hint_compose()}</span>
 			</div>
 		</div>
-	{:else if bodyState?.status === 'loading' || threadPending}
+	{:else if showSkeleton}
 		<ReaderSkeleton {onBack} />
 	{:else}
 		<div class="reader-bar">
@@ -934,7 +945,7 @@
 						onConfirmKeyChange={confirmKeyChange}
 						onUnsubscribe={openUnsubscribe}
 					/>
-				{:else}
+				{:else if !threadPending}
 					<div class="letterhead">
 						<Avatar
 							initials={m.init}
@@ -976,6 +987,8 @@
 									variant="chip"
 									onConfirmKeyChange={() => confirmKeyChange(m.fromAddr)}
 								/>
+							{:else if trustPending}
+								<span class="tmark-slot" aria-hidden="true"></span>
 							{/if}
 						</div>
 					</div>

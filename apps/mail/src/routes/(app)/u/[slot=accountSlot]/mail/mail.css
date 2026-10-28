@@ -442,8 +442,6 @@
 
 .mail-app .reader-scroll { flex: 1; overflow: auto; padding: 0 24px; }
 .mail-app .reader-inner { max-width: 800px; margin: 22px auto 40px; padding: 30px 38px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-panel); box-shadow: var(--shadow-xs); }
-@keyframes reader-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
-.mail-app .reader-scroll > .reader-inner { animation: reader-in var(--dur-slow) var(--ease-out) both; }
 
 .mail-app .rec-eyebrow { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); letter-spacing: .04em; margin-bottom: 14px; }
 .mail-app .rec-eyebrow .tag { color: var(--accent-quiet); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
@@ -467,6 +465,7 @@
 .mail-app .letterhead .who .em { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-muted); min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .letterhead .who .to { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-faint); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .letterhead .prov { margin-left: auto; flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.mail-app .letterhead .prov .tmark-slot { display: block; width: 1px; height: 25px; }
 .mail-app .letterhead .when { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; }
 
 .mail-app .sealbar { display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface), var(--paper-50)); padding: 14px 18px; margin: 0 0 26px; box-shadow: var(--shadow-xs); }
@@ -1175,7 +1174,6 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.mail-app .lh-btn.refreshing svg { animation: none; opacity: .5; }
-	.mail-app .reader-scroll > .reader-inner { animation: none; }
 	.mail-app .qa { transition: opacity var(--dur-fast) var(--ease); transform: translate(0, -50%); }
 	.mail-app .mrow .row-ck { transform: none; }
 	.mail-app .fld svg path { transition: none; }
