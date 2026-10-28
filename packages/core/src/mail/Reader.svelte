@@ -952,7 +952,7 @@
 						onUnsubscribe={openUnsubscribe}
 					/>
 				{:else if !threadPending}
-					<article class="sheet">
+					<article class="sheet" class:mine={m.direction === 'sent'}>
 						<div class="letterhead">
 							<Avatar
 								initials={m.init}
