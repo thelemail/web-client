@@ -12,6 +12,8 @@
 	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import Calendar from '@lucide/svelte/icons/calendar';
 	import Avatar from '$core/components/Avatar.svelte';
+	import * as Tooltip from '$core/components/ui/tooltip';
+	import type { Snippet } from 'svelte';
 	import { swipe, swipeThreshold, type SwipeDirection } from '$core/actions/swipe';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import {
@@ -341,82 +343,66 @@
 		</div>
 	</div>
 	<div class="qa">
-		{#if caps.showStar}
-			<button
-				type="button"
-				class="star"
-				class:on={m.starred}
-				aria-pressed={m.starred}
-				title={m.starred ? msg.mail_action_unstar() : msg.mail_action_star()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onToggleStar(m.id);
-				}}><Star size={15} /></button
-			>
-		{/if}
-		{#if caps.showMarkRead}
-			<button
-				title={m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onToggleRead(m.id);
-				}}
-			>
-				{#if m.unread}
-					<MailOpen size={15} />
-				{:else}
-					<Mail size={15} />
-				{/if}
-			</button>
-		{/if}
-		{#if caps.showRestore}
-			<button
-				data-mutates
-				title={msg.mail_action_restore()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onRestore?.(m.id);
-				}}><Undo2 size={15} /></button
-			>
-		{/if}
-		{#if caps.showArchive}
-			<button
-				data-mutates
-				title={msg.mail_action_archive()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onArchive(m.id);
-				}}><Archive size={15} /></button
-			>
-		{/if}
-		{#if caps.showSpam && onSpam}
-			<button
-				title={msg.mail_action_report_spam()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onSpam?.(m.id);
-				}}><ShieldAlert size={15} /></button
-			>
-		{/if}
-		{#if caps.showTrash}
-			<button
-				data-mutates
-				title={msg.mail_action_trash()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onTrash(m.id);
-				}}><Trash2 size={15} /></button
-			>
-		{/if}
-		{#if caps.showDelete}
-			<button
-				data-mutates
-				title={msg.mail_action_delete_forever()}
-				onclick={(e) => {
-					e.stopPropagation();
-					onDelete?.(m.id);
-				}}><Trash2 size={15} /></button
-			>
-		{/if}
+		<Tooltip.Provider delayDuration={150} disableHoverableContent>
+			{#if caps.showStar}
+				{@render qaButton(m.starred ? msg.mail_action_unstar() : msg.mail_action_star(), () => onToggleStar(m.id), star, {
+					cls: m.starred ? 'star on' : 'star',
+					pressed: m.starred
+				})}
+			{/if}
+			{#if caps.showMarkRead}
+				{@render qaButton(
+					m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread(),
+					() => onToggleRead(m.id),
+					m.unread ? mailOpen : mail
+				)}
+			{/if}
+			{#if caps.showRestore}
+				{@render qaButton(msg.mail_action_restore(), () => onRestore?.(m.id), undo, { mutates: true })}
+			{/if}
+			{#if caps.showArchive}
+				{@render qaButton(msg.mail_action_archive(), () => onArchive(m.id), archive, { mutates: true })}
+			{/if}
+			{#if caps.showSpam && onSpam}
+				{@render qaButton(msg.mail_action_report_spam(), () => onSpam?.(m.id), spam)}
+			{/if}
+			{#if caps.showTrash}
+				{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true })}
+			{/if}
+			{#if caps.showDelete}
+				{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true })}
+			{/if}
+		</Tooltip.Provider>
 	</div>
 </div>
+
+{#snippet qaButton(
+	label: string,
+	run: () => void,
+	icon: Snippet,
+	opts: { cls?: string; pressed?: boolean; mutates?: boolean } = {}
+)}
+	<Tooltip.Root>
+		<Tooltip.Trigger
+			class={opts.cls}
+			aria-label={label}
+			aria-pressed={opts.pressed}
+			data-mutates={opts.mutates ? '' : undefined}
+			onclick={(e: MouseEvent) => {
+				e.stopPropagation();
+				run();
+			}}
+		>
+			{@render icon()}
+		</Tooltip.Trigger>
+		<Tooltip.Content side="top" sideOffset={6}>{label}</Tooltip.Content>
+	</Tooltip.Root>
+{/snippet}
+
+{#snippet star()}<Star size={15} />{/snippet}
+{#snippet mailOpen()}<MailOpen size={15} />{/snippet}
+{#snippet mail()}<Mail size={15} />{/snippet}
+{#snippet undo()}<Undo2 size={15} />{/snippet}
+{#snippet archive()}<Archive size={15} />{/snippet}
+{#snippet spam()}<ShieldAlert size={15} />{/snippet}
+{#snippet trash()}<Trash2 size={15} />{/snippet}
