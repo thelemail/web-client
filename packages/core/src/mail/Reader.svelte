@@ -952,90 +952,88 @@
 						onUnsubscribe={openUnsubscribe}
 					/>
 				{:else if !threadPending}
-					<article class="sheet" class:mine={m.direction === 'sent'}>
-						<div class="letterhead">
-							<Avatar
-								initials={m.init}
-								bg={m.bg}
-								fg={m.fg}
-								size={34}
-								src={img.src}
-								fit={img.fit}
-								imgBg={img.imgBg}
-							/>
-							<div class="who">
-								<div class="nm">{m.from}</div>
-								<div class="det">
-									<span class="em">{m.fromAddr}</span>
-									{#if unsubMethod}
-										<button
-											type="button"
-											class="unsub"
-											onclick={() =>
-												openUnsubscribe({ ...m, deliveredTo: enriched?.deliveredTo ?? m.deliveredTo })}
-										>
-											{msg.mail_unsub_action()}
-										</button>
-									{/if}
-									{#if sentByText}
-										<span class="by">{sentByText}</span>
-									{/if}
-									<span class="to">{msg.mail_thread_to({ list: m.to || '—' })}</span>
-									{#if deliveredLine}
-										<span class="to">{msg.mail_thread_delivered_to({ address: deliveredLine })}</span>
-									{/if}
+					<div class="letterhead">
+						<Avatar
+							initials={m.init}
+							bg={m.bg}
+							fg={m.fg}
+							size={34}
+							src={img.src}
+							fit={img.fit}
+							imgBg={img.imgBg}
+						/>
+						<div class="who">
+							<div class="nm">{m.from}</div>
+							<div class="det">
+								<span class="em">{m.fromAddr}</span>
+								{#if unsubMethod}
+									<button
+										type="button"
+										class="unsub"
+										onclick={() =>
+											openUnsubscribe({ ...m, deliveredTo: enriched?.deliveredTo ?? m.deliveredTo })}
+									>
+										{msg.mail_unsub_action()}
+									</button>
+								{/if}
+								{#if sentByText}
+									<span class="by">{sentByText}</span>
+								{/if}
+								<span class="to">{msg.mail_thread_to({ list: m.to || '—' })}</span>
+								{#if deliveredLine}
+									<span class="to">{msg.mail_thread_delivered_to({ address: deliveredLine })}</span>
+								{/if}
+							</div>
+						</div>
+						<div class="prov">
+							<div class="when">{formatWhenLong(new Date(m.epoch))}</div>
+							{#if readerTrust}
+								<TrustMark
+									trust={readerTrust}
+									variant="chip"
+									onConfirmKeyChange={() => confirmKeyChange(m.fromAddr)}
+								/>
+							{:else if trustPending}
+								<span class="tmark-slot" aria-hidden="true"></span>
+							{/if}
+						</div>
+					</div>
+
+					<div class="email-sheet" class:pending={bodyPending}>
+						<EmailBody srcDoc={bodySrcDoc} />
+					</div>
+
+					{#if isForwarded}
+						<div class="fwd-chip"><CornerDownLeft size={13} />{msg.mail_forwarded_chip()}</div>
+					{/if}
+
+					{#if quotedSrcDoc}
+						<div class="quoted-wrap">
+							<button
+								type="button"
+								class="quoted-toggle"
+								class:on={showQuoted}
+								title={showQuoted ? msg.mail_quoted_hide() : msg.mail_quoted_show()}
+								aria-expanded={showQuoted}
+								onclick={() => (showQuoted = !showQuoted)}
+							>
+								<Ellipsis size={16} />
+							</button>
+							{#if showQuoted}
+								<div class="quoted-email">
+									<EmailBody srcDoc={quotedSrcDoc} />
 								</div>
-							</div>
-							<div class="prov">
-								<div class="when">{formatWhenLong(new Date(m.epoch))}</div>
-								{#if readerTrust}
-									<TrustMark
-										trust={readerTrust}
-										variant="chip"
-										onConfirmKeyChange={() => confirmKeyChange(m.fromAddr)}
-									/>
-								{:else if trustPending}
-									<span class="tmark-slot" aria-hidden="true"></span>
-								{/if}
-							</div>
+							{/if}
 						</div>
+					{/if}
 
-						<div class="email-sheet" class:pending={bodyPending}>
-							<EmailBody srcDoc={bodySrcDoc} />
-						</div>
+					{#each calendarEvents as ev, i (ev.uid ?? i)}
+						<EventCard {ev} message={enriched ?? m} />
+					{/each}
 
-						{#if isForwarded}
-							<div class="fwd-chip"><CornerDownLeft size={13} />{msg.mail_forwarded_chip()}</div>
-						{/if}
-
-						{#if quotedSrcDoc}
-							<div class="quoted-wrap">
-								<button
-									type="button"
-									class="quoted-toggle"
-									class:on={showQuoted}
-									title={showQuoted ? msg.mail_quoted_hide() : msg.mail_quoted_show()}
-									aria-expanded={showQuoted}
-									onclick={() => (showQuoted = !showQuoted)}
-								>
-									<Ellipsis size={16} />
-								</button>
-								{#if showQuoted}
-									<div class="quoted-email">
-										<EmailBody srcDoc={quotedSrcDoc} />
-									</div>
-								{/if}
-							</div>
-						{/if}
-
-						{#each calendarEvents as ev, i (ev.uid ?? i)}
-							<EventCard {ev} message={enriched ?? m} />
-						{/each}
-
-						{#if !isThreadView}
-							<AttachmentList chips={attachmentChips} refresh={refreshPointer} />
-						{/if}
-					</article>
+					{#if !isThreadView}
+						<AttachmentList chips={attachmentChips} refresh={refreshPointer} />
+					{/if}
 				{/if}
 
 				{#if caps.showReply && !replyMode && !threadPending}

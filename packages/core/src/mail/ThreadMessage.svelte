@@ -104,8 +104,6 @@
 {#if !isOpen}
 	<div
 		class="tmsg collapsed"
-		class:mine={e.me}
-		class:unread={e.unread && !e.me}
 		data-entry={e.id}
 		role="button"
 		tabindex="0"
@@ -118,7 +116,7 @@
 		}}
 	>
 		<div class="tmsg-collapsed">
-			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={28} src={img.src} fit={img.fit} imgBg={img.imgBg} />
+			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={26} src={img.src} fit={img.fit} imgBg={img.imgBg} />
 			<span class="tc-name">
 				<span class="tc-nm">{name}</span>
 				{#if e.trust}
@@ -135,7 +133,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="tmsg open" class:mine={e.me} data-entry={e.id}>
+	<div class="tmsg open" data-entry={e.id}>
 		<div
 			class="tmsg-head"
 			role="button"
