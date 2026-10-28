@@ -147,11 +147,35 @@ describe('MessageList search states', () => {
 });
 
 describe('MessageList header', () => {
-	it('puts the search box where the folder title was', () => {
-		const { container } = mount({ list: [message('m1')] });
-		const header = container.querySelector('.list-h');
-		expect(header?.querySelector('.search input')).not.toBeNull();
-		expect(header?.querySelector('.ttl')).toBeNull();
+	it('titles the list with the folder and its unread count', () => {
+		const { container } = mount({ list: [message('m1')], folderUnread: 1234 });
+		const header = container.querySelector('.list-h')!;
+		expect(header.querySelector('.search input')).toBeNull();
+		expect(header.querySelector('h1 .ttl-name')?.textContent).toBe('Inbox');
+		expect(header.querySelector('.ttl-ct .sr-only')?.textContent?.trim()).toBe(
+			`${new Intl.NumberFormat().format(1234)} unread`
+		);
+	});
+
+	it('leaves the count out when nothing is unread', () => {
+		const { container } = mount({ list: [message('m1')], folderUnread: 0 });
+		expect(container.querySelector('.ttl-ct')).toBeNull();
+	});
+
+	it('switches between all and unread through the unread filter', async () => {
+		const onSetFilters = vi.fn();
+		const { container, rerender } = mount({ list: [message('m1')], onSetFilters });
+		const [all, unread] = [...container.querySelectorAll<HTMLButtonElement>('.seg button')];
+		expect(all.getAttribute('aria-pressed')).toBe('true');
+		expect(unread.getAttribute('aria-pressed')).toBe('false');
+		all.click();
+		expect(onSetFilters).not.toHaveBeenCalled();
+		unread.click();
+		expect(onSetFilters).toHaveBeenCalledWith({ ...EMPTY_FILTERS, unread: true });
+		await rerender({ filters: { ...EMPTY_FILTERS, unread: true } });
+		expect(unread.getAttribute('aria-pressed')).toBe('true');
+		all.click();
+		expect(onSetFilters).toHaveBeenLastCalledWith({ ...EMPTY_FILTERS, unread: false });
 	});
 
 	it('shows no view strip for the default sort without filters', () => {

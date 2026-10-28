@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import './mail.css';
 	import Sidebar from '$core/mail/Sidebar.svelte';
+	import MailTopBar from '$core/mail/MailTopBar.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
 	import { scheduled } from '$core/stores/scheduled.svelte';
@@ -75,7 +76,10 @@
 			mailNav.close();
 		}}
 	/>
-	<div class="mailmain" inert={drawer}>{@render children()}</div>
+	<div class="mailmain" inert={drawer}>
+		<MailTopBar />
+		{@render children()}
+	</div>
 </div>
 
 <ReadOnlyGuard />

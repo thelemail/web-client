@@ -162,8 +162,32 @@
 .mail-app .list-h { min-height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 6px 9px 6px 10px; border-bottom: 1px solid var(--border); background: var(--bg); }
 .mail-app .list-h .ttl-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .mail-app .list-h .ttl { font-family: var(--font-sans); font-feature-settings: normal; font-size: 17px; font-weight: 580; color: var(--fg-strong); display: flex; align-items: baseline; gap: 8px; letter-spacing: var(--track-tight); line-height: 1.1; padding-left: 5px; }
-.mail-app .list-h .searchwrap { flex: 1; min-width: 0; }
 .mail-app .list-h .lh-actions { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; padding-left: 4px; }
+.mail-app .list-h h1.ttl { margin: 0; min-width: 0; flex: 0 1 auto; font-size: 19px; white-space: nowrap; }
+.mail-app .list-h .ttl-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.mail-app .list-h .ttl-ct { flex: 0 0 auto; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .02em; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
+.mail-app .list-h .seg { display: inline-flex; flex: 0 0 auto; margin-left: auto; padding: 2px; gap: 2px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--paper-50); }
+.mail-app .list-h .seg button { height: 26px; padding: 0 11px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); font-size: 12.5px; font-weight: 500; letter-spacing: var(--track-snug); white-space: nowrap; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.mail-app .list-h .seg button:hover { color: var(--fg-strong); }
+.mail-app .list-h .seg button[aria-pressed='true'] { background: var(--surface); color: var(--fg-strong); font-weight: 600; box-shadow: var(--shadow-xs); }
+.mail-app .list-h .seg + .lh-actions { padding-left: 2px; }
+.mail-app .list-h .ttl + .lh-actions { margin-left: auto; }
+.mail-app .list { container: list / inline-size; }
+@container list (max-width: 400px) {
+	.mail-app .list-h { gap: 2px; padding-left: 8px; padding-right: 6px; }
+	.mail-app .list-h .lh-actions { gap: 0; padding-left: 0; }
+	.mail-app .list-h .lh-btn { width: 28px; }
+	.mail-app .list-h .seg button { padding: 0 8px; }
+}
+@container list (max-width: 340px) {
+	.mail-app .list-h .ttl-ct { display: none; }
+}
+
+.mail-app .mail-top { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.mail-app .mail-top .searchwrap { flex: 1 1 auto; min-width: 0; max-width: 760px; }
+.mail-app .mail-top .mt-rule { flex: 0 0 auto; width: 1px; height: 22px; margin: 0 6px 0 auto; background: var(--border); }
+.mail-app .mail-top .mt-btn { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 34px; height: 34px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--ink-500); text-decoration: none; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.mail-app .mail-top .mt-btn:hover { background: var(--paper-100); color: var(--ink-700); }
 .mail-app .view-strip { display: flex; align-items: center; gap: 4px; padding: 7px 15px; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-500); background: var(--bg-raised); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; }
 .mail-app .view-strip .list-sub-dot { color: var(--fg-faint); padding: 0 2px; }
 .mail-app .view-strip .list-sub-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--ink-400); cursor: pointer; }
@@ -375,6 +399,27 @@
 .mail-app .reader { flex: 1; background: var(--bg-raised); min-width: 0; display: flex; flex-direction: column; }
 .mail-app .reader-bar { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg-raised) 84%, transparent); backdrop-filter: blur(10px); }
 .mail-app .reader-bar .grow { flex: 1; }
+.mail-app .reader { container: reader / inline-size; }
+.mail-app .rb-sep { flex: 0 0 auto; width: 1px; height: 20px; margin: 0 4px; background: var(--border); }
+.mail-app .rb-txt { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto; height: 33px; padding: 0 9px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--ink-600); font-size: 13px; font-weight: 500; letter-spacing: var(--track-snug); white-space: nowrap; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.mail-app .rb-txt svg { flex: 0 0 auto; color: var(--ink-500); transition: color var(--dur-fast) var(--ease); }
+.mail-app .rb-txt:hover, .mail-app .rb-txt.on { background: var(--paper-100); color: var(--fg-strong); }
+.mail-app .rb-txt:hover svg, .mail-app .rb-txt.on svg { color: var(--ink-700); }
+.mail-app .rb-nav { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.mail-app .rb-ico:disabled { opacity: .38; cursor: default; background: none; }
+.mail-app .reader-bar > .rb-ico, .mail-app .reader-bar > .rb-btn { flex: 0 0 auto; }
+@container reader (max-width: 860px) {
+	.mail-app .reader-bar .rb-btn:not(.primary) .rb-t { display: none; }
+	.mail-app .reader-bar .rb-btn:not(.primary) { padding: 8px 11px; }
+}
+@container reader (max-width: 780px) {
+	.mail-app .reader-bar .rb-btn .rb-t { display: none; }
+	.mail-app .reader-bar .rb-btn { padding: 8px 11px; }
+}
+@container reader (max-width: 650px) {
+	.mail-app .rb-txt .rb-t { display: none; }
+	.mail-app .rb-txt { width: 33px; padding: 0; }
+}
 .mail-app .rb-btn { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 550; letter-spacing: var(--track-snug); border: 1px solid var(--border); background: var(--surface); color: var(--ink-700); border-radius: var(--radius-control); padding: 7px 13px; transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease), transform var(--dur-fast) var(--ease); }
 .mail-app .rb-btn:hover { background: var(--paper-50); border-color: var(--border-strong); }
 .mail-app .rb-btn:active { transform: translateY(1px); }

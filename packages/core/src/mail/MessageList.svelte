@@ -22,12 +22,9 @@
 	import AlarmClock from '@lucide/svelte/icons/alarm-clock';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Menu from '@lucide/svelte/icons/menu';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Search from '@lucide/svelte/icons/search';
-	import { mailNav } from '$core/stores/nav.svelte';
 	import MessageRow from './MessageRow.svelte';
-	import ListSearch from './ListSearch.svelte';
 	import {
 		bucketFromEpoch,
 		dayBucketLabel,
@@ -48,6 +45,7 @@
 
 	interface Props {
 		folderLabel: string;
+		folderUnread?: number;
 		list: Message[];
 		activeId: string | null;
 		checked: Set<string>;
@@ -100,6 +98,7 @@
 
 	let {
 		folderLabel,
+		folderUnread = 0,
 		list,
 		activeId,
 		checked,
@@ -245,6 +244,10 @@
 	function pickSort(id: SortId) {
 		onSort(id);
 		sortOpen = false;
+	}
+
+	function setUnreadOnly(on: boolean) {
+		if (filters.unread !== on) onSetFilters({ ...filters, unread: on });
 	}
 
 	function toggleFlag(key: 'unread' | 'starred' | 'attach' | 'direct') {
@@ -476,15 +479,23 @@
 		</div>
 	{:else}
 		<div class="list-h">
-			<button
-				class="lh-nav"
-				title={msg.mail_menu()}
-				aria-expanded={mailNav.open}
-				onclick={(e) => mailNav.toggle(e.currentTarget)}
-			>
-				<Menu size={18} />
-			</button>
-			<ListSearch />
+			<h1 class="ttl">
+				<span class="ttl-name">{folderLabel}</span>
+				{#if folderUnread > 0}
+					<span class="ttl-ct" title={msg.mail_list_unread_count({ count: fmt(folderUnread) })}>
+						<span aria-hidden="true">{fmt(folderUnread)}</span>
+						<span class="sr-only">{msg.mail_list_unread_count({ count: fmt(folderUnread) })}</span>
+					</span>
+				{/if}
+			</h1>
+			<div class="seg" role="group" aria-label={msg.mail_list_show()}>
+				<button type="button" aria-pressed={!filters.unread} onclick={() => setUnreadOnly(false)}>
+					{msg.mail_list_all()}
+				</button>
+				<button type="button" aria-pressed={filters.unread} onclick={() => setUnreadOnly(true)}>
+					{msg.mail_list_filter_unread()}
+				</button>
+			</div>
 			<div class="lh-actions">
 				{#if onRefresh}
 					<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>

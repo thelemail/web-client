@@ -9,12 +9,9 @@
 	import LifecycleBanners from '$core/lifecycle/LifecycleBanners.svelte';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
-	import Menu from '@lucide/svelte/icons/menu';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import { mailNav } from '$core/stores/nav.svelte';
 	import Compose from './Compose.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
-	import ListSearch from './ListSearch.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
 	import { scheduled } from '$core/stores/scheduled.svelte';
@@ -94,15 +91,12 @@
 <div class="mailbody">
 	<section class="list">
 		<div class="list-h">
-			<button
-				class="lh-nav"
-				title={m.mail_menu()}
-				aria-expanded={mailNav.open}
-				onclick={(e) => mailNav.toggle(e.currentTarget)}
-			>
-				<Menu size={18} />
-			</button>
-			<ListSearch placeholder={m.mail_search_drafts()} operators={false} />
+			<h1 class="ttl">
+				<span class="ttl-name">{m.mailbox_folder_drafts()}</span>
+				{#if drafts.count > 0}
+					<span class="ttl-ct">{drafts.count}</span>
+				{/if}
+			</h1>
 			<div class="lh-actions">
 				<button class="lh-btn" title={m.mail_refresh()} onclick={() => drafts.refresh()}>
 					<RefreshCw size={16} />
