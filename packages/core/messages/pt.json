@@ -3020,6 +3020,7 @@
 	"settings_domains_remove_keep": "Manter este domínio",
 	"settings_domains_removing": "A remover…",
 	"mail_row_select": "Selecionar mensagem",
+	"mail_pane_resize": "Redimensionar lista de mensagens",
 	"mail_row_unread": "Não lida",
 	"mail_row_starred": "Com estrela",
 	"mail_row_sender_mismatch": "Endereço do remetente falsificado",

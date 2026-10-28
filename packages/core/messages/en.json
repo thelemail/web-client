@@ -3020,6 +3020,7 @@
 	"settings_domains_remove_keep": "Keep this domain",
 	"settings_domains_removing": "Removing…",
 	"mail_row_select": "Select message",
+	"mail_pane_resize": "Resize message list",
 	"mail_row_unread": "Unread",
 	"mail_row_starred": "Starred",
 	"mail_row_sender_mismatch": "Sender address forged",

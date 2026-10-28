@@ -20,6 +20,7 @@
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import MovePicker, { type SystemTarget, type SystemTargetId } from './MovePicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
+	import PaneDivider from './PaneDivider.svelte';
 	import {
 		chunk,
 		labelStatesFromTallies,
@@ -1707,6 +1708,7 @@
 			{collectionKind}
 			{showScope}
 		/>
+		<PaneDivider />
 		{#if messageId && !selected && deepLinkMissing}
 			<section class="reader reader-missing">
 				<p>{msg.mail_not_found()}</p>
