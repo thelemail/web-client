@@ -1562,7 +1562,6 @@
 	"mail_headers_title": "Original headers",
 	"mail_headers_loading": "Fetching and decrypting the stored message…",
 	"mail_sidebar_compose": "Compose",
-	"mail_sidebar_mailbox": "Mailbox",
 	"mail_sidebar_less": "Less",
 	"mail_sidebar_more": "More",
 	"mail_sidebar_storage": "STORAGE",

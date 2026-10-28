@@ -1562,7 +1562,6 @@
   "mail_headers_title": "En-têtes d’origine",
   "mail_headers_loading": "Récupération et déchiffrement du message stocké…",
   "mail_sidebar_compose": "Nouveau message",
-  "mail_sidebar_mailbox": "Boîte mail",
   "mail_sidebar_less": "Moins",
   "mail_sidebar_more": "Plus",
   "mail_sidebar_storage": "STOCKAGE",

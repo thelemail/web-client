@@ -419,7 +419,6 @@
 	</button>
 
 	<nav class="rail-nav" aria-label={m.mail_sidebar_navigation()}>
-		<div class="fgroup">{m.mail_sidebar_mailbox()}</div>
 		<div class="nav-list">
 			{#each primary as f (f.id)}
 				{@const pair = folderIcons[f.id] ?? FALLBACK_ICONS}
