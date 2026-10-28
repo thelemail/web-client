@@ -23,6 +23,10 @@
 	import UserX from '@lucide/svelte/icons/user-x';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import * as Tooltip from '$core/components/ui/tooltip';
+	import type { Snippet } from 'svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import ReplyBox, { type ReplyMode } from './ReplyBox.svelte';
@@ -102,6 +106,8 @@
 		onReplySent?: (id: string) => void;
 		onReplySentArchive?: (id: string) => void;
 		onBack?: () => void;
+		onPrev?: () => void;
+		onNext?: () => void;
 	}
 
 	let {
@@ -128,7 +134,9 @@
 		blockedSenderCount,
 		onReplySent,
 		onReplySentArchive,
-		onBack
+		onBack,
+		onPrev,
+		onNext
 	}: Props = $props();
 
 	const img = $derived(senderImage(m?.fromAddr, m?.bimiDomain, m?.senderMismatch));
@@ -146,6 +154,7 @@
 
 	let moreOpen = $state(false);
 	let moreRef: HTMLDivElement | undefined = $state();
+	let snoozeRef: HTMLButtonElement | undefined = $state();
 	let morePanel: HTMLDivElement | undefined = $state();
 
 	let snoozePickerOpen = $state(false);
@@ -604,94 +613,106 @@
 			<button class="rb-ico rb-back" title={msg.mail_skeleton_back()} onclick={() => onBack?.()}>
 				<ArrowLeft size={17} />
 			</button>
+			<Tooltip.Provider delayDuration={150} disableHoverableContent>
 			{#if caps.showReply}
 				{#each replyButtons as m (m)}
+					{@const label = m === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply()}
+					<Tooltip.Root>
+						<Tooltip.Trigger
+							class={`rb-btn${m === replyButtons[0] ? ' primary' : ''}${replyMode === m ? ' on' : ''}`}
+							aria-label={label}
+							onclick={() => toggleReplyMode(m)}
+						>
+							{#if m === 'all'}<ReplyAll size={15} />{:else}<Reply size={15} />{/if}<span class="rb-t">{label}</span>
+						</Tooltip.Trigger>
+						<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
+					</Tooltip.Root>
+				{/each}
+				<Tooltip.Root>
+					<Tooltip.Trigger
+						class={replyMode === 'forward' ? 'rb-btn on' : 'rb-btn'}
+						aria-label={msg.mail_reader_forward()}
+						onclick={() => toggleReplyMode('forward')}
+					>
+						<Forward size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
+					</Tooltip.Trigger>
+					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_forward()}</Tooltip.Content>
+				</Tooltip.Root>
+			{/if}
+			{#if caps.showReply}
+				<span class="rb-sep" aria-hidden="true"></span>
+			{/if}
+				{#if caps.showArchive}
+					<button type="button" class="rb-txt" data-mutates aria-label={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
+						<Archive size={16} /><span class="rb-t">{msg.mail_action_archive()}</span>
+					</button>
+				{/if}
+				{#if caps.showSnooze && onSnooze}
+					<button
+						bind:this={snoozeRef}
+						type="button"
+						class="rb-txt"
+						class:on={snoozePickerOpen}
+						aria-label={msg.mail_reader_snooze()}
+						aria-haspopup="dialog"
+						aria-expanded={snoozePickerOpen}
+						onclick={() => (snoozePickerOpen = !snoozePickerOpen)}
+					>
+						<Clock size={16} /><span class="rb-t">{msg.mail_reader_snooze()}</span>
+					</button>
+				{/if}
+				{#if caps.showMove && onPicker}
 					<button
 						type="button"
-						class="rb-btn"
-						class:primary={m === replyButtons[0]}
-						class:on={replyMode === m}
-						onclick={() => toggleReplyMode(m)}
+						class="rb-txt"
+						class:on={openPicker === 'reader-move'}
+						data-mutates
+						data-picker="reader-move"
+						aria-label={msg.mail_reader_move_to()}
+						aria-haspopup="dialog"
+						aria-expanded={openPicker === 'reader-move'}
+						onclick={(e) => onPicker('move', m.id, e.currentTarget)}
 					>
-						{#if m === 'all'}
-							<ReplyAll size={15} /><span class="rb-t">{msg.mail_reader_reply_all()}</span>
-						{:else}
-							<Reply size={15} /><span class="rb-t">{msg.mail_reader_reply()}</span>
-						{/if}
+						<FolderInput size={16} /><span class="rb-t">{msg.mail_reader_move()}</span>
 					</button>
-				{/each}
-				<button
-					type="button"
-					class="rb-btn"
-					class:on={replyMode === 'forward'}
-					onclick={() => toggleReplyMode('forward')}
-				>
-					<Forward size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
-				</button>
-			{/if}
-			<div class="grow"></div>
-			{#if caps.showRestore}
-				<button class="rb-ico" data-mutates title={msg.mail_action_restore()} onclick={() => onRestore?.(m.id)}>
-					<Undo2 size={17} />
-				</button>
-			{/if}
-			{#if caps.showArchive}
-				<button class="rb-ico" data-mutates title={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
-					<Archive size={17} />
-				</button>
-			{/if}
-			{#if caps.showTrash}
-				<button class="rb-ico" data-mutates title={msg.common_delete()} onclick={() => onTrash(m.id)}>
-					<Trash2 size={17} />
-				</button>
-			{/if}
-			{#if caps.showDelete}
-				<button class="rb-ico rb-ico-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onDelete?.(m.id)}>
-					<Trash2 size={17} />
-				</button>
-			{/if}
-			{#if caps.showMove && onPicker}
-				<button
-					type="button"
-					class="rb-ico"
-					class:on={openPicker === 'reader-move'}
-					data-mutates
-					data-picker="reader-move"
-					title={msg.mail_reader_move_to()}
-					aria-haspopup="dialog"
-					aria-expanded={openPicker === 'reader-move'}
-					onclick={(e) => onPicker('move', m.id, e.currentTarget)}
-				>
-					<FolderInput size={17} />
-				</button>
-			{/if}
-			{#if caps.showLabels && onPicker}
-				<button
-					type="button"
-					class="rb-ico"
-					class:on={openPicker === 'reader-labels'}
-					data-mutates
-					data-picker="reader-labels"
-					title={msg.mail_list_labels()}
-					aria-haspopup="dialog"
-					aria-expanded={openPicker === 'reader-labels'}
-					onclick={(e) => onPicker('labels', m.id, e.currentTarget)}
-				>
-					<Tag size={17} />
-				</button>
-			{/if}
+				{/if}
+				{#if caps.showLabels && onPicker}
+					<button
+						type="button"
+						class="rb-txt"
+						class:on={openPicker === 'reader-labels'}
+						data-mutates
+						data-picker="reader-labels"
+						aria-label={msg.mail_list_labels()}
+						aria-haspopup="dialog"
+						aria-expanded={openPicker === 'reader-labels'}
+						onclick={(e) => onPicker('labels', m.id, e.currentTarget)}
+					>
+						<Tag size={16} /><span class="rb-t">{msg.mail_list_labels()}</span>
+					</button>
+				{/if}
+				{#if caps.showRestore}
+					{@render barIcon(msg.mail_action_restore(), () => onRestore?.(m.id), undoIcon, { mutates: true })}
+				{/if}
+				{#if caps.showTrash}
+					{@render barIcon(msg.common_delete(), () => onTrash(m.id), trashIcon, { mutates: true })}
+				{/if}
+				{#if caps.showDelete}
+					{@render barIcon(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trashIcon, { mutates: true, danger: true })}
+				{/if}
 			<div class="rb-more" bind:this={moreRef}>
-				<button
-					type="button"
-					class="rb-ico"
-					class:on={moreOpen}
-					title={msg.mail_reader_more()}
-					aria-haspopup="menu"
-					aria-expanded={moreOpen}
-					onclick={() => (moreOpen = !moreOpen)}
-				>
-					<Ellipsis size={17} />
-				</button>
+				<Tooltip.Root>
+					<Tooltip.Trigger
+						class={moreOpen ? 'rb-ico on' : 'rb-ico'}
+						aria-label={msg.mail_reader_more()}
+						aria-haspopup="menu"
+						aria-expanded={moreOpen}
+						onclick={() => (moreOpen = !moreOpen)}
+					>
+						<Ellipsis size={17} />
+					</Tooltip.Trigger>
+					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_more()}</Tooltip.Content>
+				</Tooltip.Root>
 				{#if moreOpen}
 					<AnchoredMenu anchor={moreRef} bind:panel={morePanel} extraClass="more-menu">
 						{#if caps.showMarkRead && m.unread}
@@ -717,19 +738,6 @@
 								}}
 							>
 								<Mail size={17} />{msg.mail_action_mark_unread()}
-							</button>
-						{/if}
-						{#if caps.showSnooze && onSnooze}
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									snoozePickerOpen = true;
-								}}
-							>
-								<Clock size={17} />{msg.mail_reader_snooze()}
 							</button>
 						{/if}
 						{#if caps.showUnsnooze && onUnsnooze}
@@ -833,14 +841,20 @@
 						{/if}
 					</AnchoredMenu>
 				{/if}
-				{#if snoozePickerOpen && m}
-					<SnoozePicker
-						anchor={moreRef}
-						onPick={snoozeUntil}
-						onClose={() => (snoozePickerOpen = false)}
-					/>
-				{/if}
 			</div>
+			{#if snoozePickerOpen && m}
+				<SnoozePicker
+					anchor={snoozeRef}
+					onPick={snoozeUntil}
+					onClose={() => (snoozePickerOpen = false)}
+				/>
+			{/if}
+			<div class="grow"></div>
+			<div class="rb-nav">
+				{@render barIcon(msg.mail_reader_previous(), () => onPrev?.(), prevIcon, { disabled: !onPrev })}
+				{@render barIcon(msg.mail_reader_next(), () => onNext?.(), nextIcon, { disabled: !onNext })}
+			</div>
+			</Tooltip.Provider>
 		</div>
 		<div class="reader-scroll">
 			{#key m.id}
@@ -1070,3 +1084,28 @@
 		onUnsubscribed={(name, kind) => onUnsubscribed?.(name, kind)}
 	/>
 {/if}
+
+{#snippet barIcon(
+	label: string,
+	run: () => void,
+	icon: Snippet,
+	opts: { mutates?: boolean; danger?: boolean; disabled?: boolean } = {}
+)}
+	<Tooltip.Root>
+		<Tooltip.Trigger
+			class={opts.danger ? 'rb-ico rb-ico-danger' : 'rb-ico'}
+			aria-label={label}
+			disabled={opts.disabled}
+			data-mutates={opts.mutates ? '' : undefined}
+			onclick={run}
+		>
+			{@render icon()}
+		</Tooltip.Trigger>
+		<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
+	</Tooltip.Root>
+{/snippet}
+
+{#snippet undoIcon()}<Undo2 size={17} />{/snippet}
+{#snippet trashIcon()}<Trash2 size={17} />{/snippet}
+{#snippet prevIcon()}<ChevronLeft size={18} />{/snippet}
+{#snippet nextIcon()}<ChevronRight size={18} />{/snippet}

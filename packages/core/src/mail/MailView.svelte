@@ -134,6 +134,19 @@
 				msg.mail_folder_inbox())
 	);
 
+	const folderUnread = $derived.by(() => {
+		const c = mailbox.counts;
+		if (viewFolderId) return c.folders[viewFolderId]?.subtree ?? 0;
+		if (viewLabelId) return c.labels[viewLabelId]?.subtree ?? 0;
+		const folder = query.folder as keyof typeof c;
+		const n = c[folder];
+		return typeof n === 'number' ? n : 0;
+	});
+
+	const openIndex = $derived(messageId ? list.findIndex((m) => m.id === messageId) : -1);
+	const prevId = $derived(openIndex > 0 ? list[openIndex - 1].id : null);
+	const nextId = $derived(openIndex >= 0 && openIndex < list.length - 1 ? list[openIndex + 1].id : null);
+
 	const inFlight = new Map<string, Promise<void>>();
 
 	function flash(text: string, undo?: () => void, undoLabel?: string) {
@@ -1659,6 +1672,7 @@
 	{:else}
 		<MessageList
 			{folderLabel}
+			{folderUnread}
 			{list}
 			activeId={messageId}
 			{checked}
@@ -1739,6 +1753,8 @@
 				onUnsubscribed={unsubscribed}
 				blockedSenderCount={(address) => blockableFrom(address).length}
 					onBack={() => closeMessage({ replace: true })}
+				onPrev={prevId ? () => openMessage(prevId) : undefined}
+				onNext={nextId ? () => openMessage(nextId) : undefined}
 				onReplySent={replySent}
 				onReplySentArchive={replySentArchive}
 			/>
