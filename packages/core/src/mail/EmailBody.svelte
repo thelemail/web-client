@@ -42,7 +42,7 @@
 			const d = frame.contentDocument;
 			if (!d) return;
 			fitWidth(d);
-			const next = Math.max(60, d.documentElement.scrollHeight) + 'px';
+			const next = Math.max(60, d.documentElement.scrollHeight, d.body?.scrollHeight ?? 0) + 'px';
 			if (frame.style.height !== next) frame.style.height = next;
 			frame.dataset.fitted = '1';
 		} catch {
