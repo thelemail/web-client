@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import Check from '@lucide/svelte/icons/check';
 	import MailOpen from '@lucide/svelte/icons/mail-open';
@@ -295,6 +296,106 @@
 		scrollEl.addEventListener('scroll', check, { passive: true });
 		return () => scrollEl?.removeEventListener('scroll', check);
 	});
+
+	type Anchor = { view: string; rows: { id: string; offset: number }[] };
+
+	const rowIds = $derived(list.map((m) => m.id).join(' '));
+	const viewKey = $derived(
+		[viewFolder, sort, JSON.stringify(filters), searchActive].join('|')
+	);
+	let anchor: Anchor | null = null;
+	let jumpToTop = false;
+	let lastTop = 0;
+	let lastActive: string | null = null;
+
+	function rowEls(): HTMLElement[] {
+		return scrollEl ? [...scrollEl.querySelectorAll<HTMLElement>('.mrow')] : [];
+	}
+
+	function rowEl(id: string): HTMLElement | undefined {
+		return rowEls().find((r) => r.dataset.id === id);
+	}
+
+	function captureAnchor(): Anchor | null {
+		if (!scrollEl || scrollEl.scrollTop <= 4) return null;
+		const top = scrollEl.getBoundingClientRect().top;
+		const rows: Anchor['rows'] = [];
+		for (const r of rowEls()) {
+			const box = r.getBoundingClientRect();
+			if (box.bottom <= top || !r.dataset.id) continue;
+			rows.push({ id: r.dataset.id, offset: box.top - top });
+			if (rows.length === 3) break;
+		}
+		return rows.length ? { view: viewKey, rows } : null;
+	}
+
+	function restoreAnchor(a: Anchor) {
+		if (!scrollEl || a.view !== viewKey) return;
+		const top = scrollEl.getBoundingClientRect().top;
+		for (const { id, offset } of a.rows) {
+			const r = rowEl(id);
+			if (!r) continue;
+			const delta = r.getBoundingClientRect().top - top - offset;
+			if (delta) scrollEl.scrollTop += delta;
+			return;
+		}
+	}
+
+	$effect.pre(() => {
+		void rowIds;
+		void pendingCount;
+		void returnedCount;
+		untrack(() => {
+			anchor = captureAnchor();
+		});
+	});
+
+	$effect(() => {
+		void rowIds;
+		void pendingCount;
+		void returnedCount;
+		untrack(() => {
+			if (jumpToTop && scrollEl) {
+				jumpToTop = false;
+				scrollEl.scrollTop = 0;
+			} else if (anchor) {
+				restoreAnchor(anchor);
+			}
+			anchor = null;
+		});
+	});
+
+	$effect(() => {
+		if (!scrollEl) return;
+		const el = scrollEl;
+		const track = () => {
+			if (el.clientHeight > 0) lastTop = el.scrollTop;
+		};
+		el.addEventListener('scroll', track, { passive: true });
+		return () => el.removeEventListener('scroll', track);
+	});
+
+	$effect(() => {
+		const id = activeId;
+		untrack(() => {
+			const prev = lastActive;
+			lastActive = id;
+			if (id) {
+				rowEl(id)?.scrollIntoView?.({ block: 'nearest' });
+				return;
+			}
+			if (!prev || !scrollEl) return;
+			if (scrollEl.clientHeight > 0 && scrollEl.scrollTop !== lastTop) scrollEl.scrollTop = lastTop;
+			const focused = document.activeElement;
+			if (focused && focused !== document.body && !focused.closest('.reader')) return;
+			rowEl(prev)?.querySelector<HTMLElement>('.mrow-open')?.focus({ preventScroll: true });
+		});
+	});
+
+	function flushPending() {
+		jumpToTop = true;
+		onFlushPending?.();
+	}
 </script>
 
 <svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
@@ -575,7 +676,7 @@
 	{/if}
 	<div class="scroll" bind:this={scrollEl}>
 		{#if pendingCount > 0}
-			<button type="button" class="new-strip" onclick={onFlushPending}>
+			<button type="button" class="new-strip" onclick={flushPending}>
 				<ArrowUp size={14} />
 				<span>{msg.mail_list_new_messages({ count: pendingCount })}</span>
 			</button>

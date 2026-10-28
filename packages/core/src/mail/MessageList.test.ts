@@ -181,3 +181,75 @@ describe('MessageList header', () => {
 		expect(onSetFilters).toHaveBeenCalledWith({ ...EMPTY_FILTERS });
 	});
 });
+
+describe('MessageList position across updates', () => {
+	const ROW = 80;
+
+	function layout(container: HTMLElement) {
+		const scroll = container.querySelector<HTMLElement>('.scroll')!;
+		let top = 0;
+		Object.defineProperty(scroll, 'scrollTop', {
+			configurable: true,
+			get: () => top,
+			set: (v: number) => (top = v)
+		});
+		Object.defineProperty(scroll, 'clientHeight', { configurable: true, get: () => 400 });
+		scroll.getBoundingClientRect = () => ({ top: 0, bottom: 400 }) as DOMRect;
+		vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+			const rows = [...scroll.querySelectorAll('.mrow')];
+			const i = rows.indexOf(this);
+			const y = i * ROW - top;
+			return { top: y, bottom: y + ROW } as DOMRect;
+		});
+		return scroll;
+	}
+
+	const ids = (n: number, from = 0) => Array.from({ length: n }, (_, i) => message(`m${from + i}`));
+
+	it('keeps the visible row in place when mail arrives above it', async () => {
+		const list = ids(10, 2);
+		const { container, rerender } = mount({ list });
+		const scroll = layout(container);
+		scroll.scrollTop = 250;
+		await rerender({ list: [...ids(2), ...list] });
+		expect(scroll.scrollTop).toBe(250 + 2 * ROW);
+		vi.restoreAllMocks();
+	});
+
+	it('leaves the top of the list alone so new mail shows', async () => {
+		const list = ids(10, 2);
+		const { container, rerender } = mount({ list });
+		const scroll = layout(container);
+		await rerender({ list: [...ids(2), ...list] });
+		expect(scroll.scrollTop).toBe(0);
+		vi.restoreAllMocks();
+	});
+
+	it('keeps the selection when mail arrives', async () => {
+		const list = ids(4, 2);
+		const checked = new Set(['m3']);
+		const { container, rerender } = mount({ list, checked });
+		await rerender({ list: [...ids(2), ...list], checked });
+		const selected = [...container.querySelectorAll('.mrow.sel')].map((r) => (r as HTMLElement).dataset.id);
+		expect(selected).toEqual(['m3']);
+	});
+
+	it('returns focus to the row that was open', async () => {
+		const list = ids(4);
+		const { container, rerender } = mount({ list, activeId: 'm2' });
+		(document.activeElement as HTMLElement | null)?.blur();
+		await rerender({ list, activeId: null });
+		const row = container.querySelector<HTMLElement>('.mrow[data-id="m2"]')!;
+		expect(document.activeElement).toBe(row.querySelector('.mrow-open'));
+	});
+
+	it('does not steal focus from elsewhere when the message closes', async () => {
+		const list = ids(4);
+		const outside = document.body.appendChild(document.createElement('input'));
+		const { rerender } = mount({ list, activeId: 'm2' });
+		outside.focus();
+		await rerender({ list, activeId: null });
+		expect(document.activeElement).toBe(outside);
+		outside.remove();
+	});
+});
