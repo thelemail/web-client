@@ -24,7 +24,7 @@ export interface RenderResult {
 const BASE_STYLE = [
 	'html,body{margin:0;padding:0;background:transparent}',
 	'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#222;word-wrap:break-word}',
-	'.plain{padding:2px;max-width:68ch}',
+	'.plain{padding:2px}',
 	'.plain p{margin:0 0 16px}',
 	'img{max-width:100%;height:auto}',
 	'a{color:#234132}',

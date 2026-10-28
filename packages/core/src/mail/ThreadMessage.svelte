@@ -116,20 +116,20 @@
 		}}
 	>
 		<div class="tmsg-collapsed">
-			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={img.src} fit={img.fit} imgBg={img.imgBg} />
+			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={26} src={img.src} fit={img.fit} imgBg={img.imgBg} />
 			<span class="tc-name">
 				<span class="tc-nm">{name}</span>
 				{#if e.trust}
 					<TrustMark trust={e.trust} variant="static" />
 				{/if}
 			</span>
-			<span class="tc-snip">{e.body[0] ?? ''}</span>
 			<span class="tc-meta">
 				{#if chips.length > 0}
 					<Paperclip size={13} />
 				{/if}
 				<span class="tc-time">{shortWhen}</span>
 			</span>
+			<span class="tc-snip">{e.body[0] ?? ''}</span>
 		</div>
 	</div>
 {:else}
@@ -169,7 +169,7 @@
 					{#if sentByText}
 						<span class="by">{sentByText}</span>
 					{/if}
-					<span class="to">→ {toLine || '—'}</span>
+					<span class="to">{m.mail_thread_to({ list: toLine || '—' })}</span>
 					{#if ccLine}
 						<span class="to">{m.mail_thread_cc({ list: ccLine })}</span>
 					{/if}

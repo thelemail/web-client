@@ -416,6 +416,21 @@
 	"mail_link_remove": "Remove link",
 	"mail_link_apply": "Apply",
 	"mail_link_address": "Link address",
+	"mail_thread_pill": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} message",
+				"countPlural=*": "{count} messages"
+			}
+		}
+	],
 	"mail_thread_count": [
 		{
 			"declarations": [
@@ -1547,7 +1562,6 @@
 	"mail_headers_title": "Original headers",
 	"mail_headers_loading": "Fetching and decrypting the stored message…",
 	"mail_sidebar_compose": "Compose",
-	"mail_sidebar_mailbox": "Mailbox",
 	"mail_sidebar_less": "Less",
 	"mail_sidebar_more": "More",
 	"mail_sidebar_storage": "STORAGE",
@@ -1555,6 +1569,7 @@
 	"mail_editor_aria": "Message body",
 	"mail_thread_you": "You",
 	"mail_thread_cc": "Cc: {list}",
+	"mail_thread_to": "To: {list}",
 	"mail_thread_delivered_to": "Delivered to: {address}",
 	"mail_sent_by": "Sent by {name}",
 	"mail_sent_by_you": "Sent by you",
@@ -3020,6 +3035,14 @@
 	"settings_domains_remove_keep": "Keep this domain",
 	"settings_domains_removing": "Removing…",
 	"mail_row_select": "Select message",
+	"mail_pane_resize": "Resize message list",
+	"mail_reader_move": "Move",
+	"mail_reader_previous": "Previous message",
+	"mail_reader_next": "Next message",
+	"mail_top_help": "Help",
+	"mail_list_all": "All",
+	"mail_list_show": "Show",
+	"mail_list_unread_count": "{count} unread",
 	"mail_row_unread": "Unread",
 	"mail_row_starred": "Starred",
 	"mail_row_sender_mismatch": "Sender address forged",

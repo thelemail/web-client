@@ -416,6 +416,21 @@
   "mail_link_remove": "Supprimer le lien",
   "mail_link_apply": "Appliquer",
   "mail_link_address": "Adresse du lien",
+  "mail_thread_pill": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} message",
+        "countPlural=*": "{count} messages"
+      }
+    }
+  ],
   "mail_thread_count": [
     {
       "declarations": [
@@ -1547,7 +1562,6 @@
   "mail_headers_title": "En-têtes d’origine",
   "mail_headers_loading": "Récupération et déchiffrement du message stocké…",
   "mail_sidebar_compose": "Nouveau message",
-  "mail_sidebar_mailbox": "Boîte mail",
   "mail_sidebar_less": "Moins",
   "mail_sidebar_more": "Plus",
   "mail_sidebar_storage": "STOCKAGE",
@@ -1555,6 +1569,7 @@
   "mail_editor_aria": "Corps du message",
   "mail_thread_you": "Vous",
   "mail_thread_cc": "Cc : {list}",
+  "mail_thread_to": "À : {list}",
   "mail_thread_delivered_to": "Distribué à : {address}",
   "mail_sent_by": "Envoyé par {name}",
   "mail_sent_by_you": "Envoyé par vous",
@@ -3020,6 +3035,14 @@
   "settings_domains_remove_keep": "Conserver ce domaine",
   "settings_domains_removing": "Suppression…",
   "mail_row_select": "Sélectionner le message",
+  "mail_pane_resize": "Redimensionner la liste des messages",
+  "mail_reader_move": "Déplacer",
+  "mail_reader_previous": "Message précédent",
+  "mail_reader_next": "Message suivant",
+  "mail_top_help": "Aide",
+  "mail_list_all": "Tous",
+  "mail_list_show": "Afficher",
+  "mail_list_unread_count": "{count} non lus",
   "mail_row_unread": "Non lu",
   "mail_row_starred": "Favori",
   "mail_row_sender_mismatch": "Adresse de l’expéditeur usurpée",

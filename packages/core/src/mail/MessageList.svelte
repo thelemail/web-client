@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import Check from '@lucide/svelte/icons/check';
 	import MailOpen from '@lucide/svelte/icons/mail-open';
@@ -21,12 +22,9 @@
 	import AlarmClock from '@lucide/svelte/icons/alarm-clock';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Menu from '@lucide/svelte/icons/menu';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Search from '@lucide/svelte/icons/search';
-	import { mailNav } from '$core/stores/nav.svelte';
 	import MessageRow from './MessageRow.svelte';
-	import ListSearch from './ListSearch.svelte';
 	import {
 		bucketFromEpoch,
 		dayBucketLabel,
@@ -47,6 +45,7 @@
 
 	interface Props {
 		folderLabel: string;
+		folderUnread?: number;
 		list: Message[];
 		activeId: string | null;
 		checked: Set<string>;
@@ -99,6 +98,7 @@
 
 	let {
 		folderLabel,
+		folderUnread = 0,
 		list,
 		activeId,
 		checked,
@@ -246,6 +246,10 @@
 		sortOpen = false;
 	}
 
+	function setUnreadOnly(on: boolean) {
+		if (filters.unread !== on) onSetFilters({ ...filters, unread: on });
+	}
+
 	function toggleFlag(key: 'unread' | 'starred' | 'attach' | 'direct') {
 		onSetFilters({ ...filters, [key]: !filters[key] });
 	}
@@ -295,6 +299,128 @@
 		scrollEl.addEventListener('scroll', check, { passive: true });
 		return () => scrollEl?.removeEventListener('scroll', check);
 	});
+
+	type Anchor = { view: string; rows: { id: string; offset: number }[] };
+
+	const rowIds = $derived(list.map((m) => m.id).join(' '));
+	const viewKey = $derived(
+		[viewFolder, sort, JSON.stringify(filters), searchActive].join('|')
+	);
+	let anchor: Anchor | null = null;
+	let jumpToTop = false;
+	let lastTop = 0;
+	let lastActive: string | null = null;
+
+	function rowEls(): HTMLElement[] {
+		return scrollEl ? [...scrollEl.querySelectorAll<HTMLElement>('.mrow')] : [];
+	}
+
+	function rowEl(id: string): HTMLElement | undefined {
+		return rowEls().find((r) => r.dataset.id === id);
+	}
+
+	function captureAnchor(): Anchor | null {
+		if (!scrollEl || scrollEl.scrollTop <= 4) return null;
+		const top = scrollEl.getBoundingClientRect().top;
+		const rows: Anchor['rows'] = [];
+		for (const r of rowEls()) {
+			const box = r.getBoundingClientRect();
+			if (box.bottom <= top || !r.dataset.id) continue;
+			rows.push({ id: r.dataset.id, offset: box.top - top });
+			if (rows.length === 3) break;
+		}
+		return rows.length ? { view: viewKey, rows } : null;
+	}
+
+	function restoreAnchor(a: Anchor) {
+		if (!scrollEl || a.view !== viewKey) return;
+		const top = scrollEl.getBoundingClientRect().top;
+		for (const { id, offset } of a.rows) {
+			const r = rowEl(id);
+			if (!r) continue;
+			const delta = r.getBoundingClientRect().top - top - offset;
+			if (delta) scrollEl.scrollTop += delta;
+			return;
+		}
+	}
+
+	$effect.pre(() => {
+		void rowIds;
+		void pendingCount;
+		void returnedCount;
+		untrack(() => {
+			anchor = captureAnchor();
+		});
+	});
+
+	$effect(() => {
+		void rowIds;
+		void pendingCount;
+		void returnedCount;
+		untrack(() => {
+			if (jumpToTop && scrollEl) {
+				jumpToTop = false;
+				scrollEl.scrollTop = 0;
+			} else if (anchor) {
+				restoreAnchor(anchor);
+			}
+			anchor = null;
+		});
+	});
+
+	$effect(() => {
+		if (!scrollEl) return;
+		const el = scrollEl;
+		const track = () => {
+			if (el.clientHeight > 0) lastTop = el.scrollTop;
+		};
+		el.addEventListener('scroll', track, { passive: true });
+		return () => el.removeEventListener('scroll', track);
+	});
+
+	$effect(() => {
+		const id = activeId;
+		untrack(() => {
+			const prev = lastActive;
+			lastActive = id;
+			if (id) {
+				rowEl(id)?.scrollIntoView?.({ block: 'nearest' });
+				return;
+			}
+			if (!prev || !scrollEl) return;
+			if (scrollEl.clientHeight > 0 && scrollEl.scrollTop !== lastTop) scrollEl.scrollTop = lastTop;
+			const focused = document.activeElement;
+			if (focused && focused !== document.body && !focused.closest('.reader')) return;
+			rowEl(prev)?.querySelector<HTMLElement>('.mrow-open')?.focus({ preventScroll: true });
+		});
+	});
+
+	let arrived = $state<Set<string>>(new Set());
+	let seen: { view: string; ids: Set<string> } | null = null;
+	let arrivedTimer: ReturnType<typeof setTimeout> | undefined;
+
+	$effect(() => {
+		const ids = list.map((m) => m.id);
+		const view = viewKey;
+		untrack(() => {
+			const prev = seen;
+			seen = { view, ids: new Set(ids) };
+			if (!prev || prev.view !== view || prev.ids.size === 0) return;
+			const firstKnown = ids.findIndex((id) => prev.ids.has(id));
+			const fresh = ids.slice(0, firstKnown < 0 ? 0 : firstKnown);
+			if (fresh.length === 0) return;
+			arrived = new Set(fresh);
+			clearTimeout(arrivedTimer);
+			arrivedTimer = setTimeout(() => (arrived = new Set()), 700);
+		});
+	});
+
+	$effect(() => () => clearTimeout(arrivedTimer));
+
+	function flushPending() {
+		jumpToTop = true;
+		onFlushPending?.();
+	}
 </script>
 
 <svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
@@ -375,15 +501,23 @@
 		</div>
 	{:else}
 		<div class="list-h">
-			<button
-				class="lh-nav"
-				title={msg.mail_menu()}
-				aria-expanded={mailNav.open}
-				onclick={(e) => mailNav.toggle(e.currentTarget)}
-			>
-				<Menu size={18} />
-			</button>
-			<ListSearch />
+			<h1 class="ttl">
+				<span class="ttl-name">{folderLabel}</span>
+				{#if folderUnread > 0}
+					<span class="ttl-ct" title={msg.mail_list_unread_count({ count: fmt(folderUnread) })}>
+						<span aria-hidden="true">{fmt(folderUnread)}</span>
+						<span class="sr-only">{msg.mail_list_unread_count({ count: fmt(folderUnread) })}</span>
+					</span>
+				{/if}
+			</h1>
+			<div class="seg" role="group" aria-label={msg.mail_list_show()}>
+				<button type="button" aria-pressed={!filters.unread} onclick={() => setUnreadOnly(false)}>
+					{msg.mail_list_all()}
+				</button>
+				<button type="button" aria-pressed={filters.unread} onclick={() => setUnreadOnly(true)}>
+					{msg.mail_list_filter_unread()}
+				</button>
+			</div>
 			<div class="lh-actions">
 				{#if onRefresh}
 					<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
@@ -575,7 +709,7 @@
 	{/if}
 	<div class="scroll" bind:this={scrollEl}>
 		{#if pendingCount > 0}
-			<button type="button" class="new-strip" onclick={onFlushPending}>
+			<button type="button" class="new-strip" onclick={flushPending}>
 				<ArrowUp size={14} />
 				<span>{msg.mail_list_new_messages({ count: pendingCount })}</span>
 			</button>
@@ -620,6 +754,7 @@
 					<MessageRow
 						{m}
 						active={activeId === m.id}
+						fresh={arrived.has(m.id)}
 						checked={inQuery || checked.has(m.id)}
 						{anyChecked}
 						{caps}

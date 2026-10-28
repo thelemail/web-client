@@ -416,6 +416,21 @@
 	"mail_link_remove": "Remover ligação",
 	"mail_link_apply": "Aplicar",
 	"mail_link_address": "Endereço da ligação",
+	"mail_thread_pill": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} mensagem",
+				"countPlural=*": "{count} mensagens"
+			}
+		}
+	],
 	"mail_thread_count": [
 		{
 			"declarations": [
@@ -1547,7 +1562,6 @@
 	"mail_headers_title": "Cabeçalhos originais",
 	"mail_headers_loading": "A obter e decifrar a mensagem guardada…",
 	"mail_sidebar_compose": "Escrever",
-	"mail_sidebar_mailbox": "Caixa de correio",
 	"mail_sidebar_less": "Menos",
 	"mail_sidebar_more": "Mais",
 	"mail_sidebar_storage": "ARMAZENAMENTO",
@@ -1555,6 +1569,7 @@
 	"mail_editor_aria": "Corpo da mensagem",
 	"mail_thread_you": "Eu",
 	"mail_thread_cc": "Cc: {list}",
+	"mail_thread_to": "Para: {list}",
 	"mail_thread_delivered_to": "Entregue a: {address}",
 	"mail_sent_by": "Enviado por {name}",
 	"mail_sent_by_you": "Enviado por você",
@@ -3020,6 +3035,14 @@
 	"settings_domains_remove_keep": "Manter este domínio",
 	"settings_domains_removing": "A remover…",
 	"mail_row_select": "Selecionar mensagem",
+	"mail_pane_resize": "Redimensionar lista de mensagens",
+	"mail_reader_move": "Mover",
+	"mail_reader_previous": "Mensagem anterior",
+	"mail_reader_next": "Próxima mensagem",
+	"mail_top_help": "Ajuda",
+	"mail_list_all": "Todas",
+	"mail_list_show": "Mostrar",
+	"mail_list_unread_count": "{count} não lidas",
 	"mail_row_unread": "Não lida",
 	"mail_row_starred": "Com estrela",
 	"mail_row_sender_mismatch": "Endereço do remetente falsificado",

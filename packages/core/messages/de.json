@@ -416,6 +416,21 @@
 	"mail_link_remove": "Link entfernen",
 	"mail_link_apply": "Anwenden",
 	"mail_link_address": "Link-Adresse",
+	"mail_thread_pill": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} Nachricht",
+				"countPlural=*": "{count} Nachrichten"
+			}
+		}
+	],
 	"mail_thread_count": [
 		{
 			"declarations": [
@@ -1547,7 +1562,6 @@
 	"mail_headers_title": "Ursprüngliche Kopfzeilen",
 	"mail_headers_loading": "Gespeicherte Nachricht wird abgerufen und entschlüsselt…",
 	"mail_sidebar_compose": "Verfassen",
-	"mail_sidebar_mailbox": "Postfach",
 	"mail_sidebar_less": "Weniger",
 	"mail_sidebar_more": "Mehr",
 	"mail_sidebar_storage": "SPEICHERPLATZ",
@@ -1555,6 +1569,7 @@
 	"mail_editor_aria": "Nachrichteninhalt",
 	"mail_thread_you": "Sie",
 	"mail_thread_cc": "Cc: {list}",
+	"mail_thread_to": "An: {list}",
 	"mail_thread_delivered_to": "Zugestellt an: {address}",
 	"mail_sent_by": "Gesendet von {name}",
 	"mail_sent_by_you": "Von Ihnen gesendet",
@@ -3020,6 +3035,14 @@
 	"settings_domains_remove_keep": "Diese Domain behalten",
 	"settings_domains_removing": "Wird entfernt…",
 	"mail_row_select": "Nachricht auswählen",
+	"mail_pane_resize": "Nachrichtenliste anpassen",
+	"mail_reader_move": "Verschieben",
+	"mail_reader_previous": "Vorherige Nachricht",
+	"mail_reader_next": "Nächste Nachricht",
+	"mail_top_help": "Hilfe",
+	"mail_list_all": "Alle",
+	"mail_list_show": "Anzeigen",
+	"mail_list_unread_count": "{count} ungelesen",
 	"mail_row_unread": "Ungelesen",
 	"mail_row_starred": "Mit Stern markiert",
 	"mail_row_sender_mismatch": "Absenderadresse gefälscht",
