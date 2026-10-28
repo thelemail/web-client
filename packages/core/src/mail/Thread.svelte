@@ -123,6 +123,15 @@
 		};
 	});
 
+	function foldSenders(start: number, count: number): string {
+		const names = new Map<string, string>();
+		for (const e of entries.slice(start, start + count)) {
+			const key = e.me ? '' : e.fromAddr.toLowerCase();
+			if (!names.has(key)) names.set(key, e.me ? msg.mail_thread_you() : e.from);
+		}
+		return [...names.values()].join(', ');
+	}
+
 	function toggle(id: string | undefined) {
 		if (!id) return;
 		if (open.has(id)) open.delete(id);
@@ -165,7 +174,11 @@
 				/>
 			{:else}
 				<button type="button" class="thr-fold" onclick={() => (revealed = true)}>
-					<span class="thr-fold-n">{msg.mail_thread_older({ count: row.count })}</span>
+					<span class="thr-fold-ct" aria-hidden="true">{row.count}</span>
+					<span class="thr-fold-tx">
+						<span class="thr-fold-n">{msg.mail_thread_older({ count: row.count })}</span>
+						<span class="thr-fold-who">{foldSenders(row.start, row.count)}</span>
+					</span>
 				</button>
 			{/if}
 		{/each}
