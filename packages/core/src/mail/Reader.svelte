@@ -53,6 +53,7 @@
 	import AttachmentList from '$core/mail/AttachmentList.svelte';
 	import { hydrateThread, type HydratedThread } from './hydrateThread';
 	import { focusIdOf, initialOpenIds } from './threadFold';
+	import { canTakeFocus } from './readerFocus';
 	import TrustMark from './TrustMark.svelte';
 	import { acceptSenderKeyChange } from './senderVerify';
 	import { loadMessageBody } from './bodySource';
@@ -155,6 +156,16 @@
 	let moreOpen = $state(false);
 	let moreRef: HTMLDivElement | undefined = $state();
 	let snoozeRef: HTMLButtonElement | undefined = $state();
+	let headingEl: HTMLHeadingElement | undefined = $state();
+	let headingFocusedFor: string | null = null;
+
+	$effect(() => {
+		const el = headingEl;
+		const id = m?.id;
+		if (!el || !id || headingFocusedFor === id) return;
+		headingFocusedFor = id;
+		if (canTakeFocus(document.activeElement)) el.focus({ preventScroll: true });
+	});
 	let morePanel: HTMLDivElement | undefined = $state();
 
 	let snoozePickerOpen = $state(false);
@@ -874,7 +885,7 @@
 			{#key m.id}
 			<div class="reader-inner">
 				<div class="reader-h">
-					<h1>
+					<h1 bind:this={headingEl} tabindex="-1">
 						{plainSubject(m.subj)}
 						{#if threadCount > 1}
 							<span class="thr-pill">{msg.mail_thread_pill({ count: threadCount })}</span>
