@@ -394,8 +394,8 @@
 .mail-app .empty-list .t { font-size: 16px; font-weight: 560; letter-spacing: var(--track-tight); color: var(--fg-strong); }
 .mail-app .empty-list .d { font-size: 13px; max-width: 34ch; line-height: 1.55; }
 
-.mail-app .reader { flex: 1; background: var(--bg-raised); min-width: 0; display: flex; flex-direction: column; }
-.mail-app .reader-bar { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--border); background: color-mix(in oklch, var(--bg-raised) 84%, transparent); backdrop-filter: blur(10px); }
+.mail-app .reader { flex: 1; background: var(--surface); min-width: 0; display: flex; flex-direction: column; }
+.mail-app .reader-bar { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(10px); }
 .mail-app .reader-bar .grow { flex: 1; }
 .mail-app .reader { container: reader / inline-size; }
 .mail-app .rb-sep { flex: 0 0 auto; width: 1px; height: 20px; margin: 0 4px; background: var(--border); }
