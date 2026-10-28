@@ -569,6 +569,9 @@
 	const isThreadView = $derived(
 		Math.max(enriched?.thread?.length ?? 0, m ? mailbox.threadSize(m.id) : 0) > 1
 	);
+	const threadCount = $derived(
+		!m ? 0 : threadMeta?.id === m.id ? threadMeta.entries.length : mailbox.threadSize(m.id)
+	);
 	const threadPending = $derived(
 		!!m && isThreadView && threadMeta?.id !== m.id && threadFailedFor !== m.id
 	);
@@ -873,6 +876,9 @@
 				<div class="reader-h">
 					<h1>
 						{plainSubject(m.subj)}
+						{#if threadCount > 1}
+							<span class="thr-pill">{msg.mail_thread_pill({ count: threadCount })}</span>
+						{/if}
 						{#if caps.showStar}
 							<button
 								type="button"
@@ -1028,6 +1034,27 @@
 					{#if !isThreadView}
 						<AttachmentList chips={attachmentChips} refresh={refreshPointer} />
 					{/if}
+				{/if}
+
+				{#if caps.showReply && !replyMode && !threadPending}
+					<div class="reply-row">
+						{#each replyButtons as mode (mode)}
+							<button
+								type="button"
+								class={mode === replyButtons[0] ? 'rr-btn primary' : 'rr-btn'}
+								onclick={() => toggleReplyMode(mode)}
+							>
+								{#if mode === 'all'}
+									<ReplyAll size={16} />{msg.mail_reader_reply_all()}
+								{:else}
+									<Reply size={16} />{msg.mail_reader_reply()}
+								{/if}
+							</button>
+						{/each}
+						<button type="button" class="rr-btn" onclick={() => toggleReplyMode('forward')}>
+							<Forward size={16} />{msg.mail_reader_forward()}
+						</button>
+					</div>
 				{/if}
 
 				{#if replyMode}

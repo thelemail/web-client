@@ -2,7 +2,6 @@
 	import { m as msg } from '$paraglide/messages.js';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { untrack } from 'svelte';
-	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import ThreadMessage from './ThreadMessage.svelte';
 	import { foldRows } from './threadFold';
 	import type { ThreadEntry } from './data';
@@ -144,9 +143,6 @@
 
 <div class="thread-wrap" class:settling={!settled} bind:this={wrap}>
 	<div class="thread-top">
-		<span class="thr-n">
-			<MessagesSquare size={14} />{msg.mail_thread_count({ count: entries.length })}
-		</span>
 		<button type="button" class="thr-exp" onclick={allOpen ? collapseAll : expandAll}>
 			{allOpen ? msg.mail_thread_collapse_all() : msg.mail_thread_expand_all()}
 		</button>

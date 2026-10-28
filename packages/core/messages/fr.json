@@ -416,6 +416,21 @@
   "mail_link_remove": "Supprimer le lien",
   "mail_link_apply": "Appliquer",
   "mail_link_address": "Adresse du lien",
+  "mail_thread_pill": [
+    {
+      "declarations": [
+        "input count",
+        "local countPlural = count: plural"
+      ],
+      "selectors": [
+        "countPlural"
+      ],
+      "match": {
+        "countPlural=one": "{count} message",
+        "countPlural=*": "{count} messages"
+      }
+    }
+  ],
   "mail_thread_count": [
     {
       "declarations": [

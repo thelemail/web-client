@@ -416,6 +416,21 @@
 	"mail_link_remove": "Remover ligação",
 	"mail_link_apply": "Aplicar",
 	"mail_link_address": "Endereço da ligação",
+	"mail_thread_pill": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} mensagem",
+				"countPlural=*": "{count} mensagens"
+			}
+		}
+	],
 	"mail_thread_count": [
 		{
 			"declarations": [

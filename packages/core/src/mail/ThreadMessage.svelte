@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -116,20 +117,20 @@
 		}}
 	>
 		<div class="tmsg-collapsed">
-			<Avatar initials={e.init} bg={e.bg} fg={e.fg} size={30} src={img.src} fit={img.fit} imgBg={img.imgBg} />
+			<ChevronRight size={16} class="tc-chev" />
 			<span class="tc-name">
 				<span class="tc-nm">{name}</span>
 				{#if e.trust}
 					<TrustMark trust={e.trust} variant="static" />
 				{/if}
 			</span>
-			<span class="tc-snip">{e.body[0] ?? ''}</span>
 			<span class="tc-meta">
 				{#if chips.length > 0}
 					<Paperclip size={13} />
 				{/if}
 				<span class="tc-time">{shortWhen}</span>
 			</span>
+			<span class="tc-snip">{e.body[0] ?? ''}</span>
 		</div>
 	</div>
 {:else}
