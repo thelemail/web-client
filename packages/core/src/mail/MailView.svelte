@@ -143,10 +143,6 @@
 		return typeof n === 'number' ? n : 0;
 	});
 
-	const openIndex = $derived(messageId ? list.findIndex((m) => m.id === messageId) : -1);
-	const prevId = $derived(openIndex > 0 ? list[openIndex - 1].id : null);
-	const nextId = $derived(openIndex >= 0 && openIndex < list.length - 1 ? list[openIndex + 1].id : null);
-
 	const inFlight = new Map<string, Promise<void>>();
 
 	function flash(text: string, undo?: () => void, undoLabel?: string) {
@@ -199,6 +195,10 @@
 			? mailSearch.results.map((hit) => mailbox.findMessage(hit.id) ?? hit)
 			: snapshot.msgs
 	);
+
+	const openIndex = $derived(messageId ? list.findIndex((m) => m.id === messageId) : -1);
+	const prevId = $derived(openIndex > 0 ? list[openIndex - 1].id : null);
+	const nextId = $derived(openIndex >= 0 && openIndex < list.length - 1 ? list[openIndex + 1].id : null);
 	const selected = $derived(mailbox.findMessage(messageId));
 
 	$effect(() => {
