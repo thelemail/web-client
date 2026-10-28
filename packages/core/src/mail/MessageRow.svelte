@@ -11,7 +11,6 @@
 	import MailOpen from '@lucide/svelte/icons/mail-open';
 	import MessagesSquare from '@lucide/svelte/icons/messages-square';
 	import Calendar from '@lucide/svelte/icons/calendar';
-	import Clock from '@lucide/svelte/icons/clock';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { swipe, swipeThreshold, type SwipeDirection } from '$core/actions/swipe';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
@@ -233,7 +232,7 @@
 		class="mrow-open"
 		aria-current={active ? 'true' : undefined}
 		aria-labelledby="{uid}-st {uid}-from {uid}-subj"
-		aria-describedby="{uid}-time {uid}-chips {uid}-prev"
+		aria-describedby="{uid}-time {uid}-prev"
 		onclick={() => onOpen(m)}
 	></button>
 	<div class="lead">
@@ -286,7 +285,7 @@
 			{/if}
 			{#if wakeAt}
 				<span class="time wake" id="{uid}-time" title={msg.mail_row_comes_back({ when: formatWhenLong(wakeAt) })}>
-					<Clock size={11} />{formatRowTime(wakeAt)}
+					{formatRowTime(wakeAt)}
 				</span>
 			{:else}
 				<span class="time" id="{uid}-time">{formatRowTime(new Date(m.epoch))}</span>
@@ -309,11 +308,8 @@
 			{/if}
 		</div>
 		<div class="r2">
-			<span class="stxt" id="{uid}-subj">{plainSubject(m.subj)}</span>
-		</div>
-		<div class="r3">
 			{#if location || shownChips.length > 0}
-				<span class="row-chips" id="{uid}-chips">
+				<span class="row-chips">
 					{#if location}
 						<LocationChip {location} />
 					{/if}
@@ -340,6 +336,7 @@
 					{/if}
 				</span>
 			{/if}
+			<span class="stxt" id="{uid}-subj">{plainSubject(m.subj)}</span>
 			<span class="prev" id="{uid}-prev">{m.prev}</span>
 		</div>
 	</div>
