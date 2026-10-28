@@ -170,7 +170,7 @@
 					{#if sentByText}
 						<span class="by">{sentByText}</span>
 					{/if}
-					<span class="to">→ {toLine || '—'}</span>
+					<span class="to">{m.mail_thread_to({ list: toLine || '—' })}</span>
 					{#if ccLine}
 						<span class="to">{m.mail_thread_cc({ list: ccLine })}</span>
 					{/if}

@@ -979,7 +979,7 @@
 								{#if sentByText}
 									<span class="by">{sentByText}</span>
 								{/if}
-								<span class="to">&rarr; {m.to || '—'}</span>
+								<span class="to">{msg.mail_thread_to({ list: m.to || '—' })}</span>
 								{#if deliveredLine}
 									<span class="to">{msg.mail_thread_delivered_to({ address: deliveredLine })}</span>
 								{/if}

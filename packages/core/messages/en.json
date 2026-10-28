@@ -1570,6 +1570,7 @@
 	"mail_editor_aria": "Message body",
 	"mail_thread_you": "You",
 	"mail_thread_cc": "Cc: {list}",
+	"mail_thread_to": "To: {list}",
 	"mail_thread_delivered_to": "Delivered to: {address}",
 	"mail_sent_by": "Sent by {name}",
 	"mail_sent_by_you": "Sent by you",
