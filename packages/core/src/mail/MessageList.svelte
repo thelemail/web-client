@@ -395,6 +395,28 @@
 		});
 	});
 
+	let arrived = $state<Set<string>>(new Set());
+	let seen: { view: string; ids: Set<string> } | null = null;
+	let arrivedTimer: ReturnType<typeof setTimeout> | undefined;
+
+	$effect(() => {
+		const ids = list.map((m) => m.id);
+		const view = viewKey;
+		untrack(() => {
+			const prev = seen;
+			seen = { view, ids: new Set(ids) };
+			if (!prev || prev.view !== view || prev.ids.size === 0) return;
+			const firstKnown = ids.findIndex((id) => prev.ids.has(id));
+			const fresh = ids.slice(0, firstKnown < 0 ? 0 : firstKnown);
+			if (fresh.length === 0) return;
+			arrived = new Set(fresh);
+			clearTimeout(arrivedTimer);
+			arrivedTimer = setTimeout(() => (arrived = new Set()), 700);
+		});
+	});
+
+	$effect(() => () => clearTimeout(arrivedTimer));
+
 	function flushPending() {
 		jumpToTop = true;
 		onFlushPending?.();
@@ -732,6 +754,7 @@
 					<MessageRow
 						{m}
 						active={activeId === m.id}
+						fresh={arrived.has(m.id)}
 						checked={inQuery || checked.has(m.id)}
 						{anyChecked}
 						{caps}

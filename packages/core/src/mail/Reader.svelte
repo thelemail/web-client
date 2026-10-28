@@ -993,7 +993,7 @@
 						</div>
 					</div>
 
-					<div class="email-sheet">
+					<div class="email-sheet" class:pending={bodyPending}>
 						<EmailBody srcDoc={bodySrcDoc} />
 					</div>
 

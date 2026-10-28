@@ -442,6 +442,19 @@
 
 .mail-app .reader-scroll { flex: 1; overflow: auto; padding: 0 24px; }
 .mail-app .reader-inner { max-width: 800px; margin: 22px auto 40px; padding: 30px 38px 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-panel); box-shadow: var(--shadow-xs); }
+@keyframes reader-content-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.mail-app .reader-inner > * { animation: reader-content-in var(--dur) var(--ease-out) backwards; }
+.mail-app .reader-inner > :nth-child(n+2) { animation-delay: 40ms; }
+.mail-app .email-sheet { transition: opacity 160ms var(--ease-out); }
+.mail-app .email-sheet.pending { opacity: 0; transition: none; }
+@keyframes mrow-arrive { from { opacity: 0; transform: translateY(-8px); background: var(--pine-100); } }
+.mail-app .mrow.fresh { animation: mrow-arrive var(--dur-slow) var(--ease-out) backwards; }
+@media (prefers-reduced-motion: reduce) {
+	@keyframes reader-content-in { from { opacity: 0; } to { opacity: 1; } }
+	@keyframes mrow-arrive { from { opacity: 0; background: var(--pine-100); } }
+	.mail-app .reader-inner > * { animation-duration: 120ms; }
+	.mail-app .reader-inner > :nth-child(n+2) { animation-delay: 0ms; }
+}
 
 .mail-app .rec-eyebrow { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--ink-400); letter-spacing: .04em; margin-bottom: 14px; }
 .mail-app .rec-eyebrow .tag { color: var(--accent-quiet); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }

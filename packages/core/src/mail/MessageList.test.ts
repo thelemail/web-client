@@ -277,3 +277,25 @@ describe('MessageList position across updates', () => {
 		outside.remove();
 	});
 });
+
+describe('MessageList arrivals', () => {
+	const rows = (n: number, from = 0) => Array.from({ length: n }, (_, i) => message(`a${from + i}`));
+	const fresh = (c: HTMLElement) => [...c.querySelectorAll<HTMLElement>('.mrow.fresh')].map((r) => r.dataset.id);
+
+	it('marks mail that lands above the rows already shown', async () => {
+		const list = rows(3, 2);
+		const { container, rerender } = mount({ list });
+		expect(fresh(container)).toEqual([]);
+		await rerender({ list: [...rows(2), ...list] });
+		expect(fresh(container)).toEqual(['a0', 'a1']);
+	});
+
+	it('does not mark rows loaded by paging or by switching view', async () => {
+		const list = rows(3);
+		const { container, rerender } = mount({ list });
+		await rerender({ list: [...list, ...rows(2, 3)] });
+		expect(fresh(container)).toEqual([]);
+		await rerender({ list: rows(2, 10), viewFolder: 'archive' });
+		expect(fresh(container)).toEqual([]);
+	});
+});

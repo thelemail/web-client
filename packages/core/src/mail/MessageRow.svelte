@@ -36,6 +36,7 @@
 	interface Props {
 		m: Message;
 		active: boolean;
+		fresh?: boolean;
 		checked: boolean;
 		anyChecked: boolean;
 		caps: MailActionCaps;
@@ -56,6 +57,7 @@
 	let {
 		m,
 		active,
+		fresh = false,
 		checked,
 		anyChecked,
 		caps,
@@ -192,6 +194,7 @@
 	onfocusout={onFocusOut}
 	class:unread={m.unread}
 	class:active
+	class:fresh
 	class:sel={checked}
 	class:checking={anyChecked}
 	class:swiping={sx !== 0}
