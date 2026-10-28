@@ -158,7 +158,7 @@
 
 .mail-app .mailbody { flex: 1; display: flex; min-height: 0; }
 
-.mail-app .list { width: clamp(300px, var(--mail-list-w, 34%), calc(100% - 520px)); flex: 0 0 auto; border-right: 1px solid var(--border); background: var(--bg); display: flex; flex-direction: column; min-width: 0; }
+.mail-app .list { width: clamp(300px, var(--mail-list-w, min(34%, 480px)), calc(100% - 520px)); flex: 0 0 auto; border-right: 1px solid var(--border); background: var(--bg); display: flex; flex-direction: column; min-width: 0; }
 .mail-app .list-h { min-height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 6px 9px 6px 10px; border-bottom: 1px solid var(--border); background: var(--bg); }
 .mail-app .list-h .ttl-block { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .mail-app .list-h .ttl { font-family: var(--font-sans); font-feature-settings: normal; font-size: 17px; font-weight: 580; color: var(--fg-strong); display: flex; align-items: baseline; gap: 8px; letter-spacing: var(--track-tight); line-height: 1.1; padding-left: 5px; }
@@ -207,7 +207,7 @@
 .mail-app .empty-clear:hover { background: var(--paper-100); border-color: var(--border-strong); }
 
 .mail-app .bulk { height: 52px; flex: 0 0 auto; display: flex; align-items: center; gap: 4px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); background: var(--pine-50); }
-.mail-app .bulk .cnt { font-size: 13px; font-weight: 600; color: var(--accent-foreground); margin-right: 6px; }
+.mail-app .bulk .cnt { font-size: 13px; font-weight: 600; color: var(--accent-foreground); margin-right: 6px; white-space: nowrap; }
 .mail-app .bulk .grow { flex: 1; }
 
 .mail-app .scroll { flex: 1; overflow: auto; overflow-anchor: none; }
@@ -285,7 +285,7 @@
 .mail-app .mrow.active { background: var(--pine-50); }
 .mail-app .mrow.sel { background: var(--pine-100); }
 .mail-app .mrow.unread::before { content: ""; position: absolute; left: 5px; top: 19px; width: 6px; height: 6px; border-radius: 50%; background: var(--pine-600); }
-.mail-app .mrow.active::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brass-500); }
+.mail-app .mrow.active::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--brass-500); }
 
 .mail-app .mrow { touch-action: pan-y; }
 .mail-app .mrow.swiping { overflow: hidden; }
