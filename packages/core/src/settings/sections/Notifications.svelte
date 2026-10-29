@@ -18,8 +18,12 @@
 		type ReminderPermission
 	} from '$core/calendar/reminders';
 	import { m } from '$paraglide/messages.js';
+	import { deviceOf } from '../keyName';
 
-	const SYSTEM_SETTINGS_URL = 'x-apple.systempreferences:com.apple.Notifications-Settings.extension';
+	const onWindows = deviceOf(navigator) === 'Windows';
+	const SYSTEM_SETTINGS_URL = onWindows
+		? 'ms-settings:notifications'
+		: 'x-apple.systempreferences:com.apple.Notifications-Settings.extension';
 
 	const REMINDER_CHOICES: (number | null)[] = [null, 0, 5, 10, 15, 30, 60, 120, 1440];
 
@@ -74,7 +78,7 @@
 	});
 
 	const summary = $derived.by(() => {
-		if (!status) return m.settings_notify_checking();
+		if (!status) return onWindows ? m.settings_notify_checking_windows() : m.settings_notify_checking();
 		if (!status.supported) return m.settings_notify_unsupported();
 		if (!status.bundled) return m.settings_notify_unbundled();
 		if (status.translocated) {
@@ -86,11 +90,11 @@
 			case 'ephemeral':
 				return m.settings_notify_authorized();
 			case 'denied':
-				return m.settings_notify_denied();
+				return onWindows ? m.settings_notify_denied_windows() : m.settings_notify_denied();
 			case 'notDetermined':
 				return m.settings_notify_not_determined();
 			default:
-				return m.settings_notify_unknown();
+				return onWindows ? m.settings_notify_unknown_windows() : m.settings_notify_unknown();
 		}
 	});
 
@@ -126,14 +130,14 @@
 
 {#if platform.notifications}
 	<Card title={m.settings_notify_new_mail()}>
-		<Row t={m.settings_notify_macos()} descSnippet={desc}>
+		<Row t={onWindows ? m.settings_notify_windows() : m.settings_notify_macos()} descSnippet={desc}>
 			<div class="ntf-actions">
 				<Button variant="ghost" size="sm" onclick={check} disabled={checking}>
 					<RefreshCw />{m.settings_notify_check_again()}
 				</Button>
 				{#if canOpenSystemSettings}
 					<Button variant="secondary" size="sm" onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}>
-						<ExternalLink />{m.settings_notify_open_system_settings()}
+						<ExternalLink />{onWindows ? m.settings_notify_open_windows_settings() : m.settings_notify_open_system_settings()}
 					</Button>
 				{/if}
 			</div>
