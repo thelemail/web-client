@@ -51,7 +51,24 @@
 	} from './quote';
 	import { loadMessageBody } from './bodySource';
 	import { buildSrcDoc } from './render';
-	import { restoreAttachmentFile } from './draft';
+	import {
+		restoreAttachmentFile,
+		loadDraftDoc,
+		restoreDraftAttachments,
+		DRAFT_DOC_VERSION,
+		type DraftAttachmentMeta,
+		type DraftDoc
+	} from './draft';
+	import { getDraft, deleteDraft } from '$core/api/drafts';
+	import { DraftSaver, attachmentSig } from './draftSaver.svelte';
+	import {
+		autosaveAllowed,
+		draftSaveStatus,
+		mayClose,
+		type DraftLoad,
+		type DraftSaveFacts
+	} from './draftSave';
+	import { drafts, rowFromDoc } from '$core/stores/drafts.svelte';
 	import { replyThreadHeaders, type ReplyThreadIds } from './threading';
 	import { EncStatusTracker } from './encStatus.svelte';
 	import { summarizeEncryption } from './encSummary';
@@ -95,6 +112,7 @@
 		onSent?: () => void;
 		onSentAndArchive?: () => void;
 		onClose?: () => void;
+		draftId?: string | null;
 	}
 
 	let {
@@ -104,7 +122,8 @@
 		canArchive = false,
 		onSent,
 		onSentAndArchive,
-		onClose
+		onClose,
+		draftId = null
 	}: Props = $props();
 
 	const seedId = untrack(() => seed?.id ?? m.id);
@@ -459,7 +478,7 @@
 				} else {
 					setQuote(undefined, fallbackQuoteText());
 				}
-				if (mode === 'forward') await attachForwarded(accountId, detail);
+				if (mode === 'forward' && !openedDraftId) await attachForwarded(accountId, detail);
 				return;
 			} catch {
 				setQuote(undefined, fallbackQuoteText());
@@ -469,7 +488,188 @@
 		setQuote(undefined, fallbackQuoteText());
 	}
 
+	const openedDraftId = untrack(() => draftId);
+	const draftAccountId = untrack(() => auth.accountId) ?? '';
+	const replySource = untrack(() => m.id);
+	let load = $state<DraftLoad>(openedDraftId ? 'loading' : 'ready');
+	let closing = $state(false);
+	let pendingBody = $state<string | null>(null);
+	let afterBody: (() => void) | null = null;
+
 	const initPromise = untrack(() => initFromDetail());
+
+	function draftRecipients(chips: RecipientChip[]) {
+		return chips
+			.filter((c) => c.email.trim())
+			.map((c) => ({ name: c.name || undefined, address: c.email }));
+	}
+
+	function replyDoc(metas: DraftAttachmentMeta[]): DraftDoc {
+		const headers = threadIds ? replyThreadHeaders(threadIds) : null;
+		return {
+			v: DRAFT_DOC_VERSION,
+			from: { email: ident.email, name: ident.name },
+			to: draftRecipients(to),
+			cc: draftRecipients(cc),
+			bcc: draftRecipients(bcc),
+			subject,
+			bodyHtml: html,
+			bodyText: text,
+			inReplyToMessageId: headers?.inReplyToMessageId ?? seedId,
+			inReplyToHeader: headers?.inReplyToHeader,
+			references: headers?.references,
+			reply: { source: replySource, seed: seedId, mode, quoteRemoved },
+			attachments: metas
+		};
+	}
+
+	function replyKey(): string {
+		return `${JSON.stringify(replyDoc([]))}|${attachmentSig(attachments)}`;
+	}
+
+	function replyWorth(): boolean {
+		if (text.trim() !== '') return true;
+		if (mode === 'forward') return to.length + cc.length + bcc.length > 0;
+		return attachments.length > 0;
+	}
+
+	const saver = new DraftSaver(
+		draftAccountId,
+		{
+			allowed: () => !!draftAccountId && autosaveAllowed(load, status === 'sending'),
+			key: replyKey,
+			worth: replyWorth,
+			attachments: () => attachments,
+			doc: replyDoc,
+			saved: (id, doc) => {
+				if (auth.accountId === draftAccountId) drafts.upsertLocal(rowFromDoc(id, doc));
+			}
+		},
+		openedDraftId
+	);
+
+	const replyDirty = $derived(replyKey() !== saver.lastKey && (saver.id !== null || replyWorth()));
+	const saveFacts = $derived<DraftSaveFacts>({
+		load,
+		saving: saver.saving,
+		failed: saver.failed,
+		dirty: replyDirty,
+		persisted: saver.persisted
+	});
+	const saveStatus = $derived(draftSaveStatus(saveFacts));
+
+	$effect(() => {
+		void to;
+		void cc;
+		void bcc;
+		void html;
+		void subject;
+		void quoteRemoved;
+		void mode;
+		void threadIds;
+		void attachmentSig(attachments);
+		void ident.email;
+		void ident.name;
+		if (!autosaveAllowed(load, status === 'sending')) return;
+		saver.schedule();
+	});
+
+	$effect(() => {
+		const ed = editor;
+		const body = pendingBody;
+		if (!ed || body === null) return;
+		untrack(() => {
+			pendingBody = null;
+			ed.commands.setContent(body, { emitUpdate: true });
+			html = ed.getHTML();
+			text = ed.getText();
+			const done = afterBody;
+			afterBody = null;
+			done?.();
+		});
+	});
+
+	async function hydrateReply(id: string): Promise<void> {
+		load = 'loading';
+		if (!draftAccountId) {
+			load = 'failed';
+			return;
+		}
+		try {
+			const detail = await getDraft(id);
+			const doc = await loadDraftDoc(draftAccountId, detail);
+			identInit = true;
+			signatureSeeded = true;
+			signatureChosen = true;
+			fromEmail = doc.from.email;
+			to = doc.to.map(recipientChip);
+			cc = doc.cc.map(recipientChip);
+			bcc = doc.bcc.map(recipientChip);
+			if (cc.length) showCc = true;
+			if (bcc.length) showBcc = true;
+			subject = doc.subject;
+			quoteRemoved = !!doc.reply?.quoteRemoved;
+			let restoreFailed = false;
+			if (doc.attachments.length > 0 && detail.attachmentsBundle) {
+				try {
+					const restored = await restoreDraftAttachments(draftAccountId, doc, detail.attachmentsBundle);
+					const added: ComposeAttachment[] = restored.map((r) => ({
+						id: crypto.randomUUID(),
+						file: r.file,
+						status: 'queued',
+						progress: 0,
+						disposition: r.disposition,
+						contentId: r.contentId
+					}));
+					attachments = [...attachments, ...added];
+					for (const att of added) {
+						void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.indexOf(att)));
+					}
+				} catch {
+					restoreFailed = true;
+					attErr = msg.mail_compose_restore_att_failed({
+						name: doc.attachments.map((a) => a.filename).join(', ')
+					});
+				}
+			}
+			afterBody = () => {
+				if (restoreFailed) {
+					saver.keepUnrestored(doc.attachments);
+					saver.lastKey = replyKey();
+				} else {
+					saver.baseline(replyKey(), attachments, doc.attachments);
+				}
+				load = 'ready';
+				queueMicrotask(() => editor?.commands.focus('end'));
+			};
+			pendingBody = doc.bodyHtml;
+		} catch {
+			load = 'failed';
+		}
+	}
+
+	async function closeKeepingDraft(): Promise<void> {
+		if (closing || !onClose) return;
+		if (load !== 'ready') {
+			saver.cancel();
+			onClose();
+			return;
+		}
+		closing = true;
+		try {
+			await saver.settle();
+		} finally {
+			closing = false;
+		}
+		if (mayClose(saveFacts)) onClose();
+	}
+
+	function forgetDraft(): void {
+		const id = saver.release();
+		if (!id) return;
+		if (auth.accountId === draftAccountId) drafts.remove(id);
+		void deleteDraft(id).catch(() => {});
+	}
 
 	const encTracker = new EncStatusTracker();
 	const allRecipients = $derived([...to, ...cc, ...bcc]);
@@ -590,6 +790,7 @@
 	};
 
 	function discard() {
+		forgetDraft();
 		text = '';
 		html = '';
 		attachments = [];
@@ -598,12 +799,13 @@
 		quoteRemoved = false;
 		editor?.commands.clearContent();
 		clearErr();
+		onClose?.();
 	}
 
 	const acceptedKeys = new Map<string, string>();
 
 	async function performSend(after: SendAfter = 'none') {
-		if (!canSend) {
+		if (!canSend || load !== 'ready') {
 			warn = true;
 			return;
 		}
@@ -656,6 +858,7 @@
 			);
 			status = 'idle';
 			attempts = 0;
+			forgetDraft();
 			if (after === 'archive' && canArchive) onSentAndArchive?.();
 			else onSent?.();
 		} catch (e) {
@@ -747,13 +950,17 @@
 	onMount(() => {
 		void contacts.ensureLoaded();
 		const t = setTimeout(() => boxRef?.scrollIntoView({ block: 'start' }), 0);
-		const release = holdRestart(() => {
+		if (openedDraftId) void hydrateReply(openedDraftId);
+		const release = holdRestart(async () => {
 			if (status === 'sending') return msg.mail_compose_hold_sending();
-			if (text.trim() || attachments.length > 0) return msg.mail_compose_hold_reply_unsaved();
-			return null;
+			if (load !== 'ready') return null;
+			await saver.settle();
+			return replyDirty ? msg.mail_compose_hold_reply_unsaved() : null;
 		});
 		return () => {
 			clearTimeout(t);
+			if (load === 'ready' && replyDirty) void saver.save();
+			else saver.cancel();
 			release();
 		};
 	});
@@ -835,9 +1042,10 @@
 			<button
 				type="button"
 				class="rt-x"
-				title={msg.mail_compose_discard()}
+				title={msg.common_close()}
+				aria-busy={closing}
 				disabled={status === 'sending'}
-				onclick={onClose}
+				onclick={() => void closeKeepingDraft()}
 			>
 				<X size={15} />
 			</button>
@@ -936,7 +1144,7 @@
 		bind:text
 		bind:editor
 		placeholder={mode === 'forward' ? msg.mail_compose_add_note() : msg.mail_compose_write_reply()}
-		disabled={status === 'sending'}
+		disabled={status === 'sending' || load !== 'ready'}
 		autofocus={mode !== 'forward'}
 		class="cbody reply"
 	/>
@@ -1018,6 +1226,24 @@
 		<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
 	{/if}
 
+	{#if load === 'failed'}
+		<div class="cwarn" role="alert">
+			<CircleAlert size={14} />
+			<span class="cwarn-t">{msg.mail_compose_open_draft_failed()} {msg.mail_compose_draft_untouched()}</span>
+			{#if openedDraftId}
+				<button type="button" class="cwarn-act" onclick={() => void hydrateReply(openedDraftId)}>
+					{msg.common_retry()}
+				</button>
+			{/if}
+		</div>
+	{:else if saveStatus === 'failed'}
+		<div class="cwarn" role="alert">
+			<CircleAlert size={14} />
+			<span class="cwarn-t">{msg.mail_compose_save_failed()}</span>
+			<button type="button" class="cwarn-act" onclick={() => void saver.save()}>{msg.common_retry()}</button>
+		</div>
+	{/if}
+
 	<div class="rf">
 		<div class="rf-send" class:split={canArchive} bind:this={sendRef}>
 			<button
@@ -1068,7 +1294,7 @@
 			class="att-hidden-input"
 			onchange={onFileInputChange}
 		/>
-		<button type="button" class="rb-ico" title={msg.mail_compose_discard()} onclick={discard}>
+		<button type="button" class="rb-ico" title={msg.mail_compose_discard_draft()} onclick={discard}>
 			<Trash2 size={17} />
 		</button>
 		<span class="enc" data-tone={encSummary.tone} title={encSummary.title}>
@@ -1081,6 +1307,19 @@
 			{/if}
 			{encSummary.label}
 		</span>
+		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
+			<span class="rsave" data-state={saveStatus} role="status"
+				>{saveStatus === 'loading'
+					? msg.mail_compose_opening()
+					: saveStatus === 'saving'
+						? msg.mail_compose_saving()
+						: saveStatus === 'saved'
+							? msg.mail_compose_draft_saved()
+							: saveStatus === 'failed'
+								? msg.mail_compose_not_saved()
+								: msg.mail_compose_unsaved()}</span
+			>
+		{/if}
 	</div>
 
 	{#if status === 'sending'}

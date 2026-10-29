@@ -68,7 +68,7 @@
 		type DraftAttachmentMeta,
 		type DraftDoc
 	} from './draft';
-	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
+	import { drafts, rowFromDoc } from '$core/stores/drafts.svelte';
 	import { holdRestart } from '$core/stores/restartGuard';
 	import { onMount, untrack } from 'svelte';
 	import {
@@ -196,6 +196,7 @@
 	const openedDraftId = untrack(() => draftId);
 	const isDraftEdit = !!openedDraftId;
 	const draftAccountId = untrack(() => auth.accountId) ?? '';
+	let replyLink = $state<Pick<DraftDoc, 'inReplyToMessageId' | 'inReplyToHeader' | 'references' | 'reply'>>({});
 	let load = $state<DraftLoad>(openedDraftId ? 'loading' : 'ready');
 	let closing = $state(false);
 
@@ -215,6 +216,7 @@
 			subject,
 			bodyHtml,
 			bodyText,
+			...replyLink,
 			attachments: metas
 		};
 	}
@@ -233,26 +235,6 @@
 		);
 	}
 
-	function draftRowFromDoc(id: string, doc: DraftDoc): DraftRow {
-		const now = new Date();
-		const recips = [...doc.to, ...doc.cc, ...doc.bcc].map((r) => r.name || r.address);
-		const summary =
-			recips.length === 0
-				? m.mail_no_recipients()
-				: recips.length <= 2
-					? recips.join(', ')
-					: `${recips.slice(0, 2).join(', ')} +${recips.length - 2}`;
-		return {
-			id,
-			subject: doc.subject.trim() || m.mail_compose_no_subject(),
-			snippet: doc.bodyText.slice(0, 280),
-			to: summary,
-			updatedAt: now.toISOString(),
-			epoch: now.getTime(),
-			attachmentCount: doc.attachments.length,
-			init: initialsFor(doc.subject || '', '')
-		};
-	}
 
 	const saver = new DraftSaver(
 		draftAccountId,
@@ -263,7 +245,7 @@
 			attachments: () => attachments,
 			doc: currentDoc,
 			saved: (id, doc) => {
-				if (auth.accountId === draftAccountId) drafts.upsertLocal(draftRowFromDoc(id, doc));
+				if (auth.accountId === draftAccountId) drafts.upsertLocal(rowFromDoc(id, doc));
 			}
 		},
 		openedDraftId
@@ -371,6 +353,12 @@
 			subject = doc.subject;
 			bodyHtml = doc.bodyHtml;
 			bodyText = doc.bodyText;
+			replyLink = {
+				inReplyToMessageId: doc.inReplyToMessageId,
+				inReplyToHeader: doc.inReplyToHeader,
+				references: doc.references,
+				reply: doc.reply
+			};
 			let restoreFailed = false;
 			if (doc.attachments.length > 0 && detail.attachmentsBundle) {
 				try {
@@ -623,6 +611,9 @@
 					fromEmail: ident.email,
 					fromName: ident.name,
 					fromAliasId: ident.aliasId,
+					inReplyToMessageId: replyLink.inReplyToMessageId,
+					inReplyToHeader: replyLink.inReplyToHeader,
+					references: replyLink.references,
 					scheduledAt: when ?? undefined
 				},
 				{ acceptedKeys }

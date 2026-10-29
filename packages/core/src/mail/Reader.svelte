@@ -48,6 +48,7 @@
 	import { untrack } from 'svelte';
 	import { DecryptionError } from '$core/mail/decrypt';
 	import { auth } from '$core/stores/auth.svelte';
+	import { drafts } from '$core/stores/drafts.svelte';
 	import { getMessage } from '$core/api/messages';
 	import { initialChips, type AttachmentChip } from '$core/mail/attachments';
 	import AttachmentList from '$core/mail/AttachmentList.svelte';
@@ -164,6 +165,7 @@
 		const id = m?.id;
 		if (!el || !id || headingFocusedFor === id) return;
 		headingFocusedFor = id;
+		if (untrack(() => replyDraft)) return;
 		if (canTakeFocus(document.activeElement)) el.focus({ preventScroll: true });
 	});
 	let morePanel: HTMLDivElement | undefined = $state();
@@ -234,8 +236,28 @@
 			blockOpen = false;
 			unsubTarget = null;
 			replyMode = null;
+			restoredReplyFor = null;
 		}
 	});
+
+	const replyDraft = $derived(m ? drafts.forSource(m.id) : undefined);
+	let restoredReplyFor: string | null = null;
+
+	$effect(() => {
+		const id = m?.id;
+		const draft = replyDraft;
+		if (!id || !draft?.reply || restoredReplyFor === id) return;
+		untrack(() => {
+			restoredReplyFor = id;
+			if (replyMode === null) replyMode = draft.reply!.mode;
+		});
+	});
+
+	const replyDraftId = $derived(
+		replyDraft?.reply && replyMode && (replyDraft.reply.mode === 'forward') === (replyMode === 'forward')
+			? replyDraft.id
+			: null
+	);
 
 	const openedId = $derived(m?.id ?? null);
 	$effect(() => {
@@ -1074,6 +1096,7 @@
 							m={enriched ?? m}
 							mode={replyMode}
 							seed={replySeed}
+							draftId={replyDraftId}
 							canArchive={caps.showArchive && !!onReplySentArchive}
 							onSent={() => {
 								const id = m.id;

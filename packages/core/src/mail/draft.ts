@@ -34,6 +34,15 @@ export interface DraftAttachmentMeta {
 	length: number;
 }
 
+export type DraftReplyMode = 'reply' | 'all' | 'forward';
+
+export interface DraftReply {
+	source: string;
+	seed: string;
+	mode: DraftReplyMode;
+	quoteRemoved?: boolean;
+}
+
 export interface DraftDoc {
 	v: number;
 	from: { email: string; name: string };
@@ -46,6 +55,7 @@ export interface DraftDoc {
 	inReplyToMessageId?: string;
 	inReplyToHeader?: string;
 	references?: string[];
+	reply?: DraftReply;
 	attachments: DraftAttachmentMeta[];
 }
 
@@ -81,7 +91,7 @@ function draftPreview(doc: DraftDoc): MessagePreview {
 		recipients,
 		snippet: snippetSource(doc.bodyText).slice(0, 280),
 		display_date: new Date().toISOString(),
-		flags: {}
+		flags: doc.reply ? { reply: { source: doc.reply.source, mode: doc.reply.mode } } : {}
 	};
 }
 
