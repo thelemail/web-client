@@ -70,6 +70,7 @@
 	} from './draft';
 	import { drafts, rowFromDoc } from '$core/stores/drafts.svelte';
 	import { holdRestart } from '$core/stores/restartGuard';
+	import { holdLeave } from '$core/stores/leaveGuard';
 	import { onMount, untrack } from 'svelte';
 	import {
 		MAX_ATTACHMENT_BYTES,
@@ -327,7 +328,19 @@
 		void contacts.ensureLoaded();
 		if (draftId) void hydrateDraft(draftId);
 		const release = holdRestart(restartHold);
+		const releaseLeave = holdLeave({
+			pending: () => load === 'ready' && (dirty || saver.saving || saver.failed),
+			settle: async () => {
+				await saver.settle();
+				return mayClose(saveFacts);
+			},
+			focus: () => {
+				min = false;
+				editor?.commands.focus();
+			}
+		});
 		return () => {
+			releaseLeave();
 			if (load === 'ready' && dirty) void saver.save();
 			else saver.cancel();
 			release();

@@ -92,6 +92,7 @@
 	} from './signatureRegion';
 	import type { Editor } from '@tiptap/core';
 	import { holdRestart } from '$core/stores/restartGuard';
+	import { holdLeave } from '$core/stores/leaveGuard';
 	import {
 		MAX_ATTACHMENT_BYTES,
 		MAX_ATTACHMENTS,
@@ -957,8 +958,20 @@
 			await saver.settle();
 			return replyDirty ? msg.mail_compose_hold_reply_unsaved() : null;
 		});
+		const releaseLeave = holdLeave({
+			pending: () => load === 'ready' && (replyDirty || saver.saving || saver.failed),
+			settle: async () => {
+				await saver.settle();
+				return mayClose(saveFacts);
+			},
+			focus: () => {
+				boxRef?.scrollIntoView({ block: 'nearest' });
+				editor?.commands.focus('end');
+			}
+		});
 		return () => {
 			clearTimeout(t);
+			releaseLeave();
 			if (load === 'ready' && replyDirty) void saver.save();
 			else saver.cancel();
 			release();
