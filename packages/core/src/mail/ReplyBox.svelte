@@ -27,7 +27,7 @@
 	import TofuModal from './TofuModal.svelte';
 	import RichEditor from './editor/RichEditor.svelte';
 	import EditorToolbar from './editor/EditorToolbar.svelte';
-	import { SendError } from './send';
+	import { SendError, type ApprovedModes } from './send';
 	import { dispatchSend } from './sendDispatch';
 	import { acceptExternalKey } from '$core/api/externalKeys';
 	import { getMessage } from '$core/api/messages';
@@ -703,6 +703,7 @@
 		'locked',
 		'no_account',
 		'encrypt',
+		'encryption_downgrade',
 		'recipient_key_invalid',
 		'rate_limited',
 		'malware_blocked',
@@ -720,7 +721,12 @@
 	const failedAddress = $derived.by(() => {
 		const p = err?.payload;
 		if (!p) return null;
-		if (p.kind === 'tofu' || p.kind === 'directory' || p.kind === 'external-key-change') {
+		if (
+			p.kind === 'tofu' ||
+			p.kind === 'directory' ||
+			p.kind === 'external-key-change' ||
+			p.kind === 'encryption_downgrade'
+		) {
 			return p.address;
 		}
 		return null;
@@ -807,6 +813,7 @@
 	}
 
 	const acceptedKeys = new Map<string, string>();
+	let approved: ApprovedModes = new Map();
 
 	async function performSend(after: SendAfter = 'none') {
 		if (!canSend || load !== 'ready') {
@@ -858,7 +865,7 @@
 					fromName: ident.name,
 					fromAliasId: ident.aliasId
 				},
-				{ acceptedKeys }
+				{ acceptedKeys, approved }
 			);
 			status = 'idle';
 			attempts = 0;
@@ -869,6 +876,7 @@
 			status = 'idle';
 			if (e instanceof SendError) {
 				err = e;
+				if (e.code === 'encryption_downgrade') encTracker.recheck(recipientAddresses());
 				attempts = e.code === 'encrypt' ? attempts + 1 : 0;
 			} else {
 				err = new SendError('unknown', e instanceof Error ? e.message : msg.mail_compose_send_failed());
@@ -904,6 +912,7 @@
 	}
 
 	function evaluateGuards(run: () => void): void {
+		approved = encTracker.approvals(recipientAddresses());
 		const next = pendingSendGuards({
 			settings: accountSettings.composing,
 			statuses: allRecipients.filter((c) => c.valid).map((c) => encStatusFor(c.email)),
@@ -1229,7 +1238,7 @@
 		<InlineSendError
 			code={inlineErr.code as InlineErrorCode}
 			{attempts}
-			recipient={primaryRecip}
+			recipient={modalRecip}
 			retryAfterSeconds={inlineRetryAfter}
 			message={inlineErr.message}
 			onEditRecipient={editRecipient}

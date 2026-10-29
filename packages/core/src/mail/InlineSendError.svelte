@@ -20,6 +20,7 @@
 		| 'locked'
 		| 'no_account'
 		| 'encrypt'
+		| 'encryption_downgrade'
 		| 'recipient_key_invalid'
 		| 'rate_limited'
 		| 'schedule_unsupported'
@@ -133,6 +134,15 @@
 							actionIcon: RefreshCw,
 							onAction: onRetry
 						};
+			case 'encryption_downgrade':
+				return {
+					tone: 'warn',
+					ic: ShieldAlert,
+					title: msg.mail_send_err_downgrade_title(),
+					actionLabel: msg.mail_send_err_back_to_draft(),
+					actionIcon: Pencil,
+					onAction: onDismiss
+				};
 			case 'recipient_key_invalid':
 				return {
 					tone: 'warn',
@@ -218,6 +228,8 @@
 				{:else}
 					{msg.mail_send_err_encrypt_text()}
 				{/if}
+			{:else if code === 'encryption_downgrade'}
+				<Rich text={msg.mail_send_err_downgrade_text({ email: recipient.email })} tags={{ code: mono }} />
 			{:else if code === 'recipient_key_invalid'}
 				{msg.mail_send_err_key_invalid_text()}
 			{:else if code === 'rate_limited'}
