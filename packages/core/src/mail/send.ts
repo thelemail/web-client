@@ -62,6 +62,7 @@ export type SendErrorCode =
 	| 'directory_verification_failed'
 	| 'tofu'
 	| 'external_key_change'
+	| 'encryption_downgrade'
 	| 'encrypt'
 	| 'rate_limited'
 	| 'alias_key_stale'
@@ -113,6 +114,10 @@ export type SendErrorPayload =
 	| {
 			kind: 'rate_limited';
 			retryAfterSeconds: number;
+	  }
+	| {
+			kind: 'encryption_downgrade';
+			address: string;
 	  };
 
 export class SendError extends Error {
@@ -254,6 +259,19 @@ function normaliseEmail(s: string): string {
 }
 
 export type AcceptedKeys = ReadonlyMap<string, string>;
+
+export type ApprovedMode = 'internal' | 'encrypted' | 'cleartext';
+
+export type ApprovedModes = ReadonlyMap<string, ApprovedMode>;
+
+export function encryptionDowngradeError(address: string): SendError {
+	return new SendError(
+		'encryption_downgrade',
+		m.send_error_encryption_downgrade({ address }),
+		undefined,
+		{ kind: 'encryption_downgrade', address }
+	);
+}
 
 export interface ResolveOptions {
 	acceptedKeys?: AcceptedKeys;

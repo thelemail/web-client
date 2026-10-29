@@ -8,7 +8,9 @@ const calls = vi.hoisted(() => ({
 	staleExternal: 0,
 	staleAccount: 0,
 	aliasKeyLoads: [] as string[],
-	accountKeyLoads: [] as string[]
+	accountKeyLoads: [] as string[],
+	resolved: [] as { addresses: string[]; approved: unknown }[],
+	keyless: new Set<string>()
 }));
 
 vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'acct-me' } }));
@@ -40,6 +42,7 @@ vi.mock('./send', () => {
 	}
 	return {
 		SendError,
+		encryptionDowngradeError: (address: string) => new SendError('encryption_downgrade', address),
 		sendErrorFromApi: (e: unknown, fallback: string) =>
 			new SendError('unknown', e instanceof Error ? e.message : fallback),
 		sendInternalMessage: async (
@@ -64,6 +67,19 @@ vi.mock('./send', () => {
 });
 
 vi.mock('./sendExternal', () => ({
+	resolveExternalKeys: async (
+		recipients: { address: string }[],
+		approved?: ReadonlyMap<string, string>
+	) => {
+		calls.resolved.push({ addresses: recipients.map((r) => r.address), approved });
+		const { SendError } = await import('./send');
+		for (const r of recipients) {
+			if (calls.keyless.has(r.address) && approved && approved.get(r.address) !== 'cleartext') {
+				throw new SendError('encryption_downgrade', r.address);
+			}
+		}
+		return { keyed: [], keyless: [] };
+	},
 	sendExternalMessage: async (input: Record<string, unknown>) => {
 		calls.external.push(input);
 		if (calls.staleExternal > 0) {
@@ -104,6 +120,8 @@ beforeEach(() => {
 	calls.staleAccount = 0;
 	calls.aliasKeyLoads.length = 0;
 	calls.accountKeyLoads.length = 0;
+	calls.resolved.length = 0;
+	calls.keyless.clear();
 });
 
 describe('dispatchSend scheduling', () => {
@@ -235,5 +253,66 @@ describe('dispatchSend with a shared address key that just rotated', () => {
 		await dispatchSend({ to: [party('friend@thelemail.test')], subject: 'hi', body: 'hello' });
 		expect(calls.accountKeyLoads).toEqual(['acct-me']);
 		expect(calls.internal).toHaveLength(2);
+	});
+});
+
+describe('dispatchSend bound to the approved encryption mode', () => {
+	it('refuses a recipient approved as internal that now resolves as external', async () => {
+		const err = await dispatchSend(
+			{ to: [party('gone@example.test')], subject: 'hi', body: 'hello' },
+			{ approved: new Map([['gone@example.test', 'internal']]) }
+		).catch((e) => e);
+
+		expect((err as SendError).code).toBe('encryption_downgrade');
+		expect(calls.internal).toHaveLength(0);
+		expect(calls.external).toHaveLength(0);
+	});
+
+	it('refuses before the internal leg of a mixed send goes out', async () => {
+		calls.keyless.add('ext@example.test');
+		const err = await dispatchSend(
+			{
+				to: [party('friend@thelemail.test'), party('ext@example.test')],
+				subject: 'hi',
+				body: 'hello'
+			},
+			{
+				approved: new Map([
+					['friend@thelemail.test', 'internal'],
+					['ext@example.test', 'encrypted']
+				])
+			}
+		).catch((e) => e);
+
+		expect((err as SendError).code).toBe('encryption_downgrade');
+		expect(calls.internal).toHaveLength(0);
+		expect(calls.external).toHaveLength(0);
+	});
+
+	it('sends a mixed message once external keys resolve as approved', async () => {
+		const approved = new Map([
+			['friend@thelemail.test', 'internal'],
+			['ext@example.test', 'encrypted']
+		] as const);
+		await dispatchSend(
+			{
+				to: [party('friend@thelemail.test'), party('ext@example.test')],
+				subject: 'hi',
+				body: 'hello'
+			},
+			{ approved }
+		);
+
+		expect(calls.resolved).toEqual([{ addresses: ['ext@example.test'], approved }]);
+		expect(calls.internal).toHaveLength(1);
+		expect(calls.external).toHaveLength(1);
+	});
+
+	it('lets an approved internal recipient through when it still resolves as internal', async () => {
+		await dispatchSend(
+			{ to: [party('friend@thelemail.test')], subject: 'hi', body: 'hello' },
+			{ approved: new Map([['friend@thelemail.test', 'internal']]) }
+		);
+		expect(calls.internal).toHaveLength(1);
 	});
 });

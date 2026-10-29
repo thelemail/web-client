@@ -44,7 +44,7 @@ vi.mock('$core/api/externalKeys', () => ({
 		address,
 		status: 'known',
 		fingerprint: `fp:${address}`,
-		armoredKey: address.startsWith('keyless') ? '' : `key:${address}`
+		armoredKey: address.toLowerCase().startsWith('keyless') ? '' : `key:${address}`
 	})
 }));
 vi.mock('$core/api/submission', () => ({
@@ -272,5 +272,49 @@ describe('sendExternalMessage cleartext leg', () => {
 			})
 		).rejects.toMatchObject({ code: 'rejected' });
 		expect(uploads).toHaveLength(0);
+	});
+});
+
+describe('sendExternalMessage bound to the approved encryption mode', () => {
+	const input = (address: string) => ({
+		to: [party('keyed@example.org'), party(address)],
+		subject: 'hi',
+		body: 'hello',
+		sentMessageId: '00000000-0000-4000-8000-00000000000c'
+	});
+
+	it('refuses cleartext to a recipient approved as encrypted', async () => {
+		await expect(
+			sendExternalMessage(input('keyless@example.org'), {
+				approved: new Map([
+					['keyed@example.org', 'encrypted'],
+					['keyless@example.org', 'encrypted']
+				])
+			})
+		).rejects.toMatchObject({
+			code: 'encryption_downgrade',
+			payload: { kind: 'encryption_downgrade', address: 'keyless@example.org' }
+		});
+		expect(submitted).toHaveLength(0);
+		expect(uploads).toHaveLength(0);
+	});
+
+	it('refuses cleartext to a recipient whose mode was never resolved', async () => {
+		await expect(
+			sendExternalMessage(input('keyless@example.org'), {
+				approved: new Map([['keyed@example.org', 'encrypted']])
+			})
+		).rejects.toMatchObject({ code: 'encryption_downgrade' });
+		expect(submitted).toHaveLength(0);
+	});
+
+	it('sends cleartext to a recipient approved as cleartext', async () => {
+		await sendExternalMessage(input('KEYLESS@example.org'), {
+			approved: new Map([
+				['keyed@example.org', 'encrypted'],
+				['keyless@example.org', 'cleartext']
+			])
+		});
+		expect(uploads).toHaveLength(1);
 	});
 });
