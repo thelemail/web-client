@@ -41,7 +41,7 @@
 	} from './data';
 	import type { MessagePreviewRecipient } from './preview';
 	import { forwardSubject, replySubject } from './subjects';
-	import { replyTargets, type ReplyParty } from './replyRecipients';
+	import { replyTargets, switchReplyMode, type ReplyParty, type ReplySeed } from './replyRecipients';
 	import {
 		forwardQuoteHtml,
 		forwardQuoteText,
@@ -126,22 +126,60 @@
 		return mine;
 	}
 
+	const replySeedParties: ReplySeed = {
+		sender: seedSender,
+		senderIsMe: seedSenderIsMe,
+		recipients: seedRecipients
+	};
+	const partyChip = (p: ReplyParty) => recipientChip({ name: p.display || undefined, address: p.address });
+
 	const seededChips = untrack(() => {
-		if (mode === 'forward') return { to: [] as RecipientChip[], cc: [] as RecipientChip[] };
-		const targets = replyTargets(
-			{ sender: seedSender, senderIsMe: seedSenderIsMe, recipients: seedRecipients },
-			mode === 'all' ? 'all' : 'reply',
-			myEmails()
-		);
-		const chip = (p: ReplyParty) =>
-			recipientChip({ name: p.display || undefined, address: p.address });
-		return { to: targets.to.map(chip), cc: targets.cc.map(chip) };
+		if (mode === 'forward') return { to: [] as RecipientChip[], cc: [] as RecipientChip[], added: [] as string[] };
+		const targets = replyTargets(replySeedParties, mode === 'all' ? 'all' : 'reply', myEmails());
+		const added =
+			mode === 'all'
+				? switchReplyMode(
+						{ ...replyTargets(replySeedParties, 'reply', myEmails()), bcc: [] },
+						'all',
+						replySeedParties,
+						myEmails(),
+						[],
+						(p) => p.address,
+						(p) => p
+					).added
+				: [];
+		return { to: targets.to.map(partyChip), cc: targets.cc.map(partyChip), added };
 	});
 
 	let to = $state<RecipientChip[]>(seededChips.to);
 	let cc = $state<RecipientChip[]>(seededChips.cc);
 	let bcc = $state<RecipientChip[]>([]);
 	let showCc = $state(seededChips.cc.length > 0);
+	let addedByAll: string[] = seededChips.added;
+	let appliedMode = untrack(() => mode);
+
+	$effect(() => {
+		const next = mode;
+		if (next === appliedMode) return;
+		const prev = appliedMode;
+		appliedMode = next;
+		if (prev === 'forward' || next === 'forward') return;
+		untrack(() => {
+			const switched = switchReplyMode(
+				{ to, cc, bcc },
+				next,
+				replySeedParties,
+				myEmails(),
+				addedByAll,
+				(c) => c.email,
+				partyChip
+			);
+			to = switched.to;
+			cc = switched.cc;
+			addedByAll = switched.added;
+			if (cc.length > 0) showCc = true;
+		});
+	});
 	let showBcc = $state(false);
 	let ccFocus = $state(false);
 	let bccFocus = $state(false);

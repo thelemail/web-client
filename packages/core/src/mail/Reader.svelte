@@ -1069,7 +1069,7 @@
 				{/if}
 
 				{#if replyMode}
-					{#key `${replyMode}:${m.id}`}
+					{#key `${replyMode === 'forward' ? 'forward' : 'reply'}:${m.id}`}
 						<ReplyBox
 							m={enriched ?? m}
 							mode={replyMode}
