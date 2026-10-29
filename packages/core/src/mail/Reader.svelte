@@ -82,6 +82,9 @@
 	import { locationFor } from './location';
 	import type { CollectionEntry } from './collections/tree';
 	import Users from '@lucide/svelte/icons/users';
+	import { deviceOf } from '$core/settings/keyName';
+
+	const printShortcut = deviceOf(navigator) === 'Mac' ? '⌘P' : 'Ctrl+P';
 
 	interface Props {
 		m: Message | null;
@@ -831,7 +834,7 @@
 								moreOpen = false;
 							}}
 						>
-							<Printer size={17} />{msg.mail_reader_print()}<span class="rt">⌘P</span>
+							<Printer size={17} />{msg.mail_reader_print()}<span class="rt">{printShortcut}</span>
 						</button>
 						{#if productLaunched('calendar')}
 							<div class="msep"></div>
