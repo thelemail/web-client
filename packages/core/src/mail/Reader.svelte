@@ -253,11 +253,6 @@
 		});
 	});
 
-	const replyDraftId = $derived(
-		replyDraft?.reply && replyMode && (replyDraft.reply.mode === 'forward') === (replyMode === 'forward')
-			? replyDraft.id
-			: null
-	);
 
 	const openedId = $derived(m?.id ?? null);
 	$effect(() => {
@@ -335,6 +330,12 @@
 	function toggleReplyMode(next: ReplyMode) {
 		replyMode = replyMode === next ? null : next;
 	}
+
+	const replyDraftId = $derived(
+		replyDraft?.reply && replyMode && (replyDraft.reply.mode === 'forward') === (replyMode === 'forward')
+			? replyDraft.id
+			: null
+	);
 
 	const unsubMethod = $derived(m ? unsubscribeMethod(m.unsubscribe) : null);
 
