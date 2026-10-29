@@ -3,6 +3,8 @@ packages:
   - 'packages/*'
 
 minimumReleaseAge: 1440
+overrides:
+  '@tailwindcss/typography>postcss-selector-parser': ^6.1.5
 allowBuilds:
   core-js: false
 onlyBuiltDependencies:
