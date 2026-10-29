@@ -3,6 +3,7 @@ import { classifyAddress } from './sendDispatch';
 import { lookupExternalKey } from '$core/api/externalKeys';
 import { ApiCallError } from '$core/api/types';
 import type { RecipientEncStatus } from './RecipientField.svelte';
+import type { ApprovedMode, ApprovedModes } from './send';
 
 type ResolvedStatus = 'checking' | 'internal' | 'encrypted' | 'cleartext' | 'failed';
 
@@ -26,6 +27,24 @@ export class EncStatusTracker {
 			}
 			return Promise.all(waits).then(() => undefined);
 		});
+	}
+
+	recheck(emails: string[]): void {
+		untrack(() => {
+			for (const raw of emails) this.#check(raw.toLowerCase());
+		});
+	}
+
+	approvals(emails: string[]): ApprovedModes {
+		const out = new Map<string, ApprovedMode>();
+		for (const raw of emails) {
+			const email = raw.toLowerCase();
+			const status = this.#statuses[email];
+			if (status === 'internal' || status === 'encrypted' || status === 'cleartext') {
+				out.set(email, status);
+			}
+		}
+		return out;
 	}
 
 	#set(email: string, status: ResolvedStatus): void {

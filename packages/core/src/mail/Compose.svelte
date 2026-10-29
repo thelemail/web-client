@@ -44,7 +44,7 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { signatures } from '$core/stores/signatures.svelte';
-	import { SendError } from './send';
+	import { SendError, type ApprovedModes } from './send';
 	import { dispatchSend } from './sendDispatch';
 	import { acceptExternalKey } from '$core/api/externalKeys';
 	import type { RecipientEncStatus } from './RecipientField.svelte';
@@ -512,6 +512,7 @@
 		'locked',
 		'no_account',
 		'encrypt',
+		'encryption_downgrade',
 		'recipient_key_invalid',
 		'rate_limited',
 		'schedule_unsupported',
@@ -530,7 +531,12 @@
 	const failedAddress = $derived.by(() => {
 		const p = err?.payload;
 		if (!p) return null;
-		if (p.kind === 'tofu' || p.kind === 'directory' || p.kind === 'external-key-change') {
+		if (
+			p.kind === 'tofu' ||
+			p.kind === 'directory' ||
+			p.kind === 'external-key-change' ||
+			p.kind === 'encryption_downgrade'
+		) {
 			return p.address;
 		}
 		return null;
@@ -589,6 +595,7 @@
 	};
 
 	const acceptedKeys = new Map<string, string>();
+	let approved: ApprovedModes = new Map();
 
 	async function performSend(scheduledAt?: string | null) {
 		const when = scheduledAt === undefined ? pendingScheduledAt : scheduledAt;
@@ -632,7 +639,7 @@
 					references: replyLink.references,
 					scheduledAt: when ?? undefined
 				},
-				{ acceptedKeys }
+				{ acceptedKeys, approved }
 			);
 			status = 'idle';
 			attempts = 0;
@@ -649,6 +656,7 @@
 			platform.reportError?.('send', e);
 			if (e instanceof SendError) {
 				err = e;
+				if (e.code === 'encryption_downgrade') encTracker.recheck(recipientAddresses());
 				if (e.code === 'encrypt') attempts += 1;
 				else attempts = 0;
 			} else {
@@ -699,6 +707,7 @@
 	}
 
 	function evaluateGuards(run: () => void): void {
+		approved = encTracker.approvals(recipientAddresses());
 		const next = pendingSendGuards({
 			settings: accountSettings.composing,
 			statuses: encStatuses,
@@ -1048,7 +1057,7 @@
 				<InlineSendError
 					code={inlineErr.code as InlineErrorCode}
 					{attempts}
-					recipient={primaryRecip}
+					recipient={modalRecip}
 					retryAfterSeconds={inlineRetryAfter}
 					message={inlineErr.message}
 					onEditRecipient={editRecipient}

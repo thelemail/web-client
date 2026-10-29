@@ -2,10 +2,12 @@ import {
 	sendInternalMessage,
 	SendError,
 	sendErrorFromApi,
+	encryptionDowngradeError,
 	type AcceptedKeys,
+	type ApprovedModes,
 	type ComposeInput
 } from './send';
-import { sendExternalMessage } from './sendExternal';
+import { resolveExternalKeys, sendExternalMessage } from './sendExternal';
 import type { ReplyParty } from './replyRecipients';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
 import { lookupAccount } from '$core/api/accounts';
@@ -69,6 +71,7 @@ export interface DispatchInput {
 
 export interface DispatchOptions {
 	acceptedKeys?: AcceptedKeys;
+	approved?: ApprovedModes;
 }
 
 function party(r: DispatchRecipient): ReplyParty {
@@ -111,34 +114,42 @@ async function sendMixed(
 	const internalAddresses = new Set(
 		[...classes].filter(([, cls]) => cls === 'internal').map(([addr]) => addr)
 	);
-	const sent = await sendInternalMessage(toComposeInput(input), {
-		acceptedKeys: opts.acceptedKeys,
-		deliverOnly: internalAddresses
-	});
 	const externalOnly = (list: DispatchRecipient[] | undefined) =>
 		(list ?? [])
 			.filter((r) => classes.get(r.address.trim().toLowerCase()) === 'external')
 			.map(party);
+	const externalTo = externalOnly(input.to);
 	const externalCc = externalOnly(input.cc);
 	const externalBcc = externalOnly(input.bcc);
-	await sendExternalMessage({
-		to: externalOnly(input.to),
-		cc: externalCc.length ? externalCc : undefined,
-		bcc: externalBcc.length ? externalBcc : undefined,
-		replyTo: input.replyTo ? party(input.replyTo) : undefined,
-		subject: input.subject,
-		body: input.body,
-		bodyHtml: input.bodyHtml,
-		inReplyToHeader: input.inReplyToHeader,
-		references: input.references,
-		calendar: input.calendar,
-		attachments: input.attachments,
-		fromEmail: input.fromEmail,
-		fromName: input.fromName,
-		fromAliasId: input.fromAliasId,
-		scheduledAt: input.scheduledAt,
-		sentMessageId: sent.messageId
+	const resolved = await resolveExternalKeys(
+		[...externalTo, ...externalCc, ...externalBcc],
+		opts.approved
+	);
+	const sent = await sendInternalMessage(toComposeInput(input), {
+		acceptedKeys: opts.acceptedKeys,
+		deliverOnly: internalAddresses
 	});
+	await sendExternalMessage(
+		{
+			to: externalTo,
+			cc: externalCc.length ? externalCc : undefined,
+			bcc: externalBcc.length ? externalBcc : undefined,
+			replyTo: input.replyTo ? party(input.replyTo) : undefined,
+			subject: input.subject,
+			body: input.body,
+			bodyHtml: input.bodyHtml,
+			inReplyToHeader: input.inReplyToHeader,
+			references: input.references,
+			calendar: input.calendar,
+			attachments: input.attachments,
+			fromEmail: input.fromEmail,
+			fromName: input.fromName,
+			fromAliasId: input.fromAliasId,
+			scheduledAt: input.scheduledAt,
+			sentMessageId: sent.messageId
+		},
+		{ resolved }
+	);
 }
 
 export async function dispatchSend(
@@ -173,29 +184,38 @@ async function dispatchOnce(input: DispatchInput, opts: DispatchOptions): Promis
 	const hasInternal = results.includes('internal');
 	const hasExternal = results.includes('external');
 
+	for (const [address, cls] of classes) {
+		if (cls === 'external' && opts.approved?.get(address) === 'internal') {
+			throw encryptionDowngradeError(address);
+		}
+	}
+
 	if (hasInternal && hasExternal) {
 		await sendMixed(input, opts, classes);
 		return;
 	}
 
 	if (hasExternal) {
-		await sendExternalMessage({
-			to: input.to.map(party),
-			cc: parties(input.cc),
-			bcc: parties(input.bcc),
-			replyTo: input.replyTo ? party(input.replyTo) : undefined,
-			subject: input.subject,
-			body: input.body,
-			bodyHtml: input.bodyHtml,
-			inReplyToHeader: input.inReplyToHeader,
-			references: input.references,
-			calendar: input.calendar,
-			attachments: input.attachments,
-			fromEmail: input.fromEmail,
-			fromName: input.fromName,
-			fromAliasId: input.fromAliasId,
-			scheduledAt: input.scheduledAt
-		});
+		await sendExternalMessage(
+			{
+				to: input.to.map(party),
+				cc: parties(input.cc),
+				bcc: parties(input.bcc),
+				replyTo: input.replyTo ? party(input.replyTo) : undefined,
+				subject: input.subject,
+				body: input.body,
+				bodyHtml: input.bodyHtml,
+				inReplyToHeader: input.inReplyToHeader,
+				references: input.references,
+				calendar: input.calendar,
+				attachments: input.attachments,
+				fromEmail: input.fromEmail,
+				fromName: input.fromName,
+				fromAliasId: input.fromAliasId,
+				scheduledAt: input.scheduledAt
+			},
+			{ approved: opts.approved }
+		);
 		return;
 	}
 

@@ -22,7 +22,9 @@ import {
 	releaseDate,
 	buildEnvelope,
 	buildPreview,
-	externalKeyChangePayload
+	externalKeyChangePayload,
+	encryptionDowngradeError,
+	type ApprovedModes
 } from './send';
 import {
 	buildMIME,
@@ -105,12 +107,29 @@ export function encryptionGroups(
 	return shared.addresses.length > 0 ? [shared, ...blind] : blind;
 }
 
-async function resolveExternalKeys(
-	recipients: ReplyParty[]
-): Promise<{ keyed: KeyedRecipient[]; keyless: ReplyParty[] }> {
+export interface ExternalKeys {
+	keyed: KeyedRecipient[];
+	keyless: ReplyParty[];
+}
+
+export interface ExternalSendOptions {
+	approved?: ApprovedModes;
+	resolved?: ExternalKeys;
+}
+
+export async function resolveExternalKeys(
+	recipients: ReplyParty[],
+	approved?: ApprovedModes
+): Promise<ExternalKeys> {
 	const keyed: KeyedRecipient[] = [];
 	const keyless: ReplyParty[] = [];
 	const seen = new Set<string>();
+	const noKey = (r: ReplyParty) => {
+		if (approved && approved.get(lower(r.address)) !== 'cleartext') {
+			throw encryptionDowngradeError(r.address);
+		}
+		keyless.push(r);
+	};
 	for (const r of recipients) {
 		if (seen.has(lower(r.address))) continue;
 		seen.add(lower(r.address));
@@ -125,7 +144,7 @@ async function resolveExternalKeys(
 				);
 			}
 			if (!trust.armoredKey) {
-				keyless.push(r);
+				noKey(r);
 				continue;
 			}
 			keyed.push({
@@ -137,7 +156,7 @@ async function resolveExternalKeys(
 		} catch (e) {
 			if (e instanceof SendError) throw e;
 			if (e instanceof ApiCallError && e.status === 404) {
-				keyless.push(r);
+				noKey(r);
 				continue;
 			}
 			throw sendErrorFromApi(e, m.send_error_key_lookup_failed());
@@ -147,7 +166,8 @@ async function resolveExternalKeys(
 }
 
 export async function sendExternalMessage(
-	input: ExternalComposeInput
+	input: ExternalComposeInput,
+	opts: ExternalSendOptions = {}
 ): Promise<SubmitMessageResponse> {
 	const allRecipients = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])];
 	if (allRecipients.length === 0) {
@@ -162,7 +182,8 @@ export async function sendExternalMessage(
 	const fromName = input.fromName ?? auth.fullName ?? fromAddress;
 	const sender = input.sentMessageId ? null : await senderKey(accountId, input.fromAliasId);
 
-	const { keyed, keyless } = await resolveExternalKeys(allRecipients);
+	const { keyed, keyless } =
+		opts.resolved ?? (await resolveExternalKeys(allRecipients, opts.approved));
 
 	const now = releaseDate(input.scheduledAt);
 	const packed = await packBodyForSend(input.bodyHtml);
