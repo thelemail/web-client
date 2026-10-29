@@ -703,6 +703,9 @@
 
 :is(.mail-scrim, .mail-app .replybox) .cwarn { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--danger-100); color: var(--danger-700); font-size: 12.5px; font-weight: 500; padding: 9px 17px; border-top: 1px solid var(--danger-500); }
 :is(.mail-scrim, .mail-app .replybox) .cwarn svg { width: 14px; height: 14px; flex: 0 0 auto; }
+:is(.mail-scrim, .mail-app .replybox) .cwarn .cwarn-t { flex: 1 1 auto; min-width: 0; }
+:is(.mail-scrim, .mail-app .replybox) .cwarn .cwarn-act { flex: 0 0 auto; margin-left: auto; padding: 4px 10px; border: 1px solid currentColor; border-radius: var(--radius-control-compact); background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+:is(.mail-scrim, .mail-app .replybox) .cwarn .cwarn-act:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
 :is(.mail-scrim, .mail-app .replybox) .cnote { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--warning-100); color: var(--warning-700); font-size: 12.5px; font-weight: 500; padding: 9px 17px; border-bottom: 1px solid var(--border); }
 :is(.mail-scrim, .mail-app .replybox) .cnote svg { width: 14px; height: 14px; flex: 0 0 auto; }
 
@@ -737,6 +740,7 @@
 .mail-scrim .cf-enc[data-tone="partial"] { color: var(--warning-700); }
 .mail-scrim .cf-enc[data-tone="none"] { color: var(--danger-700); }
 .mail-scrim .compose-f .csave { margin-left: auto; font-size: 12px; color: var(--fg-faint); font-style: italic; }
+.mail-scrim .compose-f .csave[data-state='failed'] { color: var(--danger-700); font-style: normal; font-weight: 600; }
 
 .compose-dock { position: fixed; bottom: 0; right: 32px; z-index: 90; display: flex; align-items: center; gap: 9px; width: 300px; background: var(--pine-900); color: var(--fg-on-pine); padding: 12px 10px 12px 15px; border-radius: var(--radius-panel) var(--radius-panel) 0 0; box-shadow: var(--shadow-lg); cursor: pointer; animation: mail-slideup var(--dur) var(--ease-out); font-family: var(--font-sans); border: none; }
 .compose-dock > svg { width: 15px; height: 15px; color: var(--pine-300); flex: 0 0 auto; }
