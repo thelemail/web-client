@@ -72,3 +72,42 @@ export function replyTargets(
 
 	return { to, cc };
 }
+
+export interface ReplyLists<T> {
+	to: T[];
+	cc: T[];
+	bcc: T[];
+}
+
+export function switchReplyMode<T>(
+	lists: ReplyLists<T>,
+	next: 'reply' | 'all',
+	seed: ReplySeed,
+	myEmails: Set<string>,
+	added: readonly string[],
+	addressOf: (item: T) => string,
+	make: (party: ReplyParty) => T
+): { to: T[]; cc: T[]; added: string[] } {
+	if (next === 'reply') {
+		const drop = new Set(added.map(norm));
+		const keep = (item: T) => !drop.has(norm(addressOf(item)));
+		return { to: lists.to.filter(keep), cc: lists.cc.filter(keep), added: [] };
+	}
+	const present = new Set([...lists.to, ...lists.cc, ...lists.bcc].map((i) => norm(addressOf(i))));
+	const targets = replyTargets(seed, 'all', myEmails);
+	const fresh: string[] = [];
+	const take = (parties: ReplyParty[]) => {
+		const out: T[] = [];
+		for (const p of parties) {
+			const key = norm(p.address);
+			if (!key || present.has(key)) continue;
+			present.add(key);
+			fresh.push(key);
+			out.push(make(p));
+		}
+		return out;
+	};
+	const to = [...lists.to, ...take(targets.to)];
+	const cc = [...lists.cc, ...take(targets.cc)];
+	return { to, cc, added: [...added.map(norm), ...fresh] };
+}

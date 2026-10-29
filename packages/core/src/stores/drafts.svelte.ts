@@ -2,6 +2,8 @@ import { listDrafts } from '$core/api/drafts';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { initialsFor } from '$core/mail/initials';
 import type { DraftListItem } from '$core/api/types';
+import type { DraftDoc, DraftReplyMode } from '$core/mail/draft';
+import type { MessagePreview } from '$core/mail/preview';
 import { auth } from './auth.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -14,6 +16,34 @@ export interface DraftRow {
 	epoch: number;
 	attachmentCount: number;
 	init: string;
+	reply?: { source: string; mode: DraftReplyMode };
+}
+
+const REPLY_MODES: readonly DraftReplyMode[] = ['reply', 'all', 'forward'];
+
+function replyRef(preview: MessagePreview): DraftRow['reply'] {
+	const raw = preview.flags?.reply;
+	if (typeof raw !== 'object' || raw === null) return undefined;
+	const { source, mode } = raw as Record<string, unknown>;
+	if (typeof source !== 'string' || !source) return undefined;
+	if (!REPLY_MODES.includes(mode as DraftReplyMode)) return undefined;
+	return { source, mode: mode as DraftReplyMode };
+}
+
+export function rowFromDoc(id: string, doc: DraftDoc): DraftRow {
+	const now = new Date();
+	const recips = [...doc.to, ...doc.cc, ...doc.bcc].map((r) => r.name || r.address);
+	return {
+		id,
+		subject: doc.subject.trim() || m.mail_compose_no_subject(),
+		snippet: doc.bodyText.slice(0, 280),
+		to: recips.length === 0 ? m.mail_no_recipients() : recipientSummary(recips),
+		updatedAt: now.toISOString(),
+		epoch: now.getTime(),
+		attachmentCount: doc.attachments.length,
+		init: initialsFor(doc.subject || '', ''),
+		reply: doc.reply ? { source: doc.reply.source, mode: doc.reply.mode } : undefined
+	};
 }
 
 const PAGE_SIZE = 50;
@@ -37,7 +67,8 @@ async function decryptRow(accountId: string, item: DraftListItem): Promise<Draft
 		updatedAt: item.updatedAt,
 		epoch: updatedAt.getTime(),
 		attachmentCount: item.attachmentCount,
-		init: initialsFor(preview.subject || '', '')
+		init: initialsFor(preview.subject || '', ''),
+		reply: replyRef(preview)
 	};
 }
 
@@ -97,6 +128,10 @@ class DraftsStore {
 	async loadMore(): Promise<void> {
 		if (this.exhausted || !this.#nextCursor) return;
 		await this.#load(true);
+	}
+
+	forSource(messageId: string): DraftRow | undefined {
+		return this.items.find((i) => i.reply?.source === messageId);
 	}
 
 	remove(id: string): void {

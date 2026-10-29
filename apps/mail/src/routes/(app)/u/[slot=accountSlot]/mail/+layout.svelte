@@ -9,6 +9,8 @@
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { mailNav } from '$core/stores/nav.svelte';
 	import { auth } from '$core/stores/auth.svelte';
+	import { beforeNavigate, goto } from '$app/navigation';
+	import { leavePending, settleForLeave } from '$core/stores/leaveGuard';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { DEFAULT_QUERY } from '$core/mail/url';
 	import '$core/lifecycle/lifecycle.css';
@@ -16,6 +18,18 @@
 	import ReadOnlyGuard from '$core/lifecycle/ReadOnlyGuard.svelte';
 
 	let { children, data } = $props();
+
+	beforeNavigate((nav) => {
+		if (nav.willUnload || !nav.to || !leavePending()) return;
+		nav.cancel();
+		const target = nav.to.url;
+		const back = nav.type === 'popstate' ? nav.delta : undefined;
+		void settleForLeave().then((ok) => {
+			if (!ok) return;
+			if (back) history.go(back);
+			else void goto(target);
+		});
+	});
 
 	const NARROW = '(max-width: 1000px)';
 	let narrow = $state(false);

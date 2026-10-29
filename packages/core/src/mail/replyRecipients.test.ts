@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { replyTargets, type ReplySeed } from './replyRecipients';
+import { replyTargets, switchReplyMode, type ReplyParty, type ReplySeed } from './replyRecipients';
 import type { MessagePreviewRecipient } from './preview';
 
 function r(address: string, kind: MessagePreviewRecipient['kind'], display = ''): MessagePreviewRecipient {
@@ -152,5 +152,62 @@ describe('replyTargets with plus-tagged own addresses', () => {
 		);
 		expect(addrs(to)).toEqual(['alice@example.com', 'vlad+x@gmail.com']);
 		expect(addrs(cc)).toEqual(['bob+news@example.com', 'bob@example.com']);
+	});
+});
+
+describe('switchReplyMode', () => {
+	const seed: ReplySeed = {
+		sender: { display: 'Mira', address: 'mira@a.test' },
+		senderIsMe: false,
+		recipients: [
+			{ display: 'Me', address: 'me@a.test', kind: 'to' },
+			{ display: 'Theo', address: 'theo@a.test', kind: 'to' },
+			{ display: 'Ada', address: 'ada@a.test', kind: 'cc' }
+		]
+	};
+	const mine = new Set(['me@a.test']);
+	const addr = (p: ReplyParty) => p.address;
+	const make = (p: ReplyParty) => p;
+	const names = (l: ReplyParty[]) => l.map((p) => p.address);
+
+	it('adds the others without duplicates when switching to Reply all', () => {
+		const start = { to: [{ display: 'Mira', address: 'MIRA@a.test' }], cc: [], bcc: [] };
+		const next = switchReplyMode(start, 'all', seed, mine, [], addr, make);
+		expect(names(next.to)).toEqual(['MIRA@a.test', 'theo@a.test']);
+		expect(names(next.cc)).toEqual(['ada@a.test']);
+		expect(next.added).toEqual(['theo@a.test', 'ada@a.test']);
+	});
+
+	it('removes only what Reply all added when switching back, keeping manual edits', () => {
+		const reply = { to: [{ display: 'Mira', address: 'mira@a.test' }], cc: [], bcc: [] };
+		const all = switchReplyMode(reply, 'all', seed, mine, [], addr, make);
+		const edited = {
+			to: [...all.to.filter((p) => p.address !== 'theo@a.test'), { display: 'Sam', address: 'sam@a.test' }],
+			cc: all.cc,
+			bcc: [{ display: 'Lee', address: 'lee@a.test' }]
+		};
+		const back = switchReplyMode(edited, 'reply', seed, mine, all.added, addr, make);
+		expect(names(back.to)).toEqual(['mira@a.test', 'sam@a.test']);
+		expect(back.cc).toEqual([]);
+		expect(back.added).toEqual([]);
+	});
+
+	it('keeps someone the user typed in even if Reply all would also add them', () => {
+		const reply = {
+			to: [{ display: 'Mira', address: 'mira@a.test' }],
+			cc: [{ display: 'Ada', address: 'ada@a.test' }],
+			bcc: []
+		};
+		const all = switchReplyMode(reply, 'all', seed, mine, [], addr, make);
+		expect(all.added).toEqual(['theo@a.test']);
+		const back = switchReplyMode(all, 'reply', seed, mine, all.added, addr, make);
+		expect(names(back.cc)).toEqual(['ada@a.test']);
+	});
+
+	it('does not add a person already sitting in Bcc', () => {
+		const reply = { to: [{ display: 'Mira', address: 'mira@a.test' }], cc: [], bcc: [{ display: 'Theo', address: 'theo@a.test' }] };
+		const all = switchReplyMode(reply, 'all', seed, mine, [], addr, make);
+		expect(names(all.to)).toEqual(['mira@a.test']);
+		expect(all.added).toEqual(['ada@a.test']);
 	});
 });

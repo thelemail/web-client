@@ -4239,6 +4239,8 @@
 	"mail_compose_from": "From",
 	"mail_compose_manage_addresses": "Manage addresses",
 	"mail_compose_from_unavailable": "{address} cannot send right now, so this message will go from {from}.",
+	"mail_compose_from_choose": "This draft was written from {address}, which can no longer send. Choose another address before sending.",
+	"mail_compose_choose_address": "Choose address",
 	"mail_compose_no_sender": "None of your addresses can send right now. Open Addresses in Settings to see why.",
 	"mail_compose_drop": "Drop to attach",
 	"mail_compose_send_now": "Send now",

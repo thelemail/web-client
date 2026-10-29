@@ -23,6 +23,7 @@
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
 	import InlineSendError, { type InlineErrorCode } from './InlineSendError.svelte';
+	import { DraftSaver, attachmentSig } from './draftSaver.svelte';
 	import {
 		autosaveAllowed,
 		draftSaveStatus,
@@ -39,7 +40,7 @@
 	import { recipientChip, type RecipientChip, type SendIdentity } from './data';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { initialsFor } from './initials';
-	import { chooseFrom, sendIdentityOf } from './identities';
+	import { chooseFrom, fromNeedsChoice, sendIdentityOf } from './identities';
 	import { auth } from '$core/stores/auth.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { signatures } from '$core/stores/signatures.svelte';
@@ -59,20 +60,17 @@
 		removeSignature,
 		hasSignature
 	} from './signatureRegion';
-	import { getDraft, putDraft, deleteDraft } from '$core/api/drafts';
+	import { getDraft, deleteDraft } from '$core/api/drafts';
 	import {
-		buildDraftEnvelope,
 		loadDraftDoc,
-		packDraftBundle,
-		uploadDraftBundle,
 		restoreDraftAttachments,
 		DRAFT_DOC_VERSION,
 		type DraftAttachmentMeta,
 		type DraftDoc
 	} from './draft';
-	import type { DraftAttachmentsChange } from '$core/api/types';
-	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
+	import { drafts, rowFromDoc } from '$core/stores/drafts.svelte';
 	import { holdRestart } from '$core/stores/restartGuard';
+	import { holdLeave } from '$core/stores/leaveGuard';
 	import { onMount, untrack } from 'svelte';
 	import {
 		MAX_ATTACHMENT_BYTES,
@@ -111,6 +109,8 @@
 	const from = $derived(chooseFrom(identityOptions, fromEmail));
 	const ident = $derived<SendIdentity>(from.identity ?? userIdentity);
 	const noSender = $derived(from.identity === null);
+	let restoredFrom = $state<{ email: string; name: string } | null>(null);
+	const fromRevoked = $derived(fromNeedsChoice(from, restoredFrom?.email ?? null, fromEmail));
 	const fromNotice = $derived(
 		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
 	);
@@ -198,16 +198,10 @@
 
 	const openedDraftId = untrack(() => draftId);
 	const isDraftEdit = !!openedDraftId;
-	let savedDraftId = $state<string | null>(openedDraftId);
+	const draftAccountId = untrack(() => auth.accountId) ?? '';
+	let replyLink = $state<Pick<DraftDoc, 'inReplyToMessageId' | 'inReplyToHeader' | 'references' | 'reply'>>({});
 	let load = $state<DraftLoad>(openedDraftId ? 'loading' : 'ready');
-	let savingNow = $state(false);
-	let saveFailed = $state(false);
 	let closing = $state(false);
-	let lastSavedKey = $state('');
-	let bundled: { sig: string; metas: DraftAttachmentMeta[] } = { sig: '', metas: [] };
-	let saving: Promise<void> | null = null;
-	let saveAgain = false;
-	let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function chipsToRecipients(chips: RecipientChip[]) {
 		return chips
@@ -218,19 +212,16 @@
 	function currentDoc(metas: DraftAttachmentMeta[]): DraftDoc {
 		return {
 			v: DRAFT_DOC_VERSION,
-			from: { email: ident.email, name: ident.name },
+			from: fromRevoked && restoredFrom ? restoredFrom : { email: ident.email, name: ident.name },
 			to: chipsToRecipients(to),
 			cc: chipsToRecipients(cc),
 			bcc: chipsToRecipients(bcc),
 			subject,
 			bodyHtml,
 			bodyText,
+			...replyLink,
 			attachments: metas
 		};
-	}
-
-	function attachmentSig(list: ComposeAttachment[]): string {
-		return list.map((a) => `${a.id}:${a.disposition}:${a.contentId ?? ''}`).join('|');
 	}
 
 	function draftKey(list: ComposeAttachment[]): string {
@@ -247,38 +238,33 @@
 		);
 	}
 
-	function draftRowFromDoc(id: string, doc: DraftDoc): DraftRow {
-		const now = new Date();
-		const recips = [...doc.to, ...doc.cc, ...doc.bcc].map((r) => r.name || r.address);
-		const summary =
-			recips.length === 0
-				? m.mail_no_recipients()
-				: recips.length <= 2
-					? recips.join(', ')
-					: `${recips.slice(0, 2).join(', ')} +${recips.length - 2}`;
-		return {
-			id,
-			subject: doc.subject.trim() || m.mail_compose_no_subject(),
-			snippet: doc.bodyText.slice(0, 280),
-			to: summary,
-			updatedAt: now.toISOString(),
-			epoch: now.getTime(),
-			attachmentCount: doc.attachments.length,
-			init: initialsFor(doc.subject || '', '')
-		};
-	}
+
+	const saver = new DraftSaver(
+		draftAccountId,
+		{
+			allowed: () => !!draftAccountId && autosaveAllowed(load, status === 'sending'),
+			key: () => draftKey(attachments),
+			worth: () => isWorthSaving(currentDoc([])),
+			attachments: () => attachments,
+			doc: currentDoc,
+			saved: (id, doc) => {
+				if (auth.accountId === draftAccountId) drafts.upsertLocal(rowFromDoc(id, doc));
+			}
+		},
+		openedDraftId
+	);
 
 	const currentKey = $derived(draftKey(attachments));
 	const dirty = $derived(
-		currentKey !== lastSavedKey &&
-			(savedDraftId !== null || attachments.length > 0 || isWorthSaving(currentDoc([])))
+		currentKey !== saver.lastKey &&
+			(saver.id !== null || attachments.length > 0 || isWorthSaving(currentDoc([])))
 	);
 	const saveFacts = $derived<DraftSaveFacts>({
 		load,
-		saving: savingNow,
-		failed: saveFailed,
+		saving: saver.saving,
+		failed: saver.failed,
 		dirty,
-		persisted: savedDraftId !== null && lastSavedKey !== ''
+		persisted: saver.persisted
 	});
 	const saveStatus = $derived(draftSaveStatus(saveFacts));
 
@@ -288,84 +274,13 @@
 		);
 	}
 
-	function saveDraft(): Promise<void> {
-		if (saving) {
-			saveAgain = true;
-			return saving;
-		}
-		saving = persistDraft().finally(() => {
-			saving = null;
-			if (saveAgain) {
-				saveAgain = false;
-				void saveDraft();
-			}
-		});
-		return saving;
-	}
-
-	async function persistDraft(): Promise<void> {
-		if (!autosaveAllowed(load, status === 'sending')) return;
-		const accountId = auth.accountId;
-		if (!accountId) return;
-		const snapshot = attachments;
-		const key = draftKey(snapshot);
-		if (key === lastSavedKey) return;
-		if (!savedDraftId && snapshot.length === 0 && !isWorthSaving(currentDoc([]))) return;
-		const id = savedDraftId ?? crypto.randomUUID();
-		savedDraftId = id;
-		savingNow = true;
-		try {
-			const sig = attachmentSig(snapshot);
-			let metas = bundled.metas;
-			let change: DraftAttachmentsChange | undefined;
-			if (sig !== bundled.sig) {
-				if (snapshot.length === 0) {
-					metas = [];
-					change = { action: 'clear' };
-				} else {
-					const packed = await packDraftBundle(
-						accountId,
-						snapshot.map((a) => ({ file: a.file, disposition: a.disposition, contentId: a.contentId }))
-					);
-					const uploadId = await uploadDraftBundle(id, packed);
-					metas = packed.metas;
-					change = { action: 'replace', uploadId, count: metas.length };
-				}
-			}
-			const doc = currentDoc(metas);
-			const req = await buildDraftEnvelope(accountId, doc, change);
-			await putDraft(id, req);
-			bundled = { sig, metas };
-			lastSavedKey = key;
-			saveFailed = false;
-			drafts.upsertLocal(draftRowFromDoc(id, doc));
-		} catch {
-			saveFailed = true;
-		} finally {
-			savingNow = false;
-		}
-	}
-
-	function scheduleSave(): void {
-		clearTimeout(saveTimer);
-		saveTimer = setTimeout(() => void saveDraft(), 1500);
-	}
-
-	async function settleSave(): Promise<void> {
-		clearTimeout(saveTimer);
-		await saveDraft();
-		while (saving) await saving;
-	}
-
 	function retrySave(): void {
-		clearTimeout(saveTimer);
-		void saveDraft();
+		saver.cancel();
+		void saver.save();
 	}
 
 	function discardDraft(): void {
-		clearTimeout(saveTimer);
-		const id = savedDraftId;
-		savedDraftId = null;
+		const id = saver.release();
 		if (id) {
 			drafts.remove(id);
 			void deleteDraft(id).catch(() => {});
@@ -376,13 +291,13 @@
 	async function closeKeepingDraft(): Promise<void> {
 		if (closing) return;
 		if (load !== 'ready') {
-			clearTimeout(saveTimer);
+			saver.cancel();
 			onClose();
 			return;
 		}
 		closing = true;
 		try {
-			await settleSave();
+			await saver.settle();
 		} finally {
 			closing = false;
 		}
@@ -399,30 +314,43 @@
 		void ident.email;
 		void ident.name;
 		if (!autosaveAllowed(load, status === 'sending')) return;
-		scheduleSave();
+		saver.schedule();
 	});
 
 	async function restartHold(): Promise<string | null> {
 		if (status === 'sending') return m.mail_compose_hold_sending();
 		if (uploadsInFlight()) return m.mail_compose_hold_uploading();
 		if (load !== 'ready') return null;
-		await settleSave();
-		if (!savedDraftId && attachments.length === 0 && !isWorthSaving(currentDoc([]))) return null;
-		return draftKey(attachments) === lastSavedKey ? null : m.mail_compose_hold_draft_unsaved();
+		await saver.settle();
+		if (!saver.id && attachments.length === 0 && !isWorthSaving(currentDoc([]))) return null;
+		return draftKey(attachments) === saver.lastKey ? null : m.mail_compose_hold_draft_unsaved();
 	}
 
 	onMount(() => {
 		void contacts.ensureLoaded();
 		if (draftId) void hydrateDraft(draftId);
 		const release = holdRestart(restartHold);
+		const releaseLeave = holdLeave({
+			pending: () => load === 'ready' && (dirty || saver.saving || saver.failed),
+			settle: async () => {
+				await saver.settle();
+				return mayClose(saveFacts);
+			},
+			focus: () => {
+				min = false;
+				editor?.commands.focus();
+			}
+		});
 		return () => {
-			clearTimeout(saveTimer);
+			releaseLeave();
+			if (load === 'ready' && dirty) void saver.save();
+			else saver.cancel();
 			release();
 		};
 	});
 
 	async function hydrateDraft(id: string): Promise<void> {
-		const accountId = auth.accountId;
+		const accountId = draftAccountId;
 		load = 'loading';
 		if (!accountId) {
 			load = 'failed';
@@ -432,6 +360,7 @@
 			const detail = await getDraft(id);
 			const doc = await loadDraftDoc(accountId, detail);
 			fromEmail = doc.from.email;
+			restoredFrom = doc.from;
 			to = doc.to.map(recipientChip);
 			cc = doc.cc.map(recipientChip);
 			bcc = doc.bcc.map(recipientChip);
@@ -440,6 +369,13 @@
 			subject = doc.subject;
 			bodyHtml = doc.bodyHtml;
 			bodyText = doc.bodyText;
+			replyLink = {
+				inReplyToMessageId: doc.inReplyToMessageId,
+				inReplyToHeader: doc.inReplyToHeader,
+				references: doc.references,
+				reply: doc.reply
+			};
+			let restoreFailed = false;
 			if (doc.attachments.length > 0 && detail.attachmentsBundle) {
 				try {
 					const restored = await restoreDraftAttachments(accountId, doc, detail.attachmentsBundle);
@@ -453,15 +389,19 @@
 					}));
 					attachments = [...attachments, ...added];
 					for (const att of added) startUpload(att);
-					bundled = { sig: attachmentSig(attachments), metas: doc.attachments };
 				} catch {
-					bundled = { sig: '', metas: doc.attachments };
+					restoreFailed = true;
 					attErr = m.mail_compose_restore_att_failed({
 						name: doc.attachments.map((a) => a.filename).join(', ')
 					});
 				}
 			}
-			lastSavedKey = draftKey(attachments);
+			if (restoreFailed) {
+				saver.keepUnrestored(doc.attachments);
+				saver.lastKey = draftKey(attachments);
+			} else {
+				saver.baseline(draftKey(attachments), attachments, doc.attachments);
+			}
 			load = 'ready';
 		} catch {
 			load = 'failed';
@@ -554,7 +494,7 @@
 	const hasInvalid = $derived(allRecipients.some((c) => !c.valid));
 	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
 	const canSend = $derived(
-		validCount > 0 && !hasInvalid && status !== 'sending' && attReady && !noSender
+		validCount > 0 && !hasInvalid && status !== 'sending' && attReady && !noSender && !fromRevoked
 	);
 	function identityKindLabel(kind: SendIdentity['kind']): string {
 		if (kind === 'Alias') return m.mail_compose_ident_shared();
@@ -687,6 +627,9 @@
 					fromEmail: ident.email,
 					fromName: ident.name,
 					fromAliasId: ident.aliasId,
+					inReplyToMessageId: replyLink.inReplyToMessageId,
+					inReplyToHeader: replyLink.inReplyToHeader,
+					references: replyLink.references,
 					scheduledAt: when ?? undefined
 				},
 				{ acceptedKeys }
@@ -694,10 +637,9 @@
 			status = 'idle';
 			attempts = 0;
 			pendingScheduledAt = null;
-			clearTimeout(saveTimer);
-			if (savedDraftId) {
-				const id = savedDraftId;
-				savedDraftId = null;
+			const sentDraftId = saver.release();
+			if (sentDraftId) {
+				const id = sentDraftId;
 				drafts.remove(id);
 				void deleteDraft(id).catch(() => {});
 			}
@@ -978,7 +920,15 @@
 						</div>
 					{/if}
 				</div>
-				{#if noSender}
+				{#if fromRevoked && restoredFrom}
+					<div class="cwarn" role="alert">
+						<CircleAlert size={14} />
+						<span class="cwarn-t">{m.mail_compose_from_choose({ address: restoredFrom.email })}</span>
+						<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
+							{m.mail_compose_choose_address()}
+						</button>
+					</div>
+				{:else if noSender}
 					<div class="cnote"><CircleAlert size={14} />{m.mail_compose_no_sender()}</div>
 				{:else if fromNotice}
 					<div class="cnote">

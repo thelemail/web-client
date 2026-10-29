@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { leavePending, settleForLeave } from '$core/stores/leaveGuard';
 	import { m } from '$paraglide/messages.js';
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import { productLaunched } from '$core/products';
@@ -132,6 +133,7 @@
 		const target = accounts.byId(a.id);
 		if (!target) return;
 		open = false;
+		if (leavePending() && !(await settleForLeave())) return;
 		switchDone = false;
 		switching = a;
 		clearTimeout(switchTimer);
