@@ -23,6 +23,13 @@
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
 	import InlineSendError, { type InlineErrorCode } from './InlineSendError.svelte';
+	import {
+		autosaveAllowed,
+		draftSaveStatus,
+		mayClose,
+		type DraftLoad,
+		type DraftSaveFacts
+	} from './draftSave';
 	import DirectoryFailModal from './DirectoryFailModal.svelte';
 	import SchedulePicker from './SchedulePicker.svelte';
 	import TofuModal from './TofuModal.svelte';
@@ -66,7 +73,7 @@
 	import type { DraftAttachmentsChange } from '$core/api/types';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
 	import { holdRestart } from '$core/stores/restartGuard';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import {
 		MAX_ATTACHMENT_BYTES,
 		MAX_ATTACHMENTS,
@@ -189,11 +196,14 @@
 		attachments = attachments.map((x) => (x.id === a.id ? { ...a } : x));
 	}, auth.accountId ?? '');
 
-	const isDraftEdit = !!draftId;
-	let savedDraftId = $state<string | null>(draftId);
-	let draftStatus = $state<'idle' | 'saving' | 'saved'>(isDraftEdit ? 'saved' : 'idle');
-	let hydrating = $state(isDraftEdit);
-	let lastSavedKey = '';
+	const openedDraftId = untrack(() => draftId);
+	const isDraftEdit = !!openedDraftId;
+	let savedDraftId = $state<string | null>(openedDraftId);
+	let load = $state<DraftLoad>(openedDraftId ? 'loading' : 'ready');
+	let savingNow = $state(false);
+	let saveFailed = $state(false);
+	let closing = $state(false);
+	let lastSavedKey = $state('');
 	let bundled: { sig: string; metas: DraftAttachmentMeta[] } = { sig: '', metas: [] };
 	let saving: Promise<void> | null = null;
 	let saveAgain = false;
@@ -258,6 +268,20 @@
 		};
 	}
 
+	const currentKey = $derived(draftKey(attachments));
+	const dirty = $derived(
+		currentKey !== lastSavedKey &&
+			(savedDraftId !== null || attachments.length > 0 || isWorthSaving(currentDoc([])))
+	);
+	const saveFacts = $derived<DraftSaveFacts>({
+		load,
+		saving: savingNow,
+		failed: saveFailed,
+		dirty,
+		persisted: savedDraftId !== null && lastSavedKey !== ''
+	});
+	const saveStatus = $derived(draftSaveStatus(saveFacts));
+
 	function uploadsInFlight(): boolean {
 		return attachments.some(
 			(a) => a.status === 'queued' || a.status === 'encrypting' || a.status === 'uploading'
@@ -280,7 +304,7 @@
 	}
 
 	async function persistDraft(): Promise<void> {
-		if (hydrating || status === 'sending') return;
+		if (!autosaveAllowed(load, status === 'sending')) return;
 		const accountId = auth.accountId;
 		if (!accountId) return;
 		const snapshot = attachments;
@@ -289,7 +313,7 @@
 		if (!savedDraftId && snapshot.length === 0 && !isWorthSaving(currentDoc([]))) return;
 		const id = savedDraftId ?? crypto.randomUUID();
 		savedDraftId = id;
-		draftStatus = 'saving';
+		savingNow = true;
 		try {
 			const sig = attachmentSig(snapshot);
 			let metas = bundled.metas;
@@ -313,10 +337,12 @@
 			await putDraft(id, req);
 			bundled = { sig, metas };
 			lastSavedKey = key;
-			draftStatus = 'saved';
+			saveFailed = false;
 			drafts.upsertLocal(draftRowFromDoc(id, doc));
 		} catch {
-			draftStatus = 'idle';
+			saveFailed = true;
+		} finally {
+			savingNow = false;
 		}
 	}
 
@@ -325,7 +351,13 @@
 		saveTimer = setTimeout(() => void saveDraft(), 1500);
 	}
 
-	function flushSave(): void {
+	async function settleSave(): Promise<void> {
+		clearTimeout(saveTimer);
+		await saveDraft();
+		while (saving) await saving;
+	}
+
+	function retrySave(): void {
 		clearTimeout(saveTimer);
 		void saveDraft();
 	}
@@ -341,9 +373,20 @@
 		onClose();
 	}
 
-	function closeKeepingDraft(): void {
-		flushSave();
-		onClose();
+	async function closeKeepingDraft(): Promise<void> {
+		if (closing) return;
+		if (load !== 'ready') {
+			clearTimeout(saveTimer);
+			onClose();
+			return;
+		}
+		closing = true;
+		try {
+			await settleSave();
+		} finally {
+			closing = false;
+		}
+		if (mayClose(saveFacts)) onClose();
 	}
 
 	$effect(() => {
@@ -353,16 +396,17 @@
 		void subject;
 		void bodyHtml;
 		void attachmentSig(attachments);
-		if (hydrating || status === 'sending') return;
+		void ident.email;
+		void ident.name;
+		if (!autosaveAllowed(load, status === 'sending')) return;
 		scheduleSave();
 	});
 
 	async function restartHold(): Promise<string | null> {
 		if (status === 'sending') return m.mail_compose_hold_sending();
 		if (uploadsInFlight()) return m.mail_compose_hold_uploading();
-		if (hydrating) return null;
-		clearTimeout(saveTimer);
-		await saveDraft();
+		if (load !== 'ready') return null;
+		await settleSave();
 		if (!savedDraftId && attachments.length === 0 && !isWorthSaving(currentDoc([]))) return null;
 		return draftKey(attachments) === lastSavedKey ? null : m.mail_compose_hold_draft_unsaved();
 	}
@@ -379,8 +423,9 @@
 
 	async function hydrateDraft(id: string): Promise<void> {
 		const accountId = auth.accountId;
+		load = 'loading';
 		if (!accountId) {
-			hydrating = false;
+			load = 'failed';
 			return;
 		}
 		try {
@@ -410,17 +455,17 @@
 					for (const att of added) startUpload(att);
 					bundled = { sig: attachmentSig(attachments), metas: doc.attachments };
 				} catch {
+					bundled = { sig: '', metas: doc.attachments };
 					attErr = m.mail_compose_restore_att_failed({
 						name: doc.attachments.map((a) => a.filename).join(', ')
 					});
 				}
 			}
 			lastSavedKey = draftKey(attachments);
+			load = 'ready';
 		} catch {
-			err = new SendError('unknown', m.mail_compose_open_draft_failed());
+			load = 'failed';
 		} finally {
-			hydrating = false;
-			draftStatus = 'saved';
 			if (editor) {
 				signatureOn = hasSignature(editor);
 				signatureChosen = true;
@@ -575,7 +620,7 @@
 				sendOpen = false;
 				return;
 			}
-			if (!err) closeKeepingDraft();
+			if (!err) void closeKeepingDraft();
 		}
 	}
 
@@ -765,7 +810,7 @@
 	});
 
 	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) closeKeepingDraft();
+		if (e.target === e.currentTarget) void closeKeepingDraft();
 	}
 
 	let linkInitial = $state<string | null>(null);
@@ -851,13 +896,23 @@
 					<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => (min = true)}>
 						<Minus size={16} />
 					</button>
-					<button type="button" class="chx x" title={m.common_close()} onclick={closeKeepingDraft}>
+					<button type="button" class="chx x" title={m.common_close()} aria-busy={closing} onclick={() => void closeKeepingDraft()}>
 						<X size={16} />
 					</button>
 				</div>
 			</div>
 
-			<div class="compose-scroll">
+			{#if load === 'failed'}
+				<div class="cwarn" role="alert">
+					<CircleAlert size={14} />
+					<span class="cwarn-t">{m.mail_compose_open_draft_failed()} {m.mail_compose_draft_untouched()}</span>
+					<button type="button" class="cwarn-act" onclick={() => draftId && void hydrateDraft(draftId)}>
+						{m.common_retry()}
+					</button>
+				</div>
+			{/if}
+
+			<div class="compose-scroll" inert={load !== 'ready'} aria-busy={load === 'loading'}>
 				<div class="from-row" bind:this={fromRef}>
 					<span class="recip-label">{m.mail_compose_from()}</span>
 					<button
@@ -1058,7 +1113,15 @@
 				</div>
 			{/if}
 
-			<div class="compose-f">
+			{#if saveStatus === 'failed'}
+				<div class="cwarn" role="alert">
+					<CircleAlert size={14} />
+					<span class="cwarn-t">{m.mail_compose_save_failed()}</span>
+					<button type="button" class="cwarn-act" onclick={retrySave}>{m.common_retry()}</button>
+				</div>
+			{/if}
+
+			<div class="compose-f" inert={load !== 'ready'}>
 				<div
 					class="send-split"
 					class:off={!canSend}
@@ -1121,12 +1184,18 @@
 					<span class="cf-enc-t">{encSummary.label}</span>
 				</span>
 
-				<span class="csave"
-					>{draftStatus === 'saving'
-						? m.mail_compose_saving()
-						: draftStatus === 'saved'
-							? m.mail_compose_draft_saved()
-							: m.mail_compose_draft()}</span
+				<span class="csave" data-state={saveStatus} role="status"
+					>{saveStatus === 'loading'
+						? m.mail_compose_opening()
+						: saveStatus === 'saving'
+							? m.mail_compose_saving()
+							: saveStatus === 'saved'
+								? m.mail_compose_draft_saved()
+								: saveStatus === 'failed'
+									? m.mail_compose_not_saved()
+									: saveStatus === 'unsaved'
+										? m.mail_compose_unsaved()
+										: m.mail_compose_draft()}</span
 				>
 				<button type="button" class="cf-ico danger" title={m.mail_compose_discard_draft()} onclick={discardDraft}>
 					<Trash2 size={17} />
