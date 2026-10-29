@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AccountAddress } from '$core/api/addresses';
-import { chooseFrom, sendIdentityOf } from './identities';
+import { chooseFrom, fromNeedsChoice, sendIdentityOf } from './identities';
 
 function address(over: Partial<AccountAddress> = {}): AccountAddress {
 	return {
@@ -66,5 +66,24 @@ describe('chooseFrom', () => {
 			identity: null,
 			unavailable: 'ada@acme.test'
 		});
+	});
+});
+
+describe('fromNeedsChoice', () => {
+	const options = [sendIdentityOf(address({ email: 'work@a.test', isPrimary: true }), 'Me')];
+
+	it('asks for a choice when a restored draft was written from an address that can no longer send', () => {
+		const choice = chooseFrom(options, 'old@a.test');
+		expect(choice.identity?.email).toBe('work@a.test');
+		expect(fromNeedsChoice(choice, 'old@a.test', 'old@a.test')).toBe(true);
+	});
+
+	it('stops asking once the user picks another address', () => {
+		expect(fromNeedsChoice(chooseFrom(options, 'work@a.test'), 'old@a.test', 'work@a.test')).toBe(false);
+	});
+
+	it('does not ask when the saved address is still available or nothing was restored', () => {
+		expect(fromNeedsChoice(chooseFrom(options, 'work@a.test'), 'work@a.test', 'work@a.test')).toBe(false);
+		expect(fromNeedsChoice(chooseFrom(options, 'old@a.test'), null, 'old@a.test')).toBe(false);
 	});
 });

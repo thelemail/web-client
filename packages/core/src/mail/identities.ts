@@ -30,3 +30,9 @@ export function chooseFrom(options: SendIdentity[], wanted: string | null): From
 		options.find((o) => o.kind === 'Default') ?? options.find((o) => o.kind !== 'Alias') ?? options[0] ?? null;
 	return { identity: hit ?? fallback, unavailable: key && !hit ? want : null };
 }
+
+export function fromNeedsChoice(choice: FromChoice, restored: string | null, current: string | null): boolean {
+	if (!restored || !current) return false;
+	if (restored.trim().toLowerCase() !== current.trim().toLowerCase()) return false;
+	return choice.unavailable !== null;
+}

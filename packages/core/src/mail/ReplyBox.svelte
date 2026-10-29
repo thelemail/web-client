@@ -75,7 +75,7 @@
 	import { pendingSendGuards, type SendGuard } from './sendGuards';
 	import SendGuardDialog from './SendGuardDialog.svelte';
 	import { initialsFor } from './initials';
-	import { chooseFrom, sendIdentityOf } from './identities';
+	import { chooseFrom, fromNeedsChoice, sendIdentityOf } from './identities';
 	import { auth } from '$core/stores/auth.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { contacts } from '$core/stores/contacts.svelte';
@@ -236,6 +236,8 @@
 	const from = $derived(chooseFrom(identityOptions, fromEmail));
 	const ident = $derived<SendIdentity>(from.identity ?? userIdentity);
 	const noSender = $derived(from.identity === null);
+	let restoredFrom = $state<{ email: string; name: string } | null>(null);
+	const fromRevoked = $derived(fromNeedsChoice(from, restoredFrom?.email ?? null, fromEmail));
 	const fromNotice = $derived(
 		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
 	);
@@ -509,7 +511,7 @@
 		const headers = threadIds ? replyThreadHeaders(threadIds) : null;
 		return {
 			v: DRAFT_DOC_VERSION,
-			from: { email: ident.email, name: ident.name },
+			from: fromRevoked && restoredFrom ? restoredFrom : { email: ident.email, name: ident.name },
 			to: draftRecipients(to),
 			cc: draftRecipients(cc),
 			bcc: draftRecipients(bcc),
@@ -603,6 +605,7 @@
 			signatureSeeded = true;
 			signatureChosen = true;
 			fromEmail = doc.from.email;
+			restoredFrom = doc.from;
 			to = doc.to.map(recipientChip);
 			cc = doc.cc.map(recipientChip);
 			bcc = doc.bcc.map(recipientChip);
@@ -689,7 +692,7 @@
 	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
 	const bodyOk = $derived(mode === 'forward' || text.trim().length > 0);
 	const canSend = $derived(
-		validCount > 0 && !hasInvalid && bodyOk && status !== 'sending' && attReady && !noSender
+		validCount > 0 && !hasInvalid && bodyOk && status !== 'sending' && attReady && !noSender && !fromRevoked
 	);
 
 	const INLINE_CODES = new Set<SendError['code']>([
@@ -1064,7 +1067,15 @@
 			</button>
 		{/if}
 	</div>
-	{#if noSender}
+	{#if fromRevoked && restoredFrom}
+		<div class="cwarn" role="alert">
+			<CircleAlert size={14} />
+			<span class="cwarn-t">{msg.mail_compose_from_choose({ address: restoredFrom.email })}</span>
+			<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
+				{msg.mail_compose_choose_address()}
+			</button>
+		</div>
+	{:else if noSender}
 		<div class="cnote"><CircleAlert size={14} />{msg.mail_compose_no_sender()}</div>
 	{:else if fromNotice}
 		<div class="cnote">

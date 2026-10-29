@@ -40,7 +40,7 @@
 	import { recipientChip, type RecipientChip, type SendIdentity } from './data';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { initialsFor } from './initials';
-	import { chooseFrom, sendIdentityOf } from './identities';
+	import { chooseFrom, fromNeedsChoice, sendIdentityOf } from './identities';
 	import { auth } from '$core/stores/auth.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { signatures } from '$core/stores/signatures.svelte';
@@ -109,6 +109,8 @@
 	const from = $derived(chooseFrom(identityOptions, fromEmail));
 	const ident = $derived<SendIdentity>(from.identity ?? userIdentity);
 	const noSender = $derived(from.identity === null);
+	let restoredFrom = $state<{ email: string; name: string } | null>(null);
+	const fromRevoked = $derived(fromNeedsChoice(from, restoredFrom?.email ?? null, fromEmail));
 	const fromNotice = $derived(
 		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
 	);
@@ -210,7 +212,7 @@
 	function currentDoc(metas: DraftAttachmentMeta[]): DraftDoc {
 		return {
 			v: DRAFT_DOC_VERSION,
-			from: { email: ident.email, name: ident.name },
+			from: fromRevoked && restoredFrom ? restoredFrom : { email: ident.email, name: ident.name },
 			to: chipsToRecipients(to),
 			cc: chipsToRecipients(cc),
 			bcc: chipsToRecipients(bcc),
@@ -358,6 +360,7 @@
 			const detail = await getDraft(id);
 			const doc = await loadDraftDoc(accountId, detail);
 			fromEmail = doc.from.email;
+			restoredFrom = doc.from;
 			to = doc.to.map(recipientChip);
 			cc = doc.cc.map(recipientChip);
 			bcc = doc.bcc.map(recipientChip);
@@ -491,7 +494,7 @@
 	const hasInvalid = $derived(allRecipients.some((c) => !c.valid));
 	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
 	const canSend = $derived(
-		validCount > 0 && !hasInvalid && status !== 'sending' && attReady && !noSender
+		validCount > 0 && !hasInvalid && status !== 'sending' && attReady && !noSender && !fromRevoked
 	);
 	function identityKindLabel(kind: SendIdentity['kind']): string {
 		if (kind === 'Alias') return m.mail_compose_ident_shared();
@@ -917,7 +920,15 @@
 						</div>
 					{/if}
 				</div>
-				{#if noSender}
+				{#if fromRevoked && restoredFrom}
+					<div class="cwarn" role="alert">
+						<CircleAlert size={14} />
+						<span class="cwarn-t">{m.mail_compose_from_choose({ address: restoredFrom.email })}</span>
+						<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
+							{m.mail_compose_choose_address()}
+						</button>
+					</div>
+				{:else if noSender}
 					<div class="cnote"><CircleAlert size={14} />{m.mail_compose_no_sender()}</div>
 				{:else if fromNotice}
 					<div class="cnote">
