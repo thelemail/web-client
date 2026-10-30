@@ -41,7 +41,7 @@
 	import EditorToolbar from './editor/EditorToolbar.svelte';
 	import AttachPreview from './AttachPreview.svelte';
 	import FromPicker from './FromPicker.svelte';
-	import { attachmentStatusText, dockAttention, sendBlock, sendBlockText } from './sendBlock';
+	import { attachmentStatusText, dockAttention, hasFailedAttachment, sendBlock, sendBlockText } from './sendBlock';
 	import EmailBody from './EmailBody.svelte';
 	import { FOLDERS, formatWhenLong, recipientChip, type Message, type RecipientChip, type SendIdentity } from './data';
 	import { contacts } from '$core/stores/contacts.svelte';
@@ -376,6 +376,7 @@
 	}
 
 	const attStatus = $derived(attachmentStatusText(attachments));
+	const attFailed = $derived(hasFailedAttachment(attachments));
 	const saveLine = $derived(attStatus && load === 'ready' ? `${saveLabel} · ${attStatus}` : saveLabel);
 
 	function discardDraft(): void {
@@ -1056,8 +1057,8 @@
 		{#if draftAccountEmail}
 			<span class="ch-acct" title={draftAccountEmail}>{m.mail_compose_in_account({ account: draftAccountEmail })}</span>
 		{/if}
-		<span class="ch-save" data-state={saveStatus} class:att={!!attStatus} role="status">
-			{#if attStatus || saveStatus === 'failed'}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveLine}
+		<span class="ch-save" data-state={saveStatus} class:att={attFailed} role="status">
+			{#if attFailed || saveStatus === 'failed'}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveLine}
 		</span>
 		<span class="ch-rule" aria-hidden="true"></span>
 		<div class="ch-actions">

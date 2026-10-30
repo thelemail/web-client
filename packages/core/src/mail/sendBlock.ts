@@ -35,6 +35,10 @@ export function sendBlockText(b: SendBlock): string {
 	return m.mail_compose_block_att_pending({ name: b.name });
 }
 
+export function hasFailedAttachment(list: Tracked[]): boolean {
+	return list.some((a) => FAILED.has(a.status));
+}
+
 export function attachmentStatusText(list: Tracked[]): string | null {
 	const failed = list.find((a) => FAILED.has(a.status));
 	if (failed) return m.mail_compose_status_att_failed({ name: failed.file.name });

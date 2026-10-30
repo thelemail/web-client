@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Attachment } from './attachmentUpload';
-import { attachmentStatusText, dockAttention, sendBlock, sendBlockText } from './sendBlock';
+import { attachmentStatusText, dockAttention, hasFailedAttachment, sendBlock, sendBlockText } from './sendBlock';
 
 function att(name: string, status: Attachment['status']): Pick<Attachment, 'id' | 'file' | 'status'> {
 	return { id: name, file: new File([new Uint8Array(1)], name), status };
@@ -57,6 +57,11 @@ describe('draft status for attachments', () => {
 	it('counts uploads still running', () => {
 		expect(attachmentStatusText([att('a.pdf', 'uploading'), att('b.pdf', 'queued')])).toBe('2 uploads in progress');
 		expect(attachmentStatusText([att('a.pdf', 'encrypting')])).toBe('1 upload in progress');
+	});
+
+	it('only treats failed files as a problem, not uploads still running', () => {
+		expect(hasFailedAttachment([att('a.pdf', 'uploading'), att('b.pdf', 'queued')])).toBe(false);
+		expect(hasFailedAttachment([att('a.pdf', 'ready'), att('b.pdf', 'cancelled')])).toBe(true);
 	});
 
 	it('adds nothing once every file is ready', () => {

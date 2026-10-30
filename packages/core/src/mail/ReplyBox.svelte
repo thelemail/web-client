@@ -24,7 +24,7 @@
 	import InlineSendError, { type InlineErrorCode } from './InlineSendError.svelte';
 	import AttachPreview from './AttachPreview.svelte';
 	import FromPicker from './FromPicker.svelte';
-	import { attachmentStatusText, sendBlock, sendBlockText } from './sendBlock';
+	import { attachmentStatusText, hasFailedAttachment, sendBlock, sendBlockText } from './sendBlock';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import DirectoryFailModal from './DirectoryFailModal.svelte';
@@ -597,6 +597,7 @@
 	});
 	const saveStatus = $derived(draftSaveStatus(saveFacts));
 	const attStatus = $derived(load === 'ready' ? attachmentStatusText(attachments) : null);
+	const attFailed = $derived(hasFailedAttachment(attachments));
 
 	$effect(() => {
 		void to;
@@ -1083,8 +1084,8 @@
 			<span class="rt-acct" title={draftAccountEmail}>{msg.mail_compose_in_account({ account: draftAccountEmail })}</span>
 		{/if}
 		{#if (saveStatus !== 'idle' && saveStatus !== 'load-failed') || attStatus}
-			<span class="rt-save" data-state={saveStatus} class:att={!!attStatus} role="status">
-				{#if attStatus}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
+			<span class="rt-save" data-state={saveStatus} class:att={attFailed} role="status">
+				{#if attFailed}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
 					? msg.mail_compose_opening()
 					: saveStatus === 'saving'
 						? msg.mail_compose_saving()
