@@ -13,6 +13,11 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import Users from '@lucide/svelte/icons/users';
+	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import Minimize2 from '@lucide/svelte/icons/minimize-2';
+	import PanelLeft from '@lucide/svelte/icons/panel-left';
+	import Reply from '@lucide/svelte/icons/reply';
+	import ReplyAll from '@lucide/svelte/icons/reply-all';
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import RecipientField from './RecipientField.svelte';
@@ -114,6 +119,11 @@
 		onSentAndArchive?: () => void;
 		onClose?: () => void;
 		draftId?: string | null;
+		expanded?: boolean;
+		pane?: boolean;
+		onExpand?: (next: boolean) => void;
+		onPane?: (next: boolean) => void;
+		onMode?: (next: ReplyMode) => void;
 	}
 
 	let {
@@ -124,7 +134,12 @@
 		onSent,
 		onSentAndArchive,
 		onClose,
-		draftId = null
+		draftId = null,
+		expanded = false,
+		pane = true,
+		onExpand,
+		onPane,
+		onMode
 	}: Props = $props();
 
 	const seedId = untrack(() => seed?.id ?? m.id);
@@ -766,6 +781,22 @@
 		if (sendOpen && sendRef && !sendRef.contains(e.target as Node)) sendOpen = false;
 	}
 
+	let lastFocus: HTMLElement | null = null;
+
+	function trackFocus(e: FocusEvent) {
+		const t = e.target;
+		if (t instanceof HTMLElement && !t.closest('.rt')) lastFocus = t;
+	}
+
+	function toggleExpand() {
+		onExpand?.(!expanded);
+		const back = lastFocus;
+		queueMicrotask(() => {
+			if (back?.isConnected && !back.closest('.ProseMirror')) back.focus();
+			else editor?.commands.focus();
+		});
+	}
+
 	function handleKey(e: KeyboardEvent) {
 		if (e.key !== 'Escape') return;
 		if (sendOpen) {
@@ -991,14 +1022,43 @@
 
 <div
 	class="replybox"
+	class:expanded
+	class:paneless={expanded && !pane}
 	role="group"
+	aria-label={modeLabel}
 	bind:this={boxRef}
+	onfocusin={trackFocus}
 	ondragover={onDragOver}
 	ondragleave={onDragLeave}
 	ondrop={onDrop}
 >
 	<div class="rt">
-		<h2 class="rt-t">{modeLabel}</h2>
+		{#if expanded && onMode}
+			<div class="rt-mode" role="radiogroup" aria-label={msg.mail_compose_reply_mode()}>
+				<button
+					type="button"
+					role="radio"
+					aria-checked={mode === 'reply'}
+					class:on={mode === 'reply'}
+					disabled={status === 'sending'}
+					onclick={() => onMode('reply')}
+				>
+					<Reply size={15} />{msg.mail_reader_reply()}
+				</button>
+				<button
+					type="button"
+					role="radio"
+					aria-checked={mode === 'all'}
+					class:on={mode === 'all'}
+					disabled={status === 'sending'}
+					onclick={() => onMode('all')}
+				>
+					<ReplyAll size={15} />{msg.mail_reader_reply_all()}
+				</button>
+			</div>
+		{:else}
+			<h2 class="rt-t">{modeLabel}</h2>
+		{/if}
 		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
 			<span class="rt-save" data-state={saveStatus} role="status">
 				{#if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
@@ -1010,6 +1070,31 @@
 							: saveStatus === 'failed'
 								? msg.mail_compose_not_saved()
 								: msg.mail_compose_unsaved()}
+			</span>
+		{/if}
+		{#if onExpand}
+			<span class="rt-acts">
+				{#if expanded && onPane}
+					<button
+						type="button"
+						class="rt-x"
+						class:on={pane}
+						title={pane ? msg.mail_compose_hide_conversation() : msg.mail_compose_show_conversation()}
+						aria-pressed={pane}
+						onclick={() => onPane(!pane)}
+					>
+						<PanelLeft size={16} />
+					</button>
+				{/if}
+				<button
+					type="button"
+					class="rt-x rt-size"
+					title={expanded ? msg.mail_compose_collapse() : msg.mail_compose_expand()}
+					aria-pressed={expanded}
+					onclick={toggleExpand}
+				>
+					{#if expanded}<Minimize2 size={16} />{:else}<Maximize2 size={16} />{/if}
+				</button>
 			</span>
 		{/if}
 		{#if onClose}
@@ -1026,292 +1111,294 @@
 			</button>
 		{/if}
 	</div>
-	{#if identityOptions.length > 1}
-		<div class="from-row" bind:this={fromRef}>
-			<span class="recip-label">{msg.mail_compose_from()}</span>
-			<button
-				type="button"
-				class="from-trigger"
-				class:open={fromOpen}
-				onclick={() => (fromOpen = !fromOpen)}
-			>
-				<Avatar
-					initials={ident.init}
-					src={ident.kind === 'Alias' ? null : auth.avatarUrl}
-					fit="cover"
-					size={22}
-					bg={ident.bg}
-					fg={ident.fg}
-				/>
-				<span class="ft-name">{ident.name}</span>
-				<span class="ft-email">&lt;{ident.email}&gt;</span>
-				<ChevronDown size={14} />
-			</button>
-			{#if fromOpen}
-				<div class="from-menu" role="menu">
-					<div class="fm-h">{msg.mail_compose_send_as()}</div>
-					{#each identityOptions as id, i (id.email + '-' + i)}
-						<button
-							type="button"
-							class="fm-item"
-							class:on={id.email === ident.email}
-							role="menuitemradio"
-							aria-checked={id.email === ident.email}
-							onclick={() => pickIdentity(id.email)}
-						>
-							<Avatar
-								initials={id.init}
-								src={id.kind === 'Alias' ? null : auth.avatarUrl}
-								fit="cover"
-								size={30}
-								bg={id.bg}
-								fg={id.fg}
-							/>
-							<span class="fm-tx">
-								<span class="fm-top">
-									<b>{id.name}</b>
-									<span class="fm-kind">{identityKindLabel(id.kind)}</span>
+	<div class="rbx-mid">
+		{#if identityOptions.length > 1}
+			<div class="from-row" bind:this={fromRef}>
+				<span class="recip-label">{msg.mail_compose_from()}</span>
+				<button
+					type="button"
+					class="from-trigger"
+					class:open={fromOpen}
+					onclick={() => (fromOpen = !fromOpen)}
+				>
+					<Avatar
+						initials={ident.init}
+						src={ident.kind === 'Alias' ? null : auth.avatarUrl}
+						fit="cover"
+						size={22}
+						bg={ident.bg}
+						fg={ident.fg}
+					/>
+					<span class="ft-name">{ident.name}</span>
+					<span class="ft-email">&lt;{ident.email}&gt;</span>
+					<ChevronDown size={14} />
+				</button>
+				{#if fromOpen}
+					<div class="from-menu" role="menu">
+						<div class="fm-h">{msg.mail_compose_send_as()}</div>
+						{#each identityOptions as id, i (id.email + '-' + i)}
+							<button
+								type="button"
+								class="fm-item"
+								class:on={id.email === ident.email}
+								role="menuitemradio"
+								aria-checked={id.email === ident.email}
+								onclick={() => pickIdentity(id.email)}
+							>
+								<Avatar
+									initials={id.init}
+									src={id.kind === 'Alias' ? null : auth.avatarUrl}
+									fit="cover"
+									size={30}
+									bg={id.bg}
+									fg={id.fg}
+								/>
+								<span class="fm-tx">
+									<span class="fm-top">
+										<b>{id.name}</b>
+										<span class="fm-kind">{identityKindLabel(id.kind)}</span>
+									</span>
+									<span class="fm-em">{id.email}</span>
 								</span>
-								<span class="fm-em">{id.email}</span>
-							</span>
-							{#if id.email === ident.email}<Check size={17} />{/if}
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-	{/if}
-	{#if fromRevoked && restoredFrom}
-		<div class="cwarn" role="alert">
-			<CircleAlert size={14} />
-			<span class="cwarn-t">{msg.mail_compose_from_choose({ address: restoredFrom.email })}</span>
-			<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
-				{msg.mail_compose_choose_address()}
-			</button>
-		</div>
-	{:else if noSender}
-		<div class="cnote"><CircleAlert size={14} />{msg.mail_compose_no_sender()}</div>
-	{:else if fromNotice}
-		<div class="cnote">
-			<CircleAlert size={14} />{msg.mail_compose_from_unavailable({
-				address: fromNotice,
-				from: ident.email
-			})}
-		</div>
-	{/if}
-	{#if othersReplying}
-		<div class="cnote" role="status"><Users size={14} />{othersReplying}</div>
-	{/if}
-	{#if replyToNotice.length > 0}
-		<div class={replyToOffsite ? 'cwarn' : 'cnote'} role="status">
-			<CircleAlert size={14} />
-			<span class="cwarn-t">
-				{replyToOffsite
-					? msg.mail_compose_reply_to_offsite({ list: replyToList, domain: senderDomain })
-					: msg.mail_compose_reply_to_note({ list: replyToList })}
-			</span>
-			<button type="button" class="cwarn-act" onclick={replyToSenderInstead}>
-				{msg.mail_compose_reply_to_sender_instead()}
-			</button>
-		</div>
-	{/if}
-
-	{#snippet ccBccSlot()}
-		<div class="ccbcc">
-			{#if !showCc}
-				<button
-					type="button"
-					onclick={() => {
-						showCc = true;
-						ccFocus = true;
-					}}>{msg.mail_recip_cc()}</button
-				>
-			{/if}
-			{#if !showBcc}
-				<button
-					type="button"
-					onclick={() => {
-						showBcc = true;
-						bccFocus = true;
-					}}>{msg.mail_recip_bcc()}</button
-				>
-			{/if}
-		</div>
-	{/snippet}
-
-	<RecipientField
-		label="To"
-		chips={to}
-		setChips={(next) => (to = next)}
-		contacts={contacts.items}
-		rightSlot={ccBccSlot}
-		{encStatusFor}
-	/>
-
-	{#if showCc}
-		<RecipientField
-			label="Cc"
-			chips={cc}
-			setChips={(next) => (cc = next)}
-			contacts={contacts.items}
-			autoFocus={ccFocus}
-			{encStatusFor}
-			onRemoveField={() => {
-				cc = [];
-				showCc = false;
-				ccFocus = false;
-			}}
-		/>
-	{/if}
-
-	{#if showBcc}
-		<RecipientField
-			label="Bcc"
-			chips={bcc}
-			setChips={(next) => (bcc = next)}
-			contacts={contacts.items}
-			autoFocus={bccFocus}
-			{encStatusFor}
-			onRemoveField={() => {
-				bcc = [];
-				showBcc = false;
-				bccFocus = false;
-			}}
-		/>
-	{/if}
-
-	<div class="cenc" data-tone={encSummary.tone}>
-		{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
-			<Mail size={15} />
-		{:else if encSummary.tone === 'unknown'}
-			<CircleAlert size={15} />
-		{:else}
-			<Lock size={15} />
-		{/if}
-		<span class="cenc-t">{encSummary.label}</span>
-		<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
-			{msg.mail_compose_enc_details()}
-		</button>
-	</div>
-	{#if encOpen}
-		<p class="cenc-more">{encSummary.title}</p>
-	{/if}
-
-	<div class="cfield subj">
-		<span class="recip-label">{msg.mail_compose_subject()}</span>
-		<span class="subj-static" title={subject}>{subject}</span>
-	</div>
-
-	<RichEditor
-		bind:html
-		bind:text
-		bind:editor
-		placeholder={msg.mail_compose_write_reply()}
-		disabled={status === 'sending' || load !== 'ready'}
-		autofocus
-		class="cbody reply"
-	/>
-
-	{#if quote && !quoteRemoved}
-		<div class="rq">
-			<button
-				type="button"
-				class="quoted-toggle"
-				class:on={showQuote}
-				title={showQuote ? msg.mail_compose_hide_quoted() : msg.mail_compose_show_quoted()}
-				aria-expanded={showQuote}
-				onclick={() => (showQuote = !showQuote)}
-			>
-				<Ellipsis size={16} />
-			</button>
-			<span class="rq-lbl">{msg.mail_compose_quoted_text()}</span>
-			<button
-				type="button"
-				class="rq-rm"
-				title={msg.mail_compose_remove_quoted()}
-				onclick={() => {
-					quoteRemoved = true;
-					showQuote = false;
-				}}
-			>
-				<X size={13} />
-			</button>
-		</div>
-		{#if showQuote && quoteSrcDoc}
-			<div class="rq-view">
-				<EmailBody srcDoc={quoteSrcDoc} />
+								{#if id.email === ident.email}<Check size={17} />{/if}
+							</button>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/if}
-	{/if}
-
-	<EditorToolbar
-		{editor}
-		signature={{
-			present: !!signatureBody.trim(),
-			on: signatureOn,
-			onToggle: toggleSignature
-		}}
-	>
-		{#snippet extra()}
-			<button type="button" class="cbar-lab" onclick={pickFiles}>
-				<Paperclip size={16} />{msg.mail_compose_attach()}
-			</button>
-		{/snippet}
-	</EditorToolbar>
-
-	{#if warn && !canSend && !noSender && status !== 'sending'}
-		<div class="cwarn">
-			<CircleAlert size={14} />
-			{hasInvalid
-				? msg.mail_compose_invalid_addresses()
-				: validCount === 0
-					? msg.mail_compose_need_recipient()
-					: msg.mail_compose_need_body()}
-		</div>
-	{/if}
-
-	{#if inlineErr}
-		<InlineSendError
-			code={inlineErr.code as InlineErrorCode}
-			{attempts}
-			recipient={modalRecip}
-			retryAfterSeconds={inlineRetryAfter}
-			message={inlineErr.message}
-			onEditRecipient={editRecipient}
-			onUnlock={unlockVault}
-			onRetry={retrySend}
-			onDismiss={dismiss}
-		/>
-	{:else if err && err.code === 'unknown'}
-		<div class="cwarn">
-			<CircleAlert size={14} />
-			{err.message}
-		</div>
-	{/if}
-
-	<AttachPreview files={attachments} onRemove={removeAttachment} rows />
-
-	{#if attErr}
-		<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
-	{/if}
-
-	{#if load === 'failed'}
-		<div class="cwarn" role="alert">
-			<CircleAlert size={14} />
-			<span class="cwarn-t">{msg.mail_compose_open_draft_failed()} {msg.mail_compose_draft_untouched()}</span>
-			{#if openedDraftId}
-				<button type="button" class="cwarn-act" onclick={() => void hydrateReply(openedDraftId)}>
-					{msg.common_retry()}
+		{#if fromRevoked && restoredFrom}
+			<div class="cwarn" role="alert">
+				<CircleAlert size={14} />
+				<span class="cwarn-t">{msg.mail_compose_from_choose({ address: restoredFrom.email })}</span>
+				<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
+					{msg.mail_compose_choose_address()}
 				</button>
+			</div>
+		{:else if noSender}
+			<div class="cnote"><CircleAlert size={14} />{msg.mail_compose_no_sender()}</div>
+		{:else if fromNotice}
+			<div class="cnote">
+				<CircleAlert size={14} />{msg.mail_compose_from_unavailable({
+					address: fromNotice,
+					from: ident.email
+				})}
+			</div>
+		{/if}
+		{#if othersReplying}
+			<div class="cnote" role="status"><Users size={14} />{othersReplying}</div>
+		{/if}
+		{#if replyToNotice.length > 0}
+			<div class={replyToOffsite ? 'cwarn' : 'cnote'} role="status">
+				<CircleAlert size={14} />
+				<span class="cwarn-t">
+					{replyToOffsite
+						? msg.mail_compose_reply_to_offsite({ list: replyToList, domain: senderDomain })
+						: msg.mail_compose_reply_to_note({ list: replyToList })}
+				</span>
+				<button type="button" class="cwarn-act" onclick={replyToSenderInstead}>
+					{msg.mail_compose_reply_to_sender_instead()}
+				</button>
+			</div>
+		{/if}
+
+		{#snippet ccBccSlot()}
+			<div class="ccbcc">
+				{#if !showCc}
+					<button
+						type="button"
+						onclick={() => {
+							showCc = true;
+							ccFocus = true;
+						}}>{msg.mail_recip_cc()}</button
+					>
+				{/if}
+				{#if !showBcc}
+					<button
+						type="button"
+						onclick={() => {
+							showBcc = true;
+							bccFocus = true;
+						}}>{msg.mail_recip_bcc()}</button
+					>
+				{/if}
+			</div>
+		{/snippet}
+
+		<RecipientField
+			label="To"
+			chips={to}
+			setChips={(next) => (to = next)}
+			contacts={contacts.items}
+			rightSlot={ccBccSlot}
+			{encStatusFor}
+		/>
+
+		{#if showCc}
+			<RecipientField
+				label="Cc"
+				chips={cc}
+				setChips={(next) => (cc = next)}
+				contacts={contacts.items}
+				autoFocus={ccFocus}
+				{encStatusFor}
+				onRemoveField={() => {
+					cc = [];
+					showCc = false;
+					ccFocus = false;
+				}}
+			/>
+		{/if}
+
+		{#if showBcc}
+			<RecipientField
+				label="Bcc"
+				chips={bcc}
+				setChips={(next) => (bcc = next)}
+				contacts={contacts.items}
+				autoFocus={bccFocus}
+				{encStatusFor}
+				onRemoveField={() => {
+					bcc = [];
+					showBcc = false;
+					bccFocus = false;
+				}}
+			/>
+		{/if}
+
+		<div class="cenc" data-tone={encSummary.tone}>
+			{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
+				<Mail size={15} />
+			{:else if encSummary.tone === 'unknown'}
+				<CircleAlert size={15} />
+			{:else}
+				<Lock size={15} />
 			{/if}
+			<span class="cenc-t">{encSummary.label}</span>
+			<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
+				{msg.mail_compose_enc_details()}
+			</button>
 		</div>
-	{:else if saveStatus === 'failed'}
-		<div class="cwarn" role="alert">
-			<CircleAlert size={14} />
-			<span class="cwarn-t">{msg.mail_compose_save_failed()}</span>
-			<button type="button" class="cwarn-act" onclick={() => void saver.save()}>{msg.common_retry()}</button>
+		{#if encOpen}
+			<p class="cenc-more">{encSummary.title}</p>
+		{/if}
+
+		<div class="cfield subj">
+			<span class="recip-label">{msg.mail_compose_subject()}</span>
+			<span class="subj-static" title={subject}>{subject}</span>
 		</div>
-	{/if}
+
+		<RichEditor
+			bind:html
+			bind:text
+			bind:editor
+			placeholder={msg.mail_compose_write_reply()}
+			disabled={status === 'sending' || load !== 'ready'}
+			autofocus
+			class="cbody reply"
+		/>
+
+		{#if quote && !quoteRemoved}
+			<div class="rq">
+				<button
+					type="button"
+					class="quoted-toggle"
+					class:on={showQuote}
+					title={showQuote ? msg.mail_compose_hide_quoted() : msg.mail_compose_show_quoted()}
+					aria-expanded={showQuote}
+					onclick={() => (showQuote = !showQuote)}
+				>
+					<Ellipsis size={16} />
+				</button>
+				<span class="rq-lbl">{msg.mail_compose_quoted_text()}</span>
+				<button
+					type="button"
+					class="rq-rm"
+					title={msg.mail_compose_remove_quoted()}
+					onclick={() => {
+						quoteRemoved = true;
+						showQuote = false;
+					}}
+				>
+					<X size={13} />
+				</button>
+			</div>
+			{#if showQuote && quoteSrcDoc}
+				<div class="rq-view">
+					<EmailBody srcDoc={quoteSrcDoc} />
+				</div>
+			{/if}
+		{/if}
+
+		<EditorToolbar
+			{editor}
+			signature={{
+				present: !!signatureBody.trim(),
+				on: signatureOn,
+				onToggle: toggleSignature
+			}}
+		>
+			{#snippet extra()}
+				<button type="button" class="cbar-lab" onclick={pickFiles}>
+					<Paperclip size={16} />{msg.mail_compose_attach()}
+				</button>
+			{/snippet}
+		</EditorToolbar>
+
+		{#if warn && !canSend && !noSender && status !== 'sending'}
+			<div class="cwarn">
+				<CircleAlert size={14} />
+				{hasInvalid
+					? msg.mail_compose_invalid_addresses()
+					: validCount === 0
+						? msg.mail_compose_need_recipient()
+						: msg.mail_compose_need_body()}
+			</div>
+		{/if}
+
+		{#if inlineErr}
+			<InlineSendError
+				code={inlineErr.code as InlineErrorCode}
+				{attempts}
+				recipient={modalRecip}
+				retryAfterSeconds={inlineRetryAfter}
+				message={inlineErr.message}
+				onEditRecipient={editRecipient}
+				onUnlock={unlockVault}
+				onRetry={retrySend}
+				onDismiss={dismiss}
+			/>
+		{:else if err && err.code === 'unknown'}
+			<div class="cwarn">
+				<CircleAlert size={14} />
+				{err.message}
+			</div>
+		{/if}
+
+		<AttachPreview files={attachments} onRemove={removeAttachment} rows />
+
+		{#if attErr}
+			<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
+		{/if}
+
+		{#if load === 'failed'}
+			<div class="cwarn" role="alert">
+				<CircleAlert size={14} />
+				<span class="cwarn-t">{msg.mail_compose_open_draft_failed()} {msg.mail_compose_draft_untouched()}</span>
+				{#if openedDraftId}
+					<button type="button" class="cwarn-act" onclick={() => void hydrateReply(openedDraftId)}>
+						{msg.common_retry()}
+					</button>
+				{/if}
+			</div>
+		{:else if saveStatus === 'failed'}
+			<div class="cwarn" role="alert">
+				<CircleAlert size={14} />
+				<span class="cwarn-t">{msg.mail_compose_save_failed()}</span>
+				<button type="button" class="cwarn-act" onclick={() => void saver.save()}>{msg.common_retry()}</button>
+			</div>
+		{/if}
+	</div>
 
 	<div class="rf">
 		<div class="rf-send" class:split={canArchive} bind:this={sendRef}>

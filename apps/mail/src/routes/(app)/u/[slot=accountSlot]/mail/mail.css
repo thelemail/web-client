@@ -573,6 +573,52 @@
 .mail-app .replybox .rf-caret.on { background: var(--primary-press); }
 .mail-app .replybox .rf-caret:disabled { opacity: .5; pointer-events: none; }
 .mail-app .replybox .rf-menu { top: auto; right: auto; left: 0; bottom: calc(100% + 8px); width: 218px; }
+.mail-app .replybox .rbx-mid { display: contents; }
+.mail-app .replybox .rt-acts { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
+.mail-app .replybox .rt .rt-x.on { background: var(--selection); color: var(--fg-strong); }
+.mail-app .replybox .rt-mode { margin-right: auto; display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--bg-raised); }
+.mail-app .replybox .rt-mode button { display: inline-flex; align-items: center; gap: 7px; height: 28px; white-space: nowrap; padding: 0 11px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.mail-app .replybox .rt-mode button:hover { color: var(--fg-strong); }
+.mail-app .replybox .rt-mode button.on { background: var(--surface); color: var(--fg-strong); font-weight: 600; box-shadow: var(--shadow-xs); }
+.mail-app .replybox .rt-mode button:disabled { opacity: .5; pointer-events: none; }
+
+.mail-app .reader.ws { position: relative; --ws-pane: clamp(360px, 38%, 520px); }
+.mail-app .mailbody:has(> .reader.ws) > :is(.list, .pane-divider) { display: none; }
+.mail-app .reader.ws:not(.ws-pane) > :is(.reader-bar, .reader-scroll) { visibility: hidden; }
+.mail-app .reader.ws-pane > :is(.reader-bar, .reader-scroll) { width: var(--ws-pane); border-right: 1px solid var(--border); }
+.mail-app .reader.ws-pane .reader-scroll { padding: 0 22px; }
+.mail-app .reader.ws-pane .reader-bar { overflow-x: auto; scrollbar-width: none; }
+.mail-app .reader.ws-pane .reader-bar .rb-btn .rb-t, .mail-app .reader.ws-pane .rb-txt .rb-t { display: none; }
+.mail-app .reader.ws-pane .reader-bar .rb-btn { padding: 8px 11px; }
+.mail-app .reader.ws-pane .rb-txt { width: 33px; padding: 0; }
+.mail-app .reader.ws-pane .rb-nav { display: none; }
+.mail-app .reader.ws .replybox.expanded { position: absolute; top: 0; right: 0; bottom: 0; left: var(--ws-pane); z-index: 5; margin: 0; visibility: visible; display: flex; flex-direction: column; border: 0; border-radius: 0; box-shadow: none; background: var(--bg); animation: mail-fade var(--dur) var(--ease-out); }
+.mail-app .reader.ws .replybox.expanded.paneless { left: 0; }
+.mail-app .reader.ws > .apx-scrim.docked { position: absolute; top: 0; left: 0; bottom: 0; right: auto; width: var(--ws-pane); z-index: 6; display: flex; padding: 0; background: var(--bg); backdrop-filter: none; border-right: 1px solid var(--border); }
+.mail-app .reader.ws > .apx-scrim.docked .apx-modal { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; animation: mail-fade var(--dur) var(--ease-out); }
+.mail-app .replybox.expanded .rt { flex: 0 0 auto; height: 54px; gap: 10px; padding: 0 12px 0 20px; }
+.mail-app .replybox.expanded .rbx-mid { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.mail-app .replybox.expanded .rich-editor { flex: 1 0 auto; }
+.mail-app .replybox.expanded .cbar { position: sticky; bottom: 0; z-index: 1; margin: 12px 20px 0; padding-bottom: 6px; background: var(--bg); }
+.mail-app .replybox.expanded .rf { flex: 0 0 auto; padding: 10px 20px 16px; }
+@media (min-width: 861px) {
+	.mail-app .replybox.expanded :is(.from-row, .recip-row, .cfield.subj) { min-height: 46px; padding-left: 20px; padding-right: 20px; }
+	.mail-app .replybox.expanded .recip-label { width: 62px; font-size: 13.5px; }
+	.mail-app .replybox.expanded .from-menu { left: 96px; }
+	.mail-app .replybox.expanded :is(.cenc, .cenc-more) { padding-left: 96px; padding-right: 20px; }
+	.mail-app .replybox.expanded .cbody { padding: 22px 20px 10px 96px; font-size: 15px; max-width: calc(72ch + 116px); min-height: 36vh; }
+	.mail-app .replybox.expanded :is(.att-preview, .rq) { padding-left: 96px; padding-right: 20px; }
+	.mail-app .replybox.expanded .rq-view { margin-left: 96px; margin-right: 20px; }
+}
+@media (max-width: 860px) {
+	.mail-app .reader.ws > :is(.reader-bar, .reader-scroll) { visibility: hidden; }
+	.mail-app .reader.ws .replybox.expanded { left: 0; }
+	.mail-app .replybox.expanded .rt { gap: 6px; padding: 0 6px 0 12px; }
+	.mail-app .replybox .rt-mode button { padding: 0 9px; }
+	.mail-app .replybox .rt-mode button svg { display: none; }
+	.mail-app .replybox.expanded .rt-save { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+	.mail-app .replybox.expanded .rt-acts .rt-x:not(.rt-size) { display: none; }
+}
 
 .mail-app .reader-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; color: var(--fg-muted); text-align: center; padding: 48px; }
 .mail-app .reader-empty .t { font-size: 17px; font-weight: 560; letter-spacing: var(--track-tight); color: var(--fg-strong); white-space: nowrap; }

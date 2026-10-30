@@ -12,6 +12,7 @@
 	} from './attachments';
 	import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 	import { auth } from '$core/stores/auth.svelte';
+	import { replyWorkspace } from '$core/stores/replyWorkspace.svelte';
 	import { canPreview, fileKind } from './previewKind';
 	import AttachmentViewer, { type PreviewItem } from './AttachmentViewer.svelte';
 
@@ -21,6 +22,14 @@
 	}
 
 	let { chips, refresh }: Props = $props();
+
+	const dock = $derived(replyWorkspace.expanded && replyWorkspace.pane ? '.reader.ws' : null);
+	let wasDocked = false;
+	$effect(() => {
+		const docked = dock !== null;
+		if (wasDocked && !docked) viewing = null;
+		wasDocked = docked;
+	});
 
 	type ChipState =
 		| { kind: 'loading' }
@@ -172,5 +181,12 @@
 {/if}
 
 {#if viewing !== null && previewItems.length > 0}
-	<AttachmentViewer items={previewItems} bind:index={() => viewing ?? 0, (v) => (viewing = v)} onClose={() => (viewing = null)} />
+	{#key dock}
+		<AttachmentViewer
+			items={previewItems}
+			bind:index={() => viewing ?? 0, (v) => (viewing = v)}
+			onClose={() => (viewing = null)}
+			{dock}
+		/>
+	{/key}
 {/if}
