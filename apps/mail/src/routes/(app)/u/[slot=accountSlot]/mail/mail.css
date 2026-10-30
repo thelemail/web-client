@@ -638,7 +638,7 @@
 .mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-err { display: none; }
 
 .mail-app :is(.compose-layer .compose-win, .replybox) .cbar { gap: 4px; margin: 10px 16px 0; padding: 10px 0 0; border-top: 1px solid var(--border); background: none; }
-.mail-app :is(.compose-layer .compose-win, .replybox) .cbar[role] button { width: 32px; height: 32px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar[role] button:not(.cbar-lab) { width: 32px; height: 32px; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .cbar-sep { height: 20px; background: var(--border); margin: 0 8px; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab { width: auto; height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg); font: inherit; font-size: 13.5px; cursor: pointer; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab:hover { background: var(--paper-100); }
