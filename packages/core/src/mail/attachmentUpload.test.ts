@@ -6,7 +6,8 @@ const h = vi.hoisted(() => ({
 	accepted: [] as { email: string; acceptFingerprint?: string }[],
 	encrypted: [] as string[],
 	slots: [] as { role: string; recipientAccountId?: string; keyFingerprint: string }[],
-	puts: [] as string[]
+	puts: [] as string[],
+	putErrors: [] as Error[]
 }));
 
 vi.mock('openpgp', () => ({
@@ -84,11 +85,14 @@ vi.mock('$core/api/messages', () => ({
 }));
 vi.mock('$core/api/client', () => ({
 	apiBlobPut: async (path: string) => {
+		const fail = h.putErrors.shift();
+		if (fail) throw fail;
 		h.puts.push(path);
 	}
 }));
 
-import { UploadOrchestrator, type Attachment } from './attachmentUpload';
+import { UploadOrchestrator, uploadFailure, type Attachment } from './attachmentUpload';
+import { ApiCallError } from '$core/api/types';
 import { bytesToB64, hexToBytes } from '$core/crypto';
 
 function fingerprintOf(key: string): string {
@@ -123,6 +127,7 @@ function reset() {
 beforeEach(() => {
 	h.keys = { 'ada@thelemail.test': 'key-ada-1', 'bob@thelemail.test': 'key-bob-1' };
 	h.failures = {};
+	h.putErrors = [];
 	reset();
 });
 
@@ -193,5 +198,79 @@ describe('recipient attachment copies', () => {
 		await orchestrator.ensureRecipientCopies([att], ['ada@thelemail.test', 'someone@example.org']);
 		expect(h.encrypted).toEqual(['key-ada-1']);
 		expect([...(att.recipientDescriptors?.keys() ?? [])]).toEqual(['acct-ada']);
+	});
+});
+
+describe('upload failures', () => {
+	function quick(onChange: (a: Attachment) => void = () => {}): UploadOrchestrator {
+		const orchestrator = new UploadOrchestrator(onChange, 'acct-me');
+		orchestrator.retryDelayMs = 0;
+		return orchestrator;
+	}
+
+	it('tells a refused file from a dropped connection', () => {
+		expect(uploadFailure(new ApiCallError(413, null, 'too large'))).toBe('refused');
+		expect(uploadFailure(new ApiCallError(403, null, 'quota'))).toBe('refused');
+		expect(uploadFailure(new ApiCallError(429, null, 'slow down'))).toBe('transient');
+		expect(uploadFailure(new ApiCallError(502, null, 'bad gateway'))).toBe('transient');
+		expect(uploadFailure(new TypeError('Failed to fetch'))).toBe('transient');
+	});
+
+	it('retries a dropped upload once on its own with fresh upload slots', async () => {
+		h.putErrors = [new TypeError('Failed to fetch')];
+		const seen: boolean[] = [];
+		const att = attachment();
+		await quick((a) => seen.push(!!a.retrying)).startUpload(att, [], 0);
+
+		expect(att.status).toBe('ready');
+		expect(att.retrying).toBe(false);
+		expect(seen).toContain(true);
+		expect(h.slots.filter((s) => s.role === 'sender')).toHaveLength(2);
+		expect(att.senderDescriptor?.objectKey).toBe(h.puts[0].split('objectKey=')[1]);
+	});
+
+	it('fails the file after the automatic retry also drops', async () => {
+		h.putErrors = [new TypeError('Failed to fetch'), new TypeError('Failed to fetch')];
+		const att = attachment();
+		await quick().startUpload(att, [], 0);
+
+		expect(att).toMatchObject({ status: 'error', failure: 'transient', retrying: false });
+		expect(att.senderDescriptor).toBeUndefined();
+	});
+
+	it('does not retry a file the server refused', async () => {
+		h.putErrors = [new ApiCallError(413, null, 'too large')];
+		const att = attachment();
+		await quick().startUpload(att, [], 0);
+
+		expect(att).toMatchObject({ status: 'error', failure: 'refused' });
+		expect(h.slots.filter((s) => s.role === 'sender')).toHaveLength(1);
+	});
+
+	it('uploads a failed file again when the user retries it', async () => {
+		h.putErrors = [new TypeError('Failed to fetch'), new TypeError('Failed to fetch')];
+		const orchestrator = quick();
+		const att = attachment();
+		await orchestrator.startUpload(att, [], 0);
+		expect(att.status).toBe('error');
+
+		await orchestrator.startUpload(att, [], 0);
+		expect(att.status).toBe('ready');
+		expect(att.failure).toBeUndefined();
+		expect(att.error).toBeUndefined();
+	});
+
+	it('stops quietly when the composer closes during the retry pause', async () => {
+		h.putErrors = [new TypeError('Failed to fetch')];
+		const orchestrator = new UploadOrchestrator(() => {}, 'acct-me');
+		orchestrator.retryDelayMs = 50;
+		const att = attachment();
+		const run = orchestrator.startUpload(att, [], 0);
+		await vi.waitFor(() => expect(att.retrying).toBe(true));
+		orchestrator.cancel();
+		await run;
+
+		expect(att.status).toBe('cancelled');
+		expect(h.puts).toEqual([]);
 	});
 });
