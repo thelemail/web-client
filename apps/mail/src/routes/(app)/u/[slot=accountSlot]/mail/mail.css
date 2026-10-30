@@ -555,20 +555,16 @@
 .mail-app .quoted-email { margin-top: 14px; padding-left: 14px; border-left: 2px solid var(--border-strong); }
 
 .mail-app .replybox { margin-top: 28px; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; position: relative; }
-.mail-app .replybox .rt { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); }
-.mail-app .replybox .rt b { color: var(--ink-700); font-weight: 600; }
-.mail-app .replybox .rt .rt-x { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: none; background: none; border-radius: var(--radius-control-compact); cursor: pointer; color: var(--fg-muted); }
+.mail-app .replybox .rt { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); }
+.mail-app .replybox .rt-t { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); }
+.mail-app .replybox .rt-save { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+.mail-app .replybox .rt-save[data-state='failed'] { color: var(--danger-700); font-weight: 600; }
+.mail-app .replybox .rt-rule { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.mail-app .replybox .rt .rt-x { display: grid; place-items: center; width: 32px; height: 32px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); cursor: pointer; }
 .mail-app .replybox .rt .rt-x:hover { background: var(--paper-100); color: var(--ink-700); }
 .mail-app .replybox .rt .rt-x:disabled { opacity: .4; pointer-events: none; }
 .mail-app .replybox textarea { width: 100%; border: none; outline: none; resize: none; font-size: 14.5px; line-height: 1.6; color: var(--ink-700); padding: 15px; min-height: 96px; background: none; }
-.mail-app .replybox .rf { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-top: 1px solid var(--border); }
-.mail-app .replybox .enc { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--success-700); font-weight: 600; white-space: nowrap; }
-.mail-app .replybox .enc[data-tone="pending"] { color: var(--fg-faint); }
-.mail-app .replybox .enc[data-tone="unknown"] { color: var(--warning-700); }
-.mail-app .replybox .rsave { margin-left: 12px; font-size: 12px; color: var(--fg-faint); font-style: italic; white-space: nowrap; }
-.mail-app .replybox .rsave[data-state='failed'] { color: var(--danger-700); font-style: normal; font-weight: 600; }
-.mail-app .replybox .enc[data-tone="partial"] { color: var(--warning-700); }
-.mail-app .replybox .enc[data-tone="none"] { color: var(--danger-700); }
+.mail-app .replybox .rf { display: flex; align-items: center; gap: 10px; padding: 10px 16px 12px; }
 .mail-app .replybox .rf-send { position: relative; display: inline-flex; align-items: stretch; }
 .mail-app .replybox .rf-send.split .rb-btn.primary { border-radius: var(--radius-control) 0 0 var(--radius-control); }
 .mail-app .replybox .rf-caret { display: inline-flex; align-items: center; justify-content: center; width: 30px; border: none; border-left: 1px solid rgba(255, 255, 255, .2); border-radius: 0 var(--radius-control) var(--radius-control) 0; background: var(--primary); color: var(--primary-fg); box-shadow: var(--shadow-xs); cursor: pointer; transition: background var(--dur-fast); }
@@ -602,51 +598,51 @@
 .compose-layer .compose-h .chx:hover { background: var(--paper-100); color: var(--fg); }
 .compose-layer .compose-h .chx.on { background: var(--selection); color: var(--fg-strong); }
 
-.mail-app .compose-layer .compose-win :is(.from-row, .recip-row, .cfield.subj) { min-height: 42px; padding: 0 16px; gap: 14px; align-items: center; }
-.mail-app .compose-layer .compose-win .recip-label { width: 50px; padding-top: 0; font-size: 13px; color: var(--fg-muted); }
-.mail-app .compose-layer .compose-win .recip-row { padding-top: 6px; padding-bottom: 6px; }
-.mail-app .compose-layer .compose-win .from-trigger { gap: 10px; padding: 5px 10px 5px 6px; background: var(--surface); border-radius: var(--radius-control); color: var(--fg-strong); }
-.mail-app .compose-layer .compose-win .from-trigger:hover { background: var(--bg-raised); }
-.mail-app .compose-layer .compose-win .from-trigger .ft-name { font-weight: 500; }
-.mail-app .compose-layer .compose-win .from-trigger .ft-email { font-size: 12.5px; }
-.mail-app .compose-layer .compose-win .from-menu { left: 80px; }
-.mail-app .compose-layer .compose-win .rchip { background: var(--surface); padding: 2px 6px 2px 3px; color: var(--fg-strong); }
-.mail-app .compose-layer .compose-win .ccbcc button { font-size: 13px; font-weight: 400; }
-.mail-app .compose-layer .compose-win .cenc { display: flex; align-items: center; gap: 8px; padding: 6px 16px 8px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); }
-.mail-app .compose-layer .compose-win .cenc svg { flex: 0 0 auto; }
-.mail-app .compose-layer .compose-win .cenc[data-tone='ok'] svg { color: var(--success-700); }
-.mail-app .compose-layer .compose-win .cenc[data-tone='unknown'] svg, .mail-app .compose-layer .compose-win .cenc[data-tone='partial'] svg { color: var(--warning-700); }
-.mail-app .compose-layer .compose-win .cenc-t { flex: 1 1 auto; min-width: 0; }
-.mail-app .compose-layer .compose-win .cenc-d { background: none; border: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--fg); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
-.mail-app .compose-layer .compose-win .cenc-more { margin: 0; padding: 8px 16px 10px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; line-height: 1.5; color: var(--fg-muted); background: var(--bg-raised); }
-.mail-app .compose-layer .compose-win .cfield.subj input { font-size: 15px; font-weight: 400; color: var(--fg-strong); }
+.mail-app :is(.compose-layer .compose-win, .replybox) :is(.from-row, .recip-row, .cfield.subj) { min-height: 42px; padding: 0 16px; gap: 14px; align-items: center; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .recip-label { width: 50px; padding-top: 0; font-size: 13px; color: var(--fg-muted); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .recip-row { padding-top: 6px; padding-bottom: 6px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger { gap: 10px; padding: 2px 10px 2px 2px; background: var(--surface); border-radius: var(--radius-control); color: var(--fg-strong); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger:hover { background: var(--bg-raised); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger .ft-name { font-weight: 500; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger .ft-email { font-size: 12.5px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-menu { left: 80px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .rchip { background: var(--surface); padding: 2px 6px 2px 2px; color: var(--fg-strong); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .ccbcc button { font-size: 13px; font-weight: 400; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc { display: flex; align-items: center; gap: 8px; padding: 6px 16px 8px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc svg { flex: 0 0 auto; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc[data-tone='ok'] svg { color: var(--success-700); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc[data-tone='unknown'] svg, .mail-app :is(.compose-layer .compose-win, .replybox) .cenc[data-tone='partial'] svg { color: var(--warning-700); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc-t { flex: 1 1 auto; min-width: 0; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc-d { background: none; border: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--fg); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc-more { margin: 0; padding: 8px 16px 10px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; line-height: 1.5; color: var(--fg-muted); background: var(--bg-raised); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cfield.subj input { font-size: 15px; font-weight: 400; color: var(--fg-strong); }
 .compose-layer .cbody { padding: 16px; font-size: 14.5px; color: var(--fg); line-height: 1.6; min-height: 170px; outline: none; flex: 1 1 auto; }
 
 .mail-app .compose-layer .compose-win .att-preview { padding: 0 16px 4px; border-top: none; }
-.compose-layer .att-preview.rows .apv-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-.compose-layer .att-preview.rows .apv-card { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; min-width: 260px; max-width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: none; }
-.compose-layer .att-preview.rows .apv-card:hover { border-color: var(--border-strong); box-shadow: none; }
-.compose-layer .att-preview.rows .apv-thumb { flex: 0 0 auto; width: 32px; height: 32px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); }
-.compose-layer .att-preview.rows button.apv-thumb { border: none; }
-.compose-layer .att-preview.rows .apv-thumb img { border-radius: var(--radius-control-compact); }
-.compose-layer .att-preview.rows .apv-thumb svg { width: 20px; height: 20px; }
-.compose-layer .att-preview.rows .apv-ext { display: none; }
-.compose-layer .att-preview.rows .apv-info { flex: 1 1 auto; padding: 0; }
-.compose-layer .att-preview.rows .apv-name { font-size: 13.5px; font-weight: 550; }
-.compose-layer .att-preview.rows .apv-size { font-size: 12px; }
-.compose-layer .att-preview.rows .apv-state::before { content: " · "; }
-.compose-layer .att-preview.rows .apv-state[data-state='error'] { color: var(--danger-700); }
-.compose-layer .att-preview.rows .apv-rm { position: static; flex: 0 0 auto; width: 28px; height: 28px; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); opacity: 1; }
-.compose-layer .att-preview.rows .apv-rm:hover { background: var(--paper-100); color: var(--fg); }
-.compose-layer .att-preview.rows .apv-bar { position: absolute; left: 12px; right: 12px; bottom: 4px; margin: 0; }
-.compose-layer .att-preview.rows .apv-err { display: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-card { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; min-width: 260px; max-width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-card:hover { border-color: var(--border-strong); box-shadow: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-thumb { flex: 0 0 auto; width: 32px; height: 32px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows button.apv-thumb { border: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-thumb img { border-radius: var(--radius-control-compact); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-thumb svg { width: 20px; height: 20px; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-ext { display: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-info { flex: 1 1 auto; padding: 0; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-name { font-size: 13.5px; font-weight: 550; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-size { font-size: 12px; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-state::before { content: " · "; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-state[data-state='error'] { color: var(--danger-700); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-rm { position: static; flex: 0 0 auto; width: 28px; height: 28px; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); opacity: 1; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-rm:hover { background: var(--paper-100); color: var(--fg); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-bar { position: absolute; left: 12px; right: 12px; bottom: 4px; margin: 0; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-err { display: none; }
 
-.mail-app .compose-layer .compose-win .cbar { gap: 4px; margin: 10px 16px 0; padding: 10px 0 0; border-top: 1px solid var(--border); background: none; }
-.mail-app .compose-layer .compose-win .cbar[role] button { width: 32px; height: 32px; }
-.mail-app .compose-layer .compose-win .cbar-sep { height: 20px; background: var(--border); margin: 0 8px; }
-.mail-app .compose-layer .compose-win .cbar .cbar-lab { width: auto; height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg); font: inherit; font-size: 13.5px; cursor: pointer; }
-.mail-app .compose-layer .compose-win .cbar .cbar-lab:hover { background: var(--paper-100); }
-.mail-app .compose-layer .compose-win .cbar .cbar-lab svg { flex: 0 0 auto; width: 16px; height: 16px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar { gap: 4px; margin: 10px 16px 0; padding: 10px 0 0; border-top: 1px solid var(--border); background: none; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar[role] button { width: 32px; height: 32px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar-sep { height: 20px; background: var(--border); margin: 0 8px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab { width: auto; height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg); font: inherit; font-size: 13.5px; cursor: pointer; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab:hover { background: var(--paper-100); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab svg { flex: 0 0 auto; width: 16px; height: 16px; }
 
 .compose-layer .compose-f { display: flex; align-items: center; gap: 10px; padding: 10px 16px 12px; flex: 0 0 auto; }
 .compose-layer .send-split { position: relative; display: flex; align-items: stretch; border-radius: var(--radius-control); }
@@ -657,8 +653,8 @@
 .compose-layer .cf-sched { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); color: var(--fg); font: inherit; font-size: 14px; cursor: pointer; transition: background var(--dur-fast); }
 .compose-layer .cf-sched:hover:not(:disabled) { background: var(--bg-raised); }
 .compose-layer .cf-sched:disabled { color: var(--fg-faint); cursor: not-allowed; }
-.compose-layer .cf-disc { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 6px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); font: inherit; font-size: 14px; cursor: pointer; }
-.compose-layer .cf-disc:hover { color: var(--danger-700); background: var(--danger-100); }
+:is(.compose-layer, .mail-app .replybox) .cf-disc { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 6px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); font: inherit; font-size: 14px; cursor: pointer; }
+:is(.compose-layer, .mail-app .replybox) .cf-disc:hover { color: var(--danger-700); background: var(--danger-100); }
 
 .compose-dock { flex: 0 1 250px; min-width: 160px; display: flex; align-items: center; gap: 8px; background: var(--surface); color: var(--fg-strong); padding: 10px 12px; border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-menu) var(--radius-menu) 0 0; box-shadow: var(--shadow-md); cursor: pointer; font-family: var(--font-sans); }
 .compose-dock:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -3px; }
@@ -742,9 +738,9 @@
 :is(.compose-layer, .mail-app .replybox) .recip-box { position: relative; flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 24px; border-radius: var(--radius-control); min-width: 0; }
 :is(.compose-layer, .mail-app .replybox) .recip-input { border: none; outline: none; background: none; font-size: 14px; color: var(--fg); flex: 1 1 90px; min-width: 90px; padding: 3px 2px; line-height: 1.4; font-family: inherit; }
 :is(.compose-layer, .mail-app .replybox) .recip-input::placeholder { color: var(--fg-faint); }
-:is(.compose-layer, .mail-app .replybox) .rchip { display: inline-flex; align-items: center; gap: 6px; background: var(--paper-100); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 2px 4px 2px 3px; font-size: 13px; color: var(--fg); max-width: 100%; }
+:is(.compose-layer, .mail-app .replybox) .rchip { display: inline-flex; align-items: center; gap: 6px; background: var(--paper-100); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 2px 4px 2px 2px; font-size: 13px; color: var(--fg); max-width: 100%; }
 :is(.compose-layer, .mail-app .replybox) .rchip .rtx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-:is(.compose-layer, .mail-app .replybox) .rchip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 2px; border-radius: 50%; flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .rchip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 2px; border-radius: var(--radius-check); flex: 0 0 auto; }
 :is(.compose-layer, .mail-app .replybox) .rchip .rm:hover { background: var(--paper-200); color: var(--fg); }
 :is(.compose-layer, .mail-app .replybox) .rchip.bad { background: var(--danger-100); border-color: var(--danger-500); }
 :is(.compose-layer, .mail-app .replybox) .rchip.bad > svg { width: 13px; height: 13px; color: var(--danger-700); margin-left: 3px; }
@@ -785,7 +781,7 @@
 .compose-layer .att-chip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 3px; border-radius: var(--radius-control-compact); }
 .compose-layer .att-chip .rm:hover { background: var(--paper-200); color: var(--fg); }
 
-.replybox .att-preview { padding: 0 15px 14px; border-top: none; }
+.mail-app .replybox .att-preview { padding: 0 16px 4px; border-top: none; }
 .mail-app .apv-head { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 10px; }
 .mail-app .apv-head svg { width: 13px; height: 13px; color: var(--pine-700); }
 .mail-app .apv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -1096,9 +1092,6 @@
 .replybox .att-hidden-input { display: none; }
 .replybox .att-drop { position: absolute; inset: 0; z-index: 9; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--pine-900); background: rgba(132, 178, 124, 0.12); border: 2px dashed var(--pine-700); border-radius: var(--radius-surface); }
 
-.mail-app .replybox .rt-from { position: relative; display: inline-flex; }
-.mail-app .replybox .rt-from .from-trigger { padding: 3px 9px 3px 4px; }
-.mail-app .replybox .rt-from .from-menu { top: calc(100% + 6px); left: 0; }
 .mail-app .replybox .recip-row { padding: 8px 15px; }
 .mail-app .replybox .cfield.subj { padding: 11px 15px; }
 .mail-app .replybox .subj-static { font-size: 14px; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

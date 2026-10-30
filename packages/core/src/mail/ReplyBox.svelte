@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { m as msg } from '$paraglide/messages.js';
 	import { onMount, untrack } from 'svelte';
-	import Reply from '@lucide/svelte/icons/reply';
-	import ReplyAll from '@lucide/svelte/icons/reply-all';
 	import Send from '@lucide/svelte/icons/send';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Archive from '@lucide/svelte/icons/archive';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import Lock from '@lucide/svelte/icons/lock';
-	import LockOpen from '@lucide/svelte/icons/lock-open';
+	import Mail from '@lucide/svelte/icons/mail';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
@@ -195,6 +192,7 @@
 		});
 	});
 	let showBcc = $state(false);
+	let encOpen = $state(false);
 	let ccFocus = $state(false);
 	let bccFocus = $state(false);
 	let subject = $state(untrack(() => replySubject(m.subj)));
@@ -967,66 +965,22 @@
 	ondrop={onDrop}
 >
 	<div class="rt">
-		{#if mode === 'all'}
-			<ReplyAll size={14} />
-		{:else}
-			<Reply size={14} />
-		{/if}
-		{modeLabel}
-		{#if identityOptions.length > 1}
-			<span class="rt-from" bind:this={fromRef}>
-				<button
-					type="button"
-					class="from-trigger"
-					class:open={fromOpen}
-					onclick={() => (fromOpen = !fromOpen)}
-				>
-					<Avatar
-						initials={ident.init}
-						src={ident.kind === 'Alias' ? null : auth.avatarUrl}
-						fit="cover"
-						size={20}
-						bg={ident.bg}
-						fg={ident.fg}
-					/>
-					<span class="ft-email">{ident.email}</span>
-					<ChevronDown size={14} />
-				</button>
-				{#if fromOpen}
-					<div class="from-menu" role="menu">
-						<div class="fm-h">{msg.mail_compose_send_as()}</div>
-						{#each identityOptions as id, i (id.email + '-' + i)}
-							<button
-								type="button"
-								class="fm-item"
-								class:on={id.email === ident.email}
-								role="menuitemradio"
-								aria-checked={id.email === ident.email}
-								onclick={() => pickIdentity(id.email)}
-							>
-								<Avatar
-									initials={id.init}
-									src={id.kind === 'Alias' ? null : auth.avatarUrl}
-									fit="cover"
-									size={30}
-									bg={id.bg}
-									fg={id.fg}
-								/>
-								<span class="fm-tx">
-									<span class="fm-top">
-										<b>{id.name}</b>
-										<span class="fm-kind">{identityKindLabel(id.kind)}</span>
-									</span>
-									<span class="fm-em">{id.email}</span>
-								</span>
-								{#if id.email === ident.email}<Check size={17} />{/if}
-							</button>
-						{/each}
-					</div>
-				{/if}
+		<h2 class="rt-t">{modeLabel}</h2>
+		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
+			<span class="rt-save" data-state={saveStatus} role="status">
+				{#if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
+					? msg.mail_compose_opening()
+					: saveStatus === 'saving'
+						? msg.mail_compose_saving()
+						: saveStatus === 'saved'
+							? msg.mail_compose_draft_saved()
+							: saveStatus === 'failed'
+								? msg.mail_compose_not_saved()
+								: msg.mail_compose_unsaved()}
 			</span>
 		{/if}
 		{#if onClose}
+			<span class="rt-rule" aria-hidden="true"></span>
 			<button
 				type="button"
 				class="rt-x"
@@ -1035,10 +989,65 @@
 				disabled={status === 'sending'}
 				onclick={() => void closeKeepingDraft()}
 			>
-				<X size={15} />
+				<X size={16} />
 			</button>
 		{/if}
 	</div>
+	{#if identityOptions.length > 1}
+		<div class="from-row" bind:this={fromRef}>
+			<span class="recip-label">{msg.mail_compose_from()}</span>
+			<button
+				type="button"
+				class="from-trigger"
+				class:open={fromOpen}
+				onclick={() => (fromOpen = !fromOpen)}
+			>
+				<Avatar
+					initials={ident.init}
+					src={ident.kind === 'Alias' ? null : auth.avatarUrl}
+					fit="cover"
+					size={22}
+					bg={ident.bg}
+					fg={ident.fg}
+				/>
+				<span class="ft-name">{ident.name}</span>
+				<span class="ft-email">&lt;{ident.email}&gt;</span>
+				<ChevronDown size={14} />
+			</button>
+			{#if fromOpen}
+				<div class="from-menu" role="menu">
+					<div class="fm-h">{msg.mail_compose_send_as()}</div>
+					{#each identityOptions as id, i (id.email + '-' + i)}
+						<button
+							type="button"
+							class="fm-item"
+							class:on={id.email === ident.email}
+							role="menuitemradio"
+							aria-checked={id.email === ident.email}
+							onclick={() => pickIdentity(id.email)}
+						>
+							<Avatar
+								initials={id.init}
+								src={id.kind === 'Alias' ? null : auth.avatarUrl}
+								fit="cover"
+								size={30}
+								bg={id.bg}
+								fg={id.fg}
+							/>
+							<span class="fm-tx">
+								<span class="fm-top">
+									<b>{id.name}</b>
+									<span class="fm-kind">{identityKindLabel(id.kind)}</span>
+								</span>
+								<span class="fm-em">{id.email}</span>
+							</span>
+							{#if id.email === ident.email}<Check size={17} />{/if}
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
 	{#if fromRevoked && restoredFrom}
 		<div class="cwarn" role="alert">
 			<CircleAlert size={14} />
@@ -1125,6 +1134,23 @@
 		/>
 	{/if}
 
+	<div class="cenc" data-tone={encSummary.tone}>
+		{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
+			<Mail size={15} />
+		{:else if encSummary.tone === 'unknown'}
+			<CircleAlert size={15} />
+		{:else}
+			<Lock size={15} />
+		{/if}
+		<span class="cenc-t">{encSummary.label}</span>
+		<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
+			{msg.mail_compose_enc_details()}
+		</button>
+	</div>
+	{#if encOpen}
+		<p class="cenc-more">{encSummary.title}</p>
+	{/if}
+
 	<div class="cfield subj">
 		<span class="recip-label">{msg.mail_compose_subject()}</span>
 		<span class="subj-static" title={subject}>{subject}</span>
@@ -1179,7 +1205,13 @@
 			on: signatureOn,
 			onToggle: toggleSignature
 		}}
-	/>
+	>
+		{#snippet extra()}
+			<button type="button" class="cbar-lab" onclick={pickFiles}>
+				<Paperclip size={16} />{msg.mail_compose_attach()}
+			</button>
+		{/snippet}
+	</EditorToolbar>
 
 	{#if warn && !canSend && !noSender && status !== 'sending'}
 		<div class="cwarn">
@@ -1211,7 +1243,7 @@
 		</div>
 	{/if}
 
-	<AttachPreview files={attachments} onRemove={removeAttachment} />
+	<AttachPreview files={attachments} onRemove={removeAttachment} rows />
 
 	{#if attErr}
 		<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
@@ -1261,7 +1293,7 @@
 					disabled={status === 'sending' || !canSend}
 					onclick={() => (sendOpen = !sendOpen)}
 				>
-					<ChevronUp size={15} />
+					<ChevronDown size={15} />
 				</button>
 				{#if sendOpen}
 					<div class="menu rf-menu" role="menu">
@@ -1275,9 +1307,6 @@
 				{/if}
 			{/if}
 		</div>
-		<button type="button" class="rb-ico" title={msg.mail_compose_attach()} onclick={pickFiles}>
-			<Paperclip size={17} />
-		</button>
 		<input
 			bind:this={fileInput}
 			type="file"
@@ -1285,32 +1314,9 @@
 			class="att-hidden-input"
 			onchange={onFileInputChange}
 		/>
-		<button type="button" class="rb-ico" title={msg.mail_compose_discard_draft()} onclick={discard}>
-			<Trash2 size={17} />
+		<button type="button" class="cf-disc" onclick={discard}>
+			<Trash2 size={16} />{msg.mail_compose_discard_draft()}
 		</button>
-		<span class="enc" data-tone={encSummary.tone} title={encSummary.title}>
-			{#if encSummary.tone === 'partial' || encSummary.tone === 'none'}
-				<LockOpen size={14} />
-			{:else if encSummary.tone === 'unknown'}
-				<CircleAlert size={14} />
-			{:else}
-				<Lock size={14} />
-			{/if}
-			{encSummary.label}
-		</span>
-		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
-			<span class="rsave" data-state={saveStatus} role="status"
-				>{saveStatus === 'loading'
-					? msg.mail_compose_opening()
-					: saveStatus === 'saving'
-						? msg.mail_compose_saving()
-						: saveStatus === 'saved'
-							? msg.mail_compose_draft_saved()
-							: saveStatus === 'failed'
-								? msg.mail_compose_not_saved()
-								: msg.mail_compose_unsaved()}</span
-			>
-		{/if}
 	</div>
 
 	{#if status === 'sending'}
