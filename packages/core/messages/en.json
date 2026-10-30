@@ -4209,7 +4209,6 @@
 	"cal_desc_organiser_record": "Organiser of record: Thelemail",
 	"cal_desc_zero_access": "Thelemail · zero-access storage",
 	"mail_compose_ident_default": "Default",
-	"mail_compose_ident_alias": "Alias",
 	"mail_compose_ident_identity": "Identity",
 	"mail_compose_ident_shared": "Shared",
 	"mail_compose_att_max_count": "Maximum {count} attachments per message.",
@@ -4224,7 +4223,6 @@
 	"mail_compose_hold_reply_unsaved": "A reply you are writing is not saved.",
 	"mail_compose_hold_uploading": "An attachment is still uploading.",
 	"mail_compose_hold_draft_unsaved": "A draft could not be saved.",
-	"mail_compose_send_as": "Send mail as",
 	"mail_compose_discard": "Discard",
 	"mail_compose_subject": "Subject",
 	"mail_compose_add_note": "Add a note…",
@@ -4260,9 +4258,37 @@
 	"mail_compose_discard_body": "The draft and its attachments are deleted. This cannot be undone.",
 	"mail_compose_from": "From",
 	"mail_compose_manage_addresses": "Manage addresses",
-	"mail_compose_from_unavailable": "{address} cannot send right now, so this message will go from {from}.",
-	"mail_compose_from_choose": "This draft was written from {address}, which can no longer send. Choose another address before sending.",
 	"mail_compose_choose_address": "Choose address",
+	"mail_compose_in_account": "in {account}",
+	"mail_compose_send_from_account": "Send from {account}",
+	"mail_compose_from_account_only": "Only addresses in this account",
+	"mail_compose_from_filter": "Find an address",
+	"mail_compose_from_no_match": "No address matches",
+	"mail_compose_from_gone": "Unavailable",
+	"mail_compose_from_revoked": "{address} can no longer send from this account. Choose another address to send this message.",
+	"mail_compose_block_from": "Choose a From address before sending.",
+	"mail_compose_block_att_failed": "Try {name} again or remove it before sending.",
+	"mail_compose_block_att_pending": "Wait for {name} to finish uploading.",
+	"mail_compose_status_att_failed": "{name} failed to upload",
+	"mail_compose_status_att_pending": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} upload in progress",
+				"countPlural=*": "{count} uploads in progress"
+			}
+		}
+	],
+	"mail_compose_dock_att_failed": "File failed",
+	"mail_compose_dock_from": "Choose From",
+	"mail_attach_retrying": "Upload failed, trying again",
+	"mail_attach_err_refused": "The server refused this file",
 	"mail_compose_no_sender": "None of your addresses can send right now. Open Addresses in Settings to see why.",
 	"mail_compose_reply_to_note": "The sender asked for replies to go to {list}.",
 	"mail_compose_reply_to_offsite": "Replies go to {list}, outside the sender's domain {domain}.",

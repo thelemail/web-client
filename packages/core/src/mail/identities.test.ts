@@ -71,19 +71,29 @@ describe('chooseFrom', () => {
 
 describe('fromNeedsChoice', () => {
 	const options = [sendIdentityOf(address({ email: 'work@a.test', isPrimary: true }), 'Me')];
+	const none = () => false;
 
 	it('asks for a choice when a restored draft was written from an address that can no longer send', () => {
 		const choice = chooseFrom(options, 'old@a.test');
 		expect(choice.identity?.email).toBe('work@a.test');
-		expect(fromNeedsChoice(choice, 'old@a.test', 'old@a.test')).toBe(true);
+		expect(fromNeedsChoice(choice, 'old@a.test', none)).toBe(true);
+	});
+
+	it('asks for a choice when the address the user picked is revoked while writing', () => {
+		expect(fromNeedsChoice(chooseFrom(options, 'Picked@a.test'), 'picked@a.test ', none)).toBe(true);
+	});
+
+	it('never falls back from a suspended address, even one the reply chose by default', () => {
+		const suspended = (email: string) => email === 'team@a.test';
+		expect(fromNeedsChoice(chooseFrom(options, 'team@a.test'), null, suspended)).toBe(true);
 	});
 
 	it('stops asking once the user picks another address', () => {
-		expect(fromNeedsChoice(chooseFrom(options, 'work@a.test'), 'old@a.test', 'work@a.test')).toBe(false);
+		expect(fromNeedsChoice(chooseFrom(options, 'work@a.test'), 'work@a.test', () => true)).toBe(false);
 	});
 
-	it('does not ask when the saved address is still available or nothing was restored', () => {
-		expect(fromNeedsChoice(chooseFrom(options, 'work@a.test'), 'work@a.test', 'work@a.test')).toBe(false);
-		expect(fromNeedsChoice(chooseFrom(options, 'old@a.test'), null, 'old@a.test')).toBe(false);
+	it('keeps the quiet reply default when the addressed mailbox was never a sending identity', () => {
+		expect(fromNeedsChoice(chooseFrom(options, 'catchall@a.test'), null, none)).toBe(false);
+		expect(fromNeedsChoice(chooseFrom(options, 'work@a.test'), 'work@a.test', none)).toBe(false);
 	});
 });

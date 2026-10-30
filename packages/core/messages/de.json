@@ -4209,7 +4209,6 @@
 	"cal_desc_organiser_record": "Eingetragener Organisator: Thelemail",
 	"cal_desc_zero_access": "Thelemail · Zero-Access-Speicherung",
 	"mail_compose_ident_default": "Standard",
-	"mail_compose_ident_alias": "Alias",
 	"mail_compose_ident_identity": "Identität",
 	"mail_compose_ident_shared": "Gemeinsam",
 	"mail_compose_att_max_count": "Höchstens {count} Anhänge pro Nachricht.",
@@ -4224,7 +4223,6 @@
 	"mail_compose_hold_reply_unsaved": "Eine Antwort, die Sie verfassen, ist nicht gespeichert.",
 	"mail_compose_hold_uploading": "Ein Anhang wird noch hochgeladen.",
 	"mail_compose_hold_draft_unsaved": "Ein Entwurf konnte nicht gespeichert werden.",
-	"mail_compose_send_as": "E-Mail senden als",
 	"mail_compose_discard": "Verwerfen",
 	"mail_compose_subject": "Betreff",
 	"mail_compose_add_note": "Notiz hinzufügen…",
@@ -4260,9 +4258,37 @@
 	"mail_compose_discard_body": "Der Entwurf und seine Anhänge werden gelöscht. Das lässt sich nicht rückgängig machen.",
 	"mail_compose_from": "Von",
 	"mail_compose_manage_addresses": "Adressen verwalten",
-	"mail_compose_from_unavailable": "{address} kann gerade nicht senden. Diese Nachricht wird deshalb von {from} gesendet.",
-	"mail_compose_from_choose": "Dieser Entwurf wurde mit {address} verfasst, das nicht mehr senden kann. Wählen Sie vor dem Senden eine andere Adresse.",
 	"mail_compose_choose_address": "Adresse wählen",
+	"mail_compose_in_account": "in {account}",
+	"mail_compose_send_from_account": "Senden von {account}",
+	"mail_compose_from_account_only": "Nur Adressen dieses Kontos",
+	"mail_compose_from_filter": "Adresse suchen",
+	"mail_compose_from_no_match": "Keine passende Adresse",
+	"mail_compose_from_gone": "Nicht verfügbar",
+	"mail_compose_from_revoked": "{address} kann in diesem Konto nicht mehr senden. Wählen Sie eine andere Adresse, um diese Nachricht zu senden.",
+	"mail_compose_block_from": "Wählen Sie vor dem Senden eine Absenderadresse.",
+	"mail_compose_block_att_failed": "Wiederholen oder entfernen Sie {name} vor dem Senden.",
+	"mail_compose_block_att_pending": "Warten Sie, bis {name} hochgeladen ist.",
+	"mail_compose_status_att_failed": "{name} konnte nicht hochgeladen werden",
+	"mail_compose_status_att_pending": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} Upload läuft",
+				"countPlural=*": "{count} Uploads laufen"
+			}
+		}
+	],
+	"mail_compose_dock_att_failed": "Datei fehlgeschlagen",
+	"mail_compose_dock_from": "Absender wählen",
+	"mail_attach_retrying": "Upload fehlgeschlagen, neuer Versuch",
+	"mail_attach_err_refused": "Der Server hat diese Datei abgelehnt",
 	"mail_compose_no_sender": "Keine Ihrer Adressen kann gerade senden. Den Grund sehen Sie unter „Adressen“ in den Einstellungen.",
 	"mail_compose_reply_to_note": "Der Absender möchte Antworten an {list}.",
 	"mail_compose_reply_to_offsite": "Antworten gehen an {list}, außerhalb der Absender-Domain {domain}.",

@@ -10,14 +10,21 @@
 	interface Props {
 		files: Attachment[];
 		onRemove?: (id: string) => void;
+		onRetry?: (id: string) => void;
 		rows?: boolean;
 	}
 
-	let { files, onRemove, rows = false }: Props = $props();
+	let { files, onRemove, onRetry, rows = false }: Props = $props();
+
+	function failed(a: Attachment): boolean {
+		return a.status === 'error' || a.status === 'cancelled';
+	}
 
 	function stateLabel(a: Attachment): string {
 		if (a.status === 'ready') return m.mail_attach_ready();
-		if (a.status === 'error') return m.mail_attach_upload_failed();
+		if (a.retrying) return m.mail_attach_retrying();
+		if (a.status === 'error' && a.failure === 'refused') return m.mail_attach_err_refused();
+		if (failed(a)) return m.mail_attach_upload_failed();
 		if (a.status === 'encrypting') return m.mail_attach_encrypting();
 		return m.mail_attach_uploading();
 	}
@@ -81,7 +88,7 @@
 				{@const url = previewUrls.get(a.id)}
 				{@const Ic = k.icon}
 				{@const canOpen = canPreview(a.file.type, a.file.name, a.file.size)}
-				<div class="apv-card" class:open={canOpen} title={a.file.name}>
+				<div class="apv-card" class:open={canOpen} class:failed={failed(a)} title={a.file.name}>
 					<svelte:element
 						this={canOpen ? 'button' : 'div'}
 						class="apv-thumb k-{k.cls}"
@@ -105,7 +112,7 @@
 					<div class="apv-info">
 						<span class="apv-name">{a.file.name}</span>
 						<span class="apv-size"
-							>{formatSize(a.file.size)}{#if rows}<span class="apv-state" data-state={a.status}
+							>{formatSize(a.file.size)}{#if rows}<span class="apv-state" data-state={a.retrying ? 'retrying' : a.status}
 									>{stateLabel(a)}</span
 								>{/if}</span
 						>
@@ -113,7 +120,20 @@
 					{#if a.status === 'error'}
 						<div class="apv-err">{a.error ?? m.mail_attach_upload_failed()}</div>
 					{/if}
-					{#if onRemove}
+					{#if rows && failed(a) && (onRetry || onRemove)}
+						<span class="apv-acts">
+							{#if onRetry && a.failure !== 'refused'}
+								<button type="button" class="apv-act" data-retry={a.id} onclick={() => onRetry(a.id)}>
+									{m.common_retry()}
+								</button>
+							{/if}
+							{#if onRemove}
+								<button type="button" class="apv-act quiet" onclick={() => onRemove(a.id)}>
+									{m.common_remove()}
+								</button>
+							{/if}
+						</span>
+					{:else if onRemove}
 						<button
 							type="button"
 							class="apv-rm"
