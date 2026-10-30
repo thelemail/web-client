@@ -15,7 +15,7 @@ import {
 	type SortId
 } from '$core/mail/data';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
-import { bimiDomainFromPreview, unsubscribeFromPreview } from '$core/mail/preview';
+import { bimiDomainFromPreview, trustedReplyTo, unsubscribeFromPreview } from '$core/mail/preview';
 import { sentByFrom } from '$core/mail/sentBy';
 import { senderFields } from '$core/mail/attestedSender';
 import { platform } from '$platform';
@@ -239,6 +239,7 @@ async function decryptItem(accountId: string, item: MessageListItem): Promise<Me
 			typeof preview.flags?.calendar === 'string' ? preview.flags.calendar : undefined,
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 		recipients: preview.recipients,
+		replyTo: trustedReplyTo(preview, item, sender.senderMismatch),
 		epoch: storedAt.getTime(),
 		subj: decodeWords(preview.subject || '') || '(no subject)',
 		labels,

@@ -30,6 +30,7 @@
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import ReplyBox, { type ReplyMode } from './ReplyBox.svelte';
+	import { replyToSummary } from './replyRecipients';
 	import Thread from './Thread.svelte';
 	import ReaderSkeleton from './ReaderSkeleton.svelte';
 	import OriginalHeadersDialog from './OriginalHeadersDialog.svelte';
@@ -421,6 +422,8 @@
 		const shown = (enriched?.recipients ?? []).some((r) => r.address.trim().toLowerCase() === d);
 		return shown ? '' : d;
 	});
+
+	const replyToLine = $derived(enriched ? replyToSummary(enriched) : null);
 
 	const replySeed = $derived.by<ThreadEntry | null>(() => {
 		const t = enriched?.thread;
@@ -1024,6 +1027,15 @@
 								<span class="to">{msg.mail_thread_to({ list: m.to || '—' })}</span>
 								{#if deliveredLine}
 									<span class="to">{msg.mail_thread_delivered_to({ address: deliveredLine })}</span>
+								{/if}
+								{#if replyToLine}
+									<span
+										class="to"
+										data-warn={replyToLine.offsite || undefined}
+										title={replyToLine.offsite ? msg.mail_thread_reply_to_offsite() : undefined}
+									>
+										{msg.mail_thread_reply_to({ list: replyToLine.list })}
+									</span>
 								{/if}
 							</div>
 						</div>

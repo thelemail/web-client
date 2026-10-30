@@ -1,5 +1,5 @@
 import type { MessageTrust } from './trust';
-import type { MessagePreviewRecipient, UnsubscribeLinks } from './preview';
+import type { MessagePreviewRecipient, MessagePreviewReplyTo, UnsubscribeLinks } from './preview';
 import type { AttachmentChip } from './attachments';
 import type { SentBy } from './sentBy';
 import { initialsFor } from './initials';
@@ -46,6 +46,7 @@ export interface ThreadEntry {
 	unsubscribe?: UnsubscribeLinks;
 	to: string;
 	recipients?: MessagePreviewRecipient[];
+	replyTo?: MessagePreviewReplyTo[];
 	deliveredTo?: string;
 	init: string;
 	bg: string;
@@ -80,6 +81,7 @@ export interface Message {
 	unsubscribe?: UnsubscribeLinks;
 	to: string;
 	recipients?: MessagePreviewRecipient[];
+	replyTo?: MessagePreviewReplyTo[];
 	deliveredTo?: string;
 	init: string;
 	bg: string;

@@ -3,6 +3,12 @@ export interface MessagePreviewSender {
 	address: string;
 }
 
+export interface MessagePreviewReplyTo extends MessagePreviewSender {
+	offsite?: boolean;
+}
+
+export const MAX_REPLY_TO = 10;
+
 export type MessagePreviewRecipientKind = 'to' | 'cc' | 'bcc';
 
 export interface MessagePreviewRecipient {
@@ -33,7 +39,43 @@ export interface MessagePreview {
 	snippet: string;
 	display_date: string;
 	delivered_to?: string;
+	reply_to?: MessagePreviewReplyTo[];
 	flags?: { bimi_domain?: string; auth?: MessagePreviewAuth } & Record<string, unknown>;
+}
+
+export function replyToParties(value: unknown): MessagePreviewReplyTo[] | undefined {
+	if (!Array.isArray(value) || value.length > MAX_REPLY_TO) return undefined;
+	const out: MessagePreviewReplyTo[] = [];
+	for (const v of value) {
+		if (!v || typeof v !== 'object') continue;
+		const { display, address, offsite } = v as Record<string, unknown>;
+		if (typeof address !== 'string' || !address.trim()) continue;
+		out.push({
+			display: typeof display === 'string' ? display : '',
+			address: address.trim(),
+			...(offsite === true ? { offsite: true } : {})
+		});
+	}
+	return out.length ? out : undefined;
+}
+
+export function trustedReplyTo(
+	preview: MessagePreview,
+	item: { source?: string; direction?: string },
+	senderMismatch: boolean | undefined
+): MessagePreviewReplyTo[] | undefined {
+	if (item.source !== 'inbound_external' || item.direction !== 'received') return undefined;
+	if (senderMismatch || preview.flags?.imported === true) return undefined;
+	return replyToParties(preview.reply_to);
+}
+
+export function replyToFromJson(json: string | undefined): MessagePreviewReplyTo[] | undefined {
+	if (!json) return undefined;
+	try {
+		return replyToParties(JSON.parse(json));
+	} catch {
+		return undefined;
+	}
 }
 
 export function bimiDomainFromPreview(preview: MessagePreview): string | undefined {

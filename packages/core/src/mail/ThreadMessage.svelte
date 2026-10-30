@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
+	import { replyToSummary } from './replyRecipients';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
@@ -92,6 +93,8 @@
 		return shown ? '' : d;
 	});
 
+	const replyToLine = $derived(replyToSummary(e));
+
 	const chips = $derived(e.attachments ?? []);
 
 	async function refreshPointer(attachmentId: string) {
@@ -175,6 +178,15 @@
 					{/if}
 					{#if deliveredLine}
 						<span class="to">{m.mail_thread_delivered_to({ address: deliveredLine })}</span>
+					{/if}
+					{#if replyToLine}
+						<span
+							class="to"
+							data-warn={replyToLine.offsite || undefined}
+							title={replyToLine.offsite ? m.mail_thread_reply_to_offsite() : undefined}
+						>
+							{m.mail_thread_reply_to({ list: replyToLine.list })}
+						</span>
 					{/if}
 				</div>
 			</div>

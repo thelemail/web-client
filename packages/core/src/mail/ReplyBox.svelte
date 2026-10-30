@@ -37,7 +37,14 @@
 	} from './data';
 	import type { MessagePreviewRecipient } from './preview';
 	import { replySubject } from './subjects';
-	import { replyTargets, switchReplyMode, type ReplyParty, type ReplySeed } from './replyRecipients';
+	import {
+		dropReplyTo,
+		effectiveReplyTo,
+		replyTargets,
+		switchReplyMode,
+		type ReplyParty,
+		type ReplySeed
+	} from './replyRecipients';
 	import {
 		replyQuoteHtml,
 		replyQuoteText,
@@ -130,6 +137,9 @@
 			: { display: m.from, address: m.fromAddr }
 	);
 	const seedSenderIsMe = untrack(() => (seed ? !!seed.me : m.direction === 'sent'));
+	const seedReplyTo = untrack(() =>
+		(seed?.folder ?? m.folder) === 'spam' ? [] : seed ? (seed.replyTo ?? []) : (m.replyTo ?? [])
+	);
 	const seedEpoch = untrack(() => seed?.epoch ?? m.epoch);
 
 	function myEmails(): Set<string> {
@@ -139,10 +149,11 @@
 		return mine;
 	}
 
-	const replySeedParties: ReplySeed = {
+	let replySeedParties: ReplySeed = {
 		sender: seedSender,
 		senderIsMe: seedSenderIsMe,
-		recipients: seedRecipients
+		recipients: seedRecipients,
+		replyTo: seedReplyTo
 	};
 	const partyChip = (p: ReplyParty) => recipientChip({ name: p.display || undefined, address: p.address });
 
@@ -191,6 +202,28 @@
 			if (cc.length > 0) showCc = true;
 		});
 	});
+	let replyToNotice = $state(untrack(() => effectiveReplyTo(replySeedParties, myEmails())));
+	const replyToOffsite = $derived(replyToNotice.some((p) => p.offsite));
+	const replyToList = $derived(replyToNotice.map((p) => p.address).join(', '));
+	const senderDomain = $derived(seedSender.address.split('@').pop() ?? '');
+
+	function replyToSenderInstead() {
+		const dropped = dropReplyTo(
+			{ to, cc },
+			appliedMode === 'all' ? 'all' : 'reply',
+			replySeedParties,
+			myEmails(),
+			addedByAll,
+			(c) => c.email,
+			partyChip
+		);
+		to = dropped.to;
+		cc = dropped.cc;
+		addedByAll = dropped.added;
+		replySeedParties = dropped.seed;
+		replyToNotice = [];
+	}
+
 	let showBcc = $state(false);
 	let encOpen = $state(false);
 	let ccFocus = $state(false);
@@ -1068,6 +1101,19 @@
 	{/if}
 	{#if othersReplying}
 		<div class="cnote" role="status"><Users size={14} />{othersReplying}</div>
+	{/if}
+	{#if replyToNotice.length > 0}
+		<div class={replyToOffsite ? 'cwarn' : 'cnote'} role="status">
+			<CircleAlert size={14} />
+			<span class="cwarn-t">
+				{replyToOffsite
+					? msg.mail_compose_reply_to_offsite({ list: replyToList, domain: senderDomain })
+					: msg.mail_compose_reply_to_note({ list: replyToList })}
+			</span>
+			<button type="button" class="cwarn-act" onclick={replyToSenderInstead}>
+				{msg.mail_compose_reply_to_sender_instead()}
+			</button>
+		</div>
 	{/if}
 
 	{#snippet ccBccSlot()}

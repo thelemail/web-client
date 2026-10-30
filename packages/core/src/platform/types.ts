@@ -90,6 +90,7 @@ export interface MirrorMessage {
 	senderDisplay: string;
 	senderAddress: string;
 	recipientsJson: string;
+	replyToJson?: string;
 	deliveredTo?: string;
 	snippet: string;
 	displayDate: string;
