@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { replyTargets, switchReplyMode, type ReplyParty, type ReplySeed } from './replyRecipients';
+import {
+	dropReplyTo,
+	effectiveReplyTo,
+	replyTargets,
+	replyToSummary,
+	switchReplyMode,
+	type ReplyParty,
+	type ReplySeed
+} from './replyRecipients';
 import type { MessagePreviewRecipient } from './preview';
 
 function r(address: string, kind: MessagePreviewRecipient['kind'], display = ''): MessagePreviewRecipient {
@@ -283,5 +291,78 @@ describe('switchReplyMode', () => {
 		const all = switchReplyMode(reply, 'all', seed, mine, [], addr, make);
 		expect(names(all.to)).toEqual(['mira@a.test']);
 		expect(all.added).toEqual(['ada@a.test']);
+	});
+});
+
+describe('effectiveReplyTo', () => {
+	const list = { display: 'The List', address: 'list@example.org', offsite: true };
+
+	it('returns the Reply-To parties that are not mine', () => {
+		const s = seed({ replyTo: [list, { display: '', address: 'me@example.com' }] });
+		expect(effectiveReplyTo(s, me)).toEqual([list]);
+	});
+
+	it('is empty when Reply-To is just the sender', () => {
+		expect(effectiveReplyTo(seed({ replyTo: [{ display: '', address: 'ALICE@example.com' }] }), me)).toEqual([]);
+	});
+
+	it('is empty on my own mail', () => {
+		expect(effectiveReplyTo(seed({ senderIsMe: true, replyTo: [list] }), me)).toEqual([]);
+	});
+});
+
+describe('dropReplyTo', () => {
+	const list = { display: 'The List', address: 'list@example.org' };
+	const help = { display: '', address: 'help@example.org' };
+	const make = (p: ReplyParty) => p;
+	const addr = (p: ReplyParty) => p.address;
+
+	it('swaps Reply-To for the sender on reply and keeps manual additions', () => {
+		const s = seed({ replyTo: [list, help] });
+		const start = replyTargets(s, 'reply', me);
+		const manual = { display: '', address: 'zed@example.com' };
+		const out = dropReplyTo({ to: [...start.to, manual], cc: [] }, 'reply', s, me, [], addr, make);
+		expect(addrs(out.to)).toEqual(['alice@example.com', 'zed@example.com']);
+		expect(out.seed.replyTo).toEqual([]);
+	});
+
+	it('removes only Reply-To on reply all and lets reply mode keep the sender', () => {
+		const s = seed({ replyTo: [list] });
+		const start = { ...replyTargets(s, 'reply', me), bcc: [] };
+		const all = switchReplyMode(start, 'all', s, me, [], addr, make);
+		const out = dropReplyTo(all, 'all', s, me, all.added, addr, make);
+		expect(addrs(out.to)).toEqual(['alice@example.com', 'bob@example.com']);
+		expect(addrs(out.cc)).toEqual(['carol@example.com']);
+		const back = switchReplyMode({ ...out, bcc: [] }, 'reply', out.seed, me, out.added, addr, make);
+		expect(addrs(back.to)).toEqual(['alice@example.com']);
+	});
+
+	it('keeps a Reply-To address that is also a recipient', () => {
+		const s = seed({ replyTo: [{ display: '', address: 'bob@example.com' }] });
+		const all = replyTargets(s, 'all', me);
+		const out = dropReplyTo(all, 'all', s, me, [], addr, make);
+		expect(addrs(out.to)).toEqual(['bob@example.com', 'alice@example.com']);
+	});
+});
+
+describe('replyToSummary', () => {
+	it('lists Reply-To and flags an offsite address', () => {
+		expect(
+			replyToSummary({
+				fromAddr: 'news@mail.example.com',
+				replyTo: [
+					{ display: '', address: 'help@example.com' },
+					{ display: '', address: 'pay@other.example', offsite: true }
+				]
+			})
+		).toEqual({ list: 'help@example.com, pay@other.example', offsite: true });
+	});
+
+	it('hides when Reply-To equals From, in spam, or when absent', () => {
+		expect(replyToSummary({ fromAddr: 'a@example.com', replyTo: [{ display: '', address: 'A@example.com' }] })).toBeNull();
+		expect(
+			replyToSummary({ fromAddr: 'a@example.com', folder: 'spam', replyTo: [{ display: '', address: 'b@example.com' }] })
+		).toBeNull();
+		expect(replyToSummary({ fromAddr: 'a@example.com' })).toBeNull();
 	});
 });
