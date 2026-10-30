@@ -424,7 +424,8 @@
 .mail-app .rb-btn.on { background: var(--pine-100); border-color: var(--pine-300); color: var(--pine-700); }
 .mail-app .rb-btn.primary { background: var(--primary); color: var(--primary-fg); border-color: transparent; box-shadow: var(--shadow-xs); }
 .mail-app .rb-btn.primary:hover { background: var(--primary-hover); }
-.mail-app .rb-btn.primary.off { opacity: .5; pointer-events: none; }
+.mail-app .rb-btn.primary.off { background: var(--bg-sunken); color: var(--fg-muted); border-color: var(--border-strong); box-shadow: none; }
+.mail-app .rb-btn.primary.off:hover { background: var(--bg-sunken); }
 .mail-app .rb-btn.primary.on { background: var(--primary-press); }
 .mail-app .rb-btn .send-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: mail-svspin .7s linear infinite; display: inline-block; }
 .mail-app .rb-ico { width: 33px; height: 33px; border-radius: var(--radius-control-compact); border: 1px solid transparent; background: none; color: var(--ink-500); display: flex; align-items: center; justify-content: center; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
@@ -560,6 +561,9 @@
 .mail-app .replybox .rt-t { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); }
 .mail-app .replybox .rt-save { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
 .mail-app .replybox .rt-save[data-state='failed'] { color: var(--danger-700); font-weight: 600; }
+.mail-app .replybox .rt-save.att { color: var(--warning-700); }
+.mail-app .replybox .rt :is(.rt-t, .rt-mode):has(+ .rt-acct) { margin-right: 0; }
+.mail-app .replybox .rt-acct { margin: 0 auto 0 6px; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .replybox .rt-rule { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
 .mail-app .replybox .rt .rt-x { display: grid; place-items: center; width: 32px; height: 32px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); cursor: pointer; }
 .mail-app .replybox .rt .rt-x:hover { background: var(--paper-100); color: var(--ink-700); }
@@ -639,6 +643,8 @@
 .compose-layer .compose-h .ch-back:hover { color: var(--fg); background: var(--paper-100); }
 .compose-layer .compose-h .ch-save { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
 .compose-layer .compose-h .ch-save[data-state='failed'] { color: var(--danger-700); font-weight: 600; }
+.compose-layer .compose-h .ch-save.att { color: var(--warning-700); }
+.compose-layer .compose-h .ch-acct { flex: 0 1 auto; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .compose-layer .compose-h .ch-rule { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex: 0 0 auto; }
 .compose-layer .compose-h .ch-actions { display: flex; align-items: center; gap: 2px; }
 .compose-layer .compose-h .chx { width: 32px; height: 32px; display: grid; place-items: center; color: var(--fg-muted); background: none; border: none; border-radius: var(--radius-control-compact); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
@@ -683,6 +689,15 @@
 .mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-rm:hover { background: var(--paper-100); color: var(--fg); }
 .mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-bar { position: absolute; left: 12px; right: 12px; bottom: 4px; margin: 0; }
 .mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-err { display: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-card.failed { border-color: color-mix(in srgb, var(--danger-500) 55%, var(--border)); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-state[data-state='cancelled'] { color: var(--danger-700); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-state[data-state='retrying'] { color: var(--warning-700); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-acts { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-act { padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control-compact); background: var(--surface); color: var(--fg-strong); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-act:hover { background: var(--bg-raised); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-act.quiet { border-color: transparent; background: none; color: var(--fg-muted); font-weight: 500; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-act.quiet:hover { color: var(--fg); background: var(--paper-100); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-act:focus-visible { outline: 2px solid var(--pine-500); outline-offset: 2px; }
 
 .mail-app :is(.compose-layer .compose-win, .replybox) .cbar { gap: 4px; margin: 10px 16px 0; padding: 10px 0 0; border-top: 1px solid var(--border); background: none; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .cbar[role] button:not(.cbar-lab) { width: 32px; height: 32px; }
@@ -707,6 +722,8 @@
 .compose-dock:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -3px; }
 .compose-dock > svg { width: 14px; height: 14px; color: var(--fg-muted); flex: 0 0 auto; }
 .compose-dock .dock-t { flex: 1 1 auto; font-size: 13.5px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.compose-dock .dock-flag { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--danger-700); white-space: nowrap; }
+.compose-dock .dock-flag svg { width: 13px; height: 13px; }
 .compose-dock .dock-b { display: inline-flex; background: none; border: none; color: var(--fg-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-control-compact); flex: 0 0 auto; }
 .compose-dock .dock-b:hover { background: var(--paper-100); color: var(--fg); }
 .compose-layer .compose-dock { position: relative; z-index: 2; }
@@ -765,7 +782,7 @@
 :is(.compose-layer, .mail-app .replybox) .from-trigger .ft-email { flex: 0 1 auto; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :is(.compose-layer, .mail-app .replybox) .from-trigger svg { width: 15px; height: 15px; color: var(--fg-muted); flex: 0 0 auto; }
 :is(.compose-layer, .mail-app .replybox) .from-menu { position: absolute; top: calc(100% - 2px); left: 58px; z-index: 30; width: 360px; max-width: calc(100% - 70px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 6px; animation: mail-slideup var(--dur) var(--ease-out); }
-:is(.compose-layer, .mail-app .replybox) .fm-h { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint); padding: 7px 9px 5px; }
+:is(.compose-layer, .mail-app .replybox) .fm-h { font-size: 12px; font-weight: 500; color: var(--fg-muted); padding: 7px 9px 8px; margin-bottom: 4px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 :is(.compose-layer, .mail-app .replybox) .fm-item { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 8px 9px; cursor: pointer; color: var(--fg); transition: background var(--dur-fast); }
 :is(.compose-layer, .mail-app .replybox) .fm-item:hover { background: var(--paper-100); }
 :is(.compose-layer, .mail-app .replybox) .fm-item.on { background: var(--pine-50); }
@@ -776,10 +793,23 @@
 :is(.compose-layer, .mail-app .replybox) .fm-kind { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brass-700); background: var(--brass-100); border-radius: var(--radius-pill); padding: 1px 7px; }
 :is(.compose-layer, .mail-app .replybox) .fm-em { font-family: var(--font-mono); font-size: 12px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :is(.compose-layer, .mail-app .replybox) .fm-org { font-size: 11.5px; color: var(--fg-muted); }
-:is(.compose-layer, .mail-app .replybox) .fm-sep { height: 1px; background: var(--border); margin: 5px 4px; }
-:is(.compose-layer, .mail-app .replybox) .fm-add { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: none; border-radius: var(--radius-control-compact); padding: 9px; cursor: pointer; color: var(--pine-700); font-size: 13px; font-weight: 500; }
-:is(.compose-layer, .mail-app .replybox) .fm-add svg { width: 16px; height: 16px; }
-:is(.compose-layer, .mail-app .replybox) .fm-add:hover { background: var(--paper-100); }
+:is(.compose-layer, .mail-app .replybox) .from-trigger:focus-visible { outline: 2px solid var(--pine-500); outline-offset: 2px; }
+:is(.compose-layer, .mail-app .replybox) .from-trigger.revoked { border-color: var(--danger-500); background: var(--danger-100); }
+:is(.compose-layer, .mail-app .replybox) .from-trigger.revoked .ft-name { color: var(--danger-700); }
+:is(.compose-layer, .mail-app .replybox) .from-trigger.revoked .ft-email { color: var(--danger-700); text-decoration: line-through; }
+:is(.compose-layer, .mail-app .replybox) .fm-item:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--pine-500); }
+:is(.compose-layer, .mail-app .replybox) .fm-item.gone { cursor: default; }
+:is(.compose-layer, .mail-app .replybox) .fm-item.gone:hover { background: none; }
+:is(.compose-layer, .mail-app .replybox) .fm-item.gone :is(b, .fm-em) { color: var(--fg-faint); }
+:is(.compose-layer, .mail-app .replybox) .fm-kind.gone { color: var(--danger-700); background: var(--danger-100); }
+:is(.compose-layer, .mail-app .replybox) .fm-filter { display: flex; align-items: center; gap: 8px; margin: 2px 2px 6px; padding: 7px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); color: var(--fg-muted); }
+:is(.compose-layer, .mail-app .replybox) .fm-filter:focus-within { border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+:is(.compose-layer, .mail-app .replybox) .fm-filter input { flex: 1 1 auto; min-width: 0; border: none; outline: none; background: none; font: inherit; font-size: 13px; color: var(--fg); }
+:is(.compose-layer, .mail-app .replybox) .fm-none { padding: 10px 9px; font-size: 12.5px; color: var(--fg-muted); }
+:is(.compose-layer, .mail-app .replybox) .fm-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 5px; padding: 8px 9px 4px; border-top: 1px solid var(--border); font-size: 12px; color: var(--fg-muted); }
+:is(.compose-layer, .mail-app .replybox) .fm-manage { flex: 0 0 auto; border: none; background: none; padding: 2px 4px; border-radius: var(--radius-control-compact); color: var(--pine-700); font: inherit; font-weight: 600; cursor: pointer; }
+:is(.compose-layer, .mail-app .replybox) .fm-manage:hover { text-decoration: underline; }
+:is(.compose-layer, .mail-app .replybox) .from-menu { max-height: min(420px, 60vh); overflow-y: auto; }
 
 :is(.compose-layer, .mail-app .replybox) .recip-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 17px; border-bottom: 1px solid var(--border); }
 :is(.compose-layer, .mail-app .replybox) .recip-box { position: relative; flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 24px; border-radius: var(--radius-control); min-width: 0; }
@@ -869,9 +899,11 @@
 
 .compose-layer .send-split:not(.off) .send:hover,
 .compose-layer .send-split:not(.off) .send-caret:hover { background: var(--primary-hover); }
-.compose-layer .send-split.off { box-shadow: none; opacity: .5; cursor: not-allowed; }
+.compose-layer .send-split.off { box-shadow: none; }
 .compose-layer .send-split.off .send,
-.compose-layer .send-split.off .send-caret { cursor: not-allowed; }
+.compose-layer .send-split.off .send-caret { background: var(--bg-sunken); color: var(--fg-muted); }
+.compose-layer .send-split.off .send-caret { border-left-color: var(--border-strong); }
+.compose-layer .cf-sched.off { background: var(--bg-sunken); color: var(--fg-muted); }
 .compose-layer .send-menu { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 20; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 5px; animation: mail-slideup var(--dur) var(--ease-out); }
 .compose-layer .send-menu button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 9px 10px; cursor: pointer; color: var(--fg); font-size: 13.5px; }
 .compose-layer .send-menu button svg { width: 16px; height: 16px; color: var(--fg-muted); }

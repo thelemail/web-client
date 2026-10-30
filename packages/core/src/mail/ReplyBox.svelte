@@ -18,12 +18,15 @@
 	import PanelLeft from '@lucide/svelte/icons/panel-left';
 	import Reply from '@lucide/svelte/icons/reply';
 	import ReplyAll from '@lucide/svelte/icons/reply-all';
-	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
 	import InlineSendError, { type InlineErrorCode } from './InlineSendError.svelte';
 	import AttachPreview from './AttachPreview.svelte';
+	import FromPicker from './FromPicker.svelte';
+	import { attachmentStatusText, sendBlock, sendBlockText } from './sendBlock';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import DirectoryFailModal from './DirectoryFailModal.svelte';
 	import TofuModal from './TofuModal.svelte';
 	import RichEditor from './editor/RichEditor.svelte';
@@ -274,11 +277,17 @@
 	const from = $derived(chooseFrom(identityOptions, fromEmail));
 	const ident = $derived<SendIdentity>(from.identity ?? userIdentity);
 	const noSender = $derived(from.identity === null);
-	let restoredFrom = $state<{ email: string; name: string } | null>(null);
-	const fromRevoked = $derived(fromNeedsChoice(from, restoredFrom?.email ?? null, fromEmail));
-	const fromNotice = $derived(
-		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
+	let pinnedFrom = $state<{ email: string; name: string } | null>(null);
+	const fromRevoked = $derived(
+		fromNeedsChoice(from, pinnedFrom?.email ?? null, (e) => !!addresses.getByEmail(e)?.suspended)
 	);
+	const revokedFrom = $derived.by(() => {
+		const gone = fromRevoked ? from.unavailable : null;
+		if (!gone) return null;
+		if (pinnedFrom && pinnedFrom.email.toLowerCase() === gone.toLowerCase()) return pinnedFrom;
+		const addr = addresses.getByEmail(gone);
+		return { email: gone, name: addr ? sendIdentityOf(addr, auth.fullName).name : gone };
+	});
 	const replyingAsAlias = $derived(ident.kind === 'Alias');
 	const othersReplying = $derived(replyingLine(replyPresence.replying));
 
@@ -289,7 +298,7 @@
 
 	let identInit = $state(false);
 	let fromOpen = $state(false);
-	let fromRef: HTMLElement | undefined = $state();
+	let fromPicker: ReturnType<typeof FromPicker> | undefined = $state();
 
 	function addressedIdentityEmail(): string | null {
 		const candidates: (string | undefined)[] = [
@@ -347,7 +356,9 @@
 
 	function pickIdentity(email: string) {
 		fromOpen = false;
-		if (email === ident.email) return;
+		const picked = identityOptions.find((o) => o.email === email);
+		pinnedFrom = { email, name: picked?.name ?? email };
+		if (email === ident.email && !revokedFrom) return;
 		fromEmail = email;
 		const addr = addresses.getByEmail(email);
 		if (editor && signatureSeeded && addr) {
@@ -420,6 +431,12 @@
 
 	function removeAttachment(id: string) {
 		attachments = attachments.filter((a) => a.id !== id);
+	}
+
+	function retryAttachment(id: string) {
+		const a = attachments.find((x) => x.id === id);
+		if (!a || (a.status !== 'error' && a.status !== 'cancelled')) return;
+		void orchestrator.startUpload(a, recipientAddresses(), Math.max(0, attachments.indexOf(a)));
 	}
 
 	let dragging = $state(false);
@@ -512,6 +529,7 @@
 
 	const openedDraftId = untrack(() => draftId);
 	const draftAccountId = untrack(() => auth.accountId) ?? '';
+	const draftAccountEmail = untrack(() => auth.email) ?? '';
 	const replySource = untrack(() => m.id);
 	let load = $state<DraftLoad>(openedDraftId ? 'loading' : 'ready');
 	let closing = $state(false);
@@ -530,7 +548,7 @@
 		const headers = threadIds ? replyThreadHeaders(threadIds) : null;
 		return {
 			v: DRAFT_DOC_VERSION,
-			from: fromRevoked && restoredFrom ? restoredFrom : { email: ident.email, name: ident.name },
+			from: revokedFrom ?? { email: ident.email, name: ident.name },
 			to: draftRecipients(to),
 			cc: draftRecipients(cc),
 			bcc: draftRecipients(bcc),
@@ -578,6 +596,7 @@
 		persisted: saver.persisted
 	});
 	const saveStatus = $derived(draftSaveStatus(saveFacts));
+	const attStatus = $derived(load === 'ready' ? attachmentStatusText(attachments) : null);
 
 	$effect(() => {
 		void to;
@@ -623,7 +642,7 @@
 			signatureSeeded = true;
 			signatureChosen = true;
 			fromEmail = doc.from.email;
-			restoredFrom = doc.from;
+			pinnedFrom = doc.from;
 			to = doc.to.map(recipientChip);
 			cc = doc.cc.map(recipientChip);
 			bcc = doc.bcc.map(recipientChip);
@@ -707,11 +726,19 @@
 
 	const validCount = $derived(allRecipients.filter((c) => c.valid).length);
 	const hasInvalid = $derived(allRecipients.some((c) => !c.valid));
-	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
 	const bodyOk = $derived(text.trim().length > 0);
-	const canSend = $derived(
-		validCount > 0 && !hasInvalid && bodyOk && status !== 'sending' && attReady && !noSender && !fromRevoked
-	);
+	const block = $derived(sendBlock({ noSender, revokedFrom: revokedFrom?.email ?? null, attachments }));
+	const canSend = $derived(validCount > 0 && !hasInvalid && bodyOk && status !== 'sending' && !block);
+
+	function showBlock(): void {
+		warn = true;
+		if (!block) return;
+		if (block.kind === 'from') fromPicker?.choose();
+		else if (block.kind === 'attachment-failed') {
+			const at = boxRef?.querySelector<HTMLElement>(`[data-retry="${block.id}"]`);
+			(at ?? boxRef?.querySelector<HTMLElement>('.apv-card.failed .apv-act'))?.focus();
+		}
+	}
 
 	const INLINE_CODES = new Set<SendError['code']>([
 		'recipient_unknown',
@@ -768,16 +795,9 @@
 		err = null;
 	});
 
-	function identityKindLabel(kind: SendIdentity['kind']): string {
-		if (kind === 'Alias') return msg.mail_compose_ident_alias();
-		if (kind === 'Identity') return msg.mail_compose_ident_identity();
-		return msg.mail_compose_ident_default();
-	}
-
 	const modeLabel = $derived(mode === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply());
 
 	function handleDocMouseDown(e: MouseEvent) {
-		if (fromOpen && fromRef && !fromRef.contains(e.target as Node)) fromOpen = false;
 		if (sendOpen && sendRef && !sendRef.contains(e.target as Node)) sendOpen = false;
 	}
 
@@ -845,7 +865,7 @@
 
 	async function performSend(after: SendAfter = 'none') {
 		if (!canSend || load !== 'ready') {
-			warn = true;
+			showBlock();
 			return;
 		}
 		sendOpen = false;
@@ -1059,9 +1079,12 @@
 		{:else}
 			<h2 class="rt-t">{modeLabel}</h2>
 		{/if}
-		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
-			<span class="rt-save" data-state={saveStatus} role="status">
-				{#if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
+		{#if draftAccountEmail}
+			<span class="rt-acct" title={draftAccountEmail}>{msg.mail_compose_in_account({ account: draftAccountEmail })}</span>
+		{/if}
+		{#if (saveStatus !== 'idle' && saveStatus !== 'load-failed') || attStatus}
+			<span class="rt-save" data-state={saveStatus} class:att={!!attStatus} role="status">
+				{#if attStatus}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
 					? msg.mail_compose_opening()
 					: saveStatus === 'saving'
 						? msg.mail_compose_saving()
@@ -1069,7 +1092,9 @@
 							? msg.mail_compose_draft_saved()
 							: saveStatus === 'failed'
 								? msg.mail_compose_not_saved()
-								: msg.mail_compose_unsaved()}
+								: saveStatus === 'idle'
+									? msg.mail_compose_draft()
+									: msg.mail_compose_unsaved()}{#if attStatus}{` · ${attStatus}`}{/if}
 			</span>
 		{/if}
 		{#if onExpand}
@@ -1112,79 +1137,18 @@
 		{/if}
 	</div>
 	<div class="rbx-mid">
-		{#if identityOptions.length > 1}
-			<div class="from-row" bind:this={fromRef}>
-				<span class="recip-label">{msg.mail_compose_from()}</span>
-				<button
-					type="button"
-					class="from-trigger"
-					class:open={fromOpen}
-					onclick={() => (fromOpen = !fromOpen)}
-				>
-					<Avatar
-						initials={ident.init}
-						src={ident.kind === 'Alias' ? null : auth.avatarUrl}
-						fit="cover"
-						size={22}
-						bg={ident.bg}
-						fg={ident.fg}
-					/>
-					<span class="ft-name">{ident.name}</span>
-					<span class="ft-email">&lt;{ident.email}&gt;</span>
-					<ChevronDown size={14} />
-				</button>
-				{#if fromOpen}
-					<div class="from-menu" role="menu">
-						<div class="fm-h">{msg.mail_compose_send_as()}</div>
-						{#each identityOptions as id, i (id.email + '-' + i)}
-							<button
-								type="button"
-								class="fm-item"
-								class:on={id.email === ident.email}
-								role="menuitemradio"
-								aria-checked={id.email === ident.email}
-								onclick={() => pickIdentity(id.email)}
-							>
-								<Avatar
-									initials={id.init}
-									src={id.kind === 'Alias' ? null : auth.avatarUrl}
-									fit="cover"
-									size={30}
-									bg={id.bg}
-									fg={id.fg}
-								/>
-								<span class="fm-tx">
-									<span class="fm-top">
-										<b>{id.name}</b>
-										<span class="fm-kind">{identityKindLabel(id.kind)}</span>
-									</span>
-									<span class="fm-em">{id.email}</span>
-								</span>
-								{#if id.email === ident.email}<Check size={17} />{/if}
-							</button>
-						{/each}
-					</div>
-				{/if}
-			</div>
-		{/if}
-		{#if fromRevoked && restoredFrom}
-			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
-				<span class="cwarn-t">{msg.mail_compose_from_choose({ address: restoredFrom.email })}</span>
-				<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
-					{msg.mail_compose_choose_address()}
-				</button>
-			</div>
-		{:else if noSender}
-			<div class="cnote"><CircleAlert size={14} />{msg.mail_compose_no_sender()}</div>
-		{:else if fromNotice}
-			<div class="cnote">
-				<CircleAlert size={14} />{msg.mail_compose_from_unavailable({
-					address: fromNotice,
-					from: ident.email
-				})}
-			</div>
-		{/if}
+		<FromPicker
+			bind:this={fromPicker}
+			bind:open={fromOpen}
+			options={identityOptions}
+			current={ident}
+			revoked={revokedFrom}
+			{noSender}
+			account={draftAccountEmail}
+			avatarUrl={auth.avatarUrl}
+			onPick={pickIdentity}
+			onManage={() => void goto(`/u/${page.params.slot ?? '0'}/settings/addresses`)}
+		/>
 		{#if othersReplying}
 			<div class="cnote" role="status"><Users size={14} />{othersReplying}</div>
 		{/if}
@@ -1345,14 +1309,16 @@
 			{/snippet}
 		</EditorToolbar>
 
-		{#if warn && !canSend && !noSender && status !== 'sending'}
-			<div class="cwarn">
+		{#if warn && !canSend && block?.kind !== 'no-sender' && status !== 'sending'}
+			<div class="cwarn" role="alert">
 				<CircleAlert size={14} />
-				{hasInvalid
-					? msg.mail_compose_invalid_addresses()
-					: validCount === 0
-						? msg.mail_compose_need_recipient()
-						: msg.mail_compose_need_body()}
+				{block
+					? sendBlockText(block)
+					: hasInvalid
+						? msg.mail_compose_invalid_addresses()
+						: validCount === 0
+							? msg.mail_compose_need_recipient()
+							: msg.mail_compose_need_body()}
 			</div>
 		{/if}
 
@@ -1375,7 +1341,7 @@
 			</div>
 		{/if}
 
-		<AttachPreview files={attachments} onRemove={removeAttachment} rows />
+		<AttachPreview files={attachments} onRemove={removeAttachment} onRetry={retryAttachment} rows />
 
 		{#if attErr}
 			<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
@@ -1407,7 +1373,8 @@
 				class="rb-btn primary"
 				class:off={!canSend}
 				onclick={runSend}
-				disabled={status === 'sending' || !canSend}
+				disabled={status === 'sending'}
+				aria-disabled={!canSend}
 			>
 				{#if status === 'sending'}
 					<span class="send-spin"></span>{msg.mail_compose_sending()}
@@ -1423,8 +1390,12 @@
 					title={msg.mail_compose_send_options()}
 					aria-haspopup="menu"
 					aria-expanded={sendOpen}
-					disabled={status === 'sending' || !canSend}
-					onclick={() => (sendOpen = !sendOpen)}
+					disabled={status === 'sending'}
+					aria-disabled={!canSend}
+					onclick={() => {
+						if (canSend) sendOpen = !sendOpen;
+						else showBlock();
+					}}
 				>
 					<ChevronDown size={15} />
 				</button>

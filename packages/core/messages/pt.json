@@ -4209,7 +4209,6 @@
 	"cal_desc_organiser_record": "Organizador registado: Thelemail",
 	"cal_desc_zero_access": "Thelemail · armazenamento sem acesso pelo fornecedor",
 	"mail_compose_ident_default": "Predefinido",
-	"mail_compose_ident_alias": "Alias",
 	"mail_compose_ident_identity": "Identidade",
 	"mail_compose_ident_shared": "Partilhado",
 	"mail_compose_att_max_count": "Máximo de {count} anexos por mensagem.",
@@ -4224,7 +4223,6 @@
 	"mail_compose_hold_reply_unsaved": "Uma resposta que está a escrever não está guardada.",
 	"mail_compose_hold_uploading": "Ainda há um anexo a ser carregado.",
 	"mail_compose_hold_draft_unsaved": "Não foi possível guardar um rascunho.",
-	"mail_compose_send_as": "Enviar mensagens como",
 	"mail_compose_discard": "Descartar",
 	"mail_compose_subject": "Assunto",
 	"mail_compose_add_note": "Adicione uma nota…",
@@ -4260,9 +4258,37 @@
 	"mail_compose_discard_body": "O rascunho e os anexos são apagados. Não é possível desfazer.",
 	"mail_compose_from": "De",
 	"mail_compose_manage_addresses": "Gerir endereços",
-	"mail_compose_from_unavailable": "{address} não pode enviar de momento, por isso esta mensagem será enviada de {from}.",
-	"mail_compose_from_choose": "Este rascunho foi escrito a partir de {address}, que já não pode enviar. Escolha outro endereço antes de enviar.",
 	"mail_compose_choose_address": "Escolher endereço",
+	"mail_compose_in_account": "em {account}",
+	"mail_compose_send_from_account": "Enviar a partir de {account}",
+	"mail_compose_from_account_only": "Apenas endereços desta conta",
+	"mail_compose_from_filter": "Procurar um endereço",
+	"mail_compose_from_no_match": "Nenhum endereço corresponde",
+	"mail_compose_from_gone": "Indisponível",
+	"mail_compose_from_revoked": "{address} já não pode enviar a partir desta conta. Escolha outro endereço para enviar esta mensagem.",
+	"mail_compose_block_from": "Escolha um endereço de envio antes de enviar.",
+	"mail_compose_block_att_failed": "Tente novamente ou remova {name} antes de enviar.",
+	"mail_compose_block_att_pending": "Aguarde que o carregamento de {name} termine.",
+	"mail_compose_status_att_failed": "Falha ao carregar {name}",
+	"mail_compose_status_att_pending": [
+		{
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
+			"match": {
+				"countPlural=one": "{count} carregamento em curso",
+				"countPlural=*": "{count} carregamentos em curso"
+			}
+		}
+	],
+	"mail_compose_dock_att_failed": "Ficheiro falhou",
+	"mail_compose_dock_from": "Escolher remetente",
+	"mail_attach_retrying": "Falha no carregamento, a tentar novamente",
+	"mail_attach_err_refused": "O servidor recusou este ficheiro",
 	"mail_compose_no_sender": "Nenhum dos seus endereços pode enviar de momento. Abra «Endereços» nas definições para saber porquê.",
 	"mail_compose_reply_to_note": "O remetente pediu que as respostas sigam para {list}.",
 	"mail_compose_reply_to_offsite": "As respostas seguem para {list}, fora do domínio do remetente {domain}.",

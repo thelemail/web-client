@@ -31,8 +31,13 @@ export function chooseFrom(options: SendIdentity[], wanted: string | null): From
 	return { identity: hit ?? fallback, unavailable: key && !hit ? want : null };
 }
 
-export function fromNeedsChoice(choice: FromChoice, restored: string | null, current: string | null): boolean {
-	if (!restored || !current) return false;
-	if (restored.trim().toLowerCase() !== current.trim().toLowerCase()) return false;
-	return choice.unavailable !== null;
+export function fromNeedsChoice(
+	choice: FromChoice,
+	pinned: string | null,
+	suspended: (email: string) => boolean
+): boolean {
+	const gone = choice.unavailable;
+	if (!gone) return false;
+	if (suspended(gone)) return true;
+	return !!pinned && pinned.trim().toLowerCase() === gone.trim().toLowerCase();
 }
