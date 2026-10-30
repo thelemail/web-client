@@ -722,6 +722,7 @@
 .compose-dock:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -3px; }
 .compose-dock > svg { width: 14px; height: 14px; color: var(--fg-muted); flex: 0 0 auto; }
 .compose-dock .dock-t { flex: 1 1 auto; font-size: 13.5px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+@media (min-width: 641px) { .compose-dock:has(.dock-flag) { flex-basis: 330px; } }
 .compose-dock .dock-flag { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: var(--danger-700); white-space: nowrap; }
 .compose-dock .dock-flag svg { width: 13px; height: 13px; }
 .compose-dock .dock-b { display: inline-flex; background: none; border: none; color: var(--fg-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-control-compact); flex: 0 0 auto; }
@@ -1319,6 +1320,9 @@
 	.compose-layer .compose-f { flex-wrap: wrap; row-gap: 6px; }
 	:is(.compose-layer, .mail-app .replybox) .recip-label { width: 36px; }
 	:is(.compose-layer, .mail-app .replybox) .from-menu { left: 46px; max-width: calc(100% - 58px); }
+	.mail-app :is(.compose-layer .compose-win, .replybox).expanded .from-menu { left: 12px; right: 12px; width: auto; max-width: none; }
+	.compose-layer .compose-h .ch-acct, .mail-app .replybox .rt-acct { display: none; }
+	.mail-app .replybox .rt :is(.rt-t, .rt-mode):has(+ .rt-acct) { margin-right: auto; }
 	.compose-layer .cbar { overflow-x: auto; scrollbar-width: none; }
 	.compose-layer .cbar::-webkit-scrollbar { display: none; }
 

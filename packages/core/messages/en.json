@@ -4267,7 +4267,7 @@
 	"mail_compose_from_gone": "Unavailable",
 	"mail_compose_from_revoked": "{address} can no longer send from this account. Choose another address to send this message.",
 	"mail_compose_block_from": "Choose a From address before sending.",
-	"mail_compose_block_att_failed": "Retry or remove {name} before sending.",
+	"mail_compose_block_att_failed": "Try {name} again or remove it before sending.",
 	"mail_compose_block_att_pending": "Wait for {name} to finish uploading.",
 	"mail_compose_status_att_failed": "{name} failed to upload",
 	"mail_compose_status_att_pending": [

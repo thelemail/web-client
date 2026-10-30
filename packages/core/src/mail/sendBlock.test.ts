@@ -25,7 +25,7 @@ describe('sendBlock', () => {
 			attachments: [att('photo.heic', 'uploading'), att('budget.xlsx', 'error')]
 		});
 		expect(b).toEqual({ kind: 'attachment-failed', id: 'budget.xlsx', name: 'budget.xlsx' });
-		expect(sendBlockText(b!)).toBe('Retry or remove budget.xlsx before sending.');
+		expect(sendBlockText(b!)).toBe('Try budget.xlsx again or remove it before sending.');
 	});
 
 	it('treats an upload cut off by closing the composer as failed', () => {
