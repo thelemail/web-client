@@ -496,6 +496,9 @@ export function buildPreview(
 		recipients,
 		snippet: snippetSource(input.body).slice(0, 280),
 		display_date: now.toISOString(),
+		...(input.replyTo
+			? { reply_to: [{ display: input.replyTo.display, address: input.replyTo.address }] }
+			: {}),
 		flags: input.calendar ? { calendar: input.calendar.method } : {}
 	};
 }

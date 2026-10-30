@@ -27,6 +27,7 @@ export interface ParsedEml {
 	subject: string;
 	from: ParsedEmlAddress;
 	recipients: ParsedEmlRecipient[];
+	replyTo: ParsedEmlAddress[];
 	text?: string;
 	html?: string;
 	attachments: ParsedEmlAttachment[];
@@ -111,6 +112,7 @@ export async function parseEml(raw: Uint8Array): Promise<ParsedEml> {
 		...flattenAddresses(email.to).map((a) => ({ ...a, kind: 'to' as const })),
 		...flattenAddresses(email.cc).map((a) => ({ ...a, kind: 'cc' as const }))
 	];
+	const replyTo = flattenAddresses(email.replyTo);
 
 	const attachments: ParsedEmlAttachment[] = [];
 	let ordinal = 0;
@@ -144,6 +146,7 @@ export async function parseEml(raw: Uint8Array): Promise<ParsedEml> {
 		subject: email.subject || '',
 		from,
 		recipients,
+		replyTo,
 		text: email.text || undefined,
 		html: email.html || undefined,
 		attachments,
