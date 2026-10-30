@@ -79,6 +79,7 @@
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import SpamConsentDialog from './SpamConsentDialog.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
+	import { replyWorkspace } from '$core/stores/replyWorkspace.svelte';
 	import { DEFAULT_QUERY, withFilters, type Query } from './url';
 	import { mailActionsFor } from './actions';
 	import { untrack } from 'svelte';
@@ -1575,6 +1576,7 @@
 		if (isTypingTarget(e.target)) return;
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 		if (composeStore.active && composeStore.expanded) return;
+		if (replyWorkspace.expanded) return;
 		if (e.target instanceof Element && e.target.closest('.compose-layer')) return;
 
 		if (e.key === 'Escape') {

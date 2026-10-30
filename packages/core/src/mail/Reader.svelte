@@ -46,7 +46,8 @@
 	import ListTodo from '@lucide/svelte/icons/list-todo';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
+	import { replyWorkspace } from '$core/stores/replyWorkspace.svelte';
 	import { DecryptionError } from '$core/mail/decrypt';
 	import { auth } from '$core/stores/auth.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
@@ -335,6 +336,46 @@
 
 	function toggleReplyMode(next: ReplyMode) {
 		replyMode = replyMode === next ? null : next;
+	}
+
+	let replyExpanded = $state(false);
+	const wsOn = $derived(replyExpanded && replyMode !== null);
+	let wsPushed = false;
+
+	$effect(() => {
+		if (replyMode === null) replyExpanded = false;
+	});
+
+	$effect(() => {
+		replyWorkspace.setExpanded(wsOn);
+		return () => replyWorkspace.setExpanded(false);
+	});
+
+	$effect(() => {
+		const on = wsOn;
+		const marked = !!page.state.replyExpanded;
+		untrack(() => {
+			if (on && !wsPushed) {
+				wsPushed = true;
+				if (!marked) void goto(page.url.href, { state: { ...page.state, replyExpanded: true }, shallow: true });
+			} else if (on && !marked) {
+				wsPushed = false;
+				replyExpanded = false;
+			} else if (!on && wsPushed) {
+				wsPushed = false;
+				if (marked) history.back();
+			}
+		});
+	});
+
+	async function closeReply() {
+		const seedId = replySeed?.id ?? m?.id ?? null;
+		replyMode = null;
+		if (!seedId) return;
+		await tick();
+		const entry = document.querySelector<HTMLElement>(`.reader [data-entry="${CSS.escape(seedId)}"]`);
+		const target = entry?.matches('[tabindex]') ? entry : entry?.querySelector<HTMLElement>('.tmsg-head');
+		target?.focus();
 	}
 
 	const replyDraftId = $derived(replyDraft?.reply && replyMode ? replyDraft.id : null);
@@ -654,7 +695,7 @@
 
 <svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
 
-<section class="reader">
+<section class="reader" class:ws={wsOn} class:ws-pane={wsOn && replyWorkspace.pane}>
 	{#if !m}
 		<div class="reader-empty">
 			<div class="t">{msg.mail_reader_empty_title()}</div>
@@ -1130,7 +1171,12 @@
 								replyMode = null;
 								onReplySentArchive?.(id);
 							}}
-							onClose={() => (replyMode = null)}
+							onClose={() => void closeReply()}
+							expanded={wsOn}
+							pane={replyWorkspace.pane}
+							onExpand={(next) => (replyExpanded = next)}
+							onPane={(next) => replyWorkspace.setPane(next)}
+							onMode={(next) => (replyMode = next)}
 						/>
 					{/key}
 				{/if}

@@ -13,6 +13,7 @@ declare global {
 	namespace App {
 		interface PageState {
 			composeExpanded?: boolean;
+			replyExpanded?: boolean;
 		}
 	}
 }
