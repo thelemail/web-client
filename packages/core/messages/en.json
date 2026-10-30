@@ -4244,6 +4244,8 @@
 	"mail_compose_expand": "Expand",
 	"mail_compose_minimize": "Minimize",
 	"mail_compose_collapse": "Collapse",
+	"mail_compose_show_forwarded": "Show forwarded message",
+	"mail_compose_hide_forwarded": "Hide forwarded message",
 	"mail_compose_open": "Open",
 	"mail_compose_discard_title": "Discard this draft?",
 	"mail_compose_discard_body": "The draft and its attachments are deleted. This cannot be undone.",

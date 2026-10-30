@@ -7,6 +7,8 @@
 	import X from '@lucide/svelte/icons/x';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import PanelLeft from '@lucide/svelte/icons/panel-left';
 	import Minimize2 from '@lucide/svelte/icons/minimize-2';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -39,6 +41,7 @@
 	import RichEditor from './editor/RichEditor.svelte';
 	import EditorToolbar from './editor/EditorToolbar.svelte';
 	import AttachPreview from './AttachPreview.svelte';
+	import EmailBody from './EmailBody.svelte';
 	import { recipientChip, type RecipientChip, type SendIdentity } from './data';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { initialsFor } from './initials';
@@ -60,11 +63,21 @@
 		swapSignatureForAddress,
 		insertSignature,
 		removeSignature,
-		hasSignature
+		hasSignature,
+		hasRenderableHtml
 	} from './signatureRegion';
+	import { loadMessageBody } from './bodySource';
+	import { buildSrcDoc } from './render';
+	import { replyThreadHeaders, type ReplyThreadIds } from './threading';
+	import { forwardSubject } from './subjects';
+	import { addressedIdentity, forwardFallbackText, forwardQuote, type ForwardQuote } from './forward';
+	import { mailbox } from '$core/stores/mailbox.svelte';
+	import type { ForwardRef } from '$core/stores/compose.svelte';
+	import type { MessageDetail } from '$core/api/types';
 	import { getDraft, deleteDraft } from '$core/api/drafts';
 	import {
 		loadDraftDoc,
+		restoreAttachmentFile,
 		restoreDraftAttachments,
 		DRAFT_DOC_VERSION,
 		type DraftAttachmentMeta,
@@ -89,8 +102,9 @@
 
 	interface Props {
 		onClose: () => void;
-		onSend: (info?: { scheduledAt?: string }) => void;
+		onSend: (info?: { scheduledAt?: string; forwardOf?: string }) => void;
 		draftId?: string | null;
+		forward?: ForwardRef | null;
 		view?: ComposeView;
 		onFocus?: () => void;
 		onMinimize?: () => void;
@@ -102,6 +116,7 @@
 		onClose,
 		onSend,
 		draftId = null,
+		forward = null,
 		view = 'float',
 		onFocus,
 		onMinimize,
@@ -171,7 +186,7 @@
 		if (!currentAddress) return;
 		if (!signatures.loaded) return;
 		if (seededSignature) return;
-		const body = signatures.effectiveFor(currentAddress.id, 'new');
+		const body = signatures.effectiveFor(currentAddress.id, signatureKind);
 		if (body) {
 			applySignatureSeed(editor, body);
 			signatureOn = true;
@@ -195,7 +210,7 @@
 		if (!addr) return;
 		const body = signatures.bodyFor(addr.id);
 		if (!seededSignature) {
-			const seed = signatures.effectiveFor(addr.id, 'new');
+			const seed = signatures.effectiveFor(addr.id, signatureKind);
 			if (seed) {
 				applySignatureSeed(editor, seed);
 				signatureOn = true;
@@ -203,7 +218,7 @@
 			seededSignature = true;
 			return;
 		}
-		const keep = signatureChosen ? signatureOn : signatures.effectiveFor(addr.id, 'new') !== null;
+		const keep = signatureChosen ? signatureOn : signatures.effectiveFor(addr.id, signatureKind) !== null;
 		signatureOn = keep && !!body.trim();
 		swapSignatureForAddress(editor, signatureOn ? body : '');
 	}
@@ -218,8 +233,32 @@
 
 	const openedDraftId = untrack(() => draftId);
 	const isDraftEdit = !!openedDraftId;
+	const forwardDraft = untrack(
+		() => !!openedDraftId && drafts.items.find((d) => d.id === openedDraftId)?.reply?.mode === 'forward'
+	);
 	const draftAccountId = untrack(() => auth.accountId) ?? '';
 	let replyLink = $state<Pick<DraftDoc, 'inReplyToMessageId' | 'inReplyToHeader' | 'references' | 'reply'>>({});
+	let fwd = $state<ForwardRef | null>(untrack(() => forward));
+	const signatureKind = $derived<'new' | 'reply'>(fwd ? 'reply' : 'new');
+	let fwdQuote = $state<ForwardQuote | null>(null);
+	let fwdIds = $state<ReplyThreadIds | null>(null);
+	let quoteRemoved = $state(false);
+	let showQuote = $state(false);
+	let refOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 1200);
+	let fwdReady: Promise<void> = Promise.resolve();
+	const quoteSrcDoc = $derived(fwdQuote ? buildSrcDoc(fwdQuote.html, false) : null);
+	const withRef = $derived(expanded && refOpen && !!quoteSrcDoc && !quoteRemoved);
+
+	const link = $derived.by<Pick<DraftDoc, 'inReplyToMessageId' | 'inReplyToHeader' | 'references' | 'reply'>>(() => {
+		if (!fwd) return replyLink;
+		const headers = fwdIds ? replyThreadHeaders(fwdIds) : null;
+		return {
+			inReplyToMessageId: headers?.inReplyToMessageId ?? fwd.seed,
+			inReplyToHeader: headers?.inReplyToHeader,
+			references: headers?.references,
+			reply: { source: fwd.source, seed: fwd.seed, mode: 'forward', quoteRemoved }
+		};
+	});
 	let load = $state<DraftLoad>(openedDraftId ? 'loading' : 'ready');
 	let closing = $state(false);
 
@@ -239,7 +278,7 @@
 			subject,
 			bodyHtml,
 			bodyText,
-			...replyLink,
+			...link,
 			attachments: metas
 		};
 	}
@@ -249,6 +288,7 @@
 	}
 
 	function isWorthSaving(doc: DraftDoc): boolean {
+		if (fwd) return doc.to.length + doc.cc.length + doc.bcc.length > 0 || doc.bodyText.trim() !== '';
 		return (
 			doc.to.length > 0 ||
 			doc.cc.length > 0 ||
@@ -356,6 +396,7 @@
 	onMount(() => {
 		void contacts.ensureLoaded();
 		if (draftId) void hydrateDraft(draftId);
+		else if (fwd) fwdReady = loadForward(fwd, true);
 		const release = holdRestart(restartHold);
 		const releaseLeave = holdLeave({
 			pending: () => load === 'ready' && (dirty || saver.saving || saver.failed),
@@ -375,6 +416,50 @@
 			release();
 		};
 	});
+
+	async function attachForwarded(accountId: string, detail: MessageDetail): Promise<void> {
+		const files: File[] = [];
+		let failed = false;
+		for (const a of detail.attachments ?? []) {
+			if (a.isInline) continue;
+			try {
+				files.push(await restoreAttachmentFile(accountId, a.pointer));
+			} catch {
+				failed = true;
+			}
+		}
+		if (files.length) addFiles(files);
+		if (failed) attErr = m.mail_compose_att_reattach_failed();
+	}
+
+	async function loadForward(ref: ForwardRef, fresh: boolean): Promise<void> {
+		const accountId = draftAccountId;
+		const ownName = auth.fullName ?? auth.email ?? '';
+		const msg = await mailbox.ensureMessage(ref.seed).catch(() => null);
+		if (fresh) {
+			if (!subject.trim()) subject = forwardSubject(msg?.subj ?? '');
+			const own = msg && addressedIdentity(msg, (a) => addresses.getByRecipient(a)?.email ?? null);
+			if (own && fromEmail === null) fromEmail = own;
+		}
+		try {
+			if (!accountId) throw new Error('no account');
+			const { detail, render } = await loadMessageBody(accountId, ref.seed, {
+				stripTracking: accountSettings.privacy.stripTrackingParams
+			});
+			fwdIds = {
+				seedId: ref.seed,
+				externalMessageId: detail.externalMessageId ?? undefined,
+				references: detail.references ?? undefined
+			};
+			fwdQuote =
+				render.contentHtml || render.contentText
+					? forwardQuote(msg, ownName, render.contentHtml, render.contentText)
+					: forwardQuote(msg, ownName, undefined, forwardFallbackText(msg));
+			if (fresh) await attachForwarded(accountId, detail);
+		} catch {
+			fwdQuote = forwardQuote(msg, ownName, undefined, forwardFallbackText(msg));
+		}
+	}
 
 	async function hydrateDraft(id: string): Promise<void> {
 		const accountId = draftAccountId;
@@ -396,12 +481,19 @@
 			subject = doc.subject;
 			bodyHtml = doc.bodyHtml;
 			bodyText = doc.bodyText;
-			replyLink = {
-				inReplyToMessageId: doc.inReplyToMessageId,
-				inReplyToHeader: doc.inReplyToHeader,
-				references: doc.references,
-				reply: doc.reply
-			};
+			if (doc.reply?.mode === 'forward') {
+				fwd = { source: doc.reply.source, seed: doc.reply.seed };
+				quoteRemoved = !!doc.reply.quoteRemoved;
+				fwdReady = loadForward(fwd, false);
+				await fwdReady;
+			} else {
+				replyLink = {
+					inReplyToMessageId: doc.inReplyToMessageId,
+					inReplyToHeader: doc.inReplyToHeader,
+					references: doc.references,
+					reply: doc.reply
+				};
+			}
 			let restoreFailed = false;
 			if (doc.attachments.length > 0 && detail.attachmentsBundle) {
 				try {
@@ -627,8 +719,10 @@
 
 	async function performSend(scheduledAt?: string | null) {
 		const when = scheduledAt === undefined ? pendingScheduledAt : scheduledAt;
+		if (fwd) await fwdReady;
 		const bodyStr = bodyText.trim();
-		if (!canSend || !bodyStr) {
+		const q = fwd && !quoteRemoved ? fwdQuote : null;
+		if (!canSend || (!bodyStr && !q)) {
 			warn = true;
 			return;
 		}
@@ -656,15 +750,15 @@
 					cc: validCc.length ? validCc.map(chip) : undefined,
 					bcc: validBcc.length ? validBcc.map(chip) : undefined,
 					subject: subject.trim(),
-					body: bodyStr,
-					bodyHtml: bodyHtml || undefined,
+					body: q ? (bodyStr ? `${bodyStr}\n\n${q.text}` : q.text) : bodyStr,
+					bodyHtml: (q ? `${bodyStr || hasRenderableHtml(bodyHtml) ? bodyHtml : ''}${q.html}` : bodyHtml) || undefined,
 					attachments: attachments.length > 0 ? attachments : undefined,
 					fromEmail: ident.email,
 					fromName: ident.name,
 					fromAliasId: ident.aliasId,
-					inReplyToMessageId: replyLink.inReplyToMessageId,
-					inReplyToHeader: replyLink.inReplyToHeader,
-					references: replyLink.references,
+					inReplyToMessageId: link.inReplyToMessageId,
+					inReplyToHeader: link.inReplyToHeader,
+					references: link.references,
 					scheduledAt: when ?? undefined
 				},
 				{ acceptedKeys, approved }
@@ -678,7 +772,10 @@
 				drafts.remove(id);
 				void deleteDraft(id).catch(() => {});
 			}
-			onSend(when ? { scheduledAt: when } : undefined);
+			onSend({
+				...(when ? { scheduledAt: when } : {}),
+				...(fwd ? { forwardOf: fwd.source } : {})
+			});
 		} catch (e) {
 			status = 'idle';
 			platform.reportError?.('send', e);
@@ -716,7 +813,7 @@
 	let settlingKeys = false;
 
 	function guardedSend(run: () => void): void {
-		if (!canSend || !bodyText.trim()) {
+		if (!canSend || (!bodyText.trim() && !fwd)) {
 			run();
 			return;
 		}
@@ -858,6 +955,7 @@
 	bind:this={winRef}
 	class="compose-win"
 	class:expanded
+	class:with-ref={withRef}
 	hidden={min}
 	role="dialog"
 	aria-modal="false"
@@ -867,9 +965,34 @@
 	ondragleave={onDragLeave}
 	ondrop={onDrop}
 >
+	{#if withRef && quoteSrcDoc}
+		<aside class="compose-ref" aria-label={m.mail_forwarded_chip()}>
+			<div class="cref-h">
+				<span>{m.mail_forwarded_chip()}</span>
+				<button type="button" class="chx" title={m.mail_compose_hide_forwarded()} onclick={() => (refOpen = false)}>
+					<X size={15} />
+				</button>
+			</div>
+			<div class="cref-b">
+				<EmailBody srcDoc={quoteSrcDoc} />
+			</div>
+		</aside>
+	{/if}
 	<div class="compose-h">
 		<PenLine size={16} /><span class="ch-t">{subjLine}</span>
 		<div class="ch-actions">
+			{#if expanded && fwdQuote && !quoteRemoved}
+				<button
+					type="button"
+					class="chx"
+					class:on={refOpen}
+					title={refOpen ? m.mail_compose_hide_forwarded() : m.mail_compose_show_forwarded()}
+					aria-pressed={refOpen}
+					onclick={() => (refOpen = !refOpen)}
+				>
+					<PanelLeft size={15} />
+				</button>
+			{/if}
 			<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => onMinimize?.()}>
 				<Minus size={16} />
 			</button>
@@ -1043,9 +1166,46 @@
 				bind:html={bodyHtml}
 				bind:text={bodyText}
 				bind:editor
-				placeholder={m.mail_editor_placeholder()}
+				placeholder={fwd || forwardDraft ? m.mail_compose_add_note() : m.mail_editor_placeholder()}
 				disabled={status === 'sending'}
 			/>
+
+			{#if fwdQuote && !quoteRemoved}
+				<div class="rq">
+					<button
+						type="button"
+						class="quoted-toggle"
+						class:on={expanded ? refOpen : showQuote}
+						title={(expanded ? refOpen : showQuote)
+							? m.mail_compose_hide_forwarded()
+							: m.mail_compose_show_forwarded()}
+						aria-expanded={expanded ? refOpen : showQuote}
+						onclick={() => {
+							if (expanded) refOpen = !refOpen;
+							else showQuote = !showQuote;
+						}}
+					>
+						<Ellipsis size={16} />
+					</button>
+					<span class="rq-lbl">{m.mail_forwarded_chip()}</span>
+					<button
+						type="button"
+						class="rq-rm"
+						title={m.mail_compose_remove_quoted()}
+						onclick={() => {
+							quoteRemoved = true;
+							showQuote = false;
+						}}
+					>
+						<X size={13} />
+					</button>
+				</div>
+				{#if showQuote && !expanded && quoteSrcDoc}
+					<div class="rq-view">
+						<EmailBody srcDoc={quoteSrcDoc} />
+					</div>
+				{/if}
+			{/if}
 
 			<AttachPreview files={attachments} onRemove={removeAttachment} />
 

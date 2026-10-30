@@ -3,7 +3,6 @@
 	import { onMount, untrack } from 'svelte';
 	import Reply from '@lucide/svelte/icons/reply';
 	import ReplyAll from '@lucide/svelte/icons/reply-all';
-	import Forward from '@lucide/svelte/icons/forward';
 	import Send from '@lucide/svelte/icons/send';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -40,11 +39,9 @@
 		type ThreadEntry
 	} from './data';
 	import type { MessagePreviewRecipient } from './preview';
-	import { forwardSubject, replySubject } from './subjects';
+	import { replySubject } from './subjects';
 	import { replyTargets, switchReplyMode, type ReplyParty, type ReplySeed } from './replyRecipients';
 	import {
-		forwardQuoteHtml,
-		forwardQuoteText,
 		replyQuoteHtml,
 		replyQuoteText,
 		type QuoteSource
@@ -52,7 +49,6 @@
 	import { loadMessageBody } from './bodySource';
 	import { buildSrcDoc } from './render';
 	import {
-		restoreAttachmentFile,
 		loadDraftDoc,
 		restoreDraftAttachments,
 		DRAFT_DOC_VERSION,
@@ -101,7 +97,7 @@
 		type Attachment as ComposeAttachment
 	} from './attachmentUpload';
 
-	export type ReplyMode = 'reply' | 'all' | 'forward';
+	export type ReplyMode = 'reply' | 'all';
 
 	type SendAfter = 'none' | 'archive';
 
@@ -154,7 +150,6 @@
 	const partyChip = (p: ReplyParty) => recipientChip({ name: p.display || undefined, address: p.address });
 
 	const seededChips = untrack(() => {
-		if (mode === 'forward') return { to: [] as RecipientChip[], cc: [] as RecipientChip[], added: [] as string[] };
 		const targets = replyTargets(replySeedParties, mode === 'all' ? 'all' : 'reply', myEmails());
 		const added =
 			mode === 'all'
@@ -183,7 +178,6 @@
 		if (next === appliedMode) return;
 		const prev = appliedMode;
 		appliedMode = next;
-		if (prev === 'forward' || next === 'forward') return;
 		untrack(() => {
 			const switched = switchReplyMode(
 				{ to, cc, bcc },
@@ -203,9 +197,7 @@
 	let showBcc = $state(false);
 	let ccFocus = $state(false);
 	let bccFocus = $state(false);
-	let subject = $state(
-		untrack(() => (mode === 'forward' ? forwardSubject(m.subj) : replySubject(m.subj)))
-	);
+	let subject = $state(untrack(() => replySubject(m.subj)));
 
 	let text = $state('');
 	let html = $state('');
@@ -241,7 +233,7 @@
 	const fromNotice = $derived(
 		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
 	);
-	const replyingAsAlias = $derived(mode !== 'forward' && ident.kind === 'Alias');
+	const replyingAsAlias = $derived(ident.kind === 'Alias');
 	const othersReplying = $derived(replyingLine(replyPresence.replying));
 
 	$effect(() => {
@@ -439,10 +431,7 @@
 
 	function setQuote(htmlSrc: string | undefined, textSrc: string | undefined) {
 		const src = quoteSourceFrom(htmlSrc, textSrc);
-		quote =
-			mode === 'forward'
-				? { html: forwardQuoteHtml(src), text: forwardQuoteText(src) }
-				: { html: replyQuoteHtml(src), text: replyQuoteText(src) };
+		quote = { html: replyQuoteHtml(src), text: replyQuoteText(src) };
 	}
 
 	function threadIdsFrom(detail: MessageDetail): ReplyThreadIds {
@@ -451,21 +440,6 @@
 			externalMessageId: detail.externalMessageId ?? undefined,
 			references: detail.references ?? undefined
 		};
-	}
-
-	async function attachForwarded(accountId: string, detail: MessageDetail): Promise<void> {
-		const files: File[] = [];
-		let failed = false;
-		for (const a of detail.attachments ?? []) {
-			if (a.isInline) continue;
-			try {
-				files.push(await restoreAttachmentFile(accountId, a.pointer));
-			} catch {
-				failed = true;
-			}
-		}
-		if (files.length) addFiles(files);
-		if (failed) attErr = msg.mail_compose_att_reattach_failed();
 	}
 
 	async function initFromDetail(): Promise<void> {
@@ -481,7 +455,6 @@
 				} else {
 					setQuote(undefined, fallbackQuoteText());
 				}
-				if (mode === 'forward' && !openedDraftId) await attachForwarded(accountId, detail);
 				return;
 			} catch {
 				setQuote(undefined, fallbackQuoteText());
@@ -532,7 +505,6 @@
 
 	function replyWorth(): boolean {
 		if (text.trim() !== '') return true;
-		if (mode === 'forward') return to.length + cc.length + bcc.length > 0;
 		return attachments.length > 0;
 	}
 
@@ -690,7 +662,7 @@
 	const validCount = $derived(allRecipients.filter((c) => c.valid).length);
 	const hasInvalid = $derived(allRecipients.some((c) => !c.valid));
 	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
-	const bodyOk = $derived(mode === 'forward' || text.trim().length > 0);
+	const bodyOk = $derived(text.trim().length > 0);
 	const canSend = $derived(
 		validCount > 0 && !hasInvalid && bodyOk && status !== 'sending' && attReady && !noSender && !fromRevoked
 	);
@@ -756,13 +728,7 @@
 		return msg.mail_compose_ident_default();
 	}
 
-	const modeLabel = $derived(
-		mode === 'all'
-			? msg.mail_reader_reply_all()
-			: mode === 'forward'
-				? msg.mail_reader_forward()
-				: msg.mail_reader_reply()
-	);
+	const modeLabel = $derived(mode === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply());
 
 	function handleDocMouseDown(e: MouseEvent) {
 		if (fromOpen && fromRef && !fromRef.contains(e.target as Node)) fromOpen = false;
@@ -915,8 +881,7 @@
 		approved = encTracker.approvals(recipientAddresses());
 		const next = pendingSendGuards({
 			settings: accountSettings.composing,
-			statuses: allRecipients.filter((c) => c.valid).map((c) => encStatusFor(c.email)),
-			subject: mode === 'forward' ? subject : undefined
+			statuses: allRecipients.filter((c) => c.valid).map((c) => encStatusFor(c.email))
 		});
 		if (next.length === 0) {
 			run();
@@ -1004,8 +969,6 @@
 	<div class="rt">
 		{#if mode === 'all'}
 			<ReplyAll size={14} />
-		{:else if mode === 'forward'}
-			<Forward size={14} />
 		{:else}
 			<Reply size={14} />
 		{/if}
@@ -1126,7 +1089,6 @@
 		chips={to}
 		setChips={(next) => (to = next)}
 		contacts={contacts.items}
-		autoFocus={mode === 'forward'}
 		rightSlot={ccBccSlot}
 		{encStatusFor}
 	/>
@@ -1165,20 +1127,16 @@
 
 	<div class="cfield subj">
 		<span class="recip-label">{msg.mail_compose_subject()}</span>
-		{#if mode === 'forward'}
-			<input bind:value={subject} placeholder={msg.mail_compose_subject()} />
-		{:else}
-			<span class="subj-static" title={subject}>{subject}</span>
-		{/if}
+		<span class="subj-static" title={subject}>{subject}</span>
 	</div>
 
 	<RichEditor
 		bind:html
 		bind:text
 		bind:editor
-		placeholder={mode === 'forward' ? msg.mail_compose_add_note() : msg.mail_compose_write_reply()}
+		placeholder={msg.mail_compose_write_reply()}
 		disabled={status === 'sending' || load !== 'ready'}
-		autofocus={mode !== 'forward'}
+		autofocus
 		class="cbody reply"
 	/>
 
@@ -1194,7 +1152,7 @@
 			>
 				<Ellipsis size={16} />
 			</button>
-			<span class="rq-lbl">{mode === 'forward' ? msg.mail_forwarded_chip() : msg.mail_compose_quoted_text()}</span>
+			<span class="rq-lbl">{msg.mail_compose_quoted_text()}</span>
 			<button
 				type="button"
 				class="rq-rm"

@@ -58,7 +58,7 @@
 		returnFocus(composeStore.close(key));
 	}
 
-	function sent(key: string, info?: { scheduledAt?: string }) {
+	function sent(key: string, info?: { scheduledAt?: string; forwardOf?: string }) {
 		const s = composeStore.close(key);
 		returnFocus(s);
 		if (info?.scheduledAt) {
@@ -67,7 +67,7 @@
 		} else {
 			flash(m.mail_toast_sent());
 		}
-		if (s?.forward) mailbox.noteReplySent(s.forward.source);
+		if (info?.forwardOf) mailbox.noteReplySent(info.forwardOf);
 		void drafts.refresh();
 		void mailbox.refresh([
 			{ ...DEFAULT_QUERY, folder: 'inbox' },
@@ -81,6 +81,7 @@
 		{#each composeStore.sessions as s (s.key)}
 			<Compose
 				draftId={s.draftId}
+				forward={s.forward}
 				view={composeStore.focused === s.key ? (composeStore.expanded ? 'expanded' : 'float') : 'min'}
 				onFocus={() => composeStore.focus(s.key)}
 				onMinimize={() => composeStore.minimize(s.key)}

@@ -762,6 +762,22 @@
 .compose-layer .compose-win.expanded .compose-h .chx:hover { background: var(--paper-100); color: var(--fg); }
 .compose-layer .compose-win.expanded :is(.from-row, .recip-row, .cfield.subj, .att-preview, .cbar, .compose-f) { padding-left: 28px; padding-right: 28px; }
 .compose-layer .compose-win.expanded .cbody { padding: 24px 28px 32px; font-size: 15px; line-height: 1.7; max-width: calc(72ch + 56px); }
+.compose-layer .compose-win .rq { padding: 2px 17px 12px; }
+.compose-layer .compose-win.expanded .rq { padding-left: 28px; padding-right: 28px; }
+.compose-layer .compose-win .rq-view { margin: 0 17px 14px; }
+.compose-layer .compose-h .chx.on { background: rgba(255, 255, 255, .12); color: #fff; }
+.compose-layer .compose-win.expanded .compose-h .chx.on { background: var(--pine-50); color: var(--pine-700); }
+.compose-layer .compose-win.expanded.with-ref { padding-left: 440px; }
+.compose-layer .compose-ref { position: absolute; top: 0; bottom: 0; left: 0; width: 440px; display: flex; flex-direction: column; background: var(--bg-raised); border-right: 1px solid var(--border); z-index: 1; }
+.compose-layer .compose-ref .cref-h { display: flex; align-items: center; gap: 8px; height: 51px; padding: 0 12px 0 22px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--fg-muted); flex: 0 0 auto; }
+.compose-layer .compose-ref .cref-h span { flex: 1 1 auto; }
+.compose-layer .compose-ref .cref-h .chx { display: flex; padding: 5px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); cursor: pointer; }
+.compose-layer .compose-ref .cref-h .chx:hover { background: var(--paper-100); color: var(--fg); }
+.compose-layer .compose-ref .cref-b { flex: 1 1 auto; overflow-y: auto; padding: 18px 22px 28px; }
+@media (max-width: 1200px) {
+	.compose-layer .compose-win.expanded.with-ref { padding-left: 0; }
+	.compose-layer .compose-ref { width: min(440px, 88%); box-shadow: var(--shadow-lg); z-index: 3; }
+}
 
 .mail-app .send-veil { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 13px; padding: 32px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(2px); animation: mail-fade var(--dur); }
 .mail-app .sv-ring { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--pine-100); border-top-color: var(--pine-600); animation: mail-svspin .8s linear infinite; }
@@ -1029,11 +1045,11 @@
 .mail-app .replybox .recip-row { padding: 8px 15px; }
 .mail-app .replybox .cfield.subj { padding: 11px 15px; }
 .mail-app .replybox .subj-static { font-size: 14px; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .replybox .rq { display: flex; align-items: center; gap: 9px; padding: 2px 15px 10px; }
-.mail-app .replybox .rq .rq-lbl { font-size: 12px; color: var(--fg-muted); flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .replybox .rq .rq-rm { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-faint); cursor: pointer; }
-.mail-app .replybox .rq .rq-rm:hover { background: var(--paper-100); color: var(--ink-700); }
-.mail-app .replybox .rq-view { margin: 0 15px 12px; padding-left: 12px; border-left: 2px solid var(--border-strong); }
+.mail-app :is(.replybox, .compose-win) .rq { display: flex; align-items: center; gap: 9px; padding: 2px 15px 10px; }
+.mail-app :is(.replybox, .compose-win) .rq .rq-lbl { font-size: 12px; color: var(--fg-muted); flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mail-app :is(.replybox, .compose-win) .rq .rq-rm { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-faint); cursor: pointer; }
+.mail-app :is(.replybox, .compose-win) .rq .rq-rm:hover { background: var(--paper-100); color: var(--ink-700); }
+.mail-app :is(.replybox, .compose-win) .rq-view { margin: 0 15px 12px; padding-left: 12px; border-left: 2px solid var(--border-strong); }
 
 [data-theme='dark'] :is(.compose-layer, .replybox) .att-drop { color: var(--pine-700); }
 [data-theme='dark'] .mail-app .compose { background: #ECEFE2; color: var(--pine-950); }
@@ -1297,6 +1313,6 @@
 
 @media (pointer: coarse) {
 	.mail-app .rb-ico, .mail-app .lh-btn { flex: 0 0 auto; width: 40px; height: 40px; }
-	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn) { position: relative; }
-	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
+	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn) { position: relative; }
+	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
 }

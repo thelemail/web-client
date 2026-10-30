@@ -4244,6 +4244,8 @@
 	"mail_compose_expand": "Expandir",
 	"mail_compose_minimize": "Minimizar",
 	"mail_compose_collapse": "Reduzir",
+	"mail_compose_show_forwarded": "Mostrar mensagem reencaminhada",
+	"mail_compose_hide_forwarded": "Ocultar mensagem reencaminhada",
 	"mail_compose_open": "Abrir",
 	"mail_compose_discard_title": "Descartar este rascunho?",
 	"mail_compose_discard_body": "O rascunho e os anexos são apagados. Não é possível desfazer.",

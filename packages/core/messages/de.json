@@ -4244,6 +4244,8 @@
 	"mail_compose_expand": "Vergrößern",
 	"mail_compose_minimize": "Minimieren",
 	"mail_compose_collapse": "Verkleinern",
+	"mail_compose_show_forwarded": "Weitergeleitete Nachricht anzeigen",
+	"mail_compose_hide_forwarded": "Weitergeleitete Nachricht ausblenden",
 	"mail_compose_open": "Öffnen",
 	"mail_compose_discard_title": "Entwurf verwerfen?",
 	"mail_compose_discard_body": "Der Entwurf und seine Anhänge werden gelöscht. Das lässt sich nicht rückgängig machen.",
