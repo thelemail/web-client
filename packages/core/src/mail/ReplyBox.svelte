@@ -366,7 +366,7 @@
 				disposition: 'attachment'
 			};
 			attachments = [...attachments, att];
-			void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.indexOf(att)));
+			void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.findIndex((x) => x.id === att.id)));
 		}
 	}
 
@@ -627,7 +627,7 @@
 					}));
 					attachments = [...attachments, ...added];
 					for (const att of added) {
-						void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.indexOf(att)));
+						void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.findIndex((x) => x.id === att.id)));
 					}
 				} catch {
 					restoreFailed = true;

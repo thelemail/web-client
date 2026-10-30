@@ -484,7 +484,7 @@
 	}
 
 	function startUpload(att: ComposeAttachment) {
-		orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.indexOf(att)));
+		orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.findIndex((x) => x.id === att.id)));
 	}
 
 	function removeAttachment(id: string) {
