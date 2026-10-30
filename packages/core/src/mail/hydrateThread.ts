@@ -5,7 +5,7 @@ import {
 	authSummaryFromPreview,
 	bimiDomainFromPreview,
 	replyToFromJson,
-	replyToParties,
+	trustedReplyTo,
 	unsubscribeFromPreview
 } from '$core/mail/preview';
 import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
@@ -115,7 +115,7 @@ function previewEntry({ item, preview }: EntrySource): ThreadEntry {
 		unsubscribe: me ? undefined : unsubscribeFromPreview(preview),
 		to: toAddresses.length ? toAddresses.join(', ') : (preview.recipients[0]?.address ?? ''),
 		recipients: preview.recipients,
-		replyTo: me ? undefined : replyToParties(preview.reply_to),
+		replyTo: trustedReplyTo(preview, item, sender.senderMismatch),
 		deliveredTo: typeof preview.delivered_to === 'string' ? preview.delivered_to : undefined,
 		init: sender.init,
 		bg: me ? 'var(--pine-700)' : sender.bg,
