@@ -44,6 +44,15 @@ export function forwardQuote(
 	return { html: forwardQuoteHtml(src), text: forwardQuoteText(src) };
 }
 
+export function plainToHtml(text: string): string {
+	return text
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/\r?\n/g, '<br>');
+}
+
 export function forwardFallbackText(msg: Message | null): string {
 	if (!msg) return '';
 	const body = msg.body?.length ? msg.body.join('\n\n') : '';

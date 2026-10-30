@@ -9,13 +9,13 @@
 	import Maximize2 from '@lucide/svelte/icons/maximize-2';
 	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import PanelLeft from '@lucide/svelte/icons/panel-left';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Mail from '@lucide/svelte/icons/mail';
 	import Minimize2 from '@lucide/svelte/icons/minimize-2';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Send from '@lucide/svelte/icons/send';
 	import Lock from '@lucide/svelte/icons/lock';
-	import LockOpen from '@lucide/svelte/icons/lock-open';
-	import Link from '@lucide/svelte/icons/link';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
@@ -42,7 +42,7 @@
 	import EditorToolbar from './editor/EditorToolbar.svelte';
 	import AttachPreview from './AttachPreview.svelte';
 	import EmailBody from './EmailBody.svelte';
-	import { recipientChip, type RecipientChip, type SendIdentity } from './data';
+	import { FOLDERS, formatWhenLong, recipientChip, type Message, type RecipientChip, type SendIdentity } from './data';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { initialsFor } from './initials';
 	import { chooseFrom, fromNeedsChoice, sendIdentityOf } from './identities';
@@ -70,7 +70,13 @@
 	import { buildSrcDoc } from './render';
 	import { replyThreadHeaders, type ReplyThreadIds } from './threading';
 	import { forwardSubject } from './subjects';
-	import { addressedIdentity, forwardFallbackText, forwardQuote, type ForwardQuote } from './forward';
+	import {
+		addressedIdentity,
+		forwardFallbackText,
+		forwardQuote,
+		plainToHtml,
+		type ForwardQuote
+	} from './forward';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import type { ForwardRef } from '$core/stores/compose.svelte';
 	import type { MessageDetail } from '$core/api/types';
@@ -95,8 +101,6 @@
 		type Attachment as ComposeAttachment
 	} from './attachmentUpload';
 	import type { Editor } from '@tiptap/core';
-	import LinkDialog from './editor/LinkDialog.svelte';
-	import { applyLink, currentLink } from './editor/link';
 
 	export type ComposeView = 'float' | 'min' | 'expanded';
 
@@ -241,13 +245,35 @@
 	let fwd = $state<ForwardRef | null>(untrack(() => forward));
 	const signatureKind = $derived<'new' | 'reply'>(fwd ? 'reply' : 'new');
 	let fwdQuote = $state<ForwardQuote | null>(null);
+	let fwdMsg = $state.raw<Message | null>(null);
+	let fwdBody = $state<string | null>(null);
+	let fwdFiles = $state.raw<{ name: string; size: number }[]>([]);
+	let encOpen = $state(false);
 	let fwdIds = $state<ReplyThreadIds | null>(null);
 	let quoteRemoved = $state(false);
 	let showQuote = $state(false);
 	let refOpen = $state(typeof window !== 'undefined' && window.innerWidth >= 1200);
 	let fwdReady: Promise<void> = Promise.resolve();
 	const quoteSrcDoc = $derived(fwdQuote ? buildSrcDoc(fwdQuote.html, false) : null);
-	const withRef = $derived(expanded && refOpen && !!quoteSrcDoc && !quoteRemoved);
+	const refSrcDoc = $derived(fwdBody === null ? null : buildSrcDoc(fwdBody, false));
+	const withRef = $derived(expanded && refOpen && !!fwdQuote && !quoteRemoved);
+	const backLabel = $derived(
+		FOLDERS.find((f) => f.id === (page.params.folder ?? page.url.pathname.split('/mail/')[1]?.split('/')[0]))
+			?.label ?? m.mail_skeleton_back()
+	);
+	const saveLabel = $derived(
+		saveStatus === 'loading'
+			? m.mail_compose_opening()
+			: saveStatus === 'saving'
+				? m.mail_compose_saving()
+				: saveStatus === 'saved'
+					? m.mail_compose_draft_saved()
+					: saveStatus === 'failed'
+						? m.mail_compose_not_saved()
+						: saveStatus === 'unsaved'
+							? m.mail_compose_unsaved()
+							: m.mail_compose_draft()
+	);
 
 	const link = $derived.by<Pick<DraftDoc, 'inReplyToMessageId' | 'inReplyToHeader' | 'references' | 'reply'>>(() => {
 		if (!fwd) return replyLink;
@@ -428,6 +454,7 @@
 				failed = true;
 			}
 		}
+		fwdFiles = files.map((f) => ({ name: f.name, size: f.size }));
 		if (files.length) addFiles(files);
 		if (failed) attErr = m.mail_compose_att_reattach_failed();
 	}
@@ -436,6 +463,7 @@
 		const accountId = draftAccountId;
 		const ownName = auth.fullName ?? auth.email ?? '';
 		const msg = await mailbox.ensureMessage(ref.seed).catch(() => null);
+		fwdMsg = msg;
 		if (fresh) {
 			if (!subject.trim()) subject = forwardSubject(msg?.subj ?? '');
 			const own = msg && addressedIdentity(msg, (a) => addresses.getByRecipient(a)?.email ?? null);
@@ -451,13 +479,16 @@
 				externalMessageId: detail.externalMessageId ?? undefined,
 				references: detail.references ?? undefined
 			};
+			const fallback = forwardFallbackText(msg);
 			fwdQuote =
 				render.contentHtml || render.contentText
 					? forwardQuote(msg, ownName, render.contentHtml, render.contentText)
-					: forwardQuote(msg, ownName, undefined, forwardFallbackText(msg));
+					: forwardQuote(msg, ownName, undefined, fallback);
+			fwdBody = render.contentHtml || plainToHtml(render.contentText || fallback);
 			if (fresh) await attachForwarded(accountId, detail);
 		} catch {
 			fwdQuote = forwardQuote(msg, ownName, undefined, forwardFallbackText(msg));
+			fwdBody = plainToHtml(forwardFallbackText(msg));
 		}
 	}
 
@@ -889,30 +920,9 @@
 		const id = saver.id;
 		if (id) untrack(() => onDraftId?.(id));
 	});
-
-	let linkInitial = $state<string | null>(null);
-
-	function insertLink() {
-		if (!editor) return;
-		linkInitial = currentLink(editor);
-	}
-
-	function closeLink() {
-		linkInitial = null;
-		editor?.commands.focus();
-	}
-
-	function submitLink(url: string) {
-		linkInitial = null;
-		if (editor) applyLink(editor, url);
-	}
 </script>
 
 <svelte:document onkeydown={handleKey} onmousedown={handleDocMouseDown} />
-
-{#if linkInitial !== null}
-	<LinkDialog initial={linkInitial} onApply={submitLink} onClose={closeLink} />
-{/if}
 
 {#if min}
 	<div
@@ -965,21 +975,51 @@
 	ondragleave={onDragLeave}
 	ondrop={onDrop}
 >
-	{#if withRef && quoteSrcDoc}
+	{#if withRef}
 		<aside class="compose-ref" aria-label={m.mail_forwarded_chip()}>
 			<div class="cref-h">
-				<span>{m.mail_forwarded_chip()}</span>
+				<ArrowLeft size={16} /><span>{m.mail_forwarded_chip()}</span>
 				<button type="button" class="chx" title={m.mail_compose_hide_forwarded()} onclick={() => (refOpen = false)}>
-					<X size={15} />
+					<X size={16} />
 				</button>
 			</div>
 			<div class="cref-b">
-				<EmailBody srcDoc={quoteSrcDoc} />
+				{#if fwdMsg}
+					<h3 class="cref-subj">{fwdMsg.subj}</h3>
+					<div class="cref-from">
+						<Avatar initials={initialsFor(fwdMsg.from, fwdMsg.fromAddr)} size={36} />
+						<span class="cref-who">
+							<b>{fwdMsg.from}</b>
+							<span>{fwdMsg.fromAddr}</span>
+						</span>
+						<span class="cref-date">{formatWhenLong(new Date(fwdMsg.epoch))}</span>
+					</div>
+				{/if}
+				{#if refSrcDoc}
+					<EmailBody srcDoc={refSrcDoc} />
+				{:else if quoteSrcDoc}
+					<EmailBody srcDoc={quoteSrcDoc} />
+				{/if}
+				{#each fwdFiles as f (f.name + f.size)}
+					<div class="cref-file">
+						<Paperclip size={18} />
+						<span class="cref-ft"><b>{f.name}</b><span>{formatSize(f.size)}</span></span>
+					</div>
+				{/each}
 			</div>
 		</aside>
 	{/if}
 	<div class="compose-h">
-		<PenLine size={16} /><span class="ch-t">{subjLine}</span>
+		{#if expanded}
+			<button type="button" class="ch-back" onclick={() => onExpand?.(false)}>
+				<ArrowLeft size={16} />{backLabel}
+			</button>
+		{/if}
+		<h2 class="ch-t">{fwd || forwardDraft ? m.mail_reader_forward() : m.mail_compose_new_message()}</h2>
+		<span class="ch-save" data-state={saveStatus} role="status">
+			{#if saveStatus === 'saved'}<Check size={14} />{:else if saveStatus === 'failed'}<CircleAlert size={14} />{/if}{saveLabel}
+		</span>
+		<span class="ch-rule" aria-hidden="true"></span>
 		<div class="ch-actions">
 			{#if expanded && fwdQuote && !quoteRemoved}
 				<button
@@ -990,7 +1030,7 @@
 					aria-pressed={refOpen}
 					onclick={() => (refOpen = !refOpen)}
 				>
-					<PanelLeft size={15} />
+					<PanelLeft size={16} />
 				</button>
 			{/if}
 			<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => onMinimize?.()}>
@@ -1003,7 +1043,7 @@
 				aria-pressed={expanded}
 				onclick={() => onExpand?.(!expanded)}
 			>
-				{#if expanded}<Minimize2 size={15} />{:else}<Maximize2 size={15} />{/if}
+				{#if expanded}<Minimize2 size={16} />{:else}<Maximize2 size={16} />{/if}
 			</button>
 			<button type="button" class="chx x" title={m.common_close()} aria-busy={closing} onclick={() => void closeKeepingDraft()}>
 				<X size={16} />
@@ -1157,6 +1197,23 @@
 				/>
 			{/if}
 
+			<div class="cenc" data-tone={encSummary.tone}>
+				{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
+					<Mail size={15} />
+				{:else if encSummary.tone === 'unknown'}
+					<CircleAlert size={15} />
+				{:else}
+					<Lock size={15} />
+				{/if}
+				<span class="cenc-t">{encSummary.label}</span>
+				<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
+					{m.mail_compose_enc_details()}
+				</button>
+			</div>
+			{#if encOpen}
+				<p class="cenc-more">{encSummary.title}</p>
+			{/if}
+
 			<div class="cfield subj">
 				<span class="recip-label">{m.mail_compose_subject()}</span>
 				<input bind:value={subject} placeholder={m.mail_compose_subject()} />
@@ -1207,7 +1264,7 @@
 				{/if}
 			{/if}
 
-			<AttachPreview files={attachments} onRemove={removeAttachment} />
+			<AttachPreview files={attachments} onRemove={removeAttachment} rows />
 
 			{#if attErr}
 				<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
@@ -1237,7 +1294,13 @@
 				on: signatureOn,
 				onToggle: toggleSignature
 			}}
-		/>
+		>
+			{#snippet extra()}
+				<button type="button" class="cbar-lab" onclick={pickFiles}>
+					<Paperclip size={16} />{m.mail_compose_attach()}
+				</button>
+			{/snippet}
+		</EditorToolbar>
 
 		{#if warn && !canSend && !noSender && status !== 'sending'}
 			<div class="cwarn">
@@ -1303,7 +1366,7 @@
 						if (canSend && status !== 'sending') sendOpen = !sendOpen;
 					}}
 				>
-					<ChevronUp size={15} />
+					<ChevronDown size={15} />
 				</button>
 				{#if sendOpen}
 					<div class="send-menu" role="menu">
@@ -1319,40 +1382,20 @@
 				{/if}
 			</div>
 
-			<button type="button" class="cf-ico" title={m.mail_compose_attach_files()} onclick={pickFiles}>
-				<Paperclip size={17} />
-			</button>
-
-			<button type="button" class="cf-ico" title={m.mail_toolbar_link()} onclick={insertLink}>
-				<Link size={17} />
-			</button>
-
-			<span class="cf-enc" data-tone={encSummary.tone} title={encSummary.title}>
-				{#if encSummary.tone === 'partial' || encSummary.tone === 'none'}
-					<LockOpen size={16} />
-				{:else if encSummary.tone === 'unknown'}
-					<CircleAlert size={16} />
-				{:else}
-					<Lock size={16} />
-				{/if}
-				<span class="cf-enc-t">{encSummary.label}</span>
-			</span>
-
-			<span class="csave" data-state={saveStatus} role="status"
-				>{saveStatus === 'loading'
-					? m.mail_compose_opening()
-					: saveStatus === 'saving'
-						? m.mail_compose_saving()
-						: saveStatus === 'saved'
-							? m.mail_compose_draft_saved()
-							: saveStatus === 'failed'
-								? m.mail_compose_not_saved()
-								: saveStatus === 'unsaved'
-									? m.mail_compose_unsaved()
-									: m.mail_compose_draft()}</span
+			<button
+				type="button"
+				class="cf-sched"
+				disabled={!canSend || status === 'sending'}
+				onclick={() => {
+					sendOpen = false;
+					scheduleOpen = true;
+				}}
 			>
-			<button type="button" class="cf-ico danger" title={m.mail_compose_discard_draft()} onclick={askDiscard}>
-				<Trash2 size={17} />
+				<Clock size={16} />{m.mail_compose_schedule()}
+			</button>
+
+			<button type="button" class="cf-disc" onclick={askDiscard}>
+				<Trash2 size={16} />{m.mail_compose_discard_draft()}
 			</button>
 		</div>
 </div>

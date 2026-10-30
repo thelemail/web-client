@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Message } from './data';
-import { addressedIdentity, forwardFallbackText, forwardQuote, forwardSource } from './forward';
+import { addressedIdentity, forwardFallbackText, forwardQuote, forwardSource, plainToHtml } from './forward';
 
 function msg(overrides: Partial<Message> = {}): Message {
 	return {
@@ -83,5 +83,11 @@ describe('addressedIdentity', () => {
 
 	it('returns null when none of the addresses are ours', () => {
 		expect(addressedIdentity(msg({ to: 'x@y.example' }), lookup)).toBeNull();
+	});
+});
+
+describe('plainToHtml', () => {
+	it('escapes markup and keeps line breaks', () => {
+		expect(plainToHtml('a < b & "c"\nnext')).toBe('a &lt; b &amp; &quot;c&quot;<br>next');
 	});
 });

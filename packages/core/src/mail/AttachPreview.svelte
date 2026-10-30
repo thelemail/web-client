@@ -10,9 +10,17 @@
 	interface Props {
 		files: Attachment[];
 		onRemove?: (id: string) => void;
+		rows?: boolean;
 	}
 
-	let { files, onRemove }: Props = $props();
+	let { files, onRemove, rows = false }: Props = $props();
+
+	function stateLabel(a: Attachment): string {
+		if (a.status === 'ready') return m.mail_attach_ready();
+		if (a.status === 'error') return m.mail_attach_upload_failed();
+		if (a.status === 'encrypting') return m.mail_attach_encrypting();
+		return m.mail_attach_uploading();
+	}
 
 	function formatSize(n: number): string {
 		if (n < 1024) return m.mail_size_bytes({ size: n });
@@ -60,11 +68,13 @@
 </script>
 
 {#if files.length > 0}
-	<div class="att-preview">
-		<div class="apv-head">
-			<Paperclip size={13} />
-			{m.mail_attach_count({ count: files.length })}
-		</div>
+	<div class="att-preview" class:rows>
+		{#if !rows}
+			<div class="apv-head">
+				<Paperclip size={13} />
+				{m.mail_attach_count({ count: files.length })}
+			</div>
+		{/if}
 		<div class="apv-grid">
 			{#each files as a (a.id)}
 				{@const k = fileKind(a.file.name)}
@@ -94,7 +104,11 @@
 					{/if}
 					<div class="apv-info">
 						<span class="apv-name">{a.file.name}</span>
-						<span class="apv-size">{formatSize(a.file.size)}</span>
+						<span class="apv-size"
+							>{formatSize(a.file.size)}{#if rows}<span class="apv-state" data-state={a.status}
+									>{stateLabel(a)}</span
+								>{/if}</span
+						>
 					</div>
 					{#if a.status === 'error'}
 						<div class="apv-err">{a.error ?? m.mail_attach_upload_failed()}</div>
