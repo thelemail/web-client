@@ -1,7 +1,7 @@
 .mail-app * { box-sizing: border-box; }
 
-:is(.mail-scrim, .mail-app .replybox) .recip-input:focus,
-:is(.mail-scrim, .mail-app .replybox) .cfield.subj input:focus {
+:is(.compose-layer, .mail-app .replybox) .recip-input:focus,
+:is(.compose-layer, .mail-app .replybox) .cfield.subj input:focus {
 	box-shadow: none;
 	border-color: transparent;
 	outline: none;
@@ -555,20 +555,16 @@
 .mail-app .quoted-email { margin-top: 14px; padding-left: 14px; border-left: 2px solid var(--border-strong); }
 
 .mail-app .replybox { margin-top: 28px; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; position: relative; }
-.mail-app .replybox .rt { display: flex; align-items: center; gap: 8px; padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); }
-.mail-app .replybox .rt b { color: var(--ink-700); font-weight: 600; }
-.mail-app .replybox .rt .rt-x { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border: none; background: none; border-radius: var(--radius-control-compact); cursor: pointer; color: var(--fg-muted); }
+.mail-app .replybox .rt { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); }
+.mail-app .replybox .rt-t { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); }
+.mail-app .replybox .rt-save { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+.mail-app .replybox .rt-save[data-state='failed'] { color: var(--danger-700); font-weight: 600; }
+.mail-app .replybox .rt-rule { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+.mail-app .replybox .rt .rt-x { display: grid; place-items: center; width: 32px; height: 32px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); cursor: pointer; }
 .mail-app .replybox .rt .rt-x:hover { background: var(--paper-100); color: var(--ink-700); }
 .mail-app .replybox .rt .rt-x:disabled { opacity: .4; pointer-events: none; }
 .mail-app .replybox textarea { width: 100%; border: none; outline: none; resize: none; font-size: 14.5px; line-height: 1.6; color: var(--ink-700); padding: 15px; min-height: 96px; background: none; }
-.mail-app .replybox .rf { display: flex; align-items: center; gap: 8px; padding: 11px 13px; border-top: 1px solid var(--border); }
-.mail-app .replybox .enc { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--success-700); font-weight: 600; white-space: nowrap; }
-.mail-app .replybox .enc[data-tone="pending"] { color: var(--fg-faint); }
-.mail-app .replybox .enc[data-tone="unknown"] { color: var(--warning-700); }
-.mail-app .replybox .rsave { margin-left: 12px; font-size: 12px; color: var(--fg-faint); font-style: italic; white-space: nowrap; }
-.mail-app .replybox .rsave[data-state='failed'] { color: var(--danger-700); font-style: normal; font-weight: 600; }
-.mail-app .replybox .enc[data-tone="partial"] { color: var(--warning-700); }
-.mail-app .replybox .enc[data-tone="none"] { color: var(--danger-700); }
+.mail-app .replybox .rf { display: flex; align-items: center; gap: 10px; padding: 10px 16px 12px; }
 .mail-app .replybox .rf-send { position: relative; display: inline-flex; align-items: stretch; }
 .mail-app .replybox .rf-send.split .rb-btn.primary { border-radius: var(--radius-control) 0 0 var(--radius-control); }
 .mail-app .replybox .rf-caret { display: inline-flex; align-items: center; justify-content: center; width: 30px; border: none; border-left: 1px solid rgba(255, 255, 255, .2); border-radius: 0 var(--radius-control) var(--radius-control) 0; background: var(--primary); color: var(--primary-fg); box-shadow: var(--shadow-xs); cursor: pointer; transition: background var(--dur-fast); }
@@ -584,96 +580,208 @@
 .mail-app .reader-empty .re-hints kbd { font-family: var(--font-mono); font-size: 11px; line-height: 1; color: var(--fg-muted); background: var(--surface); border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: var(--radius-check); padding: 3px 5px; min-width: 16px; text-align: center; }
 .mail-app .reader-empty .d { font-size: 13.5px; max-width: 34ch; line-height: 1.55; }
 
-.mail-scrim { position: fixed; inset: 0; background: rgba(14, 31, 24, .14); display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 32px 0 0; z-index: 90; animation: mail-fade var(--dur); }
+.compose-layer { position: fixed; right: 32px; bottom: 0; z-index: 90; display: flex; align-items: flex-end; justify-content: flex-end; gap: 12px; max-width: calc(100vw - 48px); pointer-events: none; }
+.compose-layer > * { pointer-events: auto; }
 @keyframes mail-fade { from { opacity: 0; } to { opacity: 1; } }
-.mail-scrim .compose-win { width: 600px; max-width: calc(100vw - 64px); max-height: 88dvh; background: var(--surface); border-radius: var(--radius-panel) var(--radius-panel) 0 0; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; animation: mail-slideup var(--dur-slow) var(--ease-out); font-family: var(--font-sans); color: var(--fg); }
+.compose-layer .compose-win[hidden] { display: none; }
+.compose-layer .compose-win { flex: 0 0 auto; position: relative; width: 600px; max-width: calc(100vw - 64px); height: min(640px, calc(100dvh - 72px)); background: var(--surface); border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-surface) var(--radius-surface) 0 0; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; font-family: var(--font-sans); color: var(--fg); }
+.compose-layer .compose-win.fresh { animation: mail-slideup var(--dur-slow) var(--ease-out); }
+.compose-layer .compose-h { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
+.compose-layer .compose-h .ch-t { flex: 0 1 auto; min-width: 0; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compose-layer .compose-h .ch-back { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; padding: 4px 6px 4px 2px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); font: inherit; font-size: 13.5px; cursor: pointer; }
+.compose-layer .compose-h .ch-back:hover { color: var(--fg); background: var(--paper-100); }
+.compose-layer .compose-h .ch-save { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
+.compose-layer .compose-h .ch-save[data-state='failed'] { color: var(--danger-700); font-weight: 600; }
+.compose-layer .compose-h .ch-rule { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex: 0 0 auto; }
+.compose-layer .compose-h .ch-actions { display: flex; align-items: center; gap: 2px; }
+.compose-layer .compose-h .chx { width: 32px; height: 32px; display: grid; place-items: center; color: var(--fg-muted); background: none; border: none; border-radius: var(--radius-control-compact); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
+.compose-layer .compose-h .chx:hover { background: var(--paper-100); color: var(--fg); }
+.compose-layer .compose-h .chx.on { background: var(--selection); color: var(--fg-strong); }
+
+.mail-app :is(.compose-layer .compose-win, .replybox) :is(.from-row, .recip-row, .cfield.subj) { min-height: 42px; padding: 0 16px; gap: 14px; align-items: center; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .recip-label { width: 50px; padding-top: 0; font-size: 13px; color: var(--fg-muted); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .recip-row { padding-top: 6px; padding-bottom: 6px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger { gap: 10px; padding: 2px 10px 2px 2px; background: var(--surface); border-radius: var(--radius-control); color: var(--fg-strong); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger:hover { background: var(--bg-raised); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger .ft-name { font-weight: 500; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger .ft-email { font-size: 12.5px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .from-menu { left: 80px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .rchip { background: var(--surface); padding: 2px 6px 2px 2px; color: var(--fg-strong); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .ccbcc button { font-size: 13px; font-weight: 400; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc { display: flex; align-items: center; gap: 8px; padding: 6px 16px 8px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc svg { flex: 0 0 auto; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc[data-tone='ok'] svg { color: var(--success-700); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc[data-tone='unknown'] svg, .mail-app :is(.compose-layer .compose-win, .replybox) .cenc[data-tone='partial'] svg { color: var(--warning-700); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc-t { flex: 1 1 auto; min-width: 0; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc-d { background: none; border: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--fg); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cenc-more { margin: 0; padding: 8px 16px 10px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; line-height: 1.5; color: var(--fg-muted); background: var(--bg-raised); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cfield.subj input { font-size: 15px; font-weight: 400; color: var(--fg-strong); }
+.compose-layer .cbody { padding: 16px; font-size: 14.5px; color: var(--fg); line-height: 1.6; min-height: 170px; outline: none; flex: 1 1 auto; }
+
+.mail-app .compose-layer .compose-win .att-preview { padding: 0 16px 4px; border-top: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-card { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; min-width: 260px; max-width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-card:hover { border-color: var(--border-strong); box-shadow: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-thumb { flex: 0 0 auto; width: 32px; height: 32px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows button.apv-thumb { border: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-thumb img { border-radius: var(--radius-control-compact); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-thumb svg { width: 20px; height: 20px; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-ext { display: none; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-info { flex: 1 1 auto; padding: 0; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-name { font-size: 13.5px; font-weight: 550; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-size { font-size: 12px; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-state::before { content: " · "; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-state[data-state='error'] { color: var(--danger-700); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-rm { position: static; flex: 0 0 auto; width: 28px; height: 28px; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); opacity: 1; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-rm:hover { background: var(--paper-100); color: var(--fg); }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-bar { position: absolute; left: 12px; right: 12px; bottom: 4px; margin: 0; }
+.mail-app :is(.compose-layer, .replybox) .att-preview.rows .apv-err { display: none; }
+
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar { gap: 4px; margin: 10px 16px 0; padding: 10px 0 0; border-top: 1px solid var(--border); background: none; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar[role] button:not(.cbar-lab) { width: 32px; height: 32px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar-sep { height: 20px; background: var(--border); margin: 0 8px; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab { width: auto; height: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg); font: inherit; font-size: 13.5px; cursor: pointer; }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab:hover { background: var(--paper-100); }
+.mail-app :is(.compose-layer .compose-win, .replybox) .cbar .cbar-lab svg { flex: 0 0 auto; width: 16px; height: 16px; }
+
+.compose-layer .compose-f { display: flex; align-items: center; gap: 10px; padding: 10px 16px 12px; flex: 0 0 auto; }
+.compose-layer .send-split { position: relative; display: flex; align-items: stretch; border-radius: var(--radius-control); }
+.compose-layer .send-split .send { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: var(--primary-fg); font-weight: 600; font-size: 14px; border: none; border-radius: var(--radius-control) 0 0 var(--radius-control); padding: 9px 18px; cursor: pointer; font-family: inherit; transition: background var(--dur-fast); }
+.compose-layer .send-split .send svg { width: 16px; height: 16px; }
+.compose-layer .send-split .send-caret { display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; background: var(--primary); color: var(--primary-fg); border: none; border-left: 1px solid rgba(255, 255, 255, .18); border-radius: 0 var(--radius-control) var(--radius-control) 0; cursor: pointer; transition: background var(--dur-fast); }
+.compose-layer .send-split .send-caret svg { width: 14px; height: 14px; }
+.compose-layer .cf-sched { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control); color: var(--fg); font: inherit; font-size: 14px; cursor: pointer; transition: background var(--dur-fast); }
+.compose-layer .cf-sched:hover:not(:disabled) { background: var(--bg-raised); }
+.compose-layer .cf-sched:disabled { color: var(--fg-faint); cursor: not-allowed; }
+:is(.compose-layer, .mail-app .replybox) .cf-disc { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 6px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); font: inherit; font-size: 14px; cursor: pointer; }
+:is(.compose-layer, .mail-app .replybox) .cf-disc:hover { color: var(--danger-700); background: var(--danger-100); }
+
+.compose-dock { flex: 0 1 250px; min-width: 160px; display: flex; align-items: center; gap: 8px; background: var(--surface); color: var(--fg-strong); padding: 10px 12px; border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-menu) var(--radius-menu) 0 0; box-shadow: var(--shadow-md); cursor: pointer; font-family: var(--font-sans); }
+.compose-dock:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -3px; }
+.compose-dock > svg { width: 14px; height: 14px; color: var(--fg-muted); flex: 0 0 auto; }
+.compose-dock .dock-t { flex: 1 1 auto; font-size: 13.5px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+.compose-dock .dock-b { display: inline-flex; background: none; border: none; color: var(--fg-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-control-compact); flex: 0 0 auto; }
+.compose-dock .dock-b:hover { background: var(--paper-100); color: var(--fg); }
+.compose-layer .compose-dock { position: relative; z-index: 2; }
+
+.mail-app .compose-layer .compose-win .rq { padding: 2px 16px 12px; }
+.mail-app .compose-layer .compose-win .rq-view { margin: 0 16px 14px; }
+
+.compose-layer .compose-win.expanded { position: fixed; top: 54px; left: 248px; right: 0; bottom: 0; width: auto; height: auto; max-width: none; border: 0; border-left: 1px solid var(--border); border-radius: 0; box-shadow: none; background: var(--bg); }
+.compose-layer .compose-win.expanded.fresh { animation: mail-fade var(--dur) var(--ease-out); }
+.compose-layer.stacked .compose-win.expanded { padding-bottom: 46px; }
+.mail-app .compose-layer .compose-win.expanded .compose-h { height: 52px; gap: 12px; padding: 0 20px; }
+.mail-app .compose-layer .compose-win.expanded .compose-h .ch-t { font-size: 18px; }
+.mail-app .compose-layer .compose-win.expanded :is(.from-row, .recip-row, .cfield.subj) { min-height: 46px; padding-left: 20px; padding-right: 20px; }
+.mail-app .compose-layer .compose-win.expanded .recip-label { width: 62px; font-size: 13.5px; }
+.mail-app .compose-layer .compose-win.expanded .from-menu { left: 96px; }
+.mail-app .compose-layer .compose-win.expanded :is(.cenc, .cenc-more) { padding-left: 96px; padding-right: 20px; }
+.mail-app .compose-layer .compose-win.expanded .cbody { padding: 22px 20px 10px 96px; font-size: 15px; max-width: calc(72ch + 116px); }
+.mail-app .compose-layer .compose-win.expanded :is(.att-preview, .rq) { padding-left: 96px; padding-right: 20px; }
+.mail-app .compose-layer .compose-win.expanded .cbar { margin: 12px 20px 0; }
+.mail-app .compose-layer .compose-win.expanded .compose-f { padding: 12px 20px 16px; }
+.compose-layer .compose-win.expanded.with-ref { padding-left: 420px; }
+
+.compose-layer .compose-ref { position: absolute; top: 0; bottom: 0; left: 0; width: 420px; display: flex; flex-direction: column; background: var(--bg-raised); border-right: 1px solid var(--border); z-index: 1; }
+.compose-layer .compose-ref .cref-h { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 12px 0 18px; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--fg-muted); flex: 0 0 auto; }
+.compose-layer .compose-ref .cref-h span { flex: 1 1 auto; }
+.compose-layer .compose-ref .cref-h .chx { width: 32px; height: 32px; display: grid; place-items: center; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); cursor: pointer; }
+.compose-layer .compose-ref .cref-h .chx:hover { background: var(--paper-100); color: var(--fg); }
+.compose-layer .compose-ref .cref-b { flex: 1 1 auto; overflow-y: auto; padding: 18px; }
+.compose-layer .compose-ref .cref-subj { margin: 0 0 14px; font-size: 20px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); text-wrap: balance; }
+.compose-layer .compose-ref .cref-from { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.compose-layer .compose-ref .cref-who { display: flex; flex-direction: column; min-width: 0; }
+.compose-layer .compose-ref .cref-who b { font-weight: 600; color: var(--fg-strong); }
+.compose-layer .compose-ref .cref-who span, .compose-layer .compose-ref .cref-date { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compose-layer .compose-ref .cref-date { margin-left: auto; flex: 0 0 auto; }
+.compose-layer .compose-ref .cref-file { display: inline-flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface); color: var(--fg-muted); }
+.compose-layer .compose-ref .cref-ft { display: flex; flex-direction: column; }
+.compose-layer .compose-ref .cref-ft b { font-weight: 550; color: var(--fg-strong); }
+.compose-layer .compose-ref .cref-ft span { font-family: var(--font-mono); font-size: 12px; }
+@media (max-width: 1200px) {
+	.compose-layer .compose-win.expanded.with-ref { padding-left: 0; }
+	.compose-layer .compose-ref { width: min(420px, 88%); box-shadow: var(--shadow-lg); z-index: 3; }
+}
 @keyframes mail-slideup { from { transform: translateY(22px); opacity: .4; } to { transform: none; opacity: 1; } }
 
-.mail-scrim .compose-h { display: flex; align-items: center; gap: 10px; padding: 14px 17px; background: var(--pine-900); color: var(--fg-on-pine); font-size: 13.5px; font-weight: 600; flex: 0 0 auto; }
-.mail-scrim .compose-h > svg { width: 16px; height: 16px; color: var(--pine-300); }
-.mail-scrim .compose-h .ch-actions { margin-left: auto; display: flex; align-items: center; gap: 2px; }
-.mail-scrim .compose-h .chx { color: var(--fg-on-pine-muted); background: none; border: none; display: flex; padding: 5px; border-radius: var(--radius-control-compact); cursor: pointer; transition: background var(--dur-fast), color var(--dur-fast); }
-.mail-scrim .compose-h .chx:hover { background: rgba(255, 255, 255, .1); color: #fff; }
 
-.mail-scrim .compose-scroll { overflow-y: auto; flex: 1 1 auto; display: flex; flex-direction: column; position: relative; }
+.compose-layer .compose-scroll { overflow-y: auto; flex: 1 1 auto; display: flex; flex-direction: column; position: relative; }
 
-:is(.mail-scrim, .mail-app .replybox) .recip-label { font-size: 12.5px; color: var(--fg-muted); width: 46px; flex: 0 0 auto; padding-top: 7px; line-height: 1.4; }
+:is(.compose-layer, .mail-app .replybox) .recip-label { font-size: 12.5px; color: var(--fg-muted); width: 46px; flex: 0 0 auto; padding-top: 7px; line-height: 1.4; }
 
-:is(.mail-scrim, .mail-app .replybox) .from-row { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 11px 17px; border-bottom: 1px solid var(--border); }
-:is(.mail-scrim, .mail-app .replybox) .from-row .recip-label { padding-top: 8px; }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 5px 11px 5px 6px; cursor: pointer; font-size: 13px; color: var(--fg); transition: background var(--dur-fast), border-color var(--dur-fast); }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger:hover { background: var(--paper-100); }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger.open { border-color: var(--pine-500); background: var(--paper-100); }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger .ft-name { font-weight: 600; white-space: nowrap; }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger .ft-email { flex: 0 1 auto; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-:is(.mail-scrim, .mail-app .replybox) .from-trigger svg { width: 15px; height: 15px; color: var(--fg-muted); flex: 0 0 auto; }
-:is(.mail-scrim, .mail-app .replybox) .from-menu { position: absolute; top: calc(100% - 2px); left: 58px; z-index: 30; width: 360px; max-width: calc(100% - 70px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 6px; animation: mail-slideup var(--dur) var(--ease-out); }
-:is(.mail-scrim, .mail-app .replybox) .fm-h { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint); padding: 7px 9px 5px; }
-:is(.mail-scrim, .mail-app .replybox) .fm-item { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 8px 9px; cursor: pointer; color: var(--fg); transition: background var(--dur-fast); }
-:is(.mail-scrim, .mail-app .replybox) .fm-item:hover { background: var(--paper-100); }
-:is(.mail-scrim, .mail-app .replybox) .fm-item.on { background: var(--pine-50); }
-:is(.mail-scrim, .mail-app .replybox) .fm-item > svg { width: 17px; height: 17px; color: var(--pine-700); margin-left: auto; flex: 0 0 auto; }
-:is(.mail-scrim, .mail-app .replybox) .fm-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-:is(.mail-scrim, .mail-app .replybox) .fm-top { display: flex; align-items: center; gap: 8px; }
-:is(.mail-scrim, .mail-app .replybox) .fm-top b { font-size: 13.5px; font-weight: 600; }
-:is(.mail-scrim, .mail-app .replybox) .fm-kind { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brass-700); background: var(--brass-100); border-radius: var(--radius-pill); padding: 1px 7px; }
-:is(.mail-scrim, .mail-app .replybox) .fm-em { font-family: var(--font-mono); font-size: 12px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-:is(.mail-scrim, .mail-app .replybox) .fm-org { font-size: 11.5px; color: var(--fg-muted); }
-:is(.mail-scrim, .mail-app .replybox) .fm-sep { height: 1px; background: var(--border); margin: 5px 4px; }
-:is(.mail-scrim, .mail-app .replybox) .fm-add { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: none; border-radius: var(--radius-control-compact); padding: 9px; cursor: pointer; color: var(--pine-700); font-size: 13px; font-weight: 500; }
-:is(.mail-scrim, .mail-app .replybox) .fm-add svg { width: 16px; height: 16px; }
-:is(.mail-scrim, .mail-app .replybox) .fm-add:hover { background: var(--paper-100); }
+:is(.compose-layer, .mail-app .replybox) .from-row { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 11px 17px; border-bottom: 1px solid var(--border); }
+:is(.compose-layer, .mail-app .replybox) .from-row .recip-label { padding-top: 8px; }
+:is(.compose-layer, .mail-app .replybox) .from-trigger { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-width: 0; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 5px 11px 5px 6px; cursor: pointer; font-size: 13px; color: var(--fg); transition: background var(--dur-fast), border-color var(--dur-fast); }
+:is(.compose-layer, .mail-app .replybox) .from-trigger:hover { background: var(--paper-100); }
+:is(.compose-layer, .mail-app .replybox) .from-trigger.open { border-color: var(--pine-500); background: var(--paper-100); }
+:is(.compose-layer, .mail-app .replybox) .from-trigger .ft-name { font-weight: 600; white-space: nowrap; }
+:is(.compose-layer, .mail-app .replybox) .from-trigger .ft-email { flex: 0 1 auto; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(.compose-layer, .mail-app .replybox) .from-trigger svg { width: 15px; height: 15px; color: var(--fg-muted); flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .from-menu { position: absolute; top: calc(100% - 2px); left: 58px; z-index: 30; width: 360px; max-width: calc(100% - 70px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 6px; animation: mail-slideup var(--dur) var(--ease-out); }
+:is(.compose-layer, .mail-app .replybox) .fm-h { font-size: 10.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-faint); padding: 7px 9px 5px; }
+:is(.compose-layer, .mail-app .replybox) .fm-item { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 8px 9px; cursor: pointer; color: var(--fg); transition: background var(--dur-fast); }
+:is(.compose-layer, .mail-app .replybox) .fm-item:hover { background: var(--paper-100); }
+:is(.compose-layer, .mail-app .replybox) .fm-item.on { background: var(--pine-50); }
+:is(.compose-layer, .mail-app .replybox) .fm-item > svg { width: 17px; height: 17px; color: var(--pine-700); margin-left: auto; flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .fm-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+:is(.compose-layer, .mail-app .replybox) .fm-top { display: flex; align-items: center; gap: 8px; }
+:is(.compose-layer, .mail-app .replybox) .fm-top b { font-size: 13.5px; font-weight: 600; }
+:is(.compose-layer, .mail-app .replybox) .fm-kind { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--brass-700); background: var(--brass-100); border-radius: var(--radius-pill); padding: 1px 7px; }
+:is(.compose-layer, .mail-app .replybox) .fm-em { font-family: var(--font-mono); font-size: 12px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(.compose-layer, .mail-app .replybox) .fm-org { font-size: 11.5px; color: var(--fg-muted); }
+:is(.compose-layer, .mail-app .replybox) .fm-sep { height: 1px; background: var(--border); margin: 5px 4px; }
+:is(.compose-layer, .mail-app .replybox) .fm-add { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: none; border-radius: var(--radius-control-compact); padding: 9px; cursor: pointer; color: var(--pine-700); font-size: 13px; font-weight: 500; }
+:is(.compose-layer, .mail-app .replybox) .fm-add svg { width: 16px; height: 16px; }
+:is(.compose-layer, .mail-app .replybox) .fm-add:hover { background: var(--paper-100); }
 
-:is(.mail-scrim, .mail-app .replybox) .recip-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 17px; border-bottom: 1px solid var(--border); }
-:is(.mail-scrim, .mail-app .replybox) .recip-box { position: relative; flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 24px; border-radius: var(--radius-control); min-width: 0; }
-:is(.mail-scrim, .mail-app .replybox) .recip-input { border: none; outline: none; background: none; font-size: 14px; color: var(--fg); flex: 1 1 90px; min-width: 90px; padding: 3px 2px; line-height: 1.4; font-family: inherit; }
-:is(.mail-scrim, .mail-app .replybox) .recip-input::placeholder { color: var(--fg-faint); }
-:is(.mail-scrim, .mail-app .replybox) .rchip { display: inline-flex; align-items: center; gap: 6px; background: var(--paper-100); border: 1px solid var(--border-strong); border-radius: var(--radius-pill); padding: 2px 4px 2px 3px; font-size: 13px; color: var(--fg); max-width: 100%; }
-:is(.mail-scrim, .mail-app .replybox) .rchip .rtx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-:is(.mail-scrim, .mail-app .replybox) .rchip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 2px; border-radius: 50%; flex: 0 0 auto; }
-:is(.mail-scrim, .mail-app .replybox) .rchip .rm:hover { background: var(--paper-200); color: var(--fg); }
-:is(.mail-scrim, .mail-app .replybox) .rchip.bad { background: var(--danger-100); border-color: var(--danger-500); }
-:is(.mail-scrim, .mail-app .replybox) .rchip.bad > svg { width: 13px; height: 13px; color: var(--danger-700); margin-left: 3px; }
-:is(.mail-scrim, .mail-app .replybox) .rchip.bad .rtx { color: var(--danger-700); font-family: var(--font-mono); font-size: 12px; }
-:is(.mail-scrim, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(0, 0, 0, .06); }
-:is(.mail-scrim, .mail-app .replybox) .rchip .renc { display: inline-flex; align-items: center; flex: 0 0 auto; }
-:is(.mail-scrim, .mail-app .replybox) .rchip .renc.ok { color: var(--success-700); }
-:is(.mail-scrim, .mail-app .replybox) .rchip .renc.warn { color: var(--warning-700); }
+:is(.compose-layer, .mail-app .replybox) .recip-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 17px; border-bottom: 1px solid var(--border); }
+:is(.compose-layer, .mail-app .replybox) .recip-box { position: relative; flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 24px; border-radius: var(--radius-control); min-width: 0; }
+:is(.compose-layer, .mail-app .replybox) .recip-input { border: none; outline: none; background: none; font-size: 14px; color: var(--fg); flex: 1 1 90px; min-width: 90px; padding: 3px 2px; line-height: 1.4; font-family: inherit; }
+:is(.compose-layer, .mail-app .replybox) .recip-input::placeholder { color: var(--fg-faint); }
+:is(.compose-layer, .mail-app .replybox) .rchip { display: inline-flex; align-items: center; gap: 6px; background: var(--paper-100); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 2px 4px 2px 2px; font-size: 13px; color: var(--fg); max-width: 100%; }
+:is(.compose-layer, .mail-app .replybox) .rchip .rtx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+:is(.compose-layer, .mail-app .replybox) .rchip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 2px; border-radius: var(--radius-check); flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .rchip .rm:hover { background: var(--paper-200); color: var(--fg); }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad { background: var(--danger-100); border-color: var(--danger-500); }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad > svg { width: 13px; height: 13px; color: var(--danger-700); margin-left: 3px; }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad .rtx { color: var(--danger-700); font-family: var(--font-mono); font-size: 12px; }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(0, 0, 0, .06); }
+:is(.compose-layer, .mail-app .replybox) .rchip .renc { display: inline-flex; align-items: center; flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .rchip .renc.ok { color: var(--success-700); }
+:is(.compose-layer, .mail-app .replybox) .rchip .renc.warn { color: var(--warning-700); }
 
-:is(.mail-scrim, .mail-app .replybox) .recip-right { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; padding-top: 3px; }
-:is(.mail-scrim, .mail-app .replybox) .ccbcc { display: flex; gap: 2px; }
-:is(.mail-scrim, .mail-app .replybox) .ccbcc button { background: none; border: none; color: var(--fg-muted); font-size: 12.5px; font-weight: 500; padding: 4px 7px; border-radius: var(--radius-control-compact); cursor: pointer; }
-:is(.mail-scrim, .mail-app .replybox) .ccbcc button:hover { background: var(--paper-100); color: var(--pine-700); }
-:is(.mail-scrim, .mail-app .replybox) .recip-x { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 4px; border-radius: var(--radius-control-compact); }
-:is(.mail-scrim, .mail-app .replybox) .recip-x:hover { background: var(--paper-100); color: var(--fg); }
+:is(.compose-layer, .mail-app .replybox) .recip-right { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; padding-top: 3px; }
+:is(.compose-layer, .mail-app .replybox) .ccbcc { display: flex; gap: 2px; }
+:is(.compose-layer, .mail-app .replybox) .ccbcc button { background: none; border: none; color: var(--fg-muted); font-size: 12.5px; font-weight: 500; padding: 4px 7px; border-radius: var(--radius-control-compact); cursor: pointer; }
+:is(.compose-layer, .mail-app .replybox) .ccbcc button:hover { background: var(--paper-100); color: var(--pine-700); }
+:is(.compose-layer, .mail-app .replybox) .recip-x { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 4px; border-radius: var(--radius-control-compact); }
+:is(.compose-layer, .mail-app .replybox) .recip-x:hover { background: var(--paper-100); color: var(--fg); }
 
-:is(.mail-scrim, .mail-app .replybox) .ac-menu { position: absolute; top: calc(100% + 6px); left: -6px; z-index: 25; min-width: 300px; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 5px; animation: mail-slideup var(--dur) var(--ease-out); }
-:is(.mail-scrim, .mail-app .replybox) .ac-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 7px 9px; cursor: pointer; color: var(--fg); }
-:is(.mail-scrim, .mail-app .replybox) .ac-item.active { background: var(--pine-50); }
-:is(.mail-scrim, .mail-app .replybox) .ac-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-:is(.mail-scrim, .mail-app .replybox) .ac-tx b { font-size: 13.5px; font-weight: 600; }
-:is(.mail-scrim, .mail-app .replybox) .ac-tx span { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(.compose-layer, .mail-app .replybox) .ac-menu { position: absolute; top: calc(100% + 6px); left: -6px; z-index: 25; min-width: 300px; max-width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 5px; animation: mail-slideup var(--dur) var(--ease-out); }
+:is(.compose-layer, .mail-app .replybox) .ac-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 7px 9px; cursor: pointer; color: var(--fg); }
+:is(.compose-layer, .mail-app .replybox) .ac-item.active { background: var(--pine-50); }
+:is(.compose-layer, .mail-app .replybox) .ac-tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+:is(.compose-layer, .mail-app .replybox) .ac-tx b { font-size: 13.5px; font-weight: 600; }
+:is(.compose-layer, .mail-app .replybox) .ac-tx span { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-:is(.mail-scrim, .mail-app .replybox) .cfield.subj { display: flex; align-items: center; gap: 12px; padding: 11px 17px; border-bottom: 1px solid var(--border); }
-:is(.mail-scrim, .mail-app .replybox) .cfield.subj .recip-label { padding-top: 0; }
-:is(.mail-scrim, .mail-app .replybox) .cfield.subj input { border: none; outline: none; font-size: 14px; font-weight: 500; color: var(--fg); width: 100%; background: none; font-family: inherit; }
-:is(.mail-scrim, .mail-app .replybox) .cfield.subj input::placeholder { color: var(--fg-faint); font-weight: 400; }
-.mail-scrim .cbody { padding: 16px 17px; font-size: 14.5px; color: var(--ink-700); line-height: 1.65; min-height: 170px; outline: none; flex: 1 1 auto; }
-.mail-scrim .cbody.empty::before { content: attr(data-ph); color: var(--fg-faint); pointer-events: none; }
-.mail-scrim .cbody:focus { outline: none; }
-.mail-scrim .cbody a { color: var(--link); }
-.mail-scrim .cbody ul, .mail-scrim .cbody ol { margin: 0 0 12px; padding-left: 22px; }
+:is(.compose-layer, .mail-app .replybox) .cfield.subj { display: flex; align-items: center; gap: 12px; padding: 11px 17px; border-bottom: 1px solid var(--border); }
+:is(.compose-layer, .mail-app .replybox) .cfield.subj .recip-label { padding-top: 0; }
+:is(.compose-layer, .mail-app .replybox) .cfield.subj input { border: none; outline: none; font-size: 14px; font-weight: 500; color: var(--fg); width: 100%; background: none; font-family: inherit; }
+:is(.compose-layer, .mail-app .replybox) .cfield.subj input::placeholder { color: var(--fg-faint); font-weight: 400; }
+.compose-layer .cbody.empty::before { content: attr(data-ph); color: var(--fg-faint); pointer-events: none; }
+.compose-layer .cbody:focus { outline: none; }
+.compose-layer .cbody a { color: var(--link); }
+.compose-layer .cbody ul, .compose-layer .cbody ol { margin: 0 0 12px; padding-left: 22px; }
 
-.mail-scrim .att-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 17px 16px; }
-.mail-scrim .att-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 6px 6px 6px 10px; font-size: 12.5px; color: var(--fg); }
-.mail-scrim .att-chip > svg { width: 13px; height: 13px; color: var(--pine-700); flex: 0 0 auto; }
-.mail-scrim .att-chip .ac-n { font-weight: 500; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-scrim .att-chip .ac-s { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
-.mail-scrim .att-chip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 3px; border-radius: var(--radius-control-compact); }
-.mail-scrim .att-chip .rm:hover { background: var(--paper-200); color: var(--fg); }
+.compose-layer .att-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 17px 16px; }
+.compose-layer .att-chip { display: inline-flex; align-items: center; gap: 7px; background: var(--paper-50); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 6px 6px 6px 10px; font-size: 12.5px; color: var(--fg); }
+.compose-layer .att-chip > svg { width: 13px; height: 13px; color: var(--pine-700); flex: 0 0 auto; }
+.compose-layer .att-chip .ac-n { font-weight: 500; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compose-layer .att-chip .ac-s { color: var(--fg-muted); font-family: var(--font-mono); font-size: 11px; }
+.compose-layer .att-chip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 3px; border-radius: var(--radius-control-compact); }
+.compose-layer .att-chip .rm:hover { background: var(--paper-200); color: var(--fg); }
 
-.mail-scrim .att-preview { padding: 14px 17px 16px; border-top: 1px solid var(--border); }
-.replybox .att-preview { padding: 0 15px 14px; border-top: none; }
+.mail-app .replybox .att-preview { padding: 0 16px 4px; border-top: none; }
 .mail-app .apv-head { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 10px; }
 .mail-app .apv-head svg { width: 13px; height: 13px; color: var(--pine-700); }
 .mail-app .apv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -703,52 +811,26 @@
 .mail-app .apv-bar { margin: 0 10px 6px; height: 3px; border-radius: 999px; background: var(--paper-200); overflow: hidden; }
 .mail-app .apv-bar-fill { height: 100%; background: var(--pine-700); transition: width var(--dur-fast); }
 
-:is(.mail-scrim, .mail-app .replybox) .cwarn { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--danger-100); color: var(--danger-700); font-size: 12.5px; font-weight: 500; padding: 9px 17px; border-top: 1px solid var(--danger-500); }
-:is(.mail-scrim, .mail-app .replybox) .cwarn svg { width: 14px; height: 14px; flex: 0 0 auto; }
-:is(.mail-scrim, .mail-app .replybox) .cwarn .cwarn-t { flex: 1 1 auto; min-width: 0; }
-:is(.mail-scrim, .mail-app .replybox) .cwarn .cwarn-act { flex: 0 0 auto; margin-left: auto; padding: 4px 10px; border: 1px solid currentColor; border-radius: var(--radius-control-compact); background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
-:is(.mail-scrim, .mail-app .replybox) .cwarn .cwarn-act:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
-:is(.mail-scrim, .mail-app .replybox) .cnote { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--warning-100); color: var(--warning-700); font-size: 12.5px; font-weight: 500; padding: 9px 17px; border-bottom: 1px solid var(--border); }
-:is(.mail-scrim, .mail-app .replybox) .cnote svg { width: 14px; height: 14px; flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .cwarn { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--danger-100); color: var(--danger-700); font-size: 12.5px; font-weight: 500; padding: 9px 17px; border-top: 1px solid var(--danger-500); }
+:is(.compose-layer, .mail-app .replybox) .cwarn svg { width: 14px; height: 14px; flex: 0 0 auto; }
+:is(.compose-layer, .mail-app .replybox) .cwarn .cwarn-t { flex: 1 1 auto; min-width: 0; }
+:is(.compose-layer, .mail-app .replybox) .cwarn .cwarn-act { flex: 0 0 auto; margin-left: auto; padding: 4px 10px; border: 1px solid currentColor; border-radius: var(--radius-control-compact); background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
+:is(.compose-layer, .mail-app .replybox) .cwarn .cwarn-act:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+:is(.compose-layer, .mail-app .replybox) .cnote { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; background: var(--warning-100); color: var(--warning-700); font-size: 12.5px; font-weight: 500; padding: 9px 17px; border-bottom: 1px solid var(--border); }
+:is(.compose-layer, .mail-app .replybox) .cnote svg { width: 14px; height: 14px; flex: 0 0 auto; }
 
-.mail-scrim .cbar { display: flex; align-items: center; gap: 1px; flex: 0 0 auto; padding: 6px 13px; border-top: 1px solid var(--border); background: var(--paper-50); }
-.mail-scrim .cbar button { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--ink-600); cursor: pointer; font-size: 14px; font-family: var(--font-sans); font-feature-settings: normal; }
-.mail-scrim .cbar button:hover { background: var(--paper-150); color: var(--fg); }
-.mail-scrim .cbar button svg { width: 16px; height: 16px; }
-.mail-scrim .cbar-sep { width: 1px; height: 18px; background: var(--border-strong); margin: 0 6px; }
 
-.mail-scrim .compose-f { display: flex; align-items: center; gap: 8px; padding: 12px 17px; border-top: 1px solid var(--border); flex: 0 0 auto; }
-.mail-scrim .send-split { position: relative; display: flex; align-items: stretch; border-radius: var(--radius-control); box-shadow: var(--shadow-xs); }
-.mail-scrim .send-split .send { display: inline-flex; align-items: center; gap: 8px; background: var(--primary); color: var(--primary-fg); font-weight: 600; font-size: 14px; border: none; border-radius: var(--radius-control) 0 0 var(--radius-control); padding: 10px 16px 10px 18px; cursor: pointer; transition: background var(--dur-fast); }
-.mail-scrim .send-split .send svg { width: 16px; height: 16px; }
-.mail-scrim .send-split .send-caret { display: inline-flex; align-items: center; justify-content: center; width: 34px; background: var(--primary); color: var(--primary-fg); border: none; border-left: 1px solid rgba(255, 255, 255, .18); border-radius: 0 var(--radius-control) var(--radius-control) 0; cursor: pointer; transition: background var(--dur-fast); }
-.mail-scrim .send-split .send-caret svg { width: 15px; height: 15px; }
-.mail-scrim .send-split:not(.off) .send:hover,
-.mail-scrim .send-split:not(.off) .send-caret:hover { background: var(--primary-hover); }
-.mail-scrim .send-split.off { box-shadow: none; opacity: .5; cursor: not-allowed; }
-.mail-scrim .send-split.off .send,
-.mail-scrim .send-split.off .send-caret { cursor: not-allowed; }
-.mail-scrim .send-menu { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 20; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 5px; animation: mail-slideup var(--dur) var(--ease-out); }
-.mail-scrim .send-menu button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 9px 10px; cursor: pointer; color: var(--fg); font-size: 13.5px; }
-.mail-scrim .send-menu button svg { width: 16px; height: 16px; color: var(--fg-muted); }
-.mail-scrim .send-menu button:hover { background: var(--paper-100); }
-.mail-scrim .send-menu button:disabled { opacity: .45; cursor: not-allowed; background: none; }
-.mail-scrim .cf-ico { width: 35px; height: 35px; border-radius: var(--radius-control-compact); border: none; background: none; color: var(--ink-500); display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.mail-scrim .cf-ico:hover { background: var(--paper-100); color: var(--ink-700); }
-.mail-scrim .cf-ico.danger:hover { background: var(--danger-100); color: var(--danger-700); }
-.mail-scrim .cf-enc { display: inline-flex; align-items: center; gap: 6px; padding: 0 4px; font-size: 12px; font-weight: 600; color: var(--success-700); white-space: nowrap; }
-.mail-scrim .cf-enc[data-tone="pending"] { color: var(--fg-faint); }
-.mail-scrim .cf-enc[data-tone="unknown"] { color: var(--warning-700); }
-.mail-scrim .cf-enc[data-tone="partial"] { color: var(--warning-700); }
-.mail-scrim .cf-enc[data-tone="none"] { color: var(--danger-700); }
-.mail-scrim .compose-f .csave { margin-left: auto; font-size: 12px; color: var(--fg-faint); font-style: italic; }
-.mail-scrim .compose-f .csave[data-state='failed'] { color: var(--danger-700); font-style: normal; font-weight: 600; }
+.compose-layer .send-split:not(.off) .send:hover,
+.compose-layer .send-split:not(.off) .send-caret:hover { background: var(--primary-hover); }
+.compose-layer .send-split.off { box-shadow: none; opacity: .5; cursor: not-allowed; }
+.compose-layer .send-split.off .send,
+.compose-layer .send-split.off .send-caret { cursor: not-allowed; }
+.compose-layer .send-menu { position: absolute; bottom: calc(100% + 8px); left: 0; z-index: 20; min-width: 200px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); padding: 5px; animation: mail-slideup var(--dur) var(--ease-out); }
+.compose-layer .send-menu button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; border-radius: var(--radius-control-compact); padding: 9px 10px; cursor: pointer; color: var(--fg); font-size: 13.5px; }
+.compose-layer .send-menu button svg { width: 16px; height: 16px; color: var(--fg-muted); }
+.compose-layer .send-menu button:hover { background: var(--paper-100); }
+.compose-layer .send-menu button:disabled { opacity: .45; cursor: not-allowed; background: none; }
 
-.compose-dock { position: fixed; bottom: 0; right: 32px; z-index: 90; display: flex; align-items: center; gap: 9px; width: 300px; background: var(--pine-900); color: var(--fg-on-pine); padding: 12px 10px 12px 15px; border-radius: var(--radius-panel) var(--radius-panel) 0 0; box-shadow: var(--shadow-lg); cursor: pointer; animation: mail-slideup var(--dur) var(--ease-out); font-family: var(--font-sans); border: none; }
-.compose-dock > svg { width: 15px; height: 15px; color: var(--pine-300); flex: 0 0 auto; }
-.compose-dock .dock-t { flex: 1 1 auto; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
-.compose-dock .dock-b { display: inline-flex; background: none; border: none; color: var(--fg-on-pine-muted); cursor: pointer; padding: 4px; border-radius: var(--radius-control-compact); flex: 0 0 auto; }
-.compose-dock .dock-b:hover { background: rgba(255, 255, 255, .1); color: #fff; }
 
 .mail-app .send-veil { position: absolute; inset: 0; z-index: 8; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 13px; padding: 32px; background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(2px); animation: mail-fade var(--dur); }
 .mail-app .sv-ring { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--pine-100); border-top-color: var(--pine-600); animation: mail-svspin .8s linear infinite; }
@@ -756,12 +838,12 @@
 .mail-app .sv-t { font-family: var(--font-sans); font-weight: 600; font-size: 16px; color: var(--fg-strong); }
 .mail-app .sv-d { font-size: 12.5px; color: var(--fg-muted); max-width: 40ch; line-height: 1.55; }
 
-.mail-scrim .send-split.sending { box-shadow: var(--shadow-xs); opacity: 1; }
-.mail-scrim .send-split.sending .send,
-.mail-scrim .send-split.sending .send-caret { background: var(--pine-600); cursor: default; }
-.mail-scrim .send-split.sending .send-caret { opacity: .55; }
-.mail-scrim .send .send-spin { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: mail-svspin .7s linear infinite; display: inline-block; }
-.mail-scrim .send[disabled] { cursor: default; }
+.compose-layer .send-split.sending { box-shadow: var(--shadow-xs); opacity: 1; }
+.compose-layer .send-split.sending .send,
+.compose-layer .send-split.sending .send-caret { background: var(--pine-600); cursor: default; }
+.compose-layer .send-split.sending .send-caret { opacity: .55; }
+.compose-layer .send .send-spin { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: mail-svspin .7s linear infinite; display: inline-block; }
+.compose-layer .send[disabled] { cursor: default; }
 
 .mail-app .se-banner { display: flex; align-items: flex-start; gap: 11px; flex: 0 0 auto; padding: 12px 16px; border-top: 1px solid var(--border); animation: mail-slideup var(--dur) var(--ease-out); }
 .mail-app .se-ic { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
@@ -986,43 +1068,40 @@
 .mail-app .quoted p:last-child { margin-bottom: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-	.mail-scrim .sv-ring,
-	.mail-scrim .send .send-spin,
+	.compose-layer .sv-ring,
+	.compose-layer .send .send-spin,
 	.mail-app .rb-btn .send-spin { animation: none; }
 }
 
-.mail-scrim .att-hidden-input { display: none; }
-.mail-scrim .att-list { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 0; }
-.mail-scrim .att-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--paper-200); border-radius: var(--radius-sm); background: var(--paper-50); }
-.mail-scrim .att-chip.err { border-color: var(--danger-500); background: var(--danger-100); }
-.mail-scrim .att-chip .ic { color: var(--ink-500); display: flex; align-items: center; justify-content: center; }
-.mail-scrim .att-chip .info { flex: 1; min-width: 0; }
-.mail-scrim .att-chip .nm { font-size: 13px; color: var(--ink-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-scrim .att-chip .sz { font-size: 11px; color: var(--ink-500); }
-.mail-scrim .att-chip .errmsg { font-size: 11px; color: var(--danger-700); }
-.mail-scrim .att-chip .bar { margin-top: 4px; height: 3px; border-radius: 999px; background: var(--paper-200); overflow: hidden; }
-.mail-scrim .att-chip .bar-fill { height: 100%; background: var(--pine-700); transition: width var(--dur-fast); }
-.mail-scrim .att-chip .state { display: flex; align-items: center; gap: 6px; color: var(--ink-500); }
-.mail-scrim .att-chip .rm { background: none; border: none; padding: 4px; color: inherit; cursor: pointer; border-radius: var(--radius-control-compact); }
-.mail-scrim .att-chip .rm:hover { background: var(--paper-200); color: var(--ink-700); }
-.mail-scrim .att-drop { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--pine-900); background: rgba(132, 178, 124, 0.12); border: 2px dashed var(--pine-700); border-radius: var(--radius-md); }
+.compose-layer .att-hidden-input { display: none; }
+.compose-layer .att-list { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 0; }
+.compose-layer .att-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--paper-200); border-radius: var(--radius-sm); background: var(--paper-50); }
+.compose-layer .att-chip.err { border-color: var(--danger-500); background: var(--danger-100); }
+.compose-layer .att-chip .ic { color: var(--ink-500); display: flex; align-items: center; justify-content: center; }
+.compose-layer .att-chip .info { flex: 1; min-width: 0; }
+.compose-layer .att-chip .nm { font-size: 13px; color: var(--ink-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.compose-layer .att-chip .sz { font-size: 11px; color: var(--ink-500); }
+.compose-layer .att-chip .errmsg { font-size: 11px; color: var(--danger-700); }
+.compose-layer .att-chip .bar { margin-top: 4px; height: 3px; border-radius: 999px; background: var(--paper-200); overflow: hidden; }
+.compose-layer .att-chip .bar-fill { height: 100%; background: var(--pine-700); transition: width var(--dur-fast); }
+.compose-layer .att-chip .state { display: flex; align-items: center; gap: 6px; color: var(--ink-500); }
+.compose-layer .att-chip .rm { background: none; border: none; padding: 4px; color: inherit; cursor: pointer; border-radius: var(--radius-control-compact); }
+.compose-layer .att-chip .rm:hover { background: var(--paper-200); color: var(--ink-700); }
+.compose-layer .att-drop { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--pine-900); background: rgba(132, 178, 124, 0.12); border: 2px dashed var(--pine-700); border-radius: var(--radius-md); }
 
 .replybox .att-hidden-input { display: none; }
 .replybox .att-drop { position: absolute; inset: 0; z-index: 9; pointer-events: none; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--pine-900); background: rgba(132, 178, 124, 0.12); border: 2px dashed var(--pine-700); border-radius: var(--radius-surface); }
 
-.mail-app .replybox .rt-from { position: relative; display: inline-flex; }
-.mail-app .replybox .rt-from .from-trigger { padding: 3px 9px 3px 4px; }
-.mail-app .replybox .rt-from .from-menu { top: calc(100% + 6px); left: 0; }
 .mail-app .replybox .recip-row { padding: 8px 15px; }
 .mail-app .replybox .cfield.subj { padding: 11px 15px; }
 .mail-app .replybox .subj-static { font-size: 14px; font-weight: 500; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .replybox .rq { display: flex; align-items: center; gap: 9px; padding: 2px 15px 10px; }
-.mail-app .replybox .rq .rq-lbl { font-size: 12px; color: var(--fg-muted); flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .replybox .rq .rq-rm { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-faint); cursor: pointer; }
-.mail-app .replybox .rq .rq-rm:hover { background: var(--paper-100); color: var(--ink-700); }
-.mail-app .replybox .rq-view { margin: 0 15px 12px; padding-left: 12px; border-left: 2px solid var(--border-strong); }
+.mail-app :is(.replybox, .compose-win) .rq { display: flex; align-items: center; gap: 9px; padding: 2px 15px 10px; }
+.mail-app :is(.replybox, .compose-win) .rq .rq-lbl { font-size: 12px; color: var(--fg-muted); flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mail-app :is(.replybox, .compose-win) .rq .rq-rm { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-faint); cursor: pointer; }
+.mail-app :is(.replybox, .compose-win) .rq .rq-rm:hover { background: var(--paper-100); color: var(--ink-700); }
+.mail-app :is(.replybox, .compose-win) .rq-view { margin: 0 15px 12px; padding-left: 12px; border-left: 2px solid var(--border-strong); }
 
-[data-theme='dark'] :is(.mail-scrim, .replybox) .att-drop { color: var(--pine-700); }
+[data-theme='dark'] :is(.compose-layer, .replybox) .att-drop { color: var(--pine-700); }
 [data-theme='dark'] .mail-app .compose { background: #ECEFE2; color: var(--pine-950); }
 [data-theme='dark'] .mail-app .compose:hover { background: #F8FAF0; }
 
@@ -1038,13 +1117,12 @@
 [data-theme='dark'] .mail-app .bulk .cnt { color: var(--pine-700); }
 
 [data-theme='dark'] .sw-ovl { background: rgba(0, 0, 0, 0.6); }
-[data-theme='dark'] .mail-scrim { background: rgba(0, 0, 0, 0.4); }
 
 [data-theme='dark'] .compose-dock { border: 1px solid var(--border-dark); }
 [data-theme='dark'] .compose-dock { border-bottom: none; }
 
-[data-theme='dark'] .mail-scrim .send-split.sending .send,
-[data-theme='dark'] .mail-scrim .send-split.sending .send-caret { background: #2E5440; }
+[data-theme='dark'] .compose-layer .send-split.sending .send,
+[data-theme='dark'] .compose-layer .send-split.sending .send-caret { background: #2E5440; }
 [data-theme='dark'] .mail-app .se-info .se-ic,
 [data-theme='dark'] .mail-app .se-warn .se-ic,
 [data-theme='dark'] .mail-app .se-pine .se-ic { background: rgba(255, 255, 255, 0.09); }
@@ -1053,7 +1131,7 @@
 [data-theme='dark'] .mail-app .se-pine .se-btn.primary { background: var(--primary); }
 [data-theme='dark'] .mail-app .se-pine .se-btn.primary:hover { background: var(--primary-hover); }
 [data-theme='dark'] .mail-app .se-x:hover { background: rgba(255, 255, 255, 0.08); }
-[data-theme='dark'] :is(.mail-scrim, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(255, 255, 255, 0.1); }
+[data-theme='dark'] :is(.compose-layer, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(255, 255, 255, 0.1); }
 
 .mail-app .sysalerts { flex: 0 0 auto; display: flex; flex-direction: column; position: relative; z-index: 60; }
 .mail-app .sysalert { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 7px 18px; font-size: 13.5px; line-height: 1.45; border-bottom: 1px solid var(--border); }
@@ -1090,6 +1168,7 @@
 @media (max-width: 1000px) {
 	.mail-app .lh-nav { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-right: 2px; margin-left: -4px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--ink-600); flex: 0 0 auto; }
 	.mail-app .lh-nav:hover { background: var(--paper-100); }
+	.compose-layer .compose-win.expanded { left: 0; border-left: 0; }
 	.mail-app .rail { position: fixed; left: 0; top: 0; bottom: 0; z-index: 220; transform: translateX(-105%); transition: transform var(--dur-slow) var(--ease-out); will-change: transform; }
 	.mail-app:not(.nav-open) .rail { visibility: hidden; transition: transform var(--dur-slow) var(--ease-out), visibility 0s linear var(--dur-slow); }
 	.mail-app.nav-open .rail { transform: none; box-shadow: var(--shadow-lg); }
@@ -1110,6 +1189,7 @@
 	.mail-app .reader-bar { padding: 0 10px; gap: 5px; overflow-x: auto; scrollbar-width: none; }
 	.mail-app .reader-bar::-webkit-scrollbar { display: none; }
 	.mail-app .fab { position: fixed; right: 18px; bottom: 20px; z-index: 80; display: flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; border: none; background: var(--primary); color: var(--primary-fg); box-shadow: var(--shadow-lg); }
+	.mail-app:has(.compose-dock) .fab { bottom: 68px; }
 	.mail-app .fab svg { width: 22px; height: 22px; }
 	.mail-app .fab:active { background: var(--primary-press); }
 
@@ -1152,16 +1232,15 @@
 
 	.mail-app .att-card { max-width: none; }
 
-	.mail-scrim { padding: 0; align-items: stretch; justify-content: stretch; }
-	.mail-scrim .compose-win { width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
-	.compose-dock { left: 0; right: 0; width: auto; border-radius: 0; }
-	.mail-scrim .compose-f { flex-wrap: wrap; row-gap: 6px; }
-	.mail-scrim .compose-f .csave { display: none; }
-	.mail-scrim .compose-f .cf-enc-t { display: none; }
-	:is(.mail-scrim, .mail-app .replybox) .recip-label { width: 36px; }
-	:is(.mail-scrim, .mail-app .replybox) .from-menu { left: 46px; max-width: calc(100% - 58px); }
-	.mail-scrim .cbar { overflow-x: auto; scrollbar-width: none; }
-	.mail-scrim .cbar::-webkit-scrollbar { display: none; }
+	.compose-layer { left: 0; right: 0; gap: 0; max-width: none; }
+	.compose-layer :is(.compose-win, .compose-win.expanded) { position: fixed; inset: 0; width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: 0; }
+	.compose-dock { flex: 1 1 0; min-width: 0; border-radius: 0; }
+	.compose-layer .compose-h .chx.size { display: none; }
+	.compose-layer .compose-f { flex-wrap: wrap; row-gap: 6px; }
+	:is(.compose-layer, .mail-app .replybox) .recip-label { width: 36px; }
+	:is(.compose-layer, .mail-app .replybox) .from-menu { left: 46px; max-width: calc(100% - 58px); }
+	.compose-layer .cbar { overflow-x: auto; scrollbar-width: none; }
+	.compose-layer .cbar::-webkit-scrollbar { display: none; }
 
 	.mail-app .menu { width: min(290px, calc(100vw - 28px)); }
 	.mail-app .filter-menu { width: min(256px, calc(100vw - 28px)); }
@@ -1284,6 +1363,6 @@
 
 @media (pointer: coarse) {
 	.mail-app .rb-ico, .mail-app .lh-btn { flex: 0 0 auto; width: 40px; height: 40px; }
-	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn) { position: relative; }
-	.mail-app :is(.replybox .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
+	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn) { position: relative; }
+	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .snz-strip .snz-x, .view-strip .list-sub-x, .fgroup .addbtn, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
 }

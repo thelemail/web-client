@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import type { Editor } from '@tiptap/core';
+	import type { Snippet } from 'svelte';
 	import LinkDialog from './LinkDialog.svelte';
 	import { applyLink, currentLink } from './link';
 	import List from '@lucide/svelte/icons/list';
@@ -19,9 +20,10 @@
 	interface Props {
 		editor: Editor | null;
 		signature?: SignatureControl;
+		extra?: Snippet;
 	}
 
-	let { editor, signature }: Props = $props();
+	let { editor, signature, extra }: Props = $props();
 
 	let tick = $state(0);
 
@@ -116,6 +118,10 @@
 		>
 			<PenLine size={16} />
 		</button>
+	{/if}
+	{#if extra}
+		<span class="cbar-sep"></span>
+		{@render extra()}
 	{/if}
 </div>
 

@@ -3,6 +3,7 @@
 	import './mail.css';
 	import Sidebar from '$core/mail/Sidebar.svelte';
 	import MailTopBar from '$core/mail/MailTopBar.svelte';
+	import ComposeHost from '$core/mail/ComposeHost.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
 	import { scheduled } from '$core/stores/scheduled.svelte';
@@ -20,7 +21,7 @@
 	let { children, data } = $props();
 
 	beforeNavigate((nav) => {
-		if (nav.willUnload || !nav.to || !leavePending()) return;
+		if (nav.willUnload || !nav.to || nav.to.url.href === nav.from?.url.href || !leavePending()) return;
 		nav.cancel();
 		const target = nav.to.url;
 		const back = nav.type === 'popstate' ? nav.delta : undefined;
@@ -94,6 +95,7 @@
 		<MailTopBar />
 		{@render children()}
 	</div>
+	<ComposeHost />
 </div>
 
 <ReadOnlyGuard />

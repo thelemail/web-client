@@ -3,7 +3,7 @@ import { cleanup, render } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import MailLayout from './+layout.svelte';
 
-vi.mock('openpgp', () => ({}));
+vi.mock('openpgp', () => ({ enums: { publicKey: {}, keyFlags: {} } }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribe: vi.fn() } }));
 vi.mock('$core/directory/signing-key', () => ({
 	DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: '',
@@ -15,7 +15,7 @@ vi.mock('$core/directory/verify', () => ({
 	DirectoryVerificationError: class extends Error {}
 }));
 vi.mock('$app/state', () => ({
-	page: { params: { slot: '0' }, url: new URL('http://localhost/u/0/mail/inbox') }
+	page: { params: { slot: '0' }, url: new URL('http://localhost/u/0/mail/inbox'), state: {} }
 }));
 
 const children = createRawSnippet(() => ({ render: () => '<p>list</p>' }));

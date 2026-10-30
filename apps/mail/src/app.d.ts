@@ -11,6 +11,9 @@ interface ImportMeta {
 
 declare global {
 	namespace App {
+		interface PageState {
+			composeExpanded?: boolean;
+		}
 	}
 }
 

@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { m as msg } from '$paraglide/messages.js';
 	import { onMount, untrack } from 'svelte';
-	import Reply from '@lucide/svelte/icons/reply';
-	import ReplyAll from '@lucide/svelte/icons/reply-all';
-	import Forward from '@lucide/svelte/icons/forward';
 	import Send from '@lucide/svelte/icons/send';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Archive from '@lucide/svelte/icons/archive';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import Lock from '@lucide/svelte/icons/lock';
-	import LockOpen from '@lucide/svelte/icons/lock-open';
+	import Mail from '@lucide/svelte/icons/mail';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import X from '@lucide/svelte/icons/x';
 	import Check from '@lucide/svelte/icons/check';
@@ -40,11 +36,9 @@
 		type ThreadEntry
 	} from './data';
 	import type { MessagePreviewRecipient } from './preview';
-	import { forwardSubject, replySubject } from './subjects';
+	import { replySubject } from './subjects';
 	import { replyTargets, switchReplyMode, type ReplyParty, type ReplySeed } from './replyRecipients';
 	import {
-		forwardQuoteHtml,
-		forwardQuoteText,
 		replyQuoteHtml,
 		replyQuoteText,
 		type QuoteSource
@@ -52,7 +46,6 @@
 	import { loadMessageBody } from './bodySource';
 	import { buildSrcDoc } from './render';
 	import {
-		restoreAttachmentFile,
 		loadDraftDoc,
 		restoreDraftAttachments,
 		DRAFT_DOC_VERSION,
@@ -101,7 +94,7 @@
 		type Attachment as ComposeAttachment
 	} from './attachmentUpload';
 
-	export type ReplyMode = 'reply' | 'all' | 'forward';
+	export type ReplyMode = 'reply' | 'all';
 
 	type SendAfter = 'none' | 'archive';
 
@@ -154,7 +147,6 @@
 	const partyChip = (p: ReplyParty) => recipientChip({ name: p.display || undefined, address: p.address });
 
 	const seededChips = untrack(() => {
-		if (mode === 'forward') return { to: [] as RecipientChip[], cc: [] as RecipientChip[], added: [] as string[] };
 		const targets = replyTargets(replySeedParties, mode === 'all' ? 'all' : 'reply', myEmails());
 		const added =
 			mode === 'all'
@@ -183,7 +175,6 @@
 		if (next === appliedMode) return;
 		const prev = appliedMode;
 		appliedMode = next;
-		if (prev === 'forward' || next === 'forward') return;
 		untrack(() => {
 			const switched = switchReplyMode(
 				{ to, cc, bcc },
@@ -201,11 +192,10 @@
 		});
 	});
 	let showBcc = $state(false);
+	let encOpen = $state(false);
 	let ccFocus = $state(false);
 	let bccFocus = $state(false);
-	let subject = $state(
-		untrack(() => (mode === 'forward' ? forwardSubject(m.subj) : replySubject(m.subj)))
-	);
+	let subject = $state(untrack(() => replySubject(m.subj)));
 
 	let text = $state('');
 	let html = $state('');
@@ -241,7 +231,7 @@
 	const fromNotice = $derived(
 		from.unavailable && addresses.getByEmail(from.unavailable)?.suspended ? from.unavailable : null
 	);
-	const replyingAsAlias = $derived(mode !== 'forward' && ident.kind === 'Alias');
+	const replyingAsAlias = $derived(ident.kind === 'Alias');
 	const othersReplying = $derived(replyingLine(replyPresence.replying));
 
 	$effect(() => {
@@ -366,7 +356,7 @@
 				disposition: 'attachment'
 			};
 			attachments = [...attachments, att];
-			void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.indexOf(att)));
+			void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.findIndex((x) => x.id === att.id)));
 		}
 	}
 
@@ -439,10 +429,7 @@
 
 	function setQuote(htmlSrc: string | undefined, textSrc: string | undefined) {
 		const src = quoteSourceFrom(htmlSrc, textSrc);
-		quote =
-			mode === 'forward'
-				? { html: forwardQuoteHtml(src), text: forwardQuoteText(src) }
-				: { html: replyQuoteHtml(src), text: replyQuoteText(src) };
+		quote = { html: replyQuoteHtml(src), text: replyQuoteText(src) };
 	}
 
 	function threadIdsFrom(detail: MessageDetail): ReplyThreadIds {
@@ -451,21 +438,6 @@
 			externalMessageId: detail.externalMessageId ?? undefined,
 			references: detail.references ?? undefined
 		};
-	}
-
-	async function attachForwarded(accountId: string, detail: MessageDetail): Promise<void> {
-		const files: File[] = [];
-		let failed = false;
-		for (const a of detail.attachments ?? []) {
-			if (a.isInline) continue;
-			try {
-				files.push(await restoreAttachmentFile(accountId, a.pointer));
-			} catch {
-				failed = true;
-			}
-		}
-		if (files.length) addFiles(files);
-		if (failed) attErr = msg.mail_compose_att_reattach_failed();
 	}
 
 	async function initFromDetail(): Promise<void> {
@@ -481,7 +453,6 @@
 				} else {
 					setQuote(undefined, fallbackQuoteText());
 				}
-				if (mode === 'forward' && !openedDraftId) await attachForwarded(accountId, detail);
 				return;
 			} catch {
 				setQuote(undefined, fallbackQuoteText());
@@ -532,7 +503,6 @@
 
 	function replyWorth(): boolean {
 		if (text.trim() !== '') return true;
-		if (mode === 'forward') return to.length + cc.length + bcc.length > 0;
 		return attachments.length > 0;
 	}
 
@@ -627,7 +597,7 @@
 					}));
 					attachments = [...attachments, ...added];
 					for (const att of added) {
-						void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.indexOf(att)));
+						void orchestrator.startUpload(att, recipientAddresses(), Math.max(0, attachments.findIndex((x) => x.id === att.id)));
 					}
 				} catch {
 					restoreFailed = true;
@@ -690,7 +660,7 @@
 	const validCount = $derived(allRecipients.filter((c) => c.valid).length);
 	const hasInvalid = $derived(allRecipients.some((c) => !c.valid));
 	const attReady = $derived(attachments.every((a) => a.status === 'ready'));
-	const bodyOk = $derived(mode === 'forward' || text.trim().length > 0);
+	const bodyOk = $derived(text.trim().length > 0);
 	const canSend = $derived(
 		validCount > 0 && !hasInvalid && bodyOk && status !== 'sending' && attReady && !noSender && !fromRevoked
 	);
@@ -756,13 +726,7 @@
 		return msg.mail_compose_ident_default();
 	}
 
-	const modeLabel = $derived(
-		mode === 'all'
-			? msg.mail_reader_reply_all()
-			: mode === 'forward'
-				? msg.mail_reader_forward()
-				: msg.mail_reader_reply()
-	);
+	const modeLabel = $derived(mode === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply());
 
 	function handleDocMouseDown(e: MouseEvent) {
 		if (fromOpen && fromRef && !fromRef.contains(e.target as Node)) fromOpen = false;
@@ -915,8 +879,7 @@
 		approved = encTracker.approvals(recipientAddresses());
 		const next = pendingSendGuards({
 			settings: accountSettings.composing,
-			statuses: allRecipients.filter((c) => c.valid).map((c) => encStatusFor(c.email)),
-			subject: mode === 'forward' ? subject : undefined
+			statuses: allRecipients.filter((c) => c.valid).map((c) => encStatusFor(c.email))
 		});
 		if (next.length === 0) {
 			run();
@@ -1002,68 +965,22 @@
 	ondrop={onDrop}
 >
 	<div class="rt">
-		{#if mode === 'all'}
-			<ReplyAll size={14} />
-		{:else if mode === 'forward'}
-			<Forward size={14} />
-		{:else}
-			<Reply size={14} />
-		{/if}
-		{modeLabel}
-		{#if identityOptions.length > 1}
-			<span class="rt-from" bind:this={fromRef}>
-				<button
-					type="button"
-					class="from-trigger"
-					class:open={fromOpen}
-					onclick={() => (fromOpen = !fromOpen)}
-				>
-					<Avatar
-						initials={ident.init}
-						src={ident.kind === 'Alias' ? null : auth.avatarUrl}
-						fit="cover"
-						size={20}
-						bg={ident.bg}
-						fg={ident.fg}
-					/>
-					<span class="ft-email">{ident.email}</span>
-					<ChevronDown size={14} />
-				</button>
-				{#if fromOpen}
-					<div class="from-menu" role="menu">
-						<div class="fm-h">{msg.mail_compose_send_as()}</div>
-						{#each identityOptions as id, i (id.email + '-' + i)}
-							<button
-								type="button"
-								class="fm-item"
-								class:on={id.email === ident.email}
-								role="menuitemradio"
-								aria-checked={id.email === ident.email}
-								onclick={() => pickIdentity(id.email)}
-							>
-								<Avatar
-									initials={id.init}
-									src={id.kind === 'Alias' ? null : auth.avatarUrl}
-									fit="cover"
-									size={30}
-									bg={id.bg}
-									fg={id.fg}
-								/>
-								<span class="fm-tx">
-									<span class="fm-top">
-										<b>{id.name}</b>
-										<span class="fm-kind">{identityKindLabel(id.kind)}</span>
-									</span>
-									<span class="fm-em">{id.email}</span>
-								</span>
-								{#if id.email === ident.email}<Check size={17} />{/if}
-							</button>
-						{/each}
-					</div>
-				{/if}
+		<h2 class="rt-t">{modeLabel}</h2>
+		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
+			<span class="rt-save" data-state={saveStatus} role="status">
+				{#if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
+					? msg.mail_compose_opening()
+					: saveStatus === 'saving'
+						? msg.mail_compose_saving()
+						: saveStatus === 'saved'
+							? msg.mail_compose_draft_saved()
+							: saveStatus === 'failed'
+								? msg.mail_compose_not_saved()
+								: msg.mail_compose_unsaved()}
 			</span>
 		{/if}
 		{#if onClose}
+			<span class="rt-rule" aria-hidden="true"></span>
 			<button
 				type="button"
 				class="rt-x"
@@ -1072,10 +989,65 @@
 				disabled={status === 'sending'}
 				onclick={() => void closeKeepingDraft()}
 			>
-				<X size={15} />
+				<X size={16} />
 			</button>
 		{/if}
 	</div>
+	{#if identityOptions.length > 1}
+		<div class="from-row" bind:this={fromRef}>
+			<span class="recip-label">{msg.mail_compose_from()}</span>
+			<button
+				type="button"
+				class="from-trigger"
+				class:open={fromOpen}
+				onclick={() => (fromOpen = !fromOpen)}
+			>
+				<Avatar
+					initials={ident.init}
+					src={ident.kind === 'Alias' ? null : auth.avatarUrl}
+					fit="cover"
+					size={22}
+					bg={ident.bg}
+					fg={ident.fg}
+				/>
+				<span class="ft-name">{ident.name}</span>
+				<span class="ft-email">&lt;{ident.email}&gt;</span>
+				<ChevronDown size={14} />
+			</button>
+			{#if fromOpen}
+				<div class="from-menu" role="menu">
+					<div class="fm-h">{msg.mail_compose_send_as()}</div>
+					{#each identityOptions as id, i (id.email + '-' + i)}
+						<button
+							type="button"
+							class="fm-item"
+							class:on={id.email === ident.email}
+							role="menuitemradio"
+							aria-checked={id.email === ident.email}
+							onclick={() => pickIdentity(id.email)}
+						>
+							<Avatar
+								initials={id.init}
+								src={id.kind === 'Alias' ? null : auth.avatarUrl}
+								fit="cover"
+								size={30}
+								bg={id.bg}
+								fg={id.fg}
+							/>
+							<span class="fm-tx">
+								<span class="fm-top">
+									<b>{id.name}</b>
+									<span class="fm-kind">{identityKindLabel(id.kind)}</span>
+								</span>
+								<span class="fm-em">{id.email}</span>
+							</span>
+							{#if id.email === ident.email}<Check size={17} />{/if}
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
 	{#if fromRevoked && restoredFrom}
 		<div class="cwarn" role="alert">
 			<CircleAlert size={14} />
@@ -1126,7 +1098,6 @@
 		chips={to}
 		setChips={(next) => (to = next)}
 		contacts={contacts.items}
-		autoFocus={mode === 'forward'}
 		rightSlot={ccBccSlot}
 		{encStatusFor}
 	/>
@@ -1163,22 +1134,35 @@
 		/>
 	{/if}
 
+	<div class="cenc" data-tone={encSummary.tone}>
+		{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
+			<Mail size={15} />
+		{:else if encSummary.tone === 'unknown'}
+			<CircleAlert size={15} />
+		{:else}
+			<Lock size={15} />
+		{/if}
+		<span class="cenc-t">{encSummary.label}</span>
+		<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
+			{msg.mail_compose_enc_details()}
+		</button>
+	</div>
+	{#if encOpen}
+		<p class="cenc-more">{encSummary.title}</p>
+	{/if}
+
 	<div class="cfield subj">
 		<span class="recip-label">{msg.mail_compose_subject()}</span>
-		{#if mode === 'forward'}
-			<input bind:value={subject} placeholder={msg.mail_compose_subject()} />
-		{:else}
-			<span class="subj-static" title={subject}>{subject}</span>
-		{/if}
+		<span class="subj-static" title={subject}>{subject}</span>
 	</div>
 
 	<RichEditor
 		bind:html
 		bind:text
 		bind:editor
-		placeholder={mode === 'forward' ? msg.mail_compose_add_note() : msg.mail_compose_write_reply()}
+		placeholder={msg.mail_compose_write_reply()}
 		disabled={status === 'sending' || load !== 'ready'}
-		autofocus={mode !== 'forward'}
+		autofocus
 		class="cbody reply"
 	/>
 
@@ -1194,7 +1178,7 @@
 			>
 				<Ellipsis size={16} />
 			</button>
-			<span class="rq-lbl">{mode === 'forward' ? msg.mail_forwarded_chip() : msg.mail_compose_quoted_text()}</span>
+			<span class="rq-lbl">{msg.mail_compose_quoted_text()}</span>
 			<button
 				type="button"
 				class="rq-rm"
@@ -1221,7 +1205,13 @@
 			on: signatureOn,
 			onToggle: toggleSignature
 		}}
-	/>
+	>
+		{#snippet extra()}
+			<button type="button" class="cbar-lab" onclick={pickFiles}>
+				<Paperclip size={16} />{msg.mail_compose_attach()}
+			</button>
+		{/snippet}
+	</EditorToolbar>
 
 	{#if warn && !canSend && !noSender && status !== 'sending'}
 		<div class="cwarn">
@@ -1253,7 +1243,7 @@
 		</div>
 	{/if}
 
-	<AttachPreview files={attachments} onRemove={removeAttachment} />
+	<AttachPreview files={attachments} onRemove={removeAttachment} rows />
 
 	{#if attErr}
 		<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
@@ -1303,7 +1293,7 @@
 					disabled={status === 'sending' || !canSend}
 					onclick={() => (sendOpen = !sendOpen)}
 				>
-					<ChevronUp size={15} />
+					<ChevronDown size={15} />
 				</button>
 				{#if sendOpen}
 					<div class="menu rf-menu" role="menu">
@@ -1317,9 +1307,6 @@
 				{/if}
 			{/if}
 		</div>
-		<button type="button" class="rb-ico" title={msg.mail_compose_attach()} onclick={pickFiles}>
-			<Paperclip size={17} />
-		</button>
 		<input
 			bind:this={fileInput}
 			type="file"
@@ -1327,32 +1314,9 @@
 			class="att-hidden-input"
 			onchange={onFileInputChange}
 		/>
-		<button type="button" class="rb-ico" title={msg.mail_compose_discard_draft()} onclick={discard}>
-			<Trash2 size={17} />
+		<button type="button" class="cf-disc" onclick={discard}>
+			<Trash2 size={16} />{msg.mail_compose_discard_draft()}
 		</button>
-		<span class="enc" data-tone={encSummary.tone} title={encSummary.title}>
-			{#if encSummary.tone === 'partial' || encSummary.tone === 'none'}
-				<LockOpen size={14} />
-			{:else if encSummary.tone === 'unknown'}
-				<CircleAlert size={14} />
-			{:else}
-				<Lock size={14} />
-			{/if}
-			{encSummary.label}
-		</span>
-		{#if saveStatus !== 'idle' && saveStatus !== 'load-failed'}
-			<span class="rsave" data-state={saveStatus} role="status"
-				>{saveStatus === 'loading'
-					? msg.mail_compose_opening()
-					: saveStatus === 'saving'
-						? msg.mail_compose_saving()
-						: saveStatus === 'saved'
-							? msg.mail_compose_draft_saved()
-							: saveStatus === 'failed'
-								? msg.mail_compose_not_saved()
-								: msg.mail_compose_unsaved()}</span
-			>
-		{/if}
 	</div>
 
 	{#if status === 'sending'}

@@ -49,6 +49,7 @@
 	import { DecryptionError } from '$core/mail/decrypt';
 	import { auth } from '$core/stores/auth.svelte';
 	import { drafts } from '$core/stores/drafts.svelte';
+	import { composeStore } from '$core/stores/compose.svelte';
 	import { getMessage } from '$core/api/messages';
 	import { initialChips, type AttachmentChip } from '$core/mail/attachments';
 	import AttachmentList from '$core/mail/AttachmentList.svelte';
@@ -252,7 +253,8 @@
 		if (!id || !draft?.reply || restoredReplyFor === id) return;
 		untrack(() => {
 			restoredReplyFor = id;
-			if (replyMode === null) replyMode = draft.reply!.mode;
+			const mode = draft.reply!.mode;
+			if (replyMode === null && mode !== 'forward') replyMode = mode;
 		});
 	});
 
@@ -334,11 +336,14 @@
 		replyMode = replyMode === next ? null : next;
 	}
 
-	const replyDraftId = $derived(
-		replyDraft?.reply && replyMode && (replyDraft.reply.mode === 'forward') === (replyMode === 'forward')
-			? replyDraft.id
-			: null
-	);
+	const replyDraftId = $derived(replyDraft?.reply && replyMode ? replyDraft.id : null);
+
+	function forward() {
+		if (!m) return;
+		const existing = drafts.forSource(m.id, true);
+		if (existing) composeStore.openDraft(existing.id);
+		else composeStore.openForward({ source: m.id, seed: replySeed?.id ?? m.id });
+	}
 
 	const unsubMethod = $derived(m ? unsubscribeMethod(m.unsubscribe) : null);
 
@@ -681,9 +686,9 @@
 				{/each}
 				<Tooltip.Root>
 					<Tooltip.Trigger
-						class={replyMode === 'forward' ? 'rb-btn on' : 'rb-btn'}
+						class="rb-btn"
 						aria-label={msg.mail_reader_forward()}
-						onclick={() => toggleReplyMode('forward')}
+						onclick={forward}
 					>
 						<Forward size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
 					</Tooltip.Trigger>
@@ -1088,14 +1093,14 @@
 								{/if}
 							</button>
 						{/each}
-						<button type="button" class="rr-btn" onclick={() => toggleReplyMode('forward')}>
+						<button type="button" class="rr-btn" onclick={forward}>
 							<Forward size={16} />{msg.mail_reader_forward()}
 						</button>
 					</div>
 				{/if}
 
 				{#if replyMode}
-					{#key `${replyMode === 'forward' ? 'forward' : 'reply'}:${m.id}`}
+					{#key m.id}
 						<ReplyBox
 							m={enriched ?? m}
 							mode={replyMode}

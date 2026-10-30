@@ -130,8 +130,10 @@ class DraftsStore {
 		await this.#load(true);
 	}
 
-	forSource(messageId: string): DraftRow | undefined {
-		return this.items.find((i) => i.reply?.source === messageId);
+	forSource(messageId: string, forward = false): DraftRow | undefined {
+		return this.items.find(
+			(i) => i.reply?.source === messageId && (i.reply.mode === 'forward') === forward
+		);
 	}
 
 	remove(id: string): void {
