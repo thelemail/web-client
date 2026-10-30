@@ -588,7 +588,8 @@
 .compose-layer > * { pointer-events: auto; }
 @keyframes mail-fade { from { opacity: 0; } to { opacity: 1; } }
 .compose-layer .compose-win[hidden] { display: none; }
-.compose-layer .compose-win { flex: 0 0 auto; position: relative; width: 600px; max-width: calc(100vw - 64px); height: min(640px, calc(100dvh - 72px)); background: var(--surface); border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-surface) var(--radius-surface) 0 0; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; animation: mail-slideup var(--dur-slow) var(--ease-out); font-family: var(--font-sans); color: var(--fg); }
+.compose-layer .compose-win { flex: 0 0 auto; position: relative; width: 600px; max-width: calc(100vw - 64px); height: min(640px, calc(100dvh - 72px)); background: var(--surface); border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-surface) var(--radius-surface) 0 0; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; font-family: var(--font-sans); color: var(--fg); }
+.compose-layer .compose-win.fresh { animation: mail-slideup var(--dur-slow) var(--ease-out); }
 .compose-layer .compose-h { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
 .compose-layer .compose-h .ch-t { flex: 0 1 auto; min-width: 0; margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .compose-layer .compose-h .ch-back { display: inline-flex; align-items: center; gap: 6px; margin-right: 6px; padding: 4px 6px 4px 2px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); font: inherit; font-size: 13.5px; cursor: pointer; }
@@ -659,7 +660,7 @@
 .compose-layer .cf-disc { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 8px 6px; background: none; border: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); font: inherit; font-size: 14px; cursor: pointer; }
 .compose-layer .cf-disc:hover { color: var(--danger-700); background: var(--danger-100); }
 
-.compose-dock { flex: 0 1 250px; min-width: 160px; display: flex; align-items: center; gap: 8px; background: var(--surface); color: var(--fg-strong); padding: 10px 12px; border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-menu) var(--radius-menu) 0 0; box-shadow: var(--shadow-md); cursor: pointer; animation: mail-slideup var(--dur) var(--ease-out); font-family: var(--font-sans); }
+.compose-dock { flex: 0 1 250px; min-width: 160px; display: flex; align-items: center; gap: 8px; background: var(--surface); color: var(--fg-strong); padding: 10px 12px; border: 1px solid var(--border); border-bottom: 0; border-radius: var(--radius-menu) var(--radius-menu) 0 0; box-shadow: var(--shadow-md); cursor: pointer; font-family: var(--font-sans); }
 .compose-dock:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -3px; }
 .compose-dock > svg { width: 14px; height: 14px; color: var(--fg-muted); flex: 0 0 auto; }
 .compose-dock .dock-t { flex: 1 1 auto; font-size: 13.5px; font-weight: 550; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
@@ -670,7 +671,8 @@
 .mail-app .compose-layer .compose-win .rq { padding: 2px 16px 12px; }
 .mail-app .compose-layer .compose-win .rq-view { margin: 0 16px 14px; }
 
-.compose-layer .compose-win.expanded { position: fixed; top: 54px; left: 248px; right: 0; bottom: 0; width: auto; height: auto; max-width: none; border: 0; border-left: 1px solid var(--border); border-radius: 0; box-shadow: none; background: var(--bg); animation: mail-fade var(--dur) var(--ease-out); }
+.compose-layer .compose-win.expanded { position: fixed; top: 54px; left: 248px; right: 0; bottom: 0; width: auto; height: auto; max-width: none; border: 0; border-left: 1px solid var(--border); border-radius: 0; box-shadow: none; background: var(--bg); }
+.compose-layer .compose-win.expanded.fresh { animation: mail-fade var(--dur) var(--ease-out); }
 .compose-layer.stacked .compose-win.expanded { padding-bottom: 46px; }
 .mail-app .compose-layer .compose-win.expanded .compose-h { height: 52px; gap: 12px; padding: 0 20px; }
 .mail-app .compose-layer .compose-win.expanded .compose-h .ch-t { font-size: 18px; }

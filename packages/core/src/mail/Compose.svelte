@@ -375,6 +375,7 @@
 	}
 
 	let confirmDiscard = $state(false);
+	let fresh = $state(true);
 
 	function askDiscard(): void {
 		if (saver.id || attachments.length > 0 || isWorthSaving(currentDoc([]))) confirmDiscard = true;
@@ -964,6 +965,7 @@
 <div
 	bind:this={winRef}
 	class="compose-win"
+	class:fresh
 	class:expanded
 	class:with-ref={withRef}
 	hidden={min}
@@ -974,6 +976,9 @@
 	ondragover={onDragOver}
 	ondragleave={onDragLeave}
 	ondrop={onDrop}
+	onanimationend={(e) => {
+		if (e.target === e.currentTarget) fresh = false;
+	}}
 >
 	{#if withRef}
 		<aside class="compose-ref" aria-label={m.mail_forwarded_chip()}>
