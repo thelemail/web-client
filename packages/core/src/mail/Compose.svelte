@@ -998,7 +998,7 @@
 			</button>
 			<button
 				type="button"
-				class="chx"
+				class="chx size"
 				title={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
 				aria-pressed={expanded}
 				onclick={() => onExpand?.(!expanded)}

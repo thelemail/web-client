@@ -1139,6 +1139,7 @@
 	.mail-app .reader-bar { padding: 0 10px; gap: 5px; overflow-x: auto; scrollbar-width: none; }
 	.mail-app .reader-bar::-webkit-scrollbar { display: none; }
 	.mail-app .fab { position: fixed; right: 18px; bottom: 20px; z-index: 80; display: flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; border: none; background: var(--primary); color: var(--primary-fg); box-shadow: var(--shadow-lg); }
+	.mail-app:has(.compose-dock) .fab { bottom: 68px; }
 	.mail-app .fab svg { width: 22px; height: 22px; }
 	.mail-app .fab:active { background: var(--primary-press); }
 
@@ -1184,6 +1185,7 @@
 	.compose-layer { left: 0; right: 0; gap: 0; max-width: none; }
 	.compose-layer :is(.compose-win, .compose-win.expanded) { position: fixed; inset: 0; width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-radius: 0; border: 0; }
 	.compose-dock { flex: 1 1 0; min-width: 0; border-radius: 0; }
+	.compose-layer .compose-h .chx.size { display: none; }
 	.compose-layer .compose-f { flex-wrap: wrap; row-gap: 6px; }
 	.compose-layer .compose-f .csave { display: none; }
 	.compose-layer .compose-f .cf-enc-t { display: none; }
