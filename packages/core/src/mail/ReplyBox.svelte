@@ -130,6 +130,7 @@
 			: { display: m.from, address: m.fromAddr }
 	);
 	const seedSenderIsMe = untrack(() => (seed ? !!seed.me : m.direction === 'sent'));
+	const seedReplyTo: ReplyParty[] = untrack(() => (seed ? (seed.replyTo ?? []) : (m.replyTo ?? [])));
 	const seedEpoch = untrack(() => seed?.epoch ?? m.epoch);
 
 	function myEmails(): Set<string> {
@@ -142,7 +143,8 @@
 	const replySeedParties: ReplySeed = {
 		sender: seedSender,
 		senderIsMe: seedSenderIsMe,
-		recipients: seedRecipients
+		recipients: seedRecipients,
+		replyTo: seedReplyTo
 	};
 	const partyChip = (p: ReplyParty) => recipientChip({ name: p.display || undefined, address: p.address });
 

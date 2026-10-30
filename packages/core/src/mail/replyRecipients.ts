@@ -10,6 +10,7 @@ export interface ReplySeed {
 	sender: ReplyParty;
 	senderIsMe: boolean;
 	recipients: MessagePreviewRecipient[];
+	replyTo?: ReplyParty[];
 }
 
 function norm(address: string): string {
@@ -43,6 +44,8 @@ export function replyTargets(
 	const senderIsMe = seed.senderIsMe || (!!senderAddr && mine.has(senderAddr));
 	const toKind = seed.recipients.filter((r) => r.kind === 'to').map(party);
 	const ccKind = seed.recipients.filter((r) => r.kind === 'cc').map(party);
+	const replyTo = senderIsMe ? [] : dedupe(seed.replyTo ?? [], new Set(), mine);
+	const sender = senderAddr ? [{ display: seed.sender.display, address: seed.sender.address }] : [];
 
 	let to: ReplyParty[] = [];
 	let cc: ReplyParty[] = [];
@@ -50,17 +53,15 @@ export function replyTargets(
 	if (mode === 'reply') {
 		if (senderIsMe) {
 			to = dedupe(toKind, new Set());
-		} else if (senderAddr) {
-			to = [{ display: seed.sender.display, address: seed.sender.address }];
+		} else {
+			to = replyTo.length ? replyTo : sender;
 		}
 	} else {
+		const head = senderIsMe ? [] : dedupe([...replyTo, ...sender], new Set());
 		const excluded = new Set(mine);
 		if (senderAddr) excluded.add(senderAddr);
-		if (!senderIsMe && senderAddr) {
-			to = [{ display: seed.sender.display, address: seed.sender.address }, ...dedupe(toKind, excluded, mine)];
-		} else {
-			to = dedupe(toKind, excluded, mine);
-		}
+		for (const p of head) excluded.add(norm(p.address));
+		to = [...head, ...dedupe(toKind, excluded, mine)];
 		const inTo = new Set(mine);
 		for (const p of to) inTo.add(norm(p.address));
 		cc = dedupe(ccKind, inTo, mine);

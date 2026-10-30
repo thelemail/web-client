@@ -155,6 +155,80 @@ describe('replyTargets with plus-tagged own addresses', () => {
 	});
 });
 
+describe('replyTargets with Reply-To', () => {
+	const list = { display: 'The List', address: 'list@example.org' };
+	const help = { display: 'Support', address: 'help@example.org' };
+
+	it('replies to a single Reply-To instead of the sender', () => {
+		const { to, cc } = replyTargets(seed({ replyTo: [list] }), 'reply', me);
+		expect(to).toEqual([list]);
+		expect(cc).toEqual([]);
+	});
+
+	it('replies to every Reply-To address', () => {
+		const { to } = replyTargets(seed({ replyTo: [list, help] }), 'reply', me);
+		expect(addrs(to)).toEqual(['list@example.org', 'help@example.org']);
+	});
+
+	it('adds the sender to Reply-To on reply all', () => {
+		const { to, cc } = replyTargets(seed({ replyTo: [list, help] }), 'all', me);
+		expect(addrs(to)).toEqual(['list@example.org', 'help@example.org', 'alice@example.com', 'bob@example.com']);
+		expect(addrs(cc)).toEqual(['carol@example.com']);
+	});
+
+	it('does not repeat the sender when Reply-To equals From', () => {
+		const s = seed({ replyTo: [{ display: '', address: 'Alice@Example.com' }] });
+		expect(addrs(replyTargets(s, 'reply', me).to)).toEqual(['Alice@Example.com']);
+		expect(addrs(replyTargets(s, 'all', me).to)).toEqual(['Alice@Example.com', 'bob@example.com']);
+	});
+
+	it('drops Reply-To addresses that are recipients already', () => {
+		const s = seed({ replyTo: [{ display: '', address: 'carol@example.com' }] });
+		const { to, cc } = replyTargets(s, 'all', me);
+		expect(addrs(to)).toEqual(['carol@example.com', 'alice@example.com', 'bob@example.com']);
+		expect(cc).toEqual([]);
+	});
+
+	it('ignores own addresses in Reply-To', () => {
+		const s = seed({ replyTo: [{ display: '', address: 'me+lists@example.com' }] });
+		expect(addrs(replyTargets(s, 'reply', me).to)).toEqual(['alice@example.com']);
+		expect(addrs(replyTargets(s, 'all', me).to)).toEqual(['alice@example.com', 'bob@example.com']);
+	});
+
+	it('keeps the other Reply-To addresses when one is mine', () => {
+		const s = seed({ replyTo: [{ display: '', address: 'me@example.com' }, list] });
+		expect(replyTargets(s, 'reply', me).to).toEqual([list]);
+	});
+
+	it('ignores Reply-To on my own sent mail', () => {
+		const s = seed({
+			sender: { display: 'Me', address: 'me@example.com' },
+			senderIsMe: true,
+			replyTo: [list]
+		});
+		expect(addrs(replyTargets(s, 'reply', me).to)).toEqual(['me@example.com', 'bob@example.com']);
+		expect(addrs(replyTargets(s, 'all', me).to)).toEqual(['bob@example.com']);
+	});
+
+	it('falls back to the sender without Reply-To', () => {
+		expect(addrs(replyTargets(seed({ replyTo: [] }), 'reply', me).to)).toEqual(['alice@example.com']);
+		expect(addrs(replyTargets(seed({ replyTo: undefined }), 'all', me).to)).toEqual([
+			'alice@example.com',
+			'bob@example.com'
+		]);
+	});
+
+	it('adds and removes the sender when switching modes', () => {
+		const s = seed({ replyTo: [list] });
+		const start = { to: replyTargets(s, 'reply', me).to, cc: [], bcc: [] };
+		const all = switchReplyMode(start, 'all', s, me, [], (p) => p.address, (p) => p);
+		expect(addrs(all.to)).toEqual(['list@example.org', 'alice@example.com', 'bob@example.com']);
+		const back = switchReplyMode({ ...all, bcc: [] }, 'reply', s, me, all.added, (p) => p.address, (p) => p);
+		expect(back.to).toEqual([list]);
+		expect(back.cc).toEqual([]);
+	});
+});
+
 describe('switchReplyMode', () => {
 	const seed: ReplySeed = {
 		sender: { display: 'Mira', address: 'mira@a.test' },
