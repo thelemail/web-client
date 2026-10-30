@@ -33,7 +33,29 @@ export interface MessagePreview {
 	snippet: string;
 	display_date: string;
 	delivered_to?: string;
+	reply_to?: MessagePreviewSender[];
 	flags?: { bimi_domain?: string; auth?: MessagePreviewAuth } & Record<string, unknown>;
+}
+
+export function replyToParties(value: unknown): MessagePreviewSender[] | undefined {
+	if (!Array.isArray(value)) return undefined;
+	const out: MessagePreviewSender[] = [];
+	for (const v of value) {
+		if (!v || typeof v !== 'object') continue;
+		const { display, address } = v as Record<string, unknown>;
+		if (typeof address !== 'string' || !address.trim()) continue;
+		out.push({ display: typeof display === 'string' ? display : '', address: address.trim() });
+	}
+	return out.length ? out : undefined;
+}
+
+export function replyToFromJson(json: string | undefined): MessagePreviewSender[] | undefined {
+	if (!json) return undefined;
+	try {
+		return replyToParties(JSON.parse(json));
+	} catch {
+		return undefined;
+	}
 }
 
 export function bimiDomainFromPreview(preview: MessagePreview): string | undefined {

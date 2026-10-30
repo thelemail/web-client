@@ -43,6 +43,7 @@ export interface MirrorRow {
 	senderDisplay: string;
 	senderAddress: string;
 	recipientsJson: string;
+	replyToJson?: string;
 	snippet: string;
 	displayDate: string;
 	storedAt: string;
@@ -90,6 +91,7 @@ export interface MirrorMessage {
 	senderDisplay: string;
 	senderAddress: string;
 	recipientsJson: string;
+	replyToJson?: string;
 	deliveredTo?: string;
 	snippet: string;
 	displayDate: string;
