@@ -253,7 +253,8 @@
 		if (!id || !draft?.reply || restoredReplyFor === id) return;
 		untrack(() => {
 			restoredReplyFor = id;
-			if (replyMode === null) replyMode = draft.reply!.mode;
+			const mode = draft.reply!.mode;
+			if (replyMode === null && mode !== 'forward') replyMode = mode;
 		});
 	});
 

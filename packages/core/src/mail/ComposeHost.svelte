@@ -31,7 +31,7 @@
 		untrack(() => {
 			if (on && pushed === null) {
 				pushed = href;
-				if (!marked) void goto(page.url, { state: { ...page.state, composeExpanded: true }, shallow: true });
+				if (!marked) void goto(page.url.href, { state: { ...page.state, composeExpanded: true }, shallow: true });
 			} else if (on && !marked && pushed === href) {
 				pushed = null;
 				composeStore.setExpanded(false);

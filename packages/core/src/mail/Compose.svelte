@@ -261,19 +261,6 @@
 		FOLDERS.find((f) => f.id === (page.params.folder ?? page.url.pathname.split('/mail/')[1]?.split('/')[0]))
 			?.label ?? m.mail_skeleton_back()
 	);
-	const saveLabel = $derived(
-		saveStatus === 'loading'
-			? m.mail_compose_opening()
-			: saveStatus === 'saving'
-				? m.mail_compose_saving()
-				: saveStatus === 'saved'
-					? m.mail_compose_draft_saved()
-					: saveStatus === 'failed'
-						? m.mail_compose_not_saved()
-						: saveStatus === 'unsaved'
-							? m.mail_compose_unsaved()
-							: m.mail_compose_draft()
-	);
 
 	const link = $derived.by<Pick<DraftDoc, 'inReplyToMessageId' | 'inReplyToHeader' | 'references' | 'reply'>>(() => {
 		if (!fwd) return replyLink;
@@ -353,6 +340,19 @@
 		persisted: saver.persisted
 	});
 	const saveStatus = $derived(draftSaveStatus(saveFacts));
+	const saveLabel = $derived(
+		saveStatus === 'loading'
+			? m.mail_compose_opening()
+			: saveStatus === 'saving'
+				? m.mail_compose_saving()
+				: saveStatus === 'saved'
+					? m.mail_compose_draft_saved()
+					: saveStatus === 'failed'
+						? m.mail_compose_not_saved()
+						: saveStatus === 'unsaved'
+							? m.mail_compose_unsaved()
+							: m.mail_compose_draft()
+	);
 
 	function uploadsInFlight(): boolean {
 		return attachments.some(
