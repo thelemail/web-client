@@ -593,6 +593,8 @@
 .mail-app .reader.ws-pane .rb-txt { width: 33px; padding: 0; }
 .mail-app .reader.ws .replybox.expanded { position: absolute; top: 0; right: 0; bottom: 0; left: var(--ws-pane); z-index: 5; margin: 0; visibility: visible; display: flex; flex-direction: column; border: 0; border-radius: 0; box-shadow: none; background: var(--bg); animation: mail-fade var(--dur) var(--ease-out); }
 .mail-app .reader.ws .replybox.expanded.paneless { left: 0; }
+.mail-app .reader.ws > .apx-scrim.docked { position: absolute; top: 0; left: 0; bottom: 0; right: auto; width: var(--ws-pane); z-index: 6; display: flex; padding: 0; background: var(--bg); backdrop-filter: none; border-right: 1px solid var(--border); }
+.mail-app .reader.ws > .apx-scrim.docked .apx-modal { width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; animation: mail-fade var(--dur) var(--ease-out); }
 .mail-app .replybox.expanded .rt { flex: 0 0 auto; height: 54px; gap: 10px; padding: 0 12px 0 20px; }
 .mail-app .replybox.expanded .rbx-mid { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
 .mail-app .replybox.expanded .rich-editor { flex: 1 0 auto; }

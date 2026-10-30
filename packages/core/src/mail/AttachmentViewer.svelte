@@ -39,9 +39,10 @@
 		items: PreviewItem[];
 		index: number;
 		onClose: () => void;
+		dock?: string | null;
 	}
 
-	let { items, index = $bindable(), onClose }: Props = $props();
+	let { items, index = $bindable(), onClose, dock = null }: Props = $props();
 
 	type View =
 		| { status: 'loading' }
@@ -177,6 +178,7 @@
 	}
 
 	function handleKey(e: KeyboardEvent) {
+		if (dock && !modal?.contains(document.activeElement)) return;
 		if (e.key === 'Escape') {
 			e.stopPropagation();
 			e.preventDefault();
@@ -192,6 +194,7 @@
 			e.preventDefault();
 			step(e.key === 'ArrowLeft' ? -1 : 1);
 		} else if (e.key === 'Tab') {
+			if (dock) return;
 			const list = focusables();
 			if (list.length === 0) return;
 			const first = list[0];
@@ -216,18 +219,18 @@
 	});
 
 	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) onClose();
+		if (!dock && e.target === e.currentTarget) onClose();
 	}
 </script>
 
 <svelte:document onkeydowncapture={handleKey} />
 
-<Portal>
-	<div class="apx-scrim" role="presentation" onmousedown={scrimMouseDown}>
+<Portal to={dock ?? undefined}>
+	<div class="apx-scrim" class:docked={!!dock} role="presentation" onmousedown={scrimMouseDown}>
 		<div
 			class="apx-modal"
-			role="dialog"
-			aria-modal="true"
+			role={dock ? 'region' : 'dialog'}
+			aria-modal={dock ? undefined : 'true'}
 			aria-labelledby="apx-title"
 			tabindex="-1"
 			bind:this={modal}
