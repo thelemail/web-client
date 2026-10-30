@@ -15,7 +15,7 @@ vi.mock('$core/directory/verify', () => ({
 	DirectoryVerificationError: class extends Error {}
 }));
 vi.mock('$app/state', () => ({
-	page: { params: { slot: '0' }, url: new URL('http://localhost/u/0/mail/inbox') }
+	page: { params: { slot: '0' }, url: new URL('http://localhost/u/0/mail/inbox'), state: {} }
 }));
 
 const children = createRawSnippet(() => ({ render: () => '<p>list</p>' }));

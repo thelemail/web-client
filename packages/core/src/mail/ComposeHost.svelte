@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
+	import { untrack } from 'svelte';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import Compose from './Compose.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { composeStore, type ComposeSession } from '$core/stores/compose.svelte';
@@ -17,6 +20,34 @@
 		clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
 	}
+
+	const showing = $derived(composeStore.expanded && composeStore.active !== null);
+	let pushed: string | null = null;
+
+	$effect(() => {
+		const on = showing;
+		const marked = !!page.state.composeExpanded;
+		const href = page.url.href;
+		untrack(() => {
+			if (on && pushed === null) {
+				pushed = href;
+				if (!marked) void goto(page.url, { state: { ...page.state, composeExpanded: true }, shallow: true });
+			} else if (on && !marked && pushed === href) {
+				pushed = null;
+				composeStore.setExpanded(false);
+			} else if (!on && pushed !== null) {
+				pushed = null;
+				if (marked) history.back();
+			}
+		});
+	});
+
+	afterNavigate((nav) => {
+		if (nav.type === 'enter' || nav.from?.url.href === nav.to?.url.href) return;
+		pushed = null;
+		const active = composeStore.active;
+		if (active && composeStore.expanded) composeStore.minimize(active.key);
+	});
 
 	function returnFocus(s: ComposeSession | null) {
 		const el = s?.returnFocus;

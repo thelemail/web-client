@@ -21,7 +21,7 @@
 	let { children, data } = $props();
 
 	beforeNavigate((nav) => {
-		if (nav.willUnload || !nav.to || !leavePending()) return;
+		if (nav.willUnload || !nav.to || nav.to.url.href === nav.from?.url.href || !leavePending()) return;
 		nav.cancel();
 		const target = nav.to.url;
 		const back = nav.type === 'popstate' ? nav.delta : undefined;
