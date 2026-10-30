@@ -9,13 +9,11 @@
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Compose from './Compose.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { scheduled, type ScheduledRow } from '$core/stores/scheduled.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
-	import { drafts } from '$core/stores/drafts.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { DEFAULT_QUERY } from './url';
 	import { auth } from '$core/stores/auth.svelte';
@@ -64,21 +62,6 @@
 		} finally {
 			cancelling = false;
 		}
-	}
-
-	function onSend(info?: { scheduledAt?: string }) {
-		composeStore.close();
-		flash(
-			info?.scheduledAt
-				? m.mail_toast_scheduled({ when: formatWhenLong(new Date(info.scheduledAt)) })
-				: m.mail_toast_sent()
-		);
-		void drafts.refresh();
-		void scheduled.refresh();
-		void mailbox.refresh([
-			{ ...DEFAULT_QUERY, folder: 'inbox' },
-			{ ...DEFAULT_QUERY, folder: 'sent' }
-		]);
 	}
 </script>
 
@@ -191,15 +174,10 @@
 	/>
 {/if}
 
-{#if !composeStore.open}
+{#if !composeStore.active}
 	<button class="fab" title={m.mail_compose()} onclick={() => composeStore.openNew()}>
 		<PenLine size={22} />
 	</button>
-{/if}
-{#if composeStore.open}
-	{#key composeStore.editingDraftId}
-		<Compose draftId={composeStore.editingDraftId} onClose={() => composeStore.close()} {onSend} />
-	{/key}
 {/if}
 {#if toast}
 	<Toast text={toast.text} shift={131} />

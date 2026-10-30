@@ -10,17 +10,13 @@
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Compose from './Compose.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
-	import { scheduled } from '$core/stores/scheduled.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { deleteDraft } from '$core/api/drafts';
-	import { mailbox } from '$core/stores/mailbox.svelte';
-	import { DEFAULT_QUERY } from './url';
 	import { auth } from '$core/stores/auth.svelte';
-	import { formatRowTime, formatWhenLong } from './data';
+	import { formatRowTime } from './data';
 
 	onMount(() => mailSearch.clear());
 
@@ -55,7 +51,7 @@
 		e.stopPropagation();
 		if (lifecycle.readOnly) return;
 		drafts.remove(d.id);
-		if (composeStore.editingDraftId === d.id) composeStore.close();
+		composeStore.closeDraft(d.id);
 		try {
 			await deleteDraft(d.id);
 			flash(m.mail_drafts_discarded());
@@ -63,21 +59,6 @@
 			flash(m.mail_drafts_discard_failed());
 			void drafts.refresh();
 		}
-	}
-
-	function onSend(info?: { scheduledAt?: string }) {
-		composeStore.close();
-		if (info?.scheduledAt) {
-			flash(m.mail_toast_scheduled({ when: formatWhenLong(new Date(info.scheduledAt)) }));
-			void scheduled.refresh();
-		} else {
-			flash(m.mail_toast_sent());
-		}
-		void drafts.refresh();
-		void mailbox.refresh([
-			{ ...DEFAULT_QUERY, folder: 'inbox' },
-			{ ...DEFAULT_QUERY, folder: 'sent' }
-		]);
 	}
 </script>
 
@@ -126,7 +107,7 @@
 				{#each list as d (d.id)}
 					<div
 						class="drow"
-						class:active={composeStore.editingDraftId === d.id}
+						class:active={composeStore.isOpen(d.id)}
 						role="button"
 						tabindex="0"
 						onclick={() => openDraft(d)}
@@ -182,19 +163,10 @@
 	</div>
 </div>
 
-{#if !composeStore.open}
+{#if !composeStore.active}
 	<button class="fab" title={m.mail_compose()} onclick={() => composeStore.openNew()}>
 		<PenLine size={22} />
 	</button>
-{/if}
-{#if composeStore.open}
-	{#key composeStore.editingDraftId}
-		<Compose
-			draftId={composeStore.editingDraftId}
-			onClose={() => composeStore.close()}
-			{onSend}
-		/>
-	{/key}
 {/if}
 {#if toast}
 	<Toast text={toast.text} shift={131} />

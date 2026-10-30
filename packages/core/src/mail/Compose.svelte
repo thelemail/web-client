@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
@@ -7,6 +6,8 @@
 	import PenLine from '@lucide/svelte/icons/pen-line';
 	import X from '@lucide/svelte/icons/x';
 	import Minus from '@lucide/svelte/icons/minus';
+	import Maximize2 from '@lucide/svelte/icons/maximize-2';
+	import Minimize2 from '@lucide/svelte/icons/minimize-2';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Send from '@lucide/svelte/icons/send';
@@ -33,6 +34,7 @@
 	} from './draftSave';
 	import DirectoryFailModal from './DirectoryFailModal.svelte';
 	import SchedulePicker from './SchedulePicker.svelte';
+	import ConfirmDialog from './ConfirmDialog.svelte';
 	import TofuModal from './TofuModal.svelte';
 	import RichEditor from './editor/RichEditor.svelte';
 	import EditorToolbar from './editor/EditorToolbar.svelte';
@@ -83,13 +85,32 @@
 	import LinkDialog from './editor/LinkDialog.svelte';
 	import { applyLink, currentLink } from './editor/link';
 
+	export type ComposeView = 'float' | 'min' | 'expanded';
+
 	interface Props {
 		onClose: () => void;
 		onSend: (info?: { scheduledAt?: string }) => void;
 		draftId?: string | null;
+		view?: ComposeView;
+		onFocus?: () => void;
+		onMinimize?: () => void;
+		onExpand?: (expanded: boolean) => void;
+		onDraftId?: (id: string) => void;
 	}
 
-	let { onClose, onSend, draftId = null }: Props = $props();
+	let {
+		onClose,
+		onSend,
+		draftId = null,
+		view = 'float',
+		onFocus,
+		onMinimize,
+		onExpand,
+		onDraftId
+	}: Props = $props();
+
+	const min = $derived(view === 'min');
+	const expanded = $derived(view === 'expanded');
 
 	const userIdentity = $derived<SendIdentity>({
 		name: auth.fullName ?? auth.email ?? 'Me',
@@ -123,7 +144,6 @@
 	let showCc = $state(false);
 	let showBcc = $state(false);
 	let subject = $state('');
-	let min = $state(false);
 	let warn = $state(false);
 	let bodyEmpty = $state(true);
 	let status = $state<'idle' | 'sending'>('idle');
@@ -137,7 +157,7 @@
 	let bodyHtml = $state('');
 	let bodyText = $state('');
 	let editor: Editor | null = $state(null);
-	let winRef: HTMLDivElement | undefined = $state();
+	let winRef: HTMLElement | undefined = $state();
 	let seededSignature = $state(false);
 	let signatureOn = $state(false);
 	let signatureChosen = $state(false);
@@ -288,6 +308,13 @@
 		onClose();
 	}
 
+	let confirmDiscard = $state(false);
+
+	function askDiscard(): void {
+		if (saver.id || attachments.length > 0 || isWorthSaving(currentDoc([]))) confirmDiscard = true;
+		else discardDraft();
+	}
+
 	async function closeKeepingDraft(): Promise<void> {
 		if (closing) return;
 		if (load !== 'ready') {
@@ -337,7 +364,7 @@
 				return mayClose(saveFacts);
 			},
 			focus: () => {
-				min = false;
+				onFocus?.();
 				editor?.commands.focus();
 			}
 		});
@@ -560,6 +587,7 @@
 	});
 
 	function handleKey(e: KeyboardEvent) {
+		if (min || !winRef || !(e.target instanceof Node) || !winRef.contains(e.target)) return;
 		if (e.key === 'Escape') {
 			if (fromOpen || sendOpen) {
 				fromOpen = false;
@@ -760,9 +788,10 @@
 		bodyEmpty = !bodyText.trim();
 	});
 
-	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) void closeKeepingDraft();
-	}
+	$effect(() => {
+		const id = saver.id;
+		if (id) untrack(() => onDraftId?.(id));
+	});
 
 	let linkInitial = $state<string | null>(null);
 
@@ -793,11 +822,11 @@
 		class="compose-dock"
 		role="button"
 		tabindex="0"
-		onclick={() => (min = false)}
+		onclick={() => onFocus?.()}
 		onkeydown={(e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
+			if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
 				e.preventDefault();
-				min = false;
+				onFocus?.();
 			}
 		}}
 	>
@@ -806,421 +835,445 @@
 		<button
 			type="button"
 			class="dock-b"
-			title={m.mail_compose_expand()}
+			title={m.mail_compose_open()}
 			onclick={(e) => {
 				e.stopPropagation();
-				min = false;
+				onFocus?.();
 			}}><ChevronUp size={16} /></button
 		>
 		<button
 			type="button"
 			class="dock-b"
-			title={m.mail_compose_discard()}
+			title={m.common_close()}
+			aria-busy={closing}
 			onclick={(e) => {
 				e.stopPropagation();
-				discardDraft();
+				void closeKeepingDraft();
 			}}><X size={16} /></button
 		>
 	</div>
-{:else}
-	<div
-		class="mail-scrim"
-		role="dialog"
-		aria-modal="true"
-		aria-label={m.mail_compose_new_message()}
-		use:trapFocus
-		tabindex="-1"
-		onmousedown={scrimMouseDown}
-	>
-		<div
-			bind:this={winRef}
-			class="compose-win"
-			role="presentation"
-			onmousedown={(e) => e.stopPropagation()}
-			ondragover={onDragOver}
-			ondragleave={onDragLeave}
-			ondrop={onDrop}
-		>
-			<div class="compose-h">
-				<PenLine size={16} />{m.mail_compose_new_message()}
-				<div class="ch-actions">
-					<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => (min = true)}>
-						<Minus size={16} />
-					</button>
-					<button type="button" class="chx x" title={m.common_close()} aria-busy={closing} onclick={() => void closeKeepingDraft()}>
-						<X size={16} />
-					</button>
-				</div>
-			</div>
+{/if}
 
-			{#if load === 'failed'}
-				<div class="cwarn" role="alert">
-					<CircleAlert size={14} />
-					<span class="cwarn-t">{m.mail_compose_open_draft_failed()} {m.mail_compose_draft_untouched()}</span>
-					<button type="button" class="cwarn-act" onclick={() => draftId && void hydrateDraft(draftId)}>
-						{m.common_retry()}
-					</button>
-				</div>
-			{/if}
-
-			<div class="compose-scroll" inert={load !== 'ready'} aria-busy={load === 'loading'}>
-				<div class="from-row" bind:this={fromRef}>
-					<span class="recip-label">{m.mail_compose_from()}</span>
-					<button
-						type="button"
-						class="from-trigger"
-						class:open={fromOpen}
-						onclick={() => (fromOpen = !fromOpen)}
-					>
-						<Avatar
-							initials={ident.init}
-							src={ident.kind === 'Alias' ? null : auth.avatarUrl}
-							fit="cover"
-							size={22}
-							bg={ident.bg}
-							fg={ident.fg}
-						/>
-						<span class="ft-name">{ident.name}</span>
-						<span class="ft-email">&lt;{ident.email}&gt;</span>
-						<ChevronDown size={15} />
-					</button>
-					{#if fromOpen}
-						<div class="from-menu" role="menu">
-							<div class="fm-h">{m.mail_compose_send_as()}</div>
-							{#each identityOptions as id, i (id.email + '-' + i)}
-								<button
-									type="button"
-									class="fm-item"
-									class:on={id.email === ident.email}
-									role="menuitemradio"
-									aria-checked={id.email === ident.email}
-									onclick={() => pickIdentity(id.email)}
-								>
-									<Avatar
-										initials={id.init}
-										src={id.kind === 'Alias' ? null : auth.avatarUrl}
-										fit="cover"
-										size={30}
-										bg={id.bg}
-										fg={id.fg}
-									/>
-									<span class="fm-tx">
-										<span class="fm-top">
-											<b>{id.name}</b>
-											<span class="fm-kind">{identityKindLabel(id.kind)}</span>
-										</span>
-										<span class="fm-em">{id.email}</span>
-										{#if id.org}<span class="fm-org">{id.org}</span>{/if}
-									</span>
-									{#if id.email === ident.email}<Check size={17} />{/if}
-								</button>
-							{/each}
-							<div class="fm-sep"></div>
-							<button
-								type="button"
-								class="fm-add"
-								onclick={() => {
-									fromOpen = false;
-									void goto(`/u/${page.params.slot ?? '0'}/settings/addresses`);
-								}}
-							>
-								<AtSign size={16} />{m.mail_compose_manage_addresses()}
-							</button>
-						</div>
-					{/if}
-				</div>
-				{#if fromRevoked && restoredFrom}
-					<div class="cwarn" role="alert">
-						<CircleAlert size={14} />
-						<span class="cwarn-t">{m.mail_compose_from_choose({ address: restoredFrom.email })}</span>
-						<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
-							{m.mail_compose_choose_address()}
-						</button>
-					</div>
-				{:else if noSender}
-					<div class="cnote"><CircleAlert size={14} />{m.mail_compose_no_sender()}</div>
-				{:else if fromNotice}
-					<div class="cnote">
-						<CircleAlert size={14} />{m.mail_compose_from_unavailable({
-							address: fromNotice,
-							from: ident.email
-						})}
-					</div>
-				{/if}
-
-				{#snippet ccBccSlot()}
-					<div class="ccbcc">
-						{#if !showCc}
-							<button type="button" onclick={() => (showCc = true)}>{m.mail_recip_cc()}</button>
-						{/if}
-						{#if !showBcc}
-							<button type="button" onclick={() => (showBcc = true)}>{m.mail_recip_bcc()}</button>
-						{/if}
-					</div>
-				{/snippet}
-
-				<RecipientField
-					label="To"
-					chips={to}
-					setChips={(next) => (to = next)}
-					contacts={contacts.items}
-					autoFocus
-					rightSlot={ccBccSlot}
-					{encStatusFor}
-				/>
-
-				{#if showCc}
-					<RecipientField
-						label="Cc"
-						chips={cc}
-						setChips={(next) => (cc = next)}
-						contacts={contacts.items}
-						autoFocus
-						{encStatusFor}
-						onRemoveField={() => {
-							cc = [];
-							showCc = false;
-						}}
-					/>
-				{/if}
-
-				{#if showBcc}
-					<RecipientField
-						label="Bcc"
-						chips={bcc}
-						setChips={(next) => (bcc = next)}
-						contacts={contacts.items}
-						autoFocus
-						{encStatusFor}
-						onRemoveField={() => {
-							bcc = [];
-							showBcc = false;
-						}}
-					/>
-				{/if}
-
-				<div class="cfield subj">
-					<span class="recip-label">{m.mail_compose_subject()}</span>
-					<input bind:value={subject} placeholder={m.mail_compose_subject()} />
-				</div>
-
-				<RichEditor
-					bind:html={bodyHtml}
-					bind:text={bodyText}
-					bind:editor
-					placeholder={m.mail_editor_placeholder()}
-					disabled={status === 'sending'}
-				/>
-
-				<AttachPreview files={attachments} onRemove={removeAttachment} />
-
-				{#if attErr}
-					<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
-				{/if}
-
-				{#if status === 'sending'}
-					<SendingVeil />
-				{/if}
-
-				{#if dragging}
-					<div class="att-drop">{m.mail_compose_drop()}</div>
-				{/if}
-			</div>
-
-			<input
-				bind:this={fileInput}
-				type="file"
-				multiple
-				class="att-hidden-input"
-				onchange={onFileInputChange}
-			/>
-
-			<EditorToolbar
-				{editor}
-				signature={{
-					present: !!signatureBody.trim(),
-					on: signatureOn,
-					onToggle: toggleSignature
-				}}
-			/>
-
-			{#if warn && !canSend && !noSender && status !== 'sending'}
-				<div class="cwarn">
-					<CircleAlert size={14} />
-					{hasInvalid
-						? m.mail_compose_invalid_addresses()
-						: m.mail_compose_need_recipient_and_body()}
-				</div>
-			{/if}
-
-			{#if inlineErr}
-				<InlineSendError
-					code={inlineErr.code as InlineErrorCode}
-					{attempts}
-					recipient={modalRecip}
-					retryAfterSeconds={inlineRetryAfter}
-					message={inlineErr.message}
-					onEditRecipient={editRecipient}
-					onUnlock={unlockVault}
-					onRetry={retrySend}
-					onDismiss={clearErr}
-				/>
-			{:else if err && err.code === 'unknown'}
-				<div class="cwarn">
-					<CircleAlert size={14} />
-					{err.message}
-				</div>
-			{/if}
-
-			{#if saveStatus === 'failed'}
-				<div class="cwarn" role="alert">
-					<CircleAlert size={14} />
-					<span class="cwarn-t">{m.mail_compose_save_failed()}</span>
-					<button type="button" class="cwarn-act" onclick={retrySave}>{m.common_retry()}</button>
-				</div>
-			{/if}
-
-			<div class="compose-f" inert={load !== 'ready'}>
-				<div
-					class="send-split"
-					class:off={!canSend}
-					class:sending={status === 'sending'}
-					bind:this={sendRef}
-				>
-					<button
-						type="button"
-						class="send"
-						onclick={runSend}
-						disabled={status === 'sending' || !canSend}
-					>
-						{#if status === 'sending'}
-							<span class="send-spin"></span>{m.mail_compose_sending()}
-						{:else}
-							<Send size={16} />{m.mail_compose_send()}
-						{/if}
-					</button>
-					<button
-						type="button"
-						class="send-caret"
-						title={m.mail_compose_send_options()}
-						disabled={!canSend || status === 'sending'}
-						onclick={() => {
-							if (canSend && status !== 'sending') sendOpen = !sendOpen;
-						}}
-					>
-						<ChevronUp size={15} />
-					</button>
-					{#if sendOpen}
-						<div class="send-menu" role="menu">
-							<button type="button" onclick={runSend}><Send size={16} />{m.mail_compose_send_now()}</button>
-							<button
-								type="button"
-								onclick={() => {
-									sendOpen = false;
-									scheduleOpen = true;
-								}}><Clock size={16} />{m.mail_compose_schedule()}</button
-							>
-						</div>
-					{/if}
-				</div>
-
-				<button type="button" class="cf-ico" title={m.mail_compose_attach_files()} onclick={pickFiles}>
-					<Paperclip size={17} />
-				</button>
-
-				<button type="button" class="cf-ico" title={m.mail_toolbar_link()} onclick={insertLink}>
-					<Link size={17} />
-				</button>
-
-				<span class="cf-enc" data-tone={encSummary.tone} title={encSummary.title}>
-					{#if encSummary.tone === 'partial' || encSummary.tone === 'none'}
-						<LockOpen size={16} />
-					{:else if encSummary.tone === 'unknown'}
-						<CircleAlert size={16} />
-					{:else}
-						<Lock size={16} />
-					{/if}
-					<span class="cf-enc-t">{encSummary.label}</span>
-				</span>
-
-				<span class="csave" data-state={saveStatus} role="status"
-					>{saveStatus === 'loading'
-						? m.mail_compose_opening()
-						: saveStatus === 'saving'
-							? m.mail_compose_saving()
-							: saveStatus === 'saved'
-								? m.mail_compose_draft_saved()
-								: saveStatus === 'failed'
-									? m.mail_compose_not_saved()
-									: saveStatus === 'unsaved'
-										? m.mail_compose_unsaved()
-										: m.mail_compose_draft()}</span
-				>
-				<button type="button" class="cf-ico danger" title={m.mail_compose_discard_draft()} onclick={discardDraft}>
-					<Trash2 size={17} />
-				</button>
-			</div>
+<div
+	bind:this={winRef}
+	class="compose-win"
+	class:expanded
+	hidden={min}
+	role="dialog"
+	aria-modal="false"
+	tabindex="-1"
+	aria-label={subjLine}
+	ondragover={onDragOver}
+	ondragleave={onDragLeave}
+	ondrop={onDrop}
+>
+	<div class="compose-h">
+		<PenLine size={16} /><span class="ch-t">{subjLine}</span>
+		<div class="ch-actions">
+			<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => onMinimize?.()}>
+				<Minus size={16} />
+			</button>
+			<button
+				type="button"
+				class="chx"
+				title={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
+				aria-pressed={expanded}
+				onclick={() => onExpand?.(!expanded)}
+			>
+				{#if expanded}<Minimize2 size={15} />{:else}<Maximize2 size={15} />{/if}
+			</button>
+			<button type="button" class="chx x" title={m.common_close()} aria-busy={closing} onclick={() => void closeKeepingDraft()}>
+				<X size={16} />
+			</button>
 		</div>
 	</div>
 
-	{#if guards.length > 0}
-		<SendGuardDialog {guards} onConfirm={confirmGuards} onCancel={cancelGuards} />
-	{/if}
+		{#if load === 'failed'}
+			<div class="cwarn" role="alert">
+				<CircleAlert size={14} />
+				<span class="cwarn-t">{m.mail_compose_open_draft_failed()} {m.mail_compose_draft_untouched()}</span>
+				<button type="button" class="cwarn-act" onclick={() => draftId && void hydrateDraft(draftId)}>
+					{m.common_retry()}
+				</button>
+			</div>
+		{/if}
 
-	{#if scheduleOpen}
-		<SchedulePicker
-			busy={status === 'sending'}
-			onSchedule={scheduleSend}
-			onClose={() => (scheduleOpen = false)}
-		/>
-	{/if}
+		<div class="compose-scroll" inert={load !== 'ready'} aria-busy={load === 'loading'}>
+			<div class="from-row" bind:this={fromRef}>
+				<span class="recip-label">{m.mail_compose_from()}</span>
+				<button
+					type="button"
+					class="from-trigger"
+					class:open={fromOpen}
+					onclick={() => (fromOpen = !fromOpen)}
+				>
+					<Avatar
+						initials={ident.init}
+						src={ident.kind === 'Alias' ? null : auth.avatarUrl}
+						fit="cover"
+						size={22}
+						bg={ident.bg}
+						fg={ident.fg}
+					/>
+					<span class="ft-name">{ident.name}</span>
+					<span class="ft-email">&lt;{ident.email}&gt;</span>
+					<ChevronDown size={15} />
+				</button>
+				{#if fromOpen}
+					<div class="from-menu" role="menu">
+						<div class="fm-h">{m.mail_compose_send_as()}</div>
+						{#each identityOptions as id, i (id.email + '-' + i)}
+							<button
+								type="button"
+								class="fm-item"
+								class:on={id.email === ident.email}
+								role="menuitemradio"
+								aria-checked={id.email === ident.email}
+								onclick={() => pickIdentity(id.email)}
+							>
+								<Avatar
+									initials={id.init}
+									src={id.kind === 'Alias' ? null : auth.avatarUrl}
+									fit="cover"
+									size={30}
+									bg={id.bg}
+									fg={id.fg}
+								/>
+								<span class="fm-tx">
+									<span class="fm-top">
+										<b>{id.name}</b>
+										<span class="fm-kind">{identityKindLabel(id.kind)}</span>
+									</span>
+									<span class="fm-em">{id.email}</span>
+									{#if id.org}<span class="fm-org">{id.org}</span>{/if}
+								</span>
+								{#if id.email === ident.email}<Check size={17} />{/if}
+							</button>
+						{/each}
+						<div class="fm-sep"></div>
+						<button
+							type="button"
+							class="fm-add"
+							onclick={() => {
+								fromOpen = false;
+								void goto(`/u/${page.params.slot ?? '0'}/settings/addresses`);
+							}}
+						>
+							<AtSign size={16} />{m.mail_compose_manage_addresses()}
+						</button>
+					</div>
+				{/if}
+			</div>
+			{#if fromRevoked && restoredFrom}
+				<div class="cwarn" role="alert">
+					<CircleAlert size={14} />
+					<span class="cwarn-t">{m.mail_compose_from_choose({ address: restoredFrom.email })}</span>
+					<button type="button" class="cwarn-act" onclick={() => (fromOpen = true)}>
+						{m.mail_compose_choose_address()}
+					</button>
+				</div>
+			{:else if noSender}
+				<div class="cnote"><CircleAlert size={14} />{m.mail_compose_no_sender()}</div>
+			{:else if fromNotice}
+				<div class="cnote">
+					<CircleAlert size={14} />{m.mail_compose_from_unavailable({
+						address: fromNotice,
+						from: ident.email
+					})}
+				</div>
+			{/if}
 
-	{#if err && err.code === 'directory_verification_failed' && err.payload?.kind === 'directory'}
-		<DirectoryFailModal
-			inner={err.inner ?? 'unknown'}
-			recipient={modalRecip}
-			requestedAddress={err.payload.requestedAddress}
-			statementAddress={err.payload.statementAddress}
-			signedKeyFingerprint={err.payload.signedKeyFingerprint}
-			servedKeyFingerprint={err.payload.servedKeyFingerprint}
-			expectedSignerFingerprint={err.payload.expectedSignerFingerprint}
-			actualSignerFingerprint={err.payload.actualSignerFingerprint}
-			previousFingerprint={err.payload.previousFingerprint}
-			currentFingerprint={err.payload.currentFingerprint}
-			keyAlgorithm={err.payload.keyAlgorithm}
-			servedKeyAlgorithm={err.payload.servedKeyAlgorithm}
-			statementField={err.payload.statementField}
-			seenVersion={err.payload.seenVersion}
-			servedVersion={err.payload.servedVersion}
-			onEditRecipient={editRecipient}
-			onRetry={retrySend}
-			onCancel={clearErr}
-		/>
-	{/if}
+			{#snippet ccBccSlot()}
+				<div class="ccbcc">
+					{#if !showCc}
+						<button type="button" onclick={() => (showCc = true)}>{m.mail_recip_cc()}</button>
+					{/if}
+					{#if !showBcc}
+						<button type="button" onclick={() => (showBcc = true)}>{m.mail_recip_bcc()}</button>
+					{/if}
+				</div>
+			{/snippet}
 
-	{#if err && err.code === 'tofu' && err.payload?.kind === 'tofu'}
-		<TofuModal
-			recipient={modalRecip}
-			previousFingerprint={err.payload.previousFingerprint}
-			previousLastSeen={err.payload.previousLastSeen}
-			previousFirstSeen={null}
-			currentFingerprint={err.payload.currentFingerprint}
-			shared={err.payload.shared}
-			onSendAnyway={trustAndSend}
-			onCancel={clearErr}
-		/>
-	{/if}
+			<RecipientField
+				label="To"
+				chips={to}
+				setChips={(next) => (to = next)}
+				contacts={contacts.items}
+				autoFocus
+				rightSlot={ccBccSlot}
+				{encStatusFor}
+			/>
 
-	{#if err && err.code === 'external_key_change' && err.payload?.kind === 'external-key-change'}
-		<TofuModal
-			recipient={{ name: '', email: err.payload.address }}
-			previousFingerprint={err.payload.previousFingerprint}
-			previousLastSeen={null}
-			previousFirstSeen={err.payload.previousFirstSeen}
-			currentFingerprint={err.payload.currentFingerprint}
-			shared={false}
-			onSendAnyway={acceptExternalAndSend}
-			onCancel={clearErr}
+			{#if showCc}
+				<RecipientField
+					label="Cc"
+					chips={cc}
+					setChips={(next) => (cc = next)}
+					contacts={contacts.items}
+					autoFocus
+					{encStatusFor}
+					onRemoveField={() => {
+						cc = [];
+						showCc = false;
+					}}
+				/>
+			{/if}
+
+			{#if showBcc}
+				<RecipientField
+					label="Bcc"
+					chips={bcc}
+					setChips={(next) => (bcc = next)}
+					contacts={contacts.items}
+					autoFocus
+					{encStatusFor}
+					onRemoveField={() => {
+						bcc = [];
+						showBcc = false;
+					}}
+				/>
+			{/if}
+
+			<div class="cfield subj">
+				<span class="recip-label">{m.mail_compose_subject()}</span>
+				<input bind:value={subject} placeholder={m.mail_compose_subject()} />
+			</div>
+
+			<RichEditor
+				bind:html={bodyHtml}
+				bind:text={bodyText}
+				bind:editor
+				placeholder={m.mail_editor_placeholder()}
+				disabled={status === 'sending'}
+			/>
+
+			<AttachPreview files={attachments} onRemove={removeAttachment} />
+
+			{#if attErr}
+				<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
+			{/if}
+
+			{#if status === 'sending'}
+				<SendingVeil />
+			{/if}
+
+			{#if dragging}
+				<div class="att-drop">{m.mail_compose_drop()}</div>
+			{/if}
+		</div>
+
+		<input
+			bind:this={fileInput}
+			type="file"
+			multiple
+			class="att-hidden-input"
+			onchange={onFileInputChange}
 		/>
-	{/if}
+
+		<EditorToolbar
+			{editor}
+			signature={{
+				present: !!signatureBody.trim(),
+				on: signatureOn,
+				onToggle: toggleSignature
+			}}
+		/>
+
+		{#if warn && !canSend && !noSender && status !== 'sending'}
+			<div class="cwarn">
+				<CircleAlert size={14} />
+				{hasInvalid
+					? m.mail_compose_invalid_addresses()
+					: m.mail_compose_need_recipient_and_body()}
+			</div>
+		{/if}
+
+		{#if inlineErr}
+			<InlineSendError
+				code={inlineErr.code as InlineErrorCode}
+				{attempts}
+				recipient={modalRecip}
+				retryAfterSeconds={inlineRetryAfter}
+				message={inlineErr.message}
+				onEditRecipient={editRecipient}
+				onUnlock={unlockVault}
+				onRetry={retrySend}
+				onDismiss={clearErr}
+			/>
+		{:else if err && err.code === 'unknown'}
+			<div class="cwarn">
+				<CircleAlert size={14} />
+				{err.message}
+			</div>
+		{/if}
+
+		{#if saveStatus === 'failed'}
+			<div class="cwarn" role="alert">
+				<CircleAlert size={14} />
+				<span class="cwarn-t">{m.mail_compose_save_failed()}</span>
+				<button type="button" class="cwarn-act" onclick={retrySave}>{m.common_retry()}</button>
+			</div>
+		{/if}
+
+		<div class="compose-f" inert={load !== 'ready'}>
+			<div
+				class="send-split"
+				class:off={!canSend}
+				class:sending={status === 'sending'}
+				bind:this={sendRef}
+			>
+				<button
+					type="button"
+					class="send"
+					onclick={runSend}
+					disabled={status === 'sending' || !canSend}
+				>
+					{#if status === 'sending'}
+						<span class="send-spin"></span>{m.mail_compose_sending()}
+					{:else}
+						<Send size={16} />{m.mail_compose_send()}
+					{/if}
+				</button>
+				<button
+					type="button"
+					class="send-caret"
+					title={m.mail_compose_send_options()}
+					disabled={!canSend || status === 'sending'}
+					onclick={() => {
+						if (canSend && status !== 'sending') sendOpen = !sendOpen;
+					}}
+				>
+					<ChevronUp size={15} />
+				</button>
+				{#if sendOpen}
+					<div class="send-menu" role="menu">
+						<button type="button" onclick={runSend}><Send size={16} />{m.mail_compose_send_now()}</button>
+						<button
+							type="button"
+							onclick={() => {
+								sendOpen = false;
+								scheduleOpen = true;
+							}}><Clock size={16} />{m.mail_compose_schedule()}</button
+						>
+					</div>
+				{/if}
+			</div>
+
+			<button type="button" class="cf-ico" title={m.mail_compose_attach_files()} onclick={pickFiles}>
+				<Paperclip size={17} />
+			</button>
+
+			<button type="button" class="cf-ico" title={m.mail_toolbar_link()} onclick={insertLink}>
+				<Link size={17} />
+			</button>
+
+			<span class="cf-enc" data-tone={encSummary.tone} title={encSummary.title}>
+				{#if encSummary.tone === 'partial' || encSummary.tone === 'none'}
+					<LockOpen size={16} />
+				{:else if encSummary.tone === 'unknown'}
+					<CircleAlert size={16} />
+				{:else}
+					<Lock size={16} />
+				{/if}
+				<span class="cf-enc-t">{encSummary.label}</span>
+			</span>
+
+			<span class="csave" data-state={saveStatus} role="status"
+				>{saveStatus === 'loading'
+					? m.mail_compose_opening()
+					: saveStatus === 'saving'
+						? m.mail_compose_saving()
+						: saveStatus === 'saved'
+							? m.mail_compose_draft_saved()
+							: saveStatus === 'failed'
+								? m.mail_compose_not_saved()
+								: saveStatus === 'unsaved'
+									? m.mail_compose_unsaved()
+									: m.mail_compose_draft()}</span
+			>
+			<button type="button" class="cf-ico danger" title={m.mail_compose_discard_draft()} onclick={askDiscard}>
+				<Trash2 size={17} />
+			</button>
+		</div>
+</div>
+
+{#snippet discardBody()}
+	<p class="cfd-p">{m.mail_compose_discard_body()}</p>
+{/snippet}
+
+{#if confirmDiscard}
+	<ConfirmDialog
+		icon={Trash2}
+		title={m.mail_compose_discard_title()}
+		sub={subjLine}
+		tone="danger"
+		confirmLabel={m.mail_compose_discard_draft()}
+		body={discardBody}
+		onConfirm={() => {
+			confirmDiscard = false;
+			discardDraft();
+		}}
+		onClose={() => (confirmDiscard = false)}
+	/>
+{/if}
+
+{#if guards.length > 0}
+	<SendGuardDialog {guards} onConfirm={confirmGuards} onCancel={cancelGuards} />
+{/if}
+
+{#if scheduleOpen}
+	<SchedulePicker
+		busy={status === 'sending'}
+		onSchedule={scheduleSend}
+		onClose={() => (scheduleOpen = false)}
+	/>
+{/if}
+
+{#if err && err.code === 'directory_verification_failed' && err.payload?.kind === 'directory'}
+	<DirectoryFailModal
+		inner={err.inner ?? 'unknown'}
+		recipient={modalRecip}
+		requestedAddress={err.payload.requestedAddress}
+		statementAddress={err.payload.statementAddress}
+		signedKeyFingerprint={err.payload.signedKeyFingerprint}
+		servedKeyFingerprint={err.payload.servedKeyFingerprint}
+		expectedSignerFingerprint={err.payload.expectedSignerFingerprint}
+		actualSignerFingerprint={err.payload.actualSignerFingerprint}
+		previousFingerprint={err.payload.previousFingerprint}
+		currentFingerprint={err.payload.currentFingerprint}
+		keyAlgorithm={err.payload.keyAlgorithm}
+		servedKeyAlgorithm={err.payload.servedKeyAlgorithm}
+		statementField={err.payload.statementField}
+		seenVersion={err.payload.seenVersion}
+		servedVersion={err.payload.servedVersion}
+		onEditRecipient={editRecipient}
+		onRetry={retrySend}
+		onCancel={clearErr}
+	/>
+{/if}
+
+{#if err && err.code === 'tofu' && err.payload?.kind === 'tofu'}
+	<TofuModal
+		recipient={modalRecip}
+		previousFingerprint={err.payload.previousFingerprint}
+		previousLastSeen={err.payload.previousLastSeen}
+		previousFirstSeen={null}
+		currentFingerprint={err.payload.currentFingerprint}
+		shared={err.payload.shared}
+		onSendAnyway={trustAndSend}
+		onCancel={clearErr}
+	/>
+{/if}
+
+{#if err && err.code === 'external_key_change' && err.payload?.kind === 'external-key-change'}
+	<TofuModal
+		recipient={{ name: '', email: err.payload.address }}
+		previousFingerprint={err.payload.previousFingerprint}
+		previousLastSeen={null}
+		previousFirstSeen={err.payload.previousFirstSeen}
+		currentFingerprint={err.payload.currentFingerprint}
+		shared={false}
+		onSendAnyway={acceptExternalAndSend}
+		onCancel={clearErr}
+	/>
 {/if}

@@ -3,7 +3,7 @@ import { cleanup, render } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
 import MailLayout from './+layout.svelte';
 
-vi.mock('openpgp', () => ({}));
+vi.mock('openpgp', () => ({ enums: { publicKey: {}, keyFlags: {} } }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribe: vi.fn() } }));
 vi.mock('$core/directory/signing-key', () => ({
 	DIRECTORY_SIGNING_PUBLIC_KEY_ARMORED: '',

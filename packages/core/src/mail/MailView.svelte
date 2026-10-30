@@ -10,7 +10,6 @@
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import MessageList, { type BulkAction } from './MessageList.svelte';
 	import Reader from './Reader.svelte';
-	import Compose from './Compose.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
@@ -76,8 +75,6 @@
 	import { applyToThread, threadMessageIds, threadTargets, type ThreadVerb } from './threadActions';
 	import { canFetchFolder, mailbox, selectorFor } from '$core/stores/mailbox.svelte';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
-	import { drafts } from '$core/stores/drafts.svelte';
-	import { scheduled } from '$core/stores/scheduled.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import SpamConsentDialog from './SpamConsentDialog.svelte';
@@ -1521,18 +1518,6 @@
 		]);
 	}
 
-	function send(info?: { scheduledAt?: string }) {
-		composeStore.close();
-		if (info?.scheduledAt) {
-			flash(msg.mail_toast_scheduled({ when: formatWhenLong(new Date(info.scheduledAt)) }));
-			void scheduled.refresh();
-		} else {
-			flash(msg.mail_toast_sent());
-		}
-		refreshAfterSend();
-		void drafts.refresh();
-	}
-
 	function replySent(id: string) {
 		mailbox.noteReplySent(id);
 		flash(msg.mail_toast_reply_sent());
@@ -1589,7 +1574,8 @@
 		if (!isListShortcut(e)) return;
 		if (isTypingTarget(e.target)) return;
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
-		if (composeStore.open) return;
+		if (composeStore.active && composeStore.expanded) return;
+		if (e.target instanceof Element && e.target.closest('.compose-layer')) return;
 
 		if (e.key === 'Escape') {
 			if (messageId !== null) {
@@ -1797,19 +1783,10 @@
 	{/key}
 {/if}
 
-{#if messageId === null && !composeStore.open}
+{#if messageId === null && !composeStore.active}
 	<button class="fab" title={msg.mail_compose()} onclick={() => composeStore.openNew()}>
 		<PenLine size={22} />
 	</button>
-{/if}
-{#if composeStore.open}
-	{#key composeStore.editingDraftId}
-		<Compose
-			draftId={composeStore.editingDraftId}
-			onClose={() => composeStore.close()}
-			onSend={send}
-		/>
-	{/key}
 {/if}
 {#snippet deleteBody()}
 	<p class="cfd-p">
