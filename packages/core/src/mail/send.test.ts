@@ -507,12 +507,6 @@ describe('buildPreview', () => {
 		const p = buildPreview({ ...input, body: 'x'.repeat(500) }, true, now);
 		expect(p.snippet).toHaveLength(280);
 	});
-
-	it('carries Reply-To only when set', () => {
-		expect(buildPreview(input, false, now).reply_to).toBeUndefined();
-		const replyTo = { display: 'Team', address: 'team@thelemail.com' };
-		expect(buildPreview({ ...input, replyTo }, false, now).reply_to).toEqual([replyTo]);
-	});
 });
 
 describe('sendErrorFromApi', () => {

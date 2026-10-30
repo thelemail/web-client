@@ -68,7 +68,6 @@ function buildPreview(p: ParsedEml, bimiDomain: string): MessagePreview {
 		recipients,
 		snippet: buildSnippet(p),
 		display_date: (p.date ?? new Date()).toISOString(),
-		...(p.replyTo.length ? { reply_to: p.replyTo } : {}),
 		flags
 	};
 }
