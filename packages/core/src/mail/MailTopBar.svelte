@@ -7,6 +7,8 @@
 	import * as Tooltip from '$core/components/ui/tooltip';
 	import { platform } from '$platform';
 	import { mailNav } from '$core/stores/nav.svelte';
+	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
 	import ListSearch from './ListSearch.svelte';
 
 	const HELP_URL = 'https://thelemail.com/documentation';
@@ -18,7 +20,9 @@
 			? m.mail_search_drafts()
 			: view === 'scheduled'
 				? m.mail_search_scheduled()
-				: m.mail_search_placeholder()
+				: accounts.list.length > 1 && auth.email
+					? m.mail_search_in_account({ address: auth.email })
+					: m.mail_search_placeholder()
 	);
 </script>
 
