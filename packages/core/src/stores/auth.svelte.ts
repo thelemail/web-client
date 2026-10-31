@@ -480,6 +480,10 @@ class AuthStore {
 		return this.#profiles.get(accountId)?.vaultUnlocked ?? false;
 	}
 
+	hasPersistentFor(accountId: string): boolean {
+		return this.#profiles.get(accountId)?.hasPersistent ?? false;
+	}
+
 	deletionFor(accountId: string): DeletionStatus | null {
 		return this.#profiles.get(accountId)?.deletion ?? null;
 	}

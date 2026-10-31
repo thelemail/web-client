@@ -3,7 +3,7 @@ import type { MailboxCounts } from '$core/api/types';
 
 class UnreadStore {
 	#counts = $state(new Map<string, MailboxCounts>());
-	#pending = new Map<string, Promise<void>>();
+	#pending = new Map<string, Promise<boolean>>();
 
 	countsFor(accountId: string): MailboxCounts | null {
 		return this.#counts.get(accountId) ?? null;
@@ -15,14 +15,16 @@ class UnreadStore {
 		this.#counts = map;
 	}
 
-	async refresh(accountId: string): Promise<void> {
+	async refresh(accountId: string): Promise<boolean> {
 		const pending = this.#pending.get(accountId);
 		if (pending) return pending;
 		const run = (async () => {
 			try {
 				const counts = await getMailboxCounts(accountId);
 				this.set(accountId, counts);
+				return true;
 			} catch {
+				return false;
 			} finally {
 				this.#pending.delete(accountId);
 			}
