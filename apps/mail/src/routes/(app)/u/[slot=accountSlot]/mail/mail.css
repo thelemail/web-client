@@ -86,7 +86,7 @@
 .mail-app .acct-nm { font-size: 12.5px; font-weight: 550; color: var(--fg-strong); line-height: 1.25; letter-spacing: var(--track-snug); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .acct-em { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .acct-btn .uchev { color: var(--fg-faint); display: flex; flex: 0 0 auto; }
-.mail-app .rail-acct .menu { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; width: 272px; display: flex; flex-direction: column; max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain; }
+.mail-app .rail-acct .menu { top: auto; bottom: calc(100% + 8px); left: 0; right: auto; width: 320px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain; }
 .mail-app .rail-acct .menu > *:not(.acct-list) { flex: 0 0 auto; }
 @keyframes mail-pop-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .mail-app .rail-acct .menu { animation: mail-pop-up var(--dur) var(--ease-out); }
@@ -114,45 +114,36 @@
 .mail-app .mitem.danger svg { color: var(--danger-500); }
 .mail-app .mitem.danger:hover { background: var(--danger-100); }
 
-.mail-app .swh { display: flex; align-items: center; gap: 8px; padding: 6px 6px 9px; }
-.mail-app .swh-bk { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--ink-500); cursor: pointer; }
-.mail-app .swh-bk:hover { background: var(--paper-100); color: var(--fg-strong); }
-.mail-app .swh-t { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); }
 .mail-app .acct-row { display: flex; align-items: center; gap: 11px; width: 100%; text-align: left; border: none; background: none; padding: 10px 11px; border-radius: var(--radius-control-compact); cursor: pointer; }
 .mail-app .acct-row:hover { background: var(--paper-100); }
 .mail-app .acct-row.cur { background: var(--pine-50); }
 .mail-app .acct-row .ar-tx { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
 .mail-app .acct-row .ar-nm { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .acct-row .ar-em { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .acct-row .ar-org { font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mail-app .acct-row .ar-cur { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-pill); padding: 3px 9px; }
+.mail-app .acct-row .ar-em { font-family: var(--font-mono); font-size: 11.5px; line-height: 1.35; color: var(--fg-muted); overflow-wrap: anywhere; }
+.mail-app .acct-row .ar-ep { display: inline-block; max-width: 100%; }
+.mail-app .acct-row .ar-em.solo { font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--fg-strong); }
+.mail-app .acct-row .ar-cur { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--pine-700); background: var(--pine-100); border-radius: var(--radius-pill); padding: 3px 9px; }
 .mail-app .acct-row .ar-cur svg { width: 13px; height: 13px; }
-.mail-app .acct-row .ar-unread { margin-left: auto; flex: 0 0 auto; font-size: 11px; font-weight: 700; color: var(--pine-50); background: var(--pine-600); border-radius: var(--radius-pill); padding: 2px 7px; font-variant-numeric: tabular-nums; }
-.mail-app .acct-row .ar-go { display: inline-flex; margin-left: auto; flex: 0 0 auto; color: var(--ink-400); }
+.mail-app .acct-h { font-size: 12.5px; font-weight: 600; color: var(--fg-strong); padding: 7px 11px 6px; }
+.mail-app .acct-row .ar-side { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; flex: 0 0 auto; }
+.mail-app .acct-row .ar-unread { font-size: 11.5px; color: var(--fg-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mail-app .acct-row .ar-st { font-size: 11.5px; color: var(--fg-muted); margin-top: 1px; }
+.mail-app .acct-row[data-state='syncing'] .ar-st { color: var(--fg-faint); }
+.mail-app .acct-row .ar-act { font-size: 12px; font-weight: 600; color: var(--fg-strong); background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-control-compact); padding: 4px 9px; white-space: nowrap; transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.mail-app .acct-row:hover .ar-act, .mail-app .acct-row:focus-visible .ar-act { border-color: var(--pine-600); color: var(--pine-700); }
+.mail-app .acct-row:is([data-state='locked'], [data-state='expired']) .ar-st { color: var(--warning-700); }
+.mail-app .acct-row[data-state='unavailable'] .ar-st { color: var(--danger-700); }
+.mail-app .acct-row:focus-visible, .mail-app .rail-acct .mitem:focus-visible { outline: 2px solid var(--pine-600); outline-offset: -2px; background: var(--paper-100); }
+.mail-app .rail-acct .menu:focus { outline: none; }
+.mail-app .acct-acts { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--border); }
+.mail-app .acct-acts .mitem { width: auto; flex: 1 1 auto; }
+.mail-app .acct-row .ar-go { display: inline-flex; flex: 0 0 auto; color: var(--ink-400); }
 .mail-app .acct-row .ar-go svg { width: 15px; height: 15px; }
 .mail-app .acct-row:hover .ar-go { color: var(--pine-600); }
 .mail-app .acct-list { flex: 0 1 auto; min-height: 0; max-height: 304px; overflow-y: auto; overscroll-behavior: contain; }
 .mail-app .acct-list::-webkit-scrollbar { width: 6px; }
 .mail-app .acct-list::-webkit-scrollbar-thumb { background: var(--paper-200); border: none; }
 .mail-app a.mitem { text-decoration: none; cursor: pointer; }
-.mail-app .sw-note { font-size: 11.5px; line-height: 1.5; color: var(--fg-faint); padding: 8px 11px 6px; }
-
-.sw-ovl { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--ink-900) 45%, transparent); backdrop-filter: blur(2px); animation: swfade var(--dur) var(--ease-out); }
-@keyframes swfade { from { opacity: 0; } to { opacity: 1; } }
-.sw-card { display: flex; flex-direction: column; align-items: center; width: 300px; padding: 30px 28px 26px; text-align: center; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-surface); box-shadow: var(--shadow-lg); animation: swpop var(--dur) var(--ease-out); }
-@keyframes swpop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.sw-card .sw-logo { display: block; margin-bottom: 18px; }
-.sw-card .sw-spin { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--paper-150); border-top-color: var(--pine-600); animation: swspin .8s linear infinite; margin-bottom: 14px; }
-@keyframes swspin { to { transform: rotate(360deg); } }
-.sw-card .sw-ok { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--success-100); color: var(--success-700); margin-bottom: 14px; }
-.sw-card .sw-ok svg { width: 15px; height: 15px; }
-.sw-card .sw-t { font-family: var(--font-sans); font-feature-settings: normal; font-size: 17px; font-weight: 500; color: var(--fg-strong); }
-.sw-card .sw-e { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-muted); margin-top: 6px; }
-.sw-card .sw-d { font-size: 12px; color: var(--fg-faint); margin-top: 3px; }
-@media (prefers-reduced-motion: reduce) {
-	.sw-ovl, .sw-card { animation: none; }
-	.sw-card .sw-spin { animation-duration: 1.6s; }
-}
 
 .mail-app .mailbody { flex: 1; display: flex; min-height: 0; }
 
