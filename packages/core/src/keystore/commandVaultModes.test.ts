@@ -24,7 +24,8 @@ const credentialCommands: KeystoreCommand[] = [
 	'preparePasswordChangeCredentials',
 	'commitPasswordChange',
 	'migrationStartRegistration',
-	'migrationFinishStage'
+	'migrationFinishStage',
+	'migrationFinalized'
 ];
 
 const keyIssuingCommands: KeystoreCommand[] = [

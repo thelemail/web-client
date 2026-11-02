@@ -1,4 +1,6 @@
 import {
+	getMe,
+	getMigrationStatus,
 	loginInit,
 	loginComplete,
 	migrationFinalize,
@@ -23,6 +25,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$core/stores/auth.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { syncAddressUids } from '$core/keys/uid-sync';
+import { bytesToHex } from '$core/keys/encode';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
 
@@ -71,25 +74,60 @@ export class TwoFactorExpiredError extends Error {
 const FINALIZE_ATTEMPTS = 3;
 const FINALIZE_RETRY_MS = 400;
 
-async function finalizeMigrationIfGranted(grant: Partial<LoginSessionGrant>): Promise<boolean> {
-	if (!grant.migrationFinalizeGrant) return false;
-	for (let attempt = 1; attempt <= FINALIZE_ATTEMPTS; attempt++) {
+async function finalizeMigration(finalizeToken: string): Promise<void> {
+	for (let attempt = 1; ; attempt++) {
 		try {
-			await migrationFinalize({ finalizeToken: grant.migrationFinalizeGrant });
-			return true;
+			await migrationFinalize({ finalizeToken });
+			return;
 		} catch (err) {
-			if (err instanceof ApiCallError && err.status >= 400 && err.status < 500) {
-				console.warn('login: migration finalize rejected', err.status);
-				return false;
-			}
-			if (attempt === FINALIZE_ATTEMPTS) {
-				console.warn('login: migration finalize failed', err);
-				return false;
-			}
+			const refused = err instanceof ApiCallError && err.status >= 400 && err.status < 500;
+			if (refused || attempt === FINALIZE_ATTEMPTS) throw err;
 			await new Promise((resolve) => setTimeout(resolve, FINALIZE_RETRY_MS * attempt));
 		}
 	}
-	return false;
+}
+
+async function serverFinalized(accountId: string, masterKeyId: string): Promise<boolean> {
+	try {
+		const status = await getMigrationStatus(accountId);
+		return status.authScheme === 'opaque_v1' && !status.migrationState && status.masterKeyId === masterKeyId;
+	} catch (err) {
+		console.warn('login: migration status unavailable', err);
+		return false;
+	}
+}
+
+async function unlockedKeyIsPublished(accountId: string): Promise<boolean> {
+	try {
+		const [me, local] = await Promise.all([getMe(accountId), keystore.getPublicKey({ accountId })]);
+		return local.ok && bytesToHex(local.fingerprint) === me.keyFingerprint.toLowerCase();
+	} catch (err) {
+		console.warn('login: published key unavailable', err);
+		return false;
+	}
+}
+
+async function finalizeStagedMigration(
+	accountId: string,
+	finalizeToken: string,
+	masterKeyId: string
+): Promise<void> {
+	if (!(await unlockedKeyIsPublished(accountId))) {
+		await keystore.lock({ accountId });
+		auth.forgetSession(accountId);
+		console.error('login: staged key does not match the published key');
+		throw new Error(m.auth_login_unlock_failed());
+	}
+	let finalized = true;
+	try {
+		await finalizeMigration(finalizeToken);
+	} catch (err) {
+		console.warn('login: migration finalize failed', err);
+		finalized = await serverFinalized(accountId, masterKeyId);
+	}
+	if (!finalized) return;
+	const promoted = await keystore.migrationFinalized({ accountId });
+	if (!promoted.ok) console.warn('login: vault promotion failed', promoted.code);
 }
 
 async function stageMigrationIfGranted(
@@ -319,7 +357,6 @@ async function finishOpaqueLogin(
 	) {
 		throw new Error(m.auth_login_unexpected_response());
 	}
-	const finalized = await finalizeMigrationIfGranted(grant);
 	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId);
 	const unlock = await keystore.opaqueCompleteLoginUnlock({
 		operationId,
@@ -328,7 +365,7 @@ async function finishOpaqueLogin(
 		wrappedMasterKey: grant.wrappedMasterKey,
 		masterKeyId: grant.masterKeyId,
 		opaqueParamsVersion: grant.opaqueParamsVersion ?? 1,
-		serverAuthScheme: finalized || !grant.staged ? 'opaque_v1' : 'srp_v1'
+		serverAuthScheme: grant.staged ? 'srp_v1' : 'opaque_v1'
 	});
 	if (!unlock.ok) {
 		auth.forgetSession(grant.accountId);
@@ -338,6 +375,9 @@ async function finishOpaqueLogin(
 				? m.auth_login_interrupted()
 				: m.auth_login_unlock_failed()
 		);
+	}
+	if (grant.staged && grant.migrationFinalizeGrant) {
+		await finalizeStagedMigration(grant.accountId, grant.migrationFinalizeGrant, grant.masterKeyId);
 	}
 
 	if (rememberMe && grant.serverHalf) {

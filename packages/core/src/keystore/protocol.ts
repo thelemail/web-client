@@ -576,6 +576,10 @@ export type MigrationFinishStageResponse =
 	  }
 	| { ok: false; code: 'locked' | 'no_pending_operation' };
 
+export type MigrationFinalizedArgs = AccountScopedArgs;
+
+export type MigrationFinalizedResponse = { ok: true } | { ok: false; code: 'locked' | 'not_staged' };
+
 export type OpaqueRecoverySetupStartArgs = AccountScopedArgs;
 
 export type OpaqueRecoverySetupStartResponse =
@@ -757,6 +761,7 @@ export type KeystoreCommand =
 	| 'opaqueAbandonOperation'
 	| 'migrationStartRegistration'
 	| 'migrationFinishStage'
+	| 'migrationFinalized'
 	| 'opaqueRecoverySetupStart'
 	| 'opaqueRecoverySetupFinish'
 	| 'opaqueCompleteRecoveryUnlock'
@@ -826,6 +831,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	opaqueAbandonOperation: ['account'],
 	migrationStartRegistration: ['account'],
 	migrationFinishStage: ['account'],
+	migrationFinalized: ['account'],
 	opaqueRecoverySetupStart: ['account'],
 	opaqueRecoverySetupFinish: ['account'],
 	opaqueCompleteRecoveryUnlock: ['account'],

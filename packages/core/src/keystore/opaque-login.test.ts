@@ -32,10 +32,14 @@ vi.mock('@protontech/crypto', () => ({ CryptoProxy: {} }));
 vi.mock('@protontech/crypto/proxy/endpoint/api.ts', () => ({ Api: class {} }));
 vi.mock('@protontech/crypto/srp', () => ({}));
 
+const persisted = vi.hoisted(() => [] as { authScheme: string; masterKeyId?: string }[]);
+
 vi.mock('./idb', () => ({
 	getVault: async () => null,
 	getAllVaults: async () => [],
-	putVault: async () => undefined,
+	putVault: async (record: { authScheme: string; masterKeyId?: string }) => {
+		persisted.push(record);
+	},
 	deleteVault: async () => undefined,
 	clearAllVaults: async () => undefined,
 	getAllAccountSlots: async () => [],
@@ -271,5 +275,52 @@ describe('pending OPAQUE login in the keystore', () => {
 
 		expect(zeroed(key)).toBe(true);
 		expect(await unlock(operationId)).toEqual({ ok: false, code: 'no_pending_operation' });
+	});
+});
+
+describe('staged credential promotion', () => {
+	async function schemeOf(): Promise<string | undefined> {
+		const status = await call<{ accounts: { accountId: string; authScheme: string }[] }>('status');
+		return status.accounts.find((a) => a.accountId === ACCOUNT)?.authScheme;
+	}
+
+	it('keeps a staged unlock on the password scheme until the server finalizes', async () => {
+		const { operationId } = await authenticate(PASSWORD);
+
+		expect(await unlock(operationId, { serverAuthScheme: 'srp_v1' })).toMatchObject({ ok: true });
+
+		expect(await schemeOf()).toBe('srp_v1');
+		expect(persisted.at(-1)?.authScheme).toBe('srp_v1');
+	});
+
+	it('moves the vault and its stored record to OPAQUE once finalized', async () => {
+		const { operationId } = await authenticate(PASSWORD);
+		await unlock(operationId, { serverAuthScheme: 'srp_v1' });
+
+		expect(await call('migrationFinalized', { accountId: ACCOUNT })).toEqual({ ok: true });
+
+		expect(await schemeOf()).toBe('opaque_v1');
+		expect(persisted.at(-1)).toMatchObject({ authScheme: 'opaque_v1', masterKeyId: account.masterKeyId });
+	});
+
+	it('refuses to promote a vault that is already on OPAQUE', async () => {
+		const { operationId } = await authenticate(PASSWORD);
+		await unlock(operationId);
+		const writes = persisted.length;
+
+		expect(await call('migrationFinalized', { accountId: ACCOUNT })).toEqual({
+			ok: false,
+			code: 'not_staged'
+		});
+		expect(persisted).toHaveLength(writes);
+	});
+
+	it('refuses to promote a locked account', async () => {
+		await call('lock', { accountId: ACCOUNT });
+
+		expect(await call('migrationFinalized', { accountId: ACCOUNT })).toEqual({
+			ok: false,
+			code: 'locked'
+		});
 	});
 });
