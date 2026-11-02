@@ -105,6 +105,8 @@ import type {
 	InvalidatePersistedVaultArgs,
 	LockArgs,
 	MigrationFinishStageArgs,
+	MigrationFinalizedArgs,
+	MigrationFinalizedResponse,
 	MigrationFinishStageResponse,
 	MigrationStartRegistrationArgs,
 	MigrationStartRegistrationResponse,
@@ -2594,6 +2596,33 @@ async function handleMigrationFinishStage(
 	};
 }
 
+async function handleMigrationFinalized(
+	args: MigrationFinalizedArgs
+): Promise<MigrationFinalizedResponse> {
+	const v = vaults.get(args.accountId);
+	if (!v) {
+		return { ok: false, code: 'locked' };
+	}
+	if (v.authScheme !== 'srp_v1' || !v.masterKey || !v.wrappedMasterKey || !v.masterKeyId) {
+		return { ok: false, code: 'not_staged' };
+	}
+	const previous = cachedRecords.get(args.accountId) ?? (await getVault(args.accountId)) ?? undefined;
+	v.authScheme = 'opaque_v1';
+	await seedAccountKeys(v, previous);
+	if (previous) {
+		const persisted: VaultRecord = {
+			...previous,
+			authScheme: 'opaque_v1',
+			...storedAccountKeys(v),
+			updatedAt: Date.now()
+		};
+		await putVault(persisted);
+		cachedRecords.set(args.accountId, persisted);
+	}
+	broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
+	return { ok: true };
+}
+
 async function handleOpaqueRecoverySetupStart(
 	args: OpaqueRecoverySetupStartArgs
 ): Promise<OpaqueRecoverySetupStartResponse> {
@@ -3197,6 +3226,9 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 					msg.id,
 					await handleMigrationFinishStage(msg.args as MigrationFinishStageArgs)
 				);
+				break;
+			case 'migrationFinalized':
+				respond(port, msg.id, await handleMigrationFinalized(msg.args as MigrationFinalizedArgs));
 				break;
 			case 'opaqueRecoverySetupStart':
 				respond(

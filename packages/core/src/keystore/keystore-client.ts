@@ -59,6 +59,8 @@ import type {
 	InvalidatePersistedVaultArgs,
 	MigrationFinishStageArgs,
 	MigrationFinishStageResponse,
+	MigrationFinalizedArgs,
+	MigrationFinalizedResponse,
 	MigrationStartRegistrationArgs,
 	MigrationStartRegistrationResponse,
 	OpaqueAbandonOperationArgs,
@@ -274,6 +276,8 @@ export const keystore = {
 		call<MigrationStartRegistrationResponse>('migrationStartRegistration', args),
 	migrationFinishStage: (args: MigrationFinishStageArgs) =>
 		call<MigrationFinishStageResponse>('migrationFinishStage', args),
+	migrationFinalized: (args: MigrationFinalizedArgs) =>
+		call<MigrationFinalizedResponse>('migrationFinalized', args),
 	opaqueRecoverySetupStart: (args: OpaqueRecoverySetupStartArgs) =>
 		call<OpaqueRecoverySetupStartResponse>('opaqueRecoverySetupStart', args),
 	opaqueRecoverySetupFinish: (args: OpaqueRecoverySetupFinishArgs) =>
