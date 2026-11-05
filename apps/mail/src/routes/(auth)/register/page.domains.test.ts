@@ -22,7 +22,7 @@ vi.mock('$core/auth/proof-of-work', () => ({
 	withProofOfWork: (_proof: unknown, _email: string, run: (payload: undefined) => unknown) => run(undefined)
 }));
 vi.mock('$core/auth/perform-login', () => ({ performLogin: vi.fn() }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: null } }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: { email: null } }));
 vi.mock('$platform', () => ({ platform: { returnOrigin: () => 'http://localhost', openExternal: vi.fn() } }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$app/state', () => ({ page: { params: {}, url: new URL('http://localhost/register') } }));
