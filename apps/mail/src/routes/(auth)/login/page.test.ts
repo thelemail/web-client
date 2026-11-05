@@ -23,7 +23,7 @@ const nav = vi.hoisted(() => ({ goto: vi.fn() }));
 vi.mock('$app/navigation', () => nav);
 const route = vi.hoisted(() => ({ page: { params: {}, url: new URL('http://localhost/login') } }));
 vi.mock('$app/state', () => route);
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: null } }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: { email: null } }));
 const known = vi.hoisted(() => ({ bySlot: vi.fn() }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: known }));
 
