@@ -327,15 +327,18 @@ export function logout(accountId: string) {
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
-		accountId
+		accountId,
+		csrf: true
 	});
 }
 
-export function logoutAll() {
+export function logoutAll(accountId?: string) {
 	return apiFetch<void>('/v1/auth/logout/all', {
 		method: 'POST',
 		skipAuth: true,
-		skipRetryOnUnauthorized: true
+		skipRetryOnUnauthorized: true,
+		accountId,
+		csrf: true
 	});
 }
 
@@ -393,7 +396,8 @@ export function getPersistentHalf(accountId: string) {
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
-		accountId
+		accountId,
+		csrf: true
 	});
 }
 
@@ -406,6 +410,7 @@ export function disablePersistentHalf(accountId: string) {
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
-		accountId
+		accountId,
+		csrf: true
 	});
 }

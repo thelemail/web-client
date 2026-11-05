@@ -16,7 +16,7 @@
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import SecretLeaveConfirm from '../SecretLeaveConfirm.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import {
 		commitRecovery,
 		prepareRecovery,

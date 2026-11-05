@@ -8,7 +8,7 @@
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CeremonyShell from './CeremonyShell.svelte';
 	import SecretLeaveConfirm from './SecretLeaveConfirm.svelte';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { backupCodesFile } from '$core/auth/backup-codes';
 

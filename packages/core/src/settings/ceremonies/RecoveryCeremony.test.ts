@@ -15,7 +15,7 @@ vi.mock('$platform', () => ({ platform: { saveBlob } }));
 vi.mock('$core/recovery/setup', () => recovery);
 vi.mock('$core/recovery/kit', () => ({ RECOVERY_KIT_FILENAME: 'kit.txt', recoveryKitBlob: () => new Blob() }));
 vi.mock('$core/auth/reauth.svelte', () => ({ isReauthenticationRequired: () => false }));
-vi.mock('$core/stores/auth.svelte', () => ({
+vi.mock('$core/stores/session.svelte', () => ({
 	auth: { accountId: 'me', email: 'me@thelemail.test', recoveryEnabled: false, loadProfile: vi.fn() }
 }));
 

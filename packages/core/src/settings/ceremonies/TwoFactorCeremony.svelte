@@ -32,7 +32,7 @@
 		type TwoFactorMethod,
 		type TwoFactorProof
 	} from '$core/api/types';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
 	import { Button } from '$core/components/ui/button';

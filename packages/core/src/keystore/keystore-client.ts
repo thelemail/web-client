@@ -173,10 +173,8 @@ function getSingleton(): KeystoreSingleton {
 
 	let worker: SharedWorker;
 	try {
-		worker = new SharedWorker(new URL('./keystore-worker.ts', import.meta.url), {
-			type: 'module',
-			name: 'thelemail-keystore'
-		});
+		if (!platform.spawnKeystore) throw new Error(WORKER_UNAVAILABLE);
+		worker = platform.spawnKeystore();
 	} catch {
 		throw new Error(WORKER_UNAVAILABLE);
 	}
@@ -322,6 +320,7 @@ export const keystore = {
 	invalidatePersistedVault: (args: InvalidatePersistedVaultArgs) =>
 		call<void>('invalidatePersistedVault', args),
 	abandonPasswordChange: () => call<void>('abandonPasswordChange'),
+	touch: () => call<void>('touch'),
 	lock: (args: LockArgs) => call<void>('lock', args),
 	clear: (args: ClearArgs) => call<void>('clear', args),
 	clearAll: () => call<void>('clearAll'),

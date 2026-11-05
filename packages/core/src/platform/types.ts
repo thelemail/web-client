@@ -210,6 +210,7 @@ export interface Platform {
 	locale: LocaleStore;
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
+	spawnKeystore?: () => SharedWorker;
 	transport?: Transport;
 	openEventSource?: (url: string, accountId: string) => EventSourceLike;
 	blobPut: (

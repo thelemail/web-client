@@ -36,6 +36,7 @@ const auth = vi.hoisted(() => ({
 	loadProfile: vi.fn()
 }));
 vi.mock('$core/stores/auth.svelte', () => ({ auth }));
+vi.mock('$core/stores/session.svelte', () => ({ auth }));
 vi.mock('$core/stores/accountKeys.svelte', () => ({
 	accountKeys: { current: null, history: [], authScheme: 'opaque', ready: vi.fn() }
 }));

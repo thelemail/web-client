@@ -27,7 +27,7 @@ vi.mock('$core/api/twofactor', async (importOriginal) => ({
 }));
 
 const session = vi.hoisted(() => ({ addSession: vi.fn(), forgetSession: vi.fn() }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: session }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: session }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: {} }));
 vi.mock('$core/keys/uid-sync', () => ({ syncAddressUids: async () => undefined }));
 vi.mock('$platform', () => ({ platform: {} }));

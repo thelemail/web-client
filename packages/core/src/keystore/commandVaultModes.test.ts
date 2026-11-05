@@ -47,9 +47,40 @@ describe('commandVaultModes', () => {
 		for (const [cmd, modes] of Object.entries(commandVaultModes)) {
 			expect(modes.length, `${cmd} has no vault mode`).toBeGreaterThan(0);
 			for (const mode of modes) {
-				expect(['account', 'product'], `${cmd} has an unknown mode`).toContain(mode);
+				expect(['account', 'product', 'auth'], `${cmd} has an unknown mode`).toContain(mode);
 			}
 		}
+	});
+
+	it('keeps mail content, alias keys, legacy SRP and forks out of the auth vault', () => {
+		const auth = Object.entries(commandVaultModes)
+			.filter(([, modes]) => modes.includes('auth'))
+			.map(([cmd]) => cmd);
+		for (const cmd of [
+			'decrypt',
+			'encrypt',
+			'encryptToKeys',
+			'signDetached',
+			'attachmentHeader',
+			'attachmentBytes',
+			'sealIndex',
+			'openIndex',
+			'getPublicKey',
+			'sealProductFork',
+			'openProductFork',
+			'prepareLogin',
+			'completeLoginUnlock',
+			'migrationStartRegistration',
+			...keyIssuingCommands
+		]) {
+			expect(auth, `${cmd} must not reach the auth vault`).not.toContain(cmd);
+		}
+		expect(auth).toContain('opaqueCompleteLoginUnlock');
+		expect(auth).toContain('touch');
+	});
+
+	it('gives touch to the auth vault alone', () => {
+		expect(commandVaultModes.touch).toEqual(['auth']);
 	});
 
 	it('keeps the fork ends on opposite sides of the boundary', () => {

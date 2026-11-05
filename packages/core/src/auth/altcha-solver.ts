@@ -1,13 +1,10 @@
-import 'altcha/external';
+import { solveChallengeWorkers } from 'altcha/lib';
 import Pbkdf2Worker from 'altcha/workers/pbkdf2?worker';
-import type { AltchaWidgetElement } from 'altcha/types/generic';
 import type { ProofChallenge } from '$core/api/types';
 import { m } from '$paraglide/messages.js';
 
 const ALGORITHM = 'PBKDF2/SHA-256';
-const MOUNT_ATTEMPTS = 50;
-
-globalThis.$altcha.algorithms.set(ALGORITHM, () => new Pbkdf2Worker());
+const MAX_WORKERS = 8;
 
 export class ProofSolveError extends Error {
 	constructor(cause?: unknown) {
@@ -16,12 +13,19 @@ export class ProofSolveError extends Error {
 	}
 }
 
-async function mounted(widget: AltchaWidgetElement) {
-	for (let attempt = 0; attempt < MOUNT_ATTEMPTS; attempt++) {
-		if (typeof widget.configure === 'function' && typeof widget.verify === 'function') return;
-		await new Promise((resolve) => setTimeout(resolve, 0));
-	}
-	throw new ProofSolveError();
+interface ProofSolution {
+	counter: number;
+	derivedKey: string;
+	time?: number;
+}
+
+export function encodeProof(challenge: ProofChallenge, solution: ProofSolution): string {
+	return btoa(
+		JSON.stringify({
+			challenge: { parameters: challenge.parameters, signature: challenge.signature },
+			solution
+		})
+	);
 }
 
 export async function solveWithAltcha(
@@ -30,32 +34,24 @@ export async function solveWithAltcha(
 ): Promise<string> {
 	signal.throwIfAborted();
 	if (challenge.parameters.algorithm !== ALGORITHM) throw new ProofSolveError();
-	const widget = document.createElement('altcha-widget');
-	widget.hidden = true;
-	document.body.append(widget);
 	const controller = new AbortController();
 	const abort = () => controller.abort();
 	signal.addEventListener('abort', abort, { once: true });
 	try {
-		await mounted(widget);
-		await widget.configure({
+		const solution = await solveChallengeWorkers({
 			challenge,
-			auto: 'off',
-			display: 'invisible',
-			hideLogo: true,
-			hideFooter: true,
-			humanInteractionSignature: false,
-			minDuration: 0
+			controller,
+			concurrency: Math.min(MAX_WORKERS, Math.max(1, navigator.hardwareConcurrency || 1)),
+			createWorker: () => new Pbkdf2Worker(),
+			counterMode: 'uint32'
 		});
-		const result = await widget.verify({ controller });
 		signal.throwIfAborted();
-		if (!result?.payload) throw new ProofSolveError(widget.getState());
-		return result.payload;
+		if (!solution) throw new ProofSolveError();
+		return encodeProof(challenge, solution);
 	} catch (err) {
 		if (signal.aborted || err instanceof ProofSolveError) throw err;
 		throw new ProofSolveError(err);
 	} finally {
 		signal.removeEventListener('abort', abort);
-		widget.remove();
 	}
 }

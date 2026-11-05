@@ -9,6 +9,9 @@ import { m } from '$paraglide/messages.js';
 import { i18n } from '$core/i18n/locale.svelte';
 import { dateParts, intlLocale } from '$core/i18n/intl';
 import { customFolderRoute as customRoute } from './folderRoute';
+import { isEmail } from '$core/email';
+
+export { isEmail };
 
 export {
 	ROUTE_FOLDERS,
@@ -217,11 +220,6 @@ export interface Contact {
 
 export interface RecipientChip extends Contact {
 	valid: boolean;
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export function isEmail(value: string): boolean {
-	return EMAIL_RE.test(value.trim());
 }
 
 export function recipientChip(r: { name?: string; address: string }): RecipientChip {

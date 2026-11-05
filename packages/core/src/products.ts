@@ -22,7 +22,9 @@ const targets = parse(import.meta.env.PUBLIC_PRODUCT_ORIGINS);
 
 export const currentProduct = import.meta.env.PUBLIC_THELEMAIL_PRODUCT || 'app';
 
-export const isProductVault = currentProduct !== 'app';
+export const isAuthOrigin = currentProduct === 'auth';
+
+export const isProductVault = currentProduct !== 'app' && !isAuthOrigin;
 
 const launched = new Set(
 	String(import.meta.env.PUBLIC_LAUNCHED_PRODUCTS ?? '')

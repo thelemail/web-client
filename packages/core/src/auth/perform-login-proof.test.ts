@@ -25,7 +25,7 @@ vi.mock('$core/auth/proof-of-work', async (importOriginal) => ({
 	...pow
 }));
 
-vi.mock('$core/stores/auth.svelte', () => ({ auth: {} }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: {} }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: {} }));
 vi.mock('$core/keys/uid-sync', () => ({ syncAddressUids: async () => undefined }));
 vi.mock('$platform', () => ({ platform: {} }));

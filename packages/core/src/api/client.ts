@@ -66,6 +66,29 @@ interface FetchOptions {
 	accountId?: string;
 	headers?: Record<string, string>;
 	keepalive?: boolean;
+	csrf?: boolean;
+}
+
+const csrfTokens = new Map<string, string>();
+
+export const csrfStore = {
+	remember(accountId: string, token: string | undefined | null) {
+		if (token) csrfTokens.set(accountId, token);
+	},
+	forget(accountId: string) {
+		csrfTokens.delete(accountId);
+	},
+	clear() {
+		csrfTokens.clear();
+	}
+};
+
+const STEP_UP_GRANT_HEADER = 'X-Step-Up-Grant';
+
+async function bodyDigest(body: BodyInit | null | undefined): Promise<string> {
+	const bytes = new TextEncoder().encode(typeof body === 'string' ? body : '');
+	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as BufferSource));
+	return btoa(String.fromCharCode(...digest));
 }
 
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
@@ -242,6 +265,8 @@ async function doFetch<T>(
 	if (opts.keepalive) init.keepalive = true;
 	const accountId = resolveAccountId(opts.accountId);
 	Object.assign(headers, await authHeaders(accountId, !opts.skipAuth));
+	const csrf = opts.csrf && accountId ? csrfTokens.get(accountId) : undefined;
+	if (csrf) headers['X-CSRF-Token'] = csrf;
 
 	const kind = base === PUBLIC_SUBMISSION_BASE_URL.replace(/\/$/, '') ? 'submission' : 'api';
 	const resp = await transport(url, init, kind);
@@ -277,6 +302,28 @@ async function doFetch<T>(
 		(await reauthHandler(accountId))
 	) {
 		return doFetch<T>(path, opts, retried, true);
+	}
+	if (code === 'step_up_grant_required' && !opts.headers?.[STEP_UP_GRANT_HEADER] && accountId) {
+		const { grant } = await doFetch<{ grant: string }>(
+			'/v1/auth/step-up/grants',
+			{
+				method: 'POST',
+				accountId,
+				body: {
+					method: init.method,
+					path: path.split('?')[0],
+					bodyDigest: await bodyDigest(init.body)
+				}
+			},
+			false,
+			false
+		);
+		return doFetch<T>(
+			path,
+			{ ...opts, headers: { ...opts.headers, [STEP_UP_GRANT_HEADER]: grant } },
+			retried,
+			reauthed
+		);
 	}
 	if ((code === 'read_only' || code === 'account_suspended') && lifecycleReconciler) {
 		lifecycleReconciler.onLifecycleError(code, accountId);

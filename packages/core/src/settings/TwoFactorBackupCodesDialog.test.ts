@@ -4,7 +4,7 @@ import TwoFactorBackupCodesDialog from './TwoFactorBackupCodesDialog.svelte';
 
 const saveBlob = vi.hoisted(() => vi.fn());
 vi.mock('$platform', () => ({ platform: { saveBlob } }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { email: 'me@thelemail.test' } }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: { email: 'me@thelemail.test' } }));
 
 const codes = ['aaaa-bbbb', 'cccc-dddd'];
 

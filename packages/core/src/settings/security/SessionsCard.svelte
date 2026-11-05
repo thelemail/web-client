@@ -8,7 +8,7 @@
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { timeSince } from '$core/i18n/relative';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { listSessions, revokeSession, revokeOtherSessions } from '$core/api/auth';

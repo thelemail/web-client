@@ -20,3 +20,16 @@ describe('altcha PBKDF2 solver', () => {
 		}
 	});
 });
+
+describe('altcha proof payload', () => {
+	it('encodes the challenge and solution the way the platform decodes it', async () => {
+		const { encodeProof } = await import('./altcha-solver');
+		const v = vectors[0];
+		const decoded = JSON.parse(
+			atob(encodeProof(v.challenge as never, { counter: v.counter, derivedKey: v.derivedKey }))
+		);
+		expect(decoded.challenge.parameters).toEqual(v.challenge.parameters);
+		expect(decoded.challenge.signature).toBe(v.challenge.signature);
+		expect(decoded.solution).toEqual({ counter: v.counter, derivedKey: v.derivedKey });
+	});
+});

@@ -1,4 +1,4 @@
-import { isEmail } from '$core/mail/data';
+import { isEmail } from '$core/email';
 
 export function loginIdentifier(value: string): string {
 	return value.trim();

@@ -10,7 +10,7 @@
 	import { codeProof, enrolledMethods, webauthnProof } from '$core/auth/two-factor-proof';
 	import { webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { reauth } from './reauth.svelte';
 	import { sessionStepUp } from './session-step-up';

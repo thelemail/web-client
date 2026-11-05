@@ -18,7 +18,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { timeSince } from '$core/i18n/relative';
 	import { serverNow } from '$core/api/serverclock';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { listSecurityEvents } from '$core/api/auth';
 	import type { SecurityEventAction, SecurityEventInfo } from '$core/api/types';
