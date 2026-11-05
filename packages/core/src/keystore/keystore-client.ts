@@ -173,10 +173,8 @@ function getSingleton(): KeystoreSingleton {
 
 	let worker: SharedWorker;
 	try {
-		worker = new SharedWorker(new URL('./keystore-worker.ts', import.meta.url), {
-			type: 'module',
-			name: 'thelemail-keystore'
-		});
+		if (!platform.spawnKeystore) throw new Error(WORKER_UNAVAILABLE);
+		worker = platform.spawnKeystore();
 	} catch {
 		throw new Error(WORKER_UNAVAILABLE);
 	}
