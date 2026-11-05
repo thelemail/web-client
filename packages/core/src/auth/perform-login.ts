@@ -24,7 +24,6 @@ import { getAssertion } from '$core/auth/webauthn';
 import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$core/stores/session.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
-import { syncAddressUids } from '$core/keys/uid-sync';
 import { bytesToHex } from '$core/keys/encode';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
@@ -463,7 +462,7 @@ async function finishLoginSession(
 		slot = accounts.allocateSlot();
 		await accounts.upsert({ accountId, slot, email, addedAt: now, lastActiveAt: now });
 	}
-	void syncAddressUids(accountId);
+	auth.vaultOpened(accountId);
 	return { accountId, slot };
 }
 

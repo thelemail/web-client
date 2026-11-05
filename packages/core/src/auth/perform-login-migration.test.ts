@@ -41,6 +41,7 @@ const session = vi.hoisted(() => ({
 	addSession: vi.fn(),
 	forgetSession: vi.fn(),
 	setSession: vi.fn(),
+	vaultOpened: vi.fn(),
 	loadProfile: vi.fn(),
 	email: 'm@thelemail.com'
 }));

@@ -70,7 +70,7 @@ const emptyProfile = (): ProfileSnapshot => ({
 export interface SessionHooks {
 	accountChanged?(accountId: string | null): void;
 	sessionRevived?(accountId: string): void;
-	vaultRestored?(accountId: string): void;
+	vaultOpened?(accountId: string): void;
 	woke?(): void;
 	profileLoaded?(me: MeResponse): void;
 }
@@ -139,6 +139,10 @@ class SessionStore {
 		this.#hooks.push(hooks);
 	}
 
+	vaultOpened(accountId: string): void {
+		for (const h of this.#hooks) h.vaultOpened?.(accountId);
+	}
+
 	#emitAccountChanged(accountId: string | null): void {
 		for (const h of this.#hooks) h.accountChanged?.(accountId);
 	}
@@ -172,7 +176,7 @@ class SessionStore {
 				vaultUnlocked: true,
 				email: p.serverEmail ?? restored.email ?? p.email
 			}));
-			for (const h of this.#hooks) h.vaultRestored?.(accountId);
+			this.vaultOpened(accountId);
 			return true;
 		} catch (err) {
 			if (err instanceof ApiCallError && err.status === 401) {

@@ -53,7 +53,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 auth.attach({
 	accountChanged: broadcastAccountToStores,
 	sessionRevived: () => void realtime.sync(),
-	vaultRestored: (accountId) => void syncAddressUids(accountId),
+	vaultOpened: (accountId) => void syncAddressUids(accountId),
 	woke: () => realtime.wake(),
 	profileLoaded: (me) =>
 		accountKeys.noteServerKey(me.accountId, me.keyFingerprint, me.keyVersion, me.email)
