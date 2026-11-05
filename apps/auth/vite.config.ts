@@ -18,8 +18,11 @@ const authOrigin = (buildEnv.PUBLIC_PRODUCT_ORIGINS ?? '')
 	.map((entry) => entry.split('='))
 	.find(([audience]) => audience?.trim() === 'auth')?.[1]
 	?.trim();
-if (authOrigin && new URL(authOrigin).origin !== apiOrigin) {
-	throw new Error(`the auth app must call its own origin; PUBLIC_API_BASE_URL is ${apiOrigin}`);
+const building = process.argv.includes('build');
+if (building && (!authOrigin || new URL(authOrigin).origin !== apiOrigin)) {
+	throw new Error(
+		`the auth app must call its own origin; PUBLIC_API_BASE_URL is ${apiOrigin}, auth is ${authOrigin}`
+	);
 }
 const secure = apiOrigin.startsWith('https://');
 const devApi = process.env.THELEMAIL_DEV_API ?? 'http://127.0.0.1:8080';

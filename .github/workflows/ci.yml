@@ -61,14 +61,30 @@ jobs:
         run: pnpm test
 
       - name: Build
-        run: pnpm build
+        run: pnpm --filter @thelemail/mail --filter @thelemail/calendar build
 
       - name: Check that the bundle contacts no third party
-        run: pnpm verify:bundle
+        run: pnpm --filter @thelemail/mail --filter @thelemail/calendar verify:bundle
+
+      - name: Build the auth app
+        run: |
+          set -euo pipefail
+          set -a
+          . .github/auth-build-config.env
+          set +a
+          PUBLIC_THELEMAIL_PRODUCT=auth pnpm --filter @thelemail/auth build
+          PUBLIC_THELEMAIL_PRODUCT=auth pnpm --filter @thelemail/auth verify:bundle
 
       - name: Validate the Caddyfile
         run: |
           docker run --rm -v "$PWD/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 \
+            caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile
+
+      - name: Validate the auth Caddyfile
+        run: |
+          docker run --rm -v "$PWD/caddy/auth.Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$PWD/apps/auth/build-meta/csp.caddy:/etc/caddy/csp.caddy:ro" \
             caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 \
             caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile
 
@@ -84,3 +100,15 @@ jobs:
             node scripts/check-static-host.mjs http://localhost:8080 "apps/$app/build"
             docker stop "static-$app"
           done
+
+      - name: Check the auth host headers
+        run: |
+          set -euo pipefail
+          docker run -d --rm --name static-auth -p 8081:80 \
+            -v "$PWD/caddy/auth.Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$PWD/apps/auth/build-meta/csp.caddy:/etc/caddy/csp.caddy:ro" \
+            -v "$PWD/apps/auth/build:/srv:ro" \
+            caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+          timeout 30 sh -c 'until curl -so /dev/null http://localhost:8081/robots.txt; do sleep 0.5; done'
+          node scripts/check-auth-host.mjs http://localhost:8081 apps/auth/build
+          docker stop static-auth
