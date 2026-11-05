@@ -15,6 +15,7 @@ import type {
 	RestoreResponse,
 	TryRestoreFromPersistentArgs
 } from '../protocol';
+import { isAuthOrigin } from '../../products';
 import type { VaultState } from './state';
 import {
 	vaults,
@@ -38,7 +39,9 @@ export async function handleInvalidatePersistedVault(args: InvalidatePersistedVa
 }
 
 export const HKDF_INFO_V1 = new TextEncoder().encode('thelemail-vault-wrap-v1');
-export const HKDF_INFO_V2 = new TextEncoder().encode('thelemail-vault-wrap-v2');
+export const HKDF_INFO_V2 = new TextEncoder().encode(
+	isAuthOrigin ? 'thelemail-auth-vault-wrap-v1' : 'thelemail-vault-wrap-v2'
+);
 
 export async function deriveWrapKey(
 	localHalfKey: CryptoKey,
@@ -71,6 +74,9 @@ export async function handleEnrollPersistent(args: EnrollPersistentArgs): Promis
 	ikm.fill(0);
 
 	const wrapVersion: 1 | 2 = v.authScheme === 'opaque_v1' && v.masterKey ? 2 : 1;
+	if (isAuthOrigin && wrapVersion !== 2) {
+		throw new Error('keystore: the auth vault persists only an OPAQUE master key');
+	}
 	const serverHalfBytes = base64ToBytes(args.serverHalf);
 	const wrapKey = await deriveWrapKey(localHalfKey, serverHalfBytes, wrapVersion);
 	serverHalfBytes.fill(0);
@@ -121,6 +127,9 @@ export async function handleTryRestoreFromPersistent(
 	}
 	await ensureCryptoReady();
 	const wrapVersion = rec.wrapPayloadVersion ?? 1;
+	if (isAuthOrigin && wrapVersion !== 2) {
+		return { ok: false, reason: 'no_persistent' };
+	}
 	try {
 		const serverHalfBytes = base64ToBytes(args.serverHalf);
 		const wrapKey = await deriveWrapKey(rec.localHalfKey, serverHalfBytes, wrapVersion);

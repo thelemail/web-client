@@ -812,36 +812,37 @@ export type KeystoreCommand =
 	| 'sealIndex'
 	| 'openIndex'
 	| 'sealProductFork'
-	| 'openProductFork';
+	| 'openProductFork'
+	| 'touch';
 
-export type VaultMode = 'account' | 'product';
+export type VaultMode = 'account' | 'product' | 'auth';
 
 export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = {
-	status: ['account', 'product'],
+	status: ['account', 'product', 'auth'],
 	prepareLogin: ['account'],
 	verifyLoginProof: ['account'],
 	completeLoginUnlock: ['account'],
 	abandonLogin: ['account'],
-	opaqueStartRegistration: ['account'],
-	opaqueFinishRegistration: ['account'],
-	opaqueFinalizeRegister: ['account'],
-	opaqueStartAuth: ['account'],
-	opaqueFinishAuth: ['account'],
-	opaqueCompleteLoginUnlock: ['account'],
-	opaqueAbandonOperation: ['account'],
+	opaqueStartRegistration: ['account', 'auth'],
+	opaqueFinishRegistration: ['account', 'auth'],
+	opaqueFinalizeRegister: ['account', 'auth'],
+	opaqueStartAuth: ['account', 'auth'],
+	opaqueFinishAuth: ['account', 'auth'],
+	opaqueCompleteLoginUnlock: ['account', 'auth'],
+	opaqueAbandonOperation: ['account', 'auth'],
 	migrationStartRegistration: ['account'],
 	migrationFinishStage: ['account'],
 	migrationFinalized: ['account'],
-	opaqueRecoverySetupStart: ['account'],
-	opaqueRecoverySetupFinish: ['account'],
-	opaqueCompleteRecoveryUnlock: ['account'],
-	opaquePrepareCredentialReset: ['account'],
-	opaqueFinishCredentialReset: ['account'],
-	opaquePrepareAmkRotation: ['account'],
-	opaqueFinishAmkRotation: ['account'],
-	opaquePasswordChangeStart: ['account'],
-	opaquePasswordChangeFinish: ['account'],
-	opaquePasswordChangeCommit: ['account'],
+	opaqueRecoverySetupStart: ['account', 'auth'],
+	opaqueRecoverySetupFinish: ['account', 'auth'],
+	opaqueCompleteRecoveryUnlock: ['account', 'auth'],
+	opaquePrepareCredentialReset: ['account', 'auth'],
+	opaqueFinishCredentialReset: ['account', 'auth'],
+	opaquePrepareAmkRotation: ['account', 'auth'],
+	opaqueFinishAmkRotation: ['account', 'auth'],
+	opaquePasswordChangeStart: ['account', 'auth'],
+	opaquePasswordChangeFinish: ['account', 'auth'],
+	opaquePasswordChangeCommit: ['account', 'auth'],
 	prepareRecoverySetup: ['account'],
 	prepareRecoveryLogin: ['account'],
 	verifyRecoveryProof: ['account'],
@@ -853,14 +854,14 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	verifyPasswordChangeProof: ['account'],
 	preparePasswordChangeCredentials: ['account'],
 	commitPasswordChange: ['account'],
-	invalidatePersistedVault: ['account'],
+	invalidatePersistedVault: ['account', 'auth'],
 	abandonPasswordChange: ['account'],
-	lock: ['account', 'product'],
-	clear: ['account', 'product'],
-	clearAll: ['account', 'product'],
-	enrollPersistent: ['account', 'product'],
-	tryRestoreFromPersistent: ['account', 'product'],
-	disablePersistent: ['account', 'product'],
+	lock: ['account', 'product', 'auth'],
+	clear: ['account', 'product', 'auth'],
+	clearAll: ['account', 'product', 'auth'],
+	enrollPersistent: ['account', 'product', 'auth'],
+	tryRestoreFromPersistent: ['account', 'product', 'auth'],
+	disablePersistent: ['account', 'product', 'auth'],
 	attachmentHeader: ['account', 'product'],
 	attachmentBytes: ['account', 'product'],
 	decrypt: ['account', 'product'],
@@ -883,6 +884,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	openIndex: ['account', 'product'],
 	sealProductFork: ['account'],
 	openProductFork: ['product'],
+	touch: ['auth']
 };
 
 export interface SealProductForkArgs extends AccountScopedArgs {
