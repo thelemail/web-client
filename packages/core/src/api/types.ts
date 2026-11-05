@@ -54,7 +54,9 @@ export type ErrorCode =
 	| 'reauthentication_required'
 	| 'unsubscribe_tag_invalid'
 	| 'unsubscribe_rejected'
-	| 'unsubscribe_unreachable';
+	| 'unsubscribe_unreachable'
+	| 'auth_origin_unavailable'
+	| 'step_up_grant_required';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
@@ -802,6 +804,7 @@ export interface LoginSessionGrant {
 	tokenType: 'Bearer';
 	expiresInSeconds: number;
 	accountId: string;
+	csrfToken?: string;
 	encryptedPrivateKey: string;
 	keySalt?: string;
 	kdfParamsVersion?: number;
@@ -1015,6 +1018,7 @@ export interface RefreshResponse {
 	tokenType: 'Bearer';
 	expiresInSeconds: number;
 	accountId: string;
+	csrfToken?: string;
 }
 
 export type SessionClient = 'web' | 'mobile' | 'desktop';

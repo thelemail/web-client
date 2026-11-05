@@ -1,6 +1,6 @@
 import { browser } from '$app/env';
 import { refreshAll } from '$app/navigation';
-import { registerAuthRouter, registerLifecycleReconciler } from '$core/api/client';
+import { csrfStore, registerAuthRouter, registerLifecycleReconciler } from '$core/api/client';
 import {
 	refreshSession,
 	logout as apiLogout,
@@ -278,8 +278,14 @@ class SessionStore {
 		return true;
 	}
 
-	addSession(accessToken: string, expiresInSeconds: number, accountId: string): void {
+	addSession(
+		accessToken: string,
+		expiresInSeconds: number,
+		accountId: string,
+		csrfToken?: string
+	): void {
 		const revived = this.#unmarkLost(accountId);
+		csrfStore.remember(accountId, csrfToken);
 		const m = new Map(this.#tokens);
 		m.set(accountId, {
 			accessToken,
@@ -292,8 +298,8 @@ class SessionStore {
 	}
 
 	async adoptRotatedSession(session: RefreshResponse): Promise<void> {
-		const { accessToken, expiresInSeconds, accountId } = session;
-		this.addSession(accessToken, expiresInSeconds, accountId);
+		const { accessToken, expiresInSeconds, accountId, csrfToken } = session;
+		this.addSession(accessToken, expiresInSeconds, accountId, csrfToken);
 		this.sessionRotations += 1;
 		const mirror = platform.mirror;
 		if (mirror) await mirror.setToken(accountId, accessToken).catch(() => {});
@@ -467,6 +473,7 @@ class SessionStore {
 		}
 		this.#dropToken(accountId);
 		this.#unmarkLost(accountId);
+		csrfStore.forget(accountId);
 		await keystore.clear({ accountId });
 		await forgetAccountAvatar(accountId);
 		if (platform.session) {
@@ -493,9 +500,10 @@ class SessionStore {
 
 	async logoutAll(): Promise<void> {
 		try {
-			await apiLogoutAll();
+			await apiLogoutAll(this.#currentId ?? undefined);
 		} catch {
 		}
+		csrfStore.clear();
 		this.#tokens = new Map();
 		this.#lost = new Set();
 		await keystore.clearAll();

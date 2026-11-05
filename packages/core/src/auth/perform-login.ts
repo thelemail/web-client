@@ -357,7 +357,7 @@ async function finishOpaqueLogin(
 	) {
 		throw new Error(m.auth_login_unexpected_response());
 	}
-	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId);
+	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId, grant.csrfToken);
 	const unlock = await keystore.opaqueCompleteLoginUnlock({
 		operationId,
 		accountId: grant.accountId,
@@ -414,7 +414,7 @@ async function finishLogin(
 	) {
 		throw new Error(m.auth_login_unexpected_response());
 	}
-	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId);
+	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId, grant.csrfToken);
 	const unlock = await keystore.completeLoginUnlock({
 		accountId: grant.accountId,
 		encryptedPrivateKey: grant.encryptedPrivateKey,
