@@ -27,7 +27,7 @@ vi.mock('$core/auth/webauthn', async (importOriginal) => ({
 	webauthnSupported: () => webauthn.supported,
 	platformAuthenticatorAvailable: () => Promise.resolve(webauthn.platform)
 }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: authState }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: authState }));
 vi.mock('$core/stores/twofactor.svelte', () => ({ twofactor: tfState }));
 
 async function selected(): Promise<string | undefined> {

@@ -44,7 +44,7 @@ const session = vi.hoisted(() => ({
 	loadProfile: vi.fn(),
 	email: 'm@thelemail.com'
 }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: session }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: session }));
 
 const accounts = vi.hoisted(() => ({
 	load: vi.fn(),

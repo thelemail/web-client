@@ -11,7 +11,7 @@
 	import Card from '../Card.svelte';
 	import Heading from '../Heading.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import type { CeremonyKind } from '../data';
 
 	interface Props {

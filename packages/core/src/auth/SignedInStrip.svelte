@@ -3,7 +3,7 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { initialsFor } from '$core/mail/initials';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';

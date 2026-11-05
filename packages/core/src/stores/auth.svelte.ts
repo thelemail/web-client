@@ -23,7 +23,7 @@ import { contacts } from './contacts.svelte';
 import { realtime } from '$core/realtime/realtime.svelte';
 import { delegations } from './delegations.svelte';
 import { readDelegations } from './readDelegations.svelte';
-import { session } from './session.svelte';
+import { auth } from './session.svelte';
 
 function broadcastAccountToStores(accountId: string | null): void {
 	mailbox.setAccount(accountId);
@@ -50,7 +50,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	personAvatars.setAccount(accountId);
 }
 
-session.attach({
+auth.attach({
 	accountChanged: broadcastAccountToStores,
 	sessionRevived: () => void realtime.sync(),
 	vaultRestored: (accountId) => void syncAddressUids(accountId),
@@ -60,8 +60,8 @@ session.attach({
 });
 
 if (browser) {
-	addresses.onPrimaryChange((accountId, email) => session.reconcilePrimaryEmail(accountId, email));
+	addresses.onPrimaryChange((accountId, email) => auth.reconcilePrimaryEmail(accountId, email));
 }
 
-export const auth = session;
+export { auth };
 export type { RecoveryState } from './session.svelte';

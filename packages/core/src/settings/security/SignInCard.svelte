@@ -20,7 +20,7 @@
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import { regenerateBackupCodes, totpDisable, webauthnDelete, webauthnRename } from '$core/api/twofactor';
 	import { ApiCallError } from '$core/api/types';

@@ -516,27 +516,27 @@ class SessionStore {
 	}
 }
 
-export const session = new SessionStore();
+export const auth = new SessionStore();
 
 if (browser) {
 	registerAuthRouter({
-		currentAccountId: () => session.accountId,
-		getAccessToken: (accountId) => session.getAccessToken(accountId),
-		ensureFreshToken: (accountId) => session.ensureFreshToken(accountId),
-		isSessionLost: (accountId) => session.sessionLost(accountId),
-		onUnauthorized: (accountId) => session.tryRefresh(accountId ?? undefined)
+		currentAccountId: () => auth.accountId,
+		getAccessToken: (accountId) => auth.getAccessToken(accountId),
+		ensureFreshToken: (accountId) => auth.ensureFreshToken(accountId),
+		isSessionLost: (accountId) => auth.sessionLost(accountId),
+		onUnauthorized: (accountId) => auth.tryRefresh(accountId ?? undefined)
 	});
 
 	registerLifecycleReconciler({
 		onLifecycleError: (_code, accountId) => {
 			void (async () => {
-				if (accountId) await session.loadProfile(accountId);
+				if (accountId) await auth.loadProfile(accountId);
 				await refreshAll();
 			})();
 		}
 	});
 
-	const wake = () => session.wake();
+	const wake = () => auth.wake();
 	document.addEventListener('visibilitychange', () => {
 		if (document.visibilityState === 'visible') wake();
 	});

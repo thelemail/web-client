@@ -34,7 +34,7 @@
 	import { getAssertion, webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { passwordReqs } from '$core/auth/password-policy';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';

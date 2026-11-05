@@ -22,7 +22,7 @@ import {
 import { isRestartableLoginProofError, solveProof } from '$core/auth/proof-of-work';
 import { getAssertion } from '$core/auth/webauthn';
 import { keystore } from '$core/keystore/keystore-client';
-import { auth } from '$core/stores/auth.svelte';
+import { auth } from '$core/stores/session.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { syncAddressUids } from '$core/keys/uid-sync';
 import { bytesToHex } from '$core/keys/encode';

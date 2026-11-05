@@ -17,7 +17,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { initialsFor } from '$core/mail/initials';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import {
 		commitRecovery,
