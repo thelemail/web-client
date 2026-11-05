@@ -320,6 +320,7 @@ export const keystore = {
 	invalidatePersistedVault: (args: InvalidatePersistedVaultArgs) =>
 		call<void>('invalidatePersistedVault', args),
 	abandonPasswordChange: () => call<void>('abandonPasswordChange'),
+	touch: () => call<void>('touch'),
 	lock: (args: LockArgs) => call<void>('lock', args),
 	clear: (args: ClearArgs) => call<void>('clear', args),
 	clearAll: () => call<void>('clearAll'),

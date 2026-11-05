@@ -116,6 +116,9 @@
 	function loginErrorMessage(err: unknown): string {
 		if (err instanceof ApiCallError) {
 			if (err.status === 401) return m.auth_login_wrong_credentials();
+			if (err.envelope?.error.code === 'auth_origin_unavailable') {
+				return m.auth_login_origin_unavailable();
+			}
 			if (err.status === 429) return m.auth_login_rate_limited();
 			if (err.status === 503) return m.auth_login_busy();
 			if (err.status === 422 && err.envelope?.error.code.startsWith('proof_')) return m.auth_proof_failed();

@@ -335,7 +335,7 @@ class SessionStore {
 		const p = (async () => {
 			try {
 				const res = await refreshSession(id);
-				this.addSession(res.accessToken, res.expiresInSeconds, res.accountId);
+				this.addSession(res.accessToken, res.expiresInSeconds, res.accountId, res.csrfToken);
 				return true;
 			} catch (err) {
 				if (err instanceof ApiCallError && err.status === 401) this.#markLost(id);
