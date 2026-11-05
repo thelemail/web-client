@@ -69,7 +69,7 @@ export default defineConfig({
 					'base-uri': ['none'],
 					'form-action': ['self'],
 					'require-trusted-types-for': ['script'],
-					'trusted-types': ['svelte-trusted-html', 'default'],
+					'trusted-types': ['svelte-trusted-html', 'default', "'allow-duplicates'"],
 					...(secure ? { 'upgrade-insecure-requests': true } : {})
 				}
 			},

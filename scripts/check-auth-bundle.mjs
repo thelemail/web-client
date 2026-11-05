@@ -14,7 +14,15 @@ const forbiddenModules = [
 	/node_modules\/.*\/(postal-mime|dompurify|@tiptap|ical\.js|marked|turndown|pdfjs-dist)\//
 ];
 
-const forbiddenStrings = ['postal-mime', 'DOMPurify', 'tiptap', 'ical.js', 'pdfjs', 'thelemail-search-index'];
+const forbiddenStrings = [
+	'postal-mime',
+	'DOMPurify',
+	'tiptap',
+	'ical.js',
+	'pdfjs',
+	'thelemail-search-index',
+	'altcha-widget'
+];
 
 const modules = readFileSync(join(app, 'build-meta', 'modules.txt'), 'utf8').split('\n').filter(Boolean);
 const moduleHits = [...new Set(modules)].filter((id) => forbiddenModules.some((re) => re.test(id)));
