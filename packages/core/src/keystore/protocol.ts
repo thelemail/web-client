@@ -18,10 +18,12 @@ export interface AccountScopedArgs {
 
 export interface EnrollPersistentArgs extends AccountScopedArgs {
 	serverHalf: string;
+	wrapKey?: ArrayBuffer;
 }
 
 export interface TryRestoreFromPersistentArgs extends AccountScopedArgs {
 	serverHalf: string;
+	wrapKey?: ArrayBuffer;
 }
 
 export interface RestoreResponse {

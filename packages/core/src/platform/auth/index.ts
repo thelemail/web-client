@@ -1,6 +1,7 @@
 import { dev } from '$app/env';
 import type { Platform } from '../types';
 import { webPlatform } from '../web/base';
+import { createVaultDeviceKeys } from './vault-device-key';
 
 interface TrustedTypePolicyFactoryLike {
 	createPolicy(name: string, rules: { createScriptURL(url: string): string }): unknown;
@@ -31,5 +32,6 @@ export const platform: Platform = {
 		new SharedWorker(new URL('../../keystore/auth-worker.ts', import.meta.url), {
 			type: 'module',
 			name: 'thelemail-auth-keystore'
-		})
+		}),
+	vaultDeviceKeys: createVaultDeviceKeys()
 };

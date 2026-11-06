@@ -16,6 +16,7 @@ import type {
 	TryRestoreFromPersistentArgs
 } from '../protocol';
 import { isAuthOrigin } from '../../products';
+import { AUTH_VAULT_WRAP_INFO, LOCAL_KEY_UNSTORABLE, WRAP_KEY_BYTES } from '../vault-wrap';
 import type { VaultState } from './state';
 import {
 	vaults,
@@ -40,8 +41,34 @@ export async function handleInvalidatePersistedVault(args: InvalidatePersistedVa
 
 export const HKDF_INFO_V1 = new TextEncoder().encode('thelemail-vault-wrap-v1');
 export const HKDF_INFO_V2 = new TextEncoder().encode(
-	isAuthOrigin ? 'thelemail-auth-vault-wrap-v1' : 'thelemail-vault-wrap-v2'
+	isAuthOrigin ? AUTH_VAULT_WRAP_INFO : 'thelemail-vault-wrap-v2'
 );
+
+function takeWrapKey(buf: ArrayBuffer | undefined): Uint8Array | null {
+	if (!buf) return null;
+	return new Uint8Array(buf);
+}
+
+async function importWrapKey(bytes: Uint8Array): Promise<CryptoKey> {
+	try {
+		if (bytes.byteLength !== WRAP_KEY_BYTES) {
+			throw new Error('keystore: wrap key has the wrong length');
+		}
+		return await crypto.subtle.importKey(
+			'raw',
+			bytes as BufferSource,
+			{ name: 'AES-GCM', length: 256 },
+			false,
+			['encrypt', 'decrypt']
+		);
+	} finally {
+		bytes.fill(0);
+	}
+}
+
+function isDataCloneError(err: unknown): boolean {
+	return err instanceof DOMException && err.name === 'DataCloneError';
+}
 
 export async function deriveWrapKey(
 	localHalfKey: CryptoKey,
@@ -59,27 +86,40 @@ export async function deriveWrapKey(
 }
 
 export async function handleEnrollPersistent(args: EnrollPersistentArgs): Promise<void> {
+	const pageWrapKey = takeWrapKey(args.wrapKey);
 	const v = vaults.get(args.accountId);
 	if (!v) {
+		pageWrapKey?.fill(0);
 		throw new Error('keystore: cannot enroll persistent — vault is locked');
 	}
-	const ikm = crypto.getRandomValues(new Uint8Array(32));
-	const localHalfKey = await crypto.subtle.importKey(
-		'raw',
-		ikm as BufferSource,
-		'HKDF',
-		false,
-		['deriveKey']
-	);
-	ikm.fill(0);
-
 	const wrapVersion: 1 | 2 = v.authScheme === 'opaque_v1' && v.masterKey ? 2 : 1;
 	if (isAuthOrigin && wrapVersion !== 2) {
+		pageWrapKey?.fill(0);
 		throw new Error('keystore: the auth vault persists only an OPAQUE master key');
 	}
-	const serverHalfBytes = base64ToBytes(args.serverHalf);
-	const wrapKey = await deriveWrapKey(localHalfKey, serverHalfBytes, wrapVersion);
-	serverHalfBytes.fill(0);
+	if (pageWrapKey && !isAuthOrigin) {
+		pageWrapKey.fill(0);
+		throw new Error('keystore: a page-held local key is only accepted on the auth origin');
+	}
+
+	let localHalfKey: CryptoKey | undefined;
+	let wrapKey: CryptoKey;
+	if (pageWrapKey) {
+		wrapKey = await importWrapKey(pageWrapKey);
+	} else {
+		const ikm = crypto.getRandomValues(new Uint8Array(32));
+		localHalfKey = await crypto.subtle.importKey(
+			'raw',
+			ikm as BufferSource,
+			'HKDF',
+			false,
+			['deriveKey']
+		);
+		ikm.fill(0);
+		const serverHalfBytes = base64ToBytes(args.serverHalf);
+		wrapKey = await deriveWrapKey(localHalfKey, serverHalfBytes, wrapVersion);
+		serverHalfBytes.fill(0);
+	}
 
 	const wrappedPayload =
 		wrapVersion === 2
@@ -109,9 +149,16 @@ export async function handleEnrollPersistent(args: EnrollPersistentArgs): Promis
 		wrappedPrivateKey,
 		wrapIv,
 		wrapPayloadVersion: wrapVersion,
-		localHalfKey
+		...(localHalfKey ? { localHalfKey } : { localHalfHolder: 'page' as const })
 	};
-	await putVault(updated);
+	try {
+		await putVault(updated);
+	} catch (err) {
+		if (isAuthOrigin && localHalfKey && isDataCloneError(err)) {
+			throw new Error(LOCAL_KEY_UNSTORABLE);
+		}
+		throw err;
+	}
 	cachedRecords.set(v.accountId, updated);
 	v.wrapKey = wrapKey;
 }
@@ -119,10 +166,26 @@ export async function handleEnrollPersistent(args: EnrollPersistentArgs): Promis
 export async function handleTryRestoreFromPersistent(
 	args: TryRestoreFromPersistentArgs
 ): Promise<RestoreResponse> {
+	const pageWrapKey = takeWrapKey(args.wrapKey);
+	try {
+		return await restoreFromRecord(args, pageWrapKey);
+	} finally {
+		pageWrapKey?.fill(0);
+	}
+}
+
+async function restoreFromRecord(
+	args: TryRestoreFromPersistentArgs,
+	pageWrapKey: Uint8Array | null
+): Promise<RestoreResponse> {
 	await restorePromise;
 	const rec = cachedRecords.get(args.accountId) ?? (await getVault(args.accountId)) ?? undefined;
 	if (rec) cachedRecords.set(rec.accountId, rec);
-	if (!rec || !rec.localHalfKey || !rec.wrappedPrivateKey || !rec.wrapIv) {
+	const pageHeld = rec?.localHalfHolder === 'page';
+	if (!rec || !rec.wrappedPrivateKey || !rec.wrapIv || (!rec.localHalfKey && !pageHeld)) {
+		return { ok: false, reason: 'no_persistent' };
+	}
+	if (pageHeld && (!isAuthOrigin || !pageWrapKey)) {
 		return { ok: false, reason: 'no_persistent' };
 	}
 	await ensureCryptoReady();
@@ -131,9 +194,14 @@ export async function handleTryRestoreFromPersistent(
 		return { ok: false, reason: 'no_persistent' };
 	}
 	try {
-		const serverHalfBytes = base64ToBytes(args.serverHalf);
-		const wrapKey = await deriveWrapKey(rec.localHalfKey, serverHalfBytes, wrapVersion);
-		serverHalfBytes.fill(0);
+		let wrapKey: CryptoKey;
+		if (pageHeld && pageWrapKey) {
+			wrapKey = await importWrapKey(pageWrapKey);
+		} else {
+			const serverHalfBytes = base64ToBytes(args.serverHalf);
+			wrapKey = await deriveWrapKey(rec.localHalfKey as CryptoKey, serverHalfBytes, wrapVersion);
+			serverHalfBytes.fill(0);
+		}
 
 		const plaintext = await crypto.subtle.decrypt(
 			{ name: 'AES-GCM', iv: rec.wrapIv as BufferSource },
