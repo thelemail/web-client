@@ -144,7 +144,12 @@ export function wipe(s: string): void {
 }
 
 export function hasPersistentFor(rec: VaultRecord | undefined): boolean {
-	return !!(rec && rec.localHalfKey && rec.wrappedPrivateKey && rec.wrapIv);
+	return !!(
+		rec &&
+		(rec.localHalfKey || rec.localHalfHolder === 'page') &&
+		rec.wrappedPrivateKey &&
+		rec.wrapIv
+	);
 }
 
 export async function handleStatus(): Promise<StatusResponse> {

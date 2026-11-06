@@ -16,6 +16,7 @@ export interface VaultRecord {
 	wrappedPrivateKey?: Uint8Array;
 	wrapIv?: Uint8Array;
 	localHalfKey?: CryptoKey;
+	localHalfHolder?: 'page';
 	wrapPayloadVersion?: 1 | 2;
 }
 
