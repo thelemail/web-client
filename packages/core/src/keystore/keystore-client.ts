@@ -120,6 +120,7 @@ import type {
 	VerifyRecoveryProofArgs,
 	VerifyRecoveryProofResponse
 } from './protocol';
+import { LOCAL_KEY_UNSTORABLE } from './vault-wrap';
 
 const KEYSTORE_SINGLETON = Symbol.for('thelemail.keystore.singleton');
 
@@ -202,6 +203,7 @@ function getSingleton(): KeystoreSingleton {
 			data.type === 'aliasKeysChanged' ||
 			data.type === 'accountKeysChanged'
 		) {
+			forgetDeviceKey(data as Broadcast);
 			for (const cb of listeners) cb(data as Broadcast);
 		}
 	};
@@ -214,7 +216,12 @@ function getSingleton(): KeystoreSingleton {
 	return singleton;
 }
 
-function call<T>(cmd: string, args?: unknown, timeoutMs?: number): Promise<T> {
+function call<T>(
+	cmd: string,
+	args?: unknown,
+	timeoutMs?: number,
+	transfer: Transferable[] = []
+): Promise<T> {
 	const deadline = timeoutMs ?? DEFAULT_TIMEOUT_MS;
 	const channel = platform.keystoreChannel as KeystoreChannel<Broadcast> | undefined;
 	if (channel) {
@@ -228,8 +235,80 @@ function call<T>(cmd: string, args?: unknown, timeoutMs?: number): Promise<T> {
 			settle(s.pending, id)?.reject(new Error(`keystore ${cmd} timed out`));
 		}, deadline);
 		s.pending.set(id, entry);
-		s.port.postMessage({ id, cmd, args });
+		s.port.postMessage({ id, cmd, args }, transfer);
 	});
+}
+
+function forgetDeviceKey(b: Broadcast): void {
+	const keys = platform.vaultDeviceKeys;
+	if (!keys) return;
+	const done =
+		b.type === 'clearedAll'
+			? keys.removeAll()
+			: b.type === 'cleared' || b.type === 'persistentDisabled'
+				? keys.remove(b.accountId)
+				: null;
+	done?.catch((err) => console.warn('keystore: device key cleanup failed', err));
+}
+
+let devicePruned = false;
+
+async function status(): Promise<StatusResponse> {
+	const s = await call<StatusResponse>('status');
+	const keys = platform.vaultDeviceKeys;
+	if (keys && !devicePruned) {
+		devicePruned = true;
+		const keep = new Set(s.accounts.filter((a) => a.hasPersistent).map((a) => a.accountId));
+		keys.prune(keep).catch((err) => console.warn('keystore: device key prune failed', err));
+	}
+	return s;
+}
+
+async function enrollPersistent(args: EnrollPersistentArgs): Promise<void> {
+	const keys = platform.vaultDeviceKeys;
+	try {
+		await call<void>('enrollPersistent', { accountId: args.accountId, serverHalf: args.serverHalf });
+		return;
+	} catch (err) {
+		if (!keys || !(err instanceof Error) || err.message !== LOCAL_KEY_UNSTORABLE) throw err;
+	}
+	await keys.create(args.accountId);
+	try {
+		const wrapKey = await keys.deriveWrapKey(args.accountId, args.serverHalf);
+		if (!wrapKey) throw new Error('keystore: device key vanished during enrolment');
+		await call<void>(
+			'enrollPersistent',
+			{ accountId: args.accountId, serverHalf: args.serverHalf, wrapKey },
+			undefined,
+			[wrapKey]
+		);
+	} catch (err) {
+		await keys.remove(args.accountId).catch(() => undefined);
+		throw err;
+	}
+}
+
+async function tryRestoreFromPersistent(args: TryRestoreFromPersistentArgs): Promise<RestoreResponse> {
+	const plain = { accountId: args.accountId, serverHalf: args.serverHalf };
+	const keys = platform.vaultDeviceKeys;
+	const wrapKey = keys ? await keys.deriveWrapKey(args.accountId, args.serverHalf) : null;
+	if (!wrapKey) return call<RestoreResponse>('tryRestoreFromPersistent', plain);
+	return call<RestoreResponse>('tryRestoreFromPersistent', { ...plain, wrapKey }, undefined, [
+		wrapKey
+	]);
+}
+
+async function alsoForgetDeviceKey(accountId: string | null, run: Promise<void>): Promise<void> {
+	const keys = platform.vaultDeviceKeys;
+	try {
+		await run;
+	} finally {
+		if (keys) {
+			await (accountId === null ? keys.removeAll() : keys.remove(accountId)).catch((err) =>
+				console.warn('keystore: device key cleanup failed', err)
+			);
+		}
+	}
 }
 
 function broadcastAccountId(b: Broadcast): string | null {
@@ -247,7 +326,7 @@ function broadcastAccountId(b: Broadcast): string | null {
 }
 
 export const keystore = {
-	status: () => call<StatusResponse>('status'),
+	status,
 	prepareLogin: (args: PrepareLoginArgs) => call<PrepareLoginResponse>('prepareLogin', args),
 	verifyLoginProof: (args: VerifyLoginProofArgs) =>
 		call<VerifyLoginProofResponse>('verifyLoginProof', args),
@@ -318,16 +397,16 @@ export const keystore = {
 	commitPasswordChange: (args: CommitPasswordChangeArgs) =>
 		call<CommitPasswordChangeResponse>('commitPasswordChange', args),
 	invalidatePersistedVault: (args: InvalidatePersistedVaultArgs) =>
-		call<void>('invalidatePersistedVault', args),
+		alsoForgetDeviceKey(args.accountId, call<void>('invalidatePersistedVault', args)),
 	abandonPasswordChange: () => call<void>('abandonPasswordChange'),
 	touch: () => call<void>('touch'),
 	lock: (args: LockArgs) => call<void>('lock', args),
-	clear: (args: ClearArgs) => call<void>('clear', args),
-	clearAll: () => call<void>('clearAll'),
-	enrollPersistent: (args: EnrollPersistentArgs) => call<void>('enrollPersistent', args),
-	tryRestoreFromPersistent: (args: TryRestoreFromPersistentArgs) =>
-		call<RestoreResponse>('tryRestoreFromPersistent', args),
-	disablePersistent: (args: DisablePersistentArgs) => call<void>('disablePersistent', args),
+	clear: (args: ClearArgs) => alsoForgetDeviceKey(args.accountId, call<void>('clear', args)),
+	clearAll: () => alsoForgetDeviceKey(null, call<void>('clearAll')),
+	enrollPersistent,
+	tryRestoreFromPersistent,
+	disablePersistent: (args: DisablePersistentArgs) =>
+		alsoForgetDeviceKey(args.accountId, call<void>('disablePersistent', args)),
 	decrypt: (args: DecryptArgs) => call<DecryptResponse>('decrypt', args, CRYPTO_TIMEOUT_MS),
 	attachmentHeader: (args: AttachmentHeaderArgs) =>
 		call<AttachmentHeaderResponse>('attachmentHeader', args, ATTACHMENT_HEADER_TIMEOUT_MS),
