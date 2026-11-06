@@ -199,6 +199,14 @@ export interface LocaleStore {
 	applied?(locale: string): void;
 }
 
+export interface VaultDeviceKeys {
+	create(accountId: string): Promise<void>;
+	deriveWrapKey(accountId: string, serverHalf: string): Promise<ArrayBuffer | null>;
+	remove(accountId: string): Promise<void>;
+	removeAll(): Promise<void>;
+	prune(keep: ReadonlySet<string>): Promise<void>;
+}
+
 export interface Platform {
 	reportError?: (kind: string, err: unknown) => void;
 	interceptFrameLinks?: boolean;
@@ -211,6 +219,7 @@ export interface Platform {
 	mirror?: LocalMirror;
 	keystoreChannel?: KeystoreChannel;
 	spawnKeystore?: () => SharedWorker;
+	vaultDeviceKeys?: VaultDeviceKeys;
 	transport?: Transport;
 	openEventSource?: (url: string, accountId: string) => EventSourceLike;
 	blobPut: (
