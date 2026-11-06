@@ -6,10 +6,18 @@ const DB_NAME = 'thelemail-auth-device';
 const STORE = 'keys';
 export const PRUNE_GRACE_MS = 60_000;
 
-interface DeviceKeyRecord {
+export interface DeviceKeyRecord {
 	accountId: string;
 	key: CryptoKey;
 	createdAt: number;
+}
+
+export interface DeviceKeyStore {
+	get(accountId: string): Promise<DeviceKeyRecord | undefined>;
+	getAll(): Promise<DeviceKeyRecord[]>;
+	put(rec: DeviceKeyRecord): Promise<void>;
+	delete(accountId: string): Promise<void>;
+	clear(): Promise<void>;
 }
 
 const info = new TextEncoder().encode(AUTH_VAULT_WRAP_INFO);
@@ -48,7 +56,25 @@ async function withStore<T>(
 	}
 }
 
-export function createVaultDeviceKeys(now: () => number = Date.now): VaultDeviceKeys {
+export const idbDeviceKeyStore: DeviceKeyStore = {
+	get: (accountId) =>
+		withStore<DeviceKeyRecord | undefined>('readonly', (s) => s.get(accountId)),
+	getAll: () => withStore<DeviceKeyRecord[]>('readonly', (s) => s.getAll()),
+	put: async (rec) => {
+		await withStore('readwrite', (s) => s.put(rec));
+	},
+	delete: async (accountId) => {
+		await withStore('readwrite', (s) => s.delete(accountId));
+	},
+	clear: async () => {
+		await withStore('readwrite', (s) => s.clear());
+	}
+};
+
+export function createVaultDeviceKeys(
+	store: DeviceKeyStore = idbDeviceKeyStore,
+	now: () => number = Date.now
+): VaultDeviceKeys {
 	return {
 		async create(accountId) {
 			const ikm = crypto.getRandomValues(new Uint8Array(WRAP_KEY_BYTES));
@@ -60,12 +86,11 @@ export function createVaultDeviceKeys(now: () => number = Date.now): VaultDevice
 			} finally {
 				ikm.fill(0);
 			}
-			const rec: DeviceKeyRecord = { accountId, key, createdAt: now() };
-			await withStore('readwrite', (s) => s.put(rec));
+			await store.put({ accountId, key, createdAt: now() });
 		},
 
 		async deriveWrapKey(accountId, serverHalf) {
-			const rec = await withStore<DeviceKeyRecord | undefined>('readonly', (s) => s.get(accountId));
+			const rec = await store.get(accountId);
 			if (!rec) return null;
 			const salt = base64ToBytes(serverHalf);
 			try {
@@ -79,20 +104,15 @@ export function createVaultDeviceKeys(now: () => number = Date.now): VaultDevice
 			}
 		},
 
-		async remove(accountId) {
-			await withStore('readwrite', (s) => s.delete(accountId));
-		},
+		remove: (accountId) => store.delete(accountId),
 
-		async removeAll() {
-			await withStore('readwrite', (s) => s.clear());
-		},
+		removeAll: () => store.clear(),
 
 		async prune(keep) {
-			const all = await withStore<DeviceKeyRecord[]>('readonly', (s) => s.getAll());
 			const cutoff = now() - PRUNE_GRACE_MS;
-			for (const rec of all) {
+			for (const rec of await store.getAll()) {
 				if (!keep.has(rec.accountId) && rec.createdAt < cutoff) {
-					await withStore('readwrite', (s) => s.delete(rec.accountId));
+					await store.delete(rec.accountId);
 				}
 			}
 		}
