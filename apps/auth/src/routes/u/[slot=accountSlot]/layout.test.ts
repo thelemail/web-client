@@ -13,7 +13,10 @@ const accounts = vi.hoisted(() => ({
 }));
 
 vi.mock('$core/stores/session.svelte', () => ({ auth: session }));
+const productKeys = vi.hoisted(() => ({ ensureProductKeys: vi.fn(async () => ({ status: 'disabled' })) }));
+
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts }));
+vi.mock('$core/auth/product-keys', () => productKeys);
 
 import { load } from './+layout';
 
@@ -54,6 +57,15 @@ describe('account guard', () => {
 	it('treats an evicted or locked vault as unlock again', async () => {
 		session.ensureVaultUnlocked.mockResolvedValue(false);
 		expect(await redirectOf('1')).toBe('/login?slot=1');
+		expect(productKeys.ensureProductKeys).not.toHaveBeenCalled();
+	});
+
+	it('prepares product keys once the vault is open, without waiting for it', async () => {
+		let release: () => void = () => {};
+		productKeys.ensureProductKeys.mockImplementation(() => new Promise((resolve) => (release = () => resolve({ status: 'disabled' }))));
+		await expect(load(event('1'))).resolves.toEqual({ accountId: 'acct-1', slot: 1 });
+		expect(productKeys.ensureProductKeys).toHaveBeenCalledWith('acct-1');
+		release();
 	});
 
 	it('refreshes before it restores, so the restore carries the csrf token', async () => {
