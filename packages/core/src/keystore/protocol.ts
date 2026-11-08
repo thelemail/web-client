@@ -914,7 +914,7 @@ export interface PrepareProductKeysArgs extends AccountScopedArgs {
 	slotHashes: Uint8Array[];
 	historyEvents: Uint8Array[];
 	availability: { keyId: string; state: Availability }[];
-	accountKeys: { armoredEncrypted: string | null }[];
+	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
 	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
 }
 
@@ -922,7 +922,8 @@ export type PrepareProductKeysResponse =
 	| { ok: true; output: ConversionOutput }
 	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
 
-export type ReadProductKeysArgs = AccountScopedArgs & Omit<ReadInput, 'accountId' | 'amk' | 'keyPassword' | 'mailKey'>;
+export type ReadProductKeysArgs = AccountScopedArgs &
+	Omit<ReadInput, 'accountId' | 'amk' | 'keyPassword' | 'mailKeys'> & { mailPublicKeysArmored: string[] };
 
 export type ReadProductKeysResponse =
 	| { ok: true; result: ReadResult }

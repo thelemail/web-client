@@ -1,3 +1,4 @@
+import * as openpgp from 'openpgp';
 import type {
 	PrepareProductKeysArgs,
 	PrepareProductKeysResponse,
@@ -26,7 +27,6 @@ export async function handlePrepareProductKeys(args: PrepareProductKeysArgs): Pr
 			accountId: args.accountId,
 			amk: v.masterKey!,
 			keyPassword: v.keyPassword,
-			currentKey: v.privateKey,
 			scope: args.scope,
 			sessionEpoch: args.sessionEpoch,
 			previousHeadHash: args.previousHeadHash,
@@ -49,11 +49,13 @@ export async function handleReadProductKeys(args: ReadProductKeysArgs): Promise<
 	if (refused) return refused;
 	const v = vaults.get(args.accountId)!;
 	try {
+		const { mailPublicKeysArmored, ...rest } = args;
+		const mailKeys = await Promise.all(mailPublicKeysArmored.map((armoredKey) => openpgp.readKey({ armoredKey })));
 		const result = await readProductKeys({
-			...args,
+			...rest,
 			amk: v.masterKey!,
 			keyPassword: v.keyPassword,
-			mailKey: v.privateKey.toPublic()
+			mailKeys
 		});
 		return { ok: true, result };
 	} catch (err) {

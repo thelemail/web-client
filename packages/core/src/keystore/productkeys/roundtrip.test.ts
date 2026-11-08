@@ -49,7 +49,6 @@ async function fixture() {
 		accountId,
 		amk,
 		keyPassword,
-		currentKey: current,
 		scope: { stateRevision: 0, activeKeyEpoch: 3, activeGeneration: 1, authEpoch: 2, recoveryEpoch: 1, amkEpoch: 1, minimumWriteProfile: null, historyEventCount: 5, keyHistoryRoot: new Uint8Array(32).fill(7) },
 		sessionEpoch: 4,
 		previousHeadHash: null,
@@ -57,10 +56,14 @@ async function fixture() {
 		slotHashes: [new Uint8Array(32).fill(2), new Uint8Array(32).fill(3)],
 		history,
 		availability,
-		accountKeys: [{ armoredEncrypted: keys[0].armor() }, { armoredEncrypted: keys[1].armor() }, { armoredEncrypted: keys[2].armor() }],
+		accountKeys: [
+			{ armoredEncrypted: keys[0].armor(), isCurrent: false },
+			{ armoredEncrypted: keys[1].armor(), isCurrent: false },
+			{ armoredEncrypted: keys[2].armor(), isCurrent: true }
+		],
 		aliasKeys: [{ aliasId, keyVersion: 1, wrappedPrivateKey: wrapped as string }]
 	};
-	return { input, history, current, alias };
+	return { input, history, current, alias, keys };
 }
 
 function readInput(f: Awaited<ReturnType<typeof fixture>>, out: ConversionOutput) {
@@ -80,7 +83,7 @@ function readInput(f: Awaited<ReturnType<typeof fixture>>, out: ConversionOutput
 		accountId,
 		amk: f.input.amk,
 		keyPassword,
-		mailKey: f.current.toPublic(),
+		mailKeys: f.keys.map((k) => k.toPublic()),
 		authorityKey: out.activation.authorityPublicKey,
 		head: { raw: out.activation.head, mac: out.activation.mac, previousHeadHash: null, authority: out.activation.authoritySignature, legacy: out.activation.legacySignature, transition: null },
 		secretBundles: out.secretBundles,
@@ -139,6 +142,27 @@ describe('product key conversion', () => {
 		await expect(readProductKeys(swapped)).rejects.toMatchObject({ code: 'context' });
 		const mailSigned = { ...input, head: { ...input.head, legacy: null, authority: input.head.legacy } };
 		await expect(readProductKeys(mailSigned)).rejects.toMatchObject({ code: 'signature' });
+	});
+
+	it('signs with the published current key even when the caller holds an older one', async () => {
+		const f = await fixture();
+		const out = await buildConversion(f.input);
+		const head = parseHeadV2(out.activation.head);
+		expect(head.currentSigningKeyId).toBe(f.history[2].keyId);
+		const swapped = { ...f.input, accountKeys: f.input.accountKeys.map((k, i) => ({ ...k, isCurrent: i === 0 })) };
+		await expect(buildConversion(swapped)).resolves.toBeDefined();
+		const none = { ...f.input, accountKeys: f.input.accountKeys.map((k) => ({ ...k, isCurrent: false })) };
+		await expect(buildConversion(none)).rejects.toMatchObject({ code: 'context' });
+	});
+
+	it('still reads back after a later mail key rotation', async () => {
+		const f = await fixture();
+		const out = await buildConversion(f.input);
+		const later = await mailKey(4);
+		const input = readInput(f, out);
+		const result = await readProductKeys({ ...input, mailKeys: [later.toPublic(), ...input.mailKeys] });
+		expect(result.importDedupMatches).toBe(true);
+		await expect(readProductKeys({ ...input, mailKeys: [later.toPublic()] })).rejects.toMatchObject({ code: 'context' });
 	});
 
 	it('derives the search leaf the mail worker uses', async () => {

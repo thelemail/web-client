@@ -51,7 +51,7 @@ async function convert(accountId: string, state: CryptoStateResponse, events: Ui
 		slotHashes: state.slots.filter((s) => s.state === 'active').map((s) => b64decode(s.wrapperHash)),
 		historyEvents: events,
 		availability: state.keys.map((k) => ({ keyId: k.keyId, state: k.privateState as Availability })),
-		accountKeys: keys.keys.map((k) => ({ armoredEncrypted: k.encryptedPrivateKey || null })),
+		accountKeys: keys.keys.map((k) => ({ armoredEncrypted: k.encryptedPrivateKey || null, isCurrent: k.isCurrent })),
 		aliasKeys: aliases.keys.map((g) => ({ aliasId: g.aliasId, keyVersion: g.keyVersion, wrappedPrivateKey: g.wrappedPrivateKey }))
 	});
 	if (!prepared.ok) {
@@ -121,8 +121,10 @@ export async function readProductKeys(accountId: string, state?: CryptoStateResp
 			bundles
 		});
 	}
+	const published = await listMyKeys(accountId);
 	const read = await keystore.readProductKeys({
 		accountId,
+		mailPublicKeysArmored: published.keys.map((k) => k.publicKeyArmored).filter(Boolean),
 		authorityKey: authorityKey!,
 		head: {
 			raw,

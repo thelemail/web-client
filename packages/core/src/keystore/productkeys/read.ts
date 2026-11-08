@@ -35,7 +35,7 @@ export interface ReadInput {
 	accountId: string;
 	amk: Uint8Array;
 	keyPassword: string;
-	mailKey: openpgp.Key;
+	mailKeys: openpgp.Key[];
 	authorityKey: Uint8Array;
 	head: { raw: Uint8Array; mac: Uint8Array; previousHeadHash: Uint8Array | null } & HeadSignatures;
 	secretBundles: StoredBundle[];
@@ -65,11 +65,17 @@ function find(bundles: StoredBundle[], bundleId: string, revision: number): Stor
 	return b;
 }
 
+function mailKey(input: ReadInput, id: string): openpgp.Key {
+	const key = input.mailKeys.find((k) => keyId(input.accountId, fingerprintBytes(k)) === id);
+	if (!key) fail('context', `mail key ${id} is not published`);
+	return key;
+}
+
 export async function readProductKeys(input: ReadInput): Promise<ReadResult> {
 	const authority = await parsePublicKey(input.authorityKey);
 	await validateProfile(PROFILE.accountAuthority, authority);
 	if (input.head.legacy) {
-		await verifyBootstrap(input.head.raw, input.head.previousHeadHash, input.head, authority, input.mailKey);
+		await verifyBootstrap(input.head.raw, input.head.previousHeadHash, input.head, authority, mailKey(input, parseHeadV2(input.head.raw).currentSigningKeyId));
 	} else if (input.head.authority) {
 		await verifyTranscript(HEAD_DOMAIN, input.head.raw, input.head.authority, authority);
 	} else {
@@ -156,7 +162,7 @@ export async function readProductKeys(input: ReadInput): Promise<ReadResult> {
 		let dataManifestPages = 0;
 		if (p.dataManifest.length > 0) {
 			const pages = await verifyDataManifestPages(p.dataManifest.map((x) => x.record));
-			const signer = d.product === 'app' ? input.mailKey : await parsePublicKey(p.delegation.signingPublicKey);
+			const signer = d.product === 'app' ? mailKey(input, delegation.signingKeyId) : await parsePublicKey(p.delegation.signingPublicKey);
 			if (keyId(input.accountId, fingerprintBytes(signer)) !== delegation.signingKeyId || pages[0].signerKeyId !== delegation.signingKeyId) {
 				fail('context', 'data manifest signer');
 			}

@@ -30,7 +30,6 @@ export interface ConversionInput {
 	accountId: string;
 	amk: Uint8Array;
 	keyPassword: string;
-	currentKey: openpgp.PrivateKey;
 	scope: {
 		stateRevision: number;
 		activeKeyEpoch: number;
@@ -48,7 +47,7 @@ export interface ConversionInput {
 	slotHashes: Uint8Array[];
 	history: HistoryKey[];
 	availability: Map<string, Availability>;
-	accountKeys: { armoredEncrypted: string | null }[];
+	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
 	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
 	now?: Date;
 }
@@ -150,15 +149,28 @@ async function unlock(armored: string, passphrase: string): Promise<openpgp.Priv
 	return privateKey.isDecrypted() ? privateKey : openpgp.decryptKey({ privateKey, passphrase });
 }
 
-async function mailEntries(input: ConversionInput, forbidden: Uint8Array[]): Promise<{ entries: Entry[]; keys: IdentityKey[]; unlocked: openpgp.PrivateKey[] }> {
-	const material = new Map<string, Uint8Array>();
+async function unlockAccountKeys(input: ConversionInput): Promise<{ unlocked: openpgp.PrivateKey[]; current: openpgp.PrivateKey }> {
 	const unlocked: openpgp.PrivateKey[] = [];
+	let current: openpgp.PrivateKey | null = null;
 	for (const k of input.accountKeys) {
-		if (!k.armoredEncrypted) continue;
+		if (!k.armoredEncrypted) {
+			if (k.isCurrent) fail('context', 'current key has no private material');
+			continue;
+		}
 		const key = await unlock(k.armoredEncrypted, input.keyPassword);
 		unlocked.push(key);
-		material.set(keyId(input.accountId, fingerprintBytes(key)), secretKeyBytes(key));
+		if (k.isCurrent) {
+			if (current) fail('context', 'more than one current key');
+			current = key;
+		}
 	}
+	if (!current) fail('context', 'no current key');
+	return { unlocked, current };
+}
+
+async function mailEntries(input: ConversionInput, unlocked: openpgp.PrivateKey[], forbidden: Uint8Array[]): Promise<{ entries: Entry[]; keys: IdentityKey[] }> {
+	const material = new Map<string, Uint8Array>();
+	for (const key of unlocked) material.set(keyId(input.accountId, fingerprintBytes(key)), secretKeyBytes(key));
 	const entries: Entry[] = [];
 	const keys: IdentityKey[] = [];
 	for (const h of input.history) {
@@ -203,7 +215,7 @@ async function mailEntries(input: ConversionInput, forbidden: Uint8Array[]): Pro
 	}
 	entries.sort((a, b) => (a.keyId < b.keyId ? -1 : 1));
 	keys.sort((a, b) => (a.keyId < b.keyId ? -1 : 1));
-	return { entries, keys, unlocked };
+	return { entries, keys };
 }
 
 function chunk(entries: Entry[]): Entry[][] {
@@ -241,7 +253,8 @@ export async function buildConversion(input: ConversionInput): Promise<Conversio
 	if (input.amk.length !== SECRET_LEN) fail('malformed', 'amk length');
 	const now = formatTime(input.now ?? new Date());
 	const accountId = input.accountId;
-	const currentId = keyId(accountId, fingerprintBytes(input.currentKey));
+	const { unlocked, current: currentKey } = await unlockAccountKeys(input);
+	const currentId = keyId(accountId, fingerprintBytes(currentKey));
 	const current = input.history.find((h) => h.keyId === currentId);
 	if (!current) fail('context', 'current key is not in key history');
 
@@ -255,7 +268,7 @@ export async function buildConversion(input: ConversionInput): Promise<Conversio
 	const calRoot = randomBytes(SECRET_LEN);
 	const roots = [input.amk, utf8(input.keyPassword), appRoot, calRoot];
 
-	const mail = await mailEntries(input, roots);
+	const mail = await mailEntries(input, unlocked, roots);
 	const appSealed = await sealPages(appRoot, accountId, 'app', mail.entries, roots);
 	const calEntries: Entry[] = [
 		{ keyId: calId, scopeId: accountId, purpose: ENTRY.calendarIdentity, profileId: PROFILE.calendarIdentity, keyEpoch: 1, availability: 'available', material: secretKeyBytes(cal) }
@@ -404,12 +417,12 @@ export async function buildConversion(input: ConversionInput): Promise<Conversio
 			{ product: 'app', kind: 'identity', revision: 1, page: 1, record: appManifest.record, signature: appManifest.signature },
 			{ product: 'calendar', kind: 'identity', revision: 1, page: 1, record: calManifest.record, signature: calManifest.signature }
 		],
-		dataManifests: [await dataManifest('app', current.keyId, input.currentKey), await dataManifest('calendar', calId, cal)],
+		dataManifests: [await dataManifest('app', current.keyId, currentKey), await dataManifest('calendar', calId, cal)],
 		activation: {
 			head: headRaw,
 			mac: await headMac(input.amk, accountId, headRaw),
 			authoritySignature: await signTranscript(HEAD_DOMAIN, headRaw, aak),
-			legacySignature: await signTranscript(HEAD_DOMAIN, headRaw, input.currentKey),
+			legacySignature: await signTranscript(HEAD_DOMAIN, headRaw, currentKey),
 			authorityPublicKey: aakPublic,
 			delegations: [
 				{ record: appDelegation, signature: await signTranscript(DOMAIN.delegation, appDelegation, aak), signingPublicKey: current.publicKeyBytes, recipientPublicKey: current.publicKeyBytes },
