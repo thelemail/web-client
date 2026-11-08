@@ -57,7 +57,7 @@ async function fixture() {
 		slotHashes: [new Uint8Array(32).fill(2), new Uint8Array(32).fill(3)],
 		history,
 		availability,
-		accountKeys: [{ armoredEncrypted: keys[0].armor() }, { armoredEncrypted: null }, { armoredEncrypted: keys[2].armor() }],
+		accountKeys: [{ armoredEncrypted: keys[0].armor() }, { armoredEncrypted: keys[1].armor() }, { armoredEncrypted: keys[2].armor() }],
 		aliasKeys: [{ aliasId, keyVersion: 1, wrappedPrivateKey: wrapped as string }]
 	};
 	return { input, history, current, alias };

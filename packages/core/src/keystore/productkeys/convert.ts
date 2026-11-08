@@ -162,10 +162,10 @@ async function mailEntries(input: ConversionInput, forbidden: Uint8Array[]): Pro
 	const entries: Entry[] = [];
 	const keys: IdentityKey[] = [];
 	for (const h of input.history) {
-		const bytes = material.get(h.keyId) ?? null;
 		const stated = input.availability.get(h.keyId) ?? 'unavailable';
 		const held = stated === 'available' || stated === 'migration-only';
-		const availability: Availability = bytes ? (held ? stated : 'available') : held ? 'unavailable' : stated;
+		const bytes = held ? (material.get(h.keyId) ?? null) : null;
+		const availability: Availability = held && !bytes ? 'unavailable' : stated;
 		entries.push({ keyId: h.keyId, scopeId: input.accountId, purpose: ENTRY.mailIdentity, profileId: h.profileId, keyEpoch: h.keyEpoch, availability, material: bytes });
 		keys.push({ keyId: h.keyId, profileId: h.profileId, usage: USAGE.mailIdentity, keyEpoch: h.keyEpoch, publicKeyDigest: h.publicKeyHash, privateAvailability: availability });
 	}
