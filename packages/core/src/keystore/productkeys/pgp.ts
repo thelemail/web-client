@@ -51,7 +51,7 @@ export async function validateProfile(profileId: string, key: openpgp.Key): Prom
 	if (primary.version !== 6 || primary.algorithm !== openpgp.enums.publicKey.ed25519 || key.getUserIDs().length !== 0) {
 		fail('profile', 'primary key');
 	}
-	const f = flags(key.directSignatures[0]);
+	const f = flags((key as unknown as { directSignatures: openpgp.SignaturePacket[] }).directSignatures[0]);
 	const encrypt = openpgp.enums.keyFlags.encryptCommunication | openpgp.enums.keyFlags.encryptStorage;
 	if (!(f & openpgp.enums.keyFlags.signData) || f & encrypt) fail('profile', 'primary key flags');
 	if (profileId === PROFILE.accountAuthority) {
@@ -85,12 +85,14 @@ export async function verifyTranscript(domain: string, raw: Uint8Array, signatur
 	if (packets.length !== 1) fail('signature');
 	const p = packets[0];
 	const primary = key.keyPacket;
+	const fingerprint = primary.getFingerprintBytes();
 	if (
+		!fingerprint ||
 		p.signatureType !== openpgp.enums.signature.binary ||
 		!ALLOWED_HASHES.has(p.hashAlgorithm as number) ||
 		p.version !== primary.version ||
 		!p.issuerFingerprint ||
-		!bytesEqual(p.issuerFingerprint, primary.getFingerprintBytes())
+		!bytesEqual(p.issuerFingerprint, fingerprint)
 	) {
 		fail('signature');
 	}

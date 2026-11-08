@@ -118,7 +118,11 @@ import type {
 	VerifyPasswordChangeProofArgs,
 	VerifyPasswordChangeProofResponse,
 	VerifyRecoveryProofArgs,
-	VerifyRecoveryProofResponse
+	VerifyRecoveryProofResponse,
+	PrepareProductKeysArgs,
+	PrepareProductKeysResponse,
+	ReadProductKeysArgs,
+	ReadProductKeysResponse
 } from './protocol';
 import { LOCAL_KEY_UNSTORABLE } from './vault-wrap';
 
@@ -400,6 +404,8 @@ export const keystore = {
 		alsoForgetDeviceKey(args.accountId, call<void>('invalidatePersistedVault', args)),
 	abandonPasswordChange: () => call<void>('abandonPasswordChange'),
 	touch: () => call<void>('touch'),
+	prepareProductKeys: (args: PrepareProductKeysArgs) => call<PrepareProductKeysResponse>('prepareProductKeys', args),
+	readProductKeys: (args: ReadProductKeysArgs) => call<ReadProductKeysResponse>('readProductKeys', args),
 	lock: (args: LockArgs) => call<void>('lock', args),
 	clear: (args: ClearArgs) => alsoForgetDeviceKey(args.accountId, call<void>('clear', args)),
 	clearAll: () => alsoForgetDeviceKey(null, call<void>('clearAll')),
