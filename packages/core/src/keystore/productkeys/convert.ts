@@ -50,6 +50,7 @@ export interface ConversionInput {
 	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
 	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
 	now?: Date;
+	bundleBudget?: number;
 }
 
 export interface SecretBundleUpload {
@@ -218,13 +219,13 @@ async function mailEntries(input: ConversionInput, unlocked: openpgp.PrivateKey[
 	return { entries, keys };
 }
 
-function chunk(entries: Entry[]): Entry[][] {
+function chunk(entries: Entry[], budget: number): Entry[][] {
 	const pages: Entry[][] = [];
 	let page: Entry[] = [];
 	let size = 0;
 	for (const e of entries) {
 		const cost = 512 + Math.ceil(((e.material?.length ?? 0) * 4) / 3);
-		if (page.length > 0 && size + cost > BUNDLE_BUDGET) {
+		if (page.length > 0 && size + cost > budget) {
 			pages.push(page);
 			page = [];
 			size = 0;
@@ -236,10 +237,17 @@ function chunk(entries: Entry[]): Entry[][] {
 	return pages;
 }
 
-async function sealPages(root: Uint8Array, accountId: string, product: Product, entries: Entry[], forbidden: Uint8Array[]): Promise<{ uploads: ProductBundleUpload[]; refs: BundleRef[] }> {
+async function sealPages(
+	root: Uint8Array,
+	accountId: string,
+	product: Product,
+	entries: Entry[],
+	forbidden: Uint8Array[],
+	budget: number
+): Promise<{ uploads: ProductBundleUpload[]; refs: BundleRef[] }> {
 	const uploads: ProductBundleUpload[] = [];
 	const refs: BundleRef[] = [];
-	for (const page of chunk(entries)) {
+	for (const page of chunk(entries, budget)) {
 		const bundleId = randomUuid();
 		const bundle = await sealProductBundle(root, { accountId, product, productKeyEpoch: 1, bundleId, revision: 1 }, page, forbidden);
 		uploads.push({ product, bundleId, revision: 1, bundle });
@@ -269,11 +277,12 @@ export async function buildConversion(input: ConversionInput): Promise<Conversio
 	const roots = [input.amk, utf8(input.keyPassword), appRoot, calRoot];
 
 	const mail = await mailEntries(input, unlocked, roots);
-	const appSealed = await sealPages(appRoot, accountId, 'app', mail.entries, roots);
+	const budget = Math.min(input.bundleBudget ?? BUNDLE_BUDGET, BUNDLE_BUDGET);
+	const appSealed = await sealPages(appRoot, accountId, 'app', mail.entries, roots, budget);
 	const calEntries: Entry[] = [
 		{ keyId: calId, scopeId: accountId, purpose: ENTRY.calendarIdentity, profileId: PROFILE.calendarIdentity, keyEpoch: 1, availability: 'available', material: secretKeyBytes(cal) }
 	];
-	const calSealed = await sealPages(calRoot, accountId, 'calendar', calEntries, roots);
+	const calSealed = await sealPages(calRoot, accountId, 'calendar', calEntries, roots, budget);
 
 	const delegationBase = { accountId, authorityKeyId: aakId, authorityEpoch: 1, productKeyEpoch: 1, issuedAt: now, delegationRevision: 1, previousDelegationHash: null };
 	const appDelegation = encodeDelegation({

@@ -165,6 +165,23 @@ describe('product key conversion', () => {
 		await expect(readProductKeys({ ...input, mailKeys: [later.toPublic()] })).rejects.toMatchObject({ code: 'context' });
 	});
 
+	it('splits a large keyring across bundles and reads every page back', async () => {
+		const f = await fixture();
+		const out = await buildConversion({ ...f.input, bundleBudget: 1500 });
+		const app = out.productBundles.filter((b) => b.product === 'app');
+		expect(app.length).toBeGreaterThan(2);
+		const manifest = JSON.parse(new TextDecoder().decode(out.identityManifests.find((m) => m.product === 'app')!.record));
+		expect(manifest.bundles.map((b: { bundleId: string }) => b.bundleId).sort()).toEqual(app.map((b) => b.bundleId).sort());
+		const result = await readProductKeys(readInput(f, out));
+		const entries = result.products.find((p) => p.product === 'app')!.entries;
+		expect(entries.filter((e) => e.purpose === 'mail.identity')).toHaveLength(3);
+		expect(entries.filter((e) => e.purpose === 'mail.alias')).toHaveLength(1);
+		expect(result.importDedupMatches && result.searchLeafMatches).toBe(true);
+		const input = readInput(f, out);
+		const missing = { ...input, products: input.products.map((p) => (p.product === 'app' ? { ...p, bundles: p.bundles.slice(1) } : p)) };
+		await expect(readProductKeys(missing)).rejects.toMatchObject({ code: 'context' });
+	});
+
 	it('derives the search leaf the mail worker uses', async () => {
 		const ikm = await crypto.subtle.importKey('raw', utf8(keyPassword), 'HKDF', false, ['deriveKey']);
 		const key = await crypto.subtle.deriveKey(
