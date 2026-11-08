@@ -10,7 +10,11 @@ import {
 	putSecretBundle
 } from '$core/api/productKeys';
 import { listMyKeys } from '$core/api/me';
+import type { AliasKeyGrant } from '$core/api/aliases';
 import { listMyAliasKeys } from '$core/api/aliases';
+import type { AccountKeyListResponse } from '$core/api/types';
+import { b64ToText } from '$core/keys/encode';
+import type { PrepareProductKeysArgs } from '$core/keystore/protocol';
 import { keystore } from '$core/keystore/keystore-client';
 import { b64decode, b64encode } from '$core/keystore/productkeys/encoding';
 import { parseHeadV2 } from '$core/keystore/productkeys/head';
@@ -40,9 +44,14 @@ function opt(s: string | null): Uint8Array | null {
 	return s ? b64decode(s) : null;
 }
 
-async function convert(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<ProductKeysOutcome | null> {
-	const [keys, aliases] = await Promise.all([listMyKeys(accountId), listMyAliasKeys(accountId)]);
-	const prepared = await keystore.prepareProductKeys({
+export function conversionArgs(
+	accountId: string,
+	state: CryptoStateResponse,
+	events: Uint8Array[],
+	keys: AccountKeyListResponse,
+	aliases: AliasKeyGrant[]
+): PrepareProductKeysArgs {
+	return {
 		accountId,
 		scope: { ...state.scope, keyHistoryRoot: b64decode(state.scope.keyHistoryRoot) },
 		sessionEpoch: state.sessionEpoch,
@@ -52,8 +61,13 @@ async function convert(accountId: string, state: CryptoStateResponse, events: Ui
 		historyEvents: events,
 		availability: state.keys.map((k) => ({ keyId: k.keyId, state: k.privateState as Availability })),
 		accountKeys: keys.keys.map((k) => ({ armoredEncrypted: k.encryptedPrivateKey || null, isCurrent: k.isCurrent })),
-		aliasKeys: aliases.keys.map((g) => ({ aliasId: g.aliasId, keyVersion: g.keyVersion, wrappedPrivateKey: g.wrappedPrivateKey }))
-	});
+		aliasKeys: aliases.map((g) => ({ aliasId: g.aliasAccountId, keyVersion: g.keyVersion, wrappedPrivateKey: b64ToText(g.wrappedPrivateKey) }))
+	};
+}
+
+async function convert(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<ProductKeysOutcome | null> {
+	const [keys, aliases] = await Promise.all([listMyKeys(accountId), listMyAliasKeys(accountId)]);
+	const prepared = await keystore.prepareProductKeys(conversionArgs(accountId, state, events, keys, aliases.keys));
 	if (!prepared.ok) {
 		if (prepared.code === 'invalid') throw new Error(prepared.message ?? 'product keys: conversion refused');
 		return { status: prepared.code };
