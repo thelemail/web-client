@@ -3,6 +3,7 @@ import { decryptPreview } from '$core/mail/decrypt';
 import { loadMessageBody } from '$core/mail/bodySource';
 import type { CalendarEvent } from '$core/mail/render/icalParse';
 import { auth } from '$core/stores/auth.svelte';
+import type { VerifiedDelivery } from './delivery';
 import { parseInvitation, type ParsedInvitation } from './ics/fromMail';
 import { isOrganizer, myAddressList } from './invite';
 import type { CalendarItem } from './model';
@@ -128,6 +129,17 @@ export async function applyCalendarEvents(
 		out.push(result);
 	}
 	return out;
+}
+
+export async function applyDelivered(d: VerifiedDelivery, events: CalendarEvent[]): Promise<void> {
+	const ev = events.find((e) => e.uid === d.message.uid);
+	if (!ev) return;
+	if (d.message.method === 'REQUEST' && !calendarStore.itemByUid(d.message.uid)) {
+		const { addFromInvitation } = await import('./entry');
+		await addFromInvitation(ev, '');
+		return;
+	}
+	await applyCalendarEvents([ev], d.message.operationId);
 }
 
 export async function applyFromMessageId(messageId: string): Promise<AppliedChange[]> {

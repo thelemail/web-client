@@ -29,7 +29,7 @@ import { DOMAIN, encodeDelegation, productPurposes } from '$core/keystore/produc
 import { fingerprintBytes, generateAuthorityKey, generateCalendarIdentity, publicKeyBytes, publicKeyDigest, signTranscript } from '$core/keystore/productkeys/pgp';
 import { PROFILE } from '$core/keystore/productkeys/profiles';
 import { memoryCalendarDb } from './db';
-import { CalendarIdentityError, forgetCalendarIdentities, resolveCalendarIdentity } from './identity';
+import { CalendarIdentityError, forgetCalendarIdentities, resolveCalendarIdentity, resolveCalendarRecipient } from './identity';
 
 const self = '9c1e2a3b-4d5f-4a6b-8c7d-0e1f2a3b4c5d';
 const peer = '5b6f1c34-7d0e-4c3a-9f61-2a1d3b6c8e90';
@@ -87,6 +87,7 @@ async function build(opts: { revision?: number; accountForAddress?: string; muta
 	return {
 		cal,
 		res: {
+			state: 'published',
 			accountId: peer,
 			authorityKey: toBase64(publicKeyBytes(aak)),
 			authorityEpoch: 1,
@@ -133,9 +134,21 @@ describe('resolveCalendarIdentity', () => {
 		expect(id?.authority.delegation.delegationRevision).toBe(2);
 	});
 
-	it('answers null for an address with no calendar identity', async () => {
+	it('answers null for an address outside Thelemail and for one still pending', async () => {
 		h.lookup.mockRejectedValue(new ApiCallError(404, null, 'not found'));
 		expect(await resolveCalendarIdentity(memoryCalendarDb(), self, email)).toBeNull();
+		forgetCalendarIdentities();
+		const { res } = await build();
+		h.lookup.mockResolvedValue({ state: 'pending', accountId: peer, addressStatement: res.addressStatement, addressSignature: res.addressSignature });
+		expect(await resolveCalendarIdentity(memoryCalendarDb(), self, email)).toBeNull();
+		forgetCalendarIdentities();
+		expect(await resolveCalendarRecipient(memoryCalendarDb(), self, email)).toEqual({ kind: 'pending', accountId: peer, email });
+	});
+
+	it('refuses a pending answer whose address belongs to another account', async () => {
+		const { res } = await build({ accountForAddress: self });
+		h.lookup.mockResolvedValue({ state: 'pending', accountId: peer, addressStatement: res.addressStatement, addressSignature: res.addressSignature });
+		expect(await code(resolveCalendarRecipient(memoryCalendarDb(), self, email))).toBe('unverified');
 	});
 
 	it('refuses a served key the delegation does not name', async () => {

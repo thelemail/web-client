@@ -3,7 +3,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { longWhen } from './format';
 import { buildItemIcs, buildReplyIcs, type IcsIdentity } from './ics/write';
 import type { Attendee, CalendarItem, Partstat } from './model';
-import type { OutboxMail, OutboxRecipient } from './outbox';
+import type { OutboxEvent, OutboxMail, OutboxRecipient } from './outbox';
 import { expandItem, type Occurrence } from './recur';
 import { calendarStore } from './store.svelte';
 import { isOwnRecipient } from '$core/mail/recipientAddress';
@@ -58,6 +58,15 @@ function recipientsOf(attendees: Attendee[], exclude: string[]): OutboxRecipient
 		out.push({ display: a.name ?? '', address: a.email });
 	}
 	return out;
+}
+
+function eventOf(item: CalendarItem, sequence = item.sequence): OutboxEvent {
+	return {
+		calendarId: item.calendarId,
+		uid: item.uid,
+		sequence,
+		membershipRevision: calendarStore.calendar(item.calendarId)?.row.keyVersion ?? 0
+	};
 }
 
 function whenLine(item: CalendarItem, occurrence?: Occurrence): string {
@@ -119,7 +128,8 @@ export async function sendInvitations(
 				method: 'REQUEST',
 				fromEmail: identity.email,
 				fromName: identity.name,
-				fromAliasId: identity.aliasId
+				fromAliasId: identity.aliasId,
+				event: eventOf(item)
 			},
 			previous
 				? m.cal_op_invitation_updated({ title: item.title || m.cal_op_untitled() })
@@ -142,7 +152,8 @@ export async function sendInvitations(
 				method: 'CANCEL',
 				fromEmail: identity.email,
 				fromName: identity.name,
-				fromAliasId: identity.aliasId
+				fromAliasId: identity.aliasId,
+				event: eventOf(previous)
 			},
 			m.cal_op_cancellation({ title: previous.title || m.cal_op_untitled() })
 		);
@@ -177,7 +188,8 @@ export async function sendCancellation(item: CalendarItem, occurrence?: Occurren
 			method: 'CANCEL',
 			fromEmail: identity.email,
 			fromName: identity.name,
-			fromAliasId: identity.aliasId
+			fromAliasId: identity.aliasId,
+			event: eventOf(cancelled)
 		},
 		m.cal_op_cancellation({ title: item.title || m.cal_op_untitled() })
 	);
@@ -215,7 +227,8 @@ export async function sendReply(
 					: `I am unable to attend "${item.title}".`,
 		ics,
 		method: 'REPLY',
-		inReplyToMessageId: sourceMessageId
+		inReplyToMessageId: sourceMessageId,
+		event: eventOf(item)
 	};
 	await calendarStore.queueMail(item.id, mail, m.cal_op_rsvp({ partstat, title: item.title || m.cal_op_untitled() }));
 }

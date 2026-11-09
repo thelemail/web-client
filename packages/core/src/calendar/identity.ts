@@ -75,8 +75,7 @@ function parseProductStatement(raw: Uint8Array): ProductStatement {
 
 const pinned = () => DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX.toLowerCase();
 
-export async function verifyCalendarIdentity(res: CalendarIdentityResponse, email: string): Promise<CalendarIdentity> {
-	const address = email.trim().toLowerCase();
+async function verifyAddress(res: CalendarIdentityResponse, address: string): Promise<void> {
 	const addressRaw = b64decode(res.addressStatement);
 	await verifyDirectoryRecord({
 		raw: addressRaw,
@@ -90,7 +89,14 @@ export async function verifyCalendarIdentity(res: CalendarIdentityResponse, emai
 	if (stmt.signingKeyFingerprint !== pinned() || stmt.address.toLowerCase() !== address || stmt.accountId !== res.accountId) {
 		unverified('address statement does not bind this account');
 	}
+}
 
+export async function verifyCalendarIdentity(res: CalendarIdentityResponse, email: string): Promise<CalendarIdentity> {
+	const address = email.trim().toLowerCase();
+	await verifyAddress(res, address);
+	if (res.state !== 'published' || !res.statement || !res.statementSignature || !res.delegations || !res.authorityKey || !res.signingKey || res.authorityEpoch === undefined) {
+		return unverified('no published calendar identity');
+	}
 	const productRaw = b64decode(res.statement);
 	const ps = parseProductStatement(productRaw);
 	if (ps.signingKeyFingerprint !== pinned() || ps.accountId !== res.accountId || ps.product !== 'calendar') {
@@ -134,23 +140,40 @@ export async function verifyCalendarIdentity(res: CalendarIdentityResponse, emai
 	return { accountId: res.accountId, email: address, authority, signingKey };
 }
 
-const cache = new Map<string, { at: number; identity: CalendarIdentity | null }>();
+const cache = new Map<string, { at: number; recipient: CalendarRecipient }>();
 const CACHE_MS = 5 * 60 * 1000;
 
+export type CalendarRecipient =
+	| { kind: 'published'; identity: CalendarIdentity }
+	| { kind: 'pending'; accountId: string; email: string }
+	| { kind: 'external'; email: string };
+
 export async function resolveCalendarIdentity(db: CalendarDb, accountId: string, email: string): Promise<CalendarIdentity | null> {
+	const r = await resolveCalendarRecipient(db, accountId, email);
+	return r.kind === 'published' ? r.identity : null;
+}
+
+export async function resolveCalendarRecipient(db: CalendarDb, accountId: string, email: string): Promise<CalendarRecipient> {
 	const address = email.trim().toLowerCase();
 	const key = `${accountId} ${address}`;
 	const hit = cache.get(key);
-	if (hit && Date.now() - hit.at < CACHE_MS) return hit.identity;
+	if (hit && Date.now() - hit.at < CACHE_MS) return hit.recipient;
 	let res: CalendarIdentityResponse;
 	try {
 		res = await lookupCalendarIdentity(address);
 	} catch (err) {
 		if (err instanceof ApiCallError && err.status === 404) {
-			cache.set(key, { at: Date.now(), identity: null });
-			return null;
+			const recipient: CalendarRecipient = { kind: 'external', email: address };
+			cache.set(key, { at: Date.now(), recipient });
+			return recipient;
 		}
 		throw err;
+	}
+	if (res.state === 'pending') {
+		await verifyAddress(res, address);
+		const recipient: CalendarRecipient = { kind: 'pending', accountId: res.accountId, email: address };
+		cache.set(key, { at: Date.now(), recipient });
+		return recipient;
 	}
 	const identity = await verifyCalendarIdentity(res, address);
 	const delegation = identity.authority.delegation;
@@ -164,10 +187,16 @@ export async function resolveCalendarIdentity(db: CalendarDb, accountId: string,
 		delegationRevision: delegation.delegationRevision,
 		authorityEpoch: delegation.authorityEpoch
 	});
-	cache.set(key, { at: Date.now(), identity });
-	return identity;
+	const recipient: CalendarRecipient = { kind: 'published', identity };
+	cache.set(key, { at: Date.now(), recipient });
+	return recipient;
 }
 
-export function forgetCalendarIdentities(): void {
-	cache.clear();
+export function forgetCalendarIdentities(email?: string): void {
+	if (!email) {
+		cache.clear();
+		return;
+	}
+	const address = email.trim().toLowerCase();
+	for (const key of [...cache.keys()]) if (key.endsWith(` ${address}`)) cache.delete(key);
 }

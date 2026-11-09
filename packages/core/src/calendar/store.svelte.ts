@@ -24,6 +24,7 @@ import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 import { dispatchSend } from '$core/mail/sendDispatch';
+import { calendarSigningContext } from './signing';
 import { m } from '$paraglide/messages.js';
 import { onCalendarMessage, postCalendarMessage } from './channel';
 import {
@@ -128,6 +129,7 @@ export class CalendarStore {
 	revision = $state(0);
 
 	#db: CalendarDb;
+	#deliveriesRunning = false;
 	#api: SyncApi;
 	#accountId: string | null = null;
 	#cursor: string | null = null;
@@ -340,10 +342,27 @@ export class CalendarStore {
 				postCalendarMessage({ type: 'changed', accountId });
 			}
 			this.#kick();
+			void this.#syncDeliveries(accountId);
 		} catch (err) {
 			this.#noteFailure(err);
 		} finally {
 			if (this.#accountId === accountId) this.syncing = false;
+		}
+	}
+
+	async #syncDeliveries(accountId: string): Promise<void> {
+		if (this.#deliveriesRunning) return;
+		this.#deliveriesRunning = true;
+		try {
+			const ctx = await calendarSigningContext(accountId);
+			if (!ctx || this.#accountId !== accountId) return;
+			const [{ processInbox, releasePendingDeliveries }, { applyDelivered }] = await Promise.all([import('./delivery'), import('./replies')]);
+			await releasePendingDeliveries(accountId, this.#db);
+			await processInbox(accountId, this.#db, applyDelivered);
+		} catch (err) {
+			console.warn('calendar: invitation sync failed', err);
+		} finally {
+			this.#deliveriesRunning = false;
 		}
 	}
 
@@ -357,6 +376,7 @@ export class CalendarStore {
 		this.#noteOnline();
 		await this.#hydrate();
 		postCalendarMessage({ type: 'changed', accountId });
+		void this.#syncDeliveries(accountId);
 	}
 
 	#creatingPersonal = false;
@@ -817,7 +837,7 @@ export class CalendarStore {
 	}
 
 	async queueMail(itemId: string, mail: OutboxMail, label: string): Promise<void> {
-		await this.#enqueue({ kind: 'invite.send', itemId, mail, label });
+		await this.#enqueue({ kind: 'invite.send', itemId, mail: { ...mail, operationId: mail.operationId ?? crypto.randomUUID() }, label });
 	}
 
 	async #enqueue(op: OutboxOp): Promise<void> {
@@ -1016,7 +1036,14 @@ export class CalendarStore {
 			putState: putCalendarItemState,
 			patchCalendar: updateCalendar,
 			deleteCalendar: apiDeleteCalendar,
-			sendMail: async (mail) => {
+			sendMail: async (mail, itemId) => {
+				const accountId = this.#accountId;
+				const ctx = accountId ? await calendarSigningContext(accountId) : null;
+				if (accountId && ctx) {
+					const { deliverCalendarMail } = await import('./delivery');
+					await deliverCalendarMail(accountId, ctx, this.#db, itemId, mail);
+					return;
+				}
 				await dispatchSend({
 					to: mail.to,
 					subject: mail.subject,

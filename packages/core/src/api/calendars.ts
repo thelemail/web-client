@@ -357,13 +357,14 @@ export interface CalendarDelegationRecord {
 }
 
 export interface CalendarIdentityResponse {
+	state: 'published' | 'pending';
 	accountId: string;
-	authorityKey: string;
-	authorityEpoch: number;
-	delegations: CalendarDelegationRecord[];
-	signingKey: string;
-	statement: string;
-	statementSignature: string;
+	authorityKey?: string;
+	authorityEpoch?: number;
+	delegations?: CalendarDelegationRecord[];
+	signingKey?: string;
+	statement?: string;
+	statementSignature?: string;
 	statementTlogProof?: string;
 	statementTlogConsistency?: TlogConsistencyProof;
 	addressStatement: string;

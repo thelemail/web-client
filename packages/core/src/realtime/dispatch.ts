@@ -106,6 +106,7 @@ export function applyHint(hint: RealtimeHint): void {
 			return;
 		case 'calendar':
 		case 'calendar_item':
+		case 'calendar_invitation':
 			if (isActive) notifyCalendarHint(hint);
 			return;
 		case 'shared_alias':

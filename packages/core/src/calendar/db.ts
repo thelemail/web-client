@@ -52,11 +52,26 @@ export interface IdentityMark {
 	authorityEpoch: number;
 }
 
+export interface EventOrigin {
+	organizerAccountId: string;
+	calendarId: string;
+	eventId: string;
+}
+
 export interface EventMark {
 	accountId: string;
 	event: string;
 	sequence: number;
 	operations: string[];
+	origin?: EventOrigin;
+}
+
+export interface DeliveryRecord {
+	accountId: string;
+	operationId: string;
+	statement: string;
+	signature: string;
+	payload: string;
 }
 
 export interface CalendarDb {
@@ -79,6 +94,9 @@ export interface CalendarDb {
 	putIdentityMark(mark: IdentityMark): Promise<void>;
 	eventMark(accountId: string, event: string): Promise<EventMark | null>;
 	putEventMark(mark: EventMark): Promise<void>;
+	delivery(accountId: string, operationId: string): Promise<DeliveryRecord | null>;
+	putDelivery(record: DeliveryRecord): Promise<void>;
+	removeDelivery(accountId: string, operationId: string): Promise<void>;
 	clear(accountId: string): Promise<void>;
 }
 
@@ -91,6 +109,7 @@ const SYNC = 'sync';
 const OUTBOX = 'outbox';
 const IDENTITIES = 'identities';
 const EVENTS = 'events';
+const DELIVERIES = 'deliveries';
 const BY_ACCOUNT = 'byAccount';
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -133,6 +152,12 @@ function openDb(): Promise<IDBDatabase> {
 		}
 		if (!db.objectStoreNames.contains(EVENTS)) {
 			db.createObjectStore(EVENTS, { keyPath: ['accountId', 'event'] }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+		if (!db.objectStoreNames.contains(DELIVERIES)) {
+			db.createObjectStore(DELIVERIES, { keyPath: ['accountId', 'operationId'] }).createIndex(
 				BY_ACCOUNT,
 				'accountId'
 			);
@@ -235,6 +260,9 @@ export const idbCalendarDb: CalendarDb = {
 	putIdentityMark: (mark) => put(IDENTITIES, mark),
 	eventMark: (accountId, event) => getOne<EventMark>(EVENTS, [accountId, event]),
 	putEventMark: (mark) => put(EVENTS, mark),
+	delivery: (accountId, operationId) => getOne<DeliveryRecord>(DELIVERIES, [accountId, operationId]),
+	putDelivery: (record) => put(DELIVERIES, record),
+	removeDelivery: (accountId, operationId) => remove(DELIVERIES, [accountId, operationId]),
 	async clear(accountId) {
 		await Promise.all([
 			clearAccount(CALENDARS, accountId),
@@ -242,6 +270,7 @@ export const idbCalendarDb: CalendarDb = {
 			clearAccount(STATES, accountId),
 			clearAccount(OUTBOX, accountId),
 			clearAccount(EVENTS, accountId),
+			clearAccount(DELIVERIES, accountId),
 			remove(SYNC, accountId)
 		]);
 	}
@@ -261,6 +290,7 @@ export function memoryCalendarDb(): CalendarDb {
 	const outbox = new Map<number, OutboxRecord>();
 	const identities = new Map<string, IdentityMark>();
 	const events = new Map<string, EventMark>();
+	const deliveries = new Map<string, DeliveryRecord>();
 	let seq = 0;
 	const key = (a: string, b: string) => `${a} ${b}`;
 	return {
@@ -275,6 +305,15 @@ export function memoryCalendarDb(): CalendarDb {
 		},
 		async putEventMark(mark) {
 			events.set(key(mark.accountId, mark.event), mark);
+		},
+		async delivery(accountId, operationId) {
+			return deliveries.get(key(accountId, operationId)) ?? null;
+		},
+		async putDelivery(record) {
+			deliveries.set(key(record.accountId, record.operationId), record);
+		},
+		async removeDelivery(accountId, operationId) {
+			deliveries.delete(key(accountId, operationId));
 		},
 		async calendars(accountId) {
 			return [...calendars.values()].filter((c) => c.accountId === accountId);
