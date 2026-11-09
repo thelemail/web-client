@@ -18,6 +18,11 @@ const authOrigin = (buildEnv.PUBLIC_PRODUCT_ORIGINS ?? '')
 	.map((entry) => entry.split('='))
 	.find(([audience]) => audience?.trim() === 'auth')?.[1]
 	?.trim();
+const productOrigins = (buildEnv.PUBLIC_PRODUCT_ORIGINS ?? '')
+	.split(',')
+	.map((entry) => entry.split('=').map((part) => part.trim()))
+	.filter(([audience, origin]) => audience && origin && audience !== 'auth')
+	.map(([, origin]) => new URL(origin).origin as `${string}://${string}.${string}`);
 const building = process.argv.includes('build');
 if (building && (!authOrigin || new URL(authOrigin).origin !== apiOrigin)) {
 	throw new Error(
@@ -62,7 +67,7 @@ export default defineConfig({
 					'style-src': ['self', 'unsafe-inline'],
 					'img-src': ['self', 'data:', 'blob:'],
 					'font-src': ['self'],
-					'connect-src': ['self'],
+					'connect-src': ['self', ...productOrigins],
 					'worker-src': ['self'],
 					'manifest-src': ['self'],
 					'object-src': ['none'],
