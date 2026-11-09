@@ -1,6 +1,6 @@
 import type { ConversionOutput } from './productkeys/convert';
 import type { Availability } from './productkeys/productBundle';
-import type { ReadInput, ReadResult } from './productkeys/read';
+import type { ReadInput, ReadResult, StoredBundle } from './productkeys/read';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 
 export interface AccountStatus {
@@ -820,7 +820,11 @@ export type KeystoreCommand =
 	| 'openProductFork'
 	| 'touch'
 	| 'prepareProductKeys'
-	| 'readProductKeys';
+	| 'readProductKeys'
+	| 'sealProductHandoff'
+	| 'adoptHandoff'
+	| 'commitHandoff'
+	| 'discardHandoff';
 
 export type VaultMode = 'account' | 'product' | 'auth';
 
@@ -893,7 +897,11 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	openProductFork: ['product'],
 	touch: ['auth'],
 	prepareProductKeys: ['auth'],
-	readProductKeys: ['auth']
+	readProductKeys: ['auth'],
+	sealProductHandoff: ['auth'],
+	adoptHandoff: ['product'],
+	commitHandoff: ['product'],
+	discardHandoff: ['product']
 };
 
 export interface PrepareProductKeysArgs extends AccountScopedArgs {
@@ -928,6 +936,55 @@ export type ReadProductKeysArgs = AccountScopedArgs &
 export type ReadProductKeysResponse =
 	| { ok: true; result: ReadResult }
 	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
+
+export interface SealProductHandoffArgs extends AccountScopedArgs {
+	grant: Uint8Array;
+	receiverPublicKey: Uint8Array;
+	head: { raw: Uint8Array; mac: Uint8Array };
+	secretBundles: StoredBundle[];
+}
+
+export type SealProductHandoffResponse =
+	| { ok: true; envelope: Uint8Array }
+	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
+
+export interface HandoffExpectation {
+	issuer: string;
+	origin: string;
+	clientId: string;
+	callback: string;
+	destinationSessionId: string;
+	receiverKeyDigest: Uint8Array;
+	stateHash: Uint8Array;
+}
+
+export interface HandoffProductKeys {
+	head: { raw: Uint8Array; authority: Uint8Array };
+	authorityKey: Uint8Array;
+	identityManifest: { record: Uint8Array; signature: Uint8Array };
+	bundles: StoredBundle[];
+}
+
+export interface AdoptHandoffArgs extends AccountScopedArgs {
+	requestId: string;
+	product: 'app' | 'calendar';
+	email: string;
+	envelope: Uint8Array;
+	sharedSecret: Uint8Array;
+	expect: HandoffExpectation;
+	keys: HandoffProductKeys;
+	serverHalf: string | null;
+}
+
+export type AdoptHandoffResponse =
+	| { ok: true; envelopeDigest: Uint8Array; manifestHash: Uint8Array; durable: boolean }
+	| { ok: false; code: 'invalid'; message?: string };
+
+export interface CommitHandoffArgs extends AccountScopedArgs {
+	requestId: string;
+}
+
+export type CommitHandoffResponse = { ok: true } | { ok: false; code: 'missing' };
 
 export interface SealProductForkArgs extends AccountScopedArgs {
 	product: string;
