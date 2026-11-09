@@ -33,6 +33,7 @@ export interface VaultState {
 	keyVersion: number;
 	aliasKeys: Map<string, AliasKeyEntry>;
 	aliasCurrent: Map<string, string>;
+	product?: 'app' | 'calendar';
 }
 
 export interface AccountKeyEntry {

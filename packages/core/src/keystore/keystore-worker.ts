@@ -142,7 +142,24 @@ import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 import { handleSealProductFork, handleOpenProductFork } from './worker/fork-ops';
 import { handleAdoptHandoff, handleCommitHandoff, handleDiscardHandoff } from './worker/handoff-ops';
-import type { AdoptHandoffArgs, CommitHandoffArgs } from './protocol';
+import type {
+	AdoptHandoffArgs,
+	CommitHandoffArgs,
+	CreateCalendarKeyArgs,
+	LoadCalendarKeysArgs,
+	SignCalendarGrantArgs,
+	SignFreeBusyArgs,
+	SignInvitationArgs,
+	SignReplyArgs
+} from './protocol';
+import {
+	handleCreateCalendarKey,
+	handleLoadCalendarKeys,
+	handleSignCalendarGrant,
+	handleSignFreeBusy,
+	handleSignInvitation,
+	handleSignReply
+} from './worker/calendar-ops';
 
 declare const self: SharedWorkerGlobalScope;
 
@@ -471,6 +488,24 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'encryptToKeys':
 				respond(port, msg.id, await handleEncryptToKeys(msg.args as EncryptToKeysArgs));
+				break;
+			case 'signInvitation':
+				respond(port, msg.id, await handleSignInvitation(msg.args as SignInvitationArgs));
+				break;
+			case 'signReply':
+				respond(port, msg.id, await handleSignReply(msg.args as SignReplyArgs));
+				break;
+			case 'signFreeBusy':
+				respond(port, msg.id, await handleSignFreeBusy(msg.args as SignFreeBusyArgs));
+				break;
+			case 'signCalendarGrant':
+				respond(port, msg.id, await handleSignCalendarGrant(msg.args as SignCalendarGrantArgs));
+				break;
+			case 'createCalendarKey':
+				respond(port, msg.id, await handleCreateCalendarKey(msg.args as CreateCalendarKeyArgs));
+				break;
+			case 'loadCalendarKeys':
+				respond(port, msg.id, await handleLoadCalendarKeys(msg.args as LoadCalendarKeysArgs));
 				break;
 			case 'signDetached':
 				respond(port, msg.id, await handleSignDetached(msg.args as SignDetachedArgs));
