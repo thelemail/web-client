@@ -376,7 +376,8 @@ export class CalendarStore {
 	}
 
 	async #createPersonalCalendar(accountId: string): Promise<void> {
-		const { key, grants } = await mintOwnCalendarKey(accountId);
+		const id = crypto.randomUUID();
+		const { key, grants } = await mintOwnCalendarKey(accountId, id);
 		const meta: CalendarMeta = {
 			schemaVersion: META_SCHEMA_VERSION,
 			name: m.cal_default_calendar_name(),
@@ -385,6 +386,7 @@ export class CalendarStore {
 		};
 		const sealedMeta = await sealText(accountId, key, serializeMeta(meta));
 		const row = await createCalendar({
+			id,
 			kind: 'personal',
 			sealedMeta,
 			metaKeyFingerprint: key.fingerprintB64,

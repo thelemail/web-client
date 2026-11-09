@@ -4588,6 +4588,7 @@
 	"cal_store_no_account": "Sem conta",
 	"cal_store_revision_unrestorable": "Não é possível restaurar essa revisão",
 	"cal_seal_key_failed": "Não foi possível criar a chave do calendário",
+	"cal_seal_members_without_calendar": "Estas pessoas ainda não abriram o Calendário: {emails}. Peça que o abram uma vez e tente de novo.",
 	"cal_seal_no_key": "Ainda não possui a chave deste calendário.",
 	"cal_seal_role_no_address": "Este calendário funcional não tem endereço.",
 	"cal_seal_alias_key_missing": "A chave do endereço partilhado não está carregada.",

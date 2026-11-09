@@ -34,7 +34,8 @@ export async function signBusyWindows(
 		}
 		const res = await keystore.signFreeBusy({
 			accountId,
-			...ctx,
+			productKeyEpoch: ctx.productKeyEpoch,
+			delegationRevision: ctx.delegationRevision,
 			calendarId: statement.calendarId.toLowerCase(),
 			itemId: statement.itemId.toLowerCase(),
 			privacy: statement.privacy,

@@ -4588,6 +4588,7 @@
 	"cal_store_no_account": "No account",
 	"cal_store_revision_unrestorable": "That revision cannot be restored",
 	"cal_seal_key_failed": "Could not create the calendar key",
+	"cal_seal_members_without_calendar": "These people haven't opened Calendar yet: {emails}. Ask them to open it once, then try again.",
 	"cal_seal_no_key": "You do not hold the key for this calendar yet.",
 	"cal_seal_role_no_address": "This role calendar has no address.",
 	"cal_seal_alias_key_missing": "The shared address key is not loaded.",

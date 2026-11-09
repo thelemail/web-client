@@ -4588,6 +4588,7 @@
 	"cal_store_no_account": "Kein Konto",
 	"cal_store_revision_unrestorable": "Diese Version kann nicht wiederhergestellt werden",
 	"cal_seal_key_failed": "Kalenderschlüssel konnte nicht erstellt werden",
+	"cal_seal_members_without_calendar": "Diese Personen haben Kalender noch nicht geöffnet: {emails}. Bitten Sie sie, ihn einmal zu öffnen, und versuchen Sie es dann erneut.",
 	"cal_seal_no_key": "Sie besitzen noch keinen Schlüssel für diesen Kalender.",
 	"cal_seal_role_no_address": "Dieser Rollenkalender hat keine Adresse.",
 	"cal_seal_alias_key_missing": "Der Schlüssel der gemeinsamen Adresse ist nicht geladen.",

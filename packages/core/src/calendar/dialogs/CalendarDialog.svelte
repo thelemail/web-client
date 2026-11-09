@@ -25,7 +25,7 @@
 	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
 	import { META_SCHEMA_VERSION, serializeMeta, type CalendarMeta, type Privacy } from '../model';
-	import { mintOwnCalendarKey, sealText, type SealKey } from '../seal';
+	import { mintOwnCalendarKey, mintSharedCalendarKey, sealText, type SealKey } from '../seal';
 	import { cal } from '../state.svelte';
 	import { calendarStore } from '../store.svelte';
 	import type { BoundaryLine, CalendarDialogRequest } from '../types';
@@ -131,7 +131,18 @@
 		return out;
 	}
 
-	async function mintKey(accountId: string) {
+	async function mintKey(accountId: string, calendarId: string, keyVersion: number) {
+		const chosen = members.filter((member) => roles[member.accountId]);
+		if (!chosen.length) throw new Error(m.cal_caldlg_pick_member());
+		if (!chosen.some((member) => roles[member.accountId] === 'owner')) throw new Error(m.cal_caldlg_needs_owner());
+		progress = m.cal_caldlg_creating_key();
+		const signed = await mintSharedCalendarKey(
+			accountId,
+			calendarId,
+			keyVersion,
+			chosen.map((member) => ({ accountId: member.accountId, email: member.email, role: roles[member.accountId] as CalendarRole }))
+		);
+		if (signed) return signed;
 		const recipients = await resolveRecipients();
 		progress = m.cal_caldlg_creating_key();
 		const created = await keystore.createAliasKey({
@@ -157,9 +168,9 @@
 		return { grants, key };
 	}
 
-	async function mintOwnKey(accountId: string) {
+	async function mintOwnKey(accountId: string, calendarId: string) {
 		progress = m.cal_caldlg_creating_key();
-		return mintOwnCalendarKey(accountId);
+		return mintOwnCalendarKey(accountId, calendarId);
 	}
 
 	async function aliasKey(accountId: string, aliasId: string): Promise<SealKey> {
@@ -173,8 +184,9 @@
 		let key: SealKey;
 		let grants: CalendarMemberGrant[] | undefined;
 		let sharedAliasId: string | undefined;
+		const id = crypto.randomUUID();
 		if (kind === 'shared') {
-			const minted = await mintKey(accountId);
+			const minted = await mintKey(accountId, id, 1);
 			key = minted.key;
 			grants = minted.grants;
 		} else if (kind === 'role') {
@@ -183,7 +195,7 @@
 			sharedAliasId = addr.sharedAliasId;
 			key = await aliasKey(accountId, addr.sharedAliasId);
 		} else {
-			const minted = await mintOwnKey(accountId);
+			const minted = await mintOwnKey(accountId, id);
 			key = minted.key;
 			grants = minted.grants;
 		}
@@ -191,6 +203,7 @@
 		const sealedMeta = await sealText(accountId, key, serializeMeta(meta()));
 		progress = m.cal_caldlg_saving();
 		const row = await createCalendar({
+			id,
 			kind,
 			sealedMeta,
 			metaKeyFingerprint: key.fingerprintB64,
@@ -213,7 +226,7 @@
 
 	async function submitShare(accountId: string) {
 		if (!existing) return;
-		const minted = await mintKey(accountId);
+		const minted = await mintKey(accountId, existing.id, existing.row.keyVersion + 1);
 		progress = m.cal_caldlg_rotating();
 		const row = await rotateCalendarMembers(existing.id, {
 			calendarPublicKeyArmored: minted.key.publicKeyArmored,
