@@ -1,9 +1,7 @@
 import { bytesToB64 } from '$core/crypto';
-import { hexToB64 } from '$core/keys/encode';
-import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { m } from '$paraglide/messages.js';
-import { canonicalise, type BusyStatement } from './busycanon';
+import type { BusyStatement } from './busycanon';
 import { BUSY_FUTURE_DAYS, BUSY_PAST_DAYS } from './recur';
 import { SealError } from './seal';
 import { calendarSigningContext } from './signing';
@@ -53,16 +51,6 @@ export async function signBusyWindows(
 			statement: bytesToB64(res.statement)
 		};
 	}
-	await requireConfirmedOwnKey(accountId);
-	const res = await keystore.signDetached({ accountId, data: canonicalise(statement) });
-	if (!res.ok) {
-		throw new SealError(
-			res.code === 'locked' ? 'locked' : 'unknown',
-			m.cal_busy_sign_failed()
-		);
-	}
-	return {
-		signature: bytesToB64(res.signature),
-		signerKeyFingerprint: hexToB64(res.keyFingerprintHex)
-	};
+	const { signBusyWithAccountKey } = await import('./legacy/busy');
+	return signBusyWithAccountKey(accountId, statement);
 }

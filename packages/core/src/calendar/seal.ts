@@ -2,8 +2,7 @@ import type { CalendarMemberGrant, CalendarRole, CalendarRow } from '$core/api/c
 import type { CalendarKeyMember } from '$core/keystore/protocol';
 import { keystore } from '$core/keystore/keystore-client';
 import { b64ToBytes, bytesToB64 } from '$core/crypto';
-import { b64ToHex, hexToB64, textToB64 } from '$core/keys/encode';
-import { senderKey } from '$core/mail/send';
+import { b64ToHex } from '$core/keys/encode';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 import { m } from '$paraglide/messages.js';
@@ -107,29 +106,8 @@ export async function mintSharedCalendarKey(
 export async function mintOwnCalendarKey(accountId: string, calendarId: string): Promise<MintedCalendarKey> {
 	const ctx = await calendarSigningContext(accountId);
 	if (ctx) return mintForIdentities(accountId, ctx, calendarId, 1, [{ accountId, email: '', role: 'owner' }]);
-	const own = await senderKey(accountId);
-	const created = await keystore.createAliasKey({
-		accountId,
-		email: '',
-		displayName: 'Thelemail calendar',
-		recipients: [{ accountId, publicKeyArmored: own.publicKeyArmored }]
-	});
-	if (!created.ok) {
-		throw new SealError(created.code === 'locked' ? 'locked' : 'unknown', m.cal_seal_key_failed());
-	}
-	return {
-		key: {
-			publicKeyArmored: created.publicKeyArmored,
-			fingerprintB64: hexToB64(created.keyFingerprintHex),
-			fingerprintHex: created.keyFingerprintHex
-		},
-		grants: created.grants.map((g) => ({
-			accountId: g.accountId,
-			role: 'owner' as const,
-			memberKeyFingerprint: hexToB64(g.memberKeyFingerprintHex),
-			wrappedPrivateKey: textToB64(g.wrappedPrivateKeyArmored)
-		}))
-	};
+	const { mintOwnCalendarKeyForMailKey } = await import('./legacy/keys');
+	return mintOwnCalendarKeyForMailKey(accountId);
 }
 
 export async function keyForCalendar(accountId: string, cal: CalendarRow): Promise<SealKey> {

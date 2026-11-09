@@ -23,7 +23,6 @@ import type { RealtimeHint } from '$core/realtime/types';
 import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
-import { dispatchSend } from '$core/mail/sendDispatch';
 import { calendarSigningContext } from './signing';
 import { m } from '$paraglide/messages.js';
 import { onCalendarMessage, postCalendarMessage } from './channel';
@@ -1044,18 +1043,8 @@ export class CalendarStore {
 					await deliverCalendarMail(accountId, ctx, this.#db, itemId, mail);
 					return;
 				}
-				await dispatchSend({
-					to: mail.to,
-					subject: mail.subject,
-					body: mail.body,
-					calendar: { method: mail.method, ics: mail.ics },
-					fromEmail: mail.fromEmail,
-					fromName: mail.fromName,
-					fromAliasId: mail.fromAliasId,
-					inReplyToMessageId: mail.inReplyToMessageId,
-					inReplyToHeader: mail.inReplyToHeader,
-					references: mail.references
-				});
+				const { sendCalendarMail } = await import('./legacy/mailTransport');
+				await sendCalendarMail(mail);
 			}
 		};
 	}

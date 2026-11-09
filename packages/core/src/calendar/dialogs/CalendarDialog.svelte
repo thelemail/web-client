@@ -13,10 +13,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import * as Dialog from '$core/components/ui/dialog';
-	import { verifiedMemberKey } from '$core/directory/memberKey';
-	import { hexToB64, textToB64 } from '$core/keys/encode';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { senderKey } from '$core/mail/send';
 	import { bytesToB64 } from '$core/crypto';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -117,20 +114,6 @@
 		return { schemaVersion: META_SCHEMA_VERSION, name: name.trim(), color, description: description.trim() || undefined, defaultPrivacy };
 	}
 
-	async function resolveRecipients(): Promise<{ accountId: string; publicKeyArmored: string; role: CalendarRole }[]> {
-		const out = [];
-		for (const member of members) {
-			const role = roles[member.accountId];
-			if (!role) continue;
-			progress = m.cal_caldlg_verifying({ email: member.email });
-			const publicKeyArmored = await verifiedMemberKey(member.email, member.accountId);
-			out.push({ accountId: member.accountId, publicKeyArmored, role });
-		}
-		if (!out.length) throw new Error(m.cal_caldlg_pick_member());
-		if (!out.some((r) => r.role === 'owner')) throw new Error(m.cal_caldlg_needs_owner());
-		return out;
-	}
-
 	async function mintKey(accountId: string, calendarId: string, keyVersion: number) {
 		const chosen = members.filter((member) => roles[member.accountId]);
 		if (!chosen.length) throw new Error(m.cal_caldlg_pick_member());
@@ -143,29 +126,12 @@
 			chosen.map((member) => ({ accountId: member.accountId, email: member.email, role: roles[member.accountId] as CalendarRole }))
 		);
 		if (signed) return signed;
-		const recipients = await resolveRecipients();
-		progress = m.cal_caldlg_creating_key();
-		const created = await keystore.createAliasKey({
+		const { mintSharedCalendarKeyForMailKeys } = await import('../legacy/keys');
+		return mintSharedCalendarKeyForMailKeys(
 			accountId,
-			email: '',
-			displayName: 'Thelemail calendar',
-			recipients: recipients.map((r) => ({ accountId: r.accountId, publicKeyArmored: r.publicKeyArmored }))
-		});
-		if (!created.ok) {
-			throw new Error(created.code === 'locked' ? m.cal_caldlg_unlock() : m.cal_caldlg_key_failed());
-		}
-		const grants: CalendarMemberGrant[] = created.grants.map((g) => ({
-			accountId: g.accountId,
-			role: recipients.find((r) => r.accountId === g.accountId)?.role ?? 'editor',
-			memberKeyFingerprint: hexToB64(g.memberKeyFingerprintHex),
-			wrappedPrivateKey: textToB64(g.wrappedPrivateKeyArmored)
-		}));
-		const key: SealKey = {
-			publicKeyArmored: created.publicKeyArmored,
-			fingerprintB64: hexToB64(created.keyFingerprintHex),
-			fingerprintHex: created.keyFingerprintHex
-		};
-		return { grants, key };
+			chosen.map((member) => ({ accountId: member.accountId, email: member.email, role: roles[member.accountId] as CalendarRole })),
+			(email) => (progress = m.cal_caldlg_verifying({ email }))
+		);
 	}
 
 	async function mintOwnKey(accountId: string, calendarId: string) {
