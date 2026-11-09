@@ -6,7 +6,8 @@ export type ProductKeysErrorCode =
 	| 'forbidden'
 	| 'signature'
 	| 'profile'
-	| 'transition';
+	| 'transition'
+	| 'point';
 
 export class ProductKeysError extends Error {
 	readonly code: ProductKeysErrorCode;
