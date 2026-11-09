@@ -5,6 +5,7 @@ import {
 } from './signing-key';
 import { getSeen, upsertSeen } from './seen-idb';
 import { keyLabel, labelMatchesKey } from './keyLabel';
+import { isProductIdentity } from '$core/keys/productIdentity';
 import {
 	DirectoryVerificationError,
 	type DirectoryVerificationCode,
@@ -309,6 +310,13 @@ async function checkStatement(
 	}
 
 	const servedKey = await readServedKey(lookup.publicKeyArmored, stmt, requested);
+	if (isProductIdentity(servedKey)) {
+		throw new DirectoryVerificationError('algorithm_mismatch', 'served key is a product identity, not a mail key', {
+			requestedAddress: requested,
+			keyAlgorithm: stmt.keyAlgorithm,
+			servedKeyAlgorithm: keyLabel(servedKey)
+		});
+	}
 	if (!labelMatchesKey(stmt.keyAlgorithm, servedKey, stmt.issuedAt)) {
 		throw new DirectoryVerificationError('algorithm_mismatch', `unsupported algorithm ${stmt.keyAlgorithm}`, {
 			requestedAddress: requested,

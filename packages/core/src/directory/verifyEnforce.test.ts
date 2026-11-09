@@ -122,3 +122,23 @@ describe('transparency log policy mode', () => {
 		expect(res.tlog).toEqual({ state: 'not_configured' });
 	});
 });
+
+describe('directory keys that are not mail keys', () => {
+	it('refuses a calendar identity served as an address key', async () => {
+		h.policy.value = null;
+		const cal = await openpgp.generateKey({ type: 'curve25519', userIDs: [], format: 'object', config: { v6Keys: true } });
+		const fingerprint = cal.publicKey.getFingerprint().toLowerCase();
+		const signed = await signStatement(signer, {
+			address: 'vlad@thelemail.test',
+			accountId: 'acct-vlad',
+			keyFingerprint: fingerprint,
+			keyAlgorithm: 'openpgp-curve25519-v6',
+			version: 1,
+			issuedAt: '2026-09-01T00:00:00Z',
+			signingKeyFingerprint: h.signerFingerprint
+		});
+		const lookup: LookupInputForVerification = { publicKeyArmored: cal.publicKey.armor(), ...signed };
+		expect(await failure(verifyDirectoryLookup(lookup, 'vlad@thelemail.test'))).toBe('algorithm_mismatch');
+		expect(h.seen.size).toBe(0);
+	});
+});

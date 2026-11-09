@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
 import * as openpgp from 'openpgp';
+import { isProductIdentity } from '$core/keys/productIdentity';
 import { isAllowedBlobUrl } from '../blobOrigins';
 import { currentProduct, isProductVault } from '../../products';
 import { MAX_HEADER_BYTES, parseHeaderPrefix } from '$core/mail/attframe';
@@ -309,6 +310,7 @@ export async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse>
 			console.warn('keystore: decrypt invalid verification key', err);
 			verificationKeys = [];
 		}
+		verificationKeys = verificationKeys.filter((k) => !isProductIdentity(k));
 	}
 	const wanted = args.verificationKeysArmored?.length ? true : false;
 	const decryptionKeys = decryptionKeysFor(v, args.keyFingerprintHex);
