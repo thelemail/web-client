@@ -18,6 +18,7 @@ import type {
 import { isAuthOrigin } from '../../products';
 import { AUTH_VAULT_WRAP_INFO, LOCAL_KEY_UNSTORABLE, WRAP_KEY_BYTES } from '../vault-wrap';
 import type { VaultState } from './state';
+import { productWrapKey, restoreProductVault } from './handoff-ops';
 import {
 	vaults,
 	cachedRecords,
@@ -199,7 +200,10 @@ async function restoreFromRecord(
 			wrapKey = await importWrapKey(pageWrapKey);
 		} else {
 			const serverHalfBytes = base64ToBytes(args.serverHalf);
-			wrapKey = await deriveWrapKey(rec.localHalfKey as CryptoKey, serverHalfBytes, wrapVersion);
+			wrapKey =
+				wrapVersion === 3
+					? await productWrapKey(rec.localHalfKey as CryptoKey, serverHalfBytes)
+					: await deriveWrapKey(rec.localHalfKey as CryptoKey, serverHalfBytes, wrapVersion);
 			serverHalfBytes.fill(0);
 		}
 
@@ -209,6 +213,14 @@ async function restoreFromRecord(
 			rec.wrappedPrivateKey as BufferSource
 		);
 		const decoded = new TextDecoder().decode(plaintext);
+
+		if (wrapVersion === 3) {
+			if (isAuthOrigin) return { ok: false, reason: 'no_persistent' };
+			const v = await restoreProductVault(rec, wrapKey, decoded);
+			vaults.set(rec.accountId, v);
+			broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
+			return { ok: true, accountId: v.accountId, email: v.email };
+		}
 
 		if (wrapVersion === 2) {
 			const parsed = JSON.parse(decoded);
