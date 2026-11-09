@@ -3,6 +3,8 @@ import { b64ToBytes } from '$core/crypto';
 import { b64ToHex } from '$core/keys/encode';
 import { canonicalise, type BusyStatement } from './busycanon';
 import { signedWhileCurrent } from '$core/directory/retired';
+import type { CalendarAuthority } from '$core/keystore/productkeys/calendar';
+import { verifyCalendarFreeBusy } from '$core/keystore/productkeys/calendar';
 
 export type BusyTrust =
 	| 'verified'
@@ -31,6 +33,39 @@ export interface VerifyBusyInput {
 	directoryKeyFingerprintHex: string;
 	previousKey?: BusyPreviousKey | null;
 	updatedAtMillis?: number;
+	busyStatement?: string;
+	calendarAuthority?: CalendarAuthority | null;
+}
+
+function sameWindows(signed: [number, number][], statement: BusyStatement): boolean {
+	const pairs = statement.windows
+		.map((w): [number, number] => [Date.parse(w.startsAt), Date.parse(w.endsAt)])
+		.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+	return pairs.length === signed.length && pairs.every(([a, b], i) => a === signed[i][0] && b === signed[i][1]);
+}
+
+async function verifyCalendarSigned(input: VerifyBusyInput & { busyStatement: string }): Promise<BusyVerdict> {
+	const authority = input.calendarAuthority;
+	if (!authority) return unverified('key_unresolved');
+	const claimed = b64ToHex(input.signerKeyFingerprint).toLowerCase();
+	if (claimed !== authority.signingKey.getFingerprint().toLowerCase()) return unverified('key_mismatch');
+	try {
+		const f = await verifyCalendarFreeBusy(authority, b64ToBytes(input.busyStatement), b64ToBytes(input.signature));
+		const s = input.statement;
+		if (
+			f.accountId !== s.signerAccountId.toLowerCase() ||
+			f.calendarId !== s.calendarId.toLowerCase() ||
+			f.itemId !== s.itemId.toLowerCase() ||
+			f.privacy !== s.privacy ||
+			f.revision !== s.rev ||
+			!sameWindows(f.windows, s)
+		) {
+			return unverified('signature_failed');
+		}
+		return { trust: 'verified', signedAtMillis: Date.parse(f.issuedAt) };
+	} catch {
+		return unverified('signature_failed');
+	}
 }
 
 function unverified(trust: BusyTrust): BusyVerdict {
@@ -39,6 +74,7 @@ function unverified(trust: BusyTrust): BusyVerdict {
 
 export async function verifyBusyWindows(input: VerifyBusyInput): Promise<BusyVerdict> {
 	if (!input.signature || !input.signerKeyFingerprint) return unverified('unsigned');
+	if (input.busyStatement) return verifyCalendarSigned({ ...input, busyStatement: input.busyStatement });
 	if (!input.publicKeyArmored) return unverified('key_unresolved');
 
 	const claimed = b64ToHex(input.signerKeyFingerprint).toLowerCase();

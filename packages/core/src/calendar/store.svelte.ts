@@ -625,6 +625,7 @@ export class CalendarStore {
 			});
 			body.busySignature = signed.signature;
 			body.busySignerKeyFingerprint = signed.signerKeyFingerprint;
+			if (signed.statement) body.busyStatement = signed.statement;
 		}
 		return { body, key };
 	}
@@ -952,6 +953,7 @@ export class CalendarStore {
 			});
 			body.busySignature = signed.signature;
 			body.busySignerKeyFingerprint = signed.signerKeyFingerprint;
+			if (signed.statement) body.busyStatement = signed.statement;
 		}
 		await restoreCalendarItemRevision(calendarId, itemId, rev, body);
 		await this.#reloadItem(calendarId, itemId);

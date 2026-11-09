@@ -35,7 +35,7 @@ const PURPOSE: Record<CalendarStatementType, string> = {
 
 export const MAX_CALENDAR_RECIPIENTS = 100;
 export const MAX_BUSY_WINDOWS = 512;
-export const MAX_FREEBUSY_RANGE_MS = 400 * 24 * 60 * 60 * 1000;
+export const MAX_FREEBUSY_RANGE_MS = 3 * 366 * 24 * 60 * 60 * 1000;
 
 const MESSAGE_FIELDS = [
 	'accountId', 'calendarId', 'contentDigest', 'delegationRevision', 'eventId', 'issuedAt', 'membershipRevision',
