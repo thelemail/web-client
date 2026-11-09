@@ -20,7 +20,7 @@ const forbiddenStrings = [
 	'tiptap',
 	'ical.js',
 	'pdfjs',
-	'thelemail-search-index',
+	'thelemail-search-index-product',
 	'altcha-widget'
 ];
 
