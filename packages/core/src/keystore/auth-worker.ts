@@ -24,6 +24,8 @@ import type {
 	OpaqueRecoverySetupStartArgs,
 	OpaqueStartAuthArgs,
 	OpaqueStartRegistrationArgs,
+	PrepareProductKeysArgs,
+	ReadProductKeysArgs,
 	TryRestoreFromPersistentArgs
 } from './protocol';
 import { commandVaultModes } from './protocol';
@@ -62,6 +64,7 @@ import {
 	handleInvalidatePersistedVault,
 	handleTryRestoreFromPersistent
 } from './worker/vault-persist';
+import { handlePrepareProductKeys, handleReadProductKeys } from './worker/product-keys';
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 
@@ -255,6 +258,12 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 					msg.id,
 					await handleDisablePersistent(msg.args as DisablePersistentArgs)
 				);
+				break;
+			case 'prepareProductKeys':
+				respond(port, msg.id, await handlePrepareProductKeys(msg.args as PrepareProductKeysArgs));
+				break;
+			case 'readProductKeys':
+				respond(port, msg.id, await handleReadProductKeys(msg.args as ReadProductKeysArgs));
 				break;
 			default:
 				respondError(port, msg.id, `unknown command: ${msg.cmd}`);

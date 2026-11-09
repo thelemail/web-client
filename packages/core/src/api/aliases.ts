@@ -30,6 +30,7 @@ export interface SharedAlias {
 
 export interface AliasKeyGrant {
 	aliasId: string;
+	aliasAccountId: string;
 	addressId: string;
 	email: string;
 	name: string;

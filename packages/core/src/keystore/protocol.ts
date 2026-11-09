@@ -1,3 +1,6 @@
+import type { ConversionOutput } from './productkeys/convert';
+import type { Availability } from './productkeys/productBundle';
+import type { ReadInput, ReadResult } from './productkeys/read';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 
 export interface AccountStatus {
@@ -815,7 +818,9 @@ export type KeystoreCommand =
 	| 'openIndex'
 	| 'sealProductFork'
 	| 'openProductFork'
-	| 'touch';
+	| 'touch'
+	| 'prepareProductKeys'
+	| 'readProductKeys';
 
 export type VaultMode = 'account' | 'product' | 'auth';
 
@@ -886,8 +891,43 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	openIndex: ['account', 'product'],
 	sealProductFork: ['account'],
 	openProductFork: ['product'],
-	touch: ['auth']
+	touch: ['auth'],
+	prepareProductKeys: ['auth'],
+	readProductKeys: ['auth']
 };
+
+export interface PrepareProductKeysArgs extends AccountScopedArgs {
+	scope: {
+		stateRevision: number;
+		activeKeyEpoch: number;
+		activeGeneration: number;
+		authEpoch: number;
+		recoveryEpoch: number;
+		amkEpoch: number;
+		minimumWriteProfile: string | null;
+		historyEventCount: number;
+		keyHistoryRoot: Uint8Array;
+	};
+	sessionEpoch: number;
+	previousHeadHash: Uint8Array | null;
+	credentialHashes: Uint8Array[];
+	slotHashes: Uint8Array[];
+	historyEvents: Uint8Array[];
+	availability: { keyId: string; state: Availability }[];
+	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
+	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
+}
+
+export type PrepareProductKeysResponse =
+	| { ok: true; output: ConversionOutput }
+	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
+
+export type ReadProductKeysArgs = AccountScopedArgs &
+	Omit<ReadInput, 'accountId' | 'amk' | 'keyPassword' | 'mailKeys'> & { mailPublicKeysArmored: string[] };
+
+export type ReadProductKeysResponse =
+	| { ok: true; result: ReadResult }
+	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
 
 export interface SealProductForkArgs extends AccountScopedArgs {
 	product: string;
