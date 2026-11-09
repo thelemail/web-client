@@ -312,8 +312,9 @@ export function passwordChangeCompleteOpaque(
 }
 
 
-export function refreshSession(accountId: string) {
+export function refreshSession(accountId: string, baseUrl?: string) {
 	return apiFetch<RefreshResponse>('/v1/auth/refresh', {
+		baseUrl,
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
@@ -322,8 +323,9 @@ export function refreshSession(accountId: string) {
 	});
 }
 
-export function logout(accountId: string) {
+export function logout(accountId: string, baseUrl?: string) {
 	return apiFetch<void>('/v1/auth/logout', {
+		baseUrl,
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
@@ -391,8 +393,9 @@ export function listSecurityEvents(opts?: { limit?: number; cursor?: string }, a
 	});
 }
 
-export function getPersistentHalf(accountId: string) {
+export function getPersistentHalf(accountId: string, baseUrl?: string) {
 	return apiFetch<PersistentHalfResponse>('/v1/auth/session/persistent-half', {
+		baseUrl,
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,
@@ -405,8 +408,9 @@ export function getMe(accountId?: string) {
 	return apiFetch<MeResponse>('/v1/me', { method: 'GET', accountId });
 }
 
-export function disablePersistentHalf(accountId: string) {
+export function disablePersistentHalf(accountId: string, baseUrl?: string) {
 	return apiFetch<void>('/v1/auth/session/persistent-half/disable', {
+		baseUrl,
 		method: 'POST',
 		skipAuth: true,
 		skipRetryOnUnauthorized: true,

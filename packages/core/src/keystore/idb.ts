@@ -33,6 +33,7 @@ export interface AccountSlotRecord {
 	email: string;
 	addedAt: number;
 	lastActiveAt: number;
+	sessionOrigin?: 'host';
 }
 
 function vaultTxn(mode: IDBTransactionMode): Promise<IDBObjectStore> {
