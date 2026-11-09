@@ -1,4 +1,5 @@
 import { apiFetch } from './client';
+import type { TlogConsistencyProof } from './types';
 
 export type CalendarKind = 'personal' | 'shared' | 'role';
 export type CalendarRole = 'owner' | 'editor' | 'viewer';
@@ -43,9 +44,12 @@ export interface CalendarMemberGrant {
 	role: CalendarRole;
 	memberKeyFingerprint: string;
 	wrappedPrivateKey: string;
+	grantStatement?: string;
+	grantSignature?: string;
 }
 
 export interface CreateCalendarRequest {
+	id?: string;
 	kind: CalendarKind;
 	sealedMeta: string;
 	metaKeyFingerprint: string;
@@ -74,6 +78,8 @@ export interface CalendarKeyGrant {
 	calendarPublicKeyArmored: string;
 	wrappedPrivateKey: string;
 	isCurrent: boolean;
+	grantStatement?: string;
+	grantSignature?: string;
 }
 
 export interface CalendarItemRow {
@@ -100,6 +106,7 @@ export interface CalendarItemRequest {
 	busyWindows: BusyWindow[];
 	busySignature?: string;
 	busySignerKeyFingerprint?: string;
+	busyStatement?: string;
 }
 
 export interface CalendarItemSummary {
@@ -144,6 +151,7 @@ export interface CalendarBusyItem {
 	signerAccountId: string;
 	signerKeyFingerprint: string;
 	signature: string;
+	statement?: string;
 	windows: BusyWindow[];
 }
 
@@ -306,6 +314,7 @@ export interface RestoreCalendarItemRevisionRequest {
 	busyWindows: BusyWindow[];
 	busySignature?: string;
 	busySignerKeyFingerprint?: string;
+	busyStatement?: string;
 }
 
 export function restoreCalendarItemRevision(
@@ -339,4 +348,82 @@ export function listCalendarChanges(
 	if (limit) params.set('limit', String(limit));
 	const qs = params.toString();
 	return apiFetch(qs ? `/v1/calendar/changes?${qs}` : '/v1/calendar/changes');
+}
+
+export interface CalendarDelegationRecord {
+	revision: number;
+	record: string;
+	signature: string;
+}
+
+export interface CalendarIdentityResponse {
+	accountId: string;
+	authorityKey: string;
+	authorityEpoch: number;
+	delegations: CalendarDelegationRecord[];
+	signingKey: string;
+	statement: string;
+	statementSignature: string;
+	statementTlogProof?: string;
+	statementTlogConsistency?: TlogConsistencyProof;
+	addressStatement: string;
+	addressSignature: string;
+	addressTlogProof?: string;
+	addressTlogConsistency?: TlogConsistencyProof;
+}
+
+export function lookupCalendarIdentity(email: string, tlogSince?: number): Promise<CalendarIdentityResponse> {
+	const params = new URLSearchParams({ email });
+	if (tlogSince !== undefined) params.set('tlogSince', String(tlogSince));
+	return apiFetch(`/v1/calendar/identity?${params.toString()}`);
+}
+
+export interface CalendarDeliveryRecipient {
+	accountId: string;
+	recipientKeyDigest?: string;
+	ciphertext?: string;
+}
+
+export interface CalendarDeliveryRequest {
+	statement: string;
+	signature: string;
+	recipients: CalendarDeliveryRecipient[];
+}
+
+export interface CalendarDeliveryResponse {
+	operationId: string;
+	delivered: string[];
+	pending: string[];
+}
+
+export function deliverCalendarMessage(body: CalendarDeliveryRequest): Promise<CalendarDeliveryResponse> {
+	return apiFetch('/v1/calendar/deliveries', { method: 'POST', body });
+}
+
+export interface CalendarInvitationEnvelope {
+	id: string;
+	operationId: string;
+	kind: 'invitation' | 'reply';
+	senderAccountId: string;
+	senderEmail: string;
+	senderName?: string;
+	recipientAccountId: string;
+	recipientEmail?: string;
+	statement: string;
+	signature: string;
+	recipientKeyDigest?: string;
+	ciphertext?: string;
+	createdAt: string;
+}
+
+export function listCalendarInvitations(): Promise<{ invitations: CalendarInvitationEnvelope[] }> {
+	return apiFetch('/v1/calendar/invitations');
+}
+
+export function listPendingCalendarDeliveries(): Promise<{ invitations: CalendarInvitationEnvelope[] }> {
+	return apiFetch('/v1/calendar/deliveries/pending');
+}
+
+export function acknowledgeCalendarInvitation(id: string): Promise<void> {
+	return apiFetch(`/v1/calendar/invitations/${encodeURIComponent(id)}/ack`, { method: 'POST' });
 }

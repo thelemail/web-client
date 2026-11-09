@@ -45,6 +45,20 @@ export interface OutboxRecord {
 	conflict?: { serverRev: number };
 }
 
+export interface IdentityMark {
+	accountId: string;
+	peerAccountId: string;
+	delegationRevision: number;
+	authorityEpoch: number;
+}
+
+export interface EventMark {
+	accountId: string;
+	event: string;
+	sequence: number;
+	operations: string[];
+}
+
 export interface CalendarDb {
 	calendars(accountId: string): Promise<CachedCalendar[]>;
 	putCalendar(row: CachedCalendar): Promise<void>;
@@ -61,16 +75,22 @@ export interface CalendarDb {
 	enqueue(record: Omit<OutboxRecord, 'seq'>): Promise<OutboxRecord>;
 	updateOutbox(record: OutboxRecord): Promise<void>;
 	removeOutbox(seq: number): Promise<void>;
+	identityMark(accountId: string, peerAccountId: string): Promise<IdentityMark | null>;
+	putIdentityMark(mark: IdentityMark): Promise<void>;
+	eventMark(accountId: string, event: string): Promise<EventMark | null>;
+	putEventMark(mark: EventMark): Promise<void>;
 	clear(accountId: string): Promise<void>;
 }
 
 const DB_NAME = 'thelemail-calendar';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const CALENDARS = 'calendars';
 const ITEMS = 'items';
 const STATES = 'states';
 const SYNC = 'sync';
 const OUTBOX = 'outbox';
+const IDENTITIES = 'identities';
+const EVENTS = 'events';
 const BY_ACCOUNT = 'byAccount';
 
 let dbPromise: Promise<IDBDatabase> | null = null;
@@ -101,6 +121,18 @@ function openDb(): Promise<IDBDatabase> {
 		}
 		if (!db.objectStoreNames.contains(OUTBOX)) {
 			db.createObjectStore(OUTBOX, { keyPath: 'seq', autoIncrement: true }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+		if (!db.objectStoreNames.contains(IDENTITIES)) {
+			db.createObjectStore(IDENTITIES, { keyPath: ['accountId', 'peerAccountId'] }).createIndex(
+				BY_ACCOUNT,
+				'accountId'
+			);
+		}
+		if (!db.objectStoreNames.contains(EVENTS)) {
+			db.createObjectStore(EVENTS, { keyPath: ['accountId', 'event'] }).createIndex(
 				BY_ACCOUNT,
 				'accountId'
 			);
@@ -199,16 +231,27 @@ export const idbCalendarDb: CalendarDb = {
 	},
 	updateOutbox: (record) => put(OUTBOX, record),
 	removeOutbox: (seq) => remove(OUTBOX, seq),
+	identityMark: (accountId, peerAccountId) => getOne<IdentityMark>(IDENTITIES, [accountId, peerAccountId]),
+	putIdentityMark: (mark) => put(IDENTITIES, mark),
+	eventMark: (accountId, event) => getOne<EventMark>(EVENTS, [accountId, event]),
+	putEventMark: (mark) => put(EVENTS, mark),
 	async clear(accountId) {
 		await Promise.all([
 			clearAccount(CALENDARS, accountId),
 			clearAccount(ITEMS, accountId),
 			clearAccount(STATES, accountId),
 			clearAccount(OUTBOX, accountId),
+			clearAccount(EVENTS, accountId),
 			remove(SYNC, accountId)
 		]);
 	}
 };
+
+async function getOne<T>(store: string, key: IDBValidKey): Promise<T | null> {
+	const db = await openDb();
+	const tx = db.transaction(store, 'readonly');
+	return ((await request(tx.objectStore(store).get(key))) as T | undefined) ?? null;
+}
 
 export function memoryCalendarDb(): CalendarDb {
 	const calendars = new Map<string, CachedCalendar>();
@@ -216,9 +259,23 @@ export function memoryCalendarDb(): CalendarDb {
 	const states = new Map<string, CachedState>();
 	const sync = new Map<string, SyncState>();
 	const outbox = new Map<number, OutboxRecord>();
+	const identities = new Map<string, IdentityMark>();
+	const events = new Map<string, EventMark>();
 	let seq = 0;
 	const key = (a: string, b: string) => `${a} ${b}`;
 	return {
+		async identityMark(accountId, peerAccountId) {
+			return identities.get(key(accountId, peerAccountId)) ?? null;
+		},
+		async putIdentityMark(mark) {
+			identities.set(key(mark.accountId, mark.peerAccountId), mark);
+		},
+		async eventMark(accountId, event) {
+			return events.get(key(accountId, event)) ?? null;
+		},
+		async putEventMark(mark) {
+			events.set(key(mark.accountId, mark.event), mark);
+		},
 		async calendars(accountId) {
 			return [...calendars.values()].filter((c) => c.accountId === accountId);
 		},
