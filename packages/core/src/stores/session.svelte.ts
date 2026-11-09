@@ -30,6 +30,10 @@ import { platform } from '$platform';
 
 const REFRESH_SKEW_MS = 60_000;
 
+export function sessionBase(accountId: string): string | undefined {
+	return accounts.byId(accountId)?.sessionOrigin === 'host' ? window.location.origin : undefined;
+}
+
 interface TokenSlot {
 	accessToken: string;
 	accessTokenExpiresAt: number;
@@ -48,6 +52,7 @@ interface ProfileSnapshot {
 	deletion: DeletionStatus | null;
 	lifecycle: LifecycleInfo | null;
 	keyRotationBlocker: KeyRotationBlocker | null;
+	authOriginEnrolled: boolean;
 }
 
 export type RecoveryState = 'unknown' | 'error' | 'set' | 'unset';
@@ -64,7 +69,8 @@ const emptyProfile = (): ProfileSnapshot => ({
 	profileLoadFailed: false,
 	deletion: null,
 	lifecycle: null,
-	keyRotationBlocker: null
+	keyRotationBlocker: null,
+	authOriginEnrolled: false
 });
 
 export interface SessionHooks {
@@ -164,8 +170,10 @@ class SessionStore {
 		const acct = status.accounts.find((a) => a.accountId === accountId);
 		if (acct?.unlocked) return true;
 		if (!acct?.hasPersistent) return false;
+		const base = sessionBase(accountId);
+		if (base && !this.#tokens.has(accountId) && !(await this.tryRefresh(accountId))) return false;
 		try {
-			const { serverHalf } = await getPersistentHalf(accountId);
+			const { serverHalf } = await getPersistentHalf(accountId, base);
 			const restored = await keystore.tryRestoreFromPersistent({ accountId, serverHalf });
 			if (!restored.ok) {
 				await keystore.disablePersistent({ accountId });
@@ -338,7 +346,7 @@ class SessionStore {
 		if (inflight) return inflight;
 		const p = (async () => {
 			try {
-				const res = await refreshSession(id);
+				const res = await refreshSession(id, sessionBase(id));
 				this.addSession(res.accessToken, res.expiresInSeconds, res.accountId, res.csrfToken);
 				return true;
 			} catch (err) {
@@ -409,7 +417,8 @@ class SessionStore {
 			profileLoadFailed: false,
 			deletion: me.deletion ?? null,
 			lifecycle: me.lifecycle ?? null,
-			keyRotationBlocker: me.keyRotationBlocker ?? null
+			keyRotationBlocker: me.keyRotationBlocker ?? null,
+			authOriginEnrolled: me.authOriginEnrolled ?? false
 		}));
 		for (const h of this.#hooks) h.profileLoaded?.(me);
 		void cacheAccountAvatar(id, me.avatarPath || null);
@@ -433,6 +442,10 @@ class SessionStore {
 
 	markRecoveryEnabled(accountId: string): void {
 		this.#mutateProfile(accountId, (p) => ({ ...p, recoveryEnabled: true }));
+	}
+
+	authOriginEnrolledFor(accountId: string): boolean {
+		return this.#profiles.get(accountId)?.authOriginEnrolled ?? false;
 	}
 
 	keyRotationBlockerFor(accountId: string): KeyRotationBlocker | null {
@@ -472,7 +485,7 @@ class SessionStore {
 
 	async logoutAccount(accountId: string): Promise<void> {
 		try {
-			await apiLogout(accountId);
+			await apiLogout(accountId, sessionBase(accountId));
 		} catch {
 		}
 		this.#dropToken(accountId);

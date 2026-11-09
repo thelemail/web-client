@@ -10,3 +10,13 @@ describe('app.html', () => {
 		expect(html.indexOf('%sveltekit.head%')).toBeLessThan(html.indexOf('<script'));
 	});
 });
+
+describe('handoff callback capture', () => {
+	it('copies and clears the callback fragment before any module runs', () => {
+		const start = html.indexOf("if (location.pathname === '/auth/callback')");
+		expect(start).toBeGreaterThan(html.indexOf('%sveltekit.head%'));
+		const script = html.slice(start, html.indexOf('</script>', start));
+		expect(script).toContain('window.__thelemailCallback = location.hash');
+		expect(script).toContain("history.replaceState(null, '', '/auth/callback')");
+	});
+});

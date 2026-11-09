@@ -4889,5 +4889,13 @@
   "auth_notification_confirm_error_body": "L’adresse n’a pas été confirmée. Réessayez le lien dans quelques minutes.",
   "auth_notification_confirm_missing_title": "Ce lien n’a pas fonctionné",
   "auth_notification_confirm_missing_body": "Ouvrez à nouveau le lien de l’e-mail de confirmation, ou demandez-en un nouveau depuis vos paramètres Thelemail.",
-  "auth_notification_confirm_open_app": "Ouvrir Thelemail"
+  "auth_notification_confirm_open_app": "Ouvrir Thelemail",
+  "handoff_title": "La connexion n’a pas abouti",
+  "handoff_failed": "Nous n’avons pas pu terminer votre connexion. Recommencez depuis l’application.",
+  "handoff_wrong_account": "Vous vous êtes connecté à un autre compte que celui demandé par cette page.",
+  "handoff_restart": "Recommencer",
+  "handoff_opening": "Connexion en cours",
+  "handoff_auth_invalid": "Cette demande de connexion a expiré ou a déjà été utilisée. Revenez en arrière et réessayez.",
+  "handoff_auth_other_account": "Cette demande concerne un autre compte. Connectez-vous à ce compte pour continuer.",
+  "handoff_auth_returning": "Retour vers l’application"
 }

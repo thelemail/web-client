@@ -3,12 +3,18 @@ import { b64ToHex, b64ToText } from './keys/encode';
 import { handoffUrl } from './fork';
 import { currentProduct, productTarget } from './products';
 import { calendarKeys } from './stores/calendarKeys.svelte';
+import { auth } from './stores/auth.svelte';
 
 export async function openCalendar(accountId: string, slot: number): Promise<void> {
 	const path = `/u/${slot}/calendar`;
 	const target = productTarget('calendar');
 	if (!target || currentProduct === 'calendar' || target.origin === window.location.origin) {
 		await goto(path);
+		return;
+	}
+	if (auth.authOriginEnrolledFor(accountId)) {
+		const fragment = new URLSearchParams({ account: accountId, route: path });
+		window.location.assign(`${target.origin}/auth/start#${fragment.toString()}`);
 		return;
 	}
 	await calendarKeys.ready(accountId);

@@ -141,6 +141,8 @@ import {
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 import { handleSealProductFork, handleOpenProductFork } from './worker/fork-ops';
+import { handleAdoptHandoff, handleCommitHandoff, handleDiscardHandoff } from './worker/handoff-ops';
+import type { AdoptHandoffArgs, CommitHandoffArgs } from './protocol';
 
 declare const self: SharedWorkerGlobalScope;
 
@@ -478,6 +480,15 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'sealProductFork':
 				respond(port, msg.id, await handleSealProductFork(msg.args as SealProductForkArgs));
+				break;
+			case 'adoptHandoff':
+				respond(port, msg.id, await handleAdoptHandoff(msg.args as AdoptHandoffArgs));
+				break;
+			case 'commitHandoff':
+				respond(port, msg.id, await handleCommitHandoff(msg.args as CommitHandoffArgs));
+				break;
+			case 'discardHandoff':
+				respond(port, msg.id, await handleDiscardHandoff(msg.args as CommitHandoffArgs));
 				break;
 			case 'openProductFork':
 				respond(port, msg.id, await handleOpenProductFork(msg.args as OpenProductForkArgs));

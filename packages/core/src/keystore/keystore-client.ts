@@ -122,7 +122,13 @@ import type {
 	PrepareProductKeysArgs,
 	PrepareProductKeysResponse,
 	ReadProductKeysArgs,
-	ReadProductKeysResponse
+	ReadProductKeysResponse,
+	SealProductHandoffArgs,
+	SealProductHandoffResponse,
+	AdoptHandoffArgs,
+	AdoptHandoffResponse,
+	CommitHandoffArgs,
+	CommitHandoffResponse
 } from './protocol';
 import { LOCAL_KEY_UNSTORABLE } from './vault-wrap';
 
@@ -406,6 +412,10 @@ export const keystore = {
 	touch: () => call<void>('touch'),
 	prepareProductKeys: (args: PrepareProductKeysArgs) => call<PrepareProductKeysResponse>('prepareProductKeys', args),
 	readProductKeys: (args: ReadProductKeysArgs) => call<ReadProductKeysResponse>('readProductKeys', args),
+	sealProductHandoff: (args: SealProductHandoffArgs) => call<SealProductHandoffResponse>('sealProductHandoff', args),
+	adoptHandoff: (args: AdoptHandoffArgs) => call<AdoptHandoffResponse>('adoptHandoff', args),
+	commitHandoff: (args: CommitHandoffArgs) => call<CommitHandoffResponse>('commitHandoff', args),
+	discardHandoff: (args: CommitHandoffArgs) => call<void>('discardHandoff', args),
 	lock: (args: LockArgs) => call<void>('lock', args),
 	clear: (args: ClearArgs) => alsoForgetDeviceKey(args.accountId, call<void>('clear', args)),
 	clearAll: () => alsoForgetDeviceKey(null, call<void>('clearAll')),

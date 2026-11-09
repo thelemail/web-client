@@ -1,6 +1,7 @@
 import { auth } from '$core/stores/auth.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { handOffToApp } from '$core/products';
+import { reopen } from '$core/producthandoff/fallback';
 import type { LayoutLoad } from './$types';
 
 export const ssr = false;
@@ -16,10 +17,10 @@ export const load: LayoutLoad = async ({ parent, params }) => {
 	auth.activate(accountId);
 
 	if (!auth.vaultUnlocked && !(await auth.ensureVaultUnlocked(accountId))) {
-		return handOffToApp();
+		return reopen(record, `/u/${slot}/calendar`);
 	}
 	if (!auth.isAuthenticated && !(await auth.tryRefresh(accountId))) {
-		return handOffToApp();
+		return reopen(record, `/u/${slot}/calendar`);
 	}
 	return { accountId, slot };
 };

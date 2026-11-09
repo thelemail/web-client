@@ -56,6 +56,7 @@ export type ErrorCode =
 	| 'unsubscribe_rejected'
 	| 'unsubscribe_unreachable'
 	| 'auth_origin_unavailable'
+	| 'handoff_account_mismatch'
 	| 'step_up_grant_required';
 
 export type MessageDirection = 'sent' | 'received';
@@ -1199,6 +1200,7 @@ export interface LifecycleInfo {
 
 export interface MeResponse {
 	accountId: string;
+	authOriginEnrolled?: boolean;
 	email: string;
 	fullName: string;
 	status: 'active' | 'disabled' | 'suspended';

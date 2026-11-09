@@ -7,6 +7,12 @@
 		<meta name="robots" content="noindex, nofollow, noarchive" />
 		%sveltekit.head%
 		<script>
+			if (location.pathname === '/authorize') {
+				window.__thelemailAuthorize = location.hash;
+				history.replaceState(null, '', '/authorize');
+			}
+		</script>
+		<script>
 			(function () {
 				var v;
 				try {

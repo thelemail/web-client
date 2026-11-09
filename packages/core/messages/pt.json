@@ -4889,5 +4889,13 @@
 	"auth_notification_confirm_error_body": "O endereço não foi confirmado. Tente novamente a ligação dentro de alguns minutos.",
 	"auth_notification_confirm_missing_title": "Esta ligação não funcionou",
 	"auth_notification_confirm_missing_body": "Abra novamente a ligação do email de confirmação, ou peça uma nova nas definições do Thelemail.",
-	"auth_notification_confirm_open_app": "Abrir o Thelemail"
+	"auth_notification_confirm_open_app": "Abrir o Thelemail",
+	"handoff_title": "A sessão não foi iniciada",
+	"handoff_failed": "Não foi possível concluir o início de sessão. Recomece a partir da aplicação.",
+	"handoff_wrong_account": "Iniciou sessão numa conta diferente da que esta página pediu.",
+	"handoff_restart": "Recomeçar",
+	"handoff_opening": "A iniciar sessão",
+	"handoff_auth_invalid": "Este pedido de início de sessão expirou ou já foi usado. Volte atrás e tente novamente.",
+	"handoff_auth_other_account": "Este pedido é para outra conta. Inicie sessão nessa conta para continuar.",
+	"handoff_auth_returning": "A voltar à aplicação"
 }

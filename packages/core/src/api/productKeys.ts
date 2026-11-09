@@ -29,6 +29,7 @@ export interface CryptoStateResponse {
 		keyHistoryRoot: string;
 	};
 	sessionEpoch: number;
+	credentialGeneration: number;
 	head: CryptoAccountHead | null;
 	credentials: { credentialId: string; method: string; state: string; recordHash: string | null }[];
 	slots: { slotId: string; kind: string; state: string; wrapperHash: string }[];

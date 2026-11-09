@@ -7,6 +7,12 @@
 		<meta name="robots" content="noindex, nofollow, noarchive" />
 		%sveltekit.head%
 		<script>
+			if (location.pathname === '/auth/callback') {
+				window.__thelemailCallback = location.hash;
+				history.replaceState(null, '', '/auth/callback');
+			}
+		</script>
+		<script>
 			(function () {
 				var v;
 				try {

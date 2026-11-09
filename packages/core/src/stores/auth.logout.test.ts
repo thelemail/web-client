@@ -96,7 +96,7 @@ describe('removing accounts from a device', () => {
 
 		await auth.logoutAccount('b');
 
-		expect(apiLogout).toHaveBeenCalledWith('b');
+		expect(apiLogout).toHaveBeenCalledWith('b', undefined);
 		expect(keystoreClear).toHaveBeenCalledWith({ accountId: 'b' });
 		expect(sessionForget).toHaveBeenCalledWith('b');
 		expect(accountsRemove).toHaveBeenCalledWith('b');

@@ -17,7 +17,7 @@ export interface VaultRecord {
 	wrapIv?: Uint8Array;
 	localHalfKey?: CryptoKey;
 	localHalfHolder?: 'page';
-	wrapPayloadVersion?: 1 | 2;
+	wrapPayloadVersion?: 1 | 2 | 3;
 }
 
 export interface StoredAccountKey {
@@ -33,6 +33,7 @@ export interface AccountSlotRecord {
 	email: string;
 	addedAt: number;
 	lastActiveAt: number;
+	sessionOrigin?: 'host';
 }
 
 function vaultTxn(mode: IDBTransactionMode): Promise<IDBObjectStore> {
