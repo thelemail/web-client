@@ -170,8 +170,10 @@ class SessionStore {
 		const acct = status.accounts.find((a) => a.accountId === accountId);
 		if (acct?.unlocked) return true;
 		if (!acct?.hasPersistent) return false;
+		const base = sessionBase(accountId);
+		if (base && !this.#tokens.has(accountId) && !(await this.tryRefresh(accountId))) return false;
 		try {
-			const { serverHalf } = await getPersistentHalf(accountId, sessionBase(accountId));
+			const { serverHalf } = await getPersistentHalf(accountId, base);
 			const restored = await keystore.tryRestoreFromPersistent({ accountId, serverHalf });
 			if (!restored.ok) {
 				await keystore.disablePersistent({ accountId });

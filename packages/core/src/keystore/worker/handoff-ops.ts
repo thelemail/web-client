@@ -65,7 +65,7 @@ function sameContext(c: Context, args: AdoptHandoffArgs, expect: HandoffExpectat
 export async function productVaultState(accountId: string, email: string, product: 'app' | 'calendar', entries: { purpose: string; material: Uint8Array }[]): Promise<VaultState> {
 	const identity = entries.find((e) => e.purpose === IDENTITY_PURPOSE[product]);
 	if (!identity) fail('context', 'no identity key for the product');
-	const privateKey = await openpgp.readPrivateKey({ binaryKey: identity.material });
+	const privateKey = await openpgp.readPrivateKey({ binaryKey: identity.material.slice() });
 	return {
 		accountId,
 		email,

@@ -115,7 +115,7 @@ export async function handleSealProductHandoff(args: SealProductHandoffArgs): Pr
 				try {
 					const a = await openAuthority(amk, b.bundle, { accountId: args.accountId, amkEpoch: head.amkEpoch, bundleId: b.bundleId, revision: b.revision });
 					if (a.authorityKeyId !== head.authorityKeyId || a.authorityEpoch !== head.authorityEpoch) continue;
-					signer = await openpgp.readPrivateKey({ binaryKey: a.secretKey });
+					signer = await openpgp.readPrivateKey({ binaryKey: a.secretKey.slice() });
 					a.secretKey.fill(0);
 					break;
 				} catch (err) {
