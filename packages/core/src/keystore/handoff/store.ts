@@ -12,6 +12,8 @@ export interface HandoffRecord {
 	verifier: string;
 	state: string;
 	descriptorDigest: string;
+	clientId: string;
+	callback: string;
 	expectedAccountId: string | null;
 	route: string;
 	remember: boolean;

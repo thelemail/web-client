@@ -4889,5 +4889,13 @@
 	"auth_notification_confirm_error_body": "The address was not confirmed. Try the link again in a few minutes.",
 	"auth_notification_confirm_missing_title": "This link did not work",
 	"auth_notification_confirm_missing_body": "Open the link from the confirmation email again, or ask for a new one from your Thelemail settings.",
-	"auth_notification_confirm_open_app": "Open Thelemail"
+	"auth_notification_confirm_open_app": "Open Thelemail",
+	"handoff_title": "Sign-in didn't finish",
+	"handoff_failed": "We couldn't finish signing you in. Start again from the app.",
+	"handoff_wrong_account": "You signed in to a different account than this page asked for.",
+	"handoff_restart": "Start again",
+	"handoff_opening": "Signing you in",
+	"handoff_auth_invalid": "This sign-in request has expired or was already used. Go back and try again.",
+	"handoff_auth_other_account": "This request is for a different account. Sign in to that account to continue.",
+	"handoff_auth_returning": "Returning you to the app"
 }

@@ -4889,5 +4889,13 @@
 	"auth_notification_confirm_error_body": "Die Adresse wurde nicht bestätigt. Versuchen Sie es in ein paar Minuten erneut.",
 	"auth_notification_confirm_missing_title": "Dieser Link hat nicht funktioniert",
 	"auth_notification_confirm_missing_body": "Öffnen Sie den Link aus der Bestätigungs-E-Mail erneut, oder fordern Sie in Ihren Thelemail-Einstellungen einen neuen an.",
-	"auth_notification_confirm_open_app": "Thelemail öffnen"
+	"auth_notification_confirm_open_app": "Thelemail öffnen",
+	"handoff_title": "Anmeldung nicht abgeschlossen",
+	"handoff_failed": "Die Anmeldung konnte nicht abgeschlossen werden. Starte sie in der App erneut.",
+	"handoff_wrong_account": "Du hast dich mit einem anderen Konto angemeldet, als diese Seite erwartet hat.",
+	"handoff_restart": "Erneut starten",
+	"handoff_opening": "Du wirst angemeldet",
+	"handoff_auth_invalid": "Diese Anmeldeanfrage ist abgelaufen oder wurde bereits verwendet. Geh zurück und versuch es erneut.",
+	"handoff_auth_other_account": "Diese Anfrage gilt für ein anderes Konto. Melde dich bei diesem Konto an, um fortzufahren.",
+	"handoff_auth_returning": "Du wirst zur App zurückgeleitet"
 }
