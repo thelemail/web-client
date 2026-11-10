@@ -31,8 +31,6 @@ const credentialCommands: KeystoreCommand[] = [
 const keyIssuingCommands: KeystoreCommand[] = [
 	'createAliasKey',
 	'createSigningDelegationKey',
-	'reformatKeyWithUids',
-	'commitReformattedKey',
 	'loadAliasKeys',
 	'unloadAliasKeys',
 	'loadAccountKeys',
@@ -79,6 +77,12 @@ describe('commandVaultModes', () => {
 		expect(auth).toContain('touch');
 	});
 
+	it('re-signs the mail key with its addresses in the account or auth vault only', () => {
+		for (const cmd of ['reformatKeyWithUids', 'commitReformattedKey'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account', 'auth']);
+		}
+	});
+
 	it('gives touch to the auth vault alone', () => {
 		expect(commandVaultModes.touch).toEqual(['auth']);
 	});
@@ -97,11 +101,14 @@ describe('commandVaultModes', () => {
 	});
 
 	it('denies key issuance and rotation to a product vault', () => {
-		for (const cmd of ['createAliasKey', 'reformatKeyWithUids', 'commitReformattedKey', 'prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation', 'sealProductFork'] as const) {
+		for (const cmd of ['createAliasKey', 'prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation', 'sealProductFork'] as const) {
 			expect(commandVaultModes[cmd], `${cmd} must stay in the account vault`).toEqual(['account']);
 		}
-		for (const cmd of keyIssuingCommands) {
+		for (const cmd of [...keyIssuingCommands, 'reformatKeyWithUids', 'commitReformattedKey'] as const) {
 			expect(commandVaultModes[cmd], `${cmd} must not reach a calendar vault`).not.toContain('calendar');
+			if (cmd === 'reformatKeyWithUids' || cmd === 'commitReformattedKey') {
+				expect(commandVaultModes[cmd], `${cmd} must not reach a mail vault`).not.toContain('mail');
+			}
 		}
 	});
 

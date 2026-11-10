@@ -3,6 +3,7 @@ import { accounts } from '$core/stores/accounts.svelte';
 import { boot } from '$core/stores/boot.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { initLocale } from '$core/i18n/locale.svelte';
+import { syncAddressUids } from '$core/keys/uid-sync';
 
 export const ssr = false;
 export const prerender = false;
@@ -12,6 +13,7 @@ let bootstrapped = false;
 let localeReady: Promise<void> | null = null;
 
 async function bootstrap() {
+	auth.attach({ vaultOpened: (accountId) => void syncAddressUids(accountId) });
 	await auth.hydrate();
 	const status = await keystore.status();
 	for (const a of status.accounts) {

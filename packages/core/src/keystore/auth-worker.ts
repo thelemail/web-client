@@ -24,8 +24,10 @@ import type {
 	OpaqueRecoverySetupStartArgs,
 	OpaqueStartAuthArgs,
 	OpaqueStartRegistrationArgs,
+	CommitReformattedKeyArgs,
 	PrepareProductKeysArgs,
 	ReadProductKeysArgs,
+	ReformatKeyWithUidsArgs,
 	SealProductHandoffArgs,
 	TryRestoreFromPersistentArgs
 } from './protocol';
@@ -66,6 +68,7 @@ import {
 	handleTryRestoreFromPersistent
 } from './worker/vault-persist';
 import { handlePrepareProductKeys, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
+import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 
@@ -268,6 +271,12 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'sealProductHandoff':
 				respond(port, msg.id, await handleSealProductHandoff(msg.args as SealProductHandoffArgs));
+				break;
+			case 'reformatKeyWithUids':
+				respond(port, msg.id, await handleReformatKeyWithUids(msg.args as ReformatKeyWithUidsArgs));
+				break;
+			case 'commitReformattedKey':
+				respond(port, msg.id, await handleCommitReformattedKey(msg.args as CommitReformattedKeyArgs));
 				break;
 			default:
 				respondError(port, msg.id, `unknown command: ${msg.cmd}`);

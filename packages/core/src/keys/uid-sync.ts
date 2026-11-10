@@ -50,6 +50,8 @@ function isStaleKey(err: unknown): boolean {
 
 async function doSync(accountId: string, emails?: string[]): Promise<void> {
 	try {
+		const status = await keystore.status();
+		if (status.accounts.some((a) => a.accountId === accountId && a.mailOnly)) return;
 		let addressEmails = emails;
 		if (!addressEmails) {
 			const { addresses } = await listMyAddresses(accountId);

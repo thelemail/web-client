@@ -125,10 +125,9 @@ import {
 	handleListAccountKeys,
 	handlePrepareKeyRotation,
 	handleCommitKeyRotation,
-	handleAbandonKeyRotation,
-	handleReformatKeyWithUids,
-	handleCommitReformattedKey
+	handleAbandonKeyRotation
 } from './worker/key-ops';
+import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
 import {
 	handleOpaqueAbandonOperation,
 	handleOpaqueStartRegistration,

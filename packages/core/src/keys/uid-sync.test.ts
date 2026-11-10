@@ -17,7 +17,8 @@ const behaviour = vi.hoisted(() => ({
 	}),
 	updateGate: null as null | { promise: Promise<void>; release: () => void },
 	staleOnce: false,
-	reloads: [] as string[]
+	reloads: [] as string[],
+	mailOnly: [] as string[]
 }));
 
 vi.mock('$core/api/addresses', () => ({
@@ -54,6 +55,9 @@ vi.mock('$core/stores/accountKeys.svelte', () => ({
 
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
+		status: async () => ({
+			accounts: behaviour.mailOnly.map((accountId) => ({ accountId, email: '', unlocked: true, hasPersistent: false, authScheme: 'opaque_v1', mailOnly: true }))
+		}),
 		reformatKeyWithUids: async ({ accountId, emails }: { accountId: string; emails: string[] }) => {
 			calls.reformat.push({ accountId, emails });
 			return behaviour.reformat(accountId, emails);
@@ -110,6 +114,25 @@ describe('syncAddressUids', () => {
 			{ input: { publicKeyArmored: 'pub', encryptedPrivateKey: 'enc' }, accountId: 'acct-b' }
 		]);
 		expect(calls.commit).toEqual([{ accountId: 'acct-b', encryptedPrivateKey: 'enc' }]);
+	});
+
+	it('leaves the key of a mail-only vault alone and still syncs other accounts', async () => {
+		behaviour.mailOnly = ['acct-mail'];
+		behaviour.addresses['acct-mail'] = ['m@thelemail.com'];
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+		await syncAddressUids('acct-mail');
+		await syncAddressUids('acct-mail', ['m@thelemail.com', 'new@thelemail.com']);
+
+		expect(calls.list).toEqual([]);
+		expect(calls.reformat).toEqual([]);
+		expect(calls.update).toEqual([]);
+		expect(warn).not.toHaveBeenCalled();
+		warn.mockRestore();
+
+		await syncAddressUids('acct-b', ['b@thelemail.com']);
+		expect(calls.reformat).toEqual([{ accountId: 'acct-b', emails: ['b@thelemail.com'] }]);
+		behaviour.mailOnly = [];
 	});
 
 	it('skips the fetch when the caller supplies the addresses', async () => {
