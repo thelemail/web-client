@@ -20,9 +20,18 @@ export async function mailOnlyAccountId(target: { slot?: number | null; identifi
 	return status.accounts.some((a) => a.accountId === record.accountId && a.mailOnly) ? record.accountId : null;
 }
 
-export async function unlockAtAuth(accountId: string, redirect: string | null): Promise<never> {
+export async function unlockAtAuth(accountId: string, redirect: string | null, freshAuth = false): Promise<never> {
 	const status = await keystore.status();
 	const remember = status.accounts.find((a) => a.accountId === accountId)?.hasPersistent ?? false;
-	await startHandoff({ expectedAccountId: accountId, route: safeRoute(redirect), remember });
+	await startHandoff({ expectedAccountId: accountId, route: safeRoute(redirect), remember, ...(freshAuth ? { freshAuth: true } : {}) });
 	return new Promise<never>(() => {});
+}
+
+export async function confirmAtAuth(accountId: string): Promise<boolean> {
+	try {
+		await unlockAtAuth(accountId, window.location.pathname + window.location.search, true);
+	} catch (err) {
+		console.warn('custody: could not open the account origin', err);
+	}
+	return false;
 }

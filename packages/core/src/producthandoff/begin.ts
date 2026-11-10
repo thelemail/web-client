@@ -24,6 +24,7 @@ export interface StartOptions {
 	expectedAccountId: string | null;
 	route: string;
 	remember: boolean;
+	freshAuth?: boolean;
 }
 
 export async function startHandoff(opts: StartOptions): Promise<void> {
@@ -43,7 +44,8 @@ export async function startHandoff(opts: StartOptions): Promise<void> {
 			codeChallengeMethod: 'S256',
 			receiverPublicKey: b64url(receiverPublicKey),
 			expectedAccountId: opts.expectedAccountId,
-			existingSessionId: null
+			existingSessionId: null,
+			...(opts.freshAuth ? { requireFreshAuth: true } : {})
 		},
 		csrfToken
 	);

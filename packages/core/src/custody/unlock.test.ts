@@ -19,7 +19,7 @@ vi.mock('$core/stores/accounts.svelte', () => ({
 	}
 }));
 
-import { mailOnlyAccountId, unlockAtAuth } from './unlock';
+import { confirmAtAuth, mailOnlyAccountId, unlockAtAuth } from './unlock';
 
 const MAIL = 'acc-mail';
 const LEGACY = 'acc-legacy';
@@ -62,6 +62,20 @@ describe('unlocking a mail-only account', () => {
 		startHandoff.mockClear();
 		void unlockAtAuth(LEGACY, 'https://evil.test/');
 		await vi.waitFor(() => expect(startHandoff).toHaveBeenCalledWith({ expectedAccountId: LEGACY, route: '/', remember: false }));
+	});
+
+	it('asks the account origin for a fresh sign-in when an action needs one', async () => {
+		startHandoff.mockResolvedValue(undefined);
+		window.history.replaceState(null, '', '/u/0/settings/billing?plan=pro');
+		void confirmAtAuth(MAIL);
+		await vi.waitFor(() =>
+			expect(startHandoff).toHaveBeenCalledWith({ expectedAccountId: MAIL, route: '/u/0/settings/billing?plan=pro', remember: true, freshAuth: true })
+		);
+	});
+
+	it('gives the action up when the account origin cannot be opened', async () => {
+		startHandoff.mockRejectedValue(new Error('offline'));
+		expect(await confirmAtAuth(MAIL)).toBe(false);
 	});
 
 	it('reports a handoff that could not start', async () => {
