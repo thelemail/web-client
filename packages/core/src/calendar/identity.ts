@@ -142,7 +142,6 @@ export async function verifyCalendarIdentity(res: CalendarIdentityResponse, emai
 
 const cache = new Map<string, { at: number; recipient: CalendarRecipient }>();
 const CACHE_MS = 5 * 60 * 1000;
-const PENDING_CACHE_MS = 30 * 1000;
 
 export type CalendarRecipient =
 	| { kind: 'published'; identity: CalendarIdentity }
@@ -158,7 +157,7 @@ export async function resolveCalendarRecipient(db: CalendarDb, accountId: string
 	const address = email.trim().toLowerCase();
 	const key = `${accountId} ${address}`;
 	const hit = cache.get(key);
-	if (hit && Date.now() - hit.at < (hit.recipient.kind === 'pending' ? PENDING_CACHE_MS : CACHE_MS)) return hit.recipient;
+	if (hit && Date.now() - hit.at < CACHE_MS) return hit.recipient;
 	let res: CalendarIdentityResponse;
 	try {
 		res = await lookupCalendarIdentity(address);
