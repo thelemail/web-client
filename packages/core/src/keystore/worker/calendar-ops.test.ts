@@ -22,10 +22,12 @@ const product = vi.hoisted(() => ({ value: 'calendar' }));
 vi.mock('../../products', () => ({
 	get currentProduct() {
 		return product.value;
-	}
+	},
+	isProductVault: true
 }));
 
 const ops = await import('./calendar-ops');
+const { handleSignDetached } = await import('./content-ops');
 const { vaults } = await import('./state');
 
 const accountId = '5b6f1c34-7d0e-4c3a-9f61-2a1d3b6c8e90';
@@ -152,5 +154,19 @@ describe('calendar keys', () => {
 			members: [{ accountId: otherId, role: 'editor', recipientPublicKey: publicKeyBytes(publicKey) }]
 		});
 		expect(res).toEqual({ ok: false, code: 'invalid_recipient_key' });
+	});
+});
+
+describe('caller-chosen signatures', () => {
+	it('never signs arbitrary bytes with an adopted calendar identity', async () => {
+		vaults.set(accountId, vault('calendar'));
+		expect(await handleSignDetached({ accountId, data: new Uint8Array([1, 2, 3]) })).toEqual({ ok: false, code: 'product_identity' });
+	});
+
+	it('still signs for a forked vault on the calendar origin', async () => {
+		vaults.set(accountId, vault());
+		const res = await handleSignDetached({ accountId, data: new Uint8Array([1, 2, 3]) });
+		expect(res.ok).toBe(true);
+		vaults.delete(accountId);
 	});
 });

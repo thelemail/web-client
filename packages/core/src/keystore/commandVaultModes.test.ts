@@ -122,10 +122,6 @@ describe('commandVaultModes', () => {
 		}
 	});
 
-	it('gives a product vault no signature over caller-chosen bytes', () => {
-		expect(commandVaultModes.signDetached).toEqual(['account']);
-	});
-
 	it('keeps typed calendar signatures and calendar keys in product vaults alone', () => {
 		for (const cmd of ['signInvitation', 'signReply', 'signFreeBusy', 'signCalendarGrant', 'createCalendarKey', 'loadCalendarKeys'] as const) {
 			expect(commandVaultModes[cmd]).toEqual(['product']);

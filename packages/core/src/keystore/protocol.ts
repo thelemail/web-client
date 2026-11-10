@@ -229,7 +229,7 @@ export interface SignDetachedArgs extends AccountScopedArgs {
 
 export type SignDetachedResponse =
 	| { ok: true; signature: Uint8Array; keyFingerprintHex: string }
-	| { ok: false; code: 'locked' | 'unknown' };
+	| { ok: false; code: 'locked' | 'product_identity' | 'unknown' };
 
 export interface CalendarDelegationContext {
 	productKeyEpoch: number;
@@ -989,7 +989,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	commitReformattedKey: ['account'],
 	encrypt: ['account', 'product'],
 	encryptToKeys: ['account', 'product'],
-	signDetached: ['account'],
+	signDetached: ['account', 'product'],
 	signInvitation: ['product'],
 	signReply: ['product'],
 	signFreeBusy: ['product'],

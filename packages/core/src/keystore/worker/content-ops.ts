@@ -164,6 +164,9 @@ export async function handleSignDetached(args: SignDetachedArgs): Promise<SignDe
 	if (!v) {
 		return { ok: false, code: 'locked' };
 	}
+	if (v.product === 'calendar') {
+		return { ok: false, code: 'product_identity' };
+	}
 	const signingKey = v.privateKey;
 	if (!signingKey) {
 		return { ok: false, code: 'locked' };
