@@ -296,8 +296,6 @@ describe('mail custody in the worker', () => {
 		expect(state.vaults.get(ACCOUNT)?.masterKey).toBeDefined();
 		expect(legacyDb.records.has(ACCOUNT)).toBe(true);
 		expect(custodyDb.staged.size + custodyDb.vaults.size + custodyDb.journals.size).toBe(0);
-		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: false, code: 'missing' });
-
 		custodyDb.failPutStaged = null;
 		expect(await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: half() })).toEqual({ ok: true, durable: true });
 	});
@@ -313,7 +311,6 @@ describe('mail custody in the worker', () => {
 		custodyDb.corruptReadBack = true;
 		expect(await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: half() })).toMatchObject({ ok: false, code: 'invalid' });
 		expect(custodyDb.staged.size).toBe(0);
-		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: false, code: 'missing' });
 		expect(state.vaults.get(ACCOUNT)?.masterKey).toBeDefined();
 	});
 
@@ -359,6 +356,7 @@ describe('mail custody in the worker', () => {
 		expect(await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: null })).toEqual({ ok: false, code: 'missing' });
 		await adopted();
 		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: false, code: 'missing' });
+		expect(state.vaults.get(ACCOUNT)?.masterKey).toBeDefined();
 		await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: null });
 		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-staged') })).toMatchObject({ ok: false, code: 'invalid' });
 		expect(await ops.handleCustodyRetire({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('legacy-retired-local') })).toEqual({ ok: false, code: 'unsupported' });
@@ -366,7 +364,8 @@ describe('mail custody in the worker', () => {
 		expect(await ops.handleCustodyPrepare({ ...prepareArgs, migrationId: MIGRATION })).toEqual({ ok: false, code: 'unsupported' });
 		expect(await ops.handleCustodyRetire({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toMatchObject({ ok: false, code: 'invalid' });
 		state.handleLock({ accountId: ACCOUNT });
-		expect(await ops.handleCustodyRetire({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('legacy-retired-local') })).toEqual({ ok: false, code: 'locked' });
+		expect(await ops.handleCustodyRetire({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('legacy-retired-local') })).toEqual({ ok: true });
+		expect(legacyDb.records.has(ACCOUNT)).toBe(false);
 	});
 
 	it('forgets an adopted root when the vault locks', async () => {
@@ -392,6 +391,34 @@ describe('worker restart at each custody boundary', () => {
 		expect(await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: half() })).toEqual({ ok: false, code: 'missing' });
 		await adopted();
 		expect(await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: half() })).toEqual({ ok: true, durable: true });
+	});
+
+	it('finishes the local commit from the staged record when the worker died after the server commit', async () => {
+		await adopted();
+		const serverHalf = half();
+		await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf });
+
+		await load();
+		expect(state.productAccounts.has(ACCOUNT)).toBe(false);
+		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: true });
+		expect(state.productAccounts.has(ACCOUNT)).toBe(true);
+		expect(state.vaults.has(ACCOUNT)).toBe(false);
+		expect(state.cachedRecords.get(ACCOUNT)?.wrapPayloadVersion).toBe(4);
+		expect(custodyDb.staged.size).toBe(0);
+		expect(await persist.handleTryRestoreFromPersistent({ accountId: ACCOUNT, serverHalf })).toMatchObject({ ok: true });
+		expect(state.vaults.get(ACCOUNT)?.product).toBe('app');
+		expect(await ops.handleCustodyRetire({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('legacy-retired-local') })).toEqual({ ok: true });
+	});
+
+	it('drops an unlocked legacy vault when a recovered commit has no staged vault in memory', async () => {
+		await adopted();
+		await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: null });
+		ops.forgetPendingCustody(ACCOUNT);
+		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: true });
+		expect(state.vaults.has(ACCOUNT)).toBe(false);
+		expect(state.productAccounts.has(ACCOUNT)).toBe(true);
+		expect(state.cachedRecords.has(ACCOUNT)).toBe(false);
+		expect(gate.commandAllowed('opaqueCompleteLoginUnlock', { accountId: ACCOUNT })).toBe(false);
 	});
 
 	it('after the local commit comes back mail-only and restores with the new half', async () => {

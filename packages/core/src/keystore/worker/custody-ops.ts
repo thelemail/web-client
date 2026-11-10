@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
 import * as openpgp from 'openpgp';
+import type { CustodyJournal } from '$core/custody/journal';
 import type { StagedCustodyVault } from '$core/custody/store';
 import { commitCustody, deleteStagedVault, getStagedVault, putJournal, putStagedVault } from '$core/custody/store';
 import { deleteVault } from '../idb';
@@ -181,36 +182,50 @@ export async function handleCustodyStage(args: CustodyStageArgs): Promise<Custod
 	}
 }
 
-export async function handleCustodyCommit(args: CustodyCommitArgs): Promise<CustodyCommitResponse> {
-	const v = source(args.accountId);
-	if ('ok' in v) return v;
-	const p = pending.get(args.migrationId);
-	if (!p || p.accountId !== args.accountId || !p.state) return { ok: false, code: 'missing' };
-	if (args.journal.accountId !== args.accountId || args.journal.migrationId !== args.migrationId || args.journal.state !== 'mail-committed') {
-		return { ok: false, code: 'invalid', message: 'journal does not commit this migration' };
+function checkJournal(args: CustodyCommitArgs | CustodyRetireArgs, state: CustodyJournal['state']): CustodyRefusal | null {
+	if (args.journal.accountId !== args.accountId || args.journal.migrationId !== args.migrationId || args.journal.state !== state) {
+		return { ok: false, code: 'invalid', message: `journal does not record ${state} for this migration` };
 	}
-	await commitCustody(args.journal, p.staged);
-	if (p.staged) cachedRecords.set(args.accountId, p.staged.record);
-	productAccounts.add(args.accountId);
-	vaults.set(args.accountId, p.state);
-	indexKeys.delete(args.accountId);
-	pendingRotations.delete(args.accountId);
+	return null;
+}
+
+function dropLegacy(accountId: string): void {
+	const v = vaults.get(accountId);
+	if (!v || v.product) return;
 	v.masterKey?.fill(0);
 	v.masterKey = undefined;
 	v.keyPassword = '';
 	v.wrapKey = undefined;
+	vaults.delete(accountId);
+}
+
+export async function handleCustodyCommit(args: CustodyCommitArgs): Promise<CustodyCommitResponse> {
+	const bad = checkJournal(args, 'mail-committed');
+	if (bad) return bad;
+	const p = pending.get(args.migrationId);
+	if (p && (p.accountId !== args.accountId || !p.state)) return { ok: false, code: 'missing' };
+	const staged = p ? p.staged : await getStagedVault(args.migrationId);
+	if (staged && staged.accountId !== args.accountId) return { ok: false, code: 'missing' };
+	await commitCustody(args.journal, staged);
+	productAccounts.add(args.accountId);
+	if (staged) cachedRecords.set(args.accountId, staged.record);
+	else if ((cachedRecords.get(args.accountId)?.wrapPayloadVersion ?? 1) < 3) cachedRecords.delete(args.accountId);
+	indexKeys.delete(args.accountId);
+	pendingRotations.delete(args.accountId);
+	dropLegacy(args.accountId);
+	const email = p?.state?.email ?? staged?.record.email ?? '';
+	if (p?.state) vaults.set(args.accountId, p.state);
 	drop(args.migrationId);
-	broadcast({ type: 'custodyChanged', accountId: args.accountId, email: p.state.email });
+	broadcast({ type: 'custodyChanged', accountId: args.accountId, email });
 	return { ok: true };
 }
 
 export async function handleCustodyRetire(args: CustodyRetireArgs): Promise<CustodyRetireResponse> {
-	const v = vaults.get(args.accountId);
-	if (!v) return { ok: false, code: 'locked' };
-	if (v.product !== 'app' || !productAccounts.has(args.accountId)) return { ok: false, code: 'unsupported' };
-	if (args.journal.accountId !== args.accountId || args.journal.migrationId !== args.migrationId || args.journal.state !== 'legacy-retired-local') {
-		return { ok: false, code: 'invalid', message: 'journal does not retire this migration' };
+	if (!productAccounts.has(args.accountId) || vaults.get(args.accountId)?.product === undefined && vaults.has(args.accountId)) {
+		return { ok: false, code: 'unsupported' };
 	}
+	const bad = checkJournal(args, 'legacy-retired-local');
+	if (bad) return bad;
 	opaqueOps.forgetAccount(args.accountId);
 	pendingRotations.delete(args.accountId);
 	const cached = cachedRecords.get(args.accountId);

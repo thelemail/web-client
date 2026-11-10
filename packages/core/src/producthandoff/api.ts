@@ -38,7 +38,7 @@ interface HostCall {
 	token?: string;
 }
 
-async function hostFetch<T>(path: string, call: HostCall = {}): Promise<T> {
+export async function hostFetch<T>(path: string, call: HostCall = {}): Promise<T> {
 	const headers: Record<string, string> = {};
 	if (call.body !== undefined) headers['Content-Type'] = 'application/json';
 	if (call.csrf) headers['X-CSRF-Token'] = call.csrf;

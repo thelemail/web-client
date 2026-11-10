@@ -1026,7 +1026,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	custodyPrepare: ['account'],
 	custodyAdopt: ['account'],
 	custodyStage: ['account'],
-	custodyCommit: ['account'],
+	custodyCommit: ['account', 'mail'],
 	custodyRetire: ['mail'],
 	custodyDiscard: ['account', 'mail']
 };
