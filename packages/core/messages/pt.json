@@ -4900,6 +4900,7 @@
 	"handoff_restart": "Recomeçar",
 	"handoff_opening": "A iniciar sessão",
 	"handoff_auth_invalid": "Este pedido de início de sessão expirou ou já foi usado. Volte atrás e tente novamente.",
+	"handoff_auth_unavailable": "Esta conta ainda não pode ser aberta aí. Volte atrás e tente novamente mais tarde.",
 	"handoff_auth_other_account": "Este pedido é para outra conta. Inicie sessão nessa conta para continuar.",
 	"handoff_auth_returning": "A voltar à aplicação",
 	"settings_security_account_origin_title": "Início de sessão e recuperação",

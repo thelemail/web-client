@@ -4900,6 +4900,7 @@
 	"handoff_restart": "Erneut starten",
 	"handoff_opening": "Du wirst angemeldet",
 	"handoff_auth_invalid": "Diese Anmeldeanfrage ist abgelaufen oder wurde bereits verwendet. Geh zurück und versuch es erneut.",
+	"handoff_auth_unavailable": "Dieses Konto kann dort noch nicht geöffnet werden. Geh zurück und versuch es später erneut.",
 	"handoff_auth_other_account": "Diese Anfrage gilt für ein anderes Konto. Melde dich bei diesem Konto an, um fortzufahren.",
 	"handoff_auth_returning": "Du wirst zur App zurückgeleitet",
 	"settings_security_account_origin_title": "Anmeldung und Wiederherstellung",
