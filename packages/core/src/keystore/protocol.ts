@@ -1,6 +1,7 @@
 import type { ConversionOutput } from './productkeys/convert';
 import type { Availability } from './productkeys/productBundle';
 import type { ReadInput, ReadResult, StoredBundle } from './productkeys/read';
+import type { StoredCandidate } from './productkeys/mailCandidate';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 
 export interface AccountStatus {
@@ -1029,6 +1030,7 @@ export interface PrepareProductKeysArgs extends AccountScopedArgs {
 	availability: { keyId: string; state: Availability }[];
 	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
 	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
+	candidate?: StoredCandidate;
 }
 
 export type PrepareProductKeysResponse =

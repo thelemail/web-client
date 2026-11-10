@@ -13,6 +13,7 @@ import { buildConversion, historyKeys } from '../productkeys/convert';
 import { bytesEqual, sha256 } from '../productkeys/encoding';
 import { fail, ProductKeysError } from '../productkeys/errors';
 import { headHash, parseHeadV2, verifyHeadMac } from '../productkeys/head';
+import { openMailCandidate, wipeOpenedMailKeys } from '../productkeys/mailCandidate';
 import { openAuthority, openRootDescriptor } from '../productkeys/secretBundle';
 import type { Availability } from '../productkeys/productBundle';
 import { readProductKeys } from '../productkeys/read';
@@ -29,7 +30,13 @@ export async function handlePrepareProductKeys(args: PrepareProductKeysArgs): Pr
 	const refused = unusable(args.accountId);
 	if (refused) return refused;
 	const v = vaults.get(args.accountId)!;
+	let adopted: Uint8Array | undefined;
 	try {
+		if (args.candidate) {
+			const opened = await openMailCandidate(args.accountId, v.masterKey!, v.keyPassword, args.candidate);
+			adopted = opened.root.slice();
+			wipeOpenedMailKeys(opened);
+		}
 		const output = await buildConversion({
 			accountId: args.accountId,
 			amk: v.masterKey!,
@@ -42,12 +49,15 @@ export async function handlePrepareProductKeys(args: PrepareProductKeysArgs): Pr
 			history: historyKeys(args.historyEvents),
 			availability: new Map<string, Availability>(args.availability.map((a) => [a.keyId, a.state])),
 			accountKeys: args.accountKeys,
-			aliasKeys: args.aliasKeys
+			aliasKeys: args.aliasKeys,
+			...(adopted ? { appRoot: adopted } : {})
 		});
 		return { ok: true, output };
 	} catch (err) {
 		if (err instanceof ProductKeysError) return { ok: false, code: 'invalid', message: err.message };
 		throw err;
+	} finally {
+		adopted?.fill(0);
 	}
 }
 
