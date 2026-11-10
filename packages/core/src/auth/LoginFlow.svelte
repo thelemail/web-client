@@ -25,7 +25,10 @@
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
-	let { afterSignIn }: { afterSignIn: (slot: number) => Promise<unknown> } = $props();
+	let {
+		afterSignIn,
+		intercept
+	}: { afterSignIn: (slot: number) => Promise<unknown>; intercept?: (identifier: string) => Promise<boolean> } = $props();
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
 	const returnTo = $derived(page.url.searchParams.get('redirect'));
@@ -95,6 +98,14 @@
 		identifier = loginIdentifier(email);
 		email = identifier;
 		loginError = null;
+		if (intercept) {
+			void intercept(identifier)
+				.catch(() => false)
+				.then((handled) => {
+					if (!handled && identifier === loginIdentifier(email)) step = 'password';
+				});
+			return;
+		}
 		step = 'password';
 	}
 

@@ -81,7 +81,7 @@ export async function adoptFork(fragment: string): Promise<AdoptedFork> {
 
 export function localForkPath(redirect: string, slot: number): string {
 	const rest = redirect.replace(/^\/u\/\d+(?=\/|$)/, '');
-	return `/u/${slot}${rest === '' || rest === '/' ? '/calendar' : rest}`;
+	return `/u/${slot}${rest === '' || rest === '/' ? (currentProduct === 'app' ? '/mail/inbox' : '/calendar') : rest}`;
 }
 
 function safeRedirect(value: string | null): string {

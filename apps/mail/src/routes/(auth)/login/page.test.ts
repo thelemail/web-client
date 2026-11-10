@@ -24,8 +24,13 @@ vi.mock('$app/navigation', () => nav);
 const route = vi.hoisted(() => ({ page: { params: {}, url: new URL('http://localhost/login') } }));
 vi.mock('$app/state', () => route);
 vi.mock('$core/stores/session.svelte', () => ({ auth: { email: null } }));
-const known = vi.hoisted(() => ({ bySlot: vi.fn() }));
+const known = vi.hoisted(() => ({ bySlot: vi.fn(), list: [] as { accountId: string }[] }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: known }));
+const custody = vi.hoisted(() => ({
+	mailOnlyAccountId: vi.fn(async (_target: { slot?: number | null; identifier?: string }) => null as string | null),
+	unlockAtAuth: vi.fn((_accountId: string, _redirect: string | null) => new Promise<never>(() => {}))
+}));
+vi.mock('$core/custody/unlock', () => custody);
 
 const OPERATION = 'op-1';
 let pending: {
@@ -79,6 +84,10 @@ beforeEach(() => {
 		fn.mockReset();
 	}
 	route.page.url = new URL('http://localhost/login');
+	custody.mailOnlyAccountId.mockReset();
+	custody.mailOnlyAccountId.mockResolvedValue(null);
+	custody.unlockAtAuth.mockReset();
+	custody.unlockAtAuth.mockImplementation(() => new Promise<never>(() => {}));
 	pending = {
 		pendingToken: 'pt-1',
 		methods: ['totp'],
@@ -346,9 +355,50 @@ describe('login page identifier step', () => {
 
 		render(LoginPage);
 
+		await vi.waitFor(() => expect(document.querySelector('#login-identifier')).not.toBeNull());
+		expect(custody.mailOnlyAccountId).toHaveBeenCalledWith({ slot: 2 });
 		expect(document.querySelector('#login-email')).toBeNull();
 		expect(document.querySelector<HTMLInputElement>('#login-identifier')!.value).toBe('kept@thelemail.com');
 		expect(document.body.textContent).toContain(m.auth_login_resume_title());
+		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
+	});
+
+	it('sends a locked mail-only account to the account origin without asking for a password', async () => {
+		route.page.url = new URL('http://localhost/login?slot=2&redirect=%2Fu%2F2%2Fmail%2Finbox');
+		known.bySlot.mockImplementation((slot: number) => (slot === 2 ? { email: 'kept@thelemail.com' } : undefined));
+		custody.mailOnlyAccountId.mockResolvedValue('acc-mail-only');
+
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-mail-only', '/u/2/mail/inbox'));
+		expect(document.querySelector('input[type="password"]')).toBeNull();
+		expect(document.querySelector('#login-identifier')).toBeNull();
+		expect(document.querySelector('#login-email')).toBeNull();
+		expect(document.body.textContent).toContain(m.handoff_opening());
+		expect(login.performLogin).not.toHaveBeenCalled();
+	});
+
+	it('sends a mail-only account to the account origin when its address is typed', async () => {
+		custody.mailOnlyAccountId.mockImplementation(async (target: { identifier?: string }) => (target.identifier === 'r@thelemail.com' ? 'acc-mail-only' : null));
+
+		render(LoginPage);
+		await enterEmail('r@thelemail.com');
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-mail-only', null));
+		expect(document.querySelector('input[type="password"]')).toBeNull();
+		expect(login.performLogin).not.toHaveBeenCalled();
+	});
+
+	it('says so when the account origin cannot be opened', async () => {
+		route.page.url = new URL('http://localhost/login?slot=2');
+		known.bySlot.mockImplementation((slot: number) => (slot === 2 ? { email: 'kept@thelemail.com' } : undefined));
+		custody.mailOnlyAccountId.mockResolvedValue('acc-mail-only');
+		custody.unlockAtAuth.mockRejectedValue(new Error('offline'));
+
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_failed()));
+		expect(document.querySelector('input[type="password"]')).toBeNull();
 	});
 
 	it('starts adding an account on an empty email step', async () => {
