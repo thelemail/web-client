@@ -145,6 +145,28 @@ describe('resolveCalendarIdentity', () => {
 		expect(await resolveCalendarRecipient(memoryCalendarDb(), self, email)).toEqual({ kind: 'pending', accountId: peer, email });
 	});
 
+	it('asks again for a pending address after half a minute and keeps a published one for longer', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		try {
+			const db = memoryCalendarDb();
+			const { res } = await build();
+			h.lookup.mockResolvedValue({ state: 'pending', accountId: peer, addressStatement: res.addressStatement, addressSignature: res.addressSignature });
+			expect((await resolveCalendarRecipient(db, self, email)).kind).toBe('pending');
+			vi.advanceTimersByTime(20_000);
+			await resolveCalendarRecipient(db, self, email);
+			expect(h.lookup).toHaveBeenCalledTimes(1);
+			vi.advanceTimersByTime(11_000);
+			h.lookup.mockResolvedValue(res);
+			expect((await resolveCalendarRecipient(db, self, email)).kind).toBe('published');
+			expect(h.lookup).toHaveBeenCalledTimes(2);
+			vi.advanceTimersByTime(60_000);
+			await resolveCalendarRecipient(db, self, email);
+			expect(h.lookup).toHaveBeenCalledTimes(2);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('refuses a pending answer whose address belongs to another account', async () => {
 		const { res } = await build({ accountForAddress: self });
 		h.lookup.mockResolvedValue({ state: 'pending', accountId: peer, addressStatement: res.addressStatement, addressSignature: res.addressSignature });
