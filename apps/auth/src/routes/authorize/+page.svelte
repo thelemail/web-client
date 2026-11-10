@@ -4,6 +4,7 @@
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 	import { ApiCallError } from '$core/api/types';
+	import { ensureConverted } from '$core/auth/product-keys';
 	import { syncAddressUids } from '$core/keys/uid-sync';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/session.svelte';
@@ -57,6 +58,10 @@
 				return;
 			}
 			auth.activate(rec.accountId);
+			if (!(await ensureConverted(rec.accountId))) {
+				fail(m.handoff_auth_invalid());
+				return;
+			}
 			await Promise.race([syncAddressUids(rec.accountId), new Promise((resolve) => setTimeout(resolve, UID_SYNC_WAIT_MS))]);
 			const callback = await grantRequest(rec.accountId, req);
 			clearPendingAuthorize();

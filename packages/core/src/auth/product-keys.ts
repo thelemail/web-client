@@ -191,3 +191,11 @@ export async function ensureProductKeys(accountId: string): Promise<ProductKeysO
 	const read = await readProductKeys(accountId);
 	return read.status === 'active' ? { status: 'activated', result: read.result } : read;
 }
+
+export async function ensureConverted(accountId: string): Promise<boolean> {
+	const { state, events } = await loadCryptoState(accountId);
+	if (!state.features.productKeys) return false;
+	if (state.head?.version === 2) return true;
+	if (await convert(accountId, state, events)) return false;
+	return (await readProductKeys(accountId)).status === 'active';
+}
