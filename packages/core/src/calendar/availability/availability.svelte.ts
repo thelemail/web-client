@@ -5,6 +5,9 @@ import { auth } from '$core/stores/auth.svelte';
 import { workspaces } from '$core/stores/workspaces.svelte';
 import { m } from '$paraglide/messages.js';
 import { calendarStore } from '../store.svelte';
+import { idbCalendarDb } from '../db';
+import { resolveCalendarIdentity } from '../identity';
+import type { CalendarAuthority } from '$core/keystore/productkeys/calendar';
 import { verifyBusyWindows, type BusyPreviousKey, type BusyTrust } from '../verifybusy';
 import { buildBoard, type Board, type BoardDay, type BoardOwner, type BoardWindow } from './board';
 
@@ -21,6 +24,7 @@ interface SignerKey {
 	publicKeyArmored: string;
 	fingerprintHex: string;
 	retiredFingerprints: string[];
+	calendar: CalendarAuthority | null;
 }
 
 function trustKey(itemId: string, rev: number): string {
@@ -85,7 +89,7 @@ class AvailabilityStore {
 					keys.set(item.signerAccountId, await this.#keyFor(accountId, item.signerAccountId));
 				}
 				const key = keys.get(item.signerAccountId) ?? null;
-				if (!key) {
+				if (!key || (!key.publicKeyArmored && !item.statement)) {
 					const member = workspaces.members.find((m) => m.accountId === item.signerAccountId);
 					out.set(cacheKey, member ? 'key_unresolved' : 'signer_unknown');
 					continue;
@@ -109,7 +113,9 @@ class AvailabilityStore {
 					publicKeyArmored: key.publicKeyArmored,
 					directoryKeyFingerprintHex: key.fingerprintHex,
 					previousKey,
-					updatedAtMillis: Date.parse(item.updatedAt)
+					updatedAtMillis: Date.parse(item.updatedAt),
+					busyStatement: item.statement,
+					calendarAuthority: key.calendar
 				});
 				out.set(cacheKey, verdict.trust);
 			}
@@ -130,17 +136,18 @@ class AvailabilityStore {
 	async #keyFor(accountId: string, signerAccountId: string): Promise<SignerKey | null> {
 		const member = workspaces.members.find((m) => m.accountId === signerAccountId);
 		if (!member) return null;
-		try {
-			const trust = await directoryTrust(accountId, member.email);
-			if (!trust?.ok || !trust.publicKeyArmored || !trust.statement) return null;
-			return {
-				publicKeyArmored: trust.publicKeyArmored,
-				fingerprintHex: trust.statement.keyFingerprint,
-				retiredFingerprints: trust.statement.keyTransitions.map((t) => t.previousKeyFingerprint)
-			};
-		} catch {
-			return null;
-		}
+		const [trust, calendar] = await Promise.all([
+			directoryTrust(accountId, member.email).catch(() => null),
+			resolveCalendarIdentity(idbCalendarDb, accountId, member.email).catch(() => null)
+		]);
+		const mail = trust?.ok && trust.publicKeyArmored && trust.statement ? trust : null;
+		if (!mail && !calendar) return null;
+		return {
+			publicKeyArmored: mail?.publicKeyArmored ?? '',
+			fingerprintHex: mail?.statement?.keyFingerprint ?? '',
+			retiredFingerprints: mail?.statement?.keyTransitions.map((t) => t.previousKeyFingerprint) ?? [],
+			calendar: calendar?.accountId === signerAccountId ? calendar.authority : null
+		};
 	}
 
 	board(days: BoardDay[]): Board {

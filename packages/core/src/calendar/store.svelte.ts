@@ -23,7 +23,7 @@ import type { RealtimeHint } from '$core/realtime/types';
 import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
-import { dispatchSend } from '$core/mail/sendDispatch';
+import { calendarSigningContext } from './signing';
 import { m } from '$paraglide/messages.js';
 import { onCalendarMessage, postCalendarMessage } from './channel';
 import {
@@ -128,6 +128,7 @@ export class CalendarStore {
 	revision = $state(0);
 
 	#db: CalendarDb;
+	#deliveriesRunning = false;
 	#api: SyncApi;
 	#accountId: string | null = null;
 	#cursor: string | null = null;
@@ -340,10 +341,27 @@ export class CalendarStore {
 				postCalendarMessage({ type: 'changed', accountId });
 			}
 			this.#kick();
+			void this.#syncDeliveries(accountId);
 		} catch (err) {
 			this.#noteFailure(err);
 		} finally {
 			if (this.#accountId === accountId) this.syncing = false;
+		}
+	}
+
+	async #syncDeliveries(accountId: string): Promise<void> {
+		if (this.#deliveriesRunning) return;
+		this.#deliveriesRunning = true;
+		try {
+			const ctx = await calendarSigningContext(accountId);
+			if (!ctx || this.#accountId !== accountId) return;
+			const [{ processInbox, releasePendingDeliveries }, { applyDelivered }] = await Promise.all([import('./delivery'), import('./replies')]);
+			await releasePendingDeliveries(accountId, this.#db);
+			await processInbox(accountId, this.#db, applyDelivered);
+		} catch (err) {
+			console.warn('calendar: invitation sync failed', err);
+		} finally {
+			this.#deliveriesRunning = false;
 		}
 	}
 
@@ -357,6 +375,7 @@ export class CalendarStore {
 		this.#noteOnline();
 		await this.#hydrate();
 		postCalendarMessage({ type: 'changed', accountId });
+		void this.#syncDeliveries(accountId);
 	}
 
 	#creatingPersonal = false;
@@ -376,7 +395,8 @@ export class CalendarStore {
 	}
 
 	async #createPersonalCalendar(accountId: string): Promise<void> {
-		const { key, grants } = await mintOwnCalendarKey(accountId);
+		const id = crypto.randomUUID();
+		const { key, grants } = await mintOwnCalendarKey(accountId, id);
 		const meta: CalendarMeta = {
 			schemaVersion: META_SCHEMA_VERSION,
 			name: m.cal_default_calendar_name(),
@@ -385,6 +405,7 @@ export class CalendarStore {
 		};
 		const sealedMeta = await sealText(accountId, key, serializeMeta(meta));
 		const row = await createCalendar({
+			id,
 			kind: 'personal',
 			sealedMeta,
 			metaKeyFingerprint: key.fingerprintB64,
@@ -625,6 +646,7 @@ export class CalendarStore {
 			});
 			body.busySignature = signed.signature;
 			body.busySignerKeyFingerprint = signed.signerKeyFingerprint;
+			if (signed.statement) body.busyStatement = signed.statement;
 		}
 		return { body, key };
 	}
@@ -814,7 +836,7 @@ export class CalendarStore {
 	}
 
 	async queueMail(itemId: string, mail: OutboxMail, label: string): Promise<void> {
-		await this.#enqueue({ kind: 'invite.send', itemId, mail, label });
+		await this.#enqueue({ kind: 'invite.send', itemId, mail: { ...mail, operationId: mail.operationId ?? crypto.randomUUID() }, label });
 	}
 
 	async #enqueue(op: OutboxOp): Promise<void> {
@@ -952,6 +974,7 @@ export class CalendarStore {
 			});
 			body.busySignature = signed.signature;
 			body.busySignerKeyFingerprint = signed.signerKeyFingerprint;
+			if (signed.statement) body.busyStatement = signed.statement;
 		}
 		await restoreCalendarItemRevision(calendarId, itemId, rev, body);
 		await this.#reloadItem(calendarId, itemId);
@@ -1012,19 +1035,16 @@ export class CalendarStore {
 			putState: putCalendarItemState,
 			patchCalendar: updateCalendar,
 			deleteCalendar: apiDeleteCalendar,
-			sendMail: async (mail) => {
-				await dispatchSend({
-					to: mail.to,
-					subject: mail.subject,
-					body: mail.body,
-					calendar: { method: mail.method, ics: mail.ics },
-					fromEmail: mail.fromEmail,
-					fromName: mail.fromName,
-					fromAliasId: mail.fromAliasId,
-					inReplyToMessageId: mail.inReplyToMessageId,
-					inReplyToHeader: mail.inReplyToHeader,
-					references: mail.references
-				});
+			sendMail: async (mail, itemId) => {
+				const accountId = this.#accountId;
+				const ctx = accountId ? await calendarSigningContext(accountId) : null;
+				if (accountId && ctx) {
+					const { deliverCalendarMail } = await import('./delivery');
+					await deliverCalendarMail(accountId, ctx, this.#db, itemId, mail);
+					return;
+				}
+				const { sendCalendarMail } = await import('./legacy/mailTransport');
+				await sendCalendarMail(mail);
 			}
 		};
 	}

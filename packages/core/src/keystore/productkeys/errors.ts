@@ -7,7 +7,9 @@ export type ProductKeysErrorCode =
 	| 'signature'
 	| 'profile'
 	| 'transition'
-	| 'point';
+	| 'point'
+	| 'authority'
+	| 'purpose';
 
 export class ProductKeysError extends Error {
 	readonly code: ProductKeysErrorCode;

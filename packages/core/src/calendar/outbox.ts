@@ -26,6 +26,15 @@ export interface OutboxMail {
 	inReplyToMessageId?: string;
 	inReplyToHeader?: string;
 	references?: string[];
+	operationId?: string;
+	event?: OutboxEvent;
+}
+
+export interface OutboxEvent {
+	calendarId: string;
+	uid: string;
+	sequence: number;
+	membershipRevision: number;
 }
 
 export type OutboxOp =
@@ -105,7 +114,7 @@ export interface ReplayApi {
 	putState(calendarId: string, itemId: string, body: CalendarItemStateRequest): Promise<unknown>;
 	patchCalendar(calendarId: string, body: UpdateCalendarRequest): Promise<unknown>;
 	deleteCalendar(calendarId: string): Promise<void>;
-	sendMail(mail: OutboxMail): Promise<void>;
+	sendMail(mail: OutboxMail, itemId: string): Promise<void>;
 }
 
 export interface ReplayHooks {
@@ -143,7 +152,7 @@ async function execute(record: OutboxRecord, api: ReplayApi): Promise<unknown> {
 		case 'calendar.delete':
 			return api.deleteCalendar(op.calendarId);
 		case 'invite.send':
-			return api.sendMail(op.mail);
+			return api.sendMail(op.mail, op.itemId);
 	}
 }
 

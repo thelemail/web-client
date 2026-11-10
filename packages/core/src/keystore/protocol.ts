@@ -229,7 +229,100 @@ export interface SignDetachedArgs extends AccountScopedArgs {
 
 export type SignDetachedResponse =
 	| { ok: true; signature: Uint8Array; keyFingerprintHex: string }
-	| { ok: false; code: 'locked' | 'unknown' };
+	| { ok: false; code: 'locked' | 'product_identity' | 'unknown' };
+
+export interface CalendarDelegationContext {
+	productKeyEpoch: number;
+	delegationRevision: number;
+}
+
+export interface SignInvitationArgs extends AccountScopedArgs, CalendarDelegationContext {
+	calendarId: string;
+	eventId: string;
+	uid: string;
+	method: 'REQUEST' | 'CANCEL';
+	sequence: number;
+	recipients: string[];
+	content: Uint8Array;
+	membershipRevision: number;
+	operationId: string;
+}
+
+export interface SignReplyArgs extends AccountScopedArgs, CalendarDelegationContext {
+	organizerAccountId: string;
+	calendarId: string;
+	eventId: string;
+	uid: string;
+	sequence: number;
+	content: Uint8Array;
+	operationId: string;
+}
+
+export interface SignFreeBusyArgs extends AccountScopedArgs, CalendarDelegationContext {
+	calendarId: string;
+	itemId: string;
+	privacy: 'busy' | 'shared';
+	revision: number;
+	rangeStart: number;
+	rangeEnd: number;
+	windows: [number, number][];
+}
+
+export interface SignCalendarGrantArgs extends AccountScopedArgs, CalendarDelegationContext {
+	calendarId: string;
+	keyVersion: number;
+	keyFingerprint: Uint8Array;
+	memberAccountId: string;
+	role: 'owner' | 'editor' | 'viewer';
+	recipientPublicKey: Uint8Array;
+	wrappedKey: Uint8Array;
+}
+
+export type CalendarStatementResponse =
+	| { ok: true; statement: Uint8Array; signature: Uint8Array; signerFingerprint: Uint8Array }
+	| { ok: false; code: 'locked' | 'not_calendar' | 'invalid' | 'unknown' };
+
+export interface CalendarKeyMember {
+	accountId: string;
+	role: 'owner' | 'editor' | 'viewer';
+	recipientPublicKey: Uint8Array;
+}
+
+export interface CreateCalendarKeyArgs extends AccountScopedArgs, CalendarDelegationContext {
+	calendarId: string;
+	keyVersion: number;
+	members: CalendarKeyMember[];
+	serverClockOffsetMs?: number;
+}
+
+export interface CreatedCalendarGrant {
+	accountId: string;
+	role: 'owner' | 'editor' | 'viewer';
+	memberKeyFingerprint: Uint8Array;
+	wrappedPrivateKey: Uint8Array;
+	grantStatement: Uint8Array;
+	grantSignature: Uint8Array;
+}
+
+export type CreateCalendarKeyResponse =
+	| { ok: true; publicKeyArmored: string; keyFingerprint: Uint8Array; grants: CreatedCalendarGrant[] }
+	| { ok: false; code: 'locked' | 'not_calendar' | 'invalid_recipient_key' | 'unknown' };
+
+export interface CalendarKeyGrantInput {
+	calendarId: string;
+	keyVersion: number;
+	calendarKeyFingerprintHex: string;
+	wrappedPrivateKey: Uint8Array;
+	isCurrent: boolean;
+}
+
+export interface LoadCalendarKeysArgs extends AccountScopedArgs {
+	grants: CalendarKeyGrantInput[];
+}
+
+export type LoadCalendarKeysResponse =
+	| { ok: true; loaded: string[]; failed: { calendarId: string; keyVersion: number }[] }
+	| { ok: false; code: 'locked' | 'not_calendar' };
 
 export interface SealIndexArgs extends AccountScopedArgs {
 	plaintext: Uint8Array;
@@ -824,7 +917,13 @@ export type KeystoreCommand =
 	| 'sealProductHandoff'
 	| 'adoptHandoff'
 	| 'commitHandoff'
-	| 'discardHandoff';
+	| 'discardHandoff'
+	| 'signInvitation'
+	| 'signReply'
+	| 'signFreeBusy'
+	| 'signCalendarGrant'
+	| 'createCalendarKey'
+	| 'loadCalendarKeys';
 
 export type VaultMode = 'account' | 'product' | 'auth';
 
@@ -891,6 +990,12 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	encrypt: ['account', 'product'],
 	encryptToKeys: ['account', 'product'],
 	signDetached: ['account', 'product'],
+	signInvitation: ['product'],
+	signReply: ['product'],
+	signFreeBusy: ['product'],
+	signCalendarGrant: ['product'],
+	createCalendarKey: ['product'],
+	loadCalendarKeys: ['product'],
 	sealIndex: ['account', 'product'],
 	openIndex: ['account', 'product'],
 	sealProductFork: ['account'],

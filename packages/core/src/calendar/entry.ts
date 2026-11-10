@@ -5,7 +5,7 @@ import { m } from '$paraglide/messages.js';
 import { itemFromInvitation, parseInvitation } from './ics/fromMail';
 import { myAddressList } from './invite';
 import type { CalendarItem, ItemKind, Partstat } from './model';
-import { applyCalendarEvents, applyFromMessageId, type AppliedChange } from './replies';
+import { applyCalendarEvents, type AppliedChange } from './replies';
 import { calendarStore } from './store.svelte';
 import { isOwnRecipient } from '$core/mail/recipientAddress';
 
@@ -62,9 +62,13 @@ export async function statusFor(ev: CalendarEvent): Promise<InvitationStatus> {
 	};
 }
 
-export async function addFromMail(
+export function addFromMail(ev: CalendarEvent, message: Message, partstat?: Partstat): Promise<CalendarItem> {
+	return addFromInvitation(ev, message.id, partstat);
+}
+
+export async function addFromInvitation(
 	ev: CalendarEvent,
-	message: Message,
+	sourceMessageId: string,
 	partstat?: Partstat
 ): Promise<CalendarItem> {
 	await calendarStore.ensureLoaded();
@@ -80,7 +84,7 @@ export async function addFromMail(
 		ev,
 		target.id,
 		myAddressList(),
-		message.id,
+		sourceMessageId,
 		calendarStore.defaultPrivacy(target.id),
 		accountSettings.calendar.defaultReminderMinutes
 	);
@@ -120,5 +124,6 @@ export function replySummary(ev: CalendarEvent): ReplySummary | null {
 }
 
 export async function observeNewMessage(messageId: string): Promise<void> {
+	const { applyFromMessageId } = await import('./legacy/fromMail');
 	await applyFromMessageId(messageId);
 }

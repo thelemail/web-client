@@ -117,8 +117,14 @@ describe('commandVaultModes', () => {
 	});
 
 	it('allows a product vault the crypto it needs', () => {
-		for (const cmd of ['decrypt', 'encrypt', 'signDetached', 'sealIndex', 'openIndex'] as const) {
+		for (const cmd of ['decrypt', 'encrypt', 'sealIndex', 'openIndex'] as const) {
 			expect(commandVaultModes[cmd]).toContain('product');
+		}
+	});
+
+	it('keeps typed calendar signatures and calendar keys in product vaults alone', () => {
+		for (const cmd of ['signInvitation', 'signReply', 'signFreeBusy', 'signCalendarGrant', 'createCalendarKey', 'loadCalendarKeys'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['product']);
 		}
 	});
 

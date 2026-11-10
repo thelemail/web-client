@@ -76,7 +76,8 @@ export async function productVaultState(accountId: string, email: string, produc
 		accountKeys: new Map(),
 		keyVersion: 1,
 		aliasKeys: new Map(),
-		aliasCurrent: new Map()
+		aliasCurrent: new Map(),
+		product
 	};
 }
 

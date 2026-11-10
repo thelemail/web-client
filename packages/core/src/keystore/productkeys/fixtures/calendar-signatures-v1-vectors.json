@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "mailKey": "xioGavBkQBsAAAAgz6Xc4Cg/9SHdPWHAKfWw2xv4hDwhGWkBb90XBLhtBDjClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZP4GOEpIlPDX6Y0nd3Ib29ay/MwkBAVgaEo9f304CZIAAAAAq1kQtzrC2fJpKLp2R61RZNDe9RQlRTHkfkq+7PxQm37pcxUztAg0Q1vPRVRBGPlak69dwBq4TzUZCEkNmuW+wqI6NcIjPRrX0mbQtouMOwBB4gTNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZP4GOEpIlPDX6Y0nd3Ib29ay/MwkBAVgaEo9f304CZIAAAAAHhoQA74b+GleNkFfOUpps6FIw2MIpdIrB0coFi7j6XqDBVQzS1/rSDlGzkDYlqtWusoTfgE6vtVY6Ebdnbvgxf5n/0QFteCV4Oi3ed23w8grKALOKgZq8GRAGQAAACDkVJqY9KoCoYqLYZZPJe3flsh2NHskM2jiMJCFupdiA8KLBhgbCAAAACwFgmrwZEACmwwioQZk/gY4SkiU8NfpjSd3chvb1rL8zCQEBWBoSj1/fTgJkgAAAABYDhA2HMyGx2m6LgnwXQ9DVtpt3o+ENCEqxGkFlzqZGJPQP4tq+Vcvod+3gPZXzXR63PVgdZM3c8ac8POorQKxszt65ksvffl3t9KYdnJO+WjhDA==",
+  "authorities": [
+    {
+      "name": "full",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 1,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"signingKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBk9sLskt08YLJGjzVj01O1SbzgN+AjH5ttuSRmf7PEMMAAAAAGpKEOmDJVhlQ1dIaIjmPTjqAUyMnmpUU0XC8MVhlBqIwK3fXAy708WKb5NQczSU5YPyUBoJUQQFEz4y1wGzZAnV4DWgL86AX865BAM8ZPnfaFkB",
+      "signingKey": "xioGavBkQBsAAAAg9iK40bzA3TWmxb2EMPxmt5tV/62xRhG42uACE9YnOvLClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG4Ur8Ghx53ZmskKYyfQHax+bNwNQjhj3IX5lAY/Y1fUUAAAAASC8Qmr9WCJa1akZasca9ABl+ZpvqXkze28waYeOCDTX1ug3/569J/JpjUfAKKp+u06k60MMnTULDj9PpXm9/JiKIeEsPcShpswtlcKwkdn9TcAnOKgZq8GRAGQAAACB8Q/4W2ulFRL3YTsl1IYspGW/z3vKtVZbUdNBK2bdrRcKLBhgbCAAAACwFgmrwZEACmwwioQbhSvwaHHndmayQpjJ9AdrH5s3A1COGPchfmUBj9jV9RQAAAABwHxBTkKPlf/hEHWgyEUEiWF3jYMRrG+w0jCDojrEeVVEElkjX83NN7i+BmJUYhXFouSAyayHFPSbTVPFDpiBX5QagULPQSh3xI2wePlgaYkXKAg=="
+    },
+    {
+      "name": "limited",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 1,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":2,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":\"rzvBxaCL/vnO2UuUXdPb8hi7yb6GdXKAh2osU3+qM0E=\",\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.invite\"],\"recipientKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"signingKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBk9sLskt08YLJGjzVj01O1SbzgN+AjH5ttuSRmf7PEMMAAAAAKNKEE1mGUSrFN7b5kueWxzOEj1E8OcW0MLOF7Ovz6SePVSKLtH1IALuodIt1TOD6V7lCNIroFf+SSekuGlU+YHWtCknceGKBD1LbEpZyKLE0M8D",
+      "signingKey": "xioGavBkQBsAAAAg9iK40bzA3TWmxb2EMPxmt5tV/62xRhG42uACE9YnOvLClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG4Ur8Ghx53ZmskKYyfQHax+bNwNQjhj3IX5lAY/Y1fUUAAAAASC8Qmr9WCJa1akZasca9ABl+ZpvqXkze28waYeOCDTX1ug3/569J/JpjUfAKKp+u06k60MMnTULDj9PpXm9/JiKIeEsPcShpswtlcKwkdn9TcAnOKgZq8GRAGQAAACB8Q/4W2ulFRL3YTsl1IYspGW/z3vKtVZbUdNBK2bdrRcKLBhgbCAAAACwFgmrwZEACmwwioQbhSvwaHHndmayQpjJ9AdrH5s3A1COGPchfmUBj9jV9RQAAAABwHxBTkKPlf/hEHWgyEUEiWF3jYMRrG+w0jCDojrEeVVEElkjX83NN7i+BmJUYhXFouSAyayHFPSbTVPFDpiBX5QagULPQSh3xI2wePlgaYkXKAg=="
+    },
+    {
+      "name": "delegation signed by the calendar key",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 1,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"signingKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAJkFEDx8nllk8xva86NfAxsWlvJ2nhFj7jNqzXdw0eU//iGQYCfgOi8Qva79lSFHJl1FNrGpP/3PFIhbQRic0ys7ldSBqMdEotcRZ8tPnqROWKQB",
+      "signingKey": "xioGavBkQBsAAAAg9iK40bzA3TWmxb2EMPxmt5tV/62xRhG42uACE9YnOvLClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG4Ur8Ghx53ZmskKYyfQHax+bNwNQjhj3IX5lAY/Y1fUUAAAAASC8Qmr9WCJa1akZasca9ABl+ZpvqXkze28waYeOCDTX1ug3/569J/JpjUfAKKp+u06k60MMnTULDj9PpXm9/JiKIeEsPcShpswtlcKwkdn9TcAnOKgZq8GRAGQAAACB8Q/4W2ulFRL3YTsl1IYspGW/z3vKtVZbUdNBK2bdrRcKLBhgbCAAAACwFgmrwZEACmwwioQbhSvwaHHndmayQpjJ9AdrH5s3A1COGPchfmUBj9jV9RQAAAABwHxBTkKPlf/hEHWgyEUEiWF3jYMRrG+w0jCDojrEeVVEElkjX83NN7i+BmJUYhXFouSAyayHFPSbTVPFDpiBX5QagULPQSh3xI2wePlgaYkXKAg==",
+      "error": "authority"
+    },
+    {
+      "name": "mail key as calendar identity",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 1,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"signingKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBk9sLskt08YLJGjzVj01O1SbzgN+AjH5ttuSRmf7PEMMAAAAAGpKEOmDJVhlQ1dIaIjmPTjqAUyMnmpUU0XC8MVhlBqIwK3fXAy708WKb5NQczSU5YPyUBoJUQQFEz4y1wGzZAnV4DWgL86AX865BAM8ZPnfaFkB",
+      "signingKey": "xioGavBkQBsAAAAgz6Xc4Cg/9SHdPWHAKfWw2xv4hDwhGWkBb90XBLhtBDjClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZP4GOEpIlPDX6Y0nd3Ib29ay/MwkBAVgaEo9f304CZIAAAAAq1kQtzrC2fJpKLp2R61RZNDe9RQlRTHkfkq+7PxQm37pcxUztAg0Q1vPRVRBGPlak69dwBq4TzUZCEkNmuW+wqI6NcIjPRrX0mbQtouMOwBB4gTNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZP4GOEpIlPDX6Y0nd3Ib29ay/MwkBAVgaEo9f304CZIAAAAAHhoQA74b+GleNkFfOUpps6FIw2MIpdIrB0coFi7j6XqDBVQzS1/rSDlGzkDYlqtWusoTfgE6vtVY6Ebdnbvgxf5n/0QFteCV4Oi3ed23w8grKALOKgZq8GRAGQAAACDkVJqY9KoCoYqLYZZPJe3flsh2NHskM2jiMJCFupdiA8KLBhgbCAAAACwFgmrwZEACmwwioQZk/gY4SkiU8NfpjSd3chvb1rL8zCQEBWBoSj1/fTgJkgAAAABYDhA2HMyGx2m6LgnwXQ9DVtpt3o+ENCEqxGkFlzqZGJPQP4tq+Vcvod+3gPZXzXR63PVgdZM3c8ac8POorQKxszt65ksvffl3t9KYdnJO+WjhDA==",
+      "error": "authority"
+    },
+    {
+      "name": "app delegation",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 1,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"purposes\":[\"mail.state\"],\"recipientKeyId\":\"e164a30c-43f9-5515-b3ed-e53dd187b56b\",\"recipientProfileId\":\"mail-classic-v1\",\"recipientPublicKeyDigest\":\"clRxQ5Ceio/hERoq4TARrJizYkrcZQNcYfqk7eOrbYw=\",\"signingKeyId\":\"e164a30c-43f9-5515-b3ed-e53dd187b56b\",\"signingProfileId\":\"mail-classic-v1\",\"signingPublicKeyDigest\":\"clRxQ5Ceio/hERoq4TARrJizYkrcZQNcYfqk7eOrbYw=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBk9sLskt08YLJGjzVj01O1SbzgN+AjH5ttuSRmf7PEMMAAAAALR/EPaudg1mnLwELUQr3JfflnZQK+eI0tjBChgaGadq4IKNmnARazcWXLO4/pjK6JEXa1m1/SocxTSCCZVrp2/0UzQ8le0jsVqW1ivqyE3uLFgN",
+      "signingKey": "xioGavBkQBsAAAAgz6Xc4Cg/9SHdPWHAKfWw2xv4hDwhGWkBb90XBLhtBDjClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZP4GOEpIlPDX6Y0nd3Ib29ay/MwkBAVgaEo9f304CZIAAAAAq1kQtzrC2fJpKLp2R61RZNDe9RQlRTHkfkq+7PxQm37pcxUztAg0Q1vPRVRBGPlak69dwBq4TzUZCEkNmuW+wqI6NcIjPRrX0mbQtouMOwBB4gTNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZP4GOEpIlPDX6Y0nd3Ib29ay/MwkBAVgaEo9f304CZIAAAAAHhoQA74b+GleNkFfOUpps6FIw2MIpdIrB0coFi7j6XqDBVQzS1/rSDlGzkDYlqtWusoTfgE6vtVY6Ebdnbvgxf5n/0QFteCV4Oi3ed23w8grKALOKgZq8GRAGQAAACDkVJqY9KoCoYqLYZZPJe3flsh2NHskM2jiMJCFupdiA8KLBhgbCAAAACwFgmrwZEACmwwioQZk/gY4SkiU8NfpjSd3chvb1rL8zCQEBWBoSj1/fTgJkgAAAABYDhA2HMyGx2m6LgnwXQ9DVtpt3o+ENCEqxGkFlzqZGJPQP4tq+Vcvod+3gPZXzXR63PVgdZM3c8ac8POorQKxszt65ksvffl3t9KYdnJO+WjhDA==",
+      "error": "authority"
+    },
+    {
+      "name": "authority epoch mismatch",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 2,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"signingKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBk9sLskt08YLJGjzVj01O1SbzgN+AjH5ttuSRmf7PEMMAAAAAGpKEOmDJVhlQ1dIaIjmPTjqAUyMnmpUU0XC8MVhlBqIwK3fXAy708WKb5NQczSU5YPyUBoJUQQFEz4y1wGzZAnV4DWgL86AX865BAM8ZPnfaFkB",
+      "signingKey": "xioGavBkQBsAAAAg9iK40bzA3TWmxb2EMPxmt5tV/62xRhG42uACE9YnOvLClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG4Ur8Ghx53ZmskKYyfQHax+bNwNQjhj3IX5lAY/Y1fUUAAAAASC8Qmr9WCJa1akZasca9ABl+ZpvqXkze28waYeOCDTX1ug3/569J/JpjUfAKKp+u06k60MMnTULDj9PpXm9/JiKIeEsPcShpswtlcKwkdn9TcAnOKgZq8GRAGQAAACB8Q/4W2ulFRL3YTsl1IYspGW/z3vKtVZbUdNBK2bdrRcKLBhgbCAAAACwFgmrwZEACmwwioQbhSvwaHHndmayQpjJ9AdrH5s3A1COGPchfmUBj9jV9RQAAAABwHxBTkKPlf/hEHWgyEUEiWF3jYMRrG+w0jCDojrEeVVEElkjX83NN7i+BmJUYhXFouSAyayHFPSbTVPFDpiBX5QagULPQSh3xI2wePlgaYkXKAg==",
+      "error": "authority"
+    },
+    {
+      "name": "other account",
+      "accountId": "654905d8-4976-57fd-89fa-ed61729f15b5",
+      "authorityKey": "xioGavBkQBsAAAAgLIXkc5fzmbrkdd2alr2AL1lomWr6U9pifV2cjMDm0LXClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGT2wuyS3TxgskaPNWPTU7VJvOA34CMfm225JGZ/s8QwwAAAAAaZ0QZZqg9HMmy+mclzq4NYQ48devSJM1wxJA6SQtAy97eUGgOdHuQvnZ+7Qn42Qe1sD4XiC7BvzhiSBqcjZFziMZZrVoYLxyRFoYFKPkJOOg+Qc=",
+      "authorityEpoch": 1,
+      "delegation": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"authorityEpoch\":1,\"authorityKeyId\":\"3a6fd8fb-5a21-5254-ac17-66da4776fdab\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"signingKeyId\":\"a1603fae-433c-57db-9985-fc3bd2bcb22e\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"type\":\"thelemail-product-delegation/v1\"}",
+      "delegationSignature": "wogGABsIAAAAKQWCavBkQCKhBk9sLskt08YLJGjzVj01O1SbzgN+AjH5ttuSRmf7PEMMAAAAAGpKEOmDJVhlQ1dIaIjmPTjqAUyMnmpUU0XC8MVhlBqIwK3fXAy708WKb5NQczSU5YPyUBoJUQQFEz4y1wGzZAnV4DWgL86AX865BAM8ZPnfaFkB",
+      "signingKey": "xioGavBkQBsAAAAg9iK40bzA3TWmxb2EMPxmt5tV/62xRhG42uACE9YnOvLClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG4Ur8Ghx53ZmskKYyfQHax+bNwNQjhj3IX5lAY/Y1fUUAAAAASC8Qmr9WCJa1akZasca9ABl+ZpvqXkze28waYeOCDTX1ug3/569J/JpjUfAKKp+u06k60MMnTULDj9PpXm9/JiKIeEsPcShpswtlcKwkdn9TcAnOKgZq8GRAGQAAACB8Q/4W2ulFRL3YTsl1IYspGW/z3vKtVZbUdNBK2bdrRcKLBhgbCAAAACwFgmrwZEACmwwioQbhSvwaHHndmayQpjJ9AdrH5s3A1COGPchfmUBj9jV9RQAAAABwHxBTkKPlf/hEHWgyEUEiWF3jYMRrG+w0jCDojrEeVVEElkjX83NN7i+BmJUYhXFouSAyayHFPSbTVPFDpiBX5QagULPQSh3xI2wePlgaYkXKAg==",
+      "error": "authority"
+    }
+  ],
+  "statements": [
+    {
+      "name": "invitation",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAM1IEEwU/YJRM8x+NNSphp9Si9dsSIc+aMPsu815ivW3VQEsOBU9OERUzi521MQFaqWoG4AtFMk/3mq1HAZbf5qLBzWmdyfHHBon8c3e+X3uQ0kD"
+    },
+    {
+      "name": "cancellation",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"CANCEL\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":3,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAABY7EE3FP6fbIiKAdKaZaeRFWs/jNqFSdwPMrXpVmfby7BShcSmKtolq+Ap3IfUauRFXx0W3d3Dp4Vg/HcDxRzl6EmyE48S/46AkWNqhbBhVat4F"
+    },
+    {
+      "name": "reply",
+      "authority": "full",
+      "type": "thelemail-calendar-reply/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"JauWDVeOn7nHyxfdvyEfgYhWTxPiTmStUVsaIsv1Hxw=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":0,\"method\":\"REPLY\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\"],\"sequence\":2,\"type\":\"thelemail-calendar-reply/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAIhnEIxgH1a8BNtK158xLW5iOYKaOIVOs16/8DfyjuvTBqYpBahcv6Hriqgb/YBa96Yj9bEWzvw0bi3dRVJP8olDWbSXAl0IoGzhuDx9IzRnTrgK"
+    },
+    {
+      "name": "free/busy",
+      "authority": "full",
+      "type": "thelemail-calendar-freebusy/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"itemId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"privacy\":\"busy\",\"productKeyEpoch\":1,\"rangeEnd\":1800000000000,\"rangeStart\":1790000000000,\"revision\":4,\"type\":\"thelemail-calendar-freebusy/v1\",\"windows\":[[1795000000000,1795003600000],[1796000000000,1796001800000]]}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAAXdELXUjOcBf2XSy4247V+7S6Nfe77Q7KhKLncWngTxDd/SxWPWSL14Py7gh5uB8LVm5hM+kgrUAA02MSTMikQYIBsYc6YmaFvhklsJOOyX/k8C"
+    },
+    {
+      "name": "grant",
+      "authority": "full",
+      "type": "thelemail-calendar-grant/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"keyFingerprint\":\"hYrFn8iNuBN+nO/rbLl72llZy9hre1aARzU8wv0RDWM=\",\"keyVersion\":2,\"memberAccountId\":\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"productKeyEpoch\":1,\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"role\":\"editor\",\"type\":\"thelemail-calendar-grant/v1\",\"wrappedKeyDigest\":\"rb9FsIrWRoqhR+WyojdY71arYxorcK1SUByjWEQaNPM=\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAKQ/EKlvxB4BIw+v1qe6S0/IWhmkYsCHJAjkiFRG1SGIAlv8sd9B4TmI0DBX0pgq/KojOGXUpmGW2g8MCutj3GHwVp5GkANtuY7UmsSOGl7nlC8B"
+    },
+    {
+      "name": "invitation under a limited delegation",
+      "authority": "limited",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":2,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAGtcEEeJZpd34Oe4S9tnaAsmgoU4JtwyrLZlS3PeJQuOhQl20Fkzqj5PQKtnVkKVmO8XgX6oIbZTyIslv+UnKUEtOkOJaepapekZSIvdAh6ez5YK"
+    },
+    {
+      "name": "free/busy outside the delegated purposes",
+      "authority": "limited",
+      "type": "thelemail-calendar-freebusy/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"delegationRevision\":2,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"itemId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"privacy\":\"busy\",\"productKeyEpoch\":1,\"rangeEnd\":1800000000000,\"rangeStart\":1790000000000,\"revision\":4,\"type\":\"thelemail-calendar-freebusy/v1\",\"windows\":[[1795000000000,1795003600000],[1796000000000,1796001800000]]}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAGwVEM7RhxVTgtrN2393GmSJiQ0YdjFm8F9pA1d5hJ2JmacjaXdpUCzvL93ps13kup6TouIVMIcWnbJ8MaWf8eSzk1utMyvWeZveQIAbkHvqsNUA",
+      "error": "purpose"
+    },
+    {
+      "name": "invitation signed under the reply domain",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAMDBEEl8dLEfXhAVlv+ec0JHuZoZSpBkTge4wreT/blIfKozrjTSRAxzXnOHWAf4UX+SukU0sbUYcn7r6nkVpkfU4ES3dDm6Mv16cofLOyZabtIN",
+      "error": "signature"
+    },
+    {
+      "name": "invitation signed by the mail key",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBmT+BjhKSJTw1+mNJ3dyG9vWsvzMJAQFYGhKPX99OAmSAAAAADy6EA0czzNuAdxjGW685MjIHx0796IA0nSMRzYwnqyJr0vv/jKjclwUebbzcrfYSdLpn/zdap2tbk8I1CfpPJWcRAcs3xCr35k5YTOnSR4SqZ0K",
+      "error": "signature"
+    },
+    {
+      "name": "invitation signed without a domain",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAJRoEDQTiCjmGEp3gnu9rAi+uc2kW7DNyzK74XI1YZE6ooe4IxUEeOmdkqHPqiThaSM8kup7w1+p1Vh4iu1qU2u4Hx80Xk8J6EGQfYGk/cscwuMG",
+      "error": "signature"
+    },
+    {
+      "name": "stale delegation revision",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"naqOJPm3WQc2h4OaCqfeKi8Jq8Knced6NOGgXdQZg4c=\",\"delegationRevision\":2,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAGz0EMvfZWmJ/xq4o+rFsb+2vMsARvreSTytkkWYOwPXyulTJWB+HrBnzfRlarJhvxqL9UDML0GwF306IE8OcKY9Jx1vKJNvX+9R9bJcNz7ONL8B",
+      "error": "context"
+    },
+    {
+      "name": "content digest swapped after signing",
+      "authority": "full",
+      "type": "thelemail-calendar-invitation/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"kjuAVxEEHiOpnwfhRlkcUAJh0cKJ9iqdOfhYHOuKEMo=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":3,\"method\":\"REQUEST\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"productKeyEpoch\":1,\"recipients\":[\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-invitation/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAM1IEEwU/YJRM8x+NNSphp9Si9dsSIc+aMPsu815ivW3VQEsOBU9OERUzi521MQFaqWoG4AtFMk/3mq1HAZbf5qLBzWmdyfHHBon8c3e+X3uQ0kD",
+      "error": "signature"
+    },
+    {
+      "name": "reply to someone other than the organizer",
+      "authority": "full",
+      "type": "thelemail-calendar-reply/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"contentDigest\":\"JauWDVeOn7nHyxfdvyEfgYhWTxPiTmStUVsaIsv1Hxw=\",\"delegationRevision\":1,\"eventId\":\"8eb197a3-85e5-5598-af0a-57726ae223fe\",\"issuedAt\":\"2026-11-08T12:00:00Z\",\"membershipRevision\":0,\"method\":\"REPLY\",\"operationId\":\"eca3f05f-7363-5a84-b01e-32114526f23f\",\"organizerAccountId\":\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"productKeyEpoch\":1,\"recipients\":[\"d64a4368-bc08-5ce4-9fe4-9699b920bafe\"],\"sequence\":2,\"type\":\"thelemail-calendar-reply/v1\",\"uid\":\"4f0c7a5e-calloway@thelemail.test\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAKChEKTgbG7LYoYEE3fej54j4GU9MR5GtUXXXlPN3MWTKJqHm/ljQC2CkoWQjA4WDWwdLhSjoNWJERt3oUp8hEtAeRNXcF/toAxV/S5cVrriI9wB",
+      "error": "malformed"
+    },
+    {
+      "name": "grant with an unknown field",
+      "authority": "full",
+      "type": "thelemail-calendar-grant/v1",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"calendarId\":\"971b61fb-31d5-5ae0-ae80-dc9d30bd7ac0\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"keyFingerprint\":\"hYrFn8iNuBN+nO/rbLl72llZy9hre1aARzU8wv0RDWM=\",\"keyVersion\":2,\"memberAccountId\":\"654905d8-4976-57fd-89fa-ed61729f15b5\",\"note\":\"x\",\"productKeyEpoch\":1,\"recipientPublicKeyDigest\":\"WqjWQRps8Dgx17Lrs3YSUPazvbDrxiPEAtnSkSFwwXE=\",\"role\":\"editor\",\"type\":\"thelemail-calendar-grant/v1\",\"wrappedKeyDigest\":\"rb9FsIrWRoqhR+WyojdY71arYxorcK1SUByjWEQaNPM=\"}",
+      "signature": "wogGABsIAAAAKQWCavBkQCKhBuFK/Boced2ZrJCmMn0B2sfmzcDUI4Y9yF+ZQGP2NX1FAAAAAPJrEOdh0qZo9gCV83ESXmAM/II8l0kjK/59J6J5xOalXxEE2aQkDYlHAGlBBvynZRd6kwC+jVKj6yYo9OeEmOBgLXeW2dLv1slXU19oyLr3UskB",
+      "error": "malformed"
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import {
 } from './signing-key';
 import { getSeen, upsertSeen } from './seen-idb';
 import { keyLabel, labelMatchesKey } from './keyLabel';
+import { isProductIdentity } from '$core/keys/productIdentity';
 import {
 	DirectoryVerificationError,
 	type DirectoryVerificationCode,
@@ -161,6 +162,39 @@ async function readServedKey(
 	}
 }
 
+export interface DirectoryRecordInput {
+	raw: Uint8Array;
+	signatureB64: string;
+	label: string;
+	tlogProof?: string;
+	tlogConsistency?: TlogConsistencyProof;
+	refetchConsistency: (since: number) => Promise<TlogConsistencyProof | undefined>;
+}
+
+export async function verifyDirectoryRecord(input: DirectoryRecordInput): Promise<TlogOutcome> {
+	await verifyDirectorySignature(input.raw, input.signatureB64, input.label);
+	if (!TLOG_POLICY) return { state: 'not_configured' };
+	const policy = TLOG_POLICY;
+	try {
+		const details = await verifyTlogProof(input.tlogProof, input.raw, input.label, policy, {
+			nowMillis: Date.now(),
+			store: tlogStateStore,
+			consistency: input.tlogConsistency,
+			refetchConsistency: input.refetchConsistency
+		});
+		return { state: 'verified', ...details };
+	} catch (e) {
+		const err =
+			e instanceof DirectoryVerificationError
+				? e
+				: new DirectoryVerificationError('tlog_proof_malformed', e instanceof Error ? e.message : 'tlog check failed', {
+						logOrigin: policy.origin
+					});
+		if (policy.mode === 'enforce') throw err;
+		return { state: 'failed', code: err.code, details: err.details };
+	}
+}
+
 async function checkTlog(
 	lookup: LookupInputForVerification,
 	raw: Uint8Array,
@@ -276,6 +310,13 @@ async function checkStatement(
 	}
 
 	const servedKey = await readServedKey(lookup.publicKeyArmored, stmt, requested);
+	if (isProductIdentity(servedKey)) {
+		throw new DirectoryVerificationError('algorithm_mismatch', 'served key is a product identity, not a mail key', {
+			requestedAddress: requested,
+			keyAlgorithm: stmt.keyAlgorithm,
+			servedKeyAlgorithm: keyLabel(servedKey)
+		});
+	}
 	if (!labelMatchesKey(stmt.keyAlgorithm, servedKey, stmt.issuedAt)) {
 		throw new DirectoryVerificationError('algorithm_mismatch', `unsupported algorithm ${stmt.keyAlgorithm}`, {
 			requestedAddress: requested,

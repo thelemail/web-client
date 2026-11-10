@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
 import * as openpgp from 'openpgp';
+import { isProductIdentity } from '$core/keys/productIdentity';
 import { isAllowedBlobUrl } from '../blobOrigins';
 import { currentProduct, isProductVault } from '../../products';
 import { MAX_HEADER_BYTES, parseHeaderPrefix } from '$core/mail/attframe';
@@ -163,6 +164,9 @@ export async function handleSignDetached(args: SignDetachedArgs): Promise<SignDe
 	if (!v) {
 		return { ok: false, code: 'locked' };
 	}
+	if (v.product === 'calendar') {
+		return { ok: false, code: 'product_identity' };
+	}
 	const signingKey = v.privateKey;
 	if (!signingKey) {
 		return { ok: false, code: 'locked' };
@@ -309,6 +313,7 @@ export async function handleDecrypt(args: DecryptArgs): Promise<DecryptResponse>
 			console.warn('keystore: decrypt invalid verification key', err);
 			verificationKeys = [];
 		}
+		verificationKeys = verificationKeys.filter((k) => !isProductIdentity(k));
 	}
 	const wanted = args.verificationKeysArmored?.length ? true : false;
 	const decryptionKeys = decryptionKeysFor(v, args.keyFingerprintHex);

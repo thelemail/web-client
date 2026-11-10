@@ -1,11 +1,13 @@
-import type { CalendarMemberGrant, CalendarRow } from '$core/api/calendars';
+import type { CalendarMemberGrant, CalendarRole, CalendarRow } from '$core/api/calendars';
+import type { CalendarKeyMember } from '$core/keystore/protocol';
 import { keystore } from '$core/keystore/keystore-client';
 import { b64ToBytes, bytesToB64 } from '$core/crypto';
-import { b64ToHex, hexToB64, textToB64 } from '$core/keys/encode';
-import { senderKey } from '$core/mail/send';
+import { b64ToHex } from '$core/keys/encode';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 import { m } from '$paraglide/messages.js';
+import type { CalendarSigningContext } from './signing';
+import { calendarSigningContext } from './signing';
 
 export interface SealKey {
 	publicKeyArmored: string;
@@ -27,30 +29,85 @@ export interface MintedCalendarKey {
 	grants: CalendarMemberGrant[];
 }
 
-export async function mintOwnCalendarKey(accountId: string): Promise<MintedCalendarKey> {
-	const own = await senderKey(accountId);
-	const created = await keystore.createAliasKey({
+export class CalendarMembersWithoutIdentity extends Error {
+	emails: string[];
+	constructor(emails: string[]) {
+		super(m.cal_seal_members_without_calendar({ emails: emails.join(', ') }));
+		this.emails = emails;
+		this.name = 'CalendarMembersWithoutIdentity';
+	}
+}
+
+export interface CalendarKeyRecipient {
+	accountId: string;
+	email: string;
+	role: CalendarRole;
+}
+
+async function mintForIdentities(
+	accountId: string,
+	ctx: CalendarSigningContext,
+	calendarId: string,
+	keyVersion: number,
+	members: CalendarKeyRecipient[]
+): Promise<MintedCalendarKey> {
+	const [{ resolveCalendarIdentity }, { idbCalendarDb }] = await Promise.all([import('./identity'), import('./db')]);
+	const resolved: CalendarKeyMember[] = [];
+	const missing: string[] = [];
+	for (const member of members) {
+		if (member.accountId === accountId) {
+			resolved.push({ accountId, role: member.role, recipientPublicKey: ctx.signingKey });
+			continue;
+		}
+		const identity = await resolveCalendarIdentity(idbCalendarDb, accountId, member.email);
+		if (!identity || identity.accountId !== member.accountId) {
+			missing.push(member.email);
+			continue;
+		}
+		resolved.push({ accountId: member.accountId, role: member.role, recipientPublicKey: identity.signingKey });
+	}
+	if (missing.length) throw new CalendarMembersWithoutIdentity(missing);
+	const created = await keystore.createCalendarKey({
 		accountId,
-		email: '',
-		displayName: 'Thelemail calendar',
-		recipients: [{ accountId, publicKeyArmored: own.publicKeyArmored }]
+		productKeyEpoch: ctx.productKeyEpoch,
+		delegationRevision: ctx.delegationRevision,
+		calendarId,
+		keyVersion,
+		members: resolved
 	});
 	if (!created.ok) {
 		throw new SealError(created.code === 'locked' ? 'locked' : 'unknown', m.cal_seal_key_failed());
 	}
+	const fingerprintB64 = bytesToB64(created.keyFingerprint);
 	return {
-		key: {
-			publicKeyArmored: created.publicKeyArmored,
-			fingerprintB64: hexToB64(created.keyFingerprintHex),
-			fingerprintHex: created.keyFingerprintHex
-		},
+		key: { publicKeyArmored: created.publicKeyArmored, fingerprintB64, fingerprintHex: b64ToHex(fingerprintB64) },
 		grants: created.grants.map((g) => ({
 			accountId: g.accountId,
-			role: 'owner' as const,
-			memberKeyFingerprint: hexToB64(g.memberKeyFingerprintHex),
-			wrappedPrivateKey: textToB64(g.wrappedPrivateKeyArmored)
+			role: g.role,
+			memberKeyFingerprint: bytesToB64(g.memberKeyFingerprint),
+			wrappedPrivateKey: bytesToB64(g.wrappedPrivateKey),
+			grantStatement: bytesToB64(g.grantStatement),
+			grantSignature: bytesToB64(g.grantSignature)
 		}))
 	};
+}
+
+export async function mintSharedCalendarKey(
+	accountId: string,
+	calendarId: string,
+	keyVersion: number,
+	members: CalendarKeyRecipient[]
+): Promise<MintedCalendarKey | null> {
+	const ctx = await calendarSigningContext(accountId);
+	if (!ctx) return null;
+	return mintForIdentities(accountId, ctx, calendarId, keyVersion, members);
+}
+
+export async function mintOwnCalendarKey(accountId: string, calendarId: string): Promise<MintedCalendarKey> {
+	const ctx = await calendarSigningContext(accountId);
+	if (ctx) return mintForIdentities(accountId, ctx, calendarId, 1, [{ accountId, email: '', role: 'owner' }]);
+	const { mintOwnCalendarKeyForMailKey } = await import('./legacy/keys');
+	return mintOwnCalendarKeyForMailKey(accountId);
 }
 
 export async function keyForCalendar(accountId: string, cal: CalendarRow): Promise<SealKey> {

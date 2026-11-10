@@ -3,6 +3,8 @@ import { listMyCalendarKeys, type CalendarKeyGrant } from '$core/api/calendars';
 import { keystore } from '$core/keystore/keystore-client';
 import { accountKeys } from './accountKeys.svelte';
 import { b64ToHex, b64ToText } from '$core/keys/encode';
+import { b64decode } from '$core/keystore/productkeys/encoding';
+import { calendarSigningContext } from '$core/calendar/signing';
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -101,6 +103,24 @@ class CalendarKeysStore {
 			this.grants = keys;
 			if (!keys.length) {
 				this.loaded = true;
+				return;
+			}
+			const ctx = await calendarSigningContext(accountId);
+			if (this.#accountId !== accountId) return;
+			if (ctx) {
+				const loaded = await keystore.loadCalendarKeys({
+					accountId,
+					grants: keys.map((k) => ({
+						calendarId: k.calendarId,
+						keyVersion: k.keyVersion,
+						calendarKeyFingerprintHex: b64ToHex(k.calendarKeyFingerprint),
+						wrappedPrivateKey: b64decode(k.wrappedPrivateKey),
+						isCurrent: k.isCurrent
+					}))
+				});
+				if (this.#accountId !== accountId) return;
+				this.loaded = loaded.ok;
+				this.error = loaded.ok ? null : 'vault is locked';
 				return;
 			}
 			const res = await keystore.loadAliasKeys({
