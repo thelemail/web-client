@@ -84,6 +84,12 @@ async function acknowledged(rec: HandoffRecord, red: RedemptionResponse, body: {
 	}
 }
 
+async function startCalendarFresh(accountId: string): Promise<void> {
+	const [{ idbCalendarDb }, { forgetCalendarSigningContext }] = await Promise.all([import('$core/calendar/db'), import('$core/calendar/signing')]);
+	forgetCalendarSigningContext(accountId);
+	await idbCalendarDb.clear(accountId).catch(() => undefined);
+}
+
 export async function completeHandoff(fragment: string): Promise<CompletedHandoff> {
 	const authTarget = productTarget('auth');
 	const { code, state, requestId, iss } = parseFragment(fragment);
@@ -148,6 +154,7 @@ export async function completeHandoff(fragment: string): Promise<CompletedHandof
 			sessionOrigin: 'host'
 		});
 		auth.addSession(red.accessToken, red.expiresIn, red.accountId, ack.csrfToken);
+		if (currentProduct === 'calendar' && existing?.sessionOrigin !== 'host') await startCalendarFresh(red.accountId);
 		await deleteRequest(requestId).catch(() => undefined);
 		sessionStorage.removeItem(HANDOFF_TAB_PREFIX + requestId);
 		return { accountId: red.accountId, slot, route: rec.route };
