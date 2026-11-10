@@ -60,6 +60,8 @@ const SECTION_KEYS: ReadonlyArray<keyof SettingsState> = [
 	...COMPOSING_KEYS
 ];
 
+const ACCOUNT_ORIGIN_CEREMONIES: ReadonlySet<CeremonyKind> = new Set(['recovery', 'password', 'twofa', 'keys', 'delete']);
+
 class SettingsDraftStore {
 	s = $state<SettingsState>({ ...SETTINGS_DEFAULTS });
 	saveState = $state<SaveState>('idle');
@@ -374,6 +376,7 @@ class SettingsDraftStore {
 	};
 
 	launch = (kind: CeremonyKind, opts?: { method?: TwoFaSetupMethod }): void => {
+		if (ACCOUNT_ORIGIN_CEREMONIES.has(kind) && auth.mailOnlyFor(auth.accountId)) return;
 		this.ceremonyTwoFaMethod = opts?.method;
 		this.ceremony = kind;
 	};
