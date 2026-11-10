@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$core/calendar/calendar.css';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import * as Dialog from '$core/components/ui/dialog';
 	import Toast from '$core/components/Toast.svelte';
 	import ReadOnlyGuard from '$core/lifecycle/ReadOnlyGuard.svelte';
@@ -14,6 +15,8 @@
 	import { startReminders } from '$core/calendar/reminders';
 	import { cal } from '$core/calendar/state.svelte';
 	import { calendarStore } from '$core/calendar/store.svelte';
+	import { openCalendar } from '$core/handoff';
+	import { productTarget } from '$core/products';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { auth } from '$core/stores/auth.svelte';
 	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
@@ -24,6 +27,11 @@
 	$effect(() => {
 		const accountId = auth.accountId;
 		if (!accountId || !auth.canEnterApp) return;
+		const target = productTarget('calendar');
+		if (auth.mailOnlyFor(accountId) && target && target.origin !== window.location.origin) {
+			void openCalendar(accountId, Number(page.params.slot ?? '0'));
+			return;
+		}
 		ensureAccountData(accountId);
 		calendarStore.setAccount(accountId);
 		void calendarKeys
