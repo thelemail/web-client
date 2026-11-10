@@ -27,6 +27,7 @@ import {
 	hydrateAvatarCache
 } from '$core/avatarCache.svelte';
 import { platform } from '$platform';
+import { isAuthOrigin } from '$core/products';
 
 const REFRESH_SKEW_MS = 60_000;
 
@@ -176,7 +177,7 @@ class SessionStore {
 			const { serverHalf } = await getPersistentHalf(accountId, base);
 			const restored = await keystore.tryRestoreFromPersistent({ accountId, serverHalf });
 			if (!restored.ok) {
-				await keystore.disablePersistent({ accountId });
+				if (isAuthOrigin) await keystore.disablePersistent({ accountId });
 				return false;
 			}
 			this.#mutateProfile(accountId, (p) => ({
@@ -187,7 +188,7 @@ class SessionStore {
 			this.vaultOpened(accountId);
 			return true;
 		} catch (err) {
-			if (err instanceof ApiCallError && err.status === 401) {
+			if (isAuthOrigin && err instanceof ApiCallError && err.status === 401) {
 				await keystore.disablePersistent({ accountId });
 			}
 			return false;

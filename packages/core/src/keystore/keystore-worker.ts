@@ -13,7 +13,6 @@ import type {
 	UnloadAliasKeysArgs,
 	CreateAliasKeyArgs,
 	CreateSigningDelegationKeyArgs,
-	DisablePersistentArgs,
 	EncryptArgs,
 	EncryptToKeysArgs,
 	SignDetachedArgs,
@@ -92,8 +91,7 @@ import {
 import {
 	handleInvalidatePersistedVault,
 	handleEnrollPersistent,
-	handleTryRestoreFromPersistent,
-	handleDisablePersistent
+	handleTryRestoreFromPersistent
 } from './worker/vault-persist';
 import {
 	handleSealIndex,
@@ -419,10 +417,6 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 					msg.id,
 					await handleTryRestoreFromPersistent(msg.args as TryRestoreFromPersistentArgs)
 				);
-				break;
-			case 'disablePersistent':
-				await handleDisablePersistent(msg.args as DisablePersistentArgs);
-				respond(port, msg.id, undefined);
 				break;
 			case 'attachmentHeader':
 				respond(port, msg.id, await handleAttachmentHeader(msg.args as AttachmentHeaderArgs));

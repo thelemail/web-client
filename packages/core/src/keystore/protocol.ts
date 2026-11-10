@@ -971,7 +971,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	clearAll: ['account', 'product', 'auth'],
 	enrollPersistent: ['account', 'product', 'auth'],
 	tryRestoreFromPersistent: ['account', 'product', 'auth'],
-	disablePersistent: ['account', 'product', 'auth'],
+	disablePersistent: ['auth'],
 	attachmentHeader: ['account', 'product'],
 	attachmentBytes: ['account', 'product'],
 	decrypt: ['account', 'product'],
