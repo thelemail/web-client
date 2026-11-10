@@ -32,7 +32,7 @@ export type ProductKeysOutcome =
 
 const PRODUCTS: ProductKeysProduct[] = ['app', 'calendar'];
 
-async function loadState(accountId: string): Promise<{ state: CryptoStateResponse; events: Uint8Array[] }> {
+export async function loadCryptoState(accountId: string): Promise<{ state: CryptoStateResponse; events: Uint8Array[] }> {
 	const state = await getCryptoState(accountId);
 	const events = state.history.events.map(b64decode);
 	let cursor = state.history.nextCursor;
@@ -183,7 +183,7 @@ export async function readProductKeys(accountId: string, state?: CryptoStateResp
 }
 
 export async function ensureProductKeys(accountId: string): Promise<ProductKeysOutcome> {
-	const { state, events } = await loadState(accountId);
+	const { state, events } = await loadCryptoState(accountId);
 	if (!state.features.productKeys) return { status: 'disabled' };
 	if (state.head?.version === 2) return readProductKeys(accountId, state);
 	const refused = await convert(accountId, state, events);

@@ -44,6 +44,12 @@ class AccountsStore {
 		syncSessionHint(all.length > 0);
 	}
 
+	async refresh(): Promise<void> {
+		if (!browser) return;
+		this.#loaded = true;
+		await this.#reload();
+	}
+
 	bySlot(slot: number): AccountSlotRecord | null {
 		return this.list.find((r) => r.slot === slot) ?? null;
 	}
