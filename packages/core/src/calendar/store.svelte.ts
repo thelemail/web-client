@@ -20,6 +20,7 @@ import { coalesce } from '$core/realtime/coalesce';
 import { electLeader, type LeaderHandle } from '$core/realtime/leader';
 import { registerCalendarRealtime } from '$core/realtime/calendarHook';
 import type { RealtimeHint } from '$core/realtime/types';
+import { currentProduct } from '$core/products';
 import { auth } from '$core/stores/auth.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
@@ -212,7 +213,8 @@ export class CalendarStore {
 		}
 		if (!this.#stopRealtime) {
 			this.#stopRealtime = registerCalendarRealtime({
-				onHint: () => {
+				onHint: (hint) => {
+					if (hint.kind === 'calendar_invitation.updated') this.#identitiesStale = true;
 					this.#syncCoalesced();
 					this.#scheduleLagSync();
 				},
@@ -349,6 +351,8 @@ export class CalendarStore {
 		}
 	}
 
+	#identitiesStale = false;
+
 	async #syncDeliveries(accountId: string): Promise<void> {
 		if (this.#deliveriesRunning) return;
 		this.#deliveriesRunning = true;
@@ -356,6 +360,10 @@ export class CalendarStore {
 			const ctx = await calendarSigningContext(accountId);
 			if (!ctx || this.#accountId !== accountId) return;
 			const [{ processInbox, releasePendingDeliveries }, { applyDelivered }] = await Promise.all([import('./delivery'), import('./replies')]);
+			if (this.#identitiesStale) {
+				this.#identitiesStale = false;
+				(await import('./identity')).forgetCalendarIdentities();
+			}
 			await releasePendingDeliveries(accountId, this.#db);
 			await processInbox(accountId, this.#db, applyDelivered);
 		} catch (err) {
@@ -382,6 +390,7 @@ export class CalendarStore {
 
 	async #ensurePersonal(accountId: string): Promise<void> {
 		if (this.#creatingPersonal || !this.online) return;
+		if (currentProduct !== 'calendar' && auth.mailOnlyFor(accountId)) return;
 		if (this.calendars.some((c) => c.kind === 'personal' && c.row.ownerAccountId === accountId))
 			return;
 		this.#creatingPersonal = true;
@@ -426,13 +435,23 @@ export class CalendarStore {
 			this.#db.items(accountId),
 			this.#db.states(accountId)
 		]);
+		const ctx = await calendarSigningContext(accountId).catch(() => null);
 		if (this.#accountId !== accountId) return;
+		const awaiting = new Set<string>();
+		if (ctx) {
+			for (const c of cals) {
+				if (c.row.kind === 'shared' && !calendarKeys.grants.some((g) => g.calendarId === c.row.id)) awaiting.add(c.row.id);
+			}
+		}
 		const views: CalendarView[] = [];
-		for (const c of cals) views.push(await this.#viewFor(accountId, c.row));
+		for (const c of cals) {
+			if (!awaiting.has(c.row.id)) views.push(await this.#viewFor(accountId, c.row));
+		}
 		views.sort((a, b) => a.row.createdAt.localeCompare(b.row.createdAt));
 		const nextItems = new Map<string, LoadedItem>();
 		const reindex: CachedItem[] = [];
 		for (const entry of cached) {
+			if (awaiting.has(entry.row.calendarId)) continue;
 			const previous = this.items.get(entry.id);
 			if (
 				previous &&
