@@ -102,6 +102,7 @@ type MessageListener = (hint: RealtimeHint) => void;
 
 const REALTIME_COALESCE_MS = 750;
 const CHANGES_LAG_RESYNC_MS = 6500;
+const VISIBLE_SYNC_MS = 60_000;
 
 function labelFor(item: CalendarItem, action: 'created' | 'edited' | 'deleted'): string {
 	if (item.kind === 'hold') {
@@ -139,6 +140,7 @@ export class CalendarStore {
 	#replaying = false;
 	#stopChannel: (() => void) | null = null;
 	#stopRealtime: (() => void) | null = null;
+	#stopPolling: (() => void) | null = null;
 	#pendingSync: Promise<void> | null = null;
 	#loadPromise: Promise<void> | null = null;
 	#messageListeners = new Set<MessageListener>();
@@ -224,6 +226,17 @@ export class CalendarStore {
 				onResync: () => this.#syncCoalesced()
 			});
 		}
+		if (currentProduct === 'calendar' && !this.#stopPolling) {
+			const tick = () => {
+				if (document.visibilityState === 'visible') this.#syncCoalesced();
+			};
+			const timer = setInterval(tick, VISIBLE_SYNC_MS);
+			document.addEventListener('visibilitychange', tick);
+			this.#stopPolling = () => {
+				clearInterval(timer);
+				document.removeEventListener('visibilitychange', tick);
+			};
+		}
 		if (!this.#leader) {
 			this.#leader = electLeader('thelemail:calendar-outbox', () => {
 				this.#leading = true;
@@ -246,6 +259,8 @@ export class CalendarStore {
 		this.#stopChannel = null;
 		this.#stopRealtime?.();
 		this.#stopRealtime = null;
+		this.#stopPolling?.();
+		this.#stopPolling = null;
 		if (this.#replayTimer) clearTimeout(this.#replayTimer);
 		this.#replayTimer = null;
 		if (this.#lagTimer) clearTimeout(this.#lagTimer);
