@@ -36,7 +36,7 @@ import { DOMAIN, encodeDelegation, productPurposes } from '$core/keystore/produc
 import { fingerprintBytes, generateAuthorityKey, generateCalendarIdentity, publicKeyBytes, publicKeyDigest, signTranscript } from '$core/keystore/productkeys/pgp';
 import { PROFILE } from '$core/keystore/productkeys/profiles';
 import { memoryCalendarDb } from './db';
-import { deliverCalendarMail, encodePayload, processInbox } from './delivery';
+import { deliverCalendarMail, encodePayload, processInbox, releasePendingDeliveries } from './delivery';
 import type { CalendarIdentity } from './identity';
 import type { OutboxMail } from './outbox';
 
@@ -126,6 +126,66 @@ describe('deliverCalendarMail', () => {
 		await deliverCalendarMail(me, ctx, db, itemId, mail());
 		expect(h.signInvitation).toHaveBeenCalledTimes(1);
 		expect(h.deliver.mock.calls[1][0].statement).toBe(h.deliver.mock.calls[0][0].statement);
+	});
+});
+
+describe('releasePendingDeliveries', () => {
+	const operationId = mail().operationId as string;
+	const waiting = { operationId, recipientAccountId: carla, recipientEmail: 'carla@thelemail.test' };
+
+	async function sent() {
+		const statement = encodeCalendarMessage({
+			type: CALENDAR_TYPE.invitation, accountId: me, organizerAccountId: me, calendarId, eventId: itemId, uid, method: 'REQUEST', sequence: 1,
+			recipients: [carla, bruno], contentDigest: await sha256(encodePayload({ method: 'REQUEST', subject: 's', body: 'b', ics })),
+			productKeyEpoch: 1, delegationRevision: 1, membershipRevision: 2, operationId, issuedAt: formatTime(new Date())
+		});
+		h.signInvitation.mockResolvedValue({ ok: true, statement, signature: new Uint8Array([2]), signerFingerprint: new Uint8Array() });
+		const db = memoryCalendarDb();
+		await deliverCalendarMail(me, ctx, db, itemId, mail());
+		h.deliver.mockClear();
+		h.pending.mockResolvedValue({ invitations: [waiting] });
+		return db;
+	}
+
+	it('seals the stored invitation to a recipient whose identity has appeared and resends the same statement', async () => {
+		const db = await sent();
+		const record = await db.delivery(me, operationId);
+		const carlaId = (await identityFor(carla, 'carla@thelemail.test')).identity;
+		h.resolve.mockImplementation(async (_db: unknown, _me: string, email: string) =>
+			email === 'carla@thelemail.test' ? { kind: 'published', identity: carlaId } : { kind: 'external', email }
+		);
+		h.deliver.mockResolvedValue({ operationId, delivered: [bruno, carla], pending: [] });
+		await releasePendingDeliveries(me, db);
+		expect(h.signInvitation).toHaveBeenCalledTimes(1);
+		const body = h.deliver.mock.calls[0][0];
+		expect(body.statement).toBe(record?.statement);
+		expect(body.signature).toBe(record?.signature);
+		expect(body.recipients).toEqual([
+			{ accountId: carla, recipientKeyDigest: b64encode(carlaId.authority.signingKeyDigest), ciphertext: expect.any(String) },
+			{ accountId: bruno }
+		]);
+		expect(await db.delivery(me, operationId)).toBeNull();
+	});
+
+	it('sends nothing while the recipient still has no identity', async () => {
+		const db = await sent();
+		await releasePendingDeliveries(me, db);
+		expect(h.deliver).not.toHaveBeenCalled();
+		expect(await db.delivery(me, operationId)).not.toBeNull();
+	});
+
+	it('refuses an identity that belongs to another account', async () => {
+		const db = await sent();
+		h.resolve.mockResolvedValue({ kind: 'published', identity: brunoId });
+		await releasePendingDeliveries(me, db);
+		expect(h.deliver).not.toHaveBeenCalled();
+	});
+
+	it('skips an operation this device did not send', async () => {
+		h.pending.mockResolvedValue({ invitations: [waiting] });
+		await releasePendingDeliveries(me, memoryCalendarDb());
+		expect(h.resolve).not.toHaveBeenCalled();
+		expect(h.deliver).not.toHaveBeenCalled();
 	});
 });
 
