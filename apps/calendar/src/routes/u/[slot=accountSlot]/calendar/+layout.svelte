@@ -14,6 +14,7 @@
 	import { startReminders } from '$core/calendar/reminders';
 	import { cal } from '$core/calendar/state.svelte';
 	import { calendarStore } from '$core/calendar/store.svelte';
+	import { realtime } from '$core/realtime/realtime.svelte';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { auth } from '$core/stores/auth.svelte';
 	import { handOffToApp } from '$core/products';
@@ -21,6 +22,8 @@
 	import { m } from '$paraglide/messages.js';
 
 	let { children } = $props();
+
+	onMount(() => realtime.start());
 
 	$effect(() => {
 		if (auth.sessionLost(auth.accountId)) handOffToApp();
