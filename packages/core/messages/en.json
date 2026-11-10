@@ -4901,5 +4901,9 @@
 	"handoff_opening": "Signing you in",
 	"handoff_auth_invalid": "This sign-in request has expired or was already used. Go back and try again.",
 	"handoff_auth_other_account": "This request is for a different account. Sign in to that account to continue.",
-	"handoff_auth_returning": "Returning you to the app"
+	"handoff_auth_returning": "Returning you to the app",
+	"settings_security_account_origin_title": "Sign-in and recovery",
+	"settings_security_account_origin_desc": "Password, two-factor sign-in, recovery, signed-in devices and the security log are in your account settings.",
+	"settings_security_account_origin_cta": "Open account settings",
+	"settings_account_delete_at_account": "You delete the account from your account settings."
 }

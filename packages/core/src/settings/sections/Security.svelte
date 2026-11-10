@@ -9,6 +9,8 @@
 	import ContactKeysCard from '../security/ContactKeysCard.svelte';
 	import PrivacyCard from '../security/PrivacyCard.svelte';
 	import SecurityLog from '../security/SecurityLog.svelte';
+	import AccountOriginCard from '../security/AccountOriginCard.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import type { SettingsState, CeremonyKind, TwoFaSetupMethod } from '../data';
 
 	interface Props {
@@ -18,14 +20,19 @@
 	}
 
 	let { s, set, launch }: Props = $props();
+	const mailOnly = $derived(auth.mailOnlyFor(auth.accountId));
 </script>
 
 <SecHead desc={m.settings_security_desc()} />
 
 <SecGroup id="sec-access" title={m.settings_security_group_access()}>
-	<RecoveryHero {launch} />
-	<SignInCard {launch} />
-	<SessionsCard />
+	{#if mailOnly}
+		<AccountOriginCard />
+	{:else}
+		<RecoveryHero {launch} />
+		<SignInCard {launch} />
+		<SessionsCard />
+	{/if}
 </SecGroup>
 
 <SecGroup id="sec-encryption" title={m.settings_security_group_encryption()}>
@@ -35,5 +42,7 @@
 
 <SecGroup id="sec-privacy" title={m.settings_security_group_privacy()}>
 	<PrivacyCard {s} {set} />
-	<SecurityLog />
+	{#if !mailOnly}
+		<SecurityLog />
+	{/if}
 </SecGroup>

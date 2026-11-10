@@ -82,7 +82,7 @@ export const load: LayoutLoad = async ({ parent, params, url }) => {
 		throw redirect(303, `/u/${slot}/billing/choose`);
 	}
 
-	const gate = recoveryGateTarget(url.pathname, url.search, slot, auth.recoveryEnabled);
+	const gate = auth.mailOnlyFor(accountId) ? null : recoveryGateTarget(url.pathname, url.search, slot, auth.recoveryEnabled);
 	if (gate) {
 		throw redirect(303, gate);
 	}

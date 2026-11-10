@@ -101,7 +101,7 @@ describe('commandVaultModes', () => {
 	});
 
 	it('denies key issuance and rotation to a product vault', () => {
-		for (const cmd of ['createAliasKey', 'prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation', 'sealProductFork'] as const) {
+		for (const cmd of ['prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation', 'sealProductFork'] as const) {
 			expect(commandVaultModes[cmd], `${cmd} must stay in the account vault`).toEqual(['account']);
 		}
 		for (const cmd of [...keyIssuingCommands, 'reformatKeyWithUids', 'commitReformattedKey'] as const) {
@@ -112,8 +112,8 @@ describe('commandVaultModes', () => {
 		}
 	});
 
-	it('lets a mail vault read its own keyring and alias grants and nothing that rewrites them', () => {
-		for (const cmd of ['loadAccountKeys', 'listAccountKeys', 'loadAliasKeys', 'unloadAliasKeys', 'createSigningDelegationKey'] as const) {
+	it('lets a mail vault read its keyring and issue alias and delegation keys, never rewrite its own', () => {
+		for (const cmd of ['loadAccountKeys', 'listAccountKeys', 'loadAliasKeys', 'unloadAliasKeys', 'createAliasKey', 'createSigningDelegationKey'] as const) {
 			expect(commandVaultModes[cmd]).toEqual(['account', 'mail']);
 		}
 	});

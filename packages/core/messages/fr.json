@@ -4901,5 +4901,9 @@
   "handoff_opening": "Connexion en cours",
   "handoff_auth_invalid": "Cette demande de connexion a expiré ou a déjà été utilisée. Revenez en arrière et réessayez.",
   "handoff_auth_other_account": "Cette demande concerne un autre compte. Connectez-vous à ce compte pour continuer.",
-  "handoff_auth_returning": "Retour vers l’application"
+  "handoff_auth_returning": "Retour vers l’application",
+  "settings_security_account_origin_title": "Connexion et récupération",
+  "settings_security_account_origin_desc": "Le mot de passe, l’authentification à deux facteurs, la récupération, les appareils connectés et le journal de sécurité se trouvent dans les paramètres de votre compte.",
+  "settings_security_account_origin_cta": "Ouvrir les paramètres du compte",
+  "settings_account_delete_at_account": "La suppression du compte se fait dans les paramètres de votre compte."
 }

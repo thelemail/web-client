@@ -32,6 +32,10 @@ const auth = vi.hoisted(() => ({
 	recoveryState: 'set' as 'unknown' | 'error' | 'set' | 'unset',
 	sessionRotations: 0,
 	keyRotationBlockerFor: () => null,
+	mailOnly: false,
+	mailOnlyFor(): boolean {
+		return this.mailOnly;
+	},
 	adoptRotatedSession: vi.fn(),
 	loadProfile: vi.fn()
 }));
@@ -79,6 +83,7 @@ function open() {
 
 beforeEach(() => {
 	auth.recoveryState = 'set';
+	auth.mailOnly = false;
 	twofactor.status = status('Security key · Oct 19, 2026');
 	twofactor.phase = 'ready';
 	api.getTwoFactorStatus.mockResolvedValue(status('Desk YubiKey'));
@@ -174,6 +179,39 @@ describe('Security layout', () => {
 		await fireEvent.click(button('Rename')!);
 		expect(document.querySelector('.cfd-input')).not.toBeNull();
 		expect(unnamedControls(container)).toEqual([]);
+	});
+});
+
+describe('security settings of a mail-only account', () => {
+	it('points sign-in, recovery and devices to account settings instead of running them in mail', async () => {
+		auth.mailOnly = true;
+		auth.recoveryState = 'unset';
+		authApi.listSessions.mockClear();
+		authApi.listSecurityEvents.mockClear();
+		const { container } = open();
+
+		expect(document.body.textContent).toContain('Password, two-factor sign-in, recovery, signed-in devices and the security log are in your account settings.');
+		expect(document.querySelector('.recovery-hero')).toBeNull();
+		expect(button('Regenerate recovery phrase')).toBeFalsy();
+		expect(button('Change password')).toBeFalsy();
+		expect(document.body.textContent).not.toContain('Not set up');
+		expect(authApi.listSessions).not.toHaveBeenCalled();
+		expect(authApi.listSecurityEvents).not.toHaveBeenCalled();
+		expect(unnamedControls(container)).toEqual([]);
+		expect(headingJumps(container, 1)).toEqual([]);
+	});
+
+	it('offers no key rotation and still shows the keys', () => {
+		auth.mailOnly = true;
+		open();
+		expect(document.body.textContent).not.toContain('Rotate');
+		expect(document.querySelector('#sec-encryption')).not.toBeNull();
+	});
+
+	it('keeps every action for an account that still signs in here', () => {
+		open();
+		expect(document.body.textContent).not.toContain('are in your account settings');
+		expect(button('Regenerate recovery phrase')).toBeTruthy();
 	});
 });
 

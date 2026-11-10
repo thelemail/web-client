@@ -4901,5 +4901,9 @@
 	"handoff_opening": "Du wirst angemeldet",
 	"handoff_auth_invalid": "Diese Anmeldeanfrage ist abgelaufen oder wurde bereits verwendet. Geh zurück und versuch es erneut.",
 	"handoff_auth_other_account": "Diese Anfrage gilt für ein anderes Konto. Melde dich bei diesem Konto an, um fortzufahren.",
-	"handoff_auth_returning": "Du wirst zur App zurückgeleitet"
+	"handoff_auth_returning": "Du wirst zur App zurückgeleitet",
+	"settings_security_account_origin_title": "Anmeldung und Wiederherstellung",
+	"settings_security_account_origin_desc": "Passwort, Zwei-Faktor-Authentifizierung, Wiederherstellung, angemeldete Geräte und das Sicherheitsprotokoll finden Sie in Ihren Kontoeinstellungen.",
+	"settings_security_account_origin_cta": "Kontoeinstellungen öffnen",
+	"settings_account_delete_at_account": "Das Konto löschen Sie in Ihren Kontoeinstellungen."
 }

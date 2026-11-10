@@ -36,7 +36,6 @@ const accountOnly: KeystoreCommand[] = [
 	'opaqueRecoverySetupStart',
 	'opaquePrepareAmkRotation',
 	'prepareDeletionProof',
-	'createAliasKey',
 	'prepareKeyRotation',
 	'commitKeyRotation',
 	'reformatKeyWithUids',
@@ -44,7 +43,7 @@ const accountOnly: KeystoreCommand[] = [
 	'sealProductFork',
 	'invalidatePersistedVault'
 ];
-const mailContent: KeystoreCommand[] = ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentBytes', 'getPublicKey', 'sealIndex', 'openIndex', 'loadAliasKeys', 'listAccountKeys', 'loadAccountKeys', 'lock', 'clear'];
+const mailContent: KeystoreCommand[] = ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentBytes', 'getPublicKey', 'sealIndex', 'openIndex', 'loadAliasKeys', 'createAliasKey', 'createSigningDelegationKey', 'listAccountKeys', 'loadAccountKeys', 'lock', 'clear'];
 const calendarOnly: KeystoreCommand[] = ['signInvitation', 'signReply', 'signFreeBusy', 'signCalendarGrant', 'createCalendarKey', 'loadCalendarKeys', 'openProductFork'];
 const authOnly: KeystoreCommand[] = ['touch', 'prepareProductKeys', 'readProductKeys', 'sealProductHandoff', 'disablePersistent'];
 

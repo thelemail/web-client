@@ -91,7 +91,7 @@ export function custodyDeps(lock: CustodyDeps['lock'] = tryLock): CustodyDeps {
 			}
 		},
 		session: {
-			enrolled: (accountId) => auth.authOriginEnrolledFor(accountId),
+			enrolled: (accountId) => auth.authOriginEnrolledFor(accountId) && auth.recoveryEnabledFor(accountId) === true,
 			hostBound: (accountId) => accounts.byId(accountId)?.sessionOrigin === 'host',
 			adopt: (accountId, grant) => auth.adoptHostSession(accountId, grant.accessToken, grant.expiresIn, grant.csrfToken),
 			reopen: async (accountId) => {
@@ -188,10 +188,10 @@ export function startMailCustody(): void {
 	document.addEventListener('visibilitychange', reloadIfHidden);
 	auth.attach({
 		profileLoaded(me) {
-			if (me.authOriginEnrolled) schedule(me.accountId, 2_000);
+			if (me.authOriginEnrolled && me.recoveryEnabled === true) schedule(me.accountId, 2_000);
 		},
 		vaultOpened(accountId) {
-			if (auth.authOriginEnrolledFor(accountId)) schedule(accountId, 2_000);
+			if (auth.authOriginEnrolledFor(accountId) && auth.recoveryEnabledFor(accountId) === true) schedule(accountId, 2_000);
 		}
 	});
 }

@@ -481,6 +481,10 @@ class SessionStore {
 		this.#mutateProfile(accountId, (p) => ({ ...p, recoveryEnabled: true }));
 	}
 
+	recoveryEnabledFor(accountId: string): boolean | null {
+		return this.#profiles.get(accountId)?.recoveryEnabled ?? null;
+	}
+
 	mailOnlyFor(accountId: string | null): boolean {
 		return this.#profiles.get(accountId ?? this.#currentId ?? '')?.mailOnly ?? false;
 	}

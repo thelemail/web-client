@@ -29,6 +29,7 @@
 		if (auth.accountId) void accountKeys.ready(auth.accountId);
 	});
 
+	const mailOnly = $derived(auth.mailOnlyFor(auth.accountId));
 	const rotationBlocker = $derived(
 		accountKeys.authScheme === 'srp_v1'
 			? 'sign_in_upgrade_required'
@@ -92,6 +93,7 @@
 			</div>
 		{/if}
 	</Row>
+	{#if !mailOnly}
 	<div class="cer-rows tight">
 		{#if rotationBlocker}
 			<div class="setrow">
@@ -114,6 +116,7 @@
 			/>
 		{/if}
 	</div>
+	{/if}
 	<Row t={m.settings_security_export_title()} d={m.settings_security_export_desc()}>
 		<Button variant="secondary" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
 			<Download size={14} />{m.settings_security_export_key()}

@@ -4901,5 +4901,9 @@
 	"handoff_opening": "A iniciar sessão",
 	"handoff_auth_invalid": "Este pedido de início de sessão expirou ou já foi usado. Volte atrás e tente novamente.",
 	"handoff_auth_other_account": "Este pedido é para outra conta. Inicie sessão nessa conta para continuar.",
-	"handoff_auth_returning": "A voltar à aplicação"
+	"handoff_auth_returning": "A voltar à aplicação",
+	"settings_security_account_origin_title": "Início de sessão e recuperação",
+	"settings_security_account_origin_desc": "A palavra-passe, a autenticação de dois fatores, a recuperação, os dispositivos com sessão iniciada e o registo de segurança estão nas definições da sua conta.",
+	"settings_security_account_origin_cta": "Abrir definições da conta",
+	"settings_account_delete_at_account": "A conta elimina-se nas definições da sua conta."
 }

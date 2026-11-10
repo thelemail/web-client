@@ -993,7 +993,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	decrypt: ['account', 'mail', 'calendar'],
 	loadAliasKeys: ['account', 'mail'],
 	unloadAliasKeys: ['account', 'mail'],
-	createAliasKey: ['account'],
+	createAliasKey: ['account', 'mail'],
 	createSigningDelegationKey: ['account', 'mail'],
 	getPublicKey: ['account', 'mail', 'calendar'],
 	loadAccountKeys: ['account', 'mail'],
