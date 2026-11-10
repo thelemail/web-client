@@ -47,7 +47,7 @@ function idOf(scope: string, k: openpgp.PrivateKey): string {
 function mailVault(current: number): ProductVault {
 	const keys = [
 		...identities.map((k, i) => ({ keyId: idOf(ACCOUNT, k), scopeId: ACCOUNT, purpose: ENTRY.mailIdentity, profileId: PROFILE.mailClassic, keyEpoch: i + 1, material: secretKeyBytes(k) })),
-		{ keyId: idOf(ALIAS, aliases[0]), scopeId: ALIAS, purpose: ENTRY.mailAlias, profileId: PROFILE.mailClassic, keyEpoch: 2, material: secretKeyBytes(aliases[0]), alias: { addressId: 'addr-team', email: 'team@thelemail.test' } },
+		{ keyId: idOf(ALIAS, aliases[0]), scopeId: ALIAS, purpose: ENTRY.mailAlias, profileId: PROFILE.mailClassic, keyEpoch: 2, material: secretKeyBytes(aliases[0]), alias: { aliasId: 'alias-team', addressId: 'addr-team', email: 'team@thelemail.test' } },
 		{ keyId: idOf(OTHER_ALIAS, aliases[1]), scopeId: OTHER_ALIAS, purpose: ENTRY.mailAlias, profileId: PROFILE.mailClassic, keyEpoch: 1, material: secretKeyBytes(aliases[1]) },
 		{ keyId: 'aaaaaaaa-0000-4000-8000-000000000001', scopeId: ACCOUNT, purpose: ENTRY.mailImportDedup, profileId: PROFILE.mailImportDedup, keyEpoch: 1, material: dedup.slice() },
 		{ keyId: 'aaaaaaaa-0000-4000-8000-000000000002', scopeId: ACCOUNT, purpose: ENTRY.mailSearchIndex, profileId: PROFILE.mailSearchIndex, keyEpoch: 1, material: leaf.slice() }
@@ -108,10 +108,9 @@ describe('product vault codec', () => {
 		const state = await productVaultState(ACCOUNT, EMAIL, roundTrip(mailVault(2)));
 		const team = state.aliasKeys.get(fingerprintHexOf(aliases[0]));
 		const desk = state.aliasKeys.get(fingerprintHexOf(aliases[1]));
-		expect(team).toMatchObject({ aliasId: ALIAS, addressId: 'addr-team', email: 'team@thelemail.test', keyVersion: 2 });
-		expect(desk).toMatchObject({ aliasId: OTHER_ALIAS, addressId: '', email: '', keyVersion: 1 });
-		expect(state.aliasCurrent.get(ALIAS)).toBe(fingerprintHexOf(aliases[0]));
-		expect(state.aliasCurrent.get(OTHER_ALIAS)).toBe(fingerprintHexOf(aliases[1]));
+		expect(team).toMatchObject({ aliasId: 'alias-team', addressId: 'addr-team', email: 'team@thelemail.test', keyVersion: 2 });
+		expect(desk).toMatchObject({ aliasId: '', addressId: '', email: '', keyVersion: 1 });
+		expect(state.aliasCurrent.get('alias-team')).toBe(fingerprintHexOf(aliases[0]));
 	});
 
 	it('keeps the search leaf and never a root or passphrase in the unlocked state', async () => {

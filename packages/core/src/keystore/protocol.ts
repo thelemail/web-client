@@ -1,7 +1,8 @@
 import type { ConversionOutput } from './productkeys/convert';
 import type { Availability } from './productkeys/productBundle';
 import type { ReadInput, ReadResult, StoredBundle } from './productkeys/read';
-import type { StoredCandidate } from './productkeys/mailCandidate';
+import type { MailCandidateUpload, StoredCandidate, StoredCommittedMailKeys } from './productkeys/mailCandidate';
+import type { CustodyJournal } from '$core/custody/journal';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 
 export interface AccountStatus {
@@ -10,6 +11,7 @@ export interface AccountStatus {
 	unlocked: boolean;
 	hasPersistent: boolean;
 	authScheme: 'srp_v1' | 'opaque_v1';
+	mailOnly?: boolean;
 }
 
 export interface StatusResponse {
@@ -564,8 +566,15 @@ export interface AccountKeysChangedBroadcast {
 	currentChanged: boolean;
 }
 
+export interface CustodyChangedBroadcast {
+	type: 'custodyChanged';
+	accountId: string;
+	email: string;
+}
+
 export type Broadcast =
 	| VaultChangedBroadcast
+	| CustodyChangedBroadcast
 	| LockedBroadcast
 	| ClearedBroadcast
 	| ClearedAllBroadcast
@@ -924,7 +933,13 @@ export type KeystoreCommand =
 	| 'signFreeBusy'
 	| 'signCalendarGrant'
 	| 'createCalendarKey'
-	| 'loadCalendarKeys';
+	| 'loadCalendarKeys'
+	| 'custodyPrepare'
+	| 'custodyAdopt'
+	| 'custodyStage'
+	| 'custodyCommit'
+	| 'custodyRetire'
+	| 'custodyDiscard';
 
 export type VaultMode = 'account' | 'mail' | 'calendar' | 'auth';
 
@@ -1007,7 +1022,13 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	sealProductHandoff: ['auth'],
 	adoptHandoff: ['mail', 'calendar'],
 	commitHandoff: ['mail', 'calendar'],
-	discardHandoff: ['mail', 'calendar']
+	discardHandoff: ['mail', 'calendar'],
+	custodyPrepare: ['account'],
+	custodyAdopt: ['account'],
+	custodyStage: ['account'],
+	custodyCommit: ['account'],
+	custodyRetire: ['mail'],
+	custodyDiscard: ['account', 'mail']
 };
 
 export interface PrepareProductKeysArgs extends AccountScopedArgs {
@@ -1112,3 +1133,43 @@ export interface OpenProductForkArgs {
 export type OpenProductForkResponse =
 	| { ok: true; accountId: string; email: string; keyCount: number }
 	| { ok: false; code: 'invalid_payload' | 'wrong_product' | 'wrong_account' };
+
+export interface CustodyScopedArgs extends AccountScopedArgs {
+	migrationId: string;
+}
+
+export type CustodyRefusal = { ok: false; code: 'locked' | 'unsupported' | 'missing' | 'invalid'; message?: string };
+
+export interface CustodyPrepareArgs extends CustodyScopedArgs {
+	amkEpoch: number;
+	historyEvents: Uint8Array[];
+	availability: { keyId: string; state: Availability }[];
+	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
+	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
+}
+
+export type CustodyPrepareResponse = { ok: true; upload: MailCandidateUpload } | CustodyRefusal;
+
+export interface CustodyAdoptArgs extends CustodyScopedArgs {
+	source: { kind: 'candidate'; stored: StoredCandidate } | { kind: 'committed'; stored: StoredCommittedMailKeys };
+}
+
+export type CustodyAdoptResponse = { ok: true; kind: 'candidate' | 'committed'; digest: Uint8Array; keyCount: number } | CustodyRefusal;
+
+export interface CustodyStageArgs extends CustodyScopedArgs {
+	serverHalf: string | null;
+}
+
+export type CustodyStageResponse = { ok: true; durable: boolean } | CustodyRefusal;
+
+export interface CustodyCommitArgs extends CustodyScopedArgs {
+	journal: CustodyJournal;
+}
+
+export type CustodyCommitResponse = { ok: true } | CustodyRefusal;
+
+export interface CustodyRetireArgs extends CustodyScopedArgs {
+	journal: CustodyJournal;
+}
+
+export type CustodyRetireResponse = { ok: true } | CustodyRefusal;

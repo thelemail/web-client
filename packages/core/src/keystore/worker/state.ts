@@ -7,6 +7,9 @@ import { Api as CryptoApi } from '@protontech/crypto/proxy/endpoint/api.ts';
 import { clearAllVaults, deleteVault, getAllVaults, putVault } from '../idb';
 import type { VaultRecord } from '../idb';
 import type { Broadcast, ClearArgs, LockArgs, StatusResponse } from '../protocol';
+import { isProductCustody, reached } from '$core/custody/journal';
+import { forgetAllCustody, forgetCustody, getAllCustodyVaults, getAllJournals } from '$core/custody/store';
+import { currentProduct } from '../../products';
 
 export const pendingFlows: {
 	login: PendingLogin | null;
@@ -118,6 +121,22 @@ export async function restoreFromIdb() {
 	} catch (err) {
 		console.warn('keystore: idb restore failed', err);
 	}
+	if (currentProduct !== 'app' || typeof indexedDB === 'undefined') return;
+	try {
+		const journals = await getAllJournals();
+		const records = new Map((await getAllCustodyVaults()).map((rec) => [rec.accountId, rec]));
+		for (const journal of journals) {
+			if (!isProductCustody(journal)) continue;
+			productAccounts.add(journal.accountId);
+			const legacy = cachedRecords.get(journal.accountId);
+			const record = records.get(journal.accountId);
+			if (record) cachedRecords.set(journal.accountId, record);
+			else cachedRecords.delete(journal.accountId);
+			if (legacy && reached(journal, 'legacy-retired-local')) await deleteVault(journal.accountId);
+		}
+	} catch (err) {
+		console.warn('keystore: custody restore failed', err);
+	}
 }
 
 export async function ensureCryptoReady(): Promise<void> {
@@ -166,7 +185,8 @@ export async function handleStatus(): Promise<StatusResponse> {
 			email: v.email,
 			unlocked: true,
 			hasPersistent: hasPersistentFor(rec),
-			authScheme: v.authScheme
+			authScheme: v.authScheme,
+			...(v.product === 'app' ? { mailOnly: true } : {})
 		});
 		seen.add(v.accountId);
 	}
@@ -177,7 +197,8 @@ export async function handleStatus(): Promise<StatusResponse> {
 			email: rec.email,
 			unlocked: false,
 			hasPersistent: hasPersistentFor(rec),
-			authScheme: rec.authScheme
+			authScheme: rec.authScheme,
+			...(productAccounts.has(rec.accountId) ? { mailOnly: true } : {})
 		});
 	}
 	return { accounts };
@@ -189,6 +210,10 @@ export async function handleClear(args: ClearArgs): Promise<void> {
 	indexKeys.delete(args.accountId);
 	cachedRecords.delete(args.accountId);
 	await deleteVault(args.accountId);
+	if (currentProduct === 'app') {
+		productAccounts.delete(args.accountId);
+		await forgetCustody(args.accountId);
+	}
 	broadcast({ type: 'cleared', accountId: args.accountId });
 }
 
@@ -203,6 +228,10 @@ export async function handleClearAll(): Promise<void> {
 	pendingFlows.passwordChange = null;
 	opaqueOps.clear();
 	await clearAllVaults();
+	if (currentProduct === 'app') {
+		productAccounts.clear();
+		await forgetAllCustody();
+	}
 	broadcast({ type: 'clearedAll' });
 }
 

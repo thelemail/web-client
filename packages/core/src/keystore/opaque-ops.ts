@@ -80,6 +80,15 @@ export class OpaqueOperations {
 		if (op) wipeOpaqueOperation(op);
 	}
 
+	forgetAccount(accountId: string): void {
+		for (const [id, op] of this.ops) {
+			if (op.accountId === accountId) {
+				wipeOpaqueOperation(op);
+				this.ops.delete(id);
+			}
+		}
+	}
+
 	reap(now = Date.now()): void {
 		const cutoff = now - OPAQUE_OP_TTL_MS;
 		for (const [id, op] of this.ops) {

@@ -1,7 +1,8 @@
 /// <reference lib="webworker" />
 
 import * as openpgp from 'openpgp';
-import { b64decode, b64encode, isCanonicalUuid } from '../productkeys/encoding';
+import type { VaultRecord } from '../idb';
+import { b64decode, b64encode, bytesEqual, isCanonicalUuid } from '../productkeys/encoding';
 import { SECRET_LEN } from '../productkeys/envelope';
 import { fail } from '../productkeys/errors';
 import type { Product } from '../productkeys/productBundle';
@@ -10,6 +11,7 @@ import type { AccountKeyEntry, AliasKeyEntry, VaultState } from './state';
 import { fingerprintHexOf, recomputeAliasCurrent } from './state';
 
 export const PRODUCT_VAULT_VERSION = 4;
+export const PRODUCT_VAULT_WRAP_INFO = new TextEncoder().encode('thelemail-product-vault-wrap-v1');
 
 const IDENTITY_PURPOSE: Record<Product, string> = {
 	app: ENTRY.mailIdentity,
@@ -23,7 +25,7 @@ export interface ProductVaultKey {
 	profileId: string;
 	keyEpoch: number;
 	material: Uint8Array;
-	alias?: { addressId: string; email: string };
+	alias?: { aliasId: string; addressId: string; email: string };
 }
 
 export interface ProductVaultManifest {
@@ -48,7 +50,7 @@ interface WireKey {
 	f: string;
 	e: number;
 	m: string;
-	a?: [string, string];
+	a?: [string, string, string];
 }
 
 interface Wire {
@@ -73,7 +75,7 @@ export function encodeProductVault(vault: ProductVault): Uint8Array {
 			f: k.profileId,
 			e: k.keyEpoch,
 			m: b64encode(k.material),
-			...(k.alias ? { a: [k.alias.addressId, k.alias.email] as [string, string] } : {})
+			...(k.alias ? { a: [k.alias.aliasId, k.alias.addressId, k.alias.email] as [string, string, string] } : {})
 		})),
 		n: vault.manifest
 			? { i: vault.manifest.manifestId, r: vault.manifest.revision, h: b64encode(vault.manifest.hash), e: vault.manifest.productKeyEpoch }
@@ -110,8 +112,8 @@ function decodeKey(raw: unknown, version: number): ProductVaultKey {
 	};
 	if (!isCanonicalUuid(out.keyId) || !isCanonicalUuid(out.scopeId)) fail('malformed', 'product vault key id');
 	if (k.a !== undefined) {
-		if (!Array.isArray(k.a) || k.a.length !== 2) fail('malformed', 'product vault alias');
-		out.alias = { addressId: text(k.a[0]), email: text(k.a[1]) };
+		if (!Array.isArray(k.a) || k.a.length !== 3) fail('malformed', 'product vault alias');
+		out.alias = { aliasId: text(k.a[0]), addressId: text(k.a[1]), email: text(k.a[2]) };
 	}
 	return out;
 }
@@ -164,7 +166,7 @@ export async function productVaultState(accountId: string, email: string, vault:
 			const privateKey = await openpgp.readPrivateKey({ binaryKey: k.material.slice() });
 			const fingerprintHex = fingerprintHexOf(privateKey);
 			aliasKeys.set(fingerprintHex, {
-				aliasId: k.scopeId,
+				aliasId: k.alias?.aliasId ?? '',
 				addressId: k.alias?.addressId ?? '',
 				email: k.alias?.email ?? '',
 				keyVersion: k.keyEpoch,
@@ -195,4 +197,53 @@ export async function productVaultState(accountId: string, email: string, vault:
 	};
 	recomputeAliasCurrent(state);
 	return state;
+}
+
+export async function productWrapKey(localHalfKey: CryptoKey, serverHalf: Uint8Array): Promise<CryptoKey> {
+	return crypto.subtle.deriveKey(
+		{ name: 'HKDF', hash: 'SHA-256', salt: serverHalf as BufferSource, info: PRODUCT_VAULT_WRAP_INFO as BufferSource },
+		localHalfKey,
+		{ name: 'AES-GCM', length: 256 },
+		false,
+		['encrypt', 'decrypt']
+	);
+}
+
+export async function sealProductRecord(accountId: string, email: string, vault: ProductVault, serverHalf: Uint8Array): Promise<{ record: VaultRecord; plain: Uint8Array }> {
+	const ikm = crypto.getRandomValues(new Uint8Array(32));
+	const localHalfKey = await crypto.subtle.importKey('raw', ikm as BufferSource, 'HKDF', false, ['deriveKey']);
+	ikm.fill(0);
+	const wrapKey = await productWrapKey(localHalfKey, serverHalf);
+	const wrapIv = crypto.getRandomValues(new Uint8Array(12));
+	const plain = encodeProductVault(vault);
+	const wrappedPrivateKey = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: wrapIv as BufferSource }, wrapKey, plain as BufferSource));
+	return {
+		record: {
+			accountId,
+			email,
+			authScheme: 'opaque_v1',
+			armoredEncryptedPrivateKey: '',
+			updatedAt: Date.now(),
+			wrappedPrivateKey,
+			wrapIv,
+			wrapPayloadVersion: PRODUCT_VAULT_VERSION,
+			localHalfKey
+		},
+		plain
+	};
+}
+
+export async function reopenProductRecord(record: VaultRecord | null | undefined, serverHalf: Uint8Array, plain: Uint8Array): Promise<CryptoKey> {
+	if (!record?.localHalfKey || !record.wrappedPrivateKey || !record.wrapIv) fail('context', 'staged vault did not read back');
+	const wrapKey = await productWrapKey(record.localHalfKey, serverHalf);
+	let reread: Uint8Array;
+	try {
+		reread = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: record.wrapIv as BufferSource }, wrapKey, record.wrappedPrivateKey as BufferSource));
+	} catch {
+		fail('context', 'staged vault did not read back');
+	}
+	const same = bytesEqual(reread, plain);
+	reread.fill(0);
+	if (!same) fail('context', 'staged vault did not read back');
+	return wrapKey;
 }

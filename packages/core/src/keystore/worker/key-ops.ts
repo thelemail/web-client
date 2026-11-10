@@ -65,7 +65,8 @@ export async function handleLoadAliasKeys(args: LoadAliasKeysArgs): Promise<Load
 		const want = g.aliasKeyFingerprintHex.toLowerCase();
 		const held = v.aliasKeys.get(want);
 		if (held) {
-			if (v.product === 'app' && held.aliasId === g.aliasId) {
+			if (v.product === 'app') {
+				held.aliasId = g.aliasId;
 				held.addressId = g.addressId;
 				held.email = g.email;
 				held.keyVersion = g.keyVersion;

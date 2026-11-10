@@ -18,7 +18,8 @@ import type {
 import { isAuthOrigin } from '../../products';
 import { AUTH_VAULT_WRAP_INFO, LOCAL_KEY_UNSTORABLE, WRAP_KEY_BYTES } from '../vault-wrap';
 import type { VaultState } from './state';
-import { productWrapKey, restoreProductVault } from './handoff-ops';
+import { restoreProductVault } from './handoff-ops';
+import { productWrapKey } from './product-vault';
 import {
 	vaults,
 	cachedRecords,

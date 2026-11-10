@@ -60,9 +60,24 @@ import type {
 	CommitKeyRotationArgs,
 	ListAccountKeysArgs,
 	LoadAccountKeysArgs,
-	PrepareKeyRotationArgs
+	PrepareKeyRotationArgs,
+	CustodyAdoptArgs,
+	CustodyCommitArgs,
+	CustodyPrepareArgs,
+	CustodyRetireArgs,
+	CustodyScopedArgs,
+	CustodyStageArgs
 } from './protocol';
 import { commandAllowed } from './worker/gate';
+import {
+	forgetPendingCustody,
+	handleCustodyAdopt,
+	handleCustodyCommit,
+	handleCustodyDiscard,
+	handleCustodyPrepare,
+	handleCustodyRetire,
+	handleCustodyStage
+} from './worker/custody-ops';
 import { ports, handleStatus, handleClear, handleClearAll, handleLock } from './worker/state';
 import {
 	handlePrepareLogin,
@@ -387,14 +402,17 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				respond(port, msg.id, undefined);
 				break;
 			case 'lock':
+				forgetPendingCustody((msg.args as LockArgs).accountId);
 				handleLock(msg.args as LockArgs);
 				respond(port, msg.id, undefined);
 				break;
 			case 'clear':
+				forgetPendingCustody((msg.args as ClearArgs).accountId);
 				await handleClear(msg.args as ClearArgs);
 				respond(port, msg.id, undefined);
 				break;
 			case 'clearAll':
+				forgetPendingCustody();
 				await handleClearAll();
 				respond(port, msg.id, undefined);
 				break;
@@ -514,6 +532,24 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'openIndex':
 				respond(port, msg.id, await handleOpenIndex(msg.args as OpenIndexArgs));
+				break;
+			case 'custodyPrepare':
+				respond(port, msg.id, await handleCustodyPrepare(msg.args as CustodyPrepareArgs));
+				break;
+			case 'custodyAdopt':
+				respond(port, msg.id, await handleCustodyAdopt(msg.args as CustodyAdoptArgs));
+				break;
+			case 'custodyStage':
+				respond(port, msg.id, await handleCustodyStage(msg.args as CustodyStageArgs));
+				break;
+			case 'custodyCommit':
+				respond(port, msg.id, await handleCustodyCommit(msg.args as CustodyCommitArgs));
+				break;
+			case 'custodyRetire':
+				respond(port, msg.id, await handleCustodyRetire(msg.args as CustodyRetireArgs));
+				break;
+			case 'custodyDiscard':
+				respond(port, msg.id, await handleCustodyDiscard(msg.args as CustodyScopedArgs));
 				break;
 			default:
 				respondError(port, msg.id, `unknown command: ${msg.cmd}`);

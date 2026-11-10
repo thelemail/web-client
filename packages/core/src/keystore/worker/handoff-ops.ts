@@ -23,11 +23,9 @@ import type {
 	HandoffExpectation
 } from '../protocol';
 import type { ProductVault } from './product-vault';
-import { decodeProductVault, encodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, wipeProductVault } from './product-vault';
+import { decodeProductVault, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
 import { broadcast, cachedRecords, indexKeys, vaults } from './state';
-
-export const PRODUCT_VAULT_WRAP_INFO = new TextEncoder().encode('thelemail-product-vault-wrap-v1');
 
 interface PendingAdoption {
 	accountId: string;
@@ -50,16 +48,6 @@ function sameContext(c: Context, args: AdoptHandoffArgs, expect: HandoffExpectat
 		c.destinationSessionId === expect.destinationSessionId &&
 		bytesEqual(c.receiverKeyDigest, expect.receiverKeyDigest) &&
 		bytesEqual(c.stateHash, expect.stateHash)
-	);
-}
-
-export async function productWrapKey(localHalfKey: CryptoKey, serverHalf: Uint8Array): Promise<CryptoKey> {
-	return crypto.subtle.deriveKey(
-		{ name: 'HKDF', hash: 'SHA-256', salt: serverHalf as BufferSource, info: PRODUCT_VAULT_WRAP_INFO as BufferSource },
-		localHalfKey,
-		{ name: 'AES-GCM', length: 256 },
-		false,
-		['encrypt', 'decrypt']
 	);
 }
 
@@ -104,52 +92,26 @@ async function openBundles(args: AdoptHandoffArgs, root: Uint8Array, c: Context,
 
 async function stage(args: AdoptHandoffArgs, vault: ProductVault): Promise<{ record: VaultRecord; wrapKey: CryptoKey } | null> {
 	if (!args.serverHalf) return null;
-	const ikm = crypto.getRandomValues(new Uint8Array(32));
-	const localHalfKey = await crypto.subtle.importKey('raw', ikm as BufferSource, 'HKDF', false, ['deriveKey']);
-	ikm.fill(0);
 	const serverHalf = b64decode(args.serverHalf);
-	const wrapKey = await productWrapKey(localHalfKey, serverHalf);
-	const wrapIv = crypto.getRandomValues(new Uint8Array(12));
-	const plain = encodeProductVault(vault);
-	const wrappedPrivateKey = new Uint8Array(
-		await crypto.subtle.encrypt({ name: 'AES-GCM', iv: wrapIv as BufferSource }, wrapKey, plain as BufferSource)
-	);
-	const record: VaultRecord = {
-		accountId: args.accountId,
-		email: args.email,
-		authScheme: 'opaque_v1',
-		armoredEncryptedPrivateKey: '',
-		updatedAt: Date.now(),
-		wrappedPrivateKey,
-		wrapIv,
-		wrapPayloadVersion: PRODUCT_VAULT_VERSION,
-		localHalfKey
-	};
+	const { record, plain } = await sealProductRecord(args.accountId, args.email, vault, serverHalf);
 	try {
-		await putStaged({ requestId: args.requestId, record });
-	} catch (err) {
-		if (err instanceof DOMException && err.name === 'DataCloneError') {
-			plain.fill(0);
-			serverHalf.fill(0);
-			return null;
+		try {
+			await putStaged({ requestId: args.requestId, record });
+		} catch (err) {
+			if (err instanceof DOMException && err.name === 'DataCloneError') return null;
+			throw err;
 		}
-		throw err;
+		const back = await getStaged(args.requestId);
+		try {
+			return { record: back!.record, wrapKey: await reopenProductRecord(back?.record, serverHalf, plain) };
+		} catch (err) {
+			await deleteStaged(args.requestId);
+			throw err;
+		}
+	} finally {
+		plain.fill(0);
+		serverHalf.fill(0);
 	}
-	const back = await getStaged(args.requestId);
-	if (!back?.record.localHalfKey || !back.record.wrappedPrivateKey || !back.record.wrapIv) fail('context', 'staged vault did not read back');
-	const freshKey = await productWrapKey(back.record.localHalfKey, serverHalf);
-	serverHalf.fill(0);
-	const reread = new Uint8Array(
-		await crypto.subtle.decrypt({ name: 'AES-GCM', iv: back.record.wrapIv as BufferSource }, freshKey, back.record.wrappedPrivateKey as BufferSource)
-	);
-	const same = bytesEqual(reread, plain);
-	reread.fill(0);
-	plain.fill(0);
-	if (!same) {
-		await deleteStaged(args.requestId);
-		fail('context', 'staged vault did not read back');
-	}
-	return { record: back.record, wrapKey: freshKey };
 }
 
 export async function handleAdoptHandoff(args: AdoptHandoffArgs): Promise<AdoptHandoffResponse> {
