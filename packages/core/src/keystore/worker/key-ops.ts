@@ -63,7 +63,13 @@ export async function handleLoadAliasKeys(args: LoadAliasKeysArgs): Promise<Load
 	const failed: { aliasId: string; keyVersion: number }[] = [];
 	for (const g of args.grants) {
 		const want = g.aliasKeyFingerprintHex.toLowerCase();
-		if (v.aliasKeys.has(want)) {
+		const held = v.aliasKeys.get(want);
+		if (held) {
+			if (v.product === 'app' && held.aliasId === g.aliasId) {
+				held.addressId = g.addressId;
+				held.email = g.email;
+				held.keyVersion = g.keyVersion;
+			}
 			loaded.push(want);
 			continue;
 		}
@@ -573,7 +579,7 @@ export async function handleCommitReformattedKey(
 		if (prev) {
 			let wrappedPrivateKey = prev.wrappedPrivateKey;
 			let wrapIv = prev.wrapIv;
-			if (v.wrapKey && prev.wrappedPrivateKey && prev.wrapPayloadVersion !== 2) {
+			if (v.wrapKey && prev.wrappedPrivateKey && (prev.wrapPayloadVersion ?? 1) === 1) {
 				const payload = JSON.stringify({ k: unlocked.armor(), p: v.keyPassword });
 				const iv = crypto.getRandomValues(new Uint8Array(12));
 				wrappedPrivateKey = new Uint8Array(

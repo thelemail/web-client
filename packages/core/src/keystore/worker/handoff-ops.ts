@@ -6,14 +6,14 @@ import type { VaultRecord } from '../idb';
 import { openHandoff, verifyHandoff } from '../handoff/envelope';
 import { deleteStaged, getStaged, putStaged } from '../handoff/store';
 import type { Context } from '../handoff/wire';
-import { b64decode, b64encode, bytesEqual, keyId, sha256 } from '../productkeys/encoding';
+import { b64decode, bytesEqual, keyId, sha256 } from '../productkeys/encoding';
 import { transcriptHash } from '../productkeys/envelope';
 import { fail, ProductKeysError } from '../productkeys/errors';
 import { HEAD_DOMAIN, headHash, parseHeadV2 } from '../productkeys/head';
 import { DOMAIN, parseIdentityManifest } from '../productkeys/manifests';
 import { fingerprintBytes, parsePublicKey, validateProfile, verifyTranscript } from '../productkeys/pgp';
 import type { Entry } from '../productkeys/productBundle';
-import { ENTRY, openProductBundle } from '../productkeys/productBundle';
+import { openProductBundle } from '../productkeys/productBundle';
 import { PROFILE } from '../productkeys/profiles';
 import type {
 	AdoptHandoffArgs,
@@ -22,15 +22,12 @@ import type {
 	CommitHandoffResponse,
 	HandoffExpectation
 } from '../protocol';
+import type { ProductVault } from './product-vault';
+import { decodeProductVault, encodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
 import { broadcast, cachedRecords, indexKeys, vaults } from './state';
 
 export const PRODUCT_VAULT_WRAP_INFO = new TextEncoder().encode('thelemail-product-vault-wrap-v1');
-
-const IDENTITY_PURPOSE: Record<'app' | 'calendar', string> = {
-	app: ENTRY.mailIdentity,
-	calendar: ENTRY.calendarIdentity
-};
 
 interface PendingAdoption {
 	accountId: string;
@@ -40,12 +37,6 @@ interface PendingAdoption {
 }
 
 const pending = new Map<string, PendingAdoption>();
-
-export interface ProductVaultPayload {
-	p: 'app' | 'calendar';
-	r: string;
-	k: { i: string; u: string; m: string }[];
-}
 
 function sameContext(c: Context, args: AdoptHandoffArgs, expect: HandoffExpectation): boolean {
 	return (
@@ -60,25 +51,6 @@ function sameContext(c: Context, args: AdoptHandoffArgs, expect: HandoffExpectat
 		bytesEqual(c.receiverKeyDigest, expect.receiverKeyDigest) &&
 		bytesEqual(c.stateHash, expect.stateHash)
 	);
-}
-
-export async function productVaultState(accountId: string, email: string, product: 'app' | 'calendar', entries: { purpose: string; material: Uint8Array }[]): Promise<VaultState> {
-	const identity = entries.find((e) => e.purpose === IDENTITY_PURPOSE[product]);
-	if (!identity) fail('context', 'no identity key for the product');
-	const privateKey = await openpgp.readPrivateKey({ binaryKey: identity.material.slice() });
-	return {
-		accountId,
-		email,
-		authScheme: 'opaque_v1',
-		armoredEncryptedPrivateKey: '',
-		privateKey,
-		keyPassword: `${product}:${accountId}`,
-		accountKeys: new Map(),
-		keyVersion: 1,
-		aliasKeys: new Map(),
-		aliasCurrent: new Map(),
-		product
-	};
 }
 
 export async function productWrapKey(localHalfKey: CryptoKey, serverHalf: Uint8Array): Promise<CryptoKey> {
@@ -130,7 +102,7 @@ async function openBundles(args: AdoptHandoffArgs, root: Uint8Array, c: Context,
 	return entries;
 }
 
-async function stage(args: AdoptHandoffArgs, payload: ProductVaultPayload): Promise<{ record: VaultRecord; wrapKey: CryptoKey } | null> {
+async function stage(args: AdoptHandoffArgs, vault: ProductVault): Promise<{ record: VaultRecord; wrapKey: CryptoKey } | null> {
 	if (!args.serverHalf) return null;
 	const ikm = crypto.getRandomValues(new Uint8Array(32));
 	const localHalfKey = await crypto.subtle.importKey('raw', ikm as BufferSource, 'HKDF', false, ['deriveKey']);
@@ -138,7 +110,7 @@ async function stage(args: AdoptHandoffArgs, payload: ProductVaultPayload): Prom
 	const serverHalf = b64decode(args.serverHalf);
 	const wrapKey = await productWrapKey(localHalfKey, serverHalf);
 	const wrapIv = crypto.getRandomValues(new Uint8Array(12));
-	const plain = new TextEncoder().encode(JSON.stringify(payload));
+	const plain = encodeProductVault(vault);
 	const wrappedPrivateKey = new Uint8Array(
 		await crypto.subtle.encrypt({ name: 'AES-GCM', iv: wrapIv as BufferSource }, wrapKey, plain as BufferSource)
 	);
@@ -150,7 +122,7 @@ async function stage(args: AdoptHandoffArgs, payload: ProductVaultPayload): Prom
 		updatedAt: Date.now(),
 		wrappedPrivateKey,
 		wrapIv,
-		wrapPayloadVersion: 3,
+		wrapPayloadVersion: PRODUCT_VAULT_VERSION,
 		localHalfKey
 	};
 	try {
@@ -213,12 +185,15 @@ export async function handleAdoptHandoff(args: AdoptHandoffArgs): Promise<AdoptH
 		root = plain.productRoot;
 		const entries = await openBundles(args, root, c, authority, head.authorityKeyId);
 		const held = entries.filter((x): x is Entry & { material: Uint8Array } => x.material !== null);
-		const state = await productVaultState(args.accountId, args.email, args.product, held);
-		const staged = await stage(args, {
-			p: args.product,
-			r: b64encode(root),
-			k: held.map((x) => ({ i: x.keyId, u: x.purpose, m: b64encode(x.material) }))
-		});
+		const vault: ProductVault = {
+			product: args.product,
+			root,
+			currentKeyId: args.product === 'app' ? head.currentSigningKeyId : null,
+			keys: held.map((x) => ({ keyId: x.keyId, scopeId: x.scopeId, purpose: x.purpose, profileId: x.profileId, keyEpoch: x.keyEpoch, material: x.material })),
+			manifest: { manifestId: c.manifestId, revision: c.manifestRevision, hash: c.manifestHash, productKeyEpoch: c.productKeyEpoch }
+		};
+		const state = await productVaultState(args.accountId, args.email, vault);
+		const staged = await stage(args, vault);
 		for (const x of held) x.material.fill(0);
 		pending.set(args.requestId, { accountId: args.accountId, state, staged: staged?.record ?? null, wrapKey: staged?.wrapKey ?? null });
 		return { ok: true, envelopeDigest: await sha256(args.envelope), manifestHash: c.manifestHash, durable: staged !== null };
@@ -255,11 +230,12 @@ export async function handleDiscardHandoff(args: CommitHandoffArgs): Promise<voi
 }
 
 export async function restoreProductVault(rec: VaultRecord, wrapKey: CryptoKey, decoded: string): Promise<VaultState> {
-	const payload = JSON.parse(decoded) as ProductVaultPayload;
-	if ((payload.p !== 'app' && payload.p !== 'calendar') || !Array.isArray(payload.k)) fail('malformed', 'product vault payload');
-	const entries = payload.k.map((x) => ({ purpose: x.u, material: b64decode(x.m) }));
-	const state = await productVaultState(rec.accountId, rec.email, payload.p, entries);
-	for (const x of entries) x.material.fill(0);
-	state.wrapKey = wrapKey;
-	return state;
+	const vault = decodeProductVault(decoded);
+	try {
+		const state = await productVaultState(rec.accountId, rec.email, vault);
+		state.wrapKey = wrapKey;
+		return state;
+	} finally {
+		wipeProductVault(vault);
+	}
 }

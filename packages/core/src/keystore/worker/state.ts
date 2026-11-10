@@ -34,6 +34,7 @@ export interface VaultState {
 	aliasKeys: Map<string, AliasKeyEntry>;
 	aliasCurrent: Map<string, string>;
 	product?: 'app' | 'calendar';
+	searchLeaf?: Uint8Array;
 }
 
 export interface AccountKeyEntry {
