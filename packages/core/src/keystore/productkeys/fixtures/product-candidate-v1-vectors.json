@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "bundles": [
+    {
+      "bundleId": "0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40",
+      "revision": 1,
+      "ciphertextHash": "DrI25Q3jXFnAO2NiliQ1Gvd4zDP7xVqSJU48KeWOYlU=",
+      "byteLength": 2048,
+      "profileId": "product-bundle-v1"
+    },
+    {
+      "bundleId": "0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40",
+      "revision": 2,
+      "ciphertextHash": "D2ckq3fkh7dFhymfrIwzNgMPQVfIYgLVo/XKZKYFlEI=",
+      "byteLength": 512,
+      "profileId": "product-bundle-v1"
+    }
+  ],
+  "bundlesHash": "vsRSxN6d/tEU8Oc8ihUWUCqPOjDxNc++0Nt9J1wg1J4=",
+  "records": [
+    {
+      "name": "mail candidate",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"amkEpoch\":0,\"bundles\":[{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":2048,\"ciphertextHash\":\"DrI25Q3jXFnAO2NiliQ1Gvd4zDP7xVqSJU48KeWOYlU=\",\"profileId\":\"product-bundle-v1\",\"revision\":1},{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":512,\"ciphertextHash\":\"D2ckq3fkh7dFhymfrIwzNgMPQVfIYgLVo/XKZKYFlEI=\",\"profileId\":\"product-bundle-v1\",\"revision\":2}],\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"G/FmHiwyyeyhehPjlNG4miv+TJMNc509g5RI9L3oe0A=\",\"rootBundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"rootBundleRevision\":1,\"type\":\"thelemail-product-candidate/v1\"}",
+      "hash": "TFGXOFg4lBDWsRG/KGWr3qCWdx3jQAETCZBCR9VFnK4="
+    },
+    {
+      "name": "unknown field",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"amkEpoch\":0,\"bundles\":[{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":2048,\"ciphertextHash\":\"DrI25Q3jXFnAO2NiliQ1Gvd4zDP7xVqSJU48KeWOYlU=\",\"profileId\":\"product-bundle-v1\",\"revision\":1},{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":512,\"ciphertextHash\":\"D2ckq3fkh7dFhymfrIwzNgMPQVfIYgLVo/XKZKYFlEI=\",\"profileId\":\"product-bundle-v1\",\"revision\":2}],\"note\":\"x\",\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"G/FmHiwyyeyhehPjlNG4miv+TJMNc509g5RI9L3oe0A=\",\"rootBundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"rootBundleRevision\":1,\"type\":\"thelemail-product-candidate/v1\"}",
+      "error": "malformed"
+    },
+    {
+      "name": "no bundles",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"amkEpoch\":0,\"bundles\":[],\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"G/FmHiwyyeyhehPjlNG4miv+TJMNc509g5RI9L3oe0A=\",\"rootBundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"rootBundleRevision\":1,\"type\":\"thelemail-product-candidate/v1\"}",
+      "error": "malformed"
+    },
+    {
+      "name": "bundles out of order",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"amkEpoch\":0,\"bundles\":[{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":512,\"ciphertextHash\":\"D2ckq3fkh7dFhymfrIwzNgMPQVfIYgLVo/XKZKYFlEI=\",\"profileId\":\"product-bundle-v1\",\"revision\":2},{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":2048,\"ciphertextHash\":\"DrI25Q3jXFnAO2NiliQ1Gvd4zDP7xVqSJU48KeWOYlU=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"G/FmHiwyyeyhehPjlNG4miv+TJMNc509g5RI9L3oe0A=\",\"rootBundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"rootBundleRevision\":1,\"type\":\"thelemail-product-candidate/v1\"}",
+      "error": "malformed"
+    },
+    {
+      "name": "wrong type",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"amkEpoch\":0,\"bundles\":[{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":2048,\"ciphertextHash\":\"DrI25Q3jXFnAO2NiliQ1Gvd4zDP7xVqSJU48KeWOYlU=\",\"profileId\":\"product-bundle-v1\",\"revision\":1},{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":512,\"ciphertextHash\":\"D2ckq3fkh7dFhymfrIwzNgMPQVfIYgLVo/XKZKYFlEI=\",\"profileId\":\"product-bundle-v1\",\"revision\":2}],\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"G/FmHiwyyeyhehPjlNG4miv+TJMNc509g5RI9L3oe0A=\",\"rootBundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"rootBundleRevision\":1,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+      "error": "malformed"
+    },
+    {
+      "name": "unknown product",
+      "record": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"amkEpoch\":0,\"bundles\":[{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":2048,\"ciphertextHash\":\"DrI25Q3jXFnAO2NiliQ1Gvd4zDP7xVqSJU48KeWOYlU=\",\"profileId\":\"product-bundle-v1\",\"revision\":1},{\"bundleId\":\"0f6c9a1e-2b3d-4c5e-8f7a-9b0c1d2e3f40\",\"byteLength\":512,\"ciphertextHash\":\"D2ckq3fkh7dFhymfrIwzNgMPQVfIYgLVo/XKZKYFlEI=\",\"profileId\":\"product-bundle-v1\",\"revision\":2}],\"product\":\"auth\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"G/FmHiwyyeyhehPjlNG4miv+TJMNc509g5RI9L3oe0A=\",\"rootBundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"rootBundleRevision\":1,\"type\":\"thelemail-product-candidate/v1\"}",
+      "error": "malformed"
+    }
+  ],
+  "roots": [
+    {
+      "name": "mail root candidate",
+      "key": "QWhsxxuCxLY6ARmwyB0nA8/A2UZ8nGHTsHtqV1PrFNA=",
+      "header": {
+        "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+        "amkEpoch": 0,
+        "bundleId": "fd41c9c7-93da-5840-8cae-a0017406e9c7",
+        "revision": 1
+      },
+      "envelope": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"ciphertext\":\"ppP2Zg6cNdCTDUZXG+VZMEE2vkA8deR5vLS9c7IqATFLqMiPUHjNoWdxHJiSlYt+IsdUdXuHBVTOC53M7SWSNXp7xAu4H17ltX1Xu2y2pfuFx9ZBEpwmAAFxpMROZcTELjIOyO1+RI589wpZoJt3atEOl5CAEzfVnWuTKlMt6E18YvNd8FeBXPeXl7xGeuqqPzEC0kM4Gc7L/zT7JnWZkdNvDrsBzTJ86yBjR+FWJyQohqWqPErTWy9NgAyWSrHLHBx/DwWV1sKiTYmGrE6XJYNTxpdBPOBi6jjU1xWpmeQveAbjWAKp97bfMxOfSxU1uxMNXrAR+CdPcG6OZMOUnZ+q6nc+dI4TZhw/ZlChI4PlzgMtnBWqe4fNNg8+hL6/8L4lrwV5a9l57iHCKpU8XNd9R0wd4MgQ2OAxPfOXPMHONEWEydnLMo+xQ5/veqINJ0ogCaBillNUD9Q=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"v17n2SFvhEce0vl9\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"SQtpzJbsUv4qr/RnczSuuxUDFbAuRSv/12m7AXeqjkQ=\",\"version\":2}",
+      "product": "app",
+      "productKeyEpoch": 1,
+      "productRoot": "iECTDpq7TSHjB0najZXDKtH8yGu6nb083MzK1OiMiiw=",
+      "bundlesHash": "vsRSxN6d/tEU8Oc8ihUWUCqPOjDxNc++0Nt9J1wg1J4="
+    },
+    {
+      "name": "wrong key",
+      "key": "3hKzBBKqRXdj3WtYVYx6CtGZgqSMeZQ6SinGgK27Kj8=",
+      "header": {
+        "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+        "amkEpoch": 0,
+        "bundleId": "fd41c9c7-93da-5840-8cae-a0017406e9c7",
+        "revision": 1
+      },
+      "envelope": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"ciphertext\":\"ppP2Zg6cNdCTDUZXG+VZMEE2vkA8deR5vLS9c7IqATFLqMiPUHjNoWdxHJiSlYt+IsdUdXuHBVTOC53M7SWSNXp7xAu4H17ltX1Xu2y2pfuFx9ZBEpwmAAFxpMROZcTELjIOyO1+RI589wpZoJt3atEOl5CAEzfVnWuTKlMt6E18YvNd8FeBXPeXl7xGeuqqPzEC0kM4Gc7L/zT7JnWZkdNvDrsBzTJ86yBjR+FWJyQohqWqPErTWy9NgAyWSrHLHBx/DwWV1sKiTYmGrE6XJYNTxpdBPOBi6jjU1xWpmeQveAbjWAKp97bfMxOfSxU1uxMNXrAR+CdPcG6OZMOUnZ+q6nc+dI4TZhw/ZlChI4PlzgMtnBWqe4fNNg8+hL6/8L4lrwV5a9l57iHCKpU8XNd9R0wd4MgQ2OAxPfOXPMHONEWEydnLMo+xQ5/veqINJ0ogCaBillNUD9Q=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"v17n2SFvhEce0vl9\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"SQtpzJbsUv4qr/RnczSuuxUDFbAuRSv/12m7AXeqjkQ=\",\"version\":2}",
+      "error": "decrypt"
+    },
+    {
+      "name": "other account",
+      "key": "QWhsxxuCxLY6ARmwyB0nA8/A2UZ8nGHTsHtqV1PrFNA=",
+      "header": {
+        "accountId": "8e1f4c2a-7b3d-4a5e-b6c9-0d2e3f4a5b6c",
+        "amkEpoch": 0,
+        "bundleId": "fd41c9c7-93da-5840-8cae-a0017406e9c7",
+        "revision": 1
+      },
+      "envelope": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"ciphertext\":\"ppP2Zg6cNdCTDUZXG+VZMEE2vkA8deR5vLS9c7IqATFLqMiPUHjNoWdxHJiSlYt+IsdUdXuHBVTOC53M7SWSNXp7xAu4H17ltX1Xu2y2pfuFx9ZBEpwmAAFxpMROZcTELjIOyO1+RI589wpZoJt3atEOl5CAEzfVnWuTKlMt6E18YvNd8FeBXPeXl7xGeuqqPzEC0kM4Gc7L/zT7JnWZkdNvDrsBzTJ86yBjR+FWJyQohqWqPErTWy9NgAyWSrHLHBx/DwWV1sKiTYmGrE6XJYNTxpdBPOBi6jjU1xWpmeQveAbjWAKp97bfMxOfSxU1uxMNXrAR+CdPcG6OZMOUnZ+q6nc+dI4TZhw/ZlChI4PlzgMtnBWqe4fNNg8+hL6/8L4lrwV5a9l57iHCKpU8XNd9R0wd4MgQ2OAxPfOXPMHONEWEydnLMo+xQ5/veqINJ0ogCaBillNUD9Q=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"v17n2SFvhEce0vl9\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"SQtpzJbsUv4qr/RnczSuuxUDFbAuRSv/12m7AXeqjkQ=\",\"version\":2}",
+      "error": "context"
+    },
+    {
+      "name": "committed root descriptor",
+      "key": "QWhsxxuCxLY6ARmwyB0nA8/A2UZ8nGHTsHtqV1PrFNA=",
+      "header": {
+        "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+        "amkEpoch": 0,
+        "bundleId": "fd41c9c7-93da-5840-8cae-a0017406e9c7",
+        "revision": 1
+      },
+      "envelope": "{\"accountId\":\"5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"fd41c9c7-93da-5840-8cae-a0017406e9c7\",\"ciphertext\":\"+WFmhezqjLTodcqc/mqVAYTokBrWmP/wv05m2PRWTmFqoc1rJ4Otufjt45RmCtFZP4AiT+sLjWyGsMiGsshBMZdII2Oq2a+oJsHaWLxWD9BPZlRn3VCr+CNdyx9GUyN2BOWBL/TWMfOPqfEcOOOukgntRDrZsS0m2+9LCDnmmt9s8k/oTWT+8PQ12e0SDaZDPP3+IpK/K3i4eUzQtbvVpF00jRWcHvvE82IM3/sPn5r/Fr6GLCBjBuuarzgTY7e1YihnCe5TrftbV85aQ1fjGhMZyjfLbUZKEVGq6Pt0A++AHLEFMonk/1UEqerUja9E9VFZJcWwtQdc3q9FvgfVILlT4lJNQZ82BHPkJhKvKTYlrFPG+JfgHD8+JyoWqjqi5fHdF6jK0vcXtvkNqfmoeC7WwYJiWRcgFxrd8xK/2QRV3SXusrCyeu//AsG/StIaIpQM4Bl6VgLYFJHHb8qE57D2gX5JmzEEw9GBJhzChMpnYSRTDPs3z+hryKvzPxv4ePoPgcQDa4s0h5q1S1IYGHWH0UhuQYHDuQnVho6gbhK1J9m4jLYih1Mv7DD+SR7VBvuH\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"y8Eyd3CEGU/a0b7m\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"4VrlkIK+Gv8OB2FHbwIwX2Oi3kQgrLW8/mBafhc5tmA=\",\"version\":2}",
+      "error": "context"
+    }
+  ]
+}
