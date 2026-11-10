@@ -1,12 +1,15 @@
 /// <reference lib="webworker" />
 
 import * as openpgp from 'openpgp';
-import { putVault } from '../idb';
+import { deleteVault, putVault } from '../idb';
 import type { VaultRecord } from '../idb';
+import { JOURNAL_SCHEMA } from '$core/custody/journal';
+import { commitCustody, getJournal } from '$core/custody/store';
+import { currentProduct } from '../../products';
 import { openHandoff, verifyHandoff } from '../handoff/envelope';
 import { deleteStaged, getStaged, putStaged } from '../handoff/store';
 import type { Context } from '../handoff/wire';
-import { b64decode, bytesEqual, keyId, sha256 } from '../productkeys/encoding';
+import { b64decode, b64encode, bytesEqual, keyId, sha256 } from '../productkeys/encoding';
 import { transcriptHash } from '../productkeys/envelope';
 import { fail, ProductKeysError } from '../productkeys/errors';
 import { HEAD_DOMAIN, headHash, parseHeadV2 } from '../productkeys/head';
@@ -23,15 +26,16 @@ import type {
 	HandoffExpectation
 } from '../protocol';
 import type { ProductVault } from './product-vault';
-import { decodeProductVault, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
+import { decodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
-import { broadcast, cachedRecords, indexKeys, vaults } from './state';
+import { broadcast, cachedRecords, indexKeys, productAccounts, vaults } from './state';
 
 interface PendingAdoption {
 	accountId: string;
 	state: VaultState;
 	staged: VaultRecord | null;
 	wrapKey: CryptoKey | null;
+	manifestHash: Uint8Array;
 }
 
 const pending = new Map<string, PendingAdoption>();
@@ -157,7 +161,7 @@ export async function handleAdoptHandoff(args: AdoptHandoffArgs): Promise<AdoptH
 		const state = await productVaultState(args.accountId, args.email, vault);
 		const staged = await stage(args, vault);
 		for (const x of held) x.material.fill(0);
-		pending.set(args.requestId, { accountId: args.accountId, state, staged: staged?.record ?? null, wrapKey: staged?.wrapKey ?? null });
+		pending.set(args.requestId, { accountId: args.accountId, state, staged: staged?.record ?? null, wrapKey: staged?.wrapKey ?? null, manifestHash: c.manifestHash.slice() });
 		return { ok: true, envelopeDigest: await sha256(args.envelope), manifestHash: c.manifestHash, durable: staged !== null };
 	} catch (err) {
 		if (err instanceof ProductKeysError) return { ok: false, code: 'invalid', message: err.message };
@@ -168,10 +172,44 @@ export async function handleAdoptHandoff(args: AdoptHandoffArgs): Promise<AdoptH
 	}
 }
 
+async function commitMailAdoption(requestId: string, p: PendingAdoption): Promise<void> {
+	const existing = await getJournal(p.accountId);
+	const now = Date.now();
+	const record: VaultRecord = p.staged ?? {
+		accountId: p.accountId,
+		email: p.state.email,
+		authScheme: 'opaque_v1',
+		armoredEncryptedPrivateKey: '',
+		updatedAt: now,
+		wrapPayloadVersion: PRODUCT_VAULT_VERSION
+	};
+	await commitCustody(
+		{
+			accountId: p.accountId,
+			schema: JOURNAL_SCHEMA,
+			migrationId: existing?.migrationId ?? requestId,
+			state: 'complete',
+			target: { kind: 'committed', digest: b64encode(p.manifestHash) },
+			exchange: null,
+			sessionId: existing?.sessionId ?? null,
+			startedAt: existing?.startedAt ?? now,
+			updatedAt: now,
+			failure: null
+		},
+		record
+	);
+	productAccounts.add(p.accountId);
+	cachedRecords.set(p.accountId, record);
+	await deleteVault(p.accountId);
+	await deleteStaged(requestId);
+}
+
 export async function handleCommitHandoff(args: CommitHandoffArgs): Promise<CommitHandoffResponse> {
 	const p = pending.get(args.requestId);
 	if (!p || p.accountId !== args.accountId) return { ok: false, code: 'missing' };
-	if (p.staged) {
+	if (currentProduct === 'app') {
+		await commitMailAdoption(args.requestId, p);
+	} else if (p.staged) {
 		await putVault(p.staged);
 		cachedRecords.set(p.accountId, p.staged);
 		await deleteStaged(args.requestId);
