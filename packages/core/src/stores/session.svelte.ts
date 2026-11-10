@@ -54,6 +54,7 @@ interface ProfileSnapshot {
 	lifecycle: LifecycleInfo | null;
 	keyRotationBlocker: KeyRotationBlocker | null;
 	authOriginEnrolled: boolean;
+	mailOnly: boolean;
 }
 
 export type RecoveryState = 'unknown' | 'error' | 'set' | 'unset';
@@ -71,7 +72,8 @@ const emptyProfile = (): ProfileSnapshot => ({
 	deletion: null,
 	lifecycle: null,
 	keyRotationBlocker: null,
-	authOriginEnrolled: false
+	authOriginEnrolled: false,
+	mailOnly: false
 });
 
 export interface SessionHooks {
@@ -82,6 +84,8 @@ export interface SessionHooks {
 	profileLoaded?(me: MeResponse): void;
 }
 
+export type SessionRecovery = (accountId: string, triedBase: string | undefined) => Promise<boolean>;
+
 class SessionStore {
 	#tokens = $state(new Map<string, TokenSlot>());
 	#profiles = $state(new Map<string, ProfileSnapshot>());
@@ -90,6 +94,7 @@ class SessionStore {
 	#lost = $state(new Set<string>());
 	#refreshTimer: ReturnType<typeof setTimeout> | null = null;
 	#hooks: SessionHooks[] = [];
+	#recovery: SessionRecovery | null = null;
 	sessionRotations = $state(0);
 
 	accessToken = $derived<string | null>(this.#tokens.get(this.#currentId ?? '')?.accessToken ?? null);
@@ -146,6 +151,23 @@ class SessionStore {
 		this.#hooks.push(hooks);
 	}
 
+	registerSessionRecovery(recover: SessionRecovery | null): void {
+		this.#recovery = recover;
+	}
+
+	async adoptHostSession(accountId: string, accessToken: string, expiresInSeconds: number, csrfToken?: string): Promise<void> {
+		const slot = accounts.byId(accountId);
+		if (slot && slot.sessionOrigin !== 'host') await accounts.upsert({ ...slot, sessionOrigin: 'host' });
+		this.addSession(accessToken, expiresInSeconds, accountId, csrfToken);
+		this.sessionRotations += 1;
+		const mirror = platform.mirror;
+		if (mirror) await mirror.setToken(accountId, accessToken).catch(() => {});
+	}
+
+	async syncVaultStatus(): Promise<void> {
+		this.syncFromKeystoreStatus(await keystore.status());
+	}
+
 	vaultOpened(accountId: string): void {
 		for (const h of this.#hooks) h.vaultOpened?.(accountId);
 	}
@@ -160,7 +182,8 @@ class SessionStore {
 				...p,
 				email: p.serverEmail ?? a.email,
 				vaultUnlocked: a.unlocked,
-				hasPersistent: a.hasPersistent
+				hasPersistent: a.hasPersistent,
+				mailOnly: a.mailOnly ?? false
 			}));
 		}
 	}
@@ -227,6 +250,8 @@ class SessionStore {
 					email: p.serverEmail ?? msg.email,
 					vaultUnlocked: true
 				}));
+			} else if (msg.type === 'custodyChanged') {
+				void this.syncVaultStatus().catch(() => {});
 			} else if (msg.type === 'locked') {
 				this.#mutateProfile(msg.accountId, (p) => ({ ...p, vaultUnlocked: false }));
 				this.#dropToken(msg.accountId);
@@ -346,14 +371,25 @@ class SessionStore {
 		const inflight = this.#refreshing.get(id);
 		if (inflight) return inflight;
 		const p = (async () => {
+			const base = sessionBase(id);
 			try {
-				const res = await refreshSession(id, sessionBase(id));
+				const res = await refreshSession(id, base);
 				this.addSession(res.accessToken, res.expiresInSeconds, res.accountId, res.csrfToken);
 				return true;
 			} catch (err) {
-				if (err instanceof ApiCallError && err.status === 401) this.#markLost(id);
-				return false;
+				if (!(err instanceof ApiCallError) || err.status !== 401) return false;
 			}
+			if (this.#recovery && (await this.#recovery(id, base).catch(() => false))) {
+				try {
+					const res = await refreshSession(id, sessionBase(id));
+					this.addSession(res.accessToken, res.expiresInSeconds, res.accountId, res.csrfToken);
+					return true;
+				} catch (err) {
+					if (!(err instanceof ApiCallError) || err.status !== 401) return false;
+				}
+			}
+			this.#markLost(id);
+			return false;
 		})();
 		this.#refreshing.set(id, p);
 		try {
@@ -443,6 +479,10 @@ class SessionStore {
 
 	markRecoveryEnabled(accountId: string): void {
 		this.#mutateProfile(accountId, (p) => ({ ...p, recoveryEnabled: true }));
+	}
+
+	mailOnlyFor(accountId: string | null): boolean {
+		return this.#profiles.get(accountId ?? this.#currentId ?? '')?.mailOnly ?? false;
 	}
 
 	authOriginEnrolledFor(accountId: string): boolean {

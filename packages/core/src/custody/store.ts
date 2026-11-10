@@ -123,10 +123,9 @@ export function deleteStagedVault(migrationId: string): Promise<void> {
 	});
 }
 
-export function commitCustody(journal: CustodyJournal, staged: StagedCustodyVault | null): Promise<void> {
+export function commitCustody(journal: CustodyJournal, record: VaultRecord): Promise<void> {
 	return transact<void>([JOURNAL, VAULTS, STAGED], 'readwrite', (tx) => {
-		if (staged) tx.objectStore(VAULTS).put(staged.record);
-		else tx.objectStore(VAULTS).delete(journal.accountId);
+		tx.objectStore(VAULTS).put(record);
 		tx.objectStore(STAGED).delete(journal.migrationId);
 		tx.objectStore(JOURNAL).put({ ...journal, schema: JOURNAL_SCHEMA });
 	});

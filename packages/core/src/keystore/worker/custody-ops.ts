@@ -4,6 +4,7 @@ import * as openpgp from 'openpgp';
 import type { CustodyJournal } from '$core/custody/journal';
 import type { StagedCustodyVault } from '$core/custody/store';
 import { commitCustody, deleteStagedVault, getStagedVault, putJournal, putStagedVault } from '$core/custody/store';
+import type { VaultRecord } from '../idb';
 import { deleteVault } from '../idb';
 import { historyKeys } from '../productkeys/convert';
 import { b64decode, keyId } from '../productkeys/encoding';
@@ -28,7 +29,7 @@ import type {
 	CustodyStageResponse
 } from '../protocol';
 import type { ProductVault } from './product-vault';
-import { decodeProductVault, encodeProductVault, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
+import { decodeProductVault, encodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
 import { broadcast, cachedRecords, fingerprintHexOf, indexKeys, opaqueOps, pendingRotations, productAccounts, vaults } from './state';
 
@@ -206,14 +207,21 @@ export async function handleCustodyCommit(args: CustodyCommitArgs): Promise<Cust
 	if (p && (p.accountId !== args.accountId || !p.state)) return { ok: false, code: 'missing' };
 	const staged = p ? p.staged : await getStagedVault(args.migrationId);
 	if (staged && staged.accountId !== args.accountId) return { ok: false, code: 'missing' };
-	await commitCustody(args.journal, staged);
+	const email = p?.state?.email ?? staged?.record.email ?? vaults.get(args.accountId)?.email ?? cachedRecords.get(args.accountId)?.email ?? '';
+	const record: VaultRecord = staged?.record ?? {
+		accountId: args.accountId,
+		email,
+		authScheme: 'opaque_v1',
+		armoredEncryptedPrivateKey: '',
+		updatedAt: Date.now(),
+		wrapPayloadVersion: PRODUCT_VAULT_VERSION
+	};
+	await commitCustody(args.journal, record);
 	productAccounts.add(args.accountId);
-	if (staged) cachedRecords.set(args.accountId, staged.record);
-	else if ((cachedRecords.get(args.accountId)?.wrapPayloadVersion ?? 1) < 3) cachedRecords.delete(args.accountId);
+	cachedRecords.set(args.accountId, record);
 	indexKeys.delete(args.accountId);
 	pendingRotations.delete(args.accountId);
 	dropLegacy(args.accountId);
-	const email = p?.state?.email ?? staged?.record.email ?? '';
 	if (p?.state) vaults.set(args.accountId, p.state);
 	drop(args.migrationId);
 	broadcast({ type: 'custodyChanged', accountId: args.accountId, email });

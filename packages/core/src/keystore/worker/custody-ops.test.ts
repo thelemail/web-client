@@ -63,10 +63,9 @@ vi.mock('$core/custody/store', () => ({
 	deleteStagedVault: async (id: string) => {
 		custodyDb.staged.delete(id);
 	},
-	commitCustody: async (j: CustodyJournal, staged: StagedCustodyVault | null) => {
+	commitCustody: async (j: CustodyJournal, record: VaultRecord) => {
 		if (custodyDb.failCommit) throw custodyDb.failCommit();
-		if (staged) custodyDb.vaults.set(j.accountId, staged.record);
-		else custodyDb.vaults.delete(j.accountId);
+		custodyDb.vaults.set(j.accountId, record);
 		custodyDb.staged.delete(j.migrationId);
 		custodyDb.journals.set(j.accountId, j);
 	},
@@ -281,10 +280,15 @@ describe('mail custody in the worker', () => {
 		expect(await ops.handleCustodyStage({ accountId: ACCOUNT, migrationId: MIGRATION, serverHalf: null })).toEqual({ ok: true, durable: false });
 		expect(custodyDb.staged.size).toBe(0);
 		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: true });
-		expect(custodyDb.vaults.size).toBe(0);
+		const kept = custodyDb.vaults.get(ACCOUNT) as VaultRecord;
+		expect(kept).toMatchObject({ accountId: ACCOUNT, email: EMAIL, armoredEncryptedPrivateKey: '' });
+		expect(kept.wrappedPrivateKey).toBeUndefined();
+		expect(kept.localHalfKey).toBeUndefined();
+		expect(kept.wrappedMasterKey).toBeUndefined();
 		expect(state.vaults.get(ACCOUNT)?.product).toBe('app');
 		await ops.handleCustodyRetire({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('legacy-retired-local') });
 		state.handleLock({ accountId: ACCOUNT });
+		expect((await state.handleStatus()).accounts).toEqual([{ accountId: ACCOUNT, email: EMAIL, unlocked: false, hasPersistent: false, authScheme: 'opaque_v1', mailOnly: true }]);
 		expect(await persist.handleTryRestoreFromPersistent({ accountId: ACCOUNT, serverHalf: half() })).toEqual({ ok: false, reason: 'no_persistent' });
 		expect(gate.vaultModeOf(ACCOUNT)).toBe('mail');
 	});
@@ -417,7 +421,8 @@ describe('worker restart at each custody boundary', () => {
 		expect(await ops.handleCustodyCommit({ accountId: ACCOUNT, migrationId: MIGRATION, journal: journal('mail-committed') })).toEqual({ ok: true });
 		expect(state.vaults.has(ACCOUNT)).toBe(false);
 		expect(state.productAccounts.has(ACCOUNT)).toBe(true);
-		expect(state.cachedRecords.has(ACCOUNT)).toBe(false);
+		expect(state.cachedRecords.get(ACCOUNT)).toMatchObject({ email: EMAIL, armoredEncryptedPrivateKey: '' });
+		expect(state.cachedRecords.get(ACCOUNT)?.wrappedMasterKey).toBeUndefined();
 		expect(gate.commandAllowed('opaqueCompleteLoginUnlock', { accountId: ACCOUNT })).toBe(false);
 	});
 
@@ -461,7 +466,7 @@ describe('worker restart at each custody boundary', () => {
 
 		await load();
 		expect(state.productAccounts.has(ACCOUNT)).toBe(true);
-		expect(state.cachedRecords.has(ACCOUNT)).toBe(false);
+		expect((await state.handleStatus()).accounts).toEqual([{ accountId: ACCOUNT, email: EMAIL, unlocked: false, hasPersistent: false, authScheme: 'opaque_v1', mailOnly: true }]);
 		expect(gate.vaultModeOf(ACCOUNT)).toBe('mail');
 		expect(gate.commandAllowed('opaqueFinishAuth', { accountId: ACCOUNT })).toBe(false);
 		expect(gate.commandAllowed('adoptHandoff', { accountId: ACCOUNT })).toBe(true);

@@ -71,7 +71,7 @@ describe('custody store', () => {
 		if (!staged) return;
 		expect(await getCustodyVault(ACCOUNT)).toBeNull();
 
-		await commitCustody(advance(j, 'mail-committed'), staged);
+		await commitCustody(advance(j, 'mail-committed'), staged.record);
 
 		const active = await getCustodyVault(ACCOUNT);
 		expect(active?.wrapPayloadVersion).toBe(4);
@@ -88,18 +88,21 @@ describe('custody store', () => {
 		if (!staged) return;
 		const unclonable = { ...advance(j, 'mail-committed'), failure: (() => {}) as unknown as CustodyJournal['failure'] };
 
-		await expect(commitCustody(unclonable, staged)).rejects.toBeDefined();
+		await expect(commitCustody(unclonable, staged.record)).rejects.toBeDefined();
 
 		expect(await getCustodyVault(ACCOUNT)).toBeNull();
 		expect(await getStagedVault('op-2')).not.toBeNull();
 		expect((await getJournal(ACCOUNT))?.state).toBe('mail-staged');
 	});
 
-	it('commits a memory-only migration with no stored vault', async () => {
+	it('commits a memory-only migration with a record that holds no key material', async () => {
 		const j = journal(ACCOUNT, 'op-3');
 		await putJournal(j);
-		await commitCustody(advance(j, 'mail-committed'), null);
-		expect(await getCustodyVault(ACCOUNT)).toBeNull();
+		await commitCustody(advance(j, 'mail-committed'), { accountId: ACCOUNT, email: 'calloway@thelemail.test', authScheme: 'opaque_v1', armoredEncryptedPrivateKey: '', updatedAt: 1, wrapPayloadVersion: 4 });
+		const active = await getCustodyVault(ACCOUNT);
+		expect(active?.email).toBe('calloway@thelemail.test');
+		expect(active?.wrappedPrivateKey).toBeUndefined();
+		expect(active?.localHalfKey).toBeUndefined();
 		expect((await getJournal(ACCOUNT))?.state).toBe('mail-committed');
 	});
 
@@ -108,7 +111,7 @@ describe('custody store', () => {
 		await putJournal(journal(OTHER, 'op-5'));
 		const mine = await stageable(ACCOUNT, 'op-4');
 		const theirs = await stageable(OTHER, 'op-5');
-		if (theirs) await commitCustody(advance(journal(OTHER, 'op-5'), 'mail-committed'), theirs);
+		if (theirs) await commitCustody(advance(journal(OTHER, 'op-5'), 'mail-committed'), theirs.record);
 
 		await forgetCustody(ACCOUNT);
 

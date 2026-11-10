@@ -212,9 +212,9 @@ async function settle(journal: CustodyJournal, deps: CustodyDeps): Promise<Custo
 async function finalize(journal: CustodyJournal, grant: CustodySessionGrant, deps: CustodyDeps): Promise<CustodyOutcome> {
 	const accountId = journal.accountId;
 	const next = advance({ ...journal, exchange: null }, 'mail-committed', deps.now());
+	await deps.session.adopt(accountId, grant);
 	const local = await deps.keystore.custodyCommit({ accountId, migrationId: journal.migrationId, journal: next });
 	if (!local.ok) return refusal(local);
-	await deps.session.adopt(accountId, grant);
 	deps.session.announce(accountId);
 	return settle(next, deps);
 }

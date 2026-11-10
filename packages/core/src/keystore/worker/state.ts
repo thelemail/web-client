@@ -131,7 +131,7 @@ export async function restoreFromIdb() {
 			const legacy = cachedRecords.get(journal.accountId);
 			const record = records.get(journal.accountId);
 			if (record) cachedRecords.set(journal.accountId, record);
-			else cachedRecords.delete(journal.accountId);
+			else if ((legacy?.wrapPayloadVersion ?? 1) < 3) cachedRecords.delete(journal.accountId);
 			if (legacy && reached(journal, 'legacy-retired-local')) await deleteVault(journal.accountId);
 		}
 	} catch (err) {
