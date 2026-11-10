@@ -1,6 +1,5 @@
 /// <reference lib="webworker" />
 
-import { isProductVault } from '../products';
 import type {
 	AttachmentBytesArgs,
 	AttachmentHeaderArgs,
@@ -61,11 +60,9 @@ import type {
 	CommitKeyRotationArgs,
 	ListAccountKeysArgs,
 	LoadAccountKeysArgs,
-	PrepareKeyRotationArgs,
-	KeystoreCommand,
-	VaultMode
+	PrepareKeyRotationArgs
 } from './protocol';
-import { commandVaultModes } from './protocol';
+import { commandAllowed } from './worker/gate';
 import { ports, handleStatus, handleClear, handleClearAll, handleLock } from './worker/state';
 import {
 	handlePrepareLogin,
@@ -161,16 +158,9 @@ import {
 
 declare const self: SharedWorkerGlobalScope;
 
-const VAULT_MODE: VaultMode = isProductVault ? 'product' : 'account';
-
-function commandAllowed(cmd: KeystoreCommand): boolean {
-	const modes = commandVaultModes[cmd];
-	return modes !== undefined && modes.includes(VAULT_MODE);
-}
-
 async function dispatch(port: MessagePort, msg: RequestMessage) {
 	try {
-		if (!commandAllowed(msg.cmd)) {
+		if (!commandAllowed(msg.cmd, msg.args)) {
 			respondError(port, msg.id, new Error('command unavailable'));
 			return;
 		}

@@ -273,9 +273,26 @@ export async function endorsedBy(
 	}
 }
 
+function checkProductKeyList(v: VaultState, args: LoadAccountKeysArgs): LoadAccountKeysResponse {
+	const listed = validKeyList(args);
+	if (!listed) return { ok: false, code: 'key_list_invalid' };
+	const currentFingerprintHex = fingerprintHexOf(v.privateKey);
+	const loaded: string[] = [];
+	const failed: number[] = [];
+	for (const k of listed) {
+		const held = v.accountKeys.get(k.fingerprintHex);
+		if (held && held.keyVersion !== k.keyVersion) return { ok: false, code: 'key_list_invalid' };
+		if (held) loaded.push(k.fingerprintHex);
+		else failed.push(k.keyVersion);
+	}
+	announceAccountKeys(v, false);
+	return { ok: true, loaded, failed, unverified: [], currentFingerprintHex, keyVersion: v.keyVersion, currentChanged: false };
+}
+
 export async function handleLoadAccountKeys(args: LoadAccountKeysArgs): Promise<LoadAccountKeysResponse> {
 	const v = vaults.get(args.accountId);
 	if (!v) return { ok: false, code: 'locked' };
+	if (v.product === 'app') return checkProductKeyList(v, args);
 	if (v.authScheme !== 'opaque_v1' || !v.keyPassword) return { ok: false, code: 'not_opaque' };
 	const start = v.accountKeys.get(fingerprintHexOf(v.privateKey));
 	if (!start) return { ok: false, code: 'not_opaque' };

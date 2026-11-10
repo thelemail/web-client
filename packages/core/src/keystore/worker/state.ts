@@ -101,6 +101,7 @@ export interface PendingPasswordChange {
 export const vaults = new Map<string, VaultState>();
 export const indexKeys = new Map<string, CryptoKey>();
 export const cachedRecords = new Map<string, VaultRecord>();
+export const productAccounts = new Set<string>();
 export const pendingRotations = new Map<string, PendingRotation>();
 export let cryptoReady: Promise<void> | null = null;
 export const ports = new Set<MessagePort>();

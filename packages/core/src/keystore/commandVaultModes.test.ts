@@ -47,7 +47,7 @@ describe('commandVaultModes', () => {
 		for (const [cmd, modes] of Object.entries(commandVaultModes)) {
 			expect(modes.length, `${cmd} has no vault mode`).toBeGreaterThan(0);
 			for (const mode of modes) {
-				expect(['account', 'product', 'auth'], `${cmd} has an unknown mode`).toContain(mode);
+				expect(['account', 'mail', 'calendar', 'auth'], `${cmd} has an unknown mode`).toContain(mode);
 			}
 		}
 	});
@@ -85,53 +85,58 @@ describe('commandVaultModes', () => {
 
 	it('keeps the fork ends on opposite sides of the boundary', () => {
 		expect(commandVaultModes.sealProductFork).toEqual(['account']);
-		expect(commandVaultModes.openProductFork).toEqual(['product']);
+		expect(commandVaultModes.openProductFork).toEqual(['calendar']);
 	});
 
 	it('denies credential and recovery commands to a product vault', () => {
 		for (const cmd of credentialCommands) {
-			expect(commandVaultModes[cmd], `${cmd} must not reach a product vault`).not.toContain(
-				'product'
-			);
+			for (const mode of ['mail', 'calendar'] as const) {
+				expect(commandVaultModes[cmd], `${cmd} must not reach a ${mode} vault`).not.toContain(mode);
+			}
 		}
 	});
 
-	it('denies key issuance to a product vault', () => {
+	it('denies key issuance and rotation to a product vault', () => {
+		for (const cmd of ['createAliasKey', 'reformatKeyWithUids', 'commitReformattedKey', 'prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation', 'sealProductFork'] as const) {
+			expect(commandVaultModes[cmd], `${cmd} must stay in the account vault`).toEqual(['account']);
+		}
 		for (const cmd of keyIssuingCommands) {
-			expect(commandVaultModes[cmd], `${cmd} must not reach a product vault`).not.toContain(
-				'product'
-			);
+			expect(commandVaultModes[cmd], `${cmd} must not reach a calendar vault`).not.toContain('calendar');
 		}
 	});
 
-	it('keeps account key history and rotation inside the account vault', () => {
-		for (const cmd of [
-			'loadAccountKeys',
-			'listAccountKeys',
-			'prepareKeyRotation',
-			'commitKeyRotation',
-			'abandonKeyRotation'
-		] as const) {
-			expect(commandVaultModes[cmd]).toEqual(['account']);
+	it('lets a mail vault read its own keyring and alias grants and nothing that rewrites them', () => {
+		for (const cmd of ['loadAccountKeys', 'listAccountKeys', 'loadAliasKeys', 'unloadAliasKeys', 'createSigningDelegationKey'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account', 'mail']);
 		}
 	});
 
 	it('allows a product vault the crypto it needs', () => {
-		for (const cmd of ['decrypt', 'encrypt', 'sealIndex', 'openIndex'] as const) {
-			expect(commandVaultModes[cmd]).toContain('product');
+		for (const cmd of ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentHeader', 'attachmentBytes', 'getPublicKey', 'sealIndex', 'openIndex'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account', 'mail', 'calendar']);
 		}
 	});
 
-	it('keeps typed calendar signatures and calendar keys in product vaults alone', () => {
+	it('keeps typed calendar signatures and calendar keys in calendar vaults alone', () => {
 		for (const cmd of ['signInvitation', 'signReply', 'signFreeBusy', 'signCalendarGrant', 'createCalendarKey', 'loadCalendarKeys'] as const) {
-			expect(commandVaultModes[cmd]).toEqual(['product']);
+			expect(commandVaultModes[cmd]).toEqual(['calendar']);
+		}
+	});
+
+	it('lets both product vaults adopt a handoff and no account vault', () => {
+		for (const cmd of ['adoptHandoff', 'commitHandoff', 'discardHandoff'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['mail', 'calendar']);
 		}
 	});
 
 	it('allows a product vault to lock and persist itself', () => {
-		for (const cmd of ['status', 'lock', 'clear', 'enrollPersistent'] as const) {
-			expect(commandVaultModes[cmd]).toContain('product');
+		for (const cmd of ['status', 'lock', 'clear', 'enrollPersistent', 'tryRestoreFromPersistent'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account', 'mail', 'calendar', 'auth']);
 		}
+	});
+
+	it('leaves dropping a remembered vault to the auth origin', () => {
+		expect(commandVaultModes.disablePersistent).toEqual(['auth']);
 	});
 });
 
