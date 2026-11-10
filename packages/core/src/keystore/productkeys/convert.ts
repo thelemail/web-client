@@ -16,7 +16,7 @@ import { sealAuthority, sealRootDescriptor } from './secretBundle';
 
 const DEDUP_INFO = 'thelemail/import-dedup-key/v1\u0000';
 const SEARCH_INFO = 'thelemail-search-index-v1';
-const BUNDLE_BUDGET = MAX_RECORD_BYTES - 64 * 1024;
+export const BUNDLE_BUDGET = MAX_RECORD_BYTES - 64 * 1024;
 
 export interface HistoryKey {
 	keyId: string;
@@ -49,6 +49,7 @@ export interface ConversionInput {
 	availability: Map<string, Availability>;
 	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
 	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
+	appRoot?: Uint8Array;
 	now?: Date;
 	bundleBudget?: number;
 }
@@ -150,7 +151,7 @@ async function unlock(armored: string, passphrase: string): Promise<openpgp.Priv
 	return privateKey.isDecrypted() ? privateKey : openpgp.decryptKey({ privateKey, passphrase });
 }
 
-async function unlockAccountKeys(input: ConversionInput): Promise<{ unlocked: openpgp.PrivateKey[]; current: openpgp.PrivateKey }> {
+export async function unlockAccountKeys(input: Pick<ConversionInput, 'accountKeys' | 'keyPassword'>): Promise<{ unlocked: openpgp.PrivateKey[]; current: openpgp.PrivateKey }> {
 	const unlocked: openpgp.PrivateKey[] = [];
 	let current: openpgp.PrivateKey | null = null;
 	for (const k of input.accountKeys) {
@@ -169,7 +170,11 @@ async function unlockAccountKeys(input: ConversionInput): Promise<{ unlocked: op
 	return { unlocked, current };
 }
 
-async function mailEntries(input: ConversionInput, unlocked: openpgp.PrivateKey[], forbidden: Uint8Array[]): Promise<{ entries: Entry[]; keys: IdentityKey[] }> {
+export async function mailEntries(
+	input: Pick<ConversionInput, 'accountId' | 'keyPassword' | 'history' | 'availability' | 'aliasKeys'>,
+	unlocked: openpgp.PrivateKey[],
+	forbidden: Uint8Array[]
+): Promise<{ entries: Entry[]; keys: IdentityKey[] }> {
 	const material = new Map<string, Uint8Array>();
 	for (const key of unlocked) material.set(keyId(input.accountId, fingerprintBytes(key)), secretKeyBytes(key));
 	const entries: Entry[] = [];
@@ -237,7 +242,7 @@ function chunk(entries: Entry[], budget: number): Entry[][] {
 	return pages;
 }
 
-async function sealPages(
+export async function sealPages(
 	root: Uint8Array,
 	accountId: string,
 	product: Product,
@@ -272,7 +277,8 @@ export async function buildConversion(input: ConversionInput): Promise<Conversio
 	const calPublic = publicKeyBytes(cal);
 	const aakId = keyId(accountId, fingerprintBytes(aak));
 	const calId = keyId(accountId, fingerprintBytes(cal));
-	const appRoot = randomBytes(SECRET_LEN);
+	if (input.appRoot && input.appRoot.length !== SECRET_LEN) fail('malformed', 'adopted mail root length');
+	const appRoot = input.appRoot ? input.appRoot.slice() : randomBytes(SECRET_LEN);
 	const calRoot = randomBytes(SECRET_LEN);
 	const roots = [input.amk, utf8(input.keyPassword), appRoot, calRoot];
 

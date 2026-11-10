@@ -1,6 +1,5 @@
 /// <reference lib="webworker" />
 
-import { isProductVault } from '../products';
 import type {
 	AttachmentBytesArgs,
 	AttachmentHeaderArgs,
@@ -13,7 +12,6 @@ import type {
 	UnloadAliasKeysArgs,
 	CreateAliasKeyArgs,
 	CreateSigningDelegationKeyArgs,
-	DisablePersistentArgs,
 	EncryptArgs,
 	EncryptToKeysArgs,
 	SignDetachedArgs,
@@ -63,10 +61,23 @@ import type {
 	ListAccountKeysArgs,
 	LoadAccountKeysArgs,
 	PrepareKeyRotationArgs,
-	KeystoreCommand,
-	VaultMode
+	CustodyAdoptArgs,
+	CustodyCommitArgs,
+	CustodyPrepareArgs,
+	CustodyRetireArgs,
+	CustodyScopedArgs,
+	CustodyStageArgs
 } from './protocol';
-import { commandVaultModes } from './protocol';
+import { commandAllowed } from './worker/gate';
+import {
+	forgetPendingCustody,
+	handleCustodyAdopt,
+	handleCustodyCommit,
+	handleCustodyDiscard,
+	handleCustodyPrepare,
+	handleCustodyRetire,
+	handleCustodyStage
+} from './worker/custody-ops';
 import { ports, handleStatus, handleClear, handleClearAll, handleLock } from './worker/state';
 import {
 	handlePrepareLogin,
@@ -92,8 +103,7 @@ import {
 import {
 	handleInvalidatePersistedVault,
 	handleEnrollPersistent,
-	handleTryRestoreFromPersistent,
-	handleDisablePersistent
+	handleTryRestoreFromPersistent
 } from './worker/vault-persist';
 import {
 	handleSealIndex,
@@ -115,10 +125,9 @@ import {
 	handleListAccountKeys,
 	handlePrepareKeyRotation,
 	handleCommitKeyRotation,
-	handleAbandonKeyRotation,
-	handleReformatKeyWithUids,
-	handleCommitReformattedKey
+	handleAbandonKeyRotation
 } from './worker/key-ops';
+import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
 import {
 	handleOpaqueAbandonOperation,
 	handleOpaqueStartRegistration,
@@ -163,16 +172,9 @@ import {
 
 declare const self: SharedWorkerGlobalScope;
 
-const VAULT_MODE: VaultMode = isProductVault ? 'product' : 'account';
-
-function commandAllowed(cmd: KeystoreCommand): boolean {
-	const modes = commandVaultModes[cmd];
-	return modes !== undefined && modes.includes(VAULT_MODE);
-}
-
 async function dispatch(port: MessagePort, msg: RequestMessage) {
 	try {
-		if (!commandAllowed(msg.cmd)) {
+		if (!commandAllowed(msg.cmd, msg.args)) {
 			respondError(port, msg.id, new Error('command unavailable'));
 			return;
 		}
@@ -399,14 +401,17 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				respond(port, msg.id, undefined);
 				break;
 			case 'lock':
+				forgetPendingCustody((msg.args as LockArgs).accountId);
 				handleLock(msg.args as LockArgs);
 				respond(port, msg.id, undefined);
 				break;
 			case 'clear':
+				forgetPendingCustody((msg.args as ClearArgs).accountId);
 				await handleClear(msg.args as ClearArgs);
 				respond(port, msg.id, undefined);
 				break;
 			case 'clearAll':
+				forgetPendingCustody();
 				await handleClearAll();
 				respond(port, msg.id, undefined);
 				break;
@@ -419,10 +424,6 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 					msg.id,
 					await handleTryRestoreFromPersistent(msg.args as TryRestoreFromPersistentArgs)
 				);
-				break;
-			case 'disablePersistent':
-				await handleDisablePersistent(msg.args as DisablePersistentArgs);
-				respond(port, msg.id, undefined);
 				break;
 			case 'attachmentHeader':
 				respond(port, msg.id, await handleAttachmentHeader(msg.args as AttachmentHeaderArgs));
@@ -530,6 +531,24 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'openIndex':
 				respond(port, msg.id, await handleOpenIndex(msg.args as OpenIndexArgs));
+				break;
+			case 'custodyPrepare':
+				respond(port, msg.id, await handleCustodyPrepare(msg.args as CustodyPrepareArgs));
+				break;
+			case 'custodyAdopt':
+				respond(port, msg.id, await handleCustodyAdopt(msg.args as CustodyAdoptArgs));
+				break;
+			case 'custodyStage':
+				respond(port, msg.id, await handleCustodyStage(msg.args as CustodyStageArgs));
+				break;
+			case 'custodyCommit':
+				respond(port, msg.id, await handleCustodyCommit(msg.args as CustodyCommitArgs));
+				break;
+			case 'custodyRetire':
+				respond(port, msg.id, await handleCustodyRetire(msg.args as CustodyRetireArgs));
+				break;
+			case 'custodyDiscard':
+				respond(port, msg.id, await handleCustodyDiscard(msg.args as CustodyScopedArgs));
 				break;
 			default:
 				respondError(port, msg.id, `unknown command: ${msg.cmd}`);

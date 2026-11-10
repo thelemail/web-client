@@ -10,8 +10,9 @@ vi.mock('$core/api/accountSettings', () => ({
 	putAccountSettingsSection: (...a: unknown[]) => putAccountSettingsSection(...a)
 }));
 
+const custody = vi.hoisted(() => ({ mailOnly: false }));
 vi.mock('./auth.svelte', () => ({
-	auth: { canEnterApp: true, accountId: 'acc-1' }
+	auth: { canEnterApp: true, accountId: 'acc-1', mailOnlyFor: () => custody.mailOnly }
 }));
 
 vi.mock('./workspaces.svelte', () => ({ workspaces: {} }));
@@ -475,5 +476,35 @@ describe('save feedback', () => {
 		await vi.advanceTimersByTimeAsync(2000);
 		expect(putsFor('appearance')).toEqual([{ theme: 'dark' }, { theme: 'dark' }]);
 		expect(settingsDraft.saveState).toBe('saved');
+	});
+});
+
+describe('launching a ceremony', () => {
+	it('opens every ceremony for an account that signs in here', () => {
+		for (const kind of ['recovery', 'password', 'twofa', 'keys', 'delete', 'alias', 'member'] as const) {
+			settingsDraft.close();
+			settingsDraft.launch(kind);
+			expect(settingsDraft.ceremony, kind).toBe(kind);
+		}
+		settingsDraft.close();
+	});
+
+	it('leaves account-origin ceremonies closed for a mail-only account', () => {
+		custody.mailOnly = true;
+		try {
+			for (const kind of ['recovery', 'password', 'twofa', 'keys', 'delete'] as const) {
+				settingsDraft.close();
+				settingsDraft.launch(kind, { method: 'totp' });
+				expect(settingsDraft.ceremony, kind).toBeNull();
+			}
+			for (const kind of ['alias', 'member', 'familyInvite', 'family'] as const) {
+				settingsDraft.close();
+				settingsDraft.launch(kind);
+				expect(settingsDraft.ceremony, kind).toBe(kind);
+			}
+		} finally {
+			custody.mailOnly = false;
+			settingsDraft.close();
+		}
 	});
 });

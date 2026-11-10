@@ -13,11 +13,14 @@
 	import RecoveryCeremony from '$core/settings/ceremonies/RecoveryCeremony.svelte';
 	import PasswordCeremony from '$core/settings/ceremonies/PasswordCeremony.svelte';
 	import TwoFactorCeremony from '$core/settings/ceremonies/TwoFactorCeremony.svelte';
+	import DeleteCeremony from '$core/settings/ceremonies/DeleteCeremony.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '$core/settings/data';
 	import Card from '$core/settings/Card.svelte';
 	import Row from '$core/settings/Row.svelte';
 	import { Button } from '$core/components/ui/button';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Download from '@lucide/svelte/icons/download';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 
 	let active = $state<CeremonyKind | null>(null);
@@ -25,7 +28,7 @@
 	let signingOut = $state(false);
 
 	function launch(kind: CeremonyKind, opts?: { method?: TwoFaSetupMethod }) {
-		if (kind !== 'recovery' && kind !== 'password' && kind !== 'twofa') return;
+		if (kind !== 'recovery' && kind !== 'password' && kind !== 'twofa' && kind !== 'delete') return;
 		twoFaMethod = opts?.method;
 		active = kind;
 	}
@@ -88,6 +91,14 @@
 					<SecGroup id="sec-log" title={m.settings_security_log()}>
 						<SecurityLog />
 					</SecGroup>
+
+					<Card icon={CircleAlert} title={m.settings_account_delete_title()} variant="danger">
+						<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_desc()}>
+							<Button variant="danger" size="sm" onclick={() => launch('delete')}>
+								<Trash2 size={14} />{m.settings_account_delete_button()}
+							</Button>
+						</Row>
+					</Card>
 				</div>
 			</div>
 		</div>
@@ -100,6 +111,8 @@
 	<PasswordCeremony onClose={close} onComplete={close} />
 {:else if active === 'twofa'}
 	<TwoFactorCeremony onClose={close} onComplete={close} initialMethod={twoFaMethod} />
+{:else if active === 'delete'}
+	<DeleteCeremony onClose={close} onComplete={close} />
 {/if}
 
 <style>

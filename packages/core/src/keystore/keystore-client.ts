@@ -137,6 +137,17 @@ import type {
 	AdoptHandoffArgs,
 	AdoptHandoffResponse,
 	CommitHandoffArgs,
+	CustodyAdoptArgs,
+	CustodyAdoptResponse,
+	CustodyCommitArgs,
+	CustodyCommitResponse,
+	CustodyPrepareArgs,
+	CustodyPrepareResponse,
+	CustodyRetireArgs,
+	CustodyRetireResponse,
+	CustodyScopedArgs,
+	CustodyStageArgs,
+	CustodyStageResponse,
 	CommitHandoffResponse
 } from './protocol';
 import { LOCAL_KEY_UNSTORABLE } from './vault-wrap';
@@ -333,6 +344,7 @@ async function alsoForgetDeviceKey(accountId: string | null, run: Promise<void>)
 function broadcastAccountId(b: Broadcast): string | null {
 	switch (b.type) {
 		case 'vaultChanged':
+		case 'custodyChanged':
 		case 'locked':
 		case 'cleared':
 		case 'persistentDisabled':
@@ -425,6 +437,12 @@ export const keystore = {
 	adoptHandoff: (args: AdoptHandoffArgs) => call<AdoptHandoffResponse>('adoptHandoff', args),
 	commitHandoff: (args: CommitHandoffArgs) => call<CommitHandoffResponse>('commitHandoff', args),
 	discardHandoff: (args: CommitHandoffArgs) => call<void>('discardHandoff', args),
+	custodyPrepare: (args: CustodyPrepareArgs) => call<CustodyPrepareResponse>('custodyPrepare', args, CRYPTO_TIMEOUT_MS),
+	custodyAdopt: (args: CustodyAdoptArgs) => call<CustodyAdoptResponse>('custodyAdopt', args, CRYPTO_TIMEOUT_MS),
+	custodyStage: (args: CustodyStageArgs) => call<CustodyStageResponse>('custodyStage', args, CRYPTO_TIMEOUT_MS),
+	custodyCommit: (args: CustodyCommitArgs) => call<CustodyCommitResponse>('custodyCommit', args),
+	custodyRetire: (args: CustodyRetireArgs) => call<CustodyRetireResponse>('custodyRetire', args),
+	custodyDiscard: (args: CustodyScopedArgs) => call<void>('custodyDiscard', args),
 	lock: (args: LockArgs) => call<void>('lock', args),
 	clear: (args: ClearArgs) => alsoForgetDeviceKey(args.accountId, call<void>('clear', args)),
 	clearAll: () => alsoForgetDeviceKey(null, call<void>('clearAll')),

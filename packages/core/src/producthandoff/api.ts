@@ -38,7 +38,7 @@ interface HostCall {
 	token?: string;
 }
 
-async function hostFetch<T>(path: string, call: HostCall = {}): Promise<T> {
+export async function hostFetch<T>(path: string, call: HostCall = {}): Promise<T> {
 	const headers: Record<string, string> = {};
 	if (call.body !== undefined) headers['Content-Type'] = 'application/json';
 	if (call.csrf) headers['X-CSRF-Token'] = call.csrf;
@@ -62,7 +62,15 @@ export function bootstrap(): Promise<{ csrfToken: string }> {
 }
 
 export function createRequest(
-	body: { state: string; codeChallenge: string; codeChallengeMethod: 'S256'; receiverPublicKey: string; expectedAccountId: string | null; existingSessionId: string | null },
+	body: {
+		state: string;
+		codeChallenge: string;
+		codeChallengeMethod: 'S256';
+		receiverPublicKey: string;
+		expectedAccountId: string | null;
+		existingSessionId: string | null;
+		requireFreshAuth?: boolean;
+	},
 	csrf: string
 ): Promise<DescriptorResponse> {
 	return hostFetch('/v1/auth/handoffs/requests', { method: 'POST', body, csrf });

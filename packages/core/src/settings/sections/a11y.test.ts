@@ -7,7 +7,7 @@ const { getAccountSettings, putAccountSettingsSection } = vi.hoisted(() => ({
 }));
 
 vi.mock('$core/api/accountSettings', () => ({ getAccountSettings, putAccountSettingsSection }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { canEnterApp: true, accountId: 'acc-1' } }));
+vi.mock('$core/stores/auth.svelte', () => ({ auth: { canEnterApp: true, accountId: 'acc-1', mailOnlyFor: () => false } }));
 vi.mock('$core/stores/workspaces.svelte', () => ({ workspaces: {} }));
 vi.mock('$core/stores/twofactor.svelte', () => ({ twofactor: {} }));
 vi.mock('$platform', () => ({ platform: { notifications: null, openExternal: vi.fn() } }));

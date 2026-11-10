@@ -18,6 +18,7 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { auth } from '$core/stores/auth.svelte';
+	import { productTarget } from '$core/products';
 	import { createBillingPortalSession } from '$core/api/billing';
 	import { ApiCallError } from '$core/api/types';
 	import { planNameFor, subscriptionPrice } from '$core/auth/plans';
@@ -34,6 +35,8 @@
 	}
 
 	let { launch }: Props = $props();
+	const mailOnly = $derived(auth.mailOnlyFor(auth.accountId));
+	const accountSettings = productTarget('auth')?.origin ?? null;
 
 	let portalBusy = $state(false);
 	let portalError = $state<string | null>(null);
@@ -253,14 +256,24 @@
 </Card>
 
 <Card icon={CircleAlert} title={m.settings_account_delete_title()} variant="danger">
-	<Row
-		t={m.settings_account_delete_row()}
-		d={m.settings_account_delete_desc()}
-	>
-		<Button variant="danger" size="sm" onclick={() => launch('delete')}>
-			<Trash2 size={14} />{m.settings_account_delete_button()}
-		</Button>
-	</Row>
+	{#if mailOnly}
+		<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_at_account()}>
+			{#if accountSettings}
+				<Button variant="secondary" size="sm" href={accountSettings}>
+					{m.settings_security_account_origin_cta()}<ExternalLink size={14} />
+				</Button>
+			{/if}
+		</Row>
+	{:else}
+		<Row
+			t={m.settings_account_delete_row()}
+			d={m.settings_account_delete_desc()}
+		>
+			<Button variant="danger" size="sm" onclick={() => launch('delete')}>
+				<Trash2 size={14} />{m.settings_account_delete_button()}
+			</Button>
+		</Row>
+	{/if}
 </Card>
 
 <style>

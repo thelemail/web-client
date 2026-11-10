@@ -12,8 +12,10 @@ import { PROFILE } from './profiles';
 const INFO = 'thelemail/secret-wrap/v2/secret-bundle';
 const ROOT_TYPE = 'thelemail-product-root/v1';
 const AUTHORITY_TYPE = 'thelemail-account-authority/v1';
+const ROOT_CANDIDATE_TYPE = 'thelemail-product-root-candidate/v1';
 const ENVELOPE_FIELDS = ['accountId', 'aead', 'amkEpoch', 'bundleId', 'ciphertext', 'kdf', 'nonce', 'purpose', 'revision', 'salt', 'version'];
 const ROOT_FIELDS = ['accountId', 'amkEpoch', 'bundleId', 'identityManifestHash', 'identityManifestId', 'identityManifestRevision', 'product', 'productKeyEpoch', 'productRoot', 'revision', 'type'];
+const ROOT_CANDIDATE_FIELDS = ['accountId', 'amkEpoch', 'bundleId', 'bundlesHash', 'product', 'productKeyEpoch', 'productRoot', 'revision', 'type'];
 const AUTHORITY_FIELDS = ['accountId', 'amkEpoch', 'authorityEpoch', 'authorityKeyId', 'bundleId', 'profileId', 'revision', 'secretKey', 'type'];
 
 export interface SecretBundleHeader {
@@ -30,6 +32,13 @@ export interface RootDescriptor {
 	identityManifestId: string;
 	identityManifestRevision: number;
 	identityManifestHash: Uint8Array;
+}
+
+export interface RootCandidate {
+	product: Product;
+	productKeyEpoch: number;
+	productRoot: Uint8Array;
+	bundlesHash: Uint8Array;
 }
 
 export interface Authority {
@@ -177,4 +186,42 @@ export async function openAuthority(amk: Uint8Array, raw: Uint8Array, expect: Se
 	};
 	checkAuthority(a, amk);
 	return a;
+}
+
+function checkRootCandidate(c: RootCandidate, amk: Uint8Array): void {
+	if (!isProduct(c.product)) fail('malformed', 'product');
+	if (!Number.isSafeInteger(c.productKeyEpoch) || c.productKeyEpoch < 1) fail('malformed', 'productKeyEpoch');
+	if (c.bundlesHash.length !== 32) fail('malformed', 'bundlesHash');
+	if (c.productRoot.length !== SECRET_LEN) fail('malformed', 'product root length');
+	if (bytesEqual(c.productRoot, amk)) fail('forbidden', 'product root equals the amk');
+}
+
+export async function sealRootCandidate(amk: Uint8Array, h: SecretBundleHeader, c: RootCandidate): Promise<Uint8Array> {
+	checkRootCandidate(c, amk);
+	return sealSecret(
+		amk,
+		h,
+		encodeCanonical({
+			type: ROOT_CANDIDATE_TYPE,
+			...contextJson(h),
+			product: c.product,
+			productKeyEpoch: c.productKeyEpoch,
+			productRoot: b64encode(c.productRoot),
+			bundlesHash: b64encode(c.bundlesHash)
+		})
+	);
+}
+
+export async function openRootCandidate(amk: Uint8Array, raw: Uint8Array, expect: SecretBundleHeader): Promise<RootCandidate> {
+	const o = exact(await openSecret(amk, raw, expect, ROOT_CANDIDATE_TYPE), ROOT_CANDIDATE_FIELDS);
+	const product = str(o, 'product');
+	if (!isProduct(product)) fail('malformed', 'product');
+	const c: RootCandidate = {
+		product,
+		productKeyEpoch: int(o, 'productKeyEpoch', 1),
+		productRoot: bin(o, 'productRoot', SECRET_LEN),
+		bundlesHash: hash(o, 'bundlesHash')
+	};
+	checkRootCandidate(c, amk);
+	return c;
 }

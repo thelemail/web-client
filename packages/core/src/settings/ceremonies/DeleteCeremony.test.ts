@@ -23,7 +23,7 @@ vi.mock('$core/keystore/keystore-client', () => ({
 vi.mock('$core/auth/webauthn', () => ({ webauthnSupported: () => false, webauthnFailure: () => null, webauthnFailureMessage: () => '' }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: { list: [] } }));
 vi.mock('$core/stores/twofactor.svelte', () => ({ twofactor: { status: null, phase: 'ready', ensure: vi.fn() } }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me', email: 'ada@thelemail.com' } }));
+vi.mock('$core/stores/session.svelte', () => ({ auth: { accountId: 'me', email: 'ada@thelemail.com' } }));
 
 const ws = vi.hoisted(() => ({
 	workspace: { id: 'w1', ownerAccountId: 'me' } as { id: string; ownerAccountId: string } | null,

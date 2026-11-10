@@ -3,6 +3,7 @@ import { accounts } from '$core/stores/accounts.svelte';
 import { boot } from '$core/stores/boot.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { initLocale } from '$core/i18n/locale.svelte';
+import { startMailCustody } from '$core/custody/runtime';
 import { platform } from '$platform';
 
 export const ssr = false;
@@ -16,6 +17,7 @@ let localeReady: Promise<void> | null = null;
 let attempts = 0;
 
 async function bootstrap() {
+	startMailCustody();
 	await auth.hydrate();
 
 	if (platform.session) {

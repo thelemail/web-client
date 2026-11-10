@@ -17,7 +17,7 @@ export interface VaultRecord {
 	wrapIv?: Uint8Array;
 	localHalfKey?: CryptoKey;
 	localHalfHolder?: 'page';
-	wrapPayloadVersion?: 1 | 2 | 3;
+	wrapPayloadVersion?: 1 | 2 | 3 | 4;
 }
 
 export interface StoredAccountKey {

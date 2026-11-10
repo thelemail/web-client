@@ -16,7 +16,8 @@ const api = vi.hoisted(() => ({
 const openExternal = vi.hoisted(() => vi.fn());
 
 vi.mock('$platform', () => ({ platform: { returnOrigin: () => 'https://mail.test', openExternal } }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me' } }));
+const custody = vi.hoisted(() => ({ mailOnly: false }));
+vi.mock('$core/stores/auth.svelte', () => ({ auth: { accountId: 'me', mailOnlyFor: () => custody.mailOnly } }));
 vi.mock('$core/stores/accountData', () => ({ reloadWorkspaceData: vi.fn() }));
 vi.mock('$core/api/billing', async (orig) => ({ ...(await orig<object>()), ...api }));
 
@@ -186,5 +187,27 @@ describe('Account data export', () => {
 		const link = [...document.querySelectorAll('a')].find((a) => a.textContent?.includes('Get the Export Tool'));
 		expect(document.body.textContent).toContain('Download your data');
 		expect(link?.getAttribute('href')).toBe('https://github.com/thelemail/export-tool');
+	});
+});
+
+describe('Account deletion for a mail-only account', () => {
+	it('points to account settings instead of starting the deletion in mail', () => {
+		custody.mailOnly = true;
+		try {
+			render(Account, { props: { launch: () => {} } });
+			expect(document.body.textContent).toContain('You delete the account from your account settings.');
+			expect([...document.querySelectorAll('button')].some((b) => b.textContent?.includes('Delete account'))).toBe(false);
+		} finally {
+			custody.mailOnly = false;
+		}
+	});
+
+	it('starts the deletion in mail for an account that still signs in here', () => {
+		const launch = vi.fn();
+		render(Account, { props: { launch } });
+		const del = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('Delete account'));
+		expect(del).toBeTruthy();
+		del!.click();
+		expect(launch).toHaveBeenCalledWith('delete');
 	});
 });

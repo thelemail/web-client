@@ -21,7 +21,8 @@
 	import { webauthnFailure, webauthnFailureMessage, webauthnSupported } from '$core/auth/webauthn';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { accounts } from '$core/stores/accounts.svelte';
-	import { auth } from '$core/stores/auth.svelte';
+	import { appOrigin, isAuthOrigin } from '$core/products';
+	import { auth } from '$core/stores/session.svelte';
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import type { CeremonyKind } from '../data';
@@ -70,10 +71,14 @@
 	});
 
 	onMount(() => {
-		if (!workspaces.workspace) void workspaces.load(auth.accountId);
+		if (!isAuthOrigin && !workspaces.workspace) void workspaces.load(auth.accountId);
 	});
 
 	async function openMembers() {
+		if (isAuthOrigin) {
+			window.location.assign(appOrigin());
+			return;
+		}
 		onClose();
 		await tick();
 		const card = document.getElementById('members');

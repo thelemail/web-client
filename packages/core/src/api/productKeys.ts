@@ -119,3 +119,34 @@ export function putProductManifest(
 		accountId
 	});
 }
+
+export interface ProductCandidateResponse {
+	product: ProductKeysProduct;
+	productKeyEpoch: number;
+	rootBundleId: string;
+	rootBundleRevision: number;
+	rootBundle: string;
+	record: string;
+	recordHash: string;
+	claimed: boolean;
+}
+
+export function putProductCandidateBundle(accountId: string, product: ProductKeysProduct, bundleId: string, revision: number, bundle: string): Promise<void> {
+	return apiFetch(`/v1/me/product-keys/${product}/candidate/bundles/${bundleId}/revisions/${revision}`, { method: 'PUT', body: { bundle }, accountId });
+}
+
+export function claimProductCandidate(
+	accountId: string,
+	product: ProductKeysProduct,
+	body: { rootBundleId: string; rootBundleRevision: number; rootBundle: string; record: string }
+): Promise<ProductCandidateResponse> {
+	return apiFetch(`/v1/me/product-keys/${product}/candidate`, { method: 'PUT', body, accountId });
+}
+
+export function getProductCandidate(accountId: string, product: ProductKeysProduct): Promise<ProductCandidateResponse> {
+	return apiFetch(`/v1/me/product-keys/${product}/candidate`, { accountId });
+}
+
+export function getProductRootDescriptor(accountId: string, product: ProductKeysProduct): Promise<{ bundleId: string; bundleRevision: number; kind: string | null; bundle: string }> {
+	return apiFetch(`/v1/me/product-keys/${product}/root-descriptor`, { accountId });
+}

@@ -42,6 +42,15 @@ export async function searchIndexKey(accountId: string): Promise<CryptoKey | nul
 	if (cached) return cached;
 	const v = vaults.get(accountId);
 	if (!v) return null;
+	if (v.product === 'app') {
+		if (!v.searchLeaf) return null;
+		const leaf = await crypto.subtle.importKey('raw', v.searchLeaf as BufferSource, { name: 'AES-GCM', length: 256 }, false, [
+			'encrypt',
+			'decrypt'
+		]);
+		indexKeys.set(accountId, leaf);
+		return leaf;
+	}
 	const ikm = await crypto.subtle.importKey(
 		'raw',
 		new TextEncoder().encode(v.keyPassword) as BufferSource,

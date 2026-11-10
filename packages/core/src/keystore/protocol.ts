@@ -1,6 +1,8 @@
 import type { ConversionOutput } from './productkeys/convert';
 import type { Availability } from './productkeys/productBundle';
 import type { ReadInput, ReadResult, StoredBundle } from './productkeys/read';
+import type { MailCandidateUpload, StoredCandidate, StoredCommittedMailKeys } from './productkeys/mailCandidate';
+import type { CustodyJournal } from '$core/custody/journal';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 
 export interface AccountStatus {
@@ -9,6 +11,7 @@ export interface AccountStatus {
 	unlocked: boolean;
 	hasPersistent: boolean;
 	authScheme: 'srp_v1' | 'opaque_v1';
+	mailOnly?: boolean;
 }
 
 export interface StatusResponse {
@@ -563,8 +566,15 @@ export interface AccountKeysChangedBroadcast {
 	currentChanged: boolean;
 }
 
+export interface CustodyChangedBroadcast {
+	type: 'custodyChanged';
+	accountId: string;
+	email: string;
+}
+
 export type Broadcast =
 	| VaultChangedBroadcast
+	| CustodyChangedBroadcast
 	| LockedBroadcast
 	| ClearedBroadcast
 	| ClearedAllBroadcast
@@ -923,12 +933,18 @@ export type KeystoreCommand =
 	| 'signFreeBusy'
 	| 'signCalendarGrant'
 	| 'createCalendarKey'
-	| 'loadCalendarKeys';
+	| 'loadCalendarKeys'
+	| 'custodyPrepare'
+	| 'custodyAdopt'
+	| 'custodyStage'
+	| 'custodyCommit'
+	| 'custodyRetire'
+	| 'custodyDiscard';
 
-export type VaultMode = 'account' | 'product' | 'auth';
+export type VaultMode = 'account' | 'mail' | 'calendar' | 'auth';
 
 export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = {
-	status: ['account', 'product', 'auth'],
+	status: ['account', 'mail', 'calendar', 'auth'],
 	prepareLogin: ['account'],
 	verifyLoginProof: ['account'],
 	completeLoginUnlock: ['account'],
@@ -966,47 +982,53 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	commitPasswordChange: ['account'],
 	invalidatePersistedVault: ['account', 'auth'],
 	abandonPasswordChange: ['account'],
-	lock: ['account', 'product', 'auth'],
-	clear: ['account', 'product', 'auth'],
-	clearAll: ['account', 'product', 'auth'],
-	enrollPersistent: ['account', 'product', 'auth'],
-	tryRestoreFromPersistent: ['account', 'product', 'auth'],
-	disablePersistent: ['account', 'product', 'auth'],
-	attachmentHeader: ['account', 'product'],
-	attachmentBytes: ['account', 'product'],
-	decrypt: ['account', 'product'],
-	loadAliasKeys: ['account'],
-	unloadAliasKeys: ['account'],
-	createAliasKey: ['account'],
-	createSigningDelegationKey: ['account'],
-	getPublicKey: ['account', 'product'],
-	loadAccountKeys: ['account'],
-	listAccountKeys: ['account'],
+	lock: ['account', 'mail', 'calendar', 'auth'],
+	clear: ['account', 'mail', 'calendar', 'auth'],
+	clearAll: ['account', 'mail', 'calendar', 'auth'],
+	enrollPersistent: ['account', 'mail', 'calendar', 'auth'],
+	tryRestoreFromPersistent: ['account', 'mail', 'calendar', 'auth'],
+	disablePersistent: ['auth'],
+	attachmentHeader: ['account', 'mail', 'calendar'],
+	attachmentBytes: ['account', 'mail', 'calendar'],
+	decrypt: ['account', 'mail', 'calendar'],
+	loadAliasKeys: ['account', 'mail'],
+	unloadAliasKeys: ['account', 'mail'],
+	createAliasKey: ['account', 'mail'],
+	createSigningDelegationKey: ['account', 'mail'],
+	getPublicKey: ['account', 'mail', 'calendar'],
+	loadAccountKeys: ['account', 'mail'],
+	listAccountKeys: ['account', 'mail'],
 	prepareKeyRotation: ['account'],
 	commitKeyRotation: ['account'],
 	abandonKeyRotation: ['account'],
-	reformatKeyWithUids: ['account'],
-	commitReformattedKey: ['account'],
-	encrypt: ['account', 'product'],
-	encryptToKeys: ['account', 'product'],
-	signDetached: ['account', 'product'],
-	signInvitation: ['product'],
-	signReply: ['product'],
-	signFreeBusy: ['product'],
-	signCalendarGrant: ['product'],
-	createCalendarKey: ['product'],
-	loadCalendarKeys: ['product'],
-	sealIndex: ['account', 'product'],
-	openIndex: ['account', 'product'],
+	reformatKeyWithUids: ['account', 'auth'],
+	commitReformattedKey: ['account', 'auth'],
+	encrypt: ['account', 'mail', 'calendar'],
+	encryptToKeys: ['account', 'mail', 'calendar'],
+	signDetached: ['account', 'mail', 'calendar'],
+	signInvitation: ['calendar'],
+	signReply: ['calendar'],
+	signFreeBusy: ['calendar'],
+	signCalendarGrant: ['calendar'],
+	createCalendarKey: ['calendar'],
+	loadCalendarKeys: ['calendar'],
+	sealIndex: ['account', 'mail', 'calendar'],
+	openIndex: ['account', 'mail', 'calendar'],
 	sealProductFork: ['account'],
-	openProductFork: ['product'],
+	openProductFork: ['calendar'],
 	touch: ['auth'],
 	prepareProductKeys: ['auth'],
 	readProductKeys: ['auth'],
 	sealProductHandoff: ['auth'],
-	adoptHandoff: ['product'],
-	commitHandoff: ['product'],
-	discardHandoff: ['product']
+	adoptHandoff: ['mail', 'calendar'],
+	commitHandoff: ['mail', 'calendar'],
+	discardHandoff: ['mail', 'calendar'],
+	custodyPrepare: ['account'],
+	custodyAdopt: ['account'],
+	custodyStage: ['account'],
+	custodyCommit: ['account', 'mail'],
+	custodyRetire: ['mail'],
+	custodyDiscard: ['account', 'mail']
 };
 
 export interface PrepareProductKeysArgs extends AccountScopedArgs {
@@ -1029,6 +1051,7 @@ export interface PrepareProductKeysArgs extends AccountScopedArgs {
 	availability: { keyId: string; state: Availability }[];
 	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
 	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
+	candidate?: StoredCandidate;
 }
 
 export type PrepareProductKeysResponse =
@@ -1110,3 +1133,43 @@ export interface OpenProductForkArgs {
 export type OpenProductForkResponse =
 	| { ok: true; accountId: string; email: string; keyCount: number }
 	| { ok: false; code: 'invalid_payload' | 'wrong_product' | 'wrong_account' };
+
+export interface CustodyScopedArgs extends AccountScopedArgs {
+	migrationId: string;
+}
+
+export type CustodyRefusal = { ok: false; code: 'locked' | 'unsupported' | 'missing' | 'invalid'; message?: string };
+
+export interface CustodyPrepareArgs extends CustodyScopedArgs {
+	amkEpoch: number;
+	historyEvents: Uint8Array[];
+	availability: { keyId: string; state: Availability }[];
+	accountKeys: { armoredEncrypted: string | null; isCurrent: boolean }[];
+	aliasKeys: { aliasId: string; keyVersion: number; wrappedPrivateKey: string }[];
+}
+
+export type CustodyPrepareResponse = { ok: true; upload: MailCandidateUpload } | CustodyRefusal;
+
+export interface CustodyAdoptArgs extends CustodyScopedArgs {
+	source: { kind: 'candidate'; stored: StoredCandidate } | { kind: 'committed'; stored: StoredCommittedMailKeys };
+}
+
+export type CustodyAdoptResponse = { ok: true; kind: 'candidate' | 'committed'; digest: Uint8Array; keyCount: number } | CustodyRefusal;
+
+export interface CustodyStageArgs extends CustodyScopedArgs {
+	serverHalf: string | null;
+}
+
+export type CustodyStageResponse = { ok: true; durable: boolean } | CustodyRefusal;
+
+export interface CustodyCommitArgs extends CustodyScopedArgs {
+	journal: CustodyJournal;
+}
+
+export type CustodyCommitResponse = { ok: true } | CustodyRefusal;
+
+export interface CustodyRetireArgs extends CustodyScopedArgs {
+	journal: CustodyJournal;
+}
+
+export type CustodyRetireResponse = { ok: true } | CustodyRefusal;

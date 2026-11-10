@@ -3,6 +3,7 @@ import {
 	activateCryptoHead,
 	getCryptoState,
 	getProductBundle,
+	getProductCandidate,
 	getProductKeys,
 	getSecretBundle,
 	putProductBundle,
@@ -13,11 +14,14 @@ import { listMyKeys } from '$core/api/me';
 import type { AliasKeyGrant } from '$core/api/aliases';
 import { listMyAliasKeys } from '$core/api/aliases';
 import type { AccountKeyListResponse } from '$core/api/types';
+import { ApiCallError } from '$core/api/types';
 import { b64ToText } from '$core/keys/encode';
 import type { PrepareProductKeysArgs } from '$core/keystore/protocol';
 import { keystore } from '$core/keystore/keystore-client';
 import { b64decode, b64encode } from '$core/keystore/productkeys/encoding';
+import { parseCandidate } from '$core/keystore/productkeys/candidate';
 import { parseHeadV2 } from '$core/keystore/productkeys/head';
+import type { StoredCandidate } from '$core/keystore/productkeys/mailCandidate';
 import { parseIdentityManifest } from '$core/keystore/productkeys/manifests';
 import type { Availability } from '$core/keystore/productkeys/productBundle';
 import type { ProductReadInput, ReadResult, StoredBundle } from '$core/keystore/productkeys/read';
@@ -28,7 +32,7 @@ export type ProductKeysOutcome =
 
 const PRODUCTS: ProductKeysProduct[] = ['app', 'calendar'];
 
-async function loadState(accountId: string): Promise<{ state: CryptoStateResponse; events: Uint8Array[] }> {
+export async function loadCryptoState(accountId: string): Promise<{ state: CryptoStateResponse; events: Uint8Array[] }> {
 	const state = await getCryptoState(accountId);
 	const events = state.history.events.map(b64decode);
 	let cursor = state.history.nextCursor;
@@ -65,9 +69,29 @@ export function conversionArgs(
 	};
 }
 
+export async function storedMailCandidate(accountId: string): Promise<StoredCandidate | null> {
+	let found;
+	try {
+		found = await getProductCandidate(accountId, 'app');
+	} catch (err) {
+		if (err instanceof ApiCallError && err.status === 404) return null;
+		throw err;
+	}
+	const record = b64decode(found.record);
+	const bundles: StoredBundle[] = [];
+	for (const ref of parseCandidate(record).bundles) {
+		const got = await getProductBundle(accountId, 'app', ref.bundleId, ref.revision);
+		bundles.push({ bundleId: ref.bundleId, revision: ref.revision, bundle: b64decode(got.bundle) });
+	}
+	return { record, rootBundle: b64decode(found.rootBundle), bundles };
+}
+
 async function convert(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<ProductKeysOutcome | null> {
-	const [keys, aliases] = await Promise.all([listMyKeys(accountId), listMyAliasKeys(accountId)]);
-	const prepared = await keystore.prepareProductKeys(conversionArgs(accountId, state, events, keys, aliases.keys));
+	const [keys, aliases, candidate] = await Promise.all([listMyKeys(accountId), listMyAliasKeys(accountId), storedMailCandidate(accountId)]);
+	const prepared = await keystore.prepareProductKeys({
+		...conversionArgs(accountId, state, events, keys, aliases.keys),
+		...(candidate ? { candidate } : {})
+	});
 	if (!prepared.ok) {
 		if (prepared.code === 'invalid') throw new Error(prepared.message ?? 'product keys: conversion refused');
 		return { status: prepared.code };
@@ -159,11 +183,19 @@ export async function readProductKeys(accountId: string, state?: CryptoStateResp
 }
 
 export async function ensureProductKeys(accountId: string): Promise<ProductKeysOutcome> {
-	const { state, events } = await loadState(accountId);
+	const { state, events } = await loadCryptoState(accountId);
 	if (!state.features.productKeys) return { status: 'disabled' };
 	if (state.head?.version === 2) return readProductKeys(accountId, state);
 	const refused = await convert(accountId, state, events);
 	if (refused) return refused;
 	const read = await readProductKeys(accountId);
 	return read.status === 'active' ? { status: 'activated', result: read.result } : read;
+}
+
+export async function ensureConverted(accountId: string): Promise<boolean> {
+	const { state, events } = await loadCryptoState(accountId);
+	if (!state.features.productKeys) return false;
+	if (state.head?.version === 2) return true;
+	if (await convert(accountId, state, events)) return false;
+	return (await readProductKeys(accountId)).status === 'active';
 }

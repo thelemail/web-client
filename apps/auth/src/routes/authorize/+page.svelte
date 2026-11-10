@@ -2,7 +2,10 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
+	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 	import { ApiCallError } from '$core/api/types';
+	import { ensureConverted } from '$core/auth/product-keys';
+	import { syncAddressUids } from '$core/keys/uid-sync';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/session.svelte';
 	import {
@@ -14,6 +17,7 @@
 	import { m } from '$paraglide/messages.js';
 
 	const LOGIN_TRIED = 'thelemail-authorize-login';
+	const UID_SYNC_WAIT_MS = 4000;
 	const fragment = takeAuthorizeFragment();
 	let error = $state<string | null>(null);
 
@@ -54,6 +58,11 @@
 				return;
 			}
 			auth.activate(rec.accountId);
+			if (!(await ensureConverted(rec.accountId))) {
+				fail(m.handoff_auth_invalid());
+				return;
+			}
+			await Promise.race([syncAddressUids(rec.accountId), new Promise((resolve) => setTimeout(resolve, UID_SYNC_WAIT_MS))]);
 			const callback = await grantRequest(rec.accountId, req);
 			clearPendingAuthorize();
 			sessionStorage.removeItem(LOGIN_TRIED);
@@ -75,6 +84,8 @@
 		{/if}
 	</div>
 </AuthShell>
+
+<ReauthDialog />
 
 <style>
 	.handoffcard {

@@ -12,7 +12,7 @@ vi.mock('@protontech/crypto/proxy/endpoint/api.ts', () => ({
 		static init() {}
 	}
 }));
-vi.mock('../../products', () => ({ isAuthOrigin: true }));
+vi.mock('../../products', () => ({ isAuthOrigin: true, isProductVault: false, currentProduct: 'auth' }));
 
 const db = vi.hoisted(() => ({
 	records: new Map<string, VaultRecord>(),
