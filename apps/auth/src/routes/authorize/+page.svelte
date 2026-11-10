@@ -59,7 +59,7 @@
 			}
 			auth.activate(rec.accountId);
 			if (!(await ensureConverted(rec.accountId))) {
-				fail(m.handoff_auth_invalid());
+				fail(m.handoff_auth_unavailable());
 				return;
 			}
 			await Promise.race([syncAddressUids(rec.accountId), new Promise((resolve) => setTimeout(resolve, UID_SYNC_WAIT_MS))]);

@@ -13,9 +13,11 @@ import { electLeader, type LeaderHandle } from './leader';
 import { openRealtimeChannel, type RealtimeChannel } from './channel';
 import type { ConnectionState, RealtimeHint } from './types';
 import { platform } from '$platform';
+import { currentProduct } from '$core/products';
 
 const LEADER_LOCK_NAME = 'thelemail:realtime-leader';
 const STALE_MS = 60_000;
+const mailProduct = currentProduct === 'app';
 
 class RealtimeStore {
 	#connections = new Map<string, RealtimeConnection>();
@@ -101,7 +103,7 @@ class RealtimeStore {
 			});
 			this.#connections.set(id, conn);
 			conn.start();
-			if (id !== auth.accountId) void unread.refresh(id);
+			if (mailProduct && id !== auth.accountId) void unread.refresh(id);
 		}
 	}
 
@@ -138,6 +140,10 @@ class RealtimeStore {
 	}
 
 	#resync(accountId: string, full: boolean): void {
+		if (!mailProduct) {
+			if (accountId === auth.accountId) notifyCalendarResync(full);
+			return;
+		}
 		if (accountId !== auth.accountId) {
 			void unread.refresh(accountId);
 			return;

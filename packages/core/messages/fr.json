@@ -4900,6 +4900,7 @@
   "handoff_restart": "Recommencer",
   "handoff_opening": "Connexion en cours",
   "handoff_auth_invalid": "Cette demande de connexion a expiré ou a déjà été utilisée. Revenez en arrière et réessayez.",
+  "handoff_auth_unavailable": "Ce compte ne peut pas encore être ouvert ici. Revenez en arrière et réessayez plus tard.",
   "handoff_auth_other_account": "Cette demande concerne un autre compte. Connectez-vous à ce compte pour continuer.",
   "handoff_auth_returning": "Retour vers l’application",
   "settings_security_account_origin_title": "Connexion et récupération",

@@ -7,6 +7,7 @@ const disablePersistent = vi.fn();
 const product = vi.hoisted(() => ({ isAuthOrigin: false }));
 
 vi.mock('$core/products', () => ({
+	currentProduct: 'app',
 	get isAuthOrigin() {
 		return product.isAuthOrigin;
 	}

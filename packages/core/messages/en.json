@@ -4900,6 +4900,7 @@
 	"handoff_restart": "Start again",
 	"handoff_opening": "Signing you in",
 	"handoff_auth_invalid": "This sign-in request has expired or was already used. Go back and try again.",
+	"handoff_auth_unavailable": "This account can't be opened there yet. Go back and try again later.",
 	"handoff_auth_other_account": "This request is for a different account. Sign in to that account to continue.",
 	"handoff_auth_returning": "Returning you to the app",
 	"settings_security_account_origin_title": "Sign-in and recovery",

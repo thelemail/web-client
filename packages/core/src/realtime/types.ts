@@ -31,6 +31,7 @@ export type RealtimeKind =
 	| 'calendar_item.updated'
 	| 'calendar_item.deleted'
 	| 'calendar_invitation.created'
+	| 'calendar_invitation.updated'
 	| 'shared_alias.created'
 	| 'shared_alias.updated'
 	| 'shared_alias.deleted'
