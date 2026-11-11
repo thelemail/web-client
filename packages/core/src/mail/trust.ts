@@ -616,6 +616,14 @@ function serverSignatureCheck(sig: ServerSignature): TrustCheck {
 					m.trust_explain_the_message_is_signed_but_not(),
 				rows
 			};
+		case 'weak_key':
+			return {
+				id: 'signature',
+				state: 'absent',
+				label: m.trust_signed_with_a_key_that_is_too_weak(),
+				explain: m.trust_explain_the_message_is_signed_with_a_weak_key(),
+				rows
+			};
 		default:
 			return {
 				id: 'signature',
