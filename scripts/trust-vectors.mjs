@@ -48,6 +48,9 @@ async function check() {
 		writeFileSync(archive, Buffer.from(await res.arrayBuffer()));
 		execFileSync('tar', ['-xzf', archive, '-C', dir, '--strip-components=1']);
 		const upstream = join(dir, 'interop', 'vectors');
+		if (!existsSync(upstream)) {
+			throw new Error(`${REPO}@${tag} has no interop/vectors`);
+		}
 		const want = jsonFiles(upstream);
 		const have = jsonFiles(VECTORS);
 		const failures = [];
