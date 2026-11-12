@@ -115,7 +115,7 @@ export async function verifyReadDelegate(
 		throw new ReadDelegationVerificationError('signature_invalid', 'the read delegation signature did not verify');
 	}
 
-	const now = opts.nowMillis ?? serverNow();
+	const now = opts.nowMillis ?? Math.max(Date.now(), serverNow());
 	if (now < Date.parse(statement.notBefore)) {
 		throw new ReadDelegationVerificationError('not_yet_valid', 'read delegation is not valid yet');
 	}
@@ -127,7 +127,7 @@ export async function verifyReadDelegate(
 	if (policy) {
 		try {
 			await verifyTlogProof(delegate.tlogProof, canonical, address, policy, {
-				nowMillis: now,
+				nowMillis: opts.nowMillis ?? Date.now(),
 				store: tlogStateStore,
 				refetchConsistency: async (since) => (await lookupAccount(address, since)).tlogConsistency
 			});
