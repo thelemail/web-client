@@ -671,7 +671,7 @@ export type SubmitOutcome =
 	| { kind: 'accepted'; response: SubmitMessageResponse }
 	| { kind: 'intent'; intent: SubmissionIntent };
 
-export type SignatureStatus = 'unsigned' | 'verified' | 'unverified' | 'unknown_key' | 'encrypted';
+export type SignatureStatus = 'unsigned' | 'verified' | 'unverified' | 'unknown_key' | 'weak_key' | 'encrypted';
 
 export interface ExternalKeyTrust {
 	address: string;

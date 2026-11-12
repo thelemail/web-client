@@ -1279,6 +1279,8 @@
 	"trust_explain_the_message_carries_a_signature_from": "Die Nachricht trägt eine Signatur des für diese Adresse hinterlegten Schlüssels, doch sie passt nicht zum Inhalt. Die Nachricht wurde nach der Signierung verändert oder die Signatur wurde gefälscht.",
 	"trust_signed_with_a_key_thelemail_could_not": "Mit einem Schlüssel signiert, den Thelemail für diese Adresse nicht finden konnte",
 	"trust_explain_the_message_is_signed_but_not": "Die Nachricht ist signiert, aber mit keinem für diese Adresse veröffentlichten Schlüssel. Die Signatur beweist daher nichts über den Absender. Möglicherweise hat der Absender einen neuen, noch nicht veröffentlichten Schlüssel.",
+	"trust_signed_with_a_key_that_is_too_weak": "Mit einem Schlüssel signiert, der zu schwach ist",
+	"trust_explain_the_message_is_signed_with_a_weak_key": "Die Nachricht ist mit dem für diese Adresse hinterlegten Schlüssel signiert, doch dieser Schlüssel erreicht nicht die Mindeststärke, die Thelemail akzeptiert. Die Signatur beweist daher nichts über den Absender.",
 	"trust_not_signed_by_the_sender": "Nicht vom Absender signiert",
 	"trust_explain_the_message_carries_no_openpgp_signature": "Die Nachricht hat keine OpenPGP-Signatur. Es gibt daher nichts zu prüfen.",
 	"trust_row_key": "Schlüssel",

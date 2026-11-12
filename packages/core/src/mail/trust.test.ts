@@ -522,6 +522,18 @@ describe('signed external mail', () => {
 		expect(trust.tier).toBe('authenticated');
 	});
 
+	it('tells a weak key apart from a verified signature', () => {
+		const weak = signatureRow(proton({ serverSignature: { status: 'weak_key', keyFingerprintHex: FP } }));
+		const unknown = signatureRow(proton({ serverSignature: { status: 'unknown_key', keyFingerprintHex: FP } }));
+		expect(weak?.state).toBe('absent');
+		expect(weak?.label).toBe('Signed with a key that is too weak to trust');
+		expect(weak?.label).not.toBe(unknown?.label);
+		expect(weak?.rows).toEqual([{ label: 'Signing key', value: formatFingerprintHex(FP) }]);
+		const trust = deriveTrust(proton({ serverSignature: { status: 'weak_key', keyFingerprintHex: FP } }));
+		expect(trust.tier).toBe('authenticated');
+		expect(trust.headline).not.toBe('Signed by the sender');
+	});
+
 	it('still fails when the sending domain fails authentication', () => {
 		const trust = deriveTrust(
 			proton({ domainAuth: { spf: 'fail', dmarc: 'fail' }, domainAuthState: 'fail' })

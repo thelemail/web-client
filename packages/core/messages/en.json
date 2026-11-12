@@ -1279,6 +1279,8 @@
 	"trust_explain_the_message_carries_a_signature_from": "The message carries a signature from the key held for this address, but the signature does not fit the content. The message was changed after it was signed, or the signature was forged.",
 	"trust_signed_with_a_key_thelemail_could_not": "Signed with a key Thelemail could not find for this address",
 	"trust_explain_the_message_is_signed_but_not": "The message is signed, but not by any key published for this address, so the signature proves nothing about the sender. The sender may have a new key that is not published yet.",
+	"trust_signed_with_a_key_that_is_too_weak": "Signed with a key that is too weak to trust",
+	"trust_explain_the_message_is_signed_with_a_weak_key": "The message is signed with the key held for this address, but that key is below the minimum strength Thelemail accepts, so the signature proves nothing about the sender.",
 	"trust_not_signed_by_the_sender": "Not signed by the sender",
 	"trust_explain_the_message_carries_no_openpgp_signature": "The message carries no OpenPGP signature, so there is nothing to check.",
 	"trust_row_key": "Key",
