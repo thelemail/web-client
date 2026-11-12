@@ -2,6 +2,7 @@ import * as openpgp from 'openpgp';
 
 import type { ReadDelegate } from '$core/api/types';
 import { lookupAccount } from '$core/api/accounts';
+import { serverNow } from '$core/api/serverclock';
 import {
 	canonicaliseReadDelegation,
 	parseReadDelegationStatement,
@@ -114,6 +115,11 @@ export async function verifyReadDelegate(
 		await result.signatures[0].verified;
 	} catch {
 		throw new ReadDelegationVerificationError('signature_invalid', 'the read delegation signature did not verify');
+	}
+
+	const now = opts.nowMillis ?? Math.max(Date.now(), serverNow());
+	if (now < Date.parse(statement.notBefore)) {
+		throw new ReadDelegationVerificationError('not_yet_valid', 'read delegation is not valid yet');
 	}
 
 	const policy = opts.tlogPolicy === undefined ? TLOG_POLICY : opts.tlogPolicy;

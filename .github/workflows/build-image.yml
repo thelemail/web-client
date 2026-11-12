@@ -51,6 +51,8 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/ci.yml
+    secrets:
+      TRUST_READ_TOKEN: ${{ secrets.TRUST_READ_TOKEN }}
 
   build:
     needs: [preflight, verify]

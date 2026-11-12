@@ -16,6 +16,7 @@ export type DelegationVerificationCode =
 	| 'statement_malformed'
 	| 'signing_key_mismatch'
 	| 'address_mismatch'
+	| 'delegation_mismatch'
 	| 'fingerprint_mismatch'
 	| 'signature_invalid'
 	| 'not_sign_only';

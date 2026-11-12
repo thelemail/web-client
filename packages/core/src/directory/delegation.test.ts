@@ -1,38 +1,16 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
+import vectors from '../interop/vectors/statements.json';
 import { canonicaliseDelegation, parseDelegationStatement, type DelegationStatement } from './delegation-statement';
 
-const statement: DelegationStatement = {
-	accountId: '11111111-2222-3333-4444-555555555555',
-	address: 'billing@example.com',
-	delegationId: '66666666-7777-8888-9999-aaaaaaaaaaaa',
-	issuedAt: '2026-09-08T12:00:00Z',
-	keyAlgorithm: 'openpgp-curve25519-v6',
-	notAfter: '2027-09-08T12:00:00Z',
-	notBefore: '2026-09-08T12:00:00Z',
-	revokedAt: null,
-	signerFingerprint: 'cd'.repeat(32),
-	signingKeyFingerprint: 'ef'.repeat(32),
-	version: 1
-};
-
-const GO_CANONICAL =
-	'{"accountId":"11111111-2222-3333-4444-555555555555",' +
-	'"address":"billing@example.com",' +
-	'"delegationId":"66666666-7777-8888-9999-aaaaaaaaaaaa",' +
-	'"issuedAt":"2026-09-08T12:00:00Z",' +
-	'"keyAlgorithm":"openpgp-curve25519-v6",' +
-	'"notAfter":"2027-09-08T12:00:00Z",' +
-	'"notBefore":"2026-09-08T12:00:00Z",' +
-	'"revokedAt":null,' +
-	`"signerFingerprint":"${'cd'.repeat(32)}",` +
-	`"signingKeyFingerprint":"${'ef'.repeat(32)}",` +
-	'"version":1}';
+const vector = vectors.cases.find((c) => c.kind === 'delegation' && c.name === 'ok')!;
+const trustCanonical = new TextDecoder().decode(Uint8Array.from(atob(vector.raw), (c) => c.charCodeAt(0)));
+const statement: DelegationStatement = parseDelegationStatement(new TextEncoder().encode(trustCanonical));
 
 describe('canonicaliseDelegation', () => {
-	it('matches the Go canonicaliser byte for byte', () => {
-		expect(new TextDecoder().decode(canonicaliseDelegation(statement))).toBe(GO_CANONICAL);
+	it('matches the trust canonicaliser byte for byte', () => {
+		expect(new TextDecoder().decode(canonicaliseDelegation(statement))).toBe(trustCanonical);
 	});
 
 	it('emits an explicit null for an unrevoked delegation', () => {
@@ -49,27 +27,23 @@ describe('canonicaliseDelegation', () => {
 	it('lowercases fingerprints so case cannot change the signed bytes', () => {
 		const upper = {
 			...statement,
-			signerFingerprint: 'CD'.repeat(32),
-			signingKeyFingerprint: 'EF'.repeat(32)
+			signerFingerprint: statement.signerFingerprint.toUpperCase(),
+			signingKeyFingerprint: statement.signingKeyFingerprint.toUpperCase()
 		};
-		expect(new TextDecoder().decode(canonicaliseDelegation(upper))).toBe(GO_CANONICAL);
+		expect(new TextDecoder().decode(canonicaliseDelegation(upper))).toBe(trustCanonical);
 	});
 
 	it('round-trips through the parser without changing the bytes', () => {
 		const bytes = canonicaliseDelegation(statement);
 		const again = canonicaliseDelegation(parseDelegationStatement(bytes));
-		expect(new TextDecoder().decode(again)).toBe(GO_CANONICAL);
+		expect(new TextDecoder().decode(again)).toBe(trustCanonical);
 	});
 
 	it('re-canonicalises the reordered, spaced JSON the server stores as jsonb', () => {
-		const jsonb =
-			`{"address": "billing@example.com", "version": 1, "notAfter": "2027-09-08T12:00:00Z", ` +
-			`"accountId": "11111111-2222-3333-4444-555555555555", "issuedAt": "2026-09-08T12:00:00Z", ` +
-			`"notBefore": "2026-09-08T12:00:00Z", "revokedAt": null, "delegationId": "66666666-7777-8888-9999-aaaaaaaaaaaa", ` +
-			`"keyAlgorithm": "openpgp-curve25519-v6", "signerFingerprint": "${'cd'.repeat(32)}", ` +
-			`"signingKeyFingerprint": "${'ef'.repeat(32)}"}`;
+		const fields = Object.entries(JSON.parse(trustCanonical) as Record<string, unknown>).reverse();
+		const jsonb = `{${fields.map(([k, v]) => `${JSON.stringify(k)}: ${JSON.stringify(v)}`).join(', ')}}`;
 		const parsed = parseDelegationStatement(new TextEncoder().encode(jsonb));
-		expect(new TextDecoder().decode(canonicaliseDelegation(parsed))).toBe(GO_CANONICAL);
+		expect(new TextDecoder().decode(canonicaliseDelegation(parsed))).toBe(trustCanonical);
 	});
 
 	it('rejects a statement missing revokedAt', () => {

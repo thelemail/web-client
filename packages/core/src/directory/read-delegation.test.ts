@@ -16,6 +16,7 @@ vi.mock('./tlog/policy', () => ({ TLOG_POLICY: null }));
 vi.mock('./tlog/state-idb', () => ({ tlogStateStore: {} }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 
+import vectors from '../interop/vectors/statements.json';
 import type { ReadDelegate } from '$core/api/types';
 import type { TlogRuntimePolicy } from './tlog/policy';
 import { generateForwardingKey } from '$core/keys/forwardingKey';
@@ -28,18 +29,8 @@ import {
 	type ReadDelegationStatement
 } from './read-delegation';
 
-const GO_CANONICAL =
-	'{"accountId":"11111111-2222-3333-4444-555555555555",' +
-	'"address":"contact@example.com",' +
-	`"encryptionKeyFingerprint":"${'ab'.repeat(32)}",` +
-	'"issuedAt":"2026-09-17T12:00:00Z",' +
-	'"keyAlgorithm":"openpgp-ed25519",' +
-	'"notBefore":"2026-09-17T12:00:00Z",' +
-	'"permissions":["decrypt-forwarded"],' +
-	'"readDelegationId":"66666666-7777-8888-9999-aaaaaaaaaaaa",' +
-	'"revokedAt":null,' +
-	`"signingKeyFingerprint":"${'ef'.repeat(32)}",` +
-	'"version":1}';
+const readVector = vectors.cases.find((c) => c.kind === 'readDelegation' && c.name === 'ok')!;
+const TRUST_CANONICAL = new TextDecoder().decode(Uint8Array.from(atob(readVector.raw), (c) => c.charCodeAt(0)));
 
 let signer: openpgp.PrivateKey;
 
@@ -112,9 +103,9 @@ async function expectCode(p: Promise<unknown>, code: string) {
 }
 
 describe('read delegation statement', () => {
-	it('matches the Go canonicaliser byte for byte', () => {
-		const parsed = parseReadDelegationStatement(new TextEncoder().encode(GO_CANONICAL));
-		expect(new TextDecoder().decode(canonicaliseReadDelegation(parsed))).toBe(GO_CANONICAL);
+	it('matches the trust canonicaliser byte for byte', () => {
+		const parsed = parseReadDelegationStatement(new TextEncoder().encode(TRUST_CANONICAL));
+		expect(new TextDecoder().decode(canonicaliseReadDelegation(parsed))).toBe(TRUST_CANONICAL);
 	});
 });
 
