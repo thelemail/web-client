@@ -1,0 +1,394 @@
+{
+  "schema": "thelemail-vectors/key-labels/v1",
+  "cutoff": "2026-09-21T00:00:00Z",
+  "cases": [
+    {
+      "name": "curve25519-v6",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgoOL3l2xjEWYlcNgoVypgwt8QKfIOT0GRs+djS0b2V/vCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbdAZGkeVImkRlI7qrsNfdC\natjnvdJZl+LnnWOiTSbmFQUnCQIHAgAAAAAZgyCmRTYK9913I2MWrqpz8j6xeoUn\nKu0rwdPEjPY/GPgh/aehq8k4Ly8XX8ADEXeA0qccoMtDQxS/CsRYiulQbYmPWf61\nwCtkFrM5vOZls0+Aaa5rA9/czvy3VChJhHGS1QTNI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBt0BkaR5UiaR\nGUjuquw190Jq2Oe90lmX4uedY6JNJuYVAAAAAJlaIPTbYWTbbeAoMOiu2z6ozIfh\nPJua1+/DeLQwtpxb0y/orIN6lS1g3Me0NaOFmZir9rVnXaReRRtQcN0ZhtYSs7ED\n1URUKoVhq7UGAo4Ah5eExfGZPDnnCJ618OgxIvf9BM4qBmqWFYAZAAAAIDDsP/gq\n9op19y6h9E3vi4ifv+wXax0Ua9Wln3013xcuwpsGGBsKAAAALAWCapYVgAKbDCKh\nBt0BkaR5UiaRGUjuquw190Jq2Oe90lmX4uedY6JNJuYVAAAAAKUbIKUy18zsj32J\nDJJIFNl6TwxIQzvAFCoG92jauJRSfwSNwEQ7cgnYYqRkJnIWgU539NWLR+l5Z7xT\nM5jqXGKXXP/WE8kliPwfZx3lSb9H5/Q72A7PywKSv8IwxesV3bSjAQ==\n=HsmR\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "dd0191a4795226911948eeaaec35f7426ad8e7bdd25997e2e79d63a24d26e615",
+      "label": "openpgp-curve25519-v6",
+      "primaryLabel": "openpgp-ed25519-v6",
+      "matches": [
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        }
+      ]
+    },
+    {
+      "name": "curve25519-v4",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxiYEapYVgBtyKEQzdYnQiyGs9vN/6PmxbeibKUbTNolop0BBcHvWa80jTm9yYSBD\nYWxsb3dheSA8bm9yYUB0aGVsZW1haWwudGVzdD7CwAsEExsKAIEFgmqWFYADCwkH\nCRCeSmluG1hTjUUUAAAAAAAcACBzYWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3Jn\nFS+JrGpyJ8AvZk4uWxNewpUkno4RpHY6Kt5Sl90W9REDFQoIAhYAAhkBApsDAh4B\nFiEEAVHXuFtO5LvZ61SknkppbhtYU40AACZSaUtcggG6Z1BGIglfBY8anObQhsaV\nm8i2KQCX4hqJeABTgkLz5xmb7uKDqkBVUgOdgywQG2nr1EziPlisUxWLB84mBGqW\nFYAZ6a7hfyiCgP1nTZ9k7z6Aj+uDVwfZ+jV7dqCl0jr26XvCugQYGwoAcAWCapYV\ngAkQnkppbhtYU41FFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9y\nZ+BV6N60iVt1vXFNtH2xniz/wdwSA5ESsHrSPqqw8VrxApsMFiEEAVHXuFtO5LvZ\n61SknkppbhtYU40AAGMQ9z4wtAUjh2wCps0ON0r2cMCVmb+Mi82F+NNR4JkXcCAI\nT/KXGu9nhsWiTfaq0TSkzQewAZOBxqzvSf/xEX1ACg==\n=Yi+Q\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "0151d7b85b4ee4bbd9eb54a49e4a696e1b58538d",
+      "label": "openpgp-curve25519-v4",
+      "primaryLabel": "openpgp-ed25519",
+      "matches": [
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": false
+        }
+      ]
+    },
+    {
+      "name": "curve25519-legacy",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxjMEapYVgBYJKwYBBAHaRw8BAQdAlmdHzq6h6qUQqS3MVDxxLziwcobZIwYtmTOT\niUot6iHNI05vcmEgQ2FsbG93YXkgPG5vcmFAdGhlbGVtYWlsLnRlc3Q+wsAPBBMW\nCgCBBYJqlhWAAwsJBwkQpm6b5i5maf5FFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMu\nb3BlbnBncGpzLm9yZ6c5RrGSBXxby779zxSvjQsSZ+ordjp970c2VgkylOyPAxUK\nCAIWAAIZAQKbAwIeARYhBCFDVjw6cUtPBPN+0KZum+YuZmn+AADaNQD+MtMavbLo\nVd81PT2JH+7I1vmx6Q1Mgd3md1E5CwaLJCEBAOWede9VWiEa+Z/ceAkQvOPXQAkz\nyGzDxAvLNeisstcMzjgEapYVgBIKKwYBBAGXVQEFAQEHQIelItAXrdiEJk6AQDOf\ns6tUt4pqy4L3TEby05py51AgAwEKCcK+BBgWCgBwBYJqlhWACRCmbpvmLmZp/kUU\nAAAAAAAcACBzYWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3JnQ2SvsJabuax66Rgh\nc2Bt3i1fV3+G3hUFHeFppiGNiPQCmwwWIQQhQ1Y8OnFLTwTzftCmbpvmLmZp/gAA\nAUYBAPhNYmgmimesvsI4XQ7tShsCVSd1bLJGjad09jkwFwgMAP9r9jqmwF/zJKbt\nDuWfHmyS/4Mx93eClNGiVyu4GQBWDA==\n=+umX\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "2143563c3a714b4f04f37ed0a66e9be62e6669fe",
+      "label": "openpgp-curve25519-legacy",
+      "primaryLabel": "openpgp-eddsa",
+      "matches": [
+        {
+          "label": "openpgp-curve25519-legacy",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-legacy",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-legacy",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-legacy",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-legacy",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": false
+        }
+      ]
+    },
+    {
+      "name": "first-of-two-encryption-subkeys",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxiYEapYVgBt1v/Fzbjs8h1eL/1wcEJWsfmhPus+7f7CFkfpiXE7F3c0hWm9lIENh\nbGxvd2F5IDx6b2VAdGhlbGVtYWlsLnRlc3Q+wsALBBMbCgCBBYJqlhWAAwsJBwkQ\nvkr4q5Z4XaZFFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9yZ9ci\nau+F/LTnHGuWYdhH2XW+EZNpbyCp7P2h9MCRc4/BAxUKCAIWAAIZAQKbAwIeARYh\nBD4RjJ2QnJsnXuPz3b5K+KuWeF2mAAA5GYt9VnWerqDUEXTdBCbW43M5vWFnlLLu\nW4xF0mDvEAx2Svm4fbgMo6L7/UI1Mm4QV9RSrOE5f4CfkJGOdM6fMwzOJgRqlhWA\nGfx5A9wAX/PdO62dm02MBd3RLp3Vn3Vk+qZ76rHEFWcrwroEGBsKAHAFgmqWFYAJ\nEL5K+KuWeF2mRRQAAAAAABwAIHNhbHRAbm90YXRpb25zLm9wZW5wZ3Bqcy5vcmc7\ngy/3LjzKcQfMtCQWk0wwQ4+bAdjfIav0I3XQ4xX6KAKbDBYhBD4RjJ2QnJsnXuPz\n3b5K+KuWeF2mAADTuOPMZyv9L+747+B3VXDM5uD2stnCUto/JJFGgAGf+mk8XjSI\nrpljBXGeqQGo2hMhwWaGBHeUO/KM2IN2ZKcR9gXOOARql2cAEgorBgEEAZdVAQUB\nAQdAxjRL4BC4Kkg5prlN6xB56MOwhtt5SvQFpf9Q4cLps1ADAQoJwroEGBsKAHAF\ngmqXZwAJEL5K+KuWeF2mRRQAAAAAABwAIHNhbHRAbm90YXRpb25zLm9wZW5wZ3Bq\ncy5vcmckedKvGGIPisKJ3Eb1NuE7Y5p1Hm66L/HiD6G/2030FQKbDBYhBD4RjJ2Q\nnJsnXuPz3b5K+KuWeF2mAADULz8HW4QEsRNvCh8hv0Eb/nxsAEWioXOTgmiIBaLZ\nO3WpavcO1WZjp3Fnm+hB2FJoHwC3pmX3WCNw2Xe1V6/lRQA=\n=1RwS\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "3e118c9d909c9b275ee3f3ddbe4af8ab96785da6",
+      "label": "openpgp-curve25519-v4",
+      "primaryLabel": "openpgp-ed25519",
+      "matches": [
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": false
+        }
+      ]
+    },
+    {
+      "name": "subkey-without-key-flags",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxiYEapYVgBvUSfJpnFKuxVSjLr+eAa0nQeFS20As1bxlLnCLvTEvWs0hWm9lIENh\nbGxvd2F5IDx6b2VAdGhlbGVtYWlsLnRlc3Q+wsALBBMbCgCBBYJqlhWAAwsJBwkQ\nj4nxggPBajFFFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9yZzmG\nYqfmS+z5g+HCg5VUehFeFNFjaDZ8xZnqRW+/JuGpAxUKCAIWAAIZAQKbAwIeARYh\nBMVv/YkiSioxd4UGFo+J8YIDwWoxAABYmGQctPP3UeurG3qk87ygxfFX5aHFgvzB\nEGha+nu0XtPJLMIRPmLS8LA0FGmg29/AE1adZuuCJFLbdRhUB+XWIAnOJgRqlhWA\nGfem9jBfKGKygkQsr9vs+k6+Xo/z9uWBEBY2jAbnx8RIwrcEGBsKAG0FgmqWFYAJ\nEI+J8YIDwWoxRRQAAAAAABwAIHNhbHRAbm90YXRpb25zLm9wZW5wZ3Bqcy5vcmfh\n2qGkxi+8F/LUiTCFfdFtqr0BZWN+WVQQIMitZA1VURYhBMVv/YkiSioxd4UGFo+J\n8YIDwWoxAAAlmLNJKsms9GXqzSHuJZHbxjRZiA93nz0OOIOp81ue2P3U3IgSgS3N\n6BsIoB326wpTDSK7rl/Qv8374zEb64NhoQw=\n=4btF\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "c56ffd89224a2a31778506168f89f18203c16a31",
+      "label": "openpgp-curve25519-v4",
+      "primaryLabel": "openpgp-ed25519",
+      "matches": [
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v4",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": false
+        }
+      ]
+    },
+    {
+      "name": "sign-only-v6",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgh/V88ZvBEDT6gaImUgIZGCraU4GSRtBMF1RSMj/14JPCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb8XOFMy+dSGBmqe4ecGsv0\nYgrswpry6woDv2q+XfM1sQUnCQIHAgAAAAC+YiCZWk82x0V2N4/PIMF64JvOWHhE\nyebKGKIjmzLuZu+M6UAU/mGBrnqt5KmfyGVVZzz7VoDYsCx6CFgAI/Rxv63XHk9f\noKCJ/2cQtPAqWe66gr3Kw3bE77zor8EJtrNCuwbNI1RoZW8gQ2FsbG93YXkgPHRo\nZW9AdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvxc4UzL51IY\nGap7h5way/RiCuzCmvLrCgO/ar5d8zWxAAAAADVcIPtV13WR7R7hfVo1nG+V9G0m\nGisiJknwk5Nx9ZRql8nrTkf7WXpGb6ryi9Aupai8Wc2UoVaTjingWxTpbjMtn4Ki\n3/KxZATqR1SQoCimAttGUFtoMeMCrv43o1/2SZ02BA==\n=142y\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "fc5ce14ccbe7521819aa7b879c1acbf4620aecc29af2eb0a03bf6abe5df335b1",
+      "label": "openpgp-ed25519-v6",
+      "primaryLabel": "openpgp-ed25519-v6",
+      "matches": [
+        {
+          "label": "openpgp-ed25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-ed25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-ed25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-ed25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-ed25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": false
+        }
+      ]
+    },
+    {
+      "name": "rsa",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxsBNBGqWFYABCACjYnt7QQ2Qe6q2wyNMHPUzokacm2ksv6ujNB6m4M7uTjHhzkK9\n8umlsAyl+s4vGqBkMvLtx3REBjs1ZSKEp0n/qRXSvAQb8AK/G1raBmtYusF9X+Wi\nZcGzyI/Ay4s5xF9YNewYUZNMqdceUsd6ulur3ePUIwRp+GbfPAXOoR++rYwPD8tL\nqEPEZpioTTk3p/1ACs/PMNoAJKEOlq2dU5OUNM5an4EFq4X+09FY+v9RiWEh7VTJ\nRk35+KlV3yQlFr3Cd/o+/LS4DjXxzOOQpEqEtgNyEQOQyRrgta47ucMYBUJpRpSP\nsR81WhKXRdbg6GURr7BMqh2VHhn25ZJBFs+fABEBAAHNI1RoZW8gQ2FsbG93YXkg\nPHRoZW9AdGhlbGVtYWlsLnRlc3Q+wsDNBBMBCgCBBYJqlhWAAwsJBwkQHW66iwLP\n9UNFFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9yZ155ANVuJccs\nEsu8p5bben/sV8cd4J3XUXbofv6ATF5gAxUKCAIWAAIZAQKbAwIeARYhBJn5gnTm\n5ziR4jq25h1uuosCz/VDAAA5zQf/ca1VX+TGja255piaKivQW5BE1hYPEArim3Si\np7FPmxi41Ba+szXOzETAtAkC1bxVicEGOgfuuFPjOePvoMMxTEY6elONqJanEs9X\n7e0eKfV3Gr8SnLpADgQeZPVqfSLq62Ytaw1OoEylzRKlLC9B0p2ig371i+CcoDI2\nKx8F0mjmBPqoz44MsnHjHXV5A1heB98LnjeHYMyZvBLzeM+A7XdyqtwJGNvshfvO\npLt3sypF7rkY/UQ0tZBjg3VeohciFF6Nk5FEhPiBJvgz+TUAknBwJ2KF9PenKkXx\nadNTcr6doiOrv1Nek1ZkzzaSQgELZy4oW9s0xRiTpMazuJM4Ic7ATQRqlhWAAQgA\nuqTRqFGI19iG0RVbyS23YgiZMseJQhwgYK8M3DZbyTxB3vJd72a79XATAXdjbbfr\nbT1DfsNsGzlkjTwcI/WcgNOAyszTD8W3ZoLSgUgpsqW3T1ei7rQcUQuf6I1a0+RI\nmmUqEQQIwZ5DY3bpGfknwwsu5HacaT+8AwWuh93hNJGY8jUhXwUXbDqZzcXQLILr\nTXjb4Uhm2XL/whjTvLv0XuWyC9Qe58450vCOH43hhnQR2t1LPKctVUiyJVKssUz0\nNSm5PbjV8AOMHmN7BobYsn/aRTR0SJZhy9/0QL8QlDdf/LdoFl9GKpyCwf6Vsa30\nTzDm5e4lzM9GrE9jXAqn0QARAQABwsC8BBgBCgBwBYJqlhWACRAdbrqLAs/1Q0UU\nAAAAAAAcACBzYWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3JnaErwZR6zr0vEGgla\noZ4cNKaz4OpBqKQADa3jDGNgmJ4CmwwWIQSZ+YJ05uc4keI6tuYdbrqLAs/1QwAA\njVQH/1us6atBr+8Tm4zUV2yzOhyWk5OT2c2XlCEw6YQfRNWvELNCokVKluZPiKi8\ntafZEheJzQgMBSx8H/GAPYTY+f8wU7aQhI+/HXPuwCi6A6YTtIvVNdcwoFB8a596\nV078OMqKqPs7FGL3QgCQDedOSpBZyFRsSmBjiXvWZUECcyIkXBHjq/k7ye7oG11o\nKshWhSjQfU1yJBgSx0SiqVTgwlykZeCb4PRoqLnyeynQBquTlWqqPt1eiekou+kz\ndJ1UKBAhRk1z/ynTYxQrqJP9p5pE2bTEa4vIlXM3csjz0NIUT1nMFeBN63/Dzb05\nxY73wn8Yk9o1iRoQ4bffzBAmpVU=\n=LJUm\n-----END PGP PUBLIC KEY BLOCK-----",
+      "fingerprint": "99f98274e6e73891e23ab6e61d6eba8b02cff543",
+      "label": "openpgp-rsa",
+      "primaryLabel": "openpgp-rsa",
+      "matches": [
+        {
+          "label": "openpgp-rsa",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-rsa",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-rsa",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": true
+        },
+        {
+          "label": "openpgp-rsa",
+          "issuedAt": "2026-09-01",
+          "matches": true
+        },
+        {
+          "label": "openpgp-rsa",
+          "issuedAt": "not a timestamp",
+          "matches": true
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-21T00:00:00Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-20T23:59:59.999Z",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "2026-09-01",
+          "matches": false
+        },
+        {
+          "label": "openpgp-curve25519-v6",
+          "issuedAt": "not a timestamp",
+          "matches": false
+        }
+      ]
+    }
+  ]
+}

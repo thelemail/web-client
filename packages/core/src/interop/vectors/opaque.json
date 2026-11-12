@@ -1,0 +1,65 @@
+{
+  "schema": "thelemail-vectors/opaque/v1",
+  "params": {
+    "opaqueParamsVersion": 1,
+    "oprf": "ristretto255-sha512",
+    "ake": "ristretto255-sha512",
+    "kdf": "sha512",
+    "mac": "sha512",
+    "hash": "sha512",
+    "ksf": {
+      "name": "argon2id",
+      "timeCost": 3,
+      "memoryKib": 65536,
+      "threads": 4,
+      "salt": "AAAAAAAAAAAAAAAAAAAAAA==",
+      "outputLength": 64
+    },
+    "serverIdentity": "thelemail.com"
+  },
+  "serverPublicKey": "NMDRutolLPeqFQ6A39/herRaLsGhnpiNNvMa+bA5ow4=",
+  "cases": [
+    {
+      "name": "password",
+      "recovery": false,
+      "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+      "password": "correct horse battery staple",
+      "credentialIdentifier": "bxwqfjudTFih4J0vS3yOFQ==",
+      "clientIdentity": "thelemail/auth/opaque/v1:6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+      "serverIdentity": "thelemail.com",
+      "registrationRequest": "QiFLF4OyX0d9ribeDuiUySpBPak5f2mIrrMuHD1/a0o=",
+      "registrationResponse": "JhKJTPdQKZ/b+vN4Qp46RszIassvS7H3LrdMzSwG3Xo0wNG62iUs96oVDoDf3+F6tFouwaGemI028xr5sDmjDg==",
+      "registrationRecord": "rmpMWSNMI3p0ZzQPX0ezLgVTHpkPXZlfCbJBD1dzYEHJYvpvLJqk7HP3yl83gwn7oO56uaD99MCPuNBTvI/OfAhQCyvuGD2CNJkeVYsM+VgkGIJKNlNhFChZaXpski/65ARYtu9QGPaxcxKrliQh7Y1XPT8H2iB2eyW9TiMDcyDSGs2tyRtDQbnfA95rV4p9t1B9xE4XWAGzeAzBTtWOSmIIS/IKJfWJ2dEars8z+pzZR7wOFTKsa67EHDEFSTd1",
+      "ke1": "FmAzaTMY/4vxUhEMoGYrOoQtLdfEf4kqvzrU2gwhmkTu8L0PS3sVF+P0hgl8EQsGTCvGkGtl//7J/bSs7RMgOM6GpCOv8s6xOEhhYA3rJTC7d1bIMq+TVTyIhuUXoB9U",
+      "ke2": "Ev8jqZm6sLIKxgMx6opvAFjZHLkovL2hoRZJrKokpyRA6oKC4oPvcvXwDyKWWtNS9YlZkGLCOSQMOuJNx7SXjvSlCaKnSJhd0ZjInmT+xCLg2VQIQ46xh/ycWO9uo9977sz53d4zo0ZUxfB3sMAox0wOhRLnqZNstsY+UUv7Kti9vjMIHGshG3MuP7S8XWWhjOURmDk8M6QE/R1V8rCCu7guDbyC4EOXkZGDp2M+cstX6wXRykqdw6k3Q2T0mjvhVQbYkVDezrSB3sHIkSUqS2YrR6mQO/DMM38bVT/jeHB03omlKWBxWlXWsTXUzcEgUJnFqV8Y55mMNlnQ8pDuaOLUZXbZjpFEdqDwQMOth8N5x1Ng4sTcKBRzFSXNhULdxz4VwTUWm394xsXlHbU68LXAu+oWYf5mlLtucJ+lT6A=",
+      "ke3": "c7c9Yvcv5e0sw1s870A3hGvhpayHbwzczOMeP101RXlD4YsQ9WtRGNKq2sstymQn3bnhOnO7u6Ehs/IJLH3LCw==",
+      "sessionKey": "R8gU4gfoaIc783VCJrz99Dqmf55MdLFY5JXTfHTpA1XdQ8zf57hLM08dtTQgwKBP/axmPsCJkE5i+FA9Xc75Ag==",
+      "exportKey": "kZoQoY/LVb+hXrwvdq+hxszaaTgqqs0RYvHvAwvzSAHjznwv6tVR71TXvKOXfC7aoUcgJ+/Vm/weI4AqdgZwsw==",
+      "masterKey": "/NAU2GOx302+HLzFypqp8FmrUqswyCBwr2HSS7zSa98=",
+      "wrappedMasterKey": "AYKfDRv5yr5EMEl5El1CUBfXM/l/ug2ZsOD/5/vddWJrXVoNnan9T7543RNekNBfWVXRi+vZRdlqZFCY/Q==",
+      "masterKeyId": "KlvI0kBwu/AfzbqmSEXwRg==",
+      "pgpPassphrase": "AT+P5M02C04okA5cGRRfWM0fBTnW6oHsQxtc1QIfBBA="
+    },
+    {
+      "name": "recovery",
+      "recovery": true,
+      "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+      "password": "correct horse battery staple",
+      "credentialIdentifier": "bxwqfjudTFih4J0vS3yOFXJlY292ZXJ5",
+      "clientIdentity": "thelemail/auth/opaque/v1:recovery:6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+      "serverIdentity": "thelemail.com",
+      "registrationRequest": "Ti1w/rOlubplbueW/ynBExrOSMnzTLlKJe2EmSHOqH8=",
+      "registrationResponse": "xtv+NZm2wLlWFmpS90fDh83EGPA3psMXBJuMA6n2JjI0wNG62iUs96oVDoDf3+F6tFouwaGemI028xr5sDmjDg==",
+      "registrationRecord": "ApX8u+pOizVwja3DLpYzWQ07o7L4Xe1LIKmuIoxLRFGEqHuax78w8KYGffD80hlZOzk81JKzQ23ovi8fuVJq74VNtUXHo8fj4VNszsgxtSttw0nWyItlNcy3YfQK0sAH1h4Zs3FYCy/vIRMiRIyvsRDyTi8nKbK6EM/ndXV4XHeDjr5OluYuQIENklUiR8qehCeZ1On/9Ezg8p2Qa3ggdgkcxCCiz+bvNboq+btkRudJLz9BbVBY27LqFPmG8Ime",
+      "ke1": "GhCkCWpnQ+HodUNmd6VfeLfODHDGnKuWmJiRcGE7LzQyUbeVVfyNTgjFIFv0Je+1vI/ZFybH3EhDXcEQVPoIJ/ITeJzp/NPpYGNoq3FJd3e8PCN1s8/5J4ehQ4EpIJ80",
+      "ke2": "wlmrJ29HF8QdTOkx568W2dzeOu8Zw8zlT5mRX5ckekFqp6XfeQ9BVBOk2Qz6C+4faOLSeJUxQStCMKy03KIfDgKZS2sINvdb8OQI6Z9Bqdcil3hLx6tGzR6x9Wg8wjajDOxMcNkkqFnyvzzuiGNEa/oxGeMgXOqKNjHAdsE09hX6tNfrzfXR/apDzVWu6m9HRBXfRiQe5LTbJbW1WK61rOjPvw7I/x0S72fVQ696qvFgQUWgeC2HEC/EmmI6YES28NpoW/uio5gtGknDg4jb9FOYTs4SDIhezdP/Zqiof8eA2R4aiSttJtcmrRZ5dpZktBCX8c1qLSNx+GO7DqgHLidf7wx2Jmgrg5+uvKuEn9IfUuHLHksFcPGfrVARHetoDw2RbfiqQBAqiz1IAr0BOnnikVJJWxGZ191j47RR4Pw=",
+      "ke3": "deAwswprZ+zw4cvDWT0OxnKKScMPJAbUoeicO2VsQ6oXbnPFXDXyqhK9tCcgUUdaU37SOXgv5098lpWxkMwkHQ==",
+      "sessionKey": "uhkqGweJ0eJr5nXWEaZ8ye+C5hdkrq2NjVFEgYBEm+Q2bJ4nGL3uz7ICBCanpqsTN+1I7uA7N8yFmHVMD5D9Zg==",
+      "exportKey": "Zym/yLkHBPqv0oOJCqFsE9jnGicbzngP/5sK7QlhgZgaXLLwUN/05HhnNfvqs+5K8S/Jp6PmzHjIxIVn42rymA==",
+      "masterKey": "R/DagtTTGNHKf5eJuZV2Z28d5f92Naotc6y3tGq0CjE=",
+      "wrappedMasterKey": "Aa0q0d7LWNkCJhIdA+/xRFFliHHsfWOciWud7BfTIu5ikwZ1lw9Kp8q+zKE3ub+CVH+GIlFdnfQpIMC0DQ==",
+      "masterKeyId": "VL0olGAhP437gLcvJm7KVA==",
+      "pgpPassphrase": "zsqh/NhVtvKH+T5ra41lhTR4xUUglSbt7BlbY71/n1E="
+    }
+  ]
+}

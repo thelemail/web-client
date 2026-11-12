@@ -1,0 +1,502 @@
+{
+  "schema": "thelemail-vectors/statements/v1",
+  "directorySigningKey": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgAKW3/zrYCyYEAn8H+2jDoImfnLq2UXTGcpT6VseTtXjCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQZn5oXbWAPKo9r1Q2/7NM/d\n7A13PQ5G5GRXrG0lsWVahwUnCQIHAgAAAACr0SBst48+aDEOMoqFCY4HSHZqNzSs\neSMd9VPVEC0nAc//xddwOFC/Hm9R3+tTzVqiVaNzFN4RglE9JAwz/uNgHG8bgPoN\nb8N5E0ljKS/bX3PeQYCmhhi5aQVMVho8vUeq+QDNLlRoZWxlbWFpbCBEaXJlY3Rv\ncnkgPGRpcmVjdG9yeUB0aGVsZW1haWwudGVzdD7CmwYTGwoAAAAsBYJqlhWAAhkB\nIqEGZ+aF21gDyqPa9UNv+zTP3ewNdz0ORuRkV6xtJbFlWocAAAAAnUsggQ7e4F54\ni7Oc6qUSIkYbZndfeSC/R/TJf929OADtYYnQ2gDiuq16DVXQUYTLWj+4j10i4Uwc\nLFQ89uS6wikDL96nbnq3oFN4MZ48Sj7UEjzSfggzGLRLiRUI4nR3iGUPzioGapYV\ngBkAAAAgBdqhcaDgtd+oeg2HybJkRNz8/l9sz+hEDTiiIkYvNG3CmwYYGwoAAAAs\nBYJqlhWAApsMIqEGZ+aF21gDyqPa9UNv+zTP3ewNdz0ORuRkV6xtJbFlWocAAAAA\nZEwgy3Xc2rg7iRZXfi3D3bcU2N5SUqFUmA2e74ASHsaoK3zyjvyoHT88VfCPR/wn\nWcULQmgTWQG5n9xOYo8YXGJLTaGUH3IBnWxdvPB35RmbfyDSOgRtcFk7PEdQzIBX\nMs4K\n=1SPc\n-----END PGP PUBLIC KEY BLOCK-----",
+  "cases": [
+    {
+      "name": "ok",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAEspIGWzUwnabLQDovAseyWS9RZw0OVzQupmX6Hdoo3UptsHBPppXxZ880Phhb2kGZtSeeiRj5vXaXWmCIVJnlMhXw0CgUlgACHTr3p6LUd7oGPrgyVCT4c9hVvNVKoCn07aBg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "nora@thelemail.test",
+        "issuedAt": "2026-10-01T12:00:00Z",
+        "keyAlgorithm": "openpgp-curve25519-v6",
+        "keyFingerprint": "f92be56ad61fd6a43e8ffcb689872f4ecd6e3b5d5ca4e2d996a5e5cb7bebd8ad",
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 1
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "mislabelled-v4-before-cutoff",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0wOS0yMFQyMzo1OTo1OVoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6IjkzNzE5ZDMyODUzNzI5NmI4NmFhNjg0MmRkNDFmMDI5MjBkMWRkZmMiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAAn7IH279jOZ5e2mDZ0ISFxNfem+5cM1BirF7I/y2uLkzQqky8TRg+GnDTFccFqRCD11CaKhKwafbJlijsNDg8mCYVk1fPzhJknUQUPHk0TxJZUOYXl6Q7zZn03TZqMOCbmQDA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxiYEapYVgBtZwLZaAdcd9tPuWLKRl8/ogF5WR07gREKlDI1JXhsv0M0jTm9yYSBD\nYWxsb3dheSA8bm9yYUB0aGVsZW1haWwudGVzdD7CwAsEExsKAIEFgmqWFYADCwkH\nCRDdQfApINHd/EUUAAAAAAAcACBzYWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3Jn\nTV9ke0/CLrpuVCN4f0OQGiv9RHzXVK8ueI1Qi5CiZ+kDFQoIAhYAAhkBApsDAh4B\nFiEEk3GdMoU3KWuGqmhC3UHwKSDR3fwAAFIEY9CRl05fle/TSkY+RhhX62/cG3oQ\nkp6vcohvVbOT4H/VK8BhjJrdCr5iwQaU+ropTUiXKLOVu20OUhJbDKe8C84mBGqW\nFYAZtuxYh+5bjdTORpaXd1Z2TXu10uUfC8/zZGkn0qnQmCjCugQYGwoAcAWCapYV\ngAkQ3UHwKSDR3fxFFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9y\nZyx5mb7KHx6vaCCZTbayFqiT6l70sLkZwPzZm9WFDWSPApsMFiEEk3GdMoU3KWuG\nqmhC3UHwKSDR3fwAAJY/G2qoU5aIwyX2fkfQqG0aJuM2ZB5SXgA5/JUsxaE/VXFO\nlu0FcEemP0Iw0pOyuONO5iP0hD0a61jngVbTpe06CQ==\n=SeVl\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "nora@thelemail.test",
+        "issuedAt": "2026-09-20T23:59:59Z",
+        "keyAlgorithm": "openpgp-curve25519-v6",
+        "keyFingerprint": "93719d328537296b86aa6842dd41f02920d1ddfc",
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 1
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "mislabelled-v4-after-cutoff",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0wOS0yMVQwMDowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6IjkzNzE5ZDMyODUzNzI5NmI4NmFhNjg0MmRkNDFmMDI5MjBkMWRkZmMiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAGHQIAJMaOg0xMCwacdu8Wplt1XbXB20m4MozcwTbvAETPTCVBpF6hu/86OQ4l+LQn5UK/FaewoMRKmjBwdna0jIBeoKzFAxKD0tmmHm7OzPBMK4xeP08HS/b/8ThGxeMhtKCA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxiYEapYVgBtZwLZaAdcd9tPuWLKRl8/ogF5WR07gREKlDI1JXhsv0M0jTm9yYSBD\nYWxsb3dheSA8bm9yYUB0aGVsZW1haWwudGVzdD7CwAsEExsKAIEFgmqWFYADCwkH\nCRDdQfApINHd/EUUAAAAAAAcACBzYWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3Jn\nTV9ke0/CLrpuVCN4f0OQGiv9RHzXVK8ueI1Qi5CiZ+kDFQoIAhYAAhkBApsDAh4B\nFiEEk3GdMoU3KWuGqmhC3UHwKSDR3fwAAFIEY9CRl05fle/TSkY+RhhX62/cG3oQ\nkp6vcohvVbOT4H/VK8BhjJrdCr5iwQaU+ropTUiXKLOVu20OUhJbDKe8C84mBGqW\nFYAZtuxYh+5bjdTORpaXd1Z2TXu10uUfC8/zZGkn0qnQmCjCugQYGwoAcAWCapYV\ngAkQ3UHwKSDR3fxFFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9y\nZyx5mb7KHx6vaCCZTbayFqiT6l70sLkZwPzZm9WFDWSPApsMFiEEk3GdMoU3KWuG\nqmhC3UHwKSDR3fwAAJY/G2qoU5aIwyX2fkfQqG0aJuM2ZB5SXgA5/JUsxaE/VXFO\nlu0FcEemP0Iw0pOyuONO5iP0hD0a61jngVbTpe06CQ==\n=SeVl\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "expect": "algorithmMismatch"
+    },
+    {
+      "name": "v4-label",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjQiLCJrZXlGaW5nZXJwcmludCI6IjkzNzE5ZDMyODUzNzI5NmI4NmFhNjg0MmRkNDFmMDI5MjBkMWRkZmMiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAIUuION8DvlDn+X0oJXZSL8GZJGn6VHN2xtojnPtWSr9NmdroZl5XMtCc6VFupf5fLytQCL7SJLGH7jIlasAvWPJOI+UMBnb3v/2lAwYMr/roxAhxskLe7jMHdZU+0/zDofcBg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxiYEapYVgBtZwLZaAdcd9tPuWLKRl8/ogF5WR07gREKlDI1JXhsv0M0jTm9yYSBD\nYWxsb3dheSA8bm9yYUB0aGVsZW1haWwudGVzdD7CwAsEExsKAIEFgmqWFYADCwkH\nCRDdQfApINHd/EUUAAAAAAAcACBzYWx0QG5vdGF0aW9ucy5vcGVucGdwanMub3Jn\nTV9ke0/CLrpuVCN4f0OQGiv9RHzXVK8ueI1Qi5CiZ+kDFQoIAhYAAhkBApsDAh4B\nFiEEk3GdMoU3KWuGqmhC3UHwKSDR3fwAAFIEY9CRl05fle/TSkY+RhhX62/cG3oQ\nkp6vcohvVbOT4H/VK8BhjJrdCr5iwQaU+ropTUiXKLOVu20OUhJbDKe8C84mBGqW\nFYAZtuxYh+5bjdTORpaXd1Z2TXu10uUfC8/zZGkn0qnQmCjCugQYGwoAcAWCapYV\ngAkQ3UHwKSDR3fxFFAAAAAAAHAAgc2FsdEBub3RhdGlvbnMub3BlbnBncGpzLm9y\nZyx5mb7KHx6vaCCZTbayFqiT6l70sLkZwPzZm9WFDWSPApsMFiEEk3GdMoU3KWuG\nqmhC3UHwKSDR3fwAAJY/G2qoU5aIwyX2fkfQqG0aJuM2ZB5SXgA5/JUsxaE/VXFO\nlu0FcEemP0Iw0pOyuONO5iP0hD0a61jngVbTpe06CQ==\n=SeVl\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "nora@thelemail.test",
+        "issuedAt": "2026-10-01T12:00:00Z",
+        "keyAlgorithm": "openpgp-curve25519-v4",
+        "keyFingerprint": "93719d328537296b86aa6842dd41f02920d1ddfc",
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 1
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "signed-by-another-key",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBlqPhQuoCKMErpAadlvLtgxGxewlv+AVHBMC6GHRYr7ZAAAAAEexIP9SPsVtPmiP3KIn1jfvZCgDFkqlzg8QcDp0YAWa5pfl5NXfTihl1VfXggdV/jzJKHSSQQR15RRECOAV6WdE7MKuiP36Wg0baE4Kd1h6ZSZYi7x+QW3wh1TVwsGt4LsbDg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "names-another-signing-key",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI1YThmODUwYmE4MDhhMzA0YWU5MDFhNzY1YmNiYjYwYzQ2YzVlYzI1YmZlMDE1MWMxMzAyZTg2MWQxNjJiZWQ5IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAALcwIAbkkbvJN/TcOVMuyFIRWJAdJ8hlFBPUMjRxjUj1wJt40Hg3EXTPlFNWAWP9HmS8SXrptXEAVGEGbIola411PhORYCdgW1Sz5jI12Lrz8J0u7E7gjtmg7w867YYl5dbiDg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "expect": "signingKeyMismatch"
+    },
+    {
+      "name": "tampered",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6Mn0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAABdpIA1b1T6Gi9YE/W+YuWiBYkGnUQ3hr0LLOMyqFureNmnFdFNYYI6BA1OP5MG98jKY2rF4+mdx21LfneOY81CthxiMi6xft05V2L8u3utJ3vy1SMVTZKD4+GK4zCFwxZX8DQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "address-mismatch",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAIHQIISNwRKUElkfouAnsQvAN12gUO+VIwUy1xwZ2uSpZQOjM9D6Y0wNjFuVfobH79p9Yjr3oSrcNRJG1epzl4xKHZdfYhxkTnUct0uMHXJ2oK2k5WAPjZZVrxjFXujKx1HgCw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "zoe@thelemail.test",
+      "expect": "addressMismatch"
+    },
+    {
+      "name": "served-key-differs",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAOXkIGkvFJpYFqA/LzMD3ov314AhJYI7JE7tPHfLumIYQ9oDhkI9FmDekLpZVJYSDGSdFiGCCg8IVZQ/gPeMXiPf58QMTpRLiEo29CAhSEhuHmbk2f0/iekV4DaowhsmP8yiAg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAglwD2PAKRUqEgkYRK/jdvcPXwAJYETyi3S6rVX524RH/CrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQZfT9+ySSTEjnVJmbNlj2Pd\nkOM0BSSud3Q7/O2YRX9MtQUnCQIHAgAAAABIBSB0iyX5/NXljaf+Tv+9ntT48B+b\no3HzV5tSwXkHkPIH3qtq0VRP8HW2KamImfM3cQ7iYi4rJF7gDaLccfXMAtZsOp75\nTs3S02kH1xF008jZfffRxkWjqAH7O2RI+pC4gAPNIVpvZSBDYWxsb3dheSA8em9l\nQHRoZWxlbWFpbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQZfT9+ySSTEjnVJ\nmbNlj2PdkOM0BSSud3Q7/O2YRX9MtQAAAACPASDOq8qxGZp7UI2nS1NU66D9HE4I\n6NRqiHq+SMsNZgOF0hjS2AzCFANtzzQAAG3LR9Voivkl6AW0Fhf+w8YxcwBmjYXz\n9zX0O9Tk9HmeNOzBLecqOO74uaKgplX+AWhY7gnOKgZqlhWAGQAAACDqc2NSPY1S\ni38MC4Tpd+XSJeU0bMMskYRL6oUvcrFbOMKbBhgbCgAAACwFgmqWFYACmwwioQZf\nT9+ySSTEjnVJmbNlj2PdkOM0BSSud3Q7/O2YRX9MtQAAAACOXyBKP57qUZEOGhqI\n6NUchCjh3cffAUhxNep2m2yPfXVM9DvQ+V/mwH/lUxnZS8YI2PBabtXungvCYJyK\nCK9HDEHWPWZ0XKXkLzQtqUPRL8MvQ8RZa2C8U0i7TxoCnrUnHg4=\n=LlJ0\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "expect": "fingerprintMismatch"
+    },
+    {
+      "name": "trailing-data",
+      "kind": "directory",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoibm9yYUB0aGVsZW1haWwudGVzdCIsImlzc3VlZEF0IjoiMjAyNi0xMC0wMVQxMjowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWN1cnZlMjU1MTktdjYiLCJrZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0ge30=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAAILIMRn9bTe7BtHSR2G2mHW8VgzTiu1i6fsyX4SvuJExACGzY6KS5o+6RwjZMuA4sZ2pDTKDDXK6Y18Nh99vbwmaHF6ZblrCsY65MvXAiIkLhGCatzcsj7ZYyB3r3TPLAXsAA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "address": "nora@thelemail.test",
+      "expect": "statementMalformed",
+      "detail": "trailing_data"
+    },
+    {
+      "name": "ok",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAMs9IFVwfSgd41bSxlRjOziVJwP7wO6tv0RXStKydUYqJ2DyVdSXPcvsTpKaOypblK0MqF6JqYR1zFlqDWvyMBoDM8BYahofjtOgZaqoFRY5LXHy+UZ08942N03YotP7SDeVAA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "contact@thelemail.test",
+        "delegationId": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+        "issuedAt": "2026-09-30T09:00:00Z",
+        "keyAlgorithm": "openpgp-ed25519-v6",
+        "notAfter": "2026-12-30T09:00:00Z",
+        "notBefore": "2026-09-30T09:00:00Z",
+        "revokedAt": null,
+        "signerFingerprint": "eb08b62d473d942d27f0600eccba5616d1282c8cfa8e30f999f56ce69f104e46",
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 2
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "not-yet-valid",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAGxUILDXIZJ4jwU+b5MPsN6ISS91ypFcEAtINpVpoSjL/b5PUgsFI++azbXfEml0O1TIsI2dQMr8ReTDFaBZ/gSFsLTCi62gp7zaUsoAdTkmZ+jTYFE08Jr9qAbhMQ1APPBvDA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-09-30T08:59:59Z",
+      "expect": "notYetValid"
+    },
+    {
+      "name": "expired",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAJPVIOjEucJyuJLHflTEJSiXUFf2Lr03FyU+DwAnRTz6eEYi0ef++mqBCoWQMd2p8Y7MdF3xZXFHfZi3DEqIJ0cLpwL+t9dPc6xJVvmM+Y49Ck+9GeqVLIdV0jE76cNgLThyBQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-12-30T09:00:00Z",
+      "expect": "expired"
+    },
+    {
+      "name": "revoked-before-revocation",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOiIyMDI2LTEwLTAxVDExOjAwOjAwWiIsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAABtqIG6HPTyWxYYsbigQ79G0FH1VhP39MjAeiBfIpD86fSipUi8VAg+qKDUHGTT6sIdUzDOpEhek7kxK7oyxW+SPi7Gn6UUogEUN2Rrw4jiYgVgXU4Dtn5V4EgJuITSFT/kDCw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T10:59:59Z",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "contact@thelemail.test",
+        "delegationId": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+        "issuedAt": "2026-09-30T09:00:00Z",
+        "keyAlgorithm": "openpgp-ed25519-v6",
+        "notAfter": "2026-12-30T09:00:00Z",
+        "notBefore": "2026-09-30T09:00:00Z",
+        "revokedAt": "2026-10-01T11:00:00Z",
+        "signerFingerprint": "eb08b62d473d942d27f0600eccba5616d1282c8cfa8e30f999f56ce69f104e46",
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 2
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "revoked",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOiIyMDI2LTEwLTAxVDExOjAwOjAwWiIsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAJMbIEH96HyLEEJJ7nURchgqz5rNDxqIDb4RFSE+jLazvDgyyLPnKnhhGb4bNfxDOZiKYlMhEVVkY8QrQGj1g9q9mSjuJlAGDKISSOquPQGB6t+0yiOqQQ1lGjPUCxbC5oPOBw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T11:00:00Z",
+      "expect": "revoked"
+    },
+    {
+      "name": "stale-version",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAGmDIDkeQNXi2wjZAGAw/uoAkMN9D4dO7Ko0LWCotbuUxmrqRDkbiJ3gzghcXTizdPwzIMRhHBteLI0v8o/UUCQ+d2sXO7JY32375XhZ+Fk5BBRg9NXhjlHd120s8tmIvw5gBg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "minVersion": 3,
+      "expect": "stale"
+    },
+    {
+      "name": "address-mismatch",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAGiMIE8aubiPUbShhpcnxPi1VYpSuMcXhShBnpuun+aaoLFJ+0k64f90F1NRQyPQXgetcfXXlOkY5IbR9qCWQesF0PIemJO2NQMXOoHLyYQUpqQ7FsDWgOEpqlcg/oDu8B+HBA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "zoe@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "addressMismatch"
+    },
+    {
+      "name": "delegation-id-mismatch",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAPGMIFu2tp18ZIFAx4nTRTS6ErkA8uAKMIGNzV0MmHK93D9+WUqo8+dZ8XGAXHGjSC+4E8xrQnprJZbBsOkQSVf+xgBQUG/OMErTUW23rzyHlnJhD0NeQ3RjMmsNyuiDkYOxDw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "1c7a5d2f-9e3b-4f8c-a04d-6b2e3f4a5b6c",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "delegationMismatch"
+    },
+    {
+      "name": "key-differs",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAADgkID5OsqGGB1kvZdUti6jnGBLkUNGgkOnpt/9UIStQaDjfZBQqtYKX+8mLe6a4uA4TaYvROp0t8he2hDC8ZvOuaOmW71obx1NpyRezFNnEFHlZtAI8VlmrPRrj6h/HL2G9Ag==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgzpt3BwunZ3RxFprUgie7sOMB91qWLcYY7xOOIFoM6p7CrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQZ/BMjtNXnvDWbuwS47dnGv\nWW9ANlD1lmxAIIHrnaqXMAUnCQIHAgAAAAAXUSASjDne89v9+IYG0i/4KdBRKpp5\neBzsbceIVmXo/EQVD+kaHUQh19QTYp0pNOpHRDy/A1dUTpT+Ex0lohDUkGHzi4VE\nhQMIt2Rv5bDRi13zpME5WEn7jviFS/UTw1l5LATNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQZ/BMjtNXnvDWbuwS47dnGvWW9A\nNlD1lmxAIIHrnaqXMAAAAAA8SSCcuGsn+ZZ3E2h0DMa+xwJZpDbqhk2XOX2jVzVR\nBfIi8zwL4IqBFqPlvjzgUNCZ82yMEidY5mlJugKkuP7x1cptpXaW1ReSDMb70fXY\ntdE+4JexqIy+yIrPjzzzjQ85Ow3OKgZqlhWAGQAAACAywOk3Z9+nMusXOmmvM+e8\nHLFUyU/z+u0OJalIJVnbIMKbBhgbCgAAACwFgmqWFYACmwwioQZ/BMjtNXnvDWbu\nwS47dnGvWW9ANlD1lmxAIIHrnaqXMAAAAAAe7SCE91FZFbk65g7tTX6Yz7KBUf3l\nJk4MninnRiO5SUocHlHxoDZzu2GyqlJXCFJcl7cb5rFdOtmrVF9HynXN5GrSQ4JO\nCZmiLR2AK3gdA5GVcAmhOqpMmZhlnvv/MvWHcwI=\n=7Ion\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "fingerprintMismatch"
+    },
+    {
+      "name": "not-sign-only",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiN2YwNGM4ZWQzNTc5ZWYwZDY2ZWVjMTJlM2I3NjcxYWY1OTZmNDAzNjUwZjU5NjZjNDAyMDgxZWI5ZGFhOTczMCIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAIQ8IAiGPSTUryFPxTEcVmAJma3mCk79LEMQ/zhCwKLsa/p55nj0Jl5vmUD+bPelJaDXlOsJCn3HQW5Vzv8QREnmhsNiR9xFRGBMS4VnqcHRYWCorJ6k1SJAPXhtVqpZt90pAA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgzpt3BwunZ3RxFprUgie7sOMB91qWLcYY7xOOIFoM6p7CrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQZ/BMjtNXnvDWbuwS47dnGv\nWW9ANlD1lmxAIIHrnaqXMAUnCQIHAgAAAAAXUSASjDne89v9+IYG0i/4KdBRKpp5\neBzsbceIVmXo/EQVD+kaHUQh19QTYp0pNOpHRDy/A1dUTpT+Ex0lohDUkGHzi4VE\nhQMIt2Rv5bDRi13zpME5WEn7jviFS/UTw1l5LATNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQZ/BMjtNXnvDWbuwS47dnGvWW9A\nNlD1lmxAIIHrnaqXMAAAAAA8SSCcuGsn+ZZ3E2h0DMa+xwJZpDbqhk2XOX2jVzVR\nBfIi8zwL4IqBFqPlvjzgUNCZ82yMEidY5mlJugKkuP7x1cptpXaW1ReSDMb70fXY\ntdE+4JexqIy+yIrPjzzzjQ85Ow3OKgZqlhWAGQAAACAywOk3Z9+nMusXOmmvM+e8\nHLFUyU/z+u0OJalIJVnbIMKbBhgbCgAAACwFgmqWFYACmwwioQZ/BMjtNXnvDWbu\nwS47dnGvWW9ANlD1lmxAIIHrnaqXMAAAAAAe7SCE91FZFbk65g7tTX6Yz7KBUf3l\nJk4MninnRiO5SUocHlHxoDZzu2GyqlJXCFJcl7cb5rFdOtmrVF9HynXN5GrSQ4JO\nCZmiLR2AK3gdA5GVcAmhOqpMmZhlnvv/MvWHcwI=\n=7Ion\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "notSignOnly"
+    },
+    {
+      "name": "signed-by-another-key",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjoyfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBlqPhQuoCKMErpAadlvLtgxGxewlv+AVHBMC6GHRYr7ZAAAAANdYIIxcNvM3NIG3M4oVpwoH13pQO2FIbF4JdiQ+Sd48mGKTq+sjW0CGj3IobTCEElg7C3axmDpOZOhJ6QIzvF3TAsC4UneLK7JaMu7Bi1oKLcSZS+dIsBzebINEFQ6E4zY5Bg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "tampered",
+      "kind": "delegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlbGVnYXRpb25JZCI6IjBiNmY0YzFlLThkMmEtNGU3Yi05YzNmLTVhMWQyZTNmNGE1YiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJrZXlBbGdvcml0aG0iOiJvcGVucGdwLWVkMjU1MTktdjYiLCJub3RBZnRlciI6IjIwMjYtMTItMzBUMDk6MDA6MDBaIiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJyZXZva2VkQXQiOm51bGwsInNpZ25lckZpbmdlcnByaW50IjoiZWIwOGI2MmQ0NzNkOTQyZDI3ZjA2MDBlY2NiYTU2MTZkMTI4MmM4Y2ZhOGUzMGY5OTlmNTZjZTY5ZjEwNGU0NiIsInNpZ25pbmdLZXlGaW5nZXJwcmludCI6IjY3ZTY4NWRiNTgwM2NhYTNkYWY1NDM2ZmZiMzRjZmRkZWMwZDc3M2QwZTQ2ZTQ2NDU3YWM2ZDI1YjE2NTVhODciLCJ2ZXJzaW9uIjozfQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAF3/IHa6E2DDOSNtM1bF7xn3dO0VjIj4XlVdk2zzwBSB8NksJs2eq6kc4P3+tbj+PlED6O6Uq/dWY8jRQ8P82Hp94N9RWcEe/6+c8XjfKr95uMVyWBz7GrlPbATjdVFdcITGBw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAguEZaz3+lIaMQqhGPf35WGRx5mTarpZ9c9+Nn3kKEgQXCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQbrCLYtRz2ULSfwYA7MulYW\n0SgsjPqOMPmZ9WzmnxBORgUnCQIHAgAAAADtdyDiBARV8HQv/EFVE5NL3kIuumYN\n//4mgCmQ260gJhP4Dbyd804HK89Kl5dxMxZWjzuxEg3IJDKHbLgVTjPBOpl7zNHK\nByMjpGV4mX8hy+MuyzgQN9svEenhyJ5qkAMd2AvNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQbrCLYtRz2ULSfwYA7MulYW0Sgs\njPqOMPmZ9WzmnxBORgAAAACneSAaZ/U4L/ih0hz+1tz3z+paiGQgj+eWKxsNfgGv\nJCZ81J+OG0CUDo6bHhvB23D8PBPkRVTvNPsR9UUUM2SWJNV9S1SStTLkIT6fLq2u\ne/gx1Dc6ixm/xNsbbrej39PELww=\n=oe8C\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "0b6f4c1e-8d2a-4e7b-9c3f-5a1d2e3f4a5b",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "ok",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAADFyIJsFpo+qPNKUw3zJ28wXS3lklJGDG+azHXYpKXRMGTVcuqkqPQbFvswqk80aLGHAppTiobOFS9KKsJgkfZRWToOvYbhkU1XaBSCi1KiVJ+G8mS3rXL1pOVMEiGapxNReDA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "contact@thelemail.test",
+        "encryptionKeyFingerprint": "1d8d022ac12ee9889f4b04138a5e3ff9ad52632c2d3659b88960d65b42909039",
+        "issuedAt": "2026-09-30T09:00:00Z",
+        "keyAlgorithm": "openpgp-ed25519-v6",
+        "notBefore": "2026-09-30T09:00:00Z",
+        "permissions": [
+          "decrypt-forwarded"
+        ],
+        "readDelegationId": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+        "revokedAt": null,
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 1
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "not-yet-valid",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAJofIByytbrkTZl3z3cUpPpLt41AfrRAzDRbcifuI4/HDukif/f+er6CJaEULYTDWKQdsUj0bZI/rhW3K+sMsfrL6sqOPxHJxYfEpZRvCUb7OO7tKFZicvT4iEh19ELHVPLeDg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-09-30T08:59:59Z",
+      "expect": "notYetValid"
+    },
+    {
+      "name": "revoked-before-revocation",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjoiMjAyNi0xMC0wMVQxMTowMDowMFoiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAKkYIH2uo80QZYFvLfAj+Iyjco+Kl/emWQa7lgvb3hEu2hkpcqDJMOVgjXLj57OUAVCcTqs5NAH1o4qJiP0OLBouDbxchLzcYstC1Jnt25gqVP+2s+Gk5jNtL3lX/E4za6/bBQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T10:59:59Z",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "contact@thelemail.test",
+        "encryptionKeyFingerprint": "1d8d022ac12ee9889f4b04138a5e3ff9ad52632c2d3659b88960d65b42909039",
+        "issuedAt": "2026-09-30T09:00:00Z",
+        "keyAlgorithm": "openpgp-ed25519-v6",
+        "notBefore": "2026-09-30T09:00:00Z",
+        "permissions": [
+          "decrypt-forwarded"
+        ],
+        "readDelegationId": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+        "revokedAt": "2026-10-01T11:00:00Z",
+        "signingKeyFingerprint": "67e685db5803caa3daf5436ffb34cfddec0d773d0e46e46457ac6d25b1655a87",
+        "version": 1
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "revoked",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjoiMjAyNi0xMC0wMVQxMTowMDowMFoiLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAPWNIBcLS2Zav9mCCxwrPKJglZGjpnvGP4UBIsdVAZXZdRN7Nwlnw+BcHrvfeW8jm3NKirYw52tdVeHMc5d+tsyMIkC+F4d8zehtrd7Yxk0EjrhHvHDcU6QptvZLlcsvh7+DBg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T11:00:00Z",
+      "expect": "revoked"
+    },
+    {
+      "name": "stale-version",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAIC4IOonFbyyKjRm447xKNIyCYokc0OzpnJpEFkqkL/9e0L02Wi7+JFA19I9tw2kaeYK56YDOh/17xZFwNqoNoMq8smdsnV9k0/W7jEuU19Ki58EWO9yDtKAvKaKbf5XrYdZCA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "minVersion": 2,
+      "expect": "stale"
+    },
+    {
+      "name": "permission-mismatch",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJmb3J3YXJkLXBsYWludGV4dCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAARNIBDC4Bs7apDq1Em0zhwc4K7gyWsBhqvma4Bx2lZ6XPSjf3DrP3HEfGLsLT8DV8jSfgVPCZuE5WNGNwLSlQaYWlFQkrVdfadXfFU6Byok/SkgwQ0ZKJI/bFvE1fhII9b4BA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "permissionMismatch"
+    },
+    {
+      "name": "address-mismatch",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAF+jIKPPRspAe2ZCHaGaO7RR+iyZAEiE8LeTr9pgnrkYv38aS0sBoPk0LUfIMKrLs7KSASbKRT7bSzv/1A9Eu0YOBkb/cxC6bJRXHAz8odMRZHGP9efEMPY1zm1BnkXIKAriCQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "zoe@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "addressMismatch"
+    },
+    {
+      "name": "delegation-id-mismatch",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAABWtINDkw80nnny73MvYu7mtfLKU+W2s9RhGw64TLuiKJbyX2qIL80DT1rFLYntcHWrkxc6YLkDLqdj4C6oVyoGYtvSWBJIYAfaKwEq0wwrDDCQ8xDVahPinDgyUqRqv0cmDCw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "3e9c7f4b-1a5d-4bae-c26f-8d4a5b6c7d8e",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "delegationMismatch"
+    },
+    {
+      "name": "key-differs",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAJjoIOx+PocWFiZS5N6UE2vhk07ks1XTzIRmnJnke4rXpGPqoYLmKOsVZvllpT7dXPWF/k/pTpZJDRjqFwYADSMRlJ+mTf9y0omVd9QnjlT/gVbcwZLtyiuZhgt80PDSOGavCw==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAg5sM1kpUth2zyaxttIHxVsm8CjeohK5THWtHnpkRKY1vCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQaA8PYPpLz4y/7aTLE3wQpi\nMwOBpoaexvz4TH1yDlo3YgUnCQIHAgAAAACyvyB2Qdb7CJ2/cWo9Wdv2Djk+J3zw\nAZ+hXIuuwxgL4WAaZSFyBaO+/CaOqtXKQiBNZy6hFDgg687z52Z7EFv1IhSVJ3bE\nUl7IYoM1Kgplebx1D7QTPRdPSWG0nhfTAX5/2wDNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQaA8PYPpLz4y/7aTLE3wQpiMwOB\npoaexvz4TH1yDlo3YgAAAADRpiAuTNqsJC4cU1fWzfR1OVipZS8E2D/qiIUtFdw8\n5DRHWHkOB3B/Er2aNmClJJADjvG2SmaymPq9XO/sk/YzjCepMrXoehK+4sFdus7W\ndHpMiq6vfTMarn84f98nyf4ZZA/OKgZqlhWAGQAAACDpsD2TboGSX4p3c/KSiFgz\ndxFJ3JDP+Io1ZYjDpDCiNsKbBhgbCgAAACwFgmqWFYACmwwioQaA8PYPpLz4y/7a\nTLE3wQpiMwOBpoaexvz4TH1yDlo3YgAAAADmvyBriKtzdvdbMZW3cKZcJiY0cJtn\noBOqdFoLAtR79lAAVELoOIjlSuZ+yKqiW+gHQLVasKEXxhmWZS0Lw8Jw8kKlJCru\nOonTPI04zL9VceyaHSyysopHBqQQGQpmfDssUQTOKgZqlhWAGwAAACDaVUcmDbob\nuJerP2GifrLt2T2AWeqBR17iopik+VKekMLAdQYYGwoAAADGBYJqlhWAApsCmaAG\nGRsKAAAAKQWCapYVgCKhBon4eANk8fem2SlNUZv0OvmjRn3APXtl696A1ohtS4fU\nAAAAAMrEIEqxFdVC9dmcITks4k0Kb75uWX8lpSjsKFaP5Cl8zU/8Tbk19qAA5BGL\nXYbmu641u3f1yB013Lbuk2UzbtJGrEVx2+30xVwDnVkbpmqORG2gwyEY5tB07dQL\n2gMvcA8yDSKhBoDw9g+kvPjL/tpMsTfBCmIzA4Gmhp7G/PhMfXIOWjdiAAAAALmt\nIJ11w2eKAPG05BpVD1+9jVX/oHxnHjfws6cHDVDZqVYH3OFo3F3TvyUaKs/PpzmK\nTrtP89whuw6X7SxFChH0O+O48HeYQDwLycCEqIQQQM8lyzuw7mrSUBriWm0NVUT6\nAA==\n=D3N1\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "fingerprintMismatch"
+    },
+    {
+      "name": "not-encryption-only",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjgwZjBmNjBmYTRiY2Y4Y2JmZWRhNGNiMTM3YzEwYTYyMzMwMzgxYTY4NjllYzZmY2Y4NGM3ZDcyMGU1YTM3NjIiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAEiHIOi3ZRsCDatwyGC0gsEEOtTJLnViLYFTCWPl09rkVQim+0INMO3hZZtl/wOXbtFhCUiZ8nT81tBOk6r3mJjmDFreNtE3utdvCeLHyCH2ZGQv7H8KYGdikznzcXRqaK4zDA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAg5sM1kpUth2zyaxttIHxVsm8CjeohK5THWtHnpkRKY1vCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQaA8PYPpLz4y/7aTLE3wQpi\nMwOBpoaexvz4TH1yDlo3YgUnCQIHAgAAAACyvyB2Qdb7CJ2/cWo9Wdv2Djk+J3zw\nAZ+hXIuuwxgL4WAaZSFyBaO+/CaOqtXKQiBNZy6hFDgg687z52Z7EFv1IhSVJ3bE\nUl7IYoM1Kgplebx1D7QTPRdPSWG0nhfTAX5/2wDNGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQaA8PYPpLz4y/7aTLE3wQpiMwOB\npoaexvz4TH1yDlo3YgAAAADRpiAuTNqsJC4cU1fWzfR1OVipZS8E2D/qiIUtFdw8\n5DRHWHkOB3B/Er2aNmClJJADjvG2SmaymPq9XO/sk/YzjCepMrXoehK+4sFdus7W\ndHpMiq6vfTMarn84f98nyf4ZZA/OKgZqlhWAGQAAACDpsD2TboGSX4p3c/KSiFgz\ndxFJ3JDP+Io1ZYjDpDCiNsKbBhgbCgAAACwFgmqWFYACmwwioQaA8PYPpLz4y/7a\nTLE3wQpiMwOBpoaexvz4TH1yDlo3YgAAAADmvyBriKtzdvdbMZW3cKZcJiY0cJtn\noBOqdFoLAtR79lAAVELoOIjlSuZ+yKqiW+gHQLVasKEXxhmWZS0Lw8Jw8kKlJCru\nOonTPI04zL9VceyaHSyysopHBqQQGQpmfDssUQTOKgZqlhWAGwAAACDaVUcmDbob\nuJerP2GifrLt2T2AWeqBR17iopik+VKekMLAdQYYGwoAAADGBYJqlhWAApsCmaAG\nGRsKAAAAKQWCapYVgCKhBon4eANk8fem2SlNUZv0OvmjRn3APXtl696A1ohtS4fU\nAAAAAMrEIEqxFdVC9dmcITks4k0Kb75uWX8lpSjsKFaP5Cl8zU/8Tbk19qAA5BGL\nXYbmu641u3f1yB013Lbuk2UzbtJGrEVx2+30xVwDnVkbpmqORG2gwyEY5tB07dQL\n2gMvcA8yDSKhBoDw9g+kvPjL/tpMsTfBCmIzA4Gmhp7G/PhMfXIOWjdiAAAAALmt\nIJ11w2eKAPG05BpVD1+9jVX/oHxnHjfws6cHDVDZqVYH3OFo3F3TvyUaKs/PpzmK\nTrtP89whuw6X7SxFChH0O+O48HeYQDwLycCEqIQQQM8lyzuw7mrSUBriWm0NVUT6\nAA==\n=D3N1\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "notEncryptionOnly"
+    },
+    {
+      "name": "signed-by-another-key",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6MX0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBlqPhQuoCKMErpAadlvLtgxGxewlv+AVHBMC6GHRYr7ZAAAAAPtMIA1r15kYXt9Pd0wLXEbM5Dpl7AjQspjaXYOTZ0fp9A2KMuGP15zCyo3yNFgby7lM0SGsO0xgazW6S8fMrD/JdtAYlSKpj8PypJ/v85pF5b01w3zAmVGhbP/9TkJwQphpAg==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "tampered",
+      "kind": "readDelegation",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwia2V5QWxnb3JpdGhtIjoib3BlbnBncC1lZDI1NTE5LXY2Iiwibm90QmVmb3JlIjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJkZWNyeXB0LWZvcndhcmRlZCJdLCJyZWFkRGVsZWdhdGlvbklkIjoiMmQ4YjZlM2EtMGY0Yy00YTlkLWIxNWUtN2MzZjRhNWI2YzdkIiwicmV2b2tlZEF0IjpudWxsLCJzaWduaW5nS2V5RmluZ2VycHJpbnQiOiI2N2U2ODVkYjU4MDNjYWEzZGFmNTQzNmZmYjM0Y2ZkZGVjMGQ3NzNkMGU0NmU0NjQ1N2FjNmQyNWIxNjU1YTg3IiwidmVyc2lvbiI6Mn0=",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBmfmhdtYA8qj2vVDb/s0z93sDXc9DkbkZFesbSWxZVqHAAAAAINRIPuqJXyIm00BhCLU3bkEb3U6mmR3yrs3HgX+g4yuvgVCx5TtgtjuYiYbcnNHakgwnuzxwgjD0LKcDT+Y12r4xov7W5dS/d1aRUVaO6uItSeBvjyOcephkWxAbDqkKICZAQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgkcnup24TPEt4Iaj6Y9UEiWyy4pHaMQS6FzVR2TeqxwfCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQYdjQIqwS7piJ9LBBOKXj/5\nrVJjLC02WbiJYNZbQpCQOQUnCQIHAgAAAAB1OiD99zJxlEG8HKkkLovtdvyfZ90A\n/eZiQnuolRxhgjsehbvBg4+2LY4KxRB4tx6TX8oXuxG9bCsOaH7Eea3Yl7hcZhio\nGGmfsaOUd5detMS+5a3TtyoT2RypEXJsDDIE+w7NGDxjb250YWN0QHRoZWxlbWFp\nbC50ZXN0PsKbBhMbCgAAACwFgmqWFYACGQEioQYdjQIqwS7piJ9LBBOKXj/5rVJj\nLC02WbiJYNZbQpCQOQAAAAAOXyBIvXpVL5Dl2oITKZc8VDrj34xacYigEqODYirT\n3VvNehp/vL4Li2jb3Od4hE6US2dTNMj548qZRcY1SuczaXPHYwMOD5BHL9n68gvt\n84FC3aGcnlTS5oZcvDWwagxpkA7OKgZqlhWAGQAAACCAoJcUbNbiZLNosPuiRvBS\nfXnpPqMeHmbvY27gcw8WTsKbBhgbCgAAACwFgmqWFYACmwwioQYdjQIqwS7piJ9L\nBBOKXj/5rVJjLC02WbiJYNZbQpCQOQAAAABuFyBmJopKpFmzNERf0kGv0eNj8Tv4\nWlLKU5eUsZUlee/1t5cbAJWxNUAYKfAyXLooPF+AzA4h/7mQNwv/1yNrtMdeldxo\njaeSdRCLfq//6IJAzSNh2SMhcrFCtvI/4NPzTwU=\n=16Oq\n-----END PGP PUBLIC KEY BLOCK-----",
+      "id": "2d8b6e3a-0f4c-4a9d-b15e-7c3f4a5b6c7d",
+      "address": "contact@thelemail.test",
+      "at": "2026-10-01T12:00:00Z",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "ok",
+      "kind": "readAuthorization",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlc3RpbmF0aW9uIjoiaGVscGRlc2tAY2FsbG93YXkudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwicGVybWlzc2lvbnMiOlsiZGVjcnlwdC1mb3J3YXJkZWQiXSwic2lnbmVyS2V5RmluZ2VycHJpbnQiOiJmOTJiZTU2YWQ2MWZkNmE0M2U4ZmZjYjY4OTg3MmY0ZWNkNmUzYjVkNWNhNGUyZDk5NmE1ZTVjYjdiZWJkOGFkIiwidHlwZSI6InRoZWxlbWFpbC1yZWFkLWRlbGVnYXRpb24vdjEifQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAKJoIN6xvVbmj9k3O3zldlu1agwzL/JvWdYFK2A//hKro7ayds+sjXC/HnsJoM7IuAEzqcqwa1NWGgz6VTyyJOEHD2ymR40bACdyjpEiacnoyJv5JEvqKBdjkAcoWrpGQQkeBA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "contact@thelemail.test",
+        "destination": "helpdesk@calloway.test",
+        "encryptionKeyFingerprint": "1d8d022ac12ee9889f4b04138a5e3ff9ad52632c2d3659b88960d65b42909039",
+        "issuedAt": "2026-09-30T09:00:00Z",
+        "permissions": [
+          "decrypt-forwarded"
+        ],
+        "signerKeyFingerprint": "f92be56ad61fd6a43e8ffcb689872f4ecd6e3b5d5ca4e2d996a5e5cb7bebd8ad",
+        "type": "thelemail-read-delegation/v1"
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "plaintext-forwarding",
+      "kind": "readAuthorization",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlc3RpbmF0aW9uIjoiaGVscGRlc2tAY2FsbG93YXkudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IiIsImlzc3VlZEF0IjoiMjAyNi0wOS0zMFQwOTowMDowMFoiLCJwZXJtaXNzaW9ucyI6WyJmb3J3YXJkLXBsYWludGV4dCJdLCJzaWduZXJLZXlGaW5nZXJwcmludCI6ImY5MmJlNTZhZDYxZmQ2YTQzZThmZmNiNjg5ODcyZjRlY2Q2ZTNiNWQ1Y2E0ZTJkOTk2YTVlNWNiN2JlYmQ4YWQiLCJ0eXBlIjoidGhlbGVtYWlsLXJlYWQtZGVsZWdhdGlvbi92MSJ9",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAJNrIFUJ8jHmTQGTyh+TxJdCaQL/bSPeX5c8b6IgmHoJWtwGgeGhpwUSeJXdITPpgAtRbUtzlGjJ32HS4I1yFy2Ou9LQFznsmZsU94Mavj8eq1o4gZ4GhGIBOSSGQ80/d3XnDQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "statement": {
+        "accountId": "6f1c2a7e-3b9d-4c58-a1e0-9d2f4b7c8e15",
+        "address": "contact@thelemail.test",
+        "destination": "helpdesk@calloway.test",
+        "encryptionKeyFingerprint": "",
+        "issuedAt": "2026-09-30T09:00:00Z",
+        "permissions": [
+          "forward-plaintext"
+        ],
+        "signerKeyFingerprint": "f92be56ad61fd6a43e8ffcb689872f4ecd6e3b5d5ca4e2d996a5e5cb7bebd8ad",
+        "type": "thelemail-read-delegation/v1"
+      },
+      "expect": "ok"
+    },
+    {
+      "name": "signed-by-another-key",
+      "kind": "readAuthorization",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlc3RpbmF0aW9uIjoiaGVscGRlc2tAY2FsbG93YXkudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwicGVybWlzc2lvbnMiOlsiZGVjcnlwdC1mb3J3YXJkZWQiXSwic2lnbmVyS2V5RmluZ2VycHJpbnQiOiJmOTJiZTU2YWQ2MWZkNmE0M2U4ZmZjYjY4OTg3MmY0ZWNkNmUzYjVkNWNhNGUyZDk5NmE1ZTVjYjdiZWJkOGFkIiwidHlwZSI6InRoZWxlbWFpbC1yZWFkLWRlbGVnYXRpb24vdjEifQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBl9P37JJJMSOdUmZs2WPY92Q4zQFJK53dDv87ZhFf0y1AAAAAJzkIBGcsRTJhZf0x9JeKPnG7b6P6Mi9ru6qE+kWz7HRmsH2QhdLHK7bUHmZCnJHBzqAI0WFcyP0tvhbrL4KwxsBLazLteP9SvOB+AqjuJ2So0mSyu55Spfz9mYAuzXS6MeGBA==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "expect": "signatureInvalid"
+    },
+    {
+      "name": "tampered",
+      "kind": "readAuthorization",
+      "raw": "eyJhY2NvdW50SWQiOiI2ZjFjMmE3ZS0zYjlkLTRjNTgtYTFlMC05ZDJmNGI3YzhlMTUiLCJhZGRyZXNzIjoiY29udGFjdEB0aGVsZW1haWwudGVzdCIsImRlc3RpbmF0aW9uIjoiaGVscGRlc3FAY2FsbG93YXkudGVzdCIsImVuY3J5cHRpb25LZXlGaW5nZXJwcmludCI6IjFkOGQwMjJhYzEyZWU5ODg5ZjRiMDQxMzhhNWUzZmY5YWQ1MjYzMmMyZDM2NTliODg5NjBkNjViNDI5MDkwMzkiLCJpc3N1ZWRBdCI6IjIwMjYtMDktMzBUMDk6MDA6MDBaIiwicGVybWlzc2lvbnMiOlsiZGVjcnlwdC1mb3J3YXJkZWQiXSwic2lnbmVyS2V5RmluZ2VycHJpbnQiOiJmOTJiZTU2YWQ2MWZkNmE0M2U4ZmZjYjY4OTg3MmY0ZWNkNmUzYjVkNWNhNGUyZDk5NmE1ZTVjYjdiZWJkOGFkIiwidHlwZSI6InRoZWxlbWFpbC1yZWFkLWRlbGVnYXRpb24vdjEifQ==",
+      "signature": "wpgGABsKAAAAKQWCar5LQCKhBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAANyXIFgF/kbtjEKJQJJOfBQcK7ArNkC0vCkkj15DH4RK/pgHg+/Ws+DbCpnfmKje+ZJOHluvIqaBsM7U2cnQ8/4pLGkvs1zLnWWlEDzHByCqiwGVKYGDKe3Yyt30rSz/6ktyDQ==",
+      "publicKeyArmored": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nxioGapYVgBsAAAAgVyBjPon/JBNvcdtjAw0fDHgZxYkjWwsErR1gTXq0JwbCrwYf\nGwoAAABABYJqlhWAAwsJBwMVCggCFgACmwMCHgkioQb5K+Vq1h/WpD6P/LaJhy9O\nzW47XVyk4tmWpeXLe+vYrQUnCQIHAgAAAABQ5SADAGl4eAc/TU2PZZx8DVJCZ52Z\n9xyb03ogoiQFoNbtdc6IzQtngq9y8CXfySifMPeb3VFRG6T4J5DlhCyG8N0SUuLe\nl+/Sn8fCCifcwY5bgUa9BAMlQ3utpkFn7R5y9g7NI05vcmEgQ2FsbG93YXkgPG5v\ncmFAdGhlbGVtYWlsLnRlc3Q+wpsGExsKAAAALAWCapYVgAIZASKhBvkr5WrWH9ak\nPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAMbeIBacuPXObJo9+5aAPhuT3t4K\nHbEsPIUukiCnPzzbsDjvGQyQ1O7jp+pbi+/DAiACoXh8VLXonx6MrIDYQWyw81Ne\n2OEifXs8aNzPWZJpu75WTvj2TRoLKQZm9lC7hgjQCs4qBmqWFYAZAAAAIK/4Gz2g\nHfijrl+hwWbPf00n1NA0z15b7HXbLjuHzENqwpsGGBsKAAAALAWCapYVgAKbDCKh\nBvkr5WrWH9akPo/8tomHL07NbjtdXKTi2Zal5ct769itAAAAAO6hINLfDsfgFriT\npPkdto2gz9tLOsfsQPHB1lof/bWlSXNoWWpxNZILU4aZeRb1z9QVhNNC3rMw0Ap6\npb8D4MKe4QFfxXr6yPEnbl9Crs6BYCsji/Uz4PzaqNWPrvlIxAmwAA==\n=hLHs\n-----END PGP PUBLIC KEY BLOCK-----",
+      "expect": "signatureInvalid"
+    }
+  ]
+}
