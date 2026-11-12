@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
   workflow_call:
+    secrets:
+      TRUST_READ_TOKEN:
+        required: true
 
 permissions:
   contents: read
@@ -53,6 +56,11 @@ jobs:
 
       - name: Check the trust roots
         run: node scripts/check-trust-roots.mjs
+
+      - name: Check the trust vectors against the pinned release
+        env:
+          TRUST_READ_TOKEN: ${{ secrets.TRUST_READ_TOKEN }}
+        run: node scripts/trust-vectors.mjs --check
 
       - name: Typecheck
         run: pnpm check
