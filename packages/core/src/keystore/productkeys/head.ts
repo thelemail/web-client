@@ -190,7 +190,7 @@ export async function verifyHeadMac(amk: Uint8Array, accountId: string, raw: Uin
 	if (!bytesEqual(await headMac(amk, accountId, raw), mac)) fail('signature', 'head mac');
 }
 
-async function checkAuthorityKey(h: HeadV2, authority: openpgp.Key): Promise<void> {
+export async function checkAuthorityKey(h: HeadV2, authority: openpgp.Key): Promise<void> {
 	await validateProfile(h.authorityProfileId, authority);
 	if (keyId(h.accountId, fingerprintBytes(authority)) !== h.authorityKeyId || !bytesEqual(await publicKeyDigest(authority), h.authorityPublicKeyDigest)) {
 		fail('transition', 'authority key does not match the head');

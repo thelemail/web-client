@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import raw from './fixtures/product-candidate-v1-vectors.json?raw';
+import raw from '../../interop/vectors/product-candidate-v1.json?raw';
 import { candidateBundlesHash, candidateHash, encodeCandidate, parseCandidate } from './candidate';
 import { utf8 } from './canonical';
 import { b64decode, b64encode, sha256 } from './encoding';

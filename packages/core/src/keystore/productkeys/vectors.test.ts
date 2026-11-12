@@ -1,7 +1,7 @@
 // @vitest-environment node
 import * as openpgp from 'openpgp';
 import { describe, expect, it } from 'vitest';
-import raw from './fixtures/product-keys-v1-vectors.json?raw';
+import raw from '../../interop/vectors/product-keys-v1.json?raw';
 import { utf8 } from './canonical';
 import { b64decode, b64encode, sha256 } from './encoding';
 import { transcriptHash } from './envelope';
