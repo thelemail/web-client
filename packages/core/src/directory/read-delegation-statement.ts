@@ -22,6 +22,7 @@ export type ReadDelegationVerificationCode =
 	| 'fingerprint_mismatch'
 	| 'signature_invalid'
 	| 'revoked'
+	| 'not_yet_valid'
 	| 'permission_mismatch'
 	| 'not_encryption_only';
 
