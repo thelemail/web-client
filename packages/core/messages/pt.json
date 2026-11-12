@@ -1200,6 +1200,7 @@
 	"trust_failure_tlog_witness_policy_unmet": "Não houve testemunhas suficientes a confirmar o ponto de controlo",
 	"trust_failure_tlog_policy_invalid": "As definições de testemunhas do registo de transparência são inválidas",
 	"trust_failure_tlog_checkpoint_stale": "O ponto de controlo do registo de transparência está desatualizado",
+	"trust_failure_tlog_checkpoint_behind": "O registo de transparência apresentou um ponto de controlo mais antigo do que um já visto",
 	"trust_failure_tlog_inclusion_invalid": "A chave não consta do registo de transparência",
 	"trust_failure_tlog_vrf_invalid": "A entrada do registo de transparência não corresponde a este endereço",
 	"trust_failure_tlog_tree_rolled_back": "O registo de transparência retrocedeu",

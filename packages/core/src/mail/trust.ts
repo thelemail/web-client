@@ -108,6 +108,7 @@ const FAILURE_HEADLINES: Record<string, () => string> = {
 	tlog_witness_policy_unmet: () => m.trust_failure_tlog_witness_policy_unmet(),
 	tlog_policy_invalid: () => m.trust_failure_tlog_policy_invalid(),
 	tlog_checkpoint_stale: () => m.trust_failure_tlog_checkpoint_stale(),
+	tlog_checkpoint_behind: () => m.trust_failure_tlog_checkpoint_behind(),
 	tlog_inclusion_invalid: () => m.trust_failure_tlog_inclusion_invalid(),
 	tlog_vrf_invalid: () => m.trust_failure_tlog_vrf_invalid(),
 	tlog_tree_rolled_back: () => m.trust_failure_tlog_tree_rolled_back(),

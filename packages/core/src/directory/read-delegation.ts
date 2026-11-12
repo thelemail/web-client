@@ -17,6 +17,7 @@ import {
 import { TLOG_POLICY, type TlogRuntimePolicy } from './tlog/policy';
 import { tlogStateStore } from './tlog/state-idb';
 import { verifyTlogProof } from './tlog/verify-tlog';
+import { DirectoryVerificationError, SOFT_TLOG_CODES } from './errors';
 
 export * from './read-delegation-statement';
 
@@ -131,7 +132,8 @@ export async function verifyReadDelegate(
 				refetchConsistency: async (since) => (await lookupAccount(address, since)).tlogConsistency
 			});
 		} catch (e) {
-			if (policy.mode === 'enforce') throw e;
+			const soft = e instanceof DirectoryVerificationError && SOFT_TLOG_CODES.has(e.code);
+			if (policy.mode === 'enforce' && !soft) throw e;
 		}
 	}
 	return statement;

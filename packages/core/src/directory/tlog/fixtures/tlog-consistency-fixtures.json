@@ -264,7 +264,7 @@
           "kdDNoZAKodGn4QUxdls93WS3p+M2S2OqCnLtZ6awWtc="
         ]
       },
-      "expect": "ok",
+      "expect": "tlog_checkpoint_behind",
       "advance": false
     },
     {

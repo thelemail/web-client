@@ -1200,6 +1200,7 @@
 	"trust_failure_tlog_witness_policy_unmet": "Not enough witnesses confirmed the checkpoint",
 	"trust_failure_tlog_policy_invalid": "The transparency log witness settings are invalid",
 	"trust_failure_tlog_checkpoint_stale": "The transparency log checkpoint is out of date",
+	"trust_failure_tlog_checkpoint_behind": "The transparency log showed an older checkpoint than one already seen",
 	"trust_failure_tlog_inclusion_invalid": "The key is not included in the transparency log",
 	"trust_failure_tlog_vrf_invalid": "The transparency log entry does not match this address",
 	"trust_failure_tlog_tree_rolled_back": "The transparency log went backwards",
