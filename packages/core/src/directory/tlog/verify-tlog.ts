@@ -294,12 +294,5 @@ async function checkContinuity(
 					details
 				);
 	}
-	if (!grows) {
-		throw new DirectoryVerificationError(
-			'tlog_checkpoint_behind',
-			`tree size ${checkpoint.treeSize} is older than the accepted tree size ${stored.treeSize}`,
-			details
-		);
-	}
-	await save();
+	if (grows) await save();
 }

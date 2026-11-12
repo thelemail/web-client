@@ -35,6 +35,12 @@ describe('transparency log proofs agree with trust', () => {
 				store,
 				consistency: c.consistency ?? undefined
 			});
+			if (c.expect === 'tlog_checkpoint_behind') {
+				const details = await run;
+				expect(details.leafIndex).toBe(vectors.cases.find((x) => x.expect === 'ok')!.leafIndex);
+				expect(await store.get(policy.origin)).toEqual(before);
+				return;
+			}
 			if (c.expect === 'ok') {
 				const details = await run;
 				expect(details.treeSize).toBe(c.treeSize);

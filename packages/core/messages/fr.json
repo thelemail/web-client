@@ -1200,7 +1200,6 @@
   "trust_failure_tlog_witness_policy_unmet": "Le nombre de témoins ayant confirmé le point de contrôle est insuffisant",
   "trust_failure_tlog_policy_invalid": "Les paramètres des témoins du journal de transparence sont invalides",
   "trust_failure_tlog_checkpoint_stale": "Le point de contrôle du journal de transparence est périmé",
-  "trust_failure_tlog_checkpoint_behind": "Le journal de transparence a fourni un point de contrôle plus ancien que celui déjà vu",
   "trust_failure_tlog_inclusion_invalid": "La clé ne figure pas dans le journal de transparence",
   "trust_failure_tlog_vrf_invalid": "L’entrée du journal de transparence ne correspond pas à cette adresse",
   "trust_failure_tlog_tree_rolled_back": "Le journal de transparence est revenu à un état antérieur",

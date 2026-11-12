@@ -1200,7 +1200,6 @@
 	"trust_failure_tlog_witness_policy_unmet": "Zu wenige unabhängige Zeugen haben den Prüfpunkt bestätigt",
 	"trust_failure_tlog_policy_invalid": "Die Zeugeneinstellungen des Transparenzprotokolls sind ungültig",
 	"trust_failure_tlog_checkpoint_stale": "Der Prüfpunkt des Transparenzprotokolls ist veraltet",
-	"trust_failure_tlog_checkpoint_behind": "Das Transparenzprotokoll hat einen älteren Prüfpunkt als einen bereits gesehenen geliefert",
 	"trust_failure_tlog_inclusion_invalid": "Der Schlüssel ist nicht im Transparenzprotokoll enthalten",
 	"trust_failure_tlog_vrf_invalid": "Der Eintrag im Transparenzprotokoll stimmt nicht mit dieser Adresse überein",
 	"trust_failure_tlog_tree_rolled_back": "Das Transparenzprotokoll hat einen älteren Stand geliefert",

@@ -19,15 +19,12 @@ export type DirectoryVerificationCode =
 	| 'tlog_witness_policy_unmet'
 	| 'tlog_policy_invalid'
 	| 'tlog_checkpoint_stale'
-	| 'tlog_checkpoint_behind'
 	| 'tlog_inclusion_invalid'
 	| 'tlog_vrf_invalid'
 	| 'tlog_tree_rolled_back'
 	| 'tlog_checkpoint_conflict'
 	| 'tlog_consistency_unavailable'
 	| 'tlog_consistency_invalid';
-
-export const SOFT_TLOG_CODES: ReadonlySet<DirectoryVerificationCode> = new Set(['tlog_checkpoint_behind']);
 
 export type KeyTransitionState =
 	| 'absent'

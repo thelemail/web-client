@@ -8,7 +8,6 @@ import { keyLabel, labelMatchesKey } from './keyLabel';
 import { isProductIdentity } from '$core/keys/productIdentity';
 import {
 	DirectoryVerificationError,
-	SOFT_TLOG_CODES,
 	type DirectoryVerificationCode,
 	type DirectoryVerificationDetails,
 	type TlogOutcome
@@ -191,7 +190,7 @@ export async function verifyDirectoryRecord(input: DirectoryRecordInput): Promis
 				: new DirectoryVerificationError('tlog_proof_malformed', e instanceof Error ? e.message : 'tlog check failed', {
 						logOrigin: policy.origin
 					});
-		if (policy.mode === 'enforce' && !SOFT_TLOG_CODES.has(err.code)) throw err;
+		if (policy.mode === 'enforce') throw err;
 		return { state: 'failed', code: err.code, details: err.details };
 	}
 }
@@ -223,7 +222,7 @@ async function checkTlog(
 					);
 		return {
 			outcome: { state: 'failed', code: err.code, details: err.details },
-			enforced: policy.mode === 'enforce' && !SOFT_TLOG_CODES.has(err.code) ? err : null
+			enforced: policy.mode === 'enforce' ? err : null
 		};
 	}
 }
