@@ -10,8 +10,6 @@ const { publicKey: algo, keyFlags } = openpgp.enums;
 
 const ALGORITHM_NAMES: Partial<Record<number, string>> = {
 	[algo.rsaEncryptSign]: 'openpgp-rsa',
-	[algo.rsaEncrypt]: 'openpgp-rsa',
-	[algo.rsaSign]: 'openpgp-rsa',
 	[algo.eddsaLegacy]: 'openpgp-eddsa',
 	[algo.ed25519]: 'openpgp-ed25519',
 	[algo.ecdsa]: 'openpgp-ecdsa',
@@ -26,10 +24,23 @@ function primaryLabel(packet: KeyPacket): string {
 	return packet.version === 6 ? `${name}-v6` : name;
 }
 
+const ENCRYPTING_ALGORITHMS = new Set<number>([algo.rsaEncryptSign, algo.ecdh, algo.x25519]);
+
+function latestBinding(sub: openpgp.Subkey): openpgp.SignaturePacket | undefined {
+	let latest: openpgp.SignaturePacket | undefined;
+	for (const sig of sub.bindingSignatures) {
+		if (!latest || (sig.created?.getTime() ?? 0) >= (latest.created?.getTime() ?? 0)) {
+			latest = sig;
+		}
+	}
+	return latest;
+}
+
 function encryptionSubkey(key: openpgp.Key): KeyPacket | null {
 	for (const sub of key.getSubkeys()) {
-		const flags = sub.bindingSignatures[0]?.keyFlags?.[0] ?? 0;
-		if (flags & (keyFlags.encryptCommunication | keyFlags.encryptStorage)) {
+		if (!ENCRYPTING_ALGORITHMS.has(sub.keyPacket.algorithm)) continue;
+		const flags = latestBinding(sub)?.keyFlags;
+		if (!flags || flags.length === 0 || flags[0] & (keyFlags.encryptCommunication | keyFlags.encryptStorage)) {
 			return sub.keyPacket;
 		}
 	}
@@ -60,12 +71,18 @@ export function keyLabel(key: openpgp.Key): string {
 	return primaryLabel(primary);
 }
 
+const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:\d{2})$/;
+
+function parseRFC3339(value: string): number {
+	return RFC3339.test(value) ? Date.parse(value) : Number.NaN;
+}
+
 export function labelMatchesKey(label: string, key: openpgp.Key, issuedAt: string): boolean {
 	const actual = keyLabel(key);
 	if (label === actual) return true;
 	return (
 		label === LABEL_CURVE25519_V6 &&
 		(actual === LABEL_CURVE25519_V4 || actual === LABEL_CURVE25519_LEGACY) &&
-		Date.parse(issuedAt) < MISLABELLED_V4_CUTOFF
+		parseRFC3339(issuedAt) < MISLABELLED_V4_CUTOFF
 	);
 }
