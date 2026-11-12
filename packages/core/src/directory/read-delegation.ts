@@ -62,6 +62,9 @@ export async function verifyReadDelegate(
 	if (statement.readDelegationId !== delegate.id) {
 		throw new ReadDelegationVerificationError('delegation_mismatch', 'statement names a different read delegation');
 	}
+	if (statement.revokedAt !== null) {
+		throw new ReadDelegationVerificationError('revoked', 'read delegation is revoked');
+	}
 	if (statement.permissions.length !== 1 || statement.permissions[0] !== READ_DELEGATION_PERMISSION) {
 		throw new ReadDelegationVerificationError('permission_mismatch', 'read delegation grants an unexpected permission');
 	}
@@ -117,9 +120,6 @@ export async function verifyReadDelegate(
 	const now = opts.nowMillis ?? Math.max(Date.now(), serverNow());
 	if (now < Date.parse(statement.notBefore)) {
 		throw new ReadDelegationVerificationError('not_yet_valid', 'read delegation is not valid yet');
-	}
-	if (statement.revokedAt !== null && now >= Date.parse(statement.revokedAt)) {
-		throw new ReadDelegationVerificationError('revoked', 'read delegation is revoked');
 	}
 
 	const policy = opts.tlogPolicy === undefined ? TLOG_POLICY : opts.tlogPolicy;

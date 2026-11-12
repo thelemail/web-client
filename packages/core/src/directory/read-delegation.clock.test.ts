@@ -25,7 +25,7 @@ const delegate = { id: revoked.id!, publicKeyArmored: revoked.publicKeyArmored, 
 const revokedAt = Date.parse(revoked.at!);
 
 describe('read delegation clock', () => {
-	it('keeps a revocation in force when the server clock claims an earlier time', async () => {
+	it('keeps a revocation in force whatever the server clock says', async () => {
 		h.serverNow = revokedAt - 24 * 60 * 60 * 1000;
 		const err = await verifyReadDelegate(delegate, revoked.address!, { tlogPolicy: null }).then(
 			() => null,
