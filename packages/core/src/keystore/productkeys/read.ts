@@ -3,7 +3,7 @@ import { bytesEqual, keyId, sha256 } from './encoding';
 import { transcriptHash } from './envelope';
 import { fail } from './errors';
 import type { HeadSignatures } from './head';
-import { HEAD_DOMAIN, parseHeadV2, verifyBootstrap, verifyHeadMac } from './head';
+import { HEAD_DOMAIN, checkAuthorityKey, parseHeadV2, verifyBootstrap, verifyHeadMac } from './head';
 import { DOMAIN, parseDelegation, parseIdentityManifest, verifyDataManifestPages } from './manifests';
 import { fingerprintBytes, parsePublicKey, validateProfile, verifyTranscript } from './pgp';
 import type { Availability, Product } from './productBundle';
@@ -84,7 +84,7 @@ export async function readProductKeys(input: ReadInput): Promise<ReadResult> {
 	await verifyHeadMac(input.amk, input.accountId, input.head.raw, input.head.mac);
 	const head = parseHeadV2(input.head.raw);
 	if (head.accountId !== input.accountId) fail('context', 'head belongs to another account');
-	if (keyId(input.accountId, fingerprintBytes(authority)) !== head.authorityKeyId) fail('transition', 'authority key does not match the head');
+	await checkAuthorityKey(head, authority);
 
 	const committed = new Set<string>();
 	const accounted = new Set<string>();

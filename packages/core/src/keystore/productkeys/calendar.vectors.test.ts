@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import raw from './fixtures/calendar-signatures-v1-vectors.json?raw';
+import raw from '../../interop/vectors/calendar-signatures-v1.json?raw';
 import { utf8 } from './canonical';
 import type { CalendarAuthority } from './calendar';
 import { calendarAuthority, CALENDAR_DOMAIN, CALENDAR_TYPE, verifyCalendarFreeBusy, verifyCalendarGrant, verifyCalendarMessage } from './calendar';
