@@ -32,6 +32,7 @@ async function fingerprintOf(armoredKey: string): Promise<string> {
 }
 
 export interface DelegationForVerification {
+	id: string;
 	address: string;
 	publicKeyArmored: string;
 	statement?: string;
@@ -61,6 +62,12 @@ export async function verifyDelegation(
 		throw new DelegationVerificationError(
 			'address_mismatch',
 			'delegation is for a different address'
+		);
+	}
+	if (statement.delegationId !== delegation.id) {
+		throw new DelegationVerificationError(
+			'delegation_mismatch',
+			'statement names a different delegation'
 		);
 	}
 
