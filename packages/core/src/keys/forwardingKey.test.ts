@@ -7,28 +7,30 @@ import {
 	canonicaliseAuthorization,
 	generateForwardingKey
 } from './forwardingKey';
+import vectors from '../interop/vectors/statements.json';
 
-const GO_CANONICAL =
-	'{"accountId":"11111111-2222-3333-4444-555555555555","address":"contact@example.com",' +
-	'"destination":"support@helpdesk.example","encryptionKeyFingerprint":"' +
-	'ab'.repeat(32) +
-	'",' +
-	'"issuedAt":"2026-09-17T12:00:00Z","permissions":["decrypt-forwarded"],' +
-	'"signerKeyFingerprint":"' +
-	'cd'.repeat(32) +
-	'","type":"thelemail-read-delegation/v1"}';
+const authVector = vectors.cases.find((c) => c.kind === 'readAuthorization' && c.name === 'ok')!;
+const trustCanonical = new TextDecoder().decode(Uint8Array.from(atob(authVector.raw), (c) => c.charCodeAt(0)));
+const trustFields = JSON.parse(trustCanonical) as {
+	accountId: string;
+	address: string;
+	destination: string;
+	encryptionKeyFingerprint: string;
+	issuedAt: string;
+	signerKeyFingerprint: string;
+};
 
 describe('forwarding authorization', () => {
-	it('matches the Go canonicaliser byte for byte', () => {
+	it('matches the trust canonicaliser byte for byte, whatever the input case', () => {
 		const bytes = canonicaliseAuthorization({
-			accountId: '11111111-2222-3333-4444-555555555555',
-			address: 'Contact@Example.com',
-			destination: 'support@helpdesk.example',
-			encryptionKeyFingerprint: 'AB'.repeat(32),
-			issuedAt: '2026-09-17T12:00:00Z',
-			signerKeyFingerprint: 'cd'.repeat(32)
+			accountId: trustFields.accountId,
+			address: trustFields.address.toUpperCase(),
+			destination: trustFields.destination,
+			encryptionKeyFingerprint: trustFields.encryptionKeyFingerprint.toUpperCase(),
+			issuedAt: trustFields.issuedAt,
+			signerKeyFingerprint: trustFields.signerKeyFingerprint
 		});
-		expect(new TextDecoder().decode(bytes)).toBe(GO_CANONICAL);
+		expect(new TextDecoder().decode(bytes)).toBe(trustCanonical);
 	});
 
 	it('names the plain permission and carries no key fingerprint', () => {
