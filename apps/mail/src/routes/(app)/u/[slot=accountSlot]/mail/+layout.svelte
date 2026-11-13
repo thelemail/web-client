@@ -51,8 +51,9 @@
 	}
 
 	let loadedFor: string | null = null;
+	const routeAccountId = $derived(data.accountId);
 	$effect(() => {
-		const accountId = data.accountId;
+		const accountId = routeAccountId;
 		const ready = auth.canEnterApp;
 		if (!accountId || !ready || loadedFor === accountId) return;
 		loadedFor = accountId;

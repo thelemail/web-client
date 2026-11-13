@@ -141,6 +141,7 @@ function streamKey(q: Query): string {
 		q.folder,
 		q.sort,
 		q.unread ? '1' : '0',
+		q.starred ? '*' : '-',
 		q.attach ? '1' : '0',
 		q.direct ? 'D' : 'S',
 		`L:${labels}`
@@ -187,6 +188,7 @@ function listOptionsFor(q: Query): ListMessagesOptions | null {
 
 function withViewFilters<T extends ListThreadsOptions>(base: T, q: Query): T {
 	if (q.unread) base.unread = true;
+	if (q.starred) base.starred = true;
 	if (q.attach) base.hasAttachments = true;
 	if (q.labels.length && !customLabelId(q.folder)) base.labelIds = q.labels.slice();
 	if (q.direct) base.descendants = false;
@@ -307,7 +309,7 @@ async function loadFromMirror(accountId: string, query: Query): Promise<Message[
 	const mirror = platform.mirror;
 	if (!mirror) return null;
 	const mailbox = serverMailboxFor(query.folder);
-	if (!mailbox || query.labels.length || query.unread || query.attach) return null;
+	if (!mailbox || query.labels.length || query.unread || query.starred || query.attach) return null;
 	const folderId = customFolderId(query.folder);
 	if (folderId && !query.direct && mailCollections.hasChildren(folderId)) return null;
 	try {

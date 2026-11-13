@@ -324,6 +324,8 @@
 		[viewFolder, sort, JSON.stringify(filters), searchActive].join('|')
 	);
 	let anchor: Anchor | null = null;
+	let pendingRestore: { view: string; top: number } | null = null;
+	let shownView: string | null = null;
 	let jumpToTop = false;
 	let lastTop = 0;
 	let lastActive: string | null = null;
@@ -384,6 +386,36 @@
 			anchor = null;
 		});
 	});
+
+	$effect(() => {
+		const view = viewKey;
+		void rowIds;
+		untrack(() => {
+			if (!scrollEl) return;
+			if (pendingRestore && pendingRestore.view === view && list.length > 0) {
+				scrollEl.scrollTop = pendingRestore.top;
+				lastTop = pendingRestore.top;
+				pendingRestore = null;
+			} else if (shownView !== null && shownView !== view) {
+				scrollEl.scrollTop = 0;
+				lastTop = 0;
+			}
+			shownView = view;
+		});
+	});
+
+	export function scrollPosition(): { view: string; top: number } {
+		return { view: viewKey, top: scrollEl?.scrollTop ?? 0 };
+	}
+
+	export function restoreScroll(position: { view: string; top: number }) {
+		pendingRestore = position;
+		if (scrollEl && position.view === viewKey && list.length > 0) {
+			scrollEl.scrollTop = position.top;
+			lastTop = position.top;
+			pendingRestore = null;
+		}
+	}
 
 	$effect(() => {
 		if (!scrollEl) return;

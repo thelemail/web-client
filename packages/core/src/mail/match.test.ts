@@ -82,3 +82,12 @@ describe('queryMatches', () => {
 		expect(queryMatches(q, msg({ labels: ['security'] }))).toBe(true);
 	});
 });
+
+describe('starred filter on a folder', () => {
+	it('keeps only starred mail in the view', () => {
+		const q: Query = { ...DEFAULT_QUERY, starred: true };
+		const msg = { id: 'x', folder: 'inbox', labels: [], unread: false, starred: false } as unknown as Message;
+		expect(queryMatches(q, msg)).toBe(false);
+		expect(queryMatches(q, { ...msg, starred: true })).toBe(true);
+	});
+});

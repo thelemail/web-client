@@ -1,9 +1,10 @@
 <script lang="ts">
 	import ReaderSkeleton from './ReaderSkeleton.svelte';
+	import { trackOpenRow, withOpenRow, type StickyRow } from './stickyRow';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { m as msg } from '$paraglide/messages.js';
-	import { goto } from '$app/navigation';
+	import { goto, snapshot as navSnapshot } from '$app/navigation';
 	import { page } from '$app/state';
 	import { isListShortcut } from './shortcuts';
 	import PenLine from '@lucide/svelte/icons/pen-line';
@@ -113,7 +114,7 @@
 
 	const filters = $derived<ListFilters>({
 		unread: query.unread,
-		starred: query.folder === 'starred',
+		starred: query.folder === 'starred' || query.starred,
 		attach: query.attach,
 		labels: query.labels,
 		direct: query.direct
@@ -173,11 +174,15 @@
 	}
 
 	function openMessage(id: string) {
-		void goto(withSearch(`${basePath}/${id}`));
+		void goto(withSearch(`${basePath}/${id}`), { replace: messageId !== null, reset: false });
 	}
 
 	function closeMessage(opts: { replace?: boolean } = {}) {
-		void goto(withSearch(basePath), { replace: opts.replace ?? false });
+		void goto(withSearch(basePath), { replace: opts.replace ?? false, reset: false });
+	}
+
+	function withOpenMessage(search: string): string {
+		return `${basePath}${messageId ? `/${messageId}` : ''}${search}`;
 	}
 
 
@@ -201,11 +206,34 @@
 		return m.direction;
 	}
 
-	const list = $derived(
+	const baseList = $derived(
 		mailSearch.active
 			? mailSearch.results.map((hit) => mailbox.findMessage(hit.id) ?? hit)
 			: snapshot.msgs
 	);
+
+	let stickyRow = $state<StickyRow | null>(null);
+
+	$effect(() => {
+		const id = messageId;
+		const rows = baseList;
+		untrack(() => (stickyRow = trackOpenRow(rows, id, stickyRow)));
+	});
+
+	const list = $derived(withOpenRow(baseList, stickyRow, messageId, (id) => mailbox.findMessage(id)));
+
+	let listView = $state<{
+		scrollPosition: () => { view: string; top: number };
+		restoreScroll: (position: { view: string; top: number }) => void;
+	}>();
+
+	navSnapshot({
+		id: 'mail-list-scroll',
+		capture: () => listView?.scrollPosition() ?? null,
+		restore: (position) => {
+			if (position) listView?.restoreScroll(position);
+		}
+	});
 
 	const openIndex = $derived(messageId ? list.findIndex((m) => m.id === messageId) : -1);
 	const prevId = $derived(openIndex > 0 ? list[openIndex - 1].id : null);
@@ -254,6 +282,7 @@
 		void routeFolder;
 		untrack(() => {
 			checked = new Set();
+			stickyRow = null;
 			mailSearch.clear();
 			returnedDismissed = false;
 		});
@@ -1553,31 +1582,29 @@
 
 	function handleSort(id: SortId) {
 		const search = withFilters(page.url.searchParams, { sort: id });
-		void goto(`${basePath}${search}`);
+		void goto(withOpenMessage(search), { reset: false });
 	}
 
 	function handleSetFilters(next: ListFilters) {
-		const wantStarred = next.starred;
-		const onStarred = query.folder === 'starred';
-		if (wantStarred !== onStarred) {
+		if (query.folder === 'starred' && !next.starred) {
 			const slot = page.params.slot ?? '0';
-			const target = wantStarred ? `/u/${slot}/mail/starred` : `/u/${slot}/mail/inbox`;
 			const search = withFilters(new URLSearchParams(), {
 				unread: next.unread,
 				attach: next.attach,
 				labels: next.labels,
 				direct: false
 			});
-			void goto(`${target}${search}`);
+			void goto(`/u/${slot}/mail/inbox${search}`, { reset: false });
 			return;
 		}
 		const search = withFilters(page.url.searchParams, {
 			unread: next.unread,
+			starred: query.folder === 'starred' ? false : next.starred,
 			attach: next.attach,
 			labels: next.labels,
 			direct: !!next.direct
 		});
-		void goto(`${basePath}${search}`);
+		void goto(withOpenMessage(search), { reset: false });
 	}
 
 	function handleLoadMore() {
@@ -1679,6 +1706,7 @@
 		/>
 	{:else}
 		<MessageList
+			bind:this={listView}
 			{folderLabel}
 			{folderUnread}
 			{list}

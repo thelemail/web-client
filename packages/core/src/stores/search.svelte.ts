@@ -92,6 +92,7 @@ class MailSearchStore {
 	complete = $state(false);
 
 	#accountId: string | null = null;
+	#queryAccount: string | null = null;
 	#timer: ReturnType<typeof setTimeout> | undefined;
 	#run = 0;
 	#unsubscribe: (() => void) | null = null;
@@ -121,13 +122,22 @@ class MailSearchStore {
 		return out;
 	}
 
+	setAccount(accountId: string | null): void {
+		if (this.#queryAccount === accountId) return;
+		this.#queryAccount = accountId;
+		this.#reset();
+	}
+
 	start(accountId: string): () => void {
+		this.setAccount(accountId);
 		this.#accountId = accountId;
 		this.#unsubscribe?.();
-		this.#reset();
+		this.indexed = 0;
+		this.complete = false;
 		if (platform.mirror) {
 			return () => {
 				this.#accountId = null;
+				this.setAccount(null);
 			};
 		}
 		this.#unsubscribe = searchIndex.subscribe((progress) => {
@@ -140,6 +150,7 @@ class MailSearchStore {
 			this.#unsubscribe?.();
 			this.#unsubscribe = null;
 			this.#accountId = null;
+			this.setAccount(null);
 			searchIndex.close();
 		};
 	}

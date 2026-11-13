@@ -24,6 +24,7 @@ import { realtime } from '$core/realtime/realtime.svelte';
 import { delegations } from './delegations.svelte';
 import { readDelegations } from './readDelegations.svelte';
 import { auth } from './session.svelte';
+import { mailSearch } from './search.svelte';
 
 function broadcastAccountToStores(accountId: string | null): void {
 	mailbox.setAccount(accountId);
@@ -48,6 +49,7 @@ function broadcastAccountToStores(accountId: string | null): void {
 	twofactor.setAccount(accountId);
 	bimi.setAccount(accountId);
 	personAvatars.setAccount(accountId);
+	mailSearch.setAccount(accountId);
 }
 
 auth.attach({

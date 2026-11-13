@@ -25,7 +25,8 @@ vi.mock('$core/stores/auth.svelte', () => ({
 vi.mock('$core/mail/MirrorScopePrompt.svelte', () => ({ default: () => {} }));
 vi.mock('$core/auth/ReauthDialog.svelte', () => ({ default: () => {} }));
 vi.mock('$core/stores/mailbox.svelte', () => ({ mailbox: { refreshLoaded: vi.fn() } }));
-vi.mock('$core/stores/search.svelte', () => ({ mailSearch: { start: vi.fn() } }));
+const searchStart = vi.hoisted(() => vi.fn(() => () => {}));
+vi.mock('$core/stores/search.svelte', () => ({ mailSearch: { start: searchStart } }));
 
 const { default: SlotLayout } = await import('./+layout.svelte');
 
@@ -34,6 +35,7 @@ const children = createRawSnippet(() => ({ render: () => '<p>mail</p>' }));
 afterEach(() => {
 	cleanup();
 	goto.mockReset();
+	searchStart.mockClear();
 	lost.value = false;
 });
 
@@ -50,5 +52,22 @@ describe('account slot layout', () => {
 		flushSync();
 		expect(goto).not.toHaveBeenCalled();
 		expect(document.body.textContent).toContain('mail');
+	});
+
+	it('keeps the running search when the load reruns for the same account', async () => {
+		const view = render(SlotLayout, { props: { data: { accountId: 'acc-1', slot: 2 }, children } });
+		flushSync();
+		expect(searchStart).toHaveBeenCalledTimes(1);
+		await view.rerender({ data: { accountId: 'acc-1', slot: 2 }, children });
+		flushSync();
+		expect(searchStart).toHaveBeenCalledTimes(1);
+	});
+
+	it('starts search again for a different account', async () => {
+		const view = render(SlotLayout, { props: { data: { accountId: 'acc-1', slot: 2 }, children } });
+		flushSync();
+		await view.rerender({ data: { accountId: 'acc-2', slot: 3 }, children });
+		flushSync();
+		expect(searchStart).toHaveBeenLastCalledWith('acc-2');
 	});
 });

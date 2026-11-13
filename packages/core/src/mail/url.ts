@@ -5,6 +5,7 @@ export interface Query {
 	folder: MailFolderRoute;
 	labels: string[];
 	unread: boolean;
+	starred: boolean;
 	attach: boolean;
 	sort: SortId;
 	direct: boolean;
@@ -14,6 +15,7 @@ export const DEFAULT_QUERY: Query = {
 	folder: 'inbox',
 	labels: [],
 	unread: false,
+	starred: false,
 	attach: false,
 	sort: 'newest',
 	direct: false
@@ -50,6 +52,7 @@ export function parseQuery(folderParam: string | undefined, sp: ReadonlyURLSearc
 		folder,
 		labels: parseLabels(sp.get('labels')),
 		unread: parseBool(sp.get('unread')),
+		starred: folder !== 'starred' && parseBool(sp.get('starred')),
 		attach: parseBool(sp.get('attach')),
 		sort: parseSort(sp.get('sort')),
 		direct: sp.get('scope') === 'direct'
@@ -58,7 +61,7 @@ export function parseQuery(folderParam: string | undefined, sp: ReadonlyURLSearc
 
 function buildSearch(
 	sp: ReadonlyURLSearchParams,
-	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort' | 'direct'>>
+	patch: Partial<Pick<Query, 'labels' | 'unread' | 'starred' | 'attach' | 'sort' | 'direct'>>
 ): string {
 	const next = new URLSearchParams(sp.toString());
 
@@ -70,6 +73,10 @@ function buildSearch(
 	if ('unread' in patch) {
 		if (patch.unread) next.set('unread', 'true');
 		else next.delete('unread');
+	}
+	if ('starred' in patch) {
+		if (patch.starred) next.set('starred', 'true');
+		else next.delete('starred');
 	}
 	if ('attach' in patch) {
 		if (patch.attach) next.set('attach', 'true');
@@ -90,7 +97,7 @@ function buildSearch(
 
 export function withFilters(
 	sp: ReadonlyURLSearchParams,
-	patch: Partial<Pick<Query, 'labels' | 'unread' | 'attach' | 'sort' | 'direct'>>
+	patch: Partial<Pick<Query, 'labels' | 'unread' | 'starred' | 'attach' | 'sort' | 'direct'>>
 ): string {
 	return buildSearch(sp, patch);
 }
@@ -103,6 +110,6 @@ export function toggleLabel(sp: ReadonlyURLSearchParams, label: string): string 
 }
 
 export function clearFilters(sp: ReadonlyURLSearchParams): string {
-	return buildSearch(sp, { labels: [], unread: false, attach: false });
+	return buildSearch(sp, { labels: [], unread: false, starred: false, attach: false });
 }
 
