@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { delayed } from '$core/async/delayed.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -54,6 +55,8 @@
 		}
 	}
 
+	const opening = delayed(() => navigating !== null, { key: () => navigating });
+
 	async function open(slot: number, id: string) {
 		if (navigating) return;
 		navigating = id;
@@ -81,6 +84,7 @@
 					type="button"
 					class="apick-row"
 					disabled={navigating !== null}
+					aria-busy={navigating === row.id || undefined}
 					onclick={() => open(row.slot, row.id)}
 				>
 					<Avatar
@@ -97,7 +101,11 @@
 						{/if}
 						<span class="ap-em" title={row.email}>{row.email}</span>
 						<span class="ap-state" class:ap-locked={!row.unlocked}>
-							{row.unlocked ? m.auth_picker_state_signed_in() : m.auth_picker_state_locked()}
+							{#if navigating === row.id && opening.visible}
+								{m.account_transition_opening_plain()}…
+							{:else}
+								{row.unlocked ? m.auth_picker_state_signed_in() : m.auth_picker_state_locked()}
+							{/if}
 						</span>
 					</span>
 					<span class="ap-go"><ChevronRight size={16} strokeWidth={1.75} /></span>
