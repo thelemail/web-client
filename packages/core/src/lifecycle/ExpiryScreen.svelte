@@ -25,29 +25,36 @@
 	const slot = $derived(page.params.slot ?? '0');
 	const canMoveToFree = $derived(entryPointVisible(billing.subscription));
 
-	async function markShown() {
+	let busy = $state(false);
+	let failed = $state(false);
+
+	async function leaveTo(path: string) {
+		if (busy) return;
+		busy = true;
+		failed = false;
 		try {
 			await markExpiryScreenShown();
 			if (auth.accountId) await auth.loadProfile(auth.accountId);
-		} catch {}
+			await goto(path);
+		} catch {
+			failed = true;
+		} finally {
+			busy = false;
+		}
 	}
 
-	async function choosePlan() {
+	function choosePlan() {
 		lifecycle.markRestoreOrigin('grace');
-		await markShown();
-		void goto(`/u/${slot}/lifecycle/restore`);
+		void leaveTo(`/u/${slot}/lifecycle/restore`);
 	}
-	async function downloadData() {
-		await markShown();
-		void goto(`/u/${slot}/lifecycle/export`);
+	function downloadData() {
+		void leaveTo(`/u/${slot}/lifecycle/export`);
 	}
-	async function continueReadOnly() {
-		await markShown();
-		void goto(`/u/${slot}/mail/inbox`);
+	function continueReadOnly() {
+		void leaveTo(`/u/${slot}/mail/inbox`);
 	}
-	async function moveToFree() {
-		await markShown();
-		void goto(`/u/${slot}/lifecycle/downgrade`);
+	function moveToFree() {
+		void leaveTo(`/u/${slot}/lifecycle/downgrade`);
 	}
 </script>
 
@@ -79,17 +86,20 @@
 			</li>
 		</ul>
 		<div class="lc-cta">
-			<Button variant="primary" size="lg" onclick={choosePlan}><Sparkles size={17} />{m.lc_expiry_choose_plan()}</Button>
+			<Button variant="primary" size="lg" disabled={busy} onclick={choosePlan}><Sparkles size={17} />{m.lc_expiry_choose_plan()}</Button>
 			{#if canMoveToFree}
-				<Button variant="secondary" size="lg" onclick={moveToFree}>
+				<Button variant="secondary" size="lg" disabled={busy} onclick={moveToFree}>
 					<CircleArrowDown size={17} />{m.lc_expiry_move_to_free()}
 				</Button>
 			{/if}
-			<Button variant="secondary" size="lg" onclick={downloadData}>
+			<Button variant="secondary" size="lg" disabled={busy} onclick={downloadData}>
 				<Download size={17} />{m.lc_download_my_data()}
 			</Button>
-			<Button variant="ghost" size="lg" onclick={continueReadOnly}>{m.lc_expiry_continue_read_only()}</Button>
+			<Button variant="ghost" size="lg" disabled={busy} onclick={continueReadOnly}>{m.lc_expiry_continue_read_only()}</Button>
 		</div>
+		{#if failed}
+			<p class="errtext" role="alert">{m.lc_expiry_failed()}</p>
+		{/if}
 		<p class="lc-cta-note">
 			{m.lc_expiry_note()}
 		</p>

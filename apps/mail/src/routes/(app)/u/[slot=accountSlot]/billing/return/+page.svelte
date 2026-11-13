@@ -16,6 +16,21 @@
 	const slot = $derived(data.slot);
 	let phase = $state<'confirming' | 'active' | 'slow'>('confirming');
 	let polls = $state(0);
+	let checking = $state(false);
+
+	async function checkNow() {
+		if (checking) return;
+		checking = true;
+		try {
+			const sub = await billing.refresh();
+			if (sub?.entitled && sub.planCode !== 'free') {
+				phase = 'active';
+				void workspaces.load(auth.accountId);
+			}
+		} finally {
+			checking = false;
+		}
+	}
 
 	const planLabel = $derived(subscriptionPlanLabel(billing.plan, billing.subscription));
 
@@ -83,10 +98,13 @@
 						{m.billing_return_slow_body()}
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<Button variant="secondary" size="lg" block onclick={() => billing.refresh()}>
-							{m.billing_return_check_again()}
+						<Button variant="secondary" size="lg" block disabled={checking} onclick={checkNow}>
+							{checking ? m.common_loading() : m.billing_return_check_again()}
 						</Button>
 					</div>
+					{#if billing.error && !checking}
+						<p class="errtext" role="alert">{m.billing_return_check_failed()}</p>
+					{/if}
 				{:else}
 					<span class="return-spinner" aria-hidden="true"></span>
 					<h1>{m.billing_return_confirming_title()}</h1>

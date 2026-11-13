@@ -100,7 +100,10 @@
 		try {
 			material = await prepareRecovery(accountId);
 		} catch (err) {
-			if (isReauthenticationRequired(err)) return;
+			if (isReauthenticationRequired(err)) {
+				generateError = m.recovery_start_confirm_needed();
+				return;
+			}
 			console.warn('recovery: generate failed', err);
 			generateError =
 				err instanceof RecoveryVaultLockedError

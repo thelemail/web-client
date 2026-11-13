@@ -65,6 +65,7 @@ export const load = async () => {
 	try {
 		await bootstrap();
 		bootstrapped = true;
+		boot.markStorageAvailable();
 	} catch (err) {
 		console.warn('bootstrap: local account state unavailable', err);
 		boot.markStorageUnavailable();

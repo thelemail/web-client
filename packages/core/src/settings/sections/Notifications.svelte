@@ -56,6 +56,7 @@
 
 	let status = $state<NotificationStatus | null>(null);
 	let checking = $state(false);
+	let statusFailed = $state(false);
 
 	async function check() {
 		const native = platform.notifications;
@@ -63,8 +64,10 @@
 		checking = true;
 		try {
 			status = await native.status();
+			statusFailed = false;
 		} catch {
 			status = null;
+			statusFailed = true;
 		} finally {
 			checking = false;
 		}
@@ -78,6 +81,7 @@
 	});
 
 	const summary = $derived.by(() => {
+		if (!status && statusFailed) return m.settings_notify_status_failed();
 		if (!status) return onWindows ? m.settings_notify_checking_windows() : m.settings_notify_checking();
 		if (!status.supported) return m.settings_notify_unsupported();
 		if (!status.bundled) return m.settings_notify_unbundled();
