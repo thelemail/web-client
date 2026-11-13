@@ -31,7 +31,7 @@ import type {
 import type { ProductVault } from './product-vault';
 import { decodeProductVault, encodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
-import { broadcast, cachedRecords, fingerprintHexOf, indexKeys, opaqueOps, pendingRotations, productAccounts, vaults } from './state';
+import { broadcast, cachedRecords, fingerprintHexOf, indexKeys, installVault, opaqueOps, pendingRotations, productAccounts, vaults, wipeProductRoot } from './state';
 
 interface PendingCustody {
 	accountId: string;
@@ -59,6 +59,7 @@ function drop(migrationId: string): void {
 	const p = pending.get(migrationId);
 	if (!p) return;
 	wipeOpenedMailKeys(p.opened);
+	if (p.state && vaults.get(p.accountId) !== p.state) wipeProductRoot(p.state);
 	pending.delete(migrationId);
 }
 
@@ -136,7 +137,9 @@ export async function handleCustodyStage(args: CustodyStageArgs): Promise<Custod
 	if (!p || p.accountId !== args.accountId) return { ok: false, code: 'missing' };
 	const vault = await productVault(v, p.opened);
 	try {
-		if (fingerprintHexOf((await productVaultState(args.accountId, v.email, vault)).privateKey) !== fingerprintHexOf(v.privateKey)) {
+		const probe = await productVaultState(args.accountId, v.email, vault);
+		wipeProductRoot(probe);
+		if (fingerprintHexOf(probe.privateKey) !== fingerprintHexOf(v.privateKey)) {
 			fail('context', 'the stored keys name another current key');
 		}
 		p.staged = null;
@@ -170,6 +173,7 @@ export async function handleCustodyStage(args: CustodyStageArgs): Promise<Custod
 		}
 		const reread = decodeProductVault(new TextDecoder().decode(encodeProductVault(vault)));
 		try {
+			wipeProductRoot(p.state ?? undefined);
 			p.state = await productVaultState(args.accountId, v.email, reread);
 		} finally {
 			wipeProductVault(reread);
@@ -222,7 +226,7 @@ export async function handleCustodyCommit(args: CustodyCommitArgs): Promise<Cust
 	indexKeys.delete(args.accountId);
 	pendingRotations.delete(args.accountId);
 	dropLegacy(args.accountId);
-	if (p?.state) vaults.set(args.accountId, p.state);
+	if (p?.state) installVault(p.state);
 	drop(args.migrationId);
 	broadcast({ type: 'custodyChanged', accountId: args.accountId, email });
 	return { ok: true };

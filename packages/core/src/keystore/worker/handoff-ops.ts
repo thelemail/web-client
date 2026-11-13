@@ -28,7 +28,7 @@ import type {
 import type { ProductVault } from './product-vault';
 import { decodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
-import { broadcast, cachedRecords, indexKeys, productAccounts, vaults } from './state';
+import { broadcast, cachedRecords, indexKeys, installVault, productAccounts, vaults, wipeProductRoot } from './state';
 
 interface PendingAdoption {
 	accountId: string;
@@ -215,7 +215,7 @@ export async function handleCommitHandoff(args: CommitHandoffArgs): Promise<Comm
 		await deleteStaged(args.requestId);
 	}
 	if (p.wrapKey) p.state.wrapKey = p.wrapKey;
-	vaults.set(p.accountId, p.state);
+	installVault(p.state);
 	indexKeys.delete(p.accountId);
 	pending.delete(args.requestId);
 	broadcast({ type: 'vaultChanged', accountId: p.accountId, email: p.state.email });
@@ -225,6 +225,7 @@ export async function handleCommitHandoff(args: CommitHandoffArgs): Promise<Comm
 export async function handleDiscardHandoff(args: CommitHandoffArgs): Promise<void> {
 	const p = pending.get(args.requestId);
 	if (p && p.accountId !== args.accountId) return;
+	if (p && vaults.get(p.accountId) !== p.state) wipeProductRoot(p.state);
 	pending.delete(args.requestId);
 	await deleteStaged(args.requestId);
 }
