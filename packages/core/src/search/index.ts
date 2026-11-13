@@ -4,14 +4,13 @@ import { decryptPreview } from '$core/mail/decrypt';
 import { idbSearchDb, type SearchDb } from './db';
 import {
 	excerptFor,
-	hasFilters,
-	isEmptyQuery,
-	matchesFrom,
-	matchesRow,
-	parseQuery,
+	matchesPreview,
+	NO_COLLECTIONS,
+	planPreview,
 	scoreText,
 	type CollectionResolver
-} from './query';
+} from './preview';
+import type { ParsedQuery, QueryError } from './query/ast';
 import { rowFor, textFor, undecryptableText } from './records';
 import { openChunk, sealChunk } from './seal';
 import {
@@ -31,6 +30,8 @@ export interface IndexProgress {
 	indexed: number;
 	complete: boolean;
 }
+
+export type SearchOutcome = { ok: true; results: SearchResult[] } | { ok: false; error: QueryError };
 
 export interface SearchResult {
 	row: IndexedRow;
@@ -269,23 +270,20 @@ export class SearchIndex {
 		this.#meta = { ...this.#meta, nextChunkId: chunkId + 1 };
 	}
 
-	search(text: string, collections?: CollectionResolver, limit = 200): SearchResult[] {
-		const parsed = parseQuery(text, collections);
-		if (isEmptyQuery(parsed)) return [];
-		const { terms } = parsed;
-		const filtersOnly = terms.length === 0 && hasFilters(parsed);
+	search(query: ParsedQuery, collections: CollectionResolver = NO_COLLECTIONS, limit = 200): SearchOutcome {
+		if (!query.root) return { ok: true, results: [] };
+		const planned = planPreview(query.root, query.universe, collections);
+		if (!planned.ok) return planned;
+		const { plan } = planned;
 		const hits: SearchResult[] = [];
 		for (const [id, row] of this.#rows) {
-			if (!matchesRow(row, parsed)) continue;
 			const indexed = this.#texts.get(id);
-			if (!indexed) continue;
-			if (!matchesFrom(indexed, parsed)) continue;
-			const score = filtersOnly ? 0 : scoreText(indexed, terms);
-			if (!filtersOnly && score <= 0) continue;
-			hits.push({ row, text: indexed, excerpt: excerptFor(indexed, terms), score });
+			if (!indexed || !matchesPreview(plan, row, indexed)) continue;
+			const score = scoreText(indexed, plan.terms);
+			hits.push({ row, text: indexed, excerpt: excerptFor(indexed, plan.terms), score });
 		}
 		hits.sort((a, b) => b.score - a.score || b.row.storedAt - a.row.storedAt);
-		return hits.slice(0, limit);
+		return { ok: true, results: hits.slice(0, limit) };
 	}
 }
 

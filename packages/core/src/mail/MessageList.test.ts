@@ -144,6 +144,18 @@ describe('MessageList search states', () => {
 		const { container } = mount({ list: [], searchActive: true });
 		expect(container.querySelector('.empty-clear')?.textContent).toContain('Clear search');
 	});
+
+	it('explains a search it could not run', () => {
+		const { container } = mount({
+			list: [],
+			searchActive: true,
+			searchError: 'A quote is missing its closing mark.'
+		});
+		expect(container.querySelector('.empty-list .t')?.textContent).toBe("Can't run this search");
+		expect(container.querySelector('.empty-list .d')?.textContent).toBe('A quote is missing its closing mark.');
+		expect(container.querySelector('.empty-clear')?.textContent).toContain('Clear search');
+		expect(container.textContent).not.toContain('Nothing in your mail matches that.');
+	});
 });
 
 describe('MessageList header', () => {

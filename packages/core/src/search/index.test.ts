@@ -28,6 +28,22 @@ vi.mock('./seal', () => ({
 
 import { memorySearchDb } from './db';
 import { SearchIndex } from './index';
+import type { CollectionResolver } from './preview';
+import { parseQuery } from './query';
+
+const SNAPSHOT = { now: Date.UTC(2026, 10, 13), timeZone: 'UTC' };
+
+function run(index: SearchIndex, text: string, collections?: CollectionResolver) {
+	const parsed = parseQuery(text, SNAPSHOT);
+	if (!parsed.ok) throw new Error(`${text}: ${parsed.error.code}`);
+	return index.search(parsed.query, collections);
+}
+
+function find(index: SearchIndex, text: string, collections?: CollectionResolver) {
+	const outcome = run(index, text, collections);
+	if (!outcome.ok) throw new Error(`${text}: ${outcome.error.code}`);
+	return outcome.results;
+}
 
 const ACCOUNT = 'acc-1';
 
@@ -104,7 +120,7 @@ describe('SearchIndex backfill', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		const hits = index.search('permission slip');
+		const hits = find(index, 'permission slip');
 		expect(hits.map((h) => h.row.id)).toEqual(['needle']);
 	});
 
@@ -125,7 +141,7 @@ describe('SearchIndex backfill', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		const hits = index.search('accounts@supplier.pt');
+		const hits = find(index, 'accounts@supplier.pt');
 		expect(hits.map((h) => h.row.id)).toEqual(['older']);
 	});
 
@@ -139,7 +155,7 @@ describe('SearchIndex backfill', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		expect(index.search('archived invoice').map((h) => h.row.id)).toEqual(['archived']);
+		expect(find(index, 'archived invoice').map((h) => h.row.id)).toEqual(['archived']);
 	});
 
 	it('backfills mail already filed in custom folders and finds it by folder and label', async () => {
@@ -165,8 +181,8 @@ describe('SearchIndex backfill', () => {
 			folder: (name: string) => (name.toLowerCase() === 'acme' ? ['f-acme'] : null),
 			label: (name: string) => (name.toLowerCase() === 'work' ? ['l-work'] : null)
 		};
-		expect(index.search('in:acme label:work', resolver).map((h) => h.row.id)).toEqual(['filed']);
-		expect(index.search('report in:archive', resolver)).toEqual([]);
+		expect(find(index, 'in:acme label:work', resolver).map((h) => h.row.id)).toEqual(['filed']);
+		expect(find(index, 'report in:archive', resolver)).toEqual([]);
 	});
 
 	it('resumes an interrupted backfill from the stored cursor', async () => {
@@ -193,8 +209,8 @@ describe('SearchIndex backfill', () => {
 		const second = new SearchIndex(db);
 		await second.sync(ACCOUNT);
 
-		expect(second.search('second page').map((h) => h.row.id)).toEqual(['b']);
-		expect(second.search('first page').map((h) => h.row.id)).toEqual(['a']);
+		expect(find(second, 'second page').map((h) => h.row.id)).toEqual(['b']);
+		expect(find(second, 'first page').map((h) => h.row.id)).toEqual(['a']);
 	});
 
 	it('survives a preview it cannot decrypt', async () => {
@@ -210,7 +226,7 @@ describe('SearchIndex backfill', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		expect(index.search('readable subject').map((h) => h.row.id)).toEqual(['fine']);
+		expect(find(index, 'readable subject').map((h) => h.row.id)).toEqual(['fine']);
 	});
 });
 
@@ -229,7 +245,7 @@ describe('SearchIndex freshness', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		expect(index.search('just arrived').map((h) => h.row.id)).toEqual(['fresh']);
+		expect(find(index, 'just arrived').map((h) => h.row.id)).toEqual(['fresh']);
 	});
 
 	it('drops a message the change feed reports as deleted', async () => {
@@ -244,7 +260,7 @@ describe('SearchIndex freshness', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		expect(index.search('doomed invoice')).toEqual([]);
+		expect(find(index, 'doomed invoice')).toEqual([]);
 	});
 
 	it('rebuilds from scratch when the feed demands a resync', async () => {
@@ -259,7 +275,7 @@ describe('SearchIndex freshness', () => {
 		const index = new SearchIndex(memorySearchDb());
 		await index.sync(ACCOUNT);
 
-		expect(index.search('kept invoice').map((h) => h.row.id)).toEqual(['kept']);
+		expect(find(index, 'kept invoice').map((h) => h.row.id)).toEqual(['kept']);
 	});
 
 	it('reports progress as complete only once every scope is exhausted', async () => {
@@ -287,7 +303,7 @@ describe('SearchIndex persistence', () => {
 		await reopened.open(ACCOUNT);
 
 		expect(listMessages).not.toHaveBeenCalled();
-		expect(reopened.search('stored invoice').map((h) => h.row.id)).toEqual(['kept']);
+		expect(find(reopened, 'stored invoice').map((h) => h.row.id)).toEqual(['kept']);
 	});
 });
 
@@ -319,9 +335,9 @@ describe('SearchIndex operators', () => {
 				'enc-b': preview('Invoice 43', 'bob@other.pt')
 			}
 		);
-		expect(index.search('invoice').map((h) => h.row.id).sort()).toEqual(['a', 'b']);
-		expect(index.search('invoice from:anna').map((h) => h.row.id)).toEqual(['a']);
-		expect(index.search('invoice from:school').map((h) => h.row.id)).toEqual(['a']);
+		expect(find(index, 'invoice').map((h) => h.row.id).sort()).toEqual(['a', 'b']);
+		expect(find(index, 'invoice from:anna').map((h) => h.row.id)).toEqual(['a']);
+		expect(find(index, 'invoice from:school').map((h) => h.row.id)).toEqual(['a']);
 	});
 
 	it('narrows by unread', async () => {
@@ -332,8 +348,8 @@ describe('SearchIndex operators', () => {
 			],
 			{ 'enc-read': preview('Invoice'), 'enc-unread': preview('Invoice') }
 		);
-		expect(index.search('invoice is:unread').map((h) => h.row.id)).toEqual(['unread']);
-		expect(index.search('invoice is:read').map((h) => h.row.id)).toEqual(['read']);
+		expect(find(index, 'invoice is:unread').map((h) => h.row.id)).toEqual(['unread']);
+		expect(find(index, 'invoice is:read').map((h) => h.row.id)).toEqual(['read']);
 	});
 
 	it('tells sent from inbox', async () => {
@@ -344,8 +360,8 @@ describe('SearchIndex operators', () => {
 			],
 			{ 'enc-in': preview('Invoice'), 'enc-out': preview('Invoice') }
 		);
-		expect(index.search('invoice in:sent').map((h) => h.row.id)).toEqual(['out']);
-		expect(index.search('invoice in:inbox').map((h) => h.row.id)).toEqual(['in']);
+		expect(find(index, 'invoice in:sent').map((h) => h.row.id)).toEqual(['out']);
+		expect(find(index, 'invoice in:inbox').map((h) => h.row.id)).toEqual(['in']);
 	});
 
 	it('narrows by attachments and by star', async () => {
@@ -356,8 +372,8 @@ describe('SearchIndex operators', () => {
 			],
 			{ 'enc-plain': preview('Invoice'), 'enc-withatt': preview('Invoice') }
 		);
-		expect(index.search('invoice has:attachment').map((h) => h.row.id)).toEqual(['withatt']);
-		expect(index.search('invoice is:starred').map((h) => h.row.id)).toEqual(['withatt']);
+		expect(find(index, 'invoice has:attachment').map((h) => h.row.id)).toEqual(['withatt']);
+		expect(find(index, 'invoice is:starred').map((h) => h.row.id)).toEqual(['withatt']);
 	});
 
 	it('answers a filter-only query newest first', async () => {
@@ -373,22 +389,34 @@ describe('SearchIndex operators', () => {
 				'enc-seen': preview('Three')
 			}
 		);
-		expect(index.search('is:unread').map((h) => h.row.id)).toEqual(['new', 'old']);
+		expect(find(index, 'is:unread').map((h) => h.row.id)).toEqual(['new', 'old']);
 	});
 
 	it('returns nothing for a query that parses to nothing', async () => {
 		const index = await indexed([item('a', '2024-01-01T00:00:00Z')], {
 			'enc-a': preview('Invoice')
 		});
-		expect(index.search('()')).toEqual([]);
-		expect(index.search('   ')).toEqual([]);
+		expect(find(index, '   ')).toEqual([]);
 	});
 
-	it('returns nothing for a folder it does not know', async () => {
+	it('reports a folder or label it does not know', async () => {
 		const index = await indexed([item('a', '2024-01-01T00:00:00Z')], {
 			'enc-a': preview('Invoice')
 		});
-		expect(index.search('invoice in:nowhere')).toEqual([]);
+		expect(run(index, 'invoice in:nowhere')).toEqual({
+			ok: false,
+			error: { code: 'unknown_folder', range: { start: 8, end: 18 }, name: 'nowhere' }
+		});
+		expect(run(index, 'label:"Tax 2026"')).toMatchObject({ ok: false, error: { code: 'unknown_label', name: 'Tax 2026' } });
+	});
+
+	it('reports what the preview index cannot answer', async () => {
+		const index = await indexed([item('a', '2024-01-01T00:00:00Z')], {
+			'enc-a': preview('Invoice')
+		});
+		for (const text of ['body:invoice', 'a AROUND 2 b', 'filename:pdf', 'size:10K', 'bcc:anna', 'to:me', 'in:drafts', 'has:image', 'list:x', 'rfc822msgid:a@b', 'deliveredto:a@b.c', 'filetype:pdf', 'attachment:x']) {
+			expect(run(index, text), text).toMatchObject({ ok: false, error: { code: 'unavailable' } });
+		}
 	});
 
 	it('combines operators', async () => {
@@ -404,7 +432,7 @@ describe('SearchIndex operators', () => {
 				'enc-alreadyread': preview('Invoice', 'anna@school.pt')
 			}
 		);
-		expect(index.search('invoice from:anna is:unread has:attachment').map((h) => h.row.id)).toEqual(
+		expect(find(index, 'invoice from:anna is:unread has:attachment').map((h) => h.row.id)).toEqual(
 			['hit']
 		);
 	});
