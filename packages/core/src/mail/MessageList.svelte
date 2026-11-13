@@ -99,6 +99,7 @@
 		searchActive?: boolean;
 		searchPending?: boolean;
 		searchFailed?: boolean;
+		searchError?: string | null;
 		onRetrySearch?: () => void;
 		searchIndexed?: number;
 		searchComplete?: boolean;
@@ -159,6 +160,7 @@
 		searchActive = false,
 		searchPending = false,
 		searchFailed = false,
+		searchError = null,
 		onRetrySearch,
 		searchIndexed = 0,
 		searchComplete = true,
@@ -184,7 +186,9 @@
 				: msg.mail_list_search_all_detail()
 	);
 	const emptyTitle = $derived(
-		searchActive && searchFailed
+		searchActive && searchError
+			? msg.mail_search_query_invalid()
+			: searchActive && searchFailed
 			? msg.mail_search_failed()
 			: searchActive
 			? searchPending
@@ -195,7 +199,9 @@
 				: msg.mail_list_folder_empty({ folder: viewName })
 	);
 	const emptyDetail = $derived(
-		searchActive && searchFailed
+		searchActive && searchError
+			? searchError
+			: searchActive && searchFailed
 			? msg.mail_search_failed_detail()
 			: searchActive
 			? searchPending

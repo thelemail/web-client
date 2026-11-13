@@ -1767,6 +1767,7 @@
 			searchActive={mailSearch.active}
 			searchPending={mailSearch.searching}
 			searchFailed={mailSearch.failed}
+			searchError={mailSearch.error}
 			onRetrySearch={() => mailSearch.commit(mailSearch.committed)}
 			searchIndexed={mailSearch.indexed}
 			searchComplete={!mailSearch.partial}
