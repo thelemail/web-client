@@ -15,7 +15,7 @@ import {
 	type Sort,
 	type Step
 } from './compile';
-import { registerFunctions } from './functions';
+import { bounded, registerFunctions } from './functions';
 import { suggest, type Suggestion } from './suggest';
 import { Tokenizer, nearWithin } from './tokenizer';
 import { Field, SourceKind, type SourceKey } from './types';
@@ -27,6 +27,7 @@ const STATEMENT_MS = 40;
 const PROGRESS_OPS = 1000;
 const FIRST_SLICE = 2048;
 const MAX_SLICE = 1 << 20;
+const FILL_BATCH = 4096;
 
 export interface QueryOptions {
 	sort: Sort;
@@ -87,10 +88,6 @@ const ORDER: Readonly<Record<Sort, readonly (readonly [string, boolean])[]>> = {
 		['sid', false]
 	]
 };
-
-const WEIGHT_CASE = `CASE f.field ${Object.entries(WEIGHTS)
-	.map(([field, weight]) => `WHEN ${Number(field)} THEN ${weight}`)
-	.join(' ')} END`;
 
 const GROUP_KEY: Readonly<Record<Grouping, string>> = {
 	thread: `CASE WHEN s.kind = ${SourceKind.message} AND s.thread_id IS NOT NULL THEN 't' || s.thread_id ELSE s.kind || ':' || s.source_id END`,
@@ -239,6 +236,18 @@ export class QueryEngine {
 		return Number(this.#db.changes());
 	}
 
+	#atomic<T>(fn: () => T): T {
+		this.#db.exec('BEGIN');
+		try {
+			const value = fn();
+			this.#db.exec('COMMIT');
+			return value;
+		} catch (err) {
+			if (!this.#capi.sqlite3_get_autocommit(this.#db.pointer!)) this.#db.exec('ROLLBACK');
+			throw err;
+		}
+	}
+
 	#guarded<T>(fn: () => T, limit: boolean): { ok: true; value: T } | { ok: false } {
 		this.#deadline = limit ? performance.now() + STATEMENT_MS : Infinity;
 		try {
@@ -336,7 +345,7 @@ export class QueryEngine {
 		let incomplete = 0;
 		let excluded = 0;
 		await this.#sliced('sources', scope, checkpoint, (lo, hi) => {
-			const [added, a, b] = this.#db.transaction(() => {
+			const [added, a, b] = this.#atomic(() => {
 				const n = this.#exec(insertMatches, [lo, hi, ...universe.params, ...expr.params]);
 				if (n) this.#exec(upsertGroups, [lo, hi]);
 				if (!coverage || !coverageSql) return [n, 0, 0];
@@ -365,40 +374,22 @@ export class QueryEngine {
 			case 'fts': {
 				const content = step.table === 'parts_fts' ? 'parts' : 'literals';
 				const near = step.near ? this.#overlap(step.near) : null;
-				const joins: string[] = [];
-				const where: string[] = [`${step.table} MATCH ?`, `f.field IN (${placeholders(step.fields.length)})`];
-				const params: BindValue[] = [step.match, ...step.fields];
-				if (step.role !== null || step.verify !== null || near) joins.push('JOIN parts p ON p.id = f.rowid');
-				if (step.role !== null) {
-					where.push('p.locator = ?');
-					params.push(step.role);
-				}
-				if (step.verify !== null) {
-					where.push('tl_bounded(p.text, ?)');
-					params.push(step.verify);
-				}
-				const sliceOn = candidates
-					? `f.rowid IN (SELECT id FROM ${content} WHERE source IN (SELECT source FROM ${candidates} WHERE source BETWEEN ? AND ?))`
-					: 'f.rowid BETWEEN ? AND ?';
-				where.push(sliceOn);
-				const select = `SELECT f.source AS source, -bm25(${step.table}) * ${WEIGHT_CASE} AS score${near ? ', p.text AS text' : ''}
-					FROM ${step.table} f ${joins.join(' ')} WHERE ${where.join(' AND ')}`;
-				const range = candidates ? scope : this.#range(content);
-				if (near) {
-					const upsert = `INSERT INTO ${table} (source, score) VALUES (?, ?) ON CONFLICT (source) DO UPDATE SET score = score + excluded.score`;
-					await this.#sliced(content, range, checkpoint, (lo, hi) => {
-						const rows = this.#db.selectArrays(select, [...params, lo, hi]);
-						const kept = rows.filter(([, , text]) => nearWithin(this.#tokenizer.tokens(text as string), near.left, near.right, near.distance));
-						this.#db.transaction(() => {
-							for (const [source, score] of kept) this.#exec(upsert, [source, score]);
-						});
-					});
-					return;
-				}
-				const sql = `WITH r AS MATERIALIZED (${select})
-					INSERT INTO ${table} (source, score) SELECT source, sum(score) FROM r WHERE 1 GROUP BY source
-					ON CONFLICT (source) DO UPDATE SET score = score + excluded.score`;
-				await this.#sliced(content, range, checkpoint, (lo, hi) => this.#exec(sql, [...params, lo, hi]));
+				const joined = step.role !== null || step.verify !== null || near !== null;
+				const restrict = candidates ? ` AND f.rowid IN (SELECT id FROM ${content} WHERE source IN (SELECT source FROM ${candidates}))` : '';
+				const sql = `SELECT f.source, f.field, -bm25(${step.table})${joined ? ', p.locator, p.text' : ''}
+					FROM ${step.table} f${joined ? ' JOIN parts p ON p.id = f.rowid' : ''} WHERE ${step.table} MATCH ?${restrict}`;
+				const fields = new Set<number>(step.fields);
+				const scores = new Map<number, number>();
+				await this.#stream(sql, [step.match], checkpoint, (row) => {
+					const field = row[1] as Field;
+					if (!fields.has(field)) return;
+					if (step.role !== null && row[3] !== step.role) return;
+					if (step.verify !== null && !bounded(row[4] as string, step.verify)) return;
+					if (near && !nearWithin(this.#tokenizer.tokens(row[4] as string), near.left, near.right, near.distance)) return;
+					const source = row[0] as number;
+					scores.set(source, (scores.get(source) ?? 0) + (row[2] as number) * WEIGHTS[field]);
+				});
+				await this.#fill(table, scores, checkpoint);
 				return;
 			}
 			case 'msgid': {
@@ -421,6 +412,40 @@ export class QueryEngine {
 				await this.#sliced('parts', range, checkpoint, (lo, hi) => this.#exec(sql, [...step.fields, step.needle, lo, hi]));
 				return;
 			}
+		}
+	}
+
+	async #stream(sql: string, params: readonly BindValue[], checkpoint: () => Promise<void>, onRow: (row: SqlValue[]) => void): Promise<void> {
+		const statement = this.#db.prepare(sql);
+		try {
+			statement.bind(params as BindValue[]);
+			for (let more = true; more; ) {
+				await checkpoint();
+				const until = performance.now() + TARGET_MS;
+				for (let n = 0; ; n++) {
+					more = statement.step();
+					if (!more) break;
+					onRow(statement.get([]));
+					if ((n & 255) === 255 && performance.now() > until) break;
+				}
+			}
+		} finally {
+			statement.finalize();
+		}
+	}
+
+	async #fill(table: string, scores: Map<number, number>, checkpoint: () => Promise<void>): Promise<void> {
+		const entries = [...scores];
+		const insert = this.#db.prepare(`INSERT INTO ${table} (source, score) VALUES (?, ?) ON CONFLICT (source) DO UPDATE SET score = score + excluded.score`);
+		try {
+			for (let i = 0; i < entries.length; i += FILL_BATCH) {
+				await checkpoint();
+				this.#atomic(() => {
+					for (const entry of entries.slice(i, i + FILL_BATCH)) insert.bind(entry).stepReset();
+				});
+			}
+		} finally {
+			insert.finalize();
 		}
 	}
 

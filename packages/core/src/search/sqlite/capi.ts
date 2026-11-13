@@ -14,6 +14,7 @@ declare module '@thelemail/sqlite-wasm' {
 
 	interface CApi {
 		readonly SQLITE_INTERRUPT: number;
+		sqlite3_get_autocommit(pDb: Pointer): number;
 		sqlite3_progress_handler(pDb: Pointer, ops: number, handler: ((arg: Pointer) => number) | 0, arg: Pointer): void;
 	}
 }
