@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Harness, document, randomDirectory, randomKey, removeDirectory } from './harness';
+import { ANALYZER_VERSION } from './analysis';
 import { SCHEMA_VERSION } from './schema';
 import { Coverage, Dimension, Field, Flag, SourceKind } from './types';
 
@@ -307,7 +308,7 @@ describe('encrypted file', () => {
 		const h = harness();
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
 		expect(await h.select("SELECT key, value FROM meta ORDER BY key")).toEqual([
-			['analyzer_version', 1],
+			['analyzer_version', ANALYZER_VERSION],
 			['schema_version', SCHEMA_VERSION]
 		]);
 		await h.call({ op: 'close' });
