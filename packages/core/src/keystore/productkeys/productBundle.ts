@@ -15,6 +15,7 @@ export const ENTRY = {
 	mailAlias: 'mail.alias',
 	mailImportDedup: 'mail.import-dedup',
 	mailSearchIndex: 'mail.search-index',
+	mailSearchRoot: 'mail.search-root',
 	calendarIdentity: 'calendar.identity'
 } as const;
 
@@ -67,6 +68,8 @@ function admissible(product: Product, e: Entry): boolean {
 				return e.profileId === PROFILE.mailImportDedup && e.availability === 'available' && e.material?.length === SECRET_LEN;
 			case ENTRY.mailSearchIndex:
 				return e.profileId === PROFILE.mailSearchIndex && e.availability === 'available' && e.material?.length === SECRET_LEN;
+			case ENTRY.mailSearchRoot:
+				return e.profileId === PROFILE.mailSearchRoot && e.availability === 'available' && e.material?.length === SECRET_LEN;
 		}
 		return false;
 	}
@@ -86,7 +89,7 @@ function checkEntries(product: Product, entries: Entry[], forbidden: Uint8Array[
 		if (held !== (e.material !== null && e.material.length > 0)) fail('malformed', 'material does not match availability');
 		if (e.material !== null && e.material.length === 0) fail('malformed', 'empty material');
 		if (!admissible(product, e)) fail('forbidden', `entry ${e.purpose}`);
-		if (e.purpose === ENTRY.mailImportDedup || e.purpose === ENTRY.mailSearchIndex) {
+		if (e.purpose === ENTRY.mailImportDedup || e.purpose === ENTRY.mailSearchIndex || e.purpose === ENTRY.mailSearchRoot) {
 			if (singletons.has(e.purpose)) fail('malformed', `repeated ${e.purpose}`);
 			singletons.add(e.purpose);
 		}

@@ -5,6 +5,7 @@ export const PROFILE = {
 	calendarIdentity: 'calendar-identity-v1',
 	mailImportDedup: 'mail-import-dedup-v1',
 	mailSearchIndex: 'mail-search-index-v1',
+	mailSearchRoot: 'mail-search-root-v1',
 	mailClassic: 'mail-classic-v1',
 	legacyImportPrefix: 'legacy-import-'
 } as const;
