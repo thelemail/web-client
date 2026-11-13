@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { accountTransition } from '$core/stores/accountTransition.svelte';
 	import { leavePending, settleForLeave } from '$core/stores/leaveGuard';
 	import { m } from '$paraglide/messages.js';
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
@@ -242,27 +243,33 @@
 		}
 		const target = accounts.byId(r.id);
 		if (!target) return;
-		auth.activate(target.accountId);
-		await goto(`/u/${target.slot}/mail/inbox`);
+		await accountTransition.run('switch', target.email ?? null, async () => {
+			auth.activate(target.accountId);
+			await goto(`/u/${target.slot}/mail/inbox`);
+		});
 	}
 
 	async function signOut() {
 		closeMenu(false);
-		const id = auth.accountId;
-		if (id) await auth.logoutAccount(id);
-		const remaining = accounts.list[0];
-		if (remaining) {
-			auth.activate(remaining.accountId);
-			await goto(`/u/${remaining.slot}/mail/inbox`);
-		} else {
-			await goto('/login');
-		}
+		await accountTransition.run('signout', null, async () => {
+			const id = auth.accountId;
+			if (id) await auth.logoutAccount(id);
+			const remaining = accounts.list[0];
+			if (remaining) {
+				auth.activate(remaining.accountId);
+				await goto(`/u/${remaining.slot}/mail/inbox`);
+			} else {
+				await goto('/login');
+			}
+		});
 	}
 
 	async function signOutAll() {
 		closeMenu(false);
-		await auth.logoutAll();
-		await goto('/login');
+		await accountTransition.run('signout', null, async () => {
+			await auth.logoutAll();
+			await goto('/login');
+		});
 	}
 
 	async function openCalendar() {

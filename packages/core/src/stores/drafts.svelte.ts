@@ -5,6 +5,7 @@ import type { DraftListItem } from '$core/api/types';
 import type { DraftDoc, DraftReplyMode } from '$core/mail/draft';
 import type { MessagePreview } from '$core/mail/preview';
 import { auth } from './auth.svelte';
+import { Latest } from '$core/async/latest';
 import { mailbox } from './mailbox.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -97,11 +98,16 @@ class DraftsStore {
 	#nextCursor: string | null = null;
 	#accountId: string | null = null;
 	#pending: Promise<void> | null = null;
-	#loaded = false;
+	#loaded = $state(false);
+	#latest = new Latest();
 	#removed = new Set<string>();
 
 	get count(): number {
 		return this.items.length;
+	}
+
+	get loaded(): boolean {
+		return this.#loaded;
 	}
 
 	setAccount(accountId: string | null): void {
@@ -113,6 +119,10 @@ class DraftsStore {
 		this.loadError = null;
 		this.#loaded = false;
 		this.#removed.clear();
+		this.loading = false;
+		this.loadingMore = false;
+		this.#pending = null;
+		this.#latest.invalidate();
 	}
 
 	async ensureLoaded(): Promise<void> {
@@ -148,7 +158,6 @@ class DraftsStore {
 		if (!this.items.some((i) => i.id === row.id)) void mailbox.refreshCounts();
 		const rest = this.items.filter((i) => i.id !== row.id);
 		this.items = [row, ...rest];
-		this.#loaded = true;
 	}
 
 	async #load(more: boolean, force = false): Promise<void> {
@@ -160,12 +169,13 @@ class DraftsStore {
 		if (more) this.loadingMore = true;
 		else this.loading = true;
 		this.loadError = null;
+		const token = this.#latest.begin();
 
 		const cursor = more ? (this.#nextCursor ?? undefined) : undefined;
 		const run = (async () => {
 			try {
 				const resp = await listDrafts({ limit: PAGE_SIZE, cursor });
-				if (this.#accountId !== accountId) return;
+				if (!this.#latest.isCurrent(token)) return;
 				const rows: DraftRow[] = [];
 				for (const item of resp.items) {
 					if (this.#removed.has(item.id)) continue;
@@ -176,18 +186,20 @@ class DraftsStore {
 						rows.push(fallbackRow(item));
 					}
 				}
-				if (this.#accountId !== accountId) return;
+				if (!this.#latest.isCurrent(token)) return;
 				this.items = more ? this.#mergeRows(this.items, rows) : rows;
 				this.#nextCursor = resp.nextCursor ?? null;
 				this.exhausted = !resp.nextCursor;
 				this.#loaded = true;
 			} catch (err) {
-				if (this.#accountId !== accountId) return;
+				if (!this.#latest.isCurrent(token)) return;
 				this.loadError = err instanceof Error ? err.message : m.store_drafts_load_failed();
 			} finally {
-				if (more) this.loadingMore = false;
-				else this.loading = false;
-				this.#pending = null;
+				if (this.#latest.isCurrent(token)) {
+					this.loading = false;
+					this.loadingMore = false;
+					this.#pending = null;
+				}
 			}
 		})();
 		this.#pending = run;

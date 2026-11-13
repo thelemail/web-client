@@ -199,6 +199,7 @@ export class CalendarStore {
 		this.loadError = null;
 		this.halted = null;
 		this.#cursor = null;
+		this.#loadPromise = null;
 		this.revision += 1;
 	}
 
@@ -276,10 +277,11 @@ export class CalendarStore {
 		}
 		const accountId = this.#accountId;
 		if (!accountId) return Promise.resolve();
-		this.#loadPromise = this.#load(accountId).finally(() => {
-			this.#loadPromise = null;
+		const run: Promise<void> = this.#load(accountId).finally(() => {
+			if (this.#loadPromise === run) this.#loadPromise = null;
 		});
-		return this.#loadPromise;
+		this.#loadPromise = run;
+		return run;
 	}
 
 	async #load(accountId: string): Promise<void> {
@@ -288,10 +290,12 @@ export class CalendarStore {
 		try {
 			await calendarKeys.ready(accountId);
 			const sync = await this.#db.sync(accountId);
+			if (this.#accountId !== accountId) return;
 			this.#cursor = sync?.cursor ?? null;
 			this.lastSyncAt = sync?.lastSyncAt ?? null;
 			if (sync?.loaded) {
 				await this.#hydrate();
+				if (this.#accountId !== accountId) return;
 				this.loaded = true;
 				this.start();
 				await this.syncDelta();
@@ -299,10 +303,12 @@ export class CalendarStore {
 				return;
 			}
 			await this.#fullLoad();
+			if (this.#accountId !== accountId) return;
 			this.loaded = true;
 			this.start();
 			await this.#ensurePersonal(accountId);
 		} catch (err) {
+			if (this.#accountId !== accountId) return;
 			this.loadError = err instanceof Error ? err.message : m.cal_store_load_failed();
 			this.#noteFailure(err);
 		} finally {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$core/assets/favicon.svg';
+	import AccountTransition from '$core/components/AccountTransition.svelte';
 
 	let { children } = $props();
 </script>
@@ -10,3 +11,4 @@
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </svelte:head>
 <div data-app-ready style="display: contents">{@render children()}</div>
+<AccountTransition />
