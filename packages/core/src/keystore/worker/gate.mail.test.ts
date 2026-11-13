@@ -88,6 +88,15 @@ describe('mail worker command gate', () => {
 		}
 	});
 
+	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'closeSearchSession'] as const)(
+		'runs %s for a mail vault and never for a legacy one',
+		(cmd) => {
+			expect(commandAllowed(cmd, { accountId: MAIL })).toBe(true);
+			expect(commandAllowed(cmd, { accountId: LOCKED_MAIL })).toBe(true);
+			expect(commandAllowed(cmd, { accountId: LEGACY })).toBe(false);
+		}
+	);
+
 	it('never runs calendar or auth commands', () => {
 		for (const cmd of [...calendarOnly, ...authOnly]) {
 			for (const accountId of [LEGACY, MAIL, LOCKED_MAIL, UNKNOWN]) {

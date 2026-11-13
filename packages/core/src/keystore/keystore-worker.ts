@@ -170,9 +170,12 @@ import {
 	handleSignReply
 } from './worker/calendar-ops';
 
+import type { CloseSearchSessionArgs, OpenSearchRootArgs } from './protocol';
+import { handleCloseSearchSession, handleOpenSearchRoot, SESSION_ONLY } from './worker/search-ops';
+
 declare const self: SharedWorkerGlobalScope;
 
-async function dispatch(port: MessagePort, msg: RequestMessage) {
+async function dispatch(port: MessagePort, msg: RequestMessage, transferred: readonly MessagePort[] = []) {
 	try {
 		if (!commandAllowed(msg.cmd, msg.args)) {
 			respondError(port, msg.id, new Error('command unavailable'));
@@ -544,6 +547,18 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 			case 'custodyCommit':
 				respond(port, msg.id, await handleCustodyCommit(msg.args as CustodyCommitArgs));
 				break;
+			case 'openSearchRoot':
+				respond(port, msg.id, await handleOpenSearchRoot({ ...(msg.args as OpenSearchRootArgs), port: transferred[0] }));
+				break;
+			case 'closeSearchSession':
+				handleCloseSearchSession(msg.args as CloseSearchSessionArgs);
+				respond(port, msg.id, undefined);
+				break;
+			case 'sealSearchArtifact':
+			case 'openSearchArtifact':
+			case 'deriveSearchDbKey':
+				respond(port, msg.id, SESSION_ONLY);
+				break;
 			case 'custodyRetire':
 				respond(port, msg.id, await handleCustodyRetire(msg.args as CustodyRetireArgs));
 				break;
@@ -562,7 +577,7 @@ self.onconnect = (event: MessageEvent) => {
 	const port = event.ports[0];
 	ports.add(port);
 	port.onmessage = (ev: MessageEvent<RequestMessage>) => {
-		void dispatch(port, ev.data);
+		void dispatch(port, ev.data, ev.ports);
 	};
 	port.start?.();
 };

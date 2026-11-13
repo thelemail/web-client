@@ -32,6 +32,11 @@ describe('calendar worker command gate', () => {
 		}
 	});
 
+	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'closeSearchSession'] as KeystoreCommand[])('refuses %s', (cmd) => {
+		expect(commandAllowed(cmd, { accountId: ACCOUNT })).toBe(false);
+		expect(commandAllowed(cmd, undefined)).toBe(false);
+	});
+
 	it('refuses mail keyring, account and auth commands', () => {
 		for (const cmd of ['loadAliasKeys', 'loadAccountKeys', 'listAccountKeys', 'createAliasKey', 'opaqueStartAuth', 'opaqueCompleteLoginUnlock', 'prepareKeyRotation', 'sealProductFork', 'prepareProductKeys', 'touch'] as KeystoreCommand[]) {
 			expect(commandAllowed(cmd, { accountId: ACCOUNT }), cmd).toBe(false);

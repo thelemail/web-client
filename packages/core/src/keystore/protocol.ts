@@ -939,7 +939,12 @@ export type KeystoreCommand =
 	| 'custodyStage'
 	| 'custodyCommit'
 	| 'custodyRetire'
-	| 'custodyDiscard';
+	| 'custodyDiscard'
+	| 'openSearchRoot'
+	| 'sealSearchArtifact'
+	| 'openSearchArtifact'
+	| 'deriveSearchDbKey'
+	| 'closeSearchSession';
 
 export type VaultMode = 'account' | 'mail' | 'calendar' | 'auth';
 
@@ -1028,8 +1033,67 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	custodyStage: ['account'],
 	custodyCommit: ['account', 'mail'],
 	custodyRetire: ['mail'],
-	custodyDiscard: ['account', 'mail']
+	custodyDiscard: ['account', 'mail'],
+	openSearchRoot: ['mail'],
+	sealSearchArtifact: ['mail'],
+	openSearchArtifact: ['mail'],
+	deriveSearchDbKey: ['mail'],
+	closeSearchSession: ['mail']
 };
+
+export interface OpenSearchRootArgs extends AccountScopedArgs {
+	bundle?: Uint8Array;
+	port: MessagePort;
+}
+
+export type OpenSearchRootResponse =
+	| { ok: true; generationId: string; unlockEpoch: number; bundle?: Uint8Array }
+	| { ok: false; code: 'locked' | 'unavailable' | 'stale_epoch' | 'invalid' };
+
+export type CloseSearchSessionArgs = AccountScopedArgs;
+
+export type SearchSessionRefusal = { ok: false; code: 'no_session' | 'invalid' | 'too_large' };
+
+export interface SearchArtifactRef {
+	kind: 'document' | 'vectors';
+	sourceKind: 'message' | 'draft' | 'scheduled';
+	sourceId: string;
+	contentRevision: number;
+	componentEpoch: number;
+	extractionRevision: number;
+}
+
+export interface SealSearchArtifactArgs extends SearchArtifactRef {
+	payload: Uint8Array;
+}
+
+export type SealSearchArtifactResponse = { ok: true; artifact: Uint8Array } | SearchSessionRefusal;
+
+export interface OpenSearchArtifactArgs extends SearchArtifactRef {
+	artifact: Uint8Array;
+}
+
+export type OpenSearchArtifactResponse = { ok: true; payload: Uint8Array } | SearchSessionRefusal;
+
+export interface DeriveSearchDbKeyArgs {
+	installationSalt: Uint8Array;
+}
+
+export type DeriveSearchDbKeyResponse = { ok: true; key: Uint8Array } | SearchSessionRefusal;
+
+export type SearchSessionCommand = 'sealSearchArtifact' | 'openSearchArtifact' | 'deriveSearchDbKey' | 'closeSearchSession';
+
+export interface SearchSessionRequest {
+	id: string;
+	cmd: SearchSessionCommand;
+	args?: unknown;
+}
+
+export interface SearchSessionResponse {
+	type: 'response';
+	id: string;
+	value: unknown;
+}
 
 export interface PrepareProductKeysArgs extends AccountScopedArgs {
 	scope: {

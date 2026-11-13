@@ -130,6 +130,16 @@ describe('commandVaultModes', () => {
 		}
 	});
 
+	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'closeSearchSession'] as const)(
+		'keeps %s in the mail vault alone, out of the calendar and auth workers',
+		(cmd) => {
+			expect(commandVaultModes[cmd]).toEqual(['mail']);
+			expect(commandVaultModes[cmd]).not.toContain('auth');
+			expect(commandVaultModes[cmd]).not.toContain('calendar');
+			expect(commandVaultModes[cmd]).not.toContain('account');
+		}
+	);
+
 	it('lets both product vaults adopt a handoff and no account vault', () => {
 		for (const cmd of ['adoptHandoff', 'commitHandoff', 'discardHandoff'] as const) {
 			expect(commandVaultModes[cmd]).toEqual(['mail', 'calendar']);
