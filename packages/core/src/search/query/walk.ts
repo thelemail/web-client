@@ -14,3 +14,7 @@ export function childrenOf(node: QueryNode): QueryNode[] {
 			return [];
 	}
 }
+
+export function conjuncts(node: QueryNode): QueryNode[] {
+	return node.kind === 'and' ? node.children.flatMap(conjuncts) : [node];
+}

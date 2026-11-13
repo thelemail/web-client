@@ -2,7 +2,12 @@ import { folderFromServer, type Message } from '$core/mail/data';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { searchIndex, type SearchResult } from '$core/search';
-import { collectionResolver, parseQuery, type CollectionResolver } from '$core/search/query';
+import { collectionResolver, type CollectionResolver } from '$core/search/preview';
+import { parseQuery } from '$core/search/query';
+import type { ParsedQuery, QueryError, QueryNode } from '$core/search/query/ast';
+import { queryErrorMessage } from '$core/search/query/messages';
+import { conjuncts } from '$core/search/query/walk';
+import { locale } from '$core/mail/locale.svelte';
 import { mailCollections } from './mailCollections.svelte';
 import type { SearchHit } from '$core/platform/types';
 import { platform } from '$platform';
@@ -18,6 +23,22 @@ function collections(): CollectionResolver {
 		mailCollections.labels.filter((l) => !l.sealed),
 		mailCollections.subtree
 	);
+}
+
+const TEXT_NODES = new Set<QueryNode['kind']>(['term', 'phrase', 'literal', 'prefix', 'and', 'or', 'around']);
+
+function isChip(node: QueryNode): boolean {
+	if (node.kind === 'not') return isChip(node.child);
+	return !TEXT_NODES.has(node.kind);
+}
+
+function parse(text: string): ReturnType<typeof parseQuery> {
+	return parseQuery(text, { now: Date.now(), timeZone: locale.timeZone });
+}
+
+interface Found {
+	messages: Message[];
+	error: QueryError | null;
 }
 
 function messageFromResult(result: SearchResult): Message {
@@ -95,7 +116,9 @@ class MailSearchStore {
 	indexed = $state(0);
 	indexing = $state(false);
 	complete = $state(false);
+	queryError = $state<QueryError | null>(null);
 
+	#query = $state.raw<ParsedQuery | null>(null);
 	#accountId: string | null = null;
 	#queryAccount: string | null = null;
 	#timer: ReturnType<typeof setTimeout> | undefined;
@@ -115,21 +138,16 @@ class MailSearchStore {
 		return this.active && !this.complete && !platform.mirror;
 	}
 
+	get error(): string | null {
+		return this.queryError ? queryErrorMessage(this.queryError) : null;
+	}
+
 	get chips(): string[] {
-		if (!this.active) return [];
-		const parsed = parseQuery(this.committed, collections());
-		const out: string[] = [];
-		for (const sender of parsed.from) out.push(`from:${sender}`);
-		if (parsed.folder) out.push(`in:${parsed.folder}`);
-		if (parsed.folderName !== null) out.push(`in:${parsed.folderName}`);
-		if (parsed.unknownFolder !== null) out.push(`in:${parsed.unknownFolder}`);
-		for (const name of parsed.labelNames) out.push(`label:${name}`);
-		if (parsed.unknownLabel !== null) out.push(`label:${parsed.unknownLabel}`);
-		if (parsed.unread === true) out.push('unread');
-		if (parsed.unread === false) out.push('read');
-		if (parsed.starred) out.push('starred');
-		if (parsed.hasAttachment) out.push('has attachment');
-		return out;
+		const root = this.#query?.root;
+		if (!this.active || !root) return [];
+		return conjuncts(root)
+			.filter(isChip)
+			.map((node) => this.committed.slice(node.range.start, node.range.end));
 	}
 
 	setAccount(accountId: string | null): void {
@@ -199,12 +217,17 @@ class MailSearchStore {
 		this.draft = query;
 		this.committed = query;
 		this.failed = false;
+		this.queryError = null;
+		this.#query = null;
 		if (!query.trim()) {
 			this.#run += 1;
 			this.results = [];
 			this.searching = false;
 			return;
 		}
+		const parsed = parse(query);
+		if (parsed.ok) this.#query = parsed.query;
+		else if (!platform.mirror) this.queryError = parsed.error;
 		this.searching = true;
 		this.#execute();
 	}
@@ -238,32 +261,41 @@ class MailSearchStore {
 		this.results = [];
 		this.searching = false;
 		this.failed = false;
+		this.queryError = null;
+		this.#query = null;
 		this.preview = [];
 		this.previewing = false;
 		this.indexed = 0;
 		this.complete = false;
 	}
 
-	async #search(query: string, limit: number): Promise<Message[]> {
+	async #search(text: string, query: ParsedQuery | null, limit: number): Promise<Found> {
 		const accountId = this.#accountId;
-		if (!accountId) return [];
 		const mirror = platform.mirror;
-		if (mirror) return (await mirror.search(accountId, query, limit)).map(messageFromHit);
-		return searchIndex.search(query, collections(), limit).map(messageFromResult);
+		if (!accountId) return { messages: [], error: null };
+		if (mirror) {
+			const hits = await mirror.search(accountId, text.trim(), limit);
+			return { messages: hits.map(messageFromHit), error: null };
+		}
+		if (!query) return { messages: [], error: null };
+		const outcome = searchIndex.search(query, collections(), limit);
+		if (!outcome.ok) return { messages: [], error: outcome.error };
+		return { messages: outcome.results.map(messageFromResult), error: null };
 	}
 
 	#execute(): void {
-		const query = this.committed.trim();
-		if (!this.#accountId || !query) {
+		const text = this.committed;
+		if (!this.#accountId || !text.trim() || (!platform.mirror && !this.#query)) {
 			this.results = [];
 			this.searching = false;
 			return;
 		}
 		const run = ++this.#run;
-		void this.#search(query, MIRROR_LIMIT).then(
+		void this.#search(text, this.#query, MIRROR_LIMIT).then(
 			(found) => {
 				if (run !== this.#run) return;
-				this.results = found;
+				this.results = found.messages;
+				this.queryError = found.error;
 				this.failed = false;
 				this.searching = false;
 			},
@@ -276,17 +308,18 @@ class MailSearchStore {
 	}
 
 	#executePreview(): void {
-		const query = this.draft.trim();
-		if (!this.#accountId || !query) {
+		const text = this.draft;
+		const parsed = text.trim() ? parse(text) : null;
+		if (!this.#accountId || !parsed || (!parsed.ok && !platform.mirror)) {
 			this.preview = [];
 			this.previewing = false;
 			return;
 		}
 		const run = ++this.#previewRun;
-		void this.#search(query, PREVIEW_LIMIT).then(
+		void this.#search(text, parsed.ok ? parsed.query : null, PREVIEW_LIMIT).then(
 			(found) => {
 				if (run !== this.#previewRun) return;
-				this.preview = found;
+				this.preview = found.messages;
 				this.previewing = false;
 			},
 			() => {

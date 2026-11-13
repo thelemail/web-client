@@ -1,5 +1,5 @@
 import type { Eligibility, QueryNode } from './ast';
-import { childrenOf } from './walk';
+import { childrenOf, conjuncts } from './walk';
 
 const MANDATORY_TEXT = new Set<QueryNode['kind']>(['phrase', 'literal']);
 
@@ -11,10 +11,6 @@ function scopedTextAllowed(node: QueryNode): boolean {
 	if (MANDATORY_TEXT.has(node.kind)) return true;
 	if (node.kind === 'and') return node.children.every(scopedTextAllowed);
 	return false;
-}
-
-function conjuncts(node: QueryNode): QueryNode[] {
-	return node.kind === 'and' ? node.children.flatMap(conjuncts) : [node];
 }
 
 export function eligibilityOf(root: QueryNode | null): Eligibility {

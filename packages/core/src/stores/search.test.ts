@@ -56,6 +56,14 @@ function result(id: string, subject: string, over: Partial<SearchResult['row']> 
 	};
 }
 
+function parsed(text: string) {
+	return expect.objectContaining({ root: expect.objectContaining({ kind: 'term', text }) });
+}
+
+function found(...results: SearchResult[]) {
+	return { ok: true, results };
+}
+
 beforeEach(() => {
 	indexSearch.mockReset();
 	indexSync.mockClear();
@@ -67,7 +75,7 @@ beforeEach(() => {
 describe('mailSearch on the web build', () => {
 	it('surfaces every index hit, whatever the mailbox has loaded', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('never-loaded', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('never-loaded', 'Permission slip')));
 
 		mailSearch.setText('permission');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
@@ -78,7 +86,7 @@ describe('mailSearch on the web build', () => {
 
 	it('files a hit under the folder its mailbox state names', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('m1', 'Invoice', { mailboxState: 'archive' })]);
+		indexSearch.mockReturnValue(found(result('m1', 'Invoice', { mailboxState: 'archive' })));
 
 		mailSearch.setText('invoice');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
@@ -88,9 +96,9 @@ describe('mailSearch on the web build', () => {
 
 	it('shows a sent hit as sent', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([
+		indexSearch.mockReturnValue(found(
 			result('m1', 'Invoice', { mailboxState: 'inbox', direction: 'sent' })
-		]);
+		));
 
 		mailSearch.setText('invoice');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
@@ -108,7 +116,7 @@ describe('mailSearch on the web build', () => {
 
 	it('debounces the preview rather than searching on every keystroke', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([]);
+		indexSearch.mockReturnValue(found());
 
 		mailSearch.setDraft('i');
 		mailSearch.setDraft('in');
@@ -116,12 +124,12 @@ describe('mailSearch on the web build', () => {
 		expect(indexSearch).not.toHaveBeenCalled();
 
 		await vi.waitFor(() => expect(indexSearch).toHaveBeenCalledTimes(1));
-		expect(indexSearch).toHaveBeenCalledWith('inv', expect.any(Object), 6);
+		expect(indexSearch).toHaveBeenCalledWith(parsed('inv'), expect.any(Object), 6);
 	});
 
 	it('drops results from a query the user has moved on from', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('stale', 'Stale')]);
+		indexSearch.mockReturnValue(found(result('stale', 'Stale')));
 		mailSearch.setText('stale');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
 
@@ -132,11 +140,11 @@ describe('mailSearch on the web build', () => {
 
 	it('re-runs the query as the index grows', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([]);
+		indexSearch.mockReturnValue(found());
 		mailSearch.setText('invoice');
 		await vi.waitFor(() => expect(indexSearch).toHaveBeenCalledTimes(1));
 
-		indexSearch.mockReturnValue([result('late', 'Invoice 42')]);
+		indexSearch.mockReturnValue(found(result('late', 'Invoice 42')));
 		for (const cb of subscribers) cb({ indexed: 900, complete: false });
 
 		await vi.waitFor(() => expect(mailSearch.results.map((m) => m.id)).toEqual(['late']));
@@ -145,7 +153,7 @@ describe('mailSearch on the web build', () => {
 
 	it('reports the search as partial until the index is complete', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([]);
+		indexSearch.mockReturnValue(found());
 		mailSearch.setText('invoice');
 		await vi.waitFor(() => expect(indexSearch).toHaveBeenCalled());
 
@@ -160,7 +168,7 @@ describe('mailSearch on the web build', () => {
 describe('mailSearch typing versus committing', () => {
 	it('previews while typing without touching the committed search', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
 
 		mailSearch.setDraft('permission');
 		await vi.waitFor(() => expect(mailSearch.preview).toHaveLength(1));
@@ -172,19 +180,19 @@ describe('mailSearch typing versus committing', () => {
 
 	it('drives the list only once the query is committed', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
 
 		mailSearch.setDraft('permission');
 		mailSearch.commit();
 
 		expect(mailSearch.active).toBe(true);
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
-		expect(indexSearch).toHaveBeenLastCalledWith('permission', expect.any(Object), 200);
+		expect(indexSearch).toHaveBeenLastCalledWith(parsed('permission'), expect.any(Object), 200);
 	});
 
 	it('keeps the committed search while the draft changes again', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
 		mailSearch.commit('permission');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
 
@@ -196,7 +204,7 @@ describe('mailSearch typing versus committing', () => {
 
 	it('keeps the search when started again for the same account', async () => {
 		const stop = mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
 		mailSearch.commit('permission');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
 
@@ -209,7 +217,7 @@ describe('mailSearch typing versus committing', () => {
 
 	it('forgets the search when the account changes', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
 		mailSearch.commit('permission');
 
 		mailSearch.setAccount('acc-2');
@@ -231,7 +239,7 @@ describe('mailSearch typing versus committing', () => {
 
 	it('patches a hit so actions on it show at once', async () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
 		mailSearch.commit('permission');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
 
@@ -244,35 +252,93 @@ describe('mailSearch typing versus committing', () => {
 describe('mailSearch filter chips', () => {
 	it('names the filters the query applied', () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([]);
-		mailSearch.setText('invoice from:anna is:unread has:attachment in:sent');
+		indexSearch.mockReturnValue(found());
+		mailSearch.setText('invoice from:anna is:unread has:attachment -in:sent subject:x');
 		expect(mailSearch.chips).toEqual([
 			'from:anna',
-			'in:sent',
-			'unread',
-			'has attachment'
+			'is:unread',
+			'has:attachment',
+			'-in:sent',
+			'subject:x'
 		]);
 	});
 
 	it('shows an unrecognised folder rather than hiding it', () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([]);
+		indexSearch.mockReturnValue(found());
 		mailSearch.setText('in:nowhere');
 		expect(mailSearch.chips).toEqual(['in:nowhere']);
 	});
 
 	it('has no chips for plain free text', () => {
 		mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([]);
+		indexSearch.mockReturnValue(found());
 		mailSearch.setText('invoice');
 		expect(mailSearch.chips).toEqual([]);
+	});
+});
+
+describe('mailSearch query errors', () => {
+	it('explains a query it cannot parse without searching', () => {
+		mailSearch.start('acc-1');
+		mailSearch.setText('"unclosed');
+		expect(indexSearch).not.toHaveBeenCalled();
+		expect(mailSearch.queryError).toMatchObject({ code: 'unterminated_quote' });
+		expect(mailSearch.error).toBe('A quote is missing its closing mark.');
+		expect(mailSearch.searching).toBe(false);
+		expect(mailSearch.results).toEqual([]);
+	});
+
+	it('names a Gmail-only filter', () => {
+		mailSearch.start('acc-1');
+		mailSearch.setText('category:social');
+		expect(mailSearch.error).toBe('category: is a Gmail feature that Thelemail does not have.');
+	});
+
+	it('passes on an error from the index', async () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue({ ok: false, error: { code: 'unavailable', range: { start: 0, end: 12 } } });
+		mailSearch.setText('body:invoice');
+		await vi.waitFor(() => expect(mailSearch.searching).toBe(false));
+		expect(mailSearch.error).toBe("Search can't check this part of your mail yet.");
+		expect(mailSearch.results).toEqual([]);
+	});
+
+	it('clears the error with the next query', async () => {
+		mailSearch.start('acc-1');
+		mailSearch.setText('(oops');
+		expect(mailSearch.error).not.toBeNull();
+		indexSearch.mockReturnValue(found(result('p1', 'Permission slip')));
+		mailSearch.setText('permission');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+		expect(mailSearch.error).toBeNull();
+	});
+
+	it('freezes the date snapshot when the query is committed', async () => {
+		vi.useFakeTimers({ now: Date.UTC(2026, 10, 13, 12), toFake: ['Date'] });
+		try {
+			mailSearch.start('acc-1');
+			indexSearch.mockReturnValue(found());
+			mailSearch.setText('newer_than:1d');
+			await vi.waitFor(() => expect(indexSearch).toHaveBeenCalled());
+			const query = indexSearch.mock.calls[0][0];
+			expect(query.snapshot.now).toBe(Date.UTC(2026, 10, 13, 12));
+			expect(query.root).toMatchObject({ kind: 'date', bound: 'after', at: Date.UTC(2026, 10, 12, 12) });
+			vi.setSystemTime(Date.UTC(2026, 10, 20));
+			subscribers.forEach((cb) => cb({ indexed: 5, complete: false }));
+			await vi.waitFor(() => expect(indexSearch.mock.calls.filter((c) => c[2] === 200)).toHaveLength(2));
+			const reruns = indexSearch.mock.calls.filter((c) => c[2] === 200);
+			expect(reruns[1][0]).toBe(query);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
 
 describe('mailSearch across accounts', () => {
 	it('drops the previous account results when the account changes', async () => {
 		const stop = mailSearch.start('acc-1');
-		indexSearch.mockReturnValue([result('from-acc-1', 'Invoice')]);
+		indexSearch.mockReturnValue(found(result('from-acc-1', 'Invoice')));
 		mailSearch.setText('invoice');
 		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
 
