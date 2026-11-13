@@ -79,6 +79,9 @@ export default defineConfig({
 			allow: [workspaceRoot]
 		}
 	},
+	optimizeDeps: {
+		exclude: ['@thelemail/sqlite-wasm']
+	},
 	resolve: {
 		alias: [
 			{ find: /^core-js\/stable$/, replacement: '/src/lib/empty-module.ts' },
