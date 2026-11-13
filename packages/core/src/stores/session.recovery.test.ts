@@ -14,6 +14,7 @@ vi.mock('$core/api/auth', () => ({
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		clear: vi.fn(),
+		closeSearchSession: vi.fn(async () => undefined),
 		clearAll: vi.fn(),
 		status: vi.fn(async () => ({ accounts: [] })),
 		subscribe: vi.fn(() => () => {}),
