@@ -211,7 +211,7 @@ function flagMeta(bit: number, set: boolean): Expr {
 }
 
 function attachmentMeta(where: string, params: BindValue[]): Expr {
-	return meta(`s.id IN (SELECT source FROM attachments WHERE ${where})`, params);
+	return meta(`EXISTS (SELECT 1 FROM attachments WHERE source = s.id AND (${where}))`, params);
 }
 
 function familyMimes(value: string): readonly string[] | null {
@@ -265,9 +265,9 @@ function hasMeta(value: HasValue): Expr {
 			return attachmentMeta(`lower(mime) IN (${placeholders(mimes.length)})`, [...mimes]);
 		}
 		case 'userlabels':
-			return meta('s.id IN (SELECT source FROM collections WHERE type = ?)', [COLLECTION_TYPE.label]);
+			return meta('EXISTS (SELECT 1 FROM collections WHERE source = s.id AND type = ?)', [COLLECTION_TYPE.label]);
 		case 'nouserlabels':
-			return meta('s.id NOT IN (SELECT source FROM collections WHERE type = ?)', [COLLECTION_TYPE.label]);
+			return meta('NOT EXISTS (SELECT 1 FROM collections WHERE source = s.id AND type = ?)', [COLLECTION_TYPE.label]);
 	}
 }
 
@@ -288,14 +288,14 @@ function filetypeMeta(value: string): Expr {
 
 function participantMeta(role: Role, addresses: readonly string[]): Expr {
 	if (!addresses.length) return NONE;
-	return meta(`s.id IN (SELECT source FROM participants WHERE role = ? AND address IN (${placeholders(addresses.length)}))`, [
+	return meta(`EXISTS (SELECT 1 FROM participants WHERE source = s.id AND role = ? AND address IN (${placeholders(addresses.length)}))`, [
 		role,
 		...addresses
 	]);
 }
 
 function collectionMeta(ids: readonly string[]): Expr {
-	return meta(`s.id IN (SELECT source FROM collections WHERE collection_id IN (${placeholders(ids.length)}))`, [...ids]);
+	return meta(`EXISTS (SELECT 1 FROM collections WHERE source = s.id AND collection_id IN (${placeholders(ids.length)}))`, [...ids]);
 }
 
 function dimsOf(fields: readonly Field[]): Dimension[] {
@@ -490,7 +490,7 @@ export function render(expr: Expr, plan: Plan, table: (leaf: number) => string):
 		case 'const':
 			return { sql: expr.value ? '1' : '0', params: [] };
 		case 'leaf':
-			return { sql: `s.id IN (SELECT source FROM ${table(expr.leaf)})`, params: [] };
+			return { sql: `EXISTS (SELECT 1 FROM ${table(expr.leaf)} WHERE source = s.id)`, params: [] };
 		case 'meta':
 			return { sql: expr.sql, params: expr.params };
 		case 'and':

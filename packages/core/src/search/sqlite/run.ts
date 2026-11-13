@@ -27,6 +27,7 @@ const STATEMENT_MS = 40;
 const PROGRESS_OPS = 1000;
 const FIRST_SLICE = 2048;
 const MAX_SLICE = 1 << 20;
+const MIN_SLICE = 64;
 const FILL_BATCH = 4096;
 
 export interface QueryOptions {
@@ -267,14 +268,14 @@ export class QueryEngine {
 			await checkpoint();
 			const b = Math.min(hi, a + size - 1);
 			const started = performance.now();
-			const outcome = this.#guarded(() => run(a, b), size > 1);
+			const outcome = this.#guarded(() => run(a, b), size > MIN_SLICE);
 			if (!outcome.ok) {
-				size = Math.max(1, size >> 1);
+				size = Math.max(MIN_SLICE, size >> 1);
 				continue;
 			}
 			const took = performance.now() - started;
 			if (took < TARGET_MS / 2) size = Math.min(MAX_SLICE, size * 2);
-			else if (took > TARGET_MS * 2) size = Math.max(1, size >> 1);
+			else if (took > TARGET_MS * 2) size = Math.max(MIN_SLICE, size >> 1);
 			a = b + 1;
 		}
 		this.#slices.set(kind, size);
@@ -323,7 +324,7 @@ export class QueryEngine {
 		const positive = plan.leaves.flatMap((l, k) => (l.positive ? [k] : []));
 		const exact = positive.filter((k) => plan.leaves[k].exact);
 		const score = positive.length ? positive.map((k) => `coalesce((SELECT score FROM ${table(k)} WHERE source = s.id), 0)`).join(' + ') : '0';
-		const tier = exact.length ? `(${exact.map((k) => `s.id IN (SELECT source FROM ${table(k)})`).join(' OR ')})` : '0';
+		const tier = exact.length ? `(${exact.map((k) => `EXISTS (SELECT 1 FROM ${table(k)} WHERE source = s.id)`).join(' OR ')})` : '0';
 		const sort = session.sort;
 		const order = orderBy(sort);
 		const matches = this.#table(session, 'm', 'source INTEGER PRIMARY KEY, grp TEXT NOT NULL, thread TEXT, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [`grp, ${order}`]);
