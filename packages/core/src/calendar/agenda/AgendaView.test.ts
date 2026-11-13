@@ -7,7 +7,12 @@ import { workspaces } from '$core/stores/workspaces.svelte';
 import { platformDomains } from '$core/stores/platformDomains.svelte';
 import AgendaView from './AgendaView.svelte';
 
-vi.mock('../store.svelte', () => ({ calendarStore: {} }));
+const store = vi.hoisted(() => ({
+	loaded: true,
+	loadError: null as string | null,
+	ensureLoaded: vi.fn(async () => {})
+}));
+vi.mock('../store.svelte', () => ({ calendarStore: store }));
 const session = vi.hoisted(() => ({ email: null as string | null }));
 
 vi.mock('$core/stores/auth.svelte', () => ({ auth: session }));
@@ -56,6 +61,8 @@ afterEach(() => {
 	workspaces.workspace = null;
 	workspaces.members = [];
 	session.email = null;
+	store.loaded = true;
+	store.loadError = null;
 });
 
 describe('AgendaView hero', () => {
@@ -96,5 +103,27 @@ describe('AgendaView hero', () => {
 		render(AgendaView);
 
 		expect(hero()).toContain('behind temail.org.');
+	});
+});
+
+describe('agenda before the calendar has loaded', () => {
+	it('does not claim an empty period while loading', () => {
+		store.loaded = false;
+		render(AgendaView);
+		expect(document.querySelector('.ag-empty')).toBeNull();
+	});
+
+	it('shows a failed load with a retry instead of an empty period', async () => {
+		store.loaded = false;
+		store.loadError = 'down';
+		const { getByRole } = render(AgendaView);
+		expect(document.querySelector('.ag-empty')).toBeNull();
+		getByRole('button', { name: /try again/i }).click();
+		expect(store.ensureLoaded).toHaveBeenCalled();
+	});
+
+	it('says the period is empty once loaded', () => {
+		render(AgendaView);
+		expect(document.querySelector('.ag-empty')).not.toBeNull();
 	});
 });

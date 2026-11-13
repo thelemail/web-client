@@ -5,6 +5,8 @@
 	import { ScrollArea } from '$core/components/ui/scroll-area';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
+	import { calendarStore } from '../store.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
 	import CapacityBar from './CapacityBar.svelte';
 	import TaskRow from './TaskRow.svelte';
 </script>
@@ -34,7 +36,15 @@
 	<ScrollArea class="min-h-0 flex-1">
 		<div class="tkpane-scroll">
 			<CapacityBar />
-			{#if !cal.taskGroups.length}
+			{#if !calendarStore.loaded && calendarStore.loadError}
+				<LoadState
+					kind="error"
+					label={m.cal_store_load_failed()}
+					onRetry={() => void calendarStore.ensureLoaded()}
+				/>
+			{:else if !calendarStore.loaded}
+				<LoadState kind="loading" label={m.common_loading()} rows={2} />
+			{:else if !cal.taskGroups.length}
 				<div class="tkgroup">{m.cal_tasks_empty()}</div>
 			{/if}
 			{#each cal.taskGroups as group (group.name)}

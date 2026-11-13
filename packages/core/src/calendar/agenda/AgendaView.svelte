@@ -11,6 +11,8 @@
 	import EventPopover from '../EventPopover.svelte';
 	import PrivacyChip from '../PrivacyChip.svelte';
 	import { cal } from '../state.svelte';
+	import { calendarStore } from '../store.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
 
 	let openKey = $state<string | null>(null);
 
@@ -38,7 +40,15 @@
 			<PrivacyChip tone="private" label={m.cal_agenda_encrypted_members()} />
 		</div>
 
-		{#if !cal.agendaDays.length}
+		{#if !calendarStore.loaded && calendarStore.loadError}
+			<LoadState
+				kind="error"
+				label={m.cal_store_load_failed()}
+				onRetry={() => void calendarStore.ensureLoaded()}
+			/>
+		{:else if !calendarStore.loaded}
+			<LoadState kind="loading" label={m.common_loading()} rows={3} />
+		{:else if !cal.agendaDays.length}
 			<div class="ag-empty">{m.cal_agenda_empty({ period: cal.title.toLowerCase() })}</div>
 		{/if}
 

@@ -13,15 +13,17 @@
 	import { observeNewMessage } from '$core/calendar/entry';
 	import { startReminders } from '$core/calendar/reminders';
 	import { cal } from '$core/calendar/state.svelte';
+	import { syncCalendarUrl } from '$core/calendar/urlState.svelte';
 	import { calendarStore } from '$core/calendar/store.svelte';
 	import { realtime } from '$core/realtime/realtime.svelte';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { auth } from '$core/stores/auth.svelte';
 	import { handOffToApp } from '$core/products';
-	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	let { children } = $props();
+
+	syncCalendarUrl();
 
 	onMount(() => realtime.start());
 
@@ -34,9 +36,8 @@
 		if (!accountId || !auth.canEnterApp) return;
 		ensureAccountData(accountId);
 		calendarStore.setAccount(accountId);
-		void calendarKeys
-			.ready(accountId)
-			.then(() => calendarStore.ensureLoaded())
+		void calendarStore
+			.ensureLoaded()
 			.then(() => {
 				const pending = takePending();
 				if (pending) {
