@@ -10,6 +10,7 @@ import { m } from '$paraglide/messages.js';
 
 const DEBOUNCE_MS = 180;
 const MIRROR_LIMIT = 200;
+const PREVIEW_LIMIT = 6;
 
 function collections(): CollectionResolver {
 	return collectionResolver(
@@ -84,9 +85,13 @@ function messageFromHit(hit: SearchHit): Message {
 }
 
 class MailSearchStore {
-	text = $state('');
+	draft = $state('');
+	committed = $state('');
 	results = $state<Message[]>([]);
 	searching = $state(false);
+	failed = $state(false);
+	preview = $state<Message[]>([]);
+	previewing = $state(false);
 	indexed = $state(0);
 	indexing = $state(false);
 	complete = $state(false);
@@ -95,10 +100,15 @@ class MailSearchStore {
 	#queryAccount: string | null = null;
 	#timer: ReturnType<typeof setTimeout> | undefined;
 	#run = 0;
+	#previewRun = 0;
 	#unsubscribe: (() => void) | null = null;
 
+	get text(): string {
+		return this.committed;
+	}
+
 	get active(): boolean {
-		return this.text.trim().length > 0;
+		return this.committed.trim().length > 0;
 	}
 
 	get partial(): boolean {
@@ -107,7 +117,7 @@ class MailSearchStore {
 
 	get chips(): string[] {
 		if (!this.active) return [];
-		const parsed = parseQuery(this.text, collections());
+		const parsed = parseQuery(this.committed, collections());
 		const out: string[] = [];
 		for (const sender of parsed.from) out.push(`from:${sender}`);
 		if (parsed.folder) out.push(`in:${parsed.folder}`);
@@ -144,6 +154,7 @@ class MailSearchStore {
 			this.indexed = progress.indexed;
 			this.complete = progress.complete;
 			if (this.active) this.#execute();
+			if (this.draft.trim()) this.#executePreview();
 		});
 		void this.refresh();
 		return () => {
@@ -168,60 +179,122 @@ class MailSearchStore {
 		}
 	}
 
-	setText(next: string): void {
-		this.text = next;
+	setDraft(next: string): void {
+		this.draft = next;
 		if (this.#timer !== undefined) clearTimeout(this.#timer);
+		this.#previewRun += 1;
 		if (!next.trim()) {
+			this.preview = [];
+			this.previewing = false;
+			return;
+		}
+		this.previewing = true;
+		this.#timer = setTimeout(() => this.#executePreview(), DEBOUNCE_MS);
+	}
+
+	commit(query: string = this.draft): void {
+		if (this.#timer !== undefined) clearTimeout(this.#timer);
+		this.#previewRun += 1;
+		this.previewing = false;
+		this.draft = query;
+		this.committed = query;
+		this.failed = false;
+		if (!query.trim()) {
 			this.#run += 1;
 			this.results = [];
 			this.searching = false;
 			return;
 		}
 		this.searching = true;
-		this.#timer = setTimeout(() => this.#execute(), DEBOUNCE_MS);
+		this.#execute();
+	}
+
+	setText(next: string): void {
+		this.commit(next);
 	}
 
 	clear(): void {
-		this.setText('');
+		this.setDraft('');
+		this.commit('');
+	}
+
+	findResult(id: string): Message | null {
+		return this.results.find((m) => m.id === id) ?? this.preview.find((m) => m.id === id) ?? null;
+	}
+
+	patch(id: string, patch: Partial<Message>): void {
+		const apply = (list: Message[]) =>
+			list.some((m) => m.id === id) ? list.map((m) => (m.id === id ? { ...m, ...patch } : m)) : list;
+		this.results = apply(this.results);
+		this.preview = apply(this.preview);
 	}
 
 	#reset(): void {
 		if (this.#timer !== undefined) clearTimeout(this.#timer);
 		this.#run += 1;
-		this.text = '';
+		this.#previewRun += 1;
+		this.draft = '';
+		this.committed = '';
 		this.results = [];
 		this.searching = false;
+		this.failed = false;
+		this.preview = [];
+		this.previewing = false;
 		this.indexed = 0;
 		this.complete = false;
 	}
 
-	#execute(): void {
+	async #search(query: string, limit: number): Promise<Message[]> {
 		const accountId = this.#accountId;
-		const query = this.text.trim();
-		if (!accountId || !query) {
+		if (!accountId) return [];
+		const mirror = platform.mirror;
+		if (mirror) return (await mirror.search(accountId, query, limit)).map(messageFromHit);
+		return searchIndex.search(query, collections(), limit).map(messageFromResult);
+	}
+
+	#execute(): void {
+		const query = this.committed.trim();
+		if (!this.#accountId || !query) {
 			this.results = [];
 			this.searching = false;
 			return;
 		}
 		const run = ++this.#run;
-		const mirror = platform.mirror;
-		if (mirror) {
-			void mirror
-				.search(accountId, query, MIRROR_LIMIT)
-				.then((hits) => {
-					if (run !== this.#run) return;
-					this.results = hits.map(messageFromHit);
-					this.searching = false;
-				})
-				.catch(() => {
-					if (run !== this.#run) return;
-					this.results = [];
-					this.searching = false;
-				});
+		void this.#search(query, MIRROR_LIMIT).then(
+			(found) => {
+				if (run !== this.#run) return;
+				this.results = found;
+				this.failed = false;
+				this.searching = false;
+			},
+			() => {
+				if (run !== this.#run) return;
+				this.failed = true;
+				this.searching = false;
+			}
+		);
+	}
+
+	#executePreview(): void {
+		const query = this.draft.trim();
+		if (!this.#accountId || !query) {
+			this.preview = [];
+			this.previewing = false;
 			return;
 		}
-		this.results = searchIndex.search(query, collections()).map(messageFromResult);
-		this.searching = false;
+		const run = ++this.#previewRun;
+		void this.#search(query, PREVIEW_LIMIT).then(
+			(found) => {
+				if (run !== this.#previewRun) return;
+				this.preview = found;
+				this.previewing = false;
+			},
+			() => {
+				if (run !== this.#previewRun) return;
+				this.preview = [];
+				this.previewing = false;
+			}
+		);
 	}
 }
 

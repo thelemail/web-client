@@ -106,17 +106,17 @@ describe('mailSearch on the web build', () => {
 		expect(indexSearch).not.toHaveBeenCalled();
 	});
 
-	it('debounces rather than searching on every keystroke', async () => {
+	it('debounces the preview rather than searching on every keystroke', async () => {
 		mailSearch.start('acc-1');
 		indexSearch.mockReturnValue([]);
 
-		mailSearch.setText('i');
-		mailSearch.setText('in');
-		mailSearch.setText('inv');
+		mailSearch.setDraft('i');
+		mailSearch.setDraft('in');
+		mailSearch.setDraft('inv');
 		expect(indexSearch).not.toHaveBeenCalled();
 
 		await vi.waitFor(() => expect(indexSearch).toHaveBeenCalledTimes(1));
-		expect(indexSearch).toHaveBeenCalledWith('inv', expect.any(Object));
+		expect(indexSearch).toHaveBeenCalledWith('inv', expect.any(Object), 6);
 	});
 
 	it('drops results from a query the user has moved on from', async () => {
@@ -139,7 +139,7 @@ describe('mailSearch on the web build', () => {
 		indexSearch.mockReturnValue([result('late', 'Invoice 42')]);
 		for (const cb of subscribers) cb({ indexed: 900, complete: false });
 
-		expect(mailSearch.results.map((m) => m.id)).toEqual(['late']);
+		await vi.waitFor(() => expect(mailSearch.results.map((m) => m.id)).toEqual(['late']));
 		expect(mailSearch.indexed).toBe(900);
 	});
 
@@ -154,6 +154,90 @@ describe('mailSearch on the web build', () => {
 
 		for (const cb of subscribers) cb({ indexed: 20, complete: true });
 		expect(mailSearch.partial).toBe(false);
+	});
+});
+
+describe('mailSearch typing versus committing', () => {
+	it('previews while typing without touching the committed search', async () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+
+		mailSearch.setDraft('permission');
+		await vi.waitFor(() => expect(mailSearch.preview).toHaveLength(1));
+
+		expect(mailSearch.active).toBe(false);
+		expect(mailSearch.results).toEqual([]);
+		expect(mailSearch.committed).toBe('');
+	});
+
+	it('drives the list only once the query is committed', async () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+
+		mailSearch.setDraft('permission');
+		mailSearch.commit();
+
+		expect(mailSearch.active).toBe(true);
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+		expect(indexSearch).toHaveBeenLastCalledWith('permission', expect.any(Object), 200);
+	});
+
+	it('keeps the committed search while the draft changes again', async () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		mailSearch.commit('permission');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+
+		mailSearch.setDraft('perm');
+
+		expect(mailSearch.committed).toBe('permission');
+		expect(mailSearch.results).toHaveLength(1);
+	});
+
+	it('keeps the search when started again for the same account', async () => {
+		const stop = mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		mailSearch.commit('permission');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+
+		mailSearch.setAccount('acc-1');
+
+		expect(mailSearch.committed).toBe('permission');
+		stop();
+		expect(mailSearch.committed).toBe('');
+	});
+
+	it('forgets the search when the account changes', async () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		mailSearch.commit('permission');
+
+		mailSearch.setAccount('acc-2');
+
+		expect(mailSearch.committed).toBe('');
+		expect(mailSearch.draft).toBe('');
+		expect(mailSearch.results).toEqual([]);
+	});
+
+	it('reports a failed search instead of an empty result', async () => {
+		platformState.mirror = { search: vi.fn(async () => Promise.reject(new Error('down'))) };
+		mailSearch.start('acc-1');
+
+		mailSearch.commit('invoice');
+
+		await vi.waitFor(() => expect(mailSearch.failed).toBe(true));
+		expect(mailSearch.searching).toBe(false);
+	});
+
+	it('patches a hit so actions on it show at once', async () => {
+		mailSearch.start('acc-1');
+		indexSearch.mockReturnValue([result('p1', 'Permission slip')]);
+		mailSearch.commit('permission');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+
+		mailSearch.patch('p1', { starred: true });
+
+		expect(mailSearch.findResult('p1')?.starred).toBe(true);
 	});
 });
 

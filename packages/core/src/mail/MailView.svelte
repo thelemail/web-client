@@ -149,6 +149,16 @@
 
 	const inFlight = new Map<string, Promise<void>>();
 
+	function findAny(id: string | null): Message | null {
+		if (!id) return null;
+		return mailbox.findMessage(id) ?? mailSearch.findResult(id);
+	}
+
+	function patchAny(id: string, patch: Partial<Message>) {
+		mailbox.patchMessage(id, patch);
+		mailSearch.patch(id, patch);
+	}
+
 	function flash(text: string, undo?: () => void, undoLabel?: string) {
 		show({ text, undo, undoLabel, tone: 'success' });
 	}
@@ -208,7 +218,7 @@
 
 	const baseList = $derived(
 		mailSearch.active
-			? mailSearch.results.map((hit) => mailbox.findMessage(hit.id) ?? hit)
+			? mailSearch.results.map((hit) => findAny(hit.id) ?? hit)
 			: snapshot.msgs
 	);
 
@@ -220,7 +230,7 @@
 		untrack(() => (stickyRow = trackOpenRow(rows, id, stickyRow)));
 	});
 
-	const list = $derived(withOpenRow(baseList, stickyRow, messageId, (id) => mailbox.findMessage(id)));
+	const list = $derived(withOpenRow(baseList, stickyRow, messageId, (id) => findAny(id)));
 
 	let listView = $state<{
 		scrollPosition: () => { view: string; top: number };
@@ -238,7 +248,7 @@
 	const openIndex = $derived(messageId ? list.findIndex((m) => m.id === messageId) : -1);
 	const prevId = $derived(openIndex > 0 ? list[openIndex - 1].id : null);
 	const nextId = $derived(openIndex >= 0 && openIndex < list.length - 1 ? list[openIndex + 1].id : null);
-	const selected = $derived(mailbox.findMessage(messageId));
+	const selected = $derived(findAny(messageId));
 
 	$effect(() => {
 		if (!supported || !auth.canEnterApp) return;
@@ -248,7 +258,7 @@
 	$effect(() => {
 		const id = messageId;
 		void deepLinkTick;
-		if (!id || mailbox.findMessage(id)) {
+		if (!id || findAny(id)) {
 			deepLink = null;
 			return;
 		}
@@ -351,7 +361,7 @@
 		action: StateAction,
 		errMsg: string
 	): Promise<void> {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return Promise.resolve();
 		const direction = directionFor(current);
 		const snap: Partial<Message> = {
@@ -359,18 +369,18 @@
 			starred: current.starred,
 			snoozedUntil: current.snoozedUntil ?? null
 		};
-		mailbox.patchMessage(id, optimistic);
+		patchAny(id, optimistic);
 		const prev = inFlight.get(id) ?? Promise.resolve();
 		const next = prev.then(async () => {
 			try {
 				const state = await action(id);
-				const target = mailbox.findMessage(id);
+				const target = findAny(id);
 				if (target) {
-					mailbox.patchMessage(id, applyServerState(target, state, direction));
+					patchAny(id, applyServerState(target, state, direction));
 				}
 				void mailbox.refreshCounts();
 			} catch {
-				mailbox.patchMessage(id, snap);
+				patchAny(id, snap);
 				fail(errMsg);
 			}
 		});
@@ -399,12 +409,12 @@
 		errMsg: string,
 		folderId?: string
 	): Promise<void> {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return Promise.resolve();
 		const members = mailbox.threadMembers(id);
 		const snaps = members.map((m) => ({ id: m.id, folder: m.folder, unread: m.unread }));
 		const rootId = current.threadRootId;
-		for (const m of members) mailbox.patchMessage(m.id, memberPatch(m, optimistic));
+		for (const m of members) patchAny(m.id, memberPatch(m, optimistic));
 		const prev = inFlight.get(id) ?? Promise.resolve();
 		const next = prev.then(async () => {
 			try {
@@ -415,7 +425,7 @@
 				}
 				void mailbox.refreshCounts();
 			} catch {
-				for (const s of snaps) mailbox.patchMessage(s.id, { folder: s.folder, unread: s.unread });
+				for (const s of snaps) patchAny(s.id, { folder: s.folder, unread: s.unread });
 				fail(errMsg);
 			}
 		});
@@ -429,7 +439,7 @@
 	}
 
 	function toggleStar(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		const wantStar = !current.starred;
 		void queueStateUpdate(
@@ -486,7 +496,7 @@
 	}
 
 	function moveToInbox(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		advancePast(id);
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
@@ -521,7 +531,7 @@
 	}
 
 	function unsnoozeOne(id: string, note?: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (current.folder === 'snoozed') advancePast(id);
 		const home = homeOf(current);
@@ -594,7 +604,7 @@
 		const outcome = await submitReport(accountId, id, {
 			kind: 'spam',
 			includeHeaders: share,
-			senderAddress: share ? mailbox.findMessage(id)?.fromAddr : undefined
+			senderAddress: share ? findAny(id)?.fromAddr : undefined
 		});
 		await moveToSpam(id);
 		return outcome;
@@ -611,7 +621,7 @@
 	}
 
 	function reported(id: string, kind: MessageReportKind, outcome: ReportOutcome) {
-		const alreadySpam = mailbox.findMessage(id)?.folder === 'spam';
+		const alreadySpam = findAny(id)?.folder === 'spam';
 		if (!alreadySpam) advancePast(id);
 		void moveToSpam(id);
 		const head = outcome.duplicate
@@ -628,7 +638,7 @@
 
 	function undoReport(id: string) {
 		dismissToast();
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		const home = homeOf(current);
 		const optimistic = { folder: home.route, returnsToArchive: false };
@@ -692,7 +702,7 @@
 		const out = new Map<string, Message>();
 		for (const id of ids) {
 			const members = isThread(id) ? mailbox.threadMembers(id) : [];
-			const own = mailbox.findMessage(id);
+			const own = findAny(id);
 			for (const m of own ? [own, ...members] : members) out.set(m.id, m);
 		}
 		return [...out.values()];
@@ -732,8 +742,8 @@
 				for (const r of results) {
 					if (r.outcome === 'too_many_labels') limited.add(r.messageId);
 					if (r.outcome === 'not_found') missing.add(r.messageId);
-					if (r.labelIds && mailbox.findMessage(r.messageId)) {
-						mailbox.patchMessage(r.messageId, { labels: r.labelIds });
+					if (r.labelIds && findAny(r.messageId)) {
+						patchAny(r.messageId, { labels: r.labelIds });
 					}
 				}
 			}
@@ -752,13 +762,13 @@
 		const expand = scope === 'conversation';
 		const local = expand
 			? selectionMessages(ids)
-			: ids.map((id) => mailbox.findMessage(id)).filter((m): m is Message => !!m);
+			: ids.map((id) => findAny(id)).filter((m): m is Message => !!m);
 		const snaps = local.map((m) => ({ id: m.id, labels: m.labels ?? [], labelCounts: m.labelCounts }));
 		const drop = new Set(remove);
 		for (const m of local) {
 			const patch: Partial<Message> = { labels: withLabelChanges(m.labels ?? [], add, drop) };
 			if (expand && ids.includes(m.id)) patch.labelCounts = countsAfter(m, add, drop);
-			mailbox.patchMessage(m.id, patch);
+			patchAny(m.id, patch);
 		}
 		accountSettings.recordRecents('labels', add);
 		const threaded = expand ? ids.filter(isThread) : [];
@@ -766,7 +776,7 @@
 			const targets = new Set(expand ? local.map((m) => m.id) : ids);
 			const fetched = await Promise.all(
 				threaded.map((id) => {
-					const m = mailbox.findMessage(id);
+					const m = findAny(id);
 					return m ? threadMessageIds(m.id, m.threadRootId) : Promise.resolve([]);
 				})
 			);
@@ -785,7 +795,7 @@
 			return 'ok';
 		} catch {
 			for (const snap of snaps) {
-				mailbox.patchMessage(snap.id, { labels: snap.labels, labelCounts: snap.labelCounts });
+				patchAny(snap.id, { labels: snap.labels, labelCounts: snap.labelCounts });
 			}
 			fail(msg.mail_reader_labels_failed());
 			void mailbox.refresh([query]);
@@ -807,7 +817,7 @@
 		scope: PickerScope = 'conversation'
 	): Promise<{ ok: number; failed: number }> {
 		const plan = ids.map((id) => {
-			const row = mailbox.findMessage(id);
+			const row = findAny(id);
 			const thread = scope === 'conversation' && isThread(id);
 			return { id, rootId: row?.threadRootId, members: row ? (thread ? mailbox.threadMembers(id) : [row]) : [], thread };
 		});
@@ -819,7 +829,7 @@
 				returnsToArchive: m.returnsToArchive
 			}))
 		);
-		for (const p of plan) for (const m of p.members) mailbox.patchMessage(m.id, memberPatch(m, movePatch(m, target)));
+		for (const p of plan) for (const m of p.members) patchAny(m.id, memberPatch(m, movePatch(m, target)));
 		const folderId = target.destination === 'folder' ? target.folderId : undefined;
 		try {
 			const groups = await Promise.all(
@@ -833,8 +843,8 @@
 						failedIds.add(r.messageId);
 						continue;
 					}
-					const known = mailbox.findMessage(r.messageId);
-					if (known) mailbox.patchMessage(r.messageId, applyServerState(known, r.state, known.direction));
+					const known = findAny(r.messageId);
+					if (known) patchAny(r.messageId, applyServerState(known, r.state, known.direction));
 				}
 			}
 			const failed = plan.filter((_, i) => groups[i].some((id) => failedIds.has(id))).length;
@@ -843,7 +853,7 @@
 			if (failed > 0) void mailbox.refresh([query]);
 			return { ok: plan.length - failed, failed };
 		} catch {
-			for (const s of snaps) mailbox.patchMessage(s.id, s);
+			for (const s of snaps) patchAny(s.id, s);
 			void mailbox.refresh([query]);
 			return { ok: 0, failed: plan.length };
 		}
@@ -932,7 +942,7 @@
 	}
 
 	function moveToFolder(id: string, folderId: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (current.folder === customFolderRoute(folderId)) return;
 		advancePast(id);
@@ -1114,7 +1124,7 @@
 	const openPickerName = $derived(picker?.anchor.dataset.picker ?? null);
 
 	function tallyFor(id: string): LabelTally[] {
-		const row = mailbox.findMessage(id);
+		const row = findAny(id);
 		if (!row) return [];
 		if (row.labelCounts && (row.threadCount ?? 1) > 1) {
 			return [{ counts: row.labelCounts, total: row.threadCount ?? 1 }];
@@ -1127,7 +1137,7 @@
 		if (sel) return labelStatesFromTallies([{ counts: sel.count.labelCounts, total: sel.count.messages }]);
 		if (entry) return labelStatesFromTallies([tallyOf(entry.labels)]);
 		if (scope === 'message') {
-			return labelStatesFromTallies(ids.map((id) => tallyOf(mailbox.findMessage(id)?.labels ?? [])));
+			return labelStatesFromTallies(ids.map((id) => tallyOf(findAny(id)?.labels ?? [])));
 		}
 		return labelStatesFromTallies(ids.flatMap(tallyFor));
 	}
@@ -1184,7 +1194,7 @@
 		if (picker.entry) return [home(picker.entry.folder)];
 		if (picker.query) return viewFolderId ? [query.folder] : [];
 		return picker.ids
-			.map((id) => mailbox.findMessage(id))
+			.map((id) => findAny(id))
 			.filter((m): m is Message => !!m)
 			.map((m) => home(m.folder));
 	});
@@ -1216,7 +1226,7 @@
 		}
 		if (picker.entry) return msg.mail_scope_message();
 		if (picker.ids.length > 1) {
-			const rows = picker.ids.map((id) => mailbox.findMessage(id)).filter((m): m is Message => !!m);
+			const rows = picker.ids.map((id) => findAny(id)).filter((m): m is Message => !!m);
 			const messages = rows.reduce((n, m) => n + Math.max(1, m.threadCount ?? 1), 0);
 			if (messages > rows.length) {
 				return msg.mail_scope_bulk({ count: rows.length, messages });
@@ -1226,7 +1236,7 @@
 	});
 
 	const pickerConversationSize = $derived(
-		picker?.scopeable ? (mailbox.findMessage(picker.ids[0])?.threadCount ?? mailbox.threadSize(picker.ids[0])) : 0
+		picker?.scopeable ? (findAny(picker.ids[0])?.threadCount ?? mailbox.threadSize(picker.ids[0])) : 0
 	);
 
 	const pickerTouchesConversation = $derived(
@@ -1280,7 +1290,7 @@
 	}
 
 	function entryForRow(id: string): EntryTarget | null {
-		const row = mailbox.findMessage(id);
+		const row = findAny(id);
 		if (!row) return null;
 		return { id: row.id, rootId: row.threadRootId ?? row.id, labels: row.labels ?? [], folder: row.folder };
 	}
@@ -1328,14 +1338,14 @@
 		const scope: PickerScope = current.entry ? 'message' : current.scope;
 		const roots = current.entry
 			? [current.entry.rootId]
-			: current.ids.map((id) => mailbox.findMessage(id)?.threadRootId ?? id);
+			: current.ids.map((id) => findAny(id)?.threadRootId ?? id);
 		void applyLabels(current.ids, add, remove, scope, roots).then((outcome) => {
 			if (outcome === 'ok') flash(msg.mail_toast_labels_updated());
 		});
 	}
 
 	function removeConversationLabel(id: string, labelId: string) {
-		const row = mailbox.findMessage(id);
+		const row = findAny(id);
 		const roots = row ? [row.threadRootId ?? row.id] : [];
 		void applyLabels([id], [], [labelId], 'conversation', roots).then((outcome) => {
 			if (outcome === 'ok') {
@@ -1358,7 +1368,7 @@
 	}
 
 	function restoreOne(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (messageId === id) {
 			const nextId = nextAfter(id);
@@ -1426,7 +1436,7 @@
 	}
 
 	function toggleRead(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (current.unread) markRead(id);
 		else markUnread(id);
@@ -1503,7 +1513,7 @@
 			checked = new Set();
 			const results = await Promise.allSettled(
 				ids.map((id) => {
-					const current = mailbox.findMessage(id);
+					const current = findAny(id);
 					const targetFolder = current?.direction === 'sent' ? 'sent' : 'inbox';
 					return isThread(id)
 						? queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore())
@@ -1756,6 +1766,8 @@
 			onAtTopChange={(v) => (atTop = v)}
 			searchActive={mailSearch.active}
 			searchPending={mailSearch.searching}
+			searchFailed={mailSearch.failed}
+			onRetrySearch={() => mailSearch.commit(mailSearch.committed)}
 			searchIndexed={mailSearch.indexed}
 			searchComplete={!mailSearch.partial}
 			searchChips={mailSearch.chips}

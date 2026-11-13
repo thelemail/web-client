@@ -98,6 +98,8 @@
 		onAtTopChange?: (atTop: boolean) => void;
 		searchActive?: boolean;
 		searchPending?: boolean;
+		searchFailed?: boolean;
+		onRetrySearch?: () => void;
 		searchIndexed?: number;
 		searchComplete?: boolean;
 		searchChips?: string[];
@@ -156,6 +158,8 @@
 		onAtTopChange,
 		searchActive = false,
 		searchPending = false,
+		searchFailed = false,
+		onRetrySearch,
 		searchIndexed = 0,
 		searchComplete = true,
 		searchChips = [],
@@ -180,7 +184,9 @@
 				: msg.mail_list_search_all_detail()
 	);
 	const emptyTitle = $derived(
-		searchActive
+		searchActive && searchFailed
+			? msg.mail_search_failed()
+			: searchActive
 			? searchPending
 				? msg.mail_list_searching()
 				: msg.mail_no_matches()
@@ -189,7 +195,9 @@
 				: msg.mail_list_folder_empty({ folder: viewName })
 	);
 	const emptyDetail = $derived(
-		searchActive
+		searchActive && searchFailed
+			? msg.mail_search_failed_detail()
+			: searchActive
 			? searchPending
 				? msg.mail_list_searching_detail()
 				: searchComplete
@@ -814,7 +822,9 @@
 				<span class="el-rule"></span>
 				<div class="t">{emptyTitle}</div>
 				<div class="d">{emptyDetail}</div>
-				{#if searchActive}
+				{#if searchActive && searchFailed && onRetrySearch}
+					<button class="empty-clear" onclick={onRetrySearch}><RefreshCw size={14} />{msg.common_retry()}</button>
+				{:else if searchActive}
 					<button class="empty-clear" onclick={onClearSearch}><X size={14} />{msg.mail_list_clear_search()}</button>
 				{:else if activeFilters > 0}
 					<button class="empty-clear" onclick={clearFilters}><X size={14} />{msg.mail_list_clear_filters()}</button>
