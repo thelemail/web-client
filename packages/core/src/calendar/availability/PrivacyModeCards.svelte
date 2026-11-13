@@ -49,7 +49,7 @@
 			await accountSettings.persistCalendar({ ...accountSettings.calendar, defaultPrivacy: mode });
 			cal.notify(NOTE[mode]());
 		} catch {
-			cal.notify(m.cal_privacy_save_failed());
+			cal.notify(m.cal_privacy_save_failed(), 'error');
 		}
 	}
 </script>

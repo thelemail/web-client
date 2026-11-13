@@ -4,7 +4,7 @@
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import { untrack } from 'svelte';
 	import Card from '../Card.svelte';
-	import LoadState from './LoadState.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { timeSince } from '$core/i18n/relative';

@@ -181,12 +181,12 @@
 		persist({ collapsed: [...next] });
 	}
 
-	let toast = $state<string | null>(null);
+	let toast = $state<{ text: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 	let announcement = $state('');
 
-	function flash(text: string) {
-		toast = text;
+	function flash(text: string, tone: 'success' | 'error' = 'success') {
+		toast = { text, tone };
 		announcement = text;
 		clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
@@ -205,7 +205,7 @@
 				total: order.length
 			});
 		} catch {
-			flash(m.mail_collection_reorder_failed());
+			flash(m.mail_collection_reorder_failed(), 'error');
 		}
 	}
 
@@ -227,7 +227,7 @@
 		try {
 			await mailCollections.setFavorite(entry.id, !entry.favorite);
 		} catch {
-			flash(m.mail_collection_favorite_failed());
+			flash(m.mail_collection_favorite_failed(), 'error');
 		}
 	}
 
@@ -235,7 +235,7 @@
 		try {
 			await mailCollections.recolor(entry.id, color);
 		} catch {
-			flash(m.mail_collection_update_failed());
+			flash(m.mail_collection_update_failed(), 'error');
 		}
 	}
 
@@ -640,5 +640,5 @@
 <CollectionDialogs bind:this={dialogs} onDeleted={deleted} />
 
 {#if toast}
-	<Toast text={toast} />
+	<Toast text={toast.text} tone={toast.tone} />
 {/if}

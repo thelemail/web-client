@@ -57,7 +57,7 @@
 	onMount(() => {
 		const stopClock = cal.startClock();
 		const stopReminders = startReminders((notice) =>
-			cal.notify(m.cal_reminder_toast({ title: notice.title, body: notice.body }))
+			cal.notify(m.cal_reminder_toast({ title: notice.title, body: notice.body }), 'info')
 		);
 		const stopMessages = calendarStore.onMessage((hint) => {
 			if (hint.id) void observeNewMessage(hint.id).catch(() => {});
@@ -184,5 +184,5 @@
 <ReadOnlyGuard />
 
 {#if cal.toast}
-	<Toast text={cal.toast} shift={124} />
+	<Toast text={cal.toast.text} tone={cal.toast.tone} shift={124} />
 {/if}

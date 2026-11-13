@@ -204,7 +204,7 @@ class CalendarState {
 	editor = $state<EditorRequest | null>(null);
 	calendarDialog = $state<CalendarDialogRequest | null>(null);
 	scope = $state<ScopeRequest | null>(null);
-	toast = $state<string | null>(null);
+	toast = $state<{ text: string; tone: 'success' | 'info' | 'error' } | null>(null);
 	now = $state(new Date());
 
 	#toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -220,9 +220,9 @@ class CalendarState {
 		};
 	}
 
-	notify(message: string) {
+	notify(message: string, tone: 'success' | 'info' | 'error' = 'success') {
 		clearTimeout(this.#toastTimer);
-		this.toast = message;
+		this.toast = { text: message, tone };
 		this.#toastTimer = setTimeout(() => (this.toast = null), 3200);
 	}
 
@@ -780,7 +780,7 @@ class CalendarState {
 					: m.cal_op_reopened({ title: next.title })
 			});
 		} catch (err) {
-			this.notify(err instanceof Error ? err.message : m.cal_task_update_failed());
+			this.notify(err instanceof Error ? err.message : m.cal_task_update_failed(), 'error');
 		}
 	}
 
@@ -792,7 +792,7 @@ class CalendarState {
 				current ? m.cal_op_ack_cleared() : m.cal_op_ack_marked()
 			);
 		} catch (err) {
-			this.notify(err instanceof Error ? err.message : m.cal_editor_save_failed());
+			this.notify(err instanceof Error ? err.message : m.cal_editor_save_failed(), 'error');
 		}
 	}
 
@@ -816,7 +816,7 @@ class CalendarState {
 					: m.cal_rsvp_saved_offline()
 			);
 		} catch (err) {
-			this.notify(err instanceof Error ? err.message : m.cal_rsvp_save_failed());
+			this.notify(err instanceof Error ? err.message : m.cal_rsvp_save_failed(), 'error');
 		}
 	}
 

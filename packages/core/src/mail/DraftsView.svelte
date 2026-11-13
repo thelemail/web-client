@@ -20,12 +20,12 @@
 
 	onMount(() => mailSearch.clear());
 
-	let toast = $state<{ text: string } | null>(null);
+	let toast = $state<{ text: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 
-	function flash(text: string) {
-		toast = { text };
+	function flash(text: string, tone: 'success' | 'error' = 'success') {
+		toast = { text, tone };
 		clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
 	}
@@ -56,7 +56,7 @@
 			await deleteDraft(d.id);
 			flash(m.mail_drafts_discarded());
 		} catch {
-			flash(m.mail_drafts_discard_failed());
+			flash(m.mail_drafts_discard_failed(), 'error');
 			void drafts.refresh();
 		}
 	}
@@ -169,7 +169,7 @@
 	</button>
 {/if}
 {#if toast}
-	<Toast text={toast.text} shift={131} />
+	<Toast text={toast.text} tone={toast.tone} shift={131} />
 {/if}
 
 <style>
