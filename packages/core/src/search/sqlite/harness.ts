@@ -1,4 +1,8 @@
+import type { QuerySnapshot } from '../query/ast';
+import { parseQuery } from '../query';
+import type { QueryContext } from './compile';
 import type { HarnessReply, HarnessRequest } from './harness.worker';
+import type { PageResult, QueryOptions, QueryOutcome, QuerySummary, ResultGroup } from './run';
 import { Coverage, Dimension, Field, Flag, Role, SourceKind, type SearchDocument } from './types';
 
 export class Harness {
@@ -69,3 +73,31 @@ export async function removeDirectory(name: string): Promise<void> {
 	const root = await navigator.storage.getDirectory().catch(() => null);
 	await root?.removeEntry(name, { recursive: true }).catch(() => {});
 }
+
+export interface Collected {
+	summary: QuerySummary;
+	groups: ResultGroup[];
+}
+
+export async function collect(
+	h: Harness,
+	input: string,
+	ctx: QueryContext,
+	options: Omit<QueryOptions, 'signal'>,
+	snapshot: QuerySnapshot = SNAPSHOT
+): Promise<Collected> {
+	const parsed = parseQuery(input, snapshot);
+	if (!parsed.ok) throw new Error(`parse ${input}: ${parsed.error.code}`);
+	const outcome = await h.call<QueryOutcome>({ op: 'query', token: 0, query: parsed.query, ctx, options });
+	if (!outcome.ok) throw new Error(`compile ${input}: ${outcome.error.code}`);
+	const groups: ResultGroup[] = [];
+	for (let i = 0; i < outcome.summary.pages; i++) {
+		const page = await h.call<PageResult>({ op: 'page', session: outcome.summary.id, index: i });
+		if (!page.ok) throw new Error(`page ${i}: ${page.reason}`);
+		groups.push(...page.groups);
+	}
+	await h.call({ op: 'closeQuery', session: outcome.summary.id });
+	return { summary: outcome.summary, groups };
+}
+
+export const SNAPSHOT: QuerySnapshot = { now: Date.UTC(2026, 10, 13, 12), timeZone: 'Europe/Lisbon' };

@@ -41,7 +41,7 @@ const STATEMENTS = {
 
 type StatementName = keyof typeof STATEMENTS;
 
-const COLLECTION_TYPE = { folder: 1, label: 2 } as const;
+export const COLLECTION_TYPE = { folder: 1, label: 2 } as const;
 
 function listOf(doc: SearchDocument): string | null {
 	return doc.listId ? listKey(doc.listId) : null;
