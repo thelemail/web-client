@@ -102,6 +102,19 @@ describe('hydrateThread', () => {
 		expect(renderDetail).toHaveBeenCalledTimes(1);
 	});
 
+	it('tries a body again after a failed render instead of keeping the failure', async () => {
+		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: [item('a'), item('b')] });
+		const thread = await hydrateThread('b');
+		renderDetail.mockRejectedValueOnce(new Error('decrypt'));
+
+		await expect(thread!.load('b')).resolves.toBeNull();
+		await Promise.resolve();
+		const retried = await thread!.load('b');
+
+		expect(retried?.srcDoc).toBe('<p>b</p>');
+		expect(renderDetail).toHaveBeenCalledTimes(2);
+	});
+
 	it('renders at most three bodies at once', async () => {
 		const ids = ['a', 'b', 'c', 'd', 'e', 'f'];
 		getMessageThread.mockResolvedValue({ threadRootId: 'a', items: ids.map((id) => item(id)) });

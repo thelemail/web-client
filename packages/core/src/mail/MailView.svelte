@@ -1,4 +1,7 @@
 <script lang="ts">
+	import ReaderSkeleton from './ReaderSkeleton.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -97,7 +100,8 @@
 	let checked = $state<Set<string>>(new Set());
 	let toast = $state<{ text: string; undo?: () => void; undoLabel?: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
-	let deepLinkMissing = $state(false);
+	let deepLink = $state<{ id: string; status: 'loading' | 'missing' | 'error'; error?: string } | null>(null);
+	let deepLinkTick = $state(0);
 	let pendingDelete = $state<{ ids: string[]; bulk: boolean } | null>(null);
 	let spamConsent = $state<{ resolve: (share: boolean | null) => void } | null>(null);
 	let spamConsentBusy = $state(false);
@@ -215,21 +219,22 @@
 
 	$effect(() => {
 		const id = messageId;
-		if (!id) {
-			deepLinkMissing = false;
-			return;
-		}
-		if (mailbox.findMessage(id)) {
-			deepLinkMissing = false;
+		void deepLinkTick;
+		if (!id || mailbox.findMessage(id)) {
+			deepLink = null;
 			return;
 		}
 		if (snapshot.loading) return;
-		deepLinkMissing = false;
-		void (async () => {
-			const got = await mailbox.ensureMessage(id);
-			if (!got && messageId === id) deepLinkMissing = true;
-		})();
+		if (untrack(() => deepLink)?.id === id && untrack(() => deepLink)?.status !== 'error') return;
+		deepLink = { id, status: 'loading' };
+		void mailbox.resolveMessage(id).then((found) => {
+			if (messageId !== id) return;
+			if (found.status === 'found') deepLink = null;
+			else deepLink = { id, status: found.status, error: found.status === 'error' ? found.error : undefined };
+		});
 	});
+
+	const deepLinkWait = delayed(() => deepLink?.status === 'loading', { key: () => deepLink?.id ?? null });
 
 	$effect(() => {
 		mailbox.pin(selected);
@@ -1731,12 +1736,27 @@
 			{showScope}
 		/>
 		<PaneDivider />
-		{#if messageId && !selected && deepLinkMissing}
+		{#if messageId && !selected && deepLink?.status === 'missing'}
 			<section class="reader reader-missing">
 				<p>{msg.mail_not_found()}</p>
 				<p class="sub">{msg.mail_not_found_detail()}</p>
 				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: viewName })}</a>
 			</section>
+		{:else if messageId && !selected && deepLink?.status === 'error'}
+			<section class="reader reader-missing">
+				<LoadState
+					kind="error"
+					label={msg.mail_reader_open_failed()}
+					onRetry={() => (deepLinkTick += 1)}
+				/>
+				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: viewName })}</a>
+			</section>
+		{:else if messageId && !selected}
+			{#if deepLinkWait.visible}
+				<ReaderSkeleton onBack={() => closeMessage({ replace: true })} />
+			{:else}
+				<section class="reader" aria-busy="true" aria-label={msg.mail_reader_loading_message()}></section>
+			{/if}
 		{:else}
 			<Reader
 				m={selected}
