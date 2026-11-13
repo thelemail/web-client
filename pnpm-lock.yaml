@@ -471,8 +471,8 @@ importers:
         specifier: ^13.3.0
         version: 13.3.0
       '@thelemail/sqlite-wasm':
-        specifier: link:../../../sqlite-wasm
-        version: link:../../../sqlite-wasm
+        specifier: 3.54.0-mc2.6.1
+        version: 3.54.0-mc2.6.1
       '@tiptap/core':
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/pm@3.31.3)
@@ -1400,6 +1400,10 @@ packages:
         optional: true
       vitest:
         optional: true
+
+  '@thelemail/sqlite-wasm@3.54.0-mc2.6.1':
+    resolution: {integrity: sha512-jFMyIkDPgOwY9WulseDoALEVedAWj1CD0WVdwMEbiSB1+/pC6Onhiel+Ejx45+sVPq1l46bPRGa79Zdn2NVgdw==}
+    engines: {node: '>=24'}
 
   '@tiptap/core@3.31.3':
     resolution: {integrity: sha512-Cz50pvciQrxdSxgTkHOVz0uD0Yl/8Xt0QatGD6ILm47jW8EzyHR9RkUGs/D5IqzXKuVPntfw1ttaT926vXfiRg==}
@@ -3179,6 +3183,8 @@ snapshots:
     optionalDependencies:
       vite: 8.3.5(@types/node@26.6.5)(jiti@2.7.0)
       vitest: 4.1.12(@types/node@26.6.5)(@vitest/browser-playwright@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
+
+  '@thelemail/sqlite-wasm@3.54.0-mc2.6.1': {}
 
   '@tiptap/core@3.31.3(@tiptap/pm@3.31.3)':
     dependencies:

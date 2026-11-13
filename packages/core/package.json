@@ -12,7 +12,7 @@
     "@scure/bip39": "^2.2.0",
     "@serenity-kit/opaque": "1.1.0",
     "@simplewebauthn/browser": "^13.3.0",
-    "@thelemail/sqlite-wasm": "link:../../../sqlite-wasm",
+    "@thelemail/sqlite-wasm": "3.54.0-mc2.6.1",
     "@tiptap/core": "^3.31.3",
     "@tiptap/extension-image": "^3.31.3",
     "@tiptap/extension-link": "^3.31.3",

@@ -76,7 +76,7 @@ export default defineConfig({
 	envDir: workspaceRoot,
 	server: {
 		fs: {
-			allow: [workspaceRoot, '../../../sqlite-wasm']
+			allow: [workspaceRoot]
 		}
 	},
 	optimizeDeps: {
