@@ -13,6 +13,7 @@
 	import { mailSearch } from '$core/stores/search.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
+	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { deleteDraft } from '$core/api/drafts';
 	import { auth } from '$core/stores/auth.svelte';
@@ -74,8 +75,8 @@
 		<div class="list-h">
 			<h1 class="ttl">
 				<span class="ttl-name">{m.mailbox_folder_drafts()}</span>
-				{#if drafts.count > 0}
-					<span class="ttl-ct">{drafts.count}</span>
+				{#if mailbox.counts.drafts > 0}
+					<span class="ttl-ct">{mailbox.counts.drafts}</span>
 				{/if}
 			</h1>
 			<div class="lh-actions">

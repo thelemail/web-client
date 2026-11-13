@@ -81,7 +81,7 @@
 			starred: mailbox.counts.starred,
 			spam: mailbox.counts.spam,
 			snoozed: mailbox.counts.snoozed,
-			drafts: drafts.count,
+			drafts: mailbox.counts.drafts,
 			scheduled: scheduled.count
 		}}
 		folderCounts={mailbox.counts.folders}

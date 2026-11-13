@@ -25,6 +25,11 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Search from '@lucide/svelte/icons/search';
 	import MessageRow from './MessageRow.svelte';
+	import ListSkeleton from './ListSkeleton.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
+	import WifiOff from '@lucide/svelte/icons/wifi-off';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import {
 		bucketFromEpoch,
 		dayBucketLabel,
@@ -44,7 +49,7 @@
 	export type BulkAction = 'read' | 'archive' | 'spam' | 'trash' | 'restore' | 'delete';
 
 	interface Props {
-		folderLabel: string;
+		folderLabel: string | null;
 		folderUnread?: number;
 		list: Message[];
 		activeId: string | null;
@@ -80,6 +85,11 @@
 		exhausted?: boolean;
 		loadingMore?: boolean;
 		loadMoreError?: string | null;
+		loaded?: boolean;
+		loadError?: string | null;
+		listRefreshing?: boolean;
+		offline?: boolean;
+		onRetry?: () => void;
 		onLoadMore?: () => void;
 		returnedCount?: number;
 		onDismissReturned?: () => void;
@@ -133,6 +143,11 @@
 		exhausted = false,
 		loadingMore = false,
 		loadMoreError = null,
+		loaded = true,
+		loadError = null,
+		listRefreshing = false,
+		offline = false,
+		onRetry,
 		onLoadMore = () => {},
 		returnedCount = 0,
 		onDismissReturned,
@@ -149,6 +164,8 @@
 		showScope = false
 	}: Props = $props();
 
+	const viewName = $derived(folderLabel ?? '');
+	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
 	const fmt = (n: number) => new Intl.NumberFormat().format(n);
@@ -169,7 +186,7 @@
 				: msg.mail_no_matches()
 			: activeFilters > 0
 				? msg.mail_list_nothing_matches()
-				: msg.mail_list_folder_empty({ folder: folderLabel })
+				: msg.mail_list_folder_empty({ folder: viewName })
 	);
 	const emptyDetail = $derived(
 		searchActive
@@ -436,7 +453,7 @@
 			>
 			<span class="cnt">
 				{inQuery
-					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: folderLabel })
+					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: viewName })
 					: msg.mail_list_selected({ count: checked.size })}
 			</span>
 			<div class="grow"></div>
@@ -502,7 +519,11 @@
 	{:else}
 		<div class="list-h">
 			<h1 class="ttl">
-				<span class="ttl-name">{folderLabel}</span>
+				{#if folderLabel !== null}
+					<span class="ttl-name">{folderLabel}</span>
+				{:else}
+					<span class="ttl-name ttl-wait" aria-hidden="true"></span>
+				{/if}
 				{#if folderUnread > 0}
 					<span class="ttl-ct" title={msg.mail_list_unread_count({ count: fmt(folderUnread) })}>
 						<span aria-hidden="true">{fmt(folderUnread)}</span>
@@ -680,7 +701,7 @@
 	{:else if inQuery}
 		<div class="sel-strip" role="status">
 			<span class="sel-text">
-				{msg.mail_selection_all_matching({ count: fmt(querySelected ?? 0), view: folderLabel })}
+				{msg.mail_selection_all_matching({ count: fmt(querySelected ?? 0), view: viewName })}
 			</span>
 			{#if onClearSelection}
 				<button type="button" class="sel-act" onclick={onClearSelection}>{msg.mail_list_clear_selection()}</button>
@@ -698,7 +719,7 @@
 				>
 					{matchingTotal === null
 						? msg.mail_selection_counting()
-						: msg.mail_selection_select_matching({ count: fmt(matchingTotal), view: folderLabel })}
+						: msg.mail_selection_select_matching({ count: fmt(matchingTotal), view: viewName })}
 				</button>
 			{/if}
 		</div>
@@ -707,7 +728,7 @@
 			<span class="sel-text">{msg.mail_selection_search_loaded({ count: checked.size })}</span>
 		</div>
 	{/if}
-	<div class="scroll" bind:this={scrollEl}>
+	<div class="scroll" bind:this={scrollEl} aria-busy={listRefreshing || undefined}>
 		{#if pendingCount > 0}
 			<button type="button" class="new-strip" onclick={flushPending}>
 				<ArrowUp size={14} />
@@ -734,7 +755,29 @@
 				{/each}
 			</div>
 		{/if}
-		{#if list.length === 0}
+		{#if !searchActive && offline}
+			<div class="state-strip" role="status">
+				<WifiOff size={14} />
+				<span>{msg.mail_list_offline()}</span>
+			</div>
+		{:else if !searchActive && loaded && loadError}
+			<div class="state-strip warn" role="status">
+				<CircleAlert size={14} />
+				<span>{msg.mail_list_refresh_failed()}</span>
+				{#if onRetry}
+					<button type="button" class="state-retry" onclick={onRetry}>{msg.common_retry()}</button>
+				{/if}
+			</div>
+		{/if}
+		{#if !searchActive && !loaded && loadError}
+			<div class="list-state">
+				<LoadState kind="error" label={msg.mail_list_load_failed()} {onRetry} />
+			</div>
+		{:else if !searchActive && (!loaded || firstLoad.visible)}
+			{#if firstLoad.visible}
+				<ListSkeleton />
+			{/if}
+		{:else if list.length === 0}
 			<div class="empty-list">
 				<span class="el-rule"></span>
 				<div class="t">{emptyTitle}</div>
@@ -780,7 +823,7 @@
 					<button class="lf-retry" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
-				{:else if exhausted && list.length > 0}
+				{:else if exhausted && list.length > 0 && !offline}
 					<span class="lf-hair"></span>
 					<span class="lf-text">{msg.mail_list_end()}</span>
 					<span class="lf-hair"></span>

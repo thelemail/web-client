@@ -5,6 +5,7 @@ import type { DraftListItem } from '$core/api/types';
 import type { DraftDoc, DraftReplyMode } from '$core/mail/draft';
 import type { MessagePreview } from '$core/mail/preview';
 import { auth } from './auth.svelte';
+import { mailbox } from './mailbox.svelte';
 import { m } from '$paraglide/messages.js';
 
 export interface DraftRow {
@@ -139,10 +140,12 @@ class DraftsStore {
 	remove(id: string): void {
 		this.#removed.add(id);
 		this.items = this.items.filter((i) => i.id !== id);
+		void mailbox.refreshCounts();
 	}
 
 	upsertLocal(row: DraftRow): void {
 		this.#removed.delete(row.id);
+		if (!this.items.some((i) => i.id === row.id)) void mailbox.refreshCounts();
 		const rest = this.items.filter((i) => i.id !== row.id);
 		this.items = [row, ...rest];
 		this.#loaded = true;

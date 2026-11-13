@@ -95,7 +95,7 @@
 	const caps = $derived(mailActionsFor(query.folder));
 
 	let checked = $state<Set<string>>(new Set());
-	let toast = $state<{ text: string; undo?: () => void; undoLabel?: string } | null>(null);
+	let toast = $state<{ text: string; undo?: () => void; undoLabel?: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 	let deepLinkMissing = $state(false);
 	let pendingDelete = $state<{ ids: string[]; bulk: boolean } | null>(null);
@@ -123,14 +123,15 @@
 	const showScope = $derived(mailCollections.hasChildren(viewFolderId ?? viewLabelId));
 	const sort = $derived<SortId>(query.sort);
 
-	const folderLabel = $derived(
+	const folderLabel = $derived<string | null>(
 		query.folder === 'starred'
 			? msg.mail_folder_starred()
 			: (FOLDERS.find((f) => f.id === query.folder)?.label ??
 				mailCollections.folder(viewFolderId)?.name ??
 				mailCollections.label(viewLabelId)?.name ??
-				msg.mail_folder_inbox())
+				null)
 	);
+	const viewName = $derived(folderLabel ?? '');
 
 	const folderUnread = $derived.by(() => {
 		const c = mailbox.counts;
@@ -144,9 +145,17 @@
 	const inFlight = new Map<string, Promise<void>>();
 
 	function flash(text: string, undo?: () => void, undoLabel?: string) {
-		toast = { text, undo, undoLabel };
+		show({ text, undo, undoLabel, tone: 'success' });
+	}
+
+	function fail(text: string, undo?: () => void, undoLabel?: string) {
+		show({ text, undo, undoLabel, tone: 'error' });
+	}
+
+	function show(next: NonNullable<typeof toast>) {
+		toast = next;
 		clearTimeout(toastTimer);
-		toastTimer = setTimeout(() => (toast = null), undo ? 7000 : 2600);
+		toastTimer = setTimeout(() => (toast = null), next.undo ? 7000 : next.tone === 'error' ? 5000 : 2600);
 	}
 
 	function dismissToast() {
@@ -291,9 +300,11 @@
 	const titleUnread = $derived(viewUnread > 99 ? '99+' : String(viewUnread));
 
 	const pageTitle = $derived(
-		viewUnread > 0
-			? msg.mail_page_title_unread({ count: titleUnread, folder: folderLabel })
-			: msg.mail_page_title({ folder: folderLabel })
+		folderLabel === null
+			? 'Thelemail'
+			: viewUnread > 0
+				? msg.mail_page_title_unread({ count: titleUnread, folder: folderLabel })
+				: msg.mail_page_title({ folder: folderLabel })
 	);
 
 	const allChecked = $derived(list.length > 0 && list.every((m) => checked.has(m.id)));
@@ -326,7 +337,7 @@
 				void mailbox.refreshCounts();
 			} catch {
 				mailbox.patchMessage(id, snap);
-				flash(errMsg);
+				fail(errMsg);
 			}
 		});
 		inFlight.set(
@@ -365,13 +376,13 @@
 			try {
 				const res = await applyToThread(id, rootId, verb, folderId);
 				if (res.failed > 0) {
-					flash(errMsg);
+					fail(errMsg);
 					await mailbox.refresh([query]);
 				}
 				void mailbox.refreshCounts();
 			} catch {
 				for (const s of snaps) mailbox.patchMessage(s.id, { folder: s.folder, unread: s.unread });
-				flash(errMsg);
+				fail(errMsg);
 			}
 		});
 		inFlight.set(
@@ -561,7 +572,7 @@
 		advancePast(id);
 		void reportAndSpam(id, share).then(
 			() => flash(msg.mail_toast_reported_spam(), () => undoReport(id)),
-			() => flash(msg.mail_err_report())
+			() => fail(msg.mail_err_report())
 		);
 	}
 
@@ -730,11 +741,11 @@
 			for (const root of rootIds) mailbox.touchThread(root);
 			if (threaded.length > 0 || limited.length > 0 || missing.length > 0) void mailbox.refresh([query]);
 			if (limited.length > 0) {
-				flash(msg.mail_err_too_many_labels());
+				fail(msg.mail_err_too_many_labels());
 				return 'limit';
 			}
 			if (missing.length > 0) {
-				flash(msg.mail_bulk_labels_partial({ failed: missing.length }));
+				fail(msg.mail_bulk_labels_partial({ failed: missing.length }));
 				return 'limit';
 			}
 			return 'ok';
@@ -742,7 +753,7 @@
 			for (const snap of snaps) {
 				mailbox.patchMessage(snap.id, { labels: snap.labels, labelCounts: snap.labelCounts });
 			}
-			flash(msg.mail_reader_labels_failed());
+			fail(msg.mail_reader_labels_failed());
 			void mailbox.refresh([query]);
 			return 'failed';
 		}
@@ -852,7 +863,7 @@
 			void mailbox.refreshCounts();
 			flash(target === 'spam' ? msg.mail_toast_moved_spam() : msg.mail_toast_moved_trash());
 		} catch {
-			flash(target === 'spam' ? msg.mail_err_move_spam() : msg.mail_err_move_trash());
+			fail(target === 'spam' ? msg.mail_err_move_spam() : msg.mail_err_move_trash());
 		}
 	}
 
@@ -866,7 +877,8 @@
 		if (scope === 'message') {
 			const { failed } = await moveMany(ids, { destination: 'archive' }, 'message');
 			void mailbox.refresh([query]);
-			flash(failed > 0 ? msg.mail_err_archive() : msg.mail_toast_moved_to_label({ label }));
+			if (failed > 0) fail(msg.mail_err_archive());
+			else flash(msg.mail_toast_moved_to_label({ label }));
 			return;
 		}
 		void queueArchive(ids[0]);
@@ -983,7 +995,7 @@
 		void mailbox.refresh([query]);
 		void mailbox.refreshCounts();
 		if (outcome === 'error') {
-			flash(msg.mail_selection_failed({ done, total }));
+			fail(msg.mail_selection_failed({ done, total }));
 			return;
 		}
 		if (outcome === 'stopped') {
@@ -993,11 +1005,11 @@
 		const limited = [...failures.values()].filter((o) => o === 'too_many_labels').length;
 		const retryable = [...failures].filter(([, o]) => o !== 'too_many_labels').map(([id]) => id);
 		if (limited > 0 && retryable.length === 0) {
-			flash(msg.mail_err_too_many_labels());
+			fail(msg.mail_err_too_many_labels());
 			return;
 		}
 		if (retryable.length > 0) {
-			flash(
+			fail(
 				msg.mail_selection_some_failed({ count: retryable.length }),
 				() => {
 					dismissToast();
@@ -1166,7 +1178,7 @@
 	const pickerScopeText = $derived.by(() => {
 		if (!picker) return '';
 		if (picker.query) {
-			return msg.mail_scope_query({ count: formatCount(picker.query.count.units), view: folderLabel });
+			return msg.mail_scope_query({ count: formatCount(picker.query.count.units), view: viewName });
 		}
 		if (picker.entry) return msg.mail_scope_message();
 		if (picker.ids.length > 1) {
@@ -1351,11 +1363,14 @@
 			if (fromBulk) checked = new Set();
 			const results = await Promise.allSettled(ids.map((id) => deleteMessage(id)));
 			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (!fromBulk) flash(failed === 0 ? msg.mail_toast_deleted_forever() : msg.mail_err_delete());
+			if (!fromBulk) {
+				if (failed === 0) flash(msg.mail_toast_deleted_forever());
+				else fail(msg.mail_err_delete());
+			}
 			else if (failed === 0) flash(msg.mail_bulk_deleted({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_deleted_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_delete_failed());
+				fail(msg.mail_bulk_deleted_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_delete_failed());
 			await mailbox.refresh([query]);
 			void mailbox.refreshCounts();
 		} finally {
@@ -1443,8 +1458,8 @@
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(msg.mail_bulk_read({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_read_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_read_failed());
+				fail(msg.mail_bulk_read_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_read_failed());
 			return;
 		}
 		if (action === 'restore') {
@@ -1469,8 +1484,8 @@
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(msg.mail_bulk_restored({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_restored_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_restore_failed());
+				fail(msg.mail_bulk_restored_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_restore_failed());
 			return;
 		}
 		if (action === 'delete') {
@@ -1488,8 +1503,8 @@
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(msg.mail_bulk_reported({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_reported_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_report_failed());
+				fail(msg.mail_bulk_reported_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_report_failed());
 			return;
 		}
 		const optimistic: Partial<Message> = { folder: 'trash' };
@@ -1507,8 +1522,8 @@
 		);
 		const failed = results.filter((r) => r.status === 'rejected').length;
 		if (failed === 0) flash(msg.mail_bulk_trashed({ count: ids.length }));
-		else if (failed < ids.length) flash(msg.mail_bulk_trashed_partial({ ok: ids.length - failed, failed }));
-		else flash(msg.mail_bulk_trash_failed());
+		else if (failed < ids.length) fail(msg.mail_bulk_trashed_partial({ ok: ids.length - failed, failed }));
+		else fail(msg.mail_bulk_trash_failed());
 	}
 
 	function refreshAfterSend() {
@@ -1637,11 +1652,11 @@
 		<section class="list">
 			<div class="list-h">
 				<div class="ttl-block">
-					<span class="ttl">{folderLabel}</span>
+					<span class="ttl">{viewName}</span>
 				</div>
 			</div>
 			<div class="empty-folder">
-				<p>{msg.mail_folder_unavailable({ folder: folderLabel })}</p>
+				<p>{msg.mail_folder_unavailable({ folder: viewName })}</p>
 				<p class="sub">{msg.mail_folder_unavailable_detail()}</p>
 			</div>
 		</section>
@@ -1694,7 +1709,12 @@
 			onRefresh={() => mailbox.refresh([query])}
 			exhausted={snapshot.exhausted}
 			loadingMore={snapshot.loadingMore}
-			loadMoreError={snapshot.loadError}
+			loadMoreError={snapshot.moreError}
+			loaded={snapshot.loaded}
+			loadError={snapshot.loadError}
+			listRefreshing={snapshot.refreshing}
+			offline={snapshot.offline}
+			onRetry={() => void mailbox.retry(query)}
 			onLoadMore={handleLoadMore}
 			{returnedCount}
 			onDismissReturned={() => (returnedDismissed = true)}
@@ -1715,7 +1735,7 @@
 			<section class="reader reader-missing">
 				<p>{msg.mail_not_found()}</p>
 				<p class="sub">{msg.mail_not_found_detail()}</p>
-				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: folderLabel })}</a>
+				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: viewName })}</a>
 			</section>
 		{:else}
 			<Reader
@@ -1823,13 +1843,7 @@
 	/>
 {/if}
 {#if toast}
-	<Toast text={toast.text} onUndo={toast.undo} undoLabel={toast.undoLabel} shift={131} />
-{/if}
-{#if snapshot.loadError}
-	<Toast text={msg.mail_toast_error({ error: snapshot.loadError })} shift={131} />
-{/if}
-{#if snapshot.loading}
-	<Toast text={msg.common_loading()} shift={131} />
+	<Toast text={toast.text} tone={toast.tone} onUndo={toast.undo} undoLabel={toast.undoLabel} shift={131} />
 {/if}
 
 <style>
