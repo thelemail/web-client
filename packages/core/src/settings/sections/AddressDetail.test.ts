@@ -71,6 +71,7 @@ function sales(over: Partial<AccountAddress> = {}): AccountAddress {
 
 function setup(domain: CustomDomain, address: AccountAddress) {
 	customDomains.items = [domain];
+	addresses.loaded = true;
 	addresses.items = [
 		{
 			id: 'p',
@@ -125,6 +126,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
+	addresses.loaded = true;
 	addresses.items = [];
 	addresses.mySharedAliases = [];
 	customDomains.clear();

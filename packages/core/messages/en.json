@@ -4459,6 +4459,8 @@
 	"store_restart_still_saving": "Something is still saving.",
 	"store_delegations_load_failed": "failed to load delegations",
 	"store_addresses_load_failed": "failed to load addresses",
+	"store_domains_load_failed": "Your domains could not be loaded.",
+	"store_workspace_load_failed": "Your workspace could not be loaded.",
 	"store_workspace_addresses_load_failed": "failed to load workspace addresses",
 	"store_ceremony_done_recovery": "Recovery set up",
 	"store_ceremony_done_password": "Password changed",

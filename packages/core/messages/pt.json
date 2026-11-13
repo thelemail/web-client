@@ -4459,6 +4459,8 @@
 	"store_restart_still_saving": "Ainda há uma operação a guardar dados.",
 	"store_delegations_load_failed": "não foi possível carregar as delegações",
 	"store_addresses_load_failed": "não foi possível carregar os endereços",
+	"store_domains_load_failed": "Não foi possível carregar os seus domínios.",
+	"store_workspace_load_failed": "Não foi possível carregar o seu espaço de trabalho.",
 	"store_workspace_addresses_load_failed": "não foi possível carregar os endereços do espaço de trabalho",
 	"store_ceremony_done_recovery": "Recuperação configurada",
 	"store_ceremony_done_password": "Palavra-passe alterada",

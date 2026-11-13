@@ -82,7 +82,9 @@
 					{/each}
 				</div>
 			{/if}
-		{:else}
+		{:else if auth.vaultUnlocked && !accountKeys.error}
+			<div class="key-meta" aria-busy="true">{m.common_loading()}</div>
+		{:else if !auth.vaultUnlocked}
 			<div class="key-meta">{m.settings_security_fingerprint_locked()}</div>
 		{/if}
 		{#if accountKeys.error && auth.accountId}

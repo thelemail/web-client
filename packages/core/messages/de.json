@@ -4459,6 +4459,8 @@
 	"store_restart_still_saving": "Ein Speichervorgang läuft noch.",
 	"store_delegations_load_failed": "Delegierungen konnten nicht geladen werden",
 	"store_addresses_load_failed": "Adressen konnten nicht geladen werden",
+	"store_domains_load_failed": "Deine Domains konnten nicht geladen werden.",
+	"store_workspace_load_failed": "Dein Arbeitsbereich konnte nicht geladen werden.",
 	"store_workspace_addresses_load_failed": "Adressen des Arbeitsbereichs konnten nicht geladen werden",
 	"store_ceremony_done_recovery": "Wiederherstellung eingerichtet",
 	"store_ceremony_done_password": "Passwort geändert",

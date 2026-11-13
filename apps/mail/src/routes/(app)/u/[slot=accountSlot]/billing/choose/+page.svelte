@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { onMount } from 'svelte';
 	import { platform } from '$platform';
@@ -26,6 +27,7 @@
 	let checkoutError = $state<string | null>(null);
 	let canceledNotice = $state(page.url.searchParams.get('canceled') === '1');
 	let switched = $state(false);
+	let ready = $state(false);
 
 	const slot = $derived(data.slot);
 	const sub = $derived(billing.subscription);
@@ -38,24 +40,28 @@
 	onMount(() => {
 		void billing.ensureCatalog();
 		void (async () => {
-			const fresh = await billing.refresh();
-			if (!workspaces.workspace) {
-				await workspaces.load(auth.accountId);
-			}
-			if (fresh?.status === 'active' && fresh.planCode) {
-				const current = selectionForCode(
-					fresh.planCode,
-					Math.max(fresh.seats ?? 3, 3),
-					fresh.interval ?? 'year'
-				);
-				if (current) {
-					sel = current;
-					return;
+			try {
+				const fresh = await billing.refresh();
+				if (!workspaces.workspace) {
+					await workspaces.load(auth.accountId);
 				}
-			}
-			const wsType = workspaces.workspace?.type;
-			if (wsType && !sel.tier && sel.product !== wsType) {
-				sel = { ...sel, product: wsType };
+				if (fresh?.status === 'active' && fresh.planCode) {
+					const current = selectionForCode(
+						fresh.planCode,
+						Math.max(fresh.seats ?? 3, 3),
+						fresh.interval ?? 'year'
+					);
+					if (current) {
+						sel = current;
+						return;
+					}
+				}
+				const wsType = workspaces.workspace?.type;
+				if (wsType && !sel.tier && sel.product !== wsType) {
+					sel = { ...sel, product: wsType };
+				}
+			} finally {
+				ready = true;
 			}
 		})();
 	});
@@ -179,6 +185,8 @@
 					</button>
 				</div>
 			</div>
+		{:else if !ready}
+			<LoadState kind="loading" label={m.common_loading()} rows={3} />
 		{:else if switched}
 			<div class="card-surface screen-fade">
 				<div class="welcome">

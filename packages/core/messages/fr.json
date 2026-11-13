@@ -4459,6 +4459,8 @@
   "store_restart_still_saving": "Un enregistrement est encore en cours.",
   "store_delegations_load_failed": "Impossible de charger les délégations",
   "store_addresses_load_failed": "Impossible de charger les adresses",
+  "store_domains_load_failed": "Impossible de charger vos domaines.",
+  "store_workspace_load_failed": "Impossible de charger votre espace de travail.",
   "store_workspace_addresses_load_failed": "Impossible de charger les adresses de l’espace de travail",
   "store_ceremony_done_recovery": "Récupération configurée",
   "store_ceremony_done_password": "Mot de passe modifié",
