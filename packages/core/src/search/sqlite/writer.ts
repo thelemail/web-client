@@ -1,7 +1,8 @@
 import type { BindValue, Database, PreparedStatement } from '@thelemail/sqlite-wasm';
-import { domainOf, filenameLiterals, literals, normalize } from './analysis';
+import { domainOf, filenameLiterals, listKey, literals, normalize } from './analysis';
 import {
 	Field,
+	Role,
 	type Dimension,
 	type Coverage,
 	type PutResult,
@@ -12,9 +13,9 @@ import {
 
 const STATEMENTS = {
 	find: 'SELECT id, content_rev, metadata_rev FROM sources WHERE kind = ? AND source_id = ?',
-	insertSource: `INSERT INTO sources (kind, source_id, content_rev, metadata_rev, thread_id, message_id, date, size, flags, known_flags)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-	updateSource: `UPDATE sources SET content_rev = ?, metadata_rev = ?, thread_id = ?, message_id = ?, date = ?, size = ?, flags = ?, known_flags = ?
+	insertSource: `INSERT INTO sources (kind, source_id, content_rev, metadata_rev, thread_id, message_id, list_id, date, size, flags, known_flags)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	updateSource: `UPDATE sources SET content_rev = ?, metadata_rev = ?, thread_id = ?, message_id = ?, list_id = ?, date = ?, size = ?, flags = ?, known_flags = ?
 		WHERE id = ?`,
 	updateMetadata: 'UPDATE sources SET metadata_rev = ?, thread_id = ?, date = ?, flags = ?, known_flags = ? WHERE id = ?',
 	deleteSource: 'DELETE FROM sources WHERE id = ?',
@@ -22,7 +23,7 @@ const STATEMENTS = {
 	deleteParticipants: 'DELETE FROM participants WHERE source = ?',
 	insertCollection: 'INSERT OR IGNORE INTO collections (source, collection_id, type) VALUES (?, ?, ?)',
 	deleteCollections: 'DELETE FROM collections WHERE source = ?',
-	insertAttachment: 'INSERT OR REPLACE INTO attachments (source, attachment_id, filename, mime, size) VALUES (?, ?, ?, ?, ?)',
+	insertAttachment: 'INSERT OR REPLACE INTO attachments (source, attachment_id, filename, mime, size, inline) VALUES (?, ?, ?, ?, ?, ?)',
 	deleteAttachments: 'DELETE FROM attachments WHERE source = ?',
 	upsertCoverage: 'INSERT OR REPLACE INTO coverage (source, dimension, state) VALUES (?, ?, ?)',
 	deleteCoverage: 'DELETE FROM coverage WHERE source = ?',
@@ -42,9 +43,14 @@ type StatementName = keyof typeof STATEMENTS;
 
 const COLLECTION_TYPE = { folder: 1, label: 2 } as const;
 
+function listOf(doc: SearchDocument): string | null {
+	return doc.listId ? listKey(doc.listId) : null;
+}
+
 export class SearchWriter {
 	#db: Database;
 	#statements = new Map<StatementName, PreparedStatement>();
+	#deleted = new Set<(source: number) => void>();
 
 	constructor(db: Database) {
 		this.#db = db;
@@ -137,12 +143,13 @@ export class SearchWriter {
 		for (const p of doc.participants) {
 			const address = normalize(p.address).toLowerCase();
 			this.#run('insertParticipant', [id, p.role, p.name, address, domainOf(address)]);
+			if (p.role === Role.deliveredTo) continue;
 			const text = p.name ? `${p.name} ${p.address}` : p.address;
 			const part = this.#addPart(id, Field.participant, text, null, p.role);
 			this.#addLiterals(id, Field.participant, part, new Set([address, ...literals(text)]));
 		}
 		for (const a of doc.attachments) {
-			this.#run('insertAttachment', [id, a.attachmentId, a.filename, a.mime, a.size]);
+			this.#run('insertAttachment', [id, a.attachmentId, a.filename, a.mime, a.size, a.inline ? 1 : 0]);
 			const part = this.#addPart(id, Field.attachmentName, a.filename, a.attachmentId, null);
 			this.#addLiterals(id, Field.attachmentName, part, filenameLiterals(a.filename));
 		}
@@ -169,6 +176,7 @@ export class SearchWriter {
 					doc.metadataRevision,
 					doc.threadId,
 					doc.messageId,
+					listOf(doc),
 					doc.date,
 					doc.size,
 					doc.flags,
@@ -189,6 +197,7 @@ export class SearchWriter {
 				Math.max(doc.metadataRevision, existing.metadataRev),
 				doc.threadId,
 				doc.messageId,
+				listOf(doc),
 				doc.date,
 				doc.size,
 				doc.flags,
@@ -224,15 +233,23 @@ export class SearchWriter {
 		});
 	}
 
+	onDelete(listener: (source: number) => void): () => void {
+		this.#deleted.add(listener);
+		return () => this.#deleted.delete(listener);
+	}
+
 	delete(key: SourceKey): boolean {
-		return this.#atomic(() => {
+		const removed = this.#atomic(() => {
 			const existing = this.#find(key);
-			if (!existing) return false;
+			if (!existing) return null;
 			this.#clearContent(existing.id);
 			this.#run('deleteCollections', [existing.id]);
 			this.#run('deleteSource', [existing.id]);
-			return true;
+			return existing.id;
 		});
+		if (removed === null) return false;
+		for (const listener of this.#deleted) listener(removed);
+		return true;
 	}
 
 	putBatch(docs: readonly SearchDocument[]): PutResult[] {

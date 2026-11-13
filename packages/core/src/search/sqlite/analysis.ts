@@ -23,6 +23,12 @@ export function asciiDomain(domain: string): string | null {
 	}
 }
 
+export function listKey(value: string): string {
+	const trimmed = value.trim();
+	const bare = trimmed.startsWith('<') && trimmed.endsWith('>') ? trimmed.slice(1, -1) : trimmed;
+	return normalize(bare).toLowerCase();
+}
+
 export function domainOf(address: string): string {
 	const at = address.lastIndexOf('@');
 	return at < 0 ? '' : address.slice(at + 1).toLowerCase();
