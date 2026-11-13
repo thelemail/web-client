@@ -32,7 +32,10 @@
 	import ReplyBox, { type ReplyMode } from './ReplyBox.svelte';
 	import { replyToSummary } from './replyRecipients';
 	import Thread from './Thread.svelte';
-	import ReaderSkeleton from './ReaderSkeleton.svelte';
+	import BodyPending from './BodyPending.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import OriginalHeadersDialog from './OriginalHeadersDialog.svelte';
 	import ReportDialog from './ReportDialog.svelte';
 	import BlockSenderDialog from './BlockSenderDialog.svelte';
@@ -280,10 +283,9 @@
 	type BodyState =
 		| { id: string; status: 'loading' }
 		| { id: string; status: 'ready'; render: RenderResult; attachments: AttachmentChip[] }
-		| { id: string; status: 'error'; error: string };
+		| { id: string; status: 'error'; error: string; attempt: number };
 
 	const BODY_MAX_ATTEMPTS = 3;
-	const SKELETON_DELAY_MS = 300;
 	const BODY_RETRY_BASE_MS = 800;
 
 	let bodyState = $state<BodyState | null>(null);
@@ -532,15 +534,33 @@
 		})();
 	});
 
+	const entryFailed = new SvelteSet<string>();
+
 	function loadEntry(id: string) {
 		const meta = threadMeta;
 		if (!meta || meta.requested.has(id)) return;
 		meta.requested.add(id);
+		entryFailed.delete(id);
 		void meta.session.load(id).then((full) => {
 			const now = threadMeta;
-			if (!full || !now || now.session !== meta.session) return;
+			if (!now || now.session !== meta.session) return;
+			if (!full) {
+				meta.requested.delete(id);
+				entryFailed.add(id);
+				return;
+			}
 			threadMeta = { ...now, entries: now.entries.map((e) => (e.id === id ? full : e)) };
 		});
+	}
+
+	function retryThread() {
+		threadFailedFor = null;
+		threadRefreshTick += 1;
+	}
+
+	function retryBody() {
+		bodyAttempts = 0;
+		bodyRetryTick += 1;
 	}
 
 	function cascadeMarkRead(entries: NonNullable<Message['thread']>) {
@@ -595,7 +615,7 @@
 						: err instanceof Error
 							? err.message
 							: 'failed';
-				bodyState = { id: current.id, status: 'error', error: msgText };
+				bodyState = { id: current.id, status: 'error', error: msgText, attempt };
 				if (attempt < BODY_MAX_ATTEMPTS) {
 					setTimeout(
 						() => {
@@ -608,21 +628,8 @@
 		})();
 	});
 
-	const STATUS_SRCDOC: Record<'pending' | 'error', (error?: string) => string> = {
-		pending: () => '<!doctype html><html><body></body></html>',
-		error: (error) =>
-			`<!doctype html><html><body style="font-family:sans-serif;color:#8E2F26;font-size:13px;padding:6px 2px">${escapeForHtml(msg.mail_reader_decrypt_failed({ error: error ?? '' }))}</body></html>`
-	};
-
-	function escapeForHtml(s: string): string {
-		return s.replace(/[&<>]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'));
-	}
-
-	const bodySrcDoc = $derived.by<string>(() => {
-		if (!bodyState || bodyState.status === 'loading') return STATUS_SRCDOC.pending();
-		if (bodyState.status === 'error') return STATUS_SRCDOC.error(bodyState.error);
-		return bodyState.render.srcDoc;
-	});
+	const bodySrcDoc = $derived(bodyState?.status === 'ready' ? bodyState.render.srcDoc : '');
+	const bodyError = $derived(bodyState?.status === 'error' ? bodyState.error : '');
 
 	const quotedSrcDoc = $derived(
 		bodyState?.status === 'ready' ? bodyState.render.quoted?.srcDoc ?? null : null
@@ -661,17 +668,14 @@
 	const threadPending = $derived(
 		!!m && isThreadView && threadMeta?.id !== m.id && threadFailedFor !== m.id
 	);
-	const bodyPending = $derived(
-		!!m && (!bodyState || bodyState.id !== m.id || bodyState.status === 'loading')
+	const bodyFailed = $derived(
+		!!m && bodyState?.id === m.id && bodyState.status === 'error' && bodyState.attempt >= BODY_MAX_ATTEMPTS
 	);
-	let slowFor = $state<string | null>(null);
-	$effect(() => {
-		const id = m?.id;
-		if (!id || !(bodyPending || threadPending)) return;
-		const timer = setTimeout(() => (slowFor = id), SKELETON_DELAY_MS);
-		return () => clearTimeout(timer);
-	});
-	const showSkeleton = $derived(!!m && (bodyPending || threadPending) && slowFor === m.id);
+	const bodyPending = $derived(
+		!!m && !bodyFailed && (!bodyState || bodyState.id !== m.id || bodyState.status !== 'ready')
+	);
+	const threadFailed = $derived(!!m && isThreadView && threadFailedFor === m.id);
+	const bodyWait = delayed(() => bodyPending || threadPending, { key: () => m?.id ?? null });
 
 	async function refreshPointer(attachmentId: string) {
 		const id = m?.id;
@@ -706,8 +710,6 @@
 				<span><kbd>C</kbd> {msg.mail_reader_hint_compose()}</span>
 			</div>
 		</div>
-	{:else if showSkeleton}
-		<ReaderSkeleton {onBack} />
 	{:else}
 		<div class="reader-bar">
 			<button class="rb-ico rb-back" title={msg.mail_skeleton_back()} onclick={() => onBack?.()}>
@@ -1034,10 +1036,21 @@
 						onPicker={(kind, entry, anchor) =>
 							onEntryPicker?.(kind, entry, m.threadRootId ?? m.id, anchor)}
 						onNeed={loadEntry}
+						failed={entryFailed}
 						onConfirmKeyChange={confirmKeyChange}
 						onUnsubscribe={openUnsubscribe}
 					/>
-				{:else if !threadPending}
+				{:else if threadPending}
+					<div class="body-hold">
+						{#if bodyWait.visible}<BodyPending />{/if}
+					</div>
+				{:else}
+					{#if threadFailed}
+						<div class="thread-note" role="alert">
+							<span>{msg.mail_reader_thread_failed()}</span>
+							<button type="button" onclick={retryThread}>{msg.common_retry()}</button>
+						</div>
+					{/if}
 					<div class="letterhead">
 						<Avatar
 							initials={m.init}
@@ -1095,7 +1108,15 @@
 					</div>
 
 					<div class="email-sheet" class:pending={bodyPending}>
-						<EmailBody srcDoc={bodySrcDoc} />
+						{#if bodyFailed}
+							<LoadState kind="error" label={msg.mail_reader_decrypt_failed({ error: bodyError })} onRetry={retryBody} />
+						{:else if bodyPending}
+							<div class="body-hold">
+								{#if bodyWait.visible}<BodyPending />{/if}
+							</div>
+						{:else}
+							<EmailBody srcDoc={bodySrcDoc} />
+						{/if}
 					</div>
 
 					{#if isForwarded}

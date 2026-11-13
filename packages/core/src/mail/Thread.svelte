@@ -11,6 +11,7 @@
 		focusId?: string;
 		initialOpen: string[];
 		onNeed?: (id: string) => void;
+		failed?: ReadonlySet<string>;
 		onConfirmKeyChange?: (address: string) => void | Promise<void>;
 		onUnsubscribe?: (e: ThreadEntry) => void;
 		baseFolder?: string;
@@ -25,6 +26,7 @@
 		focusId,
 		initialOpen,
 		onNeed,
+		failed = new Set<string>(),
 		onConfirmKeyChange,
 		onUnsubscribe,
 		baseFolder,
@@ -164,6 +166,8 @@
 					{e}
 					isOpen={!!e.id && open.has(e.id)}
 					onToggle={() => toggle(e.id)}
+					failed={!!e.id && failed.has(e.id)}
+					onRetry={() => e.id && onNeed?.(e.id)}
 					{onConfirmKeyChange}
 					{onUnsubscribe}
 					{baseFolder}

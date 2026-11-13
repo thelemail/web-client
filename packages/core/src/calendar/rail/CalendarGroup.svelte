@@ -6,6 +6,7 @@
 	import { Label } from '$core/components/ui/label';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
+	import { calendarStore } from '../store.svelte';
 	import type { CalendarGroup } from '../types';
 	import CalendarMenu from './CalendarMenu.svelte';
 
@@ -35,7 +36,7 @@
 			</button>
 		{/if}
 	</div>
-	{#if !calendars.length && emptyText}
+	{#if !calendars.length && emptyText && calendarStore.loaded}
 		<div class="cal-item cal-empty">{emptyText}</div>
 	{/if}
 	{#each calendars as entry (entry.id)}

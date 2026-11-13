@@ -29,16 +29,26 @@
 	let busy = $state(false);
 	let error = $state('');
 
-	onMount(() => {
-		let live = true;
+	let live = true;
+	let methodsFailed = $state(false);
+
+	function loadMethods() {
+		methodsFailed = false;
+		error = '';
 		getTwoFactorStatus(accountId)
 			.then((status) => {
 				if (live) methods = enrolledMethods(status);
 			})
 			.catch((err) => {
 				console.warn('reauth: could not load sign-in methods', err);
-				if (live) error = m.settings_ceremony_twofa_err_network();
+				if (!live) return;
+				methodsFailed = true;
+				error = m.settings_ceremony_twofa_err_network();
 			});
+	}
+
+	onMount(() => {
+		loadMethods();
 		return () => {
 			live = false;
 		};
@@ -115,6 +125,9 @@
 </script>
 
 {#snippet form()}
+	{#if methodsFailed}
+		<Button variant="secondary" size="sm" onclick={loadMethods}>{m.common_retry()}</Button>
+	{/if}
 	<p class="cfd-p">{needsFactor ? m.reauth_lede_factor() : m.reauth_lede()}</p>
 	<div class="cfd-field reauth-field">
 		<label class="cfd-label" for="reauth-password">{m.settings_ceremony_twofa_password()}</label>

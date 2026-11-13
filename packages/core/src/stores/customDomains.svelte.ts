@@ -11,11 +11,13 @@ import {
 	type RequiredDNSRecord
 } from '$core/api/customDomains';
 import { ApiCallError } from '$core/api/types';
+import { m } from '$paraglide/messages.js';
 
 class CustomDomainsStore {
 	items = $state<CustomDomain[]>([]);
 	records = $state<Map<string, RequiredDNSRecord[]>>(new Map());
 	loading = $state(false);
+	loaded = $state(false);
 	error = $state<string | null>(null);
 	#accountId: string | null = null;
 
@@ -34,10 +36,10 @@ class CustomDomainsStore {
 			const { domains } = await listWorkspaceDomains(workspaceId);
 			if (this.#accountId !== acct) return;
 			this.items = domains;
+			this.loaded = true;
 		} catch (err) {
 			if (this.#accountId !== acct) return;
-			this.error = err instanceof Error ? err.message : 'failed to load domains';
-			this.items = [];
+			this.error = err instanceof Error ? err.message : m.store_domains_load_failed();
 		} finally {
 			if (this.#accountId === acct) this.loading = false;
 		}
@@ -122,6 +124,8 @@ class CustomDomainsStore {
 		this.items = [];
 		this.records = new Map();
 		this.error = null;
+		this.loaded = false;
+		this.loading = false;
 	}
 }
 

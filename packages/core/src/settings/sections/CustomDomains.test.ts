@@ -101,6 +101,7 @@ function show(next: DocumentVisibilityState) {
 
 function open(...items: CustomDomain[]) {
 	customDomains.items = items;
+	customDomains.loaded = true;
 	return render(CustomDomains);
 }
 
@@ -274,3 +275,13 @@ describe('CustomDomains list', () => {
 		expect(headingJumps(container, 1)).toEqual([]);
 	});
 });
+
+describe('CustomDomains before the list loads', () => {
+	it('does not claim there are no domains', () => {
+		customDomains.items = [];
+		customDomains.loaded = false;
+		render(CustomDomains);
+		expect(document.querySelector('.cd-empty')).toBeNull();
+	});
+});
+

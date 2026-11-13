@@ -7,14 +7,23 @@
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
 	import type { NotificationTarget } from '$core/platform/types';
+	import { accountTransition } from '$core/stores/accountTransition.svelte';
+	import AccountTransition from '$core/components/AccountTransition.svelte';
 
 	let { children } = $props();
 
 	function openFromNotification(target: NotificationTarget) {
 		const record = accounts.byId(target.accountId);
 		if (!record) return;
-		if (auth.accountId !== record.accountId) auth.activate(record.accountId);
-		void goto(`/u/${record.slot}/mail/inbox/${encodeURIComponent(target.messageId)}`);
+		const path = `/u/${record.slot}/mail/inbox/${encodeURIComponent(target.messageId)}`;
+		if (auth.accountId === record.accountId) {
+			void goto(path);
+			return;
+		}
+		void accountTransition.run('switch', record.email ?? null, async () => {
+			auth.activate(record.accountId);
+			await goto(path);
+		});
 	}
 
 	onMount(() => {
@@ -34,3 +43,4 @@
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </svelte:head>
 <div data-app-ready style="display: contents">{@render children()}</div>
+<AccountTransition />

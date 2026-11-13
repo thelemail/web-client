@@ -8,7 +8,13 @@
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
-	const known = $derived(accounts.list);
+	const known = $derived(
+		accounts.list.filter(
+			(a) =>
+				(auth.vaultUnlockedFor(a.accountId) || auth.hasPersistentFor(a.accountId)) &&
+				!auth.sessionLost(a.accountId)
+		)
+	);
 	const single = $derived(
 		known.length === 1
 			? [...known].sort((a, b) => b.lastActiveAt - a.lastActiveAt)[0]

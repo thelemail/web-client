@@ -12,7 +12,7 @@
 	import ShieldOff from '@lucide/svelte/icons/shield-off';
 	import { untrack } from 'svelte';
 	import Card from '../Card.svelte';
-	import LoadState from './LoadState.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { securityActionError } from './errors';
 	import { Button } from '$core/components/ui/button';

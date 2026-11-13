@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { accountTransition } from '$core/stores/accountTransition.svelte';
 	import { i18n } from '$core/i18n/locale.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -211,15 +212,17 @@
 	async function signOutDeleted() {
 		if (signingOut) return;
 		signingOut = true;
-		const id = auth.accountId;
-		if (id) await auth.logoutAccount(id);
-		const remaining = accounts.list[0];
-		if (remaining) {
-			auth.activate(remaining.accountId);
-			await goto(`/u/${remaining.slot}/mail/inbox`);
-		} else {
-			await goto('/login');
-		}
+		await accountTransition.run('signout', null, async () => {
+			const id = auth.accountId;
+			if (id) await auth.logoutAccount(id);
+			const remaining = accounts.list[0];
+			if (remaining) {
+				auth.activate(remaining.accountId);
+				await goto(`/u/${remaining.slot}/mail/inbox`);
+			} else {
+				await goto('/login');
+			}
+		});
 	}
 </script>
 

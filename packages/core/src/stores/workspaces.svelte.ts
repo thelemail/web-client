@@ -22,12 +22,15 @@ import {
 	type WorkspaceInvite,
 	type WorkspaceMember
 } from '$core/api/workspaces';
+import { m } from '$paraglide/messages.js';
 
 class WorkspaceStore {
 	workspace = $state<Workspace | null>(null);
 	members = $state<WorkspaceMember[]>([]);
 	invites = $state<WorkspaceInvite[]>([]);
 	loading = $state(false);
+	loaded = $state(false);
+	membersLoaded = $state(false);
 	error = $state<string | null>(null);
 	#accountId = $state<string | null>(null);
 
@@ -59,13 +62,16 @@ class WorkspaceStore {
 			const workspace = await getMyWorkspace();
 			if (this.#accountId !== acct) return;
 			this.workspace = workspace;
+			this.loaded = true;
 			await this.loadActiveDetails(callerAccountId);
 		} catch (err) {
 			if (this.#accountId !== acct) return;
-			this.error = err instanceof Error ? err.message : 'failed to load workspace';
-			this.workspace = null;
-			this.members = [];
-			this.invites = [];
+			this.error = err instanceof Error ? err.message : m.store_workspace_load_failed();
+			if (!this.loaded) {
+				this.workspace = null;
+				this.members = [];
+				this.invites = [];
+			}
 		} finally {
 			if (this.#accountId === acct) this.loading = false;
 		}
@@ -79,6 +85,7 @@ class WorkspaceStore {
 			const { members } = await listWorkspaceMembers(id);
 			if (this.#accountId !== acct) return;
 			this.members = members;
+			this.membersLoaded = true;
 			if (currentProduct === 'app' && this.canManage(callerAccountId)) {
 				const { invites } = await listWorkspaceInvites(id);
 				if (this.#accountId !== acct) return;
@@ -88,7 +95,7 @@ class WorkspaceStore {
 			}
 		} catch (err) {
 			if (this.#accountId !== acct) return;
-			this.error = err instanceof Error ? err.message : 'failed to load workspace';
+			this.error = err instanceof Error ? err.message : m.store_workspace_load_failed();
 		}
 	}
 
@@ -178,6 +185,9 @@ class WorkspaceStore {
 		this.members = [];
 		this.invites = [];
 		this.error = null;
+		this.loaded = false;
+		this.membersLoaded = false;
+		this.loading = false;
 	}
 }
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
 	import Globe2 from '@lucide/svelte/icons/globe-2';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -64,7 +65,7 @@
 		removeId = id;
 	}
 
-	const empty = $derived(!store.loading && store.items.length === 0);
+	const empty = $derived(store.loaded && store.items.length === 0);
 	const items = $derived(store.items);
 	const manage = $derived(workspaces.canManage());
 	const anyRunning = $derived(items.some(checkRunning));
@@ -127,8 +128,14 @@
 
 <Card icon={Globe2} title={m.settings_domains_title()}>
 
-	{#if store.loading && items.length === 0}
-		<div class="cd-empty">{m.settings_domains_loading()}</div>
+	{#if !store.loaded && store.error}
+		<LoadState
+			kind="error"
+			label={store.error}
+			onRetry={() => void store.load(workspaces.workspace?.id ?? null)}
+		/>
+	{:else if !store.loaded}
+		<LoadState kind="loading" label={m.settings_domains_loading()} />
 	{:else if empty}
 		<div class="cd-empty">{m.settings_domains_empty()}</div>
 	{:else}
@@ -213,7 +220,7 @@
 		{/if}
 	</div>
 
-	{#if store.error}
+	{#if store.loaded && store.error}
 		<div class="cd-err cd-err-card">
 			<CircleAlert size={14} /><span>{store.error}</span>
 		</div>

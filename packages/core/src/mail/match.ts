@@ -24,6 +24,7 @@ export function queryMatches(q: Query, m: Message, subtree: Subtree = selfOnly):
 		return false;
 	}
 	if (q.unread && !m.unread) return false;
+	if (q.starred && !m.starred) return false;
 	if (q.attach && !(m.attachments?.length ?? 0)) return false;
 	if (q.labels.length && !q.labels.some((l) => expand(l).some((id) => m.labels.includes(id)))) {
 		return false;

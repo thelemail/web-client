@@ -8,6 +8,8 @@ const { mailCollections, accountSettings, goto, ACME } = vi.hoisted(() => ({
 	goto: vi.fn(async () => {}),
 	mailCollections: {
 		loaded: true,
+		error: null as string | null,
+		load: vi.fn(async () => {}),
 		nodes: [] as CollectionNode[],
 		folders: [] as unknown[],
 		labels: [] as unknown[],
@@ -83,6 +85,8 @@ describe('mail sidebar', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mailCollections.loaded = true;
+		mailCollections.error = null;
 		accountSettings.mailSidebar = { expanded: [], collapsed: [], showMore: false };
 		setNodes([
 			node('clients', null, 1024, 'Clients'),
@@ -233,5 +237,22 @@ describe('mail sidebar', () => {
 		await fireEvent.click(getByRole('button', { name: 'Delete folder' }));
 		await waitFor(() => expect(mailCollections.remove).toHaveBeenCalledWith(ACME, { kind: 'inbox' }));
 		await waitFor(() => expect(goto).toHaveBeenCalledWith('/u/0/mail/inbox'));
+	});
+
+	it('shows no folders and no empty tree while folders are still loading', async () => {
+		mailCollections.loaded = false;
+		setNodes([]);
+		const { container } = await renderSidebar();
+		expect(container.querySelector('[role="tree"][aria-label="Folders"]')).toBeNull();
+		expect(container.querySelector('.rail-state')).toBeNull();
+	});
+
+	it('offers a retry when folders and labels failed to load', async () => {
+		mailCollections.error = 'boom';
+		setNodes([]);
+		const { getAllByRole } = await renderSidebar();
+		const retry = getAllByRole('button', { name: /try again/i })[0];
+		retry.click();
+		expect(mailCollections.load).toHaveBeenCalled();
 	});
 });

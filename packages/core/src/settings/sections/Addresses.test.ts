@@ -89,6 +89,7 @@ async function menuOf(email: string): Promise<string> {
 
 beforeEach(() => {
 	customDomains.items = [acme];
+	addresses.loaded = true;
 	addresses.items = [
 		address('p', 'ada@thelemail.com', { isPrimary: true }),
 		address('h', 'hello@thelemail.com'),
@@ -99,6 +100,7 @@ beforeEach(() => {
 afterEach(() => {
 	cleanup();
 	vi.restoreAllMocks();
+	addresses.loaded = true;
 	addresses.items = [];
 	addresses.mySharedAliases = [];
 	customDomains.clear();
@@ -146,6 +148,7 @@ describe('Addresses', () => {
 	});
 
 	it('never offers a shared address as primary', async () => {
+		addresses.loaded = true;
 		addresses.items = [
 			...addresses.items,
 			address('sh', 'team@thelemail.com', { shared: true })
@@ -176,6 +179,7 @@ describe('Addresses', () => {
 			updatedAt: at
 		};
 		addresses.mySharedAliases = [alias];
+		addresses.loaded = true;
 		addresses.items = [
 			...addresses.items,
 			address('sup', alias.email, { customDomainId: 'd1', shared: true, sharedAliasId: alias.id })
@@ -200,6 +204,7 @@ describe('Addresses', () => {
 		perms.manage = true;
 		billing.subscription = { planCode: 'free_family' } as Subscription;
 		customDomains.items = [];
+		addresses.loaded = true;
 		addresses.items = [address('p', 'ada@thelemail.com', { isPrimary: true })];
 		render(Addresses, { props: { launch: () => {} } });
 		const note = document.querySelector('.addr-plan')?.textContent ?? '';
@@ -222,6 +227,7 @@ describe('Addresses', () => {
 		perms.manage = true;
 		billing.subscription = { planCode: 'free_family' } as Subscription;
 		customDomains.items = [];
+		addresses.loaded = true;
 		addresses.items = [
 			address('p', 'ada@thelemail.com', { isPrimary: true }),
 			address('fam', 'family@thelemail.com', { shared: true })
@@ -235,3 +241,25 @@ describe('Addresses', () => {
 		);
 	});
 });
+
+describe('addresses before they load', () => {
+	it('says nothing about addresses or admin rights until the data is in', () => {
+		addresses.loaded = false;
+		addresses.items = [];
+		render(Addresses);
+		expect(document.body.textContent).not.toContain('No addresses yet');
+		expect(document.querySelector('.addr-note')?.textContent ?? '').not.toMatch(/admin/i);
+	});
+
+	it('offers a retry when the addresses failed to load', async () => {
+		addresses.loaded = false;
+		addresses.items = [];
+		addresses.error = 'down';
+		const load = vi.spyOn(addresses, 'load').mockResolvedValue();
+		render(Addresses);
+		await fireEvent.click(screen.getByRole('button', { name: /try again/i }));
+		expect(load).toHaveBeenCalled();
+		addresses.error = null;
+	});
+});
+

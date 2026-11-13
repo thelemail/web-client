@@ -35,6 +35,7 @@ export const load = async () => {
 		auth.adoptPreferredAccount();
 		if (auth.vaultUnlocked && !auth.isAuthenticated) await auth.tryRefresh();
 		bootstrapped = true;
+		boot.markStorageAvailable();
 	} catch (err) {
 		console.warn('bootstrap: local account state unavailable', err);
 		boot.markStorageUnavailable();

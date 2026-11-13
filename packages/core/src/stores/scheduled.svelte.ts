@@ -3,6 +3,7 @@ import { decryptPreview, DecryptionError } from '$core/mail/decrypt';
 import { initialsFor } from '$core/mail/initials';
 import type { ScheduledSend, ScheduledSendKind } from '$core/api/types';
 import { auth } from './auth.svelte';
+import { Latest } from '$core/async/latest';
 import { m } from '$paraglide/messages.js';
 
 export interface ScheduledRow {
@@ -66,10 +67,16 @@ class ScheduledStore {
 	#nextCursor: string | null = null;
 	#accountId: string | null = null;
 	#pending: Promise<void> | null = null;
-	#loaded = false;
+	#loaded = $state(false);
+	#latest = new Latest();
+	#cancelled = new Set<string>();
 
 	get count(): number {
 		return this.items.length;
+	}
+
+	get loaded(): boolean {
+		return this.#loaded;
 	}
 
 	setAccount(accountId: string | null): void {
@@ -80,6 +87,11 @@ class ScheduledStore {
 		this.exhausted = false;
 		this.loadError = null;
 		this.#loaded = false;
+		this.loading = false;
+		this.loadingMore = false;
+		this.#pending = null;
+		this.#latest.invalidate();
+		this.#cancelled.clear();
 	}
 
 	async ensureLoaded(): Promise<void> {
@@ -100,10 +112,12 @@ class ScheduledStore {
 
 	async cancel(id: string): Promise<void> {
 		const before = this.items;
+		this.#cancelled.add(id);
 		this.items = this.items.filter((r) => r.id !== id);
 		try {
 			await cancelScheduledSend(id);
 		} catch (err) {
+			this.#cancelled.delete(id);
 			this.items = before;
 			throw err;
 		}
@@ -118,14 +132,16 @@ class ScheduledStore {
 		if (more) this.loadingMore = true;
 		else this.loading = true;
 		this.loadError = null;
+		const token = this.#latest.begin();
 
 		const cursor = more ? (this.#nextCursor ?? undefined) : undefined;
 		const run = (async () => {
 			try {
 				const resp = await listScheduledSends({ limit: PAGE_SIZE, cursor });
-				if (this.#accountId !== accountId) return;
+				if (!this.#latest.isCurrent(token)) return;
 				const rows: ScheduledRow[] = [];
 				for (const item of resp.items) {
+					if (this.#cancelled.has(item.id)) continue;
 					try {
 						rows.push(await decryptRow(accountId, item));
 					} catch (err) {
@@ -133,19 +149,21 @@ class ScheduledStore {
 						rows.push(fallbackRow(item));
 					}
 				}
-				if (this.#accountId !== accountId) return;
+				if (!this.#latest.isCurrent(token)) return;
 				const merged = more ? this.#mergeRows(this.items, rows) : rows;
 				this.items = merged.slice().sort((a, b) => a.epoch - b.epoch);
 				this.#nextCursor = resp.nextCursor ?? null;
 				this.exhausted = !resp.nextCursor;
 				this.#loaded = true;
 			} catch (err) {
-				if (this.#accountId !== accountId) return;
+				if (!this.#latest.isCurrent(token)) return;
 				this.loadError = err instanceof Error ? err.message : m.store_scheduled_load_failed();
 			} finally {
-				if (more) this.loadingMore = false;
-				else this.loading = false;
-				this.#pending = null;
+				if (this.#latest.isCurrent(token)) {
+					this.loading = false;
+					this.loadingMore = false;
+					this.#pending = null;
+				}
 			}
 		})();
 		this.#pending = run;

@@ -25,6 +25,11 @@
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import Search from '@lucide/svelte/icons/search';
 	import MessageRow from './MessageRow.svelte';
+	import ListSkeleton from './ListSkeleton.svelte';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
+	import WifiOff from '@lucide/svelte/icons/wifi-off';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import {
 		bucketFromEpoch,
 		dayBucketLabel,
@@ -44,7 +49,7 @@
 	export type BulkAction = 'read' | 'archive' | 'spam' | 'trash' | 'restore' | 'delete';
 
 	interface Props {
-		folderLabel: string;
+		folderLabel: string | null;
 		folderUnread?: number;
 		list: Message[];
 		activeId: string | null;
@@ -80,6 +85,11 @@
 		exhausted?: boolean;
 		loadingMore?: boolean;
 		loadMoreError?: string | null;
+		loaded?: boolean;
+		loadError?: string | null;
+		listRefreshing?: boolean;
+		offline?: boolean;
+		onRetry?: () => void;
 		onLoadMore?: () => void;
 		returnedCount?: number;
 		onDismissReturned?: () => void;
@@ -88,6 +98,8 @@
 		onAtTopChange?: (atTop: boolean) => void;
 		searchActive?: boolean;
 		searchPending?: boolean;
+		searchFailed?: boolean;
+		onRetrySearch?: () => void;
 		searchIndexed?: number;
 		searchComplete?: boolean;
 		searchChips?: string[];
@@ -133,6 +145,11 @@
 		exhausted = false,
 		loadingMore = false,
 		loadMoreError = null,
+		loaded = true,
+		loadError = null,
+		listRefreshing = false,
+		offline = false,
+		onRetry,
 		onLoadMore = () => {},
 		returnedCount = 0,
 		onDismissReturned,
@@ -141,6 +158,8 @@
 		onAtTopChange,
 		searchActive = false,
 		searchPending = false,
+		searchFailed = false,
+		onRetrySearch,
 		searchIndexed = 0,
 		searchComplete = true,
 		searchChips = [],
@@ -149,6 +168,8 @@
 		showScope = false
 	}: Props = $props();
 
+	const viewName = $derived(folderLabel ?? '');
+	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
 	const fmt = (n: number) => new Intl.NumberFormat().format(n);
@@ -163,16 +184,20 @@
 				: msg.mail_list_search_all_detail()
 	);
 	const emptyTitle = $derived(
-		searchActive
+		searchActive && searchFailed
+			? msg.mail_search_failed()
+			: searchActive
 			? searchPending
 				? msg.mail_list_searching()
 				: msg.mail_no_matches()
 			: activeFilters > 0
 				? msg.mail_list_nothing_matches()
-				: msg.mail_list_folder_empty({ folder: folderLabel })
+				: msg.mail_list_folder_empty({ folder: viewName })
 	);
 	const emptyDetail = $derived(
-		searchActive
+		searchActive && searchFailed
+			? msg.mail_search_failed_detail()
+			: searchActive
 			? searchPending
 				? msg.mail_list_searching_detail()
 				: searchComplete
@@ -307,6 +332,8 @@
 		[viewFolder, sort, JSON.stringify(filters), searchActive].join('|')
 	);
 	let anchor: Anchor | null = null;
+	let pendingRestore: { view: string; top: number } | null = null;
+	let shownView: string | null = null;
 	let jumpToTop = false;
 	let lastTop = 0;
 	let lastActive: string | null = null;
@@ -367,6 +394,36 @@
 			anchor = null;
 		});
 	});
+
+	$effect(() => {
+		const view = viewKey;
+		void rowIds;
+		untrack(() => {
+			if (!scrollEl) return;
+			if (pendingRestore && pendingRestore.view === view && list.length > 0) {
+				scrollEl.scrollTop = pendingRestore.top;
+				lastTop = pendingRestore.top;
+				pendingRestore = null;
+			} else if (shownView !== null && shownView !== view) {
+				scrollEl.scrollTop = 0;
+				lastTop = 0;
+			}
+			shownView = view;
+		});
+	});
+
+	export function scrollPosition(): { view: string; top: number } {
+		return { view: viewKey, top: scrollEl?.scrollTop ?? 0 };
+	}
+
+	export function restoreScroll(position: { view: string; top: number }) {
+		pendingRestore = position;
+		if (scrollEl && position.view === viewKey && list.length > 0) {
+			scrollEl.scrollTop = position.top;
+			lastTop = position.top;
+			pendingRestore = null;
+		}
+	}
 
 	$effect(() => {
 		if (!scrollEl) return;
@@ -436,7 +493,7 @@
 			>
 			<span class="cnt">
 				{inQuery
-					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: folderLabel })
+					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: viewName })
 					: msg.mail_list_selected({ count: checked.size })}
 			</span>
 			<div class="grow"></div>
@@ -502,7 +559,11 @@
 	{:else}
 		<div class="list-h">
 			<h1 class="ttl">
-				<span class="ttl-name">{folderLabel}</span>
+				{#if folderLabel !== null}
+					<span class="ttl-name">{folderLabel}</span>
+				{:else}
+					<span class="ttl-name ttl-wait" aria-hidden="true"></span>
+				{/if}
 				{#if folderUnread > 0}
 					<span class="ttl-ct" title={msg.mail_list_unread_count({ count: fmt(folderUnread) })}>
 						<span aria-hidden="true">{fmt(folderUnread)}</span>
@@ -680,7 +741,7 @@
 	{:else if inQuery}
 		<div class="sel-strip" role="status">
 			<span class="sel-text">
-				{msg.mail_selection_all_matching({ count: fmt(querySelected ?? 0), view: folderLabel })}
+				{msg.mail_selection_all_matching({ count: fmt(querySelected ?? 0), view: viewName })}
 			</span>
 			{#if onClearSelection}
 				<button type="button" class="sel-act" onclick={onClearSelection}>{msg.mail_list_clear_selection()}</button>
@@ -698,7 +759,7 @@
 				>
 					{matchingTotal === null
 						? msg.mail_selection_counting()
-						: msg.mail_selection_select_matching({ count: fmt(matchingTotal), view: folderLabel })}
+						: msg.mail_selection_select_matching({ count: fmt(matchingTotal), view: viewName })}
 				</button>
 			{/if}
 		</div>
@@ -707,7 +768,7 @@
 			<span class="sel-text">{msg.mail_selection_search_loaded({ count: checked.size })}</span>
 		</div>
 	{/if}
-	<div class="scroll" bind:this={scrollEl}>
+	<div class="scroll" bind:this={scrollEl} aria-busy={listRefreshing || undefined}>
 		{#if pendingCount > 0}
 			<button type="button" class="new-strip" onclick={flushPending}>
 				<ArrowUp size={14} />
@@ -734,12 +795,36 @@
 				{/each}
 			</div>
 		{/if}
-		{#if list.length === 0}
+		{#if !searchActive && offline}
+			<div class="state-strip" role="status">
+				<WifiOff size={14} />
+				<span>{msg.mail_list_offline()}</span>
+			</div>
+		{:else if !searchActive && loaded && loadError}
+			<div class="state-strip warn" role="status">
+				<CircleAlert size={14} />
+				<span>{msg.mail_list_refresh_failed()}</span>
+				{#if onRetry}
+					<button type="button" class="state-retry" onclick={onRetry}>{msg.common_retry()}</button>
+				{/if}
+			</div>
+		{/if}
+		{#if !searchActive && !loaded && loadError}
+			<div class="list-state">
+				<LoadState kind="error" label={msg.mail_list_load_failed()} {onRetry} />
+			</div>
+		{:else if !searchActive && (!loaded || firstLoad.visible)}
+			{#if firstLoad.visible}
+				<ListSkeleton />
+			{/if}
+		{:else if list.length === 0}
 			<div class="empty-list">
 				<span class="el-rule"></span>
 				<div class="t">{emptyTitle}</div>
 				<div class="d">{emptyDetail}</div>
-				{#if searchActive}
+				{#if searchActive && searchFailed && onRetrySearch}
+					<button class="empty-clear" onclick={onRetrySearch}><RefreshCw size={14} />{msg.common_retry()}</button>
+				{:else if searchActive}
 					<button class="empty-clear" onclick={onClearSearch}><X size={14} />{msg.mail_list_clear_search()}</button>
 				{:else if activeFilters > 0}
 					<button class="empty-clear" onclick={clearFilters}><X size={14} />{msg.mail_list_clear_filters()}</button>
@@ -780,7 +865,7 @@
 					<button class="lf-retry" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
-				{:else if exhausted && list.length > 0}
+				{:else if exhausted && list.length > 0 && !offline}
 					<span class="lf-hair"></span>
 					<span class="lf-text">{msg.mail_list_end()}</span>
 					<span class="lf-hair"></span>

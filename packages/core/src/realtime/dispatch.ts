@@ -75,7 +75,10 @@ export function applyHint(hint: RealtimeHint): void {
 			}
 			return;
 		case 'draft':
-			if (isActive) refreshDraftsCoalesced();
+			if (isActive) {
+				refreshDraftsCoalesced();
+				refreshCountsCoalesced();
+			}
 			return;
 		case 'scheduled_send':
 			if (isActive) refreshScheduledCoalesced();

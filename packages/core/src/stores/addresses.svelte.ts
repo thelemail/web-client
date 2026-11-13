@@ -24,6 +24,7 @@ class AddressesStore {
 	aliasMembers = $state<Record<string, SharedAliasMember[]>>({});
 	mySharedAliases = $state<SharedAlias[]>([]);
 	loading = $state(false);
+	loaded = $state(false);
 	error = $state<string | null>(null);
 	#accountId: string | null = null;
 	#primaryListener: ((accountId: string, email: string) => void) | null = null;
@@ -72,12 +73,12 @@ class AddressesStore {
 					updatedAt: a.updatedAt
 				}))
 			];
+			this.loaded = true;
 			this.#syncUids();
 			this.#announcePrimary();
 		} catch (err) {
 			if (this.#accountId !== acct) return;
 			this.error = err instanceof Error ? err.message : m.store_addresses_load_failed();
-			this.items = [];
 		} finally {
 			if (this.#accountId === acct) this.loading = false;
 		}
@@ -141,6 +142,8 @@ class AddressesStore {
 		this.aliasMembers = {};
 		this.mySharedAliases = [];
 		this.error = null;
+		this.loaded = false;
+		this.loading = false;
 	}
 }
 

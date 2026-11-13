@@ -53,7 +53,7 @@
 			cal.dialog = null;
 			cal.scope = null;
 		} catch (err) {
-			cal.notify(err instanceof Error ? err.message : m.cal_scope_failed());
+			cal.notify(err instanceof Error ? err.message : m.cal_scope_failed(), 'error');
 		} finally {
 			busy = false;
 		}

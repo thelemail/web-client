@@ -1,4 +1,6 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { replyToSummary } from './replyRecipients';
 	import Paperclip from '@lucide/svelte/icons/paperclip';
@@ -33,6 +35,8 @@
 		canLabel?: boolean;
 		openPicker?: string | null;
 		onPicker?: (kind: 'move' | 'labels', entry: ThreadEntry, anchor: HTMLElement) => void;
+		failed?: boolean;
+		onRetry?: () => void;
 	}
 
 	let {
@@ -45,8 +49,12 @@
 		canMove = false,
 		canLabel = false,
 		openPicker = null,
-		onPicker
+		onPicker,
+		failed = false,
+		onRetry
 	}: Props = $props();
+
+	const pending = delayed(() => !e.srcDoc && !failed);
 
 	const entryLabels = $derived(
 		(e.labels ?? [])
@@ -261,8 +269,12 @@
 			<div class="email-sheet flush">
 				{#if e.srcDoc}
 					<EmailBody srcDoc={e.srcDoc} />
+				{:else if failed}
+					<LoadState kind="error" label={m.mail_reader_entry_failed()} {onRetry} />
 				{:else}
-					<div class="tmsg-pending">{m.mail_reader_decrypting()}</div>
+					<div class="tmsg-pending">
+						{#if pending.visible}{m.mail_reader_decrypting()}{/if}
+					</div>
 				{/if}
 			</div>
 

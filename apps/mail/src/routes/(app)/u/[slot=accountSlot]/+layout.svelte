@@ -15,19 +15,22 @@
 
 	let { children, data } = $props();
 
+	const accountId = $derived(data.accountId);
+	const slot = $derived(data.slot);
+
 	$effect(() => {
-		lifecycle.setAccount(data.accountId);
+		lifecycle.setAccount(accountId);
 	});
 
 	$effect(() => {
-		if (!auth.sessionLost(data.accountId)) return;
+		if (!auth.sessionLost(accountId)) return;
 		const want = untrack(() => encodeURIComponent(page.url.pathname + page.url.search));
-		void goto(`/login?slot=${data.slot}&redirect=${want}`);
+		void goto(`/login?slot=${slot}&redirect=${want}`);
 	});
 
 	onMount(() => realtime.start());
 
-	$effect(() => mailSearch.start(data.accountId));
+	$effect(() => mailSearch.start(accountId));
 
 	onMount(() => {
 		const mirror = platform.mirror;

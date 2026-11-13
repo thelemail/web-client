@@ -1,5 +1,7 @@
 <script lang="ts">
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Info from '@lucide/svelte/icons/info';
 	import { m } from '$paraglide/messages.js';
 	import { announce } from '$core/announce';
 
@@ -8,15 +10,18 @@
 		undoLabel?: string;
 		onUndo?: () => void;
 		shift?: number;
+		tone?: 'success' | 'info' | 'error';
 	}
 
-	let { text, undoLabel, onUndo, shift = 0 }: Props = $props();
+	let { text, undoLabel, onUndo, shift = 0, tone = 'success' }: Props = $props();
 
 	$effect(() => announce(text));
 </script>
 
-<div class="toast" style:--toast-shift="{shift}px">
-	<CircleCheck size={16} />{text}
+<div class="toast" class:error={tone === 'error'} style:--toast-shift="{shift}px">
+	{#if tone === 'error'}<CircleAlert size={16} />{:else if tone === 'info'}<Info size={16} />{:else}<CircleCheck
+			size={16}
+		/>{/if}{text}
 	{#if onUndo}
 		<button type="button" class="undo" onclick={onUndo}>{undoLabel ?? m.ui_toast_undo()}</button>
 	{/if}
@@ -41,6 +46,9 @@
 		font-weight: 500;
 		box-shadow: var(--shadow-lg);
 		animation: toast-in var(--dur) var(--ease-out);
+	}
+	.toast.error > :global(svg) {
+		color: var(--brass-500);
 	}
 	.undo {
 		margin-left: 6px;

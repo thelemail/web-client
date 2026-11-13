@@ -77,7 +77,7 @@
 		</span>
 		<span class="os-right">
 			<span class="os-price mono">{pricePerPeriod(total, sel.period)}</span>
-			<button type="button" class="os-change" onclick={onChangePlan}>{m.auth_payment_change()}</button>
+			<button type="button" class="os-change" disabled={submitting} onclick={onChangePlan}>{m.auth_payment_change()}</button>
 		</span>
 	</div>
 

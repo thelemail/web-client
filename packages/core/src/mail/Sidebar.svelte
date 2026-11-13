@@ -46,6 +46,7 @@
 	import { FOLDERS, customFolderId, customLabelId, customFolderRoute, customLabelRoute } from './data';
 	import type { CollectionUnread, MailCollectionKind } from '$core/api/types';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { accountSettings, type MailSidebarSection } from '$core/stores/accountSettings.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { mailNav } from '$core/stores/nav.svelte';
@@ -105,6 +106,11 @@
 		return out;
 	}
 
+	const collectionsFailed = $derived(
+		mailCollections.loaded && mailCollections.error !== null && mailCollections.nodes.length === 0
+	);
+	const collectionsReady = $derived(mailCollections.loaded && !collectionsFailed);
+	const collectionsWait = delayed(() => !mailCollections.loaded);
 	const customFolders = $derived(withoutSealed(mailCollections.folders));
 	const customLabels = $derived(withoutSealed(mailCollections.labels));
 	const favorites = $derived(mailCollections.favorites);
@@ -181,12 +187,12 @@
 		persist({ collapsed: [...next] });
 	}
 
-	let toast = $state<string | null>(null);
+	let toast = $state<{ text: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 	let announcement = $state('');
 
-	function flash(text: string) {
-		toast = text;
+	function flash(text: string, tone: 'success' | 'error' = 'success') {
+		toast = { text, tone };
 		announcement = text;
 		clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
@@ -205,7 +211,7 @@
 				total: order.length
 			});
 		} catch {
-			flash(m.mail_collection_reorder_failed());
+			flash(m.mail_collection_reorder_failed(), 'error');
 		}
 	}
 
@@ -227,7 +233,7 @@
 		try {
 			await mailCollections.setFavorite(entry.id, !entry.favorite);
 		} catch {
-			flash(m.mail_collection_favorite_failed());
+			flash(m.mail_collection_favorite_failed(), 'error');
 		}
 	}
 
@@ -235,7 +241,7 @@
 		try {
 			await mailCollections.recolor(entry.id, color);
 		} catch {
-			flash(m.mail_collection_update_failed());
+			flash(m.mail_collection_update_failed(), 'error');
 		}
 	}
 
@@ -390,6 +396,19 @@
 	</div>
 {/snippet}
 
+{#snippet collectionsPending()}
+	{#if collectionsFailed}
+		<div class="rail-state" role="alert">
+			<span>{m.mail_sidebar_collections_failed()}</span>
+			<button type="button" onclick={() => void mailCollections.load()}>{m.common_retry()}</button>
+		</div>
+	{:else if collectionsWait.visible}
+		<div class="rail-skel" aria-busy="true" aria-label={m.common_loading()}>
+			<span></span><span></span>
+		</div>
+	{/if}
+{/snippet}
+
 {#snippet tree(label: string, entries: CollectionEntry[], all: CollectionEntry[], flat: boolean)}
 	<CollectionTree
 		{label}
@@ -492,14 +511,22 @@
 			{#if !filtering || shownFolders.length > 0}
 				{@render sectionHead('folders', m.mail_collection_folders(), 'folder')}
 				{#if !collapsed.has('folders') || filtering}
-					{@render tree(m.mail_collection_folders(), shownFolders, customFolders, false)}
+					{#if collectionsReady}
+						{@render tree(m.mail_collection_folders(), shownFolders, customFolders, false)}
+					{:else}
+						{@render collectionsPending()}
+					{/if}
 				{/if}
 			{/if}
 
 			{#if !filtering || shownLabels.length > 0}
 				{@render sectionHead('labels', m.mail_collection_labels(), 'label')}
 				{#if !collapsed.has('labels') || filtering}
-					{@render tree(m.mail_collection_labels(), shownLabels, customLabels, false)}
+					{#if collectionsReady}
+						{@render tree(m.mail_collection_labels(), shownLabels, customLabels, false)}
+					{:else}
+						{@render collectionsPending()}
+					{/if}
 				{/if}
 			{/if}
 
@@ -640,5 +667,5 @@
 <CollectionDialogs bind:this={dialogs} onDeleted={deleted} />
 
 {#if toast}
-	<Toast text={toast} />
+	<Toast text={toast.text} tone={toast.tone} />
 {/if}

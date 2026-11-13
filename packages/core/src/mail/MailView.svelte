@@ -1,6 +1,10 @@
 <script lang="ts">
+	import ReaderSkeleton from './ReaderSkeleton.svelte';
+	import { trackOpenRow, withOpenRow, type StickyRow } from './stickyRow';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { m as msg } from '$paraglide/messages.js';
-	import { goto } from '$app/navigation';
+	import { goto, snapshot as navSnapshot } from '$app/navigation';
 	import { page } from '$app/state';
 	import { isListShortcut } from './shortcuts';
 	import PenLine from '@lucide/svelte/icons/pen-line';
@@ -95,9 +99,10 @@
 	const caps = $derived(mailActionsFor(query.folder));
 
 	let checked = $state<Set<string>>(new Set());
-	let toast = $state<{ text: string; undo?: () => void; undoLabel?: string } | null>(null);
+	let toast = $state<{ text: string; undo?: () => void; undoLabel?: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
-	let deepLinkMissing = $state(false);
+	let deepLink = $state<{ id: string; status: 'loading' | 'missing' | 'error'; error?: string } | null>(null);
+	let deepLinkTick = $state(0);
 	let pendingDelete = $state<{ ids: string[]; bulk: boolean } | null>(null);
 	let spamConsent = $state<{ resolve: (share: boolean | null) => void } | null>(null);
 	let spamConsentBusy = $state(false);
@@ -109,7 +114,7 @@
 
 	const filters = $derived<ListFilters>({
 		unread: query.unread,
-		starred: query.folder === 'starred',
+		starred: query.folder === 'starred' || query.starred,
 		attach: query.attach,
 		labels: query.labels,
 		direct: query.direct
@@ -123,14 +128,15 @@
 	const showScope = $derived(mailCollections.hasChildren(viewFolderId ?? viewLabelId));
 	const sort = $derived<SortId>(query.sort);
 
-	const folderLabel = $derived(
+	const folderLabel = $derived<string | null>(
 		query.folder === 'starred'
 			? msg.mail_folder_starred()
 			: (FOLDERS.find((f) => f.id === query.folder)?.label ??
 				mailCollections.folder(viewFolderId)?.name ??
 				mailCollections.label(viewLabelId)?.name ??
-				msg.mail_folder_inbox())
+				null)
 	);
+	const viewName = $derived(folderLabel ?? '');
 
 	const folderUnread = $derived.by(() => {
 		const c = mailbox.counts;
@@ -143,10 +149,28 @@
 
 	const inFlight = new Map<string, Promise<void>>();
 
+	function findAny(id: string | null): Message | null {
+		if (!id) return null;
+		return mailbox.findMessage(id) ?? mailSearch.findResult(id);
+	}
+
+	function patchAny(id: string, patch: Partial<Message>) {
+		mailbox.patchMessage(id, patch);
+		mailSearch.patch(id, patch);
+	}
+
 	function flash(text: string, undo?: () => void, undoLabel?: string) {
-		toast = { text, undo, undoLabel };
+		show({ text, undo, undoLabel, tone: 'success' });
+	}
+
+	function fail(text: string, undo?: () => void, undoLabel?: string) {
+		show({ text, undo, undoLabel, tone: 'error' });
+	}
+
+	function show(next: NonNullable<typeof toast>) {
+		toast = next;
 		clearTimeout(toastTimer);
-		toastTimer = setTimeout(() => (toast = null), undo ? 7000 : 2600);
+		toastTimer = setTimeout(() => (toast = null), next.undo ? 7000 : next.tone === 'error' ? 5000 : 2600);
 	}
 
 	function dismissToast() {
@@ -160,11 +184,15 @@
 	}
 
 	function openMessage(id: string) {
-		void goto(withSearch(`${basePath}/${id}`));
+		void goto(withSearch(`${basePath}/${id}`), { replace: messageId !== null, reset: false });
 	}
 
 	function closeMessage(opts: { replace?: boolean } = {}) {
-		void goto(withSearch(basePath), { replace: opts.replace ?? false });
+		void goto(withSearch(basePath), { replace: opts.replace ?? false, reset: false });
+	}
+
+	function withOpenMessage(search: string): string {
+		return `${basePath}${messageId ? `/${messageId}` : ''}${search}`;
 	}
 
 
@@ -188,16 +216,39 @@
 		return m.direction;
 	}
 
-	const list = $derived(
+	const baseList = $derived(
 		mailSearch.active
-			? mailSearch.results.map((hit) => mailbox.findMessage(hit.id) ?? hit)
+			? mailSearch.results.map((hit) => findAny(hit.id) ?? hit)
 			: snapshot.msgs
 	);
+
+	let stickyRow = $state<StickyRow | null>(null);
+
+	$effect(() => {
+		const id = messageId;
+		const rows = baseList;
+		untrack(() => (stickyRow = trackOpenRow(rows, id, stickyRow)));
+	});
+
+	const list = $derived(withOpenRow(baseList, stickyRow, messageId, (id) => findAny(id)));
+
+	let listView = $state<{
+		scrollPosition: () => { view: string; top: number };
+		restoreScroll: (position: { view: string; top: number }) => void;
+	}>();
+
+	navSnapshot({
+		id: 'mail-list-scroll',
+		capture: () => listView?.scrollPosition() ?? null,
+		restore: (position) => {
+			if (position) listView?.restoreScroll(position);
+		}
+	});
 
 	const openIndex = $derived(messageId ? list.findIndex((m) => m.id === messageId) : -1);
 	const prevId = $derived(openIndex > 0 ? list[openIndex - 1].id : null);
 	const nextId = $derived(openIndex >= 0 && openIndex < list.length - 1 ? list[openIndex + 1].id : null);
-	const selected = $derived(mailbox.findMessage(messageId));
+	const selected = $derived(findAny(messageId));
 
 	$effect(() => {
 		if (!supported || !auth.canEnterApp) return;
@@ -206,21 +257,22 @@
 
 	$effect(() => {
 		const id = messageId;
-		if (!id) {
-			deepLinkMissing = false;
-			return;
-		}
-		if (mailbox.findMessage(id)) {
-			deepLinkMissing = false;
+		void deepLinkTick;
+		if (!id || findAny(id)) {
+			deepLink = null;
 			return;
 		}
 		if (snapshot.loading) return;
-		deepLinkMissing = false;
-		void (async () => {
-			const got = await mailbox.ensureMessage(id);
-			if (!got && messageId === id) deepLinkMissing = true;
-		})();
+		if (untrack(() => deepLink)?.id === id && untrack(() => deepLink)?.status !== 'error') return;
+		deepLink = { id, status: 'loading' };
+		void mailbox.resolveMessage(id).then((found) => {
+			if (messageId !== id) return;
+			if (found.status === 'found') deepLink = null;
+			else deepLink = { id, status: found.status, error: found.status === 'error' ? found.error : undefined };
+		});
 	});
+
+	const deepLinkWait = delayed(() => deepLink?.status === 'loading', { key: () => deepLink?.id ?? null });
 
 	$effect(() => {
 		mailbox.pin(selected);
@@ -240,6 +292,7 @@
 		void routeFolder;
 		untrack(() => {
 			checked = new Set();
+			stickyRow = null;
 			mailSearch.clear();
 			returnedDismissed = false;
 		});
@@ -291,9 +344,11 @@
 	const titleUnread = $derived(viewUnread > 99 ? '99+' : String(viewUnread));
 
 	const pageTitle = $derived(
-		viewUnread > 0
-			? msg.mail_page_title_unread({ count: titleUnread, folder: folderLabel })
-			: msg.mail_page_title({ folder: folderLabel })
+		folderLabel === null
+			? 'Thelemail'
+			: viewUnread > 0
+				? msg.mail_page_title_unread({ count: titleUnread, folder: folderLabel })
+				: msg.mail_page_title({ folder: folderLabel })
 	);
 
 	const allChecked = $derived(list.length > 0 && list.every((m) => checked.has(m.id)));
@@ -306,7 +361,7 @@
 		action: StateAction,
 		errMsg: string
 	): Promise<void> {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return Promise.resolve();
 		const direction = directionFor(current);
 		const snap: Partial<Message> = {
@@ -314,19 +369,19 @@
 			starred: current.starred,
 			snoozedUntil: current.snoozedUntil ?? null
 		};
-		mailbox.patchMessage(id, optimistic);
+		patchAny(id, optimistic);
 		const prev = inFlight.get(id) ?? Promise.resolve();
 		const next = prev.then(async () => {
 			try {
 				const state = await action(id);
-				const target = mailbox.findMessage(id);
+				const target = findAny(id);
 				if (target) {
-					mailbox.patchMessage(id, applyServerState(target, state, direction));
+					patchAny(id, applyServerState(target, state, direction));
 				}
 				void mailbox.refreshCounts();
 			} catch {
-				mailbox.patchMessage(id, snap);
-				flash(errMsg);
+				patchAny(id, snap);
+				fail(errMsg);
 			}
 		});
 		inFlight.set(
@@ -354,24 +409,24 @@
 		errMsg: string,
 		folderId?: string
 	): Promise<void> {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return Promise.resolve();
 		const members = mailbox.threadMembers(id);
 		const snaps = members.map((m) => ({ id: m.id, folder: m.folder, unread: m.unread }));
 		const rootId = current.threadRootId;
-		for (const m of members) mailbox.patchMessage(m.id, memberPatch(m, optimistic));
+		for (const m of members) patchAny(m.id, memberPatch(m, optimistic));
 		const prev = inFlight.get(id) ?? Promise.resolve();
 		const next = prev.then(async () => {
 			try {
 				const res = await applyToThread(id, rootId, verb, folderId);
 				if (res.failed > 0) {
-					flash(errMsg);
+					fail(errMsg);
 					await mailbox.refresh([query]);
 				}
 				void mailbox.refreshCounts();
 			} catch {
-				for (const s of snaps) mailbox.patchMessage(s.id, { folder: s.folder, unread: s.unread });
-				flash(errMsg);
+				for (const s of snaps) patchAny(s.id, { folder: s.folder, unread: s.unread });
+				fail(errMsg);
 			}
 		});
 		inFlight.set(
@@ -384,7 +439,7 @@
 	}
 
 	function toggleStar(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		const wantStar = !current.starred;
 		void queueStateUpdate(
@@ -441,7 +496,7 @@
 	}
 
 	function moveToInbox(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		advancePast(id);
 		const targetFolder = current.direction === 'sent' ? 'sent' : 'inbox';
@@ -476,7 +531,7 @@
 	}
 
 	function unsnoozeOne(id: string, note?: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (current.folder === 'snoozed') advancePast(id);
 		const home = homeOf(current);
@@ -549,7 +604,7 @@
 		const outcome = await submitReport(accountId, id, {
 			kind: 'spam',
 			includeHeaders: share,
-			senderAddress: share ? mailbox.findMessage(id)?.fromAddr : undefined
+			senderAddress: share ? findAny(id)?.fromAddr : undefined
 		});
 		await moveToSpam(id);
 		return outcome;
@@ -561,12 +616,12 @@
 		advancePast(id);
 		void reportAndSpam(id, share).then(
 			() => flash(msg.mail_toast_reported_spam(), () => undoReport(id)),
-			() => flash(msg.mail_err_report())
+			() => fail(msg.mail_err_report())
 		);
 	}
 
 	function reported(id: string, kind: MessageReportKind, outcome: ReportOutcome) {
-		const alreadySpam = mailbox.findMessage(id)?.folder === 'spam';
+		const alreadySpam = findAny(id)?.folder === 'spam';
 		if (!alreadySpam) advancePast(id);
 		void moveToSpam(id);
 		const head = outcome.duplicate
@@ -583,7 +638,7 @@
 
 	function undoReport(id: string) {
 		dismissToast();
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		const home = homeOf(current);
 		const optimistic = { folder: home.route, returnsToArchive: false };
@@ -647,7 +702,7 @@
 		const out = new Map<string, Message>();
 		for (const id of ids) {
 			const members = isThread(id) ? mailbox.threadMembers(id) : [];
-			const own = mailbox.findMessage(id);
+			const own = findAny(id);
 			for (const m of own ? [own, ...members] : members) out.set(m.id, m);
 		}
 		return [...out.values()];
@@ -687,8 +742,8 @@
 				for (const r of results) {
 					if (r.outcome === 'too_many_labels') limited.add(r.messageId);
 					if (r.outcome === 'not_found') missing.add(r.messageId);
-					if (r.labelIds && mailbox.findMessage(r.messageId)) {
-						mailbox.patchMessage(r.messageId, { labels: r.labelIds });
+					if (r.labelIds && findAny(r.messageId)) {
+						patchAny(r.messageId, { labels: r.labelIds });
 					}
 				}
 			}
@@ -707,13 +762,13 @@
 		const expand = scope === 'conversation';
 		const local = expand
 			? selectionMessages(ids)
-			: ids.map((id) => mailbox.findMessage(id)).filter((m): m is Message => !!m);
+			: ids.map((id) => findAny(id)).filter((m): m is Message => !!m);
 		const snaps = local.map((m) => ({ id: m.id, labels: m.labels ?? [], labelCounts: m.labelCounts }));
 		const drop = new Set(remove);
 		for (const m of local) {
 			const patch: Partial<Message> = { labels: withLabelChanges(m.labels ?? [], add, drop) };
 			if (expand && ids.includes(m.id)) patch.labelCounts = countsAfter(m, add, drop);
-			mailbox.patchMessage(m.id, patch);
+			patchAny(m.id, patch);
 		}
 		accountSettings.recordRecents('labels', add);
 		const threaded = expand ? ids.filter(isThread) : [];
@@ -721,7 +776,7 @@
 			const targets = new Set(expand ? local.map((m) => m.id) : ids);
 			const fetched = await Promise.all(
 				threaded.map((id) => {
-					const m = mailbox.findMessage(id);
+					const m = findAny(id);
 					return m ? threadMessageIds(m.id, m.threadRootId) : Promise.resolve([]);
 				})
 			);
@@ -730,19 +785,19 @@
 			for (const root of rootIds) mailbox.touchThread(root);
 			if (threaded.length > 0 || limited.length > 0 || missing.length > 0) void mailbox.refresh([query]);
 			if (limited.length > 0) {
-				flash(msg.mail_err_too_many_labels());
+				fail(msg.mail_err_too_many_labels());
 				return 'limit';
 			}
 			if (missing.length > 0) {
-				flash(msg.mail_bulk_labels_partial({ failed: missing.length }));
+				fail(msg.mail_bulk_labels_partial({ failed: missing.length }));
 				return 'limit';
 			}
 			return 'ok';
 		} catch {
 			for (const snap of snaps) {
-				mailbox.patchMessage(snap.id, { labels: snap.labels, labelCounts: snap.labelCounts });
+				patchAny(snap.id, { labels: snap.labels, labelCounts: snap.labelCounts });
 			}
-			flash(msg.mail_reader_labels_failed());
+			fail(msg.mail_reader_labels_failed());
 			void mailbox.refresh([query]);
 			return 'failed';
 		}
@@ -762,7 +817,7 @@
 		scope: PickerScope = 'conversation'
 	): Promise<{ ok: number; failed: number }> {
 		const plan = ids.map((id) => {
-			const row = mailbox.findMessage(id);
+			const row = findAny(id);
 			const thread = scope === 'conversation' && isThread(id);
 			return { id, rootId: row?.threadRootId, members: row ? (thread ? mailbox.threadMembers(id) : [row]) : [], thread };
 		});
@@ -774,7 +829,7 @@
 				returnsToArchive: m.returnsToArchive
 			}))
 		);
-		for (const p of plan) for (const m of p.members) mailbox.patchMessage(m.id, memberPatch(m, movePatch(m, target)));
+		for (const p of plan) for (const m of p.members) patchAny(m.id, memberPatch(m, movePatch(m, target)));
 		const folderId = target.destination === 'folder' ? target.folderId : undefined;
 		try {
 			const groups = await Promise.all(
@@ -788,8 +843,8 @@
 						failedIds.add(r.messageId);
 						continue;
 					}
-					const known = mailbox.findMessage(r.messageId);
-					if (known) mailbox.patchMessage(r.messageId, applyServerState(known, r.state, known.direction));
+					const known = findAny(r.messageId);
+					if (known) patchAny(r.messageId, applyServerState(known, r.state, known.direction));
 				}
 			}
 			const failed = plan.filter((_, i) => groups[i].some((id) => failedIds.has(id))).length;
@@ -798,7 +853,7 @@
 			if (failed > 0) void mailbox.refresh([query]);
 			return { ok: plan.length - failed, failed };
 		} catch {
-			for (const s of snaps) mailbox.patchMessage(s.id, s);
+			for (const s of snaps) patchAny(s.id, s);
 			void mailbox.refresh([query]);
 			return { ok: 0, failed: plan.length };
 		}
@@ -852,7 +907,7 @@
 			void mailbox.refreshCounts();
 			flash(target === 'spam' ? msg.mail_toast_moved_spam() : msg.mail_toast_moved_trash());
 		} catch {
-			flash(target === 'spam' ? msg.mail_err_move_spam() : msg.mail_err_move_trash());
+			fail(target === 'spam' ? msg.mail_err_move_spam() : msg.mail_err_move_trash());
 		}
 	}
 
@@ -866,7 +921,8 @@
 		if (scope === 'message') {
 			const { failed } = await moveMany(ids, { destination: 'archive' }, 'message');
 			void mailbox.refresh([query]);
-			flash(failed > 0 ? msg.mail_err_archive() : msg.mail_toast_moved_to_label({ label }));
+			if (failed > 0) fail(msg.mail_err_archive());
+			else flash(msg.mail_toast_moved_to_label({ label }));
 			return;
 		}
 		void queueArchive(ids[0]);
@@ -886,7 +942,7 @@
 	}
 
 	function moveToFolder(id: string, folderId: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (current.folder === customFolderRoute(folderId)) return;
 		advancePast(id);
@@ -983,7 +1039,7 @@
 		void mailbox.refresh([query]);
 		void mailbox.refreshCounts();
 		if (outcome === 'error') {
-			flash(msg.mail_selection_failed({ done, total }));
+			fail(msg.mail_selection_failed({ done, total }));
 			return;
 		}
 		if (outcome === 'stopped') {
@@ -993,11 +1049,11 @@
 		const limited = [...failures.values()].filter((o) => o === 'too_many_labels').length;
 		const retryable = [...failures].filter(([, o]) => o !== 'too_many_labels').map(([id]) => id);
 		if (limited > 0 && retryable.length === 0) {
-			flash(msg.mail_err_too_many_labels());
+			fail(msg.mail_err_too_many_labels());
 			return;
 		}
 		if (retryable.length > 0) {
-			flash(
+			fail(
 				msg.mail_selection_some_failed({ count: retryable.length }),
 				() => {
 					dismissToast();
@@ -1068,7 +1124,7 @@
 	const openPickerName = $derived(picker?.anchor.dataset.picker ?? null);
 
 	function tallyFor(id: string): LabelTally[] {
-		const row = mailbox.findMessage(id);
+		const row = findAny(id);
 		if (!row) return [];
 		if (row.labelCounts && (row.threadCount ?? 1) > 1) {
 			return [{ counts: row.labelCounts, total: row.threadCount ?? 1 }];
@@ -1081,7 +1137,7 @@
 		if (sel) return labelStatesFromTallies([{ counts: sel.count.labelCounts, total: sel.count.messages }]);
 		if (entry) return labelStatesFromTallies([tallyOf(entry.labels)]);
 		if (scope === 'message') {
-			return labelStatesFromTallies(ids.map((id) => tallyOf(mailbox.findMessage(id)?.labels ?? [])));
+			return labelStatesFromTallies(ids.map((id) => tallyOf(findAny(id)?.labels ?? [])));
 		}
 		return labelStatesFromTallies(ids.flatMap(tallyFor));
 	}
@@ -1138,7 +1194,7 @@
 		if (picker.entry) return [home(picker.entry.folder)];
 		if (picker.query) return viewFolderId ? [query.folder] : [];
 		return picker.ids
-			.map((id) => mailbox.findMessage(id))
+			.map((id) => findAny(id))
 			.filter((m): m is Message => !!m)
 			.map((m) => home(m.folder));
 	});
@@ -1166,11 +1222,11 @@
 	const pickerScopeText = $derived.by(() => {
 		if (!picker) return '';
 		if (picker.query) {
-			return msg.mail_scope_query({ count: formatCount(picker.query.count.units), view: folderLabel });
+			return msg.mail_scope_query({ count: formatCount(picker.query.count.units), view: viewName });
 		}
 		if (picker.entry) return msg.mail_scope_message();
 		if (picker.ids.length > 1) {
-			const rows = picker.ids.map((id) => mailbox.findMessage(id)).filter((m): m is Message => !!m);
+			const rows = picker.ids.map((id) => findAny(id)).filter((m): m is Message => !!m);
 			const messages = rows.reduce((n, m) => n + Math.max(1, m.threadCount ?? 1), 0);
 			if (messages > rows.length) {
 				return msg.mail_scope_bulk({ count: rows.length, messages });
@@ -1180,7 +1236,7 @@
 	});
 
 	const pickerConversationSize = $derived(
-		picker?.scopeable ? (mailbox.findMessage(picker.ids[0])?.threadCount ?? mailbox.threadSize(picker.ids[0])) : 0
+		picker?.scopeable ? (findAny(picker.ids[0])?.threadCount ?? mailbox.threadSize(picker.ids[0])) : 0
 	);
 
 	const pickerTouchesConversation = $derived(
@@ -1234,7 +1290,7 @@
 	}
 
 	function entryForRow(id: string): EntryTarget | null {
-		const row = mailbox.findMessage(id);
+		const row = findAny(id);
 		if (!row) return null;
 		return { id: row.id, rootId: row.threadRootId ?? row.id, labels: row.labels ?? [], folder: row.folder };
 	}
@@ -1282,14 +1338,14 @@
 		const scope: PickerScope = current.entry ? 'message' : current.scope;
 		const roots = current.entry
 			? [current.entry.rootId]
-			: current.ids.map((id) => mailbox.findMessage(id)?.threadRootId ?? id);
+			: current.ids.map((id) => findAny(id)?.threadRootId ?? id);
 		void applyLabels(current.ids, add, remove, scope, roots).then((outcome) => {
 			if (outcome === 'ok') flash(msg.mail_toast_labels_updated());
 		});
 	}
 
 	function removeConversationLabel(id: string, labelId: string) {
-		const row = mailbox.findMessage(id);
+		const row = findAny(id);
 		const roots = row ? [row.threadRootId ?? row.id] : [];
 		void applyLabels([id], [], [labelId], 'conversation', roots).then((outcome) => {
 			if (outcome === 'ok') {
@@ -1312,7 +1368,7 @@
 	}
 
 	function restoreOne(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (messageId === id) {
 			const nextId = nextAfter(id);
@@ -1351,11 +1407,14 @@
 			if (fromBulk) checked = new Set();
 			const results = await Promise.allSettled(ids.map((id) => deleteMessage(id)));
 			const failed = results.filter((r) => r.status === 'rejected').length;
-			if (!fromBulk) flash(failed === 0 ? msg.mail_toast_deleted_forever() : msg.mail_err_delete());
+			if (!fromBulk) {
+				if (failed === 0) flash(msg.mail_toast_deleted_forever());
+				else fail(msg.mail_err_delete());
+			}
 			else if (failed === 0) flash(msg.mail_bulk_deleted({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_deleted_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_delete_failed());
+				fail(msg.mail_bulk_deleted_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_delete_failed());
 			await mailbox.refresh([query]);
 			void mailbox.refreshCounts();
 		} finally {
@@ -1377,7 +1436,7 @@
 	}
 
 	function toggleRead(id: string) {
-		const current = mailbox.findMessage(id);
+		const current = findAny(id);
 		if (!current) return;
 		if (current.unread) markRead(id);
 		else markUnread(id);
@@ -1443,8 +1502,8 @@
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(msg.mail_bulk_read({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_read_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_read_failed());
+				fail(msg.mail_bulk_read_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_read_failed());
 			return;
 		}
 		if (action === 'restore') {
@@ -1454,7 +1513,7 @@
 			checked = new Set();
 			const results = await Promise.allSettled(
 				ids.map((id) => {
-					const current = mailbox.findMessage(id);
+					const current = findAny(id);
 					const targetFolder = current?.direction === 'sent' ? 'sent' : 'inbox';
 					return isThread(id)
 						? queueThreadUpdate(id, { folder: targetFolder }, 'restore', msg.mail_err_restore())
@@ -1469,8 +1528,8 @@
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(msg.mail_bulk_restored({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_restored_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_restore_failed());
+				fail(msg.mail_bulk_restored_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_restore_failed());
 			return;
 		}
 		if (action === 'delete') {
@@ -1488,8 +1547,8 @@
 			const failed = results.filter((r) => r.status === 'rejected').length;
 			if (failed === 0) flash(msg.mail_bulk_reported({ count: ids.length }));
 			else if (failed < ids.length)
-				flash(msg.mail_bulk_reported_partial({ ok: ids.length - failed, failed }));
-			else flash(msg.mail_bulk_report_failed());
+				fail(msg.mail_bulk_reported_partial({ ok: ids.length - failed, failed }));
+			else fail(msg.mail_bulk_report_failed());
 			return;
 		}
 		const optimistic: Partial<Message> = { folder: 'trash' };
@@ -1507,8 +1566,8 @@
 		);
 		const failed = results.filter((r) => r.status === 'rejected').length;
 		if (failed === 0) flash(msg.mail_bulk_trashed({ count: ids.length }));
-		else if (failed < ids.length) flash(msg.mail_bulk_trashed_partial({ ok: ids.length - failed, failed }));
-		else flash(msg.mail_bulk_trash_failed());
+		else if (failed < ids.length) fail(msg.mail_bulk_trashed_partial({ ok: ids.length - failed, failed }));
+		else fail(msg.mail_bulk_trash_failed());
 	}
 
 	function refreshAfterSend() {
@@ -1533,31 +1592,29 @@
 
 	function handleSort(id: SortId) {
 		const search = withFilters(page.url.searchParams, { sort: id });
-		void goto(`${basePath}${search}`);
+		void goto(withOpenMessage(search), { reset: false });
 	}
 
 	function handleSetFilters(next: ListFilters) {
-		const wantStarred = next.starred;
-		const onStarred = query.folder === 'starred';
-		if (wantStarred !== onStarred) {
+		if (query.folder === 'starred' && !next.starred) {
 			const slot = page.params.slot ?? '0';
-			const target = wantStarred ? `/u/${slot}/mail/starred` : `/u/${slot}/mail/inbox`;
 			const search = withFilters(new URLSearchParams(), {
 				unread: next.unread,
 				attach: next.attach,
 				labels: next.labels,
 				direct: false
 			});
-			void goto(`${target}${search}`);
+			void goto(`/u/${slot}/mail/inbox${search}`, { reset: false });
 			return;
 		}
 		const search = withFilters(page.url.searchParams, {
 			unread: next.unread,
+			starred: query.folder === 'starred' ? false : next.starred,
 			attach: next.attach,
 			labels: next.labels,
 			direct: !!next.direct
 		});
-		void goto(`${basePath}${search}`);
+		void goto(withOpenMessage(search), { reset: false });
 	}
 
 	function handleLoadMore() {
@@ -1637,11 +1694,11 @@
 		<section class="list">
 			<div class="list-h">
 				<div class="ttl-block">
-					<span class="ttl">{folderLabel}</span>
+					<span class="ttl">{viewName}</span>
 				</div>
 			</div>
 			<div class="empty-folder">
-				<p>{msg.mail_folder_unavailable({ folder: folderLabel })}</p>
+				<p>{msg.mail_folder_unavailable({ folder: viewName })}</p>
 				<p class="sub">{msg.mail_folder_unavailable_detail()}</p>
 			</div>
 		</section>
@@ -1659,6 +1716,7 @@
 		/>
 	{:else}
 		<MessageList
+			bind:this={listView}
 			{folderLabel}
 			{folderUnread}
 			{list}
@@ -1694,7 +1752,12 @@
 			onRefresh={() => mailbox.refresh([query])}
 			exhausted={snapshot.exhausted}
 			loadingMore={snapshot.loadingMore}
-			loadMoreError={snapshot.loadError}
+			loadMoreError={snapshot.moreError}
+			loaded={snapshot.loaded}
+			loadError={snapshot.loadError}
+			listRefreshing={snapshot.refreshing}
+			offline={snapshot.offline}
+			onRetry={() => void mailbox.retry(query)}
 			onLoadMore={handleLoadMore}
 			{returnedCount}
 			onDismissReturned={() => (returnedDismissed = true)}
@@ -1703,6 +1766,8 @@
 			onAtTopChange={(v) => (atTop = v)}
 			searchActive={mailSearch.active}
 			searchPending={mailSearch.searching}
+			searchFailed={mailSearch.failed}
+			onRetrySearch={() => mailSearch.commit(mailSearch.committed)}
 			searchIndexed={mailSearch.indexed}
 			searchComplete={!mailSearch.partial}
 			searchChips={mailSearch.chips}
@@ -1711,12 +1776,27 @@
 			{showScope}
 		/>
 		<PaneDivider />
-		{#if messageId && !selected && deepLinkMissing}
+		{#if messageId && !selected && deepLink?.status === 'missing'}
 			<section class="reader reader-missing">
 				<p>{msg.mail_not_found()}</p>
 				<p class="sub">{msg.mail_not_found_detail()}</p>
-				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: folderLabel })}</a>
+				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: viewName })}</a>
 			</section>
+		{:else if messageId && !selected && deepLink?.status === 'error'}
+			<section class="reader reader-missing">
+				<LoadState
+					kind="error"
+					label={msg.mail_reader_open_failed()}
+					onRetry={() => (deepLinkTick += 1)}
+				/>
+				<a class="back" href={withSearch(basePath)}>{msg.mail_back_to_folder({ folder: viewName })}</a>
+			</section>
+		{:else if messageId && !selected}
+			{#if deepLinkWait.visible}
+				<ReaderSkeleton onBack={() => closeMessage({ replace: true })} />
+			{:else}
+				<section class="reader" aria-busy="true" aria-label={msg.mail_reader_loading_message()}></section>
+			{/if}
 		{:else}
 			<Reader
 				m={selected}
@@ -1823,13 +1903,7 @@
 	/>
 {/if}
 {#if toast}
-	<Toast text={toast.text} onUndo={toast.undo} undoLabel={toast.undoLabel} shift={131} />
-{/if}
-{#if snapshot.loadError}
-	<Toast text={msg.mail_toast_error({ error: snapshot.loadError })} shift={131} />
-{/if}
-{#if snapshot.loading}
-	<Toast text={msg.common_loading()} shift={131} />
+	<Toast text={toast.text} tone={toast.tone} onUndo={toast.undo} undoLabel={toast.undoLabel} shift={131} />
 {/if}
 
 <style>

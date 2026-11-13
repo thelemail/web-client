@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '$core/settings/settings.css';
 	import { auth } from '$core/stores/session.svelte';
+	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 
 	let { children, data } = $props();
 
@@ -11,3 +12,5 @@
 </script>
 
 {@render children()}
+
+<ReauthDialog />

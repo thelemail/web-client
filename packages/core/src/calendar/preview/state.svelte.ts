@@ -28,12 +28,12 @@ class PreviewState {
 		live.dialog = value;
 	}
 
-	notify(message: string) {
-		live.notify(message);
+	notify(message: string, tone: 'success' | 'info' | 'error' = 'success') {
+		live.notify(message, tone);
 	}
 
 	unbuilt() {
-		live.notify(m.cal_preview_unbuilt());
+		live.notify(m.cal_preview_unbuilt(), 'info');
 	}
 
 	toggleMailProposal(key: string) {
@@ -53,7 +53,7 @@ class PreviewState {
 
 	confirmMail() {
 		if (this.mailOwnerMissing) {
-			this.notify(m.cal_preview_choose_owner());
+			this.notify(m.cal_preview_choose_owner(), 'info');
 			return;
 		}
 		const n = this.mailSelectedCount;
@@ -71,7 +71,7 @@ class PreviewState {
 	addSlot() {
 		const next = [0, 1, 2, 3].find((i) => !this.offeredSlots.includes(i));
 		if (next === undefined) {
-			this.notify(m.cal_preview_no_slots());
+			this.notify(m.cal_preview_no_slots(), 'info');
 			return;
 		}
 		this.offeredSlots = [...this.offeredSlots, next].sort();
@@ -171,7 +171,7 @@ class PreviewState {
 
 	confirmBooking() {
 		if (this.bookingSlot === null) {
-			this.notify(m.cal_preview_pick_time_first());
+			this.notify(m.cal_preview_pick_time_first(), 'info');
 			return;
 		}
 		this.notify(

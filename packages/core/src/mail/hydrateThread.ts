@@ -221,9 +221,8 @@ async function fullEntry(
 					)) ?? signature;
 			}
 		} catch (err) {
-			if (err instanceof DecryptionError) {
-				bodyLines = ['(Could not decrypt this message.)'];
-			}
+			if (!(err instanceof DecryptionError)) throw err;
+			bodyLines = ['(Could not decrypt this message.)'];
 		}
 
 		let srcDoc: string;
@@ -358,6 +357,9 @@ export async function hydrateThread(messageId: string): Promise<HydratedThread |
 		const source = byId.get(id);
 		const next = source ? run(() => fullEntry(accountId, source, stripTracking)) : Promise.resolve(null);
 		loads.set(id, next);
+		void next.then((entry) => {
+			if (!entry && loads.get(id) === next) loads.delete(id);
+		});
 		return next;
 	};
 

@@ -2,15 +2,16 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import AuthShell from '$core/auth/AuthShell.svelte';
 	import LoginFlow from '$core/auth/LoginFlow.svelte';
 	import { resolveReturnTo } from '$core/auth/return-to';
 	import { Button } from '$core/components/ui/button';
 	import { mailOnlyAccountId, unlockAtAuth } from '$core/custody/unlock';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	const slot = page.url.searchParams.get('slot');
 	let mode = $state<'checking' | 'password' | 'auth' | 'failed'>(slot === null ? 'password' : 'checking');
+	const checking = delayed(() => mode === 'checking', { minVisible: 0 });
 
 	function redirect(): string | null {
 		return page.url.searchParams.get('redirect');
@@ -45,18 +46,22 @@
 
 {#if mode === 'password'}
 	<LoginFlow {intercept} afterSignIn={(slot) => goto(resolveReturnTo(redirect(), slot))} />
-{:else if mode !== 'checking'}
-	<AuthShell>
-		<div class="card unlockcard" aria-live="polite">
-			{#if mode === 'failed'}
-				<h1>{m.handoff_title()}</h1>
-				<p class="unlockmsg">{m.handoff_failed()}</p>
-				<Button variant="primary" size="lg" href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
-			{:else}
-				<p class="unlockmsg">{m.handoff_opening()}</p>
-			{/if}
-		</div>
-	</AuthShell>
+{:else if mode === 'checking'}
+	<div class="unlockcard" aria-busy="true" aria-live="polite">
+		{#if checking.visible}
+			<p class="unlockmsg">{m.common_loading()}</p>
+		{/if}
+	</div>
+{:else}
+	<div class="unlockcard" aria-live="polite">
+		{#if mode === 'failed'}
+			<h1>{m.handoff_title()}</h1>
+			<p class="unlockmsg">{m.handoff_failed()}</p>
+			<Button variant="primary" size="lg" href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
+		{:else}
+			<p class="unlockmsg">{m.handoff_opening()}</p>
+		{/if}
+	</div>
 {/if}
 
 <style>

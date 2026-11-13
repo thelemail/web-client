@@ -13,6 +13,7 @@
 	import { mailSearch } from '$core/stores/search.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
+	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { deleteDraft } from '$core/api/drafts';
 	import { auth } from '$core/stores/auth.svelte';
@@ -20,12 +21,12 @@
 
 	onMount(() => mailSearch.clear());
 
-	let toast = $state<{ text: string } | null>(null);
+	let toast = $state<{ text: string; tone: 'success' | 'error' } | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 
-	function flash(text: string) {
-		toast = { text };
+	function flash(text: string, tone: 'success' | 'error' = 'success') {
+		toast = { text, tone };
 		clearTimeout(toastTimer);
 		toastTimer = setTimeout(() => (toast = null), 2600);
 	}
@@ -56,7 +57,7 @@
 			await deleteDraft(d.id);
 			flash(m.mail_drafts_discarded());
 		} catch {
-			flash(m.mail_drafts_discard_failed());
+			flash(m.mail_drafts_discard_failed(), 'error');
 			void drafts.refresh();
 		}
 	}
@@ -74,8 +75,8 @@
 		<div class="list-h">
 			<h1 class="ttl">
 				<span class="ttl-name">{m.mailbox_folder_drafts()}</span>
-				{#if drafts.count > 0}
-					<span class="ttl-ct">{drafts.count}</span>
+				{#if mailbox.counts.drafts > 0}
+					<span class="ttl-ct">{mailbox.counts.drafts}</span>
 				{/if}
 			</h1>
 			<div class="lh-actions">
@@ -169,7 +170,7 @@
 	</button>
 {/if}
 {#if toast}
-	<Toast text={toast.text} shift={131} />
+	<Toast text={toast.text} tone={toast.tone} shift={131} />
 {/if}
 
 <style>

@@ -13,7 +13,8 @@
 		onEnter,
 		invalid = false,
 		describedby,
-		focusOnMount = false
+		focusOnMount = false,
+		disabled = false
 	}: {
 		label: string;
 		value: string;
@@ -24,6 +25,7 @@
 		invalid?: boolean;
 		describedby?: string;
 		focusOnMount?: boolean;
+		disabled?: boolean;
 	} = $props();
 
 	let show = $state(false);
@@ -47,6 +49,7 @@
 			aria-invalid={invalid || undefined}
 			aria-describedby={describedby}
 			autofocus={focusOnMount}
+			{disabled}
 			onkeydown={(e) => {
 				if (e.key === 'Enter' && onEnter) onEnter();
 			}}
@@ -54,6 +57,7 @@
 		<button
 			type="button"
 			class="reveal"
+			{disabled}
 			aria-label={show ? m.common_hide_password() : m.common_show_password()}
 			onclick={() => (show = !show)}
 		>

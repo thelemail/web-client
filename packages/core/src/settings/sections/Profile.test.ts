@@ -28,7 +28,7 @@ vi.mock('$core/api/me', () => ({
 vi.mock('$core/mail/send', () => ({ sha256B64: vi.fn() }));
 vi.mock('$core/mail/signatureImages', () => ({ hostSignatureImages: vi.fn() }));
 vi.mock('$core/stores/signatures.svelte', () => ({
-	signatures: { locked: false, getForAddress: () => null, save: vi.fn(), remove: vi.fn() }
+	signatures: { loaded: true, locked: false, getForAddress: () => null, save: vi.fn(), remove: vi.fn() }
 }));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: {} }));
 
@@ -96,6 +96,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	cleanup();
+	addresses.loaded = true;
 	addresses.items = [];
 	customDomains.clear();
 	workspaces.setAccount(null);
@@ -103,6 +104,7 @@ afterEach(() => {
 
 describe('profile header', () => {
 	it('shows neither a domain indicator nor a role for a platform-address account', () => {
+		addresses.loaded = true;
 		addresses.items = [address('p', 'ada@thelemail.com', { isPrimary: true })];
 		setWorkspace('personal', 'owner');
 		const { container } = renderProfile();
@@ -131,6 +133,7 @@ describe('profile header', () => {
 
 	it.each(unverified)('claims no verified domain when the domain is %s', (_, d) => {
 		customDomains.items = [d];
+		addresses.loaded = true;
 		addresses.items = [address('a', 'ada@acme.test', { isPrimary: true, customDomainId: 'd1' })];
 		setWorkspace('personal', 'owner');
 		const { container } = renderProfile('ada@acme.test');
@@ -171,6 +174,7 @@ describe('profile header', () => {
 
 describe('profile sending identity', () => {
 	it('shows the primary address as text and sends changes to Addresses', () => {
+		addresses.loaded = true;
 		addresses.items = [
 			address('p', 'ada@thelemail.com', { isPrimary: true, name: 'Ada' }),
 			address('h', 'hello@thelemail.com')

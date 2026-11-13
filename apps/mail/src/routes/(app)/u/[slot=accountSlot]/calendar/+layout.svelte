@@ -14,15 +14,17 @@
 	import { observeNewMessage } from '$core/calendar/entry';
 	import { startReminders } from '$core/calendar/reminders';
 	import { cal } from '$core/calendar/state.svelte';
+	import { syncCalendarUrl } from '$core/calendar/urlState.svelte';
 	import { calendarStore } from '$core/calendar/store.svelte';
 	import { openCalendar } from '$core/handoff';
 	import { productTarget } from '$core/products';
 	import { ensureAccountData } from '$core/stores/accountData';
 	import { auth } from '$core/stores/auth.svelte';
-	import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	let { children } = $props();
+
+	syncCalendarUrl();
 
 	$effect(() => {
 		const accountId = auth.accountId;
@@ -34,9 +36,8 @@
 		}
 		ensureAccountData(accountId);
 		calendarStore.setAccount(accountId);
-		void calendarKeys
-			.ready(accountId)
-			.then(() => calendarStore.ensureLoaded())
+		void calendarStore
+			.ensureLoaded()
 			.then(() => {
 				const pending = takePending();
 				if (pending) {
@@ -57,7 +58,7 @@
 	onMount(() => {
 		const stopClock = cal.startClock();
 		const stopReminders = startReminders((notice) =>
-			cal.notify(m.cal_reminder_toast({ title: notice.title, body: notice.body }))
+			cal.notify(m.cal_reminder_toast({ title: notice.title, body: notice.body }), 'info')
 		);
 		const stopMessages = calendarStore.onMessage((hint) => {
 			if (hint.id) void observeNewMessage(hint.id).catch(() => {});
@@ -184,5 +185,5 @@
 <ReadOnlyGuard />
 
 {#if cal.toast}
-	<Toast text={cal.toast} shift={124} />
+	<Toast text={cal.toast.text} tone={cal.toast.tone} shift={124} />
 {/if}

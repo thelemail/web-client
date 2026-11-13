@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -120,6 +120,10 @@
 		step = 'identify';
 	}
 
+	onDestroy(() => {
+		pw = '';
+	});
+
 	async function navigateAfterLogin(slot: number) {
 		await afterSignIn(slot);
 	}
@@ -160,8 +164,8 @@
 				if (outcome.status === 'twoFactorRequired') await abandonTwoFactorLogin(outcome.pending);
 				return;
 			}
-			pw = '';
 			if (outcome.status === 'twoFactorRequired') {
+				pw = '';
 				heldTwoFactor = outcome.pending;
 				pendingTwoFactor = outcome.pending;
 				twoFaError = null;
@@ -171,6 +175,7 @@
 				return;
 			}
 			await navigateAfterLogin(outcome.result.slot);
+			if (attempt === current) busy = false;
 		} catch (err) {
 			if (attempt !== current) return;
 			console.error('login failed', err);
@@ -357,6 +362,7 @@
 					placeholder={m.auth_login_password_placeholder()}
 					autocomplete="current-password"
 					focusOnMount
+					disabled={busy}
 					invalid={!!loginError}
 					describedby={loginError ? 'login-err' : undefined}
 				>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
 	import { DropdownMenu } from 'bits-ui';
@@ -101,15 +102,23 @@
 	{@const folder = kind === 'folder'}
 	<Card icon={folder ? FolderIcon : TagIcon} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
 		{#snippet right()}
-			<span class="card-meta">
-				{folder
-					? m.settings_collections_folder_count({ count: entries.length })
-					: m.settings_collections_label_count({ count: entries.length })}
-			</span>
+			{#if mailCollections.loaded}
+				<span class="card-meta">
+					{folder
+						? m.settings_collections_folder_count({ count: entries.length })
+						: m.settings_collections_label_count({ count: entries.length })}
+				</span>
+			{/if}
 		{/snippet}
 
 		{#if !mailCollections.loaded}
-			<div class="coll-set-empty">{m.common_loading()}</div>
+			<LoadState kind="loading" label={m.common_loading()} />
+		{:else if mailCollections.error && mailCollections.nodes.length === 0}
+			<LoadState
+				kind="error"
+				label={m.mail_sidebar_collections_failed()}
+				onRetry={() => void mailCollections.load()}
+			/>
 		{:else if entries.length === 0}
 			<div class="coll-set-empty">
 				{folder ? m.settings_collections_no_folders() : m.settings_collections_no_labels()}

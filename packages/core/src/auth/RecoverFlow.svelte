@@ -157,6 +157,15 @@
 		if (heldOperation) releaseRecovery();
 		try {
 			const outcome = await verifyRecoveryPhrase({ email, phrase });
+			if (step !== 'phrase') {
+				heldOperation =
+					outcome.status === 'twoFactorRequired'
+						? outcome.pending.opaqueOperationId
+						: outcome.result.opaqueOperationId;
+				releaseRecovery();
+				phraseStatus = 'idle';
+				return;
+			}
 			phraseStatus = 'idle';
 			if (outcome.status === 'twoFactorRequired') {
 				heldOperation = outcome.pending.opaqueOperationId;
@@ -170,6 +179,10 @@
 			}
 			applyRecoveryResult(outcome.result);
 		} catch (err) {
+			if (step !== 'phrase') {
+				phraseStatus = 'idle';
+				return;
+			}
 			phraseStatus = 'bad';
 			phraseError =
 				err instanceof RecoveryPhraseError
@@ -415,7 +428,7 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 'account')}>
+					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={phraseStatus === 'checking'} onclick={() => (step = 'account')}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
@@ -429,7 +442,7 @@
 			</div>
 		</div>
 		<p class="switch">
-			<button class="linklike" type="button" onclick={() => (step = 'nophrase')}>
+			<button class="linklike" type="button" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>
 				{m.auth_recover_no_phrase()}
 			</button>
 		</p>

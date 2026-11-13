@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { page } from '$app/state';
 	import Camera from '@lucide/svelte/icons/camera';
@@ -408,7 +409,9 @@
 		/>
 	</Row>
 	<Row t={m.settings_profile_sending_identity()} d={m.settings_profile_sending_identity_desc()}>
-		{#if sendingAddress}
+		{#if !addresses.loaded}
+			<span class="pf-wait" aria-hidden="true"></span>
+		{:else if sendingAddress}
 			<span class="pf-sending">
 				<span class="pf-sending-addr">{identityLabel(sendingAddress.name, sendingAddress.email)}</span>
 				<a class="pf-sending-link" href={addressesHref}>{m.settings_profile_sending_identity_change()}</a>
@@ -447,7 +450,9 @@
 		</span>
 	{/snippet}
 	<div class="sig-wrap">
-		{#if sigIdentity}
+		{#if !addresses.loaded || !signatures.loaded}
+			<LoadState kind="loading" label={m.common_loading()} />
+		{:else if sigIdentity}
 			<div class="sig-idnote">
 				<UserRound size={13} /><Rich
 					text={m.settings_profile_signature_editing({ name: sigIdentity.name || sigIdentity.email })}
@@ -570,5 +575,12 @@
 		text-decoration: underline;
 		text-underline-offset: 3px;
 		text-decoration-thickness: 1px;
+	}
+	.pf-wait {
+		display: inline-block;
+		width: 180px;
+		height: 12px;
+		border-radius: var(--radius-xs);
+		background: color-mix(in oklab, var(--fg-strong) 8%, transparent);
 	}
 </style>

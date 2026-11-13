@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
 	import { i18n } from '$core/i18n/locale.svelte';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { platform } from '$platform';
@@ -127,7 +128,15 @@
 
 <SecHead desc={m.settings_account_desc()} />
 
-{#if !ws}
+{#if !ws && workspaces.error && !workspaces.loaded}
+	<Card>
+		<LoadState
+			kind="error"
+			label={workspaces.error}
+			onRetry={() => void workspaces.load(auth.accountId)}
+		/>
+	</Card>
+{:else if !ws}
 	<Card>
 		<div class="plan-top">
 			<div class="plan-id">
@@ -150,6 +159,8 @@
 				<div class="plan-price">
 					{#if isFree}
 						{freeNote(type, sub?.planCode, billing.plan)}
+					{:else if !billing.catalog && sub?.planCode}
+						<span class="plan-wait" aria-hidden="true"></span>
 					{:else if priceLine}
 						{priceLine}{#if renewalLine}&nbsp;&middot; {renewalLine}{/if}
 					{:else if isPersonal}
@@ -286,5 +297,12 @@
 		margin-top: 8px;
 		font-size: var(--text-sm, 13px);
 		color: var(--warning-500, #c08431);
+	}
+	.plan-wait {
+		display: inline-block;
+		width: 200px;
+		height: 11px;
+		border-radius: var(--radius-xs);
+		background: color-mix(in oklab, var(--fg-strong) 8%, transparent);
 	}
 </style>

@@ -116,8 +116,6 @@
 				throw new Error(m.auth_register_keys_failed());
 			}
 			password = '';
-			pw = '';
-			confirm = '';
 			const result = await registerAndAcceptInvite({
 				token: page.params.token ?? '',
 				email,
@@ -159,6 +157,8 @@
 				});
 			}
 			landingSlot = newSlot;
+			pw = '';
+			confirm = '';
 			step = 2;
 		} catch (err) {
 			password = '';
@@ -291,6 +291,7 @@
 				bind:value={pw}
 				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
+				disabled={submitting}
 			/>
 			<PasswordRequirements {pw} />
 			<PasswordField
@@ -298,6 +299,7 @@
 				bind:value={confirm}
 				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
+				disabled={submitting}
 				onEnter={() => {
 					if (passwordReady) submitRegistration();
 				}}

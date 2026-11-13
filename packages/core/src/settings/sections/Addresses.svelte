@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import AtSign from '@lucide/svelte/icons/at-sign';
 	import Users from '@lucide/svelte/icons/users';
@@ -62,6 +63,7 @@
 
 	const slot = $derived(page.params.slot ?? '0');
 	const manage = $derived(canManageWorkspace());
+	const roleKnown = $derived(workspaces.membersLoaded || (workspaces.loaded && !workspaces.workspace));
 	const showCatchAll = $derived(workspaces.isOwner(auth.accountId));
 
 	const ctx = $derived(addressContext(manage));
@@ -305,13 +307,15 @@
 	</Card>
 {/each}
 
-{#if addresses.loading && rows.length === 0}
-	<p class="addr-note">{m.common_loading()}</p>
+{#if !addresses.loaded && addresses.error}
+	<LoadState kind="error" label={addresses.error} onRetry={() => void addresses.load()} />
+{:else if !addresses.loaded}
+	<LoadState kind="loading" label={m.common_loading()} />
 {:else if rows.length === 0}
 	<p class="addr-note">{m.settings_address_empty()}</p>
 {/if}
 
-{#if !manage}
+{#if roleKnown && !manage}
 	<p class="addr-note">{m.settings_address_admin_only()}</p>
 {/if}
 
@@ -331,7 +335,7 @@
 	</div>
 {/if}
 
-{#if addresses.error}
+{#if addresses.loaded && addresses.error}
 	<p class="addr-note err">{addresses.error}</p>
 {/if}
 {#if workspaceAddresses.error}
