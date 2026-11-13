@@ -42,30 +42,56 @@ interface Stream {
 	items: Message[];
 	nextCursor: string | null;
 	exhausted: boolean;
+	loaded: boolean;
 	loading: boolean;
 	loadingMore: boolean;
 	error: string | null;
+	moreError: string | null;
 	missing: boolean;
+	offline: boolean;
 }
 
 export interface StreamSnapshot {
 	msgs: Message[];
+	loaded: boolean;
 	loading: boolean;
+	refreshing: boolean;
 	loadingMore: boolean;
 	exhausted: boolean;
 	loadError: string | null;
+	moreError: string | null;
 	missing: boolean;
+	offline: boolean;
 }
+
+export type MessageLookup =
+	| { status: 'found'; message: Message }
+	| { status: 'missing' }
+	| { status: 'error'; error: string };
 
 const PAGE_SIZE = 50;
 
-const EMPTY_SNAPSHOT: StreamSnapshot = Object.freeze({
+const UNLOADED_SNAPSHOT: StreamSnapshot = Object.freeze({
 	msgs: [],
+	loaded: false,
 	loading: false,
+	refreshing: false,
 	loadingMore: false,
 	exhausted: false,
 	loadError: null,
-	missing: false
+	moreError: null,
+	missing: false,
+	offline: false
+});
+
+const EMPTY_COUNTS: MailboxCounts = Object.freeze({
+	inbox: 0,
+	starred: 0,
+	spam: 0,
+	snoozed: 0,
+	drafts: 0,
+	folders: {},
+	labels: {}
 });
 
 function emptyStream(query: Query): Stream {
@@ -74,11 +100,30 @@ function emptyStream(query: Query): Stream {
 		items: [],
 		nextCursor: null,
 		exhausted: false,
+		loaded: false,
 		loading: false,
 		loadingMore: false,
 		error: null,
-		missing: false
+		moreError: null,
+		missing: false,
+		offline: false
 	};
+}
+
+function errorText(err: unknown): string {
+	return err instanceof Error ? err.message : m.mailbox_load_failed();
+}
+
+function unreadBadgeDelta(before: Message, after: Message): Partial<Record<'inbox' | 'spam', number>> {
+	if (before.direction !== 'received' || (before.threadCount ?? 1) > 1) return {};
+	const weight = (msg: Message, folder: 'inbox' | 'spam') =>
+		msg.unread && msg.folder === folder ? 1 : 0;
+	const out: Partial<Record<'inbox' | 'spam', number>> = {};
+	for (const folder of ['inbox', 'spam'] as const) {
+		const delta = weight(after, folder) - weight(before, folder);
+		if (delta !== 0) out[folder] = delta;
+	}
+	return out;
 }
 
 function insertByEpoch(items: Message[], msg: Message, sort: SortId): Message[] {
@@ -375,15 +420,21 @@ class MailboxStore {
 
 	#streams = $state(new Map<string, Stream>());
 	#pending = new Map<string, Promise<void>>();
-	#deepLinkPending = new Map<string, Promise<Message | null>>();
+	#firstPageTokens = new Map<string, number>();
+	#tokenSeq = 0;
+	#patchSeq = 0;
+	#patchedAt = new Map<string, number>();
+	#deepLinkPending = new Map<string, Promise<MessageLookup>>();
 	#accountId: string | null = null;
 
 	get accountId(): string | null {
 		return this.#accountId;
 	}
 
-	#counts = $state<MailboxCounts>({ inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {}, labels: {} });
+	#counts = $state<MailboxCounts>(EMPTY_COUNTS);
+	#countsLoaded = $state(false);
 	#countsPending: Promise<void> | null = null;
+	#countsAgain = false;
 
 	#revs = new Map<string, number>();
 	#detached = new Map<string, Message>();
@@ -398,9 +449,13 @@ class MailboxStore {
 		this.pinned = null;
 		this.#streams = new Map();
 		this.#pending.clear();
+		this.#firstPageTokens.clear();
+		this.#patchedAt.clear();
 		this.#deepLinkPending.clear();
-		this.#counts = { inbox: 0, starred: 0, spam: 0, snoozed: 0, folders: {}, labels: {} };
+		this.#counts = EMPTY_COUNTS;
+		this.#countsLoaded = false;
 		this.#countsPending = null;
+		this.#countsAgain = false;
 		this.#revs.clear();
 		this.#detached.clear();
 		this.#pendingNew = new Map();
@@ -413,18 +468,32 @@ class MailboxStore {
 		return this.#counts;
 	}
 
+	get countsLoaded(): boolean {
+		return this.#countsLoaded;
+	}
+
 	async refreshCounts(): Promise<void> {
 		if (!auth.canEnterApp) return;
 		const accountId = auth.accountId;
 		if (!accountId) return;
-		if (this.#countsPending) return this.#countsPending;
-		const run = (async () => {
+		if (this.#countsPending) {
+			this.#countsAgain = true;
+			return this.#countsPending;
+		}
+		const run: Promise<void> = (async () => {
 			try {
-				const next = await getMailboxCounts();
-				if (this.#accountId !== accountId) return;
-				this.#counts = next;
-				unread.set(accountId, next);
-			} catch {
+				do {
+					this.#countsAgain = false;
+					try {
+						const next = await getMailboxCounts();
+						if (this.#accountId !== accountId) return;
+						this.#counts = next;
+						this.#countsLoaded = true;
+						unread.set(accountId, next);
+					} catch {
+						if (this.#accountId !== accountId) return;
+					}
+				} while (this.#countsAgain);
 			} finally {
 				this.#countsPending = null;
 			}
@@ -433,21 +502,41 @@ class MailboxStore {
 		return run;
 	}
 
+	#adjustCounts(delta: Partial<Record<'inbox' | 'spam', number>>): void {
+		if (!this.#countsLoaded || (!delta.inbox && !delta.spam)) return;
+		const c = this.#counts;
+		this.#counts = {
+			...c,
+			inbox: Math.max(0, c.inbox + (delta.inbox ?? 0)),
+			spam: Math.max(0, c.spam + (delta.spam ?? 0))
+		};
+	}
+
 	streamFor(query: Query): StreamSnapshot {
 		const s = this.#streams.get(streamKey(query));
-		if (!s) return EMPTY_SNAPSHOT;
+		if (!s) return UNLOADED_SNAPSHOT;
 		return {
 			msgs: s.items,
-			loading: s.loading,
+			loaded: s.loaded,
+			loading: s.loading && !s.loaded,
+			refreshing: s.loading && s.loaded,
 			loadingMore: s.loadingMore,
 			exhausted: s.exhausted,
 			loadError: s.error,
-			missing: s.missing
+			moreError: s.moreError,
+			missing: s.missing,
+			offline: s.offline
 		};
 	}
 
 	async ensureLoaded(query: Query): Promise<void> {
+		const s = this.#streams.get(streamKey(query));
+		if (s && (s.loaded || s.error !== null)) return;
 		await this.#loadStream(query, false);
+	}
+
+	async retry(query: Query): Promise<void> {
+		await this.#loadStream(query, false, true);
 	}
 
 	async loadMore(query: Query): Promise<void> {
@@ -467,6 +556,9 @@ class MailboxStore {
 	}
 
 	patchMessage(id: string, patch: Partial<Message>) {
+		const before = this.findMessage(id) ?? this.#detached.get(id) ?? null;
+		this.#patchSeq += 1;
+		this.#patchedAt.set(id, this.#patchSeq);
 		const map = new Map(this.#streams);
 		const detached = this.#detached.get(id);
 		let dropped: Message | null = null;
@@ -495,6 +587,7 @@ class MailboxStore {
 		if (dropped) this.#detached.set(id, dropped);
 		else if (restored) this.#detached.delete(id);
 		if (this.pinned?.id === id) this.pinned = { ...this.pinned, ...patch };
+		if (before) this.#adjustCounts(unreadBadgeDelta(before, { ...before, ...patch }));
 	}
 
 	pin(m: Message | null) {
@@ -566,67 +659,70 @@ class MailboxStore {
 		this.noteThreadSize(seed.threadRootId ?? seed.id, Math.max(this.threadSize(id), 1) + 1);
 	}
 
-	async #fetchDecrypted(id: string, accountId: string): Promise<{ msg: Message; locked: boolean } | null> {
+	async #fetchDecrypted(id: string, accountId: string): Promise<{ msg: Message; locked: boolean }> {
+		const detail = await getMessage(id);
+		const adapted: MessageListItem = {
+			id: detail.id,
+			ownerAccountId: detail.ownerAccountId,
+			direction: detail.direction,
+			source: detail.source,
+			storedAt: detail.storedAt,
+			bodySizeBytes: 0,
+			attachmentCount: detail.attachments.length,
+			totalAttachmentBytes: 0,
+			encryptedPreview: detail.encryptedPreview,
+			previewKeyFingerprint: detail.previewKeyFingerprint,
+			schemaVersion: detail.schemaVersion,
+			mailboxState: detail.mailboxState,
+			starred: detail.starred,
+			starredAt: detail.starredAt,
+			read: detail.read,
+			readAt: detail.readAt,
+			snoozedUntil: detail.snoozedUntil,
+			threadRootId: detail.threadRootId,
+			threadCount: detail.threadCount,
+			rsvpStatus: detail.rsvpStatus,
+			folderId: detail.folderId,
+			returnsToArchive: detail.returnsToArchive,
+			labelIds: detail.labelIds,
+			sentViaAliasId: detail.sentViaAliasId,
+			sentByAccountId: detail.sentByAccountId,
+			attestedSender: detail.attestedSender
+		};
+		let msg: Message;
+		let locked = false;
 		try {
-			const detail = await getMessage(id);
-			const adapted: MessageListItem = {
-				id: detail.id,
-				ownerAccountId: detail.ownerAccountId,
-				direction: detail.direction,
-				source: detail.source,
-				storedAt: detail.storedAt,
-				bodySizeBytes: 0,
-				attachmentCount: detail.attachments.length,
-				totalAttachmentBytes: 0,
-				encryptedPreview: detail.encryptedPreview,
-				previewKeyFingerprint: detail.previewKeyFingerprint,
-				schemaVersion: detail.schemaVersion,
-				mailboxState: detail.mailboxState,
-				starred: detail.starred,
-				starredAt: detail.starredAt,
-				read: detail.read,
-				readAt: detail.readAt,
-				snoozedUntil: detail.snoozedUntil,
-				threadRootId: detail.threadRootId,
-				threadCount: detail.threadCount,
-				rsvpStatus: detail.rsvpStatus,
-				folderId: detail.folderId,
-				returnsToArchive: detail.returnsToArchive,
-				labelIds: detail.labelIds,
-				sentViaAliasId: detail.sentViaAliasId,
-				sentByAccountId: detail.sentByAccountId,
-				attestedSender: detail.attestedSender
-			};
-			let msg: Message;
-			let locked = false;
-			try {
-				msg = await decryptItem(accountId, adapted);
-			} catch (err) {
-				const code = err instanceof DecryptionError ? err.code : 'unknown';
-				locked = code === 'locked';
-				msg = fallbackRow(adapted, code);
-			}
-			return { msg, locked };
-		} catch {
-			return null;
+			msg = await decryptItem(accountId, adapted);
+		} catch (err) {
+			const code = err instanceof DecryptionError ? err.code : 'unknown';
+			locked = code === 'locked';
+			msg = fallbackRow(adapted, code);
 		}
+		return { msg, locked };
 	}
 
 	async ensureMessage(id: string): Promise<Message | null> {
-		if (!auth.canEnterApp) return null;
+		const found = await this.resolveMessage(id);
+		return found.status === 'found' ? found.message : null;
+	}
+
+	async resolveMessage(id: string): Promise<MessageLookup> {
+		if (!auth.canEnterApp) return { status: 'error', error: m.mailbox_load_failed() };
 		const accountId = auth.accountId;
-		if (!accountId) return null;
+		if (!accountId) return { status: 'error', error: m.mailbox_load_failed() };
 		const cached = this.findMessage(id);
-		if (cached) return cached;
+		if (cached) return { status: 'found', message: cached };
 		const pending = this.#deepLinkPending.get(id);
 		if (pending) return pending;
-		const run = (async () => {
+		const run = (async (): Promise<MessageLookup> => {
 			try {
 				const result = await this.#fetchDecrypted(id, accountId);
-				if (!result) return null;
-				if (this.#accountId !== accountId) return null;
+				if (this.#accountId !== accountId) return { status: 'error', error: m.mailbox_load_failed() };
 				this.pin(result.msg);
-				return result.msg;
+				return { status: 'found', message: result.msg };
+			} catch (err) {
+				if (err instanceof ApiCallError && err.status === 404) return { status: 'missing' };
+				return { status: 'error', error: errorText(err) };
 			} finally {
 				this.#deepLinkPending.delete(id);
 			}
@@ -704,7 +800,7 @@ class MailboxStore {
 		const accountId = this.#accountId;
 		if (!accountId) return;
 		void (async () => {
-			const result = await this.#fetchDecrypted(hint.id!, accountId);
+			const result = await this.#fetchDecrypted(hint.id!, accountId).catch(() => null);
 			if (!result) return;
 			if (this.#accountId !== accountId) return;
 			if (result.locked) return;
@@ -713,6 +809,8 @@ class MailboxStore {
 	}
 
 	#removeMessage(id: string): void {
+		this.#patchSeq += 1;
+		this.#patchedAt.set(id, this.#patchSeq);
 		this.#detached.delete(id);
 		const map = new Map(this.#streams);
 		let changed = false;
@@ -807,6 +905,21 @@ class MailboxStore {
 		return out;
 	}
 
+	#keepLocalEdits(current: Message[], incoming: Message[], since: number): Message[] {
+		const local = new Map(current.map((m) => [m.id, m] as const));
+		const out: Message[] = [];
+		for (const item of incoming) {
+			const editedAt = this.#patchedAt.get(item.id);
+			if (editedAt === undefined || editedAt <= since) {
+				out.push(item);
+				continue;
+			}
+			const kept = local.get(item.id);
+			if (kept) out.push(kept);
+		}
+		return out;
+	}
+
 	#reconcileFirstPage(current: Message[], page: Message[], query: Query): Message[] {
 		if (page.length === 0) return page;
 		const threaded = isThreaded(query);
@@ -847,15 +960,25 @@ class MailboxStore {
 
 		const before = this.#streams.get(key) ?? emptyStream(query);
 		if (more && (before.exhausted || !before.nextCursor)) return;
-		if (!more && !force && before.items.length > 0) {
-			return;
-		}
+		if (!more && !force && before.loaded) return;
+
+		this.#tokenSeq += 1;
+		const token = this.#tokenSeq;
+		if (!more) this.#firstPageTokens.set(key, token);
+		const firstPageAtStart = this.#firstPageTokens.get(key);
+		const patchSeqAtStart = this.#patchSeq;
+		const isStale = () =>
+			this.#accountId !== accountId ||
+			(more
+				? this.#firstPageTokens.get(key) !== firstPageAtStart
+				: this.#firstPageTokens.get(key) !== token);
 
 		this.#setStream(key, {
 			...before,
-			loading: !more,
-			loadingMore: more,
-			error: null
+			loading: before.loading || !more,
+			loadingMore: before.loadingMore || more,
+			error: more ? before.error : null,
+			moreError: null
 		});
 
 		const cursor = more ? before.nextCursor : undefined;
@@ -872,7 +995,7 @@ class MailboxStore {
 					rows = resp.items.map((item) => ({ item, thread: null }));
 					nextCursor = resp.nextCursor ?? null;
 				}
-				if (this.#accountId !== accountId) return;
+				if (isStale()) return;
 				const decrypted: Message[] = [];
 				for (const { item, thread } of rows) {
 					let msg: Message;
@@ -884,31 +1007,40 @@ class MailboxStore {
 					}
 					decrypted.push(thread ? withThreadAggregates(msg, thread) : msg);
 				}
-				if (this.#accountId !== accountId) return;
+				if (isStale()) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
 				const threaded = threadOpts !== null;
+				const fresh = this.#keepLocalEdits(current.items, decrypted, patchSeqAtStart);
 				const merged = more
-					? this.#mergeMessages(current.items, decrypted, threaded)
-					: this.#reconcileFirstPage(current.items, decrypted, query);
-				if (!more) this.#dropListedPending(key, decrypted, threaded);
+					? this.#mergeMessages(current.items, fresh, threaded)
+					: this.#reconcileFirstPage(current.items, fresh, query);
+				if (!more) this.#dropListedPending(key, fresh, threaded);
 				this.#setStream(key, {
 					...current,
 					items: merged,
 					nextCursor,
 					exhausted: !nextCursor,
-					loading: false,
+					loaded: true,
+					loading: more ? current.loading : false,
 					loadingMore: false,
-					error: null,
-					missing: false
+					error: more ? current.error : null,
+					moreError: null,
+					missing: false,
+					offline: false
 				});
 			} catch (err) {
-				if (this.#accountId !== accountId) return;
+				if (isStale()) return;
 				const current = this.#streams.get(key) ?? emptyStream(query);
+				if (more) {
+					this.#setStream(key, { ...current, loadingMore: false, moreError: errorText(err) });
+					return;
+				}
 				if (err instanceof ApiCallError && err.status === 404) {
 					this.#setStream(key, {
 						...current,
 						items: [],
 						exhausted: true,
+						loaded: true,
 						loading: false,
 						loadingMore: false,
 						error: null,
@@ -917,28 +1049,27 @@ class MailboxStore {
 					return;
 				}
 
-				if (!more) {
+				if (!current.loaded) {
 					const cached = await loadFromMirror(accountId, query);
+					if (isStale()) return;
 					if (cached && cached.length > 0) {
-						if (this.#accountId !== accountId) return;
+						const latest = this.#streams.get(key) ?? current;
 						this.#setStream(key, {
-							...current,
+							...latest,
 							items: cached,
 							exhausted: true,
+							loaded: true,
 							loading: false,
 							loadingMore: false,
-							error: null
+							error: null,
+							offline: true
 						});
 						return;
 					}
 				}
 
-				this.#setStream(key, {
-					...current,
-					loading: false,
-					loadingMore: false,
-					error: err instanceof Error ? err.message : m.mailbox_load_failed()
-				});
+				const latest = this.#streams.get(key) ?? current;
+				this.#setStream(key, { ...latest, loading: false, loadingMore: false, error: errorText(err) });
 			} finally {
 				this.#pending.delete(pendingKey);
 			}

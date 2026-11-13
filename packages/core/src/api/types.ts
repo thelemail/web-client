@@ -73,6 +73,7 @@ export interface MailboxCounts {
 	starred: number;
 	spam: number;
 	snoozed: number;
+	drafts: number;
 	folders: Record<string, CollectionUnread>;
 	labels: Record<string, CollectionUnread>;
 }
