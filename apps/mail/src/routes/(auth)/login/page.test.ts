@@ -409,4 +409,18 @@ describe('login page identifier step', () => {
 		expect(document.querySelector<HTMLInputElement>('#login-email')!.value).toBe('');
 		expect(document.body.textContent).toContain(m.auth_login_add_title());
 	});
+
+	it('keeps the password in place while the mailbox opens', async () => {
+		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
+		const leaving = Promise.withResolvers<void>();
+		nav.goto.mockReturnValue(leaving.promise);
+		render(LoginPage);
+
+		await submitCredentials();
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalled());
+
+		expect(document.querySelector<HTMLInputElement>('input[type="password"]')?.value).toBe('hunter22');
+		leaving.resolve();
+	});
 });
+

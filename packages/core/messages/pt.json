@@ -4063,6 +4063,7 @@
 	"auth_register_passwords_mismatch": "As palavras-passe não coincidem.",
 	"auth_register_passwords_match": "As palavras-passe coincidem.",
 	"auth_register_creating": "A criar a sua caixa de correio…",
+	"auth_register_opening": "A abrir a sua caixa de correio…",
 	"auth_register_create_mailbox": "Criar a minha caixa de correio",
 	"auth_register_free_instead": "Começar antes com o plano gratuito",
 	"auth_register_paid_instead": "Escolher antes um plano pago",

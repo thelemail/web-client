@@ -100,6 +100,31 @@ describe('invite page', () => {
 		expect(text()).not.toContain('the domain for this invitation is not available');
 	});
 
+	it('keeps both passwords on screen while the account is created and after a refusal', async () => {
+		ws.previewWorkspaceInvite.mockResolvedValue(preview);
+		authApi.registrationInit.mockResolvedValue({ accountId: 'a2', registrationId: 'r1', registrationResponse: 'resp' });
+		keystore.opaqueStartRegistration.mockResolvedValue({ operationId: 'op1', registrationRequest: 'req' });
+		keystore.opaqueFinishRegistration.mockResolvedValue({ ok: true, opaqueRecord: 'rec' });
+		const accepting = Promise.withResolvers<never>();
+		ws.registerAndAcceptInvite.mockReturnValue(accepting.promise);
+		render(InvitePage);
+
+		await vi.waitFor(() => expect(document.querySelector('#invite-name')).not.toBeNull());
+		await fireEvent.input(document.querySelector('#invite-name')!, { target: { value: 'Bob Builder' } });
+		await fireEvent.click(button('Continue')!);
+		const fields = () => [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
+		await fireEvent.input(fields()[0], { target: { value: 'Tr1cky-Passw0rd' } });
+		await fireEvent.input(fields()[1], { target: { value: 'Tr1cky-Passw0rd' } });
+		await fireEvent.click(document.querySelector('input[type="checkbox"]')!);
+		await fireEvent.click(button('Create account')!);
+
+		await vi.waitFor(() => expect(ws.registerAndAcceptInvite).toHaveBeenCalled());
+		expect(fields().map((f) => f.value)).toEqual(['Tr1cky-Passw0rd', 'Tr1cky-Passw0rd']);
+		accepting.reject(notAcceptable());
+		await vi.waitFor(() => expect(text()).toContain('The invitation may have expired'));
+		expect(fields().map((f) => f.value)).toEqual(['Tr1cky-Passw0rd', 'Tr1cky-Passw0rd']);
+	});
+
 	it('refuses short and common passwords and accepts a plain long one', async () => {
 		ws.previewWorkspaceInvite.mockResolvedValue(preview);
 		render(InvitePage);

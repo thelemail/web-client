@@ -5,10 +5,22 @@
 	import { initialsFor } from '$core/mail/initials';
 	import { auth } from '$core/stores/session.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
+	import { readinessOf } from '$core/mail/accountReadiness';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
-	const known = $derived(accounts.list);
+	const known = $derived(
+		accounts.list.filter((a) => {
+			const state = readinessOf({
+				unlocked: auth.vaultUnlockedFor(a.accountId),
+				restorable: auth.hasPersistentFor(a.accountId),
+				sessionLost: auth.sessionLost(a.accountId),
+				probe: 'ok',
+				countsLoaded: true
+			});
+			return state !== 'locked' && state !== 'expired';
+		})
+	);
 	const single = $derived(
 		known.length === 1
 			? [...known].sort((a, b) => b.lastActiveAt - a.lastActiveAt)[0]

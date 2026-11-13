@@ -4063,6 +4063,7 @@
   "auth_register_passwords_mismatch": "Les mots de passe ne correspondent pas.",
   "auth_register_passwords_match": "Les mots de passe correspondent.",
   "auth_register_creating": "Création de votre boîte mail…",
+  "auth_register_opening": "Ouverture de votre boîte…",
   "auth_register_create_mailbox": "Créer ma boîte mail",
   "auth_register_free_instead": "Commencer plutôt avec l’offre gratuite",
   "auth_register_paid_instead": "Choisir plutôt une offre payante",

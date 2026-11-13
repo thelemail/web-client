@@ -25,10 +25,12 @@ vi.mock('$core/auth/proof-of-work', () => ({
 		return run(undefined);
 	}
 }));
-vi.mock('$core/auth/perform-login', () => ({ performLogin: vi.fn() }));
+const performLogin = vi.hoisted(() => vi.fn());
+vi.mock('$core/auth/perform-login', () => ({ performLogin }));
 vi.mock('$core/stores/session.svelte', () => ({ auth: { email: null } }));
 vi.mock('$platform', () => ({ platform: { returnOrigin: () => 'http://localhost', openExternal: vi.fn() } }));
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+const goto = vi.hoisted(() => vi.fn());
+vi.mock('$app/navigation', () => ({ goto }));
 vi.mock('$app/state', () => ({ page: { params: {}, url: new URL('http://localhost/register') } }));
 
 function select(): HTMLSelectElement | null {
@@ -69,7 +71,22 @@ beforeEach(() => {
 		default: 'temail.org'
 	});
 	authApi.checkAddressAvailability.mockResolvedValue({ available: true });
+	performLogin.mockReset();
+	goto.mockReset();
 });
+
+function succeedRegistration() {
+	keystore.opaqueStartRegistration.mockResolvedValue({ operationId: 'op1', registrationRequest: 'req' });
+	authApi.registrationInit.mockResolvedValue({ accountId: 'acc-1', registrationResponse: 'resp', registrationId: 'reg-1' });
+	keystore.opaqueFinishRegistration.mockResolvedValue({ ok: true, opaqueRecord: 'rec' });
+	authApi.register.mockResolvedValue({});
+	keystore.opaqueFinalizeRegister.mockResolvedValue({ ok: true });
+	performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
+}
+
+function passwordValues() {
+	return [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')].map((i) => i.value);
+}
 
 afterEach(() => {
 	cleanup();
@@ -133,6 +150,36 @@ describe('register page', () => {
 		await fillPassword('harbourlamp');
 		expect(button('Create my mailbox')?.disabled).toBe(true);
 		await fillPassword('harbour lamp');
+		expect(button('Create my mailbox')?.disabled).toBe(false);
+	});
+
+	it('keeps the filled password step on screen while the mailbox opens', async () => {
+		succeedRegistration();
+		const leaving = Promise.withResolvers<void>();
+		goto.mockReturnValue(leaving.promise);
+		render(RegisterPage);
+		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await continueToPassword('camille');
+
+		await submitPassword();
+		await vi.waitFor(() => expect(goto).toHaveBeenCalled());
+
+		expect(passwordValues()).toEqual(['Quiet-harbour-lantern-47', 'Quiet-harbour-lantern-47']);
+		expect(document.body.textContent).toContain('Opening your mailbox');
+		expect(document.body.textContent).toContain('Passwords match');
+		leaving.resolve();
+	});
+
+	it('keeps both passwords when creating the account fails', async () => {
+		keystore.opaqueStartRegistration.mockRejectedValue(new Error('network down'));
+		render(RegisterPage);
+		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await continueToPassword('camille');
+
+		await submitPassword();
+		await vi.waitFor(() => expect(document.body.textContent).toContain('network down'));
+
+		expect(passwordValues()).toEqual(['Quiet-harbour-lantern-47', 'Quiet-harbour-lantern-47']);
 		expect(button('Create my mailbox')?.disabled).toBe(false);
 	});
 });

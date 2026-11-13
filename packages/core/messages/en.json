@@ -4063,6 +4063,7 @@
 	"auth_register_passwords_mismatch": "Passwords don’t match.",
 	"auth_register_passwords_match": "Passwords match.",
 	"auth_register_creating": "Creating your mailbox…",
+	"auth_register_opening": "Opening your mailbox…",
 	"auth_register_create_mailbox": "Create my mailbox",
 	"auth_register_free_instead": "Start with the free plan instead",
 	"auth_register_paid_instead": "Choose a paid plan instead",

@@ -4063,6 +4063,7 @@
 	"auth_register_passwords_mismatch": "Die Passwörter stimmen nicht überein.",
 	"auth_register_passwords_match": "Die Passwörter stimmen überein.",
 	"auth_register_creating": "Ihr Postfach wird erstellt…",
+	"auth_register_opening": "Dein Postfach wird geöffnet…",
 	"auth_register_create_mailbox": "Mein Postfach erstellen",
 	"auth_register_free_instead": "Stattdessen mit dem kostenlosen Tarif beginnen",
 	"auth_register_paid_instead": "Stattdessen einen kostenpflichtigen Tarif wählen",

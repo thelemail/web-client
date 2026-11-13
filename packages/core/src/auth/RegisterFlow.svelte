@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import PasswordRequirements from '$core/auth/PasswordRequirements.svelte';
@@ -77,7 +77,13 @@
 	);
 
 	let submitting = $state(false);
+	let leaving = $state(false);
 	let submitError = $state<string | null>(null);
+
+	onDestroy(() => {
+		pw = '';
+		confirm = '';
+	});
 
 	let status = $state<'idle' | 'invalid' | 'checking' | 'taken' | 'available'>('idle');
 
@@ -136,7 +142,8 @@
 	});
 
 	const nameReady = $derived(fullName.trim().length > 0 && fullName.trim().length <= 120);
-	const addressReady = $derived(status === 'available' && nameReady);
+	const domainReady = $derived(platformDomains.loaded && mailDomain.length > 0);
+	const addressReady = $derived(status === 'available' && nameReady && domainReady);
 
 	const allMet = $derived(passwordReqs(pw).every((r) => r.met));
 	const matches = $derived(confirm.length > 0 && confirm === pw);
@@ -236,8 +243,7 @@
 			if (outcome.status !== 'complete') {
 				throw new Error('unexpected two-factor challenge on a fresh account');
 			}
-			pw = '';
-			confirm = '';
+			leaving = true;
 			return outcome.result.slot;
 		} catch {
 			pw = '';
@@ -254,7 +260,19 @@
 		submitError = null;
 		const slot = await registerAndLogin();
 		if (slot === null) return;
-		await afterRegister(slot);
+		try {
+			await afterRegister(slot);
+		} catch {
+			leaveToSignIn();
+		}
+	}
+
+	function leaveToSignIn() {
+		pw = '';
+		confirm = '';
+		leaving = false;
+		submitting = false;
+		step = 4;
 	}
 
 	async function submitRegistration() {
@@ -269,12 +287,16 @@
 		const slot = await registerAndLogin();
 		if (slot === null) return;
 
-		await checkout(slot, {
-			planCode,
-			interval: sel.period,
-			seats: product.perMailbox ? sel.seats : undefined,
-			workspaceType: product.id
-		});
+		try {
+			await checkout(slot, {
+				planCode,
+				interval: sel.period,
+				seats: product.perMailbox ? sel.seats : undefined,
+				workspaceType: product.id
+			});
+		} catch {
+			leaveToSignIn();
+		}
 	}
 </script>
 
@@ -370,7 +392,7 @@
 							<ChevronDown size={14} strokeWidth={1.75} />
 						</span>
 					{:else}
-						<span class="suf">@{mailDomain}</span>
+						<span class="suf">@{domainReady ? mailDomain : ''}</span>
 					{/if}
 					<span class="statusic">
 						{#if status === 'available'}
@@ -432,6 +454,7 @@
 				bind:value={pw}
 				placeholder={m.auth_register_password_placeholder()}
 				autocomplete="new-password"
+				disabled={submitting}
 			/>
 			<PasswordRequirements {pw} />
 			<PasswordField
@@ -439,6 +462,7 @@
 				bind:value={confirm}
 				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
+				disabled={submitting}
 				invalid={mismatch}
 				describedby={mismatch ? 'register-confirm-msg' : undefined}
 				onEnter={continueFromPassword}
@@ -466,7 +490,9 @@
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={!passwordReady || submitting} onclick={continueFromPassword}>
-						{#if submitting}
+						{#if leaving}
+							{m.auth_register_opening()}
+						{:else if submitting}
 							{m.auth_register_creating()}
 						{:else if paid}
 							{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
