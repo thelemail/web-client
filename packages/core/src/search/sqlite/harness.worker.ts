@@ -142,11 +142,7 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			return maintain(db!, r.step);
 		case 'stats': {
 			const sqlite = await loadSqlite();
-			return {
-				heap: sqlite.wasm.heap8u().byteLength,
-				highwater: Number(sqlite.capi.sqlite3_memory_highwater(0)),
-				used: Number(sqlite.capi.sqlite3_memory_used())
-			};
+			return { heap: sqlite.wasm.heap8u().byteLength };
 		}
 		case 'close':
 			close();
