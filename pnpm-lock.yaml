@@ -470,6 +470,9 @@ importers:
       '@simplewebauthn/browser':
         specifier: ^13.3.0
         version: 13.3.0
+      '@thelemail/sqlite-wasm':
+        specifier: link:../../../sqlite-wasm
+        version: link:../../../sqlite-wasm
       '@tiptap/core':
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/pm@3.31.3)

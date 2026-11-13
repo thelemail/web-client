@@ -76,8 +76,11 @@ export default defineConfig({
 	envDir: workspaceRoot,
 	server: {
 		fs: {
-			allow: [workspaceRoot]
+			allow: [workspaceRoot, '../../../sqlite-wasm']
 		}
+	},
+	optimizeDeps: {
+		exclude: ['@thelemail/sqlite-wasm']
 	},
 	resolve: {
 		alias: [
