@@ -113,15 +113,19 @@ describe('product vault codec', () => {
 		expect(state.aliasCurrent.get('alias-team')).toBe(fingerprintHexOf(aliases[0]));
 	});
 
-	it('keeps the search leaf and never a root or passphrase in the unlocked state', async () => {
+	it('keeps the search leaf and its own copy of the mail root, never a passphrase or master key', async () => {
 		const vault = roundTrip(mailVault(2));
 		const state = await productVaultState(ACCOUNT, EMAIL, vault);
 		expect(state.searchLeaf).toEqual(leaf);
 		expect(state.wrappedMasterKey).toBeUndefined();
-		expect(Object.values(state).some((v) => v instanceof Uint8Array && v.length === 32 && v.every((b) => b === 9))).toBe(false);
+		expect(state.masterKey).toBeUndefined();
+		expect(state.keyPassword).toBe('');
+		const roots = Object.entries(state).filter(([, v]) => v instanceof Uint8Array && v.length === 32 && v.every((b) => b === 9));
+		expect(roots.map(([k]) => k)).toEqual(vault.manifest ? ['productRoot'] : []);
 		wipeProductVault(vault);
 		expect(vault.root.every((b) => b === 0)).toBe(true);
 		expect(state.searchLeaf).toEqual(leaf);
+		if (vault.manifest) expect(state.productRoot).toEqual(new Uint8Array(32).fill(9));
 	});
 
 	it('refuses a vault whose current key is missing', async () => {

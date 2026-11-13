@@ -27,7 +27,7 @@ import {
 	hydrateAvatarCache
 } from '$core/avatarCache.svelte';
 import { platform } from '$platform';
-import { isAuthOrigin } from '$core/products';
+import { currentProduct, isAuthOrigin } from '$core/products';
 
 const REFRESH_SKEW_MS = 60_000;
 
@@ -302,6 +302,7 @@ class SessionStore {
 
 	#markLost(accountId: string): void {
 		this.#dropToken(accountId);
+		if (currentProduct === 'app' && !platform.keystoreChannel) void keystore.closeSearchSession({ accountId }).catch(() => undefined);
 		if (this.#lost.has(accountId)) return;
 		const s = new Set(this.#lost);
 		s.add(accountId);

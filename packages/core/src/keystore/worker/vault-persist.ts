@@ -22,6 +22,7 @@ import { restoreProductVault } from './handoff-ops';
 import { productWrapKey } from './product-vault';
 import {
 	vaults,
+	installVault,
 	cachedRecords,
 	restorePromise,
 	ensureCryptoReady,
@@ -218,7 +219,7 @@ async function restoreFromRecord(
 		if (wrapVersion >= 3) {
 			if (isAuthOrigin) return { ok: false, reason: 'no_persistent' };
 			const v = await restoreProductVault(rec, wrapKey, decoded);
-			vaults.set(rec.accountId, v);
+			installVault(v);
 			broadcast({ type: 'vaultChanged', accountId: v.accountId, email: v.email });
 			return { ok: true, accountId: v.accountId, email: v.email };
 		}

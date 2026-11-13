@@ -8,15 +8,21 @@ export const SALT_LEN = 32;
 export const NONCE_LEN = 12;
 export const SECRET_LEN = 32;
 
-async function deriveKey(ikm: Uint8Array, salt: Uint8Array, info: string, aad: Uint8Array): Promise<CryptoKey> {
+export async function deriveSecret(ikm: Uint8Array, salt: Uint8Array, info: string, aad: Uint8Array): Promise<Uint8Array> {
 	const label = concat(utf8(info), new Uint8Array([0]), await sha256(aad));
 	const base = await crypto.subtle.importKey('raw', ikm as BufferSource, 'HKDF', false, ['deriveBits']);
-	const bits = await crypto.subtle.deriveBits(
-		{ name: 'HKDF', hash: 'SHA-256', salt: salt as BufferSource, info: label as BufferSource },
-		base,
-		256
+	return new Uint8Array(
+		await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: salt as BufferSource, info: label as BufferSource }, base, 256)
 	);
-	return crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+
+async function deriveKey(ikm: Uint8Array, salt: Uint8Array, info: string, aad: Uint8Array): Promise<CryptoKey> {
+	const bits = await deriveSecret(ikm, salt, info, aad);
+	try {
+		return await crypto.subtle.importKey('raw', bits as BufferSource, 'AES-GCM', false, ['encrypt', 'decrypt']);
+	} finally {
+		bits.fill(0);
+	}
 }
 
 export async function seal(

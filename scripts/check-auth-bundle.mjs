@@ -10,7 +10,8 @@ const forbiddenModules = [
 	/packages\/core\/src\/realtime\/(?!device\.ts$)/,
 	/packages\/core\/src\/stores\/(auth|mailbox|drafts|scheduled|compose|contacts|signatures|calendarKeys|aliasKeys)\.svelte\.ts$/,
 	/packages\/core\/src\/keystore\/keystore-worker\.ts$/,
-	/packages\/core\/src\/keystore\/worker\/(content-ops|key-ops|fork-ops|srp-ops)\.ts$/,
+	/packages\/core\/src\/keystore\/worker\/(content-ops|key-ops|fork-ops|srp-ops|search-ops)\.ts$/,
+	/packages\/core\/src\/keystore\/searchkeys\//,
 	/node_modules\/.*\/(postal-mime|dompurify|@tiptap|ical\.js|marked|turndown|pdfjs-dist)\//
 ];
 

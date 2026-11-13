@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const refreshSession = vi.fn();
 const keystoreClear = vi.fn();
+const closeSearchSession = vi.fn(async (_args: { accountId: string }) => undefined);
 
 vi.mock('$core/api/auth', () => ({
 	refreshSession: (...a: unknown[]) => refreshSession(...a),
@@ -14,6 +15,7 @@ vi.mock('$core/api/auth', () => ({
 vi.mock('$core/keystore/keystore-client', () => ({
 	keystore: {
 		clear: (...a: unknown[]) => keystoreClear(...a),
+		closeSearchSession: (a: { accountId: string }) => closeSearchSession(a),
 		clearAll: vi.fn(),
 		status: vi.fn(async () => ({ accounts: [] })),
 		subscribe: vi.fn(() => () => {}),
@@ -52,6 +54,7 @@ describe('auth token refresh', () => {
 	beforeEach(() => {
 		refreshSession.mockReset();
 		keystoreClear.mockReset();
+		closeSearchSession.mockClear();
 	});
 
 	it('single-flights concurrent tryRefresh for the same account', async () => {
@@ -116,6 +119,7 @@ describe('auth token refresh', () => {
 		expect(await auth.tryRefresh(id)).toBe(false);
 		expect(refreshSession).toHaveBeenCalledTimes(1);
 		expect(keystoreClear).not.toHaveBeenCalled();
+		expect(closeSearchSession).toHaveBeenCalledWith({ accountId: id });
 	});
 
 	it('a 500 refresh stays retryable', async () => {

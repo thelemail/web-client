@@ -38,6 +38,8 @@ export interface VaultState {
 	aliasCurrent: Map<string, string>;
 	product?: 'app' | 'calendar';
 	searchLeaf?: Uint8Array;
+	productRoot?: Uint8Array;
+	productKeyEpoch?: number;
 }
 
 export interface AccountKeyEntry {
@@ -109,6 +111,36 @@ export const pendingRotations = new Map<string, PendingRotation>();
 export let cryptoReady: Promise<void> | null = null;
 export const ports = new Set<MessagePort>();
 export const opaqueOps = new OpaqueOperations();
+
+const vaultGoneListeners = new Set<(accountId: string | null) => void>();
+
+export function onVaultGone(listener: (accountId: string | null) => void): void {
+	vaultGoneListeners.add(listener);
+}
+
+function vaultGone(accountId: string | null): void {
+	for (const listener of vaultGoneListeners) listener(accountId);
+}
+
+export function wipeProductRoot(v: VaultState | undefined): void {
+	v?.productRoot?.fill(0);
+}
+
+function sameProductRoot(a: VaultState, b: VaultState): boolean {
+	if (a.productKeyEpoch !== b.productKeyEpoch || !a.productRoot || !b.productRoot || a.productRoot.length !== b.productRoot.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.productRoot.length; i++) diff |= a.productRoot[i] ^ b.productRoot[i];
+	return diff === 0;
+}
+
+export function installVault(v: VaultState): void {
+	const prev = vaults.get(v.accountId);
+	if (prev && prev !== v) {
+		if (!sameProductRoot(prev, v)) vaultGone(v.accountId);
+		wipeProductRoot(prev);
+	}
+	vaults.set(v.accountId, v);
+}
 
 export const restorePromise = restoreFromIdb();
 
@@ -205,6 +237,8 @@ export async function handleStatus(): Promise<StatusResponse> {
 }
 
 export async function handleClear(args: ClearArgs): Promise<void> {
+	vaultGone(args.accountId);
+	wipeProductRoot(vaults.get(args.accountId));
 	vaults.delete(args.accountId);
 	pendingRotations.delete(args.accountId);
 	indexKeys.delete(args.accountId);
@@ -218,6 +252,8 @@ export async function handleClear(args: ClearArgs): Promise<void> {
 }
 
 export async function handleClearAll(): Promise<void> {
+	vaultGone(null);
+	for (const v of vaults.values()) wipeProductRoot(v);
 	vaults.clear();
 	indexKeys.clear();
 	cachedRecords.clear();
@@ -236,6 +272,8 @@ export async function handleClearAll(): Promise<void> {
 }
 
 export function handleLock(args: LockArgs): void {
+	vaultGone(args.accountId);
+	wipeProductRoot(vaults.get(args.accountId));
 	indexKeys.delete(args.accountId);
 	pendingRotations.delete(args.accountId);
 	if (vaults.delete(args.accountId)) {

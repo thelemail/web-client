@@ -193,7 +193,8 @@ export async function productVaultState(accountId: string, email: string, vault:
 		aliasKeys,
 		aliasCurrent: new Map(),
 		product: vault.product,
-		...(searchLeaf ? { searchLeaf } : {})
+		...(searchLeaf ? { searchLeaf } : {}),
+		...(vault.product === 'app' && vault.manifest ? { productRoot: vault.root.slice(), productKeyEpoch: vault.manifest.productKeyEpoch } : {})
 	};
 	recomputeAliasCurrent(state);
 	return state;

@@ -9,6 +9,9 @@ import type {
 	AttachmentHeaderResponse,
 	Broadcast,
 	ClearArgs,
+	CloseSearchSessionArgs,
+	OpenSearchRootArgs,
+	OpenSearchRootResponse,
 	DecryptArgs,
 	LoadAliasKeysArgs,
 	LoadAliasKeysResponse,
@@ -499,6 +502,14 @@ export const keystore = {
 	signDetached: (args: SignDetachedArgs) => call<SignDetachedResponse>('signDetached', args),
 	sealIndex: (args: SealIndexArgs) => call<SealIndexResponse>('sealIndex', args, CRYPTO_TIMEOUT_MS),
 	openIndex: (args: OpenIndexArgs) => call<OpenIndexResponse>('openIndex', args, CRYPTO_TIMEOUT_MS),
+	openSearchRoot: (args: Omit<OpenSearchRootArgs, 'port'>, port: MessagePort): Promise<OpenSearchRootResponse> => {
+		if (platform.keystoreChannel) {
+			port.close();
+			return Promise.resolve({ ok: false, code: 'unavailable' });
+		}
+		return call<OpenSearchRootResponse>('openSearchRoot', args, CRYPTO_TIMEOUT_MS, [port]);
+	},
+	closeSearchSession: (args: CloseSearchSessionArgs) => call<void>('closeSearchSession', args),
 	sealProductFork: (args: SealProductForkArgs) =>
 		call<SealProductForkResponse>('sealProductFork', args, CRYPTO_TIMEOUT_MS),
 	openProductFork: (args: OpenProductForkArgs) =>
