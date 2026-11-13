@@ -1,4 +1,4 @@
-export const ANALYZER_VERSION = 1;
+export const ANALYZER_VERSION = 2;
 export const MAX_LITERAL = 4096;
 
 const EMAIL = /[\p{L}\p{N}._%+'=-]+@(?:[\p{L}\p{N}-]+\.)+[\p{L}\p{N}-]{2,}/gu;
@@ -6,9 +6,14 @@ const URL_RE = /\bhttps?:\/\/[^\s<>"'`]+[^\s<>"'`.,;:!?)\]}]/giu;
 const DOMAIN = /(?<![\p{L}\p{N}@.-])(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?\.)+\p{L}[\p{L}\p{N}-]*[\p{L}\p{N}](?![\p{L}\p{N}-])/gu;
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/giu;
 const REFERENCE = /(?<![\p{L}\p{N}])[\p{L}\p{N}]*\p{N}[\p{L}\p{N}]*(?:[-/_.#:][\p{L}\p{N}]+)+|(?<![\p{L}\p{N}])[\p{L}\p{N}]+(?:[-/_.#:][\p{L}\p{N}]+)*[-/_.#:][\p{L}\p{N}]*\p{N}[\p{L}\p{N}]*/gu;
-const SCRIPTS = '\\p{sc=Han}\\p{sc=Hiragana}\\p{sc=Katakana}\\p{sc=Hangul}\\p{sc=Thai}\\p{sc=Lao}\\p{sc=Khmer}\\p{sc=Myanmar}\\p{sc=Tibetan}';
-const UNSEGMENTED = new RegExp(`[${SCRIPTS}]+`, 'gu');
-const HAS_UNSEGMENTED = new RegExp(`[${SCRIPTS}]`, 'u');
+const SCRIPTS = ['Han', 'Hiragana', 'Katakana', 'Hangul', 'Thai', 'Lao', 'Khmer', 'Myanmar', 'Tibetan'];
+const SCRIPT_CHAR = `(?:(?!\\p{P})[${SCRIPTS.map((s) => `\\p{scx=${s}}`).join('')}])`;
+const UNSEGMENTED = new RegExp(`${SCRIPT_CHAR}+`, 'gu');
+const HAS_UNSEGMENTED = new RegExp(SCRIPT_CHAR, 'u');
+
+export function hasUnsegmented(text: string): boolean {
+	return HAS_UNSEGMENTED.test(text);
+}
 
 export function normalize(text: string): string {
 	return text.normalize('NFKC');
@@ -21,6 +26,12 @@ export function asciiDomain(domain: string): string | null {
 	} catch {
 		return null;
 	}
+}
+
+export function listKey(value: string): string {
+	const trimmed = value.trim();
+	const bare = trimmed.startsWith('<') && trimmed.endsWith('>') ? trimmed.slice(1, -1) : trimmed;
+	return normalize(bare).toLowerCase();
 }
 
 export function domainOf(address: string): string {

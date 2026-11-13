@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { Harness, document, randomDirectory, randomKey, removeDirectory } from './harness';
+import { ANALYZER_VERSION } from './analysis';
+import { SCHEMA_VERSION } from './schema';
 import { Coverage, Dimension, Field, Flag, SourceKind } from './types';
 
 const live: Harness[] = [];
@@ -244,7 +246,35 @@ describe('encrypted file', () => {
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: false, code: 'unreadable' });
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: true })).toEqual({ ok: true, rebuilt: true });
 		expect(await h.select('SELECT count(*) FROM sources')).toEqual([[0]]);
-		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[1]]);
+		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+	});
+
+	it('upgrades a version 1 database in place', async (ctx) => {
+		if (!opfs) ctx.skip();
+		const dir = directory();
+		const key = randomKey();
+		const h = harness();
+		await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false });
+		await h.call({ op: 'put', doc: document('m1') });
+		await h.call({
+			op: 'exec',
+			sql: `DROP INDEX sources_list;
+				ALTER TABLE sources DROP COLUMN list_id;
+				ALTER TABLE attachments DROP COLUMN inline;
+				UPDATE meta SET value = 1 WHERE key = 'schema_version'`
+		});
+		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
+		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+		expect(await h.select('SELECT source_id, list_id FROM sources')).toEqual([['m1', null]]);
+		await h.call({
+			op: 'put',
+			doc: document('m2', {
+				listId: '<News.Calloway.test>',
+				attachments: [{ attachmentId: 'a1', filename: 'logo.png', mime: 'image/png', size: 10, inline: true }]
+			})
+		});
+		expect(await h.select("SELECT list_id FROM sources WHERE source_id = 'm2'")).toEqual([['news.calloway.test']]);
+		expect(await h.select('SELECT inline FROM attachments')).toEqual([[1]]);
 	});
 
 	it('rebuilds a foreign database', async (ctx) => {
@@ -278,8 +308,8 @@ describe('encrypted file', () => {
 		const h = harness();
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
 		expect(await h.select("SELECT key, value FROM meta ORDER BY key")).toEqual([
-			['analyzer_version', 1],
-			['schema_version', 1]
+			['analyzer_version', ANALYZER_VERSION],
+			['schema_version', SCHEMA_VERSION]
 		]);
 		await h.call({ op: 'close' });
 		expect(await h.call({ op: 'drop', directory: dir, file: '/index.db' })).toBe(true);

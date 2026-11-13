@@ -92,6 +92,11 @@ export const MIGRATIONS: readonly string[] = [
 		body, source UNINDEXED, field UNINDEXED,
 		${CONTENTLESS}, ${TRIGRAMS}
 	);
+	`,
+	`
+	ALTER TABLE attachments ADD COLUMN inline INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE sources ADD COLUMN list_id TEXT;
+	CREATE INDEX sources_list ON sources (list_id) WHERE list_id IS NOT NULL;
 	`
 ];
 

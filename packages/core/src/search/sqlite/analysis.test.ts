@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_LITERAL, asciiDomain, domainOf, filenameLiterals, literals, normalize } from './analysis';
+import { MAX_LITERAL, asciiDomain, domainOf, filenameLiterals, hasUnsegmented, literals, normalize } from './analysis';
 
 describe('literals', () => {
 	it('keeps addresses with plus tags and their domains', () => {
@@ -33,6 +33,14 @@ describe('literals', () => {
 	it('routes unsegmented scripts to the literal lane', () => {
 		expect(literals('会議は東京都の事務所で')).toEqual(['会議は東京都の事務所で']);
 		expect(literals('สวัสดีครับ')).toEqual(['สวัสดีครับ']);
+	});
+
+	it('keeps shared marks inside unsegmented runs and splits on punctuation', () => {
+		expect(literals('東京タワーに行く')).toEqual(['東京タワーに行く']);
+		expect(literals('人々の時々')).toEqual(['人々の時々']);
+		expect(literals('東京、京都。')).toEqual(['東京', '京都']);
+		expect(hasUnsegmented('ー')).toBe(true);
+		expect(hasUnsegmented('、')).toBe(false);
 	});
 
 	it('ignores plain words', () => {

@@ -1,6 +1,9 @@
 /// <reference lib="webworker" />
 import type { Database, SqlValue } from '@thelemail/sqlite-wasm';
 import { deleteSearchDb, loadSqlite, openMemorySearchDb, openSearchDb, pauseSearchPool, resumeSearchPool } from './engine';
+import type { ParsedQuery } from '../query/ast';
+import type { QueryContext } from './compile';
+import { QueryEngine, type QueryOptions } from './run';
 import type { Coverage, Dimension, SearchDocument, SourceKey, SourceMetadata } from './types';
 import { SearchWriter, integrityCheck, maintain, type MaintenanceStep } from './writer';
 
@@ -21,21 +24,33 @@ export type HarnessRequest =
 	| { op: 'close' }
 	| { op: 'drop'; directory: string; file: string }
 	| { op: 'scan'; directory: string; needles: string[] }
-	| { op: 'corrupt'; directory: string };
+	| { op: 'corrupt'; directory: string }
+	| { op: 'query'; token: number; query: ParsedQuery; ctx: QueryContext; options: Omit<QueryOptions, 'signal'> }
+	| { op: 'cancel'; token: number }
+	| { op: 'page'; session: number; index: number }
+	| { op: 'closeQuery'; session: number };
 
 export type HarnessReply = { id: number; ok: true; value: unknown } | { id: number; ok: false; error: string };
 
 let db: Database | null = null;
 let writer: SearchWriter | null = null;
+let engine: QueryEngine | null = null;
+const running = new Map<number, AbortController>();
 
-function attach(next: Database) {
+async function attach(next: Database) {
 	db = next;
 	writer = new SearchWriter(next);
+	engine = new QueryEngine(next, (await loadSqlite()).capi);
+	writer.onDelete((source) => engine?.invalidate(source));
 }
 
 function close() {
+	for (const c of running.values()) c.abort();
+	running.clear();
+	engine?.dispose();
 	writer?.close();
 	db?.close();
+	engine = null;
 	writer = null;
 	db = null;
 }
@@ -114,12 +129,12 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			close();
 			const result = await openSearchDb(r);
 			if (!result.ok) return { ok: false, code: result.code };
-			attach(result.db);
+			await attach(result.db);
 			return { ok: true, rebuilt: result.rebuilt };
 		}
 		case 'memory':
 			close();
-			attach(await openMemorySearchDb());
+			await attach(await openMemorySearchDb());
 			return null;
 		case 'put':
 			return writer!.put(r.doc);
@@ -154,6 +169,26 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			return scan(r.directory, r.needles);
 		case 'corrupt':
 			return corrupt(r.directory);
+		case 'query': {
+			const controller = new AbortController();
+			running.set(r.token, controller);
+			try {
+				return await engine!.run(r.query, r.ctx, { ...r.options, signal: controller.signal });
+			} catch (err) {
+				if (controller.signal.aborted) return { cancelled: true };
+				throw err;
+			} finally {
+				running.delete(r.token);
+			}
+		}
+		case 'cancel':
+			running.get(r.token)?.abort();
+			return null;
+		case 'page':
+			return engine!.page(r.session, r.index);
+		case 'closeQuery':
+			engine!.close(r.session);
+			return null;
 	}
 }
 

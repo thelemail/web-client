@@ -22,7 +22,8 @@ export const Role = {
 	cc: 3,
 	bcc: 4,
 	replyTo: 5,
-	sender: 6
+	sender: 6,
+	deliveredTo: 7
 } as const;
 export type Role = (typeof Role)[keyof typeof Role];
 
@@ -79,6 +80,7 @@ export interface Attachment {
 	filename: string;
 	mime: string;
 	size: number;
+	inline?: boolean;
 }
 
 export interface Part {
@@ -103,6 +105,7 @@ export interface SearchDocument extends SourceMetadata {
 	contentRevision: number;
 	size: number;
 	messageId: string | null;
+	listId?: string | null;
 	subject: string | null;
 	participants: Participant[];
 	attachments: Attachment[];
