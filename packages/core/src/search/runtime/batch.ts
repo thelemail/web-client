@@ -23,11 +23,18 @@ export class Batch {
 	#bytes = 0;
 	#cursor: string | null = null;
 	#dirty = false;
+	#committed: (() => void) | undefined;
 
-	constructor(writer: SearchWriter, job: string, admission: (bytes: number) => Promise<Admission> = admit) {
+	constructor(
+		writer: SearchWriter,
+		job: string,
+		admission: (bytes: number) => Promise<Admission> = admit,
+		committed?: () => void
+	) {
 		this.#writer = writer;
 		this.#job = job;
 		this.#admit = admission;
+		this.#committed = committed;
 	}
 
 	get full(): boolean {
@@ -68,6 +75,7 @@ export class Batch {
 		this.#docs = [];
 		this.#bytes = 0;
 		this.#dirty = false;
+		this.#committed?.();
 		return { ok: true, results };
 	}
 }

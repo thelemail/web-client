@@ -12,6 +12,7 @@ export interface Job {
 	readonly name: string;
 	readonly class: JobClass;
 	step(ctx: StepContext): Promise<StepOutcome>;
+	receive?(message: unknown): void;
 }
 
 export interface Conditions {
@@ -61,6 +62,13 @@ export class Scheduler {
 		this.#entries.push({ job, ready: true, blocked: false });
 		this.#entries.sort((a, b) => RANK.get(a.job.class)! - RANK.get(b.job.class)!);
 		this.#kick();
+	}
+
+	tell(name: string, message: unknown): boolean {
+		const entry = this.#entries.find((e) => e.job.name === name);
+		if (!entry?.job.receive) return false;
+		entry.job.receive(message);
+		return true;
 	}
 
 	wake(name?: string): void {
