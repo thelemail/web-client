@@ -1,3 +1,4 @@
+import { afterBoot } from '$core/async/idle';
 import { folderFromServer, type Message } from '$core/mail/data';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
@@ -11,21 +12,10 @@ type Engine = typeof import('./searchEngine');
 const DEBOUNCE_MS = 180;
 const MIRROR_LIMIT = 200;
 const PREVIEW_LIMIT = 6;
-const IDLE_TIMEOUT_MS = 5000;
-const IDLE_FALLBACK_MS = 3000;
 
 interface Found {
 	messages: Message[];
 	error: QueryError | null;
-}
-
-function whenIdle(work: () => void): () => void {
-	if (typeof requestIdleCallback === 'function') {
-		const handle = requestIdleCallback(work, { timeout: IDLE_TIMEOUT_MS });
-		return () => cancelIdleCallback(handle);
-	}
-	const timer = setTimeout(work, IDLE_FALLBACK_MS);
-	return () => clearTimeout(timer);
 }
 
 function messageFromHit(hit: SearchHit): Message {
@@ -124,7 +114,7 @@ class MailSearchStore {
 				this.setAccount(null);
 			};
 		}
-		const cancelIdle = whenIdle(() => this.warm());
+		const cancelIdle = afterBoot(() => this.warm());
 		if (this.#engine) this.#follow(this.#engine, accountId);
 		return () => {
 			cancelIdle();

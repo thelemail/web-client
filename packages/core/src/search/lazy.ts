@@ -1,11 +1,9 @@
+import { afterBoot } from '$core/async/idle';
 import { keystore } from '$core/keystore/keystore-client';
 import type { Broadcast } from '$core/keystore/protocol';
 import { platform } from '$platform';
 import type { SearchClient } from './runtime/client';
 import { searchRecords } from './runtime/records';
-
-const IDLE_TIMEOUT_MS = 5000;
-const IDLE_FALLBACK_MS = 3000;
 
 interface Running {
 	accountId: string;
@@ -16,15 +14,6 @@ function supported(): boolean {
 	return import.meta.env.PUBLIC_PRIVATE_SEARCH === '1' && !platform.mirror && !platform.keystoreChannel;
 }
 
-function whenIdle(work: () => void): () => void {
-	if (typeof requestIdleCallback === 'function') {
-		const handle = requestIdleCallback(work, { timeout: IDLE_TIMEOUT_MS });
-		return () => cancelIdleCallback(handle);
-	}
-	const timer = setTimeout(work, IDLE_FALLBACK_MS);
-	return () => clearTimeout(timer);
-}
-
 class SearchRuntime {
 	#accountId: string | null = null;
 	#running: Running | null = null;
@@ -32,7 +21,7 @@ class SearchRuntime {
 	attach(accountId: string): () => void {
 		if (!supported()) return () => {};
 		this.#accountId = accountId;
-		const cancelIdle = whenIdle(() => {
+		const cancelIdle = afterBoot(() => {
 			void searchRecords.get(accountId).then(
 				(record) => {
 					if (record?.hasIndex && this.#accountId === accountId) this.#ensure(accountId);
