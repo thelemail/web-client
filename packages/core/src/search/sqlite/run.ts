@@ -114,7 +114,7 @@ function and(parts: Fragment[]): Fragment {
 	return { sql: parts.map((p) => `(${p.sql})`).join(' AND '), params: parts.flatMap((p) => p.params) };
 }
 
-function yieldTask(): Promise<void> {
+export function yieldTask(): Promise<void> {
 	return new Promise((resolve) => {
 		const channel = new MessageChannel();
 		channel.port1.onmessage = () => {
