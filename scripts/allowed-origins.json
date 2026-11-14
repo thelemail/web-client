@@ -18,6 +18,8 @@
     "http://ns.adobe.com",
     "http://www.xfa.org",
     "https://foo.bar",
-    "https://sveltekit-redirect.invalid"
+    "https://sveltekit-redirect.invalid",
+    "https://emscripten.org",
+    "https://sqlite.org"
   ]
 }
