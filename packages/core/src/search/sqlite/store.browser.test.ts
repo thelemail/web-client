@@ -249,6 +249,20 @@ describe('encrypted file', () => {
 		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
 	});
 
+	it('upgrades a version 2 database in place and keeps its sources', async (ctx) => {
+		if (!opfs) ctx.skip();
+		const dir = directory();
+		const key = randomKey();
+		const h = harness();
+		await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false });
+		await h.call({ op: 'put', doc: document('m1') });
+		await h.call({ op: 'exec', sql: "DROP TABLE checkpoints; UPDATE meta SET value = 2 WHERE key = 'schema_version'" });
+		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
+		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+		expect(await h.select('SELECT source_id FROM sources')).toEqual([['m1']]);
+		expect(await h.select('SELECT count(*) FROM checkpoints')).toEqual([[0]]);
+	});
+
 	it('upgrades a version 1 database in place', async (ctx) => {
 		if (!opfs) ctx.skip();
 		const dir = directory();
@@ -261,6 +275,7 @@ describe('encrypted file', () => {
 			sql: `DROP INDEX sources_list;
 				ALTER TABLE sources DROP COLUMN list_id;
 				ALTER TABLE attachments DROP COLUMN inline;
+				DROP TABLE checkpoints;
 				UPDATE meta SET value = 1 WHERE key = 'schema_version'`
 		});
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
