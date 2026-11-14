@@ -97,6 +97,12 @@ export const MIGRATIONS: readonly string[] = [
 	ALTER TABLE attachments ADD COLUMN inline INTEGER NOT NULL DEFAULT 0;
 	ALTER TABLE sources ADD COLUMN list_id TEXT;
 	CREATE INDEX sources_list ON sources (list_id) WHERE list_id IS NOT NULL;
+	`,
+	`
+	CREATE TABLE checkpoints (
+		job TEXT PRIMARY KEY,
+		cursor TEXT NOT NULL
+	) WITHOUT ROWID;
 	`
 ];
 
@@ -112,7 +118,8 @@ const REQUIRED_TABLES = [
 	'parts',
 	'literals',
 	'parts_fts',
-	'literals_fts'
+	'literals_fts',
+	'checkpoints'
 ];
 
 export type SchemaState =
