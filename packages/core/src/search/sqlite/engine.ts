@@ -202,3 +202,10 @@ export async function wipeSearchPool(directory: string): Promise<void> {
 	sqlite.capi.sqlite3mc_vfs_destroy(`multipleciphers-${vfsName(directory)}`);
 	await util.removeVfs();
 }
+
+export async function pruneSearchDb(directory: string, keep: string): Promise<void> {
+	const util = await pool(await loadSqlite(), directory);
+	for (const name of util.getFileNames()) {
+		if (!name.startsWith(keep)) util.unlink(name);
+	}
+}

@@ -73,7 +73,7 @@ let stop: () => void;
 beforeEach(() => {
 	goto.mockClear();
 	indexSearch.mockReset();
-	indexSearch.mockReturnValue([hit('m1', 'Permission slip'), hit('m2', 'Permission form')]);
+	indexSearch.mockReturnValue({ ok: true, results: [hit('m1', 'Permission slip'), hit('m2', 'Permission form')] });
 	stop = mailSearch.start('acc-1');
 	document.body.className = '';
 	const host = document.body.appendChild(document.createElement('div'));

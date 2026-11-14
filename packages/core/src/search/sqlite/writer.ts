@@ -36,8 +36,16 @@ const STATEMENTS = {
 	insertLiteralFts: 'INSERT INTO literals_fts (rowid, body, source, field) VALUES (?, ?, ?, ?)',
 	literalIds: 'SELECT id FROM literals WHERE source = ?',
 	deleteLiteralFts: 'DELETE FROM literals_fts WHERE rowid = ?',
-	deleteLiterals: 'DELETE FROM literals WHERE source = ?'
+	deleteLiterals: 'DELETE FROM literals WHERE source = ?',
+	readCheckpoint: 'SELECT cursor FROM checkpoints WHERE job = ?',
+	writeCheckpoint: 'INSERT OR REPLACE INTO checkpoints (job, cursor) VALUES (?, ?)',
+	deleteCheckpoint: 'DELETE FROM checkpoints WHERE job = ?'
 } as const;
+
+export interface Checkpoint {
+	job: string;
+	cursor: string | null;
+}
 
 type StatementName = keyof typeof STATEMENTS;
 
@@ -252,8 +260,25 @@ export class SearchWriter {
 		return true;
 	}
 
-	putBatch(docs: readonly SearchDocument[]): PutResult[] {
-		return this.#atomic(() => docs.map((d) => this.put(d)));
+	putBatch(docs: readonly SearchDocument[], checkpoint?: Checkpoint): PutResult[] {
+		return this.#atomic(() => {
+			const results = docs.map((d) => this.put(d));
+			if (checkpoint) this.#saveCheckpoint(checkpoint);
+			return results;
+		});
+	}
+
+	#saveCheckpoint(checkpoint: Checkpoint): void {
+		if (checkpoint.cursor === null) this.#run('deleteCheckpoint', [checkpoint.job]);
+		else this.#run('writeCheckpoint', [checkpoint.job, checkpoint.cursor]);
+	}
+
+	checkpoint(job: string): string | null {
+		return this.#column<string>('readCheckpoint', [job])[0] ?? null;
+	}
+
+	setCheckpoint(checkpoint: Checkpoint): void {
+		this.#atomic(() => this.#saveCheckpoint(checkpoint));
 	}
 
 	close(): void {

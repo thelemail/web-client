@@ -74,6 +74,9 @@ jobs:
       - name: Check that the bundle contacts no third party
         run: pnpm --filter @thelemail/mail --filter @thelemail/calendar verify:bundle
 
+      - name: Check the initial bundle size of the mail app
+        run: pnpm --filter @thelemail/mail verify:size
+
       - name: Build the auth app
         run: |
           set -euo pipefail

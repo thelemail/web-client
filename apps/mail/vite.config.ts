@@ -6,6 +6,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
+import { chunkGraph } from '../../scripts/chunk-graph.ts';
 import { pdfjsAssets } from '../../scripts/pdfjs-assets.ts';
 import { defineConfig } from 'vite';
 
@@ -70,7 +71,8 @@ export default defineConfig({
 				pollInterval: desktop ? 0 : 60000
 			}
 		}),
-		pdfjsAssets(import.meta.dirname)
+		pdfjsAssets(import.meta.dirname),
+		chunkGraph(import.meta.dirname)
 	],
 	envPrefix: ['VITE_', 'PUBLIC_'],
 	envDir: workspaceRoot,

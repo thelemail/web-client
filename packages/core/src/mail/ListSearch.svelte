@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { mailSearch } from '$core/stores/search.svelte';
+	import { searchRuntime } from '$core/search/lazy';
 	import { formatRowTime, type Message } from './data';
 
 	interface Props {
@@ -174,6 +175,8 @@
 			onfocus={() => {
 				focused = true;
 				dismissed = false;
+				mailSearch.warm();
+				searchRuntime.focus();
 			}}
 			onblur={() => {
 				focused = false;
