@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SearchResult } from '$core/search';
 
 const indexSearch = vi.fn();
@@ -63,6 +63,11 @@ function parsed(text: string) {
 function found(...results: SearchResult[]) {
 	return { ok: true, results };
 }
+
+beforeAll(async () => {
+	mailSearch.warm();
+	await vi.dynamicImportSettled();
+});
 
 beforeEach(() => {
 	indexSearch.mockReset();

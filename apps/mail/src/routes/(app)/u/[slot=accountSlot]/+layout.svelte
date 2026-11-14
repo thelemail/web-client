@@ -12,6 +12,7 @@
 	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 	import { mailbox } from '$core/stores/mailbox.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
+	import { searchRuntime } from '$core/search/lazy';
 
 	let { children, data } = $props();
 
@@ -31,6 +32,8 @@
 	onMount(() => realtime.start());
 
 	$effect(() => mailSearch.start(accountId));
+
+	$effect(() => searchRuntime.attach(accountId));
 
 	onMount(() => {
 		const mirror = platform.mirror;

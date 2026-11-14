@@ -1,75 +1,31 @@
 import { folderFromServer, type Message } from '$core/mail/data';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
-import { searchIndex, type SearchResult } from '$core/search';
-import { collectionResolver, type CollectionResolver } from '$core/search/preview';
-import { parseQuery } from '$core/search/query';
-import type { ParsedQuery, QueryError, QueryNode } from '$core/search/query/ast';
-import { queryErrorMessage } from '$core/search/query/messages';
-import { conjuncts } from '$core/search/query/walk';
-import { locale } from '$core/mail/locale.svelte';
-import { mailCollections } from './mailCollections.svelte';
+import type { ParsedQuery, QueryError } from '$core/search/query/ast';
 import type { SearchHit } from '$core/platform/types';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
 
+type Engine = typeof import('./searchEngine');
+
 const DEBOUNCE_MS = 180;
 const MIRROR_LIMIT = 200;
 const PREVIEW_LIMIT = 6;
-
-function collections(): CollectionResolver {
-	return collectionResolver(
-		mailCollections.folders.filter((f) => !f.sealed),
-		mailCollections.labels.filter((l) => !l.sealed),
-		mailCollections.subtree
-	);
-}
-
-const TEXT_NODES = new Set<QueryNode['kind']>(['term', 'phrase', 'literal', 'prefix', 'and', 'or', 'around']);
-
-function isChip(node: QueryNode): boolean {
-	if (node.kind === 'not') return isChip(node.child);
-	return !TEXT_NODES.has(node.kind);
-}
-
-function parse(text: string): ReturnType<typeof parseQuery> {
-	return parseQuery(text, { now: Date.now(), timeZone: locale.timeZone });
-}
+const IDLE_TIMEOUT_MS = 5000;
+const IDLE_FALLBACK_MS = 3000;
 
 interface Found {
 	messages: Message[];
 	error: QueryError | null;
 }
 
-function messageFromResult(result: SearchResult): Message {
-	const { row, text } = result;
-	const display = text.senderDisplay || text.senderAddress || m.mailbox_unknown_sender();
-	const palette = paletteFor(text.senderAddress.toLowerCase());
-	return {
-		id: row.id,
-		folder: folderFromServer(row.mailboxState, row.direction, row.folderId),
-		direction: row.direction,
-		from: display,
-		fromAddr: text.senderAddress,
-		to: text.recipients,
-		recipients: [],
-		init: initialsFor(display, text.senderAddress),
-		bg: palette.bg,
-		fg: palette.fg,
-		epoch: row.storedAt,
-		subj: text.subject || '(no subject)',
-		labels: row.labels,
-		unread: !row.read,
-		starred: row.starred,
-		snoozedUntil: row.snoozedUntil,
-		prev: result.excerpt || text.snippet,
-		body: [],
-		threadRootId: row.threadRootId ?? undefined,
-		attachments:
-			row.attachmentCount > 0
-				? new Array(row.attachmentCount).fill({ name: 'attachment', size: '' })
-				: undefined
-	};
+function whenIdle(work: () => void): () => void {
+	if (typeof requestIdleCallback === 'function') {
+		const handle = requestIdleCallback(work, { timeout: IDLE_TIMEOUT_MS });
+		return () => cancelIdleCallback(handle);
+	}
+	const timer = setTimeout(work, IDLE_FALLBACK_MS);
+	return () => clearTimeout(timer);
 }
 
 function messageFromHit(hit: SearchHit): Message {
@@ -119,6 +75,8 @@ class MailSearchStore {
 	queryError = $state<QueryError | null>(null);
 
 	#query = $state.raw<ParsedQuery | null>(null);
+	#engine = $state.raw<Engine | null>(null);
+	#loading: Promise<Engine> | null = null;
 	#accountId: string | null = null;
 	#queryAccount: string | null = null;
 	#timer: ReturnType<typeof setTimeout> | undefined;
@@ -139,15 +97,13 @@ class MailSearchStore {
 	}
 
 	get error(): string | null {
-		return this.queryError ? queryErrorMessage(this.queryError) : null;
+		return this.queryError && this.#engine ? this.#engine.errorMessage(this.queryError) : null;
 	}
 
 	get chips(): string[] {
-		const root = this.#query?.root;
-		if (!this.active || !root) return [];
-		return conjuncts(root)
-			.filter(isChip)
-			.map((node) => this.committed.slice(node.range.start, node.range.end));
+		const query = this.#query;
+		if (!this.active || !query || !this.#engine) return [];
+		return this.#engine.chipsOf(query, this.committed);
 	}
 
 	setAccount(accountId: string | null): void {
@@ -168,28 +124,57 @@ class MailSearchStore {
 				this.setAccount(null);
 			};
 		}
-		this.#unsubscribe = searchIndex.subscribe((progress) => {
+		const cancelIdle = whenIdle(() => this.warm());
+		if (this.#engine) this.#follow(this.#engine, accountId);
+		return () => {
+			cancelIdle();
+			this.#unsubscribe?.();
+			this.#unsubscribe = null;
+			this.#accountId = null;
+			this.setAccount(null);
+			this.#engine?.close();
+		};
+	}
+
+	warm(): void {
+		void this.#load().catch(() => undefined);
+	}
+
+	#load(): Promise<Engine> {
+		if (this.#engine) return Promise.resolve(this.#engine);
+		this.#loading ??= import('./searchEngine').then(
+			(engine) => {
+				this.#engine = engine;
+				if (this.#accountId && !platform.mirror) this.#follow(engine, this.#accountId);
+				return engine;
+			},
+			(error) => {
+				this.#loading = null;
+				throw error;
+			}
+		);
+		return this.#loading;
+	}
+
+	#follow(engine: Engine, accountId: string): void {
+		this.#unsubscribe?.();
+		this.#unsubscribe = engine.subscribe((progress) => {
+			if (this.#accountId !== accountId) return;
 			this.indexed = progress.indexed;
 			this.complete = progress.complete;
 			if (this.active) this.#execute();
 			if (this.draft.trim()) this.#executePreview();
 		});
 		void this.refresh();
-		return () => {
-			this.#unsubscribe?.();
-			this.#unsubscribe = null;
-			this.#accountId = null;
-			this.setAccount(null);
-			searchIndex.close();
-		};
 	}
 
 	async refresh(): Promise<void> {
 		const accountId = this.#accountId;
-		if (!accountId || platform.mirror) return;
+		const engine = this.#engine;
+		if (!accountId || platform.mirror || !engine) return;
 		this.indexing = true;
 		try {
-			await searchIndex.sync(accountId);
+			await engine.sync(accountId);
 		} catch {
 			this.complete = false;
 		} finally {
@@ -225,10 +210,29 @@ class MailSearchStore {
 			this.searching = false;
 			return;
 		}
-		const parsed = parse(query);
+		this.searching = true;
+		const run = ++this.#run;
+		const engine = this.#engine;
+		if (engine) {
+			this.#begin(engine, query);
+			return;
+		}
+		this.#load().then(
+			(loaded) => {
+				if (run === this.#run) this.#begin(loaded, query);
+			},
+			() => {
+				if (run !== this.#run) return;
+				this.failed = true;
+				this.searching = false;
+			}
+		);
+	}
+
+	#begin(engine: Engine, query: string): void {
+		const parsed = engine.parse(query);
 		if (parsed.ok) this.#query = parsed.query;
 		else if (!platform.mirror) this.queryError = parsed.error;
-		this.searching = true;
 		this.#execute();
 	}
 
@@ -278,9 +282,7 @@ class MailSearchStore {
 			return { messages: hits.map(messageFromHit), error: null };
 		}
 		if (!query) return { messages: [], error: null };
-		const outcome = searchIndex.search(query, collections(), limit);
-		if (!outcome.ok) return { messages: [], error: outcome.error };
-		return { messages: outcome.results.map(messageFromResult), error: null };
+		return (await this.#load()).find(query, limit);
 	}
 
 	#execute(): void {
@@ -309,7 +311,27 @@ class MailSearchStore {
 
 	#executePreview(): void {
 		const text = this.draft;
-		const parsed = text.trim() ? parse(text) : null;
+		const engine = this.#engine;
+		if (!engine) {
+			if (!this.#accountId || !text.trim()) {
+				this.preview = [];
+				this.previewing = false;
+				return;
+			}
+			const waiting = ++this.#previewRun;
+			this.#load().then(
+				() => {
+					if (waiting === this.#previewRun) this.#executePreview();
+				},
+				() => {
+					if (waiting !== this.#previewRun) return;
+					this.preview = [];
+					this.previewing = false;
+				}
+			);
+			return;
+		}
+		const parsed = text.trim() ? engine.parse(text) : null;
 		if (!this.#accountId || !parsed || (!parsed.ok && !platform.mirror)) {
 			this.preview = [];
 			this.previewing = false;
