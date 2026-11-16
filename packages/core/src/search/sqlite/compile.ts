@@ -25,6 +25,7 @@ export interface QueryContext {
 	folders: readonly { id: string; path: string }[];
 	labels: readonly { id: string; name: string }[];
 	attachmentText: boolean;
+	exactFolders?: boolean;
 }
 
 export const WEIGHTS: Readonly<Record<Field, number>> = {
@@ -159,12 +160,28 @@ export interface Suggestible {
 	range: Range;
 }
 
+export interface Highlight {
+	kind: 'words' | 'prefix' | 'literal';
+	text: string;
+	fields: readonly Field[];
+}
+
+export interface Resolution {
+	kind: 'folder' | 'label';
+	name: string;
+	range: Range;
+	ids: string[];
+	descendants: number;
+}
+
 export interface Plan {
 	leaves: Leaf[];
 	expr: Expr;
 	filters: Expr[];
 	universe: WidenedScope[];
 	suggestible: Suggestible[];
+	highlights: Highlight[];
+	resolved: Resolution[];
 }
 
 export type CompileResult = { ok: true; plan: Plan } | { ok: false; error: QueryError };
@@ -308,12 +325,18 @@ function dimsOf(fields: readonly Field[]): Dimension[] {
 class Compiler {
 	readonly leaves: Leaf[] = [];
 	readonly suggestible: Suggestible[] = [];
+	readonly highlights: Highlight[] = [];
+	readonly resolved: Resolution[] = [];
 	readonly #ctx: QueryContext;
 	readonly #bare: Field[];
 
 	constructor(ctx: QueryContext) {
 		this.#ctx = ctx;
 		this.#bare = bareFields(ctx);
+	}
+
+	#highlight(kind: Highlight['kind'], text: string, fields: readonly Field[], positive: boolean): void {
+		if (positive && !this.highlights.some((h) => h.kind === kind && h.text === text)) this.highlights.push({ kind, text, fields });
 	}
 
 	#leaf(steps: Step[], fields: readonly Field[], exact: boolean, positive: boolean): Expr {
@@ -326,6 +349,7 @@ class Compiler {
 	}
 
 	#unsegmented(text: string, fields: Field[], positive: boolean): Expr {
+		this.#highlight('literal', text, fields, positive);
 		const step: Step =
 			codePoints(text) >= 3
 				? this.#fts(quote(text), fields, { table: 'literals_fts' })
@@ -338,11 +362,13 @@ class Compiler {
 		if (!hasTokens(text)) return NONE;
 		if (hasUnsegmented(text)) return this.#unsegmented(text, scope, positive);
 		if (lane === 'identifier') {
+			this.#highlight('literal', text, scope, positive);
 			const steps: Step[] = [this.#fts(quote(text), scope, { verify: text })];
 			if (fields === null && codePoints(text) >= 3) steps.push({ kind: 'msgid', match: quote(text), needle: text });
 			return this.#leaf(steps, fields === null ? [...scope, Field.identifier] : scope, true, positive);
 		}
 		if (positive && !literal) this.suggestible.push({ text, range });
+		this.#highlight('words', text, scope, positive);
 		return this.#leaf([this.#fts(quote(text), scope)], scope, false, positive);
 	}
 
@@ -355,6 +381,7 @@ class Compiler {
 				return participantMeta(r, [value.address]);
 			case 'name': {
 				if (!hasTokens(value.text)) return NONE;
+				this.#highlight(value.prefix ? 'prefix' : 'words', value.text, [Field.participant], positive);
 				const match = value.prefix ? `${quote(value.text)} *` : quote(value.text);
 				return this.#leaf([this.#fts(match, [Field.participant], { role: r })], [Field.participant], false, positive);
 			}
@@ -363,19 +390,20 @@ class Compiler {
 
 	#folder(path: string, range: Range): Expr {
 		const target = foldText(path);
-		const ids = this.#ctx.folders.filter((f) => {
-			const p = foldText(f.path);
-			return p === target || p.startsWith(`${target}/`);
-		});
-		if (!ids.length) throw new CompileError({ code: 'unknown_folder', range, name: path });
-		return collectionMeta(unique(ids.map((f) => f.id)));
+		const exact = this.#ctx.folders.filter((f) => foldText(f.path) === target);
+		const below = this.#ctx.folders.filter((f) => foldText(f.path).startsWith(`${target}/`));
+		const ids = unique((this.#ctx.exactFolders ? exact : [...exact, ...below]).map((f) => f.id));
+		if (!exact.length && !below.length) throw new CompileError({ code: 'unknown_folder', range, name: path });
+		this.resolved.push({ kind: 'folder', name: path, range, ids, descendants: below.length });
+		return ids.length ? collectionMeta(ids) : NONE;
 	}
 
 	#label(name: string, range: Range): Expr {
 		const target = foldText(name);
-		const ids = this.#ctx.labels.filter((l) => foldText(l.name) === target);
+		const ids = unique(this.#ctx.labels.filter((l) => foldText(l.name) === target).map((l) => l.id));
 		if (!ids.length) throw new CompileError({ code: 'unknown_label', range, name });
-		return collectionMeta(unique(ids.map((l) => l.id)));
+		this.resolved.push({ kind: 'label', name, range, ids, descendants: 0 });
+		return collectionMeta(ids);
 	}
 
 	compile(node: QueryNode, fields: Field[] | null, positive: boolean): Expr {
@@ -399,12 +427,14 @@ class Compiler {
 			case 'phrase': {
 				const scope = fields ?? this.#bare;
 				if (!hasTokens(node.text)) return NONE;
+				this.#highlight('words', node.text, scope, positive);
 				if (hasUnsegmented(node.text) && !/\s/u.test(node.text)) return this.#unsegmented(node.text, scope, positive);
 				return this.#leaf([this.#fts(quote(node.text), scope)], scope, false, positive);
 			}
 			case 'prefix': {
 				const scope = fields ?? this.#bare;
 				if (!hasTokens(node.text)) return NONE;
+				this.#highlight('prefix', node.text, scope, positive);
 				if (hasUnsegmented(node.text)) return this.#unsegmented(node.text, scope, positive);
 				return this.#leaf([this.#fts(`${quote(node.text)} *`, scope)], scope, false, positive);
 			}
@@ -414,11 +444,14 @@ class Compiler {
 				const distance = Math.trunc(node.distance);
 				const match = `NEAR(${quote(node.left.text)} ${quote(node.right.text)}, ${distance})`;
 				const near = { left: node.left.text, right: node.right.text, distance };
+				this.#highlight('words', node.left.text, scope, positive);
+				this.#highlight('words', node.right.text, scope, positive);
 				return this.#leaf([this.#fts(match, scope, { near })], scope, false, positive);
 			}
 			case 'participant':
 				return this.#participant(node.role, node.value, positive);
 			case 'filename':
+				this.#highlight('literal', node.text, [Field.attachmentName], positive);
 				return attachmentMeta('instr(tl_fold(filename), ?) > 0', [node.text]);
 			case 'filetype':
 				return filetypeMeta(node.text);
@@ -472,7 +505,9 @@ export function compile(query: ParsedQuery, ctx: QueryContext): CompileResult {
 				expr,
 				filters: conjuncts.filter((c) => !containsLeaf(c)),
 				universe: query.universe,
-				suggestible: compiler.suggestible
+				suggestible: compiler.suggestible,
+				highlights: compiler.highlights,
+				resolved: compiler.resolved
 			}
 		};
 	} catch (err) {
