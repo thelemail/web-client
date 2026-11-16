@@ -5,6 +5,7 @@ import type { MessagePreview } from './preview';
 import { isPgpEncryptedMime, extractPgpArmor } from './pgpMime';
 import { apiBlobFetch } from '$core/api/client';
 import { ApiCallError, type BlobPointer } from '$core/api/types';
+import { b64ToHex, bytesToB64 } from '$core/keys/encode';
 
 export type { SignatureVerdict } from '$core/keystore/protocol';
 
@@ -147,4 +148,40 @@ export async function decryptBody(
 		}
 		return { plaintext: res.plaintext, signature: res.signature };
 	});
+}
+
+export class BlobChangedError extends Error {
+	constructor() {
+		super('blob changed');
+		this.name = 'BlobChangedError';
+	}
+}
+
+export interface StoredBody {
+	storedBytes: number;
+	mime: Uint8Array;
+}
+
+async function matchesPointer(ciphertext: Uint8Array, pointer: BlobPointer): Promise<boolean> {
+	if (ciphertext.length !== pointer.sizeBytes) return false;
+	if (!pointer.sha256) return true;
+	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', ciphertext as BufferSource));
+	return bytesToB64(digest) === pointer.sha256;
+}
+
+export async function decryptStoredBody(accountId: string, pointer: BlobPointer, signal?: AbortSignal): Promise<StoredBody> {
+	const resp = await apiBlobFetch(pointer.path, { accountId, signal });
+	const ciphertext = new Uint8Array(await resp.arrayBuffer());
+	if (!(await matchesPointer(ciphertext, pointer))) throw new BlobChangedError();
+	const keyFingerprintHex = pointer.keyFingerprint ? b64ToHex(pointer.keyFingerprint) : undefined;
+	const stored = await withAliasKeys(accountId, async () => {
+		const res = await keystore.decrypt({ accountId, ciphertextBinary: ciphertext, binary: true, keyFingerprintHex });
+		if (!res.ok) throw new DecryptionError(res.code);
+		if (!('plaintextBinary' in res)) throw new DecryptionError('invalid_ciphertext', 'expected binary plaintext for body');
+		return res.plaintextBinary;
+	});
+	const text = new TextDecoder().decode(stored);
+	if (!isPgpEncryptedMime(text)) return { storedBytes: stored.length, mime: stored };
+	const inner = await unwrapPgpMime(accountId, { plaintext: text });
+	return { storedBytes: stored.length, mime: new TextEncoder().encode(inner.plaintext) };
 }

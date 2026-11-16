@@ -3,7 +3,7 @@ import { platform } from '$platform';
 import { keystore } from '$core/keystore/keystore-client';
 import { apiUrl, blobRequestHeaders } from '$core/api/client';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
-import type { AttachmentFailureCode } from '$core/keystore/protocol';
+import type { AttachmentFailureCode, AttachmentHeaderResponse } from '$core/keystore/protocol';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
 import type { AttachmentDetail, BlobPointer } from '$core/api/types';
 import { b64ToHex } from '$core/keys/encode';
@@ -124,6 +124,15 @@ async function withFreshPointer<T>(
 	}
 	if (!result.ok) throw new AttachmentError(result.code);
 	return result.value;
+}
+
+export async function fetchAttachmentHeader(accountId: string, pointer: BlobPointer): Promise<AttachmentHeaderResponse> {
+	await aliasKeys.ready(accountId);
+	return keystore.attachmentHeader({
+		accountId,
+		...(await attachmentSource(accountId, pointer)),
+		keyFingerprintHex: pointerKeyHint(pointer)
+	});
 }
 
 export async function loadAttachmentHeader(
