@@ -32,7 +32,7 @@ describe('calendar worker command gate', () => {
 		}
 	});
 
-	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'closeSearchSession'] as KeystoreCommand[])('refuses %s', (cmd) => {
+	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'deriveSearchHistoryKey', 'closeSearchSession'] as KeystoreCommand[])('refuses %s', (cmd) => {
 		expect(commandAllowed(cmd, { accountId: ACCOUNT })).toBe(false);
 		expect(commandAllowed(cmd, undefined)).toBe(false);
 	});

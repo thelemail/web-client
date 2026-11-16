@@ -557,6 +557,7 @@ async function dispatch(port: MessagePort, msg: RequestMessage, transferred: rea
 			case 'sealSearchArtifact':
 			case 'openSearchArtifact':
 			case 'deriveSearchDbKey':
+			case 'deriveSearchHistoryKey':
 				respond(port, msg.id, SESSION_ONLY);
 				break;
 			case 'custodyRetire':

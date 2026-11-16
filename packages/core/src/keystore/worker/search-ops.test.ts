@@ -213,6 +213,20 @@ describe('search root sessions in the mail vault', () => {
 		expect(await ask<Derived>(again.port, 'deriveSearchDbKey', { installationSalt: new Uint8Array(8) })).toEqual({ ok: false, code: 'invalid' });
 	});
 
+	it('derives a history key that differs from the database key', async () => {
+		const first = await session(ACCOUNT);
+		const salt = new Uint8Array(32).fill(4);
+		const db = await ask<Derived>(first.port, 'deriveSearchDbKey', { installationSalt: salt });
+		const a = await ask<Derived>(first.port, 'deriveSearchHistoryKey', { installationSalt: salt });
+		const again = await session(ACCOUNT, first.res.bundle);
+		const b = await ask<Derived>(again.port, 'deriveSearchHistoryKey', { installationSalt: salt });
+		if (db === SILENT || a === SILENT || b === SILENT || !db.ok || !a.ok || !b.ok) throw new Error('derive failed');
+		expect(a.key.length).toBe(32);
+		expect(b.key).toEqual(a.key);
+		expect(a.key).not.toEqual(db.key);
+		expect(await ask<Derived>(again.port, 'deriveSearchHistoryKey', { installationSalt: new Uint8Array(8) })).toEqual({ ok: false, code: 'invalid' });
+	});
+
 	it('returns no search root or mail root bytes from any command', async () => {
 		const first = await session(ACCOUNT);
 		const { root } = await openSearchRoot(productRoot(9), first.res.bundle!, ACCOUNT, 1, []);

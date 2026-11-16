@@ -6,10 +6,10 @@ import { b64decode, b64encode, sha256 } from '../productkeys/encoding';
 import { ProductKeysError } from '../productkeys/errors';
 import type { ArtifactContext } from './artifact';
 import { artifactSize, MAX_ARTIFACT_BYTES, MIN_ARTIFACT_BYTES, openArtifact, sealArtifact } from './artifact';
-import { searchDbKey } from './dbKey';
+import { searchDbKey, searchHistoryKey } from './dbKey';
 import { openSearchRoot, sealSearchRoot } from './rootBundle';
 
-const DIGEST = '9346143ef469ff26161aca1b43703f1e821989c76f2de797d1653ee480d44a70';
+const DIGEST = '740fa7ffc3b3219600f8848c24651ebe6a3ec0f490618d42d6f64aba9ce7df92';
 
 interface RootVector {
 	name: string;
@@ -49,6 +49,7 @@ const vectors = JSON.parse(raw) as {
 	artifacts: ArtifactVector[];
 	buckets: { payloadLength: number; size: number }[];
 	dbKeys: DbKeyVector[];
+	historyKeys: DbKeyVector[];
 };
 
 async function expectCode(code: string, run: () => Promise<unknown>): Promise<void> {
@@ -123,5 +124,21 @@ describe('search key vectors', () => {
 				expect(b64encode(await run())).toBe(v.key);
 			});
 		}
+	});
+
+	describe('history keys', () => {
+		for (const v of vectors.historyKeys) {
+			it(v.name, async () => {
+				const run = () => searchHistoryKey(b64decode(v.root), v.accountId, v.generationId, b64decode(v.salt));
+				if (v.error) return expectCode(v.error, run);
+				expect(b64encode(await run())).toBe(v.key);
+			});
+		}
+
+		it('never equals the database key for the same installation', async () => {
+			const v = vectors.historyKeys[0];
+			const db = await searchDbKey(b64decode(v.root), v.accountId, v.generationId, b64decode(v.salt));
+			expect(b64encode(db)).not.toBe(v.key);
+		});
 	});
 });
