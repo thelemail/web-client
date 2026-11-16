@@ -24,7 +24,7 @@
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import MessageRow from './MessageRow.svelte';
-	import SearchStrip from './SearchStrip.svelte';
+	import { loadSearchStrip, loadedSearchStrip, type SearchStripComponent } from './searchStrip';
 	import type { SearchView } from './searchView';
 	import ListSkeleton from './ListSkeleton.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
@@ -157,6 +157,10 @@
 
 	const viewName = $derived(folderLabel ?? '');
 	const searchActive = $derived(search !== null);
+	let SearchStrip = $state.raw<SearchStripComponent | null>(loadedSearchStrip());
+	$effect(() => {
+		if (search && !SearchStrip) void loadSearchStrip().then((c) => (SearchStrip = c));
+	});
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
@@ -772,7 +776,7 @@
 				{/if}
 			</div>
 		{/if}
-		{#if search}
+		{#if search && SearchStrip}
 			<SearchStrip {search} />
 		{/if}
 		{#if !searchActive && offline}

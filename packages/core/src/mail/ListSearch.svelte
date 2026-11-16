@@ -13,6 +13,7 @@
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { composeStore } from '$core/stores/compose.svelte';
 	import { formatRowTime, type Message } from './data';
+	import { loadSearchStrip } from './searchStrip';
 
 	interface Props {
 		placeholder?: string;
@@ -258,6 +259,7 @@
 				focused = true;
 				dismissed = false;
 				mailSearch.warm();
+				void loadSearchStrip().catch(() => undefined);
 			}}
 			onblur={() => {
 				focused = false;

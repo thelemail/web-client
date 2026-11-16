@@ -4,10 +4,12 @@ import MessageList from './MessageList.svelte';
 import { EMPTY_FILTERS, type Message } from './data';
 import { mailActionsFor } from './actions';
 import type { SearchView } from './searchView';
+import { loadSearchStrip } from './searchStrip';
 import type { Chip } from '$core/search/chips';
 import type { CoverageView } from '$core/search/coverage';
 
-beforeAll(() => {
+beforeAll(async () => {
+	await loadSearchStrip();
 	vi.stubGlobal(
 		'IntersectionObserver',
 		class {
