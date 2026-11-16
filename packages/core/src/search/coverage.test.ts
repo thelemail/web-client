@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { coverageOf } from './coverage';
+import { coverageOf, progressOf } from './coverage';
 import type { SearchStatus } from './runtime/protocol';
 import { Coverage, Dimension } from './sqlite/types';
 
@@ -67,5 +67,42 @@ describe('coverageOf', () => {
 		expect(coverageOf(status(done, { phase: 'snapshot' }), [Dimension.metadata]).complete).toBe(false);
 		expect(coverageOf(status(done, { queue: { total: 9, undescribed: 4, held: 0, waiting: 0, bodies: {} } }), [Dimension.metadata]).complete).toBe(false);
 		expect(coverageOf(null, [Dimension.metadata]).complete).toBe(false);
+	});
+});
+
+describe('progressOf', () => {
+	it('counts the listing step before the inventory is known', () => {
+		const s = status([], { phase: 'snapshot', queue: { total: 400, undescribed: 300, held: 0, waiting: 0, bodies: {} } });
+		expect(progressOf(s)).toEqual({ state: 'listing', done: 100, total: 400, fraction: 0.25 });
+	});
+
+	it('follows message text for a saved index and previews in preview mode', () => {
+		const coverage = [
+			{ dimension: Dimension.metadata, state: Coverage.complete, count: 80 },
+			{ dimension: Dimension.metadata, state: Coverage.pending, count: 20 },
+			{ dimension: Dimension.body, state: Coverage.complete, count: 40 },
+			{ dimension: Dimension.body, state: Coverage.pending, count: 60 }
+		];
+		expect(progressOf(status(coverage))).toEqual({ state: 'reading', done: 40, total: 100, fraction: 0.4 });
+		expect(progressOf({ ...status(coverage), mode: 'preview' })).toEqual({ state: 'previews', done: 80, total: 100, fraction: 0.8 });
+	});
+
+	it('says paused, or that some mail needs attention, while work remains', () => {
+		const coverage = [
+			{ dimension: Dimension.body, state: Coverage.complete, count: 90 },
+			{ dimension: Dimension.body, state: Coverage.pending, count: 7 },
+			{ dimension: Dimension.body, state: Coverage.locked, count: 3 }
+		];
+		expect(progressOf(status(coverage))?.state).toBe('attention');
+		expect(progressOf({ ...status(coverage), paused: true })?.state).toBe('paused');
+	});
+
+	it('shows nothing once no message is waiting, even if a few could not be read', () => {
+		const coverage = [
+			{ dimension: Dimension.body, state: Coverage.complete, count: 97 },
+			{ dimension: Dimension.body, state: Coverage.failed, count: 3 }
+		];
+		expect(progressOf(status(coverage))).toBeNull();
+		expect(progressOf(null)).toBeNull();
 	});
 });

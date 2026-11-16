@@ -60,3 +60,29 @@ export function coverageOf(status: SearchStatus | null, relevant: readonly Dimen
 		});
 	return { dimensions, inventoryDone, complete, syncedAt: sync?.syncedAt ?? null, waitingOn: sync?.waiting ?? null };
 }
+
+export type ProgressState = 'listing' | 'previews' | 'reading' | 'paused' | 'attention';
+
+export interface Progress {
+	state: ProgressState;
+	done: number;
+	total: number;
+	fraction: number;
+}
+
+export function progressOf(status: SearchStatus | null): Progress | null {
+	const sync = status?.sync;
+	if (!status || !sync) return null;
+	const view = coverageOf(status, []);
+	if (!view.inventoryDone) {
+		const total = sync.queue.total;
+		const done = Math.max(0, total - sync.queue.undescribed);
+		return { state: status.paused ? 'paused' : 'listing', done, total, fraction: total ? done / total : 0 };
+	}
+	const preview = status.mode === 'preview';
+	const d = view.dimensions.find((x) => x.dimension === (preview ? Dimension.metadata : Dimension.body));
+	if (!d || !d.total || !d.gaps.waiting) return null;
+	const done = d.done + d.excluded;
+	const state: ProgressState = status.paused ? 'paused' : d.gaps.locked || d.gaps.failed ? 'attention' : preview ? 'previews' : 'reading';
+	return { state, done, total: d.total, fraction: done / d.total };
+}

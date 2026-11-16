@@ -14,7 +14,7 @@ import type { ResultRow } from './sqlite/run';
 import { Field, Flag, SourceKind } from './sqlite/types';
 
 export { chipsOf, replaceRange, type Chip } from './chips';
-export { coverageOf } from './coverage';
+export { coverageOf, progressOf } from './coverage';
 
 export function parse(text: string): ReturnType<typeof parseQuery> {
 	return parseQuery(text, { now: Date.now(), timeZone: locale.timeZone });

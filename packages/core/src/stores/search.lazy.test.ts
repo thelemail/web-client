@@ -11,7 +11,7 @@ vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribeAccount:
 const focus = vi.fn(async () => {});
 vi.mock('$core/search/lazy', () => ({
 	searchSupported: () => true,
-	searchRuntime: { focus: () => focus(), client: () => null, subscribePrefs: () => () => {} }
+	searchRuntime: { focus: () => focus(), client: () => null, subscribePrefs: () => () => {}, subscribeClient: () => () => {} }
 }));
 
 async function fresh() {
