@@ -1,6 +1,7 @@
 import type { ParseRequest, ParseResult } from '../extract/parse';
 
 export const CONNECT = 'thelemail-parser:connect';
+export const HELLO = 'thelemail-parser:hello';
 export const MAX_JOB_BYTES = 64 * 1024 * 1024;
 
 export interface ConnectMessage {

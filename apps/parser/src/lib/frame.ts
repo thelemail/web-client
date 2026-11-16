@@ -1,4 +1,4 @@
-import { CONNECT, MAX_JOB_BYTES, validRequest, type ControlEvent, type JobInput, type JobOutcome, type JobTicket } from '$core/search/parser/protocol';
+import { CONNECT, HELLO, MAX_JOB_BYTES, validRequest, type ControlEvent, type JobInput, type JobOutcome, type JobTicket } from '$core/search/parser/protocol';
 import type { AssetEntry } from './assets';
 import type { PoolResult } from './pool';
 
@@ -84,5 +84,6 @@ export function startFrame(win: Window, deps: FrameDeps): boolean {
 		void accept(e.ports[0], deps);
 	};
 	win.addEventListener('message', listener);
+	win.parent.postMessage({ type: HELLO }, deps.parentOrigin);
 	return true;
 }

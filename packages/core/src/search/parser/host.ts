@@ -1,5 +1,5 @@
 import { backoffDelay } from '../sync/backoff';
-import { CONNECT, type ConnectMessage, type ControlEvent, type JobOutcome, type JobTicket } from './protocol';
+import { CONNECT, HELLO, type ConnectMessage, type ControlEvent, type JobOutcome, type JobTicket } from './protocol';
 
 const READY_TIMEOUT_MS = 30_000;
 
@@ -26,6 +26,7 @@ function refuse(ticket: JobTicket, port: MessagePort): void {
 export class ParserHost {
 	#origin: string;
 	#document: Document;
+	#window: Window;
 	#readyTimeoutMs: number;
 	#now: () => number;
 	#frame: HTMLIFrameElement | null = null;
@@ -38,6 +39,7 @@ export class ParserHost {
 	constructor(options: ParserHostOptions) {
 		this.#origin = new URL(options.origin).origin;
 		this.#document = options.document ?? document;
+		this.#window = this.#document.defaultView ?? window;
 		this.#readyTimeoutMs = options.readyTimeoutMs ?? READY_TIMEOUT_MS;
 		this.#now = options.now ?? Date.now;
 	}
@@ -103,7 +105,7 @@ export class ParserHost {
 			const channel = new MessageChannel();
 			const finish = (port: MessagePort | null) => {
 				clearTimeout(timer);
-				frame.removeEventListener('load', onLoad);
+				this.#window.removeEventListener('message', onHello);
 				channel.port1.onmessage = null;
 				if (!port) channel.port1.close();
 				resolve(port);
@@ -113,12 +115,13 @@ export class ParserHost {
 				if (e.data?.type === 'ready') finish(channel.port1);
 				else finish(null);
 			};
-			const onLoad = () => {
+			const onHello = (e: MessageEvent<{ type?: string }>) => {
 				const target = frame.contentWindow;
-				if (!target) return finish(null);
+				if (!target || e.source !== target || e.origin !== this.#origin || e.data?.type !== HELLO) return;
+				this.#window.removeEventListener('message', onHello);
 				target.postMessage({ type: CONNECT, nonce: secret } satisfies ConnectMessage, this.#origin, [channel.port2]);
 			};
-			frame.addEventListener('load', onLoad, { once: true });
+			this.#window.addEventListener('message', onHello);
 			this.#document.body.appendChild(frame);
 		});
 	}

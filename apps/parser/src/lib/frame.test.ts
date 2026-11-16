@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CONNECT, type JobOutcome } from '$core/search/parser/protocol';
+import { CONNECT, HELLO, type JobOutcome } from '$core/search/parser/protocol';
 import { startFrame, type FrameDeps, type Runner } from './frame';
 
 const PARENT = 'https://app.thelemail.test';
@@ -7,7 +7,7 @@ const NONCE = 'AbCdEfGhIjKlMnOpQrStUvWx';
 
 function fakeWindow(hash: string) {
 	const listeners = new Set<(e: MessageEvent) => void>();
-	const parent = {};
+	const parent = { postMessage: vi.fn() };
 	const win = {
 		location: { hash, pathname: '/' },
 		history: { replaceState: vi.fn() },
@@ -63,9 +63,10 @@ describe('parser frame handshake', () => {
 		expect(startFrame(top.win, deps(okRunner))).toBe(false);
 	});
 
-	it('accepts exactly one connect and clears the fragment', async () => {
+	it('says hello to the parent only, accepts exactly one connect and clears the fragment', async () => {
 		const { win, deliver, listeners } = fakeWindow(`#n=${NONCE}`);
 		startFrame(win, deps(okRunner));
+		expect((win.parent as unknown as { postMessage: ReturnType<typeof vi.fn> }).postMessage).toHaveBeenCalledWith({ type: HELLO }, PARENT);
 		expect(win.history.replaceState).toHaveBeenCalledWith(null, '', '/');
 		deliver({ type: CONNECT, nonce: NONCE }, PARENT, [new MessageChannel().port2]);
 		expect(listeners.size).toBe(0);
