@@ -57,7 +57,10 @@ export type ErrorCode =
 	| 'unsubscribe_unreachable'
 	| 'auth_origin_unavailable'
 	| 'handoff_account_mismatch'
-	| 'step_up_grant_required';
+	| 'step_up_grant_required'
+	| 'source_barrier_pending'
+	| 'source_snapshot_expired'
+	| 'source_cursor_expired';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
@@ -160,6 +163,142 @@ export interface BlobPointer {
 	sizeBytes: number;
 	sha256?: string;
 	keyFingerprint?: string;
+}
+
+export type SearchSourceKind = 'message' | 'draft' | 'scheduled' | 'collection' | 'alias';
+export type SearchSourceState = 'live' | 'held' | 'deleted';
+export type SearchSourceChange = 'created' | 'held' | 'activated' | 'content' | 'metadata' | 'deleted' | 'invalidated';
+export type SearchSourceRelation = 'owner' | 'member' | 'grantee' | 'revoked';
+export type SearchDescriptorStatus = 'ready' | 'newer_revision' | 'deleted' | 'inaccessible' | 'held' | 'unavailable';
+
+export interface SearchSourceKey {
+	kind: SearchSourceKind;
+	sourceId: string;
+}
+
+export interface SearchSourceBarrier {
+	throughSeq: number;
+	minRetainedSeq: number;
+	serverTime: string;
+}
+
+export interface SearchMessageAttachment {
+	id: string;
+	ordinal: number;
+	inline: boolean;
+	blob: BlobPointer;
+}
+
+export interface SearchMessageDescriptor {
+	direction: MessageDirection;
+	mailboxState: MailboxState;
+	read: boolean;
+	starred: boolean;
+	folderId?: string;
+	labelIds: string[];
+	threadRootId?: string;
+	storedAt: string;
+	scheduledAt?: string;
+	snoozedUntil?: string;
+	encrypted: boolean;
+	schemaVersion: number;
+	sentViaAliasId?: string;
+	receivedViaAliasId?: string;
+	encryptedPreview: string;
+	previewKeyFingerprint?: string;
+	body: BlobPointer;
+	attachmentsInBody: boolean;
+	attachments: SearchMessageAttachment[];
+}
+
+export interface SearchDraftDescriptor {
+	schemaVersion: number;
+	replyToMessageId?: string;
+	encryptedPreview: string;
+	previewKeyFingerprint?: string;
+	body: BlobPointer;
+	attachmentsBundle?: BlobPointer;
+}
+
+export interface SearchScheduledDescriptor {
+	status: 'pending' | 'releasing' | 'failed';
+	scheduledAt: string;
+	senderCopyMessageId?: string;
+	encryptedPreview?: string;
+	previewKeyFingerprint?: string;
+}
+
+export interface SearchCollectionDescriptor {
+	kind: MailCollectionKind;
+	parentId?: string;
+	position: number;
+	rev: number;
+	sealedMeta: string;
+	metaKeyFingerprint: string;
+	metaSchemaVersion: number;
+}
+
+export interface SearchAliasGrant {
+	keyVersion: number;
+	aliasKeyFingerprint: string;
+	memberKeyFingerprint: string;
+}
+
+export interface SearchAliasDescriptor {
+	keyEpoch: number;
+	grants: SearchAliasGrant[];
+}
+
+export interface SearchSourceDescriptor extends SearchSourceKey {
+	createdSeq: number;
+	sourceRevision: number;
+	contentRevision: number;
+	metadataRevision: number;
+	state: SearchSourceState;
+	relation: SearchSourceRelation;
+	message?: SearchMessageDescriptor;
+	draft?: SearchDraftDescriptor;
+	scheduled?: SearchScheduledDescriptor;
+	collection?: SearchCollectionDescriptor;
+	alias?: SearchAliasDescriptor;
+}
+
+export interface SearchSourceSnapshotPage {
+	c0: number;
+	items: SearchSourceDescriptor[];
+	nextCursor?: string;
+	expiresAt: string;
+}
+
+export interface SearchSourceChangeEntry {
+	seq: number;
+	kind: SearchSourceKind;
+	sourceId?: string;
+	change: SearchSourceChange;
+	contentRevision: number;
+	metadataRevision: number;
+}
+
+export interface SearchSourceChangesPage {
+	afterSeq: number;
+	throughSeq: number;
+	entries: SearchSourceChangeEntry[];
+	nextAfterSeq: number;
+	complete: boolean;
+}
+
+export interface SearchSourceDescriptorRequestItem extends SearchSourceKey {
+	revision?: number;
+}
+
+export interface SearchSourceDescriptorResult extends SearchSourceKey {
+	status: SearchDescriptorStatus;
+	descriptor?: SearchSourceDescriptor;
+}
+
+export interface SearchSourceDescriptorResponse {
+	results: SearchSourceDescriptorResult[];
+	deferred: SearchSourceKey[];
 }
 
 export interface AttachmentDetail {
@@ -691,6 +830,8 @@ export interface ApiError {
 	message: string;
 	requestId?: string;
 	retryAfterSeconds?: number;
+	minRetainedSeq?: number;
+	committedSeq?: number;
 }
 
 export interface ErrorEnvelope {
@@ -1314,10 +1455,12 @@ export interface AccountSettingsSectionResponse {
 export class ApiCallError extends Error {
 	status: number;
 	envelope: ErrorEnvelope | null;
-	constructor(status: number, envelope: ErrorEnvelope | null, message: string) {
+	retryAfterSeconds: number | null;
+	constructor(status: number, envelope: ErrorEnvelope | null, message: string, retryAfterSeconds: number | null = null) {
 		super(message);
 		this.status = status;
 		this.envelope = envelope;
+		this.retryAfterSeconds = retryAfterSeconds ?? envelope?.error?.retryAfterSeconds ?? null;
 		this.name = 'ApiCallError';
 	}
 }
