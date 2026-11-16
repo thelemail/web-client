@@ -5,7 +5,7 @@ import type { QueryContext } from '../sqlite/compile';
 import { SNAPSHOT } from '../sqlite/harness';
 import { SearchClient, type ClientDeps, type ClientState } from './client';
 import { directoryFor, type QueryReply } from './protocol';
-import { memoryRecords, type RecordStore } from './records';
+import { memoryPrefs, memoryRecords, type RecordStore } from './records';
 import type { SyntheticOrder } from './synthetic.worker';
 
 const CTX: QueryContext = { identities: [], folders: [], labels: [], attachmentText: true };
@@ -59,6 +59,7 @@ function rig(): Rig {
 					return bundle ? { ok: true, generationId, unlockEpoch: 1 } : { ok: true, generationId, unlockEpoch: 1, bundle: new Uint8Array([1]) };
 				},
 				records: self.records,
+				prefs: memoryPrefs(),
 				locks: navigator.locks,
 				watch: (report) => {
 					report({ visible: true, idle: true, constrained: false });

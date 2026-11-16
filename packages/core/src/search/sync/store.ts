@@ -216,6 +216,14 @@ export class SyncStore {
 		return this.#db.changes() as number;
 	}
 
+	retryFailed(): void {
+		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0, attempts = 0 WHERE state = 0 AND kind <= 3 AND body_state IN (?, ?)', [
+			Coverage.failed,
+			Coverage.resourceLimited
+		]);
+		this.#exec('UPDATE source_queue SET described_rev = 0, next_at = 0, attempts = 0 WHERE state != 2 AND next_at > 0', []);
+	}
+
 	retryEpoch(epoch: number): void {
 		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0 WHERE state = 0 AND kind <= 3 AND extractor_epoch < ? AND body_state IN (?, ?)', [
 			epoch,

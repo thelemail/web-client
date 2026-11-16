@@ -151,6 +151,13 @@ export const MIGRATIONS: readonly string[] = [
 		key_epoch INTEGER NOT NULL,
 		grants TEXT NOT NULL
 	) WITHOUT ROWID;
+	`,
+	`
+	CREATE TABLE history (
+		id INTEGER PRIMARY KEY,
+		at INTEGER NOT NULL,
+		sealed BLOB NOT NULL
+	);
 	`
 ];
 
@@ -170,7 +177,8 @@ const REQUIRED_TABLES = [
 	'checkpoints',
 	'source_queue',
 	'source_collections',
-	'source_aliases'
+	'source_aliases',
+	'history'
 ];
 
 export type SchemaState =

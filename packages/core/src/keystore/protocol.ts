@@ -944,6 +944,7 @@ export type KeystoreCommand =
 	| 'sealSearchArtifact'
 	| 'openSearchArtifact'
 	| 'deriveSearchDbKey'
+	| 'deriveSearchHistoryKey'
 	| 'closeSearchSession';
 
 export type VaultMode = 'account' | 'mail' | 'calendar' | 'auth';
@@ -1038,6 +1039,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	sealSearchArtifact: ['mail'],
 	openSearchArtifact: ['mail'],
 	deriveSearchDbKey: ['mail'],
+	deriveSearchHistoryKey: ['mail'],
 	closeSearchSession: ['mail']
 };
 
@@ -1081,7 +1083,7 @@ export interface DeriveSearchDbKeyArgs {
 
 export type DeriveSearchDbKeyResponse = { ok: true; key: Uint8Array } | SearchSessionRefusal;
 
-export type SearchSessionCommand = 'sealSearchArtifact' | 'openSearchArtifact' | 'deriveSearchDbKey' | 'closeSearchSession';
+export type SearchSessionCommand = 'sealSearchArtifact' | 'openSearchArtifact' | 'deriveSearchDbKey' | 'deriveSearchHistoryKey' | 'closeSearchSession';
 
 export interface SearchSessionRequest {
 	id: string;

@@ -57,7 +57,7 @@ describe('initialClosure', () => {
 	it('reports search code reachable at load', () => {
 		const modules = [
 			'packages/core/src/search/query/parser.ts',
-			'packages/core/src/stores/searchEngine.ts',
+			'packages/core/src/search/ui.ts',
 			'node_modules/.pnpm/@thelemail+sqlite-wasm@3/node_modules/@thelemail/sqlite-wasm/dist/sqlite3.mjs'
 		];
 		expect(initialClosure(graph([], modules)).forbidden).toEqual([...modules].sort());

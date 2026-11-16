@@ -3,11 +3,17 @@
 	import Search from '@lucide/svelte/icons/search';
 	import X from '@lucide/svelte/icons/x';
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
+	import History from '@lucide/svelte/icons/history';
+	import User from '@lucide/svelte/icons/user';
+	import Tag from '@lucide/svelte/icons/tag';
+	import Folder from '@lucide/svelte/icons/folder';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { mailSearch } from '$core/stores/search.svelte';
-	import { searchRuntime } from '$core/search/lazy';
+	import { mailCollections } from '$core/stores/mailCollections.svelte';
+	import { composeStore } from '$core/stores/compose.svelte';
 	import { formatRowTime, type Message } from './data';
+	import { loadSearchStrip } from './searchStrip';
 
 	interface Props {
 		placeholder?: string;
@@ -17,24 +23,33 @@
 	let { placeholder = m.mail_search_placeholder(), operators = true }: Props = $props();
 
 	const OPERATORS = ['from:', 'is:unread', 'is:starred', 'has:attachment', 'in:', 'label:'];
+	const MAX_HISTORY = 5;
+	const MAX_NAMES = 6;
 	const uid = $props.id();
 	const listId = `${uid}-list`;
+	const errorId = `${uid}-error`;
 
 	type Option =
 		| { kind: 'match'; key: string; msg: Message }
 		| { kind: 'op'; key: string; op: string }
+		| { kind: 'history'; key: string; text: string }
+		| { kind: 'word'; key: string; text: string }
+		| { kind: 'person'; key: string; name: string; address: string }
+		| { kind: 'collection'; key: string; type: 'label' | 'folder'; path: string }
 		| { kind: 'all'; key: string };
 
 	let inputRef: HTMLInputElement | undefined = $state();
 	let focused = $state(false);
 	let dismissed = $state(false);
 	let highlight = $state(-1);
+	let composing = $state(false);
 
 	const inMail = $derived(/\/u\/\d+\/mail(\/|$)/.test(page.url.pathname));
 	const typed = $derived(mailSearch.draft.trim());
 	const lastToken = $derived(mailSearch.draft.split(/\s+/).at(-1) ?? '');
+	const invalid = $derived(!!mailSearch.error && mailSearch.draft === mailSearch.committed);
 
-	const suggestions = $derived.by<string[]>(() => {
+	const opSuggestions = $derived.by<string[]>(() => {
 		if (!operators) return [];
 		if (!typed) return OPERATORS;
 		const token = lastToken.toLowerCase();
@@ -42,22 +57,40 @@
 		return OPERATORS.filter((op) => op.startsWith(token) && op !== token);
 	});
 
+	const collectionSuggestions = $derived.by<Option[]>(() => {
+		const match = /^(-?)(label|in):"?([^"]*)$/i.exec(lastToken);
+		if (!match) return [];
+		const type = match[2].toLowerCase() === 'label' ? 'label' : 'folder';
+		const want = match[3].toLowerCase();
+		const pool = type === 'label' ? mailCollections.labels : mailCollections.folders;
+		return pool
+			.filter((c) => !c.sealed && c.path.toLowerCase().includes(want))
+			.slice(0, MAX_NAMES)
+			.map((c) => ({ kind: 'collection', key: `c-${c.id}`, type, path: c.path }));
+	});
+
 	const options = $derived.by<Option[]>(() => {
 		const out: Option[] = [];
+		for (const text of (typed ? mailSearch.historyMatches(mailSearch.draft) : mailSearch.history).slice(0, MAX_HISTORY)) {
+			out.push({ kind: 'history', key: `h-${text}`, text });
+		}
+		out.push(...collectionSuggestions);
+		if (typed && !lastToken.includes(':')) {
+			for (const p of mailSearch.completions.people) out.push({ kind: 'person', key: `p-${p.address}`, name: p.name, address: p.address });
+			for (const w of mailSearch.completions.terms) out.push({ kind: 'word', key: `w-${w}`, text: w });
+		}
 		if (typed) {
 			for (const msg of mailSearch.preview) out.push({ kind: 'match', key: `m-${msg.id}`, msg });
 		}
-		for (const op of suggestions) out.push({ kind: 'op', key: `o-${op}`, op });
+		for (const op of opSuggestions) out.push({ kind: 'op', key: `o-${op}`, op });
 		if (typed) out.push({ kind: 'all', key: 'all' });
 		return out;
 	});
 
-	const open = $derived(focused && !dismissed && options.length > 0);
+	const open = $derived(focused && !dismissed && !composing && options.length > 0);
 	const activeId = $derived(open && highlight >= 0 && highlight < options.length ? `${uid}-${options[highlight].key}` : undefined);
 	const showLooking = $derived(typed.length > 0 && mailSearch.previewing && mailSearch.preview.length === 0);
-	const showNoPreview = $derived(
-		typed.length > 0 && !mailSearch.previewing && mailSearch.preview.length === 0 && !suggestions.length
-	);
+	const showNoPreview = $derived(typed.length > 0 && !mailSearch.previewing && mailSearch.preview.length === 0 && !opSuggestions.length);
 
 	function folderBase(): string {
 		const slot = page.params.slot ?? '0';
@@ -68,31 +101,71 @@
 
 	function openMatch(msg: Message) {
 		dismissed = true;
-		const target = `${folderBase()}/${msg.id}${page.url.search}`;
-		void goto(target, { replace: !!page.params.id, reset: false });
+		if (msg.match?.kind === 'draft') {
+			composeStore.openDraft(msg.id);
+			return;
+		}
+		if (msg.match?.kind === 'scheduled') {
+			void goto(`/u/${page.params.slot ?? '0'}/mail/scheduled`);
+			return;
+		}
+		void goto(`${folderBase()}/${msg.id}${page.url.search}`, { replace: !!page.params.id, reset: false });
+	}
+
+	function replaceLast(text: string) {
+		const parts = mailSearch.draft.split(/(\s+)/);
+		parts[parts.length - 1] = text;
+		mailSearch.setDraft(parts.join(''));
+		highlight = -1;
+		inputRef?.focus();
+	}
+
+	function quoted(value: string): string {
+		return /[\s"():{}]/.test(value) ? `"${value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"` : value;
 	}
 
 	function applyOperator(op: string) {
 		const draft = mailSearch.draft;
 		const parts = draft.split(/(\s+)/);
 		const last = parts.at(-1) ?? '';
-		const replaceLast = last && !last.includes(':') && op.startsWith(last.toLowerCase());
-		const base = replaceLast ? parts.slice(0, -1).join('') : draft.length && !/\s$/.test(draft) ? `${draft} ` : draft;
+		const replace = last && !last.includes(':') && op.startsWith(last.toLowerCase());
+		const base = replace ? parts.slice(0, -1).join('') : draft.length && !/\s$/.test(draft) ? `${draft} ` : draft;
 		mailSearch.setDraft(`${base}${op}`);
 		highlight = -1;
 		inputRef?.focus();
 	}
 
-	function commit() {
+	function commit(text?: string) {
 		dismissed = true;
 		highlight = -1;
-		mailSearch.commit();
+		mailSearch.commit(text);
 	}
 
 	function choose(option: Option) {
-		if (option.kind === 'match') openMatch(option.msg);
-		else if (option.kind === 'op') applyOperator(option.op);
-		else commit();
+		switch (option.kind) {
+			case 'match':
+				openMatch(option.msg);
+				return;
+			case 'op':
+				applyOperator(option.op);
+				return;
+			case 'history':
+				commit(option.text);
+				return;
+			case 'word':
+				replaceLast(`${option.text} `);
+				return;
+			case 'person':
+				replaceLast(`from:${option.address} `);
+				return;
+			case 'collection': {
+				const neg = lastToken.startsWith('-') ? '-' : '';
+				replaceLast(`${neg}${option.type === 'label' ? 'label' : 'in'}:${quoted(option.path)} `);
+				return;
+			}
+			case 'all':
+				commit();
+		}
 	}
 
 	function clearAll() {
@@ -104,10 +177,7 @@
 
 	function handleKey(e: KeyboardEvent) {
 		const el = document.activeElement;
-		const typing =
-			el instanceof HTMLInputElement ||
-			el instanceof HTMLTextAreaElement ||
-			(el instanceof HTMLElement && el.isContentEditable);
+		const typing = el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || (el instanceof HTMLElement && el.isContentEditable);
 		if (!inMail) return;
 		if (e.key === '/' && !typing) {
 			e.preventDefault();
@@ -116,7 +186,7 @@
 	}
 
 	function handleInputKey(e: KeyboardEvent) {
-		if (e.isComposing) return;
+		if (e.isComposing || composing || e.keyCode === 229) return;
 		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 			if (!options.length) return;
 			e.preventDefault();
@@ -149,6 +219,14 @@
 	}
 
 	function handleInput(e: Event) {
+		if (composing) return;
+		mailSearch.setDraft((e.currentTarget as HTMLInputElement).value);
+		dismissed = false;
+		highlight = -1;
+	}
+
+	function handleCompositionEnd(e: CompositionEvent) {
+		composing = false;
 		mailSearch.setDraft((e.currentTarget as HTMLInputElement).value);
 		dismissed = false;
 		highlight = -1;
@@ -158,7 +236,7 @@
 <svelte:document onkeydown={handleKey} />
 
 <div class="searchwrap">
-	<div class="search">
+	<div class="search" class:invalid>
 		<Search size={16} />
 		<input
 			bind:this={inputRef}
@@ -167,16 +245,21 @@
 			aria-controls={open ? listId : undefined}
 			aria-activedescendant={activeId}
 			aria-autocomplete="list"
+			aria-invalid={invalid || undefined}
+			aria-describedby={invalid ? errorId : undefined}
 			autocomplete="off"
 			spellcheck="false"
+			dir="auto"
 			value={mailSearch.draft}
 			oninput={handleInput}
 			onkeydown={handleInputKey}
+			oncompositionstart={() => (composing = true)}
+			oncompositionend={handleCompositionEnd}
 			onfocus={() => {
 				focused = true;
 				dismissed = false;
 				mailSearch.warm();
-				searchRuntime.focus();
+				void loadSearchStrip().catch(() => undefined);
 			}}
 			onblur={() => {
 				focused = false;
@@ -185,10 +268,11 @@
 			{placeholder}
 			aria-label={placeholder}
 		/>
+		{#if invalid}
+			<span id={errorId} class="sr-only">{mailSearch.error}</span>
+		{/if}
 		{#if mailSearch.draft || mailSearch.active}
-			<button class="clr" onclick={clearAll} title={m.mail_search_clear()} aria-label={m.mail_search_clear()}
-				><X size={14} /></button
-			>
+			<button class="clr" onclick={clearAll} title={m.mail_search_clear()} aria-label={m.mail_search_clear()}><X size={14} /></button>
 		{:else}
 			<span class="kbd">/</span>
 		{/if}
@@ -208,8 +292,8 @@
 						onclick={() => choose(option)}
 						onkeydown={() => {}}
 					>
-						<span class="sm-from">{option.msg.from}</span>
-						<span class="sm-subj">{option.msg.subj}</span>
+						<span class="sm-from" dir="auto">{option.msg.from}</span>
+						<span class="sm-subj" dir="auto">{option.msg.subj}</span>
 						<span class="sm-when">{formatRowTime(new Date(option.msg.epoch))}</span>
 					</div>
 				{:else if option.kind === 'op'}
@@ -226,7 +310,7 @@
 					>
 						<span class="srch-op">{option.op}</span>
 					</div>
-				{:else}
+				{:else if option.kind === 'all'}
 					{#if showLooking}
 						<div class="srch-note" aria-hidden="true">{m.mail_search_looking()}</div>
 					{:else if showNoPreview}
@@ -244,8 +328,37 @@
 						onkeydown={() => {}}
 					>
 						<Search size={14} />
-						<span>{m.mail_search_show_all({ query: typed })}</span>
+						<span dir="auto">{m.mail_search_show_all({ query: typed })}</span>
 						<CornerDownLeft size={13} />
+					</div>
+				{:else}
+					<div
+						id="{uid}-{option.key}"
+						class="srch-opt srch-hint"
+						class:on={i === highlight}
+						role="option"
+						tabindex="-1"
+						aria-selected={i === highlight}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={() => choose(option)}
+						onkeydown={() => {}}
+					>
+						{#if option.kind === 'history'}
+							<History size={14} aria-hidden="true" />
+							<span class="sh-text" dir="auto">{option.text}</span>
+							<span class="sh-kind">{m.mail_search_group_history()}</span>
+						{:else if option.kind === 'person'}
+							<User size={14} aria-hidden="true" />
+							<span class="sh-text" dir="auto">{option.name || option.address}</span>
+							{#if option.name}<span class="sh-sub" dir="auto">{option.address}</span>{/if}
+						{:else if option.kind === 'collection'}
+							{#if option.type === 'label'}<Tag size={14} aria-hidden="true" />{:else}<Folder size={14} aria-hidden="true" />{/if}
+							<span class="sh-text" dir="auto">{option.path}</span>
+							<span class="sh-kind">{option.type === 'label' ? m.mail_search_group_label() : m.mail_search_group_folder()}</span>
+						{:else}
+							<Search size={14} aria-hidden="true" />
+							<span class="sh-text" dir="auto">{option.text}</span>
+						{/if}
 					</div>
 				{/if}
 			{/each}

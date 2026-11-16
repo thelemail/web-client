@@ -25,46 +25,72 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
-const indexSearch = vi.hoisted(() => vi.fn());
-vi.mock('$core/search', () => ({
-	searchIndex: {
-		search: (...a: unknown[]) => indexSearch(...a),
-		sync: vi.fn(async () => {}),
-		close: vi.fn(),
-		subscribe: () => () => {}
-	}
-}));
 vi.mock('$platform', () => ({ platform: {} }));
+vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribeAccount: () => () => {} } }));
+vi.mock('$core/stores/addresses.svelte', () => ({ addresses: { items: [] } }));
+vi.mock('$core/stores/mailCollections.svelte', () => ({
+	mailCollections: { folders: [], labels: [{ id: 'l1', name: 'Tax 2026', path: 'Tax 2026', sealed: false }] }
+}));
+const openDraft = vi.hoisted(() => vi.fn());
+vi.mock('$core/stores/compose.svelte', () => ({ composeStore: { openDraft } }));
+
+const engine = vi.hoisted(() => ({
+	query: null as unknown as ReturnType<typeof import('vitest').vi.fn>,
+	complete: null as unknown as ReturnType<typeof import('vitest').vi.fn>,
+	history: [] as string[],
+	rows: [] as unknown[]
+}));
+vi.mock('$core/search/lazy', () => {
+	const client = {
+		subscribe: (l: (s: unknown) => void) => {
+			l({ phase: 'ready', role: 'owner', status: null });
+			return () => {};
+		},
+		query: (...a: unknown[]) => engine.query(...a),
+		page: async () => ({ ok: true, groups: engine.rows }),
+		closeQuery: async () => {},
+		complete: (...a: unknown[]) => engine.complete(...a),
+		history: async () => engine.history,
+		remember: async () => {}
+	};
+	return {
+		searchSupported: () => true,
+		searchRuntime: {
+			focus: async () => {},
+			client: () => Promise.resolve(client),
+			subscribePrefs: (cb: (p: unknown) => void) => {
+				cb({ accountId: 'acc-1', consent: 'saved', paused: false, history: true });
+				return () => {};
+			}
+		}
+	};
+});
 
 import ListSearch from './ListSearch.svelte';
 import { mailSearch } from '$core/stores/search.svelte';
 
-function hit(id: string, subject: string) {
+function hit(id: string, subject: string, kind = 1) {
 	return {
-		row: {
-			accountId: 'acc-1',
-			id,
-			chunkId: 0,
-			storedAt: 1_700_000_000_000,
-			direction: 'received',
-			mailboxState: 'inbox',
-			read: true,
-			starred: false,
-			labels: [],
-			attachmentCount: 0,
-			threadRootId: null,
-			snoozedUntil: null
-		},
-		text: {
-			id,
-			subject,
-			senderDisplay: 'Anna',
-			senderAddress: 'anna@school.test',
-			recipients: '',
-			snippet: ''
-		},
-		excerpt: '',
-		score: 1
+		key: id,
+		threadId: id,
+		matches: 1,
+		exact: false,
+		score: 1,
+		date: 1_700_000_000_000,
+		best: { kind, sourceId: id },
+		sources: [{ kind, sourceId: id }],
+		subject,
+		subjectSpans: [],
+		from: { name: 'Anna', address: 'anna@school.test' },
+		to: [],
+		flags: 1 | 4,
+		knownFlags: 0x1ff,
+		attachments: 0,
+		folders: [],
+		labels: [],
+		excerpt: null,
+		filename: null,
+		fields: []
 	};
 }
 
@@ -72,8 +98,14 @@ let stop: () => void;
 
 beforeEach(() => {
 	goto.mockClear();
-	indexSearch.mockReset();
-	indexSearch.mockReturnValue({ ok: true, results: [hit('m1', 'Permission slip'), hit('m2', 'Permission form')] });
+	openDraft.mockClear();
+	engine.rows = [hit('m1', 'Permission slip'), hit('m2', 'Permission form')];
+	engine.history = [];
+	engine.query = vi.fn(async () => ({
+		ok: true,
+		summary: { id: 1, matches: engine.rows.length, groups: engine.rows.length, pages: 1, incomplete: 0, excluded: 0, suggestions: [], generation: 0, dims: [], resolved: [] }
+	}));
+	engine.complete = vi.fn(async () => ({ terms: [], people: [] }));
 	stop = mailSearch.start('acc-1');
 	document.body.className = '';
 	const host = document.body.appendChild(document.createElement('div'));
@@ -167,5 +199,79 @@ describe('mail search box', () => {
 		await userEvent.keyboard('{Escape}');
 		expect(mailSearch.committed).toBe('');
 		expect((input as HTMLInputElement).value).toBe('');
+	});
+
+	it('opens a draft result in the composer', async () => {
+		engine.rows = [hit('d1', 'Lunch plan', 2)];
+		const { getByRole } = mount();
+		const input = getByRole('combobox');
+		await userEvent.click(input);
+		await userEvent.type(input, 'lunch');
+		await vi.waitFor(() => expect(mailSearch.preview).toHaveLength(1));
+		await userEvent.keyboard('{ArrowDown}');
+		await userEvent.keyboard('{Enter}');
+		expect(openDraft).toHaveBeenCalledWith('d1');
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('completes people and words from this device', async () => {
+		engine.complete = vi.fn(async () => ({ terms: ['invoices'], people: [{ name: 'Inês Moreira', address: 'ines@example.com' }] }));
+		const { getByRole, findByRole } = mount();
+		const input = getByRole('combobox');
+		await userEvent.click(input);
+		await userEvent.type(input, 'ine');
+		await userEvent.click(await findByRole('option', { name: /Inês Moreira/ }));
+		expect((input as HTMLInputElement).value).toBe('from:ines@example.com ');
+		expect(mailSearch.active).toBe(false);
+	});
+
+	it('suggests label names after label:', async () => {
+		const { getByRole, findByRole } = mount();
+		const input = getByRole('combobox');
+		await userEvent.click(input);
+		await userEvent.type(input, 'label:tax');
+		await userEvent.click(await findByRole('option', { name: /Tax 2026/ }));
+		expect((input as HTMLInputElement).value).toBe('label:"Tax 2026" ');
+	});
+
+	it('offers recent searches and runs one when chosen', async () => {
+		engine.history = ['from:anna permission'];
+		const { getByRole, findByRole } = mount();
+		const input = getByRole('combobox');
+		await userEvent.click(input);
+		mailSearch.commit('budget');
+		await vi.waitFor(() => expect(mailSearch.history).toEqual(['from:anna permission']));
+		mailSearch.setDraft('');
+		await userEvent.click(await findByRole('option', { name: /from:anna permission/ }));
+		expect(mailSearch.committed).toBe('from:anna permission');
+	});
+
+	it('does not search while an input method is composing', async () => {
+		const { getByRole } = mount();
+		const input = getByRole('combobox') as HTMLInputElement;
+		await userEvent.click(input);
+		input.dispatchEvent(new CompositionEvent('compositionstart'));
+		input.value = 'とう';
+		input.dispatchEvent(new InputEvent('input', { isComposing: true }));
+		input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true }));
+		flushSync();
+		expect(mailSearch.draft).toBe('');
+		expect(mailSearch.committed).toBe('');
+		input.value = '東京';
+		input.dispatchEvent(new CompositionEvent('compositionend'));
+		flushSync();
+		expect(mailSearch.draft).toBe('東京');
+		expect(mailSearch.committed).toBe('');
+	});
+
+	it('marks the box invalid and describes the error after a bad query', async () => {
+		const { getByRole } = mount();
+		const input = getByRole('combobox');
+		await userEvent.click(input);
+		await userEvent.type(input, '"open');
+		await userEvent.keyboard('{Enter}');
+		await vi.waitFor(() => expect(input.getAttribute('aria-invalid')).toBe('true'));
+		const described = document.getElementById(input.getAttribute('aria-describedby')!);
+		expect(described?.textContent).toBe(mailSearch.error);
 	});
 });

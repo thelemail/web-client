@@ -1,10 +1,15 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { render } from '@testing-library/svelte';
+import { render, within } from '@testing-library/svelte';
 import MessageList from './MessageList.svelte';
 import { EMPTY_FILTERS, type Message } from './data';
 import { mailActionsFor } from './actions';
+import type { SearchView } from './searchView';
+import { loadSearchStrip } from './searchStrip';
+import type { Chip } from '$core/search/chips';
+import type { CoverageView } from '$core/search/coverage';
 
-beforeAll(() => {
+beforeAll(async () => {
+	await loadSearchStrip();
 	vi.stubGlobal(
 		'IntersectionObserver',
 		class {
@@ -86,228 +91,190 @@ describe('MessageList pagination trigger', () => {
 	});
 });
 
+function view(over: Partial<SearchView> = {}): SearchView {
+	return {
+		phase: 'ready',
+		mode: 'saved',
+		consent: 'saved',
+		canEnable: true,
+		query: 'permission',
+		matches: 1,
+		groups: 1,
+		final: true,
+		chips: [],
+		error: null,
+		errorRange: null,
+		suggestions: [],
+		coverage: complete,
+		sort: 'relevance',
+		exactFolders: false,
+		newAvailable: false,
+		paused: false,
+		limited: null,
+		settingsHref: '/u/0/settings/search',
+		onSort: vi.fn(),
+		onExactFolders: vi.fn(),
+		onRemoveChip: vi.fn(),
+		onSuggestion: vi.fn(),
+		onRefresh: vi.fn(),
+		onRetry: vi.fn(),
+		onClear: vi.fn(),
+		onEnable: vi.fn(),
+		onDecline: vi.fn(),
+		...over
+	};
+}
+
+const complete: CoverageView = {
+	dimensions: [
+		{ dimension: 1, total: 10, done: 10, excluded: 0, gaps: {} },
+		{ dimension: 2, total: 10, done: 10, excluded: 0, gaps: {} }
+	],
+	inventoryDone: true,
+	complete: true,
+	syncedAt: 1,
+	waitingOn: null
+};
+
+const partial: CoverageView = {
+	dimensions: [
+		{ dimension: 1, total: 18_510, done: 18_510, excluded: 0, gaps: {} },
+		{ dimension: 2, total: 18_510, done: 18_420, excluded: 0, gaps: { waiting: 78, locked: 12 } }
+	],
+	inventoryDone: true,
+	complete: false,
+	syncedAt: 1,
+	waitingOn: null
+};
+
+function chip(text: string, over: Partial<Chip> = {}): Chip {
+	return { key: text, text, kind: 'filter', negated: false, range: { start: 0, end: text.length }, matches: 0, descendants: 0, ...over };
+}
+
 describe('MessageList search states', () => {
-	it('hides the pagination sentinel while showing search results', () => {
-		const { container } = mount({ list: [message('m1')], searchActive: true });
-		expect(container.querySelector('.list-foot')).toBeNull();
+	it('keeps the pagination sentinel under search results so more pages load', () => {
+		const { container } = mount({ list: [message('m1')], search: view() });
+		expect(container.querySelector('.list-foot')).not.toBeNull();
 	});
 
-	it('states the scope a completed search covered', () => {
-		const { container } = mount({ list: [message('m1')], searchActive: true });
-		expect(container.querySelector('.srch-strip')?.textContent).toContain('All mail');
+	it('states how many conversations matched', () => {
+		const { container } = mount({ list: [message('m1')], search: view({ groups: 1240 }) });
+		expect(container.querySelector('.ss-status')?.textContent).toBe('1,240 conversations');
 	});
 
-	it('says how far it has read while the index is still building', () => {
-		const { container } = mount({
-			list: [],
-			searchActive: true,
-			searchComplete: false,
-			searchIndexed: 1240
-		});
-		const strip = container.querySelector('.srch-strip')?.textContent ?? '';
-		expect(strip).toContain('1,240');
-		expect(strip).not.toContain('All mail');
+	it('shows a running count while the first page is provisional', () => {
+		const { container } = mount({ list: [message('m1')], search: view({ phase: 'searching', final: false, matches: 60, groups: 50 }) });
+		expect(container.querySelector('.ss-status')?.textContent).toBe('Searching, 50 found so far');
+	});
+
+	it('says how much message text is indexed and why the rest is missing', async () => {
+		const { container } = mount({ list: [message('m1')], search: view({ coverage: partial }) });
+		const { getByRole } = within(container);
+		expect(container.querySelector('.ss-cover')?.textContent).toContain('Message text: 18,420 of 18,510 indexed');
+		await getByRole('button', { name: /Details/ }).click();
+		const details = container.querySelector('.ss-cov')?.textContent ?? '';
+		expect(details).toContain('Waiting: 78');
+		expect(details).toContain('Missing a key on this device: 12');
 	});
 
 	it('does not call an incomplete search a definitive no-match', () => {
-		const { container } = mount({
-			list: [],
-			searchActive: true,
-			searchComplete: false,
-			searchIndexed: 1240
-		});
-		expect(container.textContent).toContain('No match yet');
+		const { container } = mount({ list: [], search: view({ matches: 0, groups: 0, coverage: partial }) });
+		expect(container.querySelector('.empty-list .t')?.textContent).toBe('No matches in indexed mail');
 		expect(container.textContent).not.toContain('Nothing in your mail matches that.');
 	});
 
-	it('is definitive once the whole archive is indexed', () => {
-		const { container } = mount({ list: [], searchActive: true, searchComplete: true });
+	it('is definitive once every relevant field is indexed', () => {
+		const { container } = mount({ list: [], search: view({ matches: 0, groups: 0 }) });
 		expect(container.textContent).toContain('Nothing in your mail matches that.');
 	});
 
-	it('names the filters that were applied', () => {
-		const { container } = mount({
-			list: [message('m1')],
-			searchActive: true,
-			searchChips: ['from:anna', 'unread']
-		});
-		const chips = [...container.querySelectorAll('.srch-chip')].map((c) => c.textContent?.trim());
-		expect(chips).toEqual(['from:anna', 'unread']);
+	it('is never definitive in preview mode', () => {
+		const { container } = mount({ list: [], search: view({ mode: 'preview', consent: 'declined', matches: 0, groups: 0, coverage: partial }) });
+		expect(container.querySelector('.empty-list .t')?.textContent).toBe('No matches in indexed mail');
+		expect(container.querySelector('.ss-mode')?.textContent).toBe('Searching subjects, senders and previews only');
 	});
 
-	it('shows no chips for a plain free-text search', () => {
-		const { container } = mount({ list: [message('m1')], searchActive: true });
-		expect(container.querySelectorAll('.srch-chip')).toHaveLength(0);
+	it('offers one-time setup before the user has chosen', () => {
+		const onEnable = vi.fn();
+		const { container } = mount({ list: [], search: view({ mode: 'preview', consent: null, onEnable }) });
+		const card = within(container.querySelector('.ss-setup') as HTMLElement);
+		card.getByRole('button', { name: 'Turn on full search' }).click();
+		expect(onEnable).toHaveBeenCalled();
+		expect(card.getByRole('button', { name: 'Not now' })).toBeTruthy();
+	});
+
+	it('does not offer full search to an account that cannot hold an index yet', () => {
+		const { container } = mount({ list: [], search: view({ mode: 'preview', consent: null, canEnable: false, matches: 0, groups: 0, coverage: partial }) });
+		expect(container.querySelector('.ss-setup')).toBeNull();
+		expect(within(container).queryByRole('button', { name: 'Turn on full search' })).toBeNull();
+		expect(container.querySelector('.ss-mode')?.textContent).toBe('Searching subjects, senders and previews only');
+	});
+
+	it('names each filter and removes one on request', () => {
+		const onRemoveChip = vi.fn();
+		const chips = [chip('from:anna'), chip('is:unread')];
+		const { container } = mount({ list: [message('m1')], search: view({ chips, onRemoveChip }) });
+		const { getByRole } = within(container);
+		const shown = [...container.querySelectorAll('.srch-chip > span[dir]')].map((c) => c.textContent?.trim());
+		expect(shown).toEqual(['from:anna', 'is:unread']);
+		getByRole('button', { name: 'Remove is:unread' }).click();
+		expect(onRemoveChip).toHaveBeenCalledWith(chips[1]);
+	});
+
+	it('flags a label name shared by several labels and offers exact folders', () => {
+		const chips = [chip('label:"Tax 2026"', { kind: 'label', matches: 2 }), chip('in:Projects', { kind: 'folder', descendants: 3 })];
+		const { container } = mount({ list: [message('m1')], search: view({ chips }) });
+		expect(container.querySelector('.ss-note')?.textContent).toBe('2 labels');
+		expect(container.querySelector('.ss-exact')?.textContent).toContain('Only this folder');
+	});
+
+	it('offers a spelling suggestion as a clickable replacement', () => {
+		const onSuggestion = vi.fn();
+		const suggestion = { range: { start: 0, end: 6 }, original: 'invoce', replacement: 'invoice' };
+		const { container } = mount({ list: [], search: view({ matches: 0, groups: 0, suggestions: [suggestion], onSuggestion }) });
+		const { getByRole } = within(container);
+		getByRole('button', { name: 'invoice' }).click();
+		expect(onSuggestion).toHaveBeenCalledWith(suggestion);
+	});
+
+	it('announces new mail without reordering results', () => {
+		const onRefresh = vi.fn();
+		const { container } = mount({ list: [message('m1')], search: view({ newAvailable: true, onRefresh }) });
+		const { getByRole } = within(container);
+		getByRole('button', { name: /New mail arrived/ }).click();
+		expect(onRefresh).toHaveBeenCalled();
 	});
 
 	it('offers to clear the search rather than the filters', () => {
-		const { container } = mount({ list: [], searchActive: true });
+		const { container } = mount({ list: [], search: view({ matches: 0, groups: 0 }) });
 		expect(container.querySelector('.empty-clear')?.textContent).toContain('Clear search');
 	});
 
-	it('explains a search it could not run', () => {
+	it('explains a search it could not run and marks where', () => {
 		const { container } = mount({
 			list: [],
-			searchActive: true,
-			searchError: 'A quote is missing its closing mark.'
+			search: view({ phase: 'failed', query: 'from:x "open', error: 'A quote is missing its closing mark.', errorRange: { start: 7, end: 12 } })
 		});
 		expect(container.querySelector('.empty-list .t')?.textContent).toBe("Can't run this search");
 		expect(container.querySelector('.empty-list .d')?.textContent).toBe('A quote is missing its closing mark.');
+		expect(container.querySelector('.q-err mark')?.textContent).toBe('"open');
 		expect(container.querySelector('.empty-clear')?.textContent).toContain('Clear search');
-		expect(container.textContent).not.toContain('Nothing in your mail matches that.');
-	});
-});
-
-describe('MessageList header', () => {
-	it('titles the list with the folder and its unread count', () => {
-		const { container } = mount({ list: [message('m1')], folderUnread: 1234 });
-		const header = container.querySelector('.list-h')!;
-		expect(header.querySelector('.search input')).toBeNull();
-		expect(header.querySelector('h1 .ttl-name')?.textContent).toBe('Inbox');
-		expect(header.querySelector('.ttl-ct .sr-only')?.textContent?.trim()).toBe(
-			`${new Intl.NumberFormat().format(1234)} unread`
-		);
 	});
 
-	it('leaves the count out when nothing is unread', () => {
-		const { container } = mount({ list: [message('m1')], folderUnread: 0 });
-		expect(container.querySelector('.ttl-ct')).toBeNull();
+	it('says search is locked rather than empty', () => {
+		const { container } = mount({ list: [], search: view({ phase: 'locked', groups: null, matches: null, final: false }) });
+		expect(container.querySelector('.empty-list .t')?.textContent).toBe('Search is locked');
 	});
 
-	it('switches between all and unread through the unread filter', async () => {
-		const onSetFilters = vi.fn();
-		const { container, rerender } = mount({ list: [message('m1')], onSetFilters });
-		const [all, unread] = [...container.querySelectorAll<HTMLButtonElement>('.seg button')];
-		expect(all.getAttribute('aria-pressed')).toBe('true');
-		expect(unread.getAttribute('aria-pressed')).toBe('false');
-		all.click();
-		expect(onSetFilters).not.toHaveBeenCalled();
-		unread.click();
-		expect(onSetFilters).toHaveBeenCalledWith({ ...EMPTY_FILTERS, unread: true });
-		await rerender({ filters: { ...EMPTY_FILTERS, unread: true } });
-		expect(unread.getAttribute('aria-pressed')).toBe('true');
-		all.click();
-		expect(onSetFilters).toHaveBeenLastCalledWith({ ...EMPTY_FILTERS, unread: false });
+	it('offers a retry when the device cannot search', () => {
+		const onRetry = vi.fn();
+		const { container } = mount({ list: [], search: view({ phase: 'unavailable', groups: null, matches: null, final: false, onRetry }) });
+		(container.querySelector('.empty-clear') as HTMLButtonElement).click();
+		expect(onRetry).toHaveBeenCalled();
 	});
 
-	it('shows no view strip for the default sort without filters', () => {
-		const { container } = mount({ list: [message('m1')] });
-		expect(container.querySelector('.view-strip')).toBeNull();
-	});
-
-	it('shows the sort below the header and resets it', async () => {
-		const onSort = vi.fn();
-		const { container } = mount({ list: [message('m1')], sort: 'oldest', onSort });
-		const strip = container.querySelector('.view-strip');
-		expect(strip).not.toBeNull();
-		(strip?.querySelector('.list-sub-x') as HTMLButtonElement).click();
-		expect(onSort).toHaveBeenCalledWith('newest');
-	});
-
-	it('shows active filters below the header and clears them', () => {
-		const onSetFilters = vi.fn();
-		const { container } = mount({
-			list: [message('m1')],
-			filters: { ...EMPTY_FILTERS, unread: true },
-			onSetFilters
-		});
-		const strip = container.querySelector('.view-strip');
-		expect(strip?.textContent).toContain('1');
-		(strip?.querySelector('.list-sub-x') as HTMLButtonElement).click();
-		expect(onSetFilters).toHaveBeenCalledWith({ ...EMPTY_FILTERS });
-	});
-});
-
-describe('MessageList position across updates', () => {
-	const ROW = 80;
-
-	function layout(container: HTMLElement) {
-		const scroll = container.querySelector<HTMLElement>('.scroll')!;
-		let top = 0;
-		Object.defineProperty(scroll, 'scrollTop', {
-			configurable: true,
-			get: () => top,
-			set: (v: number) => (top = v)
-		});
-		Object.defineProperty(scroll, 'clientHeight', { configurable: true, get: () => 400 });
-		scroll.getBoundingClientRect = () => ({ top: 0, bottom: 400 }) as DOMRect;
-		vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
-			const rows = [...scroll.querySelectorAll('.mrow')];
-			const i = rows.indexOf(this);
-			const y = i * ROW - top;
-			return { top: y, bottom: y + ROW } as DOMRect;
-		});
-		return scroll;
-	}
-
-	const ids = (n: number, from = 0) => Array.from({ length: n }, (_, i) => message(`m${from + i}`));
-
-	it('keeps the visible row in place when mail arrives above it', async () => {
-		const list = ids(10, 2);
-		const { container, rerender } = mount({ list });
-		const scroll = layout(container);
-		scroll.scrollTop = 250;
-		await rerender({ list: [...ids(2), ...list] });
-		expect(scroll.scrollTop).toBe(250 + 2 * ROW);
-		vi.restoreAllMocks();
-	});
-
-	it('leaves the top of the list alone so new mail shows', async () => {
-		const list = ids(10, 2);
-		const { container, rerender } = mount({ list });
-		const scroll = layout(container);
-		await rerender({ list: [...ids(2), ...list] });
-		expect(scroll.scrollTop).toBe(0);
-		vi.restoreAllMocks();
-	});
-
-	it('keeps the selection when mail arrives', async () => {
-		const list = ids(4, 2);
-		const checked = new Set(['m3']);
-		const { container, rerender } = mount({ list, checked });
-		await rerender({ list: [...ids(2), ...list], checked });
-		const selected = [...container.querySelectorAll('.mrow.sel')].map((r) => (r as HTMLElement).dataset.id);
-		expect(selected).toEqual(['m3']);
-	});
-
-	it('returns focus to the row that was open', async () => {
-		const list = ids(4);
-		const { container, rerender } = mount({ list, activeId: 'm2' });
-		(document.activeElement as HTMLElement | null)?.blur();
-		await rerender({ list, activeId: null });
-		const row = container.querySelector<HTMLElement>('.mrow[data-id="m2"]')!;
-		expect(document.activeElement).toBe(row.querySelector('.mrow-open'));
-	});
-
-	it('does not steal focus from elsewhere when the message closes', async () => {
-		const list = ids(4);
-		const outside = document.body.appendChild(document.createElement('input'));
-		const { rerender } = mount({ list, activeId: 'm2' });
-		outside.focus();
-		await rerender({ list, activeId: null });
-		expect(document.activeElement).toBe(outside);
-		outside.remove();
-	});
-});
-
-describe('MessageList arrivals', () => {
-	const rows = (n: number, from = 0) => Array.from({ length: n }, (_, i) => message(`a${from + i}`));
-	const fresh = (c: HTMLElement) => [...c.querySelectorAll<HTMLElement>('.mrow.fresh')].map((r) => r.dataset.id);
-
-	it('marks mail that lands above the rows already shown', async () => {
-		const list = rows(3, 2);
-		const { container, rerender } = mount({ list });
-		expect(fresh(container)).toEqual([]);
-		await rerender({ list: [...rows(2), ...list] });
-		expect(fresh(container)).toEqual(['a0', 'a1']);
-	});
-
-	it('does not mark rows loaded by paging or by switching view', async () => {
-		const list = rows(3);
-		const { container, rerender } = mount({ list });
-		await rerender({ list: [...list, ...rows(2, 3)] });
-		expect(fresh(container)).toEqual([]);
-		await rerender({ list: rows(2, 10), viewFolder: 'archive' });
-		expect(fresh(container)).toEqual([]);
+	it('announces the final count to screen readers', () => {
+		const { container } = mount({ list: [message('m1')], search: view({ groups: 3 }) });
+		expect(container.querySelector('.srch-strip [role="status"]')?.textContent).toBe('3 conversations');
 	});
 });

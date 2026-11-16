@@ -3,7 +3,8 @@ import type { Database, SqlValue } from '@thelemail/sqlite-wasm';
 import { deleteSearchDb, loadSqlite, openMemorySearchDb, openSearchDb, pauseSearchPool, resumeSearchPool } from './engine';
 import type { ParsedQuery } from '../query/ast';
 import type { QueryContext } from './compile';
-import { QueryEngine, type QueryOptions } from './run';
+import { SearchHistory, historyKey } from './history';
+import { QueryEngine, type Provisional, type QueryOptions } from './run';
 import type { Coverage, Dimension, SearchDocument, SourceKey, SourceMetadata } from './types';
 import { SearchWriter, integrityCheck, maintain, type MaintenanceStep } from './writer';
 
@@ -28,7 +29,14 @@ export type HarnessRequest =
 	| { op: 'query'; token: number; query: ParsedQuery; ctx: QueryContext; options: Omit<QueryOptions, 'signal'> }
 	| { op: 'cancel'; token: number }
 	| { op: 'page'; session: number; index: number }
-	| { op: 'closeQuery'; session: number };
+	| { op: 'closeQuery'; session: number }
+	| { op: 'progress'; query: ParsedQuery; ctx: QueryContext; options: Omit<QueryOptions, 'signal' | 'onProgress'> }
+	| { op: 'complete'; prefix: string }
+	| { op: 'generation'; value: number }
+	| { op: 'historyKey'; key: Uint8Array }
+	| { op: 'historyAdd'; query: string; now: number }
+	| { op: 'historyList'; now: number }
+	| { op: 'historyClear' };
 
 export type HarnessReply = { id: number; ok: true; value: unknown } | { id: number; ok: false; error: string };
 
@@ -36,6 +44,7 @@ let db: Database | null = null;
 let writer: SearchWriter | null = null;
 let engine: QueryEngine | null = null;
 const running = new Map<number, AbortController>();
+let history: SearchHistory | null = null;
 
 async function attach(next: Database) {
 	db = next;
@@ -53,6 +62,7 @@ function close() {
 	engine = null;
 	writer = null;
 	db = null;
+	history = null;
 }
 
 async function files(directory: string): Promise<FileSystemFileHandle[]> {
@@ -188,6 +198,27 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			return engine!.page(r.session, r.index);
 		case 'closeQuery':
 			engine!.close(r.session);
+			return null;
+		case 'progress': {
+			const events: Provisional[] = [];
+			const outcome = await engine!.run(r.query, r.ctx, { ...r.options, onProgress: (p) => events.push(p) });
+			return { outcome, events };
+		}
+		case 'complete':
+			return engine!.complete(r.prefix);
+		case 'generation':
+			engine!.generation = r.value;
+			return null;
+		case 'historyKey':
+			history = new SearchHistory(db!, await historyKey(r.key));
+			return null;
+		case 'historyAdd':
+			await history!.add(r.query, r.now);
+			return null;
+		case 'historyList':
+			return history!.list(r.now);
+		case 'historyClear':
+			history!.clear();
 			return null;
 	}
 }

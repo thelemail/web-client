@@ -728,5 +728,55 @@
       "salt": "Qior1RJe1j6gDJ1Nz7JeoA==",
       "error": "malformed"
     }
+  ],
+  "historyKeys": [
+    {
+      "name": "history key for an installation",
+      "root": "OU91sOqCNSJgwR/8ZnjXmTKgdh2NRhHsDeL4jfOmPzI=",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "generationId": "ad2f7c29-efd4-4107-8dc3-448e601c77f3",
+      "salt": "Qior1RJe1j6gDJ1Nz7JeoKz8f/Go4J768EKUuHKy2Sc=",
+      "key": "S5anrhkjXkL4Om8dI8Ko81X/sxNiEr31g3ngnOHgn0o="
+    },
+    {
+      "name": "another installation",
+      "root": "OU91sOqCNSJgwR/8ZnjXmTKgdh2NRhHsDeL4jfOmPzI=",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "generationId": "ad2f7c29-efd4-4107-8dc3-448e601c77f3",
+      "salt": "Y11BHAEdXjK34jWPfLhRF8lfyZ2aEWqDXr0wdV0fY4U=",
+      "key": "fwhubVQspfXlrABclmDAR328Ag57N20qMocsHYV1LnI="
+    },
+    {
+      "name": "another generation",
+      "root": "OU91sOqCNSJgwR/8ZnjXmTKgdh2NRhHsDeL4jfOmPzI=",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "generationId": "52b6f851-5dd4-451d-bfae-df15ec06b61b",
+      "salt": "Qior1RJe1j6gDJ1Nz7JeoKz8f/Go4J768EKUuHKy2Sc=",
+      "key": "8yccH8Iup+5ZwhsAddNMuhmXNffsoPqmY86okz0MOHI="
+    },
+    {
+      "name": "another account",
+      "root": "OU91sOqCNSJgwR/8ZnjXmTKgdh2NRhHsDeL4jfOmPzI=",
+      "accountId": "8e1f4c2a-7b3d-4a5e-b6c9-0d2e3f4a5b6c",
+      "generationId": "ad2f7c29-efd4-4107-8dc3-448e601c77f3",
+      "salt": "Qior1RJe1j6gDJ1Nz7JeoKz8f/Go4J768EKUuHKy2Sc=",
+      "key": "bMZ9KBI88aA+HszBbU3yDyHEKtd5XaBEff3p/pbVt5o="
+    },
+    {
+      "name": "another search root",
+      "root": "40f6ZuVBGjZ17H0ZJbYCnx2UWwW1vBh4D9HA6Vx6vJA=",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "generationId": "ad2f7c29-efd4-4107-8dc3-448e601c77f3",
+      "salt": "Qior1RJe1j6gDJ1Nz7JeoKz8f/Go4J768EKUuHKy2Sc=",
+      "key": "vF8PmddCUrHWdIFCClIlXTydPI96fQ9M6le14bu7Hyo="
+    },
+    {
+      "name": "short salt",
+      "root": "OU91sOqCNSJgwR/8ZnjXmTKgdh2NRhHsDeL4jfOmPzI=",
+      "accountId": "5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47",
+      "generationId": "ad2f7c29-efd4-4107-8dc3-448e601c77f3",
+      "salt": "Qior1RJe1j6gDJ1Nz7JeoA==",
+      "error": "malformed"
+    }
   ]
 }

@@ -14,18 +14,45 @@ vi.mock('$core/keystore/keystore-client', () => ({
 	}
 }));
 
-const record = vi.fn();
-vi.mock('./runtime/records', () => ({ searchRecords: { get: (id: string) => record(id) } }));
+type Prefs = { accountId: string; consent: 'saved' | 'declined' | null; paused: boolean; history: boolean };
+const stored = vi.hoisted(() => ({ prefs: new Map<string, Prefs>(), record: null as unknown }));
+const deletePrefs = vi.fn();
+vi.mock('./runtime/records', () => {
+	const base = (accountId: string): Prefs => ({ accountId, consent: null, paused: false, history: false });
+	return {
+		defaultPrefs: base,
+		searchRecords: { get: async () => stored.record },
+		searchPrefs: {
+			get: async (id: string) => ({ ...base(id), ...stored.prefs.get(id) }),
+			put: async (p: Prefs) => void stored.prefs.set(p.accountId, { ...p }),
+			delete: async (id: string) => {
+				deletePrefs(id);
+				stored.prefs.delete(id);
+			}
+		}
+	};
+});
 
 const shutdown = vi.fn(async () => {});
 const retry = vi.fn();
-const startSearch = vi.fn((accountId: string) => ({ accountId, shutdown, retry }));
+const pause = vi.fn(async () => {});
+const forget = vi.fn(async () => {});
+const startSearch = vi.fn((accountId: string, consent: string) => ({
+	accountId,
+	mode: consent === 'saved' ? 'saved' : 'preview',
+	shutdown,
+	retry,
+	pause,
+	forget
+}));
 const wipeSearch = vi.fn(async () => {});
 const startLoaded = vi.fn();
 vi.mock('./runtime/start', () => {
 	startLoaded();
-	return { startSearch: (id: string) => startSearch(id), wipeSearch: (id: string) => wipeSearch(id) };
+	return { startSearch: (id: string, consent: string) => startSearch(id, consent), wipeSearch: (id: string) => wipeSearch(id) };
 });
+
+const deleted = vi.fn();
 
 async function fresh() {
 	vi.resetModules();
@@ -39,77 +66,173 @@ function broadcast(type: string) {
 async function settle() {
 	await vi.dynamicImportSettled();
 	await vi.advanceTimersByTimeAsync(0);
+	await vi.dynamicImportSettled();
+	await vi.advanceTimersByTimeAsync(0);
+}
+
+function consent(value: Prefs['consent']) {
+	stored.prefs.set('acc-1', { accountId: 'acc-1', consent: value, paused: false, history: false });
 }
 
 beforeEach(() => {
 	vi.useFakeTimers();
-	vi.stubEnv('PUBLIC_PRIVATE_SEARCH', '1');
+	vi.stubGlobal('indexedDB', { deleteDatabase: deleted });
 	platformState.mirror = undefined;
 	platformState.keystoreChannel = undefined;
 	listeners.clear();
-	record.mockReset();
-	record.mockResolvedValue(null);
-	shutdown.mockClear();
-	retry.mockClear();
-	startSearch.mockClear();
-	wipeSearch.mockClear();
-	startLoaded.mockClear();
+	stored.prefs.clear();
+	stored.record = null;
+	for (const f of [shutdown, retry, pause, forget, startSearch, wipeSearch, startLoaded, deleted, deletePrefs]) f.mockClear();
 });
 
 afterEach(() => {
-	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
 	vi.useRealTimers();
 });
 
 describe('searchRuntime', () => {
 	it('loads nothing while the app boots', async () => {
+		consent('saved');
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		await vi.advanceTimersByTimeAsync(100);
 		expect(startLoaded).not.toHaveBeenCalled();
-		expect(record).not.toHaveBeenCalled();
+		expect(deleted).not.toHaveBeenCalled();
 		detach();
 	});
 
-	it('stays off at idle when no index exists', async () => {
+	it('removes the old preview index database after boot', async () => {
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		await vi.advanceTimersByTimeAsync(3000);
 		await settle();
-		expect(record).toHaveBeenCalledWith('acc-1');
+		expect(deleted).toHaveBeenCalledWith('thelemail-search');
+		detach();
+	});
+
+	it('stays off at idle without consent, even with an old index on disk', async () => {
+		stored.record = { hasIndex: true };
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		await vi.advanceTimersByTimeAsync(3000);
+		await settle();
 		expect(startLoaded).not.toHaveBeenCalled();
 		detach();
 	});
 
-	it('starts at idle when an index exists', async () => {
-		record.mockResolvedValue({ hasIndex: true });
+	it('starts the saved index at idle once the user turned it on', async () => {
+		consent('saved');
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		await vi.advanceTimersByTimeAsync(3000);
 		await settle();
-		expect(startSearch).toHaveBeenCalledWith('acc-1');
+		expect(startSearch).toHaveBeenCalledWith('acc-1', 'saved');
 		detach();
 	});
 
-	it('starts once on the first focus of the search field', async () => {
+	it('searches previews in memory on first focus when the user has not chosen', async () => {
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		runtime.focus();
 		runtime.focus();
 		await settle();
 		expect(startSearch).toHaveBeenCalledTimes(1);
+		expect(startSearch).toHaveBeenCalledWith('acc-1', 'declined');
+		expect(runtime.prefs?.consent).toBeNull();
 		detach();
 	});
 
-	it('does nothing when the feature is off', async () => {
-		vi.stubEnv('PUBLIC_PRIVATE_SEARCH', '');
+	it('switches from previews to the saved index when the user turns it on', async () => {
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		runtime.focus();
-		await vi.advanceTimersByTimeAsync(5000);
 		await settle();
-		expect(startLoaded).not.toHaveBeenCalled();
-		expect(listeners.size).toBe(0);
+		await runtime.enable();
+		await settle();
+		expect(shutdown).toHaveBeenCalledWith({ wipe: false });
+		expect(startSearch).toHaveBeenLastCalledWith('acc-1', 'saved');
+		expect(stored.prefs.get('acc-1')?.consent).toBe('saved');
+		detach();
+	});
+
+	it('records a decline without starting anything heavy', async () => {
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		await runtime.decline();
+		await settle();
+		expect(startSearch).toHaveBeenCalledTimes(1);
+		expect(stored.prefs.get('acc-1')?.consent).toBe('declined');
+		detach();
+	});
+
+	it('clears this device and falls back to previews', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		await runtime.clear();
+		await settle();
+		expect(shutdown).toHaveBeenCalledWith({ wipe: true });
+		expect(startSearch).toHaveBeenLastCalledWith('acc-1', 'declined');
+		expect(stored.prefs.get('acc-1')).toMatchObject({ consent: 'declined', history: false });
+		detach();
+	});
+
+	it('rebuilds by wiping and starting a fresh saved index', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		await runtime.rebuild();
+		await settle();
+		expect(shutdown).toHaveBeenCalledWith({ wipe: true });
+		expect(startSearch).toHaveBeenCalledTimes(2);
+		expect(startSearch).toHaveBeenLastCalledWith('acc-1', 'saved');
+		detach();
+	});
+
+	it('remembers pause and tells the running index', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		await runtime.setPaused(true);
+		expect(pause).toHaveBeenCalledWith(true);
+		expect(stored.prefs.get('acc-1')?.paused).toBe(true);
+		detach();
+	});
+
+	it('forgets history when history is turned off', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		await runtime.setHistory(true);
+		expect(forget).not.toHaveBeenCalled();
+		await runtime.setHistory(false);
+		expect(forget).toHaveBeenCalledTimes(1);
+		detach();
+	});
+
+	it('keeps previews only while the vault cannot hold a search root', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1', () => false);
+		await vi.advanceTimersByTimeAsync(3000);
+		await settle();
+		expect(startSearch).not.toHaveBeenCalled();
+		runtime.focus();
+		await settle();
+		expect(startSearch).toHaveBeenCalledWith('acc-1', 'declined');
+		await runtime.enable();
+		expect(startSearch).toHaveBeenCalledTimes(1);
+		expect(runtime.fullSearch).toBe(false);
 		detach();
 	});
 
@@ -122,6 +245,7 @@ describe('searchRuntime', () => {
 		await vi.advanceTimersByTimeAsync(5000);
 		await settle();
 		expect(startLoaded).not.toHaveBeenCalled();
+		expect(listeners.size).toBe(0);
 		detach();
 	});
 
@@ -147,7 +271,8 @@ describe('searchRuntime', () => {
 		detach();
 	});
 
-	it('wipes the index when the account is removed', async () => {
+	it('wipes the index and the choices when the account is removed', async () => {
+		consent('saved');
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		runtime.focus();
@@ -155,11 +280,12 @@ describe('searchRuntime', () => {
 		broadcast('cleared');
 		await settle();
 		expect(shutdown).toHaveBeenCalledWith({ wipe: true });
+		expect(deletePrefs).toHaveBeenCalledWith('acc-1');
 		detach();
 	});
 
 	it('wipes a stored index on removal even if search never started', async () => {
-		record.mockResolvedValue({ hasIndex: true });
+		stored.record = { hasIndex: true };
 		const runtime = await fresh();
 		const detach = runtime.attach('acc-1');
 		broadcast('clearedAll');

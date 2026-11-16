@@ -2,7 +2,7 @@ import type { QuerySnapshot } from '../query/ast';
 import { parseQuery } from '../query';
 import type { QueryContext } from './compile';
 import type { HarnessReply, HarnessRequest } from './harness.worker';
-import type { PageResult, QueryOptions, QueryOutcome, QuerySummary, ResultGroup } from './run';
+import type { PageResult, QueryOptions, QueryOutcome, QuerySummary, ResultGroup, ResultRow } from './run';
 import { Coverage, Dimension, Field, Flag, Role, SourceKind, type SearchDocument } from './types';
 
 export class Harness {
@@ -78,6 +78,11 @@ export async function removeDirectory(name: string): Promise<void> {
 export interface Collected {
 	summary: QuerySummary;
 	groups: ResultGroup[];
+	rows: ResultRow[];
+}
+
+function group(row: ResultRow): ResultGroup {
+	return { key: row.key, threadId: row.threadId, matches: row.matches, exact: row.exact, score: row.score, date: row.date, best: row.best, sources: row.sources };
 }
 
 export async function collect(
@@ -91,14 +96,14 @@ export async function collect(
 	if (!parsed.ok) throw new Error(`parse ${input}: ${parsed.error.code}`);
 	const outcome = await h.call<QueryOutcome>({ op: 'query', token: 0, query: parsed.query, ctx, options });
 	if (!outcome.ok) throw new Error(`compile ${input}: ${outcome.error.code}`);
-	const groups: ResultGroup[] = [];
+	const rows: ResultRow[] = [];
 	for (let i = 0; i < outcome.summary.pages; i++) {
 		const page = await h.call<PageResult>({ op: 'page', session: outcome.summary.id, index: i });
 		if (!page.ok) throw new Error(`page ${i}: ${page.reason}`);
-		groups.push(...page.groups);
+		rows.push(...page.groups);
 	}
 	await h.call({ op: 'closeQuery', session: outcome.summary.id });
-	return { summary: outcome.summary, groups };
+	return { summary: outcome.summary, groups: rows.map(group), rows };
 }
 
 export const SNAPSHOT: QuerySnapshot = { now: Date.UTC(2026, 10, 13, 12), timeZone: 'Europe/Lisbon' };

@@ -23,8 +23,9 @@
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Search from '@lucide/svelte/icons/search';
 	import MessageRow from './MessageRow.svelte';
+	import { loadSearchStrip, loadedSearchStrip, type SearchStripComponent } from './searchStrip';
+	import type { SearchView } from './searchView';
 	import ListSkeleton from './ListSkeleton.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
@@ -96,15 +97,7 @@
 		pendingCount?: number;
 		onFlushPending?: () => void;
 		onAtTopChange?: (atTop: boolean) => void;
-		searchActive?: boolean;
-		searchPending?: boolean;
-		searchFailed?: boolean;
-		searchError?: string | null;
-		onRetrySearch?: () => void;
-		searchIndexed?: number;
-		searchComplete?: boolean;
-		searchChips?: string[];
-		onClearSearch?: () => void;
+		search?: SearchView | null;
 		collectionKind?: 'folder' | 'label' | null;
 		showScope?: boolean;
 	}
@@ -157,62 +150,53 @@
 		pendingCount = 0,
 		onFlushPending,
 		onAtTopChange,
-		searchActive = false,
-		searchPending = false,
-		searchFailed = false,
-		searchError = null,
-		onRetrySearch,
-		searchIndexed = 0,
-		searchComplete = true,
-		searchChips = [],
-		onClearSearch = () => {},
+		search = null,
 		collectionKind = null,
 		showScope = false
 	}: Props = $props();
 
 	const viewName = $derived(folderLabel ?? '');
+	const searchActive = $derived(search !== null);
+	let SearchStrip = $state.raw<SearchStripComponent | null>(loadedSearchStrip());
+	$effect(() => {
+		if (search && !SearchStrip) void loadSearchStrip().then((c) => (SearchStrip = c));
+	});
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
 	const fmt = (n: number) => new Intl.NumberFormat().format(n);
 	const activeFilters = $derived(countActiveFilters(filters));
 
-	const counted = $derived(new Intl.NumberFormat().format(searchIndexed));
-	const searchScopeText = $derived(
-		!searchComplete
-			? msg.mail_list_search_reading({ count: counted })
-			: searchChips.length
-				? msg.mail_list_search_all()
-				: msg.mail_list_search_all_detail()
-	);
+	const searchEmpty = $derived.by<{ title: string; detail: string; retry: boolean } | null>(() => {
+		if (!search) return null;
+		switch (search.phase) {
+			case 'failed':
+				return search.error
+					? { title: msg.mail_search_query_invalid(), detail: search.error, retry: false }
+					: { title: msg.mail_search_failed(), detail: msg.mail_search_failed_detail(), retry: true };
+			case 'locked':
+				return { title: msg.mail_search_locked(), detail: msg.mail_search_locked_detail(), retry: false };
+			case 'unavailable':
+				return { title: msg.mail_search_unavailable(), detail: msg.mail_search_unavailable_detail(), retry: true };
+			case 'starting':
+			case 'searching':
+				return { title: msg.mail_list_searching(), detail: msg.mail_list_searching_detail(), retry: false };
+			default:
+				return search.mode === 'desktop' || search.coverage?.complete
+					? { title: msg.mail_no_matches(), detail: msg.mail_list_search_none(), retry: false }
+					: { title: msg.mail_search_none_indexed(), detail: msg.mail_search_none_indexed_detail(), retry: false };
+		}
+	});
+	const errorParts = $derived.by(() => {
+		const r = search?.errorRange;
+		const q = search?.query ?? '';
+		if (!search?.error || !r || r.end <= r.start || r.start >= q.length) return null;
+		return { before: q.slice(0, r.start), bad: q.slice(r.start, r.end), after: q.slice(r.end) };
+	});
 	const emptyTitle = $derived(
-		searchActive && searchError
-			? msg.mail_search_query_invalid()
-			: searchActive && searchFailed
-			? msg.mail_search_failed()
-			: searchActive
-			? searchPending
-				? msg.mail_list_searching()
-				: msg.mail_no_matches()
-			: activeFilters > 0
-				? msg.mail_list_nothing_matches()
-				: msg.mail_list_folder_empty({ folder: viewName })
+		searchEmpty ? searchEmpty.title : activeFilters > 0 ? msg.mail_list_nothing_matches() : msg.mail_list_folder_empty({ folder: viewName })
 	);
-	const emptyDetail = $derived(
-		searchActive && searchError
-			? searchError
-			: searchActive && searchFailed
-			? msg.mail_search_failed_detail()
-			: searchActive
-			? searchPending
-				? msg.mail_list_searching_detail()
-				: searchComplete
-					? msg.mail_list_search_none()
-					: msg.mail_list_search_none_yet({ count: counted })
-			: activeFilters > 0
-				? msg.mail_list_filters_none()
-				: msg.mail_list_empty_detail()
-	);
+	const emptyDetail = $derived(searchEmpty ? searchEmpty.detail : activeFilters > 0 ? msg.mail_list_filters_none() : msg.mail_list_empty_detail());
 
 	let refreshing = $state(false);
 	const SPIN_MS = 800;
@@ -792,14 +776,8 @@
 				{/if}
 			</div>
 		{/if}
-		{#if searchActive}
-			<div class="srch-strip">
-				<Search size={14} />
-				<span>{searchScopeText}</span>
-				{#each searchChips as chip (chip)}
-					<span class="srch-chip">{chip}</span>
-				{/each}
-			</div>
+		{#if search && SearchStrip}
+			<SearchStrip {search} />
 		{/if}
 		{#if !searchActive && offline}
 			<div class="state-strip" role="status">
@@ -828,10 +806,13 @@
 				<span class="el-rule"></span>
 				<div class="t">{emptyTitle}</div>
 				<div class="d">{emptyDetail}</div>
-				{#if searchActive && searchFailed && onRetrySearch}
-					<button class="empty-clear" onclick={onRetrySearch}><RefreshCw size={14} />{msg.common_retry()}</button>
-				{:else if searchActive}
-					<button class="empty-clear" onclick={onClearSearch}><X size={14} />{msg.mail_list_clear_search()}</button>
+				{#if errorParts}
+					<code class="q-err" dir="auto">{errorParts.before}<mark>{errorParts.bad}</mark>{errorParts.after}</code>
+				{/if}
+				{#if search && searchEmpty?.retry}
+					<button class="empty-clear" onclick={search.onRetry}><RefreshCw size={14} />{msg.common_retry()}</button>
+				{:else if search}
+					<button class="empty-clear" onclick={search.onClear}><X size={14} />{msg.mail_list_clear_search()}</button>
 				{:else if activeFilters > 0}
 					<button class="empty-clear" onclick={clearFilters}><X size={14} />{msg.mail_list_clear_filters()}</button>
 				{/if}
@@ -865,7 +846,7 @@
 				{/each}
 			{/each}
 		{/if}
-		{#if !searchActive}
+		{#if !searchActive || list.length > 0}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<button class="lf-retry" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</button>

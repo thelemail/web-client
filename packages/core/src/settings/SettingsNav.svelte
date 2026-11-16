@@ -15,6 +15,7 @@
 	import UserX from '@lucide/svelte/icons/user-x';
 	import FolderTree from '@lucide/svelte/icons/folder-tree';
 	import Info from '@lucide/svelte/icons/info';
+	import Search from '@lucide/svelte/icons/search';
 	import { page } from '$app/state';
 	import { visibleGroups, sectionIdFromPath } from './data';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -39,7 +40,8 @@
 		upload: Upload,
 		'user-x': UserX,
 		'folder-tree': FolderTree,
-		info: Info
+		info: Info,
+		search: Search
 	};
 
 	const slot = $derived(page.params.slot ?? '0');

@@ -66,6 +66,7 @@ export class SearchWriter {
 	#db: Database;
 	#statements = new Map<StatementName, PreparedStatement>();
 	#deleted = new Set<(source: number) => void>();
+	#inserted = new Set<() => void>();
 
 	constructor(db: Database) {
 		this.#db = db;
@@ -244,6 +245,7 @@ export class SearchWriter {
 					doc.warnings ?? 0
 				]);
 				this.#writeContent(this.#lastId(), doc);
+				for (const listener of this.#inserted) listener();
 				return 'inserted';
 			}
 			if (doc.contentRevision < existing.contentRev) return 'stale';
@@ -299,6 +301,11 @@ export class SearchWriter {
 			this.#run('upsertCoverage', [existing.id, dimension, state]);
 			return true;
 		});
+	}
+
+	onInsert(listener: () => void): () => void {
+		this.#inserted.add(listener);
+		return () => this.#inserted.delete(listener);
 	}
 
 	onDelete(listener: (source: number) => void): () => void {

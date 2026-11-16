@@ -115,6 +115,26 @@ export interface Message {
 	sentBy?: SentBy;
 	senderMismatch?: boolean;
 	epoch: number;
+	match?: SearchMatch;
+}
+
+export interface SearchSpan {
+	start: number;
+	end: number;
+}
+
+export interface SearchMatch {
+	kind: 'message' | 'draft' | 'scheduled';
+	matches: number;
+	subjectSpans: SearchSpan[];
+	excerpt: string | null;
+	excerptSpans: SearchSpan[];
+	clippedStart: boolean;
+	clippedEnd: boolean;
+	fields: number[];
+	quoted: boolean;
+	filename: string | null;
+	locator: number | null;
 }
 
 export function plainSubject(s: unknown): string {

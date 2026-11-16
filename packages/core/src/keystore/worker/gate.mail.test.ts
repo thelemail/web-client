@@ -88,7 +88,7 @@ describe('mail worker command gate', () => {
 		}
 	});
 
-	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'closeSearchSession'] as const)(
+	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'deriveSearchHistoryKey', 'closeSearchSession'] as const)(
 		'runs %s for a mail vault and never for a legacy one',
 		(cmd) => {
 			expect(commandAllowed(cmd, { accountId: MAIL })).toBe(true);

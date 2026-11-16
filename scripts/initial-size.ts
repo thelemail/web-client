@@ -22,7 +22,6 @@ const ROUTES = [
 
 const FORBIDDEN = [
 	/packages\/core\/src\/search\/(?!lazy\.ts$|runtime\/records\.ts$)/,
-	/packages\/core\/src\/stores\/searchEngine\.ts$/,
 	/node_modules\/.*@thelemail\/sqlite-wasm\//
 ];
 

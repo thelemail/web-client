@@ -33,7 +33,7 @@
 
 	$effect(() => mailSearch.start(accountId));
 
-	$effect(() => searchRuntime.attach(accountId));
+	$effect(() => searchRuntime.attach(accountId, () => auth.mailOnlyFor(accountId)));
 
 	onMount(() => {
 		const mirror = platform.mirror;

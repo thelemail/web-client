@@ -44,6 +44,7 @@ export class Scheduler {
 	#loop: Promise<void> | null = null;
 	#stopped = false;
 	#waiters: (() => void)[] = [];
+	#paused = new Set<JobClass>();
 	#options: SchedulerOptions;
 
 	constructor(options: SchedulerOptions) {
@@ -52,6 +53,17 @@ export class Scheduler {
 
 	get working(): JobClass | null {
 		return this.#running?.job.class ?? null;
+	}
+
+	get paused(): boolean {
+		return this.#paused.size > 0;
+	}
+
+	pause(classes: readonly JobClass[]): void {
+		this.#paused = new Set(classes);
+		if (this.#running && this.#paused.has(this.#running.job.class)) this.#controller?.abort();
+		this.#kick();
+		this.#options.onChange?.();
 	}
 
 	get blocked(): boolean {
@@ -109,7 +121,7 @@ export class Scheduler {
 	}
 
 	#next(): Entry | null {
-		return this.#entries.find((e) => e.ready && !e.blocked) ?? null;
+		return this.#entries.find((e) => e.ready && !e.blocked && !this.#paused.has(e.job.class)) ?? null;
 	}
 
 	#preempts(current: Entry): boolean {

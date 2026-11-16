@@ -16,7 +16,7 @@ import { ProductKeysError } from '../productkeys/errors';
 import { parseProductBundle } from '../productkeys/productBundle';
 import type { ArtifactContext } from '../searchkeys/artifact';
 import { openArtifact, sealArtifact } from '../searchkeys/artifact';
-import { searchDbKey } from '../searchkeys/dbKey';
+import { searchDbKey, searchHistoryKey } from '../searchkeys/dbKey';
 import type { SearchRoot } from '../searchkeys/rootBundle';
 import { openSearchRoot, sealSearchRoot } from '../searchkeys/rootBundle';
 import type { VaultState } from './state';
@@ -104,6 +104,11 @@ async function run(s: Session, msg: SearchSessionRequest): Promise<{ value: unkn
 			case 'deriveSearchDbKey': {
 				const a = msg.args as DeriveSearchDbKeyArgs;
 				const key = await searchDbKey(s.root, s.accountId, s.generationId, bytes(a?.installationSalt));
+				return { value: { ok: true, key }, transfer: [key.buffer as ArrayBuffer] };
+			}
+			case 'deriveSearchHistoryKey': {
+				const a = msg.args as DeriveSearchDbKeyArgs;
+				const key = await searchHistoryKey(s.root, s.accountId, s.generationId, bytes(a?.installationSalt));
 				return { value: { ok: true, key }, transfer: [key.buffer as ArrayBuffer] };
 			}
 			default:

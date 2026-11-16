@@ -5,7 +5,6 @@ import { scheduled } from '$core/stores/scheduled.svelte';
 import { addresses } from '$core/stores/addresses.svelte';
 import { signatures } from '$core/stores/signatures.svelte';
 import { accountSettings } from '$core/stores/accountSettings.svelte';
-import { mailSearch } from '$core/stores/search.svelte';
 import { auth } from '$core/stores/auth.svelte';
 import { billing } from '$core/stores/billing.svelte';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
@@ -35,10 +34,6 @@ const refreshScheduledCoalesced = coalesce(() => {
 	void scheduled.refresh();
 }, COALESCE_WINDOW_MS);
 
-const refreshSearchIndexCoalesced = coalesce(() => {
-	void mailSearch.refresh();
-}, COALESCE_WINDOW_MS);
-
 async function refreshCollections(hint: RealtimeHint): Promise<void> {
 	if (!(await mailCollections.applyHint(hint))) return;
 	refreshLoadedCoalesced();
@@ -63,7 +58,6 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) {
 				mailbox.applyRealtime(hint);
 				refreshCountsCoalesced();
-				refreshSearchIndexCoalesced();
 				if (hint.kind === 'message.created') notifyCalendarMessage(hint);
 			} else {
 				void unread.refresh(hint.accountId);
@@ -73,7 +67,6 @@ export function applyHint(hint: RealtimeHint): void {
 			if (isActive) {
 				refreshLoadedCoalesced();
 				refreshCountsCoalesced();
-				refreshSearchIndexCoalesced();
 			} else {
 				void unread.refresh(hint.accountId);
 			}

@@ -65,6 +65,10 @@ function parsed(root: QueryNode): ParsedQuery {
 	};
 }
 
+function single(root: QueryNode): ParsedQuery {
+	return { root, universe: [], eligibility: 'words', snapshot: { now: 0, timeZone: 'UTC' } };
+}
+
 function sqlOf(plan: Plan): string[] {
 	const table = (k: number) => `temp.l${k}`;
 	const all = (e: Expr) => [render(e, plan, table).sql, knownOf(e, plan).sql];
@@ -141,5 +145,59 @@ describe('compiled structure', () => {
 			ok: false,
 			error: { code: 'unknown_label', range, name: 'Nope' }
 		});
+	});
+
+	it('resolves duplicate label names to every match and reports them', () => {
+		const c: QueryContext = {
+			identities: [],
+			folders: [],
+			labels: [
+				{ id: 'l1', name: 'Tax 2026' },
+				{ id: 'l2', name: 'tax 2026' },
+				{ id: 'l3', name: 'Tax' }
+			],
+			attachmentText: true
+		};
+		const range = { start: 0, end: 16 };
+		const out = compile(single({ kind: 'label', name: 'Tax 2026', range }), c);
+		if (!out.ok) throw new Error('compile failed');
+		expect(out.plan.resolved).toEqual([{ kind: 'label', name: 'Tax 2026', range, ids: ['l1', 'l2'], descendants: 0 }]);
+	});
+
+	it('includes subfolders unless exact folders are asked for', () => {
+		const c: QueryContext = {
+			identities: [],
+			folders: [
+				{ id: 'p', path: 'Projects' },
+				{ id: 'pi', path: 'Projects/Invoices' },
+				{ id: 'o', path: 'Other' }
+			],
+			labels: [],
+			attachmentText: true
+		};
+		const node: QueryNode = { kind: 'folder', path: 'projects', range: RANGE };
+		const wide = compile(single(node), c);
+		const narrow = compile(single(node), { ...c, exactFolders: true });
+		if (!wide.ok || !narrow.ok) throw new Error('compile failed');
+		expect(wide.plan.resolved[0]).toMatchObject({ ids: ['p', 'pi'], descendants: 1 });
+		expect(narrow.plan.resolved[0]).toMatchObject({ ids: ['p'], descendants: 1 });
+	});
+
+	it('collects positive text for highlighting and skips negated text', () => {
+		const node: QueryNode = {
+			kind: 'and',
+			children: [
+				{ kind: 'phrase', text: 'hotel invoice', range: RANGE },
+				{ kind: 'prefix', text: 'rec', range: RANGE },
+				{ kind: 'not', child: { kind: 'term', text: 'spam', lane: 'word', range: RANGE }, range: RANGE }
+			],
+			range: RANGE
+		};
+		const out = compile(single(node), ctx('x'));
+		if (!out.ok) throw new Error('compile failed');
+		expect(out.plan.highlights.map((h) => [h.kind, h.text])).toEqual([
+			['words', 'hotel invoice'],
+			['prefix', 'rec']
+		]);
 	});
 });

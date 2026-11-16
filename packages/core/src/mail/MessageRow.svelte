@@ -29,6 +29,7 @@
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import LabelChip from './collections/LabelChip.svelte';
 	import LocationChip from './collections/LocationChip.svelte';
+	import Marked from './Marked.svelte';
 	import { customLabelId } from './folderRoute';
 	import { locationFor } from './location';
 	import type { CollectionEntry } from './collections/tree';
@@ -171,6 +172,13 @@
 	const shownChips = $derived(labelChips.slice(0, CHIP_LIMIT));
 	const hiddenChips = $derived(labelChips.slice(CHIP_LIMIT));
 	const location = $derived(locationFor(m.folder, viewFolder, searching));
+	const hit = $derived(m.match ?? null);
+	const matchedIn = $derived.by(() => {
+		if (!hit) return null;
+		if (hit.filename) return hit.locator !== null ? msg.mail_search_in_attachment_page({ name: hit.filename, page: String(hit.locator) }) : msg.mail_search_in_attachment({ name: hit.filename });
+		if (hit.quoted) return msg.mail_search_in_quoted();
+		return null;
+	});
 	const hasEvent = $derived(!!m.event);
 	const nonIcsAttachments = $derived(
 		(m.attachments ?? []).filter((a) => !/\.ics$/i.test(a.name))
@@ -341,8 +349,22 @@
 					{/if}
 				</span>
 			{/if}
-			<span class="stxt" id="{uid}-subj">{plainSubject(m.subj)}</span>
-			<span class="prev" id="{uid}-prev">{m.prev}</span>
+			{#if hit && hit.kind !== 'message'}
+				<span class="kind-chip">{hit.kind === 'draft' ? msg.mail_search_kind_draft() : msg.mail_search_kind_scheduled()}</span>
+			{/if}
+			{#if hit}
+				<span class="stxt" id="{uid}-subj" dir="auto"><Marked text={m.subj} spans={hit.subjectSpans} /></span>
+				{#if hit.matches > 1}
+					<span class="hit-ct">{msg.mail_search_row_matches({ count: hit.matches, shown: new Intl.NumberFormat().format(hit.matches) })}</span>
+				{/if}
+				<span class="prev" id="{uid}-prev" dir="auto">
+					{#if matchedIn}<span class="hit-in">{matchedIn}</span>{/if}
+					{#if hit.excerpt !== null}<Marked text={hit.excerpt} spans={hit.excerptSpans} lead={hit.clippedStart} trail={hit.clippedEnd} />{/if}
+				</span>
+			{:else}
+				<span class="stxt" id="{uid}-subj">{plainSubject(m.subj)}</span>
+				<span class="prev" id="{uid}-prev">{m.prev}</span>
+			{/if}
 		</div>
 	</div>
 	<div class="qa">

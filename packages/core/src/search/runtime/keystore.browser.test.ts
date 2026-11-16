@@ -8,7 +8,7 @@ import { parseQuery } from '../query';
 import { SNAPSHOT } from '../sqlite/harness';
 import { SearchClient, type ClientDeps, type ClientState } from './client';
 import { directoryFor } from './protocol';
-import { memoryRecords, type RecordStore } from './records';
+import { memoryPrefs, memoryRecords, type RecordStore } from './records';
 
 vi.mock('@protontech/crypto', () => ({ CryptoProxy: { setEndpoint() {} } }));
 vi.mock('@protontech/crypto/proxy/endpoint/api.ts', () => ({
@@ -63,6 +63,7 @@ function client(): SearchClient {
 		broker: () => new SharedWorker(new URL('./broker.worker.ts', import.meta.url), { type: 'module', name: 'thelemail-search-broker' }).port,
 		openRoot: (args, port) => handleOpenSearchRoot({ ...args, port }),
 		records,
+		prefs: memoryPrefs(),
 		locks: navigator.locks,
 		watch: (report) => {
 			report({ visible: true, idle: true, constrained: false });

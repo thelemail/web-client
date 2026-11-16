@@ -130,7 +130,7 @@ describe('commandVaultModes', () => {
 		}
 	});
 
-	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'closeSearchSession'] as const)(
+	it.each(['openSearchRoot', 'sealSearchArtifact', 'openSearchArtifact', 'deriveSearchDbKey', 'deriveSearchHistoryKey', 'closeSearchSession'] as const)(
 		'keeps %s in the mail vault alone, out of the calendar and auth workers',
 		(cmd) => {
 			expect(commandVaultModes[cmd]).toEqual(['mail']);

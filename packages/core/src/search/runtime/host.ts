@@ -7,6 +7,7 @@ import type {
 	SearchSessionResponse
 } from '../../keystore/protocol';
 import { deleteSearchDb, loadSqlite, openMemorySearchDb, openSearchDb, pauseSearchPool, pruneSearchDb, wipeSearchPool } from '../sqlite/engine';
+import { SearchHistory, historyKey } from '../sqlite/history';
 import { QueryEngine, yieldTask } from '../sqlite/run';
 import { SearchWriter, maintain } from '../sqlite/writer';
 import { Batch } from './batch';
@@ -20,7 +21,9 @@ import {
 	type ClientRequest,
 	type ControlRequest,
 	type InitResult,
+	type Mode,
 	type Persistence,
+	type ProgressEvent,
 	type QueryReply,
 	type Reply,
 	type SearchStatus,
@@ -28,10 +31,11 @@ import {
 	type SyncStatus
 } from './protocol';
 import { admit, requestPersistence } from './quota';
-import { Scheduler, type Job } from './scheduler';
+import { Scheduler, type Job, type JobClass } from './scheduler';
 
 const KEY_TIMEOUT_MS = 10_000;
 const MAX_SESSIONS_PER_CLIENT = 4;
+const HEAVY: readonly JobClass[] = ['body', 'attachments', 'embeddings'];
 
 export interface JobContext {
 	readonly db: Database;
@@ -72,6 +76,8 @@ interface Open {
 	engine: QueryEngine;
 	scheduler: Scheduler;
 	persistence: Persistence;
+	mode: Mode;
+	history: SearchHistory | null;
 	directory: string | null;
 	file: string | null;
 	sources: number;
@@ -105,6 +111,7 @@ export const maintenanceJob: JobFactory = ({ db }) => ({
 export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly JobFactory[], options: ServeOptions = {}): void {
 	let open: Open | null = null;
 	let keystore: MessagePort | null = null;
+	let installationSalt: Uint8Array | null = null;
 	const clients = new Map<MessagePort, Client>();
 	const inflight = new Set<Promise<unknown>>();
 
@@ -112,9 +119,12 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		const o = open!;
 		return {
 			persistence: o.persistence,
+			mode: o.mode,
 			limited: o.persistence === 'session' ? 'session' : o.scheduler.blocked ? 'quota' : null,
 			sources: o.sources,
 			working: o.scheduler.working,
+			paused: o.scheduler.paused,
+			generation: o.engine.generation,
 			sync: o.sync
 		};
 	}
@@ -131,7 +141,15 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		for (const port of clients.keys()) port.postMessage(event);
 	}
 
-	async function attach(db: Database, persistence: Persistence, directory: string | null, file: string | null, port: MessagePort | undefined): Promise<void> {
+	async function attach(
+		db: Database,
+		persistence: Persistence,
+		mode: Mode,
+		directory: string | null,
+		file: string | null,
+		port: MessagePort | undefined,
+		paused: boolean
+	): Promise<void> {
 		const sqlite = await loadSqlite();
 		const writer = new SearchWriter(db);
 		const engine = new QueryEngine(db, sqlite.capi);
@@ -150,12 +168,17 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			engine,
 			scheduler,
 			persistence,
+			mode,
+			history: null,
 			directory,
 			file,
 			sources: 0,
 			sync: null
 		};
 		open = o;
+		writer.onInsert(() => {
+			if (o.progress.phase === 'live') engine.generation++;
+		});
 		count(o);
 		const admission = persistence === 'session' ? async () => ({ ok: true }) as const : admit;
 		const ctx: JobContext = {
@@ -180,12 +203,18 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			},
 			now: () => Date.now()
 		};
-		for (const factory of factories) scheduler.register(factory(ctx));
+		for (const factory of factories) {
+			const job = factory(ctx);
+			if (mode === 'preview' && HEAVY.includes(job.class)) continue;
+			scheduler.register(job);
+		}
+		if (paused) scheduler.pause(HEAVY);
 	}
 
 	async function init(r: Extract<ControlRequest, { op: 'init' }>): Promise<InitResult> {
 		if (open) await close(false);
 		keystore = r.keystore;
+		installationSalt = r.installationSalt.slice();
 		const derived = await sessionCall<DeriveSearchDbKeyResponse>(keystore, 'deriveSearchDbKey', {
 			installationSalt: r.installationSalt
 		});
@@ -199,19 +228,19 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			derived.key.fill(0);
 		}
 		if (result.ok) {
-			await attach(result.db, 'persistent', directory, file, r.bridge);
+			await attach(result.db, 'persistent', 'saved', directory, file, r.bridge, r.paused);
 			void requestPersistence();
 			await pruneSearchDb(directory, file).catch(() => undefined);
 			return { ok: true, status: status(), rebuilt: result.rebuilt };
 		}
 		if (result.code === 'bad-key') return { ok: false, code: 'failed' };
-		return memory(r.bridge, true);
+		return memory(r.bridge, 'saved', r.paused, true);
 	}
 
-	async function memory(bridge: MessagePort | undefined, keepKeystore = false): Promise<InitResult> {
+	async function memory(bridge: MessagePort | undefined, mode: Mode, paused: boolean, keepKeystore = false): Promise<InitResult> {
 		if (open) await close(false, keepKeystore);
 		try {
-			await attach(await openMemorySearchDb(), 'session', null, null, bridge);
+			await attach(await openMemorySearchDb(), 'session', mode, null, null, bridge, paused);
 		} catch {
 			return { ok: false, code: 'failed' };
 		}
@@ -230,6 +259,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			keystore.postMessage({ id: crypto.randomUUID(), cmd: 'closeSearchSession' } satisfies SearchSessionRequest);
 			keystore.close();
 			keystore = null;
+			installationSalt?.fill(0);
+			installationSalt = null;
 		}
 		if (!o) return;
 		for (const t of o.timers.values()) clearTimeout(t);
@@ -259,12 +290,27 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		port.close();
 	}
 
-	async function query(client: Client, r: Extract<ClientRequest, { op: 'query' }>): Promise<QueryReply> {
+	async function history(o: Open): Promise<SearchHistory | null> {
+		if (o.history) return o.history;
+		if (o.persistence !== 'persistent' || !keystore || !installationSalt) return null;
+		const derived = await sessionCall<DeriveSearchDbKeyResponse>(keystore, 'deriveSearchHistoryKey', { installationSalt });
+		if (!derived?.ok || open !== o) {
+			if (derived?.ok) derived.key.fill(0);
+			return null;
+		}
+		o.history = new SearchHistory(o.db, await historyKey(derived.key));
+		return o.history;
+	}
+
+	async function query(port: MessagePort, client: Client, r: Extract<ClientRequest, { op: 'query' }>): Promise<QueryReply> {
 		const o = open!;
 		const controller = new AbortController();
 		client.running.set(r.token, controller);
+		const onProgress = (progress: ProgressEvent['progress']) => {
+			if (clients.has(port) && !controller.signal.aborted) port.postMessage({ type: 'progress', token: r.token, progress } satisfies ProgressEvent);
+		};
 		try {
-			const running = o.scheduler.foreground(() => o.engine.run(r.query, r.ctx, { ...r.options, signal: controller.signal }));
+			const running = o.scheduler.foreground(() => o.engine.run(r.query, r.ctx, { ...r.options, signal: controller.signal, onProgress }));
 			const settled: Promise<boolean> = running.then(
 				() => inflight.delete(settled),
 				() => inflight.delete(settled)
@@ -288,7 +334,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		if (!open) throw new Error('closed');
 		switch (r.op) {
 			case 'query':
-				return query(client, r);
+				return query(port, client, r);
 			case 'cancel':
 				client.running.get(r.token)?.abort();
 				return null;
@@ -301,6 +347,34 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 					open.engine.close(r.session);
 				}
 				return null;
+			case 'complete':
+				return open.engine.complete(r.prefix);
+			case 'history': {
+				const h = await history(open);
+				return h ? h.list(Date.now()) : [];
+			}
+			case 'remember': {
+				const h = await history(open);
+				await h?.add(r.query, Date.now());
+				return null;
+			}
+			case 'forget': {
+				const h = await history(open);
+				h?.clear();
+				return null;
+			}
+			case 'pause':
+				open.scheduler.pause(r.paused ? HEAVY : []);
+				return null;
+			case 'retryFailed': {
+				const o = open;
+				o.writer.atomic(() => {
+					o.store.retryFailed();
+					o.store.retryLocked();
+				});
+				o.scheduler.wake();
+				return null;
+			}
 			case 'status':
 				return status();
 			case 'ping':
@@ -331,7 +405,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			case 'init':
 				return init(r);
 			case 'memory':
-				return memory(r.bridge);
+				return memory(r.bridge, r.mode, r.paused);
 			case 'connect':
 				if (!open) {
 					r.port.close();
