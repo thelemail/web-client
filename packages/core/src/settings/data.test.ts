@@ -9,15 +9,19 @@ describe('settings nav data', () => {
 		const all = SECTION_GROUPS.flatMap((g) => g.sections.map((s) => s.id));
 		expect(new Set(all).size).toBe(all.length);
 		expect(SECTIONS.map((s) => s.id)).toEqual(all);
-		expect(all).toHaveLength(14);
+		expect(all).toHaveLength(15);
 	});
 
 	it('groups account, mail and app settings in a fixed order', () => {
 		expect(ids(visibleGroups({ notifications: {}, updates: {} }))).toEqual([
 			['account', ['profile', 'addresses', 'domains', 'account', 'security']],
-			['mail', ['sending', 'reading', 'collections', 'blocked', 'import']],
+			['mail', ['sending', 'reading', 'search', 'collections', 'blocked', 'import']],
 			['app', ['notify', 'region', 'appearance', 'about']]
 		]);
+	});
+
+	it('hides search settings on the desktop app, which keeps its own index', () => {
+		expect(ids(visibleGroups({ mirror: {} }))[1]).toEqual(['mail', ['sending', 'reading', 'collections', 'blocked', 'import']]);
 	});
 
 	it('drops notifications and about where the platform lacks them', () => {

@@ -7,6 +7,7 @@ export type SectionId =
 	| 'domains'
 	| 'sending'
 	| 'reading'
+	| 'search'
 	| 'security'
 	| 'blocked'
 	| 'collections'
@@ -49,6 +50,7 @@ export const SECTION_GROUPS: SectionGroup[] = [
 		sections: [
 			{ id: 'sending', icon: 'send', label: m.settings_nav_sending },
 			{ id: 'reading', icon: 'mail-open', label: m.settings_nav_reading },
+			{ id: 'search', icon: 'search', label: m.settings_nav_search },
 			{ id: 'collections', icon: 'folder-tree', label: m.settings_nav_collections },
 			{ id: 'blocked', icon: 'user-x', label: m.settings_nav_blocked },
 			{ id: 'import', icon: 'upload', label: m.settings_nav_import }
@@ -71,11 +73,12 @@ export const SECTIONS: SectionMeta[] = SECTION_GROUPS.flatMap((g) => g.sections)
 export interface NavPlatform {
 	notifications?: unknown;
 	updates?: unknown;
+	mirror?: unknown;
 }
 
 export function visibleGroups(platform: NavPlatform): SectionGroup[] {
 	const shown = (id: SectionId) =>
-		(id !== 'notify' || !!platform.notifications) && (id !== 'about' || !!platform.updates);
+		(id !== 'notify' || !!platform.notifications) && (id !== 'about' || !!platform.updates) && (id !== 'search' || !platform.mirror);
 	return SECTION_GROUPS.map((g) => ({ ...g, sections: g.sections.filter((sec) => shown(sec.id)) })).filter(
 		(g) => g.sections.length > 0
 	);

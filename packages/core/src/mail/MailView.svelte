@@ -15,6 +15,8 @@
 	import MessageList, { type BulkAction } from './MessageList.svelte';
 	import Reader from './Reader.svelte';
 	import { mailSearch } from '$core/stores/search.svelte';
+	import { searchRuntime } from '$core/search/lazy';
+	import type { SearchView } from './searchView';
 	import Toast from '$core/components/Toast.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -184,6 +186,15 @@
 	}
 
 	function openMessage(id: string) {
+		const kind = mailSearch.active ? findAny(id)?.match?.kind : undefined;
+		if (kind === 'draft') {
+			composeStore.openDraft(id);
+			return;
+		}
+		if (kind === 'scheduled') {
+			void goto(`/u/${page.params.slot ?? '0'}/mail/scheduled`);
+			return;
+		}
 		void goto(withSearch(`${basePath}/${id}`), { replace: messageId !== null, reset: false });
 	}
 
@@ -218,7 +229,10 @@
 
 	const baseList = $derived(
 		mailSearch.active
-			? mailSearch.results.map((hit) => findAny(hit.id) ?? hit)
+			? mailSearch.results.map((hit) => {
+					const loaded = mailbox.findMessage(hit.id);
+					return loaded ? { ...loaded, match: hit.match } : hit;
+				})
 			: snapshot.msgs
 	);
 
@@ -1478,7 +1492,8 @@
 		checked = clearing ? new Set() : new Set(list.map((m) => m.id));
 	}
 
-	async function bulk(action: BulkAction, ids: string[] = Array.from(checked)) {
+	async function bulk(action: BulkAction, picked: string[] = Array.from(checked)) {
+		const ids = mailSearch.active ? picked.filter((id) => (findAny(id)?.match?.kind ?? 'message') === 'message') : picked;
 		if (querySelection) {
 			if (action === 'archive') {
 				await runSelection([selectionMoveStep({ destination: 'archive' }, 'archive')]);
@@ -1618,8 +1633,43 @@
 	}
 
 	function handleLoadMore() {
-		void mailbox.loadMore(query);
+		if (mailSearch.active) void mailSearch.loadMore();
+		else void mailbox.loadMore(query);
 	}
+
+	const searchView = $derived.by<SearchView | null>(() => {
+		if (!mailSearch.active) return null;
+		const status = mailSearch.client?.status ?? null;
+		return {
+			phase: mailSearch.phase,
+			mode: mailSearch.mode,
+			consent: mailSearch.prefs?.consent ?? null,
+			query: mailSearch.committed,
+			matches: mailSearch.matches,
+			groups: mailSearch.summary?.groups ?? mailSearch.provisional?.groups ?? (mailSearch.desktop && !mailSearch.searching ? mailSearch.results.length : null),
+			final: mailSearch.summary !== null,
+			chips: mailSearch.chips,
+			error: mailSearch.error,
+			errorRange: mailSearch.errorRange,
+			suggestions: mailSearch.suggestions,
+			coverage: mailSearch.coverage,
+			sort: mailSearch.sort,
+			exactFolders: mailSearch.exactFolders,
+			newAvailable: mailSearch.newAvailable,
+			paused: status?.paused ?? false,
+			limited: status?.limited ?? null,
+			settingsHref: `/u/${page.params.slot ?? '0'}/settings/search`,
+			onSort: (sort) => mailSearch.setSort(sort),
+			onExactFolders: (exact) => mailSearch.setExactFolders(exact),
+			onRemoveChip: (chip) => mailSearch.removeChip(chip),
+			onSuggestion: (sg) => mailSearch.applySuggestion(sg.range, sg.replacement),
+			onRefresh: () => mailSearch.refresh(),
+			onRetry: () => mailSearch.refresh(),
+			onClear: () => mailSearch.clear(),
+			onEnable: () => void searchRuntime.enable().then(() => mailSearch.refresh()),
+			onDecline: () => void searchRuntime.decline()
+		};
+	});
 
 	function isTypingTarget(target: EventTarget | null): boolean {
 		if (!(target instanceof HTMLElement)) return false;
@@ -1750,9 +1800,9 @@
 			onSort={handleSort}
 			onSetFilters={handleSetFilters}
 			onRefresh={() => mailbox.refresh([query])}
-			exhausted={snapshot.exhausted}
-			loadingMore={snapshot.loadingMore}
-			loadMoreError={snapshot.moreError}
+			exhausted={mailSearch.active ? mailSearch.exhausted : snapshot.exhausted}
+			loadingMore={mailSearch.active ? mailSearch.loadingMore : snapshot.loadingMore}
+			loadMoreError={mailSearch.active ? (mailSearch.moreFailed ? msg.mail_list_load_more_failed() : null) : snapshot.moreError}
 			loaded={snapshot.loaded}
 			loadError={snapshot.loadError}
 			listRefreshing={snapshot.refreshing}
@@ -1764,15 +1814,7 @@
 			{pendingCount}
 			onFlushPending={() => mailbox.flushPending(query)}
 			onAtTopChange={(v) => (atTop = v)}
-			searchActive={mailSearch.active}
-			searchPending={mailSearch.searching}
-			searchFailed={mailSearch.failed}
-			searchError={mailSearch.error}
-			onRetrySearch={() => mailSearch.commit(mailSearch.committed)}
-			searchIndexed={mailSearch.indexed}
-			searchComplete={!mailSearch.partial}
-			searchChips={mailSearch.chips}
-			onClearSearch={() => mailSearch.clear()}
+			search={searchView}
 			{collectionKind}
 			{showScope}
 		/>
