@@ -226,8 +226,9 @@ export class SearchWriter {
 		this.#run('deleteOtherCoverage', [id, Dimension.attachmentText]);
 	}
 
-	#refreshAttachmentCoverage(id: number): void {
+	#refreshAttachmentCoverage(id: number, clear = true): void {
 		const state = attachmentCoverage(this.#column<Coverage>('attachmentStates', [id]));
+		if (state === null && !clear) return;
 		if (state === null) this.#run('deleteDimension', [id, Dimension.attachmentText]);
 		else this.#run('upsertCoverage', [id, Dimension.attachmentText, state]);
 	}
@@ -307,7 +308,7 @@ export class SearchWriter {
 				]);
 				const id = this.#lastId();
 				this.#writeContent(id, doc);
-				this.#refreshAttachmentCoverage(id);
+				this.#refreshAttachmentCoverage(id, false);
 				for (const listener of this.#inserted) listener();
 				return 'inserted';
 			}
@@ -338,7 +339,7 @@ export class SearchWriter {
 				existing.id
 			]);
 			this.#writeContent(existing.id, { ...doc, collections: meta.collections });
-			this.#refreshAttachmentCoverage(existing.id);
+			this.#refreshAttachmentCoverage(existing.id, false);
 			return 'replaced';
 		});
 	}
