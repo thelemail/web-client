@@ -5036,5 +5036,10 @@
 	"mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Treffer", "countPlural=*": "{shown} Treffer"}}],
 	"mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Unterhaltung", "countPlural=*": "{shown} Unterhaltungen"}}],
 	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Label", "countPlural=*": "{shown} Labels"}}],
-	"settings_search_index_unavailable_desc": "Die volle Suche steht zur Verfügung, sobald die Schlüssel dieses Kontos auf das neue Format umgestellt sind. Bis dahin durchsucht sie Betreff, Absender und Vorschau."
+	"settings_search_index_unavailable_desc": "Die volle Suche steht zur Verfügung, sobald die Schlüssel dieses Kontos auf das neue Format umgestellt sind. Bis dahin durchsucht sie Betreff, Absender und Vorschau.",
+	"mail_search_progress_listing": "Die Suche erfasst Ihre E-Mails. Bisher {done} von {total}.",
+	"mail_search_progress_previews": "Nachrichtenvorschauen werden gelesen. Die Suche umfasst {done} von {total} Nachrichten.",
+	"mail_search_progress_reading": "Ältere E-Mails werden noch gelesen. Die Suche umfasst {done} von {total} Nachrichten.",
+	"mail_search_progress_paused": "Die Indexierung ist pausiert. Die Suche umfasst {done} von {total} Nachrichten.",
+	"mail_search_progress_attention": "Einige Nachrichten können noch nicht gelesen werden. Die Suche umfasst {done} von {total} Nachrichten."
 }

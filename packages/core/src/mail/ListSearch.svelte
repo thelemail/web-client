@@ -28,6 +28,7 @@
 	const uid = $props.id();
 	const listId = `${uid}-list`;
 	const errorId = `${uid}-error`;
+	const progressId = `${uid}-progress`;
 
 	type Option =
 		| { kind: 'match'; key: string; msg: Message }
@@ -87,7 +88,30 @@
 		return out;
 	});
 
-	const open = $derived(focused && !dismissed && !composing && options.length > 0);
+	const indexing = $derived(mailSearch.indexing);
+	const progressText = $derived.by(() => {
+		const p = indexing;
+		if (!p) return '';
+		const args = { done: fmt(p.done), total: fmt(p.total) };
+		switch (p.state) {
+			case 'listing':
+				return m.mail_search_progress_listing(args);
+			case 'previews':
+				return m.mail_search_progress_previews(args);
+			case 'paused':
+				return m.mail_search_progress_paused(args);
+			case 'attention':
+				return m.mail_search_progress_attention(args);
+			default:
+				return m.mail_search_progress_reading(args);
+		}
+	});
+	const describedBy = $derived([invalid ? errorId : null, indexing ? progressId : null].filter(Boolean).join(' ') || undefined);
+	const open = $derived(focused && !dismissed && !composing && (options.length > 0 || indexing !== null));
+
+	function fmt(n: number): string {
+		return new Intl.NumberFormat().format(n);
+	}
 	const activeId = $derived(open && highlight >= 0 && highlight < options.length ? `${uid}-${options[highlight].key}` : undefined);
 	const showLooking = $derived(typed.length > 0 && mailSearch.previewing && mailSearch.preview.length === 0);
 	const showNoPreview = $derived(typed.length > 0 && !mailSearch.previewing && mailSearch.preview.length === 0 && !opSuggestions.length);
@@ -241,12 +265,12 @@
 		<input
 			bind:this={inputRef}
 			role="combobox"
-			aria-expanded={open}
-			aria-controls={open ? listId : undefined}
+			aria-expanded={open && options.length > 0}
+			aria-controls={open && options.length > 0 ? listId : undefined}
 			aria-activedescendant={activeId}
 			aria-autocomplete="list"
 			aria-invalid={invalid || undefined}
-			aria-describedby={invalid ? errorId : undefined}
+			aria-describedby={describedBy}
 			autocomplete="off"
 			spellcheck="false"
 			dir="auto"
@@ -271,6 +295,10 @@
 		{#if invalid}
 			<span id={errorId} class="sr-only">{mailSearch.error}</span>
 		{/if}
+		{#if indexing}
+			<span id={progressId} class="sr-only">{progressText}</span>
+			<span class="srch-line" class:paused={indexing.state === 'paused'} class:warn={indexing.state === 'attention'} style:width="{indexing.fraction * 100}%" aria-hidden="true"></span>
+		{/if}
 		{#if mailSearch.draft || mailSearch.active}
 			<button class="clr" onclick={clearAll} title={m.mail_search_clear()} aria-label={m.mail_search_clear()}><X size={14} /></button>
 		{:else}
@@ -278,90 +306,100 @@
 		{/if}
 	</div>
 	{#if open}
-		<div class="srch-pop" id={listId} role="listbox" aria-label={m.mail_search_suggestions()}>
-			{#each options as option, i (option.key)}
-				{#if option.kind === 'match'}
-					<div
-						id="{uid}-{option.key}"
-						class="srch-opt srch-match"
-						class:on={i === highlight}
-						role="option"
-						tabindex="-1"
-						aria-selected={i === highlight}
-						onmousedown={(e) => e.preventDefault()}
-						onclick={() => choose(option)}
-						onkeydown={() => {}}
-					>
-						<span class="sm-from" dir="auto">{option.msg.from}</span>
-						<span class="sm-subj" dir="auto">{option.msg.subj}</span>
-						<span class="sm-when">{formatRowTime(new Date(option.msg.epoch))}</span>
-					</div>
-				{:else if option.kind === 'op'}
-					<div
-						id="{uid}-{option.key}"
-						class="srch-opt srch-opchip"
-						class:on={i === highlight}
-						role="option"
-						tabindex="-1"
-						aria-selected={i === highlight}
-						onmousedown={(e) => e.preventDefault()}
-						onclick={() => choose(option)}
-						onkeydown={() => {}}
-					>
-						<span class="srch-op">{option.op}</span>
-					</div>
-				{:else if option.kind === 'all'}
-					{#if showLooking}
-						<div class="srch-note" aria-hidden="true">{m.mail_search_looking()}</div>
-					{:else if showNoPreview}
-						<div class="srch-note" aria-hidden="true">{m.mail_search_no_preview()}</div>
-					{/if}
-					<div
-						id="{uid}-{option.key}"
-						class="srch-opt srch-all"
-						class:on={i === highlight}
-						role="option"
-						tabindex="-1"
-						aria-selected={i === highlight}
-						onmousedown={(e) => e.preventDefault()}
-						onclick={() => choose(option)}
-						onkeydown={() => {}}
-					>
-						<Search size={14} />
-						<span dir="auto">{m.mail_search_show_all({ query: typed })}</span>
-						<CornerDownLeft size={13} />
-					</div>
-				{:else}
-					<div
-						id="{uid}-{option.key}"
-						class="srch-opt srch-hint"
-						class:on={i === highlight}
-						role="option"
-						tabindex="-1"
-						aria-selected={i === highlight}
-						onmousedown={(e) => e.preventDefault()}
-						onclick={() => choose(option)}
-						onkeydown={() => {}}
-					>
-						{#if option.kind === 'history'}
-							<History size={14} aria-hidden="true" />
-							<span class="sh-text" dir="auto">{option.text}</span>
-							<span class="sh-kind">{m.mail_search_group_history()}</span>
-						{:else if option.kind === 'person'}
-							<User size={14} aria-hidden="true" />
-							<span class="sh-text" dir="auto">{option.name || option.address}</span>
-							{#if option.name}<span class="sh-sub" dir="auto">{option.address}</span>{/if}
-						{:else if option.kind === 'collection'}
-							{#if option.type === 'label'}<Tag size={14} aria-hidden="true" />{:else}<Folder size={14} aria-hidden="true" />{/if}
-							<span class="sh-text" dir="auto">{option.path}</span>
-							<span class="sh-kind">{option.type === 'label' ? m.mail_search_group_label() : m.mail_search_group_folder()}</span>
+		<div class="srch-pop">
+			{#if options.length > 0}
+				<div class="srch-list" id={listId} role="listbox" aria-label={m.mail_search_suggestions()}>
+					{#each options as option, i (option.key)}
+						{#if option.kind === 'match'}
+							<div
+								id="{uid}-{option.key}"
+								class="srch-opt srch-match"
+								class:on={i === highlight}
+								role="option"
+								tabindex="-1"
+								aria-selected={i === highlight}
+								onmousedown={(e) => e.preventDefault()}
+								onclick={() => choose(option)}
+								onkeydown={() => {}}
+							>
+								<span class="sm-from" dir="auto">{option.msg.from}</span>
+								<span class="sm-subj" dir="auto">{option.msg.subj}</span>
+								<span class="sm-when">{formatRowTime(new Date(option.msg.epoch))}</span>
+							</div>
+						{:else if option.kind === 'op'}
+							<div
+								id="{uid}-{option.key}"
+								class="srch-opt srch-opchip"
+								class:on={i === highlight}
+								role="option"
+								tabindex="-1"
+								aria-selected={i === highlight}
+								onmousedown={(e) => e.preventDefault()}
+								onclick={() => choose(option)}
+								onkeydown={() => {}}
+							>
+								<span class="srch-op">{option.op}</span>
+							</div>
+						{:else if option.kind === 'all'}
+							{#if showLooking}
+								<div class="srch-note" aria-hidden="true">{m.mail_search_looking()}</div>
+							{:else if showNoPreview}
+								<div class="srch-note" aria-hidden="true">{m.mail_search_no_preview()}</div>
+							{/if}
+							<div
+								id="{uid}-{option.key}"
+								class="srch-opt srch-all"
+								class:on={i === highlight}
+								role="option"
+								tabindex="-1"
+								aria-selected={i === highlight}
+								onmousedown={(e) => e.preventDefault()}
+								onclick={() => choose(option)}
+								onkeydown={() => {}}
+							>
+								<Search size={14} />
+								<span dir="auto">{m.mail_search_show_all({ query: typed })}</span>
+								<CornerDownLeft size={13} />
+							</div>
 						{:else}
-							<Search size={14} aria-hidden="true" />
-							<span class="sh-text" dir="auto">{option.text}</span>
+							<div
+								id="{uid}-{option.key}"
+								class="srch-opt srch-hint"
+								class:on={i === highlight}
+								role="option"
+								tabindex="-1"
+								aria-selected={i === highlight}
+								onmousedown={(e) => e.preventDefault()}
+								onclick={() => choose(option)}
+								onkeydown={() => {}}
+							>
+								{#if option.kind === 'history'}
+									<History size={14} aria-hidden="true" />
+									<span class="sh-text" dir="auto">{option.text}</span>
+									<span class="sh-kind">{m.mail_search_group_history()}</span>
+								{:else if option.kind === 'person'}
+									<User size={14} aria-hidden="true" />
+									<span class="sh-text" dir="auto">{option.name || option.address}</span>
+									{#if option.name}<span class="sh-sub" dir="auto">{option.address}</span>{/if}
+								{:else if option.kind === 'collection'}
+									{#if option.type === 'label'}<Tag size={14} aria-hidden="true" />{:else}<Folder size={14} aria-hidden="true" />{/if}
+									<span class="sh-text" dir="auto">{option.path}</span>
+									<span class="sh-kind">{option.type === 'label' ? m.mail_search_group_label() : m.mail_search_group_folder()}</span>
+								{:else}
+									<Search size={14} aria-hidden="true" />
+									<span class="sh-text" dir="auto">{option.text}</span>
+								{/if}
+							</div>
 						{/if}
-					</div>
-				{/if}
-			{/each}
+					{/each}
+				</div>
+			{/if}
+			{#if indexing}
+				<div class="srch-progress" aria-hidden="true">
+					<span>{progressText}</span>
+					<span class="meter" class:paused={indexing.state === 'paused'} class:warn={indexing.state === 'attention'}><i style:width="{indexing.fraction * 100}%"></i></span>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>
