@@ -38,12 +38,13 @@ const engine = vi.hoisted(() => ({
 	query: null as unknown as ReturnType<typeof import('vitest').vi.fn>,
 	complete: null as unknown as ReturnType<typeof import('vitest').vi.fn>,
 	history: [] as string[],
-	rows: [] as unknown[]
+	rows: [] as unknown[],
+	status: null as unknown
 }));
 vi.mock('$core/search/lazy', () => {
 	const client = {
 		subscribe: (l: (s: unknown) => void) => {
-			l({ phase: 'ready', role: 'owner', status: null });
+			l({ phase: 'ready', role: 'owner', status: engine.status });
 			return () => {};
 		},
 		query: (...a: unknown[]) => engine.query(...a),
@@ -58,6 +59,10 @@ vi.mock('$core/search/lazy', () => {
 		searchRuntime: {
 			focus: async () => {},
 			client: () => Promise.resolve(client),
+			subscribeClient: (cb: () => void) => {
+				cb();
+				return () => {};
+			},
 			subscribePrefs: (cb: (p: unknown) => void) => {
 				cb({ accountId: 'acc-1', consent: 'saved', paused: false, history: true });
 				return () => {};
@@ -101,6 +106,7 @@ beforeEach(() => {
 	openDraft.mockClear();
 	engine.rows = [hit('m1', 'Permission slip'), hit('m2', 'Permission form')];
 	engine.history = [];
+	engine.status = null;
 	engine.query = vi.fn(async () => ({
 		ok: true,
 		summary: { id: 1, matches: engine.rows.length, groups: engine.rows.length, pages: 1, incomplete: 0, excluded: 0, suggestions: [], generation: 0, dims: [], resolved: [] }
@@ -273,5 +279,69 @@ describe('mail search box', () => {
 		await vi.waitFor(() => expect(input.getAttribute('aria-invalid')).toBe('true'));
 		const described = document.getElementById(input.getAttribute('aria-describedby')!);
 		expect(described?.textContent).toBe(mailSearch.error);
+	});
+
+	function indexingStatus(pending: number, over: Record<string, unknown> = {}) {
+		return {
+			persistence: 'persistent',
+			mode: 'saved',
+			limited: null,
+			sources: 100,
+			working: 'body',
+			paused: false,
+			generation: 0,
+			sync: {
+				phase: 'live',
+				seq: 1,
+				syncedAt: 1,
+				waiting: null,
+				queue: { total: 100, undescribed: 0, held: 0, waiting: 0, bodies: {} },
+				coverage: [
+					{ dimension: 2, state: 2, count: 100 - pending },
+					...(pending ? [{ dimension: 2, state: 0, count: pending }] : [])
+				]
+			},
+			...over
+		};
+	}
+
+	it('draws indexing progress along the search box and explains it in the panel', async () => {
+		engine.status = indexingStatus(36);
+		stop();
+		stop = mailSearch.start('acc-1');
+		const { getByRole, container } = mount();
+		const input = getByRole('combobox');
+		await userEvent.click(input);
+		const line = await vi.waitFor(() => {
+			const el = container.querySelector<HTMLElement>('.srch-line');
+			if (!el) throw new Error('no line');
+			return el;
+		});
+		expect(line.style.width).toBe('64%');
+		expect(container.querySelector('.srch-progress')?.textContent).toContain('Still reading older mail. Search covers 64 of 100 messages.');
+		const described = (input.getAttribute('aria-describedby') ?? '').split(' ').map((id) => document.getElementById(id)?.textContent);
+		expect(described).toContain('Still reading older mail. Search covers 64 of 100 messages.');
+	});
+
+	it('greys the line and says so when indexing is paused', async () => {
+		engine.status = indexingStatus(36, { paused: true });
+		stop();
+		stop = mailSearch.start('acc-1');
+		const { getByRole, container } = mount();
+		await userEvent.click(getByRole('combobox'));
+		await vi.waitFor(() => expect(container.querySelector('.srch-line.paused')).not.toBeNull());
+		expect(container.querySelector('.srch-progress')?.textContent).toContain('Indexing is paused.');
+	});
+
+	it('shows nothing once every message is indexed', async () => {
+		engine.status = indexingStatus(0);
+		stop();
+		stop = mailSearch.start('acc-1');
+		const { getByRole, container } = mount();
+		await userEvent.click(getByRole('combobox'));
+		await vi.dynamicImportSettled();
+		expect(container.querySelector('.srch-line')).toBeNull();
+		expect(container.querySelector('.srch-progress')).toBeNull();
+		expect(getByRole('combobox').getAttribute('aria-describedby')).toBeNull();
 	});
 });

@@ -5,7 +5,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import type { SearchHit } from '$core/platform/types';
 import { searchRuntime, searchSupported } from '$core/search/lazy';
 import type { Chip } from '$core/search/chips';
-import type { CoverageView } from '$core/search/coverage';
+import type { CoverageView, Progress } from '$core/search/coverage';
 import type { ParsedQuery, QueryError, Range } from '$core/search/query/ast';
 import type { ClientState, SearchClient } from '$core/search/runtime/client';
 import type { SearchPrefs } from '$core/search/runtime/records';
@@ -106,6 +106,7 @@ class MailSearchStore {
 	#abort: AbortController | null = null;
 	#watching: SearchClient | null = null;
 	#unwatch: (() => void) | null = null;
+	#watchRun = 0;
 
 	get text(): string {
 		return this.committed;
@@ -163,6 +164,12 @@ class MailSearchStore {
 		return ui.coverageOf(this.client?.status ?? null, this.summary?.dims ?? []);
 	}
 
+	get indexing(): Progress | null {
+		const ui = this.#ui;
+		if (!ui || platform.mirror || this.client?.phase !== 'ready') return null;
+		return ui.progressOf(this.client.status);
+	}
+
 	get matches(): number | null {
 		return this.summary?.matches ?? this.provisional?.matches ?? null;
 	}
@@ -194,11 +201,13 @@ class MailSearchStore {
 		const offPrefs = searchRuntime.subscribePrefs((prefs) => {
 			this.prefs = prefs?.accountId === accountId ? prefs : null;
 		});
+		const offClient = searchRuntime.subscribeClient(() => this.#watchClient());
 		const offLock = keystore.subscribeAccount(accountId, (b) => {
 			if (b.type === 'locked' || b.type === 'cleared' || b.type === 'clearedAll') this.#reset();
 		});
 		return () => {
 			offPrefs();
+			offClient();
 			offLock();
 			this.#unwatchClient();
 			this.#accountId = null;
@@ -228,10 +237,15 @@ class MailSearchStore {
 	}
 
 	#watchClient(): void {
+		const run = ++this.#watchRun;
 		const pending = searchRuntime.client();
-		if (!pending) return;
+		if (!pending) {
+			this.#unwatchClient();
+			return;
+		}
+		void this.#load().catch(() => undefined);
 		void pending.then((client) => {
-			if (this.#watching === client) return;
+			if (this.#watching === client || run !== this.#watchRun) return;
 			this.#unwatchClient();
 			this.#watching = client;
 			this.#unwatch = client.subscribe((state) => {

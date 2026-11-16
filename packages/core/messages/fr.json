@@ -5036,5 +5036,10 @@
   "mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} résultat", "countPlural=*": "{shown} résultats"}}],
   "mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} conversation", "countPlural=*": "{shown} conversations"}}],
   "mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} étiquette", "countPlural=*": "{shown} étiquettes"}}],
-  "settings_search_index_unavailable_desc": "La recherche complète sera disponible dès que les clés de ce compte seront passées au nouveau format. D’ici là, elle couvre les objets, les expéditeurs et les aperçus."
+  "settings_search_index_unavailable_desc": "La recherche complète sera disponible dès que les clés de ce compte seront passées au nouveau format. D’ici là, elle couvre les objets, les expéditeurs et les aperçus.",
+  "mail_search_progress_listing": "La recherche fait l’inventaire de vos e-mails. {done} sur {total} pour l’instant.",
+  "mail_search_progress_previews": "Lecture des aperçus de messages. La recherche couvre {done} messages sur {total}.",
+  "mail_search_progress_reading": "Lecture des e-mails plus anciens en cours. La recherche couvre {done} messages sur {total}.",
+  "mail_search_progress_paused": "L’indexation est en pause. La recherche couvre {done} messages sur {total}.",
+  "mail_search_progress_attention": "Certains messages ne peuvent pas encore être lus. La recherche couvre {done} messages sur {total}."
 }

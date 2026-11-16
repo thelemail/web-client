@@ -5036,5 +5036,10 @@
 	"mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} match", "countPlural=*": "{shown} matches"}}],
 	"mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} conversation", "countPlural=*": "{shown} conversations"}}],
 	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} label", "countPlural=*": "{shown} labels"}}],
-	"settings_search_index_unavailable_desc": "Full search becomes available once this account’s keys move to the new format. Until then, search covers subjects, senders and previews."
+	"settings_search_index_unavailable_desc": "Full search becomes available once this account’s keys move to the new format. Until then, search covers subjects, senders and previews.",
+	"mail_search_progress_listing": "Search is listing your mail. {done} of {total} so far.",
+	"mail_search_progress_previews": "Reading message previews. Search covers {done} of {total} messages.",
+	"mail_search_progress_reading": "Still reading older mail. Search covers {done} of {total} messages.",
+	"mail_search_progress_paused": "Indexing is paused. Search covers {done} of {total} messages.",
+	"mail_search_progress_attention": "Some messages can’t be read yet. Search covers {done} of {total} messages."
 }

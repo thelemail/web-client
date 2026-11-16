@@ -44,6 +44,7 @@ interface Fake {
 const runtime = vi.hoisted(() => ({
 	prefs: null as SearchPrefs | null,
 	prefListeners: new Set<(p: SearchPrefs | null) => void>(),
+	clientListeners: new Set<() => void>(),
 	client: null as unknown,
 	focus: null as unknown as ReturnType<typeof vi.fn>
 }));
@@ -53,6 +54,11 @@ vi.mock('$core/search/lazy', () => ({
 	searchRuntime: {
 		focus: (...a: unknown[]) => runtime.focus(...a),
 		client: () => (runtime.client ? Promise.resolve(runtime.client) : null),
+		subscribeClient: (cb: () => void) => {
+			runtime.clientListeners.add(cb);
+			cb();
+			return () => runtime.clientListeners.delete(cb);
+		},
 		subscribePrefs: (cb: (p: SearchPrefs | null) => void) => {
 			runtime.prefListeners.add(cb);
 			cb(runtime.prefs);
@@ -305,7 +311,7 @@ describe('mailSearch on the local index', () => {
 	});
 
 	it('says search is locked when the vault is', async () => {
-		client.state = { phase: 'locked', role: null, status: null };
+		client.set({ phase: 'locked', role: null, status: null });
 		mailSearch.commit('budget');
 		await vi.waitFor(() => expect(mailSearch.phase).toBe('locked'));
 		expect(mailSearch.results).toEqual([]);
@@ -321,6 +327,36 @@ describe('mailSearch on the local index', () => {
 		expect(mailSearch.phase).toBe('unavailable');
 		expect(mailSearch.results).toEqual([]);
 		expect(mailSearch.summary).toBeNull();
+	});
+
+	it('reports indexing progress from a client that started at idle, without a search', async () => {
+		stop?.();
+		runtime.client = null;
+		stop = mailSearch.start('acc-1');
+		expect(mailSearch.indexing).toBeNull();
+		client.state = {
+			phase: 'ready',
+			role: 'owner',
+			status: status({
+				sync: {
+					phase: 'live',
+					seq: 1,
+					syncedAt: 1,
+					waiting: null,
+					queue: { total: 10, undescribed: 0, held: 0, waiting: 0, bodies: {} },
+					coverage: [
+						{ dimension: 2, state: 2, count: 4 },
+						{ dimension: 2, state: 0, count: 6 }
+					]
+				}
+			})
+		};
+		runtime.client = asClient(client);
+		for (const l of runtime.clientListeners) l();
+		await vi.waitFor(() => expect(mailSearch.indexing).toEqual({ state: 'reading', done: 4, total: 10, fraction: 0.4 }));
+		runtime.client = null;
+		for (const l of runtime.clientListeners) l();
+		expect(mailSearch.indexing).toBeNull();
 	});
 
 	it('clears query and results on lock and on account switch', async () => {

@@ -25,6 +25,7 @@ class SearchRuntime {
 	#pendingChange: ReturnType<typeof setTimeout> | undefined;
 	#prefs: SearchPrefs | null = null;
 	#listeners = new Set<(prefs: SearchPrefs | null) => void>();
+	#clientListeners = new Set<() => void>();
 	#channel: BroadcastChannel | null = null;
 	#legacyDropped = false;
 	#fullSearch: () => boolean = () => false;
@@ -58,6 +59,16 @@ class SearchRuntime {
 
 	get prefs(): SearchPrefs | null {
 		return this.#prefs;
+	}
+
+	subscribeClient(listener: () => void): () => void {
+		this.#clientListeners.add(listener);
+		listener();
+		return () => this.#clientListeners.delete(listener);
+	}
+
+	#clientChanged(): void {
+		for (const l of this.#clientListeners) l();
 	}
 
 	subscribePrefs(listener: (prefs: SearchPrefs | null) => void): () => void {
@@ -191,8 +202,11 @@ class SearchRuntime {
 		const client = import('./runtime/start').then((m) => m.startSearch(accountId, consent));
 		const running: Running = { accountId, consent, client };
 		this.#running = running;
+		this.#clientChanged();
 		client.catch(() => {
-			if (this.#running === running) this.#running = null;
+			if (this.#running !== running) return;
+			this.#running = null;
+			this.#clientChanged();
 		});
 	}
 
@@ -200,6 +214,7 @@ class SearchRuntime {
 		const running = this.#running;
 		if (running?.accountId === accountId) {
 			this.#running = null;
+			this.#clientChanged();
 			const client = await running.client.catch(() => null);
 			if (client) {
 				await client.shutdown({ wipe });
