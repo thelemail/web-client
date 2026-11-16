@@ -103,6 +103,54 @@ export const MIGRATIONS: readonly string[] = [
 		job TEXT PRIMARY KEY,
 		cursor TEXT NOT NULL
 	) WITHOUT ROWID;
+	`,
+	`
+	ALTER TABLE sources ADD COLUMN source_rev INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE sources ADD COLUMN extraction INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE sources ADD COLUMN extractor_epoch INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE sources ADD COLUMN size_version INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE sources ADD COLUMN warnings INTEGER NOT NULL DEFAULT 0;
+
+	CREATE TABLE source_queue (
+		kind INTEGER NOT NULL,
+		source_id TEXT NOT NULL,
+		source_rev INTEGER NOT NULL,
+		content_rev INTEGER NOT NULL,
+		metadata_rev INTEGER NOT NULL,
+		state INTEGER NOT NULL,
+		seen INTEGER NOT NULL DEFAULT 0,
+		described_rev INTEGER NOT NULL DEFAULT 0,
+		extracted_rev INTEGER NOT NULL DEFAULT 0,
+		body_state INTEGER NOT NULL DEFAULT 0,
+		reason TEXT,
+		attempts INTEGER NOT NULL DEFAULT 0,
+		next_at INTEGER NOT NULL DEFAULT 0,
+		stored_at INTEGER NOT NULL DEFAULT 0,
+		extractor_epoch INTEGER NOT NULL DEFAULT 0,
+		pointers TEXT,
+		PRIMARY KEY (kind, source_id)
+	) WITHOUT ROWID;
+	CREATE INDEX source_queue_describe ON source_queue (next_at, stored_at DESC) WHERE state != 2 AND described_rev < source_rev;
+	CREATE INDEX source_queue_extract ON source_queue (next_at, stored_at DESC, kind, source_id) WHERE state = 0 AND kind <= 3 AND described_rev >= content_rev AND extracted_rev < content_rev;
+	CREATE INDEX source_queue_state ON source_queue (kind, body_state);
+
+	CREATE TABLE source_collections (
+		collection_id TEXT PRIMARY KEY,
+		kind TEXT NOT NULL,
+		parent_id TEXT,
+		position INTEGER NOT NULL,
+		rev INTEGER NOT NULL,
+		sealed_meta TEXT NOT NULL,
+		meta_key_fingerprint TEXT NOT NULL,
+		meta_schema_version INTEGER NOT NULL
+	) WITHOUT ROWID;
+
+	CREATE TABLE source_aliases (
+		alias_id TEXT PRIMARY KEY,
+		relation TEXT NOT NULL,
+		key_epoch INTEGER NOT NULL,
+		grants TEXT NOT NULL
+	) WITHOUT ROWID;
 	`
 ];
 
@@ -119,7 +167,10 @@ const REQUIRED_TABLES = [
 	'literals',
 	'parts_fts',
 	'literals_fts',
-	'checkpoints'
+	'checkpoints',
+	'source_queue',
+	'source_collections',
+	'source_aliases'
 ];
 
 export type SchemaState =

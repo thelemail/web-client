@@ -12,10 +12,15 @@ import {
 } from './types';
 
 const STATEMENTS = {
-	find: 'SELECT id, content_rev, metadata_rev FROM sources WHERE kind = ? AND source_id = ?',
-	insertSource: `INSERT INTO sources (kind, source_id, content_rev, metadata_rev, thread_id, message_id, list_id, date, size, flags, known_flags)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-	updateSource: `UPDATE sources SET content_rev = ?, metadata_rev = ?, thread_id = ?, message_id = ?, list_id = ?, date = ?, size = ?, flags = ?, known_flags = ?
+	find: 'SELECT id, content_rev, metadata_rev, extraction FROM sources WHERE kind = ? AND source_id = ?',
+	queued: 'SELECT state, content_rev FROM source_queue WHERE kind = ? AND source_id = ?',
+	currentMetadata: 'SELECT thread_id, date, flags, known_flags FROM sources WHERE id = ?',
+	currentCollections: 'SELECT collection_id, type FROM collections WHERE source = ?',
+	insertSource: `INSERT INTO sources (kind, source_id, content_rev, metadata_rev, thread_id, message_id, list_id, date, size, flags, known_flags,
+			source_rev, extraction, extractor_epoch, size_version, warnings)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	updateSource: `UPDATE sources SET content_rev = ?, metadata_rev = ?, thread_id = ?, message_id = ?, list_id = ?, date = ?, size = ?, flags = ?, known_flags = ?,
+			source_rev = max(source_rev, ?), extraction = ?, extractor_epoch = ?, size_version = ?, warnings = ?
 		WHERE id = ?`,
 	updateMetadata: 'UPDATE sources SET metadata_rev = ?, thread_id = ?, date = ?, flags = ?, known_flags = ? WHERE id = ?',
 	deleteSource: 'DELETE FROM sources WHERE id = ?',
@@ -51,6 +56,8 @@ type StatementName = keyof typeof STATEMENTS;
 
 export const COLLECTION_TYPE = { folder: 1, label: 2 } as const;
 
+const QUEUE_DELETED = 2;
+
 function listOf(doc: SearchDocument): string | null {
 	return doc.listId ? listKey(doc.listId) : null;
 }
@@ -65,6 +72,10 @@ export class SearchWriter {
 	}
 
 	#depth = 0;
+
+	atomic<T>(fn: () => T): T {
+		return this.#atomic(fn);
+	}
 
 	#atomic<T>(fn: () => T): T {
 		if (this.#depth > 0) return fn();
@@ -104,14 +115,49 @@ export class SearchWriter {
 		return out;
 	}
 
-	#find(key: SourceKey): { id: number; contentRev: number; metadataRev: number } | null {
+	#find(key: SourceKey): { id: number; contentRev: number; metadataRev: number; extraction: number } | null {
 		const s = this.#stmt('find').bind([key.kind, key.sourceId]);
 		try {
 			if (!s.step()) return null;
-			return { id: s.getInt(0)!, contentRev: s.getInt(1)!, metadataRev: s.getInt(2)! };
+			return { id: s.getInt(0)!, contentRev: s.getInt(1)!, metadataRev: s.getInt(2)!, extraction: s.getInt(3)! };
 		} finally {
 			s.reset(true);
 		}
+	}
+
+	#superseded(key: SourceKey, contentRevision: number): boolean {
+		const s = this.#stmt('queued').bind([key.kind, key.sourceId]);
+		try {
+			if (!s.step()) return false;
+			return s.getInt(0) === QUEUE_DELETED || s.getInt(1)! > contentRevision;
+		} finally {
+			s.reset(true);
+		}
+	}
+
+	#currentMetadata(id: number, metadataRevision: number): SourceMetadata {
+		const s = this.#stmt('currentMetadata').bind([id]);
+		let meta: SourceMetadata;
+		try {
+			s.step();
+			meta = {
+				metadataRevision,
+				threadId: s.get(0) as string | null,
+				date: s.getInt(1)!,
+				flags: s.getInt(2)!,
+				knownFlags: s.getInt(3)!,
+				collections: []
+			};
+		} finally {
+			s.reset(true);
+		}
+		const c = this.#stmt('currentCollections').bind([id]);
+		try {
+			while (c.step()) meta.collections.push({ id: c.get(0) as string, type: c.getInt(1) === COLLECTION_TYPE.label ? 'label' : 'folder' });
+		} finally {
+			c.reset(true);
+		}
+		return meta;
 	}
 
 	#clearContent(id: number): void {
@@ -175,7 +221,9 @@ export class SearchWriter {
 
 	put(doc: SearchDocument): PutResult {
 		return this.#atomic(() => {
+			if (this.#superseded(doc, doc.contentRevision)) return 'stale';
 			const existing = this.#find(doc);
+			const extraction = doc.extraction ?? 0;
 			if (!existing) {
 				this.#run('insertSource', [
 					doc.kind,
@@ -188,31 +236,42 @@ export class SearchWriter {
 					doc.date,
 					doc.size,
 					doc.flags,
-					doc.knownFlags
+					doc.knownFlags,
+					doc.sourceRevision ?? 0,
+					extraction,
+					doc.extractorEpoch ?? 0,
+					doc.sizeVersion ?? 0,
+					doc.warnings ?? 0
 				]);
 				this.#writeContent(this.#lastId(), doc);
 				return 'inserted';
 			}
 			if (doc.contentRevision < existing.contentRev) return 'stale';
-			if (doc.contentRevision === existing.contentRev) {
+			if (doc.contentRevision === existing.contentRev && extraction <= existing.extraction) {
 				if (doc.metadataRevision <= existing.metadataRev) return 'unchanged';
 				this.#applyMetadata(existing.id, doc);
 				return 'metadata';
 			}
+			const meta = doc.metadataRevision >= existing.metadataRev ? doc : this.#currentMetadata(existing.id, existing.metadataRev);
 			this.#clearContent(existing.id);
 			this.#run('updateSource', [
 				doc.contentRevision,
-				Math.max(doc.metadataRevision, existing.metadataRev),
-				doc.threadId,
+				meta.metadataRevision,
+				meta.threadId,
 				doc.messageId,
 				listOf(doc),
-				doc.date,
+				meta.date,
 				doc.size,
-				doc.flags,
-				doc.knownFlags,
+				meta.flags,
+				meta.knownFlags,
+				doc.sourceRevision ?? 0,
+				extraction,
+				doc.extractorEpoch ?? 0,
+				doc.sizeVersion ?? 0,
+				doc.warnings ?? 0,
 				existing.id
 			]);
-			this.#writeContent(existing.id, doc);
+			this.#writeContent(existing.id, { ...doc, collections: meta.collections });
 			return 'replaced';
 		});
 	}
@@ -224,6 +283,7 @@ export class SearchWriter {
 
 	updateMetadata(key: SourceKey, meta: SourceMetadata): PutResult {
 		return this.#atomic(() => {
+			if (this.#superseded(key, Number.POSITIVE_INFINITY)) return 'stale';
 			const existing = this.#find(key);
 			if (!existing) return 'stale';
 			if (meta.metadataRevision <= existing.metadataRev) return 'unchanged';
@@ -260,9 +320,10 @@ export class SearchWriter {
 		return true;
 	}
 
-	putBatch(docs: readonly SearchDocument[], checkpoint?: Checkpoint): PutResult[] {
+	putBatch(docs: readonly SearchDocument[], checkpoint?: Checkpoint, also?: () => void): PutResult[] {
 		return this.#atomic(() => {
 			const results = docs.map((d) => this.put(d));
+			also?.();
 			if (checkpoint) this.#saveCheckpoint(checkpoint);
 			return results;
 		});

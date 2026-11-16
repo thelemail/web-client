@@ -297,7 +297,7 @@ class Evaluator {
 				this.prepare(node.child, scoped, !positive);
 				return;
 			case 'field': {
-				const map = { subject: [Field.subject], body: [Field.body, Field.quoted], attachment: [Field.attachmentText] };
+				const map = { subject: [Field.subject], body: [Field.body, Field.quoted, Field.signature], attachment: [Field.attachmentText] };
 				this.prepare(node.child, map[node.field], positive);
 				return;
 			}
@@ -408,6 +408,8 @@ class Evaluator {
 			}
 			case 'state':
 				return this.#flagKnown(doc, this.#stateBit(node.state));
+			case 'size':
+				return (doc.sizeVersion ?? 0) > 0;
 			default:
 				return true;
 		}
@@ -468,7 +470,7 @@ class Evaluator {
 			case 'date':
 				return node.bound === 'after' ? doc.date >= node.at : doc.date < node.at;
 			case 'size':
-				return node.op === 'gt' ? doc.size > node.bytes : doc.size < node.bytes;
+				return (doc.sizeVersion ?? 0) > 0 && (node.op === 'gt' ? doc.size > node.bytes : doc.size < node.bytes);
 			case 'deliveredto':
 				return this.#addresses(doc, Role.deliveredTo).includes(node.address);
 			case 'list':

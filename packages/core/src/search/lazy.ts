@@ -14,9 +14,12 @@ function supported(): boolean {
 	return import.meta.env.PUBLIC_PRIVATE_SEARCH === '1' && !platform.mirror && !platform.keystoreChannel;
 }
 
+const CHANGE_COALESCE_MS = 750;
+
 class SearchRuntime {
 	#accountId: string | null = null;
 	#running: Running | null = null;
+	#pendingChange: ReturnType<typeof setTimeout> | undefined;
 
 	attach(accountId: string): () => void {
 		if (!supported()) return () => {};
@@ -40,6 +43,20 @@ class SearchRuntime {
 
 	focus(): void {
 		if (this.#accountId && supported()) this.#ensure(this.#accountId);
+	}
+
+	changed(accountId: string): void {
+		if (this.#running?.accountId !== accountId || this.#pendingChange) return;
+		this.#pendingChange = setTimeout(() => {
+			this.#pendingChange = undefined;
+			this.#tell(accountId, 'sync', null);
+		}, CHANGE_COALESCE_MS);
+	}
+
+	#tell(accountId: string, job: string, message: unknown): void {
+		const running = this.#running;
+		if (running?.accountId !== accountId) return;
+		void running.client.then((c) => c.tell(job, message)).catch(() => undefined);
 	}
 
 	client(): Promise<SearchClient> | null {
@@ -75,6 +92,7 @@ class SearchRuntime {
 		if (b.type === 'locked') void this.#stop(accountId, false);
 		else if (b.type === 'cleared' || b.type === 'clearedAll') void this.#stop(accountId, true);
 		else if (b.type === 'vaultChanged') void this.#running?.client.then((c) => c.retry()).catch(() => undefined);
+		else if (b.type === 'aliasKeysChanged' || b.type === 'accountKeysChanged') this.#tell(accountId, 'describe', { retryLocked: true });
 	}
 }
 

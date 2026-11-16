@@ -61,13 +61,13 @@ export class Batch {
 		this.#dirty = true;
 	}
 
-	async commit(): Promise<CommitResult> {
+	async commit(also?: () => void): Promise<CommitResult> {
 		if (!this.#dirty) return { ok: true, results: [] };
 		const admission = await this.#admit(this.#bytes * 2);
 		if (!admission.ok) return admission;
 		let results: PutResult[];
 		try {
-			results = this.#writer.putBatch(this.#docs, { job: this.#job, cursor: this.#cursor });
+			results = this.#writer.putBatch(this.#docs, { job: this.#job, cursor: this.#cursor }, also);
 		} catch (error) {
 			if (isQuotaError(error)) return { ok: false, reason: 'quota' };
 			throw error;

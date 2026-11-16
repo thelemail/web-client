@@ -10,6 +10,10 @@ import { deleteSearchDb, loadSqlite, openMemorySearchDb, openSearchDb, pauseSear
 import { QueryEngine, yieldTask } from '../sqlite/run';
 import { SearchWriter, maintain } from '../sqlite/writer';
 import { Batch } from './batch';
+import { Bridge, type BridgeCaller } from '../sync/bridge';
+import { Extractor, type ExtractorPort } from '../sync/extractor';
+import type { SyncProgress } from '../sync/jobs';
+import { SyncStore } from '../sync/store';
 import {
 	directoryFor,
 	fileFor,
@@ -20,7 +24,8 @@ import {
 	type QueryReply,
 	type Reply,
 	type SearchStatus,
-	type StatusEvent
+	type StatusEvent,
+	type SyncStatus
 } from './protocol';
 import { admit, requestPersistence } from './quota';
 import { Scheduler, type Job } from './scheduler';
@@ -31,8 +36,22 @@ const MAX_SESSIONS_PER_CLIENT = 4;
 export interface JobContext {
 	readonly db: Database;
 	readonly writer: SearchWriter;
+	readonly store: SyncStore;
+	readonly bridge: BridgeCaller | null;
+	readonly extractor: ExtractorPort;
+	readonly progress: SyncProgress;
 	batch(job: string): Batch;
 	wake(job?: string): void;
+	later(job: string, ms: number): void;
+	now(): number;
+}
+
+export interface ServeOptions {
+	extractor?: () => ExtractorPort;
+}
+
+function defaultExtractor(): ExtractorPort {
+	return new Extractor(() => new Worker(new URL('../extract/extract.worker.ts', import.meta.url), { type: 'module', name: 'thelemail-search-extract' }));
 }
 
 export type JobFactory = (ctx: JobContext) => Job;
@@ -45,12 +64,18 @@ interface Client {
 interface Open {
 	db: Database;
 	writer: SearchWriter;
+	store: SyncStore;
+	bridge: Bridge | null;
+	extractor: ExtractorPort;
+	progress: SyncProgress;
+	timers: Map<string, ReturnType<typeof setTimeout>>;
 	engine: QueryEngine;
 	scheduler: Scheduler;
 	persistence: Persistence;
 	directory: string | null;
 	file: string | null;
 	sources: number;
+	sync: SyncStatus | null;
 }
 
 function sessionCall<T>(port: MessagePort, cmd: SearchSessionCommand, args: unknown): Promise<T | null> {
@@ -77,7 +102,7 @@ export const maintenanceJob: JobFactory = ({ db }) => ({
 	step: async () => (maintain(db, 'merge') ? 'more' : 'idle')
 });
 
-export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly JobFactory[]): void {
+export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly JobFactory[], options: ServeOptions = {}): void {
 	let open: Open | null = null;
 	let keystore: MessagePort | null = null;
 	const clients = new Map<MessagePort, Client>();
@@ -89,12 +114,14 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			persistence: o.persistence,
 			limited: o.persistence === 'session' ? 'session' : o.scheduler.blocked ? 'quota' : null,
 			sources: o.sources,
-			working: o.scheduler.working
+			working: o.scheduler.working,
+			sync: o.sync
 		};
 	}
 
 	function count(o: Open): void {
 		o.sources = Number(o.db.selectValue('SELECT count(*) FROM sources'));
+		o.sync = o.bridge ? { ...o.progress, queue: o.store.counts(), coverage: o.store.coverage() } : null;
 	}
 
 	function publish(): void {
@@ -104,20 +131,54 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		for (const port of clients.keys()) port.postMessage(event);
 	}
 
-	async function attach(db: Database, persistence: Persistence, directory: string | null, file: string | null): Promise<void> {
+	async function attach(db: Database, persistence: Persistence, directory: string | null, file: string | null, port: MessagePort | undefined): Promise<void> {
 		const sqlite = await loadSqlite();
 		const writer = new SearchWriter(db);
 		const engine = new QueryEngine(db, sqlite.capi);
 		writer.onDelete((source) => engine.invalidate(source));
 		const scheduler = new Scheduler({ yieldTask, onChange: publish });
-		open = { db, writer, engine, scheduler, persistence, directory, file, sources: 0 };
-		count(open);
+		const bridge = port ? new Bridge(port) : null;
+		const timers = new Map<string, ReturnType<typeof setTimeout>>();
+		const o: Open = {
+			db,
+			writer,
+			store: new SyncStore(db),
+			bridge,
+			extractor: (options.extractor ?? defaultExtractor)(),
+			progress: { phase: null, seq: null, syncedAt: null, waiting: null },
+			timers,
+			engine,
+			scheduler,
+			persistence,
+			directory,
+			file,
+			sources: 0,
+			sync: null
+		};
+		open = o;
+		count(o);
 		const admission = persistence === 'session' ? async () => ({ ok: true }) as const : admit;
 		const ctx: JobContext = {
 			db,
 			writer,
+			store: o.store,
+			bridge,
+			extractor: o.extractor,
+			progress: o.progress,
 			batch: (job) => new Batch(writer, job, admission, () => scheduler.wake('maintenance')),
-			wake: (job) => scheduler.wake(job)
+			wake: (job) => scheduler.wake(job),
+			later: (job, ms) => {
+				const existing = timers.get(job);
+				if (existing !== undefined) clearTimeout(existing);
+				timers.set(
+					job,
+					setTimeout(() => {
+						timers.delete(job);
+						scheduler.wake(job);
+					}, Math.max(0, ms))
+				);
+			},
+			now: () => Date.now()
 		};
 		for (const factory of factories) scheduler.register(factory(ctx));
 	}
@@ -138,26 +199,26 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			derived.key.fill(0);
 		}
 		if (result.ok) {
-			await attach(result.db, 'persistent', directory, file);
+			await attach(result.db, 'persistent', directory, file, r.bridge);
 			void requestPersistence();
 			await pruneSearchDb(directory, file).catch(() => undefined);
 			return { ok: true, status: status(), rebuilt: result.rebuilt };
 		}
 		if (result.code === 'bad-key') return { ok: false, code: 'failed' };
-		return memory();
+		return memory(r.bridge, true);
 	}
 
-	async function memory(): Promise<InitResult> {
-		if (open) await close(false);
+	async function memory(bridge: MessagePort | undefined, keepKeystore = false): Promise<InitResult> {
+		if (open) await close(false, keepKeystore);
 		try {
-			await attach(await openMemorySearchDb(), 'session', null, null);
+			await attach(await openMemorySearchDb(), 'session', null, null, bridge);
 		} catch {
 			return { ok: false, code: 'failed' };
 		}
 		return { ok: true, status: status(), rebuilt: false };
 	}
 
-	async function close(wipe: boolean): Promise<void> {
+	async function close(wipe: boolean, keepKeystore = false): Promise<void> {
 		const o = open;
 		open = null;
 		for (const [port, client] of clients) {
@@ -165,12 +226,16 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			port.close();
 		}
 		clients.clear();
-		if (keystore) {
+		if (keystore && !keepKeystore) {
 			keystore.postMessage({ id: crypto.randomUUID(), cmd: 'closeSearchSession' } satisfies SearchSessionRequest);
 			keystore.close();
 			keystore = null;
 		}
 		if (!o) return;
+		for (const t of o.timers.values()) clearTimeout(t);
+		o.timers.clear();
+		o.bridge?.close();
+		o.extractor.close();
 		await Promise.all(inflight);
 		await o.scheduler.stop();
 		o.engine.dispose();
@@ -200,7 +265,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		client.running.set(r.token, controller);
 		try {
 			const running = o.scheduler.foreground(() => o.engine.run(r.query, r.ctx, { ...r.options, signal: controller.signal }));
-			const settled = running.then(
+			const settled: Promise<boolean> = running.then(
 				() => inflight.delete(settled),
 				() => inflight.delete(settled)
 			);
@@ -266,7 +331,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			case 'init':
 				return init(r);
 			case 'memory':
-				return memory();
+				return memory(r.bridge);
 			case 'connect':
 				if (!open) {
 					r.port.close();

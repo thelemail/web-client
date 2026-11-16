@@ -67,6 +67,13 @@ interface FetchOptions {
 	headers?: Record<string, string>;
 	keepalive?: boolean;
 	csrf?: boolean;
+	withStatus?: boolean;
+}
+
+export interface StatusResponse<T> {
+	status: number;
+	body: T;
+	retryAfterSeconds: number | null;
 }
 
 const csrfTokens = new Map<string, string>();
@@ -93,6 +100,17 @@ async function bodyDigest(body: BodyInit | null | undefined): Promise<string> {
 
 export async function apiFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
 	return doFetch<T>(path, opts, false, false);
+}
+
+export function apiFetchWithStatus<T>(path: string, opts: FetchOptions = {}): Promise<StatusResponse<T>> {
+	return doFetch<StatusResponse<T>>(path, { ...opts, withStatus: true }, false, false);
+}
+
+function retryAfterOf(resp: Response, body: unknown): number | null {
+	const header = Number(resp.headers.get('retry-after'));
+	if (Number.isFinite(header) && header > 0) return header;
+	const fromBody = (body as ErrorEnvelope | null)?.error?.retryAfterSeconds;
+	return typeof fromBody === 'number' && fromBody > 0 ? fromBody : null;
 }
 
 export async function submissionFetch<T>(path: string, opts: FetchOptions = {}): Promise<T> {
@@ -169,7 +187,7 @@ async function errorFrom(resp: Response): Promise<ApiCallError> {
 	const parsed = (resp.headers.get('content-type') ?? '').includes('application/json')
 		? ((await resp.json().catch(() => null)) as ErrorEnvelope | null)
 		: null;
-	return new ApiCallError(resp.status, parsed, parsed?.error?.message ?? `HTTP ${resp.status}`);
+	return new ApiCallError(resp.status, parsed, parsed?.error?.message ?? `HTTP ${resp.status}`, retryAfterOf(resp, parsed));
 }
 
 export interface BlobFetchOptions {
@@ -272,11 +290,12 @@ async function doFetch<T>(
 	const resp = await transport(url, init, kind);
 	recordServerDate(resp.headers.get('date'));
 	if (resp.status === 204) {
-		return undefined as T;
+		return (opts.withStatus ? { status: 204, body: undefined, retryAfterSeconds: null } : undefined) as T;
 	}
 	const contentType = resp.headers.get('content-type') ?? '';
 	const body = contentType.includes('application/json') ? await resp.json() : null;
 	if (resp.ok) {
+		if (opts.withStatus) return { status: resp.status, body, retryAfterSeconds: retryAfterOf(resp, body) } as T;
 		return body as T;
 	}
 	if (
@@ -331,6 +350,7 @@ async function doFetch<T>(
 	throw new ApiCallError(
 		resp.status,
 		(body as ErrorEnvelope) ?? null,
-		(body as ErrorEnvelope)?.error?.message ?? `HTTP ${resp.status}`
+		(body as ErrorEnvelope)?.error?.message ?? `HTTP ${resp.status}`,
+		retryAfterOf(resp, body)
 	);
 }

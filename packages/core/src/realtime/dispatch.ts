@@ -12,6 +12,7 @@ import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { accountKeys } from '$core/stores/accountKeys.svelte';
 import { replyPresence } from '$core/stores/replyPresence.svelte';
 import { mailCollections } from '$core/stores/mailCollections.svelte';
+import { searchRuntime } from '$core/search/lazy';
 import { coalesce } from './coalesce';
 import { notifyCalendarHint, notifyCalendarMessage } from './calendarHook';
 import type { RealtimeHint } from './types';
@@ -49,9 +50,12 @@ function entityOf(kind: string): string {
 	return dot < 0 ? kind : kind.slice(0, dot);
 }
 
+const SOURCE_ENTITIES = new Set(['message', 'thread', 'mailbox', 'draft', 'scheduled_send', 'shared_alias', 'mail_collection']);
+
 export function applyHint(hint: RealtimeHint): void {
 	const isActive = hint.accountId === auth.accountId;
 	const entity = entityOf(hint.kind);
+	if (SOURCE_ENTITIES.has(entity)) searchRuntime.changed(hint.accountId);
 
 	switch (entity) {
 		case 'message':

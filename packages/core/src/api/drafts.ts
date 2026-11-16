@@ -24,8 +24,8 @@ export function listDrafts(opts: ListDraftsOptions = {}): Promise<DraftListRespo
 	return apiFetch<DraftListResponse>(qs ? `/v1/drafts?${qs}` : '/v1/drafts');
 }
 
-export function getDraft(draftId: string): Promise<DraftDetail> {
-	return apiFetch<DraftDetail>(`/v1/drafts/${encodeURIComponent(draftId)}`);
+export function getDraft(draftId: string, accountId?: string): Promise<DraftDetail> {
+	return apiFetch<DraftDetail>(`/v1/drafts/${encodeURIComponent(draftId)}`, { accountId });
 }
 
 export function putDraft(draftId: string, req: DraftRequest): Promise<DraftSummary> {

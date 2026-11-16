@@ -46,6 +46,7 @@ export function document(sourceId: string, overrides: Partial<SearchDocument> = 
 		messageId: `<${sourceId}@calloway.test>`,
 		date: 1_760_000_000_000,
 		size: 2048,
+		sizeVersion: 1,
 		flags: Flag.inbox,
 		knownFlags: Flag.read | Flag.starred | Flag.inbox,
 		collections: [],

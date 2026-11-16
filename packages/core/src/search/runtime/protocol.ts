@@ -2,6 +2,8 @@ import type { ParsedQuery } from '../query/ast';
 import type { Grouping, QueryContext, Sort } from '../sqlite/compile';
 import type { PageResult, QueryOutcome } from '../sqlite/run';
 import type { Conditions, JobClass } from './scheduler';
+import type { SyncProgress } from '../sync/jobs';
+import type { CoverageCount, QueueCounts } from '../sync/store';
 
 export type Persistence = 'persistent' | 'session';
 export type Limit = 'session' | 'quota';
@@ -11,13 +13,19 @@ export interface SearchStatus {
 	limited: Limit | null;
 	sources: number;
 	working: JobClass | null;
+	sync: SyncStatus | null;
+}
+
+export interface SyncStatus extends SyncProgress {
+	queue: QueueCounts;
+	coverage: CoverageCount[];
 }
 
 export type InitResult = { ok: true; status: SearchStatus; rebuilt: boolean } | { ok: false; code: 'locked' | 'failed' };
 
 export type ControlRequest =
-	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort }
-	| { op: 'memory' }
+	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort; bridge?: MessagePort }
+	| { op: 'memory'; bridge?: MessagePort }
 	| { op: 'connect'; port: MessagePort }
 	| { op: 'activity'; conditions: Conditions }
 	| { op: 'job'; name: string; message: unknown }

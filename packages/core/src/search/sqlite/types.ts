@@ -12,7 +12,8 @@ export const Field = {
 	quoted: 4,
 	attachmentName: 5,
 	attachmentText: 6,
-	identifier: 7
+	identifier: 7,
+	signature: 8
 } as const;
 export type Field = (typeof Field)[keyof typeof Field];
 
@@ -111,6 +112,11 @@ export interface SearchDocument extends SourceMetadata {
 	attachments: Attachment[];
 	parts: Part[];
 	coverage: Partial<Record<Dimension, Coverage>>;
+	sourceRevision?: number;
+	extraction?: number;
+	extractorEpoch?: number;
+	sizeVersion?: number;
+	warnings?: number;
 }
 
 export interface SourceKey {

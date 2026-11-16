@@ -53,6 +53,15 @@ async function ftsRows(h: Harness): Promise<{ parts: number; partsFts: number; l
 	return { parts, partsFts, literals, literalsFts };
 }
 
+const UNDO_SYNC = `DROP TABLE source_queue;
+	DROP TABLE source_collections;
+	DROP TABLE source_aliases;
+	ALTER TABLE sources DROP COLUMN source_rev;
+	ALTER TABLE sources DROP COLUMN extraction;
+	ALTER TABLE sources DROP COLUMN extractor_epoch;
+	ALTER TABLE sources DROP COLUMN size_version;
+	ALTER TABLE sources DROP COLUMN warnings`;
+
 describe('lexical model', () => {
 	it('matches a phrase within one part and never across parts, attachments or pages', async () => {
 		const h = await memory();
@@ -185,6 +194,51 @@ describe('lexical model', () => {
 		]);
 	});
 
+	it('replaces a preview with extracted text at the same revision and keeps newer metadata', async () => {
+		const h = await memory();
+		const preview = document('m1', {
+			metadataRevision: 3,
+			parts: [{ field: Field.body, text: 'snippet only' }],
+			coverage: { [Dimension.metadata]: Coverage.complete, [Dimension.body]: Coverage.pending }
+		});
+		expect(await h.call({ op: 'put', doc: preview })).toBe('inserted');
+		const meta = {
+			metadataRevision: 5,
+			threadId: 'thread-m1',
+			date: 1_760_000_000_000,
+			flags: Flag.read | Flag.archive,
+			knownFlags: Flag.read | Flag.starred | Flag.inbox,
+			collections: [{ id: 'l1', type: 'label' as const }]
+		};
+		expect(await h.call({ op: 'updateMetadata', key: { kind: SourceKind.message, sourceId: 'm1' }, meta })).toBe('metadata');
+		const extracted = document('m1', {
+			metadataRevision: 3,
+			extraction: 1,
+			parts: [{ field: Field.body, text: 'the whole harbour ledger' }]
+		});
+		expect(await h.call({ op: 'put', doc: extracted })).toBe('replaced');
+		expect(await h.call({ op: 'put', doc: extracted })).toBe('unchanged');
+		expect(await matches(h, 'parts_fts', 'snippet')).toEqual([]);
+		expect(await matches(h, 'parts_fts', 'ledger')).toEqual(['m1']);
+		expect(await h.select('SELECT flags, metadata_rev, extraction FROM sources')).toEqual([[Flag.read | Flag.archive, 5, 1]]);
+		expect(await h.select('SELECT collection_id FROM collections')).toEqual([['l1']]);
+		expect(await h.select('SELECT dimension, state FROM coverage ORDER BY 1')).toEqual([
+			[Dimension.metadata, Coverage.complete],
+			[Dimension.body, Coverage.complete]
+		]);
+	});
+
+	it('refuses writes for a tombstoned or newer queued source', async () => {
+		const h = await memory();
+		await h.call({ op: 'exec', sql: "INSERT INTO source_queue (kind, source_id, source_rev, content_rev, metadata_rev, state) VALUES (1, 'gone', 9, 1, 9, 2), (1, 'newer', 7, 7, 7, 0)" });
+		expect(await h.call({ op: 'put', doc: document('gone') })).toBe('stale');
+		expect(await h.call({ op: 'put', doc: document('newer', { contentRevision: 6 }) })).toBe('stale');
+		expect(await h.call({ op: 'put', doc: document('newer', { contentRevision: 7 }) })).toBe('inserted');
+		const meta = { metadataRevision: 10, threadId: null, date: 1, flags: 0, knownFlags: 0, collections: [] };
+		expect(await h.call({ op: 'updateMetadata', key: { kind: SourceKind.message, sourceId: 'gone' }, meta })).toBe('stale');
+		expect(await h.select('SELECT source_id FROM sources')).toEqual([['newer']]);
+	});
+
 	it('runs merge and optimize as maintenance', async () => {
 		const h = await memory();
 		for (let i = 0; i < 40; i++) await h.call({ op: 'put', doc: document(`m${i}`) });
@@ -256,7 +310,7 @@ describe('encrypted file', () => {
 		const h = harness();
 		await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false });
 		await h.call({ op: 'put', doc: document('m1') });
-		await h.call({ op: 'exec', sql: "DROP TABLE checkpoints; UPDATE meta SET value = 2 WHERE key = 'schema_version'" });
+		await h.call({ op: 'exec', sql: `${UNDO_SYNC}; DROP TABLE checkpoints; UPDATE meta SET value = 2 WHERE key = 'schema_version'` });
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
 		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
 		expect(await h.select('SELECT source_id FROM sources')).toEqual([['m1']]);
@@ -272,7 +326,8 @@ describe('encrypted file', () => {
 		await h.call({ op: 'put', doc: document('m1') });
 		await h.call({
 			op: 'exec',
-			sql: `DROP INDEX sources_list;
+			sql: `${UNDO_SYNC};
+				DROP INDEX sources_list;
 				ALTER TABLE sources DROP COLUMN list_id;
 				ALTER TABLE attachments DROP COLUMN inline;
 				DROP TABLE checkpoints;

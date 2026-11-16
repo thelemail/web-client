@@ -213,6 +213,18 @@ describe('retrieval', () => {
 		expect(await ids(h, 'is:read')).toEqual(['read']);
 	});
 
+	it('treats an underived message size as unknown in both directions', async () => {
+		const h = await memory([
+			message('big', { size: 50_000 }),
+			message('small', { size: 500 }),
+			message('pending', { size: 0, sizeVersion: 0 })
+		]);
+		expect(await ids(h, 'larger:10K')).toEqual(['big']);
+		expect(await ids(h, 'smaller:10K')).toEqual(['small']);
+		expect(await ids(h, '-larger:10K')).toEqual(['small']);
+		expect(await ids(h, '-smaller:10K')).toEqual(['big']);
+	});
+
 	it('finds unsegmented scripts by substring, including two characters', async () => {
 		const h = await memory([
 			message('tokyo', { parts: [{ field: Field.body, text: '明日は東京タワーに行きます' }] }),

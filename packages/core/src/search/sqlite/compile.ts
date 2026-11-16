@@ -34,7 +34,8 @@ export const WEIGHTS: Readonly<Record<Field, number>> = {
 	[Field.quoted]: 0.35,
 	[Field.attachmentName]: 3,
 	[Field.attachmentText]: 1,
-	[Field.identifier]: 3
+	[Field.identifier]: 3,
+	[Field.signature]: 0.35
 };
 
 export const DIMENSION_OF: Readonly<Record<Field, Dimension>> = {
@@ -44,7 +45,8 @@ export const DIMENSION_OF: Readonly<Record<Field, Dimension>> = {
 	[Field.quoted]: Dimension.body,
 	[Field.attachmentName]: Dimension.attachmentMetadata,
 	[Field.attachmentText]: Dimension.attachmentText,
-	[Field.identifier]: Dimension.metadata
+	[Field.identifier]: Dimension.metadata,
+	[Field.signature]: Dimension.body
 };
 
 export const ROLE_OF: Readonly<Record<ParticipantRole, Role>> = {
@@ -56,7 +58,7 @@ export const ROLE_OF: Readonly<Record<ParticipantRole, Role>> = {
 
 const SCOPED_FIELDS: Readonly<Record<TextField, readonly Field[]>> = {
 	subject: [Field.subject],
-	body: [Field.body, Field.quoted],
+	body: [Field.body, Field.quoted, Field.signature],
 	attachment: [Field.attachmentText]
 };
 
@@ -190,7 +192,7 @@ function unique<T>(values: Iterable<T>): T[] {
 }
 
 export function bareFields(ctx: QueryContext): Field[] {
-	const fields: Field[] = [Field.subject, Field.participant, Field.body, Field.quoted, Field.attachmentName];
+	const fields: Field[] = [Field.subject, Field.participant, Field.body, Field.quoted, Field.signature, Field.attachmentName];
 	if (ctx.attachmentText) fields.push(Field.attachmentText);
 	return fields;
 }
@@ -200,6 +202,7 @@ function meta(sql: string, params: BindValue[], known: Fragment | null = null): 
 }
 
 const NONE: Expr = { kind: 'const', value: false };
+const SIZE_KNOWN: Fragment = { sql: 's.size_version > 0', params: [] };
 const ALL: Expr = { kind: 'const', value: true };
 
 function flagMeta(bit: number, set: boolean): Expr {
@@ -432,7 +435,7 @@ class Compiler {
 			case 'date':
 				return node.bound === 'after' ? meta('s.date >= ?', [node.at]) : meta('s.date < ?', [node.at]);
 			case 'size':
-				return node.op === 'gt' ? meta('s.size > ?', [node.bytes]) : meta('s.size < ?', [node.bytes]);
+				return meta(`(s.size_version > 0 AND s.size ${node.op === 'gt' ? '>' : '<'} ?)`, [node.bytes], SIZE_KNOWN);
 			case 'deliveredto':
 				return participantMeta(Role.deliveredTo, [node.address]);
 			case 'list':
