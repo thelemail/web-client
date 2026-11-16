@@ -29,8 +29,8 @@ export interface SyncStatus extends SyncProgress {
 export type InitResult = { ok: true; status: SearchStatus; rebuilt: boolean } | { ok: false; code: 'locked' | 'failed' };
 
 export type ControlRequest =
-	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort; bridge?: MessagePort; paused: boolean }
-	| { op: 'memory'; bridge?: MessagePort; mode: Mode; paused: boolean }
+	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort; bridge?: MessagePort; parser?: MessagePort; paused: boolean }
+	| { op: 'memory'; bridge?: MessagePort; parser?: MessagePort; mode: Mode; paused: boolean }
 	| { op: 'connect'; port: MessagePort }
 	| { op: 'activity'; conditions: Conditions }
 	| { op: 'job'; name: string; message: unknown }

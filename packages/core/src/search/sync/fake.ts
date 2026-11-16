@@ -4,6 +4,8 @@ import type {
 	SearchSourceDescriptorResult,
 	SearchSourceKind
 } from '../../api/types';
+import { parse } from '../extract/parse';
+import type { JobInput, JobOutcome, JobTicket } from '../parser/protocol';
 import type { BridgeMessage, BridgeReply, BridgeResult } from './protocol';
 
 export interface FakeMessage {
@@ -16,6 +18,15 @@ export interface FakeMessage {
 	storedAt?: number;
 	key?: string;
 	held?: boolean;
+	files?: FakeFile[];
+}
+
+export interface FakeFile {
+	id: string;
+	filename: string;
+	mime: string;
+	bytes: Uint8Array;
+	locked?: boolean;
 }
 
 export interface FakeDraft {
@@ -139,6 +150,18 @@ export class FakeSource {
 		this.#journal = [];
 	}
 
+	#fileGate: Promise<void> | null = null;
+	#releaseFiles: (() => void) | null = null;
+
+	holdFiles(): void {
+		this.#fileGate = new Promise((resolve) => (this.#releaseFiles = resolve));
+	}
+
+	resumeFiles(): void {
+		this.#releaseFiles?.();
+		this.#fileGate = null;
+	}
+
 	hold(): void {
 		this.#gate = new Promise((resolve) => (this.#release = resolve));
 	}
@@ -182,8 +205,13 @@ export class FakeSource {
 				schemaVersion: 1,
 				encryptedPreview: this.#previewOf(s),
 				body: this.#bodyPointer(s),
-				attachmentsInBody: true,
-				attachments: []
+				attachmentsInBody: !m.files?.length,
+				attachments: (m.files ?? []).map((f, ordinal) => ({
+					id: f.id,
+					ordinal,
+					inline: false,
+					blob: { path: `/v1/messages/${s.sourceId}/attachments/${f.id}`, sizeBytes: f.bytes.length, sha256: `rev-${s.contentRevision}` }
+				}))
 			};
 		}
 		if (s.draft) base.draft = { schemaVersion: 1, encryptedPreview: this.#previewOf(s), body: this.#bodyPointer(s) };
@@ -204,6 +232,7 @@ export class FakeSource {
 	async handle(r: BridgeMessage): Promise<BridgeResult<unknown>> {
 		this.ops.push(r.op);
 		if (this.#gate && (r.op === 'body' || r.op === 'draft')) await this.#gate;
+		if (this.#fileGate && r.op === 'attachmentBytes') await this.#fileGate;
 		switch (r.op) {
 			case 'barrier':
 				return { ok: true, value: { throughSeq: this.seq, minRetainedSeq: this.minRetainedSeq, serverTime: new Date().toISOString() } };
@@ -264,8 +293,21 @@ export class FakeSource {
 				return { ok: true, value: { storedBytes: json.length, json, updatedAt: s.draft!.updatedAt } };
 			}
 			case 'attachment':
-				return { ok: false, failure: { code: 'failed', reason: 'unknown' } };
+			case 'attachmentBytes': {
+				const file = this.#file(r.pointer.path);
+				if (!file) return { ok: false, failure: { code: 'gone' } };
+				if (r.op === 'attachment') return { ok: true, value: { filename: file.filename, contentType: file.mime, inline: false, size: file.bytes.length } };
+				if (file.locked) return { ok: false, failure: { code: 'locked' } };
+				return { ok: true, value: { bytes: file.bytes.slice(), filename: file.filename, contentType: file.mime } };
+			}
+			case 'draftAttachment':
+				return { ok: false, failure: { code: 'gone' } };
 		}
+	}
+
+	#file(path: string): FakeFile | null {
+		const [, , , id, , fileId] = path.split('/');
+		return this.#sources.get(this.#k('message', id))?.message?.files?.find((f) => f.id === fileId) ?? null;
 	}
 
 	serve(port: MessagePort): () => void {
@@ -276,4 +318,27 @@ export class FakeSource {
 		port.start();
 		return () => port.close();
 	}
+}
+
+export function localParser(onJob?: (ticket: JobTicket) => Promise<void> | void): MessagePort {
+	const channel = new MessageChannel();
+	channel.port1.onmessage = (e: MessageEvent<JobTicket>) => {
+		const job = e.ports[0];
+		const ticket = e.data;
+		if (!job || ticket?.type !== 'job') return;
+		job.onmessage = async (m: MessageEvent<JobInput>) => {
+			await onJob?.(ticket);
+			let outcome: JobOutcome;
+			try {
+				outcome = { jobId: ticket.jobId, ok: true, result: await parse(m.data.request, () => {}) };
+			} catch {
+				outcome = { jobId: ticket.jobId, ok: false, reason: 'crashed' };
+			}
+			job.postMessage(outcome);
+			job.close();
+		};
+		job.start();
+	};
+	channel.port1.start();
+	return channel.port2;
 }

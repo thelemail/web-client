@@ -4,8 +4,6 @@ import { Field, Role, type Part, type Participant } from '../sqlite/types';
 import { htmlToText } from './html';
 import { regions } from './regions';
 
-export const EXTRACTOR_EPOCH = 1;
-
 type DraftFields = Partial<Record<'v' | 'from' | 'to' | 'cc' | 'bcc' | 'subject' | 'bodyHtml' | 'bodyText' | 'attachments', unknown>>;
 
 export const Warning = {

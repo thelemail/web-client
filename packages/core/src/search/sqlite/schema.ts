@@ -158,6 +158,26 @@ export const MIGRATIONS: readonly string[] = [
 		at INTEGER NOT NULL,
 		sealed BLOB NOT NULL
 	);
+	`,
+	`
+	ALTER TABLE parts ADD COLUMN place TEXT;
+	CREATE INDEX literals_part ON literals (part) WHERE part IS NOT NULL;
+
+	CREATE TABLE attachment_queue (
+		kind INTEGER NOT NULL,
+		source_id TEXT NOT NULL,
+		attachment_id TEXT NOT NULL,
+		content_rev INTEGER NOT NULL,
+		filename TEXT NOT NULL,
+		mime TEXT NOT NULL,
+		state INTEGER NOT NULL DEFAULT 0,
+		epoch INTEGER NOT NULL DEFAULT 0,
+		reason TEXT,
+		attempts INTEGER NOT NULL DEFAULT 0,
+		next_at INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (kind, source_id, attachment_id)
+	) WITHOUT ROWID;
+	CREATE INDEX attachment_queue_due ON attachment_queue (next_at, kind, source_id) WHERE state = 0;
 	`
 ];
 
@@ -178,7 +198,8 @@ const REQUIRED_TABLES = [
 	'source_queue',
 	'source_collections',
 	'source_aliases',
-	'history'
+	'history',
+	'attachment_queue'
 ];
 
 export type SchemaState =

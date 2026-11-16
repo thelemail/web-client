@@ -2,13 +2,30 @@ import { describeSources, getSourceBarrier, listSourceChanges, listSourceSnapsho
 import { getDraft } from '../../api/drafts';
 import { ApiCallError } from '../../api/types';
 import { BlobChangedError, DecryptionError, decryptPreviewRaw, decryptStoredBody } from '../../mail/decrypt';
-import { fetchAttachmentHeader } from '../../mail/attachments';
+import { AttachmentError, decryptAttachmentFull, fetchAttachmentHeader } from '../../mail/attachments';
+import { loadDraftDoc, restoreDraftAttachments } from '../../mail/draft';
 import type { BridgeFailure, BridgeMessage, BridgeReply, BridgeRequest, BridgeResult, BridgeValues } from './protocol';
 
 const EXPIRED = new Set(['source_cursor_expired', 'source_snapshot_expired']);
 
+function attachmentFailure(code: string): BridgeFailure {
+	switch (code) {
+		case 'no_matching_key':
+			return { code: 'locked' };
+		case 'locked':
+			return { code: 'vault_locked' };
+		case 'network':
+			return { code: 'retry', retryAfterSeconds: null };
+		case 'invalid_ciphertext':
+			return { code: 'failed', reason: 'ciphertext' };
+		default:
+			return { code: 'failed', reason: 'unknown' };
+	}
+}
+
 export function failureOf(error: unknown): BridgeFailure {
 	if (error instanceof BlobChangedError) return { code: 'changed' };
+	if (error instanceof AttachmentError) return attachmentFailure(error.code);
 	if (error instanceof DecryptionError) {
 		switch (error.code) {
 			case 'no_matching_key':
@@ -69,26 +86,32 @@ async function perform(accountId: string, r: BridgeRequest): Promise<BridgeResul
 				const h = res.header;
 				return { ok: true, value: { filename: h.filename, contentType: h.contentType, inline: h.disposition === 'inline', size: h.plaintextSize } };
 			}
-			switch (res.code) {
-				case 'no_matching_key':
-					return { ok: false, failure: { code: 'locked' } };
-				case 'locked':
-					return { ok: false, failure: { code: 'vault_locked' } };
-				case 'network':
-					return { ok: false, failure: { code: 'retry', retryAfterSeconds: null } };
-				case 'invalid_ciphertext':
-					return { ok: false, failure: { code: 'failed', reason: 'ciphertext' } };
-				default:
-					return { ok: false, failure: { code: 'failed', reason: 'unknown' } };
-			}
+			return { ok: false, failure: attachmentFailure(res.code) };
+		}
+		case 'attachmentBytes': {
+			const dec = await decryptAttachmentFull(accountId, r.pointer);
+			return {
+				ok: true,
+				value: { bytes: new Uint8Array(await dec.blob.arrayBuffer()), filename: dec.header.filename, contentType: dec.header.contentType }
+			};
+		}
+		case 'draftAttachment': {
+			const detail = await getDraft(r.draftId, accountId);
+			const bundle = detail.attachmentsBundle;
+			if (!bundle || bundle.sha256 !== r.bundle.sha256 || bundle.sizeBytes !== r.bundle.sizeBytes) return { ok: false, failure: { code: 'changed' } };
+			const doc = await loadDraftDoc(accountId, detail);
+			const meta = doc.attachments[r.index];
+			if (!meta) return { ok: false, failure: { code: 'changed' } };
+			const { file } = (await restoreDraftAttachments(accountId, { ...doc, attachments: [meta] }, bundle))[0];
+			return { ok: true, value: { bytes: new Uint8Array(await file.arrayBuffer()), filename: file.name, contentType: file.type } };
 		}
 	}
 }
 
 function transfers(result: BridgeResult<unknown>): Transferable[] {
 	if (!result.ok) return [];
-	const v = result.value as { mime?: Uint8Array; json?: Uint8Array };
-	const bytes = v?.mime ?? v?.json;
+	const v = result.value as { mime?: Uint8Array; json?: Uint8Array; bytes?: Uint8Array };
+	const bytes = v?.mime ?? v?.json ?? v?.bytes;
 	return bytes ? [bytes.buffer] : [];
 }
 

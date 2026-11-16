@@ -6,7 +6,7 @@ import type { QueryContext } from './compile';
 import { SearchHistory, historyKey } from './history';
 import { QueryEngine, type Provisional, type QueryOptions } from './run';
 import type { Coverage, Dimension, SearchDocument, SourceKey, SourceMetadata } from './types';
-import { SearchWriter, integrityCheck, maintain, type MaintenanceStep } from './writer';
+import { SearchWriter, integrityCheck, maintain, type AttachmentText, type MaintenanceStep } from './writer';
 
 export type HarnessRequest =
 	| { op: 'opfs' }
@@ -16,6 +16,8 @@ export type HarnessRequest =
 	| { op: 'putBatch'; docs: SearchDocument[] }
 	| { op: 'updateMetadata'; key: SourceKey; meta: SourceMetadata }
 	| { op: 'setCoverage'; key: SourceKey; dimension: Dimension; state: Coverage }
+	| { op: 'putAttachmentText'; key: SourceKey; text: AttachmentText }
+	| { op: 'refreshAttachmentCoverage'; key: SourceKey }
 	| { op: 'delete'; key: SourceKey }
 	| { op: 'select'; sql: string; bind?: SqlValue[] }
 	| { op: 'exec'; sql: string; bind?: SqlValue[] }
@@ -154,6 +156,11 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			return writer!.updateMetadata(r.key, r.meta);
 		case 'setCoverage':
 			return writer!.setCoverage(r.key, r.dimension, r.state);
+		case 'putAttachmentText':
+			return writer!.putAttachmentText(r.key, r.text);
+		case 'refreshAttachmentCoverage':
+			writer!.refreshAttachmentCoverage(r.key);
+			return null;
 		case 'delete':
 			return writer!.delete(r.key);
 		case 'select':

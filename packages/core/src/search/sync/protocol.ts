@@ -39,6 +39,12 @@ export interface AttachmentValue {
 	size: number;
 }
 
+export interface FileValue {
+	bytes: Uint8Array;
+	filename: string;
+	contentType: string;
+}
+
 export type BridgeRequest =
 	| { op: 'barrier' }
 	| { op: 'snapshot'; cursor: string | null }
@@ -47,7 +53,9 @@ export type BridgeRequest =
 	| { op: 'preview'; data: string; keyFingerprint?: string }
 	| { op: 'body'; pointer: BlobPointer }
 	| { op: 'draft'; draftId: string; pointer: BlobPointer }
-	| { op: 'attachment'; pointer: BlobPointer };
+	| { op: 'attachment'; pointer: BlobPointer }
+	| { op: 'attachmentBytes'; pointer: BlobPointer }
+	| { op: 'draftAttachment'; draftId: string; bundle: BlobPointer; index: number };
 
 export interface BridgeValues {
 	barrier: SearchSourceBarrier;
@@ -58,6 +66,8 @@ export interface BridgeValues {
 	body: BodyValue;
 	draft: DraftValue;
 	attachment: AttachmentValue;
+	attachmentBytes: FileValue;
+	draftAttachment: FileValue;
 }
 
 export type BridgeMessage = BridgeRequest & { id: number };

@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { Harness, document, randomDirectory, randomKey, removeDirectory } from './harness';
+import { Harness, collect, document, randomDirectory, randomKey, removeDirectory } from './harness';
+import type { QueryContext } from './compile';
 import { ANALYZER_VERSION } from './analysis';
 import { SCHEMA_VERSION } from './schema';
 import { Coverage, Dimension, Field, Flag, SourceKind } from './types';
@@ -53,7 +54,12 @@ async function ftsRows(h: Harness): Promise<{ parts: number; partsFts: number; l
 	return { parts, partsFts, literals, literalsFts };
 }
 
-const UNDO_SYNC = `DROP TABLE history;
+const UNDO_ATTACHMENTS = `DROP TABLE attachment_queue;
+	DROP INDEX literals_part;
+	ALTER TABLE parts DROP COLUMN place`;
+
+const UNDO_SYNC = `${UNDO_ATTACHMENTS};
+	DROP TABLE history;
 	DROP TABLE source_queue;
 	DROP TABLE source_collections;
 	DROP TABLE source_aliases;
@@ -250,6 +256,99 @@ describe('lexical model', () => {
 	});
 });
 
+describe('attachment text', () => {
+	const ctx: QueryContext = { identities: ['ada@calloway.test'], folders: [], labels: [], attachmentText: true };
+	const options = { sort: 'newest', group: 'message' } as const;
+	const key = { kind: SourceKind.message, sourceId: 'm1' };
+
+	async function queue(h: Harness, state: Coverage, rev = 1, id = 'a1'): Promise<void> {
+		await h.call({
+			op: 'exec',
+			sql: `INSERT INTO source_queue (kind, source_id, source_rev, content_rev, metadata_rev, state, described_rev, extracted_rev) VALUES (1, 'm1', ?, ?, 1, 0, ?, ?)
+				ON CONFLICT (kind, source_id) DO UPDATE SET content_rev = excluded.content_rev, extracted_rev = excluded.extracted_rev, described_rev = excluded.described_rev`,
+			bind: [rev, rev, rev, rev]
+		});
+		await h.call({
+			op: 'exec',
+			sql: `INSERT INTO attachment_queue (kind, source_id, attachment_id, content_rev, filename, mime, state) VALUES (1, 'm1', ?, ?, 'ledger.txt', 'text/plain', ?)
+				ON CONFLICT (kind, source_id, attachment_id) DO UPDATE SET state = excluded.state, content_rev = excluded.content_rev`,
+			bind: [id, rev, state]
+		});
+		await h.call({ op: 'refreshAttachmentCoverage', key });
+	}
+
+	async function state(h: Harness): Promise<Coverage | null> {
+		const rows = await h.select<[number]>('SELECT c.state FROM coverage c JOIN sources s ON s.id = c.source WHERE s.source_id = ? AND c.dimension = ?', ['m1', Dimension.attachmentText]);
+		return (rows[0]?.[0] as Coverage | undefined) ?? null;
+	}
+
+	const doc = (extraction: number, contentRevision = 1) =>
+		document('m1', {
+			contentRevision,
+			extraction,
+			parts: [{ field: Field.body, text: 'The harbour lease is attached.' }],
+			attachments: [{ attachmentId: 'a1', filename: 'ledger.txt', mime: 'text/plain', size: 10 }]
+		});
+
+	it('merges late attachment text into the same source and keeps it through body re-extraction', async () => {
+		const h = await memory();
+		await h.call({ op: 'put', doc: doc(1) });
+		await queue(h, Coverage.pending);
+		expect(await state(h)).toBe(Coverage.pending);
+		const before = await collect(h, 'body:harbour attachment:lighthouse', ctx, options);
+		expect(before.summary.matches).toBe(0);
+		expect(before.summary.incomplete).toBe(1);
+
+		expect(await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a1', parts: [{ text: 'Lighthouse ledger', place: 'line:1' }] } })).toBe(true);
+		await queue(h, Coverage.complete);
+		expect(await state(h)).toBe(Coverage.complete);
+		expect((await collect(h, 'body:harbour attachment:lighthouse', ctx, options)).summary.matches).toBe(1);
+
+		await h.call({ op: 'put', doc: doc(2) });
+		expect((await collect(h, 'body:harbour attachment:lighthouse', ctx, options)).summary.matches).toBe(1);
+		expect((await collect(h, 'lighthouse harbour', ctx, options)).summary.matches).toBe(1);
+		expect(await state(h)).toBe(Coverage.complete);
+		expect(await h.select("SELECT place FROM parts WHERE field = ? AND attachment_id = 'a1'", [Field.attachmentText])).toEqual([['line:1']]);
+	});
+
+	it('drops attachment text with a new content revision and refuses stale text', async () => {
+		const h = await memory();
+		await h.call({ op: 'put', doc: doc(1) });
+		await queue(h, Coverage.complete);
+		await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a1', parts: [{ text: 'Lighthouse ledger', place: 'line:1' }] } });
+		await queue(h, Coverage.pending, 2);
+		await h.call({ op: 'put', doc: doc(1, 2) });
+		expect((await collect(h, 'attachment:lighthouse', ctx, options)).summary.matches).toBe(0);
+		expect(await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a1', parts: [{ text: 'stale', place: 'line:1' }] } })).toBe(false);
+		expect(await state(h)).toBe(Coverage.pending);
+		const rows = await ftsRows(h);
+		expect(rows.parts).toBe(rows.partsFts);
+		expect(rows.literals).toBe(rows.literalsFts);
+	});
+
+	it('never matches a phrase across two attachments or two pages', async () => {
+		const h = await memory();
+		await h.call({ op: 'put', doc: doc(1) });
+		await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a1', parts: [{ text: 'alpha beta', place: 'page:1' }, { text: 'gamma delta', place: 'page:2' }] } });
+		await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a2', parts: [{ text: 'epsilon zeta', place: 'line:1' }] } });
+		expect((await collect(h, '"alpha beta"', ctx, options)).summary.matches).toBe(1);
+		expect((await collect(h, '"beta gamma"', ctx, options)).summary.matches).toBe(0);
+		expect((await collect(h, '"delta epsilon"', ctx, options)).summary.matches).toBe(0);
+		expect((await collect(h, 'attachment:"delta epsilon"', ctx, options)).summary.matches).toBe(0);
+	});
+
+	it('replaces the text of one attachment without touching another', async () => {
+		const h = await memory();
+		await h.call({ op: 'put', doc: doc(1) });
+		await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a1', parts: [{ text: 'first draft', place: 'line:1' }] } });
+		await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a2', parts: [{ text: 'second file', place: 'line:1' }] } });
+		await h.call({ op: 'putAttachmentText', key, text: { contentRevision: 1, attachmentId: 'a1', parts: [{ text: 'final version', place: 'line:1' }] } });
+		expect(await matches(h, 'parts_fts', 'draft')).toEqual([]);
+		expect(await matches(h, 'parts_fts', 'final')).toEqual(['m1']);
+		expect(await matches(h, 'parts_fts', 'second')).toEqual(['m1']);
+	});
+});
+
 describe('encrypted file', () => {
 	it('stores no readable term, address or subject', async (ctx) => {
 		if (!opfs) ctx.skip();
@@ -302,6 +401,20 @@ describe('encrypted file', () => {
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: true })).toEqual({ ok: true, rebuilt: true });
 		expect(await h.select('SELECT count(*) FROM sources')).toEqual([[0]]);
 		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+	});
+
+	it('upgrades a version 5 database in place and keeps its text', async (ctx) => {
+		if (!opfs) ctx.skip();
+		const dir = directory();
+		const key = randomKey();
+		const h = harness();
+		await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false });
+		await h.call({ op: 'put', doc: document('m1') });
+		await h.call({ op: 'exec', sql: `${UNDO_ATTACHMENTS}; UPDATE meta SET value = 5 WHERE key = 'schema_version'` });
+		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
+		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+		expect(await matches(h, 'parts_fts', 'm1')).toEqual(['m1']);
+		expect(await h.select('SELECT count(*) FROM attachment_queue')).toEqual([[0]]);
 	});
 
 	it('upgrades a version 2 database in place and keeps its sources', async (ctx) => {

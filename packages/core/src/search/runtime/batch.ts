@@ -61,6 +61,19 @@ export class Batch {
 		this.#dirty = true;
 	}
 
+	async apply(bytes: number, fn: () => void): Promise<{ ok: true } | { ok: false; reason: 'quota' }> {
+		const admission = await this.#admit(bytes * 2);
+		if (!admission.ok) return admission;
+		try {
+			this.#writer.atomic(fn);
+		} catch (error) {
+			if (isQuotaError(error)) return { ok: false, reason: 'quota' };
+			throw error;
+		}
+		this.#committed?.();
+		return { ok: true };
+	}
+
 	async commit(also?: () => void): Promise<CommitResult> {
 		if (!this.#dirty) return { ok: true, results: [] };
 		const admission = await this.#admit(this.#bytes * 2);
