@@ -53,7 +53,8 @@ async function ftsRows(h: Harness): Promise<{ parts: number; partsFts: number; l
 	return { parts, partsFts, literals, literalsFts };
 }
 
-const UNDO_SYNC = `DROP TABLE source_queue;
+const UNDO_SYNC = `DROP TABLE history;
+	DROP TABLE source_queue;
 	DROP TABLE source_collections;
 	DROP TABLE source_aliases;
 	ALTER TABLE sources DROP COLUMN source_rev;

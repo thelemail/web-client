@@ -5,20 +5,24 @@ import {
 	WEIGHTS,
 	compile,
 	coverageFragments,
+	quote,
 	render,
 	universeOf,
 	usedDimensions,
 	type Fragment,
 	type Grouping,
+	type Highlight,
+	type Resolution,
 	type Plan,
 	type QueryContext,
 	type Sort,
 	type Step
 } from './compile';
+import { highlight, type Excerpt, type ExcerptPart, type Span } from './excerpt';
 import { bounded, registerFunctions } from './functions';
 import { suggest, type Suggestion } from './suggest';
 import { Tokenizer, nearWithin } from './tokenizer';
-import { Field, SourceKind, type SourceKey } from './types';
+import { Dimension, Field, Role, SourceKind, type SourceKey } from './types';
 
 export const PAGE_SIZE = 50;
 export const SELECTIVE = 2000;
@@ -29,12 +33,24 @@ const FIRST_SLICE = 2048;
 const MAX_SLICE = 1 << 20;
 const MIN_SLICE = 64;
 const FILL_BATCH = 4096;
+const PROVISIONAL_MS = 120;
+const PROGRESS_EVERY_MS = 250;
+const PART_CHARS = 100_000;
+const RECIPIENTS = 3;
+const COMPLETIONS = 8;
 
 export interface QueryOptions {
 	sort: Sort;
 	group: Grouping;
 	signal?: AbortSignal;
 	strategy?: 'auto' | 'scan' | 'candidates';
+	onProgress?: (progress: Provisional) => void;
+}
+
+export interface Provisional {
+	matches: number;
+	groups: number;
+	rows: ResultRow[] | null;
 }
 
 export interface QuerySummary {
@@ -45,6 +61,9 @@ export interface QuerySummary {
 	incomplete: number;
 	excluded: number;
 	suggestions: Suggestion[];
+	generation: number;
+	dims: Dimension[];
+	resolved: Resolution[];
 }
 
 export type QueryOutcome = { ok: true; summary: QuerySummary } | { ok: false; error: QueryError };
@@ -60,7 +79,30 @@ export interface ResultGroup {
 	sources: SourceKey[];
 }
 
-export type PageResult = { ok: true; groups: ResultGroup[] } | { ok: false; reason: 'invalidated' | 'closed' };
+export interface Person {
+	name: string;
+	address: string;
+}
+
+export interface ResultRow extends ResultGroup {
+	subject: string | null;
+	subjectSpans: Span[];
+	from: Person | null;
+	to: Person[];
+	flags: number;
+	knownFlags: number;
+	attachments: number;
+	excerpt: Excerpt | null;
+	filename: string | null;
+	fields: Field[];
+}
+
+export type PageResult = { ok: true; groups: ResultRow[] } | { ok: false; reason: 'invalidated' | 'closed' };
+
+export interface Completions {
+	terms: string[];
+	people: Person[];
+}
 
 interface Session {
 	prefix: string;
@@ -68,6 +110,8 @@ interface Session {
 	tables: string[];
 	invalid: boolean;
 	summary: QuerySummary | null;
+	highlights: Highlight[];
+	generation: number;
 }
 
 const ORDER: Readonly<Record<Sort, readonly (readonly [string, boolean])[]>> = {
@@ -133,6 +177,7 @@ export class QueryEngine {
 	#sessions = new Map<number, Session>();
 	#deadline = Infinity;
 	#slices = new Map<string, number>();
+	generation = 0;
 
 	constructor(db: Database, capi: CApi) {
 		this.#db = db;
@@ -146,7 +191,7 @@ export class QueryEngine {
 		const compiled = compile(query, ctx);
 		if (!compiled.ok) return compiled;
 		const id = ++this.#next;
-		const session: Session = { prefix: `temp.q${id}`, sort: options.sort, tables: [], invalid: false, summary: null };
+		const session: Session = { prefix: `temp.q${id}`, sort: options.sort, tables: [], invalid: false, summary: null, highlights: compiled.plan.highlights, generation: this.generation };
 		this.#sessions.set(id, session);
 		try {
 			const summary = await this.#execute(id, session, compiled.plan, options);
@@ -162,6 +207,10 @@ export class QueryEngine {
 		const session = this.#sessions.get(id);
 		if (!session?.summary) return { ok: false, reason: 'closed' };
 		if (session.invalid) return { ok: false, reason: 'invalidated' };
+		return { ok: true, groups: this.#rows(session, index) };
+	}
+
+	#rows(session: Session, index: number): ResultRow[] {
 		const p = session.prefix;
 		const rows = this.#db.selectArrays(
 			`SELECT grp, thread, n, tier, score, date, kind, sid FROM ${p}_g ORDER BY ${orderBy(session.sort)} LIMIT ? OFFSET ?`,
@@ -180,19 +229,106 @@ export class QueryEngine {
 				members.get(key)!.push({ kind: kind as SourceKind, sourceId: sid as string });
 			}
 		}
+		return rows.map(([grp, thread, n, tier, score, date, kind, sid]) =>
+			this.#hydrate(
+				{
+					key: grp as string,
+					threadId: thread as string | null,
+					matches: n as number,
+					exact: tier === 1,
+					score: score as number,
+					date: date as number,
+					best: { kind: kind as SourceKind, sourceId: sid as string },
+					sources: members.get(grp as string) ?? []
+				},
+				session.highlights
+			)
+		);
+	}
+
+	#hydrate(group: ResultGroup, highlights: readonly Highlight[]): ResultRow {
+		const head = this.#db.selectArray('SELECT id, flags, known_flags FROM sources WHERE kind = ? AND source_id = ?', [group.best.kind, group.best.sourceId]) as
+			| [number, number, number]
+			| undefined;
+		const empty: ResultRow = { ...group, subject: null, subjectSpans: [], from: null, to: [], flags: 0, knownFlags: 0, attachments: 0, excerpt: null, filename: null, fields: [] };
+		if (!head) return empty;
+		const [id, flags, knownFlags] = head;
+		const parts: ExcerptPart[] = [];
+		let subject: string | null = null;
+		for (const [field, text, attachmentId, locator] of this.#db.selectArrays(
+			'SELECT field, substr(text, 1, ?), attachment_id, locator FROM parts WHERE source = ? AND field != ? ORDER BY id',
+			[PART_CHARS, id, Field.participant]
+		)) {
+			if (field === Field.subject) subject ??= text as string;
+			else parts.push({ field: field as Field, text: text as string, attachmentId: attachmentId as string | null, locator: locator as number | null });
+		}
+		const people = this.#db.selectArrays('SELECT role, name, address FROM participants WHERE source = ? AND role IN (?, ?) ORDER BY rowid', [id, Role.from, Role.to]) as [
+			number,
+			string,
+			string
+		][];
+		const fromRow = people.find((r) => r[0] === Role.from);
+		const to = people.filter((r) => r[0] === Role.to).slice(0, RECIPIENTS).map(([, name, address]) => ({ name, address }));
+		const attachments = Number(this.#db.selectValue('SELECT count(*) FROM attachments WHERE source = ? AND inline = 0', [id]));
+		const lit = highlight(subject, parts, highlights);
+		const attachmentId = lit.excerpt?.attachmentId ?? null;
+		const filename = attachmentId
+			? ((this.#db.selectValue('SELECT filename FROM attachments WHERE source = ? AND attachment_id = ?', [id, attachmentId]) as string | undefined) ?? null)
+			: null;
 		return {
-			ok: true,
-			groups: rows.map(([grp, thread, n, tier, score, date, kind, sid]) => ({
-				key: grp as string,
-				threadId: thread as string | null,
-				matches: n as number,
-				exact: tier === 1,
-				score: score as number,
-				date: date as number,
-				best: { kind: kind as SourceKind, sourceId: sid as string },
-				sources: members.get(grp as string) ?? []
-			}))
+			...group,
+			subject,
+			subjectSpans: lit.subject,
+			from: fromRow ? { name: fromRow[1], address: fromRow[2] } : null,
+			to,
+			flags,
+			knownFlags,
+			attachments,
+			excerpt: lit.excerpt,
+			filename,
+			fields: lit.fields
 		};
+	}
+
+	complete(prefix: string): Completions {
+		const tokens = this.#tokenizer.tokens(prefix);
+		const last = tokens[tokens.length - 1];
+		const terms: string[] = [];
+		if (last && [...last].length >= 2) {
+			this.#db.exec('CREATE VIRTUAL TABLE IF NOT EXISTS temp.tl_vocab USING fts5vocab (main, parts_fts, row)');
+			const rows = this.#db.selectArrays('SELECT term, doc FROM temp.tl_vocab WHERE term >= ? AND term < ? LIMIT 200', [last, `${last}\u{10FFFF}`]) as [string, number][];
+			rows.sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+			for (const [term] of rows) if (term !== last && terms.length < COMPLETIONS) terms.push(term);
+		}
+		const needle = prefix.trim().toLowerCase();
+		const people: Person[] = [];
+		if ([...needle].length >= 2) {
+			const seen = new Set<string>();
+			const add = (rows: unknown[][]) => {
+				for (const [name, address] of rows as [string, string][]) {
+					if (seen.has(address) || people.length >= COMPLETIONS) continue;
+					seen.add(address);
+					people.push({ name, address });
+				}
+			};
+			add(
+				this.#db.selectArrays(
+					'SELECT name, address FROM participants WHERE address >= ? AND address < ? AND role != ? GROUP BY address ORDER BY count(*) DESC LIMIT ?',
+					[needle, `${needle}\u{10FFFF}`, Role.deliveredTo, COMPLETIONS]
+				)
+			);
+			if (last && people.length < COMPLETIONS) {
+				add(
+					this.#db.selectArrays(
+						`SELECT p.name, p.address FROM participants p WHERE p.role != ? AND p.source IN (
+							SELECT source FROM parts_fts WHERE parts_fts MATCH ? AND field = ? LIMIT 200)
+						AND instr(tl_fold(p.name), tl_fold(?)) > 0 GROUP BY p.address ORDER BY count(*) DESC LIMIT ?`,
+						[Role.deliveredTo, `${quote(last)} *`, Field.participant, last, COMPLETIONS]
+					)
+				);
+			}
+		}
+		return { terms, people };
 	}
 
 	close(id: number): void {
@@ -345,7 +481,29 @@ export class QueryEngine {
 		let total = 0;
 		let incomplete = 0;
 		let excluded = 0;
-		await this.#sliced('sources', scope, checkpoint, (lo, hi) => {
+		const started = performance.now();
+		let first = false;
+		let reported = started;
+		const report = () => {
+			if (!options.onProgress || !total) return;
+			const now = performance.now();
+			const groupsSoFar = () => Number(this.#db.selectValue(`SELECT count(*) FROM ${groups}`));
+			if (!first) {
+				const n = groupsSoFar();
+				if (n < PAGE_SIZE && now - started < PROVISIONAL_MS) return;
+				first = true;
+				reported = now;
+				options.onProgress({ matches: total, groups: n, rows: this.#rows(session, 0) });
+				return;
+			}
+			if (now - reported < PROGRESS_EVERY_MS) return;
+			reported = now;
+			options.onProgress({ matches: total, groups: groupsSoFar(), rows: null });
+		};
+		await this.#sliced('sources', scope, async () => {
+			report();
+			await checkpoint();
+		}, (lo, hi) => {
 			const [added, a, b] = this.#atomic(() => {
 				const n = this.#exec(insertMatches, [lo, hi, ...universe.params, ...expr.params]);
 				if (n) this.#exec(upsertGroups, [lo, hi]);
@@ -366,7 +524,10 @@ export class QueryEngine {
 			pages: Math.ceil(groupCount / PAGE_SIZE),
 			incomplete,
 			excluded,
-			suggestions
+			suggestions,
+			generation: session.generation,
+			dims,
+			resolved: plan.resolved
 		};
 	}
 
