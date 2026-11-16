@@ -134,7 +134,7 @@ export interface SearchMatch {
 	fields: number[];
 	quoted: boolean;
 	filename: string | null;
-	locator: number | null;
+	place: string | null;
 }
 
 export function plainSubject(s: unknown): string {

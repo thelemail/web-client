@@ -27,14 +27,18 @@
 	const DIMENSION_LABEL: Record<number, () => string> = {
 		1: msg.mail_search_dim_metadata,
 		2: msg.mail_search_dim_body,
-		3: msg.mail_search_dim_attachment_names
+		3: msg.mail_search_dim_attachment_names,
+		4: msg.mail_search_dim_attachment_text
 	};
 	const GAP_LABEL: Record<Gap, (p: { count: string }) => string> = {
 		waiting: msg.mail_search_gap_waiting,
 		locked: msg.mail_search_gap_locked,
 		failed: msg.mail_search_gap_failed,
 		tooLarge: msg.mail_search_gap_too_large,
-		unsupported: msg.mail_search_gap_unsupported
+		unsupported: msg.mail_search_gap_unsupported,
+		password: msg.mail_search_gap_password,
+		partial: msg.mail_search_gap_partial,
+		timeout: msg.mail_search_gap_timeout
 	};
 
 	let details = $state(false);
