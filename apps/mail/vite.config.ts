@@ -4,7 +4,7 @@ import adapter from '@sveltejs/adapter-static';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
-import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from '../../scripts/csp.ts';
+import { inlineScriptHashes, loadBuildEnv, parserOriginOf, resolveOrigins } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
 import { chunkGraph } from '../../scripts/chunk-graph.ts';
 import { pdfjsAssets } from '../../scripts/pdfjs-assets.ts';
@@ -16,6 +16,7 @@ const buildEnv = loadBuildEnv(workspaceRoot);
 const origins = resolveOrigins(buildEnv);
 const secure = origins.every((origin) => origin.startsWith('https://'));
 const desktop = buildEnv.PUBLIC_THELEMAIL_TARGET === 'desktop';
+const parserOrigin = desktop ? null : parserOriginOf(buildEnv);
 
 const scriptHashes = inlineScriptHashes(readFileSync('src/app.html', 'utf8')).map(
 	(source): `sha256-${string}` => `sha256-${createHash('sha256').update(source, 'utf8').digest('base64')}`
@@ -59,7 +60,7 @@ export default defineConfig({
 								'font-src': ['self', 'data:'],
 								'connect-src': ['self', ...origins],
 								'worker-src': ['self'],
-								'frame-src': ['self'],
+								'frame-src': ['self', parserOrigin!],
 								'object-src': ['none'],
 								'base-uri': ['none'],
 								'form-action': ['none'],

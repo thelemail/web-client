@@ -44,6 +44,14 @@ export function resolveOrigins(env: Record<string, string | undefined>): Origin[
 	return [...origins];
 }
 
+export function parserOriginOf(env: Record<string, string | undefined>): Origin {
+	const value = env.PUBLIC_PARSER_ORIGIN;
+	if (!value) {
+		throw new Error('Missing required build configuration: PUBLIC_PARSER_ORIGIN. Attachment and message parsing runs in that isolated origin. See .env.example.');
+	}
+	return originOf(value, 'PUBLIC_PARSER_ORIGIN');
+}
+
 export function inlineScriptHashes(html: string): string[] {
 	return [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(
 		(match) => match[1]
