@@ -6,7 +6,7 @@ import { SNAPSHOT } from '../sqlite/harness';
 import { Coverage, Dimension } from '../sqlite/types';
 import { SearchClient, type ClientDeps, type ClientState } from '../runtime/client';
 import { directoryFor, type QueryReply, type SyncStatus } from '../runtime/protocol';
-import { memoryRecords } from '../runtime/records';
+import { memoryPrefs, memoryRecords } from '../runtime/records';
 import { FakeSource, type FakeMessage } from './fake';
 
 const CTX: QueryContext = { identities: ['ada@calloway.test'], folders: [], labels: [], attachmentText: false };
@@ -48,6 +48,7 @@ function rig(server = new FakeSource()): Rig {
 					return bundle ? { ok: true, generationId, unlockEpoch: 1 } : { ok: true, generationId, unlockEpoch: 1, bundle: new Uint8Array([1]) };
 				},
 				records,
+				prefs: memoryPrefs(),
 				locks: navigator.locks,
 				watch: (report) => {
 					report({ visible: true, idle: true, constrained: false });

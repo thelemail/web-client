@@ -1,6 +1,6 @@
 import type { ParsedQuery } from '../query/ast';
 import type { Grouping, QueryContext, Sort } from '../sqlite/compile';
-import type { PageResult, QueryOutcome } from '../sqlite/run';
+import type { Completions, PageResult, Provisional, QueryOutcome } from '../sqlite/run';
 import type { Conditions, JobClass } from './scheduler';
 import type { SyncProgress } from '../sync/jobs';
 import type { CoverageCount, QueueCounts } from '../sync/store';
@@ -8,11 +8,16 @@ import type { CoverageCount, QueueCounts } from '../sync/store';
 export type Persistence = 'persistent' | 'session';
 export type Limit = 'session' | 'quota';
 
+export type Mode = 'saved' | 'preview';
+
 export interface SearchStatus {
 	persistence: Persistence;
+	mode: Mode;
 	limited: Limit | null;
 	sources: number;
 	working: JobClass | null;
+	paused: boolean;
+	generation: number;
 	sync: SyncStatus | null;
 }
 
@@ -24,8 +29,8 @@ export interface SyncStatus extends SyncProgress {
 export type InitResult = { ok: true; status: SearchStatus; rebuilt: boolean } | { ok: false; code: 'locked' | 'failed' };
 
 export type ControlRequest =
-	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort; bridge?: MessagePort }
-	| { op: 'memory'; bridge?: MessagePort }
+	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort; bridge?: MessagePort; paused: boolean }
+	| { op: 'memory'; bridge?: MessagePort; mode: Mode; paused: boolean }
 	| { op: 'connect'; port: MessagePort }
 	| { op: 'activity'; conditions: Conditions }
 	| { op: 'job'; name: string; message: unknown }
@@ -41,6 +46,12 @@ export type ClientRequest =
 	| { op: 'cancel'; token: number }
 	| { op: 'page'; session: number; index: number }
 	| { op: 'closeQuery'; session: number }
+	| { op: 'complete'; prefix: string }
+	| { op: 'history' }
+	| { op: 'remember'; query: string }
+	| { op: 'forget' }
+	| { op: 'pause'; paused: boolean }
+	| { op: 'retryFailed' }
 	| { op: 'status' }
 	| { op: 'ping' }
 	| { op: 'bye' };
@@ -54,12 +65,20 @@ export interface StatusEvent {
 	status: SearchStatus;
 }
 
-export type ClientMessage = Reply | StatusEvent;
+export interface ProgressEvent {
+	type: 'progress';
+	token: number;
+	progress: Provisional;
+}
+
+export type ClientMessage = Reply | StatusEvent | ProgressEvent;
 
 export interface ClientResults {
 	query: QueryReply;
 	page: PageResult;
 	status: SearchStatus;
+	complete: Completions;
+	history: string[];
 }
 
 export function directoryFor(accountId: string): string {

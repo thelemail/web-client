@@ -2,7 +2,6 @@ interface ImportMetaEnv {
 	readonly PUBLIC_API_BASE_URL?: string;
 	readonly PUBLIC_THELEMAIL_PRODUCT?: string;
 	readonly PUBLIC_PRODUCT_ORIGINS?: string;
-	readonly PUBLIC_PRIVATE_SEARCH?: string;
 	readonly PUBLIC_LAUNCHED_PRODUCTS?: string;
 }
 

@@ -1,7 +1,7 @@
 import type { OpenSearchRootResponse } from '$core/keystore/protocol';
 import type { ParsedQuery } from '../query/ast';
 import type { QueryContext } from '../sqlite/compile';
-import type { PageResult } from '../sqlite/run';
+import type { Completions, PageResult, Provisional } from '../sqlite/run';
 import type { BrokerEvent, BrokerRequest } from './broker.worker';
 import { contend, lockName, type Contest, type Tenure } from './owner';
 import {
@@ -10,12 +10,13 @@ import {
 	type ClientRequest,
 	type ControlRequest,
 	type InitResult,
+	type Mode,
 	type QueryReply,
 	type QueryRequestOptions,
 	type Reply,
 	type SearchStatus
 } from './protocol';
-import type { RecordStore, SearchRecord } from './records';
+import type { PrefStore, RecordStore, SearchRecord } from './records';
 import type { Conditions } from './scheduler';
 
 const CONNECT_TIMEOUT_MS = 3000;
@@ -42,6 +43,7 @@ export interface ClientDeps {
 	broker(): MessagePort | null;
 	openRoot(args: { accountId: string; bundle?: Uint8Array }, port: MessagePort): Promise<OpenSearchRootResponse>;
 	records: RecordStore;
+	prefs: PrefStore;
 	locks: LockManager | null;
 	watch(report: (conditions: Conditions) => void): () => void;
 	serveBridge?(accountId: string, port: MessagePort): () => void;
@@ -95,13 +97,16 @@ class Link {
 	#port: MessagePort;
 	#rpc: Rpc;
 	#token = 0;
+	#progress = new Map<number, (progress: Provisional) => void>();
 
 	constructor(port: MessagePort, onStatus: (status: SearchStatus) => void) {
 		this.#port = port;
 		this.#rpc = new Rpc((message, transfer) => port.postMessage(message, transfer));
 		port.onmessage = (e: MessageEvent<ClientMessage>) => {
-			if ('type' in e.data) onStatus(e.data.status);
-			else this.#rpc.settle(e.data);
+			const m = e.data;
+			if (!('type' in m)) this.#rpc.settle(m);
+			else if (m.type === 'status') onStatus(m.status);
+			else this.#progress.get(m.token)?.(m.progress);
 		};
 	}
 
@@ -109,13 +114,21 @@ class Link {
 		return this.#rpc.call<T>(request, timeoutMs);
 	}
 
-	async query(query: ParsedQuery, ctx: QueryContext, options: QueryRequestOptions, signal?: AbortSignal): Promise<QueryReply> {
+	async query(
+		query: ParsedQuery,
+		ctx: QueryContext,
+		options: QueryRequestOptions,
+		signal?: AbortSignal,
+		onProgress?: (progress: Provisional) => void
+	): Promise<QueryReply> {
 		const token = this.#token++;
 		const cancel = () => void this.call({ op: 'cancel', token }).catch(() => undefined);
 		signal?.addEventListener('abort', cancel, { once: true });
+		if (onProgress) this.#progress.set(token, onProgress);
 		try {
 			return await this.call<QueryReply>({ op: 'query', token, query, ctx, options });
 		} finally {
+			this.#progress.delete(token);
 			signal?.removeEventListener('abort', cancel);
 		}
 	}
@@ -123,6 +136,7 @@ class Link {
 	close(bye: boolean): void {
 		if (bye) this.#port.postMessage({ op: 'bye', id: -1 });
 		this.#rpc.fail('disconnected');
+		this.#progress.clear();
 		this.#port.onmessage = null;
 		this.#port.close();
 	}
@@ -144,6 +158,7 @@ function delay(ms: number): Promise<void> {
 
 export class SearchClient {
 	readonly accountId: string;
+	readonly mode: Mode;
 	#deps: ClientDeps;
 	#state: ClientState = { phase: 'starting', role: null, status: null };
 	#listeners = new Set<(state: ClientState) => void>();
@@ -160,8 +175,9 @@ export class SearchClient {
 	#alone = false;
 	#crashes = 0;
 
-	constructor(accountId: string, deps: ClientDeps) {
+	constructor(accountId: string, deps: ClientDeps, mode: Mode = 'saved') {
 		this.accountId = accountId;
+		this.mode = mode;
 		this.#deps = deps;
 	}
 
@@ -198,8 +214,38 @@ export class SearchClient {
 		void this.#seek();
 	}
 
-	async query(query: ParsedQuery, ctx: QueryContext, options: QueryRequestOptions, signal?: AbortSignal): Promise<QueryReply> {
-		return this.#ready().query(query, ctx, options, signal);
+	async query(
+		query: ParsedQuery,
+		ctx: QueryContext,
+		options: QueryRequestOptions,
+		signal?: AbortSignal,
+		onProgress?: (progress: Provisional) => void
+	): Promise<QueryReply> {
+		return this.#ready().query(query, ctx, options, signal, onProgress);
+	}
+
+	complete(prefix: string): Promise<Completions> {
+		return this.#ready().call<Completions>({ op: 'complete', prefix });
+	}
+
+	history(): Promise<string[]> {
+		return this.#ready().call<string[]>({ op: 'history' });
+	}
+
+	async remember(query: string): Promise<void> {
+		await this.#ready().call({ op: 'remember', query });
+	}
+
+	async forget(): Promise<void> {
+		await this.#ready().call({ op: 'forget' });
+	}
+
+	async pause(paused: boolean): Promise<void> {
+		await this.#ready().call({ op: 'pause', paused });
+	}
+
+	async retryFailed(): Promise<void> {
+		await this.#ready().call({ op: 'retryFailed' });
 	}
 
 	page(session: number, index: number): Promise<PageResult> {
@@ -367,7 +413,9 @@ export class SearchClient {
 		const live = () => this.#owned === owned && !this.#closed;
 		let record: SearchRecord | null = null;
 		let keystore: MessagePort | null = null;
-		if (!this.#alone) {
+		const prefs = await this.#deps.prefs.get(this.accountId);
+		if (!live()) return 'starting';
+		if (!this.#alone && this.mode === 'saved') {
 			for (let attempt = 0; attempt < 2 && !record; attempt++) {
 				const channel = new MessageChannel();
 				const root = await this.#root(channel.port2);
@@ -405,8 +453,16 @@ export class SearchClient {
 		}
 		const request: ControlRequest =
 			record && keystore
-				? { op: 'init', accountId: this.accountId, generationId: record.generationId, installationSalt: record.installationSalt, keystore, bridge }
-				: { op: 'memory', bridge };
+				? {
+						op: 'init',
+						accountId: this.accountId,
+						generationId: record.generationId,
+						installationSalt: record.installationSalt,
+						keystore,
+						bridge,
+						paused: prefs.paused
+					}
+				: { op: 'memory', bridge, mode: this.mode, paused: prefs.paused };
 		const transfer: Transferable[] = [];
 		if (keystore) transfer.push(keystore);
 		if (bridge) transfer.push(bridge);
