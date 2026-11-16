@@ -1644,6 +1644,7 @@
 			phase: mailSearch.phase,
 			mode: mailSearch.mode,
 			consent: mailSearch.prefs?.consent ?? null,
+			canEnable: mailSearch.fullSearch,
 			query: mailSearch.committed,
 			matches: mailSearch.matches,
 			groups: mailSearch.summary?.groups ?? mailSearch.provisional?.groups ?? (mailSearch.desktop && !mailSearch.searching ? mailSearch.results.length : null),

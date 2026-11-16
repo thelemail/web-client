@@ -5035,5 +5035,6 @@
 	"settings_search_history_desc": "Speichert Ihre letzten 30 Suchen 30 Tage lang verschlüsselt auf diesem Gerät. Beim Ausschalten werden sie gelöscht.",
 	"mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Treffer", "countPlural=*": "{shown} Treffer"}}],
 	"mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Unterhaltung", "countPlural=*": "{shown} Unterhaltungen"}}],
-	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Label", "countPlural=*": "{shown} Labels"}}]
+	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} Label", "countPlural=*": "{shown} Labels"}}],
+	"settings_search_index_unavailable_desc": "Die volle Suche steht zur Verfügung, sobald die Schlüssel dieses Kontos auf das neue Format umgestellt sind. Bis dahin durchsucht sie Betreff, Absender und Vorschau."
 }

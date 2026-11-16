@@ -96,6 +96,7 @@ function view(over: Partial<SearchView> = {}): SearchView {
 		phase: 'ready',
 		mode: 'saved',
 		consent: 'saved',
+		canEnable: true,
 		query: 'permission',
 		matches: 1,
 		groups: 1,
@@ -200,6 +201,13 @@ describe('MessageList search states', () => {
 		card.getByRole('button', { name: 'Turn on full search' }).click();
 		expect(onEnable).toHaveBeenCalled();
 		expect(card.getByRole('button', { name: 'Not now' })).toBeTruthy();
+	});
+
+	it('does not offer full search to an account that cannot hold an index yet', () => {
+		const { container } = mount({ list: [], search: view({ mode: 'preview', consent: null, canEnable: false, matches: 0, groups: 0, coverage: partial }) });
+		expect(container.querySelector('.ss-setup')).toBeNull();
+		expect(within(container).queryByRole('button', { name: 'Turn on full search' })).toBeNull();
+		expect(container.querySelector('.ss-mode')?.textContent).toBe('Searching subjects, senders and previews only');
 	});
 
 	it('names each filter and removes one on request', () => {

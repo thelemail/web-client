@@ -28,7 +28,8 @@
 	);
 
 	const fmt = (n: number) => new Intl.NumberFormat().format(n);
-	const saved = $derived(prefs?.consent === 'saved');
+	const available = $derived(mailSearch.fullSearch);
+	const saved = $derived(prefs?.consent === 'saved' && available);
 	const status = $derived(mailSearch.client?.status ?? null);
 	const phase = $derived(mailSearch.client?.phase ?? null);
 	const coverage = $derived(coverageOf(status, SHOWN_DIMENSIONS));
@@ -90,8 +91,11 @@
 <SecHead desc={m.settings_search_desc()} />
 
 <Card title={m.settings_search_device_title()}>
-	<Row t={m.settings_search_index()} d={saved ? m.settings_search_index_on_desc() : m.settings_search_index_off_desc()}>
-		<Toggle on={saved} disabled={busy || prefs === null} onChange={toggleIndex} />
+	<Row
+		t={m.settings_search_index()}
+		d={!available ? m.settings_search_index_unavailable_desc() : saved ? m.settings_search_index_on_desc() : m.settings_search_index_off_desc()}
+	>
+		<Toggle on={saved} disabled={busy || prefs === null || !available} onChange={toggleIndex} />
 	</Row>
 	<div class="setrow col" role="status" aria-live="polite">
 		<div class="info">

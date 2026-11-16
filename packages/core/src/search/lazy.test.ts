@@ -220,6 +220,22 @@ describe('searchRuntime', () => {
 		detach();
 	});
 
+	it('keeps previews only while the vault cannot hold a search root', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1', () => false);
+		await vi.advanceTimersByTimeAsync(3000);
+		await settle();
+		expect(startSearch).not.toHaveBeenCalled();
+		runtime.focus();
+		await settle();
+		expect(startSearch).toHaveBeenCalledWith('acc-1', 'declined');
+		await runtime.enable();
+		expect(startSearch).toHaveBeenCalledTimes(1);
+		expect(runtime.fullSearch).toBe(false);
+		detach();
+	});
+
 	it('does nothing on the desktop build', async () => {
 		platformState.mirror = {};
 		platformState.keystoreChannel = {};

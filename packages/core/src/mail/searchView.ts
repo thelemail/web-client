@@ -10,6 +10,7 @@ export interface SearchView {
 	phase: SearchPhase;
 	mode: 'saved' | 'preview' | 'desktop';
 	consent: Consent | null;
+	canEnable: boolean;
 	query: string;
 	matches: number | null;
 	groups: number | null;

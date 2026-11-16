@@ -5035,5 +5035,6 @@
 	"settings_search_history_desc": "Keeps your last 30 searches for 30 days, encrypted on this device. Turning it off deletes them.",
 	"mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} match", "countPlural=*": "{shown} matches"}}],
 	"mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} conversation", "countPlural=*": "{shown} conversations"}}],
-	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} label", "countPlural=*": "{shown} labels"}}]
+	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} label", "countPlural=*": "{shown} labels"}}],
+	"settings_search_index_unavailable_desc": "Full search becomes available once this account’s keys move to the new format. Until then, search covers subjects, senders and previews."
 }

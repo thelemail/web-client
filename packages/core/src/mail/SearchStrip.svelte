@@ -80,7 +80,7 @@
 		<span class="ss-status">{status}</span>
 		{#if search.mode === 'preview'}
 			<span class="ss-mode">{msg.mail_search_preview_only()}</span>
-			{#if search.consent === 'declined'}
+			{#if search.canEnable && search.consent !== null}
 				<button type="button" class="ss-link" onclick={search.onEnable}>{msg.mail_search_turn_on()}</button>
 			{/if}
 		{/if}
@@ -154,7 +154,7 @@
 			<span>{msg.mail_search_new_mail()}</span>
 		</button>
 	{/if}
-	{#if search.mode === 'preview' && search.consent === null}
+	{#if search.mode === 'preview' && search.consent === null && search.canEnable}
 		<section class="ss-setup" aria-labelledby="{uid}-setup">
 			<h2 id="{uid}-setup">{msg.mail_search_setup_title()}</h2>
 			<p>{msg.mail_search_setup_body()}</p>

@@ -5035,5 +5035,6 @@
 	"settings_search_history_desc": "Guarda as suas últimas 30 pesquisas durante 30 dias, cifradas neste dispositivo. Ao desativar, são apagadas.",
 	"mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} resultado", "countPlural=*": "{shown} resultados"}}],
 	"mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} conversa", "countPlural=*": "{shown} conversas"}}],
-	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} etiqueta", "countPlural=*": "{shown} etiquetas"}}]
+	"mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} etiqueta", "countPlural=*": "{shown} etiquetas"}}],
+	"settings_search_index_unavailable_desc": "A pesquisa completa fica disponível quando as chaves desta conta passarem para o novo formato. Até lá, pesquisa assuntos, remetentes e pré-visualizações."
 }

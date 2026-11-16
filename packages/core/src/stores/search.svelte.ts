@@ -119,9 +119,13 @@ class MailSearchStore {
 		return !!platform.mirror;
 	}
 
+	get fullSearch(): boolean {
+		return !platform.mirror && searchRuntime.fullSearch;
+	}
+
 	get mode(): 'saved' | 'preview' | 'desktop' {
 		if (platform.mirror) return 'desktop';
-		return this.prefs?.consent === 'saved' ? 'saved' : 'preview';
+		return this.prefs?.consent === 'saved' && this.fullSearch ? 'saved' : 'preview';
 	}
 
 	get phase(): SearchPhase {

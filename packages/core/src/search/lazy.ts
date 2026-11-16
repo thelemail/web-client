@@ -27,15 +27,17 @@ class SearchRuntime {
 	#listeners = new Set<(prefs: SearchPrefs | null) => void>();
 	#channel: BroadcastChannel | null = null;
 	#legacyDropped = false;
+	#fullSearch: () => boolean = () => false;
 
-	attach(accountId: string): () => void {
+	attach(accountId: string, fullSearch: () => boolean = () => true): () => void {
 		if (!searchSupported()) return () => {};
 		this.#accountId = accountId;
+		this.#fullSearch = fullSearch;
 		this.#listen();
 		const cancelIdle = afterBoot(() => {
 			this.#dropLegacy();
 			void this.#loadPrefs(accountId).then((prefs) => {
-				if (prefs?.consent === 'saved' && this.#accountId === accountId) this.#ensure(accountId);
+				if (prefs?.consent === 'saved' && this.#accountId === accountId && this.fullSearch) this.#ensure(accountId);
 			});
 		});
 		const unsubscribe = keystore.subscribeAccount(accountId, (b) => this.#onKeystore(accountId, b));
@@ -48,6 +50,10 @@ class SearchRuntime {
 			}
 			void this.#stop(accountId, false);
 		};
+	}
+
+	get fullSearch(): boolean {
+		return this.#accountId !== null && this.#fullSearch();
 	}
 
 	get prefs(): SearchPrefs | null {
@@ -81,6 +87,7 @@ class SearchRuntime {
 	}
 
 	async enable(): Promise<void> {
+		if (!this.fullSearch) return;
 		await this.#update({ consent: 'saved' });
 		await this.#restart(false);
 	}
@@ -95,6 +102,7 @@ class SearchRuntime {
 	}
 
 	async rebuild(): Promise<void> {
+		if (!this.fullSearch) return;
 		await this.#update({ consent: 'saved' });
 		await this.#restart(true);
 	}
@@ -179,7 +187,7 @@ class SearchRuntime {
 
 	#ensure(accountId: string): void {
 		if (this.#running?.accountId === accountId) return;
-		const consent: Consent = this.#prefs?.accountId === accountId && this.#prefs.consent === 'saved' ? 'saved' : 'declined';
+		const consent: Consent = this.#prefs?.accountId === accountId && this.#prefs.consent === 'saved' && this.fullSearch ? 'saved' : 'declined';
 		const client = import('./runtime/start').then((m) => m.startSearch(accountId, consent));
 		const running: Running = { accountId, consent, client };
 		this.#running = running;

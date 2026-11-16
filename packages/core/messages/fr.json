@@ -5035,5 +5035,6 @@
   "settings_search_history_desc": "Conserve vos 30 dernières recherches pendant 30 jours, chiffrées sur cet appareil. Les désactiver les supprime.",
   "mail_search_row_matches": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} résultat", "countPlural=*": "{shown} résultats"}}],
   "mail_search_count": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} conversation", "countPlural=*": "{shown} conversations"}}],
-  "mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} étiquette", "countPlural=*": "{shown} étiquettes"}}]
+  "mail_search_label_many": [{"declarations": ["input count", "input shown", "local countPlural = count: plural"], "selectors": ["countPlural"], "match": {"countPlural=one": "{shown} étiquette", "countPlural=*": "{shown} étiquettes"}}],
+  "settings_search_index_unavailable_desc": "La recherche complète sera disponible dès que les clés de ce compte seront passées au nouveau format. D’ici là, elle couvre les objets, les expéditeurs et les aperçus."
 }
