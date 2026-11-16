@@ -60,10 +60,10 @@ class SearchRuntime {
 		return () => this.#listeners.delete(listener);
 	}
 
-	focus(): void {
+	focus(): Promise<void> {
 		const accountId = this.#accountId;
-		if (!accountId || !searchSupported()) return;
-		void this.#loadPrefs(accountId).then(() => {
+		if (!accountId || !searchSupported()) return Promise.resolve();
+		return this.#loadPrefs(accountId).then(() => {
 			if (this.#accountId === accountId) this.#ensure(accountId);
 		});
 	}

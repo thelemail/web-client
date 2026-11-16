@@ -1,22 +1,28 @@
-import { afterBoot } from '$core/async/idle';
 import { folderFromServer, type Message } from '$core/mail/data';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
-import type { ParsedQuery, QueryError } from '$core/search/query/ast';
+import { keystore } from '$core/keystore/keystore-client';
 import type { SearchHit } from '$core/platform/types';
+import { searchRuntime, searchSupported } from '$core/search/lazy';
+import type { Chip } from '$core/search/chips';
+import type { CoverageView } from '$core/search/coverage';
+import type { ParsedQuery, QueryError, Range } from '$core/search/query/ast';
+import type { ClientState, SearchClient } from '$core/search/runtime/client';
+import type { SearchPrefs } from '$core/search/runtime/records';
+import type { Sort } from '$core/search/sqlite/compile';
+import type { Completions, QuerySummary } from '$core/search/sqlite/run';
+import type { Suggestion } from '$core/search/sqlite/suggest';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
 
-type Engine = typeof import('./searchEngine');
+type Ui = typeof import('$core/search/ui');
 
 const DEBOUNCE_MS = 180;
-const MIRROR_LIMIT = 200;
-const PREVIEW_LIMIT = 6;
+const DESKTOP_LIMIT = 200;
+const PREVIEW_ROWS = 6;
+const NO_COMPLETIONS: Completions = { terms: [], people: [] };
 
-interface Found {
-	messages: Message[];
-	error: QueryError | null;
-}
+export type SearchPhase = 'idle' | 'starting' | 'searching' | 'ready' | 'failed' | 'locked' | 'unavailable';
 
 function messageFromHit(hit: SearchHit): Message {
 	const display = hit.senderDisplay || hit.senderAddress || m.mailbox_unknown_sender();
@@ -36,7 +42,7 @@ function messageFromHit(hit: SearchHit): Message {
 		bg: palette.bg,
 		fg: palette.fg,
 		epoch: Number.isNaN(storedAt) ? 0 : storedAt,
-		subj: hit.subject || '(no subject)',
+		subj: hit.subject || m.mail_compose_no_subject(),
 		labels: [],
 		unread: !hit.read,
 		starred: hit.starred,
@@ -44,35 +50,62 @@ function messageFromHit(hit: SearchHit): Message {
 		prev: hit.excerpt || hit.snippet,
 		body: [],
 		threadRootId: hit.threadRootId ?? undefined,
-		attachments:
-			hit.attachmentCount > 0
-				? new Array(hit.attachmentCount).fill({ name: 'attachment', size: '' })
-				: undefined
+		attachments: hit.attachmentCount > 0 ? new Array(hit.attachmentCount).fill({ name: 'attachment', size: '' }) : undefined
 	};
+}
+
+function ready(client: SearchClient): Promise<void> {
+	return new Promise((resolve, reject) => {
+		let done = false;
+		let off: (() => void) | null = null;
+		const finish = (error?: Error) => {
+			if (done) return;
+			done = true;
+			queueMicrotask(() => off?.());
+			if (error) reject(error);
+			else resolve();
+		};
+		off = client.subscribe((s) => {
+			if (s.phase === 'ready') finish();
+			else if (s.phase === 'locked' || s.phase === 'failed' || s.phase === 'closed') finish(new Error(s.phase));
+		});
+		if (done) off();
+	});
 }
 
 class MailSearchStore {
 	draft = $state('');
 	committed = $state('');
-	results = $state<Message[]>([]);
+	sort = $state<Sort>('relevance');
+	exactFolders = $state(false);
+	results = $state.raw<Message[]>([]);
+	summary = $state.raw<QuerySummary | null>(null);
+	provisional = $state.raw<{ matches: number; groups: number } | null>(null);
 	searching = $state(false);
 	failed = $state(false);
-	preview = $state<Message[]>([]);
+	loadingMore = $state(false);
+	moreFailed = $state(false);
+	queryError = $state.raw<QueryError | null>(null);
+	preview = $state.raw<Message[]>([]);
 	previewing = $state(false);
-	indexed = $state(0);
-	indexing = $state(false);
-	complete = $state(false);
-	queryError = $state<QueryError | null>(null);
+	completions = $state.raw<Completions>(NO_COMPLETIONS);
+	history = $state.raw<string[]>([]);
+	client = $state.raw<ClientState | null>(null);
+	prefs = $state.raw<SearchPrefs | null>(null);
 
-	#query = $state.raw<ParsedQuery | null>(null);
-	#engine = $state.raw<Engine | null>(null);
-	#loading: Promise<Engine> | null = null;
+	#ui = $state.raw<Ui | null>(null);
+	#parsed = $state.raw<ParsedQuery | null>(null);
+	#loading: Promise<Ui> | null = null;
 	#accountId: string | null = null;
 	#queryAccount: string | null = null;
 	#timer: ReturnType<typeof setTimeout> | undefined;
 	#run = 0;
 	#previewRun = 0;
-	#unsubscribe: (() => void) | null = null;
+	#session: { id: number; client: SearchClient } | null = null;
+	#pages = 0;
+	#abort: AbortController | null = null;
+	#watching: SearchClient | null = null;
+	#unwatch: (() => void) | null = null;
 
 	get text(): string {
 		return this.committed;
@@ -82,18 +115,61 @@ class MailSearchStore {
 		return this.committed.trim().length > 0;
 	}
 
-	get partial(): boolean {
-		return this.active && !this.complete && !platform.mirror;
+	get desktop(): boolean {
+		return !!platform.mirror;
+	}
+
+	get mode(): 'saved' | 'preview' | 'desktop' {
+		if (platform.mirror) return 'desktop';
+		return this.prefs?.consent === 'saved' ? 'saved' : 'preview';
+	}
+
+	get phase(): SearchPhase {
+		if (!this.active) return 'idle';
+		if (this.queryError) return 'failed';
+		const client = this.client?.phase;
+		if (!platform.mirror && (client === 'locked' || client === 'failed')) return client === 'locked' ? 'locked' : 'unavailable';
+		if (this.failed) return 'failed';
+		if (this.searching) return this.summary || this.provisional ? 'searching' : 'starting';
+		return 'ready';
 	}
 
 	get error(): string | null {
-		return this.queryError && this.#engine ? this.#engine.errorMessage(this.queryError) : null;
+		return this.queryError && this.#ui ? this.#ui.errorMessage(this.queryError) : null;
 	}
 
-	get chips(): string[] {
-		const query = this.#query;
-		if (!this.active || !query || !this.#engine) return [];
-		return this.#engine.chipsOf(query, this.committed);
+	get errorRange(): Range | null {
+		return this.queryError?.range ?? null;
+	}
+
+	get chips(): Chip[] {
+		const parsed = this.#parsed;
+		const ui = this.#ui;
+		if (!this.active || !parsed || !ui) return [];
+		return ui.chipsOf(parsed, this.committed, this.summary?.resolved ?? []);
+	}
+
+	get suggestions(): Suggestion[] {
+		return this.summary?.matches === 0 ? this.summary.suggestions : [];
+	}
+
+	get coverage(): CoverageView | null {
+		const ui = this.#ui;
+		if (!ui || platform.mirror) return null;
+		return ui.coverageOf(this.client?.status ?? null, this.summary?.dims ?? []);
+	}
+
+	get matches(): number | null {
+		return this.summary?.matches ?? this.provisional?.matches ?? null;
+	}
+
+	get exhausted(): boolean {
+		return !this.summary || this.#pages >= this.summary.pages;
+	}
+
+	get newAvailable(): boolean {
+		const status = this.client?.status;
+		return !!(this.summary && status && !this.searching && status.generation > this.summary.generation);
 	}
 
 	setAccount(accountId: string | null): void {
@@ -105,38 +181,39 @@ class MailSearchStore {
 	start(accountId: string): () => void {
 		this.setAccount(accountId);
 		this.#accountId = accountId;
-		this.#unsubscribe?.();
-		this.indexed = 0;
-		this.complete = false;
-		if (platform.mirror) {
+		if (platform.mirror || !searchSupported()) {
 			return () => {
 				this.#accountId = null;
 				this.setAccount(null);
 			};
 		}
-		const cancelIdle = afterBoot(() => this.warm());
-		if (this.#engine) this.#follow(this.#engine, accountId);
+		const offPrefs = searchRuntime.subscribePrefs((prefs) => {
+			this.prefs = prefs?.accountId === accountId ? prefs : null;
+		});
+		const offLock = keystore.subscribeAccount(accountId, (b) => {
+			if (b.type === 'locked' || b.type === 'cleared' || b.type === 'clearedAll') this.#reset();
+		});
 		return () => {
-			cancelIdle();
-			this.#unsubscribe?.();
-			this.#unsubscribe = null;
+			offPrefs();
+			offLock();
+			this.#unwatchClient();
 			this.#accountId = null;
 			this.setAccount(null);
-			this.#engine?.close();
 		};
 	}
 
 	warm(): void {
 		void this.#load().catch(() => undefined);
+		if (platform.mirror || !this.#accountId) return;
+		void searchRuntime.focus().then(() => this.#watchClient());
 	}
 
-	#load(): Promise<Engine> {
-		if (this.#engine) return Promise.resolve(this.#engine);
-		this.#loading ??= import('./searchEngine').then(
-			(engine) => {
-				this.#engine = engine;
-				if (this.#accountId && !platform.mirror) this.#follow(engine, this.#accountId);
-				return engine;
+	#load(): Promise<Ui> {
+		if (this.#ui) return Promise.resolve(this.#ui);
+		this.#loading ??= import('$core/search/ui').then(
+			(ui) => {
+				this.#ui = ui;
+				return ui;
 			},
 			(error) => {
 				this.#loading = null;
@@ -146,29 +223,43 @@ class MailSearchStore {
 		return this.#loading;
 	}
 
-	#follow(engine: Engine, accountId: string): void {
-		this.#unsubscribe?.();
-		this.#unsubscribe = engine.subscribe((progress) => {
-			if (this.#accountId !== accountId) return;
-			this.indexed = progress.indexed;
-			this.complete = progress.complete;
-			if (this.active) this.#execute();
-			if (this.draft.trim()) this.#executePreview();
+	#watchClient(): void {
+		const pending = searchRuntime.client();
+		if (!pending) return;
+		void pending.then((client) => {
+			if (this.#watching === client) return;
+			this.#unwatchClient();
+			this.#watching = client;
+			this.#unwatch = client.subscribe((state) => {
+				this.client = state;
+				if (state.phase === 'ready' && this.prefs?.history && !this.history.length) void this.#loadHistory(client);
+			});
 		});
-		void this.refresh();
 	}
 
-	async refresh(): Promise<void> {
-		const accountId = this.#accountId;
-		const engine = this.#engine;
-		if (!accountId || platform.mirror || !engine) return;
-		this.indexing = true;
+	#unwatchClient(): void {
+		this.#unwatch?.();
+		this.#unwatch = null;
+		this.#watching = null;
+		this.client = null;
+	}
+
+	async #client(): Promise<SearchClient> {
+		await searchRuntime.focus();
+		this.#watchClient();
+		const pending = searchRuntime.client();
+		if (!pending) throw new Error('unavailable');
+		const client = await pending;
+		await ready(client);
+		return client;
+	}
+
+	async #loadHistory(client: SearchClient): Promise<void> {
 		try {
-			await engine.sync(accountId);
+			const list = await client.history();
+			if (this.#watching === client) this.history = list;
 		} catch {
-			this.complete = false;
-		} finally {
-			if (this.#accountId === accountId) this.indexing = false;
+			this.history = [];
 		}
 	}
 
@@ -179,55 +270,88 @@ class MailSearchStore {
 		if (!next.trim()) {
 			this.preview = [];
 			this.previewing = false;
+			this.completions = NO_COMPLETIONS;
 			return;
 		}
 		this.previewing = true;
-		this.#timer = setTimeout(() => this.#executePreview(), DEBOUNCE_MS);
+		this.#timer = setTimeout(() => void this.#executePreview(), DEBOUNCE_MS);
 	}
 
 	commit(query: string = this.draft): void {
 		if (this.#timer !== undefined) clearTimeout(this.#timer);
 		this.#previewRun += 1;
 		this.previewing = false;
+		this.completions = NO_COMPLETIONS;
 		this.draft = query;
 		this.committed = query;
 		this.failed = false;
 		this.queryError = null;
-		this.#query = null;
+		this.#parsed = null;
+		this.#cancel();
 		if (!query.trim()) {
 			this.#run += 1;
 			this.results = [];
+			this.summary = null;
+			this.provisional = null;
 			this.searching = false;
 			return;
 		}
 		this.searching = true;
-		const run = ++this.#run;
-		const engine = this.#engine;
-		if (engine) {
-			this.#begin(engine, query);
-			return;
-		}
-		this.#load().then(
-			(loaded) => {
-				if (run === this.#run) this.#begin(loaded, query);
-			},
-			() => {
-				if (run !== this.#run) return;
-				this.failed = true;
-				this.searching = false;
+		void this.#execute(++this.#run, query);
+	}
+
+	refresh(): void {
+		if (this.active) this.commit(this.committed);
+	}
+
+	setSort(sort: Sort): void {
+		if (this.sort === sort) return;
+		this.sort = sort;
+		this.refresh();
+	}
+
+	setExactFolders(exact: boolean): void {
+		if (this.exactFolders === exact) return;
+		this.exactFolders = exact;
+		this.refresh();
+	}
+
+	applySuggestion(range: Range, replacement: string): void {
+		const ui = this.#ui;
+		if (!ui) return;
+		this.commit(ui.replaceRange(this.committed, range, replacement));
+	}
+
+	removeChip(chip: Chip): void {
+		const ui = this.#ui;
+		if (!ui) return;
+		this.commit(ui.replaceRange(this.committed, chip.range, '').replace(/\s+/g, ' ').trim());
+	}
+
+	async loadMore(): Promise<void> {
+		const session = this.#session;
+		const summary = this.summary;
+		const run = this.#run;
+		if (!session || !summary || this.loadingMore || this.#pages >= summary.pages) return;
+		this.loadingMore = true;
+		this.moreFailed = false;
+		try {
+			const page = await session.client.page(session.id, this.#pages);
+			if (run !== this.#run) return;
+			if (!page.ok) {
+				if (page.reason === 'invalidated') this.refresh();
+				else this.moreFailed = true;
+				return;
 			}
-		);
-	}
-
-	#begin(engine: Engine, query: string): void {
-		const parsed = engine.parse(query);
-		if (parsed.ok) this.#query = parsed.query;
-		else if (!platform.mirror) this.queryError = parsed.error;
-		this.#execute();
-	}
-
-	setText(next: string): void {
-		this.commit(next);
+			const ui = await this.#load();
+			if (run !== this.#run) return;
+			this.#pages += 1;
+			this.results = [...this.results, ...page.groups.map(ui.messageFromRow)];
+		} catch {
+			if (run === this.#run) this.moreFailed = true;
+		} finally {
+			if (run === this.#run) this.loadingMore = false;
+		}
 	}
 
 	clear(): void {
@@ -236,110 +360,176 @@ class MailSearchStore {
 	}
 
 	findResult(id: string): Message | null {
-		return this.results.find((m) => m.id === id) ?? this.preview.find((m) => m.id === id) ?? null;
+		return this.results.find((r) => r.id === id) ?? this.preview.find((r) => r.id === id) ?? null;
 	}
 
 	patch(id: string, patch: Partial<Message>): void {
-		const apply = (list: Message[]) =>
-			list.some((m) => m.id === id) ? list.map((m) => (m.id === id ? { ...m, ...patch } : m)) : list;
+		const apply = (list: Message[]) => (list.some((r) => r.id === id) ? list.map((r) => (r.id === id ? { ...r, ...patch } : r)) : list);
 		this.results = apply(this.results);
 		this.preview = apply(this.preview);
+	}
+
+	historyMatches(prefix: string): string[] {
+		const p = prefix.trim().toLowerCase();
+		return this.history.filter((h) => h.toLowerCase().startsWith(p) && h !== prefix.trim());
+	}
+
+	#cancel(): void {
+		this.#abort?.abort();
+		this.#abort = null;
+		const session = this.#session;
+		this.#session = null;
+		this.#pages = 0;
+		this.loadingMore = false;
+		this.moreFailed = false;
+		if (session) void session.client.closeQuery(session.id);
 	}
 
 	#reset(): void {
 		if (this.#timer !== undefined) clearTimeout(this.#timer);
 		this.#run += 1;
 		this.#previewRun += 1;
+		this.#cancel();
 		this.draft = '';
 		this.committed = '';
 		this.results = [];
+		this.summary = null;
+		this.provisional = null;
 		this.searching = false;
 		this.failed = false;
 		this.queryError = null;
-		this.#query = null;
+		this.#parsed = null;
 		this.preview = [];
 		this.previewing = false;
-		this.indexed = 0;
-		this.complete = false;
+		this.completions = NO_COMPLETIONS;
+		this.history = [];
+		this.exactFolders = false;
 	}
 
-	async #search(text: string, query: ParsedQuery | null, limit: number): Promise<Found> {
+	async #execute(run: number, text: string): Promise<void> {
 		const accountId = this.#accountId;
-		const mirror = platform.mirror;
-		if (!accountId) return { messages: [], error: null };
-		if (mirror) {
-			const hits = await mirror.search(accountId, text.trim(), limit);
-			return { messages: hits.map(messageFromHit), error: null };
-		}
-		if (!query) return { messages: [], error: null };
-		return (await this.#load()).find(query, limit);
-	}
-
-	#execute(): void {
-		const text = this.committed;
-		if (!this.#accountId || !text.trim() || (!platform.mirror && !this.#query)) {
-			this.results = [];
-			this.searching = false;
-			return;
-		}
-		const run = ++this.#run;
-		void this.#search(text, this.#query, MIRROR_LIMIT).then(
-			(found) => {
-				if (run !== this.#run) return;
-				this.results = found.messages;
-				this.queryError = found.error;
-				this.failed = false;
+		const current = () => run === this.#run && this.#accountId === accountId;
+		try {
+			const ui = await this.#load();
+			if (!current()) return;
+			if (platform.mirror) {
+				const hits = accountId ? await platform.mirror.search(accountId, text.trim(), DESKTOP_LIMIT) : [];
+				if (!current()) return;
+				this.results = hits.map(messageFromHit);
 				this.searching = false;
-			},
-			() => {
-				if (run !== this.#run) return;
-				this.failed = true;
-				this.searching = false;
-			}
-		);
-	}
-
-	#executePreview(): void {
-		const text = this.draft;
-		const engine = this.#engine;
-		if (!engine) {
-			if (!this.#accountId || !text.trim()) {
-				this.preview = [];
-				this.previewing = false;
 				return;
 			}
-			const waiting = ++this.#previewRun;
-			this.#load().then(
-				() => {
-					if (waiting === this.#previewRun) this.#executePreview();
-				},
-				() => {
-					if (waiting !== this.#previewRun) return;
-					this.preview = [];
-					this.previewing = false;
-				}
-			);
+			const parsed = ui.parse(text);
+			if (!parsed.ok) {
+				this.queryError = parsed.error;
+				this.results = [];
+				this.summary = null;
+				this.searching = false;
+				return;
+			}
+			this.#parsed = parsed.query;
+			const client = await this.#client();
+			if (!current()) return;
+			const abort = new AbortController();
+			this.#abort = abort;
+			const ctx = ui.contextFor({ exactFolders: this.exactFolders, attachmentText: true });
+			const reply = await client.query(parsed.query, ctx, { sort: this.sort, group: 'thread' }, abort.signal, (p) => {
+				if (!current()) return;
+				this.provisional = { matches: p.matches, groups: p.groups };
+				if (p.rows) this.results = p.rows.map(ui.messageFromRow);
+			});
+			if (!current()) {
+				if (reply.ok) void client.closeQuery(reply.summary.id);
+				return;
+			}
+			if (!reply.ok) {
+				if ('cancelled' in reply) return;
+				this.queryError = reply.error;
+				this.results = [];
+				this.summary = null;
+				this.searching = false;
+				return;
+			}
+			this.#session = { id: reply.summary.id, client };
+			const first = reply.summary.pages > 0 ? await client.page(reply.summary.id, 0) : { ok: true as const, groups: [] };
+			if (!current()) return;
+			if (!first.ok) {
+				this.refresh();
+				return;
+			}
+			this.#pages = reply.summary.pages > 0 ? 1 : 0;
+			this.summary = reply.summary;
+			this.provisional = null;
+			this.results = first.groups.map(ui.messageFromRow);
+			this.searching = false;
+			if (this.prefs?.history) void this.#remember(client, text);
+		} catch {
+			if (!current()) return;
+			this.failed = true;
+			this.searching = false;
+		}
+	}
+
+	async #remember(client: SearchClient, text: string): Promise<void> {
+		try {
+			await client.remember(text);
+			await this.#loadHistory(client);
+		} catch {
 			return;
 		}
-		const parsed = text.trim() ? engine.parse(text) : null;
-		if (!this.#accountId || !parsed || (!parsed.ok && !platform.mirror)) {
+	}
+
+	async #executePreview(): Promise<void> {
+		const text = this.draft;
+		const run = ++this.#previewRun;
+		const accountId = this.#accountId;
+		const current = () => run === this.#previewRun && this.#accountId === accountId;
+		if (!accountId || !text.trim()) {
 			this.preview = [];
 			this.previewing = false;
 			return;
 		}
-		const run = ++this.#previewRun;
-		void this.#search(text, parsed.ok ? parsed.query : null, PREVIEW_LIMIT).then(
-			(found) => {
-				if (run !== this.#previewRun) return;
-				this.preview = found.messages;
+		try {
+			const ui = await this.#load();
+			if (!current()) return;
+			if (platform.mirror) {
+				const hits = await platform.mirror.search(accountId, text.trim(), PREVIEW_ROWS);
+				if (!current()) return;
+				this.preview = hits.map(messageFromHit);
 				this.previewing = false;
-			},
-			() => {
-				if (run !== this.#previewRun) return;
+				return;
+			}
+			const parsed = ui.parse(text);
+			const client = await this.#client();
+			if (!current()) return;
+			const last = text.split(/\s+/).at(-1) ?? '';
+			const completions = last && !last.includes(':') ? await client.complete(last).catch(() => NO_COMPLETIONS) : NO_COMPLETIONS;
+			if (!current()) return;
+			this.completions = completions;
+			if (!parsed.ok) {
 				this.preview = [];
 				this.previewing = false;
+				return;
 			}
-		);
+			const ctx = ui.contextFor({ exactFolders: this.exactFolders, attachmentText: true });
+			const reply = await client.query(parsed.query, ctx, { sort: 'relevance', group: 'thread' });
+			if (!reply.ok) {
+				if (current()) {
+					this.preview = [];
+					this.previewing = false;
+				}
+				return;
+			}
+			const page = reply.summary.pages > 0 ? await client.page(reply.summary.id, 0) : null;
+			void client.closeQuery(reply.summary.id);
+			if (!current()) return;
+			this.preview = page?.ok ? page.groups.slice(0, PREVIEW_ROWS).map(ui.messageFromRow) : [];
+			this.previewing = false;
+		} catch {
+			if (!current()) return;
+			this.preview = [];
+			this.previewing = false;
+		}
 	}
 }
 

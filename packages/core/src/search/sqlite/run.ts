@@ -22,6 +22,7 @@ import { highlight, type Excerpt, type ExcerptPart, type Span } from './excerpt'
 import { bounded, registerFunctions } from './functions';
 import { suggest, type Suggestion } from './suggest';
 import { Tokenizer, nearWithin } from './tokenizer';
+import { COLLECTION_TYPE } from './writer';
 import { Dimension, Field, Role, SourceKind, type SourceKey } from './types';
 
 export const PAGE_SIZE = 50;
@@ -92,6 +93,8 @@ export interface ResultRow extends ResultGroup {
 	flags: number;
 	knownFlags: number;
 	attachments: number;
+	folders: string[];
+	labels: string[];
 	excerpt: Excerpt | null;
 	filename: string | null;
 	fields: Field[];
@@ -250,7 +253,7 @@ export class QueryEngine {
 		const head = this.#db.selectArray('SELECT id, flags, known_flags FROM sources WHERE kind = ? AND source_id = ?', [group.best.kind, group.best.sourceId]) as
 			| [number, number, number]
 			| undefined;
-		const empty: ResultRow = { ...group, subject: null, subjectSpans: [], from: null, to: [], flags: 0, knownFlags: 0, attachments: 0, excerpt: null, filename: null, fields: [] };
+		const empty: ResultRow = { ...group, subject: null, subjectSpans: [], from: null, to: [], flags: 0, knownFlags: 0, attachments: 0, folders: [], labels: [], excerpt: null, filename: null, fields: [] };
 		if (!head) return empty;
 		const [id, flags, knownFlags] = head;
 		const parts: ExcerptPart[] = [];
@@ -270,6 +273,11 @@ export class QueryEngine {
 		const fromRow = people.find((r) => r[0] === Role.from);
 		const to = people.filter((r) => r[0] === Role.to).slice(0, RECIPIENTS).map(([, name, address]) => ({ name, address }));
 		const attachments = Number(this.#db.selectValue('SELECT count(*) FROM attachments WHERE source = ? AND inline = 0', [id]));
+		const folders: string[] = [];
+		const labels: string[] = [];
+		for (const [collection, type] of this.#db.selectArrays('SELECT collection_id, type FROM collections WHERE source = ?', [id]) as [string, number][]) {
+			(type === COLLECTION_TYPE.label ? labels : folders).push(collection);
+		}
 		const lit = highlight(subject, parts, highlights);
 		const attachmentId = lit.excerpt?.attachmentId ?? null;
 		const filename = attachmentId
@@ -284,6 +292,8 @@ export class QueryEngine {
 			flags,
 			knownFlags,
 			attachments,
+			folders,
+			labels,
 			excerpt: lit.excerpt,
 			filename,
 			fields: lit.fields

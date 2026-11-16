@@ -27,6 +27,8 @@ vi.mock('$core/auth/ReauthDialog.svelte', () => ({ default: () => {} }));
 vi.mock('$core/stores/mailbox.svelte', () => ({ mailbox: { refreshLoaded: vi.fn() } }));
 const searchStart = vi.hoisted(() => vi.fn(() => () => {}));
 vi.mock('$core/stores/search.svelte', () => ({ mailSearch: { start: searchStart } }));
+const searchAttach = vi.hoisted(() => vi.fn(() => () => {}));
+vi.mock('$core/search/lazy', () => ({ searchRuntime: { attach: searchAttach } }));
 
 const { default: SlotLayout } = await import('./+layout.svelte');
 

@@ -116,9 +116,9 @@ vi.mock('$core/stores/mailCollections.svelte', () => ({
 }));
 
 const searchRefresh = vi.fn();
-vi.mock('$core/stores/search.svelte', () => ({
-	mailSearch: {
-		refresh: (...a: unknown[]) => searchRefresh(...a)
+vi.mock('$core/search/lazy', () => ({
+	searchRuntime: {
+		changed: (...a: unknown[]) => searchRefresh(...a)
 	}
 }));
 

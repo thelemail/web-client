@@ -5,7 +5,7 @@ import { unread } from '$core/stores/unread.svelte';
 import { drafts } from '$core/stores/drafts.svelte';
 import { scheduled } from '$core/stores/scheduled.svelte';
 import { mailCollections } from '$core/stores/mailCollections.svelte';
-import { mailSearch } from '$core/stores/search.svelte';
+import { searchRuntime } from '$core/search/lazy';
 import { applyHint } from './dispatch';
 import { notifyCalendarResync } from './calendarHook';
 import { RealtimeConnection } from './connection';
@@ -154,7 +154,7 @@ class RealtimeStore {
 			void scheduled.refresh();
 		}
 		void mailbox.refreshCounts();
-		void mailSearch.refresh();
+		searchRuntime.changed(accountId);
 		void mailCollections.sync().then((changed) => {
 			if (changed && !full) void mailbox.refreshLoaded();
 		});
