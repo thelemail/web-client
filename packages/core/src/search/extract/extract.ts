@@ -153,6 +153,11 @@ function contentBytes(content: ArrayBuffer | Uint8Array | string): Uint8Array {
 	return content instanceof Uint8Array ? content : new Uint8Array(content);
 }
 
+export async function parseMime(bytes: Uint8Array): Promise<Email> {
+	if (charsetWarnings(bytes).iconv) await enableIconvFallback().catch(() => undefined);
+	return parse(bytes);
+}
+
 async function parse(bytes: Uint8Array): Promise<Email> {
 	const input = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
 	return PostalMime.parse(input, { forceRfc822Attachments: true, attachmentEncoding: 'arraybuffer', maxNestingDepth: 64 });
