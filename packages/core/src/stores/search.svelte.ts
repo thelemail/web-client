@@ -465,6 +465,9 @@ class MailSearchStore {
 			if (this.prefs?.history) void this.#remember(client, text);
 		} catch {
 			if (!current()) return;
+			this.results = [];
+			this.summary = null;
+			this.provisional = null;
 			this.failed = true;
 			this.searching = false;
 		}

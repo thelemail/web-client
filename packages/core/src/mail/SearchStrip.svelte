@@ -41,6 +41,9 @@
 
 	const status = $derived.by(() => {
 		if (search.mode === 'desktop') return msg.mail_list_search_all();
+		if (search.phase === 'locked') return msg.mail_search_locked();
+		if (search.phase === 'unavailable') return msg.mail_search_unavailable();
+		if (search.phase === 'failed') return search.error ? msg.mail_search_query_invalid() : msg.mail_search_failed();
 		if (search.phase === 'starting') return msg.mail_search_starting();
 		if (search.phase === 'searching') return search.matches !== null ? msg.mail_search_counting({ shown: fmt(search.groups ?? 0) }) : msg.mail_list_searching();
 		if (search.groups !== null) return msg.mail_search_count({ count: search.groups, shown: fmt(search.groups) });

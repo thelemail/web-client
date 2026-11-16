@@ -311,6 +311,18 @@ describe('mailSearch on the local index', () => {
 		expect(mailSearch.results).toEqual([]);
 	});
 
+	it('drops earlier rows when the device can no longer search', async () => {
+		answers([row('m1')]);
+		mailSearch.commit('budget');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+		client.set({ phase: 'failed', status: null });
+		mailSearch.refresh();
+		await vi.waitFor(() => expect(mailSearch.searching).toBe(false));
+		expect(mailSearch.phase).toBe('unavailable');
+		expect(mailSearch.results).toEqual([]);
+		expect(mailSearch.summary).toBeNull();
+	});
+
 	it('clears query and results on lock and on account switch', async () => {
 		answers([row('m1')]);
 		mailSearch.commit('budget');
