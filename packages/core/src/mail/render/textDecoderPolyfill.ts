@@ -2,6 +2,7 @@
 type IconvLite = { decode: (b: any, enc: string) => string; encodingExists: (e: string) => boolean };
 
 let iconvRef: IconvLite | null = null;
+const NativeTextDecoder = globalThis.__thelemailTextDecoderPatched ? null : globalThis.TextDecoder;
 let iconvLoading: Promise<void> | null = null;
 
 export function enableIconvFallback(): Promise<void> {
@@ -127,4 +128,17 @@ export function mayNeedIconv(charsetLabel: string): boolean {
 	const c = charsetLabel.toLowerCase().trim();
 	if (!c) return false;
 	return !NATIVE_CHARSETS.has(c);
+}
+
+export function charsetDecodable(charsetLabel: string): boolean {
+	const label = charsetLabel.toLowerCase().trim();
+	if (!label || NATIVE_CHARSETS.has(label)) return true;
+	if (iconvRef?.encodingExists(label)) return true;
+	if (!NativeTextDecoder) return false;
+	try {
+		new NativeTextDecoder(label);
+		return true;
+	} catch {
+		return false;
+	}
 }

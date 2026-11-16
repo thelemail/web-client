@@ -12,7 +12,8 @@ export const Field = {
 	quoted: 4,
 	attachmentName: 5,
 	attachmentText: 6,
-	identifier: 7
+	identifier: 7,
+	signature: 8
 } as const;
 export type Field = (typeof Field)[keyof typeof Field];
 

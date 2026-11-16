@@ -297,7 +297,7 @@ class Evaluator {
 				this.prepare(node.child, scoped, !positive);
 				return;
 			case 'field': {
-				const map = { subject: [Field.subject], body: [Field.body, Field.quoted], attachment: [Field.attachmentText] };
+				const map = { subject: [Field.subject], body: [Field.body, Field.quoted, Field.signature], attachment: [Field.attachmentText] };
 				this.prepare(node.child, map[node.field], positive);
 				return;
 			}
