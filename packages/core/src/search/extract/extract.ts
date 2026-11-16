@@ -1,11 +1,12 @@
 import PostalMime, { type Address, type Email } from 'postal-mime';
-import type { DraftDoc } from '../../mail/draft';
 import { charsetDecodable, enableIconvFallback, mayNeedIconv } from '../../mail/render/textDecoderPolyfill';
 import { Field, Role, type Part, type Participant } from '../sqlite/types';
 import { htmlToText } from './html';
 import { regions } from './regions';
 
 export const EXTRACTOR_EPOCH = 1;
+
+type DraftFields = Partial<Record<'v' | 'from' | 'to' | 'cc' | 'bcc' | 'subject' | 'bodyHtml' | 'bodyText' | 'attachments', unknown>>;
 
 export const Warning = {
 	charset: 1 << 0,
@@ -261,9 +262,9 @@ function str(value: unknown): string {
 }
 
 export function extractDraft(bytes: Uint8Array, limits: ExtractLimits = LIMITS): Extracted {
-	let doc: Partial<DraftDoc>;
+	let doc: DraftFields;
 	try {
-		doc = JSON.parse(new TextDecoder().decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes))) as Partial<DraftDoc>;
+		doc = JSON.parse(new TextDecoder().decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes))) as DraftFields;
 		if (!doc || typeof doc !== 'object') throw new SyntaxError('draft');
 	} catch {
 		return { outcome: 'malformed', subject: null, participants: [], parts: [], attachments: [], messageId: null, listId: null, warnings: 0 };
@@ -279,8 +280,9 @@ export function extractDraft(bytes: Uint8Array, limits: ExtractLimits = LIMITS):
 	participants.push(...recipients(doc.to, Role.to), ...recipients(doc.cc, Role.cc), ...recipients(doc.bcc, Role.bcc));
 	const attachments: ExtractedAttachment[] = [];
 	if (Array.isArray(doc.attachments)) {
-		for (const a of doc.attachments.slice(0, limits.maxAttachments)) {
-			if (!a || typeof a !== 'object') continue;
+		for (const item of doc.attachments.slice(0, limits.maxAttachments)) {
+			if (!item || typeof item !== 'object') continue;
+			const a = item as Record<string, unknown>;
 			attachments.push({
 				attachmentId: `draft:${attachments.length}`,
 				filename: str(a.filename),

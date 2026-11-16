@@ -1,0 +1,34 @@
+{
+  "name": "@thelemail/parser",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "rm -rf build-meta && vite build && node ../../scripts/parser-headers.ts",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "verify:bundle": "node ../../scripts/check-parser-bundle.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-static": "^4.0.0",
+    "@sveltejs/kit": "^3.1.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "jsdom": "^29.1.1",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.7",
+    "typescript": "^6.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^4.1.12"
+  },
+  "dependencies": {
+    "@thelemail/core": "workspace:*",
+    "@zip.js/zip.js": "2.24.0",
+    "iconv-lite": "^0.7.2",
+    "pdfjs-dist": "^6.3.289",
+    "postal-mime": "^2.7.4",
+    "sax": "1.6.1"
+  }
+}

@@ -27,7 +27,7 @@ function decodeXml(bytes: Uint8Array): string {
 }
 
 export function walkXml(bytes: Uint8Array, sink: Sink, visitor: XmlVisitor): void {
-	const parser = sax.parser(true, { trim: false, normalize: false, xmlns: false, position: false, strictEntities: true });
+	const parser = sax.parser(true, { trim: false, normalize: false, xmlns: false, position: false, strictEntities: true } as sax.SAXOptions);
 	let depth = 0;
 	let node = 0;
 	let failure: Stop | null = null;

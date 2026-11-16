@@ -444,6 +444,55 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12(@types/node@26.6.5)(@vitest/browser-playwright@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
 
+  apps/parser:
+    dependencies:
+      '@thelemail/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@zip.js/zip.js':
+        specifier: 2.24.0
+        version: 2.24.0
+      iconv-lite:
+        specifier: ^0.7.2
+        version: 0.7.2
+      pdfjs-dist:
+        specifier: ^6.3.289
+        version: 6.3.289
+      postal-mime:
+        specifier: ^2.7.4
+        version: 2.7.4
+      sax:
+        specifier: 1.6.1
+        version: 1.6.1
+    devDependencies:
+      '@sveltejs/adapter-static':
+        specifier: ^4.0.0
+        version: 4.0.0(@sveltejs/kit@3.1.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))
+      '@sveltejs/kit':
+        specifier: ^3.1.0
+        version: 3.1.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^7.0.0
+        version: 7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
+      jsdom:
+        specifier: ^29.1.1
+        version: 29.1.1(@noble/hashes@2.2.0)
+      svelte:
+        specifier: ^5.57.2
+        version: 5.57.2
+      svelte-check:
+        specifier: ^4.7.7
+        version: 4.7.7(picomatch@4.0.7)(svelte@5.57.2)(typescript@6.0.3)
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.3
+      vite:
+        specifier: ^8.3.5
+        version: 8.3.5(@types/node@26.6.5)(jiti@2.7.0)
+      vitest:
+        specifier: ^4.1.12
+        version: 4.1.12(@types/node@26.6.5)(@vitest/browser-playwright@4.1.12)(@vitest/coverage-v8@4.1.12)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
+
   packages/core:
     dependencies:
       '@inlang/paraglide-js':

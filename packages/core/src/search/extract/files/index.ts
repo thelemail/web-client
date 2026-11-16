@@ -5,7 +5,7 @@ import { FILE_LIMITS, Sink, Stop, type FileLimits, type FileText, type Tick } fr
 import { extractHtml, extractPlain } from './text';
 import { Package, isZip } from './zip';
 
-export { FILE_LIMITS, FileWarning, type FileLimits, type FilePart, type FileState, type FileText } from './sink';
+export { FILE_LIMITS, FileWarning, type FileLimits, type FilePart, type FileState, type FileText, type Tick } from './sink';
 export { setPdfAssets, type PdfAssets } from './pdf';
 
 export interface FileInput {
