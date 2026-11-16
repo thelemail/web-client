@@ -111,6 +111,11 @@ export interface SearchDocument extends SourceMetadata {
 	attachments: Attachment[];
 	parts: Part[];
 	coverage: Partial<Record<Dimension, Coverage>>;
+	sourceRevision?: number;
+	extraction?: number;
+	extractorEpoch?: number;
+	sizeVersion?: number;
+	warnings?: number;
 }
 
 export interface SourceKey {

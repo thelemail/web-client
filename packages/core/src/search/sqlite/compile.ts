@@ -200,6 +200,7 @@ function meta(sql: string, params: BindValue[], known: Fragment | null = null): 
 }
 
 const NONE: Expr = { kind: 'const', value: false };
+const SIZE_KNOWN: Fragment = { sql: 's.size_version > 0', params: [] };
 const ALL: Expr = { kind: 'const', value: true };
 
 function flagMeta(bit: number, set: boolean): Expr {
@@ -432,7 +433,7 @@ class Compiler {
 			case 'date':
 				return node.bound === 'after' ? meta('s.date >= ?', [node.at]) : meta('s.date < ?', [node.at]);
 			case 'size':
-				return node.op === 'gt' ? meta('s.size > ?', [node.bytes]) : meta('s.size < ?', [node.bytes]);
+				return meta(`(s.size_version > 0 AND s.size ${node.op === 'gt' ? '>' : '<'} ?)`, [node.bytes], SIZE_KNOWN);
 			case 'deliveredto':
 				return participantMeta(Role.deliveredTo, [node.address]);
 			case 'list':
