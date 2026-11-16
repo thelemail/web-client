@@ -73,6 +73,10 @@ export class SearchWriter {
 
 	#depth = 0;
 
+	atomic<T>(fn: () => T): T {
+		return this.#atomic(fn);
+	}
+
 	#atomic<T>(fn: () => T): T {
 		if (this.#depth > 0) return fn();
 		this.#depth++;
@@ -316,9 +320,10 @@ export class SearchWriter {
 		return true;
 	}
 
-	putBatch(docs: readonly SearchDocument[], checkpoint?: Checkpoint): PutResult[] {
+	putBatch(docs: readonly SearchDocument[], checkpoint?: Checkpoint, also?: () => void): PutResult[] {
 		return this.#atomic(() => {
 			const results = docs.map((d) => this.put(d));
+			also?.();
 			if (checkpoint) this.#saveCheckpoint(checkpoint);
 			return results;
 		});

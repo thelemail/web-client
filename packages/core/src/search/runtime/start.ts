@@ -2,6 +2,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import { watchActivity } from './activity';
 import { SearchClient, type ClientDeps } from './client';
 import { searchRecords } from './records';
+import { serveBridge } from '../sync/serve';
 
 function broker(): MessagePort | null {
 	if (typeof SharedWorker === 'undefined') return null;
@@ -18,7 +19,8 @@ const deps: ClientDeps = {
 	openRoot: (args, port) => keystore.openSearchRoot(args, port),
 	records: searchRecords,
 	locks: typeof navigator !== 'undefined' && navigator.locks ? navigator.locks : null,
-	watch: watchActivity
+	watch: watchActivity,
+	serveBridge
 };
 
 export function startSearch(accountId: string): SearchClient {

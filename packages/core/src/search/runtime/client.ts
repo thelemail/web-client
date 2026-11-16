@@ -44,6 +44,7 @@ export interface ClientDeps {
 	records: RecordStore;
 	locks: LockManager | null;
 	watch(report: (conditions: Conditions) => void): () => void;
+	serveBridge?(accountId: string, port: MessagePort): () => void;
 }
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void; timer?: ReturnType<typeof setTimeout> };
@@ -134,6 +135,7 @@ interface Ownership {
 	stopWatching: (() => void) | null;
 	claim: ReturnType<typeof setInterval> | null;
 	persistent: boolean;
+	stopBridge: (() => void) | null;
 }
 
 function delay(ms: number): Promise<void> {
@@ -301,7 +303,7 @@ export class SearchClient {
 			tenure.release();
 			return;
 		}
-		const owned: Ownership = { tenure, worker: null, control: null, stopWatching: null, claim: null, persistent: false };
+		const owned: Ownership = { tenure, worker: null, control: null, stopWatching: null, claim: null, persistent: false, stopBridge: null };
 		this.#owned = owned;
 		this.#seeking++;
 		this.#wakeSeek?.();
@@ -395,11 +397,20 @@ export class SearchClient {
 			if (this.#owned === owned && this.#state.phase === 'ready') owned.tenure.release();
 		};
 
+		let bridge: MessagePort | undefined;
+		if (this.#deps.serveBridge) {
+			const channel = new MessageChannel();
+			owned.stopBridge = this.#deps.serveBridge(this.accountId, channel.port1);
+			bridge = channel.port2;
+		}
 		const request: ControlRequest =
 			record && keystore
-				? { op: 'init', accountId: this.accountId, generationId: record.generationId, installationSalt: record.installationSalt, keystore }
-				: { op: 'memory' };
-		const result = await control.call<InitResult>(request, undefined, keystore ? [keystore] : []);
+				? { op: 'init', accountId: this.accountId, generationId: record.generationId, installationSalt: record.installationSalt, keystore, bridge }
+				: { op: 'memory', bridge };
+		const transfer: Transferable[] = [];
+		if (keystore) transfer.push(keystore);
+		if (bridge) transfer.push(bridge);
+		const result = await control.call<InitResult>(request, undefined, transfer);
 		if (!live()) return 'starting';
 		if (!result.ok) return result.code;
 		owned.persistent = result.status.persistence === 'persistent';
@@ -429,6 +440,8 @@ export class SearchClient {
 		this.#owned = null;
 		if (owned.claim !== null) clearInterval(owned.claim);
 		owned.stopWatching?.();
+		owned.stopBridge?.();
+		owned.stopBridge = null;
 		this.#post({ op: 'release', accountId: this.accountId });
 		this.#dropLink(false);
 		if (owned.worker && owned.control) {
