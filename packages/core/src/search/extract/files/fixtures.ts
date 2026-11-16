@@ -97,10 +97,10 @@ export function odfFiles(kind: 'text' | 'spreadsheet' | 'presentation', body: st
 	};
 }
 
-export function pdf(pages: string[]): Uint8Array {
+export function pdf(pages: string[], catalog = ''): Uint8Array {
 	const objects: string[] = [];
 	const kids = pages.map((_, i) => `${4 + i * 2} 0 R`).join(' ');
-	objects.push('<< /Type /Catalog /Pages 2 0 R >>');
+	objects.push(`<< /Type /Catalog /Pages 2 0 R ${catalog}>>`);
 	objects.push(`<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
 	objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
 	pages.forEach((text, i) => {

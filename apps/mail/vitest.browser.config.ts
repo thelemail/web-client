@@ -7,6 +7,7 @@ import type { BrowserCommand } from 'vitest/node';
 import { defineConfig, mergeConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import viteConfig from './vite.config.ts';
+import { frameDatabases, networkSeen, parserOrigin, parserRequests, watchNetwork } from './parser-probe.ts';
 
 function submissionProbe(): Plugin {
 	return {
@@ -136,7 +137,17 @@ export default mergeConfig(
 			include: ['../../packages/*/src/**/*.browser.test.ts'],
 			browser: {
 				enabled: true,
-				commands: { linkProbeOrigin, clickMailLink, addVirtualAuthenticator, removeVirtualAuthenticator },
+				commands: {
+					linkProbeOrigin,
+					clickMailLink,
+					addVirtualAuthenticator,
+					removeVirtualAuthenticator,
+					parserOrigin,
+					parserRequests,
+					watchNetwork,
+					networkSeen,
+					frameDatabases
+				},
 				headless: true,
 				provider: playwright(),
 				instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }]
