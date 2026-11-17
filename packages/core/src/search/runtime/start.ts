@@ -1,4 +1,3 @@
-import { PUBLIC_PARSER_ORIGIN } from '$app/env/public';
 import { keystore } from '$core/keystore/keystore-client';
 import { ParserHost } from '../parser/host';
 import { watchActivity } from './activity';
@@ -18,8 +17,9 @@ function broker(): MessagePort | null {
 let parserHost: ParserHost | null = null;
 
 function parser(): MessagePort | null {
-	if (!PUBLIC_PARSER_ORIGIN || typeof document === 'undefined') return null;
-	parserHost ??= new ParserHost({ origin: PUBLIC_PARSER_ORIGIN });
+	const origin = import.meta.env.PUBLIC_PARSER_ORIGIN;
+	if (!origin || typeof document === 'undefined') return null;
+	parserHost ??= new ParserHost({ origin });
 	return parserHost.connect();
 }
 

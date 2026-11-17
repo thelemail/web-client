@@ -3,7 +3,6 @@ import { vi } from 'vitest';
 vi.mock('$app/env/public', () => ({
 	PUBLIC_API_BASE_URL: 'https://api.test.thelemail.local',
 	PUBLIC_SUBMISSION_BASE_URL: 'https://submit.test.thelemail.local',
-	PUBLIC_PARSER_ORIGIN: 'https://parser.test.thel.local',
 	PUBLIC_OFFICIAL_SENDER_POLICY: JSON.stringify({
 		addresses: ['no-reply@thel.email'],
 		keys: ['-----BEGIN PGP PUBLIC KEY BLOCK-----\ntest\n-----END PGP PUBLIC KEY BLOCK-----'],
