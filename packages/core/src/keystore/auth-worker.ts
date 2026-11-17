@@ -31,6 +31,7 @@ import type {
 	CommitKeyRotationArgs,
 	AbandonKeyRotationArgs,
 	LoadAccountKeysArgs,
+	GetPublicKeyArgs,
 	ListAccountKeysArgs,
 	ReadProductKeysArgs,
 	ReformatKeyWithUidsArgs,
@@ -75,7 +76,14 @@ import {
 } from './worker/vault-persist';
 import { handlePrepareProductKeys, handlePrepareSuccessorHead, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
 import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
-import { handleAbandonKeyRotation, handleCommitKeyRotation, handleListAccountKeys, handleLoadAccountKeys, handlePrepareKeyRotation } from './worker/key-ops';
+import {
+	handleAbandonKeyRotation,
+	handleCommitKeyRotation,
+	handleGetAccountPublicKey,
+	handleListAccountKeys,
+	handleLoadAccountKeys,
+	handlePrepareKeyRotation
+} from './worker/account-key-ops';
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 
@@ -284,6 +292,9 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'reformatKeyWithUids':
 				respond(port, msg.id, await handleReformatKeyWithUids(msg.args as ReformatKeyWithUidsArgs));
+				break;
+			case 'getPublicKey':
+				respond(port, msg.id, await handleGetAccountPublicKey(msg.args as GetPublicKeyArgs));
 				break;
 			case 'loadAccountKeys':
 				respond(port, msg.id, await handleLoadAccountKeys(msg.args as LoadAccountKeysArgs));

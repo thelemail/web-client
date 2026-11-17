@@ -1003,7 +1003,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	unloadAliasKeys: ['account', 'mail'],
 	createAliasKey: ['account', 'mail'],
 	createSigningDelegationKey: ['account', 'mail'],
-	getPublicKey: ['account', 'mail', 'calendar'],
+	getPublicKey: ['account', 'mail', 'calendar', 'auth'],
 	loadAccountKeys: ['account', 'mail', 'auth'],
 	listAccountKeys: ['account', 'mail', 'auth'],
 	prepareKeyRotation: ['account', 'auth'],

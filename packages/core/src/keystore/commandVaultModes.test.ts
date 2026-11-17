@@ -63,7 +63,6 @@ describe('commandVaultModes', () => {
 			'attachmentBytes',
 			'sealIndex',
 			'openIndex',
-			'getPublicKey',
 			'sealProductFork',
 			'openProductFork',
 			'prepareLogin',
@@ -126,9 +125,10 @@ describe('commandVaultModes', () => {
 	});
 
 	it('allows a product vault the crypto it needs', () => {
-		for (const cmd of ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentHeader', 'attachmentBytes', 'getPublicKey', 'sealIndex', 'openIndex'] as const) {
+		for (const cmd of ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentHeader', 'attachmentBytes', 'sealIndex', 'openIndex'] as const) {
 			expect(commandVaultModes[cmd]).toEqual(['account', 'mail', 'calendar']);
 		}
+		expect(commandVaultModes.getPublicKey).toEqual(['account', 'mail', 'calendar', 'auth']);
 	});
 
 	it('keeps typed calendar signatures and calendar keys in calendar vaults alone', () => {
