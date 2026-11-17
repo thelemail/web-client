@@ -74,6 +74,12 @@ export class ArtifactStore {
 				WHERE excluded.seq > artifact_index.seq`,
 				[MESSAGE, i.sourceId, i.contentRev, i.componentEpoch, i.extractionRev, i.seq, i.state]
 			);
+			this.#exec('UPDATE source_queue SET artifact_rev = max(artifact_rev, ?) WHERE kind = ? AND source_id = ? AND content_rev = ?', [
+				i.extractionRev,
+				MESSAGE,
+				i.sourceId,
+				i.contentRev
+			]);
 		}
 	}
 
