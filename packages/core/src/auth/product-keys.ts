@@ -268,7 +268,17 @@ async function succeed(accountId: string, state: CryptoStateResponse, events: Ui
 	return true;
 }
 
-async function current(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<Committed | null> {
+const advancing = new Map<string, Promise<Committed | null>>();
+
+function current(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<Committed | null> {
+	const running = advancing.get(accountId);
+	if (running) return running.then(() => null);
+	const next = advance(accountId, state, events).finally(() => advancing.delete(accountId));
+	advancing.set(accountId, next);
+	return next;
+}
+
+async function advance(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<Committed | null> {
 	try {
 		const committed = await loadCommitted(accountId, state);
 		return (await succeed(accountId, state, events, committed)) ? null : committed;
