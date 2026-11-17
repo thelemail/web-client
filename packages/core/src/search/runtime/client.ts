@@ -566,7 +566,7 @@ export class SearchClient {
 			await control.call(request, undefined, transfer).catch(() => request.sync?.keystore.close());
 		};
 		if (!cloud || !owned.persistent) {
-			await send({ op: 'sync', sync: null, cloud: null });
+			await send({ op: 'sync', sync: null, cloud: cloud ? 'unavailable' : null });
 			return;
 		}
 		const resolved = await resolveSync(this.accountId, { ...cloud, openRoot: this.#deps.openRoot, records: this.#deps.records });
