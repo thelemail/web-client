@@ -52,7 +52,8 @@
 		try {
 			const req = await locateRequest(fragment);
 			const expected = req.descriptor.expectedAccountId;
-			const rec = expected ? accounts.byId(expected) : auth.accountId ? accounts.byId(auth.accountId) : null;
+			const chosen = sessionStorage.getItem(LOGIN_TRIED) && auth.accountId ? accounts.byId(auth.accountId) : null;
+			const rec = expected ? accounts.byId(expected) : chosen;
 			if (!rec || !(await ready(rec.accountId))) {
 				await signIn(rec?.slot ?? null);
 				return;
