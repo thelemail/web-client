@@ -1430,6 +1430,7 @@ export interface LifecycleInfo {
 export interface MeResponse {
 	accountId: string;
 	authOriginEnrolled?: boolean;
+	productKeysActive?: boolean;
 	email: string;
 	fullName: string;
 	status: 'active' | 'disabled' | 'suspended';
