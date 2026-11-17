@@ -178,6 +178,24 @@ export const MIGRATIONS: readonly string[] = [
 		PRIMARY KEY (kind, source_id, attachment_id)
 	) WITHOUT ROWID;
 	CREATE INDEX attachment_queue_due ON attachment_queue (next_at, kind, source_id) WHERE state = 0;
+	`,
+	`
+	ALTER TABLE source_queue ADD COLUMN artifact_rev INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE source_queue ADD COLUMN artifact_state INTEGER NOT NULL DEFAULT 0;
+	ALTER TABLE source_queue ADD COLUMN upload_at INTEGER NOT NULL DEFAULT 0;
+	CREATE INDEX source_queue_upload ON source_queue (stored_at) WHERE artifact_state = 1;
+
+	CREATE TABLE artifact_index (
+		kind INTEGER NOT NULL,
+		source_id TEXT NOT NULL,
+		content_rev INTEGER NOT NULL,
+		component_epoch INTEGER NOT NULL,
+		extraction_rev INTEGER NOT NULL,
+		seq INTEGER NOT NULL,
+		state INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (kind, source_id)
+	) WITHOUT ROWID;
+	CREATE INDEX artifact_index_listed ON artifact_index (kind, source_id, content_rev) WHERE state = 0;
 	`
 ];
 
@@ -199,7 +217,8 @@ const REQUIRED_TABLES = [
 	'source_collections',
 	'source_aliases',
 	'history',
-	'attachment_queue'
+	'attachment_queue',
+	'artifact_index'
 ];
 
 export type SchemaState =
