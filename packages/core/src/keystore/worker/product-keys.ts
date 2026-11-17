@@ -2,6 +2,8 @@ import * as openpgp from 'openpgp';
 import type {
 	PrepareProductKeysArgs,
 	PrepareProductKeysResponse,
+	PrepareSuccessorHeadArgs,
+	PrepareSuccessorHeadResponse,
 	ReadProductKeysArgs,
 	ReadProductKeysResponse,
 	SealProductHandoffArgs,
@@ -17,6 +19,7 @@ import { openMailCandidate, wipeOpenedMailKeys } from '../productkeys/mailCandid
 import { openAuthority, openRootDescriptor } from '../productkeys/secretBundle';
 import type { Availability } from '../productkeys/productBundle';
 import { readProductKeys } from '../productkeys/read';
+import { buildSuccessor } from '../productkeys/successor';
 import { vaults } from './state';
 
 function unusable(accountId: string): { ok: false; code: 'locked' | 'unsupported' } | null {
@@ -58,6 +61,34 @@ export async function handlePrepareProductKeys(args: PrepareProductKeysArgs): Pr
 		throw err;
 	} finally {
 		adopted?.fill(0);
+	}
+}
+
+export async function handlePrepareSuccessorHead(args: PrepareSuccessorHeadArgs): Promise<PrepareSuccessorHeadResponse> {
+	const refused = unusable(args.accountId);
+	if (refused) return refused;
+	const v = vaults.get(args.accountId)!;
+	try {
+		const output = await buildSuccessor({
+			accountId: args.accountId,
+			amk: v.masterKey!,
+			keyPassword: v.keyPassword,
+			scope: args.scope,
+			sessionEpoch: args.sessionEpoch,
+			credentialHashes: args.credentialHashes,
+			slotHashes: args.slotHashes,
+			history: historyKeys(args.historyEvents),
+			availability: new Map<string, Availability>(args.availability.map((a) => [a.keyId, a.state])),
+			accountKeys: args.accountKeys,
+			aliasKeys: args.aliasKeys,
+			previous: args.previous,
+			secretBundles: args.secretBundles,
+			products: args.products
+		});
+		return { ok: true, output };
+	} catch (err) {
+		if (err instanceof ProductKeysError) return { ok: false, code: 'invalid', message: err.message };
+		throw err;
 	}
 }
 

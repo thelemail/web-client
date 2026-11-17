@@ -1,6 +1,7 @@
 import type { ConversionOutput } from './productkeys/convert';
 import type { Availability } from './productkeys/productBundle';
-import type { ReadInput, ReadResult, StoredBundle } from './productkeys/read';
+import type { ProductReadInput, ReadInput, ReadResult, StoredBundle } from './productkeys/read';
+import type { SuccessorOutput } from './productkeys/successor';
 import type { MailCandidateUpload, StoredCandidate, StoredCommittedMailKeys } from './productkeys/mailCandidate';
 import type { CustodyJournal } from '$core/custody/journal';
 import type { DecryptedAttachmentHeader } from '$core/mail/attframe';
@@ -923,6 +924,7 @@ export type KeystoreCommand =
 	| 'openProductFork'
 	| 'touch'
 	| 'prepareProductKeys'
+	| 'prepareSuccessorHead'
 	| 'readProductKeys'
 	| 'sealProductHandoff'
 	| 'adoptHandoff'
@@ -1024,6 +1026,7 @@ export const commandVaultModes: Record<KeystoreCommand, readonly VaultMode[]> = 
 	openProductFork: ['calendar'],
 	touch: ['auth'],
 	prepareProductKeys: ['auth'],
+	prepareSuccessorHead: ['auth'],
 	readProductKeys: ['auth'],
 	sealProductHandoff: ['auth'],
 	adoptHandoff: ['mail', 'calendar'],
@@ -1122,6 +1125,16 @@ export interface PrepareProductKeysArgs extends AccountScopedArgs {
 
 export type PrepareProductKeysResponse =
 	| { ok: true; output: ConversionOutput }
+	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
+
+export type PrepareSuccessorHeadArgs = Omit<PrepareProductKeysArgs, 'previousHeadHash' | 'candidate'> & {
+	previous: { raw: Uint8Array; mac: Uint8Array };
+	secretBundles: StoredBundle[];
+	products: ProductReadInput[];
+};
+
+export type PrepareSuccessorHeadResponse =
+	| { ok: true; output: SuccessorOutput | null }
 	| { ok: false; code: 'locked' | 'unsupported' | 'invalid'; message?: string };
 
 export type ReadProductKeysArgs = AccountScopedArgs &

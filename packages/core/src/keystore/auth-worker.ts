@@ -26,6 +26,7 @@ import type {
 	OpaqueStartRegistrationArgs,
 	CommitReformattedKeyArgs,
 	PrepareProductKeysArgs,
+	PrepareSuccessorHeadArgs,
 	ReadProductKeysArgs,
 	ReformatKeyWithUidsArgs,
 	SealProductHandoffArgs,
@@ -67,7 +68,7 @@ import {
 	handleInvalidatePersistedVault,
 	handleTryRestoreFromPersistent
 } from './worker/vault-persist';
-import { handlePrepareProductKeys, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
+import { handlePrepareProductKeys, handlePrepareSuccessorHead, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
 import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
@@ -265,6 +266,9 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'prepareProductKeys':
 				respond(port, msg.id, await handlePrepareProductKeys(msg.args as PrepareProductKeysArgs));
+				break;
+			case 'prepareSuccessorHead':
+				respond(port, msg.id, await handlePrepareSuccessorHead(msg.args as PrepareSuccessorHeadArgs));
 				break;
 			case 'readProductKeys':
 				respond(port, msg.id, await handleReadProductKeys(msg.args as ReadProductKeysArgs));
