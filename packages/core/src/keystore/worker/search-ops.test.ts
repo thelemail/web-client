@@ -170,6 +170,7 @@ describe('search root sessions in the mail vault', () => {
 		const second = await session(ACCOUNT, first.res.bundle);
 		expect(second.res.generationId).toBe(first.res.generationId);
 		expect(second.res.bundle).toBeUndefined();
+		expect(second.res.productKeyEpoch).toBe(1);
 		const opened = await ask<Opened>(second.port, 'openSearchArtifact', { ...ref, artifact: sealed.artifact });
 		expect(opened).toEqual({ ok: true, payload: new Uint8Array([1, 2, 3]) });
 	});

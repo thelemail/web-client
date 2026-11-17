@@ -189,7 +189,7 @@ export async function handleOpenSearchRoot(args: OpenSearchRootArgs): Promise<Op
 		return refuse('locked');
 	}
 	start({ accountId: args.accountId, generationId: opened.generationId, epoch, vault: v, port, root: opened.root });
-	return { ok: true, generationId: opened.generationId, unlockEpoch: epoch, ...(created ? { bundle: created } : {}) };
+	return { ok: true, generationId: opened.generationId, unlockEpoch: epoch, productKeyEpoch: v.productKeyEpoch, ...(created ? { bundle: created } : {}) };
 }
 
 export function handleCloseSearchSession(args: CloseSearchSessionArgs): void {

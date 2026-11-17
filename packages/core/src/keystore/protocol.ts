@@ -1049,7 +1049,7 @@ export interface OpenSearchRootArgs extends AccountScopedArgs {
 }
 
 export type OpenSearchRootResponse =
-	| { ok: true; generationId: string; unlockEpoch: number; bundle?: Uint8Array }
+	| { ok: true; generationId: string; unlockEpoch: number; productKeyEpoch: number; bundle?: Uint8Array }
 	| { ok: false; code: 'locked' | 'unavailable' | 'stale_epoch' | 'invalid' };
 
 export type CloseSearchSessionArgs = AccountScopedArgs;
