@@ -132,6 +132,12 @@ class SearchRuntime {
 		await this.#running?.client.then((c) => c.retryFailed()).catch(() => undefined);
 	}
 
+	async setCloudSync(enabled: boolean): Promise<void> {
+		const client = this.client();
+		if (!client) throw new Error('unavailable');
+		await (await client).setCloudSync(enabled);
+	}
+
 	#dropLegacy(): void {
 		if (this.#legacyDropped || typeof indexedDB === 'undefined') return;
 		this.#legacyDropped = true;

@@ -1,4 +1,8 @@
 import type { OpenSearchRootResponse } from '$core/keystore/protocol';
+import type { GenerationResult } from '../../api/searchSync';
+import type { SearchSyncState } from '../../api/types';
+import { resolveSync } from '../artifacts/generation';
+import type { BridgeHooks } from '../sync/serve';
 import type { ParsedQuery } from '../query/ast';
 import type { QueryContext } from '../sqlite/compile';
 import type { Completions, PageResult, Provisional } from '../sqlite/run';
@@ -9,11 +13,13 @@ import {
 	type ClientMessage,
 	type ClientRequest,
 	type ControlRequest,
+	type CloudState,
 	type InitResult,
 	type Mode,
 	type QueryReply,
 	type QueryRequestOptions,
 	type Reply,
+	type ResyncEvent,
 	type SearchStatus
 } from './protocol';
 import type { PrefStore, RecordStore, SearchRecord } from './records';
@@ -28,6 +34,7 @@ const STEAL_AFTER_MS = 10_000;
 const CLOSE_TIMEOUT_MS = 2000;
 const SALT_BYTES = 32;
 const MAX_CRASHES = 3;
+const RESYNC_RETRY_MS = 60_000;
 
 export type Phase = 'starting' | 'ready' | 'locked' | 'failed' | 'closed';
 export type Role = 'owner' | 'follower';
@@ -46,8 +53,16 @@ export interface ClientDeps {
 	prefs: PrefStore;
 	locks: LockManager | null;
 	watch(report: (conditions: Conditions) => void): () => void;
-	serveBridge?(accountId: string, port: MessagePort): () => void;
+	serveBridge?(accountId: string, port: MessagePort, hooks?: BridgeHooks): () => void;
 	parser?(): MessagePort | null;
+	cloud?: CloudApi;
+}
+
+export interface CloudApi {
+	state(accountId: string): Promise<SearchSyncState>;
+	create(accountId: string, body: { generationId: string; productKeyEpoch: number; bundle: string }): Promise<GenerationResult>;
+	enable(accountId: string): Promise<unknown>;
+	disable(accountId: string): Promise<void>;
 }
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void; timer?: ReturnType<typeof setTimeout> };
@@ -151,6 +166,9 @@ interface Ownership {
 	claim: ReturnType<typeof setInterval> | null;
 	persistent: boolean;
 	stopBridge: (() => void) | null;
+	syncing: Promise<void> | null;
+	again: boolean;
+	retry: ReturnType<typeof setTimeout> | null;
 }
 
 function delay(ms: number): Promise<void> {
@@ -247,6 +265,16 @@ export class SearchClient {
 
 	async retryFailed(): Promise<void> {
 		await this.#ready().call({ op: 'retryFailed' });
+	}
+
+	async setCloudSync(enabled: boolean): Promise<void> {
+		const cloud = this.#deps.cloud;
+		if (!cloud) throw new Error('unavailable');
+		if (enabled) await cloud.enable(this.accountId);
+		else await cloud.disable(this.accountId);
+		const owned = this.#owned;
+		if (owned) await this.#resync(owned);
+		else await this.#ready().call({ op: 'resync' });
 	}
 
 	page(session: number, index: number): Promise<PageResult> {
@@ -350,7 +378,18 @@ export class SearchClient {
 			tenure.release();
 			return;
 		}
-		const owned: Ownership = { tenure, worker: null, control: null, stopWatching: null, claim: null, persistent: false, stopBridge: null };
+		const owned: Ownership = {
+			tenure,
+			worker: null,
+			control: null,
+			stopWatching: null,
+			claim: null,
+			persistent: false,
+			stopBridge: null,
+			syncing: null,
+			again: false,
+			retry: null
+		};
 		this.#owned = owned;
 		this.#seeking++;
 		this.#wakeSeek?.();
@@ -439,7 +478,10 @@ export class SearchClient {
 		const control = new Rpc((message, transfer) => worker.postMessage(message, transfer));
 		owned.worker = worker;
 		owned.control = control;
-		worker.onmessage = (e: MessageEvent<Reply>) => control.settle(e.data);
+		worker.onmessage = (e: MessageEvent<Reply | ResyncEvent>) => {
+			if ('type' in e.data) void this.#resync(owned);
+			else control.settle(e.data);
+		};
 		worker.onerror = () => {
 			control.fail('crashed');
 			this.#crashes++;
@@ -449,7 +491,7 @@ export class SearchClient {
 		let bridge: MessagePort | undefined;
 		if (this.#deps.serveBridge) {
 			const channel = new MessageChannel();
-			owned.stopBridge = this.#deps.serveBridge(this.accountId, channel.port1);
+			owned.stopBridge = this.#deps.serveBridge(this.accountId, channel.port1, { onSyncChanged: () => void this.#resync(owned) });
 			bridge = channel.port2;
 		}
 		const parser = this.#deps.parser?.() ?? undefined;
@@ -463,7 +505,8 @@ export class SearchClient {
 						keystore,
 						bridge,
 						parser,
-						paused: prefs.paused
+						paused: prefs.paused,
+						syncPending: true
 					}
 				: { op: 'memory', bridge, parser, mode: this.mode, paused: prefs.paused };
 		const transfer: Transferable[] = [];
@@ -491,7 +534,50 @@ export class SearchClient {
 		});
 		this.#set({ phase: 'ready', role: 'owner', status: result.status });
 		this.#post({ op: 'own', accountId: this.accountId });
+		if (record) void this.#resync(owned);
 		return 'ready';
+	}
+
+	#resync(owned: Ownership): Promise<void> {
+		if (owned.syncing) {
+			owned.again = true;
+			return owned.syncing;
+		}
+		owned.syncing = (async () => {
+			try {
+				do {
+					owned.again = false;
+					await this.#attachSync(owned);
+				} while (owned.again && this.#owned === owned);
+			} finally {
+				owned.syncing = null;
+			}
+		})();
+		return owned.syncing;
+	}
+
+	async #attachSync(owned: Ownership): Promise<void> {
+		const control = owned.control;
+		if (!control) return;
+		if (owned.retry !== null) clearTimeout(owned.retry);
+		owned.retry = null;
+		const cloud = this.#deps.cloud;
+		const send = async (request: Extract<ControlRequest, { op: 'sync' }>, transfer: Transferable[] = []) => {
+			await control.call(request, undefined, transfer).catch(() => request.sync?.keystore.close());
+		};
+		if (!cloud || !owned.persistent) {
+			await send({ op: 'sync', sync: null, cloud: null });
+			return;
+		}
+		const resolved = await resolveSync(this.accountId, { ...cloud, openRoot: this.#deps.openRoot, records: this.#deps.records });
+		if (this.#owned !== owned) {
+			if (resolved.ok) resolved.attach.keystore.close();
+			return;
+		}
+		const state: CloudState = resolved.ok ? 'on' : resolved.reason;
+		if (state === 'error') owned.retry = setTimeout(() => void this.#resync(owned), RESYNC_RETRY_MS);
+		if (resolved.ok) await send({ op: 'sync', sync: resolved.attach, cloud: state }, [resolved.attach.keystore]);
+		else await send({ op: 'sync', sync: null, cloud: state });
 	}
 
 	async #retire(wipe: boolean): Promise<void> {
@@ -499,6 +585,8 @@ export class SearchClient {
 		if (!owned) return;
 		this.#owned = null;
 		if (owned.claim !== null) clearInterval(owned.claim);
+		if (owned.retry !== null) clearTimeout(owned.retry);
+		owned.retry = null;
 		owned.stopWatching?.();
 		owned.stopBridge?.();
 		owned.stopBridge = null;

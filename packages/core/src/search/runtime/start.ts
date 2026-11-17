@@ -1,4 +1,5 @@
 import { keystore } from '$core/keystore/keystore-client';
+import { createSearchGeneration, disableSearchSync, enableSearchSync, getSearchSyncState } from '../../api/searchSync';
 import { ParserHost } from '../parser/host';
 import { watchActivity } from './activity';
 import { SearchClient, type ClientDeps } from './client';
@@ -32,7 +33,8 @@ const deps: ClientDeps = {
 	locks: typeof navigator !== 'undefined' && navigator.locks ? navigator.locks : null,
 	watch: watchActivity,
 	serveBridge,
-	parser
+	parser,
+	cloud: { state: getSearchSyncState, create: createSearchGeneration, enable: enableSearchSync, disable: disableSearchSync }
 };
 
 export function startSearch(accountId: string, consent: Consent): SearchClient {
