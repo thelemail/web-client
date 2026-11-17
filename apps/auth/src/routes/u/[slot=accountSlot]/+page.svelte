@@ -12,6 +12,7 @@
 	import KeysCard from '$core/settings/security/KeysCard.svelte';
 	import KeysCeremony from '$core/settings/ceremonies/KeysCeremony.svelte';
 	import { ensureProductKeys } from '$core/auth/product-keys';
+	import { accountKeys } from '$core/stores/accountKeys.svelte';
 	import SecurityLog from '$core/settings/security/SecurityLog.svelte';
 	import RecoveryCeremony from '$core/settings/ceremonies/RecoveryCeremony.svelte';
 	import PasswordCeremony from '$core/settings/ceremonies/PasswordCeremony.svelte';
@@ -27,6 +28,8 @@
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 
 	let { data } = $props();
+
+	$effect(() => accountKeys.setAccount(data.accountId));
 
 	let active = $state<CeremonyKind | null>(null);
 	let twoFaMethod = $state<TwoFaSetupMethod | undefined>(undefined);

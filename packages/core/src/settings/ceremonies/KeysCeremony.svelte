@@ -12,7 +12,7 @@
 	import type { CeremonyKind } from '../data';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { accountKeys } from '$core/stores/accountKeys.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
 	import type { PrepareKeyRotationFailureCode } from '$core/keystore/protocol';

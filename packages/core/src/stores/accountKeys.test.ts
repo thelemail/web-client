@@ -12,7 +12,7 @@ const ks = vi.hoisted(() => ({
 }));
 
 vi.mock('$app/env', () => ({ browser: true }));
-vi.mock('$core/products', () => ({ isProductVault: false }));
+vi.mock('$core/products', () => ({ isProductVault: false, isAuthOrigin: false }));
 vi.mock('$core/api/me', () => me);
 vi.mock('$core/directory/lookup', () => ({ lookupDirectory: (...a: unknown[]) => dir.lookup(...a) }));
 vi.mock('$core/directory/verify', () => ({

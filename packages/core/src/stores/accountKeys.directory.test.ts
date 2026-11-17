@@ -16,7 +16,7 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('$app/env', () => ({ browser: true }));
-vi.mock('$core/products', () => ({ isProductVault: false }));
+vi.mock('$core/products', () => ({ isProductVault: false, isAuthOrigin: false }));
 vi.mock('$core/api/me', () => ({ listMyKeys: async () => ({ currentVersion: 1, keys: [] }) }));
 vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 vi.mock('$core/directory/signing-key', () => ({
