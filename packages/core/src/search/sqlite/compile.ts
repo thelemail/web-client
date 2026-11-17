@@ -282,7 +282,8 @@ function hasMeta(value: HasValue): Expr {
 		case 'spreadsheet':
 		case 'presentation': {
 			const mimes = FAMILIES[value];
-			return attachmentMeta(`lower(mime) IN (${placeholders(mimes.length)})`, [...mimes]);
+			const exts = Object.keys(EXTENSION_MIMES).filter((ext) => EXTENSION_MIMES[ext].some((m) => mimes.includes(m)));
+			return attachmentMeta(`lower(mime) IN (${placeholders(mimes.length)}) OR tl_ext(filename) IN (${placeholders(exts.length)})`, [...mimes, ...exts]);
 		}
 		case 'userlabels':
 			return meta('EXISTS (SELECT 1 FROM collections WHERE source = s.id AND type = ?)', [COLLECTION_TYPE.label]);

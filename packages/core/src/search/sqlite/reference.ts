@@ -375,8 +375,13 @@ class Evaluator {
 				return mimes.some((m) => m.startsWith('image/'));
 			case 'document':
 			case 'spreadsheet':
-			case 'presentation':
-				return mimes.some((m) => FAMILIES[value].includes(m));
+			case 'presentation': {
+				const family = FAMILIES[value];
+				return doc.attachments.some((a) => {
+					const ext = extension(a.filename);
+					return family.includes(a.mime.toLowerCase()) || (Object.hasOwn(EXTENSION_MIMES, ext) && EXTENSION_MIMES[ext].some((m) => family.includes(m)));
+				});
+			}
 			case 'userlabels':
 				return doc.collections.some((c) => c.type === 'label');
 			case 'nouserlabels':

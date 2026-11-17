@@ -98,7 +98,7 @@ export function messageFromRow(row: ResultRow): Message {
 			fields: row.fields,
 			quoted: row.excerpt?.field === Field.quoted,
 			filename: row.filename,
-			locator: row.excerpt?.locator ?? null
+			place: row.excerpt?.place ?? null
 		}
 	};
 }

@@ -36,14 +36,18 @@
 	const DIMENSION_LABEL: Record<number, () => string> = {
 		[Dimension.metadata]: m.mail_search_dim_metadata,
 		[Dimension.body]: m.mail_search_dim_body,
-		[Dimension.attachmentMetadata]: m.mail_search_dim_attachment_names
+		[Dimension.attachmentMetadata]: m.mail_search_dim_attachment_names,
+		[Dimension.attachmentText]: m.mail_search_dim_attachment_text
 	};
 	const GAP_LABEL: Record<Gap, (p: { count: string }) => string> = {
 		waiting: m.mail_search_gap_waiting,
 		locked: m.mail_search_gap_locked,
 		failed: m.mail_search_gap_failed,
 		tooLarge: m.mail_search_gap_too_large,
-		unsupported: m.mail_search_gap_unsupported
+		unsupported: m.mail_search_gap_unsupported,
+		password: m.mail_search_gap_password,
+		partial: m.mail_search_gap_partial,
+		timeout: m.mail_search_gap_timeout
 	};
 	const failures = $derived(
 		coverage.dimensions.reduce((n, d) => n + (d.gaps.failed ?? 0) + (d.gaps.tooLarge ?? 0) + (d.gaps.locked ?? 0), 0)

@@ -61,6 +61,7 @@ const allowed = new Set(resolveOrigins(env));
 const allowlist = JSON.parse(readFileSync(new URL('./allowed-origins.json', import.meta.url), 'utf8'));
 const inert = new Set(allowlist.inert);
 const navigable = new Set(resolveProductOrigins(env.PUBLIC_PRODUCT_ORIGINS));
+if (env.PUBLIC_PARSER_ORIGIN) navigable.add(new URL(env.PUBLIC_PARSER_ORIGIN).origin);
 const production = [...allowed].every((origin) => origin.startsWith('https://'));
 
 const loads = [];

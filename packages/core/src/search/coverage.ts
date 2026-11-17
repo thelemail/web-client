@@ -1,7 +1,7 @@
 import type { SearchStatus } from './runtime/protocol';
 import { Coverage, Dimension } from './sqlite/types';
 
-export type Gap = 'waiting' | 'locked' | 'failed' | 'tooLarge' | 'unsupported';
+export type Gap = 'waiting' | 'locked' | 'failed' | 'tooLarge' | 'unsupported' | 'password' | 'partial' | 'timeout';
 
 export interface DimensionCoverage {
 	dimension: Dimension;
@@ -25,10 +25,13 @@ const GAP_OF: Partial<Record<Coverage, Gap>> = {
 	[Coverage.locked]: 'locked',
 	[Coverage.failed]: 'failed',
 	[Coverage.resourceLimited]: 'tooLarge',
-	[Coverage.unsupported]: 'unsupported'
+	[Coverage.unsupported]: 'unsupported',
+	[Coverage.passwordRequired]: 'password',
+	[Coverage.partial]: 'partial',
+	[Coverage.timeout]: 'timeout'
 };
 
-export const SHOWN_DIMENSIONS: readonly Dimension[] = [Dimension.metadata, Dimension.body, Dimension.attachmentMetadata];
+export const SHOWN_DIMENSIONS: readonly Dimension[] = [Dimension.metadata, Dimension.body, Dimension.attachmentMetadata, Dimension.attachmentText];
 
 export function coverageOf(status: SearchStatus | null, relevant: readonly Dimension[]): CoverageView {
 	const sync = status?.sync ?? null;

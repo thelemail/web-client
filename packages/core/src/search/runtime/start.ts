@@ -1,4 +1,5 @@
 import { keystore } from '$core/keystore/keystore-client';
+import { ParserHost } from '../parser/host';
 import { watchActivity } from './activity';
 import { SearchClient, type ClientDeps } from './client';
 import { searchPrefs, searchRecords, type Consent } from './records';
@@ -13,6 +14,15 @@ function broker(): MessagePort | null {
 	}
 }
 
+let parserHost: ParserHost | null = null;
+
+function parser(): MessagePort | null {
+	const origin = import.meta.env.PUBLIC_PARSER_ORIGIN;
+	if (!origin || typeof document === 'undefined') return null;
+	parserHost ??= new ParserHost({ origin });
+	return parserHost.connect();
+}
+
 const deps: ClientDeps = {
 	spawn: () => new Worker(new URL('./search.worker.ts', import.meta.url), { type: 'module', name: 'thelemail-search' }),
 	broker,
@@ -21,7 +31,8 @@ const deps: ClientDeps = {
 	prefs: searchPrefs,
 	locks: typeof navigator !== 'undefined' && navigator.locks ? navigator.locks : null,
 	watch: watchActivity,
-	serveBridge
+	serveBridge,
+	parser
 };
 
 export function startSearch(accountId: string, consent: Consent): SearchClient {

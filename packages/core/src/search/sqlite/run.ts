@@ -258,12 +258,12 @@ export class QueryEngine {
 		const [id, flags, knownFlags] = head;
 		const parts: ExcerptPart[] = [];
 		let subject: string | null = null;
-		for (const [field, text, attachmentId, locator] of this.#db.selectArrays(
-			'SELECT field, substr(text, 1, ?), attachment_id, locator FROM parts WHERE source = ? AND field != ? ORDER BY id',
+		for (const [field, text, attachmentId, locator, place] of this.#db.selectArrays(
+			'SELECT field, substr(text, 1, ?), attachment_id, locator, place FROM parts WHERE source = ? AND field != ? ORDER BY id',
 			[PART_CHARS, id, Field.participant]
 		)) {
 			if (field === Field.subject) subject ??= text as string;
-			else parts.push({ field: field as Field, text: text as string, attachmentId: attachmentId as string | null, locator: locator as number | null });
+			else parts.push({ field: field as Field, text: text as string, attachmentId: attachmentId as string | null, locator: locator as number | null, place: place as string | null });
 		}
 		const people = this.#db.selectArrays('SELECT role, name, address FROM participants WHERE source = ? AND role IN (?, ?) ORDER BY rowid', [id, Role.from, Role.to]) as [
 			number,

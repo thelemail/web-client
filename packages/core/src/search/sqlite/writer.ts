@@ -1,10 +1,10 @@
 import type { BindValue, Database, PreparedStatement } from '@thelemail/sqlite-wasm';
 import { domainOf, filenameLiterals, listKey, literals, normalize } from './analysis';
 import {
+	Coverage,
+	Dimension,
 	Field,
 	Role,
-	type Dimension,
-	type Coverage,
 	type PutResult,
 	type SearchDocument,
 	type SourceKey,
@@ -32,16 +32,25 @@ const STATEMENTS = {
 	deleteAttachments: 'DELETE FROM attachments WHERE source = ?',
 	upsertCoverage: 'INSERT OR REPLACE INTO coverage (source, dimension, state) VALUES (?, ?, ?)',
 	deleteCoverage: 'DELETE FROM coverage WHERE source = ?',
-	insertPart: 'INSERT INTO parts (source, field, attachment_id, locator, text) VALUES (?, ?, ?, ?, ?)',
+	insertPart: 'INSERT INTO parts (source, field, attachment_id, locator, place, text) VALUES (?, ?, ?, ?, ?, ?)',
 	insertPartFts: 'INSERT INTO parts_fts (rowid, body, source, field) VALUES (?, ?, ?, ?)',
 	partIds: 'SELECT id FROM parts WHERE source = ?',
+	contentPartIds: 'SELECT id FROM parts WHERE source = ? AND field != ?',
+	attachmentPartIds: 'SELECT id FROM parts WHERE source = ? AND field = ? AND attachment_id = ?',
 	deletePartFts: 'DELETE FROM parts_fts WHERE rowid = ?',
 	deleteParts: 'DELETE FROM parts WHERE source = ?',
+	deletePart: 'DELETE FROM parts WHERE id = ?',
 	insertLiteral: 'INSERT INTO literals (source, part) VALUES (?, ?)',
 	insertLiteralFts: 'INSERT INTO literals_fts (rowid, body, source, field) VALUES (?, ?, ?, ?)',
 	literalIds: 'SELECT id FROM literals WHERE source = ?',
+	partLiteralIds: 'SELECT id FROM literals WHERE part = ?',
+	looseLiteralIds: 'SELECT id FROM literals WHERE source = ? AND part IS NULL',
 	deleteLiteralFts: 'DELETE FROM literals_fts WHERE rowid = ?',
 	deleteLiterals: 'DELETE FROM literals WHERE source = ?',
+	deleteLiteral: 'DELETE FROM literals WHERE id = ?',
+	attachmentStates: 'SELECT q.state FROM attachment_queue q JOIN sources s ON s.kind = q.kind AND s.source_id = q.source_id AND s.content_rev = q.content_rev WHERE s.id = ?',
+	deleteDimension: 'DELETE FROM coverage WHERE source = ? AND dimension = ?',
+	deleteOtherCoverage: 'DELETE FROM coverage WHERE source = ? AND dimension != ?',
 	readCheckpoint: 'SELECT cursor FROM checkpoints WHERE job = ?',
 	writeCheckpoint: 'INSERT OR REPLACE INTO checkpoints (job, cursor) VALUES (?, ?)',
 	deleteCheckpoint: 'DELETE FROM checkpoints WHERE job = ?'
@@ -57,6 +66,32 @@ type StatementName = keyof typeof STATEMENTS;
 export const COLLECTION_TYPE = { folder: 1, label: 2 } as const;
 
 const QUEUE_DELETED = 2;
+
+const ATTACHMENT_SEVERITY: readonly Coverage[] = [
+	Coverage.pending,
+	Coverage.processing,
+	Coverage.locked,
+	Coverage.failed,
+	Coverage.timeout,
+	Coverage.passwordRequired,
+	Coverage.resourceLimited,
+	Coverage.partial,
+	Coverage.unsupported
+];
+
+export function attachmentCoverage(states: readonly Coverage[]): Coverage | null {
+	if (states.length === 0) return null;
+	for (const state of ATTACHMENT_SEVERITY) {
+		if (states.includes(state)) return state === Coverage.processing ? Coverage.pending : state;
+	}
+	return Coverage.complete;
+}
+
+export interface AttachmentText {
+	contentRevision: number;
+	attachmentId: string;
+	parts: readonly { text: string; place: string }[];
+}
 
 function listOf(doc: SearchDocument): string | null {
 	return doc.listId ? listKey(doc.listId) : null;
@@ -171,13 +206,40 @@ export class SearchWriter {
 		this.#run('deleteCoverage', [id]);
 	}
 
+	#deletePart(part: number): void {
+		for (const literal of this.#column<number>('partLiteralIds', [part])) {
+			this.#run('deleteLiteralFts', [literal]);
+			this.#run('deleteLiteral', [literal]);
+		}
+		this.#run('deletePartFts', [part]);
+		this.#run('deletePart', [part]);
+	}
+
+	#clearExtraction(id: number): void {
+		for (const part of this.#column<number>('contentPartIds', [id, Field.attachmentText])) this.#deletePart(part);
+		for (const rowid of this.#column<number>('looseLiteralIds', [id])) {
+			this.#run('deleteLiteralFts', [rowid]);
+			this.#run('deleteLiteral', [rowid]);
+		}
+		this.#run('deleteParticipants', [id]);
+		this.#run('deleteAttachments', [id]);
+		this.#run('deleteOtherCoverage', [id, Dimension.attachmentText]);
+	}
+
+	#refreshAttachmentCoverage(id: number, clear = true): void {
+		const state = attachmentCoverage(this.#column<Coverage>('attachmentStates', [id]));
+		if (state === null && !clear) return;
+		if (state === null) this.#run('deleteDimension', [id, Dimension.attachmentText]);
+		else this.#run('upsertCoverage', [id, Dimension.attachmentText, state]);
+	}
+
 	#writeCollections(id: number, meta: SourceMetadata): void {
 		this.#run('deleteCollections', [id]);
 		for (const c of meta.collections) this.#run('insertCollection', [id, c.id, COLLECTION_TYPE[c.type]]);
 	}
 
-	#addPart(id: number, field: Field, text: string, attachmentId: string | null, locator: number | null): number {
-		this.#run('insertPart', [id, field, attachmentId, locator, text]);
+	#addPart(id: number, field: Field, text: string, attachmentId: string | null, locator: number | null, place: string | null = null): number {
+		this.#run('insertPart', [id, field, attachmentId, locator, place, text]);
 		const part = this.#lastId();
 		this.#run('insertPartFts', [part, normalize(text), id, field]);
 		return part;
@@ -210,7 +272,7 @@ export class SearchWriter {
 		}
 		for (const p of doc.parts) {
 			if (p.text.length === 0) continue;
-			const part = this.#addPart(id, p.field, p.text, p.attachmentId ?? null, p.locator ?? null);
+			const part = this.#addPart(id, p.field, p.text, p.attachmentId ?? null, p.locator ?? null, p.place ?? null);
 			this.#addLiterals(id, p.field, part, literals(p.text));
 		}
 		if (doc.messageId) this.#addLiterals(id, Field.identifier, null, [doc.messageId]);
@@ -244,7 +306,9 @@ export class SearchWriter {
 					doc.sizeVersion ?? 0,
 					doc.warnings ?? 0
 				]);
-				this.#writeContent(this.#lastId(), doc);
+				const id = this.#lastId();
+				this.#writeContent(id, doc);
+				this.#refreshAttachmentCoverage(id, false);
 				for (const listener of this.#inserted) listener();
 				return 'inserted';
 			}
@@ -255,7 +319,8 @@ export class SearchWriter {
 				return 'metadata';
 			}
 			const meta = doc.metadataRevision >= existing.metadataRev ? doc : this.#currentMetadata(existing.id, existing.metadataRev);
-			this.#clearContent(existing.id);
+			if (doc.contentRevision === existing.contentRev) this.#clearExtraction(existing.id);
+			else this.#clearContent(existing.id);
 			this.#run('updateSource', [
 				doc.contentRevision,
 				meta.metadataRevision,
@@ -274,7 +339,31 @@ export class SearchWriter {
 				existing.id
 			]);
 			this.#writeContent(existing.id, { ...doc, collections: meta.collections });
+			this.#refreshAttachmentCoverage(existing.id, false);
 			return 'replaced';
+		});
+	}
+
+	putAttachmentText(key: SourceKey, text: AttachmentText): boolean {
+		return this.#atomic(() => {
+			if (this.#superseded(key, text.contentRevision)) return false;
+			const existing = this.#find(key);
+			if (!existing || existing.contentRev !== text.contentRevision) return false;
+			for (const part of this.#column<number>('attachmentPartIds', [existing.id, Field.attachmentText, text.attachmentId])) this.#deletePart(part);
+			text.parts.forEach((p, locator) => {
+				if (!p.text) return;
+				const part = this.#addPart(existing.id, Field.attachmentText, p.text, text.attachmentId, locator, p.place);
+				this.#addLiterals(existing.id, Field.attachmentText, part, literals(p.text));
+			});
+			this.#refreshAttachmentCoverage(existing.id);
+			return true;
+		});
+	}
+
+	refreshAttachmentCoverage(key: SourceKey): void {
+		this.#atomic(() => {
+			const existing = this.#find(key);
+			if (existing) this.#refreshAttachmentCoverage(existing.id);
 		});
 	}
 

@@ -47,6 +47,7 @@ export interface ClientDeps {
 	locks: LockManager | null;
 	watch(report: (conditions: Conditions) => void): () => void;
 	serveBridge?(accountId: string, port: MessagePort): () => void;
+	parser?(): MessagePort | null;
 }
 
 type Pending = { resolve: (value: unknown) => void; reject: (error: Error) => void; timer?: ReturnType<typeof setTimeout> };
@@ -451,6 +452,7 @@ export class SearchClient {
 			owned.stopBridge = this.#deps.serveBridge(this.accountId, channel.port1);
 			bridge = channel.port2;
 		}
+		const parser = this.#deps.parser?.() ?? undefined;
 		const request: ControlRequest =
 			record && keystore
 				? {
@@ -460,12 +462,14 @@ export class SearchClient {
 						installationSalt: record.installationSalt,
 						keystore,
 						bridge,
+						parser,
 						paused: prefs.paused
 					}
-				: { op: 'memory', bridge, mode: this.mode, paused: prefs.paused };
+				: { op: 'memory', bridge, parser, mode: this.mode, paused: prefs.paused };
 		const transfer: Transferable[] = [];
 		if (keystore) transfer.push(keystore);
 		if (bridge) transfer.push(bridge);
+		if (parser) transfer.push(parser);
 		const result = await control.call<InitResult>(request, undefined, transfer);
 		if (!live()) return 'starting';
 		if (!result.ok) return result.code;

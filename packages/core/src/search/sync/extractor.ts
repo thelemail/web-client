@@ -1,62 +1,63 @@
-import type { Extracted, ExtractRequest } from '../extract/extract';
+import type { ParseRequest, ParseResult } from '../extract/parse';
+import type { JobInput, JobOutcome, JobTicket, ParseFailure } from '../parser/protocol';
 
-const JOB_TIMEOUT_MS = 20_000;
+const OUTER_TIMEOUT_MS = 150_000;
 
-export type ExtractResult = { ok: true; value: Extracted } | { ok: false; reason: 'timeout' | 'crashed' };
+export type ParseOutcome = { ok: true; result: ParseResult } | { ok: false; reason: ParseFailure };
+
+export interface ParseMeta {
+	source: string;
+	revision: number;
+}
 
 export interface ExtractorPort {
-	extract(request: ExtractRequest): Promise<ExtractResult>;
+	parse(request: ParseRequest, meta: ParseMeta): Promise<ParseOutcome>;
 	close(): void;
 }
 
-export class Extractor implements ExtractorPort {
-	#spawn: () => Worker;
-	#worker: Worker | null = null;
-	#next = 0;
-	#pending = new Map<number, (r: ExtractResult) => void>();
+function jobId(): string {
+	const bytes = crypto.getRandomValues(new Uint8Array(16));
+	return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
 
-	constructor(spawn: () => Worker) {
-		this.#spawn = spawn;
+export class ParserClient implements ExtractorPort {
+	#port: MessagePort | null;
+	#pending = new Set<(outcome: ParseOutcome) => void>();
+
+	constructor(port: MessagePort | null) {
+		this.#port = port;
 	}
 
-	#ensure(): Worker {
-		if (this.#worker) return this.#worker;
-		const worker = this.#spawn();
-		worker.onmessage = (e: MessageEvent<{ id: number; ok: boolean; value?: Extracted }>) => {
-			const resolve = this.#pending.get(e.data.id);
-			if (!resolve) return;
-			this.#pending.delete(e.data.id);
-			resolve(e.data.ok ? { ok: true, value: e.data.value! } : { ok: false, reason: 'crashed' });
-		};
-		worker.onerror = () => this.#reset('crashed');
-		this.#worker = worker;
-		return worker;
-	}
-
-	#reset(reason: 'timeout' | 'crashed'): void {
-		this.#worker?.terminate();
-		this.#worker = null;
-		const pending = [...this.#pending.values()];
-		this.#pending.clear();
-		for (const resolve of pending) resolve({ ok: false, reason });
-	}
-
-	extract(request: ExtractRequest): Promise<ExtractResult> {
-		const worker = this.#ensure();
-		const id = this.#next++;
-		return new Promise((resolve) => {
-			const timer = setTimeout(() => {
-				if (this.#pending.has(id)) this.#reset('timeout');
-			}, JOB_TIMEOUT_MS);
-			this.#pending.set(id, (r) => {
+	parse(request: ParseRequest, meta: ParseMeta): Promise<ParseOutcome> {
+		const port = this.#port;
+		if (!port) return Promise.resolve({ ok: false, reason: 'unavailable' });
+		const id = jobId();
+		const channel = new MessageChannel();
+		return new Promise<ParseOutcome>((resolve) => {
+			const finish = (outcome: ParseOutcome) => {
+				if (!this.#pending.delete(finish)) return;
 				clearTimeout(timer);
-				resolve(r);
-			});
-			worker.postMessage({ id, request }, [request.bytes.buffer]);
+				channel.port1.onmessage = null;
+				channel.port1.close();
+				resolve(outcome);
+			};
+			this.#pending.add(finish);
+			const timer = setTimeout(() => finish({ ok: false, reason: 'timeout' }), OUTER_TIMEOUT_MS);
+			channel.port1.onmessage = (e: MessageEvent<JobOutcome>) => {
+				const m = e.data;
+				if (!m || m.jobId !== id) return finish({ ok: false, reason: 'crashed' });
+				finish(m.ok ? { ok: true, result: m.result } : { ok: false, reason: m.reason });
+			};
+			const ticket: JobTicket = { type: 'job', jobId: id, source: meta.source, revision: meta.revision, size: request.bytes.byteLength };
+			port.postMessage(ticket, [channel.port2]);
+			const input: JobInput = { jobId: id, request };
+			channel.port1.postMessage(input, [request.bytes.buffer]);
 		});
 	}
 
 	close(): void {
-		this.#reset('crashed');
+		for (const finish of [...this.#pending]) finish({ ok: false, reason: 'unavailable' });
+		this.#port?.close();
+		this.#port = null;
 	}
 }

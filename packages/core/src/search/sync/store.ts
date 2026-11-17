@@ -34,7 +34,7 @@ export interface Revisions {
 
 export type Pointers =
 	| { kind: 'message'; body: BlobPointer; attachmentsInBody: boolean; attachments: { id: string; inline: boolean; blob: BlobPointer }[] }
-	| { kind: 'draft'; body: BlobPointer }
+	| { kind: 'draft'; body: BlobPointer; bundle?: BlobPointer | null }
 	| { kind: 'scheduled'; senderCopyMessageId: string | null };
 
 export interface QueueRow extends QueueKey, Revisions {
@@ -58,6 +58,33 @@ export interface QueueCounts {
 	held: number;
 	waiting: number;
 	bodies: Partial<Record<Coverage, number>>;
+	attachments: Partial<Record<Coverage, number>>;
+}
+
+export interface AttachmentRow extends QueueKey {
+	attachmentId: string;
+	contentRev: number;
+	filename: string;
+	mime: string;
+	state: Coverage;
+	attempts: number;
+}
+
+const ATTACHMENT_ROW = 'q.kind, q.source_id, q.attachment_id, q.content_rev, q.filename, q.mime, q.state, q.attempts';
+const CURRENT_ATTACHMENT = 'sq.kind = q.kind AND sq.source_id = q.source_id AND sq.state = 0 AND sq.content_rev = q.content_rev AND sq.extracted_rev >= q.content_rev';
+const RETRYABLE_ATTACHMENT = [Coverage.failed, Coverage.timeout, Coverage.resourceLimited];
+
+function attachmentRow(r: unknown[]): AttachmentRow {
+	return {
+		kind: r[0] as QueueKind,
+		sourceId: r[1] as string,
+		attachmentId: r[2] as string,
+		contentRev: r[3] as number,
+		filename: r[4] as string,
+		mime: r[5] as string,
+		state: r[6] as Coverage,
+		attempts: r[7] as number
+	};
 }
 
 const ROW = 'kind, source_id, source_rev, content_rev, metadata_rev, state, described_rev, extracted_rev, body_state, attempts, stored_at, pointers';
@@ -186,6 +213,7 @@ export class SyncStore {
 			ON CONFLICT (kind, source_id) DO UPDATE SET state = 2, source_rev = max(source_rev, excluded.source_rev), body_state = excluded.body_state, pointers = NULL`,
 			[key.kind, key.sourceId, sourceRev, sourceRev, Coverage.deleted]
 		);
+		this.#exec('DELETE FROM attachment_queue WHERE kind = ? AND source_id = ?', [key.kind, key.sourceId]);
 		if (key.kind === QueueKind.collection) this.#exec('DELETE FROM source_collections WHERE collection_id = ?', [key.sourceId]);
 		if (key.kind === QueueKind.alias) this.#exec('DELETE FROM source_aliases WHERE alias_id = ?', [key.sourceId]);
 	}
@@ -206,6 +234,7 @@ export class SyncStore {
 	}
 
 	retryLocked(): number {
+		this.#exec('UPDATE attachment_queue SET state = 0, next_at = 0, attempts = 0 WHERE state = ?', [Coverage.locked]);
 		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0, attempts = 0 WHERE state = 0 AND body_state = ?', [Coverage.locked]);
 		this.#exec(
 			`UPDATE source_queue SET described_rev = 0, next_at = 0 WHERE state = 0 AND kind <= 3 AND EXISTS (
@@ -217,19 +246,76 @@ export class SyncStore {
 	}
 
 	retryFailed(): void {
-		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0, attempts = 0 WHERE state = 0 AND kind <= 3 AND body_state IN (?, ?)', [
+		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0, attempts = 0 WHERE state = 0 AND kind <= 3 AND body_state IN (?, ?, ?)', [
 			Coverage.failed,
-			Coverage.resourceLimited
+			Coverage.resourceLimited,
+			Coverage.timeout
+		]);
+		this.#exec(`UPDATE attachment_queue SET state = 0, next_at = 0, attempts = 0 WHERE state IN (${RETRYABLE_ATTACHMENT.map(() => '?').join(', ')}) OR (state = 0 AND next_at > 0)`, [
+			...RETRYABLE_ATTACHMENT
 		]);
 		this.#exec('UPDATE source_queue SET described_rev = 0, next_at = 0, attempts = 0 WHERE state != 2 AND next_at > 0', []);
 	}
 
 	retryEpoch(epoch: number): void {
-		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0 WHERE state = 0 AND kind <= 3 AND extractor_epoch < ? AND body_state IN (?, ?)', [
+		this.#exec('UPDATE source_queue SET extracted_rev = 0, next_at = 0 WHERE state = 0 AND kind <= 3 AND extractor_epoch < ? AND body_state IN (?, ?, ?)', [
 			epoch,
 			Coverage.failed,
-			Coverage.resourceLimited
+			Coverage.resourceLimited,
+			Coverage.timeout
 		]);
+	}
+
+	queueAttachments(key: QueueKey, contentRev: number, attachments: readonly { attachmentId: string; filename: string; mime: string }[]): void {
+		this.#exec('DELETE FROM attachment_queue WHERE kind = ? AND source_id = ? AND content_rev != ?', [key.kind, key.sourceId, contentRev]);
+		const keep = attachments.map((a) => a.attachmentId);
+		this.#exec(
+			`DELETE FROM attachment_queue WHERE kind = ? AND source_id = ? AND attachment_id NOT IN (${keep.map(() => '?').join(', ') || "''"})`,
+			[key.kind, key.sourceId, ...keep]
+		);
+		for (const a of attachments) {
+			this.#exec(
+				`INSERT INTO attachment_queue (kind, source_id, attachment_id, content_rev, filename, mime) VALUES (?, ?, ?, ?, ?, ?)
+				ON CONFLICT (kind, source_id, attachment_id) DO UPDATE SET filename = excluded.filename, mime = excluded.mime`,
+				[key.kind, key.sourceId, a.attachmentId, contentRev, a.filename, a.mime]
+			);
+		}
+	}
+
+	toAttach(limit: number, now: number): AttachmentRow[] {
+		return this.#rows(
+			`SELECT ${ATTACHMENT_ROW} FROM attachment_queue q JOIN source_queue sq ON ${CURRENT_ATTACHMENT}
+				WHERE q.state = 0 AND q.next_at <= ? ORDER BY sq.stored_at DESC, q.kind, q.source_id, q.attachment_id LIMIT ?`,
+			[now, limit]
+		).map(attachmentRow);
+	}
+
+	attached(row: AttachmentRow, state: Coverage, epoch: number, reason: string | null): void {
+		this.#exec(
+			`UPDATE attachment_queue SET state = ?, epoch = ?, reason = ?, attempts = 0, next_at = 0
+			WHERE kind = ? AND source_id = ? AND attachment_id = ? AND content_rev = ?`,
+			[state, epoch, reason, row.kind, row.sourceId, row.attachmentId, row.contentRev]
+		);
+	}
+
+	deferAttachment(row: AttachmentRow, until: number, reason: string): void {
+		this.#exec('UPDATE attachment_queue SET next_at = ?, attempts = attempts + 1, reason = ? WHERE kind = ? AND source_id = ? AND attachment_id = ? AND content_rev = ?', [
+			until,
+			reason,
+			row.kind,
+			row.sourceId,
+			row.attachmentId,
+			row.contentRev
+		]);
+	}
+
+	nextAttachmentWake(now: number): number | null {
+		const at = this.#db.selectValue(`SELECT min(q.next_at) FROM attachment_queue q JOIN source_queue sq ON ${CURRENT_ATTACHMENT} WHERE q.state = 0 AND q.next_at > ?`, [now]);
+		return typeof at === 'number' ? at : null;
+	}
+
+	retryAttachmentEpoch(epoch: number): void {
+		this.#exec('UPDATE attachment_queue SET state = 0, next_at = 0, attempts = 0 WHERE state NOT IN (0, ?) AND epoch < ?', [Coverage.complete, epoch]);
 	}
 
 	putCollection(id: string, c: { kind: string; parentId?: string; position: number; rev: number; sealedMeta: string; metaKeyFingerprint: string; metaSchemaVersion: number }): void {
@@ -272,7 +358,11 @@ export class SyncStore {
 		)) {
 			bodies[r[0] as Coverage] = r[1] as number;
 		}
-		return { total, undescribed, held, waiting, bodies };
+		const attachments: Partial<Record<Coverage, number>> = {};
+		for (const r of this.#rows(`SELECT q.state, count(*) FROM attachment_queue q JOIN source_queue sq ON ${CURRENT_ATTACHMENT} GROUP BY q.state`, [])) {
+			attachments[r[0] as Coverage] = r[1] as number;
+		}
+		return { total, undescribed, held, waiting, bodies, attachments };
 	}
 
 	coverage(): CoverageCount[] {

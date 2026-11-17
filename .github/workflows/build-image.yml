@@ -109,6 +109,7 @@ jobs:
             PUBLIC_API_BASE_URL=${{ env.PUBLIC_API_BASE_URL }}
             PUBLIC_SUBMISSION_BASE_URL=${{ env.PUBLIC_SUBMISSION_BASE_URL }}
             PUBLIC_PRODUCT_ORIGINS=${{ env.PUBLIC_PRODUCT_ORIGINS }}
+            PUBLIC_PARSER_ORIGIN=${{ env.PUBLIC_PARSER_ORIGIN }}
             GIT_COMMIT=${{ github.sha }}
             GIT_REF=${{ github.ref }}
             BUILD_RUN_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -128,7 +128,7 @@ function row(id: string, over: Partial<ResultRow> = {}): ResultRow {
 		attachments: 0,
 		folders: [],
 		labels: [],
-		excerpt: { text: 'please sign the permission slip', spans: [{ start: 16, end: 26 }], field: 3, attachmentId: null, locator: null, clippedStart: false, clippedEnd: false },
+		excerpt: { text: 'please sign the permission slip', spans: [{ start: 16, end: 26 }], field: 3, attachmentId: null, locator: null, place: null, clippedStart: false, clippedEnd: false },
 		filename: null,
 		fields: [1, 3],
 		...over

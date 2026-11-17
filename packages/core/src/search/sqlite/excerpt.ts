@@ -11,6 +11,7 @@ export interface ExcerptPart {
 	text: string;
 	attachmentId: string | null;
 	locator: number | null;
+	place: string | null;
 }
 
 export interface Excerpt {
@@ -19,6 +20,7 @@ export interface Excerpt {
 	field: Field | null;
 	attachmentId: string | null;
 	locator: number | null;
+	place: string | null;
 	clippedStart: boolean;
 	clippedEnd: boolean;
 }
@@ -174,12 +176,12 @@ export function highlight(subject: string | null, parts: readonly ExcerptPart[],
 	let excerpt: Excerpt | null = null;
 	if (best) {
 		const c = clip(best.part.text, best.spans);
-		excerpt = { ...c, field: best.part.field, attachmentId: best.part.attachmentId, locator: best.part.locator };
+		excerpt = { ...c, field: best.part.field, attachmentId: best.part.attachmentId, locator: best.part.locator, place: best.part.place };
 	} else {
 		const body = parts.find((p) => p.field === Field.body && p.text.trim());
 		if (body) {
 			const c = clip(body.text, []);
-			excerpt = { ...c, field: null, attachmentId: null, locator: null };
+			excerpt = { ...c, field: null, attachmentId: null, locator: null, place: null };
 		}
 	}
 	return { subject: subjectSpans, excerpt, fields: [...fields].sort((a, b) => a - b) };

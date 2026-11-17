@@ -12,7 +12,7 @@ import { QueryEngine, yieldTask } from '../sqlite/run';
 import { SearchWriter, maintain } from '../sqlite/writer';
 import { Batch } from './batch';
 import { Bridge, type BridgeCaller } from '../sync/bridge';
-import { Extractor, type ExtractorPort } from '../sync/extractor';
+import { ParserClient, type ExtractorPort } from '../sync/extractor';
 import type { SyncProgress } from '../sync/jobs';
 import { SyncStore } from '../sync/store';
 import {
@@ -51,11 +51,11 @@ export interface JobContext {
 }
 
 export interface ServeOptions {
-	extractor?: () => ExtractorPort;
+	extractor?: (parser: MessagePort | null) => ExtractorPort;
 }
 
-function defaultExtractor(): ExtractorPort {
-	return new Extractor(() => new Worker(new URL('../extract/extract.worker.ts', import.meta.url), { type: 'module', name: 'thelemail-search-extract' }));
+function defaultExtractor(parser: MessagePort | null): ExtractorPort {
+	return new ParserClient(parser);
 }
 
 export type JobFactory = (ctx: JobContext) => Job;
@@ -148,6 +148,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		directory: string | null,
 		file: string | null,
 		port: MessagePort | undefined,
+		parser: MessagePort | undefined,
 		paused: boolean
 	): Promise<void> {
 		const sqlite = await loadSqlite();
@@ -162,7 +163,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			writer,
 			store: new SyncStore(db),
 			bridge,
-			extractor: (options.extractor ?? defaultExtractor)(),
+			extractor: (options.extractor ?? defaultExtractor)(parser ?? null),
 			progress: { phase: null, seq: null, syncedAt: null, waiting: null },
 			timers,
 			engine,
@@ -228,19 +229,19 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			derived.key.fill(0);
 		}
 		if (result.ok) {
-			await attach(result.db, 'persistent', 'saved', directory, file, r.bridge, r.paused);
+			await attach(result.db, 'persistent', 'saved', directory, file, r.bridge, r.parser, r.paused);
 			void requestPersistence();
 			await pruneSearchDb(directory, file).catch(() => undefined);
 			return { ok: true, status: status(), rebuilt: result.rebuilt };
 		}
 		if (result.code === 'bad-key') return { ok: false, code: 'failed' };
-		return memory(r.bridge, 'saved', r.paused, true);
+		return memory(r.bridge, r.parser, 'saved', r.paused, true);
 	}
 
-	async function memory(bridge: MessagePort | undefined, mode: Mode, paused: boolean, keepKeystore = false): Promise<InitResult> {
+	async function memory(bridge: MessagePort | undefined, parser: MessagePort | undefined, mode: Mode, paused: boolean, keepKeystore = false): Promise<InitResult> {
 		if (open) await close(false, keepKeystore);
 		try {
-			await attach(await openMemorySearchDb(), 'session', mode, null, null, bridge, paused);
+			await attach(await openMemorySearchDb(), 'session', mode, null, null, bridge, parser, paused);
 		} catch {
 			return { ok: false, code: 'failed' };
 		}
@@ -405,7 +406,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			case 'init':
 				return init(r);
 			case 'memory':
-				return memory(r.bridge, r.mode, r.paused);
+				return memory(r.bridge, r.parser, r.mode, r.paused);
 			case 'connect':
 				if (!open) {
 					r.port.close();

@@ -59,7 +59,10 @@ export const Coverage = {
 	failed: 5,
 	resourceLimited: 6,
 	excludedByUser: 7,
-	deleted: 8
+	deleted: 8,
+	passwordRequired: 9,
+	partial: 10,
+	timeout: 11
 } as const;
 export type Coverage = (typeof Coverage)[keyof typeof Coverage];
 
@@ -89,6 +92,7 @@ export interface Part {
 	text: string;
 	attachmentId?: string;
 	locator?: number;
+	place?: string;
 }
 
 export interface SourceMetadata {

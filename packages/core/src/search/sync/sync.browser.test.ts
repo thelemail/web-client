@@ -7,9 +7,11 @@ import { Coverage, Dimension } from '../sqlite/types';
 import { SearchClient, type ClientDeps, type ClientState } from '../runtime/client';
 import { directoryFor, type QueryReply, type SyncStatus } from '../runtime/protocol';
 import { memoryPrefs, memoryRecords } from '../runtime/records';
-import { FakeSource, type FakeMessage } from './fake';
+import { docxFiles, pdf, zip } from '../extract/files/fixtures';
+import { FakeSource, localParser, type FakeMessage } from './fake';
 
 const CTX: QueryContext = { identities: ['ada@calloway.test'], folders: [], labels: [], attachmentText: false };
+const FULL: QueryContext = { ...CTX, attachmentText: true };
 const OPTIONS = { sort: 'newest', group: 'message' } as const;
 const WAIT_MS = 60_000;
 const SLOW_MS = 120_000;
@@ -54,7 +56,8 @@ function rig(server = new FakeSource()): Rig {
 					report({ visible: true, idle: true, constrained: false });
 					return () => {};
 				},
-				serveBridge: (_accountId, port) => server.serve(port)
+				serveBridge: (_accountId, port) => server.serve(port),
+				parser: () => localParser()
 			};
 			const client = new SearchClient(accountId, deps);
 			clients.push(client);
@@ -86,7 +89,7 @@ function until(client: SearchClient, test: (state: ClientState) => boolean, ms =
 }
 
 function settled(sync: SyncStatus | null | undefined): boolean {
-	return !!sync && sync.phase === 'live' && sync.queue.undescribed === 0 && !sync.queue.bodies[Coverage.pending];
+	return !!sync && sync.phase === 'live' && sync.queue.undescribed === 0 && !sync.queue.bodies[Coverage.pending] && !sync.queue.attachments[Coverage.pending];
 }
 
 const idle = (state: ClientState) => state.phase === 'ready' && state.status?.working === null && settled(state.status?.sync);
@@ -104,10 +107,10 @@ function coverage(state: ClientState, dimension: Dimension, wanted: Coverage): n
 	return state.status!.sync!.coverage.find((c) => c.dimension === dimension && c.state === wanted)?.count ?? 0;
 }
 
-async function search(client: SearchClient, input: string): Promise<{ matches: number; incomplete: number; ids: string[] }> {
+async function search(client: SearchClient, input: string, ctx: QueryContext = CTX): Promise<{ matches: number; incomplete: number; ids: string[] }> {
 	const parsed = parseQuery(input, SNAPSHOT);
 	if (!parsed.ok) throw new Error(parsed.error.code);
-	const reply: QueryReply = await client.query(parsed.query, CTX, OPTIONS);
+	const reply: QueryReply = await client.query(parsed.query, ctx, OPTIONS);
 	if (!reply.ok) throw new Error('query failed');
 	const page = await client.page(reply.summary.id, 0);
 	await client.closeQuery(reply.summary.id);
@@ -328,4 +331,65 @@ describe('source sync', () => {
 		expect((await search(b, 'lighthouse')).matches).toBe(600);
 		expect((await search(b, '"number 42"')).ids).toEqual(['m042']);
 	}, SLOW_MS * 2);
+});
+
+const text = (s: string) => new TextEncoder().encode(s);
+
+describe('attachment text', () => {
+	it('indexes stored attachments into the message and answers attachment filters', async () => {
+		const server = new FakeSource();
+		server.addMessage(
+			plain('lease', 'Lease', 'The harbour lease is attached.', {
+				files: [
+					{ id: 'f1', filename: 'ledger.txt', mime: 'text/plain', bytes: text('Lighthouse ledger for October') },
+					{ id: 'f2', filename: 'terms.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', bytes: await zip(docxFiles(['Mooring terms apply'])) },
+					{ id: 'f3', filename: 'scan.pdf', mime: 'application/pdf', bytes: pdf(['Signed by Ada', 'Witnessed by Bram']) },
+					{ id: 'f4', filename: 'photo.jpg', mime: 'image/jpeg', bytes: new Uint8Array([0xff, 0xd8, 0xff, 0xe0]) }
+				]
+			})
+		);
+		server.addMessage(plain('other', 'Other', 'Nothing attached about the harbour.'));
+		const r = rig(server);
+		const a = r.client();
+		a.start();
+		const done = await until(a, caughtUp(server));
+		expect(done.status!.sync!.queue.attachments).toEqual({ [Coverage.complete]: 3, [Coverage.unsupported]: 1 });
+		expect(coverage(done, Dimension.attachmentText, Coverage.unsupported)).toBe(1);
+		expect((await search(a, 'body:harbour attachment:lighthouse', FULL)).ids).toEqual(['lease']);
+		expect((await search(a, 'attachment:mooring', FULL)).ids).toEqual(['lease']);
+		expect((await search(a, 'attachment:witnessed', FULL)).ids).toEqual(['lease']);
+		expect((await search(a, 'lighthouse', FULL)).ids).toEqual(['lease']);
+		expect((await search(a, '"ada witnessed"', FULL)).ids).toEqual([]);
+		expect((await search(a, 'filename:photo', FULL)).ids).toEqual(['lease']);
+		expect((await search(a, 'has:document', FULL)).ids).toEqual(['lease']);
+		expect((await search(a, 'filetype:pdf', FULL)).ids).toEqual(['lease']);
+	}, SLOW_MS);
+
+	it('keeps body and attachment conjunctions true when attachment text arrives late', async () => {
+		const server = new FakeSource();
+		server.addMessage(plain('late', 'Late', 'Harbour dues enclosed.', { files: [{ id: 'f1', filename: 'dues.csv', mime: 'text/csv', bytes: text('buoy,42') }] }));
+		server.holdFiles();
+		const r = rig(server);
+		const a = r.client();
+		a.start();
+		await until(a, (s) => s.phase === 'ready' && !!s.status?.sync && s.status.sync.queue.bodies[Coverage.complete] === 1);
+		const early = await search(a, 'body:harbour attachment:buoy', FULL);
+		expect(early.matches).toBe(0);
+		expect(early.incomplete).toBe(1);
+		server.resumeFiles();
+		await until(a, idle);
+		expect((await search(a, 'body:harbour attachment:buoy', FULL)).ids).toEqual(['late']);
+		expect((await search(a, '-attachment:buoy', FULL)).ids).toEqual([]);
+	}, SLOW_MS);
+
+	it('marks attachments without a key as locked and keeps the filename searchable', async () => {
+		const server = new FakeSource();
+		server.addMessage(plain('locked', 'Locked', 'See attached.', { files: [{ id: 'f1', filename: 'secret-plan.txt', mime: 'text/plain', bytes: text('plan'), locked: true }] }));
+		const r = rig(server);
+		const a = r.client();
+		a.start();
+		const done = await until(a, caughtUp(server));
+		expect(done.status!.sync!.queue.attachments).toEqual({ [Coverage.locked]: 1 });
+		expect((await search(a, 'filename:secret', FULL)).ids).toEqual(['locked']);
+	}, SLOW_MS);
 });

@@ -173,9 +173,19 @@
 	const hiddenChips = $derived(labelChips.slice(CHIP_LIMIT));
 	const location = $derived(locationFor(m.folder, viewFolder, searching));
 	const hit = $derived(m.match ?? null);
+	function attachmentPlace(name: string, place: string | null): string {
+		const page = place?.match(/^page:(\d+)$/);
+		if (page) return msg.mail_search_in_attachment_page({ name, page: page[1] });
+		const slide = place?.match(/^(?:slide|notes|comments):(\d+)$/);
+		if (slide) return msg.mail_search_in_attachment_slide({ name, slide: slide[1] });
+		const sheet = place?.match(/^(?:sheet:(.+)|(.+)!.+)$/);
+		if (sheet) return msg.mail_search_in_attachment_sheet({ name, sheet: sheet[1] ?? sheet[2] });
+		return msg.mail_search_in_attachment({ name });
+	}
+
 	const matchedIn = $derived.by(() => {
 		if (!hit) return null;
-		if (hit.filename) return hit.locator !== null ? msg.mail_search_in_attachment_page({ name: hit.filename, page: String(hit.locator) }) : msg.mail_search_in_attachment({ name: hit.filename });
+		if (hit.filename) return attachmentPlace(hit.filename, hit.place);
 		if (hit.quoted) return msg.mail_search_in_quoted();
 		return null;
 	});
