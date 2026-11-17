@@ -57,7 +57,7 @@ export async function hostFetch<T>(path: string, call: HostCall = {}): Promise<T
 	return json as T;
 }
 
-export function bootstrap(): Promise<{ csrfToken: string }> {
+export function bootstrap(): Promise<{ csrfToken: string; signInAtAuth?: boolean }> {
 	return hostFetch('/v1/auth/handoffs/bootstrap');
 }
 

@@ -54,6 +54,7 @@ interface ProfileSnapshot {
 	lifecycle: LifecycleInfo | null;
 	keyRotationBlocker: KeyRotationBlocker | null;
 	authOriginEnrolled: boolean;
+	productKeysActive: boolean;
 	mailOnly: boolean;
 }
 
@@ -73,6 +74,7 @@ const emptyProfile = (): ProfileSnapshot => ({
 	lifecycle: null,
 	keyRotationBlocker: null,
 	authOriginEnrolled: false,
+	productKeysActive: false,
 	mailOnly: false
 });
 
@@ -456,7 +458,8 @@ class SessionStore {
 			deletion: me.deletion ?? null,
 			lifecycle: me.lifecycle ?? null,
 			keyRotationBlocker: me.keyRotationBlocker ?? null,
-			authOriginEnrolled: me.authOriginEnrolled ?? false
+			authOriginEnrolled: me.authOriginEnrolled ?? false,
+			productKeysActive: me.productKeysActive ?? false
 		}));
 		for (const h of this.#hooks) h.profileLoaded?.(me);
 		void cacheAccountAvatar(id, me.avatarPath || null);
@@ -487,7 +490,8 @@ class SessionStore {
 	}
 
 	mailOnlyFor(accountId: string | null): boolean {
-		return this.#profiles.get(accountId ?? this.#currentId ?? '')?.mailOnly ?? false;
+		const p = this.#profiles.get(accountId ?? this.#currentId ?? '');
+		return (p?.mailOnly ?? false) || (!isAuthOrigin && (p?.productKeysActive ?? false));
 	}
 
 	authOriginEnrolledFor(accountId: string): boolean {

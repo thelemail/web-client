@@ -23,12 +23,19 @@ const nav = vi.hoisted(() => ({ goto: vi.fn() }));
 vi.mock('$app/navigation', () => nav);
 const route = vi.hoisted(() => ({ page: { params: {}, url: new URL('http://localhost/login') } }));
 vi.mock('$app/state', () => route);
-vi.mock('$core/stores/session.svelte', () => ({ auth: { email: null } }));
+const session = vi.hoisted(() => ({
+	auth: { email: null, loadProfile: vi.fn(async () => undefined), mailOnlyFor: vi.fn(() => false), authOriginEnrolledFor: vi.fn(() => false) }
+}));
+vi.mock('$core/stores/session.svelte', () => session);
+const vault = vi.hoisted(() => ({ keystore: { lock: vi.fn(async () => undefined) } }));
+vi.mock('$core/keystore/keystore-client', () => vault);
 const known = vi.hoisted(() => ({ bySlot: vi.fn(), list: [] as { accountId: string }[] }));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: known }));
 const custody = vi.hoisted(() => ({
 	mailOnlyAccountId: vi.fn(async (_target: { slot?: number | null; identifier?: string }) => null as string | null),
-	unlockAtAuth: vi.fn((_accountId: string, _redirect: string | null) => new Promise<never>(() => {}))
+	unlockAtAuth: vi.fn((_accountId: string, _redirect: string | null) => new Promise<never>(() => {})),
+	signInMovedToAuth: vi.fn(async () => false),
+	signInAtAuth: vi.fn((_redirect: string | null) => new Promise<never>(() => {}))
 }));
 vi.mock('$core/custody/unlock', () => custody);
 
@@ -47,6 +54,7 @@ function button(label: string) {
 }
 
 async function enterEmail(value = 'r@thelemail.com') {
+	await vi.waitFor(() => expect(document.querySelector('#login-email')).not.toBeNull());
 	await fireEvent.input(document.querySelector('#login-email')!, { target: { value } });
 	await fireEvent.submit(document.querySelector('form')!);
 }
@@ -88,6 +96,15 @@ beforeEach(() => {
 	custody.mailOnlyAccountId.mockResolvedValue(null);
 	custody.unlockAtAuth.mockReset();
 	custody.unlockAtAuth.mockImplementation(() => new Promise<never>(() => {}));
+	custody.signInMovedToAuth.mockReset();
+	custody.signInMovedToAuth.mockResolvedValue(false);
+	custody.signInAtAuth.mockReset();
+	custody.signInAtAuth.mockImplementation(() => new Promise<never>(() => {}));
+	session.auth.mailOnlyFor.mockReset();
+	session.auth.mailOnlyFor.mockReturnValue(false);
+	session.auth.authOriginEnrolledFor.mockReset();
+	session.auth.authOriginEnrolledFor.mockReturnValue(false);
+	vault.keystore.lock.mockClear();
 	pending = {
 		pendingToken: 'pt-1',
 		methods: ['totp'],
@@ -406,6 +423,7 @@ describe('login page identifier step', () => {
 
 		render(LoginPage);
 
+		await vi.waitFor(() => expect(document.querySelector('#login-email')).not.toBeNull());
 		expect(document.querySelector<HTMLInputElement>('#login-email')!.value).toBe('');
 		expect(document.body.textContent).toContain(m.auth_login_add_title());
 	});
@@ -421,6 +439,44 @@ describe('login page identifier step', () => {
 
 		expect(document.querySelector<HTMLInputElement>('input[type="password"]')?.value).toBe('hunter22');
 		leaving.resolve();
+	});
+});
+
+describe('login page account origin', () => {
+	it('hands every sign-in to the account origin once the switch is on', async () => {
+		route.page.url = new URL('http://localhost/login?redirect=%2Fu%2F0%2Fmail%2Finbox');
+		custody.signInMovedToAuth.mockResolvedValue(true);
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(custody.signInAtAuth).toHaveBeenCalledWith('/u/0/mail/inbox'));
+		expect(document.querySelector('#login-email')).toBeNull();
+		expect(login.performLogin).not.toHaveBeenCalled();
+	});
+
+	it('locks a product-key account after a password sign-in and opens it at the account origin', async () => {
+		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
+		known.bySlot.mockImplementation((slot: number) => (slot === 0 ? { accountId: 'acc-converted', email: 'r@thelemail.com' } : undefined));
+		session.auth.mailOnlyFor.mockReturnValue(true);
+		session.auth.authOriginEnrolledFor.mockReturnValue(true);
+		render(LoginPage);
+
+		await submitCredentials();
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-converted', null));
+		expect(vault.keystore.lock).toHaveBeenCalledWith({ accountId: 'acc-converted' });
+		expect(nav.goto).not.toHaveBeenCalled();
+	});
+
+	it('opens the mailbox for an account still on the old keys', async () => {
+		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
+		known.bySlot.mockImplementation((slot: number) => (slot === 0 ? { accountId: 'acc-legacy', email: 'r@thelemail.com' } : undefined));
+		render(LoginPage);
+
+		await submitCredentials();
+
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalled());
+		expect(vault.keystore.lock).not.toHaveBeenCalled();
+		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
 	});
 });
 

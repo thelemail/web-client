@@ -11,7 +11,7 @@
 	import CopyBtn from '../CopyBtn.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { accountKeys } from '$core/stores/accountKeys.svelte';
-	import { auth } from '$core/stores/auth.svelte';
+	import { auth } from '$core/stores/session.svelte';
 	import { formatFingerprintHex, formatKeyId } from '$core/directory/format';
 	import { platform } from '$platform';
 	import type { CeremonyKind } from '../data';

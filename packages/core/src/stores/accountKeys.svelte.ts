@@ -4,7 +4,7 @@ import { ApiCallError, type AccountKeyListResponse } from '$core/api/types';
 import { keystore } from '$core/keystore/keystore-client';
 import type { AccountKeySummary } from '$core/keystore/protocol';
 import { bytesToHex } from '$core/keys/encode';
-import { isProductVault } from '$core/products';
+import { isAuthOrigin, isProductVault } from '$core/products';
 import { decodeStrictBase64 } from '$core/directory/statement';
 import { DirectoryVerificationError } from '$core/directory/errors';
 import { m } from '$paraglide/messages.js';
@@ -228,6 +228,7 @@ class AccountKeysStore {
 	}
 
 	#verify(accountId: string, final: boolean): Promise<OwnKeyVerdict | null> {
+		if (isAuthOrigin) return Promise.resolve(null);
 		const running = this.#inflight.get(accountId);
 		if (running) return running;
 		const pending = this.#check(accountId, final).finally(() => this.#inflight.delete(accountId));

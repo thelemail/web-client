@@ -26,6 +26,13 @@ import type {
 	OpaqueStartRegistrationArgs,
 	CommitReformattedKeyArgs,
 	PrepareProductKeysArgs,
+	PrepareSuccessorHeadArgs,
+	PrepareKeyRotationArgs,
+	CommitKeyRotationArgs,
+	AbandonKeyRotationArgs,
+	LoadAccountKeysArgs,
+	GetPublicKeyArgs,
+	ListAccountKeysArgs,
 	ReadProductKeysArgs,
 	ReformatKeyWithUidsArgs,
 	SealProductHandoffArgs,
@@ -67,8 +74,16 @@ import {
 	handleInvalidatePersistedVault,
 	handleTryRestoreFromPersistent
 } from './worker/vault-persist';
-import { handlePrepareProductKeys, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
+import { handlePrepareProductKeys, handlePrepareSuccessorHead, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
 import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
+import {
+	handleAbandonKeyRotation,
+	handleCommitKeyRotation,
+	handleGetAccountPublicKey,
+	handleListAccountKeys,
+	handleLoadAccountKeys,
+	handlePrepareKeyRotation
+} from './worker/account-key-ops';
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 
@@ -266,6 +281,9 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 			case 'prepareProductKeys':
 				respond(port, msg.id, await handlePrepareProductKeys(msg.args as PrepareProductKeysArgs));
 				break;
+			case 'prepareSuccessorHead':
+				respond(port, msg.id, await handlePrepareSuccessorHead(msg.args as PrepareSuccessorHeadArgs));
+				break;
 			case 'readProductKeys':
 				respond(port, msg.id, await handleReadProductKeys(msg.args as ReadProductKeysArgs));
 				break;
@@ -274,6 +292,25 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'reformatKeyWithUids':
 				respond(port, msg.id, await handleReformatKeyWithUids(msg.args as ReformatKeyWithUidsArgs));
+				break;
+			case 'getPublicKey':
+				respond(port, msg.id, await handleGetAccountPublicKey(msg.args as GetPublicKeyArgs));
+				break;
+			case 'loadAccountKeys':
+				respond(port, msg.id, await handleLoadAccountKeys(msg.args as LoadAccountKeysArgs));
+				break;
+			case 'listAccountKeys':
+				respond(port, msg.id, handleListAccountKeys(msg.args as ListAccountKeysArgs));
+				break;
+			case 'prepareKeyRotation':
+				respond(port, msg.id, await handlePrepareKeyRotation(msg.args as PrepareKeyRotationArgs));
+				break;
+			case 'commitKeyRotation':
+				respond(port, msg.id, await handleCommitKeyRotation(msg.args as CommitKeyRotationArgs));
+				break;
+			case 'abandonKeyRotation':
+				handleAbandonKeyRotation(msg.args as AbandonKeyRotationArgs);
+				respond(port, msg.id, undefined);
 				break;
 			case 'commitReformattedKey':
 				respond(port, msg.id, await handleCommitReformattedKey(msg.args as CommitReformattedKeyArgs));

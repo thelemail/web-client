@@ -63,13 +63,15 @@ describe('commandVaultModes', () => {
 			'attachmentBytes',
 			'sealIndex',
 			'openIndex',
-			'getPublicKey',
 			'sealProductFork',
 			'openProductFork',
 			'prepareLogin',
 			'completeLoginUnlock',
 			'migrationStartRegistration',
-			...keyIssuingCommands
+			'createAliasKey',
+			'createSigningDelegationKey',
+			'loadAliasKeys',
+			'unloadAliasKeys'
 		]) {
 			expect(auth, `${cmd} must not reach the auth vault`).not.toContain(cmd);
 		}
@@ -101,9 +103,10 @@ describe('commandVaultModes', () => {
 	});
 
 	it('denies key issuance and rotation to a product vault', () => {
-		for (const cmd of ['prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation', 'sealProductFork'] as const) {
-			expect(commandVaultModes[cmd], `${cmd} must stay in the account vault`).toEqual(['account']);
+		for (const cmd of ['prepareKeyRotation', 'commitKeyRotation', 'abandonKeyRotation'] as const) {
+			expect(commandVaultModes[cmd], `${cmd} must stay with account custody`).toEqual(['account', 'auth']);
 		}
+		expect(commandVaultModes.sealProductFork).toEqual(['account']);
 		for (const cmd of [...keyIssuingCommands, 'reformatKeyWithUids', 'commitReformattedKey'] as const) {
 			expect(commandVaultModes[cmd], `${cmd} must not reach a calendar vault`).not.toContain('calendar');
 			if (cmd === 'reformatKeyWithUids' || cmd === 'commitReformattedKey') {
@@ -113,15 +116,19 @@ describe('commandVaultModes', () => {
 	});
 
 	it('lets a mail vault read its keyring and issue alias and delegation keys, never rewrite its own', () => {
-		for (const cmd of ['loadAccountKeys', 'listAccountKeys', 'loadAliasKeys', 'unloadAliasKeys', 'createAliasKey', 'createSigningDelegationKey'] as const) {
+		for (const cmd of ['loadAliasKeys', 'unloadAliasKeys', 'createAliasKey', 'createSigningDelegationKey'] as const) {
 			expect(commandVaultModes[cmd]).toEqual(['account', 'mail']);
+		}
+		for (const cmd of ['loadAccountKeys', 'listAccountKeys'] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account', 'mail', 'auth']);
 		}
 	});
 
 	it('allows a product vault the crypto it needs', () => {
-		for (const cmd of ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentHeader', 'attachmentBytes', 'getPublicKey', 'sealIndex', 'openIndex'] as const) {
+		for (const cmd of ['decrypt', 'encrypt', 'encryptToKeys', 'signDetached', 'attachmentHeader', 'attachmentBytes', 'sealIndex', 'openIndex'] as const) {
 			expect(commandVaultModes[cmd]).toEqual(['account', 'mail', 'calendar']);
 		}
+		expect(commandVaultModes.getPublicKey).toEqual(['account', 'mail', 'calendar', 'auth']);
 	});
 
 	it('keeps typed calendar signatures and calendar keys in calendar vaults alone', () => {
