@@ -9,6 +9,9 @@
 	import RecoveryHero from '$core/settings/security/RecoveryHero.svelte';
 	import SignInCard from '$core/settings/security/SignInCard.svelte';
 	import SessionsCard from '$core/settings/security/SessionsCard.svelte';
+	import KeysCard from '$core/settings/security/KeysCard.svelte';
+	import KeysCeremony from '$core/settings/ceremonies/KeysCeremony.svelte';
+	import { ensureProductKeys } from '$core/auth/product-keys';
 	import SecurityLog from '$core/settings/security/SecurityLog.svelte';
 	import RecoveryCeremony from '$core/settings/ceremonies/RecoveryCeremony.svelte';
 	import PasswordCeremony from '$core/settings/ceremonies/PasswordCeremony.svelte';
@@ -23,18 +26,25 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ExternalLink from '@lucide/svelte/icons/external-link';
 
+	let { data } = $props();
+
 	let active = $state<CeremonyKind | null>(null);
 	let twoFaMethod = $state<TwoFaSetupMethod | undefined>(undefined);
 	let signingOut = $state(false);
 
 	function launch(kind: CeremonyKind, opts?: { method?: TwoFaSetupMethod }) {
-		if (kind !== 'recovery' && kind !== 'password' && kind !== 'twofa' && kind !== 'delete') return;
+		if (kind !== 'recovery' && kind !== 'password' && kind !== 'keys' && kind !== 'twofa' && kind !== 'delete') return;
 		twoFaMethod = opts?.method;
 		active = kind;
 	}
 
 	function close() {
 		active = null;
+	}
+
+	function settle() {
+		active = null;
+		void ensureProductKeys(data.accountId).catch((err) => console.warn('product keys: successor head failed', err));
 	}
 
 	async function signOut() {
@@ -74,6 +84,10 @@
 						<SessionsCard />
 					</SecGroup>
 
+					<SecGroup id="sec-encryption" title={m.settings_security_group_encryption()}>
+						<KeysCard {launch} />
+					</SecGroup>
+
 					<Card icon={Download} title={m.settings_account_export_title()}>
 						<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 							<Button
@@ -106,9 +120,11 @@
 </div>
 
 {#if active === 'recovery'}
-	<RecoveryCeremony onClose={close} onComplete={close} />
+	<RecoveryCeremony onClose={settle} onComplete={settle} />
 {:else if active === 'password'}
-	<PasswordCeremony onClose={close} onComplete={close} />
+	<PasswordCeremony onClose={settle} onComplete={settle} />
+{:else if active === 'keys'}
+	<KeysCeremony onClose={settle} onComplete={settle} />
 {:else if active === 'twofa'}
 	<TwoFactorCeremony onClose={close} onComplete={close} initialMethod={twoFaMethod} />
 {:else if active === 'delete'}

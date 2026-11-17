@@ -27,6 +27,11 @@ import type {
 	CommitReformattedKeyArgs,
 	PrepareProductKeysArgs,
 	PrepareSuccessorHeadArgs,
+	PrepareKeyRotationArgs,
+	CommitKeyRotationArgs,
+	AbandonKeyRotationArgs,
+	LoadAccountKeysArgs,
+	ListAccountKeysArgs,
 	ReadProductKeysArgs,
 	ReformatKeyWithUidsArgs,
 	SealProductHandoffArgs,
@@ -70,6 +75,7 @@ import {
 } from './worker/vault-persist';
 import { handlePrepareProductKeys, handlePrepareSuccessorHead, handleReadProductKeys, handleSealProductHandoff } from './worker/product-keys';
 import { handleCommitReformattedKey, handleReformatKeyWithUids } from './worker/uid-ops';
+import { handleAbandonKeyRotation, handleCommitKeyRotation, handleListAccountKeys, handleLoadAccountKeys, handlePrepareKeyRotation } from './worker/key-ops';
 import type { RequestMessage } from './worker/serve';
 import { respond, respondError } from './worker/serve';
 
@@ -278,6 +284,22 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 				break;
 			case 'reformatKeyWithUids':
 				respond(port, msg.id, await handleReformatKeyWithUids(msg.args as ReformatKeyWithUidsArgs));
+				break;
+			case 'loadAccountKeys':
+				respond(port, msg.id, await handleLoadAccountKeys(msg.args as LoadAccountKeysArgs));
+				break;
+			case 'listAccountKeys':
+				respond(port, msg.id, handleListAccountKeys(msg.args as ListAccountKeysArgs));
+				break;
+			case 'prepareKeyRotation':
+				respond(port, msg.id, await handlePrepareKeyRotation(msg.args as PrepareKeyRotationArgs));
+				break;
+			case 'commitKeyRotation':
+				respond(port, msg.id, await handleCommitKeyRotation(msg.args as CommitKeyRotationArgs));
+				break;
+			case 'abandonKeyRotation':
+				handleAbandonKeyRotation(msg.args as AbandonKeyRotationArgs);
+				respond(port, msg.id, undefined);
 				break;
 			case 'commitReformattedKey':
 				respond(port, msg.id, await handleCommitReformattedKey(msg.args as CommitReformattedKeyArgs));
