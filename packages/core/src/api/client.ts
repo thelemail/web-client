@@ -211,6 +211,29 @@ export async function apiBlobFetch(path: string, opts: BlobFetchOptions = {}, re
 	throw await errorFrom(resp);
 }
 
+export interface RawRequest {
+	method: 'POST' | 'PUT';
+	body: BodyInit;
+	contentType: string;
+	headers?: Record<string, string>;
+}
+
+export async function apiRawFetch(path: string, request: RawRequest, opts: BlobFetchOptions = {}, retried = false): Promise<Response> {
+	const accountId = resolveAccountId(opts.accountId);
+	const headers = { ...request.headers, 'Content-Type': request.contentType, ...(await authHeaders(accountId, true)) };
+	const resp = await transport(
+		apiUrl(path),
+		{ method: request.method, credentials: 'include', headers, body: request.body, signal: opts.signal },
+		'api'
+	);
+	recordServerDate(resp.headers.get('date'));
+	if (resp.ok) return resp;
+	if (resp.status === 401 && !retried && authRouter && (await authRouter.onUnauthorized(accountId))) {
+		return apiRawFetch(path, request, opts, true);
+	}
+	throw await errorFrom(resp);
+}
+
 const blobPutRetryable = new Set([429, 503]);
 const blobPutAttempts = 5;
 

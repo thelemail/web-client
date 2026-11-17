@@ -15,7 +15,7 @@
 	import { m } from '$paraglide/messages.js';
 
 	let prefs = $state.raw<SearchPrefs | null>(null);
-	let confirm = $state<'clear' | 'rebuild' | null>(null);
+	let confirm = $state<'clear' | 'rebuild' | 'cloud' | null>(null);
 	let busy = $state(false);
 	let failed = $state<string | null>(null);
 	let retried = $state(false);
@@ -64,6 +64,28 @@
 		return status.paused ? m.mail_search_paused() : m.settings_search_working();
 	});
 
+	const cloud = $derived(status?.cloud ?? null);
+	const artifacts = $derived(status?.artifacts ?? null);
+	const CLOUD_LINE: Record<string, () => string> = {
+		locked: m.settings_search_cloud_locked,
+		unavailable: m.settings_search_cloud_unavailable,
+		stale: m.settings_search_cloud_stale,
+		error: m.settings_search_cloud_error
+	};
+	const cloudLine = $derived.by(() => {
+		if (phase !== 'ready' || cloud === null) return m.settings_search_cloud_checking();
+		if (cloud === 'off') return null;
+		if (cloud !== 'on') return CLOUD_LINE[cloud]();
+		if (artifacts?.full) return m.settings_search_cloud_full();
+		if (artifacts?.state !== 'ready') return m.settings_search_cloud_listing();
+		return m.settings_search_cloud_ready();
+	});
+
+	function toggleCloud(on: boolean) {
+		if (on) void run(() => searchRuntime.setCloudSync(true));
+		else confirm = 'cloud';
+	}
+
 	async function run(work: () => Promise<void>) {
 		busy = true;
 		failed = null;
@@ -86,6 +108,7 @@
 		await run(async () => {
 			if (which === 'clear') await searchRuntime.clear();
 			else if (which === 'rebuild') await searchRuntime.rebuild();
+			else if (which === 'cloud') await searchRuntime.setCloudSync(false);
 			mailSearch.refresh();
 		});
 		confirm = null;
@@ -149,6 +172,28 @@
 </Card>
 
 {#if saved}
+	<Card title={m.settings_search_cloud_title()}>
+		<Row t={m.settings_search_cloud()} d={cloud === 'off' ? m.settings_search_cloud_off_desc() : m.settings_search_cloud_on_desc()}>
+			{#if cloud !== null && phase === 'ready'}
+				<Toggle on={cloud !== 'off'} disabled={busy || cloud === 'unavailable'} onChange={toggleCloud} />
+			{/if}
+		</Row>
+		{#if cloudLine}
+			<div class="setrow col" role="status" aria-live="polite">
+				<div class="info">
+					<div class="t">{cloudLine}</div>
+					{#if cloud === 'on' && artifacts}
+						<ul class="srch-cov-list">
+							{#if artifacts.hydrated}<li>{m.settings_search_cloud_hydrated({ count: fmt(artifacts.hydrated) })}</li>{/if}
+							{#if artifacts.due}<li>{m.settings_search_cloud_due({ count: fmt(artifacts.due) })}</li>{/if}
+							{#if artifacts.localOnly}<li class="d">{m.settings_search_cloud_local({ count: fmt(artifacts.localOnly) })}</li>{/if}
+						</ul>
+					{/if}
+				</div>
+			</div>
+		{/if}
+	</Card>
+
 	<Card title={m.settings_search_history_title()}>
 		<Row t={m.settings_search_history()} d={m.settings_search_history_desc()}>
 			<Toggle on={prefs?.history ?? false} disabled={busy} onChange={(v) => void run(() => searchRuntime.setHistory(v))} />
@@ -158,10 +203,10 @@
 
 {#if confirm}
 	<ConfirmDialog
-		title={confirm === 'clear' ? m.settings_search_clear_confirm_title() : m.settings_search_rebuild_confirm_title()}
-		sub={confirm === 'clear' ? m.settings_search_clear_confirm_body() : m.settings_search_rebuild_confirm_body()}
-		tone={confirm === 'clear' ? 'danger' : 'neutral'}
-		confirmLabel={confirm === 'clear' ? m.settings_search_clear_action() : m.settings_search_rebuild_action()}
+		title={confirm === 'clear' ? m.settings_search_clear_confirm_title() : confirm === 'cloud' ? m.settings_search_cloud_off_confirm_title() : m.settings_search_rebuild_confirm_title()}
+		sub={confirm === 'clear' ? m.settings_search_clear_confirm_body() : confirm === 'cloud' ? m.settings_search_cloud_off_confirm_body() : m.settings_search_rebuild_confirm_body()}
+		tone={confirm === 'rebuild' ? 'neutral' : 'danger'}
+		confirmLabel={confirm === 'clear' ? m.settings_search_clear_action() : confirm === 'cloud' ? m.settings_search_cloud_off_action() : m.settings_search_rebuild_action()}
 		{busy}
 		onConfirm={confirmed}
 		onClose={() => (confirm = null)}

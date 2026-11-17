@@ -14,6 +14,9 @@ export const KIND_NAME: Readonly<Record<QueueKind, SearchSourceKind>> = {
 };
 
 export const QueueState = { live: 0, held: 1, deleted: 2 } as const;
+
+export const ArtifactState = { clean: 0, due: 1, localOnly: 2, sealing: 3 } as const;
+export type ArtifactState = (typeof ArtifactState)[keyof typeof ArtifactState];
 export type QueueState = (typeof QueueState)[keyof typeof QueueState];
 
 export function isDocumentKind(kind: QueueKind): kind is SourceKind {
@@ -137,6 +140,8 @@ export class SyncStore {
 				metadata_rev = max(metadata_rev, excluded.metadata_rev),
 				state = excluded.state,
 				seen = max(seen, excluded.seen),
+				artifact_rev = CASE WHEN excluded.content_rev > content_rev THEN 0 ELSE artifact_rev END,
+				artifact_state = CASE WHEN excluded.content_rev > content_rev THEN 0 ELSE artifact_state END,
 				next_at = 0,
 				attempts = 0`,
 			[key.kind, key.sourceId, rev.sourceRev, rev.contentRev, rev.metadataRev, rev.state, seen]
@@ -160,6 +165,7 @@ export class SyncStore {
 	toExtract(limit: number, now: number): QueueRow[] {
 		return this.#rows(
 			`SELECT ${ROW} FROM source_queue WHERE state = 0 AND kind <= 3 AND described_rev >= content_rev AND extracted_rev < content_rev AND next_at <= ?
+				AND NOT EXISTS (SELECT 1 FROM artifact_index a WHERE a.kind = source_queue.kind AND a.source_id = source_queue.source_id AND a.content_rev = source_queue.content_rev AND a.state = 0)
 				ORDER BY stored_at DESC, kind, source_id LIMIT ?`,
 			[now, limit]
 		).map(row);
@@ -187,9 +193,10 @@ export class SyncStore {
 
 	extracted(key: QueueKey, contentRev: number, state: Coverage, epoch: number, reason: string | null): void {
 		this.#exec(
-			`UPDATE source_queue SET extracted_rev = ?, body_state = ?, extractor_epoch = ?, reason = ?, attempts = 0, next_at = 0
+			`UPDATE source_queue SET extracted_rev = ?, body_state = ?, extractor_epoch = ?, reason = ?, attempts = 0, next_at = 0,
+				artifact_state = CASE WHEN kind = ? AND ? = ? THEN ? ELSE ? END
 			WHERE kind = ? AND source_id = ? AND content_rev = ? AND state != 2`,
-			[contentRev, state, epoch, reason, key.kind, key.sourceId, contentRev]
+			[contentRev, state, epoch, reason, QueueKind.message, state, Coverage.complete, ArtifactState.due, ArtifactState.clean, key.kind, key.sourceId, contentRev]
 		);
 	}
 
@@ -214,6 +221,7 @@ export class SyncStore {
 			[key.kind, key.sourceId, sourceRev, sourceRev, Coverage.deleted]
 		);
 		this.#exec('DELETE FROM attachment_queue WHERE kind = ? AND source_id = ?', [key.kind, key.sourceId]);
+		this.#exec('DELETE FROM artifact_index WHERE kind = ? AND source_id = ?', [key.kind, key.sourceId]);
 		if (key.kind === QueueKind.collection) this.#exec('DELETE FROM source_collections WHERE collection_id = ?', [key.sourceId]);
 		if (key.kind === QueueKind.alias) this.#exec('DELETE FROM source_aliases WHERE alias_id = ?', [key.sourceId]);
 	}
@@ -295,6 +303,11 @@ export class SyncStore {
 			`UPDATE attachment_queue SET state = ?, epoch = ?, reason = ?, attempts = 0, next_at = 0
 			WHERE kind = ? AND source_id = ? AND attachment_id = ? AND content_rev = ?`,
 			[state, epoch, reason, row.kind, row.sourceId, row.attachmentId, row.contentRev]
+		);
+		this.#exec(
+			`UPDATE source_queue SET artifact_state = ? WHERE kind = ? AND source_id = ? AND content_rev = ? AND kind = ? AND state = 0
+				AND extracted_rev = content_rev AND body_state = ? AND artifact_state IN (?, ?)`,
+			[ArtifactState.due, row.kind, row.sourceId, row.contentRev, QueueKind.message, Coverage.complete, ArtifactState.clean, ArtifactState.sealing]
 		);
 	}
 

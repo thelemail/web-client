@@ -2,6 +2,8 @@
 import type { Database } from '@thelemail/sqlite-wasm';
 import type {
 	DeriveSearchDbKeyResponse,
+	OpenSearchArtifactResponse,
+	SealSearchArtifactResponse,
 	SearchSessionCommand,
 	SearchSessionRequest,
 	SearchSessionResponse
@@ -15,6 +17,8 @@ import { Bridge, type BridgeCaller } from '../sync/bridge';
 import { ParserClient, type ExtractorPort } from '../sync/extractor';
 import type { SyncProgress } from '../sync/jobs';
 import { SyncStore } from '../sync/store';
+import { ArtifactStore } from '../artifacts/store';
+import { attachGeneration, type SyncSession } from '../artifacts/jobs';
 import {
 	directoryFor,
 	fileFor,
@@ -28,6 +32,9 @@ import {
 	type Reply,
 	type SearchStatus,
 	type StatusEvent,
+	type CloudState,
+	type ResyncEvent,
+	type SyncAttach,
 	type SyncStatus
 } from './protocol';
 import { admit, requestPersistence } from './quota';
@@ -35,15 +42,18 @@ import { Scheduler, type Job, type JobClass } from './scheduler';
 
 const KEY_TIMEOUT_MS = 10_000;
 const MAX_SESSIONS_PER_CLIENT = 4;
-const HEAVY: readonly JobClass[] = ['body', 'attachments', 'embeddings'];
+const HEAVY: readonly JobClass[] = ['body', 'attachments', 'embeddings', 'artifacts'];
 
 export interface JobContext {
 	readonly db: Database;
 	readonly writer: SearchWriter;
 	readonly store: SyncStore;
+	readonly artifacts: ArtifactStore;
 	readonly bridge: BridgeCaller | null;
 	readonly extractor: ExtractorPort;
 	readonly progress: SyncProgress;
+	sync(): SyncSession | null;
+	syncSettled(): boolean;
 	batch(job: string): Batch;
 	wake(job?: string): void;
 	later(job: string, ms: number): void;
@@ -69,6 +79,7 @@ interface Open {
 	db: Database;
 	writer: SearchWriter;
 	store: SyncStore;
+	artifacts: ArtifactStore;
 	bridge: Bridge | null;
 	extractor: ExtractorPort;
 	progress: SyncProgress;
@@ -102,6 +113,34 @@ function sessionCall<T>(port: MessagePort, cmd: SearchSessionCommand, args: unkn
 	});
 }
 
+type SyncSlot = { state: 'off' } | { state: 'pending' } | { state: 'on'; session: SyncSession; port: MessagePort };
+
+function syncSession(a: SyncAttach): SyncSession {
+	const port = a.keystore;
+	return {
+		generationId: a.generationId,
+		limits: a.limits,
+		listed: false,
+		full: false,
+		async seal(ref, payload) {
+			const r = await sessionCall<SealSearchArtifactResponse>(port, 'sealSearchArtifact', { ...ref, payload });
+			if (r?.ok) return r;
+			return { ok: false, code: r?.code === 'too_large' ? 'too_large' : 'unavailable' };
+		},
+		async open(ref, artifact) {
+			const r = await sessionCall<OpenSearchArtifactResponse>(port, 'openSearchArtifact', { ...ref, artifact });
+			if (r?.ok) return r;
+			return { ok: false, code: r?.code === 'invalid' || r?.code === 'too_large' ? 'invalid' : 'unavailable' };
+		}
+	};
+}
+
+function endSync(slot: SyncSlot): void {
+	if (slot.state !== 'on') return;
+	slot.port.postMessage({ id: crypto.randomUUID(), cmd: 'closeSearchSession' } satisfies SearchSessionRequest);
+	slot.port.close();
+}
+
 export const maintenanceJob: JobFactory = ({ db }) => ({
 	name: 'maintenance',
 	class: 'maintenance',
@@ -112,6 +151,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 	let open: Open | null = null;
 	let keystore: MessagePort | null = null;
 	let installationSalt: Uint8Array | null = null;
+	let sync: SyncSlot = { state: 'off' };
+	let cloud: CloudState | null = null;
 	const clients = new Map<MessagePort, Client>();
 	const inflight = new Set<Promise<unknown>>();
 
@@ -125,8 +166,17 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			working: o.scheduler.working,
 			paused: o.scheduler.paused,
 			generation: o.engine.generation,
-			sync: o.sync
+			sync: o.sync,
+			artifacts: artifactStatus(o),
+			cloud
 		};
+	}
+
+	function artifactStatus(o: Open): SearchStatus['artifacts'] {
+		if (sync.state === 'off') return null;
+		const counts = o.artifacts.counts();
+		if (sync.state === 'pending') return { ...counts, state: 'pending', full: false };
+		return { ...counts, state: sync.session.listed ? 'ready' : 'listing', full: sync.session.full };
 	}
 
 	function count(o: Open): void {
@@ -162,6 +212,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			db,
 			writer,
 			store: new SyncStore(db),
+			artifacts: new ArtifactStore(db),
 			bridge,
 			extractor: (options.extractor ?? defaultExtractor)(parser ?? null),
 			progress: { phase: null, seq: null, syncedAt: null, waiting: null },
@@ -186,9 +237,12 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			db,
 			writer,
 			store: o.store,
+			artifacts: o.artifacts,
 			bridge,
 			extractor: o.extractor,
 			progress: o.progress,
+			sync: () => (open === o && sync.state === 'on' ? sync.session : null),
+			syncSettled: () => sync.state === 'off' || (sync.state === 'on' && sync.session.listed),
 			batch: (job) => new Batch(writer, job, admission, () => scheduler.wake('maintenance')),
 			wake: (job) => scheduler.wake(job),
 			later: (job, ms) => {
@@ -229,6 +283,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			derived.key.fill(0);
 		}
 		if (result.ok) {
+			sync = r.syncPending ? { state: 'pending' } : { state: 'off' };
 			await attach(result.db, 'persistent', 'saved', directory, file, r.bridge, r.parser, r.paused);
 			void requestPersistence();
 			await pruneSearchDb(directory, file).catch(() => undefined);
@@ -251,6 +306,9 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 	async function close(wipe: boolean, keepKeystore = false): Promise<void> {
 		const o = open;
 		open = null;
+		endSync(sync);
+		sync = { state: 'off' };
+		cloud = null;
 		for (const [port, client] of clients) {
 			for (const c of client.running.values()) c.abort();
 			port.close();
@@ -280,6 +338,27 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		} else {
 			await pauseSearchPool(o.directory);
 		}
+	}
+
+	function attachSync(next: SyncAttach | null): boolean {
+		const o = open;
+		endSync(sync);
+		if (!o || o.persistence !== 'persistent') {
+			next?.keystore.close();
+			sync = { state: 'off' };
+			if (o) o.writer.atomic(() => o.artifacts.clearIndex());
+			return false;
+		}
+		if (!next) {
+			sync = { state: 'off' };
+			o.writer.atomic(() => o.artifacts.clearIndex());
+		} else {
+			attachGeneration(o.writer, () => o.artifacts.reset(), next.generationId);
+			sync = { state: 'on', session: syncSession(next), port: next.keystore };
+		}
+		o.scheduler.wake();
+		publish();
+		return true;
 	}
 
 	function drop(port: MessagePort): void {
@@ -376,6 +455,9 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 				o.scheduler.wake();
 				return null;
 			}
+			case 'resync':
+				scope.postMessage({ type: 'resync' } satisfies ResyncEvent);
+				return null;
 			case 'status':
 				return status();
 			case 'ping':
@@ -414,6 +496,9 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 				}
 				connect(r.port);
 				return true;
+			case 'sync':
+				cloud = r.cloud;
+				return attachSync(r.sync);
 			case 'activity':
 				if (open) {
 					if (r.conditions.visible && r.conditions.idle && !r.conditions.constrained && open.scheduler.blocked) open.scheduler.wake();

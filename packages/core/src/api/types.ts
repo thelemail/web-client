@@ -60,7 +60,15 @@ export type ErrorCode =
 	| 'step_up_grant_required'
 	| 'source_barrier_pending'
 	| 'source_snapshot_expired'
-	| 'source_cursor_expired';
+	| 'source_cursor_expired'
+	| 'search_sync_disabled'
+	| 'search_generation_changed'
+	| 'search_product_epoch_stale'
+	| 'search_generation_used'
+	| 'search_generation_exists'
+	| 'search_capacity_exceeded'
+	| 'search_artifact_size'
+	| 'search_artifact_mismatch';
 
 export type MessageDirection = 'sent' | 'received';
 export type MessageSource = 'internal' | 'inbound_external' | 'outbound_external';
@@ -299,6 +307,84 @@ export interface SearchSourceDescriptorResult extends SearchSourceKey {
 export interface SearchSourceDescriptorResponse {
 	results: SearchSourceDescriptorResult[];
 	deferred: SearchSourceKey[];
+}
+
+export type SearchArtifactKind = 'document' | 'vectors';
+export type SearchArtifactSourceKind = 'message' | 'draft' | 'scheduled';
+
+export interface SearchSyncLimits {
+	maxBytes: number;
+	maxObjects: number;
+	batchItems: number;
+	batchBytes: number;
+	minArtifactBytes: number;
+	maxArtifactBytes: number;
+	pageSize: number;
+}
+
+export interface SearchGeneration {
+	generationId: string;
+	productKeyEpoch: number;
+	bundle: string;
+	createdAt: string;
+}
+
+export interface SearchSyncState {
+	enabled: boolean;
+	policyRevision: number;
+	usedBytes: number;
+	usedObjects: number;
+	generation?: SearchGeneration;
+	limits: SearchSyncLimits;
+}
+
+export interface SearchArtifactKey {
+	kind: SearchArtifactKind;
+	sourceKind: SearchArtifactSourceKind;
+	sourceId: string;
+	contentRevision: number;
+	componentEpoch: number;
+}
+
+export interface SearchArtifactUploadItem extends SearchArtifactKey {
+	extractionRevision: number;
+	length: number;
+	sha256: string;
+}
+
+export type SearchArtifactUploadStatus = 'stored' | 'exists' | 'superseded' | 'inaccessible' | 'stale_revision';
+
+export interface SearchArtifactUploadResult extends SearchArtifactKey {
+	extractionRevision: number;
+	status: SearchArtifactUploadStatus;
+	seq?: number;
+}
+
+export interface SearchArtifactUploadResponse {
+	results: SearchArtifactUploadResult[];
+}
+
+export interface SearchArtifactInfo extends SearchArtifactKey {
+	extractionRevision: number;
+	length: number;
+	sha256: string;
+	seq: number;
+}
+
+export interface SearchArtifactPage {
+	items: SearchArtifactInfo[];
+	throughSeq: number;
+	complete: boolean;
+}
+
+export type SearchArtifactFetchStatus = 'ready' | 'gone' | 'deferred';
+
+export interface SearchArtifactFetchItem extends SearchArtifactKey {
+	status: SearchArtifactFetchStatus;
+	extractionRevision?: number;
+	length?: number;
+	sha256?: string;
+	seq?: number;
 }
 
 export interface AttachmentDetail {
@@ -832,6 +918,7 @@ export interface ApiError {
 	retryAfterSeconds?: number;
 	minRetainedSeq?: number;
 	committedSeq?: number;
+	generation?: SearchGeneration;
 }
 
 export interface ErrorEnvelope {

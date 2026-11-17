@@ -54,7 +54,14 @@ async function ftsRows(h: Harness): Promise<{ parts: number; partsFts: number; l
 	return { parts, partsFts, literals, literalsFts };
 }
 
-const UNDO_ATTACHMENTS = `DROP TABLE attachment_queue;
+const UNDO_ARTIFACTS = `DROP TABLE artifact_index;
+	DROP INDEX source_queue_upload;
+	ALTER TABLE source_queue DROP COLUMN artifact_rev;
+	ALTER TABLE source_queue DROP COLUMN artifact_state;
+	ALTER TABLE source_queue DROP COLUMN upload_at`;
+
+const UNDO_ATTACHMENTS = `${UNDO_ARTIFACTS};
+	DROP TABLE attachment_queue;
 	DROP INDEX literals_part;
 	ALTER TABLE parts DROP COLUMN place`;
 
@@ -401,6 +408,21 @@ describe('encrypted file', () => {
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: true })).toEqual({ ok: true, rebuilt: true });
 		expect(await h.select('SELECT count(*) FROM sources')).toEqual([[0]]);
 		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+	});
+
+	it('upgrades a version 6 database in place and leaves nothing to upload', async (ctx) => {
+		if (!opfs) ctx.skip();
+		const dir = directory();
+		const key = randomKey();
+		const h = harness();
+		await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false });
+		await h.call({ op: 'put', doc: document('m1') });
+		await h.call({ op: 'exec', sql: `${UNDO_ARTIFACTS}; UPDATE meta SET value = 6 WHERE key = 'schema_version'` });
+		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
+		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+		expect(await matches(h, 'parts_fts', 'm1')).toEqual(['m1']);
+		expect(await h.select('SELECT count(*) FROM artifact_index')).toEqual([[0]]);
+		expect(await h.select('SELECT count(*) FROM source_queue WHERE artifact_state != 0')).toEqual([[0]]);
 	});
 
 	it('upgrades a version 5 database in place and keeps its text', async (ctx) => {

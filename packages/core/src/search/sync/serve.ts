@@ -1,3 +1,4 @@
+import { FrameError, fetchSearchArtifacts, listSearchArtifacts, uploadSearchArtifacts } from '../../api/searchSync';
 import { describeSources, getSourceBarrier, listSourceChanges, listSourceSnapshot, type SourceResult } from '../../api/searchSources';
 import { getDraft } from '../../api/drafts';
 import { ApiCallError } from '../../api/types';
@@ -7,6 +8,11 @@ import { loadDraftDoc, restoreDraftAttachments } from '../../mail/draft';
 import type { BridgeFailure, BridgeMessage, BridgeReply, BridgeRequest, BridgeResult, BridgeValues } from './protocol';
 
 const EXPIRED = new Set(['source_cursor_expired', 'source_snapshot_expired']);
+const GENERATION = new Set(['search_sync_disabled', 'search_generation_changed', 'search_product_epoch_stale', 'search_generation_used']);
+
+export interface BridgeHooks {
+	onSyncChanged?: () => void;
+}
 
 function attachmentFailure(code: string): BridgeFailure {
 	switch (code) {
@@ -43,12 +49,15 @@ export function failureOf(error: unknown): BridgeFailure {
 		if (code && EXPIRED.has(code)) {
 			return { code: 'expired', minRetainedSeq: error.envelope?.error?.minRetainedSeq ?? null, committedSeq: error.envelope?.error?.committedSeq ?? null };
 		}
+		if (code && GENERATION.has(code)) return { code: 'generation' };
+		if (error.status === 507 || code === 'search_capacity_exceeded') return { code: 'full' };
 		if (error.status === 404) return { code: 'gone' };
 		if (error.status === 0 || error.status === 401 || error.status === 408 || error.status === 429 || error.status >= 500) {
 			return { code: 'retry', retryAfterSeconds: error.retryAfterSeconds };
 		}
 		return { code: 'failed', reason: 'unknown' };
 	}
+	if (error instanceof FrameError) return { code: 'retry', retryAfterSeconds: null };
 	if (error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError')) return { code: 'retry', retryAfterSeconds: null };
 	if (error instanceof SyntaxError) return { code: 'failed', reason: 'malformed' };
 	return { code: 'failed', reason: 'unknown' };
@@ -105,17 +114,24 @@ async function perform(accountId: string, r: BridgeRequest): Promise<BridgeResul
 			const { file } = (await restoreDraftAttachments(accountId, { ...doc, attachments: [meta] }, bundle))[0];
 			return { ok: true, value: { bytes: new Uint8Array(await file.arrayBuffer()), filename: file.name, contentType: file.type } };
 		}
+		case 'artifactList':
+			return { ok: true, value: await listSearchArtifacts(accountId, r.generationId, r.afterSeq, r.limit) };
+		case 'artifactFetch':
+			return { ok: true, value: await fetchSearchArtifacts(accountId, r.generationId, r.keys) };
+		case 'artifactUpload':
+			return { ok: true, value: await uploadSearchArtifacts(accountId, r.generationId, r.items) };
 	}
 }
 
 function transfers(result: BridgeResult<unknown>): Transferable[] {
 	if (!result.ok) return [];
+	if (Array.isArray(result.value)) return (result.value as { bytes?: Uint8Array | null }[]).flatMap((v) => (v.bytes ? [v.bytes.buffer] : []));
 	const v = result.value as { mime?: Uint8Array; json?: Uint8Array; bytes?: Uint8Array };
 	const bytes = v?.mime ?? v?.json ?? v?.bytes;
 	return bytes ? [bytes.buffer] : [];
 }
 
-export function serveBridge(accountId: string, port: MessagePort): () => void {
+export function serveBridge(accountId: string, port: MessagePort, hooks: BridgeHooks = {}): () => void {
 	let open = true;
 	port.onmessage = async (e: MessageEvent<BridgeMessage>) => {
 		const { id, ...request } = e.data;
@@ -124,6 +140,7 @@ export function serveBridge(accountId: string, port: MessagePort): () => void {
 			result = await perform(accountId, request as BridgeRequest);
 		} catch (error) {
 			result = { ok: false, failure: failureOf(error) };
+			if (result.failure.code === 'generation') hooks.onSyncChanged?.();
 		}
 		if (open) port.postMessage({ id, result } satisfies BridgeReply, transfers(result));
 	};

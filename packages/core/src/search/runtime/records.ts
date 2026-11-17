@@ -1,11 +1,18 @@
 import { openDatabase } from '$core/idb-open';
 
+export interface SyncRecord {
+	generationId: string;
+	bundle: Uint8Array;
+	productKeyEpoch: number;
+}
+
 export interface SearchRecord {
 	accountId: string;
 	bundle: Uint8Array;
 	generationId: string;
 	installationSalt: Uint8Array;
 	hasIndex: boolean;
+	sync?: SyncRecord;
 }
 
 export type Consent = 'saved' | 'declined';

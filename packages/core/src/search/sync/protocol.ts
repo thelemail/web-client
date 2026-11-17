@@ -1,5 +1,10 @@
+import type { FetchedArtifact } from '../../api/searchSync';
 import type {
 	BlobPointer,
+	SearchArtifactKey,
+	SearchArtifactPage,
+	SearchArtifactUploadItem,
+	SearchArtifactUploadResponse,
 	SearchSourceBarrier,
 	SearchSourceChangesPage,
 	SearchSourceDescriptorRequestItem,
@@ -17,6 +22,8 @@ export type BridgeFailure =
 	| { code: 'vault_locked' }
 	| { code: 'gone' }
 	| { code: 'changed' }
+	| { code: 'generation' }
+	| { code: 'full' }
 	| { code: 'failed'; reason: FailureReason };
 
 export type BridgeResult<T> = { ok: true; value: T } | { ok: false; failure: BridgeFailure };
@@ -55,7 +62,10 @@ export type BridgeRequest =
 	| { op: 'draft'; draftId: string; pointer: BlobPointer }
 	| { op: 'attachment'; pointer: BlobPointer }
 	| { op: 'attachmentBytes'; pointer: BlobPointer }
-	| { op: 'draftAttachment'; draftId: string; bundle: BlobPointer; index: number };
+	| { op: 'draftAttachment'; draftId: string; bundle: BlobPointer; index: number }
+	| { op: 'artifactList'; generationId: string; afterSeq: number; limit: number }
+	| { op: 'artifactFetch'; generationId: string; keys: SearchArtifactKey[] }
+	| { op: 'artifactUpload'; generationId: string; items: { item: SearchArtifactUploadItem; bytes: Uint8Array }[] };
 
 export interface BridgeValues {
 	barrier: SearchSourceBarrier;
@@ -68,6 +78,9 @@ export interface BridgeValues {
 	attachment: AttachmentValue;
 	attachmentBytes: FileValue;
 	draftAttachment: FileValue;
+	artifactList: SearchArtifactPage;
+	artifactFetch: FetchedArtifact[];
+	artifactUpload: SearchArtifactUploadResponse;
 }
 
 export type BridgeMessage = BridgeRequest & { id: number };
