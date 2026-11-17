@@ -1,12 +1,21 @@
 import type {
+	SearchArtifactFetchItem,
+	SearchArtifactInfo,
+	SearchArtifactKey,
+	SearchArtifactUploadResult,
+	SearchGeneration,
+	SearchSyncLimits,
+	SearchSyncState,
 	SearchSourceChangeEntry,
 	SearchSourceDescriptor,
 	SearchSourceDescriptorResult,
 	SearchSourceKind
 } from '../../api/types';
+import { ApiCallError } from '../../api/types';
 import { parse } from '../extract/parse';
 import type { JobInput, JobOutcome, JobTicket } from '../parser/protocol';
 import type { BridgeMessage, BridgeReply, BridgeResult } from './protocol';
+import type { BridgeHooks } from './serve';
 
 export interface FakeMessage {
 	id: string;
@@ -61,12 +70,97 @@ function unb64(data: string): string {
 
 const KIND_ORDER: SearchSourceKind[] = ['message', 'draft', 'scheduled', 'collection', 'alias'];
 
+export const FAKE_LIMITS: SearchSyncLimits = {
+	maxBytes: 1 << 30,
+	maxObjects: 100_000,
+	batchItems: 200,
+	batchBytes: 8 << 20,
+	minArtifactBytes: 4096,
+	maxArtifactBytes: 8 << 20,
+	pageSize: 500
+};
+
+export interface StoredArtifact {
+	key: SearchArtifactKey;
+	extractionRevision: number;
+	bytes: Uint8Array;
+	seq: number;
+}
+
+export class FakeCloud {
+	enabled = false;
+	policyRevision = 0;
+	generation: SearchGeneration | null = null;
+	used = new Set<string>();
+	seq = 0;
+	artifacts = new Map<string, StoredArtifact>();
+	uploads: { sourceId: string; length: number; status: SearchArtifactUploadResult['status'] }[] = [];
+
+	state(): SearchSyncState {
+		let usedBytes = 0;
+		for (const a of this.artifacts.values()) usedBytes += a.bytes.length;
+		return {
+			enabled: this.enabled,
+			policyRevision: this.policyRevision,
+			usedBytes,
+			usedObjects: this.artifacts.size,
+			...(this.generation ? { generation: this.generation } : {}),
+			limits: FAKE_LIMITS
+		};
+	}
+
+	enable(): SearchSyncState {
+		if (!this.enabled) {
+			this.enabled = true;
+			this.policyRevision++;
+		}
+		return this.state();
+	}
+
+	disable(): void {
+		this.enabled = false;
+		this.policyRevision++;
+		this.generation = null;
+		this.artifacts.clear();
+	}
+
+	create(body: { generationId: string; productKeyEpoch: number; bundle: string }): { created: SearchGeneration } | { exists: SearchGeneration } {
+		if (!this.enabled) throw new ApiCallError(409, { error: { code: 'search_sync_disabled', message: 'off' } }, 'off');
+		if (this.generation) return { exists: this.generation };
+		if (this.used.has(body.generationId)) throw new ApiCallError(409, { error: { code: 'search_generation_used', message: 'used' } }, 'used');
+		this.used.add(body.generationId);
+		this.generation = { ...body, createdAt: new Date().toISOString() };
+		return { created: this.generation };
+	}
+
+	current(generationId: string): boolean {
+		return this.enabled && this.generation?.generationId === generationId;
+	}
+
+	slot(k: { kind: string; sourceKind: string; sourceId: string }): string {
+		return `${k.kind}:${k.sourceKind}:${k.sourceId}`;
+	}
+
+	tamper(sourceId: string): void {
+		const a = this.artifacts.get(this.slot({ kind: 'document', sourceKind: 'message', sourceId }))!;
+		a.bytes = a.bytes.slice();
+		a.bytes[a.bytes.length - 1] ^= 1;
+	}
+
+	swap(first: string, second: string): void {
+		const a = this.artifacts.get(this.slot({ kind: 'document', sourceKind: 'message', sourceId: first }))!;
+		const b = this.artifacts.get(this.slot({ kind: 'document', sourceKind: 'message', sourceId: second }))!;
+		[a.bytes, b.bytes] = [b.bytes, a.bytes];
+	}
+}
+
 export class FakeSource {
 	seq = 0;
 	minRetainedSeq = 0;
 	pageSize = 25;
 	locked = new Set<string>();
 	ops: string[] = [];
+	cloud = new FakeCloud();
 	#sources = new Map<string, Source>();
 	#journal: SearchSourceChangeEntry[] = [];
 	#gate: Promise<void> | null = null;
@@ -81,6 +175,9 @@ export class FakeSource {
 		source.sourceRevision = seq;
 		source.metadataRevision = seq;
 		if (content) source.contentRevision = seq;
+		for (const [slot, a] of this.cloud.artifacts) {
+			if (a.key.sourceId === source.sourceId && a.key.sourceKind === source.kind && (change === 'deleted' || a.key.contentRevision < source.contentRevision)) this.cloud.artifacts.delete(slot);
+		}
 		this.#journal.push({ seq, kind: source.kind, sourceId: source.sourceId, change, contentRevision: source.contentRevision, metadataRevision: source.metadataRevision });
 	}
 
@@ -229,8 +326,62 @@ export class FakeSource {
 		return [...this.#sources.values()].sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || a.sourceId.localeCompare(b.sourceId));
 	}
 
-	async handle(r: BridgeMessage): Promise<BridgeResult<unknown>> {
+	#artifact(r: Extract<BridgeMessage, { op: 'artifactList' | 'artifactFetch' | 'artifactUpload' }>): BridgeResult<unknown> {
+		const cloud = this.cloud;
+		if (!cloud.current(r.generationId)) return { ok: false, failure: { code: 'generation' } };
+		const live = (a: StoredArtifact) => {
+			const s = this.#sources.get(this.#k(a.key.sourceKind, a.key.sourceId));
+			return !!s && s.state === 'live' && s.contentRevision === a.key.contentRevision;
+		};
+		if (r.op === 'artifactList') {
+			const all = [...cloud.artifacts.values()].filter((a) => a.seq > r.afterSeq && live(a)).sort((a, b) => a.seq - b.seq);
+			const page = all.slice(0, r.limit);
+			const complete = page.length === all.length;
+			const items: SearchArtifactInfo[] = page.map((a) => ({ ...a.key, extractionRevision: a.extractionRevision, length: a.bytes.length, sha256: '', seq: a.seq }));
+			return { ok: true, value: { items, throughSeq: complete ? cloud.seq : page[page.length - 1].seq, complete } };
+		}
+		if (r.op === 'artifactFetch') {
+			return {
+				ok: true,
+				value: r.keys.map((k) => {
+					const a = cloud.artifacts.get(cloud.slot(k));
+					const same = a && a.key.contentRevision === k.contentRevision && a.key.componentEpoch === k.componentEpoch && live(a);
+					const item: SearchArtifactFetchItem = same
+						? { ...k, status: 'ready', extractionRevision: a.extractionRevision, length: a.bytes.length, sha256: '', seq: a.seq }
+						: { ...k, status: 'gone' };
+					return { item, bytes: same ? a.bytes.slice() : null };
+				})
+			};
+		}
+		const results: SearchArtifactUploadResult[] = r.items.map(({ item, bytes }) => {
+			const n = bytes.length;
+			if (n !== item.length || n < 4096 || n > FAKE_LIMITS.maxArtifactBytes || (n & (n - 1)) !== 0) throw new Error('artifact size');
+			const s = this.#sources.get(this.#k(item.sourceKind, item.sourceId));
+			const key: SearchArtifactKey = { kind: item.kind, sourceKind: item.sourceKind, sourceId: item.sourceId, contentRevision: item.contentRevision, componentEpoch: item.componentEpoch };
+			const done = (status: SearchArtifactUploadResult['status'], seq?: number): SearchArtifactUploadResult => {
+				cloud.uploads.push({ sourceId: item.sourceId, length: n, status });
+				return { ...key, extractionRevision: item.extractionRevision, status, ...(seq !== undefined ? { seq } : {}) };
+			};
+			if (!s || s.state !== 'live') return done('inaccessible');
+			if (s.contentRevision !== item.contentRevision) return done('stale_revision');
+			const slot = cloud.slot(key);
+			const existing = cloud.artifacts.get(slot);
+			if (existing) {
+				const k = existing.key;
+				if (k.contentRevision === key.contentRevision && k.componentEpoch === key.componentEpoch && existing.extractionRevision >= item.extractionRevision) return done('exists');
+				if (k.contentRevision === key.contentRevision && k.componentEpoch > key.componentEpoch) return done('superseded');
+			}
+			const seq = ++cloud.seq;
+			cloud.artifacts.set(slot, { key, extractionRevision: item.extractionRevision, bytes: bytes.slice(), seq });
+			return done('stored', seq);
+		});
+		return { ok: true, value: { results } };
+	}
+
+	async handle(r: BridgeMessage, ops?: string[]): Promise<BridgeResult<unknown>> {
 		this.ops.push(r.op);
+		ops?.push(r.op);
+		if (r.op === 'artifactList' || r.op === 'artifactFetch' || r.op === 'artifactUpload') return this.#artifact(r);
 		if (this.#gate && (r.op === 'body' || r.op === 'draft')) await this.#gate;
 		if (this.#fileGate && r.op === 'attachmentBytes') await this.#fileGate;
 		switch (r.op) {
@@ -310,9 +461,10 @@ export class FakeSource {
 		return this.#sources.get(this.#k('message', id))?.message?.files?.find((f) => f.id === fileId) ?? null;
 	}
 
-	serve(port: MessagePort): () => void {
+	serve(port: MessagePort, ops?: string[], hooks?: BridgeHooks): () => void {
 		port.onmessage = async (e: MessageEvent<BridgeMessage>) => {
-			const result = await this.handle(e.data);
+			const result = await this.handle(e.data, ops);
+			if (!result.ok && result.failure.code === 'generation') hooks?.onSyncChanged?.();
 			port.postMessage({ id: e.data.id, result } satisfies BridgeReply);
 		};
 		port.start();
