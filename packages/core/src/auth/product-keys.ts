@@ -122,15 +122,22 @@ async function convert(accountId: string, state: CryptoStateResponse, events: Ui
 	return null;
 }
 
-export async function readProductKeys(accountId: string, state?: CryptoStateResponse): Promise<ProductKeysOutcome> {
-	const current = state ?? (await getCryptoState(accountId));
-	const head: CryptoAccountHead | null = current.head;
+interface Committed {
+	head: CryptoAccountHead;
+	raw: Uint8Array;
+	authorityKey: Uint8Array;
+	secretBundles: StoredBundle[];
+	products: ProductReadInput[];
+}
+
+async function loadCommitted(accountId: string, state: CryptoStateResponse): Promise<Committed> {
+	const head = state.head;
 	if (!head || head.version !== 2) throw new Error('product keys: no active head');
 	const raw = b64decode(head.head);
 	const parsed = parseHeadV2(raw);
 	const committed = new Set(parsed.bundleDescriptorHashes.map(b64encode));
 	const secretBundles: StoredBundle[] = [];
-	for (const b of current.bundles) {
+	for (const b of state.bundles) {
 		if (!committed.has(b.bytesHash)) continue;
 		const got = await getSecretBundle(accountId, b.bundleId, b.bundleRevision);
 		secretBundles.push({ bundleId: got.bundleId, revision: got.bundleRevision, bundle: b64decode(got.bundle) });
@@ -159,21 +166,25 @@ export async function readProductKeys(accountId: string, state?: CryptoStateResp
 			bundles
 		});
 	}
+	return { head, raw, authorityKey: authorityKey!, secretBundles, products };
+}
+
+async function readCommitted(accountId: string, c: Committed): Promise<ProductKeysOutcome> {
 	const published = await listMyKeys(accountId);
 	const read = await keystore.readProductKeys({
 		accountId,
 		mailPublicKeysArmored: published.keys.map((k) => k.publicKeyArmored).filter(Boolean),
-		authorityKey: authorityKey!,
+		authorityKey: c.authorityKey,
 		head: {
-			raw,
-			mac: b64decode(head.mac),
-			previousHeadHash: opt(head.previousHeadHash),
-			authority: opt(head.authoritySignature),
-			legacy: opt(head.legacySignature),
-			transition: opt(head.transitionSignature)
+			raw: c.raw,
+			mac: b64decode(c.head.mac),
+			previousHeadHash: opt(c.head.previousHeadHash),
+			authority: opt(c.head.authoritySignature),
+			legacy: opt(c.head.legacySignature),
+			transition: opt(c.head.transitionSignature)
 		},
-		secretBundles,
-		products
+		secretBundles: c.secretBundles,
+		products: c.products
 	});
 	if (!read.ok) {
 		if (read.code === 'invalid') throw new Error(read.message ?? 'product keys: read-back failed');
@@ -182,10 +193,98 @@ export async function readProductKeys(accountId: string, state?: CryptoStateResp
 	return { status: 'active', result: read.result };
 }
 
+export async function readProductKeys(accountId: string, state?: CryptoStateResponse): Promise<ProductKeysOutcome> {
+	const current = state ?? (await getCryptoState(accountId));
+	return readCommitted(accountId, await loadCommitted(accountId, current));
+}
+
+const hashSet = (hashes: (string | null)[]) => [...hashes].filter((h): h is string => !!h).sort().join(',');
+
+export function headDrift(state: CryptoStateResponse, raw: Uint8Array, appManifest: Uint8Array, aliases: AliasKeyGrant[]): boolean {
+	const head = parseHeadV2(raw);
+	const s = state.scope;
+	if (
+		head.stateRevision !== s.stateRevision ||
+		head.authEpoch !== s.authEpoch ||
+		head.recoveryEpoch !== s.recoveryEpoch ||
+		head.keyEpoch !== s.activeKeyEpoch ||
+		head.cryptoGeneration !== s.activeGeneration ||
+		head.minimumWriteProfile !== s.minimumWriteProfile ||
+		head.historyEventCount !== s.historyEventCount ||
+		head.observedSessionEpoch !== state.sessionEpoch ||
+		b64encode(head.keyHistoryRoot) !== s.keyHistoryRoot
+	) {
+		return true;
+	}
+	if (hashSet(head.credentialDescriptorHashes.map(b64encode)) !== hashSet(state.credentials.filter((c) => c.state === 'active').map((c) => c.recordHash))) return true;
+	if (hashSet(head.slotDescriptorHashes.map(b64encode)) !== hashSet(state.slots.filter((x) => x.state === 'active').map((x) => x.wrapperHash))) return true;
+	const committed = parseIdentityManifest(appManifest)
+		.identityKeys.filter((k) => k.usage === 'mail-alias')
+		.map((k) => k.keyEpoch)
+		.sort((a, b) => a - b);
+	const granted = aliases.map((g) => g.keyVersion).sort((a, b) => a - b);
+	return committed.join(',') !== granted.join(',');
+}
+
+async function succeed(accountId: string, state: CryptoStateResponse, events: Uint8Array[], c: Committed): Promise<boolean> {
+	const app = c.products.find((p) => p.product === 'app')!;
+	const [keys, aliases] = await Promise.all([listMyKeys(accountId), listMyAliasKeys(accountId)]);
+	if (!headDrift(state, c.raw, app.identityManifest.record, aliases.keys)) return false;
+	const { previousHeadHash: _, ...args } = conversionArgs(accountId, state, events, keys, aliases.keys);
+	const prepared = await keystore.prepareSuccessorHead({
+		...args,
+		previous: { raw: c.raw, mac: b64decode(c.head.mac) },
+		secretBundles: c.secretBundles,
+		products: c.products
+	});
+	if (!prepared.ok) {
+		if (prepared.code === 'invalid') throw new Error(prepared.message ?? 'product keys: successor refused');
+		return false;
+	}
+	const out = prepared.output;
+	if (!out) return false;
+	for (const b of out.secretBundles) await putSecretBundle(accountId, b.bundleId, b.revision, b.kind, b64encode(b.bundle));
+	for (const b of out.productBundles) await putProductBundle(accountId, b.product, b.bundleId, b.revision, b64encode(b.bundle));
+	for (const m of out.identityManifests) {
+		await putProductManifest(accountId, m.product, m.kind, m.revision, m.page, b64encode(m.record), b64encode(m.signature));
+	}
+	await activateCryptoHead(accountId, {
+		head: b64encode(out.activation.head),
+		mac: b64encode(out.activation.mac),
+		authoritySignature: b64encode(out.activation.authoritySignature),
+		legacySignature: null,
+		transitionSignature: null,
+		authorityPublicKey: null,
+		delegations: out.activation.delegations.map((d) => ({
+			record: b64encode(d.record),
+			signature: b64encode(d.signature),
+			signingPublicKey: b64encode(d.signingPublicKey),
+			recipientPublicKey: b64encode(d.recipientPublicKey)
+		}))
+	});
+	for (const m of out.dataManifests) {
+		await putProductManifest(accountId, m.product, m.kind, m.revision, m.page, b64encode(m.record), b64encode(m.signature));
+	}
+	return true;
+}
+
+async function current(accountId: string, state: CryptoStateResponse, events: Uint8Array[]): Promise<Committed | null> {
+	try {
+		const committed = await loadCommitted(accountId, state);
+		return (await succeed(accountId, state, events, committed)) ? null : committed;
+	} catch (err) {
+		console.warn('product keys: successor head failed', err);
+		return null;
+	}
+}
+
 export async function ensureProductKeys(accountId: string): Promise<ProductKeysOutcome> {
 	const { state, events } = await loadCryptoState(accountId);
 	if (!state.features.productKeys) return { status: 'disabled' };
-	if (state.head?.version === 2) return readProductKeys(accountId, state);
+	if (state.head?.version === 2) {
+		const committed = await current(accountId, state, events);
+		return committed ? readCommitted(accountId, committed) : readProductKeys(accountId);
+	}
 	const refused = await convert(accountId, state, events);
 	if (refused) return refused;
 	const read = await readProductKeys(accountId);
@@ -195,7 +294,10 @@ export async function ensureProductKeys(accountId: string): Promise<ProductKeysO
 export async function ensureConverted(accountId: string): Promise<boolean> {
 	const { state, events } = await loadCryptoState(accountId);
 	if (!state.features.productKeys) return false;
-	if (state.head?.version === 2) return true;
+	if (state.head?.version === 2) {
+		await current(accountId, state, events);
+		return true;
+	}
 	if (await convert(accountId, state, events)) return false;
 	return (await readProductKeys(accountId)).status === 'active';
 }
