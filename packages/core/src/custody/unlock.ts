@@ -1,5 +1,6 @@
 import { loginIdentifier } from '$core/auth/login-identifier';
 import { keystore } from '$core/keystore/keystore-client';
+import { bootstrap } from '$core/producthandoff/api';
 import { safeRoute, startHandoff } from '$core/producthandoff/begin';
 import { accounts } from '$core/stores/accounts.svelte';
 
@@ -24,6 +25,19 @@ export async function unlockAtAuth(accountId: string, redirect: string | null, f
 	const status = await keystore.status();
 	const remember = status.accounts.find((a) => a.accountId === accountId)?.hasPersistent ?? false;
 	await startHandoff({ expectedAccountId: accountId, route: safeRoute(redirect), remember, ...(freshAuth ? { freshAuth: true } : {}) });
+	return new Promise<never>(() => {});
+}
+
+export async function signInMovedToAuth(): Promise<boolean> {
+	try {
+		return (await bootstrap()).signInAtAuth === true;
+	} catch {
+		return false;
+	}
+}
+
+export async function signInAtAuth(redirect: string | null): Promise<never> {
+	await startHandoff({ expectedAccountId: null, route: safeRoute(redirect), remember: false });
 	return new Promise<never>(() => {});
 }
 
