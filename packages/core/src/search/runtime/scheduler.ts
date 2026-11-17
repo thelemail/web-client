@@ -1,4 +1,4 @@
-export const JOB_CLASSES = ['metadata', 'body', 'attachments', 'embeddings', 'maintenance'] as const;
+export const JOB_CLASSES = ['metadata', 'body', 'attachments', 'embeddings', 'artifacts', 'maintenance'] as const;
 export type JobClass = (typeof JOB_CLASSES)[number];
 
 export type StepOutcome = 'more' | 'idle' | 'blocked';

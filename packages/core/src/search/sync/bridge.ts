@@ -5,7 +5,7 @@ const CALL_TIMEOUT_MS = 180_000;
 type Op = BridgeRequest['op'];
 
 export interface BridgeCaller {
-	call<K extends Op>(request: Extract<BridgeRequest, { op: K }>): Promise<BridgeResult<BridgeValues[K]>>;
+	call<K extends Op>(request: Extract<BridgeRequest, { op: K }>, transfer?: Transferable[]): Promise<BridgeResult<BridgeValues[K]>>;
 }
 
 export class Bridge implements BridgeCaller {
@@ -26,7 +26,7 @@ export class Bridge implements BridgeCaller {
 		port.start();
 	}
 
-	call<K extends Op>(request: Extract<BridgeRequest, { op: K }>): Promise<BridgeResult<BridgeValues[K]>> {
+	call<K extends Op>(request: Extract<BridgeRequest, { op: K }>, transfer: Transferable[] = []): Promise<BridgeResult<BridgeValues[K]>> {
 		if (this.#closed) return Promise.resolve({ ok: false, failure: { code: 'vault_locked' } });
 		const id = this.#next++;
 		return new Promise((resolve) => {
@@ -35,7 +35,7 @@ export class Bridge implements BridgeCaller {
 				resolve({ ok: false, failure: { code: 'retry', retryAfterSeconds: null } });
 			}, CALL_TIMEOUT_MS);
 			this.#pending.set(id, { resolve: resolve as (r: BridgeResult<unknown>) => void, timer });
-			this.#port.postMessage({ ...request, id } satisfies BridgeMessage);
+			this.#port.postMessage({ ...request, id } satisfies BridgeMessage, transfer);
 		});
 	}
 

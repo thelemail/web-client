@@ -591,7 +591,7 @@ export const bodyJob: JobFactory = (ctx) => {
 		name: BODY_JOB,
 		class: 'body',
 		async step(step) {
-			if (!ctx.bridge) return 'idle';
+			if (!ctx.bridge || !ctx.syncSettled()) return 'idle';
 			const batch = ctx.batch(BODY_JOB);
 			const results: BodyResult[] = [];
 			const taken = new Set<string>();

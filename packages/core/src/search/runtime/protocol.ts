@@ -4,6 +4,8 @@ import type { Completions, PageResult, Provisional, QueryOutcome } from '../sqli
 import type { Conditions, JobClass } from './scheduler';
 import type { SyncProgress } from '../sync/jobs';
 import type { CoverageCount, QueueCounts } from '../sync/store';
+import type { SearchSyncLimits } from '../../api/types';
+import type { ArtifactCounts } from '../artifacts/store';
 
 export type Persistence = 'persistent' | 'session';
 export type Limit = 'session' | 'quota';
@@ -19,6 +21,21 @@ export interface SearchStatus {
 	paused: boolean;
 	generation: number;
 	sync: SyncStatus | null;
+	artifacts: ArtifactStatus | null;
+	cloud: CloudState | null;
+}
+
+export type CloudState = 'on' | 'off' | 'locked' | 'unavailable' | 'stale' | 'error';
+
+export interface ArtifactStatus extends ArtifactCounts {
+	state: 'pending' | 'listing' | 'ready';
+	full: boolean;
+}
+
+export interface SyncAttach {
+	keystore: MessagePort;
+	generationId: string;
+	limits: SearchSyncLimits;
 }
 
 export interface SyncStatus extends SyncProgress {
@@ -29,9 +46,20 @@ export interface SyncStatus extends SyncProgress {
 export type InitResult = { ok: true; status: SearchStatus; rebuilt: boolean } | { ok: false; code: 'locked' | 'failed' };
 
 export type ControlRequest =
-	| { op: 'init'; accountId: string; generationId: string; installationSalt: Uint8Array; keystore: MessagePort; bridge?: MessagePort; parser?: MessagePort; paused: boolean }
+	| {
+			op: 'init';
+			accountId: string;
+			generationId: string;
+			installationSalt: Uint8Array;
+			keystore: MessagePort;
+			bridge?: MessagePort;
+			parser?: MessagePort;
+			paused: boolean;
+			syncPending: boolean;
+	  }
 	| { op: 'memory'; bridge?: MessagePort; parser?: MessagePort; mode: Mode; paused: boolean }
 	| { op: 'connect'; port: MessagePort }
+	| { op: 'sync'; sync: SyncAttach | null; cloud: CloudState | null }
 	| { op: 'activity'; conditions: Conditions }
 	| { op: 'job'; name: string; message: unknown }
 	| { op: 'close'; wipe: boolean };
@@ -52,6 +80,7 @@ export type ClientRequest =
 	| { op: 'forget' }
 	| { op: 'pause'; paused: boolean }
 	| { op: 'retryFailed' }
+	| { op: 'resync' }
 	| { op: 'status' }
 	| { op: 'ping' }
 	| { op: 'bye' };
@@ -69,6 +98,10 @@ export interface ProgressEvent {
 	type: 'progress';
 	token: number;
 	progress: Provisional;
+}
+
+export interface ResyncEvent {
+	type: 'resync';
 }
 
 export type ClientMessage = Reply | StatusEvent | ProgressEvent;
