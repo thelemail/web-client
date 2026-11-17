@@ -172,6 +172,7 @@ export const hydrateJob: JobFactory = (ctx) => {
 		if (!r.ok) return wait(r.failure);
 		attempt = 0;
 		const byId = new Map(rows.map((row) => [row.sourceId, row]));
+		let keyless = false;
 		const hydrated: Hydrated[] = [];
 		const rejected: { sourceId: string; contentRev: number }[] = [];
 		const gone: { sourceId: string; contentRev: number }[] = [];
@@ -186,7 +187,10 @@ export const hydrateJob: JobFactory = (ctx) => {
 			const opened = await s.open(documentRef(row.sourceId, row.contentRev, item.extractionRevision), bytes);
 			if (ctx.sync() !== s) return 'idle';
 			if (!opened.ok) {
-				if (opened.code === 'unavailable') break;
+				if (opened.code === 'unavailable') {
+					keyless = true;
+					break;
+				}
 				rejected.push(row);
 				continue;
 			}
@@ -209,7 +213,7 @@ export const hydrateJob: JobFactory = (ctx) => {
 		if (!committed.ok) return 'blocked';
 		if (usable.some((h) => h.payload.attachmentStates.some((a) => a.state === Coverage.pending))) ctx.wake(ATTACHMENT_JOB);
 		if (rejected.length || gone.length) ctx.wake(BODY_JOB);
-		return 'more';
+		return keyless ? 'idle' : 'more';
 	};
 
 	return {
@@ -278,8 +282,9 @@ export const uploadJob: JobFactory = (ctx) => {
 			const local: typeof rows = [];
 			const skipped: typeof rows = [];
 			let bytes = 0;
+			let keyless = false;
 			for (const row of rows) {
-				if (step.shouldYield() && items.length) {
+				if (keyless || (step.shouldYield() && items.length)) {
 					skipped.push(row);
 					continue;
 				}
@@ -294,7 +299,10 @@ export const uploadJob: JobFactory = (ctx) => {
 				if (ctx.sync() !== s) return 'idle';
 				if (!sealed.ok) {
 					if (sealed.code === 'too_large') local.push(row);
-					else skipped.push(row);
+					else {
+						keyless = true;
+						skipped.push(row);
+					}
 					continue;
 				}
 				const n = sealed.artifact.byteLength;
@@ -314,7 +322,7 @@ export const uploadJob: JobFactory = (ctx) => {
 				for (const row of local) ctx.artifacts.settle(row.sourceId, row.contentRev, ArtifactState.localOnly);
 				for (const row of skipped) ctx.artifacts.defer(row.sourceId, row.contentRev, 0);
 			});
-			if (items.length === 0) return local.length || skipped.length ? 'more' : 'idle';
+			if (items.length === 0) return !keyless && (local.length || skipped.length) ? 'more' : 'idle';
 			const r = await ctx.bridge.call(
 				{ op: 'artifactUpload', generationId: s.generationId, items },
 				items.map((i) => i.bytes.buffer as ArrayBuffer)
@@ -339,7 +347,7 @@ export const uploadJob: JobFactory = (ctx) => {
 				}
 				for (const { item } of items) if (!answered.has(item.sourceId)) ctx.artifacts.defer(item.sourceId, item.contentRevision, done + backoffDelay(0, null));
 			});
-			return 'more';
+			return keyless ? 'idle' : 'more';
 		}
 	};
 };
