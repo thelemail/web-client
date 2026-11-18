@@ -25,6 +25,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$core/stores/session.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { bytesToHex } from '$core/keys/encode';
+import { isAuthOrigin } from '$core/products';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
 
@@ -125,8 +126,36 @@ async function finalizeStagedMigration(
 		finalized = await serverFinalized(accountId, masterKeyId);
 	}
 	if (!finalized) return;
-	const promoted = await keystore.migrationFinalized({ accountId });
-	if (!promoted.ok) console.warn('login: vault promotion failed', promoted.code);
+	try {
+		const promoted = await keystore.migrationFinalized({ accountId });
+		if (!promoted.ok) console.warn('login: vault promotion failed', promoted.code);
+	} catch (err) {
+		console.warn('login: vault promotion failed', err);
+	}
+}
+
+async function stageMigration(grantToken: string, accountId: string, password: string): Promise<boolean> {
+	const start = await keystore.migrationStartRegistration({ accountId, password });
+	if (!start.ok) return false;
+	const init = await migrationRegistrationInit({
+		grantToken,
+		registrationRequest: start.registrationRequest
+	});
+	const finish = await keystore.migrationFinishStage({
+		accountId,
+		operationId: start.operationId,
+		registrationResponse: init.registrationResponse
+	});
+	if (!finish.ok) return false;
+	await migrationStage({
+		grantToken,
+		opaqueRecord: finish.opaqueRecord,
+		wrappedMasterKey: finish.wrappedMasterKey,
+		masterKeyId: finish.masterKeyId,
+		opaqueParamsVersion: finish.opaqueParamsVersion,
+		stagedEncryptedPrivateKey: finish.stagedEncryptedPrivateKey
+	});
+	return true;
 }
 
 async function stageMigrationIfGranted(
@@ -136,32 +165,16 @@ async function stageMigrationIfGranted(
 ): Promise<void> {
 	if (!grant.migrationStageGrant) return;
 	try {
-		const start = await keystore.migrationStartRegistration({ accountId, password });
-		if (!start.ok) return;
-		const init = await migrationRegistrationInit({
-			grantToken: grant.migrationStageGrant,
-			registrationRequest: start.registrationRequest
-		});
-		const finish = await keystore.migrationFinishStage({
-			accountId,
-			operationId: start.operationId,
-			registrationResponse: init.registrationResponse
-		});
-		if (!finish.ok) return;
-		await migrationStage({
-			grantToken: grant.migrationStageGrant,
-			opaqueRecord: finish.opaqueRecord,
-			wrappedMasterKey: finish.wrappedMasterKey,
-			masterKeyId: finish.masterKeyId,
-			opaqueParamsVersion: finish.opaqueParamsVersion,
-			stagedEncryptedPrivateKey: finish.stagedEncryptedPrivateKey
-		});
+		await stageMigration(grant.migrationStageGrant, accountId, password);
 	} catch (err) {
 		console.warn('login: migration stage failed (non-fatal)', err);
 	}
 }
 
 type LoginProofSolver = (init: LoginInitResponse) => Promise<string | undefined>;
+
+const solveQuietly: LoginProofSolver = async (init) =>
+	init.proofChallenge ? solveProof(init.proofChallenge, new AbortController().signal) : undefined;
 
 function loginProofSolver(input: PerformLoginInput): LoginProofSolver {
 	return async (init) => {
@@ -335,9 +348,11 @@ async function attemptLogin(input: PerformLoginInput): Promise<PerformLoginOutco
 		};
 	}
 
-	const result = await finishLogin(complete, email, init.salt as string, rememberMe, password);
-	password = '';
-	return { status: 'complete', result };
+	try {
+		return await finishLogin(complete, email, init.salt as string, rememberMe, password);
+	} finally {
+		password = '';
+	}
 }
 
 async function finishOpaqueLogin(
@@ -397,13 +412,50 @@ async function finishOpaqueLogin(
 	return finishLoginSession(grant.accountId, grant.accessToken, grant.expiresInSeconds, email);
 }
 
+function unlockFailure(code: string): Error {
+	console.error('login: completeLoginUnlock failed', code);
+	return new Error(code === 'invalid_credentials' ? m.auth_login_unlock_failed() : m.auth_login_interrupted());
+}
+
+async function upgradeAtAuth(
+	grant: Partial<LoginSessionGrant>,
+	accountId: string,
+	email: string,
+	srpSalt: string,
+	rememberMe: boolean,
+	password: string
+): Promise<PerformLoginOutcome> {
+	const unlock = await keystore.completeLoginUnlock({
+		accountId,
+		encryptedPrivateKey: grant.encryptedPrivateKey as string,
+		keySalt: grant.keySalt as string,
+		srpSalt
+	});
+	if (!unlock.ok) throw unlockFailure(unlock.code);
+	let staged = false;
+	try {
+		if (grant.migrationStageGrant) staged = await stageMigration(grant.migrationStageGrant, accountId, password);
+	} catch (err) {
+		console.error('login: migration stage failed', err);
+	} finally {
+		await keystore.lock({ accountId });
+	}
+	if (!staged) throw new Error(m.auth_login_unlock_failed());
+	const outcome = await tryOpaqueLogin(email, password, rememberMe, solveQuietly, undefined);
+	if (!outcome) {
+		console.error('login: the staged credential did not sign in');
+		throw new Error(m.auth_login_unlock_failed());
+	}
+	return outcome;
+}
+
 async function finishLogin(
 	grant: Partial<LoginSessionGrant>,
 	email: string,
 	srpSalt: string,
 	rememberMe: boolean,
 	password: string
-): Promise<PerformLoginResult> {
+): Promise<PerformLoginOutcome> {
 	if (
 		!grant.accountId ||
 		!grant.accessToken ||
@@ -413,6 +465,7 @@ async function finishLogin(
 	) {
 		throw new Error(m.auth_login_unexpected_response());
 	}
+	if (isAuthOrigin) return upgradeAtAuth(grant, grant.accountId, email, srpSalt, rememberMe, password);
 	auth.addSession(grant.accessToken, grant.expiresInSeconds, grant.accountId, grant.csrfToken);
 	const unlock = await keystore.completeLoginUnlock({
 		accountId: grant.accountId,
@@ -422,12 +475,7 @@ async function finishLogin(
 	});
 	if (!unlock.ok) {
 		auth.forgetSession(grant.accountId);
-		console.error('login: completeLoginUnlock failed', unlock.code);
-		throw new Error(
-			unlock.code === 'invalid_credentials'
-				? m.auth_login_unlock_failed()
-				: m.auth_login_interrupted()
-		);
+		throw unlockFailure(unlock.code);
 	}
 
 	if (rememberMe && grant.serverHalf) {
@@ -439,7 +487,8 @@ async function finishLogin(
 	}
 
 	void stageMigrationIfGranted(grant, grant.accountId, password);
-	return finishLoginSession(grant.accountId, grant.accessToken, grant.expiresInSeconds, email);
+	const result = await finishLoginSession(grant.accountId, grant.accessToken, grant.expiresInSeconds, email);
+	return { status: 'complete', result };
 }
 
 async function finishLoginSession(
@@ -489,10 +538,11 @@ function assertSessionGrant(res: unknown): Partial<LoginSessionGrant> {
 async function finishPendingLogin(
 	grant: Partial<LoginSessionGrant>,
 	pending: PendingTwoFactorLogin
-): Promise<PerformLoginResult> {
+): Promise<PerformLoginOutcome> {
 	if (pending.opaqueOperationId) {
 		try {
-			return await finishOpaqueLogin(grant, pending.opaqueOperationId, pending.email, pending.rememberMe);
+			const result = await finishOpaqueLogin(grant, pending.opaqueOperationId, pending.email, pending.rememberMe);
+			return { status: 'complete', result };
 		} catch (err) {
 			await abandonOpaqueOperation(pending.opaqueOperationId);
 			throw err;
@@ -504,7 +554,7 @@ async function finishPendingLogin(
 export async function submitTwoFactorTotp(
 	pending: PendingTwoFactorLogin,
 	code: string
-): Promise<PerformLoginResult> {
+): Promise<PerformLoginOutcome> {
 	let res;
 	try {
 		res = await verify2faTotp({
@@ -521,7 +571,7 @@ export async function submitTwoFactorTotp(
 export async function submitTwoFactorBackupCode(
 	pending: PendingTwoFactorLogin,
 	code: string
-): Promise<PerformLoginResult> {
+): Promise<PerformLoginOutcome> {
 	let res;
 	try {
 		res = await verify2faBackupCode({
@@ -537,7 +587,7 @@ export async function submitTwoFactorBackupCode(
 
 export async function submitTwoFactorWebauthn(
 	pending: PendingTwoFactorLogin
-): Promise<PerformLoginResult> {
+): Promise<PerformLoginOutcome> {
 	let options;
 	try {
 		options = await init2faWebauthn({ pendingToken: pending.pendingToken });

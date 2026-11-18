@@ -14,7 +14,8 @@
 		submitTwoFactorWebauthn,
 		TwoFactorExpiredError,
 		TwoFactorRejectedError,
-		type PendingTwoFactorLogin
+		type PendingTwoFactorLogin,
+		type PerformLoginOutcome
 	} from '$core/auth/perform-login';
 	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
 	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
@@ -198,7 +199,7 @@
 		loginError = message;
 	}
 
-	async function runTwoFactor(fn: (pending: PendingTwoFactorLogin) => Promise<{ slot: number }>) {
+	async function runTwoFactor(fn: (pending: PendingTwoFactorLogin) => Promise<PerformLoginOutcome>) {
 		const pending = pendingTwoFactor;
 		if (!pending || twoFaBusy) return;
 		if (Date.now() > pending.expiresAt) {
@@ -209,9 +210,16 @@
 		twoFaError = null;
 		twoFaKeyNotice = null;
 		try {
-			const { slot } = await fn(pending);
+			const outcome = await fn(pending);
 			if (heldTwoFactor === pending) heldTwoFactor = null;
-			await navigateAfterLogin(slot);
+			if (outcome.status === 'twoFactorRequired') {
+				heldTwoFactor = outcome.pending;
+				pendingTwoFactor = outcome.pending;
+				twoFaFailures = 0;
+				twoFaBusy = false;
+				return;
+			}
+			await navigateAfterLogin(outcome.result.slot);
 		} catch (err) {
 			if (err instanceof TwoFactorRejectedError) {
 				twoFaFailures += 1;
