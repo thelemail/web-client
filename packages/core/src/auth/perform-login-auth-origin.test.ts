@@ -30,6 +30,7 @@ vi.mock('$core/keystore/keystore-client', () => ({ keystore }));
 const api = vi.hoisted(() => ({
 	loginInit: vi.fn(),
 	loginComplete: vi.fn(),
+	logout: vi.fn(),
 	migrationRegistrationInit: vi.fn(),
 	migrationStage: vi.fn(),
 	migrationFinalize: vi.fn(),
@@ -141,6 +142,7 @@ beforeEach(() => {
 	api.migrationRegistrationInit.mockResolvedValue({ registrationResponse: 'resp' });
 	api.migrationStage.mockResolvedValue({ authScheme: 'srp_v1', migrationState: 'staged' });
 	api.migrationFinalize.mockResolvedValue(undefined);
+	api.logout.mockResolvedValue(undefined);
 	api.getMe.mockResolvedValue({ accountId: ACCOUNT, keyFingerprint: 'ABCDEF01', keyVersion: 1 });
 	accounts.load.mockResolvedValue(undefined);
 	accounts.byId.mockReturnValue({ accountId: ACCOUNT, slot: 0, email: 'm@thelemail.com' });
@@ -160,8 +162,11 @@ describe('an SRP account signing in on the auth origin', () => {
 		);
 		expect(api.migrationFinalize).toHaveBeenCalledWith({ finalizeToken: 'finalize-token' });
 		expect(keystore.migrationFinalized).toHaveBeenCalledWith({ accountId: ACCOUNT });
-		expect(session.addSession).toHaveBeenCalledTimes(1);
-		expect(session.addSession).toHaveBeenCalledWith('opaque-token', 3600, ACCOUNT, undefined);
+		expect(session.addSession).toHaveBeenNthCalledWith(1, 'srp-token', 3600, ACCOUNT, undefined);
+		expect(api.logout).toHaveBeenCalledWith(ACCOUNT);
+		expect(order(api.logout)).toBeLessThan(order(keystore.opaqueStartAuth, 1));
+		expect(order(session.forgetSession)).toBeLessThan(order(keystore.opaqueStartAuth, 1));
+		expect(session.addSession).toHaveBeenLastCalledWith('opaque-token', 3600, ACCOUNT, undefined);
 		expect(session.setSession).toHaveBeenCalledWith('opaque-token', 3600, ACCOUNT);
 	});
 
@@ -195,6 +200,7 @@ describe('an SRP account signing in on the auth origin', () => {
 
 		expect(keystore.lock).toHaveBeenCalledWith({ accountId: ACCOUNT });
 		expect(keystore.opaqueStartAuth).toHaveBeenCalledTimes(1);
+		expect(api.logout).not.toHaveBeenCalled();
 		expect(session.addSession).not.toHaveBeenCalled();
 		expect(session.setSession).not.toHaveBeenCalled();
 	});

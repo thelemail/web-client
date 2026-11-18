@@ -3,6 +3,7 @@ import {
 	getMigrationStatus,
 	loginInit,
 	loginComplete,
+	logout,
 	migrationFinalize,
 	migrationRegistrationInit,
 	migrationStage
@@ -417,6 +418,17 @@ function unlockFailure(code: string): Error {
 	return new Error(code === 'invalid_credentials' ? m.auth_login_unlock_failed() : m.auth_login_interrupted());
 }
 
+async function retireSrpSession(grant: Partial<LoginSessionGrant>, accountId: string): Promise<void> {
+	auth.addSession(grant.accessToken as string, grant.expiresInSeconds as number, accountId, grant.csrfToken);
+	try {
+		await logout(accountId);
+	} catch (err) {
+		console.warn('login: the SRP session was not retired', err);
+	} finally {
+		auth.forgetSession(accountId);
+	}
+}
+
 async function upgradeAtAuth(
 	grant: Partial<LoginSessionGrant>,
 	accountId: string,
@@ -441,6 +453,7 @@ async function upgradeAtAuth(
 		await keystore.lock({ accountId });
 	}
 	if (!staged) throw new Error(m.auth_login_unlock_failed());
+	await retireSrpSession(grant, accountId);
 	const outcome = await tryOpaqueLogin(email, password, rememberMe, solveQuietly, undefined);
 	if (!outcome) {
 		console.error('login: the staged credential did not sign in');
