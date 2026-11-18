@@ -4041,6 +4041,7 @@
 	"auth_login_page_title": "Thelemail · Sign in",
 	"auth_account_page_title": "Thelemail · Account security",
 	"auth_login_2fa_lede": "Password accepted. <addr>{email}</addr> also asks for a second factor.",
+	"auth_login_2fa_again_lede": "Your sign-in for <addr>{email}</addr> was just upgraded. Enter one more code to finish.",
 	"auth_login_add_eyebrow": "Add another account",
 	"auth_login_add_title": "Sign in to a second account",
 	"auth_login_add_lede": "You can be signed in to several Thelemail accounts at once on this device.",

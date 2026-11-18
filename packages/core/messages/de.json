@@ -4041,6 +4041,7 @@
 	"auth_login_page_title": "Thelemail · Anmelden",
 	"auth_account_page_title": "Thelemail · Kontosicherheit",
 	"auth_login_2fa_lede": "Passwort akzeptiert. <addr>{email}</addr> verlangt außerdem einen zweiten Faktor.",
+	"auth_login_2fa_again_lede": "Die Anmeldung für <addr>{email}</addr> wurde soeben aktualisiert. Bitte geben Sie zum Abschluss noch einen Code ein.",
 	"auth_login_add_eyebrow": "Weiteres Konto hinzufügen",
 	"auth_login_add_title": "Bei einem zweiten Konto anmelden",
 	"auth_login_add_lede": "Sie können auf diesem Gerät gleichzeitig bei mehreren Thelemail-Konten angemeldet sein.",

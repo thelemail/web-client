@@ -4041,6 +4041,7 @@
   "auth_login_page_title": "Thelemail · Connexion",
   "auth_account_page_title": "Thelemail · Sécurité du compte",
   "auth_login_2fa_lede": "Mot de passe accepté. <addr>{email}</addr> demande aussi un second facteur.",
+  "auth_login_2fa_again_lede": "La connexion de <addr>{email}</addr> vient d’être mise à niveau. Saisissez un dernier code pour terminer.",
   "auth_login_add_eyebrow": "Ajouter un autre compte",
   "auth_login_add_title": "Se connecter à un second compte",
   "auth_login_add_lede": "Vous pouvez utiliser plusieurs comptes Thelemail simultanément sur cet appareil.",

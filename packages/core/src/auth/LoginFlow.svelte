@@ -63,6 +63,7 @@
 	let twoFaError = $state<string | null>(null);
 	let twoFaKeyNotice = $state<string | null>(null);
 	let twoFaFailures = $state(0);
+	let twoFaAgain = $state(false);
 	let heldTwoFactor: PendingTwoFactorLogin | null = null;
 	let attempt: AbortController | null = null;
 
@@ -195,6 +196,7 @@
 		twoFaError = null;
 		twoFaKeyNotice = null;
 		twoFaFailures = 0;
+		twoFaAgain = false;
 		twoFaBusy = false;
 		loginError = message;
 	}
@@ -215,6 +217,7 @@
 			if (outcome.status === 'twoFactorRequired') {
 				heldTwoFactor = outcome.pending;
 				pendingTwoFactor = outcome.pending;
+				twoFaAgain = true;
 				twoFaFailures = 0;
 				twoFaBusy = false;
 				return;
@@ -277,24 +280,28 @@
 
 {#if pendingTwoFactor}
 	<div class="card-surface screen-fade">
-		<TwoFactorChallenge
-			email={pendingTwoFactor.email}
-			methods={pendingTwoFactor.methods}
-			busy={twoFaBusy}
-			error={twoFaError}
-			keyNotice={twoFaKeyNotice}
-			onTotp={(code) => runTwoFactor((p) => submitTwoFactorTotp(p, code))}
-			onBackupCode={(code) => runTwoFactor((p) => submitTwoFactorBackupCode(p, code))}
-			onWebauthn={() => runTwoFactor((p) => submitTwoFactorWebauthn(p))}
-			onBack={() => resetToPasswordStep(null)}
-		>
-			{#snippet lede()}
-				<Rich
-					text={m.auth_login_2fa_lede({ email: pendingTwoFactor?.email ?? '' })}
-					tags={{ addr }}
-				/>
-			{/snippet}
-		</TwoFactorChallenge>
+		{#key pendingTwoFactor.pendingToken}
+			<TwoFactorChallenge
+				email={pendingTwoFactor.email}
+				methods={pendingTwoFactor.methods}
+				busy={twoFaBusy}
+				error={twoFaError}
+				keyNotice={twoFaKeyNotice}
+				onTotp={(code) => runTwoFactor((p) => submitTwoFactorTotp(p, code))}
+				onBackupCode={(code) => runTwoFactor((p) => submitTwoFactorBackupCode(p, code))}
+				onWebauthn={() => runTwoFactor((p) => submitTwoFactorWebauthn(p))}
+				onBack={() => resetToPasswordStep(null)}
+			>
+				{#snippet lede()}
+					<Rich
+						text={twoFaAgain
+							? m.auth_login_2fa_again_lede({ email: pendingTwoFactor?.email ?? '' })
+							: m.auth_login_2fa_lede({ email: pendingTwoFactor?.email ?? '' })}
+						tags={{ addr }}
+					/>
+				{/snippet}
+			</TwoFactorChallenge>
+		{/key}
 	</div>
 {:else}
 	<div class="card-surface screen-fade">
