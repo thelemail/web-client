@@ -22,7 +22,7 @@ function fakeWindow(hash: string) {
 }
 
 function deps(runner: Runner, preload: FrameDeps['preload'] = async () => new Map()): FrameDeps {
-	return { parentOrigin: PARENT, manifest: [], preload, runner: () => runner };
+	return { parentOrigin: PARENT, manifest: { path: '', size: 0, sha256: '', entries: [] }, preload, runner: () => runner };
 }
 
 function next<T>(port: MessagePort): Promise<T> {
