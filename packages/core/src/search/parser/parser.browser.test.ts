@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { commands } from 'vitest/browser';
-import { docxFiles, pdf, zip } from '../extract/files/fixtures';
+import { cjkPdf, docxFiles, pdf, zip } from '../extract/files/fixtures';
 import type { FileText } from '../extract/files/sink';
 import type { Extracted } from '../extract/extract';
 import type { ParseRequest } from '../extract/parse';
@@ -149,6 +149,21 @@ describe('isolated parser origin', () => {
 		expect(seen.filter((url) => EXFIL.some((h) => url.includes(h)))).toEqual([]);
 		expect((await commands.parserRequests()).slice(before)).toEqual([]);
 	}, 60_000);
+
+	it('loads the pdf.js assets in one bundle request', async () => {
+		const paths = (await commands.parserRequests()).map((r) => r.path);
+		expect(paths.filter((p) => /^\/_app\/immutable\/assets\/pdfjs-[0-9a-f]{16}\.bin$/.test(p))).toHaveLength(1);
+		expect(paths.filter((p) => p.startsWith('/pdfjs/'))).toEqual([]);
+	});
+
+	it('extracts Japanese text through a CJK character map without any network request', async () => {
+		const before = (await commands.parserRequests()).length;
+		await commands.watchNetwork();
+		const r = await text(file(cjkPdf(['請求書 QX-4471']), 'seikyusho.pdf', 'application/pdf'));
+		expect(r).toMatchObject({ state: 'complete', parts: [{ place: 'page:1', text: '請求書 QX-4471' }] });
+		expect((await commands.networkSeen()).filter((url) => url.startsWith(origin))).toEqual([]);
+		expect((await commands.parserRequests()).slice(before)).toEqual([]);
+	});
 
 	it('receives no cookie and cannot open the app IndexedDB', async () => {
 		const requests = await commands.parserRequests();
