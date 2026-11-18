@@ -162,11 +162,10 @@ describe('an SRP account signing in on the auth origin', () => {
 		);
 		expect(api.migrationFinalize).toHaveBeenCalledWith({ finalizeToken: 'finalize-token' });
 		expect(keystore.migrationFinalized).toHaveBeenCalledWith({ accountId: ACCOUNT });
-		expect(session.addSession).toHaveBeenNthCalledWith(1, 'srp-token', 3600, ACCOUNT, undefined);
 		expect(api.logout).toHaveBeenCalledWith(ACCOUNT);
 		expect(order(api.logout)).toBeLessThan(order(keystore.opaqueStartAuth, 1));
-		expect(order(session.forgetSession)).toBeLessThan(order(keystore.opaqueStartAuth, 1));
-		expect(session.addSession).toHaveBeenLastCalledWith('opaque-token', 3600, ACCOUNT, undefined);
+		expect(session.addSession).toHaveBeenCalledTimes(1);
+		expect(session.addSession).toHaveBeenCalledWith('opaque-token', 3600, ACCOUNT, undefined);
 		expect(session.setSession).toHaveBeenCalledWith('opaque-token', 3600, ACCOUNT);
 	});
 

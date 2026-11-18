@@ -22,6 +22,7 @@ import {
 } from '$core/api/types';
 import { isRestartableLoginProofError, solveProof } from '$core/auth/proof-of-work';
 import { getAssertion } from '$core/auth/webauthn';
+import { csrfStore } from '$core/api/client';
 import { keystore } from '$core/keystore/keystore-client';
 import { auth } from '$core/stores/session.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
@@ -419,13 +420,13 @@ function unlockFailure(code: string): Error {
 }
 
 async function retireSrpSession(grant: Partial<LoginSessionGrant>, accountId: string): Promise<void> {
-	auth.addSession(grant.accessToken as string, grant.expiresInSeconds as number, accountId, grant.csrfToken);
+	csrfStore.remember(accountId, grant.csrfToken);
 	try {
 		await logout(accountId);
 	} catch (err) {
 		console.warn('login: the SRP session was not retired', err);
 	} finally {
-		auth.forgetSession(accountId);
+		csrfStore.forget(accountId);
 	}
 }
 
