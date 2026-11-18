@@ -1,5 +1,5 @@
 import { CONNECT, HELLO, MAX_JOB_BYTES, validRequest, type ControlEvent, type JobInput, type JobOutcome, type JobTicket } from '$core/search/parser/protocol';
-import type { AssetEntry } from './assets';
+import type { AssetBundle } from './assets';
 import type { PoolResult } from './pool';
 
 const NONCE = /^#n=([A-Za-z0-9_-]{22,64})$/;
@@ -11,8 +11,8 @@ export interface Runner {
 
 export interface FrameDeps {
 	parentOrigin: string;
-	manifest: readonly AssetEntry[];
-	preload(manifest: readonly AssetEntry[]): Promise<Map<string, Uint8Array>>;
+	manifest: AssetBundle;
+	preload(manifest: AssetBundle): Promise<Map<string, Uint8Array>>;
 	runner(assets: Map<string, Uint8Array>): Runner;
 }
 

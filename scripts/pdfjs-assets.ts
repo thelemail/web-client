@@ -9,6 +9,7 @@ const PREFIX = 'pdfjs';
 const EXCLUDED = /^quickjs-eval\./;
 const UNVERIFIED = /^LICENSE/;
 const MANIFEST = 'virtual:parser-assets';
+const BUNDLE_DIR = '_app/immutable/assets';
 
 const TYPES: Record<string, string> = {
 	'.wasm': 'application/wasm',
@@ -18,6 +19,17 @@ const TYPES: Record<string, string> = {
 export interface PdfjsAssetOptions {
 	dirs?: readonly string[];
 	manifest?: boolean;
+}
+
+interface Bundle {
+	fileName: string;
+	bytes: Buffer;
+	manifest: {
+		path: string;
+		size: number;
+		sha256: string;
+		entries: { id: string; offset: number; size: number; sha256: string }[];
+	};
 }
 
 function pdfjsRoot(from: string): string {
@@ -34,9 +46,32 @@ function files(root: string, dirs: readonly string[]): { dir: string; name: stri
 	);
 }
 
+function sha256(bytes: Buffer): string {
+	return createHash('sha256').update(bytes).digest('hex');
+}
+
+function buildBundle(root: string, dirs: readonly string[]): Bundle {
+	const parts: Buffer[] = [];
+	const entries: Bundle['manifest']['entries'] = [];
+	let offset = 0;
+	for (const { dir, name } of files(root, dirs)) {
+		if (UNVERIFIED.test(name)) continue;
+		const bytes = readFileSync(join(root, dir, name));
+		entries.push({ id: `${dir}/${name}`, offset, size: bytes.length, sha256: sha256(bytes) });
+		parts.push(bytes);
+		offset += bytes.length;
+	}
+	const bytes = Buffer.concat(parts);
+	const digest = sha256(bytes);
+	const fileName = `${BUNDLE_DIR}/pdfjs-${digest.slice(0, 16)}.bin`;
+	return { fileName, bytes, manifest: { path: `/${fileName}`, size: bytes.length, sha256: digest, entries } };
+}
+
 export function pdfjsAssets(appRoot: string, options: PdfjsAssetOptions = {}): Plugin {
 	const root = pdfjsRoot(appRoot);
 	const dirs = options.dirs ?? ALL_DIRS;
+	let cached: Bundle | null = null;
+	const bundle = () => (cached ??= buildBundle(root, dirs));
 	return {
 		name: 'thelemail:pdfjs-assets',
 		resolveId(id) {
@@ -45,20 +80,18 @@ export function pdfjsAssets(appRoot: string, options: PdfjsAssetOptions = {}): P
 		},
 		load(id) {
 			if (id !== `\0${MANIFEST}`) return null;
-			const entries = files(root, dirs)
-				.filter(({ name }) => !UNVERIFIED.test(name))
-				.map(({ dir, name }) => {
-					const bytes = readFileSync(join(root, dir, name));
-					return {
-						id: `${dir}/${name}`,
-						path: `/${PREFIX}/${dir}/${name}`,
-						size: bytes.length,
-						sha256: createHash('sha256').update(bytes).digest('hex')
-					};
-				});
-			return `export default ${JSON.stringify(entries)};`;
+			return `export default ${JSON.stringify(bundle().manifest)};`;
 		},
 		configureServer(server) {
+			if (options.manifest) {
+				server.middlewares.use((req, res, next) => {
+					const { manifest, bytes } = bundle();
+					if ((req.url ?? '').split('?')[0] !== manifest.path) return next();
+					res.setHeader('Content-Type', 'application/octet-stream');
+					res.end(bytes);
+				});
+				return;
+			}
 			server.middlewares.use(`/${PREFIX}/`, (req, res, next) => {
 				const rel = normalize(decodeURIComponent((req.url ?? '').split('?')[0])).replace(/^[/\\]+/, '');
 				const [dir] = rel.split(sep);
@@ -76,7 +109,12 @@ export function pdfjsAssets(appRoot: string, options: PdfjsAssetOptions = {}): P
 		},
 		generateBundle() {
 			if (this.environment.config.consumer !== 'client') return;
+			if (options.manifest) {
+				const { fileName, bytes } = bundle();
+				this.emitFile({ type: 'asset', fileName, source: bytes });
+			}
 			for (const { dir, name } of files(root, dirs)) {
+				if (options.manifest && !UNVERIFIED.test(name)) continue;
 				this.emitFile({
 					type: 'asset',
 					fileName: `${PREFIX}/${dir}/${name}`,

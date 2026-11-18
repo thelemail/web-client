@@ -97,14 +97,25 @@ export function odfFiles(kind: 'text' | 'spreadsheet' | 'presentation', body: st
 	};
 }
 
-export function pdf(pages: string[], catalog = ''): Uint8Array {
+const HELVETICA = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
+const MINCHO =
+	'<< /Type /Font /Subtype /Type0 /BaseFont /HeiseiMin-W3 /Encoding /UniJIS-UCS2-H /DescendantFonts [<< /Type /Font /Subtype /CIDFontType0 /BaseFont /HeiseiMin-W3 /CIDSystemInfo << /Registry (Adobe) /Ordering (Japan1) /Supplement 2 >> /FontDescriptor << /Type /FontDescriptor /FontName /HeiseiMin-W3 /Flags 6 /FontBBox [0 -141 1000 859] /ItalicAngle 0 /Ascent 859 /Descent -141 /CapHeight 709 /StemV 69 >> >>] >>';
+
+const literal = (text: string) => `(${text})`;
+const ucs2 = (text: string) => `<${Array.from(text, (c) => c.charCodeAt(0).toString(16).padStart(4, '0')).join('')}>`;
+
+export function cjkPdf(pages: string[]): Uint8Array {
+	return pdf(pages, '', MINCHO, ucs2);
+}
+
+export function pdf(pages: string[], catalog = '', font = HELVETICA, show = literal): Uint8Array {
 	const objects: string[] = [];
 	const kids = pages.map((_, i) => `${4 + i * 2} 0 R`).join(' ');
 	objects.push(`<< /Type /Catalog /Pages 2 0 R ${catalog}>>`);
 	objects.push(`<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
-	objects.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+	objects.push(font);
 	pages.forEach((text, i) => {
-		const stream = `BT /F1 12 Tf 72 720 Td (${text}) Tj ET`;
+		const stream = `BT /F1 12 Tf 72 720 Td ${show(text)} Tj ET`;
 		objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${5 + i * 2} 0 R >>`);
 		objects.push(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
 	});
