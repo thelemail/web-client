@@ -244,6 +244,32 @@ describe('mail adopts a handoff from the auth origin', () => {
 		expect(state.vaults.get(ACCOUNT)?.product).toBe('app');
 	});
 
+	it('keeps a session that was not remembered for this tab only', async () => {
+		const tabHalf = b64encode(crypto.getRandomValues(new Uint8Array(32)));
+		const args = { ...(await adoption(null)), tabHalf };
+		expect(await handleAdoptHandoff(args)).toMatchObject({ ok: true, durable: false });
+		expect(await handleCommitHandoff({ accountId: ACCOUNT, requestId: args.requestId })).toEqual({ ok: true });
+		const record = custodyDb.vaults.get(ACCOUNT) as VaultRecord;
+		expect(record.seal).toBe('tab');
+		expect(record.wrappedPrivateKey).toBeDefined();
+
+		state.handleLock({ accountId: ACCOUNT });
+		expect((await state.handleStatus()).accounts.find((a) => a.accountId === ACCOUNT)).toMatchObject({ unlocked: false, hasPersistent: false, hasTabSeal: true });
+		const otherTab = b64encode(crypto.getRandomValues(new Uint8Array(32)));
+		expect(await handleTryRestoreFromPersistent({ accountId: ACCOUNT, serverHalf: otherTab })).toMatchObject({ ok: false });
+		expect(state.vaults.has(ACCOUNT)).toBe(false);
+		expect(await handleTryRestoreFromPersistent({ accountId: ACCOUNT, serverHalf: tabHalf })).toMatchObject({ ok: true });
+		expect(fp(state.vaults.get(ACCOUNT)!.privateKey)).toBe(fp(keys[1]));
+	});
+
+	it('seals with the server half when the session is remembered, even if the tab has one', async () => {
+		const args = { ...(await adoption(b64encode(crypto.getRandomValues(new Uint8Array(32))))), tabHalf: b64encode(new Uint8Array(32)) };
+		expect(await handleAdoptHandoff(args)).toMatchObject({ ok: true, durable: true });
+		expect(await handleCommitHandoff({ accountId: ACCOUNT, requestId: args.requestId })).toEqual({ ok: true });
+		expect((custodyDb.vaults.get(ACCOUNT) as VaultRecord).seal).toBeUndefined();
+		expect((await state.handleStatus()).accounts.find((a) => a.accountId === ACCOUNT)).toMatchObject({ hasPersistent: true });
+	});
+
 	it('falls back to a memory-only vault when the browser cannot store the local key', async () => {
 		handoffDb.unstorable = true;
 		const args = await adoption(b64encode(crypto.getRandomValues(new Uint8Array(32))));

@@ -95,9 +95,12 @@ async function openBundles(args: AdoptHandoffArgs, root: Uint8Array, c: Context,
 }
 
 async function stage(args: AdoptHandoffArgs, vault: ProductVault): Promise<{ record: VaultRecord; wrapKey: CryptoKey } | null> {
-	if (!args.serverHalf) return null;
-	const serverHalf = b64decode(args.serverHalf);
-	const { record, plain } = await sealProductRecord(args.accountId, args.email, vault, serverHalf);
+	const half = args.serverHalf ?? args.tabHalf;
+	if (!half) return null;
+	const serverHalf = b64decode(half);
+	const sealedRecord = await sealProductRecord(args.accountId, args.email, vault, serverHalf);
+	const plain = sealedRecord.plain;
+	const record: VaultRecord = args.serverHalf ? sealedRecord.record : { ...sealedRecord.record, seal: 'tab' };
 	try {
 		try {
 			await putStaged({ requestId: args.requestId, record });
@@ -162,7 +165,7 @@ export async function handleAdoptHandoff(args: AdoptHandoffArgs): Promise<AdoptH
 		const staged = await stage(args, vault);
 		for (const x of held) x.material.fill(0);
 		pending.set(args.requestId, { accountId: args.accountId, state, staged: staged?.record ?? null, wrapKey: staged?.wrapKey ?? null, manifestHash: c.manifestHash.slice() });
-		return { ok: true, envelopeDigest: await sha256(args.envelope), manifestHash: c.manifestHash, durable: staged !== null };
+		return { ok: true, envelopeDigest: await sha256(args.envelope), manifestHash: c.manifestHash, durable: staged !== null && staged.record.seal !== 'tab' };
 	} catch (err) {
 		if (err instanceof ProductKeysError) return { ok: false, code: 'invalid', message: err.message };
 		throw err;

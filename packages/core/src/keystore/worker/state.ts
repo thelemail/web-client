@@ -197,13 +197,16 @@ export function wipe(s: string): void {
 	void s;
 }
 
+function sealed(rec: VaultRecord | undefined): rec is VaultRecord {
+	return !!(rec && (rec.localHalfKey || rec.localHalfHolder === 'page') && rec.wrappedPrivateKey && rec.wrapIv);
+}
+
 export function hasPersistentFor(rec: VaultRecord | undefined): boolean {
-	return !!(
-		rec &&
-		(rec.localHalfKey || rec.localHalfHolder === 'page') &&
-		rec.wrappedPrivateKey &&
-		rec.wrapIv
-	);
+	return sealed(rec) && rec.seal !== 'tab';
+}
+
+export function hasTabSealFor(rec: VaultRecord | undefined): boolean {
+	return sealed(rec) && rec.seal === 'tab';
 }
 
 export async function handleStatus(): Promise<StatusResponse> {
@@ -217,6 +220,7 @@ export async function handleStatus(): Promise<StatusResponse> {
 			email: v.email,
 			unlocked: true,
 			hasPersistent: hasPersistentFor(rec),
+			...(hasTabSealFor(rec) ? { hasTabSeal: true } : {}),
 			authScheme: v.authScheme,
 			...(v.product === 'app' ? { mailOnly: true } : {})
 		});
@@ -229,6 +233,7 @@ export async function handleStatus(): Promise<StatusResponse> {
 			email: rec.email,
 			unlocked: false,
 			hasPersistent: hasPersistentFor(rec),
+			...(hasTabSealFor(rec) ? { hasTabSeal: true } : {}),
 			authScheme: rec.authScheme,
 			...(productAccounts.has(rec.accountId) ? { mailOnly: true } : {})
 		});
