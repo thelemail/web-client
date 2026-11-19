@@ -15,6 +15,7 @@ class AccountsStore {
 	list = $state<AccountSlotRecord[]>([]);
 	#channel: BroadcastChannel | null = null;
 	#loaded = false;
+	#sessions = new Map<string, string>();
 
 	constructor() {
 		if (browser) {
@@ -75,7 +76,9 @@ class AccountsStore {
 	}
 
 	async upsert(record: AccountSlotRecord): Promise<void> {
-		await putAccountSlot(record);
+		const sessionId = this.#sessions.get(record.accountId) ?? record.sessionId ?? this.byId(record.accountId)?.sessionId;
+		this.#sessions.delete(record.accountId);
+		await putAccountSlot(sessionId ? { ...record, sessionId } : record);
 		await this.#reload();
 		this.#broadcast();
 	}
@@ -98,6 +101,19 @@ class AccountsStore {
 		const rec = all.find((r) => r.accountId === accountId);
 		if (!rec || rec.email === email) return;
 		await putAccountSlot({ ...rec, email });
+		await this.#reload();
+		this.#broadcast();
+	}
+
+	async setSessionId(accountId: string, sessionId: string): Promise<void> {
+		const all = await getAllAccountSlots();
+		const rec = all.find((r) => r.accountId === accountId);
+		if (!rec) {
+			this.#sessions.set(accountId, sessionId);
+			return;
+		}
+		if (rec.sessionId === sessionId) return;
+		await putAccountSlot({ ...rec, sessionId });
 		await this.#reload();
 		this.#broadcast();
 	}
