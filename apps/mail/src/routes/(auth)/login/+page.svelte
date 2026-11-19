@@ -45,7 +45,7 @@
 	async function decide(): Promise<void> {
 		const accountId = slot === null ? null : await mailOnlyAccountId({ slot: Number(slot) }).catch(() => null);
 		if (accountId) return open(accountId);
-		if (await signInMovedToAuth()) return open(null);
+		if (await signInMovedToAuth()) return open(slot === null ? null : (accounts.bySlot(Number(slot))?.accountId ?? null));
 		mode = 'password';
 	}
 

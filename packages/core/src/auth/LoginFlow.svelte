@@ -41,10 +41,11 @@
 		return s ? `/register?${s}` : '/register';
 	});
 	const targetSlot = $derived(page.url.searchParams.get('slot'));
+	const hintEmail = $derived(page.url.searchParams.get('hint'));
 	const resumeEmail = $derived.by(() => {
 		const s = targetSlot ? Number(targetSlot) : null;
-		if (s === null || Number.isNaN(s)) return null;
-		return accounts.bySlot(s)?.email ?? null;
+		if (s !== null && !Number.isNaN(s)) return accounts.bySlot(s)?.email ?? null;
+		return !addMode && hintEmail && isLoginIdentifier(hintEmail) ? hintEmail : null;
 	});
 	const initialEmail = $derived(addMode ? '' : (auth.email ?? ''));
 

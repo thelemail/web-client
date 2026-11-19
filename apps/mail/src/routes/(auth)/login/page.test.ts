@@ -453,6 +453,17 @@ describe('login page account origin', () => {
 		expect(login.performLogin).not.toHaveBeenCalled();
 	});
 
+	it('asks the account origin for the same account when a known slot reloads after the switch', async () => {
+		route.page.url = new URL('http://localhost/login?slot=1&redirect=%2Fu%2F1%2Fmail%2Finbox');
+		known.bySlot.mockImplementation((slot: number) => (slot === 1 ? { accountId: 'acc-legacy', email: 'nora@thelemail.com' } : undefined));
+		custody.signInMovedToAuth.mockResolvedValue(true);
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-legacy', '/u/1/mail/inbox'));
+		expect(custody.signInAtAuth).not.toHaveBeenCalled();
+		expect(document.querySelector('#login-email')).toBeNull();
+	});
+
 	it('locks a product-key account after a password sign-in and opens it at the account origin', async () => {
 		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 		known.bySlot.mockImplementation((slot: number) => (slot === 0 ? { accountId: 'acc-converted', email: 'r@thelemail.com' } : undefined));

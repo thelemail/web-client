@@ -3,6 +3,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import { bootstrap } from '$core/producthandoff/api';
 import { safeRoute, startHandoff } from '$core/producthandoff/begin';
 import { accounts } from '$core/stores/accounts.svelte';
+import { auth } from '$core/stores/session.svelte';
 
 function sameAddress(a: string, b: string): boolean {
 	return loginIdentifier(a).toLowerCase() === loginIdentifier(b).toLowerCase();
@@ -24,7 +25,14 @@ export async function mailOnlyAccountId(target: { slot?: number | null; identifi
 export async function unlockAtAuth(accountId: string, redirect: string | null, freshAuth = false): Promise<never> {
 	const status = await keystore.status();
 	const remember = status.accounts.find((a) => a.accountId === accountId)?.hasPersistent ?? false;
-	await startHandoff({ expectedAccountId: accountId, route: safeRoute(redirect), remember, ...(freshAuth ? { freshAuth: true } : {}) });
+	await startHandoff({
+		expectedAccountId: accountId,
+		route: safeRoute(redirect),
+		remember,
+		existingSessionId: auth.sessionIdFor(accountId),
+		hint: accounts.byId(accountId)?.email || null,
+		...(freshAuth ? { freshAuth: true } : {})
+	});
 	return new Promise<never>(() => {});
 }
 

@@ -23,6 +23,8 @@ vi.mock('$core/stores/accounts.svelte', () => ({ accounts: known }));
 const flow = vi.hoisted(() => ({
 	expected: null as string | null,
 	takeAuthorizeFragment: vi.fn(() => '#request=x'),
+	hint: null as string | null,
+	authorizeHint: vi.fn(() => flow.hint),
 	locateRequest: vi.fn(async () => ({ descriptor: { expectedAccountId: flow.expected } })),
 	grantRequest: vi.fn(async () => 'http://app.test/auth/callback#code'),
 	clearPendingAuthorize: vi.fn()
@@ -38,6 +40,7 @@ const replace = vi.fn();
 beforeEach(() => {
 	sessionStorage.clear();
 	flow.expected = null;
+	flow.hint = null;
 	session.auth.accountId = 'acct-active';
 	for (const fn of [nav.goto, flow.grantRequest, flow.clearPendingAuthorize, session.auth.activate, replace]) fn.mockClear();
 	Object.defineProperty(window, 'location', { configurable: true, value: { ...window.location, replace } });
@@ -49,6 +52,14 @@ describe('authorize without a named account', () => {
 	it('asks the person to sign in before granting anything', async () => {
 		render(Page);
 		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/login'));
+		expect(flow.grantRequest).not.toHaveBeenCalled();
+	});
+
+	it('fills in the address the product asked for', async () => {
+		flow.expected = 'acct-unknown';
+		flow.hint = 'nora@thelemail.test';
+		render(Page);
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/login?hint=nora%40thelemail.test'));
 		expect(flow.grantRequest).not.toHaveBeenCalled();
 	});
 
