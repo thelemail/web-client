@@ -196,7 +196,7 @@ describe('login page two-factor step', () => {
 	});
 
 	it('leaves a completed login alone on the way out', async () => {
-		login.submitTwoFactorTotp.mockResolvedValue({ slot: 0 });
+		login.submitTwoFactorTotp.mockResolvedValue({ status: 'complete', result: { accountId: 'acct', slot: 0 } });
 		const { unmount } = render(LoginPage);
 		await reachTwoFactor();
 

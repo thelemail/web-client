@@ -36,7 +36,13 @@ import type {
 	ReadProductKeysArgs,
 	ReformatKeyWithUidsArgs,
 	SealProductHandoffArgs,
-	TryRestoreFromPersistentArgs
+	TryRestoreFromPersistentArgs,
+	CompleteLoginUnlockArgs,
+	MigrationFinalizedArgs,
+	MigrationFinishStageArgs,
+	MigrationStartRegistrationArgs,
+	PrepareLoginArgs,
+	VerifyLoginProofArgs
 } from './protocol';
 import { commandVaultModes } from './protocol';
 import {
@@ -68,6 +74,15 @@ import {
 	handleOpaqueStartAuth,
 	handleOpaqueStartRegistration
 } from './worker/opaque-account';
+import {
+	handleAbandonLogin,
+	handleCompleteLoginUnlock,
+	handleMigrationFinalized,
+	handleMigrationFinishStage,
+	handleMigrationStartRegistration,
+	handlePrepareLogin,
+	handleVerifyLoginProof
+} from './worker/srp-login';
 import {
 	handleDisablePersistent,
 	handleEnrollPersistent,
@@ -148,6 +163,36 @@ async function dispatch(port: MessagePort, msg: RequestMessage) {
 					msg.id,
 					await handleOpaqueFinalizeRegister(msg.args as OpaqueFinalizeRegisterArgs)
 				);
+				break;
+			case 'prepareLogin':
+				respond(port, msg.id, await handlePrepareLogin(msg.args as PrepareLoginArgs));
+				break;
+			case 'verifyLoginProof':
+				respond(port, msg.id, handleVerifyLoginProof(msg.args as VerifyLoginProofArgs));
+				break;
+			case 'completeLoginUnlock':
+				respond(port, msg.id, await handleCompleteLoginUnlock(msg.args as CompleteLoginUnlockArgs));
+				break;
+			case 'abandonLogin':
+				handleAbandonLogin();
+				respond(port, msg.id, undefined);
+				break;
+			case 'migrationStartRegistration':
+				respond(
+					port,
+					msg.id,
+					await handleMigrationStartRegistration(msg.args as MigrationStartRegistrationArgs)
+				);
+				break;
+			case 'migrationFinishStage':
+				respond(
+					port,
+					msg.id,
+					await handleMigrationFinishStage(msg.args as MigrationFinishStageArgs)
+				);
+				break;
+			case 'migrationFinalized':
+				respond(port, msg.id, await handleMigrationFinalized(msg.args as MigrationFinalizedArgs));
 				break;
 			case 'opaqueStartAuth':
 				respond(port, msg.id, await handleOpaqueStartAuth(msg.args as OpaqueStartAuthArgs));

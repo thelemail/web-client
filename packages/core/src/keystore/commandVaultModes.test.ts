@@ -50,7 +50,7 @@ describe('commandVaultModes', () => {
 		}
 	});
 
-	it('keeps mail content, alias keys, legacy SRP and forks out of the auth vault', () => {
+	it('keeps mail content, alias keys, SRP recovery and forks out of the auth vault', () => {
 		const auth = Object.entries(commandVaultModes)
 			.filter(([, modes]) => modes.includes('auth'))
 			.map(([cmd]) => cmd);
@@ -65,9 +65,10 @@ describe('commandVaultModes', () => {
 			'openIndex',
 			'sealProductFork',
 			'openProductFork',
-			'prepareLogin',
-			'completeLoginUnlock',
-			'migrationStartRegistration',
+			'prepareRecoveryLogin',
+			'completeRecoveryUnlock',
+			'prepareCredentialReset',
+			'preparePasswordChangeProof',
 			'createAliasKey',
 			'createSigningDelegationKey',
 			'loadAliasKeys',
@@ -77,6 +78,20 @@ describe('commandVaultModes', () => {
 		}
 		expect(auth).toContain('opaqueCompleteLoginUnlock');
 		expect(auth).toContain('touch');
+	});
+
+	it('lets the auth vault sign an SRP account in and upgrade it to OPAQUE', () => {
+		for (const cmd of [
+			'prepareLogin',
+			'verifyLoginProof',
+			'completeLoginUnlock',
+			'abandonLogin',
+			'migrationStartRegistration',
+			'migrationFinishStage',
+			'migrationFinalized'
+		] as const) {
+			expect(commandVaultModes[cmd]).toEqual(['account', 'auth']);
+		}
 	});
 
 	it('re-signs the mail key with its addresses in the account or auth vault only', () => {

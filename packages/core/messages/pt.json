@@ -4041,6 +4041,7 @@
 	"auth_login_page_title": "Thelemail · Iniciar sessão",
 	"auth_account_page_title": "Thelemail · Segurança da conta",
 	"auth_login_2fa_lede": "Palavra-passe aceite. <addr>{email}</addr> também requer um segundo fator.",
+	"auth_login_2fa_again_lede": "O início de sessão de <addr>{email}</addr> acabou de ser atualizado. Introduza mais um código para concluir.",
 	"auth_login_add_eyebrow": "Adicionar outra conta",
 	"auth_login_add_title": "Iniciar sessão numa segunda conta",
 	"auth_login_add_lede": "Pode ter sessão iniciada em várias contas Thelemail ao mesmo tempo neste dispositivo.",
