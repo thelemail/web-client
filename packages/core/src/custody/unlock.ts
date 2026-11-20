@@ -36,12 +36,19 @@ export async function unlockAtAuth(accountId: string, redirect: string | null, f
 	return new Promise<never>(() => {});
 }
 
+let movedToAuth: boolean | null = null;
+
 export async function signInMovedToAuth(): Promise<boolean> {
 	try {
-		return (await bootstrap()).signInAtAuth === true;
+		movedToAuth = (await bootstrap()).signInAtAuth === true;
+		return movedToAuth;
 	} catch {
 		return false;
 	}
+}
+
+export function signInMovedToAuthKnown(): boolean {
+	return movedToAuth === true;
 }
 
 export async function signInAtAuth(redirect: string | null): Promise<never> {

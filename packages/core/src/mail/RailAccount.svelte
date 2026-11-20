@@ -23,6 +23,8 @@
 	import Avatar from '$core/components/Avatar.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { signInMovedToAuth, signInMovedToAuthKnown } from '$core/custody/unlock';
+	import { openAuthTab } from '$core/producthandoff/tab';
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { accountReadiness } from '$core/stores/accountReadiness.svelte';
@@ -154,6 +156,7 @@
 
 	async function openMenu(focus: 'first' | 'last' | 'menu') {
 		open = true;
+		void signInMovedToAuth();
 		if (auth.accountId) twofactor.ensure(auth.accountId);
 		if (accounts.list.some((r) => auth.fullNameFor(r.accountId) === null)) {
 			void auth.loadSignedInProfiles();
@@ -234,11 +237,15 @@
 			void accountReadiness.probe([r.id], true);
 			return;
 		}
+		const locked = r.state === 'locked' || r.state === 'expired';
+		const inbox = `/u/${r.slot}/mail/inbox`;
+		if (locked && !leavePending() && auth.vaultUnlocked && (auth.mailOnlyFor(r.id) || signInMovedToAuthKnown())) {
+			openAuthTab(r.id, inbox);
+		}
 		closeMenu(false);
 		if (!(await releaseWork())) return;
-		if (r.state === 'locked' || r.state === 'expired') {
-			const back = encodeURIComponent(`/u/${r.slot}/mail/inbox`);
-			await goto(`/login?slot=${r.slot}&redirect=${back}`);
+		if (locked) {
+			await goto(`/login?slot=${r.slot}&redirect=${encodeURIComponent(inbox)}`);
 			return;
 		}
 		const target = accounts.byId(r.id);
