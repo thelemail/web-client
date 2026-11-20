@@ -2,10 +2,13 @@
 	import { goto } from '$app/navigation';
 	import { onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
-	import PasswordField from '$core/auth/PasswordField.svelte';
-	import PasswordRequirements from '$core/auth/PasswordRequirements.svelte';
 	import { passwordReqs } from '$core/auth/password-policy';
-	import Stepper from '$core/auth/Stepper.svelte';
+	import Blank from '$core/auth/sentence/Blank.svelte';
+	import Clause from '$core/auth/sentence/Clause.svelte';
+	import Done from '$core/auth/sentence/Done.svelte';
+	import Trail from '$core/auth/sentence/Trail.svelte';
+	import PasswordChecks from '$core/auth/sentence/PasswordChecks.svelte';
+	import WorkSteps from '$core/auth/sentence/WorkSteps.svelte';
 	import PlanStep from '$core/auth/PlanStep.svelte';
 	import PaymentStep from '$core/auth/PaymentStep.svelte';
 	import {
@@ -19,14 +22,9 @@
 	import { performLogin } from '$core/auth/perform-login';
 	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import type { PlanCode } from '$core/api/billing';
-	import Wordmark from '$core/components/Wordmark.svelte';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Check from '@lucide/svelte/icons/check';
-	import Mail from '@lucide/svelte/icons/mail';
 	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
 	import { endSignupSession, signupSession } from '$core/auth/signup-session';
 	import { ApiCallError } from '$core/api/types';
@@ -61,7 +59,13 @@
 
 	const HANDLE_RE = /^[a-z0-9]([a-z0-9._-]{1,28})[a-z0-9]$/;
 
-	let step = $state<0 | 1 | 2 | 3 | 4>(0);
+	let step = $state<0 | 2 | 3 | 4>(0);
+	const PARTS = ['address', 'name', 'password', 'confirm'] as const;
+	type Part = (typeof PARTS)[number];
+	let part = $state<Part>('address');
+	const partIndex = $derived(PARTS.indexOf(part));
+	let terms = $state(false);
+	let stage = $state(0);
 	let paid = $state(preselected !== null);
 	let fullName = $state('');
 	let handle = $state('');
@@ -85,12 +89,12 @@
 		confirm = '';
 	});
 
-	let status = $state<'idle' | 'invalid' | 'checking' | 'taken' | 'available'>('idle');
+	let status = $state<'idle' | 'invalid' | 'checking' | 'taken' | 'available' | 'unknown'>('idle');
 
 	const proof = createProofOfWork();
 
 	$effect(() => {
-		if (step === 1) untrack(() => proof.prepare(address));
+		if (step === 0 && partIndex >= 2) untrack(() => proof.prepare(address));
 	});
 
 	$effect(() => () => proof.dispose());
@@ -112,7 +116,7 @@
 				const { available } = await checkAddressAvailability(h, signupSession());
 				if (!cancelled) status = available ? 'available' : 'taken';
 			} catch {
-				if (!cancelled) status = 'available';
+				if (!cancelled) status = 'unknown';
 			}
 		}, 400);
 		return () => {
@@ -131,6 +135,24 @@
 				]
 			: [m.auth_step_address(), m.auth_step_password()]
 	);
+	const trail = $derived(
+		paid
+			? [
+					m.auth_step_address(),
+					m.auth_step_account_name(),
+					m.auth_step_password(),
+					m.auth_step_confirm(),
+					m.auth_step_plan(),
+					m.auth_step_payment()
+				]
+			: [
+					m.auth_step_address(),
+					m.auth_step_account_name(),
+					m.auth_step_password(),
+					m.auth_step_confirm(),
+					m.auth_step_recovery()
+				]
+	);
 	const totalSteps = $derived(labels.length);
 	const product = $derived(findPlan(sel).product);
 	const audience = $derived(paid ? product.id : 'personal');
@@ -143,16 +165,22 @@
 
 	const nameReady = $derived(fullName.trim().length > 0 && fullName.trim().length <= 120);
 	const domainReady = $derived(platformDomains.loaded && mailDomain.length > 0);
-	const addressReady = $derived(status === 'available' && nameReady && domainReady);
+	const handleReady = $derived((status === 'available' || status === 'unknown') && domainReady);
+	const addressReady = $derived(handleReady && nameReady);
 
 	const allMet = $derived(passwordReqs(pw).every((r) => r.met));
 	const matches = $derived(confirm.length > 0 && confirm === pw);
 	const mismatch = $derived(confirm.length > 0 && confirm !== pw);
 	const passwordReady = $derived(allMet && matches);
+	const canCreate = $derived(addressReady && passwordReady && (paid || terms));
+	const workLines = $derived([m.auth_s_work_keys(), m.auth_s_work_account(), m.auth_s_work_open()]);
 
-	const initials = $derived(
-		(handle.replace(/[^a-z0-9]/gi, '').slice(0, 2) || 'th').toUpperCase()
-	);
+	function advance() {
+		if (part === 'address' && handleReady) part = 'name';
+		else if (part === 'name' && nameReady) part = 'password';
+		else if (part === 'password' && allMet) part = 'confirm';
+		else if (part === 'confirm') continueFromPassword();
+	}
 
 	const planLabel = $derived.by(() => {
 		if (!paid) return null;
@@ -186,11 +214,12 @@
 	function chooseFree() {
 		paid = false;
 		sel = { product: 'personal', tier: null, seats: 3, period: sel.period };
-		step = 1;
+		step = 0;
+		part = 'confirm';
 	}
 
 	function continueFromPassword() {
-		if (!passwordReady) return;
+		if (!canCreate) return;
 		if (!paid) {
 			void createFree();
 			return;
@@ -202,6 +231,7 @@
 		const email = address;
 		const password = pw;
 		const plan = paid ? planCodeFor(sel) : null;
+		stage = 0;
 		try {
 			const start = await keystore.opaqueStartRegistration({ email, password });
 			const init = await withProofOfWork(proof, email, (payload) =>
@@ -215,6 +245,7 @@
 			if (!finish.ok) {
 				throw new Error(m.auth_register_keys_failed());
 			}
+			stage = 1;
 			await register(
 				{
 					email,
@@ -238,6 +269,7 @@
 			submitting = false;
 			return null;
 		}
+		stage = 2;
 		try {
 			const outcome = await performLogin({ email, password });
 			if (outcome.status !== 'complete') {
@@ -255,7 +287,7 @@
 	}
 
 	async function createFree() {
-		if (submitting || !passwordReady) return;
+		if (submitting || !canCreate) return;
 		submitting = true;
 		submitError = null;
 		const slot = await registerAndLogin();
@@ -303,219 +335,188 @@
 <svelte:head>
 	<title>{m.auth_register_page_title()}</title>
 </svelte:head>
-
 {#snippet freeButton(t: string)}
 	<button type="button" class="linklike" disabled={submitting} onclick={chooseFree}>{t}</button>
 {/snippet}
-{#snippet strong(t: string)}<strong>{t}</strong>{/snippet}
-{#snippet bold(t: string)}<b>{t}</b>{/snippet}
-{#snippet domain(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
-{#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
-
+{#snippet domain(t: string)}<span class="mono">{t}</span>{/snippet}
+{#snippet signInLink(t: string)}<a href={signInHref}>{t}</a>{/snippet}
+{#snippet terms_(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
+{#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet freeFoot()}
 	<p class="switch">
 		<Rich text={m.auth_register_free_foot()} tags={{ free: freeButton }} />
 	</p>
 {/snippet}
+{#snippet domainPick()}
+	<span aria-hidden="true">@</span>{#if platformDomains.list.length > 1}<select
+			aria-label={m.auth_register_domain_label()}
+			value={mailDomain}
+			onchange={(e) => (pickedDomain = e.currentTarget.value)}
+		>
+			{#each platformDomains.list as d (d)}
+				<option value={d}>{d}</option>
+			{/each}
+		</select><ChevronDown size={14} strokeWidth={1.75} />{:else}{domainReady ? mailDomain : ''}{/if}
+{/snippet}
+{#snippet addressBlank(_: string)}<Blank
+		id="register-handle"
+		bind:value={handle}
+		label={m.common_email_address()}
+		placeholder={m.auth_s_handle_placeholder()}
+		mono
+		maxlength={30}
+		invalid={status === 'invalid' || status === 'taken'}
+		describedby="register-handle-msg"
+		focus
+		normalize={(raw) => raw.toLowerCase().replace(/\s+/g, '')}
+		onenter={advance}
+		suffix={domainPick}
+	/>{/snippet}
+{#snippet addressDone(_: string)}<Done text={address} mono disabled={submitting} onedit={() => (part = 'address')} />{/snippet}
+{#snippet nameBlank(_: string)}<Blank
+		id="register-name"
+		bind:value={fullName}
+		label={m.auth_s_name_label()}
+		placeholder={m.auth_s_name_placeholder()}
+		autocomplete="nickname"
+		maxlength={120}
+		focus
+		onenter={advance}
+	/>{/snippet}
+{#snippet nameDone(_: string)}<Done text={fullName.trim()} disabled={submitting} onedit={() => (part = 'name')} />{/snippet}
+{#snippet passwordBlank(_: string)}<Blank
+		id="register-password"
+		bind:value={pw}
+		label={m.common_password()}
+		placeholder={m.auth_s_new_password_placeholder()}
+		mono
+		secret
+		autocomplete="new-password"
+		focus
+		onenter={advance}
+	/>{/snippet}
+{#snippet passwordDone(_: string)}<Done text="" secret disabled={submitting} onedit={() => (part = 'password')} />{/snippet}
+{#snippet confirmBlank(_: string)}<Blank
+		id="register-confirm"
+		bind:value={confirm}
+		label={m.auth_register_confirm_label()}
+		placeholder={m.auth_s_confirm_placeholder()}
+		mono
+		secret
+		autocomplete="new-password"
+		invalid={mismatch && !pw.startsWith(confirm)}
+		describedby="register-confirm-msg"
+		disabled={submitting}
+		focus
+		onenter={advance}
+	/>{/snippet}
+{#snippet addressFixed(_: string)}<Done text={address} mono />{/snippet}
 
 {#if step === 0}
-	<div class="card-surface screen-fade">
-		<Stepper step={0} {labels} />
-		<div class="card-head">
-			{#if addMode && auth.email}
-				<p class="eyebrow">{m.auth_login_add_eyebrow()}</p>
-				<h1>{m.auth_register_add_title()}</h1>
-				<p>
-					<Rich text={m.auth_register_add_lede({ email: auth.email })} tags={{ b: strong }} />
-				</p>
-			{:else}
-				<p class="eyebrow">{m.auth_step_of({ step: 1, total: totalSteps })}</p>
-				<h1>{heading}</h1>
-			{/if}
-			{#if audience === 'family'}
-				<p><Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} /></p>
-			{:else if audience === 'business'}
-				<p><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></p>
-			{:else}
-				<p><Rich text={m.auth_register_lede_personal({ domain: mailDomain })} tags={{ domain }} /></p>
-			{/if}
-		</div>
-		<div class="form">
-			<div class="field">
-				<div class="lab"><label for="register-name">{m.auth_register_name_label()}</label></div>
-				<input
-					id="register-name"
-					class="inp"
-					type="text"
-					bind:value={fullName}
-					placeholder={m.auth_register_name_placeholder()}
-					autocomplete="name"
-					maxlength={120}
-					spellcheck="true"
-				/>
-				<span class="hint">{m.auth_register_name_hint()}</span>
+	<div class="sp">
+		<Trail items={trail} current={submitting || leaving ? 3 : partIndex} />
+		{#if submitting || leaving}
+			<p class="sent sm"><Clause text={m.auth_s_register_working()} slots={{ address: addressFixed }} /></p>
+			<div class="sp-under">
+				<WorkSteps lines={workLines} at={leaving ? 2 : stage} />
+				<p class="sp-fine">{m.auth_s_work_note()}</p>
 			</div>
-			<div class="field">
-				<div class="lab"><label for="register-handle">{m.common_email_address()}</label></div>
-				<div
-					class="affix"
-					class:ok={status === 'available'}
-					class:err={status === 'invalid' || status === 'taken'}
-				>
-					<input
-						id="register-handle"
-						aria-invalid={status === 'invalid' || status === 'taken' || undefined}
-						aria-describedby="register-handle-msg"
-						bind:value={handle}
-						oninput={(e) =>
-							(handle = e.currentTarget.value.toLowerCase().replace(/\s+/g, ''))}
-						placeholder={m.auth_register_handle_placeholder()}
-						maxlength={30}
-						autocomplete="off"
-						spellcheck="false"
-						onkeydown={(e) => {
-							if (e.key === 'Enter' && addressReady) step = 1;
-						}}
-					/>
-					{#if platformDomains.list.length > 1}
-						<span class="suf pick">
-							<span aria-hidden="true">@</span>
-							<select
-								aria-label={m.auth_register_domain_label()}
-								value={mailDomain}
-								onchange={(e) => (pickedDomain = e.currentTarget.value)}
-							>
-								{#each platformDomains.list as d (d)}
-									<option value={d}>{d}</option>
-								{/each}
-							</select>
-							<ChevronDown size={14} strokeWidth={1.75} />
-						</span>
-					{:else}
-						<span class="suf">@{domainReady ? mailDomain : ''}</span>
-					{/if}
-					<span class="statusic">
-						{#if status === 'available'}
-							<span class="ok-c"><CircleCheck size={17} strokeWidth={1.75} /></span>
-						{:else if status === 'invalid' || status === 'taken'}
-							<span class="bad-c"><CircleAlert size={17} strokeWidth={1.75} /></span>
-						{/if}
-					</span>
-				</div>
-				{#if status === 'idle'}
-					<span class="hint" id="register-handle-msg">{m.auth_register_handle_hint()}</span>
-				{:else if status === 'invalid'}
-					<span class="errtext" role="alert" id="register-handle-msg">
-						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>{m.auth_register_handle_invalid()}</span>
-					</span>
-				{:else if status === 'checking'}
-					<span class="hint" id="register-handle-msg">{m.auth_register_handle_checking()}</span>
-				{:else if status === 'taken'}
-					<span class="errtext" role="alert" id="register-handle-msg">
-						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>{m.auth_register_handle_taken()}</span>
-					</span>
-				{:else if status === 'available'}
-					<span class="hint" id="register-handle-msg">
-						<Rich
-							text={m.auth_register_handle_available({ address })}
-							tags={{ b: bold }}
-						/>
-					</span>
-				{/if}
-			</div>
-			<div class="actions">
-				<Button variant="primary" size="lg" block disabled={!addressReady} onclick={() => (step = 1)}>
-					{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
-				</Button>
-			</div>
-		</div>
-		<p class="switch">
-			<Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} />
-		</p>
-	</div>
-{:else if step === 1}
-	<div class="card-surface screen-fade">
-		<Stepper step={1} {labels} />
-		<div class="card-head">
-			<p class="eyebrow">{m.auth_step_of({ step: 2, total: totalSteps })}</p>
-			<h1>{m.auth_register_password_title()}</h1>
-			<p>
-				<Rich
-					text={m.auth_register_password_securing({ address })}
-					tags={{ addr: domain }}
-				/>
-			</p>
-		</div>
-		<div class="form">
-			<PasswordField
-				label={m.common_password()}
-				bind:value={pw}
-				placeholder={m.auth_register_password_placeholder()}
-				autocomplete="new-password"
-				disabled={submitting}
-			/>
-			<PasswordRequirements {pw} />
-			<PasswordField
-				label={m.auth_register_confirm_label()}
-				bind:value={confirm}
-				placeholder={m.auth_register_confirm_placeholder()}
-				autocomplete="new-password"
-				disabled={submitting}
-				invalid={mismatch}
-				describedby={mismatch ? 'register-confirm-msg' : undefined}
-				onEnter={continueFromPassword}
-			/>
-			{#if mismatch}
-				<span class="errtext" role="alert" id="register-confirm-msg" style="margin-top:-8px">
-					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>{m.auth_register_passwords_mismatch()}</span>
-				</span>
-			{:else if matches}
-				<span class="oktext" style="margin-top:-8px">
-					<CircleCheck size={13} strokeWidth={1.75} />
-					<span>{m.auth_register_passwords_match()}</span>
-				</span>
-			{/if}
-			{#if submitError}
-				<span class="errtext" role="alert" style="margin-top:-4px">
-					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>{submitError}</span>
-				</span>
-			{/if}
-			<div class="actions">
-				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
-						<ArrowLeft size={17} strokeWidth={1.75} />
-					</Button>
-					<Button variant="primary" size="lg" disabled={!passwordReady || submitting} onclick={continueFromPassword}>
-						{#if leaving}
-							{m.auth_register_opening()}
-						{:else if submitting}
-							{m.auth_register_creating()}
-						{:else if paid}
-							{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
-						{:else}
-							{m.auth_register_create_mailbox()}<ArrowRight size={17} strokeWidth={1.75} />
-						{/if}
-					</Button>
-				</div>
-				{#if paid}
-					<Button variant="ghost" size="lg" block disabled={submitting} onclick={chooseFree}>
-						{m.auth_register_free_instead()}
-					</Button>
-				{:else}
-					<Button variant="ghost" size="lg" block disabled={!passwordReady || submitting} onclick={choosePaid}>
-						{m.auth_register_paid_instead()}
-					</Button>
-				{/if}
-			</div>
-		</div>
-		{#if paid}
-			<p class="legal">{m.auth_register_legal_paid()}</p>
 		{:else}
-			<p class="legal">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
+			<p class="sent">
+				<Clause
+					text={m.auth_s_register_address()}
+					past={partIndex > 0}
+					slots={{ address: part === 'address' ? addressBlank : addressDone }}
+				/>
+				{#if partIndex >= 1}
+					{' '}<Clause
+						text={m.auth_s_register_name()}
+						past={partIndex > 1}
+						slots={{ name: part === 'name' ? nameBlank : nameDone }}
+					/>
+				{/if}
+				{#if part === 'password'}
+					{' '}<Clause text={m.auth_s_register_password()} slots={{ password: passwordBlank }} />
+				{:else if part === 'confirm'}
+					{' '}<Clause
+						text={m.auth_s_register_password_again()}
+						slots={{ password: passwordDone, confirm: confirmBlank }}
+					/>
+				{/if}
+			</p>
+			<div class="sp-under">
+				{#if part === 'address'}
+					{#if addMode && auth.email}
+						<p class="sp-msg">{m.auth_s_add_note()}</p>
+					{/if}
+					{#if audience === 'family'}
+						<p class="sp-msg"><span><Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} /></span></p>
+					{:else if audience === 'business'}
+						<p class="sp-msg"><span><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></span></p>
+					{/if}
+					{#if status === 'invalid'}
+						<p class="sp-msg bad" role="alert" id="register-handle-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_s_handle_invalid()}</span></p>
+					{:else if status === 'taken'}
+						<p class="sp-msg bad" role="alert" id="register-handle-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_s_handle_taken({ address })}</span></p>
+					{:else if status === 'checking'}
+						<p class="sp-msg" id="register-handle-msg" role="status">{m.auth_register_handle_checking()}</p>
+					{:else if status === 'available'}
+						<p class="sp-msg ok" id="register-handle-msg" role="status"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_s_handle_free({ address })}</span></p>
+					{:else if status === 'unknown'}
+						<p class="sp-msg" id="register-handle-msg" role="status"><span><Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} /></span></p>
+					{:else}
+						<p class="sp-msg" id="register-handle-msg">{m.auth_s_handle_hint()}</p>
+					{/if}
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" disabled={!handleReady} onclick={advance}>{m.auth_sentence_next()}</Button>
+					</div>
+				{:else if part === 'name'}
+					<p class="sp-msg">{m.auth_s_name_hint()}</p>
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" disabled={!nameReady} onclick={advance}>{m.auth_sentence_next()}</Button>
+					</div>
+				{:else if part === 'password'}
+					<PasswordChecks {pw} />
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" disabled={!allMet} onclick={advance}>{m.auth_sentence_next()}</Button>
+					</div>
+				{:else}
+					{#if mismatch && !pw.startsWith(confirm)}
+						<p class="sp-msg bad" role="alert" id="register-confirm-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_mismatch()}</span></p>
+					{:else if matches}
+						<p class="sp-msg ok" id="register-confirm-msg"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_match()}</span></p>
+					{:else}
+						<p class="sp-msg" id="register-confirm-msg">{m.auth_s_confirm_hint()}</p>
+					{/if}
+					{#if !paid}
+						<label class="sp-tick">
+							<input type="checkbox" bind:checked={terms} />
+							<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
+						</label>
+					{/if}
+					{#if submitError}
+						<p class="sp-err" role="alert"><CircleAlert size={15} strokeWidth={1.75} /><span>{submitError}</span></p>
+					{/if}
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" disabled={!canCreate} onclick={continueFromPassword}>
+							{paid ? m.common_continue() : m.auth_s_create_account()}
+						</Button>
+						{#if !paid}
+							<span class="sp-fine">{m.auth_s_free_plan_line()}</span>
+						{/if}
+					</div>
+					{#if paid}
+						<button type="button" class="sp-quiet" onclick={chooseFree}>{m.auth_register_free_instead()}</button>
+						<p class="sp-fine">{m.auth_register_legal_paid()}</p>
+					{:else}
+						<button type="button" class="sp-quiet" disabled={!passwordReady} onclick={choosePaid}>{m.auth_register_paid_instead()}</button>
+						<p class="sp-fine">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
+					{/if}
+				{/if}
+			</div>
+			<div class="sp-foot">
+				<span><Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} /></span>
+			</div>
 		{/if}
 	</div>
 {:else if step === 2}
@@ -523,7 +524,10 @@
 		bind:sel
 		{labels}
 		busy={submitting}
-		onBack={() => (step = 1)}
+		onBack={() => {
+			step = 0;
+			part = 'confirm';
+		}}
 		onNext={() => (step = 3)}
 		footer={freeFoot}
 	/>
@@ -539,31 +543,17 @@
 		onPay={submitRegistration}
 	/>
 {:else}
-	<div class="card-surface screen-fade">
-		<div class="welcome">
-			<Wordmark class="brandmark brandmark-lg" size="large" />
-			<h1>{m.auth_register_submitted_title()}</h1>
-			<p>
-				<Rich
-					text={m.auth_register_submitted_body({ address })}
-					tags={{ b: bold }}
-				/>
-			</p>
-			<div class="addrcard">
-				<span class="av">{initials}</span>
-				<span class="em">{address}</span>
-				<span class="vbadge"><Check size={13} strokeWidth={2.5} /></span>
-			</div>
+	<div class="sp">
+		<p class="sent sm"><Clause text={m.auth_s_submitted()} slots={{ address: addressFixed }} /></p>
+		<div class="sp-under">
 			{#if planLabel}
-				<p class="planline">
+				<p class="sp-msg ok">
 					<CircleCheck size={14} strokeWidth={1.75} />
-					<span><Rich text={m.auth_register_plan_pending({ plan: planLabel })} tags={{ b: bold }} /></span>
+					<span><Rich text={m.auth_register_plan_pending({ plan: planLabel })} tags={{ b: domain }} /></span>
 				</p>
 			{/if}
-			<div class="actions" style="margin-top:24px">
-				<Button variant="primary" size="lg" block onclick={() => goto(signInHref)}>
-					<Mail size={17} strokeWidth={1.75} />{m.auth_sign_in()}
-				</Button>
+			<div class="sp-acts">
+				<Button variant="primary" size="lg" onclick={() => goto(signInHref)}>{m.auth_sign_in()}</Button>
 			</div>
 		</div>
 	</div>
