@@ -63,8 +63,10 @@
 			const done = await completeHandoff(fragment);
 			if (inAuthTab()) {
 				leaveAuthTab();
-				if (await handBack({ accountId: done.accountId, path: localForkPath(done.route, done.slot) })) {
-					address = accounts.byId(done.accountId)?.email || auth.emailFor(done.accountId) || '';
+				await auth.loadProfile(done.accountId).catch(() => undefined);
+				address = accounts.byId(done.accountId)?.email || auth.emailFor(done.accountId) || '';
+				const path = localForkPath(done.route, done.slot);
+				if (await handBack({ accountId: done.accountId, path, ...(address ? { email: address } : {}) })) {
 					countDown();
 					return;
 				}
@@ -81,7 +83,7 @@
 {#snippet account(_: string)}<span class="acct">{address}</span>{/snippet}
 {#snippet count(_: string)}<span class="tabnum">{left}</span>{/snippet}
 
-<AuthShell>
+<AuthShell strip={false}>
 	<div class="card">
 		<div class="sp" aria-live="polite">
 			{#if error}
@@ -90,7 +92,9 @@
 					<Button variant="primary" size="lg" href="/">{m.handoff_restart()}</Button>
 				</div>
 			{:else if phase === 'counting'}
-				<p class="sent sm"><Clause text={m.handoff_tab_done_sentence()} slots={{ account, count }} /></p>
+				<p class="sent sm">
+					<Clause text={address ? m.handoff_tab_done_sentence() : m.handoff_tab_done_plain()} slots={{ account, count }} />
+				</p>
 				<div class="sp-under">
 					<div class="sp-bar" aria-hidden="true"><i style:width="{((CLOSE_AFTER - left + 1) / CLOSE_AFTER) * 100}%"></i></div>
 					<p class="sp-fine">{m.handoff_tab_closes()}</p>
@@ -100,7 +104,9 @@
 					</div>
 				</div>
 			{:else if phase === 'stayed'}
-				<p class="sent sm"><Clause text={m.handoff_tab_stayed_sentence()} slots={{ account }} /></p>
+				<p class="sent sm">
+					{#if address}<Clause text={m.handoff_tab_stayed_sentence()} slots={{ account }} />{:else}{m.handoff_tab_stayed_plain()}{/if}
+				</p>
 				<div class="sp-acts">
 					<Button variant="secondary" size="lg" onclick={closeTab}>{m.handoff_tab_close()}</Button>
 				</div>

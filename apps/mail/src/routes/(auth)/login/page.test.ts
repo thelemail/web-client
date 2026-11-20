@@ -59,7 +59,7 @@ const tab = vi.hoisted(() => {
 				listener = null;
 			};
 		}),
-		arrive: (r: { accountId: string; path: string }) => listener?.(r)
+		arrive: (r: { accountId: string; path: string; email?: string }) => listener?.(r)
 	};
 });
 vi.mock('$core/producthandoff/tab', () => tab);
@@ -593,8 +593,9 @@ describe('login page with another account open', () => {
 		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting_new()));
 		expect(custody.signInAtAuth).not.toHaveBeenCalled();
 		expect(tab.awaitAuthTab).toHaveBeenCalledWith(null, expect.any(Function));
-		tab.arrive({ accountId: 'acc-new', path: '/u/2/mail/inbox' });
+		tab.arrive({ accountId: 'acc-new', path: '/u/2/mail/inbox', email: 'kit@thelemail.com' });
 		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/2/mail/inbox', { replace: true }));
+		await vi.waitFor(() => expect(transition.announceArrival).toHaveBeenCalledWith('kit@thelemail.com'));
 	});
 
 	it('goes to the account origin in this tab when no other account is open', async () => {

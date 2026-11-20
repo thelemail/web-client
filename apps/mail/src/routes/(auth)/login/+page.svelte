@@ -44,7 +44,7 @@
 		stopWaiting?.();
 		stopWaiting = null;
 		await accounts.refresh();
-		const email = accounts.byId(result.accountId)?.email ?? null;
+		const email = accounts.byId(result.accountId)?.email || result.email || null;
 		await accountTransition.run('switch', email, async () => {
 			await goto(result.path, { replace: true });
 		});

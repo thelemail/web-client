@@ -14,7 +14,7 @@ const flow = vi.hoisted(() => ({
 vi.mock('$app/navigation', () => ({ goto: flow.goto }));
 vi.mock('./complete', () => ({ completeHandoff: flow.complete, takeCallbackFragment: () => 'code=c&state=s' }));
 vi.mock('./tab', () => ({ handBack: flow.handBack, inAuthTab: flow.inTab, leaveAuthTab: flow.leave }));
-vi.mock('$core/stores/auth.svelte', () => ({ auth: { activate: flow.activate, emailFor: () => null } }));
+vi.mock('$core/stores/auth.svelte', () => ({ auth: { activate: flow.activate, emailFor: () => null, loadProfile: async () => true } }));
 vi.mock('$core/stores/accounts.svelte', () => ({
 	accounts: { list: [], byId: (id: string) => (id === 'acc-hal' ? { accountId: 'acc-hal', slot: 1, email: 'hal@thelemail.com' } : undefined) }
 }));
@@ -52,7 +52,7 @@ describe('sign-in tab after the handoff', () => {
 		await vi.waitFor(() => expect(document.body.textContent).toContain('hal@thelemail.com is unlocked.'));
 		expect(document.body.textContent).toContain('Back to your mail in 3 s.');
 		expect(document.body.textContent).toContain(m.handoff_tab_closes());
-		expect(flow.handBack).toHaveBeenCalledWith({ accountId: 'acc-hal', path: '/u/1/mail/inbox' });
+		expect(flow.handBack).toHaveBeenCalledWith({ accountId: 'acc-hal', path: '/u/1/mail/inbox', email: 'hal@thelemail.com' });
 
 		await vi.advanceTimersByTimeAsync(1000);
 		expect(document.body.textContent).toContain('in 2 s.');
@@ -104,6 +104,15 @@ describe('sign-in tab after the handoff', () => {
 		await vi.waitFor(() => expect(flow.goto).toHaveBeenCalledWith('/u/1/mail/inbox', { replace: true }));
 		expect(flow.activate).toHaveBeenCalledWith('acc-hal');
 		expect(close).not.toHaveBeenCalled();
+	});
+
+	it('still counts down when the account has no known address yet', async () => {
+		flow.complete.mockResolvedValue({ accountId: 'acc-new', slot: 2, route: '/mail/inbox' });
+		flow.handBack.mockResolvedValue(true);
+		render(HandoffCallback);
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain('You’re signed in. Back to your mail in 3 s.'));
+		expect(flow.handBack).toHaveBeenCalledWith({ accountId: 'acc-new', path: '/u/2/mail/inbox' });
 	});
 
 	it('shows the failure with a way back', async () => {

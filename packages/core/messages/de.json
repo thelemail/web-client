@@ -5086,5 +5086,7 @@
 	"handoff_tab_stayed_sentence": "Sie sind angemeldet, und Ihr E-Mail-Tab hat <account></account> geöffnet. Sie können diesen Tab schließen.",
 	"handoff_tab_close": "Diesen Tab schließen",
 	"handoff_tab_signed_in": "Angemeldet als {email}",
-	"auth_s_word_label": "Wort {n} von {total}"
+	"auth_s_word_label": "Wort {n} von {total}",
+	"handoff_tab_done_plain": "Sie sind angemeldet. Zurück zu Ihren E-Mails in <count></count> s.",
+	"handoff_tab_stayed_plain": "Sie sind angemeldet, und Ihr E-Mail-Tab hat das Konto geöffnet. Sie können diesen Tab schließen."
 }

@@ -5086,5 +5086,7 @@
 	"handoff_tab_stayed_sentence": "You’re signed in, and your mail tab has <account></account> open. You can close this tab.",
 	"handoff_tab_close": "Close this tab",
 	"handoff_tab_signed_in": "Signed in as {email}",
-	"auth_s_word_label": "Word {n} of {total}"
+	"auth_s_word_label": "Word {n} of {total}",
+	"handoff_tab_done_plain": "You’re signed in. Back to your mail in <count></count> s.",
+	"handoff_tab_stayed_plain": "You’re signed in, and your mail tab has the account open. You can close this tab."
 }

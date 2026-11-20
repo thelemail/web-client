@@ -5086,5 +5086,7 @@
   "handoff_tab_stayed_sentence": "Vous êtes connecté et votre onglet de messagerie a ouvert <account></account>. Vous pouvez fermer cet onglet.",
   "handoff_tab_close": "Fermer cet onglet",
   "handoff_tab_signed_in": "Connecté en tant que {email}",
-  "auth_s_word_label": "Mot {n} sur {total}"
+  "auth_s_word_label": "Mot {n} sur {total}",
+  "handoff_tab_done_plain": "Vous êtes connecté. Retour à vos e-mails dans <count></count> s.",
+  "handoff_tab_stayed_plain": "Vous êtes connecté et votre onglet de messagerie a ouvert le compte. Vous pouvez fermer cet onglet."
 }

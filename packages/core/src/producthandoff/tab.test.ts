@@ -50,6 +50,15 @@ describe('the sign-in tab', () => {
 		expect(done).toHaveBeenCalledWith({ accountId: ACCOUNT, path: '/u/1/mail/inbox' });
 	});
 
+	it('passes the signed-in address along and drops anything that is not one', async () => {
+		const done = vi.fn();
+		stops.push(awaitAuthTab(ACCOUNT, done));
+		expect(await handBack({ accountId: ACCOUNT, path: '/u/1/mail/inbox', email: 'hal@thelemail.com' })).toBe(true);
+		expect(done).toHaveBeenLastCalledWith({ accountId: ACCOUNT, path: '/u/1/mail/inbox', email: 'hal@thelemail.com' });
+		expect(await handBack({ accountId: ACCOUNT, path: '/u/1/mail/inbox', email: 'not-an-address' })).toBe(true);
+		expect(done).toHaveBeenLastCalledWith({ accountId: ACCOUNT, path: '/u/1/mail/inbox' });
+	});
+
 	it('opens a new sign-in without naming an account and hands back whichever account signed in', async () => {
 		open.mockReturnValue({});
 		openAuthTab(null, '/');

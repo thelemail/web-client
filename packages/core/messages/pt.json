@@ -5086,5 +5086,7 @@
 	"handoff_tab_stayed_sentence": "Tem sessão iniciada e o separador do correio já abriu <account></account>. Pode fechar este separador.",
 	"handoff_tab_close": "Fechar este separador",
 	"handoff_tab_signed_in": "Sessão iniciada como {email}",
-	"auth_s_word_label": "Palavra {n} de {total}"
+	"auth_s_word_label": "Palavra {n} de {total}",
+	"handoff_tab_done_plain": "Tem sessão iniciada. Regresso ao seu correio dentro de <count></count> s.",
+	"handoff_tab_stayed_plain": "Tem sessão iniciada e o separador do correio já abriu a conta. Pode fechar este separador."
 }
