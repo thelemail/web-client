@@ -44,3 +44,26 @@ describe('saved account emails', () => {
 		expect(putAccountSlot).not.toHaveBeenCalled();
 	});
 });
+
+describe('the mail session kept on an account', () => {
+	beforeEach(() => {
+		putAccountSlot.mockClear();
+		stored = [{ accountId: 'a', slot: 0, email: 'ana@acme.test', addedAt: 1, lastActiveAt: 5 }];
+	});
+
+	it('stores the session on a known account and holds it for one not saved yet', async () => {
+		await accounts.setSessionId('a', 'sid-a');
+		expect(stored[0].sessionId).toBe('sid-a');
+
+		await accounts.setSessionId('new', 'sid-new');
+		expect(putAccountSlot).toHaveBeenCalledTimes(1);
+		stored.push({ accountId: 'new', slot: 1, email: 'new@acme.test', addedAt: 3, lastActiveAt: 3 });
+		await accounts.upsert({ accountId: 'new', slot: 1, email: 'new@acme.test', addedAt: 3, lastActiveAt: 3 });
+		expect(putAccountSlot).toHaveBeenLastCalledWith(expect.objectContaining({ accountId: 'new', sessionId: 'sid-new' }));
+
+		stored = stored.map((r) => (r.accountId === 'new' ? { ...r, sessionId: 'sid-new' } : r));
+		await accounts.refresh();
+		await accounts.upsert({ accountId: 'new', slot: 1, email: 'new@acme.test', addedAt: 3, lastActiveAt: 4 });
+		expect(putAccountSlot).toHaveBeenLastCalledWith(expect.objectContaining({ lastActiveAt: 4, sessionId: 'sid-new' }));
+	});
+});

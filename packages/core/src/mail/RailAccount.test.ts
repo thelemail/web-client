@@ -25,7 +25,9 @@ const { goto, auth, accounts, unread, facts } = vi.hoisted(() => {
 		locked: new Set<string>(),
 		lost: new Set<string>(),
 		counts: new Map<string, { inbox: number }>(),
-		probes: new Map<string, Probe>()
+		probes: new Map<string, Probe>(),
+		mailOnly: new Set<string>(),
+		movedToAuth: false
 	};
 	return {
 		facts,
@@ -41,6 +43,8 @@ const { goto, auth, accounts, unread, facts } = vi.hoisted(() => {
 			loadSignedInProfiles: vi.fn(async () => {}),
 			syncFromKeystoreStatus: vi.fn(),
 			vaultUnlockedFor: (id: string) => !facts.locked.has(id),
+			vaultUnlocked: true,
+			mailOnlyFor: (id: string) => facts.mailOnly.has(id),
 			hasPersistentFor: () => false,
 			sessionLost: (id: string) => facts.lost.has(id),
 			ensureFreshToken: vi.fn(async () => {})
@@ -79,6 +83,12 @@ vi.mock('$core/stores/twofactor.svelte', () => ({
 	twofactor: { status: {}, phase: 'ready', load: vi.fn(), ensure: vi.fn() }
 }));
 vi.mock('$core/handoff', () => ({ openCalendar: vi.fn() }));
+const tab = vi.hoisted(() => ({ openAuthTab: vi.fn((_accountId: string | null, _route: string) => true) }));
+vi.mock('$core/producthandoff/tab', () => tab);
+vi.mock('$core/custody/unlock', () => ({
+	signInMovedToAuth: vi.fn(async () => facts.movedToAuth),
+	signInMovedToAuthKnown: () => facts.movedToAuth
+}));
 
 import RailAccount from './RailAccount.svelte';
 
@@ -106,6 +116,9 @@ describe('RailAccount', () => {
 		auth.activate.mockClear();
 		unread.refresh.mockClear();
 		facts.locked = new Set(['acct-c']);
+		facts.mailOnly = new Set();
+		facts.movedToAuth = false;
+		tab.openAuthTab.mockClear();
 		facts.lost = new Set(['acct-d']);
 		facts.counts = new Map([
 			['acct-b', { inbox: 3 }],
@@ -207,6 +220,36 @@ describe('RailAccount', () => {
 			)
 		);
 		expect(auth.activate).not.toHaveBeenCalled();
+	});
+
+	it('opens the account origin in a new tab from the click so this tab keeps its accounts', async () => {
+		facts.mailOnly = new Set(['acct-c']);
+		const { container } = render(RailAccount);
+		await openMenu(container);
+		await fireEvent.click(rowFor(container, 'clara@'));
+
+		expect(tab.openAuthTab).toHaveBeenCalledWith('acct-c', '/u/1/mail/inbox');
+		await waitFor(() =>
+			expect(goto).toHaveBeenCalledWith(`/login?slot=1&redirect=${encodeURIComponent('/u/1/mail/inbox')}`)
+		);
+	});
+
+	it('opens a new tab for an old-key account once sign-in has moved to the account origin', async () => {
+		facts.movedToAuth = true;
+		const { container } = render(RailAccount);
+		await openMenu(container);
+		await fireEvent.click(rowFor(container, 'clara@'));
+
+		expect(tab.openAuthTab).toHaveBeenCalledWith('acct-c', '/u/1/mail/inbox');
+	});
+
+	it('keeps an old-key account in this tab while sign-in still happens here', async () => {
+		const { container } = render(RailAccount);
+		await openMenu(container);
+		await fireEvent.click(rowFor(container, 'clara@'));
+
+		await waitFor(() => expect(goto).toHaveBeenCalled());
+		expect(tab.openAuthTab).not.toHaveBeenCalled();
 	});
 
 	it('sends an expired session to sign in again', async () => {
@@ -335,6 +378,17 @@ describe('RailAccount', () => {
 		expect(list.textContent).not.toContain('Manage accounts');
 
 		await fireEvent.click(within(container).getByText('Add account'));
+		await waitFor(() => expect(goto).toHaveBeenCalledWith('/login?addAccount=1'));
+		expect(tab.openAuthTab).not.toHaveBeenCalled();
+	});
+
+	it('adds an account in a new tab once sign-in has moved to the account origin', async () => {
+		facts.movedToAuth = true;
+		const { container } = render(RailAccount);
+		await openMenu(container);
+		await fireEvent.click(within(container).getByText('Add account'));
+
+		expect(tab.openAuthTab).toHaveBeenCalledWith(null, '/');
 		await waitFor(() => expect(goto).toHaveBeenCalledWith('/login?addAccount=1'));
 	});
 });

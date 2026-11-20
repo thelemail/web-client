@@ -9,6 +9,7 @@
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/session.svelte';
 	import {
+		authorizeHint,
 		clearPendingAuthorize,
 		grantRequest,
 		locateRequest,
@@ -41,7 +42,10 @@
 			return;
 		}
 		sessionStorage.setItem(LOGIN_TRIED, '1');
-		await goto(slot === null ? '/login' : `/login?slot=${slot}`);
+		const hint = authorizeHint(fragment);
+		if (slot !== null) await goto(`/login?slot=${slot}`);
+		else if (hint) await goto(`/login?${new URLSearchParams({ hint }).toString()}`);
+		else await goto('/login');
 	}
 
 	async function run() {

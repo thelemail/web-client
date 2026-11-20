@@ -8,9 +8,11 @@
 	import { m } from '$paraglide/messages.js';
 	import { HandoffError } from './begin';
 	import { completeHandoff, takeCallbackFragment } from './complete';
+	import { handBack, inAuthTab, leaveAuthTab } from './tab';
 
 	const fragment = takeCallbackFragment();
 	let error = $state<string | null>(null);
+	let handedBack = $state(false);
 
 	onMount(() => {
 		void run();
@@ -23,9 +25,18 @@
 		}
 		try {
 			const done = await completeHandoff(fragment);
+			if (inAuthTab()) {
+				leaveAuthTab();
+				if (await handBack({ accountId: done.accountId, path: localForkPath(done.route, done.slot) })) {
+					handedBack = true;
+					window.close();
+					return;
+				}
+			}
 			auth.activate(done.accountId);
 			await goto(localForkPath(done.route, done.slot), { replace: true });
 		} catch (err) {
+			leaveAuthTab();
 			error = err instanceof HandoffError && err.code === 'account' ? m.handoff_wrong_account() : m.handoff_failed();
 		}
 	}
@@ -37,6 +48,8 @@
 			<h1>{m.handoff_title()}</h1>
 			<p class="handoffmsg">{error}</p>
 			<Button variant="primary" size="lg" href="/">{m.handoff_restart()}</Button>
+		{:else if handedBack}
+			<p class="handoffmsg">{m.handoff_tab_done()}</p>
 		{:else}
 			<p class="handoffmsg">{m.handoff_opening()}</p>
 		{/if}

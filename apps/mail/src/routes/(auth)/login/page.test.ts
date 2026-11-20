@@ -27,9 +27,19 @@ const session = vi.hoisted(() => ({
 	auth: { email: null, loadProfile: vi.fn(async () => undefined), mailOnlyFor: vi.fn(() => false), authOriginEnrolledFor: vi.fn(() => false) }
 }));
 vi.mock('$core/stores/session.svelte', () => session);
-const vault = vi.hoisted(() => ({ keystore: { lock: vi.fn(async () => undefined) } }));
+const vault = vi.hoisted(() => ({
+	keystore: {
+		lock: vi.fn(async () => undefined),
+		status: vi.fn(async () => ({ accounts: [] as { accountId: string; unlocked: boolean }[] }))
+	}
+}));
 vi.mock('$core/keystore/keystore-client', () => vault);
-const known = vi.hoisted(() => ({ bySlot: vi.fn(), list: [] as { accountId: string }[] }));
+const known = vi.hoisted(() => ({
+	bySlot: vi.fn(),
+	byId: vi.fn((id: string) => (id === 'acc-open' ? { accountId: 'acc-open', slot: 0, email: 'ivy@thelemail.com' } : null) as { accountId: string; slot: number; email: string } | null),
+	refresh: vi.fn(async () => undefined),
+	list: [] as { accountId: string }[]
+}));
 vi.mock('$core/stores/accounts.svelte', () => ({ accounts: known }));
 const custody = vi.hoisted(() => ({
 	mailOnlyAccountId: vi.fn(async (_target: { slot?: number | null; identifier?: string }) => null as string | null),
@@ -38,6 +48,22 @@ const custody = vi.hoisted(() => ({
 	signInAtAuth: vi.fn((_redirect: string | null) => new Promise<never>(() => {}))
 }));
 vi.mock('$core/custody/unlock', () => custody);
+const tab = vi.hoisted(() => {
+	let listener: ((r: { accountId: string; path: string }) => void) | null = null;
+	return {
+		openAuthTab: vi.fn((_accountId: string | null, _route: string) => true),
+		authTabPendingFor: vi.fn((_accountId: string | null) => false),
+		awaitAuthTab: vi.fn((_accountId: string | null, done: (r: { accountId: string; path: string }) => void) => {
+			listener = done;
+			return () => {
+				listener = null;
+			};
+		}),
+		arrive: (r: { accountId: string; path: string }) => listener?.(r)
+	};
+});
+vi.mock('$core/producthandoff/tab', () => tab);
+vi.mock('$core/stores/accountTransition.svelte', () => ({ accountTransition: { run: async (_k: string, _a: string | null, work: () => Promise<void>) => work() } }));
 
 const OPERATION = 'op-1';
 let pending: {
@@ -105,6 +131,12 @@ beforeEach(() => {
 	session.auth.authOriginEnrolledFor.mockReset();
 	session.auth.authOriginEnrolledFor.mockReturnValue(false);
 	vault.keystore.lock.mockClear();
+	vault.keystore.status.mockReset();
+	vault.keystore.status.mockResolvedValue({ accounts: [] });
+	tab.openAuthTab.mockClear();
+	tab.authTabPendingFor.mockReset();
+	tab.authTabPendingFor.mockReturnValue(false);
+	tab.awaitAuthTab.mockClear();
 	pending = {
 		pendingToken: 'pt-1',
 		methods: ['totp'],
@@ -453,6 +485,17 @@ describe('login page account origin', () => {
 		expect(login.performLogin).not.toHaveBeenCalled();
 	});
 
+	it('asks the account origin for the same account when a known slot reloads after the switch', async () => {
+		route.page.url = new URL('http://localhost/login?slot=1&redirect=%2Fu%2F1%2Fmail%2Finbox');
+		known.bySlot.mockImplementation((slot: number) => (slot === 1 ? { accountId: 'acc-legacy', email: 'nora@thelemail.com' } : undefined));
+		custody.signInMovedToAuth.mockResolvedValue(true);
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-legacy', '/u/1/mail/inbox'));
+		expect(custody.signInAtAuth).not.toHaveBeenCalled();
+		expect(document.querySelector('#login-email')).toBeNull();
+	});
+
 	it('locks a product-key account after a password sign-in and opens it at the account origin', async () => {
 		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 		known.bySlot.mockImplementation((slot: number) => (slot === 0 ? { accountId: 'acc-converted', email: 'r@thelemail.com' } : undefined));
@@ -480,3 +523,72 @@ describe('login page account origin', () => {
 	});
 });
 
+describe('login page with another account open', () => {
+	beforeEach(() => {
+		route.page.url = new URL('http://localhost/login?slot=1&redirect=%2Fu%2F1%2Fmail%2Finbox');
+		custody.mailOnlyAccountId.mockResolvedValue('acc-locked');
+		vault.keystore.status.mockResolvedValue({ accounts: [{ accountId: 'acc-open', unlocked: true }, { accountId: 'acc-locked', unlocked: false }] });
+	});
+
+	it('waits for the sign-in tab the switcher opened and never leaves this page', async () => {
+		tab.authTabPendingFor.mockReturnValue(true);
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
+		expect(tab.awaitAuthTab).toHaveBeenCalledWith('acc-locked', expect.any(Function));
+
+		tab.arrive({ accountId: 'acc-locked', path: '/u/1/mail/inbox' });
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/1/mail/inbox', { replace: true }));
+		expect(known.refresh).toHaveBeenCalled();
+	});
+
+	it('asks before opening a tab when none could be opened from the switcher', async () => {
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(button(m.handoff_tab_open())).toBeDefined());
+		expect(document.body.textContent).toContain(m.handoff_tab_ask());
+		await fireEvent.click(button(m.handoff_tab_open())!);
+
+		expect(tab.openAuthTab).toHaveBeenCalledWith('acc-locked', '/u/1/mail/inbox');
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
+	});
+
+	it('signs in in this tab when asked to', async () => {
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(button(m.handoff_tab_here())).toBeDefined());
+		await fireEvent.click(button(m.handoff_tab_here())!);
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-locked', '/u/1/mail/inbox'));
+		expect(tab.openAuthTab).not.toHaveBeenCalled();
+	});
+
+	it('offers the way back to the account that is still open', async () => {
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(document.querySelector('a[href="/u/0/mail/inbox"]')).not.toBeNull());
+	});
+
+	it('adds a new account in a tab so the open account keeps its keys', async () => {
+		route.page.url = new URL('http://localhost/login?addAccount=1');
+		custody.signInMovedToAuth.mockResolvedValue(true);
+		tab.authTabPendingFor.mockImplementation((id: string | null) => id === null);
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		expect(custody.signInAtAuth).not.toHaveBeenCalled();
+		expect(tab.awaitAuthTab).toHaveBeenCalledWith(null, expect.any(Function));
+		tab.arrive({ accountId: 'acc-new', path: '/u/2/mail/inbox' });
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/2/mail/inbox', { replace: true }));
+	});
+
+	it('goes to the account origin in this tab when no other account is open', async () => {
+		vault.keystore.status.mockResolvedValue({ accounts: [{ accountId: 'acc-locked', unlocked: false }] });
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(custody.unlockAtAuth).toHaveBeenCalledWith('acc-locked', '/u/1/mail/inbox'));
+		expect(tab.awaitAuthTab).not.toHaveBeenCalled();
+	});
+});

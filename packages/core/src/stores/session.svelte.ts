@@ -31,6 +31,16 @@ import { currentProduct, isAuthOrigin } from '$core/products';
 
 const REFRESH_SKEW_MS = 60_000;
 
+function tokenSessionId(token: string): string | null {
+	try {
+		const part = token.split('.')[1] ?? '';
+		const claims = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '='))) as { sid?: unknown };
+		return typeof claims.sid === 'string' && /^[0-9a-f-]{36}$/.test(claims.sid) ? claims.sid : null;
+	} catch {
+		return null;
+	}
+}
+
 export function sessionBase(accountId: string): string | undefined {
 	return accounts.byId(accountId)?.sessionOrigin === 'host' ? window.location.origin : undefined;
 }
@@ -334,6 +344,10 @@ class SessionStore {
 		});
 		this.#tokens = m;
 		this.#getOrCreateProfile(accountId);
+		const sid = tokenSessionId(accessToken);
+		if (sid && accounts.byId(accountId)?.sessionId !== sid) {
+			void accounts.setSessionId(accountId, sid).catch(() => undefined);
+		}
 		if (accountId === this.#currentId) this.#scheduleProactiveRefresh();
 		if (revived) for (const h of this.#hooks) h.sessionRevived?.(accountId);
 	}
@@ -519,6 +533,11 @@ class SessionStore {
 
 	vaultUnlockedFor(accountId: string): boolean {
 		return this.#profiles.get(accountId)?.vaultUnlocked ?? false;
+	}
+
+	sessionIdFor(accountId: string): string | null {
+		const token = this.#tokens.get(accountId)?.accessToken;
+		return (token ? tokenSessionId(token) : null) ?? accounts.byId(accountId)?.sessionId ?? null;
 	}
 
 	hasPersistentFor(accountId: string): boolean {

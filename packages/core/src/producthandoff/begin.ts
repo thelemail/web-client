@@ -25,6 +25,8 @@ export interface StartOptions {
 	route: string;
 	remember: boolean;
 	freshAuth?: boolean;
+	existingSessionId?: string | null;
+	hint?: string | null;
 }
 
 export async function startHandoff(opts: StartOptions): Promise<void> {
@@ -44,7 +46,7 @@ export async function startHandoff(opts: StartOptions): Promise<void> {
 			codeChallengeMethod: 'S256',
 			receiverPublicKey: b64url(receiverPublicKey),
 			expectedAccountId: opts.expectedAccountId,
-			existingSessionId: null,
+			existingSessionId: opts.existingSessionId ?? null,
 			...(opts.freshAuth ? { requireFreshAuth: true } : {})
 		},
 		csrfToken
@@ -58,7 +60,8 @@ export async function startHandoff(opts: StartOptions): Promise<void> {
 		b64url(descriptor.state) !== state ||
 		b64url(descriptor.codeChallenge) !== codeChallenge ||
 		!bytesEqual(descriptor.receiverPublicKey, receiverPublicKey) ||
-		descriptor.expectedAccountId !== opts.expectedAccountId
+		descriptor.expectedAccountId !== opts.expectedAccountId ||
+		descriptor.existingSessionId !== (opts.existingSessionId ?? null)
 	) {
 		throw new HandoffError('descriptor');
 	}
@@ -79,5 +82,6 @@ export async function startHandoff(opts: StartOptions): Promise<void> {
 	});
 	sessionStorage.setItem(HANDOFF_TAB_PREFIX + descriptor.requestId, state);
 	const fragment = new URLSearchParams({ request: descriptor.requestId, digest: created.descriptorDigest });
+	if (opts.hint) fragment.set('hint', opts.hint);
 	window.location.assign(`${authTarget.origin}/authorize#${fragment.toString()}`);
 }
