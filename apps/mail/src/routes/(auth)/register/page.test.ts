@@ -42,25 +42,40 @@ function button(label: string) {
 }
 
 async function typeAddress(handle: string) {
-	await fireEvent.input(document.querySelector('#register-name')!, { target: { value: 'Camille Roux' } });
+	await vi.waitFor(() => expect(document.querySelector('#register-handle')).not.toBeNull());
 	await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: handle } });
+}
+
+async function next() {
+	await vi.waitFor(() => expect(button('Next')?.disabled).toBe(false));
+	await fireEvent.click(button('Next')!);
 }
 
 async function continueToPassword(handle: string) {
 	await typeAddress(handle);
-	await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
-	await fireEvent.click(button('Continue')!);
+	await next();
+	await fireEvent.input(document.querySelector('#register-name')!, { target: { value: 'Camille Roux' } });
+	await next();
+}
+
+async function typePassword(value: string) {
+	await fireEvent.input(document.querySelector('#register-password')!, { target: { value } });
 }
 
 async function fillPassword(value: string) {
-	const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
-	await fireEvent.input(pw, { target: { value } });
-	await fireEvent.input(confirm, { target: { value } });
+	await typePassword(value);
+	await next();
+	await fireEvent.input(document.querySelector('#register-confirm')!, { target: { value } });
 }
 
 async function submitPassword() {
 	await fillPassword('Quiet-harbour-lantern-47');
-	await fireEvent.click(button('Create my mailbox')!);
+	await fireEvent.click(document.querySelector('.sp-tick input')!);
+	await fireEvent.click(button('Create my account')!);
+}
+
+function legal() {
+	return [...document.querySelectorAll('.sp-fine')].map((e) => e.textContent).join(' ');
 }
 
 beforeEach(() => {
@@ -84,10 +99,6 @@ function succeedRegistration() {
 	performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 }
 
-function passwordValues() {
-	return [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')].map((i) => i.value);
-}
-
 afterEach(() => {
 	cleanup();
 });
@@ -96,7 +107,7 @@ describe('register page', () => {
 	it('shows a fixed suffix when only one domain is offered', async () => {
 		render(RegisterPage);
 
-		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
 		expect(select()).toBeNull();
 	});
 
@@ -105,34 +116,57 @@ describe('register page', () => {
 
 		await typeAddress('camille');
 		await vi.waitFor(() => expect(authApi.checkAddressAvailability).toHaveBeenCalledWith('camille', expect.stringMatching(/^[0-9a-f]{32}$/)));
-		await vi.waitFor(() => expect(document.body.textContent).toContain('camille@temail.org'));
+		await vi.waitFor(() => expect(document.body.textContent).toContain('camille@temail.org is available.'));
 		expect(document.body.textContent).not.toContain('thelemail.com');
 		expect(authApi.checkAddressAvailability).toHaveBeenCalledTimes(1);
+	});
+
+	it('names a taken address and keeps Next off', async () => {
+		authApi.checkAddressAvailability.mockResolvedValue({ available: false });
+		render(RegisterPage);
+
+		await typeAddress('camille');
+		await vi.waitFor(() => expect(document.body.textContent).toContain('camille@temail.org is taken.'));
+		expect(button('Next')?.disabled).toBe(true);
+		expect(document.querySelector('#register-handle')!.getAttribute('aria-invalid')).toBe('true');
 	});
 
 	it('registers on the offered domain and keeps the legal line to it', async () => {
 		keystore.opaqueStartRegistration.mockRejectedValue(new Error('stop'));
 		render(RegisterPage);
-		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
 
 		await continueToPassword('camille');
-		expect(document.querySelector('.legal')?.textContent).toContain('temail.org');
-		expect(document.querySelector('.legal')?.textContent).not.toContain('thelemail.com');
-		await submitPassword();
+		await fillPassword('Quiet-harbour-lantern-47');
+		expect(legal()).toContain('temail.org');
+		expect(legal()).not.toContain('thelemail.com');
+		await fireEvent.click(document.querySelector('.sp-tick input')!);
+		await fireEvent.click(button('Create my account')!);
 
 		await vi.waitFor(() => expect(keystore.opaqueStartRegistration).toHaveBeenCalled());
 		expect(keystore.opaqueStartRegistration.mock.calls[0][0].email).toBe('camille@temail.org');
+	});
+
+	it('will not create the account before the terms are accepted', async () => {
+		render(RegisterPage);
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
+		await continueToPassword('camille');
+		await fillPassword('Quiet-harbour-lantern-47');
+
+		expect(button('Create my account')?.disabled).toBe(true);
+		await fireEvent.click(document.querySelector('.sp-tick input')!);
+		expect(button('Create my account')?.disabled).toBe(false);
 	});
 
 	it('binds the proof of work to the chosen address', async () => {
 		authApi.registrationInit.mockRejectedValue(new Error('stop'));
 		keystore.opaqueStartRegistration.mockResolvedValue({ operationId: 'op1', registrationRequest: 'req' });
 		render(RegisterPage);
-		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
 
 		await continueToPassword('camille');
 		await vi.waitFor(() => expect(pow.prepare).toHaveBeenLastCalledWith('camille@temail.org'));
-		await fireEvent.click(document.querySelector<HTMLButtonElement>('.btn-back')!);
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('button.sp-filled')!);
 		await continueToPassword('camilla');
 		await vi.waitFor(() => expect(pow.prepare).toHaveBeenLastCalledWith('camilla@temail.org'));
 
@@ -142,44 +176,46 @@ describe('register page', () => {
 
 	it('refuses short and common passwords and accepts a plain long one', async () => {
 		render(RegisterPage);
-		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
 		await continueToPassword('camille');
 
-		await fillPassword('Password1234');
-		expect(button('Create my mailbox')?.disabled).toBe(true);
-		await fillPassword('harbourlamp');
-		expect(button('Create my mailbox')?.disabled).toBe(true);
-		await fillPassword('harbour lamp');
-		expect(button('Create my mailbox')?.disabled).toBe(false);
+		await typePassword('Password1234');
+		expect(button('Next')?.disabled).toBe(true);
+		await typePassword('harbourlamp');
+		expect(button('Next')?.disabled).toBe(true);
+		await typePassword('harbour lamp');
+		expect(button('Next')?.disabled).toBe(false);
 	});
 
-	it('keeps the filled password step on screen while the mailbox opens', async () => {
+	it('shows the setup steps for the new address while the mailbox opens', async () => {
 		succeedRegistration();
 		const leaving = Promise.withResolvers<void>();
 		goto.mockReturnValue(leaving.promise);
 		render(RegisterPage);
-		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
 		await continueToPassword('camille');
 
 		await submitPassword();
 		await vi.waitFor(() => expect(goto).toHaveBeenCalled());
 
-		expect(passwordValues()).toEqual(['Quiet-harbour-lantern-47', 'Quiet-harbour-lantern-47']);
+		expect(document.body.textContent).toContain('Setting up camille@temail.org.');
 		expect(document.body.textContent).toContain('Opening your mailbox');
-		expect(document.body.textContent).toContain('Passwords match');
+		expect(document.querySelector('#register-confirm')).toBeNull();
 		leaving.resolve();
 	});
 
 	it('keeps both passwords when creating the account fails', async () => {
 		keystore.opaqueStartRegistration.mockRejectedValue(new Error('network down'));
 		render(RegisterPage);
-		await vi.waitFor(() => expect(document.querySelector('.suf')?.textContent).toBe('@temail.org'));
+		await vi.waitFor(() => expect(document.querySelector('.blank-suffix')?.textContent).toBe('@temail.org'));
 		await continueToPassword('camille');
 
 		await submitPassword();
 		await vi.waitFor(() => expect(document.body.textContent).toContain('network down'));
 
-		expect(passwordValues()).toEqual(['Quiet-harbour-lantern-47', 'Quiet-harbour-lantern-47']);
-		expect(button('Create my mailbox')?.disabled).toBe(false);
+		expect(document.querySelector<HTMLInputElement>('#register-confirm')!.value).toBe('Quiet-harbour-lantern-47');
+		expect(button('Create my account')?.disabled).toBe(false);
+		await fireEvent.click(document.querySelector<HTMLButtonElement>('button[aria-label="Change the password"]')!);
+		expect(document.querySelector<HTMLInputElement>('#register-password')!.value).toBe('Quiet-harbour-lantern-47');
 	});
 });

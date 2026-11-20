@@ -35,17 +35,34 @@ describe('TwoFactorChallenge', () => {
 		expect(document.querySelector('input[autocomplete="one-time-code"]')).not.toBeNull();
 	});
 
-	it('names every code digit and ties a rejected code to the inputs', () => {
+	it('names the code blank and ties a rejected code to it', () => {
 		mount(['totp', 'backupCode'], 'bad code');
-		const digits = [...document.querySelectorAll<HTMLInputElement>('input[autocomplete="one-time-code"]')];
-		expect(digits).toHaveLength(6);
+		const inputs = [...document.querySelectorAll<HTMLInputElement>('input[autocomplete="one-time-code"]')];
+		expect(inputs).toHaveLength(1);
 		const alert = document.querySelector('[role="alert"]');
 		expect(alert?.id).toBeTruthy();
-		for (const [i, input] of digits.entries()) {
-			expect(input.getAttribute('aria-label')).toContain(String(i + 1));
-			expect(input.getAttribute('aria-invalid')).toBe('true');
-			expect(input.getAttribute('aria-describedby')).toBe(alert!.id);
-		}
+		expect(inputs[0].getAttribute('aria-label')).toBe('Six-digit code');
+		expect(inputs[0].getAttribute('aria-invalid')).toBe('true');
+		expect(inputs[0].getAttribute('aria-describedby')).toBe(alert!.id);
+	});
+
+	it('keeps only digits and submits six of them', async () => {
+		const onTotp = vi.fn();
+		render(TwoFactorChallenge, {
+			email: 'ada@thelemail.com',
+			methods: ['totp'],
+			busy: false,
+			error: null,
+			onTotp,
+			onBackupCode: vi.fn(),
+			onWebauthn: vi.fn(),
+			onBack: vi.fn()
+		});
+		const input = document.querySelector<HTMLInputElement>('#twofa-code')!;
+		await fireEvent.input(input, { target: { value: '123 45x6' } });
+		expect(input.value).toBe('123456');
+		await fireEvent.keyDown(input, { key: 'Enter' });
+		expect(onTotp).toHaveBeenCalledWith('123456');
 	});
 
 	it('explains a key prompt that closed and offers it again', async () => {

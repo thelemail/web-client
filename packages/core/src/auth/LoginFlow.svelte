@@ -364,7 +364,7 @@
 			</form>
 		{:else}
 			<form class="sp-form" novalidate onsubmit={submit}>
-				<input class="sp-user" type="email" value={identifier} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+				<input id="login-identifier" class="sp-user" type="email" value={identifier} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 				<p class="sent">
 					<Clause
 						text={addMode

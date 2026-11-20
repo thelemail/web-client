@@ -497,6 +497,7 @@
 					<PasswordChecks {pw} />
 					<div class="sp-acts">
 						<Button variant="primary" size="lg" disabled={!allMet} onclick={() => (pwPart = 'again')}>{m.auth_sentence_next()}</Button>
+						<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
 					</div>
 				{:else}
 					{#if mismatch && !pw.startsWith(confirm)}

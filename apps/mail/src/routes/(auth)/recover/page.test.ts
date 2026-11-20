@@ -37,9 +37,9 @@ function button(label: string) {
 }
 
 async function enterPhrase() {
-	await fireEvent.click(button(m.common_continue())!);
-	await vi.waitFor(() => expect(document.querySelectorAll('.phrasegrid input')).toHaveLength(12));
-	const inputs = document.querySelectorAll<HTMLInputElement>('.phrasegrid input');
+	await fireEvent.click(button(m.auth_sentence_next())!);
+	await vi.waitFor(() => expect(document.querySelectorAll('.sp-words input')).toHaveLength(12));
+	const inputs = document.querySelectorAll<HTMLInputElement>('.sp-words input');
 	for (const [i, word] of PHRASE.entries()) {
 		await fireEvent.input(inputs[i], { target: { value: word } });
 	}
@@ -57,7 +57,7 @@ async function reachTwoFactor() {
 		}
 	});
 	await enterPhrase();
-	await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
+	await vi.waitFor(() => expect(document.querySelector('#twofa-code')).not.toBeNull());
 }
 
 async function reachNewPassword() {
@@ -124,7 +124,7 @@ describe('recover page OPAQUE cleanup', () => {
 		render(RecoverPage);
 		await reachNewPassword();
 
-		await fireEvent.click(document.querySelector(`button[aria-label="${m.common_back()}"]`)!);
+		await fireEvent.click(button(m.common_back())!);
 		await vi.waitFor(() => expect(button(m.auth_recover_phrase_unlock())).toBeDefined());
 		await fireEvent.click(button(m.auth_recover_phrase_unlock())!);
 
@@ -139,24 +139,26 @@ describe('recover page OPAQUE cleanup', () => {
 		window.dispatchEvent(new Event('pagehide'));
 
 		expect(recovery.discardRecovery).toHaveBeenCalledWith(OPERATION);
-		await vi.waitFor(() => expect(document.querySelector('#otp-0')).toBeNull());
+		await vi.waitFor(() => expect(document.querySelector('#twofa-code')).toBeNull());
 	});
 
 	it('refuses short and common passwords and accepts a plain long one', async () => {
 		render(RecoverPage);
 		await reachNewPassword();
-		const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
-		const fill = async (value: string) => {
-			await fireEvent.input(pw, { target: { value } });
-			await fireEvent.input(confirm, { target: { value } });
-		};
-		const submit = () => button(m.auth_recover_reset_password())?.disabled;
+		const fill = (value: string) => fireEvent.input(document.querySelector('#rec-password')!, { target: { value } });
+		const blocked = () => button(m.auth_sentence_next())?.disabled;
 
 		await fill('Password1234');
-		expect(submit()).toBe(true);
+		expect(blocked()).toBe(true);
 		await fill('harbourlamp');
-		expect(submit()).toBe(true);
+		expect(blocked()).toBe(true);
 		await fill('harbour lamp');
-		expect(submit()).toBe(false);
+		expect(blocked()).toBe(false);
+
+		await fireEvent.click(button(m.auth_sentence_next())!);
+		await fireEvent.input(document.querySelector('#rec-confirm')!, { target: { value: 'harbour lam' } });
+		expect(button(m.auth_recover_reset_password())?.disabled).toBe(true);
+		await fireEvent.input(document.querySelector('#rec-confirm')!, { target: { value: 'harbour lamp' } });
+		expect(button(m.auth_recover_reset_password())?.disabled).toBe(false);
 	});
 });

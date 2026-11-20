@@ -35,22 +35,24 @@ function button(label: string) {
 	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
 }
 
-async function typeAddress(handle: string) {
-	await fireEvent.input(document.querySelector('#register-name')!, { target: { value: 'Camille Roux' } });
-	await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: handle } });
+async function next() {
+	await vi.waitFor(() => expect(button('Next')?.disabled).toBe(false));
+	await fireEvent.click(button('Next')!);
 }
 
 async function continueToPassword(handle: string) {
-	await typeAddress(handle);
-	await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
-	await fireEvent.click(button('Continue')!);
+	await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: handle } });
+	await next();
+	await fireEvent.input(document.querySelector('#register-name')!, { target: { value: 'Camille Roux' } });
+	await next();
 }
 
 async function submitPassword() {
-	const [pw, confirm] = [...document.querySelectorAll<HTMLInputElement>('input[type="password"]')];
-	await fireEvent.input(pw, { target: { value: 'Quiet-harbour-lantern-47' } });
-	await fireEvent.input(confirm, { target: { value: 'Quiet-harbour-lantern-47' } });
-	await fireEvent.click(button('Create my mailbox')!);
+	await fireEvent.input(document.querySelector('#register-password')!, { target: { value: 'Quiet-harbour-lantern-47' } });
+	await next();
+	await fireEvent.input(document.querySelector('#register-confirm')!, { target: { value: 'Quiet-harbour-lantern-47' } });
+	await fireEvent.click(document.querySelector('.sp-tick input')!);
+	await fireEvent.click(button('Create my account')!);
 }
 
 beforeEach(() => {
