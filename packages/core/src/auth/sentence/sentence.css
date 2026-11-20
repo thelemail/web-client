@@ -91,7 +91,8 @@
 	transition: box-shadow var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
 }
 .auth .blank:focus-within {
-	box-shadow: inset 0 -2px 0 var(--pine-500), 0 0 0 3px var(--focus-ring);
+	background: var(--pine-100);
+	box-shadow: inset 0 -2px 0 var(--pine-700);
 }
 .auth .blank.bad {
 	background: var(--color-danger-100);
@@ -162,7 +163,7 @@
 	border-radius: 4px;
 }
 
-.auth .done {
+.auth .sp-filled {
 	all: unset;
 	cursor: pointer;
 	font-weight: 650;
@@ -171,19 +172,19 @@
 	box-shadow: inset 0 -2px 0 var(--pine-200);
 	transition: box-shadow var(--dur-fast) var(--ease-out);
 }
-.auth .done:hover {
+.auth .sp-filled:hover {
 	box-shadow: inset 0 -2px 0 var(--pine-500);
 }
-.auth .done:focus-visible {
+.auth .sp-filled:focus-visible {
 	outline: 2px solid var(--focus-ring);
 	outline-offset: 3px;
 }
-.auth .done.mono {
+.auth .sp-filled.mono {
 	font-family: var(--font-mono);
 	font-size: 0.84em;
 	font-weight: 500;
 }
-.auth .done:disabled {
+.auth .sp-filled:disabled {
 	cursor: default;
 	box-shadow: none;
 }

@@ -21,7 +21,7 @@
 {#if onedit}
 	<button
 		type="button"
-		class="done"
+		class="sp-filled"
 		class:mono={mono || secret}
 		{disabled}
 		title={m.auth_sentence_change()}
@@ -29,5 +29,5 @@
 		onclick={onedit}>{shown}</button
 	>
 {:else}
-	<span class="done" class:mono={mono || secret}>{shown}</span>
+	<span class="sp-filled" class:mono={mono || secret}>{shown}</span>
 {/if}
