@@ -265,9 +265,11 @@
 	}
 	.rk-cover {
 		position: absolute;
-		inset: 0;
+		inset: -4px;
 		display: grid;
 		place-items: center;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--bg) 62%, transparent);
 	}
 	.rk-keep {
 		font-family: var(--font-mono);
