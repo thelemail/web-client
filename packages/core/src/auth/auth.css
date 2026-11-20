@@ -12,21 +12,30 @@
 	font-size: 14px;
 }
 
+.auth .topbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 18px 28px;
+}
+
 .auth .langbar {
-	position: absolute;
-	top: 16px;
-	right: 16px;
-	z-index: 1;
+	display: flex;
+	align-items: center;
 }
 
 .auth .pagebrand {
 	display: flex;
 	align-items: center;
-	width: fit-content;
-	min-height: 42px;
-	margin: 0 auto 26px;
+	min-height: 32px;
 	color: var(--fg-strong);
 	text-decoration: none;
+}
+.auth .pagebrand:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 4px;
+	border-radius: 4px;
 }
 
 .auth .stagebody {
@@ -35,7 +44,16 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 48px 24px 64px;
+	padding: 24px 24px 64px;
+}
+
+@media (max-width: 640px) {
+	.auth .topbar {
+		padding: 14px 20px;
+	}
+	.auth .stagebody {
+		padding: 16px 20px 40px;
+	}
 }
 
 .auth .card {
