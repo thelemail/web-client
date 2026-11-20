@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import { Button } from '$core/components/ui/button';
-	import { unlockAtAuth } from '$core/custody/unlock';
+	import { signInAtAuth, unlockAtAuth } from '$core/custody/unlock';
 	import { appOrigin } from '$core/products';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -13,18 +13,18 @@
 	history.replaceState(null, '', window.location.pathname);
 	let error = $state<string | null>(null);
 
-	async function inTab(accountId: string, route: string): Promise<never> {
+	async function inTab(accountId: string | null, route: string): Promise<never> {
 		window.opener = null;
 		markAuthTab();
 		await accounts.load();
-		return unlockAtAuth(accountId, route);
+		return accountId ? unlockAtAuth(accountId, route) : signInAtAuth(route);
 	}
 
 	onMount(() => {
 		const account = params.get('account');
 		const accountId = account && /^[0-9a-f-]{36}$/.test(account) ? account : null;
 		const route = params.get('route') ?? '/';
-		void (params.get('tab') === '1' && accountId ? inTab(accountId, route) : startFor(accountId, route)).catch(() => {
+		void (params.get('tab') === '1' ? inTab(accountId, route) : startFor(accountId, route)).catch(() => {
 			error = m.handoff_failed();
 		});
 	});

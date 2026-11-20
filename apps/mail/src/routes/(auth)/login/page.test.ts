@@ -51,9 +51,9 @@ vi.mock('$core/custody/unlock', () => custody);
 const tab = vi.hoisted(() => {
 	let listener: ((r: { accountId: string; path: string }) => void) | null = null;
 	return {
-		openAuthTab: vi.fn((_accountId: string, _route: string) => true),
-		authTabPendingFor: vi.fn((_accountId: string) => false),
-		awaitAuthTab: vi.fn((_accountId: string, done: (r: { accountId: string; path: string }) => void) => {
+		openAuthTab: vi.fn((_accountId: string | null, _route: string) => true),
+		authTabPendingFor: vi.fn((_accountId: string | null) => false),
+		awaitAuthTab: vi.fn((_accountId: string | null, done: (r: { accountId: string; path: string }) => void) => {
 			listener = done;
 			return () => {
 				listener = null;
@@ -569,6 +569,19 @@ describe('login page with another account open', () => {
 		render(LoginPage);
 
 		await vi.waitFor(() => expect(document.querySelector('a[href="/u/0/mail/inbox"]')).not.toBeNull());
+	});
+
+	it('adds a new account in a tab so the open account keeps its keys', async () => {
+		route.page.url = new URL('http://localhost/login?addAccount=1');
+		custody.signInMovedToAuth.mockResolvedValue(true);
+		tab.authTabPendingFor.mockImplementation((id: string | null) => id === null);
+		render(LoginPage);
+
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		expect(custody.signInAtAuth).not.toHaveBeenCalled();
+		expect(tab.awaitAuthTab).toHaveBeenCalledWith(null, expect.any(Function));
+		tab.arrive({ accountId: 'acc-new', path: '/u/2/mail/inbox' });
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/2/mail/inbox', { replace: true }));
 	});
 
 	it('goes to the account origin in this tab when no other account is open', async () => {

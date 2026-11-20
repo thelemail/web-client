@@ -298,6 +298,7 @@
 	}
 
 	async function addAccount() {
+		if (auth.vaultUnlocked && signInMovedToAuthKnown()) openAuthTab(null, '/');
 		closeMenu(false);
 		await goto('/login?addAccount=1');
 	}

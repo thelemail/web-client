@@ -26,7 +26,7 @@
 		return page.url.searchParams.get('redirect');
 	}
 
-	async function unlockedBesides(accountId: string): Promise<string | null> {
+	async function unlockedBesides(accountId: string | null): Promise<string | null> {
 		let status: Awaited<ReturnType<typeof keystore.status>> | null = null;
 		try {
 			status = await keystore.status();
@@ -48,13 +48,12 @@
 		});
 	}
 
-	function waitForTab(accountId: string): void {
+	function waitForTab(accountId: string | null): void {
 		stopWaiting?.();
 		stopWaiting = awaitAuthTab(accountId, (result) => void arrived(result));
 	}
 
 	function openTab(): void {
-		if (!tabFor) return;
 		tabOpen = openAuthTab(tabFor, redirect() ?? '/');
 	}
 
@@ -65,7 +64,7 @@
 	}
 
 	async function open(accountId: string | null): Promise<void> {
-		if (accountId && mode !== 'tab') {
+		if (mode !== 'tab') {
 			const back = await unlockedBesides(accountId);
 			if (back) {
 				tabFor = accountId;

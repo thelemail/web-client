@@ -50,6 +50,18 @@ describe('the sign-in tab', () => {
 		expect(done).toHaveBeenCalledWith({ accountId: ACCOUNT, path: '/u/1/mail/inbox' });
 	});
 
+	it('opens a new sign-in without naming an account and hands back whichever account signed in', async () => {
+		open.mockReturnValue({});
+		openAuthTab(null, '/');
+		const fragment = new URLSearchParams((open.mock.calls[0][0] as string).split('#')[1]);
+		expect(fragment.has('account')).toBe(false);
+		expect(authTabPendingFor(null)).toBe(true);
+		const done = vi.fn();
+		stops.push(awaitAuthTab(null, done));
+		expect(await handBack({ accountId: ACCOUNT, path: '/u/2/mail/inbox' })).toBe(true);
+		expect(done).toHaveBeenCalledWith({ accountId: ACCOUNT, path: '/u/2/mail/inbox' });
+	});
+
 	it('keeps going in its own tab when nothing waits for that account', async () => {
 		const other = vi.fn();
 		stops.push(awaitAuthTab('7c1e2d3f-4a5b-4c6d-8e7f-90a1b2c3d4e5', other));

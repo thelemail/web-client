@@ -83,7 +83,7 @@ vi.mock('$core/stores/twofactor.svelte', () => ({
 	twofactor: { status: {}, phase: 'ready', load: vi.fn(), ensure: vi.fn() }
 }));
 vi.mock('$core/handoff', () => ({ openCalendar: vi.fn() }));
-const tab = vi.hoisted(() => ({ openAuthTab: vi.fn((_accountId: string, _route: string) => true) }));
+const tab = vi.hoisted(() => ({ openAuthTab: vi.fn((_accountId: string | null, _route: string) => true) }));
 vi.mock('$core/producthandoff/tab', () => tab);
 vi.mock('$core/custody/unlock', () => ({
 	signInMovedToAuth: vi.fn(async () => facts.movedToAuth),
@@ -378,6 +378,17 @@ describe('RailAccount', () => {
 		expect(list.textContent).not.toContain('Manage accounts');
 
 		await fireEvent.click(within(container).getByText('Add account'));
+		await waitFor(() => expect(goto).toHaveBeenCalledWith('/login?addAccount=1'));
+		expect(tab.openAuthTab).not.toHaveBeenCalled();
+	});
+
+	it('adds an account in a new tab once sign-in has moved to the account origin', async () => {
+		facts.movedToAuth = true;
+		const { container } = render(RailAccount);
+		await openMenu(container);
+		await fireEvent.click(within(container).getByText('Add account'));
+
+		expect(tab.openAuthTab).toHaveBeenCalledWith(null, '/');
 		await waitFor(() => expect(goto).toHaveBeenCalledWith('/login?addAccount=1'));
 	});
 });
