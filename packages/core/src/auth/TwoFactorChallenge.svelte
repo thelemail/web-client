@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
@@ -9,6 +8,8 @@
 	import type { TwoFactorMethod } from '$core/api/types';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_MIN_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import { webauthnSupported } from '$core/auth/webauthn';
+	import Blank from '$core/auth/sentence/Blank.svelte';
+	import Clause from '$core/auth/sentence/Clause.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -19,9 +20,9 @@
 		busy: boolean;
 		error: string | null;
 		keyNotice?: string | null;
-		eyebrow?: string;
 		lede?: Snippet;
 		top?: Snippet;
+		before?: Snippet;
 		backLabel?: string;
 		onTotp: (code: string) => void;
 		onBackupCode: (code: string) => void;
@@ -35,9 +36,9 @@
 		busy,
 		error,
 		keyNotice = null,
-		eyebrow,
 		lede,
 		top,
+		before,
 		backLabel,
 		onTotp,
 		onBackupCode,
@@ -47,25 +48,12 @@
 
 	type MethodId = 'app' | 'key' | 'backup';
 
-	const META: Record<MethodId, { label: () => string; pick: () => string; back: () => string }> = {
-		app: {
-			label: () => m.auth_2fa_method_app(),
-			pick: () => m.auth_2fa_method_app_pick(),
-			back: () => m.auth_2fa_back_to_app()
-		},
-		key: {
-			label: () => m.auth_2fa_method_key(),
-			pick: () => m.auth_2fa_method_key_pick(),
-			back: () => m.auth_2fa_back_to_key()
-		},
-		backup: {
-			label: () => m.auth_2fa_method_backup(),
-			pick: () => m.auth_2fa_method_backup_pick(),
-			back: () => m.auth_2fa_back_to_backup()
-		}
+	const META: Record<MethodId, { label: () => string; pick: () => string }> = {
+		app: { label: () => m.auth_2fa_method_app(), pick: () => m.auth_2fa_method_app_pick() },
+		key: { label: () => m.auth_2fa_method_key(), pick: () => m.auth_2fa_method_key_pick() },
+		backup: { label: () => m.auth_2fa_method_backup(), pick: () => m.auth_2fa_method_backup_pick() }
 	};
 
-	const eyebrowText = $derived(eyebrow ?? m.auth_2fa_eyebrow());
 	const backText = $derived(backLabel ?? m.auth_2fa_back_to_sign_in());
 
 	const available = $derived.by<MethodId[]>(() => {
@@ -78,14 +66,12 @@
 
 	let method = $derived<MethodId>(available[0]);
 	let view = $state<'challenge' | 'switch'>('challenge');
-	let digits = $state<string[]>(Array(6).fill(''));
+	let code = $state('');
 	let bcode = $state('');
 	let editedSinceError = $state(false);
 	let keyAttempted = $state(false);
-	let otpRefs: HTMLInputElement[] = $state([]);
 
 	const showBad = $derived(error !== null && !editedSinceError);
-	const code = $derived(digits.join(''));
 
 	$effect(() => {
 		if (error !== null) editedSinceError = false;
@@ -101,16 +87,15 @@
 	function switchTo(id: MethodId) {
 		method = id;
 		view = 'challenge';
-		digits = Array(6).fill('');
+		code = '';
 		bcode = '';
 		editedSinceError = true;
 		keyAttempted = false;
 	}
 
-	function verifyCode(value?: string) {
-		const c = value ?? code;
-		if (c.length < 6 || busy) return;
-		onTotp(c);
+	function verifyCode() {
+		if (code.length < 6 || busy) return;
+		onTotp(code);
 	}
 
 	function verifyBackup() {
@@ -118,34 +103,14 @@
 		onBackupCode(bcode.trim());
 	}
 
-	function setDigit(i: number, v: string) {
-		const c = v.replace(/\D/g, '').slice(-1);
+	function digitsOnly(raw: string): string {
 		editedSinceError = true;
-		digits = digits.map((d, k) => (k === i ? c : d));
-		if (c && otpRefs[i + 1]) otpRefs[i + 1].focus();
+		return raw.replace(/\D/g, '').slice(0, 6);
 	}
 
-	function otpKey(i: number, e: KeyboardEvent) {
-		if (e.key === 'Backspace' && !digits[i] && i > 0) {
-			e.preventDefault();
-			otpRefs[i - 1]?.focus();
-		} else if (e.key === 'Enter') {
-			verifyCode();
-		}
-	}
-
-	function otpPaste(e: ClipboardEvent) {
-		const t = (e.clipboardData?.getData('text') ?? '').replace(/\D/g, '');
-		if (!t) return;
-		e.preventDefault();
+	function backupCase(raw: string): string {
 		editedSinceError = true;
-		const next = Array(6)
-			.fill('')
-			.map((_, k) => t[k] ?? '');
-		digits = next;
-		const last = Math.min(5, t.length - 1);
-		otpRefs[last]?.focus();
-		if (t.length >= 6) verifyCode(next.join(''));
+		return raw.toUpperCase();
 	}
 
 	function retryKey() {
@@ -156,174 +121,133 @@
 </script>
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
-{#snippet retry(t: string)}<button type="button" class="linklike" onclick={retryKey}>{t}</button>{/snippet}
-{#snippet addrLede(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
-{#snippet addrHint(t: string)}<span class="mono">{t}</span>{/snippet}
+{#snippet retry(t: string)}<button type="button" class="sp-link" onclick={retryKey}>{t}</button>{/snippet}
+{#snippet addr(t: string)}<span class="mono">{t}</span>{/snippet}
+{#snippet codeSlot(_: string)}<Blank
+		id="twofa-code"
+		bind:value={code}
+		label={m.auth_s_2fa_code_label()}
+		placeholder="000000"
+		mono
+		inputmode="numeric"
+		autocomplete="one-time-code"
+		maxlength={6}
+		invalid={showBad}
+		describedby="twofa-msg"
+		disabled={busy}
+		focus
+		normalize={digitsOnly}
+		onenter={verifyCode}
+	/>{/snippet}
+{#snippet backupSlot(_: string)}<Blank
+		id="twofa-backup"
+		bind:value={bcode}
+		label={m.auth_2fa_method_backup()}
+		placeholder={BACKUP_CODE_PLACEHOLDER}
+		mono
+		maxlength={BACKUP_CODE_MAX_LENGTH}
+		invalid={showBad}
+		describedby="twofa-msg"
+		disabled={busy}
+		focus
+		normalize={backupCase}
+		onenter={verifyBackup}
+	/>{/snippet}
 
-{#if view === 'switch'}
+<div class="sp">
 	{@render top?.()}
-	<div class="card-head">
-		<p class="eyebrow">{eyebrowText}</p>
-		<h1>{m.auth_2fa_switch_title()}</h1>
-		<p>{m.auth_2fa_switch_lede()}</p>
-	</div>
-	<div class="altlist">
-		{#each available.filter((id) => id !== method) as id (id)}
-			<button type="button" class="altopt" onclick={() => switchTo(id)}>
-				<span class="alt-ic">
-					{#if id === 'app'}<Smartphone size={17} strokeWidth={1.75} />
-					{:else if id === 'key'}<Usb size={17} strokeWidth={1.75} />
-					{:else}<LifeBuoy size={17} strokeWidth={1.75} />{/if}
-				</span>
-				<span class="alt-tx"><b>{META[id].label()}</b><span>{META[id].pick()}</span></span>
-				<span class="alt-chev"><ChevronRight size={16} strokeWidth={1.75} /></span>
-			</button>
-		{/each}
-	</div>
-	<div class="actions" style="margin-top:18px">
-		<Button variant="ghost" size="lg" block onclick={() => (view = 'challenge')}>
-			<ArrowLeft size={17} strokeWidth={1.75} />{META[method].back()}
-		</Button>
-	</div>
-{:else}
-	{@render top?.()}
-	<div class="card-head">
-		<p class="eyebrow">{eyebrowText}</p>
-		<h1>{m.auth_2fa_title()}</h1>
-		{#if lede}
-			<p>{@render lede()}</p>
-		{:else}
-			<p><Rich text={m.auth_2fa_lede({ email })} tags={{ addr: addrLede }} /></p>
-		{/if}
-	</div>
-	<div class="form">
-		{#if method === 'app'}
-			<div class="field">
-				<div class="lab"><label for="otp-0" id="otp-label">{m.auth_2fa_code_label()}</label></div>
-				<div class="otpgrid" class:shake={showBad} role="group" aria-labelledby="otp-label">
-					{#each digits as d, i (i)}
-						<input
-							id={'otp-' + i}
-							aria-label={m.auth_2fa_digit_label({ n: i + 1, total: digits.length })}
-							aria-invalid={showBad || undefined}
-							aria-describedby="otp-msg"
-							bind:this={otpRefs[i]}
-							value={d}
-							class:err={showBad}
-							type="text"
-							inputmode="numeric"
-							autocomplete="one-time-code"
-							spellcheck="false"
-							disabled={busy}
-							oninput={(e) => setDigit(i, e.currentTarget.value)}
-							onkeydown={(e) => otpKey(i, e)}
-							onpaste={otpPaste}
-						/>
-					{/each}
+	{#if view === 'switch'}
+		<p class="sent sm">{m.auth_2fa_switch_title()}.</p>
+		<div class="sp-under">
+			<p class="sp-msg">{m.auth_2fa_switch_lede()}</p>
+			<div class="altlist">
+				{#each available.filter((id) => id !== method) as id (id)}
+					<button type="button" class="altopt" onclick={() => switchTo(id)}>
+						<span class="alt-ic">
+							{#if id === 'app'}<Smartphone size={17} strokeWidth={1.75} />
+							{:else if id === 'key'}<Usb size={17} strokeWidth={1.75} />
+							{:else}<LifeBuoy size={17} strokeWidth={1.75} />{/if}
+						</span>
+						<span class="alt-tx"><b>{META[id].label()}</b><span>{META[id].pick()}</span></span>
+						<span class="alt-chev"><ChevronRight size={16} strokeWidth={1.75} /></span>
+					</button>
+				{/each}
+			</div>
+			<div class="sp-acts">
+				<button type="button" class="sp-quiet" onclick={() => (view = 'challenge')}>{m.common_back()}</button>
+			</div>
+		</div>
+	{:else}
+		<p class="sent">
+			{#if before}{@render before()}{' '}{/if}{#if method === 'app'}<Clause
+					text={m.auth_s_2fa_code()}
+					slots={{ code: codeSlot }}
+				/>{:else if method === 'backup'}<Clause text={m.auth_s_2fa_backup()} slots={{ code: backupSlot }} />{:else}<Clause
+					text={m.auth_s_2fa_key()}
+				/>{/if}
+		</p>
+		<div class="sp-under">
+			{#if lede}<p class="sp-msg">{@render lede()}</p>{/if}
+			{#if method === 'app'}
+				{#if showBad}
+					<p class="sp-msg bad" role="alert" id="twofa-msg">
+						<CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_2fa_code_mismatch()}</span>
+					</p>
+				{:else}
+					<p class="sp-msg" id="twofa-msg">
+						<span><Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr }} /></span>
+					</p>
+				{/if}
+				<div class="sp-acts">
+					<Button variant="primary" size="lg" disabled={code.length < 6 || busy} onclick={verifyCode}>
+						{#if busy}<span class="spinner"></span>{m.auth_2fa_checking()}{:else}{m.auth_2fa_verify_code()}{/if}
+					</Button>
+					{#if available.length > 1}
+						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
+					{/if}
+					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
 				</div>
-				{#if showBad}
-					<span class="errtext" role="alert" id="otp-msg">
-						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>{m.auth_2fa_code_mismatch()}</span>
-					</span>
-				{:else}
-					<span class="hint" id="otp-msg">
-						<Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr: addrHint }} />
-					</span>
-				{/if}
-			</div>
-			<div class="actions">
-				<Button variant="primary" size="lg" block disabled={code.length < 6 || busy} onclick={() => verifyCode()}>
+			{:else if method === 'key'}
+				<p class="sp-msg" id="twofa-msg">
 					{#if busy}
-						<span class="spinner"></span>{m.auth_2fa_checking()}
+						<span class="spinner"></span><span><Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} /></span>
+					{:else if showBad}
+						<span role="alert"><Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} /></span>
+					{:else if keyNotice}
+						<span role="alert"><Rich text={m.auth_2fa_key_notice({ notice: keyNotice })} tags={{ retry }} /></span>
 					{:else}
-						{m.auth_2fa_verify_code()}
+						<span><Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} /></span>
 					{/if}
-				</Button>
-			</div>
-		{:else if method === 'key'}
-			<div class="tfa-wait">
-				<span class="tw-ring"></span>
-				<span class="tw-ic"><Usb size={26} strokeWidth={1.75} /></span>
-			</div>
-			<div class="tfa-status">
-				{#if busy}
-					<span><Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} /></span>
-				{:else if showBad}
-					<span><Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} /></span>
-				{:else if keyNotice}
-					<span role="alert"><Rich text={m.auth_2fa_key_notice({ notice: keyNotice })} tags={{ retry }} /></span>
-				{:else}
-					<span><Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} /></span>
-				{/if}
-			</div>
-		{:else}
-			<div class="field">
-				<div class="lab"><label for="twofa-backup">{m.auth_2fa_method_backup()}</label></div>
-				<input
-					id="twofa-backup"
-					aria-invalid={showBad || undefined}
-					aria-describedby="twofa-backup-msg"
-					class="inp mono"
-					class:err={showBad}
-					value={bcode}
-					placeholder={BACKUP_CODE_PLACEHOLDER}
-					maxlength={BACKUP_CODE_MAX_LENGTH}
-					autocomplete="off"
-					autocapitalize="characters"
-					spellcheck="false"
-					disabled={busy}
-					style="text-align:center;letter-spacing:.04em"
-					oninput={(e) => {
-						editedSinceError = true;
-						bcode = e.currentTarget.value.toUpperCase();
-					}}
-					onkeydown={(e) => {
-						if (e.key === 'Enter') verifyBackup();
-					}}
-				/>
+				</p>
+				<div class="sp-acts">
+					{#if available.length > 1}
+						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
+					{/if}
+					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
+				</div>
+			{:else}
 				{#if showBad}
-					<span class="errtext" role="alert" id="twofa-backup-msg">
-						<CircleAlert size={13} strokeWidth={1.75} />
-						<span>{m.auth_2fa_backup_invalid()}</span>
-					</span>
+					<p class="sp-msg bad" role="alert" id="twofa-msg">
+						<CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_2fa_backup_invalid()}</span>
+					</p>
 				{:else}
-					<span class="hint" id="twofa-backup-msg">{m.auth_2fa_backup_hint()}</span>
+					<p class="sp-msg" id="twofa-msg">{m.auth_2fa_backup_hint()}</p>
 				{/if}
-			</div>
-			<div class="actions">
-				<Button variant="primary" size="lg" block disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy} onclick={verifyBackup}>
-					{#if busy}
-						<span class="spinner"></span>{m.auth_2fa_checking()}
-					{:else}
-						{m.auth_2fa_use_backup()}
+				<div class="sp-acts">
+					<Button
+						variant="primary"
+						size="lg"
+						disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy}
+						onclick={verifyBackup}
+					>
+						{#if busy}<span class="spinner"></span>{m.auth_2fa_checking()}{:else}{m.auth_2fa_use_backup()}{/if}
+					</Button>
+					{#if available.length > 1}
+						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
 					{/if}
-				</Button>
-			</div>
-		{/if}
-	</div>
-	<p class="switch">
-		{#if available.length > 1}
-			<button type="button" class="linklike" onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
-			<span>&nbsp;&middot;&nbsp;</span>
-		{/if}
-		<button type="button" class="linklike" onclick={onBack}>
-			{backText}
-		</button>
-	</p>
-{/if}
-
-<style>
-	.linklike {
-		background: none;
-		border: none;
-		padding: 0;
-		font: inherit;
-		color: var(--link, var(--pine-700));
-		font-weight: 500;
-		cursor: pointer;
-	}
-	.linklike:hover {
-		text-decoration: underline;
-	}
-</style>
+					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
+				</div>
+			{/if}
+		</div>
+	{/if}
+</div>
