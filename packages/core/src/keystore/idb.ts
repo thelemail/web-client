@@ -18,7 +18,6 @@ export interface VaultRecord {
 	localHalfKey?: CryptoKey;
 	localHalfHolder?: 'page';
 	wrapPayloadVersion?: 1 | 2 | 3 | 4;
-	seal?: 'tab';
 }
 
 export interface StoredAccountKey {

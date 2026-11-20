@@ -111,46 +111,6 @@ describe('remembered vault restore', () => {
 	});
 });
 
-describe('tab-session vault restore', () => {
-	beforeEach(() => {
-		getPersistentHalf.mockReset();
-		status.mockReset();
-		tryRestoreFromPersistent.mockReset();
-		product.isAuthOrigin = false;
-		sessionStorage.clear();
-		status.mockResolvedValue({
-			accounts: [{ accountId: ACCOUNT, email: 'calloway@thelemail.test', unlocked: false, hasPersistent: false, hasTabSeal: true, authScheme: 'opaque_v1', mailOnly: true }]
-		});
-	});
-
-	it('reopens the vault with this tab half and never asks the server for one', async () => {
-		sessionStorage.setItem('thelemail-tab-seal', 'dGFi');
-		tryRestoreFromPersistent.mockResolvedValue({ ok: true, accountId: ACCOUNT, email: 'calloway@thelemail.test' });
-
-		expect(await auth.ensureVaultUnlocked(ACCOUNT)).toBe(true);
-		expect(tryRestoreFromPersistent).toHaveBeenCalledWith({ accountId: ACCOUNT, serverHalf: 'dGFi' });
-		expect(getPersistentHalf).not.toHaveBeenCalled();
-		expect(auth.vaultUnlockedFor(ACCOUNT)).toBe(true);
-	});
-
-	it('counts the account as locked in a tab that does not hold the half', async () => {
-		auth.syncFromKeystoreStatus(await status());
-		expect(auth.hasPersistentFor(ACCOUNT)).toBe(false);
-		expect(await auth.ensureVaultUnlocked(ACCOUNT)).toBe(false);
-		expect(tryRestoreFromPersistent).not.toHaveBeenCalled();
-
-		sessionStorage.setItem('thelemail-tab-seal', 'dGFi');
-		expect(auth.hasPersistentFor(ACCOUNT)).toBe(true);
-	});
-
-	it('stays locked on the auth origin', async () => {
-		product.isAuthOrigin = true;
-		sessionStorage.setItem('thelemail-tab-seal', 'dGFi');
-		expect(await auth.ensureVaultUnlocked(ACCOUNT)).toBe(false);
-		expect(tryRestoreFromPersistent).not.toHaveBeenCalled();
-	});
-});
-
 describe('the mail session an account holds', () => {
 	const SID = '0b8f9a52-3c1d-4e6f-8a7b-9c0d1e2f3a4b';
 	const token = (claims: object) => ['e30', btoa(JSON.stringify(claims)).replace(/=+$/, ''), 'sig'].join('.');

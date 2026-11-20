@@ -16,7 +16,6 @@ import {
 	type MeResponse,
 	type RefreshResponse
 } from '$core/api/types';
-import { tabHalf } from '$core/custody/tab-seal';
 import { keystore } from '$core/keystore/keystore-client';
 import type { StatusResponse } from '$core/keystore/protocol';
 import { accounts } from './accounts.svelte';
@@ -67,7 +66,6 @@ interface ProfileSnapshot {
 	authOriginEnrolled: boolean;
 	productKeysActive: boolean;
 	mailOnly: boolean;
-	hasTabSeal: boolean;
 }
 
 export type RecoveryState = 'unknown' | 'error' | 'set' | 'unset';
@@ -87,8 +85,7 @@ const emptyProfile = (): ProfileSnapshot => ({
 	keyRotationBlocker: null,
 	authOriginEnrolled: false,
 	productKeysActive: false,
-	mailOnly: false,
-	hasTabSeal: false
+	mailOnly: false
 });
 
 export interface SessionHooks {
@@ -198,7 +195,6 @@ class SessionStore {
 				email: p.serverEmail ?? a.email,
 				vaultUnlocked: a.unlocked,
 				hasPersistent: a.hasPersistent,
-				hasTabSeal: a.hasTabSeal ?? false,
 				mailOnly: a.mailOnly ?? false
 			}));
 		}
@@ -209,7 +205,7 @@ class SessionStore {
 		this.syncFromKeystoreStatus(status);
 		const acct = status.accounts.find((a) => a.accountId === accountId);
 		if (acct?.unlocked) return true;
-		if (!acct?.hasPersistent) return acct?.hasTabSeal ? this.#restoreTabSeal(accountId) : false;
+		if (!acct?.hasPersistent) return false;
 		const base = sessionBase(accountId);
 		if (base && !this.#tokens.has(accountId) && !(await this.tryRefresh(accountId))) return false;
 		try {
@@ -230,26 +226,6 @@ class SessionStore {
 			if (isAuthOrigin && err instanceof ApiCallError && err.status === 401) {
 				await keystore.disablePersistent({ accountId });
 			}
-			return false;
-		}
-	}
-
-	async #restoreTabSeal(accountId: string): Promise<boolean> {
-		const half = tabHalf();
-		if (!half || isAuthOrigin) return false;
-		const base = sessionBase(accountId);
-		if (base && !this.#tokens.has(accountId) && !(await this.tryRefresh(accountId))) return false;
-		try {
-			const restored = await keystore.tryRestoreFromPersistent({ accountId, serverHalf: half });
-			if (!restored.ok) return false;
-			this.#mutateProfile(accountId, (p) => ({
-				...p,
-				vaultUnlocked: true,
-				email: p.serverEmail ?? restored.email ?? p.email
-			}));
-			this.vaultOpened(accountId);
-			return true;
-		} catch {
 			return false;
 		}
 	}
@@ -565,8 +541,7 @@ class SessionStore {
 	}
 
 	hasPersistentFor(accountId: string): boolean {
-		const p = this.#profiles.get(accountId);
-		return (p?.hasPersistent ?? false) || ((p?.hasTabSeal ?? false) && tabHalf() !== null);
+		return this.#profiles.get(accountId)?.hasPersistent ?? false;
 	}
 
 	deletionFor(accountId: string): DeletionStatus | null {

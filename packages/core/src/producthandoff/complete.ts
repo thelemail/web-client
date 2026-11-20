@@ -9,7 +9,6 @@ import { b64decode, sha256 } from '$core/keystore/productkeys/encoding';
 import { parseIdentityManifest } from '$core/keystore/productkeys/manifests';
 import type { StoredBundle } from '$core/keystore/productkeys/read';
 import { currentProduct, productTarget } from '$core/products';
-import { ensureTabHalf } from '$core/custody/tab-seal';
 import { accounts } from '$core/stores/accounts.svelte';
 import { auth } from '$core/stores/auth.svelte';
 import type { AcknowledgementResponse, RedemptionResponse } from './api';
@@ -130,8 +129,7 @@ export async function completeHandoff(fragment: string): Promise<CompletedHandof
 				stateHash: await sha256(fromB64url(state))
 			},
 			keys: await loadKeys(red.accessToken),
-			serverHalf: red.serverHalf,
-			...(red.serverHalf ? {} : { tabHalf: ensureTabHalf() ?? undefined })
+			serverHalf: red.serverHalf
 		});
 		sharedSecret.fill(0);
 		if (!result.ok) throw new HandoffError('invalid');

@@ -11,7 +11,6 @@ export interface AccountStatus {
 	email: string;
 	unlocked: boolean;
 	hasPersistent: boolean;
-	hasTabSeal?: boolean;
 	authScheme: 'srp_v1' | 'opaque_v1';
 	mailOnly?: boolean;
 }
@@ -1182,7 +1181,6 @@ export interface AdoptHandoffArgs extends AccountScopedArgs {
 	expect: HandoffExpectation;
 	keys: HandoffProductKeys;
 	serverHalf: string | null;
-	tabHalf?: string;
 }
 
 export type AdoptHandoffResponse =
