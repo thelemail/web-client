@@ -429,16 +429,16 @@
 					slots={{ address: part === 'address' ? addressBlank : addressDone }}
 				/>
 				{#if partIndex >= 1}
-					{' '}<Clause
+					<Clause lead
 						text={m.auth_s_register_name()}
 						past={partIndex > 1}
 						slots={{ name: part === 'name' ? nameBlank : nameDone }}
 					/>
 				{/if}
 				{#if part === 'password'}
-					{' '}<Clause text={m.auth_s_register_password()} slots={{ password: passwordBlank }} />
+					<Clause lead text={m.auth_s_register_password()} slots={{ password: passwordBlank }} />
 				{:else if part === 'confirm'}
-					{' '}<Clause
+					<Clause lead
 						text={m.auth_s_register_password_again()}
 						slots={{ password: passwordDone, confirm: confirmBlank }}
 					/>

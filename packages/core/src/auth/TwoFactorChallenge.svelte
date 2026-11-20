@@ -179,10 +179,12 @@
 		</div>
 	{:else}
 		<p class="sent">
-			{#if before}{@render before()}{' '}{/if}{#if method === 'app'}<Clause
+			{#if before}{@render before()}{/if}{#if method === 'app'}<Clause
+					lead={!!before}
 					text={m.auth_s_2fa_code()}
 					slots={{ code: codeSlot }}
-				/>{:else if method === 'backup'}<Clause text={m.auth_s_2fa_backup()} slots={{ code: backupSlot }} />{:else}<Clause
+				/>{:else if method === 'backup'}<Clause lead={!!before} text={m.auth_s_2fa_backup()} slots={{ code: backupSlot }} />{:else}<Clause
+					lead={!!before}
 					text={m.auth_s_2fa_key()}
 				/>{/if}
 		</p>

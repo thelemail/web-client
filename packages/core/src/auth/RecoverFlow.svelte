@@ -385,7 +385,7 @@
 		focus
 		onenter={startRekey}
 	/>{/snippet}
-{#snippet pastProof()}<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} />{' '}<Clause
+{#snippet pastProof()}<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
 		text={m.auth_s_recover_phrase_ok()}
 		past
 	/>{/snippet}
@@ -429,7 +429,7 @@
 			</div>
 		{:else if step === 'phrase'}
 			<p class="sent">
-				<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} />{' '}<Clause
+				<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
 					text={m.auth_s_recover_phrase()}
 				/>
 			</p>
@@ -484,10 +484,11 @@
 			</div>
 		{:else if step === 'password'}
 			<p class="sent sm">
-				{@render pastProof()}{' '}{#if pwPart === 'new'}<Clause
+				{@render pastProof()}{#if pwPart === 'new'}<Clause lead
 						text={m.auth_s_recover_password()}
 						slots={{ password: passwordBlank }}
 					/>{:else}<Clause
+						lead
 						text={m.auth_s_recover_password_again()}
 						slots={{ password: passwordDone, confirm: confirmBlank }}
 					/>{/if}

@@ -5,8 +5,9 @@
 	let {
 		text,
 		past = false,
+		lead = false,
 		slots = {}
-	}: { text: string; past?: boolean; slots?: Record<string, Snippet<[string]>> } = $props();
+	}: { text: string; past?: boolean; lead?: boolean; slots?: Record<string, Snippet<[string]>> } = $props();
 </script>
 
-<span class:past><Rich {text} tags={slots} /></span>
+{lead ? ' ' : ''}<span class:past><Rich {text} tags={slots} /></span>
