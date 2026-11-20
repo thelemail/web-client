@@ -1,22 +1,58 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
+	import Clause from '$core/auth/sentence/Clause.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { localForkPath } from '$core/fork';
 	import { auth } from '$core/stores/auth.svelte';
+	import { accounts } from '$core/stores/accounts.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { HandoffError } from './begin';
 	import { completeHandoff, takeCallbackFragment } from './complete';
 	import { handBack, inAuthTab, leaveAuthTab } from './tab';
 
+	const CLOSE_AFTER = 3;
+
 	const fragment = takeCallbackFragment();
 	let error = $state<string | null>(null);
-	let handedBack = $state(false);
+	let phase = $state<'working' | 'counting' | 'stayed'>('working');
+	let left = $state(CLOSE_AFTER);
+	let address = $state('');
+	let ticker: ReturnType<typeof setInterval> | null = null;
 
 	onMount(() => {
 		void run();
 	});
+
+	onDestroy(stopTicker);
+
+	function stopTicker() {
+		if (ticker) clearInterval(ticker);
+		ticker = null;
+	}
+
+	function closeTab() {
+		stopTicker();
+		window.close();
+		setTimeout(() => {
+			if (!window.closed) phase = 'stayed';
+		}, 300);
+	}
+
+	function stay() {
+		stopTicker();
+		phase = 'stayed';
+	}
+
+	function countDown() {
+		left = CLOSE_AFTER;
+		phase = 'counting';
+		ticker = setInterval(() => {
+			left -= 1;
+			if (left <= 0) closeTab();
+		}, 1000);
+	}
 
 	async function run() {
 		if (!fragment) {
@@ -28,8 +64,8 @@
 			if (inAuthTab()) {
 				leaveAuthTab();
 				if (await handBack({ accountId: done.accountId, path: localForkPath(done.route, done.slot) })) {
-					handedBack = true;
-					window.close();
+					address = accounts.byId(done.accountId)?.email || auth.emailFor(done.accountId) || '';
+					countDown();
 					return;
 				}
 			}
@@ -42,27 +78,41 @@
 	}
 </script>
 
+{#snippet account(_: string)}<span class="acct">{address}</span>{/snippet}
+{#snippet count(_: string)}<span class="tabnum">{left}</span>{/snippet}
+
 <AuthShell>
-	<div class="card handoffcard" aria-live="polite">
-		{#if error}
-			<h1>{m.handoff_title()}</h1>
-			<p class="handoffmsg">{error}</p>
-			<Button variant="primary" size="lg" href="/">{m.handoff_restart()}</Button>
-		{:else if handedBack}
-			<p class="handoffmsg">{m.handoff_tab_done()}</p>
-		{:else}
-			<p class="handoffmsg">{m.handoff_opening()}</p>
-		{/if}
+	<div class="card">
+		<div class="sp" aria-live="polite">
+			{#if error}
+				<p class="sent sm">{error}</p>
+				<div class="sp-acts">
+					<Button variant="primary" size="lg" href="/">{m.handoff_restart()}</Button>
+				</div>
+			{:else if phase === 'counting'}
+				<p class="sent sm"><Clause text={m.handoff_tab_done_sentence()} slots={{ account, count }} /></p>
+				<div class="sp-under">
+					<div class="sp-bar" aria-hidden="true"><i style:width="{((CLOSE_AFTER - left + 1) / CLOSE_AFTER) * 100}%"></i></div>
+					<p class="sp-fine">{m.handoff_tab_closes()}</p>
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" onclick={closeTab}>{m.handoff_tab_go_now()}</Button>
+						<button type="button" class="sp-quiet" onclick={stay}>{m.handoff_tab_stay()}</button>
+					</div>
+				</div>
+			{:else if phase === 'stayed'}
+				<p class="sent sm"><Clause text={m.handoff_tab_stayed_sentence()} slots={{ account }} /></p>
+				<div class="sp-acts">
+					<Button variant="secondary" size="lg" onclick={closeTab}>{m.handoff_tab_close()}</Button>
+				</div>
+			{:else}
+				<p class="sp-msg" role="status"><span class="spinner"></span><span>{m.handoff_opening()}</span></p>
+			{/if}
+		</div>
 	</div>
 </AuthShell>
 
 <style>
-	.handoffcard {
-		display: grid;
-		gap: 0.75rem;
-		justify-items: start;
-	}
-	.handoffmsg {
-		color: var(--muted-foreground);
+	.tabnum {
+		font-variant-numeric: tabular-nums;
 	}
 </style>

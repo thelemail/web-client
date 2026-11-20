@@ -12,6 +12,7 @@
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/session.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
+	import Clause from '$core/auth/sentence/Clause.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	const slot = page.url.searchParams.get('slot');
@@ -21,6 +22,7 @@
 	let backTo = $state<string | null>(null);
 	let stopWaiting: (() => void) | null = null;
 	const checking = delayed(() => mode === 'checking', { minVisible: 0 });
+	const tabEmail = $derived(tabFor ? (accounts.byId(tabFor)?.email ?? null) : null);
 
 	function redirect(): string | null {
 		return page.url.searchParams.get('redirect');
@@ -46,6 +48,7 @@
 		await accountTransition.run('switch', email, async () => {
 			await goto(result.path, { replace: true });
 		});
+		if (email) accountTransition.announceArrival(email);
 	}
 
 	function waitForTab(accountId: string | null): void {
@@ -120,15 +123,28 @@
 {#if mode === 'password'}
 	<LoginFlow {intercept} afterSignIn={signedIn} />
 {:else if mode === 'tab'}
-	<div class="unlockcard" aria-live="polite">
-		<h1>{m.handoff_tab_title()}</h1>
-		<p class="unlockmsg">{tabOpen ? m.handoff_tab_waiting() : m.handoff_tab_ask()}</p>
-		<Button variant="primary" size="lg" onclick={openTab}>{tabOpen ? m.handoff_tab_reopen() : m.handoff_tab_open()}</Button>
-		<div class="unlockalt">
-			<Button variant="ghost" size="sm" onclick={continueHere}>{m.handoff_tab_here()}</Button>
-			{#if backTo}
-				<Button variant="ghost" size="sm" href={backTo}>{m.handoff_tab_back()}</Button>
+	{#snippet account(_: string)}<span class="acct">{tabEmail}</span>{/snippet}
+	<div class="sp" aria-live="polite">
+		<p class="sent sm">
+			{#if tabEmail}
+				<Clause text={tabOpen ? m.handoff_tab_waiting_sentence() : m.handoff_tab_ask_sentence()} slots={{ account }} />
+			{:else}
+				{tabOpen ? m.handoff_tab_waiting_new() : m.handoff_tab_ask_new()}
 			{/if}
+		</p>
+		<div class="sp-under">
+			{#if tabOpen}
+				<p class="sp-msg" role="status"><span class="spinner"></span><span>{m.handoff_tab_waiting_line()}</span></p>
+			{/if}
+			<div class="sp-acts">
+				<Button variant="primary" size="lg" onclick={openTab}>{tabOpen ? m.handoff_tab_reopen() : m.handoff_tab_open()}</Button>
+			</div>
+			<div class="sp-acts">
+				<button type="button" class="sp-quiet" onclick={continueHere}>{m.handoff_tab_here()}</button>
+				{#if backTo}
+					<a class="sp-quiet" href={backTo}>{m.handoff_tab_back()}</a>
+				{/if}
+			</div>
 		</div>
 	</div>
 {:else if mode === 'checking'}
@@ -157,10 +173,5 @@
 	}
 	.unlockmsg {
 		color: var(--muted-foreground);
-	}
-	.unlockalt {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
 	}
 </style>
