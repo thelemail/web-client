@@ -2,10 +2,15 @@
 	import { m } from '$paraglide/messages.js';
 	import { accountTransition } from '$core/stores/accountTransition.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
+	import Toast from '$core/components/Toast.svelte';
 
 	const current = $derived(accountTransition.current);
 	const status = delayed(() => current !== null, { minVisible: 0 });
 </script>
+
+{#if accountTransition.arrived && !current}
+	<Toast text={m.handoff_tab_signed_in({ email: accountTransition.arrived })} />
+{/if}
 
 {#if current}
 	<div class="acct-transition" aria-busy="true">

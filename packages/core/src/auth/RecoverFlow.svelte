@@ -2,10 +2,13 @@
 	import { platform } from '$platform';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import PasswordField from '$core/auth/PasswordField.svelte';
-	import PasswordRequirements from '$core/auth/PasswordRequirements.svelte';
 	import { passwordReqs } from '$core/auth/password-policy';
-	import Stepper from '$core/auth/Stepper.svelte';
+	import Blank from '$core/auth/sentence/Blank.svelte';
+	import Clause from '$core/auth/sentence/Clause.svelte';
+	import Done from '$core/auth/sentence/Done.svelte';
+	import Trail from '$core/auth/sentence/Trail.svelte';
+	import PasswordChecks from '$core/auth/sentence/PasswordChecks.svelte';
+	import WorkSteps from '$core/auth/sentence/WorkSteps.svelte';
 	import {
 		completeRecoveryReset,
 		discardRecovery,
@@ -23,18 +26,8 @@
 	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
-	import Wordmark from '$core/components/Wordmark.svelte';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import KeyRound from '@lucide/svelte/icons/key-round';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Check from '@lucide/svelte/icons/check';
-	import MonitorSmartphone from '@lucide/svelte/icons/monitor-smartphone';
-	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
-	import LogOut from '@lucide/svelte/icons/log-out';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import Mail from '@lucide/svelte/icons/mail';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -99,6 +92,7 @@
 
 	let pw = $state('');
 	let confirm = $state('');
+	let pwPart = $state<'new' | 'again'>('new');
 	let workIdx = $state(0);
 	let workError = $state('');
 
@@ -149,7 +143,7 @@
 		if (!allFilled || phraseStatus === 'checking') return;
 		if (!validateMnemonic(phrase, wordlist)) {
 			phraseStatus = 'bad';
-			phraseError = m.auth_recover_phrase_invalid();
+			phraseError = m.auth_s_recover_phrase_invalid();
 			return;
 		}
 		phraseStatus = 'checking';
@@ -297,6 +291,7 @@
 		recoveredAccountId = undefined;
 		pw = '';
 		confirm = '';
+		pwPart = 'new';
 		workError = '';
 		workIdx = 0;
 		phraseStatus = 'idle';
@@ -340,292 +335,213 @@
 		}
 	}
 
-	const workPct = $derived(Math.min(100, Math.round((workIdx / workLines.length) * 100)));
+	const trailAt = $derived(
+		step === 'account' ? 0 : step === 'phrase' || step === 'nophrase' ? 1 : step === 'twofa' ? 2 : recLabels.length - 1
+	);
 </script>
 
-{#snippet bold(t: string)}<b>{t}</b>{/snippet}
-{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
 {#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
+{#snippet emailBlank(_: string)}<Blank
+		id="rec-email"
+		bind:value={email}
+		label={m.common_email_address()}
+		placeholder="you@yourdomain.com"
+		mono
+		autocomplete="username"
+		focus
+		normalize={(raw) => raw.trim()}
+		onenter={continueAccount}
+	/>{/snippet}
+{#snippet emailDone(_: string)}<Done
+		text={email}
+		mono
+		disabled={phraseStatus === 'checking'}
+		onedit={step === 'phrase' ? () => (step = 'account') : undefined}
+	/>{/snippet}
+{#snippet passwordBlank(_: string)}<Blank
+		id="rec-password"
+		bind:value={pw}
+		label={m.auth_recover_new_password_label()}
+		placeholder={m.auth_s_new_password_placeholder()}
+		mono
+		secret
+		autocomplete="new-password"
+		focus
+		onenter={() => {
+			if (allMet) pwPart = 'again';
+		}}
+	/>{/snippet}
+{#snippet passwordDone(_: string)}<Done text="" secret onedit={() => (pwPart = 'new')} />{/snippet}
+{#snippet confirmBlank(_: string)}<Blank
+		id="rec-confirm"
+		bind:value={confirm}
+		label={m.auth_recover_confirm_label()}
+		placeholder={m.auth_s_confirm_placeholder()}
+		mono
+		secret
+		autocomplete="new-password"
+		invalid={mismatch && !pw.startsWith(confirm)}
+		describedby="recover-confirm-msg"
+		focus
+		onenter={startRekey}
+	/>{/snippet}
+{#snippet pastProof()}<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
+		text={m.auth_s_recover_phrase_ok()}
+		past
+	/>{/snippet}
 
 <svelte:head>
 	<title>{m.auth_recover_page_title()}</title>
 </svelte:head>
 
-{#if step === 'account'}
-	<div class="card-surface screen-fade">
-		<Stepper step={0} labels={recLabelsBase} />
-		<div class="card-head">
-			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
-			<h1>{m.auth_recover_title()}</h1>
-			<p>{m.auth_recover_lede()}</p>
-		</div>
-		<div class="form">
-			<div class="keynote">
-				<KeyRound size={16} strokeWidth={1.75} />
-				<span><Rich text={m.auth_recover_keynote()} tags={{ b: bold }} /></span>
-			</div>
-			<div class="field">
-				<div class="lab"><label for="rec-email">{m.common_email_address()}</label></div>
-				<input
-					id="rec-email"
-					class="inp"
-					type="email"
-					bind:value={email}
-					placeholder="you@yourdomain.com"
-					autocomplete="username"
-					onkeydown={(e) => {
-						if (e.key === 'Enter') continueAccount();
-					}}
-				/>
-				<span class="hint">{m.auth_recover_email_hint()}</span>
-			</div>
-			<div class="actions">
-				<Button variant="primary" size="lg" block disabled={!emailValid} onclick={continueAccount}>
-					{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
-				</Button>
-			</div>
-		</div>
-		<p class="switch">
-			<Rich text={m.auth_recover_remembered()} tags={{ link: signInLink }} />
-		</p>
-	</div>
-{:else if step === 'phrase'}
-	<div class="card-surface screen-fade">
-		<Stepper step={1} labels={recLabels} />
-		<div class="card-head">
-			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
-			<h1>{m.auth_recover_phrase_title()}</h1>
-			<p><Rich text={m.auth_recover_phrase_lede({ email })} tags={{ addr }} /></p>
-		</div>
-		<div class="form">
-			<div class="phrasegrid" class:shake={phraseStatus === 'bad'}>
-				{#each words as w, i (i)}
-					{@const wrong = phraseStatus === 'bad' && badWord(w)}
-					<label class="pword" class:err={wrong}>
-						<span class="n">{i + 1}</span>
-						<input
-							value={w}
-							bind:this={inputs[i]}
-							spellcheck="false"
-							autocomplete="off"
-							autocapitalize="none"
-							oninput={(e) => setWord(i, e.currentTarget.value)}
-							onpaste={(e) => onPhrasePaste(i, e)}
-							onkeydown={(e) => onPhraseKey(i, e)}
-							aria-invalid={wrong || undefined}
-							aria-describedby={phraseStatus === 'bad' ? 'recover-phrase-err' : undefined}
-						/>
-					</label>
-				{/each}
-			</div>
-			{#if phraseStatus === 'bad'}
-				<span class="errtext" role="alert" id="recover-phrase-err">
-					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>{phraseError}</span>
-				</span>
-			{:else}
-				<span class="hint">{m.auth_recover_phrase_tip()}</span>
-			{/if}
-			<div class="actions">
-				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={phraseStatus === 'checking'} onclick={() => (step = 'account')}>
-						<ArrowLeft size={17} strokeWidth={1.75} />
-					</Button>
-					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
-						{#if phraseStatus === 'checking'}
-							<span class="spinner"></span>{m.auth_recover_phrase_checking()}
-						{:else}
-							{m.auth_recover_phrase_unlock()}<ArrowRight size={17} strokeWidth={1.75} />
-						{/if}
-					</Button>
-				</div>
-			</div>
-		</div>
-		<p class="switch">
-			<button class="linklike" type="button" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>
-				{m.auth_recover_no_phrase()}
-			</button>
-		</p>
-	</div>
-{:else if step === 'nophrase'}
-	<div class="card-surface screen-fade">
-		<div class="card-head">
-			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
-			<h1>{m.auth_recover_nophrase_title()}</h1>
-			<p>{m.auth_recover_nophrase_lede()}</p>
-		</div>
-		<div class="ways">
-			<div class="way">
-				<span class="way-ic"><MonitorSmartphone size={17} strokeWidth={1.75} /></span>
-				<div class="way-text">
-					<b>{m.auth_recover_way_device_title()}</b>
-					{m.auth_recover_way_device_body()}
-				</div>
-			</div>
-			<div class="way">
-				<span class="way-ic"><RotateCcw size={17} strokeWidth={1.75} /></span>
-				<div class="way-text">
-					<b>{m.auth_recover_way_retry_title()}</b>
-					{m.auth_recover_way_retry_body()}
-				</div>
-			</div>
-			<div class="way danger">
-				<span class="way-ic"><CircleAlert size={17} strokeWidth={1.75} /></span>
-				<div class="way-text">
-					<b>{m.auth_recover_way_reset_title()}</b>
-					{m.auth_recover_way_reset_body()}
-				</div>
-			</div>
-		</div>
-		<div class="actions" style="margin-top:22px">
-			<Button variant="secondary" size="lg" block onclick={() => (step = 'phrase')}>
-				<ArrowLeft size={17} strokeWidth={1.75} />{m.auth_recover_look_for_phrase()}
-			</Button>
-			<Button variant="ghost" size="lg" block onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</Button>
-		</div>
-	</div>
-{:else if step === 'twofa'}
-	<div class="card-surface screen-fade">
-		{#if pendingTwoFactor}
-			<TwoFactorChallenge
-				{email}
-				methods={pendingTwoFactor.methods}
-				busy={twoFaBusy}
-				error={twoFaError}
-				keyNotice={twoFaKeyNotice}
-				eyebrow={m.auth_recover_eyebrow()}
-				backLabel={m.common_back()}
-				onTotp={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorTotp(p, code))}
-				onBackupCode={(code) =>
-					runRecoveryTwoFactor((p) => submitRecoveryTwoFactorBackupCode(p, code))}
-				onWebauthn={() => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorWebauthn(p))}
-				onBack={() => resetToPhraseStep('')}
-			>
-				{#snippet top()}
-					<Stepper step={2} labels={recLabels2fa} />
-				{/snippet}
-				{#snippet lede()}
-					<Rich text={m.auth_recover_2fa_lede({ email })} tags={{ addr }} />
-				{/snippet}
-			</TwoFactorChallenge>
-		{/if}
-	</div>
-{:else if step === 'password'}
-	<div class="card-surface screen-fade">
-		<Stepper step={hadTwoFa ? 3 : 2} labels={recLabels} />
-		<div class="card-head">
-			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
-			<h1>{m.auth_recover_password_title()}</h1>
-			<p>{m.auth_recover_password_lede()}</p>
-		</div>
-		<div class="form">
-			<PasswordField
-				label={m.auth_recover_new_password_label()}
-				bind:value={pw}
-				placeholder={m.auth_register_password_placeholder()}
-				autocomplete="new-password"
-			/>
-			<PasswordRequirements {pw} />
-			<PasswordField
-				label={m.auth_recover_confirm_label()}
-				bind:value={confirm}
-				placeholder={m.auth_register_confirm_placeholder()}
-				autocomplete="new-password"
-				onEnter={startRekey}
-				invalid={mismatch}
-				describedby={mismatch ? 'recover-confirm-msg' : undefined}
-			/>
-			{#if mismatch}
-				<span class="errtext" role="alert" id="recover-confirm-msg" style="margin-top:-8px">
-					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>{m.auth_register_passwords_mismatch()}</span>
-				</span>
-			{:else if matches}
-				<span class="oktext" style="margin-top:-8px">
-					<CircleCheck size={13} strokeWidth={1.75} />
-					<span>{m.auth_register_passwords_match()}</span>
-				</span>
-			{/if}
-			<div class="keynote">
-				<KeyRound size={16} strokeWidth={1.75} />
-				<span><Rich text={m.auth_recover_rewrap_note()} tags={{ b: bold }} /></span>
-			</div>
-			<div class="actions">
-				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 'phrase')}>
-						<ArrowLeft size={17} strokeWidth={1.75} />
-					</Button>
-					<Button variant="primary" size="lg" disabled={!passwordReady} onclick={startRekey}>
-						{m.auth_recover_reset_password()}<ArrowRight size={17} strokeWidth={1.75} />
-					</Button>
-				</div>
-			</div>
-		</div>
-	</div>
-{:else if step === 'working'}
-	<div class="card-surface screen-fade">
-		<div class="card-head">
-			<p class="eyebrow">{m.auth_recover_eyebrow()}</p>
-			<h1>{m.auth_recover_working_title()}</h1>
-		</div>
-		<div class="working">
-			<div class="wbar"><i style="width:{workPct}%"></i></div>
-			<ul class="wlines">
-				{#each workLines as line, j (j)}
-					<li class:done={j < workIdx} class:active={j === workIdx && !workError}>
-						<span class="wic">
-							{#if j < workIdx}
-								<Check size={13} strokeWidth={2.5} />
-							{:else if j === workIdx && !workError}
-								<span class="spinner"></span>
-							{:else}
-								<span class="pend"></span>
-							{/if}
-						</span>
-						{line}
-					</li>
-				{/each}
-			</ul>
-			{#if workError}
-				<span class="errtext" role="alert" style="margin-top:16px">
-					<CircleAlert size={13} strokeWidth={1.75} />
-					<span>{workError}</span>
-				</span>
-				<div class="actions" style="margin-top:18px">
-					<Button variant="secondary" size="lg" block onclick={startOver}>
-						<RotateCcw size={15} strokeWidth={1.75} />{m.auth_recover_start_over()}
-					</Button>
-					<Button variant="ghost" size="lg" block onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</Button>
-				</div>
-			{/if}
-		</div>
-	</div>
+{#if step === 'twofa'}
+	{#if pendingTwoFactor}
+		<TwoFactorChallenge
+			{email}
+			methods={pendingTwoFactor.methods}
+			busy={twoFaBusy}
+			error={twoFaError}
+			keyNotice={twoFaKeyNotice}
+			backLabel={m.common_back()}
+			before={pastProof}
+			onTotp={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorTotp(p, code))}
+			onBackupCode={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorBackupCode(p, code))}
+			onWebauthn={() => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorWebauthn(p))}
+			onBack={() => resetToPhraseStep('')}
+		>
+			{#snippet top()}
+				<Trail items={recLabels2fa} current={2} />
+			{/snippet}
+		</TwoFactorChallenge>
+	{/if}
 {:else}
-	<div class="card-surface screen-fade">
-		<div class="welcome">
-			<Wordmark class="brandmark brandmark-lg" size="large" />
-			<h1>{m.auth_recover_done_title()}</h1>
-			<p>{m.auth_recover_done_lede()}</p>
-			<div class="addrcard">
-				<span class="av"><KeyRound size={16} strokeWidth={1.75} /></span>
-				<span class="em">{email}</span>
-				<span class="vbadge"><Check size={13} strokeWidth={2.5} /></span>
+	<div class="sp">
+		{#if step !== 'done' && step !== 'nophrase'}
+			<Trail items={recLabels} current={step === 'working' ? recLabels.length : trailAt} />
+		{/if}
+		{#if step === 'account'}
+			<p class="sent"><Clause text={m.auth_s_recover_account()} slots={{ email: emailBlank }} /></p>
+			<div class="sp-under">
+				<p class="sp-msg">{m.auth_s_recover_email_hint()}</p>
+				<div class="sp-acts">
+					<Button variant="primary" size="lg" disabled={!emailValid} onclick={continueAccount}>{m.auth_sentence_next()}</Button>
+				</div>
 			</div>
-			<div class="recnotes">
-				<span class="recnote">
-					<LogOut size={14} strokeWidth={1.75} />
-					{m.auth_recover_done_signed_out()}
-				</span>
-				<span class="recnote brass">
-					<LifeBuoy size={14} strokeWidth={1.75} />
-					{m.auth_recover_done_phrase_retired()}
-				</span>
+		{:else if step === 'phrase'}
+			<p class="sent">
+				<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
+					text={m.auth_s_recover_phrase()}
+				/>
+			</p>
+			<div class="sp-under wide">
+				<div class="sp-words">
+					{#each words as w, i (i)}
+						{@const wrong = phraseStatus === 'bad' && badWord(w)}
+						<label class="sp-word" class:bad={wrong}>
+							<span class="n">{i + 1}</span>
+							<input
+								value={w}
+								bind:this={inputs[i]}
+								spellcheck="false"
+								autocomplete="off"
+								autocapitalize="none"
+								aria-label={m.auth_s_word_label({ n: i + 1, total: 12 })}
+								oninput={(e) => setWord(i, e.currentTarget.value)}
+								onpaste={(e) => onPhrasePaste(i, e)}
+								onkeydown={(e) => onPhraseKey(i, e)}
+								aria-invalid={wrong || undefined}
+								aria-describedby={phraseStatus === 'bad' ? 'recover-phrase-err' : undefined}
+							/>
+						</label>
+					{/each}
+				</div>
+				{#if phraseStatus === 'bad'}
+					<p class="sp-err" role="alert" id="recover-phrase-err"><CircleAlert size={15} strokeWidth={1.75} /><span>{phraseError}</span></p>
+				{:else}
+					<p class="sp-msg">{m.auth_recover_phrase_tip()}</p>
+				{/if}
+				<div class="sp-acts">
+					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
+						{#if phraseStatus === 'checking'}<span class="spinner"></span>{m.auth_recover_phrase_checking()}{:else}{m.auth_recover_phrase_unlock()}{/if}
+					</Button>
+					<button type="button" class="sp-quiet" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>
+						{m.auth_recover_no_phrase()}
+					</button>
+				</div>
 			</div>
-			<div class="actions" style="margin-top:24px">
-				<Button variant="primary" size="lg" block onclick={exitToLogin}>
-					<Mail size={17} strokeWidth={1.75} />{m.auth_recover_done_sign_in()}
-				</Button>
+		{:else if step === 'nophrase'}
+			<p class="sent sm">{m.auth_s_recover_nophrase()}</p>
+			<div class="sp-under">
+				<div class="sp-ways">
+					<div><b>{m.auth_recover_way_device_title()}</b><span>{m.auth_recover_way_device_body()}</span></div>
+					<div><b>{m.auth_recover_way_retry_title()}</b><span>{m.auth_recover_way_retry_body()}</span></div>
+					<div><b>{m.auth_recover_way_reset_title()}</b><span>{m.auth_recover_way_reset_body()}</span></div>
+				</div>
+				<div class="sp-acts">
+					<Button variant="secondary" size="lg" onclick={() => (step = 'phrase')}>{m.auth_recover_look_for_phrase()}</Button>
+					<button type="button" class="sp-quiet" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button>
+				</div>
 			</div>
-		</div>
+		{:else if step === 'password'}
+			<p class="sent sm">
+				{@render pastProof()}{#if pwPart === 'new'}<Clause lead
+						text={m.auth_s_recover_password()}
+						slots={{ password: passwordBlank }}
+					/>{:else}<Clause
+						lead
+						text={m.auth_s_recover_password_again()}
+						slots={{ password: passwordDone, confirm: confirmBlank }}
+					/>{/if}
+			</p>
+			<div class="sp-under">
+				{#if pwPart === 'new'}
+					<PasswordChecks {pw} />
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" disabled={!allMet} onclick={() => (pwPart = 'again')}>{m.auth_sentence_next()}</Button>
+						<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
+					</div>
+				{:else}
+					{#if mismatch && !pw.startsWith(confirm)}
+						<p class="sp-msg bad" role="alert" id="recover-confirm-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_mismatch()}</span></p>
+					{:else if matches}
+						<p class="sp-msg ok" id="recover-confirm-msg"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_match()}</span></p>
+					{:else}
+						<p class="sp-msg" id="recover-confirm-msg">{m.auth_s_confirm_hint()}</p>
+					{/if}
+					<p class="sp-msg">{m.auth_s_recover_rewrap_note()}</p>
+					<div class="sp-acts">
+						<Button variant="primary" size="lg" disabled={!passwordReady} onclick={startRekey}>{m.auth_recover_reset_password()}</Button>
+					</div>
+				{/if}
+			</div>
+		{:else if step === 'working'}
+			<p class="sent sm">{m.auth_s_recover_working()}</p>
+			<div class="sp-under">
+				<WorkSteps lines={workLines} at={workIdx} failed={!!workError} />
+				{#if workError}
+					<p class="sp-err" role="alert"><CircleAlert size={15} strokeWidth={1.75} /><span>{workError}</span></p>
+					<div class="sp-acts">
+						<Button variant="secondary" size="lg" onclick={startOver}>{m.auth_recover_start_over()}</Button>
+						<button type="button" class="sp-quiet" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button>
+					</div>
+				{:else}
+					<p class="sp-fine">{m.auth_s_recover_working_note()}</p>
+				{/if}
+			</div>
+		{:else}
+			<p class="sent sm">{m.auth_s_recover_done()}</p>
+			<div class="sp-under">
+				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_signed_out()}</span></p>
+				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
+				<div class="sp-acts">
+					<Button variant="primary" size="lg" onclick={exitToLogin}>{m.auth_recover_done_sign_in()}</Button>
+				</div>
+			</div>
+		{/if}
+		{#if step === 'account' || step === 'phrase'}
+			<div class="sp-foot">
+				<span><Rich text={m.auth_recover_remembered()} tags={{ link: signInLink }} /></span>
+			</div>
+		{/if}
 	</div>
 {/if}

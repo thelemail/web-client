@@ -36,7 +36,7 @@ const vault = vi.hoisted(() => ({
 vi.mock('$core/keystore/keystore-client', () => vault);
 const known = vi.hoisted(() => ({
 	bySlot: vi.fn(),
-	byId: vi.fn((id: string) => (id === 'acc-open' ? { accountId: 'acc-open', slot: 0, email: 'ivy@thelemail.com' } : null) as { accountId: string; slot: number; email: string } | null),
+	byId: vi.fn((id: string) => (id === 'acc-open' ? { accountId: 'acc-open', slot: 0, email: 'ivy@thelemail.com' } : id === 'acc-locked' ? { accountId: 'acc-locked', slot: 1, email: 'hal@thelemail.com' } : null) as { accountId: string; slot: number; email: string } | null),
 	refresh: vi.fn(async () => undefined),
 	list: [] as { accountId: string }[]
 }));
@@ -59,11 +59,14 @@ const tab = vi.hoisted(() => {
 				listener = null;
 			};
 		}),
-		arrive: (r: { accountId: string; path: string }) => listener?.(r)
+		arrive: (r: { accountId: string; path: string; email?: string }) => listener?.(r)
 	};
 });
 vi.mock('$core/producthandoff/tab', () => tab);
-vi.mock('$core/stores/accountTransition.svelte', () => ({ accountTransition: { run: async (_k: string, _a: string | null, work: () => Promise<void>) => work() } }));
+const transition = vi.hoisted(() => ({ announceArrival: vi.fn() }));
+vi.mock('$core/stores/accountTransition.svelte', () => ({
+	accountTransition: { run: async (_k: string, _a: string | null, work: () => Promise<void>) => work(), announceArrival: transition.announceArrival }
+}));
 
 const OPERATION = 'op-1';
 let pending: {
@@ -77,6 +80,14 @@ let pending: {
 
 function button(label: string) {
 	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+}
+
+function plain(text: string) {
+	return text.replace(/<[^>]+>/g, '');
+}
+
+function changeEmail() {
+	return document.querySelector<HTMLButtonElement>('button.sp-filled');
 }
 
 async function enterEmail(value = 'r@thelemail.com') {
@@ -93,7 +104,7 @@ async function submitCredentials(email = 'r@thelemail.com') {
 
 async function reachTwoFactor() {
 	await submitCredentials();
-	await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
+	await vi.waitFor(() => expect(document.querySelector('#twofa-code')).not.toBeNull());
 }
 
 function rejection(status: number, code: ErrorCode) {
@@ -101,9 +112,7 @@ function rejection(status: number, code: ErrorCode) {
 }
 
 async function submitCode() {
-	for (let i = 0; i < 6; i++) {
-		await fireEvent.input(document.querySelector(`#otp-${i}`)!, { target: { value: String(i + 1) } });
-	}
+	await fireEvent.input(document.querySelector('#twofa-code')!, { target: { value: '123456' } });
 	await fireEvent.click(button(m.auth_2fa_verify_code())!);
 }
 
@@ -161,7 +170,7 @@ describe('login page two-factor step', () => {
 
 		await fireEvent.click(button(m.auth_2fa_back_to_sign_in())!);
 
-		await vi.waitFor(() => expect(document.querySelector('#otp-0')).toBeNull());
+		await vi.waitFor(() => expect(document.querySelector('#twofa-code')).toBeNull());
 		expect(login.abandonTwoFactorLogin).toHaveBeenCalledTimes(1);
 		expect(login.abandonTwoFactorLogin).toHaveBeenCalledWith(pending);
 		expect(login.abandonTwoFactorLogin.mock.calls[0][0].opaqueOperationId).toBe(OPERATION);
@@ -187,7 +196,7 @@ describe('login page two-factor step', () => {
 		for (let attempt = 1; attempt < 5; attempt++) {
 			await submitCode();
 			await vi.waitFor(() => expect(login.submitTwoFactorTotp).toHaveBeenCalledTimes(attempt));
-			await vi.waitFor(() => expect(document.querySelector<HTMLInputElement>('#otp-0')!.disabled).toBe(false));
+			await vi.waitFor(() => expect(document.querySelector<HTMLInputElement>('#twofa-code')!.disabled).toBe(false));
 		}
 		expect(login.abandonTwoFactorLogin).not.toHaveBeenCalled();
 
@@ -224,7 +233,7 @@ describe('login page two-factor step', () => {
 		window.dispatchEvent(new Event('pagehide'));
 
 		await vi.waitFor(() => expect(login.abandonTwoFactorLogin).toHaveBeenCalledWith(pending));
-		await vi.waitFor(() => expect(document.querySelector('#otp-0')).toBeNull());
+		await vi.waitFor(() => expect(document.querySelector('#twofa-code')).toBeNull());
 	});
 
 	it('leaves a completed login alone on the way out', async () => {
@@ -273,7 +282,7 @@ describe('login page errors and proof of work', () => {
 
 		await vi.waitFor(() => expect(button(m.auth_login_verifying())).toBeDefined());
 		finishSolve();
-		await vi.waitFor(() => expect(document.querySelector('#otp-0')).not.toBeNull());
+		await vi.waitFor(() => expect(document.querySelector('#twofa-code')).not.toBeNull());
 	});
 
 	it('aborts a running solve when the page goes away', async () => {
@@ -309,7 +318,7 @@ describe('login page identifier step', () => {
 	it('renders the same password step for any address', async () => {
 		const markup = (address: string) =>
 			document
-				.querySelector('.card-surface')!
+				.querySelector('.sp')!
 				.innerHTML.replaceAll(encodeURIComponent(address), 'ADDR')
 				.replaceAll(address, 'ADDR')
 				.replace(/"c\d+"/g, '"ID"');
@@ -363,7 +372,7 @@ describe('login page identifier step', () => {
 		await enterEmail();
 		await fireEvent.input(document.querySelector('input[type="password"]')!, { target: { value: 'hunter22' } });
 
-		await fireEvent.click(button(m.auth_login_change_email())!);
+		await fireEvent.click(changeEmail()!);
 
 		const email = document.querySelector<HTMLInputElement>('#login-email')!;
 		expect(email.value).toBe('r@thelemail.com');
@@ -378,8 +387,8 @@ describe('login page identifier step', () => {
 
 		await submitCredentials();
 
-		await vi.waitFor(() => expect(button(m.auth_login_change_email())!.disabled).toBe(true));
-		await fireEvent.click(button(m.auth_login_change_email())!);
+		await vi.waitFor(() => expect(changeEmail()!.disabled).toBe(true));
+		await fireEvent.click(changeEmail()!);
 		expect(document.querySelector('#login-email')).toBeNull();
 	});
 
@@ -408,7 +417,8 @@ describe('login page identifier step', () => {
 		expect(custody.mailOnlyAccountId).toHaveBeenCalledWith({ slot: 2 });
 		expect(document.querySelector('#login-email')).toBeNull();
 		expect(document.querySelector<HTMLInputElement>('#login-identifier')!.value).toBe('kept@thelemail.com');
-		expect(document.body.textContent).toContain(m.auth_login_resume_title());
+		expect(document.querySelector('#login-password')).not.toBeNull();
+		expect(document.body.textContent).toContain('Unlock');
 		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
 	});
 
@@ -457,7 +467,7 @@ describe('login page identifier step', () => {
 
 		await vi.waitFor(() => expect(document.querySelector('#login-email')).not.toBeNull());
 		expect(document.querySelector<HTMLInputElement>('#login-email')!.value).toBe('');
-		expect(document.body.textContent).toContain(m.auth_login_add_title());
+		expect(document.body.textContent).toContain(m.auth_s_add_note());
 	});
 
 	it('keeps the password in place while the mailbox opens', async () => {
@@ -534,24 +544,27 @@ describe('login page with another account open', () => {
 		tab.authTabPendingFor.mockReturnValue(true);
 		render(LoginPage);
 
-		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		await vi.waitFor(() => expect(document.body.textContent).toContain(plain(m.handoff_tab_waiting_sentence())));
+		expect(document.body.textContent).toContain('hal@thelemail.com');
+		expect(document.body.textContent).toContain(m.handoff_tab_waiting_line());
 		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
 		expect(tab.awaitAuthTab).toHaveBeenCalledWith('acc-locked', expect.any(Function));
 
 		tab.arrive({ accountId: 'acc-locked', path: '/u/1/mail/inbox' });
 		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/1/mail/inbox', { replace: true }));
 		expect(known.refresh).toHaveBeenCalled();
+		await vi.waitFor(() => expect(transition.announceArrival).toHaveBeenCalledWith('hal@thelemail.com'));
 	});
 
 	it('asks before opening a tab when none could be opened from the switcher', async () => {
 		render(LoginPage);
 
 		await vi.waitFor(() => expect(button(m.handoff_tab_open())).toBeDefined());
-		expect(document.body.textContent).toContain(m.handoff_tab_ask());
+		expect(document.body.textContent).toContain('To unlock hal@thelemail.com, open the sign-in tab.');
 		await fireEvent.click(button(m.handoff_tab_open())!);
 
 		expect(tab.openAuthTab).toHaveBeenCalledWith('acc-locked', '/u/1/mail/inbox');
-		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		await vi.waitFor(() => expect(document.body.textContent).toContain('hal@thelemail.com is waiting for you in the sign-in tab.'));
 		expect(custody.unlockAtAuth).not.toHaveBeenCalled();
 	});
 
@@ -577,11 +590,12 @@ describe('login page with another account open', () => {
 		tab.authTabPendingFor.mockImplementation((id: string | null) => id === null);
 		render(LoginPage);
 
-		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting()));
+		await vi.waitFor(() => expect(document.body.textContent).toContain(m.handoff_tab_waiting_new()));
 		expect(custody.signInAtAuth).not.toHaveBeenCalled();
 		expect(tab.awaitAuthTab).toHaveBeenCalledWith(null, expect.any(Function));
-		tab.arrive({ accountId: 'acc-new', path: '/u/2/mail/inbox' });
+		tab.arrive({ accountId: 'acc-new', path: '/u/2/mail/inbox', email: 'kit@thelemail.com' });
 		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/2/mail/inbox', { replace: true }));
+		await vi.waitFor(() => expect(transition.announceArrival).toHaveBeenCalledWith('kit@thelemail.com'));
 	});
 
 	it('goes to the account origin in this tab when no other account is open', async () => {

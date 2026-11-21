@@ -21,7 +21,7 @@
 			: null
 	);
 	const name = $derived(single ? (auth.fullNameFor(single.accountId)?.trim() ?? '') : '');
-	const show = $derived(known.length > 0 && page.url.pathname !== '/');
+	const show = $derived(known.length > 0 && page.url.pathname !== '/' && page.url.pathname !== '/register');
 </script>
 
 {#snippet strong(t: string)}<strong>{t}</strong>{/snippet}

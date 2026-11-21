@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '$core/auth/auth.css';
+	import '$core/auth/sentence/sentence.css';
 	import type { Snippet } from 'svelte';
 	import Wordmark from '$core/components/Wordmark.svelte';
 	import SignedInStrip from './SignedInStrip.svelte';
@@ -10,11 +11,13 @@
 </script>
 
 <div class="auth">
-	<div class="langbar"><LanguagePicker /></div>
-	<div class="stagebody">
+	<header class="topbar">
 		<a class="pagebrand" href="/" aria-label="Thelemail">
-			<Wordmark size="large" />
+			<Wordmark />
 		</a>
+		<div class="langbar"><LanguagePicker /></div>
+	</header>
+	<div class="stagebody">
 		<StorageNotice />
 		{#if strip}<SignedInStrip />{/if}
 		{@render children()}

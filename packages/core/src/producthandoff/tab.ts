@@ -5,6 +5,7 @@ const HAND_BACK_MS = 1500;
 export interface TabResult {
 	accountId: string;
 	path: string;
+	email?: string;
 }
 
 type Message = ({ type: 'done'; id: string } & TabResult) | { type: 'taken'; id: string };
@@ -84,9 +85,10 @@ export function awaitAuthTab(accountId: string | null, done: (result: TabResult)
 	ch.onmessage = (e: MessageEvent<Message>) => {
 		const msg = e.data;
 		if (msg?.type !== 'done' || typeof msg.accountId !== 'string' || (accountId !== null && msg.accountId !== accountId) || typeof msg.path !== 'string' || !/^\/u\/\d+(\/|$)/.test(msg.path)) return;
+		const email = typeof msg.email === 'string' && msg.email.length <= 320 && msg.email.includes('@') ? msg.email : undefined;
 		ch.postMessage({ type: 'taken', id: msg.id } satisfies Message);
 		if (pending?.accountId === accountId) pending = null;
-		done({ accountId: msg.accountId, path: msg.path });
+		done({ accountId: msg.accountId, path: msg.path, ...(email ? { email } : {}) });
 	};
 	return () => ch.close();
 }
