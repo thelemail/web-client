@@ -117,7 +117,7 @@ describe('migrator passkey page', () => {
 	});
 
 	it.each([
-		['ok', 'You’re verified'],
+		['ok', 'Passkey confirmed'],
 		['failed', 'Verification didn’t go through'],
 		['cancelled', 'Verification cancelled']
 	])('shows the %s result Migrator redirects to', (done, title) => {
