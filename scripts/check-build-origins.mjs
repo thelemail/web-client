@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { extname, join } from 'node:path';
+import { basename, extname, join } from 'node:path';
 import { loadBuildEnv, resolveOrigins } from './csp.ts';
 
 const BUILD_DIR = 'build';
@@ -60,6 +60,16 @@ const env = loadBuildEnv(WORKSPACE_ROOT);
 const allowed = new Set(resolveOrigins(env));
 const allowlist = JSON.parse(readFileSync(new URL('./allowed-origins.json', import.meta.url), 'utf8'));
 const inert = new Set(allowlist.inert);
+const app = basename(process.cwd());
+const handBacks = allowlist.loopbackHandBack.filter((entry) => entry.app === app).map((entry) => ({ ...entry, found: false }));
+const LOOPBACK_REACH = 200;
+
+function handBack(text, index, origin) {
+	const entry = handBacks.find((e) => e.origin === origin);
+	if (!entry) return false;
+	const near = text.slice(Math.max(0, index - LOOPBACK_REACH), index + LOOPBACK_REACH);
+	return near.includes(entry.path);
+}
 const navigable = new Set(resolveProductOrigins(env.PUBLIC_PRODUCT_ORIGINS));
 if (env.PUBLIC_PARSER_ORIGIN) navigable.add(new URL(env.PUBLIC_PARSER_ORIGIN).origin);
 const production = [...allowed].every((origin) => origin.startsWith('https://'));
@@ -80,8 +90,13 @@ for (const file of walk(BUILD_DIR)) {
 		}
 	}
 
+	for (const entry of handBacks) {
+		if (text.includes(entry.path)) entry.found = true;
+	}
+
 	if (production) {
 		for (const match of text.matchAll(LOOPBACK)) {
+			if (handBack(text, match.index, toOrigin(match[0]))) continue;
 			loopback.push(`${file}: ${match[0]} in ...${context(text, match.index)}...`);
 		}
 	}
@@ -89,6 +104,7 @@ for (const file of walk(BUILD_DIR)) {
 	for (const match of text.matchAll(ANY_ORIGIN)) {
 		const origin = toOrigin(match[0]);
 		if (!origin || allowed.has(origin) || inert.has(origin) || navigable.has(origin)) continue;
+		if (handBack(text, match.index, origin)) continue;
 		if (!production && LOOPBACK_HOST.test(origin)) continue;
 		if (!unknown.has(origin)) unknown.set(origin, `${file}: ...${context(text, match.index)}...`);
 	}
@@ -114,6 +130,13 @@ if (unknown.size > 0) {
 	console.error('Origins in build/ that are neither configured nor recognised:');
 	for (const [origin, where] of unknown) console.error(`  ${origin}\n    ${where}`);
 	console.error('  Add it to the CSP if the client fetches it, to PUBLIC_PRODUCT_ORIGINS if the client navigates to it, or to scripts/allowed-origins.json if it is inert text.');
+}
+
+const missing = handBacks.filter((e) => !e.found);
+if (missing.length > 0) {
+	failed = true;
+	console.error('Loopback hand-back routes missing from build/:');
+	for (const e of missing) console.error(`  ${e.path} (${e.purpose})`);
 }
 
 if (failed) process.exit(1);
