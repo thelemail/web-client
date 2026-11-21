@@ -58,8 +58,11 @@ async function bootstrap() {
 	}
 }
 
-export const load = async () => {
+const STANDALONE = new Set(['/migrator/passkey']);
+
+export const load = async ({ url, untrack }) => {
 	await (localeReady ??= initLocale());
+	if (untrack(() => STANDALONE.has(url.pathname))) return {};
 	if (bootstrapped || attempts >= MAX_ATTEMPTS) return {};
 	attempts++;
 	try {
