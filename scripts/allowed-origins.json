@@ -24,7 +24,7 @@
   ],
   "loopbackHandBack": [
     {
-      "app": "mail",
+      "app": "auth",
       "origin": "http://127.0.0.1",
       "path": "/migrator/passkey/result",
       "purpose": "Migrator passkey verification hands the assertion back to the desktop app"

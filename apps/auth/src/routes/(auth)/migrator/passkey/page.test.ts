@@ -13,7 +13,7 @@ vi.mock('$core/auth/webauthn', () => webauthn);
 const nav = vi.hoisted(() => ({ replaceState: vi.fn() }));
 vi.mock('$app/navigation', () => nav);
 
-const state = vi.hoisted(() => ({ page: { url: new URL('https://app.test/migrator/passkey') } }));
+const state = vi.hoisted(() => ({ page: { url: new URL('https://auth.test/migrator/passkey') } }));
 vi.mock('$app/state', () => state);
 
 const STATE = 'A'.repeat(43);
@@ -38,7 +38,7 @@ async function ready() {
 }
 
 function open(hash: string) {
-	state.page.url = new URL(`https://app.test/migrator/passkey#${hash}`);
+	state.page.url = new URL(`https://auth.test/migrator/passkey#${hash}`);
 	render(PasskeyPage);
 }
 
