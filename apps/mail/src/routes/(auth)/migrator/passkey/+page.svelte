@@ -6,11 +6,29 @@
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
 
-	type Request = { port: number; state: string; options: unknown };
+	type Request = { port: number; state: string; account: string; options: unknown };
 	type Outcome = 'ok' | 'failed' | 'cancelled';
 
 	const STATE = /^[A-Za-z0-9_-]{43}$/;
 	const PORT = /^[1-9][0-9]{0,4}$/;
+	const ACCOUNT = /^[^\s@]{1,64}@[^\s@]{1,253}$/;
+	const BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+	async function confirmationCode(state: string): Promise<string> {
+		const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`thelemail-migrator-passkey:${state}`)));
+		let bits = 0;
+		let value = 0;
+		let code = '';
+		for (const byte of digest.subarray(0, 5)) {
+			value = (value << 8) | byte;
+			bits += 8;
+			while (bits >= 5) {
+				code += BASE32[(value >> (bits - 5)) & 31];
+				bits -= 5;
+			}
+		}
+		return `${code.slice(0, 4)}-${code.slice(4)}`;
+	}
 	const OUTCOMES: readonly Outcome[] = ['ok', 'failed', 'cancelled'];
 
 	function fromBase64Url(value: string): string {
@@ -29,11 +47,12 @@
 		const port = params.get('port') ?? '';
 		const state = params.get('state') ?? '';
 		const options = params.get('options') ?? '';
-		if (!PORT.test(port) || Number(port) > 65535 || !STATE.test(state) || !options) return null;
+		const account = params.get('account') ?? '';
+		if (!PORT.test(port) || Number(port) > 65535 || !STATE.test(state) || !ACCOUNT.test(account) || !options) return null;
 		try {
 			const parsed: unknown = JSON.parse(fromBase64Url(options));
 			if (!parsed || typeof parsed !== 'object') return null;
-			return { port: Number(port), state, options: parsed };
+			return { port: Number(port), state, account, options: parsed };
 		} catch {
 			return null;
 		}
@@ -48,9 +67,16 @@
 	let working = $state(false);
 	let leaving = $state(false);
 	let problem = $state('');
+	let code = $state('');
 
 	onMount(() => {
 		if (page.url.hash) replaceState(page.url.pathname, {});
+		if (request) {
+			confirmationCode(request.state).then(
+				(value) => (code = value),
+				() => (problem = webauthnFailureMessage('notAllowed'))
+			);
+		}
 	});
 
 	function handBack(r: Request, values: Record<string, string>) {
@@ -62,7 +88,7 @@
 	}
 
 	async function verify() {
-		if (!request || working || leaving) return;
+		if (!request || !code || working || leaving) return;
 		working = true;
 		problem = '';
 		try {
@@ -112,13 +138,20 @@
 			<p>{supported ? m.auth_migrator_passkey_body() : m.auth_migrator_passkey_unsupported()}</p>
 		{/if}
 	</div>
+	{#if request && !terminal && supported}
+		<div style="margin-top:20px">
+			<p>{m.auth_migrator_passkey_account({ account: request.account })}</p>
+			<p>{m.auth_migrator_passkey_code_hint()}</p>
+			<p class="migrator-code" aria-live="polite">{code}</p>
+		</div>
+	{/if}
 	{#if request && !terminal}
 		{#if problem}
 			<p class="form-error" role="alert" style="margin-top:16px">{problem}</p>
 		{/if}
 		<div class="actions" style="margin-top:24px">
 			{#if supported}
-				<Button variant="primary" size="lg" block disabled={working || leaving} aria-busy={working} onclick={verify}>
+				<Button variant="primary" size="lg" block disabled={!code || working || leaving} aria-busy={working} onclick={verify}>
 					{working ? m.auth_migrator_passkey_working() : problem ? m.common_retry() : m.auth_migrator_passkey_button()}
 				</Button>
 			{/if}
@@ -128,3 +161,12 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.migrator-code {
+		font-size: 1.75rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		font-variant-numeric: tabular-nums;
+	}
+</style>

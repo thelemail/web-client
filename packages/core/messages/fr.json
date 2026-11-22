@@ -5094,6 +5094,8 @@
   "auth_migrator_passkey_eyebrow": "Thelemail Migrator",
   "auth_migrator_passkey_title": "Confirmez qu’il s’agit bien de vous",
   "auth_migrator_passkey_body": "Migrator se connecte à votre compte et a demandé à ce navigateur de vérifier votre clé d’accès ou votre clé de sécurité.",
+  "auth_migrator_passkey_account": "Connexion en tant que {account}",
+  "auth_migrator_passkey_code_hint": "Migrator affiche aussi un code. Continuez uniquement s’il correspond à celui-ci.",
   "auth_migrator_passkey_button": "Utiliser la clé d’accès",
   "auth_migrator_passkey_working": "En attente de votre clé d’accès…",
   "auth_migrator_passkey_cancel": "Choisir une autre méthode",

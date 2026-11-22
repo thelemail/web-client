@@ -18,6 +18,8 @@ vi.mock('$app/state', () => state);
 
 const STATE = 'A'.repeat(43);
 const OPTIONS = { challenge: 'Y2hhbGxlbmdl', rpId: 'thelemail.test', allowCredentials: [] };
+const ACCOUNT = 'ada@thelemail.test';
+const CODE = 'AKTC-EUFO';
 
 function encode(value: unknown) {
 	return btoa(JSON.stringify(value)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -25,6 +27,14 @@ function encode(value: unknown) {
 
 function decode(value: string) {
 	return JSON.parse(atob(value.replace(/-/g, '+').replace(/_/g, '/')));
+}
+
+function request() {
+	return `port=49152&state=${STATE}&account=${encodeURIComponent(ACCOUNT)}&options=${encode(OPTIONS)}`;
+}
+
+async function ready() {
+	await vi.waitFor(() => expect(text()).toContain(CODE));
 }
 
 function open(hash: string) {
@@ -63,19 +73,23 @@ describe('migrator passkey page', () => {
 	});
 
 	it('rejects a malformed state or port', () => {
-		open(`port=0&state=${STATE}&options=${encode(OPTIONS)}`);
+		open(`port=0&state=${STATE}&account=${encodeURIComponent(ACCOUNT)}&options=${encode(OPTIONS)}`);
 		expect(text()).toContain('This page can’t be used on its own');
 		cleanup();
-		open(`port=49152&state=short&options=${encode(OPTIONS)}`);
+		open(`port=49152&state=short&account=${encodeURIComponent(ACCOUNT)}&options=${encode(OPTIONS)}`);
+		expect(text()).toContain('This page can’t be used on its own');
+		cleanup();
+		open(`port=49152&state=${STATE}&options=${encode(OPTIONS)}`);
 		expect(text()).toContain('This page can’t be used on its own');
 	});
 
 	it('runs the passkey and hands the assertion back to the local Migrator port', async () => {
 		const assertion = { id: 'cred', rawId: 'cred', type: 'public-key', response: { clientDataJSON: 'x' } };
 		webauthn.getAssertion.mockResolvedValue(assertion);
-		open(`port=49152&state=${STATE}&options=${encode(OPTIONS)}`);
+		open(request());
 		expect(nav.replaceState).toHaveBeenCalledWith('/migrator/passkey', {});
 		expect(webauthn.getAssertion).not.toHaveBeenCalled();
+		await ready();
 
 		await fireEvent.click(button('Use passkey')!);
 
@@ -90,7 +104,8 @@ describe('migrator passkey page', () => {
 
 	it('keeps the request open after a dismissed prompt', async () => {
 		webauthn.getAssertion.mockRejectedValue(new DOMException('dismissed', 'NotAllowedError'));
-		open(`port=49152&state=${STATE}&options=${encode(OPTIONS)}`);
+		open(request());
+		await ready();
 		await fireEvent.click(button('Use passkey')!);
 
 		await vi.waitFor(() => expect(text()).toContain('The browser closed the request.'));
@@ -98,8 +113,17 @@ describe('migrator passkey page', () => {
 		expect(button('Try again')).toBeDefined();
 	});
 
+	it('shows the account and the code Migrator shows before using the passkey', async () => {
+		open(request());
+		expect(button('Use passkey')?.disabled).toBe(true);
+		await ready();
+		expect(text()).toContain(`Signing in as ${ACCOUNT}`);
+		expect(text()).toContain('Continue only if it matches');
+		expect(button('Use passkey')?.disabled).toBe(false);
+	});
+
 	it('cancels back to Migrator', async () => {
-		open(`port=49152&state=${STATE}&options=${encode(OPTIONS)}`);
+		open(request());
 		await fireEvent.click(button('Choose another method')!);
 
 		const target = new URL(replace.mock.calls[0][0]);
@@ -110,7 +134,7 @@ describe('migrator passkey page', () => {
 
 	it('offers only cancel when the browser has no WebAuthn', () => {
 		webauthn.webauthnSupported.mockReturnValue(false);
-		open(`port=49152&state=${STATE}&options=${encode(OPTIONS)}`);
+		open(request());
 		expect(text()).toContain('This browser can’t use passkeys');
 		expect(button('Use passkey')).toBeUndefined();
 		expect(button('Choose another method')).toBeDefined();

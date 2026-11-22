@@ -5094,6 +5094,8 @@
 	"auth_migrator_passkey_eyebrow": "Thelemail Migrator",
 	"auth_migrator_passkey_title": "Confirm it’s you",
 	"auth_migrator_passkey_body": "Migrator is signing in to your account and asked this browser to check your passkey or security key.",
+	"auth_migrator_passkey_account": "Signing in as {account}",
+	"auth_migrator_passkey_code_hint": "Migrator shows a code too. Continue only if it matches this one.",
 	"auth_migrator_passkey_button": "Use passkey",
 	"auth_migrator_passkey_working": "Waiting for your passkey…",
 	"auth_migrator_passkey_cancel": "Choose another method",
