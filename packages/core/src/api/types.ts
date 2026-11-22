@@ -1251,7 +1251,7 @@ export interface RefreshResponse {
 	csrfToken?: string;
 }
 
-export type SessionClient = 'web' | 'mobile' | 'desktop';
+export type SessionClient = 'web' | 'mobile' | 'desktop' | 'migrator';
 
 export interface SessionInfo {
 	id: string;
