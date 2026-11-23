@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowsRotate, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -23,11 +23,11 @@
 
 {#if kind === 'error'}
 	<div class="load-err {klass}" role="alert">
-		<CircleAlert size={16} />
+		<Icon icon={faCircleExclamation} size={16} />
 		<p>{label}</p>
 		{#if onRetry}
 			<Button variant="secondary" size="sm" disabled={retrying} onclick={onRetry}>
-				<RefreshCw />{m.common_retry()}
+				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		{/if}
 	</div>
