@@ -121,6 +121,36 @@ describe('register page', () => {
 		expect(authApi.checkAddressAvailability).toHaveBeenCalledTimes(1);
 	});
 
+	it('keeps one status line and says it is checking only after a pause', async () => {
+		const held = Promise.withResolvers<{ available: boolean }>();
+		authApi.checkAddressAvailability.mockReturnValue(held.promise);
+		render(RegisterPage);
+		await vi.waitFor(() => expect(document.querySelector('#register-handle')).not.toBeNull());
+		vi.useFakeTimers();
+		try {
+			const status = () => document.querySelector('#register-handle-msg');
+			const first = status();
+			await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: 'ca' } });
+			await vi.advanceTimersByTimeAsync(100);
+			expect(status()?.getAttribute('data-tone')).toBe('hint');
+			await vi.advanceTimersByTimeAsync(400);
+			expect(status()?.getAttribute('data-tone')).toBe('bad');
+
+			await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: 'camille' } });
+			await vi.advanceTimersByTimeAsync(299);
+			expect(status()?.textContent).not.toContain('Checking');
+			await vi.advanceTimersByTimeAsync(1);
+			expect(status()?.textContent).toContain('Checking');
+
+			held.resolve({ available: true });
+			await vi.advanceTimersByTimeAsync(400);
+			expect(status()?.textContent).toContain('camille@temail.org is available.');
+			expect(status()).toBe(first);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
 	it('names a taken address and keeps Next off', async () => {
 		authApi.checkAddressAvailability.mockResolvedValue({ available: false });
 		render(RegisterPage);
