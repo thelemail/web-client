@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { DropdownMenu as DropdownMenuPrimitive } from "bits-ui";
-	import MinusIcon from '@lucide/svelte/icons/minus';
-	import CheckIcon from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faMinus } from '@fortawesome/pro-regular-svg-icons';
 	import { cn, type WithoutChildrenOrChild } from "$core/utils.js";
 	import type { Snippet } from "svelte";
 
@@ -34,9 +34,9 @@
 			data-slot="dropdown-menu-checkbox-item-indicator"
 		>
 			{#if indeterminate}
-				<MinusIcon  />
+				<Icon icon={faMinus}  />
 			{:else if checked}
-				<CheckIcon  />
+				<Icon icon={faCheck}  />
 			{/if}
 		</span>
 		{@render childrenProp?.()}
