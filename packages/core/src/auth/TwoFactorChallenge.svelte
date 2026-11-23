@@ -11,6 +11,7 @@
 	import Clause from '$core/auth/sentence/Clause.svelte';
 	import Status from '$core/auth/sentence/Status.svelte';
 	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -19,6 +20,7 @@
 		email: string;
 		methods: TwoFactorMethod[];
 		busy: boolean;
+		sealed?: boolean;
 		error: string | null;
 		keyNotice?: string | null;
 		lede?: Snippet;
@@ -35,6 +37,7 @@
 		email,
 		methods,
 		busy,
+		sealed = false,
 		error,
 		keyNotice = null,
 		lede,
@@ -192,12 +195,16 @@
 		<div class="sp-under">
 			{#if lede}<p class="sp-msg">{@render lede()}</p>{/if}
 			{#if method === 'app'}
-				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
-					{#if showBad}{m.auth_2fa_code_mismatch()}{:else}<Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr }} />{/if}
-				</Status>
+				{#if sealed}
+					<Seal label={m.auth_s_seal_signed_in()} />
+				{:else}
+					<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
+						{#if showBad}{m.auth_2fa_code_mismatch()}{:else}<Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr }} />{/if}
+					</Status>
+				{/if}
 				<div class="sp-acts">
 					<Button variant="primary" size="lg" disabled={code.length < 6 || busy} onclick={verifyCode}>
-						<BusyLabel {busy} label={m.auth_2fa_verify_code()} pending={m.auth_2fa_checking()} />
+						<BusyLabel busy={busy && !sealed} label={m.auth_2fa_verify_code()} pending={m.auth_2fa_checking()} />
 					</Button>
 					{#if available.length > 1}
 						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
@@ -205,17 +212,21 @@
 					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
 				</div>
 			{:else if method === 'key'}
-				<Status id="twofa-msg" tone={busy ? 'busy' : showBad ? 'bad' : 'hint'}>
-					{#if busy}
-						<Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} />
-					{:else if showBad}
-						<Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} />
-					{:else if keyNotice}
-						<span role="alert"><Rich text={m.auth_2fa_key_notice({ notice: keyNotice })} tags={{ retry }} /></span>
-					{:else}
-						<Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} />
-					{/if}
-				</Status>
+				{#if sealed}
+					<Seal label={m.auth_s_seal_signed_in()} />
+				{:else}
+					<Status id="twofa-msg" tone={busy ? 'busy' : showBad ? 'bad' : 'hint'}>
+						{#if busy}
+							<Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} />
+						{:else if showBad}
+							<Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} />
+						{:else if keyNotice}
+							<span role="alert"><Rich text={m.auth_2fa_key_notice({ notice: keyNotice })} tags={{ retry }} /></span>
+						{:else}
+							<Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} />
+						{/if}
+					</Status>
+				{/if}
 				<div class="sp-acts">
 					{#if available.length > 1}
 						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
@@ -223,9 +234,13 @@
 					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
 				</div>
 			{:else}
-				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
-					{showBad ? m.auth_2fa_backup_invalid() : m.auth_2fa_backup_hint()}
-				</Status>
+				{#if sealed}
+					<Seal label={m.auth_s_seal_signed_in()} />
+				{:else}
+					<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
+						{showBad ? m.auth_2fa_backup_invalid() : m.auth_2fa_backup_hint()}
+					</Status>
+				{/if}
 				<div class="sp-acts">
 					<Button
 						variant="primary"
@@ -233,7 +248,7 @@
 						disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy}
 						onclick={verifyBackup}
 					>
-						<BusyLabel {busy} label={m.auth_2fa_use_backup()} pending={m.auth_2fa_checking()} />
+						<BusyLabel busy={busy && !sealed} label={m.auth_2fa_use_backup()} pending={m.auth_2fa_checking()} />
 					</Button>
 					{#if available.length > 1}
 						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>

@@ -261,6 +261,35 @@
 	color: var(--fg-muted);
 	text-wrap: pretty;
 }
+.auth .sp-seal {
+	--status-lines: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 9px;
+	min-height: calc(var(--status-lines) * 20.25px);
+	padding-top: 2px;
+}
+.auth .sp-seal.free {
+	min-height: 0;
+}
+.auth .sp-seal-rule {
+	display: block;
+	width: 72px;
+	height: 1px;
+	background: var(--brass-600);
+}
+.auth .sp-seal-mark {
+	margin: 0;
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	font-weight: 500;
+	line-height: 1.5;
+	letter-spacing: var(--track-caps);
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
+	color: var(--brass-700);
+}
 .auth .sp-status-box {
 	--status-lines: 2;
 	display: flex;
@@ -576,7 +605,8 @@
 		gap: 24px;
 	}
 	.auth .sp-status,
-	.auth .sp-status-box {
+	.auth .sp-status-box,
+	.auth .sp-seal {
 		--status-lines: 3;
 	}
 	.auth .sent {
@@ -621,7 +651,7 @@
 	.auth .sent .sp-filled {
 		animation: sp-settle 900ms var(--ease-out) 120ms backwards;
 	}
-	.auth .sp-under > :not(.sp-status, .sp-words) {
+	.auth .sp-under > :not(.sp-status, .sp-words, .sp-seal) {
 		animation: sp-rise var(--dur-slow) var(--ease-out) 140ms backwards;
 	}
 	.auth .sp-status-line {
@@ -649,12 +679,31 @@
 @media (prefers-reduced-motion: reduce) {
 	.auth .sent,
 	.auth .sent > .sp-cl:not(:first-child),
-	.auth .sp-under > :not(.sp-status, .sp-words),
+	.auth .sp-under > :not(.sp-status, .sp-words, .sp-seal),
 	.auth .sp-status-line {
 		animation: sp-fade var(--dur) linear backwards;
 	}
 }
 
+@media (prefers-reduced-motion: no-preference) {
+	.auth .sp-seal-rule {
+		transform-origin: left center;
+		animation: sp-rule 420ms var(--ease-out) backwards;
+	}
+	.auth .sp-seal-mark {
+		animation: sp-write 560ms var(--ease-out) 200ms backwards;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.auth .sp-seal {
+		animation: sp-fade var(--dur) linear backwards;
+	}
+}
+@keyframes sp-rule {
+	from {
+		transform: scaleX(0);
+	}
+}
 @keyframes sp-write {
 	from {
 		mask-image: linear-gradient(90deg, #000 40%, transparent 60%);

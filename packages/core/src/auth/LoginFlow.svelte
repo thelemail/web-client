@@ -6,6 +6,7 @@
 	import Done from '$core/auth/sentence/Done.svelte';
 	import Status from '$core/auth/sentence/Status.svelte';
 	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { ApiCallError } from '$core/api/types';
 	import {
 		abandonTwoFactorLogin,
@@ -57,6 +58,7 @@
 	let touched = false;
 	let pw = $state('');
 	let busy = $state(false);
+	let sealed = $state(false);
 	let verifying = $state(false);
 	let loginError = $state<string | null>(null);
 	let rememberMe = $state(false);
@@ -129,7 +131,13 @@
 	});
 
 	async function navigateAfterLogin(slot: number) {
-		await afterSignIn(slot);
+		sealed = true;
+		try {
+			await afterSignIn(slot);
+		} catch (err) {
+			sealed = false;
+			throw err;
+		}
 	}
 
 	function loginErrorMessage(err: unknown): string {
@@ -325,6 +333,7 @@
 			email={pendingTwoFactor.email}
 			methods={pendingTwoFactor.methods}
 			busy={twoFaBusy}
+			{sealed}
 			error={twoFaError}
 			keyNotice={twoFaKeyNotice}
 			before={pastSignIn}
@@ -375,11 +384,15 @@
 					/>
 				</p>
 				<div class="sp-under">
-					<Status id="login-err" tone={loginError ? 'bad' : 'hint'}>{loginError ?? ''}</Status>
+					{#if sealed}
+						<Seal label={m.auth_s_seal_signed_in()} />
+					{:else}
+						<Status id="login-err" tone={loginError ? 'bad' : 'hint'}>{loginError ?? ''}</Status>
+					{/if}
 					<div class="sp-acts">
 						<Button type="submit" variant="primary" size="lg" disabled={!canSignIn || busy}>
 							<BusyLabel
-								{busy}
+								busy={busy && !sealed}
 								label={m.auth_sign_in()}
 								pending={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
 							/>
