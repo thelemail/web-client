@@ -57,9 +57,6 @@ importers:
       '@inlang/paraglide-js':
         specifier: ^2.25.4
         version: 2.25.4(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
-      '@lucide/svelte':
-        specifier: ^1.39.0
-        version: 1.39.0(svelte@5.57.2)
       '@sveltejs/adapter-static':
         specifier: ^4.0.0
         version: 4.0.0(@sveltejs/kit@3.1.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))
@@ -180,15 +177,9 @@ importers:
       iconv-lite:
         specifier: ^0.7.2
         version: 0.7.2
-      lucide:
-        specifier: ^1.33.0
-        version: 1.33.0
       marked:
         specifier: ^18.0.11
         version: 18.0.11
-      morphicons:
-        specifier: ^1.7.0
-        version: 1.7.0(svelte@5.57.2)
       openpgp:
         specifier: ^6.3.0
         version: 6.3.0
@@ -202,9 +193,6 @@ importers:
       '@inlang/paraglide-js':
         specifier: ^2.25.4
         version: 2.25.4(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
-      '@lucide/svelte':
-        specifier: ^1.39.0
-        version: 1.39.0(svelte@5.57.2)
       '@sveltejs/adapter-static':
         specifier: ^4.0.0
         version: 4.0.0(@sveltejs/kit@3.1.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))
@@ -337,15 +325,9 @@ importers:
       iconv-lite:
         specifier: ^0.7.2
         version: 0.7.2
-      lucide:
-        specifier: ^1.33.0
-        version: 1.33.0
       marked:
         specifier: ^18.0.11
         version: 18.0.11
-      morphicons:
-        specifier: ^1.7.0
-        version: 1.7.0(svelte@5.57.2)
       openpgp:
         specifier: ^6.3.0
         version: 6.3.0
@@ -365,9 +347,6 @@ importers:
       '@inlang/paraglide-js':
         specifier: ^2.25.4
         version: 2.25.4(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
-      '@lucide/svelte':
-        specifier: ^1.39.0
-        version: 1.39.0(svelte@5.57.2)
       '@sveltejs/adapter-static':
         specifier: ^4.0.0
         version: 4.0.0(@sveltejs/kit@3.1.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))
@@ -576,15 +555,9 @@ importers:
       iconv-lite:
         specifier: ^0.7.2
         version: 0.7.2
-      lucide:
-        specifier: ^1.33.0
-        version: 1.33.0
       marked:
         specifier: ^18.0.11
         version: 18.0.11
-      morphicons:
-        specifier: ^1.7.0
-        version: 1.7.0(svelte@5.57.2)
       openpgp:
         specifier: ^6.3.0
         version: 6.3.0
@@ -604,9 +577,6 @@ importers:
       '@inlang/plugin-message-format':
         specifier: ^4.4.4
         version: 4.4.4
-      '@lucide/svelte':
-        specifier: ^1.39.0
-        version: 1.39.0(svelte@5.57.2)
       '@sveltejs/adapter-static':
         specifier: ^4.0.0
         version: 4.0.0(@sveltejs/kit@3.1.0(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.57.2)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))(svelte@5.57.2)(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0)))
@@ -949,11 +919,6 @@ packages:
 
   '@lix-js/sdk@0.17.0':
     resolution: {integrity: sha512-xplbKYEokKbm0/soUy9eXlROF55Si1J9HK97iwJrNl/av1VixZ2mvpDTa0QsX96UyxFnzkXru6hngjtIJTl73g==}
-
-  '@lucide/svelte@1.39.0':
-    resolution: {integrity: sha512-jCgA/RqDv9uWHs4DiIUef4kpf5TfLl9y8OMGrh+W4aQTCOscT4X2BX14ta65J+5ooslrN1bXXiO9AaeAOHAcPA==}
-    peerDependencies:
-      svelte: ^5
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -2153,9 +2118,6 @@ packages:
     resolution: {integrity: sha512-RPimw/7aMdv2oqRrxKwvZXcPfwBrn/JZ2xYcY9Hus/6LaS3VOAKVWKWgNLCFSiOm1ESXinjsDlidVU7JlnCN2A==}
     engines: {node: 20 || >=22}
 
-  lucide@1.33.0:
-    resolution: {integrity: sha512-qfSZR1mmM65zfGeqonve67gtHBmyJtvlpdMuXiQLN04RaQmEvD0o85S9Gi+A6JQaQXpjKz5FIUBdAUEhb1Lj1Q==}
-
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
@@ -2188,26 +2150,6 @@ packages:
   mini-svg-data-uri@1.4.4:
     resolution: {integrity: sha512-r9deDe9p5FJUPZAk3A59wGH7Ii9YrjjWw0jmw/liSbHl2CHiyXj6FcDXDu2K3TjVAXqiJdaw3xxwlZZr9E6nHg==}
     hasBin: true
-
-  morphicons@1.7.0:
-    resolution: {integrity: sha512-MOqSK+O5RdxynER5016vUvvqQaHkqqWYmNpocsk9TEszUZ9PB/K52Yqq8AGTRK1NUO5dj8znGSEVf9slqEIQaw==}
-    peerDependencies:
-      react: '>=18'
-      react-native: '>=0.71'
-      react-native-svg: '>=14'
-      svelte: '>=5'
-      vue: '>=3.3'
-    peerDependenciesMeta:
-      react:
-        optional: true
-      react-native:
-        optional: true
-      react-native-svg:
-        optional: true
-      svelte:
-        optional: true
-      vue:
-        optional: true
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -2931,10 +2873,6 @@ snapshots:
       '@lix-js/sdk-linux-arm64': 0.17.0
       '@lix-js/sdk-linux-x64': 0.17.0
       '@lix-js/sdk-win32-x64': 0.17.0
-
-  '@lucide/svelte@1.39.0(svelte@5.57.2)':
-    dependencies:
-      svelte: 5.57.2
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -3904,8 +3842,6 @@ snapshots:
 
   lru-cache@11.5.1: {}
 
-  lucide@1.33.0: {}
-
   lz-string@1.5.0: {}
 
   magic-string@0.30.21:
@@ -3933,10 +3869,6 @@ snapshots:
   min-indent@1.0.1: {}
 
   mini-svg-data-uri@1.4.4: {}
-
-  morphicons@1.7.0(svelte@5.57.2):
-    optionalDependencies:
-      svelte: 5.57.2
 
   mri@1.2.0: {}
 
