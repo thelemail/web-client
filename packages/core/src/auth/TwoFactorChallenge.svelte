@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
 	import Smartphone from '@lucide/svelte/icons/smartphone';
 	import Usb from '@lucide/svelte/icons/usb';
@@ -10,6 +9,8 @@
 	import { webauthnSupported } from '$core/auth/webauthn';
 	import Blank from '$core/auth/sentence/Blank.svelte';
 	import Clause from '$core/auth/sentence/Clause.svelte';
+	import Status from '$core/auth/sentence/Status.svelte';
+	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -191,18 +192,12 @@
 		<div class="sp-under">
 			{#if lede}<p class="sp-msg">{@render lede()}</p>{/if}
 			{#if method === 'app'}
-				{#if showBad}
-					<p class="sp-msg bad" role="alert" id="twofa-msg">
-						<CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_2fa_code_mismatch()}</span>
-					</p>
-				{:else}
-					<p class="sp-msg" id="twofa-msg">
-						<span><Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr }} /></span>
-					</p>
-				{/if}
+				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
+					{#if showBad}{m.auth_2fa_code_mismatch()}{:else}<Rich text={m.auth_2fa_code_hint({ email })} tags={{ addr }} />{/if}
+				</Status>
 				<div class="sp-acts">
 					<Button variant="primary" size="lg" disabled={code.length < 6 || busy} onclick={verifyCode}>
-						{#if busy}<span class="spinner"></span>{m.auth_2fa_checking()}{:else}{m.auth_2fa_verify_code()}{/if}
+						<BusyLabel {busy} label={m.auth_2fa_verify_code()} pending={m.auth_2fa_checking()} />
 					</Button>
 					{#if available.length > 1}
 						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
@@ -210,17 +205,17 @@
 					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
 				</div>
 			{:else if method === 'key'}
-				<p class="sp-msg" id="twofa-msg">
+				<Status id="twofa-msg" tone={busy ? 'busy' : showBad ? 'bad' : 'hint'}>
 					{#if busy}
-						<span class="spinner"></span><span><Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} /></span>
+						<Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} />
 					{:else if showBad}
-						<span role="alert"><Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} /></span>
+						<Rich text={m.auth_2fa_key_failed()} tags={{ b: bold, retry }} />
 					{:else if keyNotice}
 						<span role="alert"><Rich text={m.auth_2fa_key_notice({ notice: keyNotice })} tags={{ retry }} /></span>
 					{:else}
-						<span><Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} /></span>
+						<Rich text={m.auth_2fa_key_waiting()} tags={{ b: bold, retry }} />
 					{/if}
-				</p>
+				</Status>
 				<div class="sp-acts">
 					{#if available.length > 1}
 						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>
@@ -228,13 +223,9 @@
 					<button type="button" class="sp-quiet" disabled={busy} onclick={onBack}>{backText}</button>
 				</div>
 			{:else}
-				{#if showBad}
-					<p class="sp-msg bad" role="alert" id="twofa-msg">
-						<CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_2fa_backup_invalid()}</span>
-					</p>
-				{:else}
-					<p class="sp-msg" id="twofa-msg">{m.auth_2fa_backup_hint()}</p>
-				{/if}
+				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
+					{showBad ? m.auth_2fa_backup_invalid() : m.auth_2fa_backup_hint()}
+				</Status>
 				<div class="sp-acts">
 					<Button
 						variant="primary"
@@ -242,7 +233,7 @@
 						disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy}
 						onclick={verifyBackup}
 					>
-						{#if busy}<span class="spinner"></span>{m.auth_2fa_checking()}{:else}{m.auth_2fa_use_backup()}{/if}
+						<BusyLabel {busy} label={m.auth_2fa_use_backup()} pending={m.auth_2fa_checking()} />
 					</Button>
 					{#if available.length > 1}
 						<button type="button" class="sp-quiet" disabled={busy} onclick={() => (view = 'switch')}>{m.auth_2fa_try_another()}</button>

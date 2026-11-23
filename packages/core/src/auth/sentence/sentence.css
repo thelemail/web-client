@@ -256,6 +256,13 @@
 	color: var(--fg-muted);
 	text-wrap: pretty;
 }
+.auth .sp-status-box {
+	--status-lines: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-height: calc(var(--status-lines) * 20.25px);
+}
 .auth .sp-status-line {
 	display: flex;
 	align-items: flex-start;
@@ -559,7 +566,8 @@
 	.auth .sp {
 		gap: 24px;
 	}
-	.auth .sp-status {
+	.auth .sp-status,
+	.auth .sp-status-box {
 		--status-lines: 3;
 	}
 	.auth .sent {

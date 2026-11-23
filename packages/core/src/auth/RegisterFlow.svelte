@@ -22,9 +22,10 @@
 	import { performLogin } from '$core/auth/perform-login';
 	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import type { PlanCode } from '$core/api/billing';
+	import Status from '$core/auth/sentence/Status.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
 	import { endSignupSession, signupSession } from '$core/auth/signup-session';
 	import { ApiCallError } from '$core/api/types';
@@ -90,6 +91,7 @@
 	});
 
 	let status = $state<'idle' | 'invalid' | 'checking' | 'taken' | 'available' | 'unknown'>('idle');
+	const checking = delayed(() => status === 'checking');
 
 	const proof = createProofOfWork();
 
@@ -105,13 +107,14 @@
 			status = 'idle';
 			return;
 		}
-		if (!HANDLE_RE.test(h)) {
-			status = 'invalid';
-			return;
-		}
-		status = 'checking';
+		const valid = HANDLE_RE.test(h);
+		status = valid ? 'checking' : 'idle';
 		let cancelled = false;
 		const timer = setTimeout(async () => {
+			if (!valid) {
+				status = 'invalid';
+				return;
+			}
 			try {
 				const { available } = await checkAddressAvailability(h, signupSession());
 				if (!cancelled) status = available ? 'available' : 'taken';
@@ -172,6 +175,17 @@
 	const matches = $derived(confirm.length > 0 && confirm === pw);
 	const mismatch = $derived(confirm.length > 0 && confirm !== pw);
 	const passwordReady = $derived(allMet && matches);
+	const confirmBad = $derived(mismatch && !pw.startsWith(confirm));
+	const handleTone = $derived(
+		status === 'invalid' || status === 'taken'
+			? 'bad'
+			: checking.visible
+				? 'busy'
+				: status === 'available'
+					? 'ok'
+					: 'hint'
+	);
+	const confirmTone = $derived(submitError || confirmBad ? 'bad' : matches ? 'ok' : 'hint');
 	const canCreate = $derived(addressReady && passwordReady && (paid || terms));
 	const workLines = $derived([m.auth_s_work_keys(), m.auth_s_work_account(), m.auth_s_work_open()]);
 
@@ -363,6 +377,7 @@
 		bind:value={handle}
 		label={m.common_email_address()}
 		placeholder={m.auth_s_handle_placeholder()}
+		size={12}
 		mono
 		maxlength={30}
 		invalid={status === 'invalid' || status === 'taken'}
@@ -378,6 +393,7 @@
 		bind:value={fullName}
 		label={m.auth_s_name_label()}
 		placeholder={m.auth_s_name_placeholder()}
+		size={14}
 		autocomplete="nickname"
 		maxlength={120}
 		focus
@@ -389,6 +405,7 @@
 		bind:value={pw}
 		label={m.common_password()}
 		placeholder={m.auth_s_new_password_placeholder()}
+		size={14}
 		mono
 		secret
 		autocomplete="new-password"
@@ -401,10 +418,11 @@
 		bind:value={confirm}
 		label={m.auth_register_confirm_label()}
 		placeholder={m.auth_s_confirm_placeholder()}
+		size={14}
 		mono
 		secret
 		autocomplete="new-password"
-		invalid={mismatch && !pw.startsWith(confirm)}
+		invalid={confirmBad}
 		describedby="register-confirm-msg"
 		disabled={submitting}
 		focus
@@ -454,48 +472,39 @@
 					{:else if audience === 'business'}
 						<p class="sp-msg"><span><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></span></p>
 					{/if}
-					{#if status === 'invalid'}
-						<p class="sp-msg bad" role="alert" id="register-handle-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_s_handle_invalid()}</span></p>
-					{:else if status === 'taken'}
-						<p class="sp-msg bad" role="alert" id="register-handle-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_s_handle_taken({ address })}</span></p>
-					{:else if status === 'checking'}
-						<p class="sp-msg" id="register-handle-msg" role="status">{m.auth_register_handle_checking()}</p>
-					{:else if status === 'available'}
-						<p class="sp-msg ok" id="register-handle-msg" role="status"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_s_handle_free({ address })}</span></p>
-					{:else if status === 'unknown'}
-						<p class="sp-msg" id="register-handle-msg" role="status"><span><Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} /></span></p>
-					{:else}
-						<p class="sp-msg" id="register-handle-msg">{m.auth_s_handle_hint()}</p>
-					{/if}
+					<Status id="register-handle-msg" tone={handleTone}>
+						{#if status === 'invalid'}{m.auth_s_handle_invalid()}
+						{:else if status === 'taken'}{m.auth_s_handle_taken({ address })}
+						{:else if checking.visible}{m.auth_register_handle_checking()}
+						{:else if status === 'available'}{m.auth_s_handle_free({ address })}
+						{:else if status === 'unknown'}<Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} />
+						{:else}{m.auth_s_handle_hint()}{/if}
+					</Status>
 					<div class="sp-acts">
 						<Button variant="primary" size="lg" disabled={!handleReady} onclick={advance}>{m.auth_sentence_next()}</Button>
 					</div>
 				{:else if part === 'name'}
-					<p class="sp-msg">{m.auth_s_name_hint()}</p>
+					<Status>{m.auth_s_name_hint()}</Status>
 					<div class="sp-acts">
 						<Button variant="primary" size="lg" disabled={!nameReady} onclick={advance}>{m.auth_sentence_next()}</Button>
 					</div>
 				{:else if part === 'password'}
-					<PasswordChecks {pw} />
+					<div class="sp-status-box"><PasswordChecks {pw} /></div>
 					<div class="sp-acts">
 						<Button variant="primary" size="lg" disabled={!allMet} onclick={advance}>{m.auth_sentence_next()}</Button>
 					</div>
 				{:else}
-					{#if mismatch && !pw.startsWith(confirm)}
-						<p class="sp-msg bad" role="alert" id="register-confirm-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_mismatch()}</span></p>
-					{:else if matches}
-						<p class="sp-msg ok" id="register-confirm-msg"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_match()}</span></p>
-					{:else}
-						<p class="sp-msg" id="register-confirm-msg">{m.auth_s_confirm_hint()}</p>
-					{/if}
+					<Status id="register-confirm-msg" tone={confirmTone}>
+						{#if submitError}{submitError}
+						{:else if confirmBad}{m.auth_register_passwords_mismatch()}
+						{:else if matches}{m.auth_register_passwords_match()}
+						{:else}{m.auth_s_confirm_hint()}{/if}
+					</Status>
 					{#if !paid}
 						<label class="sp-tick">
 							<input type="checkbox" bind:checked={terms} />
 							<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
 						</label>
-					{/if}
-					{#if submitError}
-						<p class="sp-err" role="alert"><CircleAlert size={15} strokeWidth={1.75} /><span>{submitError}</span></p>
 					{/if}
 					<div class="sp-acts">
 						<Button variant="primary" size="lg" disabled={!canCreate} onclick={continueFromPassword}>

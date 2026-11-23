@@ -280,7 +280,7 @@
 		bind:value={email}
 		label={m.common_email_address()}
 		placeholder="you@yourdomain.com"
-		size={26}
+		size={30}
 		mono
 		autocomplete="username"
 		invalid={!!identifyError}
@@ -299,6 +299,7 @@
 		bind:value={pw}
 		label={m.common_password()}
 		placeholder={m.auth_s_password_placeholder()}
+		size={14}
 		mono
 		secret
 		autocomplete="current-password"

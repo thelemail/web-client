@@ -40,10 +40,11 @@ describe('TwoFactorChallenge', () => {
 		const inputs = [...document.querySelectorAll<HTMLInputElement>('input[autocomplete="one-time-code"]')];
 		expect(inputs).toHaveLength(1);
 		const alert = document.querySelector('[role="alert"]');
-		expect(alert?.id).toBeTruthy();
+		expect(alert?.textContent).toContain('didn’t match');
 		expect(inputs[0].getAttribute('aria-label')).toBe('Six-digit code');
 		expect(inputs[0].getAttribute('aria-invalid')).toBe('true');
-		expect(inputs[0].getAttribute('aria-describedby')).toBe(alert!.id);
+		const described = document.getElementById(inputs[0].getAttribute('aria-describedby')!);
+		expect(described?.contains(alert)).toBe(true);
 	});
 
 	it('keeps only digits and submits six of them', async () => {
