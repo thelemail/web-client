@@ -1,14 +1,17 @@
 <script lang="ts">
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Check from '@lucide/svelte/icons/check';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Info from '@lucide/svelte/icons/info';
-	import Plus from '@lucide/svelte/icons/plus';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faArrowsRotate,
+		faAt,
+		faCheck,
+		faCircleCheck,
+		faCircleExclamation,
+		faCircleInfo,
+		faPlus,
+		faTriangleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import Card from '../Card.svelte';
 	import Heading from '../Heading.svelte';
@@ -73,11 +76,11 @@
 
 	const phase = $derived(STEP_PHASE[step]);
 	const stepHead = $derived.by(() => {
-		if (step === 'ownership') return { icon: Info, title: m.settings_domains_wizard_ownership_title({ domain: domain.domain }) };
-		if (step === 'sending') return { icon: Info, title: m.settings_domains_wizard_sending_title({ domain: domain.domain }) };
-		if (step === 'recipients') return { icon: AtSign, title: m.settings_domains_wizard_recipients_title() };
-		if (step === 'routing') return { icon: TriangleAlert, title: m.settings_domains_wizard_routing_title() };
-		return { icon: CircleCheck, title: m.settings_domains_wizard_done_title() };
+		if (step === 'ownership') return { icon: faCircleInfo, title: m.settings_domains_wizard_ownership_title({ domain: domain.domain }) };
+		if (step === 'sending') return { icon: faCircleInfo, title: m.settings_domains_wizard_sending_title({ domain: domain.domain }) };
+		if (step === 'recipients') return { icon: faAt, title: m.settings_domains_wizard_recipients_title() };
+		if (step === 'routing') return { icon: faTriangleExclamation, title: m.settings_domains_wizard_routing_title() };
+		return { icon: faCircleCheck, title: m.settings_domains_wizard_done_title() };
 	});
 	const phaseRecords = $derived(phase ? records.filter((r) => r.phase === phase) : []);
 	const manage = $derived(canManageWorkspace());
@@ -154,14 +157,14 @@
 	<div class="dw-pane">
 		{#if lapsing && domain.ownershipMissingSince && domain.releaseAt}
 			<div class="dw-note bad">
-				<TriangleAlert size={15} />
+				<Icon icon={faTriangleExclamation} size={15} />
 				<span>
 					<Rich text={lapseNote(domain.ownershipMissingSince, domain.releaseAt)} tags={{ b: bold }} />
 				</span>
 			</div>
 		{:else if paused}
 			<div class="dw-note warn">
-				<Info size={15} /><span>{manage ? m.settings_domains_paused_note() : m.settings_domains_paused_note_member()}</span>
+				<Icon icon={faCircleInfo} size={15} /><span>{manage ? m.settings_domains_paused_note() : m.settings_domains_paused_note_member()}</span>
 			</div>
 		{/if}
 
@@ -185,7 +188,7 @@
 				<div class="dw-addrs">
 					{#each visibleAddresses as a (a.id)}
 						<div class="dw-addr">
-							<AtSign size={14} />
+							<Icon icon={faAt} size={14} />
 							<span class="mono">{a.email}</span>
 							{#if a.name}<span>{a.name}</span>{/if}
 						</div>
@@ -193,21 +196,21 @@
 				</div>
 			{:else if domain.addressCount > 0}
 				<div class="dw-note">
-					<AtSign size={15} /><span>{m.settings_domains_wizard_address_count({ count: domain.addressCount })}</span>
+					<Icon icon={faAt} size={15} /><span>{m.settings_domains_wizard_address_count({ count: domain.addressCount })}</span>
 				</div>
 			{/if}
 			{#if domain.addressCount === 0}
 				<div class="dw-note warn">
-					<TriangleAlert size={15} /><span>{m.settings_domains_wizard_no_addresses()}</span>
+					<Icon icon={faTriangleExclamation} size={15} /><span>{m.settings_domains_wizard_no_addresses()}</span>
 				</div>
 			{/if}
 			<div class="dw-addr-acts">
 				<Button variant="secondary" disabled={!manage || !usable(domain)} onclick={() => (addingAlias = true)}>
-					<Plus size={14} />{m.settings_domains_wizard_add_address()}
+					<Icon icon={faPlus} size={14} />{m.settings_domains_wizard_add_address()}
 				</Button>
 			</div>
 			<div class="dw-note">
-				<Info size={15} />
+				<Icon icon={faCircleInfo} size={15} />
 				<span>
 					{m.settings_domains_wizard_invite_note()}
 				</span>
@@ -220,17 +223,17 @@
 			<CheckStatus {domain} stage="routing" {now} {manage} canStart={mayCheck} />
 		{:else}
 			<div class="dw-done">
-				<span class="dw-done-ic"><CircleCheck size={34} strokeWidth={1.6} /></span>
+				<span class="dw-done-ic"><Icon icon={faCircleCheck} size={34} /></span>
 				<Heading class="dw-done-title">{m.settings_domains_wizard_live({ domain: domain.domain })}</Heading>
 				<p class="dw-done-desc">
 					{m.settings_domains_wizard_done_desc()}
 				</p>
 				<div class="dw-done-stats">
 					{#each LADDER as s (s)}
-						<span class="dw-done-stat"><Check size={13} strokeWidth={2.5} />{STEP_LABELS[s]()}</span>
+						<span class="dw-done-stat"><Icon icon={faCheck} size={13} />{STEP_LABELS[s]()}</span>
 					{/each}
 					<span class="dw-done-stat">
-						<Check size={13} strokeWidth={2.5} />{m.settings_domains_wizard_address_count({
+						<Icon icon={faCheck} size={13} />{m.settings_domains_wizard_address_count({
 							count: domain.addressCount
 						})}
 					</span>
@@ -239,29 +242,29 @@
 		{/if}
 
 		{#if startErrorText}
-			<div class="dw-note bad"><CircleAlert size={15} /><span>{startErrorText}</span></div>
+			<div class="dw-note bad"><Icon icon={faCircleExclamation} size={15} /><span>{startErrorText}</span></div>
 		{:else if lastErrorText}
-			<div class="dw-note warn"><CircleAlert size={15} /><span>{lastErrorText}</span></div>
+			<div class="dw-note warn"><Icon icon={faCircleExclamation} size={15} /><span>{lastErrorText}</span></div>
 		{/if}
 	</div>
 
 	<div class="dw-foot">
 		{#if step !== 'ownership'}
 			<Button variant="ghost" onclick={() => onStep(previousStep(step))}>
-				<ArrowLeft size={15} />{m.common_back()}
+				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 		{/if}
 		<span class="dw-spacer"></span>
 		{#if mayCheck}
 			<Button variant="secondary" disabled={starting} onclick={() => void startCheck()}>
-				<RefreshCw size={14} />{starting ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_dns()}
+				<Icon icon={faArrowsRotate} size={14} />{starting ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_dns()}
 			</Button>
 		{/if}
 		{#if step === 'done'}
-			<Button variant="primary" href={listHref}>{m.settings_domains_wizard_all_domains()}<ArrowRight size={15} /></Button>
+			<Button variant="primary" href={listHref}>{m.settings_domains_wizard_all_domains()}<Icon icon={faArrowRight} size={15} /></Button>
 		{:else}
 			<Button variant="primary" disabled={!canContinue} onclick={() => onStep(nextStep(step))}>
-				{m.common_continue()}<ArrowRight size={15} />
+				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{/if}
 	</div>

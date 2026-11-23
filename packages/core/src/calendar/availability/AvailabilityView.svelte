@@ -1,6 +1,5 @@
 <script lang="ts">
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import { faShieldCheck, faShieldExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import DisclosureBoundary from '../DisclosureBoundary.svelte';
 	import AvailabilityGrid from './AvailabilityGrid.svelte';
@@ -65,7 +64,7 @@
 				<div class="limits">
 					<DisclosureBoundary
 						heading={m.cal_boundary_heading_device()}
-						headingIcon={ShieldCheck}
+						headingIcon={faShieldCheck}
 						lines={gridBoundary}
 						noIcon="x"
 					/>
@@ -85,7 +84,7 @@
 				<div class="limits">
 					<DisclosureBoundary
 						heading={m.cal_availview_cannot_protect()}
-						headingIcon={ShieldAlert}
+						headingIcon={faShieldExclamation}
 						lines={limits}
 						noIcon="x"
 					/>

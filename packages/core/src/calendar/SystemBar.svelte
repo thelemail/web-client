@@ -1,7 +1,10 @@
 <script lang="ts">
-	import CloudOff from '@lucide/svelte/icons/cloud-off';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faCloudSlash,
+		faTriangleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from './state.svelte';
 	import { calendarStore } from './store.svelte';
@@ -11,13 +14,13 @@
 
 <div class="sysbar {cal.systemBarTone}">
 	{#if !calendarStore.online}
-		<CloudOff size={16} />
+		<Icon icon={faCloudSlash} size={16} />
 		<b>{m.cal_sysbar_offline()}</b>
 	{:else if calendarStore.blockedCount || calendarStore.halted}
-		<TriangleAlert size={16} />
+		<Icon icon={faTriangleExclamation} size={16} />
 		<b>{m.cal_sysbar_attention()}</b>
 	{:else}
-		<RefreshCw size={16} />
+		<Icon icon={faArrowsRotate} size={16} />
 		<b>{m.cal_sysbar_syncing()}</b>
 	{/if}
 	<span>{cal.systemBarText}</span>

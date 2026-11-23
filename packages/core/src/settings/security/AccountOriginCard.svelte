@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowUpRightFromSquare, faShieldCheck } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { productTarget } from '$core/products';
 	import Card from '../Card.svelte';
@@ -10,11 +10,11 @@
 	const href = productTarget('auth')?.origin ?? null;
 </script>
 
-<Card icon={ShieldCheck} title={m.settings_security_account_origin_title()}>
+<Card icon={faShieldCheck} title={m.settings_security_account_origin_title()}>
 	<Row t={m.settings_security_account_origin_title()} d={m.settings_security_account_origin_desc()}>
 		{#if href}
 			<Button variant="secondary" size="sm" {href}>
-				{m.settings_security_account_origin_cta()}<ExternalLink size={14} />
+				{m.settings_security_account_origin_cta()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 			</Button>
 		{/if}
 	</Row>

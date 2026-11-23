@@ -1,4 +1,4 @@
-import type FolderIcon from '@lucide/svelte/icons/folder';
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { MAX_COLLECTION_DEPTH } from './rules';
 import type { CollectionEntry } from './tree';
 
@@ -10,7 +10,7 @@ export interface PickerRow {
 	path?: string;
 	depth?: number;
 	dot?: string;
-	icon?: typeof FolderIcon;
+	icon?: IconDefinition;
 	iconColor?: string;
 	check?: CheckState;
 	pick: () => void;

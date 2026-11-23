@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Repeat from '@lucide/svelte/icons/repeat';
+	import Icon from '$core/components/Icon.svelte';
+	import { faRepeat } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
 	import { m } from '$paraglide/messages.js';
@@ -62,7 +63,7 @@
 
 <Dialog.Content class="cal-surface cal-dlg cal-dlg-narrow" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
-		<Repeat size={18} color="var(--brass-600)" />
+		<Icon icon={faRepeat} size={18} color="var(--brass-600)" />
 		<Dialog.Title class="dt">
 			{request.action === 'delete'
 				? m.cal_scope_title_delete({ kind: kindLabel })

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Lock from '@lucide/svelte/icons/lock';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowLeft, faLock } from '@fortawesome/pro-regular-svg-icons';
 
 	interface Props {
 		onBack?: () => void;
@@ -28,7 +28,7 @@
 <section class="reader" aria-busy="true">
 	<div class="reader-bar sk-bar">
 		<button class="rb-ico rb-back" title={m.mail_skeleton_back()} onclick={() => onBack?.()}>
-			<ArrowLeft size={17} />
+			<Icon icon={faArrowLeft} size={17} />
 		</button>
 		<span class="sk sk-pill" style="width:86px"></span>
 		<span class="sk sk-pill" style="width:94px"></span>
@@ -42,7 +42,7 @@
 		<div class="reader-inner">
 			<div class="sk-status" role="status">
 				<span class="sk-spin"></span>
-				<Lock size={13} />
+				<Icon icon={faLock} size={13} />
 				<span>{m.mail_skeleton_decrypting()}</span>
 			</div>
 			<div class="reader-h sk-h">

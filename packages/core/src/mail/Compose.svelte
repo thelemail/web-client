@@ -3,24 +3,27 @@
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
 	import { page } from '$app/state';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import X from '@lucide/svelte/icons/x';
-	import Minus from '@lucide/svelte/icons/minus';
-	import Maximize2 from '@lucide/svelte/icons/maximize-2';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import PanelLeft from '@lucide/svelte/icons/panel-left';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Mail from '@lucide/svelte/icons/mail';
-	import Minimize2 from '@lucide/svelte/icons/minimize-2';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Send from '@lucide/svelte/icons/send';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import Check from '@lucide/svelte/icons/check';
-	import Clock from '@lucide/svelte/icons/clock';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faCheck,
+		faChevronDown,
+		faChevronUp,
+		faCircleExclamation,
+		faClock,
+		faDownLeftAndUpRightToCenter,
+		faEllipsis,
+		faEnvelope,
+		faLock,
+		faMinus,
+		faPaperPlane,
+		faPaperclip,
+		faPenLine,
+		faSidebar,
+		faTrashCan,
+		faUpRightAndDownLeftFromCenter,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
@@ -970,9 +973,9 @@
 			}
 		}}
 	>
-		<PenLine size={15} />
+		<Icon icon={faPenLine} size={15} />
 		<span class="dock-t">{subjLine}</span>
-		{#if attention}<span class="dock-flag"><CircleAlert size={13} />{attention}</span>{/if}
+		{#if attention}<span class="dock-flag"><Icon icon={faCircleExclamation} size={13} />{attention}</span>{/if}
 		<button
 			type="button"
 			class="dock-b"
@@ -980,7 +983,7 @@
 			onclick={(e) => {
 				e.stopPropagation();
 				onFocus?.();
-			}}><ChevronUp size={16} /></button
+			}}><Icon icon={faChevronUp} size={16} /></button
 		>
 		<button
 			type="button"
@@ -990,7 +993,7 @@
 			onclick={(e) => {
 				e.stopPropagation();
 				void closeKeepingDraft();
-			}}><X size={16} /></button
+			}}><Icon icon={faXmark} size={16} /></button
 		>
 	</div>
 {/if}
@@ -1016,9 +1019,9 @@
 	{#if withRef}
 		<aside class="compose-ref" aria-label={m.mail_forwarded_chip()}>
 			<div class="cref-h">
-				<ArrowLeft size={16} /><span>{m.mail_forwarded_chip()}</span>
+				<Icon icon={faArrowLeft} size={16} /><span>{m.mail_forwarded_chip()}</span>
 				<button type="button" class="chx" title={m.mail_compose_hide_forwarded()} onclick={() => (refOpen = false)}>
-					<X size={16} />
+					<Icon icon={faXmark} size={16} />
 				</button>
 			</div>
 			<div class="cref-b">
@@ -1040,7 +1043,7 @@
 				{/if}
 				{#each fwdFiles as f (f.name + f.size)}
 					<div class="cref-file">
-						<Paperclip size={18} />
+						<Icon icon={faPaperclip} size={18} />
 						<span class="cref-ft"><b>{f.name}</b><span>{formatSize(f.size)}</span></span>
 					</div>
 				{/each}
@@ -1050,7 +1053,7 @@
 	<div class="compose-h">
 		{#if expanded}
 			<button type="button" class="ch-back" onclick={() => onExpand?.(false)}>
-				<ArrowLeft size={16} />{backLabel}
+				<Icon icon={faArrowLeft} size={16} />{backLabel}
 			</button>
 		{/if}
 		<h2 class="ch-t">{fwd || forwardDraft ? m.mail_reader_forward() : m.mail_compose_new_message()}</h2>
@@ -1058,7 +1061,7 @@
 			<span class="ch-acct" title={draftAccountEmail}>{m.mail_compose_in_account({ account: draftAccountEmail })}</span>
 		{/if}
 		<span class="ch-save" data-state={saveStatus} class:att={attFailed} role="status">
-			{#if attFailed || saveStatus === 'failed'}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveLine}
+			{#if attFailed || saveStatus === 'failed'}<Icon icon={faCircleExclamation} size={14} />{:else if saveStatus === 'saved'}<Icon icon={faCheck} size={14} />{/if}{saveLine}
 		</span>
 		<span class="ch-rule" aria-hidden="true"></span>
 		<div class="ch-actions">
@@ -1071,11 +1074,11 @@
 					aria-pressed={refOpen}
 					onclick={() => (refOpen = !refOpen)}
 				>
-					<PanelLeft size={16} />
+					<Icon icon={faSidebar} size={16} />
 				</button>
 			{/if}
 			<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => onMinimize?.()}>
-				<Minus size={16} />
+				<Icon icon={faMinus} size={16} />
 			</button>
 			<button
 				type="button"
@@ -1084,17 +1087,17 @@
 				aria-pressed={expanded}
 				onclick={() => onExpand?.(!expanded)}
 			>
-				{#if expanded}<Minimize2 size={16} />{:else}<Maximize2 size={16} />{/if}
+				{#if expanded}<Icon icon={faDownLeftAndUpRightToCenter} size={16} />{:else}<Icon icon={faUpRightAndDownLeftFromCenter} size={16} />{/if}
 			</button>
 			<button type="button" class="chx x" title={m.common_close()} aria-busy={closing} onclick={() => void closeKeepingDraft()}>
-				<X size={16} />
+				<Icon icon={faXmark} size={16} />
 			</button>
 		</div>
 	</div>
 
 		{#if load === 'failed'}
 			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{m.mail_compose_open_draft_failed()} {m.mail_compose_draft_untouched()}</span>
 				<button type="button" class="cwarn-act" onclick={() => draftId && void hydrateDraft(draftId)}>
 					{m.common_retry()}
@@ -1169,11 +1172,11 @@
 
 			<div class="cenc" data-tone={encSummary.tone}>
 				{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
-					<Mail size={15} />
+					<Icon icon={faEnvelope} size={15} />
 				{:else if encSummary.tone === 'unknown'}
-					<CircleAlert size={15} />
+					<Icon icon={faCircleExclamation} size={15} />
 				{:else}
-					<Lock size={15} />
+					<Icon icon={faLock} size={15} />
 				{/if}
 				<span class="cenc-t">{encSummary.label}</span>
 				<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
@@ -1212,7 +1215,7 @@
 							else showQuote = !showQuote;
 						}}
 					>
-						<Ellipsis size={16} />
+						<Icon icon={faEllipsis} size={16} />
 					</button>
 					<span class="rq-lbl">{m.mail_forwarded_chip()}</span>
 					<button
@@ -1224,7 +1227,7 @@
 							showQuote = false;
 						}}
 					>
-						<X size={13} />
+						<Icon icon={faXmark} size={13} />
 					</button>
 				</div>
 				{#if showQuote && !expanded && quoteSrcDoc}
@@ -1237,7 +1240,7 @@
 			<AttachPreview files={attachments} onRemove={removeAttachment} onRetry={retryAttachment} rows />
 
 			{#if attErr}
-				<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
+				<div class="cwarn"><Icon icon={faCircleExclamation} size={14} />{attErr}</div>
 			{/if}
 
 			{#if status === 'sending'}
@@ -1267,14 +1270,14 @@
 		>
 			{#snippet extra()}
 				<button type="button" class="cbar-lab" onclick={pickFiles}>
-					<Paperclip size={16} />{m.mail_compose_attach()}
+					<Icon icon={faPaperclip} size={16} />{m.mail_compose_attach()}
 				</button>
 			{/snippet}
 		</EditorToolbar>
 
 		{#if warn && !canSend && block?.kind !== 'no-sender' && status !== 'sending'}
 			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				{block
 					? sendBlockText(block)
 					: hasInvalid
@@ -1297,14 +1300,14 @@
 			/>
 		{:else if err && err.code === 'unknown'}
 			<div class="cwarn">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				{err.message}
 			</div>
 		{/if}
 
 		{#if saveStatus === 'failed'}
 			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{m.mail_compose_save_failed()}</span>
 				<button type="button" class="cwarn-act" onclick={retrySave}>{m.common_retry()}</button>
 			</div>
@@ -1327,7 +1330,7 @@
 					{#if status === 'sending'}
 						<span class="send-spin"></span>{m.mail_compose_sending()}
 					{:else}
-						<Send size={16} />{m.mail_compose_send()}
+						<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send()}
 					{/if}
 				</button>
 				<button
@@ -1341,12 +1344,12 @@
 						else showBlock();
 					}}
 				>
-					<ChevronDown size={15} />
+					<Icon icon={faChevronDown} size={15} />
 				</button>
 				{#if sendOpen}
 					<div class="send-menu" role="menu">
-						<button type="button" onclick={runSend}><Send size={16} />{m.mail_compose_send_now()}</button>
-						<button type="button" onclick={openSchedule}><Clock size={16} />{m.mail_compose_schedule()}</button>
+						<button type="button" onclick={runSend}><Icon icon={faPaperPlane} size={16} />{m.mail_compose_send_now()}</button>
+						<button type="button" onclick={openSchedule}><Icon icon={faClock} size={16} />{m.mail_compose_schedule()}</button>
 					</div>
 				{/if}
 			</div>
@@ -1359,11 +1362,11 @@
 				aria-disabled={!canSend}
 				onclick={openSchedule}
 			>
-				<Clock size={16} />{m.mail_compose_schedule()}
+				<Icon icon={faClock} size={16} />{m.mail_compose_schedule()}
 			</button>
 
 			<button type="button" class="cf-disc" onclick={askDiscard}>
-				<Trash2 size={16} />{m.mail_compose_discard_draft()}
+				<Icon icon={faTrashCan} size={16} />{m.mail_compose_discard_draft()}
 			</button>
 		</div>
 </div>
@@ -1374,7 +1377,7 @@
 
 {#if confirmDiscard}
 	<ConfirmDialog
-		icon={Trash2}
+		icon={faTrashCan}
 		title={m.mail_compose_discard_title()}
 		sub={subjLine}
 		tone="danger"

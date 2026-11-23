@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import Download from '@lucide/svelte/icons/download';
-	import RotateCw from '@lucide/svelte/icons/rotate-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import { faDownload, faPaperclip, faRotateRight } from '@fortawesome/pro-regular-svg-icons';
 	import {
 		AttachmentError,
 		downloadAttachment,
@@ -126,7 +125,7 @@
 {#if chips.length > 0}
 	<div class="att-row">
 		<div class="att-h">
-			<Paperclip size={14} />{m.mail_attach_count({ count: chips.length })}
+			<Icon icon={faPaperclip} size={14} />{m.mail_attach_count({ count: chips.length })}
 		</div>
 		<div class="att-list">
 			{#each chips as chip (chip.id)}
@@ -143,7 +142,7 @@
 						onclick={canOpen ? () => open(chip) : undefined}
 					>
 						<div class="ic">
-							{#if Ic}<Ic size={19} />{:else}<Paperclip size={19} />{/if}
+							{#if Ic}<Icon icon={Ic} size={19} />{:else}<Icon icon={faPaperclip} size={19} />{/if}
 						</div>
 						<div class="info">
 							{#if s.kind === 'ready' || s.kind === 'downloading'}
@@ -160,7 +159,7 @@
 					</svelte:element>
 					{#if s.kind === 'error'}
 						<button type="button" class="dl" title={m.common_retry()} onclick={() => hydrate(chip)}>
-							<RotateCw size={16} />
+							<Icon icon={faRotateRight} size={16} />
 						</button>
 					{:else}
 						<button
@@ -171,7 +170,7 @@
 							disabled={s.kind !== 'ready'}
 							onclick={() => download(chip)}
 						>
-							<Download size={16} />
+							<Icon icon={faDownload} size={16} />
 						</button>
 					{/if}
 				</div>

@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
-	import UserX from '@lucide/svelte/icons/user-x';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Lock from '@lucide/svelte/icons/lock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faLock, faTrashCan, faUserXmark } from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import Card from '../Card.svelte';
 	import AddRow from '../AddRow.svelte';
@@ -114,14 +113,14 @@
 
 <SecHead desc={m.settings_blocked_desc()} />
 
-<Card icon={UserX} title={m.settings_blocked_title()}>
+<Card icon={faUserXmark} title={m.settings_blocked_title()}>
 	{#snippet right()}
 		<span class="card-meta">{m.settings_blocked_count({ count: entries.length })}</span>
 	{/snippet}
 
 	{#if sealedHidden}
 		<div class="card-note">
-			<Lock size={13} />
+			<Icon icon={faLock} size={13} />
 			<span>
 				{m.settings_blocked_sealed_note()}
 			</span>
@@ -130,7 +129,7 @@
 
 	{#if error}
 		<div class="card-note bs-err" role="alert">
-			<Lock size={13} /><span>{error}</span>
+			<Icon icon={faLock} size={13} /><span>{error}</span>
 		</div>
 	{/if}
 
@@ -158,7 +157,7 @@
 				disabled={removing === e.id}
 				onclick={() => remove(e)}
 			>
-				<Trash2 size={15} />
+				<Icon icon={faTrashCan} size={15} />
 			</button>
 		</div>
 	{/each}
@@ -205,7 +204,7 @@
 
 {#if pendingUnblock}
 	<ConfirmDialog
-		icon={UserX}
+		icon={faUserXmark}
 		title={m.settings_blocked_unblock_title()}
 		sub={pendingUnblock.address ?? m.settings_blocked_sealed_address()}
 		confirmLabel={m.settings_blocked_unblock()}

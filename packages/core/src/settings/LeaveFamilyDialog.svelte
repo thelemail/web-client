@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
-	import CalendarOff from '@lucide/svelte/icons/calendar-off';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import LogOut from '@lucide/svelte/icons/log-out';
-	import UserRound from '@lucide/svelte/icons/user-round';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRightFromBracket,
+		faCalendarXmark,
+		faCircleExclamation,
+		faInbox,
+		faUser
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import { workspaceErrorText } from './member-errors';
@@ -42,28 +45,28 @@
 	}
 </script>
 
-<CeremonyShell icon={LogOut} eyebrow={m.settings_member_title_family()} title={m.settings_family_leave_title({ family: familyName })} tone="danger" {onClose}>
+<CeremonyShell icon={faArrowRightFromBracket} eyebrow={m.settings_member_title_family()} title={m.settings_family_leave_title({ family: familyName })} tone="danger" {onClose}>
 	<div class="cer-pane">
 		<div class="cer-lede">
 			<p>{m.settings_family_leave_lede()}</p>
 		</div>
 		<ul class="cer-points">
 			<li>
-				<Inbox size={16} />
+				<Icon icon={faInbox} size={16} />
 				<span>{m.settings_family_leave_point_keep()}</span>
 			</li>
 			<li>
-				<CalendarOff size={16} />
+				<Icon icon={faCalendarXmark} size={16} />
 				<span>{m.settings_family_leave_point_calendar()}</span>
 			</li>
 			<li>
-				<UserRound size={16} />
+				<Icon icon={faUser} size={16} />
 				<span>{m.settings_family_leave_point_unseen({ family: familyName })}</span>
 			</li>
 		</ul>
 
 		{#if error}
-			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 		{/if}
 	</div>
 

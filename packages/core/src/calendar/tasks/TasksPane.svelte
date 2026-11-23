@@ -1,7 +1,6 @@
 <script lang="ts">
-	import ListTodo from '@lucide/svelte/icons/list-todo';
-	import Plus from '@lucide/svelte/icons/plus';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faListCheck, faPlus, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { ScrollArea } from '$core/components/ui/scroll-area';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
@@ -13,7 +12,7 @@
 
 <div class="tkpane">
 	<div class="tkpane-h">
-		<ListTodo size={17} color="var(--brass-600)" />
+		<Icon icon={faListCheck} size={17} color="var(--brass-600)" />
 		<span class="tt">{m.cal_tasks_title()}</span>
 		<span class="cnt">{cal.taskCount}</span>
 		<button
@@ -22,7 +21,7 @@
 			aria-label={m.cal_tasks_new_aria()}
 			onclick={() => cal.openEditor({ mode: 'create', kind: 'task' })}
 		>
-			<Plus size={16} />
+			<Icon icon={faPlus} size={16} />
 		</button>
 		<button
 			type="button"
@@ -30,7 +29,7 @@
 			aria-label={m.cal_tasks_close_aria()}
 			onclick={() => (cal.tasksOpen = false)}
 		>
-			<X size={16} />
+			<Icon icon={faXmark} size={16} />
 		</button>
 	</div>
 	<ScrollArea class="min-h-0 flex-1">

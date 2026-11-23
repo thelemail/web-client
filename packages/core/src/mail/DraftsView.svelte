@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import FileText from '@lucide/svelte/icons/file-text';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import PenLine from '@lucide/svelte/icons/pen-line';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faFileLines,
+		faPaperclip,
+		faPenLine,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { onMount } from 'svelte';
 	import SystemAlerts from './SystemAlerts.svelte';
 	import LifecycleBanners from '$core/lifecycle/LifecycleBanners.svelte';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { mailSearch } from '$core/stores/search.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import { drafts, type DraftRow } from '$core/stores/drafts.svelte';
@@ -81,7 +84,7 @@
 			</h1>
 			<div class="lh-actions">
 				<button class="lh-btn" title={m.mail_refresh()} onclick={() => drafts.refresh()}>
-					<RefreshCw size={16} />
+					<Icon icon={faArrowsRotate} size={16} />
 				</button>
 			</div>
 		</div>
@@ -96,7 +99,7 @@
 				</div>
 			{:else if list.length === 0}
 				<div class="drafts-empty">
-					<div class="ring"><FileText size={28} /></div>
+					<div class="ring"><Icon icon={faFileLines} size={28} /></div>
 					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_drafts_empty()}</div>
 					<div class="d">
 						{mailSearch.text.trim()
@@ -133,7 +136,7 @@
 						</div>
 						<div class="dmeta">
 							{#if d.attachmentCount > 0}
-								<span class="datt"><Paperclip size={14} />{d.attachmentCount}</span>
+								<span class="datt"><Icon icon={faPaperclip} size={14} />{d.attachmentCount}</span>
 							{/if}
 							<button
 								type="button"
@@ -141,7 +144,7 @@
 								title={m.mail_drafts_discard()}
 								onclick={(e) => discardRow(e, d)}
 							>
-								<Trash2 size={16} />
+								<Icon icon={faTrashCan} size={16} />
 							</button>
 						</div>
 					</div>
@@ -158,7 +161,7 @@
 	</section>
 	<div class="drafts-side">
 		<div class="ds-inner">
-			<FileText size={40} />
+			<Icon icon={faFileLines} size={40} />
 			<p>{m.mail_drafts_side()}</p>
 		</div>
 	</div>
@@ -166,7 +169,7 @@
 
 {#if !composeStore.active}
 	<button class="fab" title={m.mail_compose()} onclick={() => composeStore.openNew()}>
-		<PenLine size={22} />
+		<Icon icon={faPenLine} size={22} />
 	</button>
 {/if}
 {#if toast}

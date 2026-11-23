@@ -1,12 +1,15 @@
 <script lang="ts">
-	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
-	import Check from '@lucide/svelte/icons/check';
-	import Eye from '@lucide/svelte/icons/eye';
-	import EyeOff from '@lucide/svelte/icons/eye-off';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
-	import Info from '@lucide/svelte/icons/info';
-	import Link2 from '@lucide/svelte/icons/link-2';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCalendarClock,
+		faCheck,
+		faCircleInfo,
+		faEye,
+		faEyeSlash,
+		faLink,
+		faUserPlus,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
@@ -41,8 +44,8 @@
 			text: cal.slotDisclosure,
 			mono: m.cal_offer_disclosure_from({ email: 'bookings@thelema.co' })
 		},
-		{ tone: 'no', icon: EyeOff, text: m.cal_offer_disclosure_events() },
-		{ tone: 'no', icon: UserPlus, text: m.cal_offer_disclosure_account() }
+		{ tone: 'no', icon: faEyeSlash, text: m.cal_offer_disclosure_events() },
+		{ tone: 'no', icon: faUserPlus, text: m.cal_offer_disclosure_account() }
 	]);
 
 	const pollColumns = $derived(cal.pollColumns.length || 1);
@@ -50,7 +53,7 @@
 
 <Dialog.Content class="cal-surface cal-dlg wide" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
-		<CalendarClock size={18} color="var(--brass-600)" />
+		<Icon icon={faCalendarClock} size={18} color="var(--brass-600)" />
 		<Dialog.Title class="dt">{m.cal_offer_title({ name: 'R. Panurge' })}</Dialog.Title>
 		<PrivacyChip tone="external" label={m.cal_offer_leaves()} />
 	</Dialog.Header>
@@ -71,7 +74,7 @@
 							aria-label={m.cal_offer_drop_aria({ when: SLOTS[index].when })}
 							onclick={() => cal.dropSlot(index)}
 						>
-							<X size={15} />
+							<Icon icon={faXmark} size={15} />
 						</button>
 					</div>
 				{/each}
@@ -80,7 +83,7 @@
 				{m.cal_offer_suggest_more()}
 			</Button>
 			<div class="limits">
-				<DisclosureBoundary heading={cal.whyHeading} headingIcon={Info} lines={why} noIcon="x" />
+				<DisclosureBoundary heading={cal.whyHeading} headingIcon={faCircleInfo} lines={why} noIcon="x" />
 			</div>
 		</div>
 
@@ -92,13 +95,13 @@
 				<div class="rblock">
 					<div class="rh">Thelemail · one-use availability link</div>
 					{#each cal.offeredSlots as index (index)}
-						<div class="rl"><Check size={13} />{SLOTS[index].when}</div>
+						<div class="rl"><Icon icon={faCheck} size={13} />{SLOTS[index].when}</div>
 					{/each}
-					<div class="rl link"><Link2 size={13} />thelema.co/t/8kq2 · expires in 7 days</div>
+					<div class="rl link"><Icon icon={faLink} size={13} />thelema.co/t/8kq2 · expires in 7 days</div>
 				</div>
 			</div>
 
-			<DisclosureBoundary heading={m.cal_offer_disclosure_heading()} headingIcon={Eye} lines={disclosure} />
+			<DisclosureBoundary heading={m.cal_offer_disclosure_heading()} headingIcon={faEye} lines={disclosure} />
 
 			<div class="sp-eyebrow">{m.cal_offer_answers()}</div>
 			<div class="poll" style:--poll-cols={pollColumns}>
@@ -117,7 +120,7 @@
 						</div>
 						{#each row.cells as cell (cell.index)}
 							<div class="pc" class:yes={cell.yes} class:no={!cell.yes}>
-								{#if cell.yes}<Check size={15} />{:else}<X size={15} />{/if}
+								{#if cell.yes}<Icon icon={faCheck} size={15} />{:else}<Icon icon={faXmark} size={15} />{/if}
 							</div>
 						{/each}
 					</div>

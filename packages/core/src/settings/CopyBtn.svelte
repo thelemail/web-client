@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Copy from '@lucide/svelte/icons/copy';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faCircleExclamation, faCopy } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 
 	interface Props {
@@ -48,9 +47,9 @@
 	title={result === 'failed' ? m.common_copy_failed() : m.settings_copy_to_clipboard()}
 	aria-label={label ?? m.common_copy()}
 >
-	{#if result === 'copied'}<Check size={iconSize} />{:else if result === 'failed'}<CircleAlert
+	{#if result === 'copied'}<Icon icon={faCheck} size={iconSize} />{:else if result === 'failed'}<Icon icon={faCircleExclamation}
 			size={iconSize}
-		/>{:else}<Copy size={iconSize} />{/if}
+		/>{:else}<Icon icon={faCopy} size={iconSize} />{/if}
 	{#if !small}<span aria-hidden="true">{status || (label ?? m.common_copy())}</span>{/if}
 </button>
 <span class="sr-only" aria-live="polite">{status}</span>

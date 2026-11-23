@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
 	import { onMount } from 'svelte';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Download from '@lucide/svelte/icons/download';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowUpRightFromSquare,
+		faArrowsRotate,
+		faDownload
+	} from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
@@ -61,11 +64,11 @@
 					onclick={() => appUpdate.check()}
 					disabled={appUpdate.checking || appUpdate.installing}
 				>
-					<RefreshCw />{m.settings_about_check()}
+					<Icon icon={faArrowsRotate} />{m.settings_about_check()}
 				</Button>
 				{#if available}
 					<Button variant="secondary" size="sm" onclick={() => appUpdate.openRelease()}>
-						<ExternalLink />{m.settings_about_release_notes()}
+						<Icon icon={faArrowUpRightFromSquare} />{m.settings_about_release_notes()}
 					</Button>
 					{#if !status?.blocked}
 						<Button
@@ -74,7 +77,7 @@
 							onclick={() => appUpdate.install()}
 							disabled={appUpdate.installing}
 						>
-							<Download />{m.settings_about_install()}
+							<Icon icon={faDownload} />{m.settings_about_install()}
 						</Button>
 					{/if}
 				{/if}

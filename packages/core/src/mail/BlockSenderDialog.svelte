@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import UserX from '@lucide/svelte/icons/user-x';
+	import { faUserXmark } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { blockSender } from './blockedSenders';
@@ -47,7 +47,7 @@
 </script>
 
 <ConfirmDialog
-	icon={UserX}
+	icon={faUserXmark}
 	title={m.mail_block_title()}
 	sub={displayName && displayName !== address ? `${displayName} · ${address}` : address}
 	confirmLabel={m.mail_block_confirm()}

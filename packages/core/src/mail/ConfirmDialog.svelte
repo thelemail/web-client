@@ -1,13 +1,15 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import './confirm-dialog.css';
-	import type { Component, Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import { Button } from '$core/components/ui/button';
 
 	interface Props {
-		icon?: Component;
+		icon?: IconDefinition;
 		title: string;
 		sub?: string;
 		tone?: 'danger' | 'neutral';
@@ -24,7 +26,7 @@
 	}
 
 	let {
-		icon: Icon,
+		icon: glyph,
 		title,
 		sub = '',
 		tone = 'neutral',
@@ -77,8 +79,8 @@
 >
 	<div class="cfd-modal {tone}" role="presentation" onmousedown={(e) => e.stopPropagation()}>
 		<div class="cfd-head">
-			{#if Icon}
-				<span class="cfd-ic"><Icon size={17} /></span>
+			{#if glyph}
+				<span class="cfd-ic"><Icon icon={glyph} size={17} /></span>
 			{/if}
 			<div class="cfd-tx">
 				<h2 class="cfd-title" id={titleId}>{title}</h2>
@@ -87,7 +89,7 @@
 				{/if}
 			</div>
 			<button type="button" class="cfd-x" title={m.common_close()} disabled={busy} onclick={close}>
-				<X size={16} />
+				<Icon icon={faXmark} size={16} />
 			</button>
 		</div>
 

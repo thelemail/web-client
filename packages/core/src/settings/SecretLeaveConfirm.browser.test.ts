@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
-import ShieldCheck from '@lucide/svelte/icons/shield-check';
+import { faShieldCheck } from '@fortawesome/pro-regular-svg-icons';
 import CeremonyShell from './CeremonyShell.svelte';
 import SecretLeaveConfirm from './SecretLeaveConfirm.svelte';
 import { m } from '$paraglide/messages.js';
@@ -17,7 +17,7 @@ describe('SecretLeaveConfirm over a ceremony', () => {
 
 	it('sits above the ceremony panel so both choices can be clicked', () => {
 		render(CeremonyShell, {
-			icon: ShieldCheck,
+			icon: faShieldCheck,
 			eyebrow: 'Security',
 			title: 'Add security key',
 			onClose: vi.fn(),

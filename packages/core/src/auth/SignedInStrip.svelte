@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowRight } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { initialsFor } from '$core/mail/initials';
 	import { auth } from '$core/stores/session.svelte';
@@ -40,10 +41,10 @@
 			<span class="si-tx" title={single.email}
 				><Rich text={m.auth_signed_in_as({ email: single.email })} tags={{ b: strong }} /></span
 			>
-			<a class="si-go" href="/">{m.auth_signed_in_open_mailbox()}<ArrowRight size={15} strokeWidth={1.75} /></a>
+			<a class="si-go" href="/">{m.auth_signed_in_open_mailbox()}<Icon icon={faArrowRight} size={15} /></a>
 		{:else}
 			<span class="si-tx">{m.auth_signed_in_count({ count: known.length })}</span>
-			<a class="si-go" href="/">{m.auth_signed_in_choose_account()}<ArrowRight size={15} strokeWidth={1.75} /></a>
+			<a class="si-go" href="/">{m.auth_signed_in_choose_account()}<Icon icon={faArrowRight} size={15} /></a>
 		{/if}
 	</div>
 {/if}

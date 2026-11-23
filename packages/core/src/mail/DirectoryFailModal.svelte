@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Lock from '@lucide/svelte/icons/lock';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faChevronDown,
+		faChevronRight,
+		faChevronUp,
+		faLock,
+		faPencil,
+		faShieldExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import type { DirectoryVerificationCode } from '$core/directory/verify';
 	import {
 		LABEL_CURVE25519_LEGACY,
@@ -184,7 +187,7 @@
 >
 	<div class="dv-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
 		<div class="dv-crest">
-			<span class="dv-seal"><ShieldAlert size={26} /></span>
+			<span class="dv-seal"><Icon icon={faShieldExclamation} size={26} /></span>
 			<span class="dv-eyebrow">{m.mail_dirfail_eyebrow()}</span>
 		</div>
 
@@ -201,13 +204,13 @@
 		</div>
 
 		<div class="dv-assure">
-			<Lock size={14} />
+			<Icon icon={faLock} size={14} />
 			{m.mail_dirfail_assure()}
 		</div>
 
 		<div class="dv-fold">
 			<button type="button" class="dv-disclose" class:open={tech} onclick={() => (tech = !tech)}>
-				<ChevronRight size={15} />{m.mail_dirfail_show_details()}
+				<Icon icon={faChevronRight} size={15} />{m.mail_dirfail_show_details()}
 			</button>
 			{#if tech}
 				<div class="dv-tech">
@@ -223,7 +226,7 @@
 
 		<button type="button" class="dv-what" class:open={what} onclick={() => (what = !what)}>
 			{m.mail_dirfail_what_is_this()}
-			{#if what}<ChevronUp size={14} />{:else}<ChevronDown size={14} />{/if}
+			{#if what}<Icon icon={faChevronUp} size={14} />{:else}<Icon icon={faChevronDown} size={14} />{/if}
 		</button>
 		{#if what}
 			<div class="dv-explainer">
@@ -233,10 +236,10 @@
 
 		<div class="dv-actions">
 			<Button variant="primary" onclick={onEditRecipient}>
-				<Pencil size={15} />{m.mail_dirfail_edit_recipient()}
+				<Icon icon={faPencil} size={15} />{m.mail_dirfail_edit_recipient()}
 			</Button>
 			<Button variant="ghost" onclick={onRetry} title={m.mail_dirfail_retry_title()}>
-				<RefreshCw size={15} />{m.common_retry()}
+				<Icon icon={faArrowsRotate} size={15} />{m.common_retry()}
 			</Button>
 			<div class="dv-spacer"></div>
 			<button type="button" class="linklike" onclick={onCancel}>{m.mail_dirfail_back_to_draft()}</button>

@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
-	import Code from '@lucide/svelte/icons/code';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Check from '@lucide/svelte/icons/check';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faCode, faCopy, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { auth } from '$core/stores/auth.svelte';
 	import { DecryptionError } from './decrypt';
 	import { loadOriginalHeaders } from './originalHeaders';
@@ -104,7 +102,7 @@
 >
 	<div class="oh-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
 		<div class="oh-head">
-			<span class="oh-ic"><Code size={17} /></span>
+			<span class="oh-ic"><Icon icon={faCode} size={17} /></span>
 			<div class="oh-tx">
 				<h2 class="oh-title" id="oh-title">{m.mail_headers_title()}</h2>
 				{#if subject}
@@ -112,7 +110,7 @@
 				{/if}
 			</div>
 			<button type="button" class="oh-x" title={m.common_close()} onclick={onClose}>
-				<X size={16} />
+				<Icon icon={faXmark} size={16} />
 			</button>
 		</div>
 
@@ -128,9 +126,9 @@
 			<Button variant="secondary" onclick={onClose}>{m.common_close()}</Button>
 			<Button variant="primary" disabled={view.status !== 'ready'} onclick={copy}>
 				{#if copied}
-					<Check size={15} />{m.common_copied()}
+					<Icon icon={faCheck} size={15} />{m.common_copied()}
 				{:else}
-					<Copy size={15} />{m.common_copy()}
+					<Icon icon={faCopy} size={15} />{m.common_copy()}
 				{/if}
 			</Button>
 		</div>

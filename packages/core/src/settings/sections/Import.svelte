@@ -1,12 +1,16 @@
 <script lang="ts">
-	import Upload from '@lucide/svelte/icons/upload';
-	import FileUp from '@lucide/svelte/icons/file-up';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import CopyCheck from '@lucide/svelte/icons/copy-check';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Lock from '@lucide/svelte/icons/lock';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleCheck,
+		faClock,
+		faClone,
+		faFileArrowUp,
+		faLock,
+		faSpinnerThird,
+		faTriangleExclamation,
+		faUpload
+	} from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import Card from '../Card.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -28,12 +32,12 @@
 		void importBatch.load(id);
 	});
 
-	const statusMeta: Record<ImportItemStatus, { icon: typeof CircleCheck; label: () => string; cls: string }> = {
-		pending: { icon: Clock, label: () => m.settings_import_status_queued(), cls: 'pending' },
-		processing: { icon: LoaderCircle, label: () => m.settings_import_status_importing(), cls: 'processing' },
-		done: { icon: CircleCheck, label: () => m.settings_import_status_imported(), cls: 'done' },
-		duplicate: { icon: CopyCheck, label: () => m.settings_import_status_duplicate(), cls: 'dup' },
-		failed: { icon: TriangleAlert, label: () => m.settings_import_status_failed(), cls: 'failed' }
+	const statusMeta: Record<ImportItemStatus, { icon: IconDefinition; label: () => string; cls: string }> = {
+		pending: { icon: faClock, label: () => m.settings_import_status_queued(), cls: 'pending' },
+		processing: { icon: faSpinnerThird, label: () => m.settings_import_status_importing(), cls: 'processing' },
+		done: { icon: faCircleCheck, label: () => m.settings_import_status_imported(), cls: 'done' },
+		duplicate: { icon: faClone, label: () => m.settings_import_status_duplicate(), cls: 'dup' },
+		failed: { icon: faTriangleExclamation, label: () => m.settings_import_status_failed(), cls: 'failed' }
 	};
 
 	function fmtSize(bytes: number): string {
@@ -91,17 +95,17 @@
 
 <SecHead desc={m.settings_import_desc()} />
 
-<Card icon={Upload} title={m.settings_import_title()}>
+<Card icon={faUpload} title={m.settings_import_title()}>
 	{#if importBatch.locked}
 		<div class="card-note warn">
-			<Lock size={13} />
+			<Icon icon={faLock} size={13} />
 			<span>{m.settings_import_locked()}</span>
 		</div>
 	{/if}
 
 	{#if !importBatch.running && importBatch.resumable > 0}
 		<div class="card-note">
-			<Clock size={13} />
+			<Icon icon={faClock} size={13} />
 			<span>
 				<Rich text={m.settings_import_resumable({ count: importBatch.resumable })} tags={{ link: resumeLink }} />
 			</span>
@@ -119,7 +123,7 @@
 		ondragover={onDragOver}
 		ondragleave={() => (dragging = false)}
 	>
-		<FileUp size={26} />
+		<Icon icon={faFileArrowUp} size={26} />
 		<div class="dz-t">{m.settings_import_drop()}</div>
 		<div class="dz-d">{m.settings_import_drop_desc()}</div>
 	</div>
@@ -136,16 +140,16 @@
 
 	{#if importBatch.items.length > 0}
 		<div class="imp-summary">
-			<span class="imp-stat"><CircleCheck size={14} />{m.settings_import_done({ count: importBatch.done })}</span>
+			<span class="imp-stat"><Icon icon={faCircleCheck} size={14} />{m.settings_import_done({ count: importBatch.done })}</span>
 			{#if importBatch.duplicate > 0}
-				<span class="imp-stat dup"><CopyCheck size={14} />{m.settings_import_duplicates({ count: importBatch.duplicate })}</span>
+				<span class="imp-stat dup"><Icon icon={faClone} size={14} />{m.settings_import_duplicates({ count: importBatch.duplicate })}</span>
 			{/if}
 			{#if importBatch.failed > 0}
-				<span class="imp-stat failed"><TriangleAlert size={14} />{m.settings_import_failed({ count: importBatch.failed })}</span>
+				<span class="imp-stat failed"><Icon icon={faTriangleExclamation} size={14} />{m.settings_import_failed({ count: importBatch.failed })}</span>
 			{/if}
 			{#if importBatch.pending > 0}
 				<span class="imp-stat pending">
-					{#if importBatch.running}<LoaderCircle size={14} class="spin" />{:else}<Clock size={14} />{/if}
+					{#if importBatch.running}<Icon icon={faSpinnerThird} size={14} class="spin" />{:else}<Icon icon={faClock} size={14} />{/if}
 					{m.settings_import_pending({ count: importBatch.pending })}
 				</span>
 			{/if}
@@ -162,7 +166,7 @@
 				{@const meta = statusMeta[item.status]}
 				{@const Ic = meta.icon}
 				<div class="imp-row {meta.cls}">
-					<span class="imp-ic"><Ic size={16} class={item.status === 'processing' ? 'spin' : ''} /></span>
+					<span class="imp-ic"><Icon icon={Ic} size={16} class={item.status === 'processing' ? 'spin' : ''} /></span>
 					<div class="imp-info">
 						<div class="imp-name">{item.name}</div>
 						<div class="imp-meta">

@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { onDestroy, untrack } from 'svelte';
-	import Bold from '@lucide/svelte/icons/bold';
-	import Italic from '@lucide/svelte/icons/italic';
-	import LinkIcon from '@lucide/svelte/icons/link';
-	import ImageIcon from '@lucide/svelte/icons/image';
-	import Code from '@lucide/svelte/icons/code';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
-	import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faBold,
+		faCode,
+		faImage,
+		faItalic,
+		faLink,
+		faLockKeyhole,
+		faSpinnerThird
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Editor } from '@tiptap/core';
 	import LinkDialog from '$core/mail/editor/LinkDialog.svelte';
 	import { applyLink, currentLink } from '$core/mail/editor/link';
@@ -310,26 +313,26 @@
 
 {#if locked}
 	<div class="sig-locked">
-		<LockKeyhole size={14} />{m.settings_signature_locked()}
+		<Icon icon={faLockKeyhole} size={14} />{m.settings_signature_locked()}
 	</div>
 {/if}
 
 {#if mode === 'rich'}
 	<div class="sig-tools">
-		<button type="button" title={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Bold size={16} /></button>
-		<button type="button" title={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Italic size={16} /></button>
-		<button type="button" title={m.settings_signature_link()} onclick={setLink} disabled={locked}><LinkIcon size={16} /></button>
+		<button type="button" title={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Icon icon={faBold} size={16} /></button>
+		<button type="button" title={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Icon icon={faItalic} size={16} /></button>
+		<button type="button" title={m.settings_signature_link()} onclick={setLink} disabled={locked}><Icon icon={faLink} size={16} /></button>
 		<span class="divr"></span>
 		<button type="button" title={m.settings_signature_insert_image()} onclick={pickImage} disabled={imageBusy || locked}>
-			{#if imageBusy}<Loader2 size={16} class="spin" />{:else}<ImageIcon size={16} />{/if}
+			{#if imageBusy}<Icon icon={faSpinnerThird} size={16} class="spin" />{:else}<Icon icon={faImage} size={16} />{/if}
 		</button>
-		<button type="button" title={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Code size={16} /></button>
+		<button type="button" title={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Icon icon={faCode} size={16} /></button>
 	</div>
 	<div bind:this={mountEl} class="sig-edit-mount"></div>
 {:else}
 	<div class="sig-tools">
 		<button type="button" title={m.settings_signature_insert_image()} onclick={pickImage} disabled={imageBusy || locked}>
-			{#if imageBusy}<Loader2 size={16} class="spin" />{:else}<ImageIcon size={16} />{/if}
+			{#if imageBusy}<Icon icon={faSpinnerThird} size={16} class="spin" />{:else}<Icon icon={faImage} size={16} />{/if}
 		</button>
 	</div>
 	<SignatureSource

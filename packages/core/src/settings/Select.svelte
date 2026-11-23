@@ -1,5 +1,6 @@
 <script lang="ts">
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Icon from '$core/components/Icon.svelte';
+	import { faChevronDown } from '@fortawesome/pro-regular-svg-icons';
 	import { getRowNames } from './a11y';
 
 	interface Props {
@@ -36,5 +37,5 @@
 			{/if}
 		{/each}
 	</select>
-	<span class="chev"><ChevronDown size={15} /></span>
+	<span class="chev"><Icon icon={faChevronDown} size={15} /></span>
 </span>

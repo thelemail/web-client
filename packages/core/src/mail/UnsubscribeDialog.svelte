@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import MailMinus from '@lucide/svelte/icons/mail-minus';
+	import { faInboxOut } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { platform } from '$platform';
@@ -98,7 +98,7 @@
 </script>
 
 <ConfirmDialog
-	icon={MailMinus}
+	icon={faInboxOut}
 	title={m.mail_unsub_title({ name })}
 	{sub}
 	confirmLabel={method.kind === 'page' ? m.mail_unsub_open_page() : m.mail_unsub_confirm()}

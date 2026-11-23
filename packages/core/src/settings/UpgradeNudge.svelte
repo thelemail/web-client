@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowRight, faSparkles } from '@fortawesome/pro-regular-svg-icons';
 	import { page } from '$app/state';
 
 	let { title, desc }: { title: string; desc: string } = $props();
@@ -9,12 +9,12 @@
 </script>
 
 <a class="upgrade-nudge" {href}>
-	<span class="up-ic"><Sparkles size={18} /></span>
+	<span class="up-ic"><Icon icon={faSparkles} size={18} /></span>
 	<span class="up-body">
 		<span class="up-t">{title}</span>
 		<span class="up-d">{desc}</span>
 	</span>
-	<ArrowRight size={16} />
+	<Icon icon={faArrowRight} size={16} />
 </a>
 
 <style>

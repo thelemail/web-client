@@ -1,17 +1,21 @@
 <script lang="ts">
 	import { accountTransition } from '$core/stores/accountTransition.svelte';
 	import { i18n } from '$core/i18n/locale.svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Users from '@lucide/svelte/icons/users';
-	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Download from '@lucide/svelte/icons/download';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Fingerprint from '@lucide/svelte/icons/fingerprint';
-	import LogOut from '@lucide/svelte/icons/log-out';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faArrowRightFromBracket,
+		faArrowUpRightFromSquare,
+		faCalendarClock,
+		faCircleCheck,
+		faCircleExclamation,
+		faDownload,
+		faFingerprint,
+		faGlobe,
+		faTrashCan,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import CeremonyShell from '../CeremonyShell.svelte';
@@ -31,7 +35,6 @@
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import { EXPORT_TOOL_URL } from '../exportTool';
 
 	interface Props {
@@ -227,7 +230,7 @@
 </script>
 
 <CeremonyShell
-	icon={CircleAlert}
+	icon={faCircleExclamation}
 	eyebrow={m.settings_ceremony_delete_eyebrow()}
 	title={m.settings_ceremony_delete_title()}
 	tone="danger"
@@ -241,7 +244,7 @@
 				<p>{m.settings_ceremony_delete_workspace_lede()}</p>
 			</div>
 			<ul class="cer-points danger">
-				<li><Users size={16} /><span>{m.settings_ceremony_delete_workspace_point()}</span></li>
+				<li><Icon icon={faUsers} size={16} /><span>{m.settings_ceremony_delete_workspace_point()}</span></li>
 			</ul>
 		</div>
 	{:else if step === 0}
@@ -252,15 +255,15 @@
 				</p>
 			</div>
 			<ul class="cer-points danger">
-				<li><Trash2 size={16} /><span>{m.settings_ceremony_delete_point_erased()}</span></li>
-				<li><Globe size={16} /><span>{m.settings_ceremony_delete_point_domains()}</span></li>
-				<li><CalendarClock size={16} /><span>{m.settings_ceremony_delete_point_signed_out()}</span></li>
+				<li><Icon icon={faTrashCan} size={16} /><span>{m.settings_ceremony_delete_point_erased()}</span></li>
+				<li><Icon icon={faGlobe} size={16} /><span>{m.settings_ceremony_delete_point_domains()}</span></li>
+				<li><Icon icon={faCalendarClock} size={16} /><span>{m.settings_ceremony_delete_point_signed_out()}</span></li>
 			</ul>
 			<div class="export-nudge">
-				<Download size={17} />
+				<Icon icon={faDownload} size={17} />
 				<div><Rich text={m.settings_ceremony_delete_export_nudge()} tags={{ b: bold }} /></div>
 				<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
-					{m.settings_ceremony_delete_export_archive()}<ExternalLink size={14} />
+					{m.settings_ceremony_delete_export_archive()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 				</Button>
 			</div>
 		</div>
@@ -357,16 +360,16 @@
 			{/if}
 			{#if hasWebauthn}
 				<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
-					<Fingerprint size={14} />{m.settings_ceremony_delete_use_security_key()}
+					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_delete_use_security_key()}
 				</Button>
 			{/if}
 			{#if verifyError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{verifyError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{verifyError}</span></span>
 			{/if}
 		</div>
 	{:else}
 		<DoneScreen
-			icon={CircleCheck}
+			icon={faCircleCheck}
 			title={m.settings_ceremony_delete_done_title()}
 			desc={m.settings_ceremony_delete_done_desc({ date: purgeDateLabel })}
 		/>
@@ -379,29 +382,29 @@
 		{:else if step === 0}
 			<Button variant="ghost" onclick={onClose}>{m.settings_ceremony_delete_keep()}</Button>
 			<Button variant="danger" onclick={() => (step = 1)}>
-				{m.common_continue()}<ArrowRight size={15} />
+				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 1}
 			<Button variant="ghost" onclick={() => (step = 0)}>
-				<ArrowLeft size={15} />{m.common_back()}
+				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={!canContinue} onclick={() => (step = 2)}>
-				{m.common_continue()}<ArrowRight size={15} />
+				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 2}
 			<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
-				<ArrowLeft size={15} />{m.common_back()}
+				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>
 				{#if busy}
 					{m.settings_ceremony_delete_verifying()}
 				{:else}
-					<Trash2 size={15} />{m.settings_ceremony_delete_submit()}
+					<Icon icon={faTrashCan} size={15} />{m.settings_ceremony_delete_submit()}
 				{/if}
 			</Button>
 		{:else}
 			<Button variant="primary" disabled={signingOut} onclick={signOutDeleted}>
-				<LogOut size={15} />{signingOut
+				<Icon icon={faArrowRightFromBracket} size={15} />{signingOut
 					? m.settings_ceremony_delete_signing_out()
 					: m.settings_ceremony_delete_sign_out()}
 			</Button>

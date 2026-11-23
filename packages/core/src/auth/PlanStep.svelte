@@ -15,15 +15,18 @@
 		type PlanTier,
 		type ProductId
 	} from '$core/auth/plans';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import UsersRound from '@lucide/svelte/icons/users-round';
-	import BriefcaseBusiness from '@lucide/svelte/icons/briefcase-business';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
-	import Plus from '@lucide/svelte/icons/plus';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faBriefcase,
+		faCheck,
+		faMinus,
+		faPlus,
+		faShieldCheck,
+		faUser,
+		faUserGroup
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
 
@@ -58,7 +61,7 @@
 	const ctaText = $derived(ctaVerb ?? m.auth_plan_cta_continue_payment());
 	const busyText = $derived(busyLabel ?? m.auth_preparing_checkout());
 
-	const ICONS = { personal: UserRound, family: UsersRound, business: BriefcaseBusiness };
+	const ICONS = { personal: faUser, family: faUserGroup, business: faBriefcase };
 
 	const product = $derived(findPlan(sel).product);
 	const tier = $derived(findPlan(sel).tier);
@@ -124,7 +127,7 @@
 					<span class="mostbadge">{p.badge}</span>
 				{/if}
 				<span class="pt-top">
-					<ProductIcon size={16} strokeWidth={1.75} />
+					<Icon icon={ProductIcon} size={16} />
 					<span class="pt-name">{p.name}</span>
 				</span>
 				<span class="pt-from mono">
@@ -170,7 +173,7 @@
 					disabled={sel.seats <= MIN_SEATS}
 					onclick={() => setSeats(sel.seats - 1)}
 				>
-					<Minus size={15} strokeWidth={1.75} />
+					<Icon icon={faMinus} size={15} />
 				</button>
 				<span class="seats-n mono">{sel.seats}</span>
 				<button
@@ -180,7 +183,7 @@
 					disabled={sel.seats >= MAX_SEATS}
 					onclick={() => setSeats(sel.seats + 1)}
 				>
-					<Plus size={15} strokeWidth={1.75} />
+					<Icon icon={faPlus} size={15} />
 				</button>
 			</span>
 			<span class="seats-note">{m.auth_plan_seats_note({ min: MIN_SEATS })}</span>
@@ -201,7 +204,7 @@
 				{#if t.badge}
 					<span class="mostbadge">{t.badge}</span>
 				{/if}
-				<span class="tc-pick" aria-hidden="true"><Check size={13} strokeWidth={2.5} /></span>
+				<span class="tc-pick" aria-hidden="true"><Icon icon={faCheck} size={13} /></span>
 				<span class="tc-name">{t.name}</span>
 				{#if t.framing}
 					<span class="tc-framing serif">{t.framing}</span>
@@ -234,7 +237,7 @@
 	</div>
 
 	<p class="bothline">
-		<ShieldCheck size={15} strokeWidth={1.75} />
+		<Icon icon={faShieldCheck} size={15} />
 		<span>{product.bothLine}</span>
 	</p>
 
@@ -242,7 +245,7 @@
 		<div class="btnrow">
 			{#if onBack}
 				<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={onBack}>
-					<ArrowLeft size={17} strokeWidth={1.75} />
+					<Icon icon={faArrowLeft} size={17} />
 				</Button>
 			{/if}
 			<Button variant="primary" size="lg" disabled={!tier || busy} onclick={onNext}>
@@ -254,7 +257,7 @@
 						plan: tier.name,
 						price: pricePerPeriod(total, sel.period)
 					})}
-					<ArrowRight size={17} strokeWidth={1.75} />
+					<Icon icon={faArrowRight} size={17} />
 				{:else}
 					{m.auth_plan_select_to_continue()}
 				{/if}

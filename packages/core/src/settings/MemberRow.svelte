@@ -1,14 +1,17 @@
 <script lang="ts">
-	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCheck,
+		faCircleExclamation,
+		faCircleInfo,
+		faCopy,
+		faEllipsisVertical,
+		faShieldCheck,
+		faTrashCan,
+		faUser,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CopyBtn from './CopyBtn.svelte';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Info from '@lucide/svelte/icons/info';
-	import X from '@lucide/svelte/icons/x';
 	import { m } from '$paraglide/messages.js';
 	import type { AccountMember } from './types';
 	import { memberRoleLabel } from './memberRole';
@@ -125,33 +128,33 @@
 					onclick={toggleMenu}
 					disabled={busy}
 				>
-					<EllipsisVertical size={16} strokeWidth={1.75} />
+					<Icon icon={faEllipsisVertical} size={16} />
 				</button>
 				{#if menuOpen}
 					<div class="mbr-menu" role="menu">
 						{#if canResend}
 							<button type="button" class="mbr-menu-item" onclick={resend}>
-								<Copy size={14} strokeWidth={1.75} />{m.settings_member_resend()}
+								<Icon icon={faCopy} size={14} />{m.settings_member_resend()}
 							</button>
 						{/if}
 						{#if canPromote}
 							<button type="button" class="mbr-menu-item" onclick={doPromote}>
-								<ShieldCheck size={14} strokeWidth={1.75} />{m.settings_member_make_admin()}
+								<Icon icon={faShieldCheck} size={14} />{m.settings_member_make_admin()}
 							</button>
 						{/if}
 						{#if canDemote}
 							<button type="button" class="mbr-menu-item" onclick={doDemote}>
-								<UserRound size={14} strokeWidth={1.75} />{m.settings_member_make_member()}
+								<Icon icon={faUser} size={14} />{m.settings_member_make_member()}
 							</button>
 						{/if}
 						{#if canRevoke}
 							<button type="button" class="mbr-menu-item danger" onclick={startRevoke}>
-								<Trash2 size={14} strokeWidth={1.75} />{m.settings_member_revoke_invite()}
+								<Icon icon={faTrashCan} size={14} />{m.settings_member_revoke_invite()}
 							</button>
 						{/if}
 						{#if canRemove}
 							<button type="button" class="mbr-menu-item danger" onclick={startRemove}>
-								<Trash2 size={14} strokeWidth={1.75} />{m.settings_member_remove_from_workspace()}
+								<Icon icon={faTrashCan} size={14} />{m.settings_member_remove_from_workspace()}
 							</button>
 						{/if}
 					</div>
@@ -170,7 +173,7 @@
 </div>
 {#if feedback}
 	<div class="mbr-feedback" class:err={feedback.kind === 'error'} role={feedback.kind === 'error' ? 'alert' : 'status'}>
-		{#if feedback.kind === 'error'}<CircleAlert size={14} />{:else if feedback.link}<Info size={14} />{:else}<Check size={14} />{/if}
+		{#if feedback.kind === 'error'}<Icon icon={faCircleExclamation} size={14} />{:else if feedback.link}<Icon icon={faCircleInfo} size={14} />{:else}<Icon icon={faCheck} size={14} />{/if}
 		<div class="mbr-fb-body">
 			<span>{feedback.text}</span>
 			{#if feedback.link}
@@ -179,7 +182,7 @@
 		</div>
 		{#if onDismiss}
 			<button type="button" class="mbr-fb-x" aria-label={m.settings_member_dismiss()} onclick={onDismiss}>
-				<X size={14} />
+				<Icon icon={faXmark} size={14} />
 			</button>
 		{/if}
 	</div>

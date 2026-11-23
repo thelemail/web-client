@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { onMount } from 'svelte';
-	import Clock from '@lucide/svelte/icons/clock';
-	import SendHorizontal from '@lucide/svelte/icons/send-horizontal';
-	import PenLine from '@lucide/svelte/icons/pen-line';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faClock,
+		faPaperPlaneTop,
+		faPenLine
+	} from '@fortawesome/pro-regular-svg-icons';
 	import SystemAlerts from './SystemAlerts.svelte';
 	import LifecycleBanners from '$core/lifecycle/LifecycleBanners.svelte';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
 	import { mailSearch } from '$core/stores/search.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Toast from '$core/components/Toast.svelte';
@@ -83,7 +86,7 @@
 			</h1>
 			<div class="lh-actions">
 				<button class="lh-btn" title={m.mail_refresh()} onclick={() => scheduled.refresh()}>
-					<RefreshCw size={16} />
+					<Icon icon={faArrowsRotate} size={16} />
 				</button>
 			</div>
 		</div>
@@ -98,7 +101,7 @@
 				</div>
 			{:else if list.length === 0}
 				<div class="sch-empty">
-					<div class="ring"><Clock size={28} /></div>
+					<div class="ring"><Icon icon={faClock} size={28} /></div>
 					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_scheduled_empty()}</div>
 					<div class="d">
 						{mailSearch.text.trim()
@@ -146,7 +149,7 @@
 	</section>
 	<div class="sch-side">
 		<div class="sch-side-in">
-			<SendHorizontal size={40} />
+			<Icon icon={faPaperPlaneTop} size={40} />
 			<p>{m.mail_scheduled_side()}</p>
 		</div>
 	</div>
@@ -158,7 +161,7 @@
 
 {#if pendingCancel}
 	<ConfirmDialog
-		icon={Clock}
+		icon={faClock}
 		title={m.mail_scheduled_cancel_title()}
 		sub={pendingCancel.subject}
 		tone="danger"
@@ -176,7 +179,7 @@
 
 {#if !composeStore.active}
 	<button class="fab" title={m.mail_compose()} onclick={() => composeStore.openNew()}>
-		<PenLine size={22} />
+		<Icon icon={faPenLine} size={22} />
 	</button>
 {/if}
 {#if toast}

@@ -22,10 +22,13 @@
 	import Card from '$core/settings/Card.svelte';
 	import Row from '$core/settings/Row.svelte';
 	import { Button } from '$core/components/ui/button';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Download from '@lucide/svelte/icons/download';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowUpRightFromSquare,
+		faCircleExclamation,
+		faDownload,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	let { data } = $props();
 
@@ -91,7 +94,7 @@
 						<KeysCard {launch} />
 					</SecGroup>
 
-					<Card icon={Download} title={m.settings_account_export_title()}>
+					<Card icon={faDownload} title={m.settings_account_export_title()}>
 						<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 							<Button
 								variant="secondary"
@@ -100,7 +103,7 @@
 								target="_blank"
 								rel="noreferrer noopener"
 							>
-								{m.settings_account_export_button()}<ExternalLink size={14} />
+								{m.settings_account_export_button()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 							</Button>
 						</Row>
 					</Card>
@@ -109,10 +112,10 @@
 						<SecurityLog />
 					</SecGroup>
 
-					<Card icon={CircleAlert} title={m.settings_account_delete_title()} variant="danger">
+					<Card icon={faCircleExclamation} title={m.settings_account_delete_title()} variant="danger">
 						<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_desc()}>
 							<Button variant="danger" size="sm" onclick={() => launch('delete')}>
-								<Trash2 size={14} />{m.settings_account_delete_button()}
+								<Icon icon={faTrashCan} size={14} />{m.settings_account_delete_button()}
 							</Button>
 						</Row>
 					</Card>

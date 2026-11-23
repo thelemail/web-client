@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
-	import CalendarOff from '@lucide/svelte/icons/calendar-off';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import UserMinus from '@lucide/svelte/icons/user-minus';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCalendarXmark,
+		faCircleExclamation,
+		faInbox,
+		faUserMinus,
+		faUserPlus
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import { workspaceErrorText } from './member-errors';
@@ -42,7 +45,7 @@
 </script>
 
 <CeremonyShell
-	icon={UserMinus}
+	icon={faUserMinus}
 	eyebrow={m.settings_member_title_family()}
 	title={m.settings_family_remove_title({ name })}
 	tone="danger"
@@ -54,21 +57,21 @@
 		</div>
 		<ul class="cer-points">
 			<li>
-				<Inbox size={16} />
+				<Icon icon={faInbox} size={16} />
 				<span>{m.settings_family_remove_point_free({ email })}</span>
 			</li>
 			<li>
-				<CalendarOff size={16} />
+				<Icon icon={faCalendarXmark} size={16} />
 				<span>{m.settings_family_remove_point_calendar()}</span>
 			</li>
 			<li>
-				<UserPlus size={16} />
+				<Icon icon={faUserPlus} size={16} />
 				<span>{m.settings_family_remove_point_reinvite()}</span>
 			</li>
 		</ul>
 
 		{#if error}
-			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 		{/if}
 	</div>
 

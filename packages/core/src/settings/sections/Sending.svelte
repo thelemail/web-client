@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import { faShieldExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
@@ -18,7 +18,7 @@
 
 <SecHead desc={m.settings_sending_desc()} />
 
-<Card icon={ShieldAlert} title={m.settings_sending_before_title()}>
+<Card icon={faShieldExclamation} title={m.settings_sending_before_title()}>
 	<SettingsGate controls={['toggle', 'toggle', 'toggle']}>
 		<Row
 			t={m.settings_sending_confirm_external()}

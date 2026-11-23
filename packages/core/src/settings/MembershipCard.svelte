@@ -1,10 +1,13 @@
 <script lang="ts">
-	import UserRound from '@lucide/svelte/icons/user-round';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleInfo,
+		faGlobe,
+		faUser,
+		faUserPlus,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { platform } from '$platform';
-	import Users from '@lucide/svelte/icons/users';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
-	import Info from '@lucide/svelte/icons/info';
-	import Globe from '@lucide/svelte/icons/globe';
 	import { browser } from '$app/env';
 	import { page } from '$app/state';
 	import { m } from '$paraglide/messages.js';
@@ -46,7 +49,7 @@
 	const slot = $derived(page.params.slot ?? '0');
 	const type = $derived(workspaces.workspace?.type ?? null);
 	const isPersonal = $derived(type === 'personal');
-	const Icon = $derived(isPersonal ? UserRound : Users);
+	const cardIcon = $derived(isPersonal ? faUser : faUsers);
 	const callerAccountId = $derived(auth.accountId);
 	const canManage = $derived(workspaces.canManage(callerAccountId));
 	const canChangeRoles = $derived(workspaces.isOwner(callerAccountId));
@@ -220,7 +223,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Card id="members" tabindex={-1} icon={Icon} {title}>
+<Card id="members" tabindex={-1} icon={cardIcon} {title}>
 	{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
 
 	{#if !isPersonal}
@@ -282,7 +285,7 @@
 				size="sm"
 				onclick={() => launch(mode === 'existing-account' ? 'familyInvite' : 'member')}
 			>
-				<UserPlus size={14} />{addLabel}
+				<Icon icon={faUserPlus} size={14} />{addLabel}
 			</Button>
 			{#if mode === 'existing-account'}
 				{#if seatsTotal != null && seatsLeft != null}
@@ -301,10 +304,10 @@
 			{/if}
 		{:else if domainGated && canManage}
 			<Button variant="secondary" size="sm" disabled>
-				<UserPlus size={14} />{addLabel}
+				<Icon icon={faUserPlus} size={14} />{addLabel}
 			</Button>
 			<div class="seat-full">
-				<Info size={15} />
+				<Icon icon={faCircleInfo} size={15} />
 				<span>{m.settings_member_domain_gate_manage()}</span>
 			</div>
 			<Button
@@ -312,18 +315,18 @@
 				size="sm"
 				href={customDomains.items.length > 0 ? `/u/${slot}/settings/domains` : `/u/${slot}/settings/domains/new`}
 			>
-				<Globe size={14} />{customDomains.items.length > 0
+				<Icon icon={faGlobe} size={14} />{customDomains.items.length > 0
 					? m.settings_member_finish_domain()
 					: m.settings_member_add_domain()}
 			</Button>
 		{:else if domainGated}
 			<div class="seat-full">
-				<Info size={15} />
+				<Icon icon={faCircleInfo} size={15} />
 				<span>{m.settings_member_domain_gate()}</span>
 			</div>
 		{:else if (!hasRoom || canManage) && fullNote}
 			<div class="seat-full">
-				<Info size={15} /><span>{fullNote}</span>
+				<Icon icon={faCircleInfo} size={15} /><span>{fullNote}</span>
 			</div>
 		{/if}
 		{#if canLeave}

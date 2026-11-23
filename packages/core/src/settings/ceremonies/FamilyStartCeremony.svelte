@@ -1,7 +1,6 @@
 <script lang="ts">
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Users from '@lucide/svelte/icons/users';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowRight, faCircleExclamation, faUsers } from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import type { CeremonyKind } from '../data';
 	import { auth } from '$core/stores/auth.svelte';
@@ -57,7 +56,7 @@
 </script>
 
 <CeremonyShell
-	icon={Users}
+	icon={faUsers}
 	eyebrow={m.settings_ceremony_family_eyebrow()}
 	title={m.settings_ceremony_family_start_title()}
 	{onClose}
@@ -82,12 +81,12 @@
 		</div>
 
 		{#if error}
-			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 		{/if}
 
 		{#if freeFamily?.maxSeats}
 			<div class="seat-callout ok">
-				<Users size={17} />
+				<Icon icon={faUsers} size={17} />
 				<div>
 					<b>{m.settings_ceremony_family_start_callout_title({
 						seats: freeFamily.maxSeats,
@@ -104,7 +103,7 @@
 		<Button variant="primary" disabled={!ready} onclick={submit}>
 			{busy
 				? m.settings_ceremony_family_start_creating()
-				: m.settings_ceremony_family_start_submit()}<ArrowRight size={15} />
+				: m.settings_ceremony_family_start_submit()}<Icon icon={faArrowRight} size={15} />
 		</Button>
 	{/snippet}
 </CeremonyShell>

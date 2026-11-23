@@ -1,9 +1,12 @@
 <script lang="ts">
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Clock from '@lucide/svelte/icons/clock';
-	import MailX from '@lucide/svelte/icons/mail-x';
-	import ShieldOff from '@lucide/svelte/icons/shield-off';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faBan,
+		faCircleExclamation,
+		faClock,
+		faShieldSlash,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -51,7 +54,7 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 {#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
 
-<CeremonyShell icon={Trash2} eyebrow={m.settings_delegation_title()} title={m.settings_delegation_revoke_title({ label: target })} tone="danger" {onClose}>
+<CeremonyShell icon={faTrashCan} eyebrow={m.settings_delegation_title()} title={m.settings_delegation_revoke_title({ label: target })} tone="danger" {onClose}>
 	<div class="cer-pane">
 		<div class="cer-lede">
 			<p>
@@ -63,15 +66,15 @@
 		</div>
 		<ul class="cer-points">
 			<li>
-				<ShieldOff size={16} />
+				<Icon icon={faShieldSlash} size={16} />
 				<span>{m.settings_delegation_revoke_point_stop()}</span>
 			</li>
 			<li>
-				<Clock size={16} />
+				<Icon icon={faClock} size={16} />
 				<span>{m.settings_delegation_revoke_point_outside()}</span>
 			</li>
 			<li>
-				<MailX size={16} />
+				<Icon icon={faBan} size={16} />
 				<span>{m.settings_delegation_revoke_point_untouched()}</span>
 			</li>
 		</ul>
@@ -101,7 +104,7 @@
 		</div>
 
 		{#if error}
-			<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 		{/if}
 	</div>
 

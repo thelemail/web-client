@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCircleExclamation, faInbox } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import Toggle from '../Toggle.svelte';
@@ -74,7 +74,7 @@
 	}
 </script>
 
-<Card icon={Inbox} title={m.settings_catchall_title()}>
+<Card icon={faInbox} title={m.settings_catchall_title()}>
 	{#if eligibleAddresses.length === 0 && !enabled}
 		<div class="setrow">
 			<div class="info">
@@ -98,7 +98,7 @@
 		{/if}
 	{/if}
 	{#if error}
-		<div class="setrow"><div class="info"><div class="ca-err"><CircleAlert size={14} />{error}</div></div></div>
+		<div class="setrow"><div class="info"><div class="ca-err"><Icon icon={faCircleExclamation} size={14} />{error}</div></div></div>
 	{/if}
 </Card>
 

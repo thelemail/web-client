@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { DropdownMenu } from 'bits-ui';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import FolderInput from '@lucide/svelte/icons/folder-input';
-	import ArrowUp from '@lucide/svelte/icons/arrow-up';
-	import ArrowDown from '@lucide/svelte/icons/arrow-down';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowDown,
+		faArrowUp,
+		faFolderArrowDown,
+		faPencil,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { COLLECTION_COLOR_KEYS, COLLECTION_COLOR_NAMES, COLLECTION_COLORS } from './palette';
 	import type { CollectionEntry } from './tree';
 
@@ -35,7 +38,7 @@
 </script>
 
 <DropdownMenu.Item class="mitem" onSelect={onEdit}>
-	<Pencil />{m.mail_collection_rename()}
+	<Icon icon={faPencil} />{m.mail_collection_rename()}
 </DropdownMenu.Item>
 <DropdownMenu.RadioGroup
 	class="coll-swatches"
@@ -62,21 +65,21 @@
 	{/each}
 </DropdownMenu.RadioGroup>
 <DropdownMenu.Item class="mitem" onSelect={onMove}>
-	<FolderInput />{m.mail_collection_move_to()}
+	<Icon icon={faFolderArrowDown} />{m.mail_collection_move_to()}
 </DropdownMenu.Item>
 {#if siblings > 1}
 	<DropdownMenu.Item class="mitem" disabled={index <= 0} onSelect={() => onShift(-1)}>
-		<ArrowUp />{m.mail_sidebar_move_up()}
+		<Icon icon={faArrowUp} />{m.mail_sidebar_move_up()}
 	</DropdownMenu.Item>
 	<DropdownMenu.Item
 		class="mitem"
 		disabled={index < 0 || index >= siblings - 1}
 		onSelect={() => onShift(1)}
 	>
-		<ArrowDown />{m.mail_sidebar_move_down()}
+		<Icon icon={faArrowDown} />{m.mail_sidebar_move_down()}
 	</DropdownMenu.Item>
 {/if}
 <DropdownMenu.Separator class="msep" />
 <DropdownMenu.Item class="mitem danger" onSelect={onDelete}>
-	<Trash2 />{folder ? m.mail_collection_delete_folder_item() : m.mail_collection_delete_label_item()}
+	<Icon icon={faTrashCan} />{folder ? m.mail_collection_delete_folder_item() : m.mail_collection_delete_label_item()}
 </DropdownMenu.Item>

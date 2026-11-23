@@ -4,11 +4,14 @@
 	import type { Snippet } from 'svelte';
 	import LinkDialog from './LinkDialog.svelte';
 	import { applyLink, currentLink } from './link';
-	import List from '@lucide/svelte/icons/list';
-	import ListOrdered from '@lucide/svelte/icons/list-ordered';
-	import LinkIcon from '@lucide/svelte/icons/link';
-	import Quote from '@lucide/svelte/icons/quote';
-	import PenLine from '@lucide/svelte/icons/pen-line';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faLink,
+		faListOl,
+		faListUl,
+		faPenLine,
+		faQuoteLeft
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	interface SignatureControl {
 		present: boolean;
@@ -94,16 +97,16 @@
 	</button>
 	<span class="cbar-sep"></span>
 	<button type="button" title={m.mail_toolbar_bulleted()} class:on={active.ul} aria-pressed={active.ul} onclick={ul}>
-		<List size={16} />
+		<Icon icon={faListUl} size={16} />
 	</button>
 	<button type="button" title={m.mail_toolbar_numbered()} class:on={active.ol} aria-pressed={active.ol} onclick={ol}>
-		<ListOrdered size={16} />
+		<Icon icon={faListOl} size={16} />
 	</button>
 	<button type="button" title={m.mail_toolbar_link()} class:on={active.link} aria-pressed={active.link} onclick={link}>
-		<LinkIcon size={16} />
+		<Icon icon={faLink} size={16} />
 	</button>
 	<button type="button" title={m.mail_toolbar_quote()} class:on={active.quote} aria-pressed={active.quote} onclick={quote}>
-		<Quote size={16} />
+		<Icon icon={faQuoteLeft} size={16} />
 	</button>
 	{#if signature?.present}
 		<span class="cbar-sep"></span>
@@ -116,7 +119,7 @@
 			disabled={signature.disabled}
 			onclick={() => signature.onToggle(!signature.on)}
 		>
-			<PenLine size={16} />
+			<Icon icon={faPenLine} size={16} />
 		</button>
 	{/if}
 	{#if extra}

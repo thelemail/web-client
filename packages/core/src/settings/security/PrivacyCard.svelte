@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import { faEyeSlash } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import Toggle from '../Toggle.svelte';
@@ -15,7 +15,7 @@
 	let { s, set }: Props = $props();
 </script>
 
-<Card icon={EyeOff} title={m.settings_security_privacy()}>
+<Card icon={faEyeSlash} title={m.settings_security_privacy()}>
 	<Row t={m.settings_security_remote_images()} d={m.settings_security_remote_images_desc()}>
 		<span class="t-mono-xs" style="color: var(--success-700)">{m.settings_security_always_proxied()}</span>
 	</Row>

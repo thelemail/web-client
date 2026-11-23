@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Icon from '$core/components/Icon.svelte';
+	import { faChevronLeft, faChevronRight } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { shiftAnchor } from '../range';
 	import { cal } from '../state.svelte';
@@ -17,14 +17,14 @@
 			aria-label={m.cal_mini_prev_month()}
 			onclick={() => (cal.anchor = shiftAnchor(cal.anchor, 'month', -1))}
 		>
-			<ChevronLeft size={16} />
+			<Icon icon={faChevronLeft} size={16} />
 		</button>
 		<button
 			type="button"
 			aria-label={m.cal_mini_next_month()}
 			onclick={() => (cal.anchor = shiftAnchor(cal.anchor, 'month', 1))}
 		>
-			<ChevronRight size={16} />
+			<Icon icon={faChevronRight} size={16} />
 		</button>
 	</div>
 	<div class="mini-grid">

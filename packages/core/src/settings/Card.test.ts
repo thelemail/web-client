@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
-import Globe from '@lucide/svelte/icons/globe';
+import { faGlobe } from '@fortawesome/pro-regular-svg-icons';
 import Card from './Card.svelte';
 
 afterEach(() => cleanup());
@@ -19,7 +19,7 @@ describe('Card', () => {
 	});
 
 	it('renders the icon, title and right side in the header', () => {
-		const { container } = render(Card, { props: { title: 'Domains', icon: Globe, right, children } });
+		const { container } = render(Card, { props: { title: 'Domains', icon: faGlobe, right, children } });
 		const head = container.querySelector('.scard > .scard-h')!;
 		expect(head.querySelector('svg')).not.toBeNull();
 		expect(head.querySelector('h2')!.textContent).toBe('Domains');

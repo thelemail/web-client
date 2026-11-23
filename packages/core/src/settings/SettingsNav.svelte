@@ -1,21 +1,25 @@
 <script lang="ts">
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Settings from '@lucide/svelte/icons/settings';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Send from '@lucide/svelte/icons/send';
-	import MailOpen from '@lucide/svelte/icons/mail-open';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Bell from '@lucide/svelte/icons/bell';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Globe2 from '@lucide/svelte/icons/globe-2';
-	import Palette from '@lucide/svelte/icons/palette';
-	import CreditCard from '@lucide/svelte/icons/credit-card';
-	import Upload from '@lucide/svelte/icons/upload';
-	import UserX from '@lucide/svelte/icons/user-x';
-	import FolderTree from '@lucide/svelte/icons/folder-tree';
-	import Info from '@lucide/svelte/icons/info';
-	import Search from '@lucide/svelte/icons/search';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faAt,
+		faBell,
+		faCircleInfo,
+		faCreditCard,
+		faEarthEurope,
+		faEnvelopeOpen,
+		faFolderTree,
+		faGear,
+		faGlobe,
+		faMagnifyingGlass,
+		faPalette,
+		faPaperPlane,
+		faShieldCheck,
+		faUpload,
+		faUser,
+		faUserXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { page } from '$app/state';
 	import { visibleGroups, sectionIdFromPath } from './data';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -26,22 +30,22 @@
 
 	const groups = visibleGroups(platform);
 
-	const icons: Record<string, typeof Settings> = {
-		'user-round': UserRound,
-		'at-sign': AtSign,
-		send: Send,
-		'mail-open': MailOpen,
-		'shield-check': ShieldCheck,
-		bell: Bell,
-		globe: Globe,
-		'globe-2': Globe2,
-		palette: Palette,
-		'credit-card': CreditCard,
-		upload: Upload,
-		'user-x': UserX,
-		'folder-tree': FolderTree,
-		info: Info,
-		search: Search
+	const icons: Record<string, IconDefinition> = {
+		'user-round': faUser,
+		'at-sign': faAt,
+		send: faPaperPlane,
+		'mail-open': faEnvelopeOpen,
+		'shield-check': faShieldCheck,
+		bell: faBell,
+		globe: faGlobe,
+		'globe-2': faEarthEurope,
+		palette: faPalette,
+		'credit-card': faCreditCard,
+		upload: faUpload,
+		'user-x': faUserXmark,
+		'folder-tree': faFolderTree,
+		info: faCircleInfo,
+		search: faMagnifyingGlass
 	};
 
 	const slot = $derived(page.params.slot ?? '0');
@@ -94,7 +98,7 @@
 
 <nav class="set-nav" aria-label={m.settings_nav_aria()}>
 	<a class="set-back" href={`/u/${slot}/mail/inbox`}>
-		<ArrowLeft size={16} /><span class="lbl">{m.settings_nav_back_to_inbox()}</span>
+		<Icon icon={faArrowLeft} size={16} /><span class="lbl">{m.settings_nav_back_to_inbox()}</span>
 	</a>
 	<div
 		class="nav-groups"
@@ -108,7 +112,7 @@
 				<div class="nav-eyebrow" id="snav-{group.id}">{group.label()}</div>
 				<ul aria-labelledby="snav-{group.id}">
 					{#each group.sections as sec (sec.id)}
-						{@const Icon = icons[sec.icon] ?? UserRound}
+						{@const glyph = icons[sec.icon] ?? faUser}
 						<li>
 							<a
 								class="snav"
@@ -116,7 +120,7 @@
 								href={`/u/${slot}/settings/${sec.id}`}
 								aria-current={current === sec.id ? 'page' : undefined}
 							>
-								<Icon size={17} /><span class="lbl">{sec.label()}</span>
+								<Icon icon={glyph} size={17} /><span class="lbl">{sec.label()}</span>
 							</a>
 						</li>
 					{/each}

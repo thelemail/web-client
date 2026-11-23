@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import LinkIcon from '@lucide/svelte/icons/link';
+	import { faLink } from '@fortawesome/pro-regular-svg-icons';
 	import { untrack } from 'svelte';
 	import ConfirmDialog from '../ConfirmDialog.svelte';
 
@@ -29,7 +29,7 @@
 </script>
 
 <ConfirmDialog
-	icon={LinkIcon}
+	icon={faLink}
 	title={initial ? m.mail_link_edit_title() : m.mail_link_insert_title()}
 	confirmLabel={removing ? m.mail_link_remove() : m.mail_link_apply()}
 	disabled={trimmed === '' && initial === ''}

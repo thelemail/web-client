@@ -1,7 +1,10 @@
 <script lang="ts">
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Info from '@lucide/svelte/icons/info';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleCheck,
+		faCircleExclamation,
+		faCircleInfo
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { announce } from '$core/announce';
 
@@ -19,7 +22,7 @@
 </script>
 
 <div class="toast" class:error={tone === 'error'} style:--toast-shift="{shift}px">
-	{#if tone === 'error'}<CircleAlert size={16} />{:else if tone === 'info'}<Info size={16} />{:else}<CircleCheck
+	{#if tone === 'error'}<Icon icon={faCircleExclamation} size={16} />{:else if tone === 'info'}<Icon icon={faCircleInfo} size={16} />{:else}<Icon icon={faCircleCheck}
 			size={16}
 		/>{/if}{text}
 	{#if onUndo}

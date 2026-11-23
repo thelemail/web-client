@@ -2,10 +2,13 @@
 	import { delayed } from '$core/async/delayed.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import LogIn from '@lucide/svelte/icons/log-in';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRightToBracket,
+		faChevronRight,
+		faUserPlus,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import RemoveAccountDialog from '$core/mail/RemoveAccountDialog.svelte';
 	import { initialsFor } from '$core/mail/initials';
@@ -108,7 +111,7 @@
 							{/if}
 						</span>
 					</span>
-					<span class="ap-go"><ChevronRight size={16} strokeWidth={1.75} /></span>
+					<span class="ap-go"><Icon icon={faChevronRight} size={16} /></span>
 				</button>
 				<button
 					type="button"
@@ -118,17 +121,17 @@
 					disabled={navigating !== null}
 					onclick={() => (removing = { id: row.id, email: row.email, name: row.name })}
 				>
-					<X size={15} strokeWidth={2} />
+					<Icon icon={faXmark} size={15} />
 				</button>
 			</div>
 		{/each}
 	</div>
 	<div class="apick-more">
 		<a class="apick-link" href={`/login?addAccount=1${moreQuery}`}>
-			<LogIn size={17} strokeWidth={1.75} />{m.auth_picker_sign_in_another()}
+			<Icon icon={faArrowRightToBracket} size={17} />{m.auth_picker_sign_in_another()}
 		</a>
 		<a class="apick-link" href={`/register?addAccount=1${moreQuery}`}>
-			<UserPlus size={17} strokeWidth={1.75} />{m.auth_picker_create_new()}
+			<Icon icon={faUserPlus} size={17} />{m.auth_picker_create_new()}
 		</a>
 	</div>
 	<p class="apick-note">{m.auth_picker_note()}</p>

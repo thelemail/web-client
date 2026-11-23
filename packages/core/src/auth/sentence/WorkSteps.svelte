@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 
 	let { lines, at, failed = false }: { lines: string[]; at: number; failed?: boolean } = $props();
 </script>
@@ -9,7 +10,7 @@
 		<li class:done={i < at} class:on={i === at && !failed}>
 			<span class="ic">
 				{#if i < at}
-					<Check size={16} strokeWidth={2.2} />
+					<Icon icon={faCheck} size={16} />
 				{:else if i === at && !failed}
 					<span class="spinner"></span>
 				{:else}

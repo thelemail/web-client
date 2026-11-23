@@ -2,13 +2,16 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Wordmark from '$core/components/Wordmark.svelte';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Send from '@lucide/svelte/icons/send';
-	import Forward from '@lucide/svelte/icons/forward';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import Download from '@lucide/svelte/icons/download';
-	import CircleArrowDown from '@lucide/svelte/icons/circle-arrow-down';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleArrowDown,
+		faClock,
+		faDownload,
+		faPaperPlane,
+		faShare,
+		faShieldCheck,
+		faSparkles
+	} from '@fortawesome/pro-regular-svg-icons';
 	import PersonalTimeline from './PersonalTimeline.svelte';
 	import { lifecycle } from './lifecycle.svelte';
 	import { markExpiryScreenShown } from '$core/api/lifecycle';
@@ -68,32 +71,32 @@
 			<h1>{m.lc_expiry_title()}</h1>
 		</div>
 		<div class="lc-reassure">
-			<ShieldCheck size={16} />{m.lc_expiry_reassure({ count: ctx.retentionDays })}
+			<Icon icon={faShieldCheck} size={16} />{m.lc_expiry_reassure({ count: ctx.retentionDays })}
 		</div>
 		<PersonalTimeline {ctx} />
 		<ul class="lc-changed">
 			<li class="ch-h">{m.lc_expiry_changed_heading()}</li>
 			<li>
-				<Send size={16} /><span
+				<Icon icon={faPaperPlane} size={16} /><span
 					><Rich text={m.lc_expiry_changed_sending()} tags={{ b: bold }} /></span
 				>
 			</li>
 			<li>
-				<Forward size={16} /><span><b>{m.lc_expiry_changed_forwarding()}</b></span>
+				<Icon icon={faShare} size={16} /><span><b>{m.lc_expiry_changed_forwarding()}</b></span>
 			</li>
 			<li>
-				<Clock size={16} /><span><Rich text={m.lc_expiry_changed_scheduled()} tags={{ b: bold }} /></span>
+				<Icon icon={faClock} size={16} /><span><Rich text={m.lc_expiry_changed_scheduled()} tags={{ b: bold }} /></span>
 			</li>
 		</ul>
 		<div class="lc-cta">
-			<Button variant="primary" size="lg" disabled={busy} onclick={choosePlan}><Sparkles size={17} />{m.lc_expiry_choose_plan()}</Button>
+			<Button variant="primary" size="lg" disabled={busy} onclick={choosePlan}><Icon icon={faSparkles} size={17} />{m.lc_expiry_choose_plan()}</Button>
 			{#if canMoveToFree}
 				<Button variant="secondary" size="lg" disabled={busy} onclick={moveToFree}>
-					<CircleArrowDown size={17} />{m.lc_expiry_move_to_free()}
+					<Icon icon={faCircleArrowDown} size={17} />{m.lc_expiry_move_to_free()}
 				</Button>
 			{/if}
 			<Button variant="secondary" size="lg" disabled={busy} onclick={downloadData}>
-				<Download size={17} />{m.lc_download_my_data()}
+				<Icon icon={faDownload} size={17} />{m.lc_download_my_data()}
 			</Button>
 			<Button variant="ghost" size="lg" disabled={busy} onclick={continueReadOnly}>{m.lc_expiry_continue_read_only()}</Button>
 		</div>

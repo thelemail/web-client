@@ -3,14 +3,17 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Wordmark from '$core/components/Wordmark.svelte';
-	import Lock from '@lucide/svelte/icons/lock';
-	import CornerUpLeft from '@lucide/svelte/icons/corner-up-left';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
-	import Download from '@lucide/svelte/icons/download';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowTurnLeftUp,
+		faCircleCheck,
+		faDownload,
+		faKey,
+		faLifeRing,
+		faLock,
+		faRotateLeft,
+		faTriangleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { lifecycle } from './lifecycle.svelte';
 	import { setNotificationEmail } from '$core/api/lifecycle';
 	import { fmt } from './dates';
@@ -65,14 +68,14 @@
 	<div class="lc-gate-top"><Wordmark size="large" /></div>
 	<div class="lc-gate-body">
 		<div class="lc-gate-card">
-			<div class="lc-gate-seal"><Lock size={26} /></div>
+			<div class="lc-gate-seal"><Icon icon={faLock} size={26} /></div>
 			<h1>{m.lc_suspended_title()}</h1>
 			<p class="lede">
 				<Rich text={m.lc_suspended_lede({ date: fmt.full(ctx.dates.remove) })} tags={{ b: bold }} />
 			</p>
 			<div class="lc-honesty">
 				<div class="hl">
-					<CornerUpLeft size={16} />
+					<Icon icon={faArrowTurnLeftUp} size={16} />
 					<span
 						><Rich
 							text={m.lc_suspended_returning({ date: fmt.med(ctx.dates.suspend) })}
@@ -81,29 +84,29 @@
 					>
 				</div>
 				<div class="hl">
-					<TriangleAlert size={16} />
+					<Icon icon={faTriangleExclamation} size={16} />
 					<span>{m.lc_suspended_sign_in_errors()}</span>
 				</div>
 			</div>
 			<div class="lc-gate-actions">
 				<button class="lc-gbtn primary" onclick={restore}>
-					<RotateCcw size={17} />{m.lc_suspended_restore()}
+					<Icon icon={faRotateLeft} size={17} />{m.lc_suspended_restore()}
 				</button>
 				<button class="lc-gbtn ghost" onclick={() => goto(`/u/${slot}/lifecycle/export`)}>
-					<Download size={17} />{m.lc_download_my_data()}
+					<Icon icon={faDownload} size={17} />{m.lc_download_my_data()}
 				</button>
 				<button class="lc-gbtn ghost" onclick={() => (emailOpen = !emailOpen)}>
-					<KeyRound size={17} />{m.lc_suspended_add_email()}
+					<Icon icon={faKey} size={17} />{m.lc_suspended_add_email()}
 				</button>
 				<button class="lc-gbtn ghost" onclick={() => flash(m.lc_suspended_support_toast())}>
-					<LifeBuoy size={17} />{m.lc_suspended_contact_support()}
+					<Icon icon={faLifeRing} size={17} />{m.lc_suspended_contact_support()}
 				</button>
 			</div>
 			{#if emailOpen}
 				<div class="lc-email-form">
 					{#if emailSent}
 						<p class="lc-email-note">
-							<CircleCheck size={15} /><Rich
+							<Icon icon={faCircleCheck} size={15} /><Rich
 								text={m.lc_suspended_email_sent({ email: emailValue.trim() })}
 								tags={{ email: mono }}
 							/>
@@ -139,5 +142,5 @@
 </div>
 
 {#if toast}
-	<div class="lc-toast"><CircleCheck size={16} />{toast}</div>
+	<div class="lc-toast"><Icon icon={faCircleCheck} size={16} />{toast}</div>
 {/if}

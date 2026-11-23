@@ -1,16 +1,17 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
-	import Plus from '@lucide/svelte/icons/plus';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import { faPlus } from '@fortawesome/pro-regular-svg-icons';
 
 	interface Props {
-		icon?: Component;
+		icon?: IconDefinition;
 		label: string;
 		onClick?: () => void;
 	}
 
-	let { icon: IconComponent = Plus, label, onClick }: Props = $props();
+	let { icon = faPlus, label, onClick }: Props = $props();
 </script>
 
 <button type="button" class="addrow" onclick={onClick}>
-	<IconComponent size={16} />{label}
+	<Icon {icon} size={16} />{label}
 </button>

@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
-	import Calendar from '@lucide/svelte/icons/calendar';
-	import Clock from '@lucide/svelte/icons/clock';
-	import MapPin from '@lucide/svelte/icons/map-pin';
-	import Video from '@lucide/svelte/icons/video';
-	import Check from '@lucide/svelte/icons/check';
-	import HelpCircle from '@lucide/svelte/icons/help-circle';
-	import X from '@lucide/svelte/icons/x';
-	import CheckCircle from '@lucide/svelte/icons/check-circle';
-	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCalendar,
+		faCalendarPlus,
+		faCheck,
+		faCircleCheck,
+		faCircleQuestion,
+		faClock,
+		faLocationDot,
+		faVideo,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { page } from '$app/state';
 	import { onMount } from 'svelte';
 	import { m } from '$paraglide/messages.js';
@@ -189,19 +192,19 @@
 			<span class="d">{monthDay.d}</span>
 		</div>
 		<div class="evt-info">
-			<div class="evt-kicker"><Calendar size={13} />{kicker}</div>
+			<div class="evt-kicker"><Icon icon={faCalendar} size={13} />{kicker}</div>
 			<div class="evt-title">{ev.summary || m.cal_card_untitled()}</div>
 			<div class="evt-meta">
 				{#if dateLabel}
-					<span><Clock size={14} />{dateLabel}</span>
+					<span><Icon icon={faClock} size={14} />{dateLabel}</span>
 				{/if}
 				{#if ev.location}
 					<span>
 						{#if isVideo}
-							<Video size={14} />
+							<Icon icon={faVideo} size={14} />
 							<a class="evt-link mono" href={normalizeHref(ev.location)} target="_blank" rel="noreferrer">{ev.location}</a>
 						{:else}
-							<MapPin size={14} />
+							<Icon icon={faLocationDot} size={14} />
 							<span class="mono">{ev.location}</span>
 						{/if}
 					</span>
@@ -235,7 +238,7 @@
 	{#if isReply}
 		<div class="evt-cal-row">
 			<span class="evt-ack">
-				<CheckCircle size={15} />
+				<Icon icon={faCircleCheck} size={15} />
 				{replyLine}
 				{#if calendarStatus?.added}
 					<a class="evt-change" href="/u/{slot}/calendar">{m.common_open()}</a>
@@ -245,7 +248,7 @@
 	{:else if isCancel}
 		<div class="evt-cal-row">
 			<span class="evt-ack">
-				<X size={15} />
+				<Icon icon={faXmark} size={15} />
 				{applied === 'cancel' ? m.cal_card_cancelled_removed() : m.cal_card_cancelled()}
 			</span>
 		</div>
@@ -253,7 +256,7 @@
 		<div class="evt-cal-row">
 			{#if calendarStatus?.added}
 				<span class="evt-ack">
-					<CheckCircle size={15} />
+					<Icon icon={faCircleCheck} size={15} />
 					{calendarStatus.calendarName
 						? m.cal_card_in_named_calendar({ calendar: calendarStatus.calendarName })
 						: m.cal_card_in_calendar()}
@@ -261,7 +264,7 @@
 				</span>
 			{:else}
 				<button type="button" class="evt-opt add" disabled={adding} onclick={addToCalendar}>
-					<CalendarPlus size={15} />{adding ? m.cal_card_adding() : m.cal_card_add()}
+					<Icon icon={faCalendarPlus} size={15} />{adding ? m.cal_card_adding() : m.cal_card_add()}
 				</button>
 			{/if}
 		</div>
@@ -271,7 +274,7 @@
 	<div class="evt-rsvp">
 		{#if rsvp}
 			<span class="evt-ack">
-				<CheckCircle size={15} />
+				<Icon icon={faCircleCheck} size={15} />
 				{ACK[rsvp]()}
 				<button type="button" class="evt-change" onclick={change} disabled={sending}>{m.cal_card_change()}</button>
 			</span>
@@ -279,13 +282,13 @@
 			<span class="evt-q">{m.cal_card_going()}</span>
 			<div class="evt-seg">
 				<button type="button" class="evt-opt yes" disabled={sending} onclick={() => choose('accepted')}>
-					<Check size={15} />{m.cal_rsvp_yes()}
+					<Icon icon={faCheck} size={15} />{m.cal_rsvp_yes()}
 				</button>
 				<button type="button" class="evt-opt maybe" disabled={sending} onclick={() => choose('tentative')}>
-					<HelpCircle size={15} />{m.cal_rsvp_maybe()}
+					<Icon icon={faCircleQuestion} size={15} />{m.cal_rsvp_maybe()}
 				</button>
 				<button type="button" class="evt-opt no" disabled={sending} onclick={() => choose('declined')}>
-					<X size={15} />{m.cal_rsvp_no()}
+					<Icon icon={faXmark} size={15} />{m.cal_rsvp_no()}
 				</button>
 			</div>
 		{/if}

@@ -1,12 +1,14 @@
-import Image from '@lucide/svelte/icons/image';
-import FileText from '@lucide/svelte/icons/file-text';
-import FileSpreadsheet from '@lucide/svelte/icons/file-spreadsheet';
-import MonitorPlay from '@lucide/svelte/icons/monitor-play';
-import FileArchive from '@lucide/svelte/icons/file-archive';
-import FileVideo from '@lucide/svelte/icons/file-video';
-import FileAudio from '@lucide/svelte/icons/file-audio';
-import File from '@lucide/svelte/icons/file';
-import type { Component } from 'svelte';
+import {
+	faFile,
+	faFileAudio,
+	faFileLines,
+	faFileSpreadsheet,
+	faFileVideo,
+	faFileZipper,
+	faImage,
+	faPresentationScreen
+} from '@fortawesome/pro-regular-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 
 const IMG_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'heic', 'avif', 'tif', 'tiff'];
 const DOC_EXT = ['doc', 'docx', 'rtf', 'txt', 'md', 'pages'];
@@ -19,7 +21,7 @@ const AUDIO_EXT = ['mp3', 'wav', 'aac', 'flac', 'm4a', 'ogg'];
 export interface FileKind {
 	ext: string;
 	type: 'image' | 'file';
-	icon: Component;
+	icon: IconDefinition;
 	cls: string;
 }
 
@@ -30,15 +32,15 @@ export function extensionOf(name: string): string {
 
 export function fileKind(name: string): FileKind {
 	const ext = extensionOf(name);
-	if (IMG_EXT.includes(ext)) return { ext, type: 'image', icon: Image, cls: 'img' };
-	if (ext === 'pdf') return { ext, type: 'file', icon: FileText, cls: 'pdf' };
-	if (DOC_EXT.includes(ext)) return { ext, type: 'file', icon: FileText, cls: 'doc' };
-	if (SHEET_EXT.includes(ext)) return { ext, type: 'file', icon: FileSpreadsheet, cls: 'sheet' };
-	if (SLIDES_EXT.includes(ext)) return { ext, type: 'file', icon: MonitorPlay, cls: 'slides' };
-	if (ZIP_EXT.includes(ext)) return { ext, type: 'file', icon: FileArchive, cls: 'zip' };
-	if (VIDEO_EXT.includes(ext)) return { ext, type: 'file', icon: FileVideo, cls: 'video' };
-	if (AUDIO_EXT.includes(ext)) return { ext, type: 'file', icon: FileAudio, cls: 'audio' };
-	return { ext, type: 'file', icon: File, cls: 'file' };
+	if (IMG_EXT.includes(ext)) return { ext, type: 'image', icon: faImage, cls: 'img' };
+	if (ext === 'pdf') return { ext, type: 'file', icon: faFileLines, cls: 'pdf' };
+	if (DOC_EXT.includes(ext)) return { ext, type: 'file', icon: faFileLines, cls: 'doc' };
+	if (SHEET_EXT.includes(ext)) return { ext, type: 'file', icon: faFileSpreadsheet, cls: 'sheet' };
+	if (SLIDES_EXT.includes(ext)) return { ext, type: 'file', icon: faPresentationScreen, cls: 'slides' };
+	if (ZIP_EXT.includes(ext)) return { ext, type: 'file', icon: faFileZipper, cls: 'zip' };
+	if (VIDEO_EXT.includes(ext)) return { ext, type: 'file', icon: faFileVideo, cls: 'video' };
+	if (AUDIO_EXT.includes(ext)) return { ext, type: 'file', icon: faFileAudio, cls: 'audio' };
+	return { ext, type: 'file', icon: faFile, cls: 'file' };
 }
 
 export type PreviewKind = 'image' | 'pdf' | 'text';

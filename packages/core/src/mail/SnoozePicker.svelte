@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Clock from '@lucide/svelte/icons/clock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCalendarClock, faClock } from '@fortawesome/pro-regular-svg-icons';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
-	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
 	import { formatClock, formatWeekday, formatWhenLong } from './data';
 	import {
 		parseLocalInput,
@@ -80,7 +80,7 @@
 	<div class="menu-lbl">{m.mail_snooze_until()}</div>
 	{#each presets as p (p.id)}
 		<button type="button" class="mitem sp-row" onclick={() => pick(p.when)}>
-			<Clock size={17} />
+			<Icon icon={faClock} size={17} />
 			<span class="sp-name">{p.label}</span>
 			<span class="sp-when">{hint(p.when)}</span>
 		</button>
@@ -111,7 +111,7 @@
 		</div>
 	{:else}
 		<button type="button" class="mitem" onclick={() => (custom = true)}>
-			<CalendarClock size={17} />{m.mail_pick_date_time()}
+			<Icon icon={faCalendarClock} size={17} />{m.mail_pick_date_time()}
 		</button>
 	{/if}
 </AnchoredMenu>

@@ -1,9 +1,12 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import Usb from '@lucide/svelte/icons/usb';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faChevronRight,
+		faLifeRing,
+		faMobile,
+		faUsbDrive
+	} from '@fortawesome/pro-regular-svg-icons';
 	import type { TwoFactorMethod } from '$core/api/types';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_MIN_LENGTH, BACKUP_CODE_PLACEHOLDER } from '$core/auth/backup-codes';
 	import { webauthnSupported } from '$core/auth/webauthn';
@@ -168,12 +171,12 @@
 				{#each available.filter((id) => id !== method) as id (id)}
 					<button type="button" class="altopt" onclick={() => switchTo(id)}>
 						<span class="alt-ic">
-							{#if id === 'app'}<Smartphone size={17} strokeWidth={1.75} />
-							{:else if id === 'key'}<Usb size={17} strokeWidth={1.75} />
-							{:else}<LifeBuoy size={17} strokeWidth={1.75} />{/if}
+							{#if id === 'app'}<Icon icon={faMobile} size={17} />
+							{:else if id === 'key'}<Icon icon={faUsbDrive} size={17} />
+							{:else}<Icon icon={faLifeRing} size={17} />{/if}
 						</span>
 						<span class="alt-tx"><b>{META[id].label()}</b><span>{META[id].pick()}</span></span>
-						<span class="alt-chev"><ChevronRight size={16} strokeWidth={1.75} /></span>
+						<span class="alt-chev"><Icon icon={faChevronRight} size={16} /></span>
 					</button>
 				{/each}
 			</div>

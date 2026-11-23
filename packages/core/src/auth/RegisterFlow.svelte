@@ -25,8 +25,8 @@
 	import Status from '$core/auth/sentence/Status.svelte';
 	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faChevronDown, faCircleCheck } from '@fortawesome/pro-regular-svg-icons';
 	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
 	import { endSignupSession, signupSession } from '$core/auth/signup-session';
 	import { ApiCallError } from '$core/api/types';
@@ -376,7 +376,7 @@
 			{#each platformDomains.list as d (d)}
 				<option value={d}>{d}</option>
 			{/each}
-		</select><ChevronDown size={14} strokeWidth={1.75} />{:else}{domainReady ? mailDomain : ''}{/if}
+		</select><Icon icon={faChevronDown} size={14} />{:else}{domainReady ? mailDomain : ''}{/if}
 {/snippet}
 {#snippet addressBlank(_: string)}<Blank
 		id="register-handle"
@@ -572,7 +572,7 @@
 		<div class="sp-under">
 			{#if planLabel}
 				<p class="sp-msg ok">
-					<CircleCheck size={14} strokeWidth={1.75} />
+					<Icon icon={faCircleCheck} size={14} />
 					<span><Rich text={m.auth_register_plan_pending({ plan: planLabel })} tags={{ b: domain }} /></span>
 				</p>
 			{/if}

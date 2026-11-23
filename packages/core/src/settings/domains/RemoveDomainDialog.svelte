@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faAt,
+		faCircleExclamation,
+		faGlobe,
+		faInbox,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
@@ -62,7 +65,7 @@
 </script>
 
 <CeremonyShell
-	icon={Trash2}
+	icon={faTrashCan}
 	eyebrow={m.settings_domains_remove_eyebrow()}
 	title={m.settings_domains_remove_title({ domain: target })}
 	tone="danger"
@@ -74,11 +77,11 @@
 		</div>
 		<ul class="cer-points">
 			<li>
-				<Inbox size={16} />
+				<Icon icon={faInbox} size={16} />
 				<span>{m.settings_domains_remove_point_mail()}</span>
 			</li>
 			<li>
-				<AtSign size={16} />
+				<Icon icon={faAt} size={16} />
 				<span>
 					{#if count === 0}
 						{m.settings_domains_remove_point_no_addresses()}
@@ -88,11 +91,11 @@
 				</span>
 			</li>
 			<li>
-				<AtSign size={16} />
+				<Icon icon={faAt} size={16} />
 				<span>{m.settings_domains_remove_point_shared()}</span>
 			</li>
 			<li>
-				<Globe size={16} />
+				<Icon icon={faGlobe} size={16} />
 				<span>{m.settings_domains_remove_point_registrar()}</span>
 			</li>
 		</ul>
@@ -116,7 +119,7 @@
 		</div>
 
 		{#if error}
-			<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 		{/if}
 	</div>
 

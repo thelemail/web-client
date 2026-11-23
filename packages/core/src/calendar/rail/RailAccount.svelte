@@ -1,8 +1,6 @@
 <script lang="ts">
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Mail from '@lucide/svelte/icons/mail';
-	import Settings from '@lucide/svelte/icons/settings';
-	import User from '@lucide/svelte/icons/user';
+	import Icon from '$core/components/Icon.svelte';
+	import { faChevronDown, faEnvelope, faGear, faUser } from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -25,17 +23,17 @@
 				<span class="acct-nm" title={displayName}>{displayName}</span>
 				<span class="acct-em" title={displayEmail}>{displayEmail}</span>
 			</span>
-			<span class="uchev"><ChevronDown size={15} /></span>
+			<span class="uchev"><Icon icon={faChevronDown} size={15} /></span>
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="cal-surface cal-menu w-64" align="start" side="top">
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/mail/inbox`)}>
-				<Mail size={17} />{m.cal_account_go_to_mail()}
+				<Icon icon={faEnvelope} size={17} />{m.cal_account_go_to_mail()}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/settings/profile`)}>
-				<User size={17} />{m.cal_account_profile()}
+				<Icon icon={faUser} size={17} />{m.cal_account_profile()}
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/settings/account`)}>
-				<Settings size={17} />{m.cal_account_settings()}
+				<Icon icon={faGear} size={17} />{m.cal_account_settings()}
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>

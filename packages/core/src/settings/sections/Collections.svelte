@@ -3,13 +3,16 @@
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
 	import { DropdownMenu } from 'bits-ui';
-	import FolderIcon from '@lucide/svelte/icons/folder';
-	import TagIcon from '@lucide/svelte/icons/tag';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import StarIcon from '@lucide/svelte/icons/star';
-	import StarOff from '@lucide/svelte/icons/star-off';
-	import FolderPlus from '@lucide/svelte/icons/folder-plus';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faEllipsis,
+		faFolder,
+		faFolderPlus,
+		faLock,
+		faStar,
+		faStarExclamation,
+		faTag
+	} from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import Card from '../Card.svelte';
 	import AddRow from '../AddRow.svelte';
@@ -100,7 +103,7 @@
 {#snippet card(kind: MailCollectionKind)}
 	{@const entries = all(kind)}
 	{@const folder = kind === 'folder'}
-	<Card icon={folder ? FolderIcon : TagIcon} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
+	<Card icon={folder ? faFolder : faTag} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
 		{#snippet right()}
 			{#if mailCollections.loaded}
 				<span class="card-meta">
@@ -129,13 +132,13 @@
 			{#each entries as e (e.id)}
 				<li class="coll-set-row" class:sealed={e.sealed} data-collection={e.id} style:--depth={Math.min(e.depth, 8)}>
 					<span class="coll-set-ico" style:color={e.color ? collectionColor(e.color) : undefined} aria-hidden="true">
-						{#if folder}<FolderIcon size={16} />{:else}<TagIcon size={16} />{/if}
+						{#if folder}<Icon icon={faFolder} size={16} />{:else}<Icon icon={faTag} size={16} />{/if}
 					</span>
 					<div class="coll-set-info">
 						<div class="coll-set-name">
 							<span>{e.name}</span>
 							{#if e.favorite}
-								<StarIcon size={12} class="coll-set-fav" aria-label={m.mail_sidebar_favorites()} />
+								<Icon icon={faStar} size={12} class="coll-set-fav" aria-label={m.mail_sidebar_favorites()} />
 							{/if}
 						</div>
 						{#if e.depth > 0 && ambiguous.has(foldName(e.name))}
@@ -143,7 +146,7 @@
 						{/if}
 					</div>
 					{#if e.sealed}
-						<span class="coll-set-locked" title={m.settings_collections_locked_row()}><Lock size={14} /></span>
+						<span class="coll-set-locked" title={m.settings_collections_locked_row()}><Icon icon={faLock} size={14} /></span>
 					{:else}
 						<button
 							type="button"
@@ -153,7 +156,7 @@
 							aria-expanded={menu?.id === e.id}
 							onclick={(ev) => (menu = { id: e.id, anchor: ev.currentTarget })}
 						>
-							<Ellipsis size={16} />
+							<Icon icon={faEllipsis} size={16} />
 						</button>
 					{/if}
 				</li>
@@ -178,7 +181,7 @@
 {/snippet}
 
 {#if mailCollections.locked}
-	<div class="coll-set-note"><Lock size={13} /><span>{m.settings_collections_locked_note()}</span></div>
+	<div class="coll-set-note"><Icon icon={faLock} size={13} /><span>{m.settings_collections_locked_note()}</span></div>
 {/if}
 
 {@render card('folder')}
@@ -215,9 +218,9 @@
 				<div class="coll-set-menu-title" title={e.path}>{e.path}</div>
 				<DropdownMenu.Item class="mitem" onSelect={() => void run(e, () => mailCollections.setFavorite(e.id, !e.favorite))}>
 					{#if e.favorite}
-						<StarOff />{m.mail_sidebar_remove_favorite()}
+						<Icon icon={faStarExclamation} />{m.mail_sidebar_remove_favorite()}
 					{:else}
-						<StarIcon />{m.mail_sidebar_add_favorite()}
+						<Icon icon={faStar} />{m.mail_sidebar_add_favorite()}
 					{/if}
 				</DropdownMenu.Item>
 				{#if e.depth + 1 < MAX_COLLECTION_DEPTH}
@@ -229,9 +232,9 @@
 						}}
 					>
 						{#if e.kind === 'folder'}
-							<FolderPlus />{m.mail_sidebar_new_subfolder()}
+							<Icon icon={faFolderPlus} />{m.mail_sidebar_new_subfolder()}
 						{:else}
-							<TagIcon />{m.mail_sidebar_new_sublabel()}
+							<Icon icon={faTag} />{m.mail_sidebar_new_sublabel()}
 						{/if}
 					</DropdownMenu.Item>
 				{/if}

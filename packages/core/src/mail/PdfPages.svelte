@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Minus from '@lucide/svelte/icons/minus';
-	import Plus from '@lucide/svelte/icons/plus';
+	import Icon from '$core/components/Icon.svelte';
+	import { faMinus, faPlus } from '@fortawesome/pro-regular-svg-icons';
 	import { tick } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
 	import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
@@ -190,7 +190,7 @@
 				disabled={zoomIndex === 0}
 				onclick={() => setZoom(zoomIndex - 1)}
 			>
-				<Minus size={15} />
+				<Icon icon={faMinus} size={15} />
 			</button>
 			<span class="apx-pdf-pos">{m.mail_preview_page({ page: current, total: doc.numPages })}</span>
 			<button
@@ -199,7 +199,7 @@
 				disabled={zoomIndex === ZOOMS.length - 1}
 				onclick={() => setZoom(zoomIndex + 1)}
 			>
-				<Plus size={15} />
+				<Icon icon={faPlus} size={15} />
 			</button>
 		</div>
 	{/if}

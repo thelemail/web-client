@@ -1,8 +1,6 @@
 <script lang="ts">
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Video from '@lucide/svelte/icons/video';
+	import Icon from '$core/components/Icon.svelte';
+	import { faAt, faClock, faLock, faVideo } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
@@ -15,7 +13,7 @@
 <div class="chrome">
 	<div class="chrome-bar">
 		<span class="dots"><i></i><i></i><i></i></span>
-		<span class="url"><Lock size={12} />thelema.co/book/consultation</span>
+		<span class="url"><Icon icon={faLock} size={12} />thelema.co/book/consultation</span>
 	</div>
 	<div class="bkpage">
 		<div class="bk-head">
@@ -24,9 +22,9 @@
 				<div class="bk-t">{m.cal_bkprev_title()}</div>
 				<div class="bk-s">{m.cal_bkprev_desc()}</div>
 				<div class="bk-meta">
-					<span class="bk-tag"><Clock size={12} />{m.cal_bkprev_duration()}</span>
-					<span class="bk-tag"><Video size={12} />{m.cal_bkprev_link_note()}</span>
-					<span class="bk-tag"><AtSign size={12} />bookings@thelema.co</span>
+					<span class="bk-tag"><Icon icon={faClock} size={12} />{m.cal_bkprev_duration()}</span>
+					<span class="bk-tag"><Icon icon={faVideo} size={12} />{m.cal_bkprev_link_note()}</span>
+					<span class="bk-tag"><Icon icon={faAt} size={12} />bookings@thelema.co</span>
 				</div>
 			</div>
 		</div>

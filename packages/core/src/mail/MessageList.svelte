@@ -1,36 +1,40 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
-	import Check from '@lucide/svelte/icons/check';
-	import MailOpen from '@lucide/svelte/icons/mail-open';
-	import Archive from '@lucide/svelte/icons/archive';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import SquareCheck from '@lucide/svelte/icons/square-check';
-	import ArrowDownUp from '@lucide/svelte/icons/arrow-down-up';
-	import ArrowDown from '@lucide/svelte/icons/arrow-down';
-	import ArrowUp from '@lucide/svelte/icons/arrow-up';
-	import Mail from '@lucide/svelte/icons/mail';
-	import Star from '@lucide/svelte/icons/star';
-	import Tag from '@lucide/svelte/icons/tag';
-	import Folder from '@lucide/svelte/icons/folder';
-	import FolderInput from '@lucide/svelte/icons/folder-input';
-	import User from '@lucide/svelte/icons/user';
-	import Type from '@lucide/svelte/icons/type';
-	import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import X from '@lucide/svelte/icons/x';
-	import AlarmClock from '@lucide/svelte/icons/alarm-clock';
-	import Undo2 from '@lucide/svelte/icons/undo-2';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faAlarmClock,
+		faArrowDown,
+		faArrowDownArrowUp,
+		faArrowRotateLeft,
+		faArrowUp,
+		faArrowsRotate,
+		faBoxArchive,
+		faCheck,
+		faCircleExclamation,
+		faEnvelope,
+		faEnvelopeOpen,
+		faFolder,
+		faFolderArrowDown,
+		faFont,
+		faPaperclip,
+		faShieldExclamation,
+		faSliders,
+		faSquareCheck,
+		faStar,
+		faTag,
+		faTrashCan,
+		faUser,
+		faWifiSlash,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import MessageRow from './MessageRow.svelte';
 	import { loadSearchStrip, loadedSearchStrip, type SearchStripComponent } from './searchStrip';
 	import type { SearchView } from './searchView';
 	import ListSkeleton from './ListSkeleton.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
-	import WifiOff from '@lucide/svelte/icons/wifi-off';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import {
 		bucketFromEpoch,
 		dayBucketLabel,
@@ -214,13 +218,13 @@
 		}
 	}
 
-	const sortIcons: Record<string, typeof ArrowDown> = {
-		'arrow-down': ArrowDown,
-		'arrow-up': ArrowUp,
-		mail: Mail,
-		star: Star,
-		user: User,
-		type: Type
+	const sortIcons: Record<string, IconDefinition> = {
+		'arrow-down': faArrowDown,
+		'arrow-up': faArrowUp,
+		mail: faEnvelope,
+		star: faStar,
+		user: faUser,
+		type: faFont
 	};
 
 	const groups = $derived.by(() => {
@@ -479,7 +483,7 @@
 				class="ck"
 				class:on={allChecked || inQuery}
 				aria-label={allChecked || inQuery ? msg.mail_list_clear_selection() : msg.mail_list_select_all()}
-				onclick={onToggleAll}><Check size={12} /></button
+				onclick={onToggleAll}><Icon icon={faCheck} size={12} /></button
 			>
 			<span class="cnt">
 				{inQuery
@@ -489,17 +493,17 @@
 			<div class="grow"></div>
 			{#if caps.showMarkRead && !inQuery}
 				<button class="lh-btn" title={msg.mail_list_mark_read()} onclick={() => onBulk('read')}>
-					<MailOpen size={16} />
+					<Icon icon={faEnvelopeOpen} size={16} />
 				</button>
 			{/if}
 			{#if caps.showRestore && !inQuery}
 				<button class="lh-btn" data-mutates title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
-					<Undo2 size={16} />
+					<Icon icon={faArrowRotateLeft} size={16} />
 				</button>
 			{/if}
 			{#if caps.showArchive}
 				<button class="lh-btn" data-mutates title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
-					<Archive size={16} />
+					<Icon icon={faBoxArchive} size={16} />
 				</button>
 			{/if}
 			{#if caps.showMove && onPicker}
@@ -513,7 +517,7 @@
 					aria-expanded={openPicker === 'bulk-move'}
 					onclick={(e) => onPicker('move', e.currentTarget)}
 				>
-					<FolderInput size={16} />
+					<Icon icon={faFolderArrowDown} size={16} />
 				</button>
 			{/if}
 			{#if caps.showLabels && onPicker}
@@ -527,22 +531,22 @@
 					aria-expanded={openPicker === 'bulk-labels'}
 					onclick={(e) => onPicker('labels', e.currentTarget)}
 				>
-					<Tag size={16} />
+					<Icon icon={faTag} size={16} />
 				</button>
 			{/if}
 			{#if caps.showSpam && !inQuery}
 				<button class="lh-btn" title={msg.mail_action_report_spam()} onclick={() => onBulk('spam')}>
-					<ShieldAlert size={16} />
+					<Icon icon={faShieldExclamation} size={16} />
 				</button>
 			{/if}
 			{#if caps.showTrash && !inQuery}
 				<button class="lh-btn" data-mutates title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
-					<Trash2 size={16} />
+					<Icon icon={faTrashCan} size={16} />
 				</button>
 			{/if}
 			{#if caps.showDelete && !inQuery}
 				<button class="lh-btn lh-btn-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
-					<Trash2 size={16} />
+					<Icon icon={faTrashCan} size={16} />
 				</button>
 			{/if}
 		</div>
@@ -572,11 +576,11 @@
 			<div class="lh-actions">
 				{#if onRefresh}
 					<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
-						<RefreshCw size={16} />
+						<Icon icon={faArrowsRotate} size={16} />
 					</button>
 				{/if}
 				<button class="lh-btn" title={msg.mail_list_select_all()} onclick={onToggleAll}>
-					<SquareCheck size={16} />
+					<Icon icon={faSquareCheck} size={16} />
 				</button>
 				<div class="lh-sort" bind:this={sortRef}>
 					<button
@@ -587,13 +591,13 @@
 						aria-expanded={sortOpen}
 						onclick={() => (sortOpen = !sortOpen)}
 					>
-						<ArrowDownUp size={16} />
+						<Icon icon={faArrowDownArrowUp} size={16} />
 					</button>
 					{#if sortOpen}
 						<div class="menu sort-menu" role="menu">
 							<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
 							{#each SORT_OPTIONS as o (o.id)}
-								{@const SIcon = sortIcons[o.icon] ?? ArrowDown}
+								{@const SIcon = sortIcons[o.icon] ?? faArrowDown}
 								<button
 									class="mitem"
 									class:active={sort === o.id}
@@ -601,9 +605,9 @@
 									aria-checked={sort === o.id}
 									onclick={() => pickSort(o.id)}
 								>
-									<SIcon size={16} />{o.label}
+									<Icon icon={SIcon} size={16} />{o.label}
 									{#if sort === o.id}
-										<span class="mck"><Check size={16} /></span>
+										<span class="mck"><Icon icon={faCheck} size={16} /></span>
 									{/if}
 								</button>
 							{/each}
@@ -619,7 +623,7 @@
 						aria-expanded={filterOpen}
 						onclick={() => (filterOpen = !filterOpen)}
 					>
-						<SlidersHorizontal size={16} />
+						<Icon icon={faSliders} size={16} />
 						{#if activeFilters > 0}
 							<span class="fbadge">{activeFilters}</span>
 						{/if}
@@ -640,7 +644,7 @@
 									aria-pressed={filters.unread}
 									onclick={() => toggleFlag('unread')}
 								>
-									<Mail size={15} />{msg.mail_list_filter_unread()}
+									<Icon icon={faEnvelope} size={15} />{msg.mail_list_filter_unread()}
 								</button>
 								<button
 									class="fchip"
@@ -648,7 +652,7 @@
 									aria-pressed={filters.starred}
 									onclick={() => toggleFlag('starred')}
 								>
-									<Star size={15} />{msg.mail_list_filter_starred()}
+									<Icon icon={faStar} size={15} />{msg.mail_list_filter_starred()}
 								</button>
 								<button
 									class="fchip"
@@ -656,7 +660,7 @@
 									aria-pressed={filters.attach}
 									onclick={() => toggleFlag('attach')}
 								>
-									<Paperclip size={15} />{msg.mail_list_filter_attach()}
+									<Icon icon={faPaperclip} size={15} />{msg.mail_list_filter_attach()}
 								</button>
 								{#if collectionKind && (showScope || filters.direct)}
 									<button
@@ -666,9 +670,9 @@
 										onclick={() => toggleFlag('direct')}
 									>
 										{#if collectionKind === 'label'}
-											<Tag size={15} />{msg.mail_view_only_label()}
+											<Icon icon={faTag} size={15} />{msg.mail_view_only_label()}
 										{:else}
-											<Folder size={15} />{msg.mail_view_only_folder()}
+											<Icon icon={faFolder} size={15} />{msg.mail_view_only_folder()}
 										{/if}
 									</button>
 								{/if}
@@ -704,7 +708,7 @@
 			{#if sort !== 'newest'}
 				<span>{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}</span>
 				<button type="button" class="list-sub-x" title={msg.mail_list_reset_sort()} onclick={() => onSort('newest')}>
-					<X size={11} />
+					<Icon icon={faXmark} size={11} />
 				</button>
 			{/if}
 			{#if sort !== 'newest' && activeFilters > 0}
@@ -713,7 +717,7 @@
 			{#if activeFilters > 0}
 				<span>{msg.mail_list_filters_active({ count: activeFilters })}</span>
 				<button type="button" class="list-sub-x" title={msg.mail_list_clear_filters()} onclick={clearFilters}>
-					<X size={11} />
+					<Icon icon={faXmark} size={11} />
 				</button>
 			{/if}
 		</div>
@@ -761,17 +765,17 @@
 	<div class="scroll" bind:this={scrollEl} aria-busy={listRefreshing || undefined}>
 		{#if pendingCount > 0}
 			<button type="button" class="new-strip" onclick={flushPending}>
-				<ArrowUp size={14} />
+				<Icon icon={faArrowUp} size={14} />
 				<span>{msg.mail_list_new_messages({ count: pendingCount })}</span>
 			</button>
 		{/if}
 		{#if returnedCount > 0}
 			<div class="snz-strip">
-				<AlarmClock size={15} />
+				<Icon icon={faAlarmClock} size={15} />
 				<span>{msg.mail_list_snooze_returned({ count: returnedCount })}</span>
 				{#if onDismissReturned}
 					<button type="button" class="snz-x" title={msg.mail_list_dismiss()} onclick={onDismissReturned}>
-						<X size={13} />
+						<Icon icon={faXmark} size={13} />
 					</button>
 				{/if}
 			</div>
@@ -781,12 +785,12 @@
 		{/if}
 		{#if !searchActive && offline}
 			<div class="state-strip" role="status">
-				<WifiOff size={14} />
+				<Icon icon={faWifiSlash} size={14} />
 				<span>{msg.mail_list_offline()}</span>
 			</div>
 		{:else if !searchActive && loaded && loadError}
 			<div class="state-strip warn" role="status">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				<span>{msg.mail_list_refresh_failed()}</span>
 				{#if onRetry}
 					<button type="button" class="state-retry" onclick={onRetry}>{msg.common_retry()}</button>
@@ -810,11 +814,11 @@
 					<code class="q-err" dir="auto">{errorParts.before}<mark>{errorParts.bad}</mark>{errorParts.after}</code>
 				{/if}
 				{#if search && searchEmpty?.retry}
-					<button class="empty-clear" onclick={search.onRetry}><RefreshCw size={14} />{msg.common_retry()}</button>
+					<button class="empty-clear" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</button>
 				{:else if search}
-					<button class="empty-clear" onclick={search.onClear}><X size={14} />{msg.mail_list_clear_search()}</button>
+					<button class="empty-clear" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</button>
 				{:else if activeFilters > 0}
-					<button class="empty-clear" onclick={clearFilters}><X size={14} />{msg.mail_list_clear_filters()}</button>
+					<button class="empty-clear" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</button>
 				{/if}
 			</div>
 		{:else}

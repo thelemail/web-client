@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Clock from '@lucide/svelte/icons/clock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faClock } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import { formatWhenLong } from './data';
 	import {
@@ -59,7 +60,7 @@
 				disabled={busy}
 				onclick={() => (selected = p.id)}
 			>
-				<Clock size={16} />
+				<Icon icon={faClock} size={16} />
 				<span class="sch-name">{p.label}</span>
 				<span class="sch-when">{formatWhenLong(p.when, now)}</span>
 			</button>
@@ -72,7 +73,7 @@
 			disabled={busy}
 			onclick={() => (selected = CUSTOM)}
 		>
-			<Clock size={16} />
+			<Icon icon={faClock} size={16} />
 			<span class="sch-name">{m.mail_pick_date_time()}</span>
 		</button>
 	</div>
@@ -95,7 +96,7 @@
 {/snippet}
 
 <ConfirmDialog
-	icon={Clock}
+	icon={faClock}
 	title={m.mail_schedule_title()}
 	confirmLabel={m.mail_schedule_confirm()}
 	{busy}

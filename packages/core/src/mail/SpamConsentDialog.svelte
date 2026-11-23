@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import { faShieldCheck } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 
 	interface Props {
@@ -14,7 +14,7 @@
 </script>
 
 <ConfirmDialog
-	icon={ShieldCheck}
+	icon={faShieldCheck}
 	title={m.mail_spam_consent_title()}
 	confirmLabel={m.mail_spam_consent_confirm()}
 	cancelLabel={m.mail_spam_consent_decline()}

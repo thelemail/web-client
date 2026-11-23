@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Dialog as DialogPrimitive } from "bits-ui";
-	import XIcon from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from "$core/components/ui/button/index.js";
 	import { m } from '$paraglide/messages.js';
 	import { cn, type WithoutChildrenOrChild } from "$core/utils.js";
@@ -39,7 +40,7 @@
 			<DialogPrimitive.Close data-slot="dialog-close">
 				{#snippet child({ props })}
 					<Button variant="ghost" size="sm" class="absolute top-3 right-3 size-8 !px-0" {...props}>
-						<XIcon  />
+						<Icon icon={faXmark}  />
 						<span class="sr-only">{m.common_close()}</span>
 					</Button>
 				{/snippet}

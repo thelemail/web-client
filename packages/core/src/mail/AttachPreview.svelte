@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faPaperclip, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { SvelteMap } from 'svelte/reactivity';
 	import type { Attachment } from './attachmentUpload';
 	import { canPreview, fileKind } from './previewKind';
@@ -78,7 +78,7 @@
 	<div class="att-preview" class:rows>
 		{#if !rows}
 			<div class="apv-head">
-				<Paperclip size={13} />
+				<Icon icon={faPaperclip} size={13} />
 				{m.mail_attach_count({ count: files.length })}
 			</div>
 		{/if}
@@ -100,7 +100,7 @@
 						{#if k.type === 'image' && url}
 							<img src={url} alt={a.file.name} />
 						{:else}
-							<Ic size={24} />
+							<Icon icon={Ic} size={24} />
 							<span class="apv-ext">{k.ext || m.mail_attach_ext_fallback()}</span>
 						{/if}
 					</svelte:element>
@@ -143,7 +143,7 @@
 								onRemove(a.id);
 							}}
 						>
-							<X size={13} />
+							<Icon icon={faXmark} size={13} />
 						</button>
 					{/if}
 				</div>

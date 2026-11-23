@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Eye from '@lucide/svelte/icons/eye';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Plus from '@lucide/svelte/icons/plus';
+	import Icon from '$core/components/Icon.svelte';
+	import { faEye, faKey, faPlus } from '@fortawesome/pro-regular-svg-icons';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { Label } from '$core/components/ui/label';
 	import { m } from '$paraglide/messages.js';
@@ -32,7 +31,7 @@
 				aria-label={m.cal_group_add_aria()}
 				onclick={() => cal.openCalendarDialog({ mode: 'create' })}
 			>
-				<Plus size={13} />
+				<Icon icon={faPlus} size={13} />
 			</button>
 		{/if}
 	</div>
@@ -54,12 +53,12 @@
 			/>
 			<Label for="cal-{entry.id}" class="cal-nm {group === 'role' ? 'role' : ''}">{entry.name}</Label>
 			{#if entry.badge === 'key'}
-				<span class="cal-badge" title={m.cal_group_key_badge_title()}><KeyRound size={11} /></span>
+				<span class="cal-badge" title={m.cal_group_key_badge_title()}><Icon icon={faKey} size={11} /></span>
 			{:else if entry.badge}
 				<span class="cal-badge">{entry.badge}</span>
 			{/if}
 			{#if entry.readOnly}
-				<span class="cal-ro"><Eye size={13} /></span>
+				<span class="cal-ro"><Icon icon={faEye} size={13} /></span>
 			{:else}
 				<CalendarMenu calendarId={entry.id} name={entry.name} />
 			{/if}

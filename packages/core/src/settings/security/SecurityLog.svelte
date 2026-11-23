@@ -1,15 +1,19 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { m } from '$paraglide/messages.js';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import Usb from '@lucide/svelte/icons/usb';
-	import LogOut from '@lucide/svelte/icons/log-out';
-	import ScrollText from '@lucide/svelte/icons/scroll-text';
-	import LogIn from '@lucide/svelte/icons/log-in';
-	import ShieldOff from '@lucide/svelte/icons/shield-off';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRightFromBracket,
+		faArrowRightToBracket,
+		faArrowsRotate,
+		faKey,
+		faLifeRing,
+		faScroll,
+		faShieldCheck,
+		faShieldSlash,
+		faTriangleExclamation,
+		faUsbDrive
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { untrack } from 'svelte';
 	import Card from '../Card.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
@@ -100,29 +104,29 @@
 		});
 	});
 
-	const securityActionMeta: Record<SecurityEventAction, { icon: typeof LogIn; label: () => string }> = {
-		signed_in: { icon: LogIn, label: () => m.settings_security_log_signed_in() },
-		signed_out: { icon: LogOut, label: () => m.settings_security_log_signed_out() },
-		session_revoked: { icon: LogOut, label: () => m.settings_security_log_session_revoked() },
-		other_sessions_revoked: { icon: LogOut, label: () => m.settings_security_log_other_sessions_revoked() },
-		session_reuse_detected: { icon: TriangleAlert, label: () => m.settings_security_log_session_reuse_detected() },
-		password_changed: { icon: KeyRound, label: () => m.settings_security_log_password_changed() },
-		recovery_phrase_set: { icon: LifeBuoy, label: () => m.settings_security_log_recovery_phrase_set() },
-		account_recovered: { icon: LifeBuoy, label: () => m.settings_security_log_account_recovered() },
-		totp_enabled: { icon: ShieldCheckIcon, label: () => m.settings_security_log_totp_enabled() },
-		totp_disabled: { icon: ShieldOff, label: () => m.settings_security_log_totp_disabled() },
-		webauthn_added: { icon: Usb, label: () => m.settings_security_log_webauthn_added() },
-		webauthn_removed: { icon: Usb, label: () => m.settings_security_log_webauthn_removed() },
-		backup_codes_regenerated: { icon: RefreshCw, label: () => m.settings_security_log_backup_codes_regenerated() },
-		account_deletion_requested: { icon: TriangleAlert, label: () => m.settings_security_log_account_deletion_requested() },
-		account_deletion_canceled: { icon: ShieldCheckIcon, label: () => m.settings_security_log_account_deletion_canceled() }
+	const securityActionMeta: Record<SecurityEventAction, { icon: IconDefinition; label: () => string }> = {
+		signed_in: { icon: faArrowRightToBracket, label: () => m.settings_security_log_signed_in() },
+		signed_out: { icon: faArrowRightFromBracket, label: () => m.settings_security_log_signed_out() },
+		session_revoked: { icon: faArrowRightFromBracket, label: () => m.settings_security_log_session_revoked() },
+		other_sessions_revoked: { icon: faArrowRightFromBracket, label: () => m.settings_security_log_other_sessions_revoked() },
+		session_reuse_detected: { icon: faTriangleExclamation, label: () => m.settings_security_log_session_reuse_detected() },
+		password_changed: { icon: faKey, label: () => m.settings_security_log_password_changed() },
+		recovery_phrase_set: { icon: faLifeRing, label: () => m.settings_security_log_recovery_phrase_set() },
+		account_recovered: { icon: faLifeRing, label: () => m.settings_security_log_account_recovered() },
+		totp_enabled: { icon: faShieldCheck, label: () => m.settings_security_log_totp_enabled() },
+		totp_disabled: { icon: faShieldSlash, label: () => m.settings_security_log_totp_disabled() },
+		webauthn_added: { icon: faUsbDrive, label: () => m.settings_security_log_webauthn_added() },
+		webauthn_removed: { icon: faUsbDrive, label: () => m.settings_security_log_webauthn_removed() },
+		backup_codes_regenerated: { icon: faArrowsRotate, label: () => m.settings_security_log_backup_codes_regenerated() },
+		account_deletion_requested: { icon: faTriangleExclamation, label: () => m.settings_security_log_account_deletion_requested() },
+		account_deletion_canceled: { icon: faShieldCheck, label: () => m.settings_security_log_account_deletion_canceled() }
 	};
 
-	function securityEventMeta(action: SecurityEventAction): { icon: typeof LogIn; label: string } {
+	function securityEventMeta(action: SecurityEventAction): { icon: IconDefinition; label: string } {
 		const meta = securityActionMeta[action];
 		return meta
 			? { icon: meta.icon, label: meta.label() }
-			: { icon: ScrollText, label: action.replaceAll('_', ' ') };
+			: { icon: faScroll, label: action.replaceAll('_', ' ') };
 	}
 
 	function fmtWhen(iso: string): string {
@@ -133,7 +137,7 @@
 	}
 </script>
 
-<Card icon={ScrollText} title={m.settings_security_log()}>
+<Card icon={faScroll} title={m.settings_security_log()}>
 	{#if secEvents === null}
 		{#if secLoadFailed}
 			<LoadState
@@ -157,7 +161,7 @@
 		<div class="log-list">
 			{#if secEvents.length === 0}
 				<div class="log-row">
-					<span class="log-ic"><ScrollText size={15} /></span>
+					<span class="log-ic"><Icon icon={faScroll} size={15} /></span>
 					<div class="log-info">
 						<div class="log-t">{m.settings_security_log_empty()}</div>
 						<div class="log-meta">{m.settings_security_log_empty_desc()}</div>
@@ -168,7 +172,7 @@
 				{@const meta = securityEventMeta(e.action)}
 				{@const Ic = meta.icon}
 				<div class="log-row">
-					<span class="log-ic"><Ic size={15} /></span>
+					<span class="log-ic"><Icon icon={Ic} size={15} /></span>
 					<div class="log-info">
 						<div class="log-t">{meta.label}</div>
 						<div class="log-meta">{sessionClientName(e.client) ?? e.client}</div>

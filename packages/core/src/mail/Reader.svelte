@@ -3,28 +3,38 @@
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import type { MessagePreviewRecipient } from './preview';
 	import { productLaunched } from '$core/products';
-	import Reply from '@lucide/svelte/icons/reply';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faAlarmExclamation,
+		faArrowLeft,
+		faArrowRotateLeft,
+		faArrowTurnDownLeft,
+		faBellSlash,
+		faBoxArchive,
+		faCalendarPlus,
+		faChevronLeft,
+		faChevronRight,
+		faClock,
+		faCode,
+		faEllipsis,
+		faEnvelope,
+		faEnvelopeOpen,
+		faFolderArrowDown,
+		faListCheck,
+		faPrint,
+		faReply,
+		faReplyAll,
+		faShare,
+		faShieldExclamation,
+		faStar,
+		faTag,
+		faTrashCan,
+		faUserXmark,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
+	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
+	import StateIcon from '$core/components/StateIcon.svelte';
 	import { platform } from '$platform';
-	import ReplyAll from '@lucide/svelte/icons/reply-all';
-	import Forward from '@lucide/svelte/icons/forward';
-	import Archive from '@lucide/svelte/icons/archive';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import Mail from '@lucide/svelte/icons/mail';
-	import MailOpen from '@lucide/svelte/icons/mail-open';
-	import Star from '@lucide/svelte/icons/star';
-	import Clock from '@lucide/svelte/icons/clock';
-	import FolderInput from '@lucide/svelte/icons/folder-input';
-	import Tag from '@lucide/svelte/icons/tag';
-	import BellOff from '@lucide/svelte/icons/bell-off';
-	import Code from '@lucide/svelte/icons/code';
-	import Printer from '@lucide/svelte/icons/printer';
-	import UserX from '@lucide/svelte/icons/user-x';
-	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import * as Tooltip from '$core/components/ui/tooltip';
 	import type { Snippet } from 'svelte';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -43,10 +53,7 @@
 	import { unsubscribeMethod, type UnsubscribeMethod } from './unsubscribe';
 	import SnoozePicker from './SnoozePicker.svelte';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
-	import AlarmClockOff from '@lucide/svelte/icons/alarm-clock-off';
 	import EventCard from './EventCard.svelte';
-	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
-	import ListTodo from '@lucide/svelte/icons/list-todo';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { tick, untrack } from 'svelte';
@@ -65,7 +72,6 @@
 	import { acceptSenderKeyChange } from './senderVerify';
 	import { loadMessageBody } from './bodySource';
 	import type { RenderResult, CalendarEvent } from '$core/mail/render';
-	import Undo2 from '@lucide/svelte/icons/undo-2';
 	import {
 		plainSubject,
 		formatWhenLong,
@@ -87,7 +93,6 @@
 	import LocationChip from './collections/LocationChip.svelte';
 	import { locationFor } from './location';
 	import type { CollectionEntry } from './collections/tree';
-	import Users from '@lucide/svelte/icons/users';
 	import { deviceOf } from '$core/settings/keyName';
 
 	const printShortcut = deviceOf(navigator) === 'Mac' ? '⌘P' : 'Ctrl+P';
@@ -713,7 +718,7 @@
 	{:else}
 		<div class="reader-bar">
 			<button class="rb-ico rb-back" title={msg.mail_skeleton_back()} onclick={() => onBack?.()}>
-				<ArrowLeft size={17} />
+				<Icon icon={faArrowLeft} size={17} />
 			</button>
 			<Tooltip.Provider delayDuration={150} disableHoverableContent>
 			{#if caps.showReply}
@@ -725,7 +730,7 @@
 							aria-label={label}
 							onclick={() => toggleReplyMode(m)}
 						>
-							{#if m === 'all'}<ReplyAll size={15} />{:else}<Reply size={15} />{/if}<span class="rb-t">{label}</span>
+							{#if m === 'all'}<Icon icon={faReplyAll} size={15} />{:else}<Icon icon={faReply} size={15} />{/if}<span class="rb-t">{label}</span>
 						</Tooltip.Trigger>
 						<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
 					</Tooltip.Root>
@@ -736,7 +741,7 @@
 						aria-label={msg.mail_reader_forward()}
 						onclick={forward}
 					>
-						<Forward size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
+						<Icon icon={faShare} size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
 					</Tooltip.Trigger>
 					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_forward()}</Tooltip.Content>
 				</Tooltip.Root>
@@ -746,7 +751,7 @@
 			{/if}
 				{#if caps.showArchive}
 					<button type="button" class="rb-txt" data-mutates aria-label={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
-						<Archive size={16} /><span class="rb-t">{msg.mail_action_archive()}</span>
+						<Icon icon={faBoxArchive} size={16} /><span class="rb-t">{msg.mail_action_archive()}</span>
 					</button>
 				{/if}
 				{#if caps.showSnooze && onSnooze}
@@ -760,7 +765,7 @@
 						aria-expanded={snoozePickerOpen}
 						onclick={() => (snoozePickerOpen = !snoozePickerOpen)}
 					>
-						<Clock size={16} /><span class="rb-t">{msg.mail_reader_snooze()}</span>
+						<Icon icon={faClock} size={16} /><span class="rb-t">{msg.mail_reader_snooze()}</span>
 					</button>
 				{/if}
 				{#if caps.showMove && onPicker}
@@ -775,7 +780,7 @@
 						aria-expanded={openPicker === 'reader-move'}
 						onclick={(e) => onPicker('move', m.id, e.currentTarget)}
 					>
-						<FolderInput size={16} /><span class="rb-t">{msg.mail_reader_move()}</span>
+						<Icon icon={faFolderArrowDown} size={16} /><span class="rb-t">{msg.mail_reader_move()}</span>
 					</button>
 				{/if}
 				{#if caps.showLabels && onPicker}
@@ -790,7 +795,7 @@
 						aria-expanded={openPicker === 'reader-labels'}
 						onclick={(e) => onPicker('labels', m.id, e.currentTarget)}
 					>
-						<Tag size={16} /><span class="rb-t">{msg.mail_list_labels()}</span>
+						<Icon icon={faTag} size={16} /><span class="rb-t">{msg.mail_list_labels()}</span>
 					</button>
 				{/if}
 				{#if caps.showRestore}
@@ -811,7 +816,7 @@
 						aria-expanded={moreOpen}
 						onclick={() => (moreOpen = !moreOpen)}
 					>
-						<Ellipsis size={17} />
+						<Icon icon={faEllipsis} size={17} />
 					</Tooltip.Trigger>
 					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_more()}</Tooltip.Content>
 				</Tooltip.Root>
@@ -827,7 +832,7 @@
 									moreOpen = false;
 								}}
 							>
-								<MailOpen size={17} />{msg.mail_action_mark_read()}
+								<Icon icon={faEnvelopeOpen} size={17} />{msg.mail_action_mark_read()}
 							</button>
 						{:else if caps.showMarkRead}
 							<button
@@ -839,7 +844,7 @@
 									moreOpen = false;
 								}}
 							>
-								<Mail size={17} />{msg.mail_action_mark_unread()}
+								<Icon icon={faEnvelope} size={17} />{msg.mail_action_mark_unread()}
 							</button>
 						{/if}
 						{#if caps.showUnsnooze && onUnsnooze}
@@ -852,7 +857,7 @@
 									onUnsnooze?.(m.id);
 								}}
 							>
-								<AlarmClockOff size={17} />{msg.mail_reader_unsnooze()}
+								<Icon icon={faAlarmExclamation} size={17} />{msg.mail_reader_unsnooze()}
 							</button>
 						{/if}
 						<div class="msep"></div>
@@ -862,7 +867,7 @@
 							role="menuitem"
 							onclick={() => (moreOpen = false)}
 						>
-							<BellOff size={17} />{msg.mail_reader_mute()}
+							<Icon icon={faBellSlash} size={17} />{msg.mail_reader_mute()}
 						</button>
 						<div class="msep"></div>
 						<button
@@ -874,7 +879,7 @@
 								headersOpen = true;
 							}}
 						>
-							<Code size={17} />{msg.mail_reader_view_headers()}
+							<Icon icon={faCode} size={17} />{msg.mail_reader_view_headers()}
 						</button>
 						<button
 							type="button"
@@ -885,7 +890,7 @@
 								moreOpen = false;
 							}}
 						>
-							<Printer size={17} />{msg.mail_reader_print()}<span class="rt">{printShortcut}</span>
+							<Icon icon={faPrint} size={17} />{msg.mail_reader_print()}<span class="rt">{printShortcut}</span>
 						</button>
 						{#if productLaunched('calendar')}
 							<div class="msep"></div>
@@ -898,7 +903,7 @@
 									void sendToCalendar('event');
 								}}
 							>
-								<CalendarPlus size={17} />{msg.mail_reader_create_event()}
+								<Icon icon={faCalendarPlus} size={17} />{msg.mail_reader_create_event()}
 							</button>
 							<button
 								type="button"
@@ -909,7 +914,7 @@
 									void sendToCalendar('task');
 								}}
 							>
-								<ListTodo size={17} />{msg.mail_reader_create_task()}
+								<Icon icon={faListCheck} size={17} />{msg.mail_reader_create_task()}
 							</button>
 						{/if}
 						{#if canBlock || canReport}
@@ -925,7 +930,7 @@
 									blockOpen = true;
 								}}
 							>
-								<UserX size={17} />{msg.mail_reader_block_sender()}
+								<Icon icon={faUserXmark} size={17} />{msg.mail_reader_block_sender()}
 							</button>
 						{/if}
 						{#if canReport}
@@ -938,7 +943,7 @@
 									reportOpen = true;
 								}}
 							>
-								<ShieldAlert size={17} />{msg.mail_reader_report()}
+								<Icon icon={faShieldExclamation} size={17} />{msg.mail_reader_report()}
 							</button>
 						{/if}
 					</AnchoredMenu>
@@ -977,7 +982,7 @@
 								title={m.starred ? msg.mail_action_unstar() : msg.mail_action_star()}
 								onclick={() => onToggleStar(m.id)}
 							>
-								<Star size={20} />
+								<StateIcon icon={faStar} activeIcon={faStarSolid} active={m.starred} gesture="spin" size={20} />
 							</button>
 						{/if}
 					</h1>
@@ -1003,14 +1008,14 @@
 
 				{#if othersReplying}
 					<div class="presence-note" role="status">
-						<Users size={13} />
+						<Icon icon={faUsers} size={13} />
 						<span>{othersReplying}</span>
 					</div>
 				{/if}
 
 				{#if snoozeState}
 					<div class="snz-note" class:back={snoozeState.kind === 'returned'}>
-						<Clock size={13} />
+						<Icon icon={faClock} size={13} />
 						<span>
 							{snoozeState.kind === 'pending'
 								? msg.mail_reader_snoozed_until({ when: formatWhenLong(snoozeState.at) })
@@ -1120,7 +1125,7 @@
 					</div>
 
 					{#if isForwarded}
-						<div class="fwd-chip"><CornerDownLeft size={13} />{msg.mail_forwarded_chip()}</div>
+						<div class="fwd-chip"><Icon icon={faArrowTurnDownLeft} size={13} />{msg.mail_forwarded_chip()}</div>
 					{/if}
 
 					{#if quotedSrcDoc}
@@ -1133,7 +1138,7 @@
 								aria-expanded={showQuoted}
 								onclick={() => (showQuoted = !showQuoted)}
 							>
-								<Ellipsis size={16} />
+								<Icon icon={faEllipsis} size={16} />
 							</button>
 							{#if showQuoted}
 								<div class="quoted-email">
@@ -1161,14 +1166,14 @@
 								onclick={() => toggleReplyMode(mode)}
 							>
 								{#if mode === 'all'}
-									<ReplyAll size={16} />{msg.mail_reader_reply_all()}
+									<Icon icon={faReplyAll} size={16} />{msg.mail_reader_reply_all()}
 								{:else}
-									<Reply size={16} />{msg.mail_reader_reply()}
+									<Icon icon={faReply} size={16} />{msg.mail_reader_reply()}
 								{/if}
 							</button>
 						{/each}
 						<button type="button" class="rr-btn" onclick={forward}>
-							<Forward size={16} />{msg.mail_reader_forward()}
+							<Icon icon={faShare} size={16} />{msg.mail_reader_forward()}
 						</button>
 					</div>
 				{/if}
@@ -1267,7 +1272,7 @@
 	</Tooltip.Root>
 {/snippet}
 
-{#snippet undoIcon()}<Undo2 size={17} />{/snippet}
-{#snippet trashIcon()}<Trash2 size={17} />{/snippet}
-{#snippet prevIcon()}<ChevronLeft size={18} />{/snippet}
-{#snippet nextIcon()}<ChevronRight size={18} />{/snippet}
+{#snippet undoIcon()}<Icon icon={faArrowRotateLeft} size={17} />{/snippet}
+{#snippet trashIcon()}<Icon icon={faTrashCan} size={17} />{/snippet}
+{#snippet prevIcon()}<Icon icon={faChevronLeft} size={18} />{/snippet}
+{#snippet nextIcon()}<Icon icon={faChevronRight} size={18} />{/snippet}

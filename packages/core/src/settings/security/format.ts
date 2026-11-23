@@ -1,7 +1,10 @@
-import Monitor from '@lucide/svelte/icons/monitor';
-import Smartphone from '@lucide/svelte/icons/smartphone';
-import Globe from '@lucide/svelte/icons/globe';
-import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
+import {
+	faArrowRightArrowLeft,
+	faDisplay,
+	faGlobe,
+	faMobile
+} from '@fortawesome/pro-regular-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import { i18n } from '$core/i18n/locale.svelte';
 import { m } from '$paraglide/messages.js';
 import type { SessionClient } from '$core/api/types';
@@ -14,11 +17,11 @@ export function fmtDate(iso: string | undefined | null): string {
 		: d.toLocaleDateString(i18n.tag, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export const sessionClientIcon: Record<SessionClient, typeof Monitor> = {
-	web: Globe,
-	mobile: Smartphone,
-	desktop: Monitor,
-	migrator: ArrowRightLeft
+export const sessionClientIcon: Record<SessionClient, IconDefinition> = {
+	web: faGlobe,
+	mobile: faMobile,
+	desktop: faDisplay,
+	migrator: faArrowRightArrowLeft
 };
 
 const sessionClientNames: Record<SessionClient, () => string> = {

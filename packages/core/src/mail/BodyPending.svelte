@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Lock from '@lucide/svelte/icons/lock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faLock } from '@fortawesome/pro-regular-svg-icons';
 
 	const LINES: (string | null)[] = ['96%', '100%', '89%', '71%', null, '93%', '100%', '82%', '58%'];
 </script>
@@ -8,7 +9,7 @@
 <div class="bp" aria-busy="true">
 	<div class="bp-status" role="status">
 		<span class="bp-spin"></span>
-		<Lock size={13} />
+		<Icon icon={faLock} size={13} />
 		<span>{m.mail_skeleton_decrypting()}</span>
 	</div>
 	<div class="bp-lines" aria-hidden="true">

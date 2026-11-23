@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import { faShieldExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import {
 		sendGuardConfirmLabel,
@@ -22,7 +22,7 @@
 </script>
 
 <ConfirmDialog
-	icon={ShieldAlert}
+	icon={faShieldExclamation}
 	title={sendGuardTitle(guards)}
 	confirmLabel={sendGuardConfirmLabel(guards)}
 	cancelLabel={m.mail_send_guard_keep_editing()}

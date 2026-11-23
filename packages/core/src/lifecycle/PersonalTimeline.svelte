@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Route from '@lucide/svelte/icons/route';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import MailX from '@lucide/svelte/icons/mail-x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faBan, faInbox, faRoute } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { fmt } from './dates';
@@ -47,7 +46,7 @@
 {#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <div class="lc-tl" class:compact>
-	<div class="lc-tl-cap"><Route size={14} />{m.lc_timeline_caption()}</div>
+	<div class="lc-tl-cap"><Icon icon={faRoute} size={14} />{m.lc_timeline_caption()}</div>
 	<div class="lc-track">
 		<div class="fill" style="width:{pct}%"></div>
 		{#if day >= 0}
@@ -66,10 +65,10 @@
 	</div>
 	<div class="lc-phases">
 		<div class="lc-phase ok">
-			<Inbox size={15} /><span><Rich text={m.lc_timeline_phase_read_only()} tags={{ b: bold }} /></span>
+			<Icon icon={faInbox} size={15} /><span><Rich text={m.lc_timeline_phase_read_only()} tags={{ b: bold }} /></span>
 		</div>
 		<div class="lc-phase warn">
-			<MailX size={15} /><span><Rich text={m.lc_timeline_phase_inactive()} tags={{ b: bold }} /></span>
+			<Icon icon={faBan} size={15} /><span><Rich text={m.lc_timeline_phase_inactive()} tags={{ b: bold }} /></span>
 		</div>
 	</div>
 </div>

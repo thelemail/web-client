@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowUpRightFromSquare, faArrowsRotate } from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Card from '../Card.svelte';
@@ -137,11 +137,11 @@
 		<Row t={onWindows ? m.settings_notify_windows() : m.settings_notify_macos()} descSnippet={desc}>
 			<div class="ntf-actions">
 				<Button variant="ghost" size="sm" onclick={check} disabled={checking}>
-					<RefreshCw />{m.settings_notify_check_again()}
+					<Icon icon={faArrowsRotate} />{m.settings_notify_check_again()}
 				</Button>
 				{#if canOpenSystemSettings}
 					<Button variant="secondary" size="sm" onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}>
-						<ExternalLink />{onWindows ? m.settings_notify_open_windows_settings() : m.settings_notify_open_system_settings()}
+						<Icon icon={faArrowUpRightFromSquare} />{onWindows ? m.settings_notify_open_windows_settings() : m.settings_notify_open_system_settings()}
 					</Button>
 				{/if}
 			</div>

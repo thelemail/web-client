@@ -3,9 +3,14 @@
 	import { delayed } from '$core/async/delayed.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { replyToSummary } from './replyRecipients';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowTurnDownLeft,
+		faEllipsis,
+		faFolderArrowDown,
+		faPaperclip,
+		faTag
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
 	import TrustMark from './TrustMark.svelte';
@@ -16,8 +21,6 @@
 	import { sentByLabel } from './sentBy';
 	import { auth } from '$core/stores/auth.svelte';
 	import { unsubscribeMethod } from './unsubscribe';
-	import FolderInput from '@lucide/svelte/icons/folder-input';
-	import Tag from '@lucide/svelte/icons/tag';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import LabelChip from './collections/LabelChip.svelte';
 	import LocationChip from './collections/LocationChip.svelte';
@@ -136,7 +139,7 @@
 			</span>
 			<span class="tc-meta">
 				{#if chips.length > 0}
-					<Paperclip size={13} />
+					<Icon icon={faPaperclip} size={13} />
 				{/if}
 				<span class="tc-time">{shortWhen}</span>
 			</span>
@@ -218,7 +221,7 @@
 									}}
 									onkeydown={(ev) => ev.stopPropagation()}
 								>
-									<FolderInput size={14} />
+									<Icon icon={faFolderArrowDown} size={14} />
 								</button>
 							{/if}
 							{#if canLabel}
@@ -237,7 +240,7 @@
 									}}
 									onkeydown={(ev) => ev.stopPropagation()}
 								>
-									<Tag size={14} />
+									<Icon icon={faTag} size={14} />
 								</button>
 							{/if}
 						</span>
@@ -279,7 +282,7 @@
 			</div>
 
 			{#if e.forwarded}
-				<div class="fwd-chip"><CornerDownLeft size={13} />{m.mail_forwarded_chip()}</div>
+				<div class="fwd-chip"><Icon icon={faArrowTurnDownLeft} size={13} />{m.mail_forwarded_chip()}</div>
 			{/if}
 
 			{#if e.quotedSrcDoc}
@@ -292,7 +295,7 @@
 						aria-expanded={showQuoted}
 						onclick={() => (showQuoted = !showQuoted)}
 					>
-						<Ellipsis size={16} />
+						<Icon icon={faEllipsis} size={16} />
 					</button>
 					{#if showQuoted}
 						<div class="quoted-email">

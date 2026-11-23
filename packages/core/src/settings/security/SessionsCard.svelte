@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import MonitorSmartphone from '@lucide/svelte/icons/monitor-smartphone';
-	import LogOut from '@lucide/svelte/icons/log-out';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowRightFromBracket, faLaptopMobile } from '@fortawesome/pro-regular-svg-icons';
 	import { untrack } from 'svelte';
 	import Card from '../Card.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
@@ -124,7 +124,7 @@
 	}
 </script>
 
-<Card icon={MonitorSmartphone} title={m.settings_security_sessions()}>
+<Card icon={faLaptopMobile} title={m.settings_security_sessions()}>
 	{#if sessions === null}
 		{#if loadFailed}
 			<LoadState
@@ -151,7 +151,7 @@
 		{#each sortedSessions as d (d.id)}
 			{@const DevIcon = sessionClientIcon[d.client]}
 			<div class="devrow">
-				<span class="dv-ic"><DevIcon size={18} /></span>
+				<span class="dv-ic"><Icon icon={DevIcon} size={18} /></span>
 				<div class="dv-info">
 					<div class="dv-name">
 						{sessionClientName(d.client)}{#if d.current}<span class="this-dev">{m.settings_security_this_device()}</span
@@ -175,7 +175,7 @@
 				</div>
 				<div class="ctl">
 					<Button variant="danger" size="sm" disabled={busy} onclick={() => (confirmAll = true)}>
-						<LogOut size={14} />{m.settings_security_revoke_all()}
+						<Icon icon={faArrowRightFromBracket} size={14} />{m.settings_security_revoke_all()}
 					</Button>
 				</div>
 			</div>
@@ -187,7 +187,7 @@
 
 {#if confirmAll}
 	<ConfirmDialog
-		icon={LogOut}
+		icon={faArrowRightFromBracket}
 		tone="danger"
 		title={m.settings_security_revoke_all_title()}
 		body={revokeAllBody}

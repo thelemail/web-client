@@ -5,10 +5,13 @@
 	import { cancelDeletion } from '$core/api/deletion';
 	import { auth } from '$core/stores/auth.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
-	import Undo2 from '@lucide/svelte/icons/undo-2';
-	import LogOut from '@lucide/svelte/icons/log-out';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRightFromBracket,
+		faArrowRotateLeft,
+		faCalendarClock,
+		faCircleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -75,7 +78,7 @@
 	<div class="card">
 		<div class="card-surface screen-fade">
 			<div class="welcome">
-				<span class="pending-icon"><CalendarClock size={44} strokeWidth={1.5} /></span>
+				<span class="pending-icon"><Icon icon={faCalendarClock} size={44} /></span>
 				<h1>{m.lc_deletion_title()}</h1>
 				<p>
 					<Rich
@@ -94,17 +97,17 @@
 				</p>
 				{#if cancelError}
 					<p class="billing-notice billing-notice-error">
-						<CircleAlert size={15} strokeWidth={1.75} />
+						<Icon icon={faCircleExclamation} size={15} />
 						<span>{cancelError}</span>
 					</p>
 				{/if}
 				<div class="actions" style="margin-top:24px">
 					<Button variant="primary" size="lg" block disabled={busy} onclick={keepAccount}>
-						<Undo2 size={17} strokeWidth={1.75} />
+						<Icon icon={faArrowRotateLeft} size={17} />
 						{busy ? m.lc_deletion_restoring() : m.lc_deletion_keep()}
 					</Button>
 					<Button variant="secondary" size="lg" block disabled={busy} onclick={signOut}>
-						<LogOut size={17} strokeWidth={1.75} />{m.lc_deletion_sign_out()}
+						<Icon icon={faArrowRightFromBracket} size={17} />{m.lc_deletion_sign_out()}
 					</Button>
 				</div>
 			</div>

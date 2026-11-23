@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { m } from '$paraglide/messages.js';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Fingerprint from '@lucide/svelte/icons/fingerprint';
+	import Icon from '$core/components/Icon.svelte';
+	import { faFingerprint, faShieldCheck } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { getTwoFactorStatus } from '$core/api/twofactor';
@@ -191,7 +191,7 @@
 	{/if}
 	{#if hasWebauthn}
 		<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={submitKey}>
-			<Fingerprint size={14} />{m.settings_ceremony_twofa_use_security_key()}
+			<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_twofa_use_security_key()}
 		</Button>
 	{/if}
 	{#if needsFactor && !needsCode && !hasWebauthn}
@@ -201,7 +201,7 @@
 
 <div class="reauth-layer">
 	<ConfirmDialog
-		icon={ShieldCheck}
+		icon={faShieldCheck}
 		title={m.reauth_title()}
 		sub={email}
 		confirmLabel={m.reauth_continue()}

@@ -1,12 +1,16 @@
 <script lang="ts" generics="T extends string">
-	import PanelRight from '@lucide/svelte/icons/panel-right';
-	import PanelBottom from '@lucide/svelte/icons/panel-bottom';
-	import Rows3 from '@lucide/svelte/icons/rows-3';
-	import Sun from '@lucide/svelte/icons/sun';
-	import Moon from '@lucide/svelte/icons/moon';
-	import Monitor from '@lucide/svelte/icons/monitor';
-	import Type from '@lucide/svelte/icons/type';
-	import Pilcrow from '@lucide/svelte/icons/pilcrow';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faDisplay,
+		faFont,
+		faMoon,
+		faParagraph,
+		faSidebarFlip,
+		faSun,
+		faTableRows,
+		faWindowFlip
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { getRowNames } from './a11y';
 
 	type IconName =
@@ -57,15 +61,15 @@
 		buttons[next]?.focus();
 	}
 
-	const icons: Record<IconName, typeof PanelRight> = {
-		'panel-right': PanelRight,
-		'panel-bottom': PanelBottom,
-		'rows-3': Rows3,
-		sun: Sun,
-		moon: Moon,
-		monitor: Monitor,
-		type: Type,
-		pilcrow: Pilcrow
+	const icons: Record<IconName, IconDefinition> = {
+		'panel-right': faSidebarFlip,
+		'panel-bottom': faWindowFlip,
+		'rows-3': faTableRows,
+		sun: faSun,
+		moon: faMoon,
+		monitor: faDisplay,
+		type: faFont,
+		pilcrow: faParagraph
 	};
 </script>
 
@@ -77,7 +81,7 @@
 	aria-describedby={labelledby ? undefined : row?.descId}
 >
 	{#each options as o, i (o.v)}
-		{@const Icon = o.icon ? icons[o.icon] : null}
+		{@const glyph = o.icon ? icons[o.icon] : null}
 		<button
 			bind:this={buttons[i]}
 			type="button"
@@ -88,7 +92,7 @@
 			onclick={() => onChange(o.v)}
 			onkeydown={(e) => onKey(e, i)}
 		>
-			{#if Icon}<Icon size={15} aria-hidden="true" />{/if}{o.l}
+			{#if glyph}<Icon icon={glyph} size={15} aria-hidden="true" />{/if}{o.l}
 		</button>
 	{/each}
 </div>

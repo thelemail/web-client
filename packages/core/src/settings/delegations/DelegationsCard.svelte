@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { formatKeyId } from '$core/directory/format';
 	import { i18n } from '$core/i18n/locale.svelte';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Check from '@lucide/svelte/icons/check';
-	import Info from '@lucide/svelte/icons/info';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faCircleInfo, faKey, faPlus } from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
@@ -49,7 +47,7 @@
 	}
 </script>
 
-<Card icon={KeyRound} title={m.settings_delegation_title()}>
+<Card icon={faKey} title={m.settings_delegation_title()}>
 	{#snippet right()}
 		<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
 		{#if billing.canAddDomains}
@@ -59,7 +57,7 @@
 				disabled={!!blocked}
 				onclick={() => (creating = true)}
 			>
-				<Plus size={13} />{m.settings_delegation_authorize()}
+				<Icon icon={faPlus} size={13} />{m.settings_delegation_authorize()}
 			</Button>
 		{/if}
 	{/snippet}
@@ -69,11 +67,11 @@
 	</div>
 
 	{#if blocked}
-		<div class="card-note"><Info size={14} />{blocked}</div>
+		<div class="card-note"><Icon icon={faCircleInfo} size={14} />{blocked}</div>
 	{/if}
 
 	{#if flash}
-		<div class="card-flash"><Check size={14} />{flash}</div>
+		<div class="card-flash"><Icon icon={faCheck} size={14} />{flash}</div>
 	{/if}
 
 	{#each rows as { d, status } (d.id)}

@@ -1,8 +1,11 @@
 <script lang="ts">
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import Send from '@lucide/svelte/icons/send';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleExclamation,
+		faInbox,
+		faPaperPlane,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -43,7 +46,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<CeremonyShell icon={Trash2} eyebrow={m.settings_forwarding_title()} title={m.settings_forwarding_revoke_title({ label: delegation.label })} tone="danger" {onClose}>
+<CeremonyShell icon={faTrashCan} eyebrow={m.settings_forwarding_title()} title={m.settings_forwarding_revoke_title({ label: delegation.label })} tone="danger" {onClose}>
 	<div class="cer-pane">
 		<div class="cer-lede">
 			<p>
@@ -55,15 +58,15 @@
 		</div>
 		<ul class="cer-points">
 			<li>
-				<Send size={16} />
+				<Icon icon={faPaperPlane} size={16} />
 				<span>{m.settings_forwarding_revoke_point_new()}</span>
 			</li>
 			<li>
-				<CircleAlert size={16} />
+				<Icon icon={faCircleExclamation} size={16} />
 				<span>{m.settings_forwarding_revoke_point_kept({ label: delegation.label })}</span>
 			</li>
 			<li>
-				<Inbox size={16} />
+				<Icon icon={faInbox} size={16} />
 				<span>{m.settings_forwarding_revoke_point_mailbox()}</span>
 			</li>
 		</ul>
@@ -74,7 +77,7 @@
 		</Label>
 
 		{#if error}
-			<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+			<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 		{/if}
 	</div>
 

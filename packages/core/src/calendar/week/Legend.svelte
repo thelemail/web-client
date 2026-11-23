@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Clock from '@lucide/svelte/icons/clock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faClock } from '@fortawesome/pro-regular-svg-icons';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
 	import PrivacyChip from '../PrivacyChip.svelte';
@@ -26,7 +27,7 @@
 	{/each}
 	<span class="lg-spacer"></span>
 	<button type="button" class="ackbtn" onclick={() => (cal.fullDay = !cal.fullDay)}>
-		<Clock size={13} />{cal.fullDay ? m.cal_legend_hide_early() : m.cal_legend_show_midnight()}
+		<Icon icon={faClock} size={13} />{cal.fullDay ? m.cal_legend_hide_early() : m.cal_legend_show_midnight()}
 	</button>
 	<PrivacyChip tone={chip.tone} label={chip.label} />
 </div>

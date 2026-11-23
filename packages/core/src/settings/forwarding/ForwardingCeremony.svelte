@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { formatFingerprintHex } from '$core/directory/format';
 	import { platform } from '$platform';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Download from '@lucide/svelte/icons/download';
-	import Eye from '@lucide/svelte/icons/eye';
-	import Forward from '@lucide/svelte/icons/forward';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import LockKeyhole from '@lucide/svelte/icons/lock-keyhole';
-	import Send from '@lucide/svelte/icons/send';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleExclamation,
+		faCopy,
+		faDownload,
+		faEye,
+		faInbox,
+		faLockKeyhole,
+		faPaperPlane,
+		faShare
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -126,7 +129,7 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <CeremonyShell
-	icon={Forward}
+	icon={faShare}
 	eyebrow={m.settings_forwarding_title()}
 	title={step === 1
 		? m.settings_forwarding_save_key_title()
@@ -206,7 +209,7 @@
 
 			<ul class="cer-points">
 				<li>
-					<Eye size={16} />
+					<Icon icon={faEye} size={16} />
 					{#if plain}
 						<span>{m.settings_forwarding_point_plain_readable()}</span>
 					{:else}
@@ -214,11 +217,11 @@
 					{/if}
 				</li>
 				<li>
-					<Inbox size={16} />
+					<Icon icon={faInbox} size={16} />
 					<span>{m.settings_forwarding_point_after_confirm()}</span>
 				</li>
 				<li>
-					<LockKeyhole size={16} />
+					<Icon icon={faLockKeyhole} size={16} />
 					{#if plain}
 						<span>{m.settings_forwarding_point_plain_no_send({ email })}</span>
 					{:else}
@@ -226,7 +229,7 @@
 					{/if}
 				</li>
 				<li>
-					<Send size={16} />
+					<Icon icon={faPaperPlane} size={16} />
 					{#if plain}
 						<span>{m.settings_forwarding_point_plain_limits()}</span>
 					{:else}
@@ -247,7 +250,7 @@
 			</Label>
 
 			{#if error}
-				<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		{:else}
 			<div class="cer-lede">
@@ -274,17 +277,17 @@
 
 			<div class="key-actions">
 				<Button variant="ghost" onclick={copyKey}>
-					<Copy size={15} />
+					<Icon icon={faCopy} size={15} />
 					{copied ? m.common_copied() : m.common_copy()}
 				</Button>
 				<Button variant="ghost" onclick={downloadKey}>
-					<Download size={15} />
+					<Icon icon={faDownload} size={15} />
 					{m.settings_forwarding_download()}
 				</Button>
 			</div>
 
 			{#if error}
-				<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		{/if}
 	</div>

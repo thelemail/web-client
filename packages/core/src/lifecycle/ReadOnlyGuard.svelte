@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Lock from '@lucide/svelte/icons/lock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faLock } from '@fortawesome/pro-regular-svg-icons';
 	import { lifecycle } from './lifecycle.svelte';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -76,7 +77,7 @@
 
 {#if active && toast}
 	<div class="lc-ro-toast">
-		<Lock size={16} />
+		<Icon icon={faLock} size={16} />
 		<span>{m.lc_readonly_toast()}</span>
 		<a
 			href={`/u/${slot}/lifecycle/restore`}

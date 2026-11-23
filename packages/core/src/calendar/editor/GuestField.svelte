@@ -1,5 +1,6 @@
 <script lang="ts">
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -75,7 +76,7 @@
 			<span class="guest-chip" class:external={!a.internal}>
 				{a.name || a.email}
 				<button type="button" aria-label={m.cal_guest_remove_aria({ email: a.email })} onclick={() => remove(a.email)}>
-					<X size={12} />
+					<Icon icon={faXmark} size={12} />
 				</button>
 			</span>
 		{/each}

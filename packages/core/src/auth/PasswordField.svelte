@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import Eye from '@lucide/svelte/icons/eye';
-	import EyeOff from '@lucide/svelte/icons/eye-off';
+	import Icon from '$core/components/Icon.svelte';
+	import { faEye, faEyeSlash } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 
 	let {
@@ -62,9 +62,9 @@
 			onclick={() => (show = !show)}
 		>
 			{#if show}
-				<EyeOff size={17} strokeWidth={1.75} />
+				<Icon icon={faEyeSlash} size={17} />
 			{:else}
-				<Eye size={17} strokeWidth={1.75} />
+				<Icon icon={faEye} size={17} />
 			{/if}
 		</button>
 	</div>

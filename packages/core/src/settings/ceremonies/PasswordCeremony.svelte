@@ -1,11 +1,14 @@
 <script lang="ts">
-	import Lock from '@lucide/svelte/icons/lock';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Fingerprint from '@lucide/svelte/icons/fingerprint';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faCheck,
+		faCircleExclamation,
+		faFingerprint,
+		faKey,
+		faLock,
+		faMinus
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import ProgressRun from '../ProgressRun.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -435,7 +438,7 @@
 </script>
 
 <CeremonyShell
-	icon={Lock}
+	icon={faLock}
 	eyebrow={m.settings_ceremony_password_eyebrow()}
 	title={m.settings_ceremony_password_title()}
 	{steps}
@@ -465,7 +468,7 @@
 				/>
 			</div>
 			{#if verifyError}
-				<span class="errtext" role="alert" id="cur-pw-err"><CircleAlert size={13} /><span>{verifyError}</span></span>
+				<span class="errtext" role="alert" id="cur-pw-err"><Icon icon={faCircleExclamation} size={13} /><span>{verifyError}</span></span>
 			{/if}
 		</div>
 	{:else if phase === 'twofa'}
@@ -520,11 +523,11 @@
 			{/if}
 			{#if hasWebauthn}
 				<Button variant="secondary" size="sm" disabled={twoFaBusy} onclick={submitTwoFaWebauthn}>
-					<Fingerprint size={14} />{m.settings_ceremony_password_use_security_key()}
+					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_password_use_security_key()}
 				</Button>
 			{/if}
 			{#if twoFaError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{twoFaError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{twoFaError}</span></span>
 			{/if}
 		</div>
 	{:else if phase === 'newpw'}
@@ -544,17 +547,15 @@
 				<div class="pwc-reqs">
 					{#each reqs as r (r.k)}
 						<span class="pwc-req" class:met={r.met}>
-							{#if r.met}<Check size={11} strokeWidth={2.5} />{:else}<Minus
+							{#if r.met}<Icon icon={faCheck} size={11} />{:else}<Icon icon={faMinus}
 									size={11}
-									strokeWidth={2.5}
 								/>{/if}
 							{r.label}
 						</span>
 					{/each}
 					<span class="pwc-req" class:met={differs}>
-						{#if differs}<Check size={11} strokeWidth={2.5} />{:else}<Minus
+						{#if differs}<Icon icon={faCheck} size={11} />{:else}<Icon icon={faMinus}
 								size={11}
-								strokeWidth={2.5}
 							/>{/if}
 						{m.settings_ceremony_password_req_differs()}
 					</span>
@@ -577,10 +578,10 @@
 				/>
 			</div>
 			{#if pw2.length > 0 && !match}
-				<span class="errtext" role="alert" id="new-pw2-err"><CircleAlert size={13} /><span>{m.settings_ceremony_password_mismatch()}</span></span>
+				<span class="errtext" role="alert" id="new-pw2-err"><Icon icon={faCircleExclamation} size={13} /><span>{m.settings_ceremony_password_mismatch()}</span></span>
 			{/if}
 			<div class="inline-warn">
-				<KeyRound size={15} />
+				<Icon icon={faKey} size={15} />
 				<span>{m.settings_ceremony_password_rewrap_warning()}</span>
 			</div>
 		</div>
@@ -588,12 +589,12 @@
 		<div class="cer-pane">
 			<ProgressRun label={m.settings_ceremony_password_progress()} lines={RUN_LINES} progress={runProgress} />
 			{#if runError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{runError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{runError}</span></span>
 			{/if}
 		</div>
 	{:else}
 		<DoneScreen
-			icon={Lock}
+			icon={faLock}
 			title={m.settings_ceremony_password_done_title()}
 			desc={m.settings_ceremony_password_done_desc()}
 		/>
@@ -606,7 +607,7 @@
 				{#if verifying}
 					{m.settings_ceremony_password_checking()}
 				{:else}
-					{m.common_continue()}<ArrowRight size={15} />
+					{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 				{/if}
 			</Button>
 		{:else if phase === 'twofa'}
@@ -617,13 +618,13 @@
 				{#if twoFaBusy}
 					{m.settings_ceremony_password_verifying()}
 				{:else}
-					{m.settings_ceremony_password_verify()}<ArrowRight size={15} />
+					{m.settings_ceremony_password_verify()}<Icon icon={faArrowRight} size={15} />
 				{/if}
 			</Button>
 		{:else if phase === 'newpw'}
 			<Button variant="ghost" onclick={close}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!pwReady} onclick={() => void changePassword()}>
-				{m.settings_ceremony_password_submit()}<ArrowRight size={15} />
+				{m.settings_ceremony_password_submit()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if phase === 'run'}
 			{#if runError}

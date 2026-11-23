@@ -12,9 +12,12 @@
 	import { billing } from '$core/stores/billing.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Mail from '@lucide/svelte/icons/mail';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleCheck,
+		faCircleExclamation,
+		faEnvelope
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { entryPointVisible } from '$core/lifecycle/downgrade';
 	import { m } from '$paraglide/messages.js';
@@ -190,7 +193,7 @@
 		{:else if switched}
 			<div class="card-surface screen-fade">
 				<div class="welcome">
-					<span class="switch-check"><CircleCheck size={44} strokeWidth={1.5} /></span>
+					<span class="switch-check"><Icon icon={faCircleCheck} size={44} /></span>
 					<h1>{m.billing_choose_switched_title()}</h1>
 					<p>
 						{#if sub?.planCode}
@@ -206,7 +209,7 @@
 					</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block href={`/u/${slot}/mail/inbox`}>
-							<Mail size={17} strokeWidth={1.75} />{m.billing_open_mailbox()}
+							<Icon icon={faEnvelope} size={17} />{m.billing_open_mailbox()}
 						</Button>
 					</div>
 				</div>
@@ -219,7 +222,7 @@
 					<p>{m.billing_choose_member_active_body()}</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block href={`/u/${slot}/mail/inbox`}>
-							<Mail size={17} strokeWidth={1.75} />{m.billing_open_mailbox()}
+							<Icon icon={faEnvelope} size={17} />{m.billing_open_mailbox()}
 						</Button>
 					</div>
 				</div>
@@ -228,7 +231,7 @@
 		{:else if alreadyActive}
 			{#if checkoutError}
 				<p class="billing-notice billing-notice-error">
-					<CircleAlert size={15} strokeWidth={1.75} />
+					<Icon icon={faCircleExclamation} size={15} />
 					<span>{checkoutError}</span>
 				</p>
 			{/if}
@@ -276,13 +279,13 @@
 		{:else}
 			{#if canceledNotice}
 				<p class="billing-notice">
-					<CircleCheck size={15} strokeWidth={1.75} />
+					<Icon icon={faCircleCheck} size={15} />
 					<span>{m.billing_choose_canceled_notice()}</span>
 				</p>
 			{/if}
 			{#if checkoutError}
 				<p class="billing-notice billing-notice-error">
-					<CircleAlert size={15} strokeWidth={1.75} />
+					<Icon icon={faCircleExclamation} size={15} />
 					<span>{checkoutError}</span>
 				</p>
 			{/if}

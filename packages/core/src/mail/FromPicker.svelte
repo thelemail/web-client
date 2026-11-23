@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Search from '@lucide/svelte/icons/search';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCheck,
+		faChevronDown,
+		faCircleExclamation,
+		faMagnifyingGlass
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { initialsFor } from './initials';
 	import type { SendIdentity } from './data';
@@ -197,7 +200,7 @@
 		/>
 		<span class="ft-name">{face.name}</span>
 		<span class="ft-email">&lt;{face.email}&gt;</span>
-		<ChevronDown size={15} />
+		<Icon icon={faChevronDown} size={15} />
 	</button>
 	{#if open}
 		<div
@@ -211,7 +214,7 @@
 			<div class="fm-h">{m.mail_compose_send_from_account({ account })}</div>
 			{#if filterable}
 				<label class="fm-filter">
-					<Search size={14} />
+					<Icon icon={faMagnifyingGlass} size={14} />
 					<input
 						bind:this={filter}
 						bind:value={query}
@@ -263,7 +266,7 @@
 						<span class="fm-em">{id.email}</span>
 						{#if id.org}<span class="fm-org">{id.org}</span>{/if}
 					</span>
-					{#if id.email === selected}<Check size={17} />{/if}
+					{#if id.email === selected}<Icon icon={faCheck} size={17} />{/if}
 				</button>
 			{/each}
 			{#if shown.length === 0}
@@ -289,10 +292,10 @@
 </div>
 {#if revoked}
 	<div class="cwarn" role="alert">
-		<CircleAlert size={14} />
+		<Icon icon={faCircleExclamation} size={14} />
 		<span class="cwarn-t" id="{uid}-revoked">{m.mail_compose_from_revoked({ address: revoked.email })}</span>
 		<button type="button" class="cwarn-act" onclick={choose}>{m.mail_compose_choose_address()}</button>
 	</div>
 {:else if noSender}
-	<div class="cnote"><CircleAlert size={14} />{m.mail_compose_no_sender()}</div>
+	<div class="cnote"><Icon icon={faCircleExclamation} size={14} />{m.mail_compose_no_sender()}</div>
 {/if}

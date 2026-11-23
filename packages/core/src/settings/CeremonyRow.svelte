@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowRight } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import Heading from './Heading.svelte';
 
 	interface Props {
-		icon: Component;
+		icon: IconDefinition;
 		title: string;
 		desc: string;
 		status?: string;
@@ -16,7 +17,7 @@
 	}
 
 	let {
-		icon: IconComponent,
+		icon,
 		title,
 		desc,
 		status,
@@ -28,7 +29,7 @@
 </script>
 
 <div class={'ceremony-row' + (tone ? ' tone-' + tone : '')}>
-	<span class="cr-ic"><IconComponent size={20} /></span>
+	<span class="cr-ic"><Icon {icon} size={20} /></span>
 	<div class="cr-body">
 		<div class="cr-title">
 			<Heading>{title}</Heading>
@@ -37,6 +38,6 @@
 		<div class="cr-desc">{desc}</div>
 	</div>
 	<Button variant={tone === 'danger' ? 'danger' : 'secondary'} size="sm" onclick={onLaunch}>
-		{cta}<ArrowRight size={14} />
+		{cta}<Icon icon={faArrowRight} size={14} />
 	</Button>
 </div>

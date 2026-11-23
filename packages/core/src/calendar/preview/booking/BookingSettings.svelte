@@ -1,7 +1,5 @@
 <script lang="ts">
-	import Eye from '@lucide/svelte/icons/eye';
-	import EyeOff from '@lucide/svelte/icons/eye-off';
-	import KeyRound from '@lucide/svelte/icons/key-round';
+	import { faEye, faEyeSlash, faKey } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Switch } from '$core/components/ui/switch';
 	import { m } from '$paraglide/messages.js';
@@ -29,12 +27,12 @@
 		{ tone: 'yes', text: m.cal_bkset_vis_open() },
 		{
 			tone: 'no',
-			icon: EyeOff,
+			icon: faEyeSlash,
 			text: m.cal_bkset_vis_hidden()
 		},
 		{
 			tone: 'yes',
-			icon: KeyRound,
+			icon: faKey,
 			text: m.cal_bkset_vis_computed()
 		}
 	]);
@@ -85,5 +83,5 @@
 			</div>
 		</div>
 	</div>
-	<DisclosureBoundary heading={m.cal_bkset_visitor_heading()} headingIcon={Eye} lines={visibility} />
+	<DisclosureBoundary heading={m.cal_bkset_visitor_heading()} headingIcon={faEye} lines={visibility} />
 </div>

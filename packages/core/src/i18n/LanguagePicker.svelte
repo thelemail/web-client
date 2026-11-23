@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Languages from '@lucide/svelte/icons/languages';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Icon from '$core/components/Icon.svelte';
+	import { faChevronDown, faLanguage } from '@fortawesome/pro-regular-svg-icons';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { m } from '$paraglide/messages.js';
 	import { i18n, setAppLocale } from './locale.svelte';
@@ -14,9 +14,9 @@
 		class="langpick {className}"
 		aria-label={m.language_picker_label({ language: LOCALE_NAMES[i18n.locale] })}
 	>
-		<Languages size={16} strokeWidth={1.8} aria-hidden="true" />
+		<Icon icon={faLanguage} size={16} aria-hidden="true" />
 		<span>{LOCALE_NAMES[i18n.locale]}</span>
-		<ChevronDown size={14} aria-hidden="true" />
+		<Icon icon={faChevronDown} size={14} aria-hidden="true" />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="w-44" align="end">
 		<DropdownMenu.RadioGroup

@@ -1,8 +1,6 @@
 <script lang="ts">
-	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Users from '@lucide/svelte/icons/users';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCalendarPlus, faKey, faTrashCan, faUsers } from '@fortawesome/pro-regular-svg-icons';
 	import {
 		createCalendar,
 		rotateCalendarMembers,
@@ -242,11 +240,11 @@
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
 		{#if request.mode === 'delete'}
-			<Trash2 size={18} color="var(--danger-500)" />
+			<Icon icon={faTrashCan} size={18} color="var(--danger-500)" />
 		{:else if request.mode === 'share'}
-			<KeyRound size={18} color="var(--brass-600)" />
+			<Icon icon={faKey} size={18} color="var(--brass-600)" />
 		{:else}
-			<CalendarPlus size={18} color="var(--brass-600)" />
+			<Icon icon={faCalendarPlus} size={18} color="var(--brass-600)" />
 		{/if}
 		<Dialog.Title class="dt">{title}</Dialog.Title>
 	</Dialog.Header>
@@ -320,7 +318,7 @@
 
 			{#if (request.mode === 'create' && kind === 'shared') || request.mode === 'share'}
 				<div class="cal-field">
-					<span><Users size={14} /> {m.cal_caldlg_members()}</span>
+					<span><Icon icon={faUsers} size={14} /> {m.cal_caldlg_members()}</span>
 					<div class="member-list">
 						{#each members as member (member.accountId)}
 							{@const role = roles[member.accountId] ?? null}

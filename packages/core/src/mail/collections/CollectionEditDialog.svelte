@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { untrack } from 'svelte';
-	import Pencil from '@lucide/svelte/icons/pencil';
+	import { faPencil } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import ColorSwatches from './ColorSwatches.svelte';
@@ -70,7 +70,7 @@
 {/snippet}
 
 <ConfirmDialog
-	icon={Pencil}
+	icon={faPencil}
 	title={folder ? m.mail_collection_edit_folder() : m.mail_collection_edit_label()}
 	sub={entry.path}
 	confirmLabel={m.mail_collection_save()}

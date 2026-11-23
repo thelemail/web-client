@@ -16,8 +16,8 @@
     "i18n:compile": "node ../../scripts/i18n-compile.ts"
   },
   "devDependencies": {
+    "@fortawesome/pro-regular-svg-icons": "^7.3.1",
     "@inlang/paraglide-js": "^2.25.4",
-    "@lucide/svelte": "^1.39.0",
     "@sveltejs/adapter-static": "^4.0.0",
     "@sveltejs/kit": "^3.1.0",
     "@sveltejs/vite-plugin-svelte": "^7.0.0",

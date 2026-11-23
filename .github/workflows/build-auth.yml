@@ -52,6 +52,7 @@ jobs:
     uses: ./.github/workflows/ci.yml
     secrets:
       TRUST_READ_TOKEN: ${{ secrets.TRUST_READ_TOKEN }}
+      FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
 
   build:
     needs: [preflight, verify]
@@ -113,6 +114,8 @@ jobs:
             GIT_COMMIT=${{ github.sha }}
             GIT_REF=${{ github.ref }}
             BUILD_RUN_URL=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          secrets: |
+            "npmrc=//npm.fontawesome.com/:_authToken=${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
           cache-from: type=gha,scope=auth
           cache-to: type=gha,scope=auth,mode=max
           provenance: mode=max

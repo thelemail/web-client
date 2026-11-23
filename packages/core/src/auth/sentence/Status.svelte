@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 
 	let {
 		id,
@@ -17,10 +17,10 @@
 <div class="sp-status" {id} data-tone={tone} role="status">
 	{#if children}
 		{#if tone === 'bad'}
-			<span class="sp-status-line" role="alert"><CircleAlert size={14} strokeWidth={1.75} /><span>{@render children()}</span></span>
+			<span class="sp-status-line" role="alert"><Icon icon={faCircleExclamation} size={14} /><span>{@render children()}</span></span>
 		{:else}
 			<span class="sp-status-line">
-				{#if tone === 'ok'}<CircleCheck size={14} strokeWidth={1.75} />{:else if tone === 'busy'}<span class="spinner"></span>{/if}<span>{@render children()}</span>
+				{#if tone === 'ok'}<Icon icon={faCircleCheck} size={14} />{:else if tone === 'busy'}<span class="spinner"></span>{/if}<span>{@render children()}</span>
 			</span>
 		{/if}
 	{/if}

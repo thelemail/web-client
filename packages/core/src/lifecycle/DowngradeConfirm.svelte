@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { page } from '$app/state';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleArrowDown from '@lucide/svelte/icons/circle-arrow-down';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
-	import MailCheck from '@lucide/svelte/icons/mail-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowUpRightFromSquare,
+		faCheck,
+		faCircleArrowDown,
+		faEnvelopeCircleCheck
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
 	import { auth } from '$core/stores/auth.svelte';
@@ -111,7 +114,7 @@
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
 			<div class="welcome">
-				<div class="seal"><Check size={20} /></div>
+				<div class="seal"><Icon icon={faCheck} size={20} /></div>
 			</div>
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_downgrade_eyebrow()}</p>
@@ -125,7 +128,7 @@
 				</p>
 			</div>
 			<p class="lc-mail-confirm">
-				<MailCheck size={16} />{m.lc_downgrade_done_email({
+				<Icon icon={faEnvelopeCircleCheck} size={16} />{m.lc_downgrade_done_email({
 					email: auth.email ?? m.lc_downgrade_your_mailbox()
 				})}
 			</p>
@@ -174,7 +177,7 @@
 			</div>
 
 			<div class="osum">
-				<span class="os-ic"><CircleArrowDown size={17} /></span>
+				<span class="os-ic"><Icon icon={faCircleArrowDown} size={17} /></span>
 				<span class="os-text">
 					<span class="os-name">{m.lc_downgrade_from_to({ from: planName, to: target })}</span>
 					<span class="os-sub">
@@ -210,13 +213,13 @@
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<ExternalLink size={16} />{m.lc_downgrade_store_open({ store: store.label })}
+						<Icon icon={faArrowUpRightFromSquare} size={16} />{m.lc_downgrade_store_open({ store: store.label })}
 					</Button>
 				</div>
 			{/if}
 
 			<div class="lc-offer">
-				<span class="of-ic"><CircleArrowDown size={22} /></span>
+				<span class="of-ic"><Icon icon={faCircleArrowDown} size={22} /></span>
 				<span class="of-tx">
 					<b>{m.lc_downgrade_staying_title({ plan: planName })}</b>
 					<p>
@@ -234,7 +237,7 @@
 						aria-label={m.common_back()}
 						href={`/u/${slot}/mail/inbox`}
 					>
-						<ArrowLeft />
+						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={busy || !confirmable} onclick={confirm}>
 						{#if effective}
