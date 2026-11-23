@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 
 	let {
@@ -22,7 +23,7 @@
 		<div class="node" class:cur={step === i} class:done={step > i}>
 			<span class="dot">
 				{#if step > i}
-					<Check size={13} strokeWidth={2} />
+					<Icon icon={faCheck} size={13} />
 				{:else}
 					{nd.n}
 				{/if}

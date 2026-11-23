@@ -26,8 +26,8 @@
 	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Status from '$core/auth/sentence/Status.svelte';
 	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
 	import Seal from '$core/auth/sentence/Seal.svelte';
@@ -538,7 +538,7 @@
 			<div class="sp-under">
 				<WorkSteps lines={workLines} at={workIdx} failed={!!workError} />
 				{#if workError}
-					<p class="sp-err" role="alert"><CircleAlert size={15} strokeWidth={1.75} /><span>{workError}</span></p>
+					<p class="sp-err" role="alert"><Icon icon={faCircleExclamation} size={15} /><span>{workError}</span></p>
 					<div class="sp-acts">
 						<Button variant="secondary" size="lg" onclick={startOver}>{m.auth_recover_start_over()}</Button>
 						<button type="button" class="sp-quiet" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button>
@@ -551,8 +551,8 @@
 			<p class="sent sm">{m.auth_s_recover_done()}</p>
 			<div class="sp-under">
 				<Seal label={m.auth_s_seal_reset()} reserve={false} />
-				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_signed_out()}</span></p>
-				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
+				<p class="sp-msg ok"><Icon icon={faCircleCheck} size={14} /><span>{m.auth_recover_done_signed_out()}</span></p>
+				<p class="sp-msg ok"><Icon icon={faCircleCheck} size={14} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
 				<div class="sp-acts">
 					<Button variant="primary" size="lg" onclick={exitToLogin}>{m.auth_recover_done_sign_in()}</Button>
 				</div>

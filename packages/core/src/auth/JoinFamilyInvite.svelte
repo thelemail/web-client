@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import LogOut from '@lucide/svelte/icons/log-out';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import Wallet from '@lucide/svelte/icons/wallet';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faArrowRightFromBracket,
+		faCalendarDays,
+		faCircleCheck,
+		faCircleExclamation,
+		faInbox,
+		faUser,
+		faWallet
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { acceptFamilyInvite, type WorkspaceInvitePreview } from '$core/api/workspaces';
 	import { acceptInviteError } from '$core/settings/family-invite-errors';
 	import { accounts } from '$core/stores/accounts.svelte';
@@ -73,7 +76,7 @@
 {#if joined}
 	<div class="card-surface screen-fade">
 		<div class="card-head">
-			<CircleCheck size={28} />
+			<Icon icon={faCircleCheck} size={28} />
 			<h1>{m.auth_family_invite_joined_title({ workspace: invite.workspaceName })}</h1>
 			<p>{m.auth_family_invite_joined_body()}</p>
 		</div>
@@ -162,30 +165,30 @@
 
 		<ul class="terms">
 			<li>
-				<Inbox size={16} />
+				<Icon icon={faInbox} size={16} />
 				<span>{m.auth_family_invite_term_keep({ email: invite.inviteeEmail })}</span>
 			</li>
 			<li>
-				<CalendarDays size={16} />
+				<Icon icon={faCalendarDays} size={16} />
 				<span>{m.auth_family_invite_term_calendar()}</span>
 			</li>
 			<li>
-				<Wallet size={16} />
+				<Icon icon={faWallet} size={16} />
 				<span>{m.auth_family_invite_term_free()}</span>
 			</li>
 			<li class="caveat">
-				<UserRound size={16} />
+				<Icon icon={faUser} size={16} />
 				<span>{m.auth_family_invite_term_privacy({ inviter })}</span>
 			</li>
 			<li class="caveat">
-				<LogOut size={16} />
+				<Icon icon={faArrowRightFromBracket} size={16} />
 				<span>{m.auth_family_invite_term_dissolve()}</span>
 			</li>
 		</ul>
 
 		{#if joinError}
 			<div class="form-error" role="alert" style="margin-top:16px">
-				<CircleAlert size={15} />{joinError}
+				<Icon icon={faCircleExclamation} size={15} />{joinError}
 			</div>
 		{/if}
 
@@ -196,7 +199,7 @@
 			<Button variant="primary" size="lg" disabled={joining} onclick={join}>
 				{joining
 					? m.auth_family_invite_joining()
-					: m.auth_family_invite_join({ workspace: invite.workspaceName })}<ArrowRight size={16} />
+					: m.auth_family_invite_join({ workspace: invite.workspaceName })}<Icon icon={faArrowRight} size={16} />
 			</Button>
 		</div>
 	</div>

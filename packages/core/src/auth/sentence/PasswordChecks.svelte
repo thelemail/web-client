@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 	import { passwordReqs } from '../password-policy';
 
 	let { pw }: { pw: string } = $props();
@@ -12,7 +13,7 @@
 <ul class="sp-checks">
 	{#each reqs as r (r.k)}
 		<li class:met={r.met}>
-			{#if r.met}<Check size={13} strokeWidth={2.4} />{:else}<span class="pend" aria-hidden="true"></span>{/if}{r.label}
+			{#if r.met}<Icon icon={faCheck} size={13} />{:else}<span class="pend" aria-hidden="true"></span>{/if}{r.label}
 		</li>
 	{/each}
 </ul>

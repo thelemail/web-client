@@ -1,15 +1,18 @@
 <script lang="ts">
 	import Stepper from '$core/auth/Stepper.svelte';
 	import { findPlan, planTotal, eur, pricePerPeriod, type PlanSelection } from '$core/auth/plans';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import UsersRound from '@lucide/svelte/icons/users-round';
-	import BriefcaseBusiness from '@lucide/svelte/icons/briefcase-business';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import CreditCard from '@lucide/svelte/icons/credit-card';
-	import Landmark from '@lucide/svelte/icons/landmark';
-	import Lock from '@lucide/svelte/icons/lock';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faBriefcase,
+		faCircleExclamation,
+		faCreditCard,
+		faLandmark,
+		faLock,
+		faShieldCheck,
+		faUser,
+		faUserGroup
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -34,7 +37,7 @@
 		onPay: () => void;
 	} = $props();
 
-	const ICONS = { personal: UserRound, family: UsersRound, business: BriefcaseBusiness };
+	const ICONS = { personal: faUser, family: faUserGroup, business: faBriefcase };
 
 	const product = $derived(findPlan(sel).product);
 	const tier = $derived(findPlan(sel).tier);
@@ -62,7 +65,7 @@
 	</div>
 
 	<div class="osum">
-		<span class="os-ic"><ProductIcon size={17} strokeWidth={1.75} /></span>
+		<span class="os-ic"><Icon icon={ProductIcon} size={17} /></span>
 		<span class="os-text">
 			<span class="os-name">{m.auth_payment_plan_name({ plan: tier ? tier.name : product.name })}</span>
 			<span class="os-sub">
@@ -84,18 +87,18 @@
 	<div class="form">
 		<div class="handoff">
 			<p class="handoff-lead">
-				<ShieldCheck size={15} strokeWidth={1.75} />
+				<Icon icon={faShieldCheck} size={15} />
 				<span>{m.auth_payment_handoff()}</span>
 			</p>
 			<div class="handoff-methods">
-				<span class="handoff-method"><CreditCard size={15} strokeWidth={1.75} />{m.auth_payment_method_card()}</span>
-				<span class="handoff-method"><Landmark size={15} strokeWidth={1.75} />{m.auth_payment_method_sepa()}</span>
+				<span class="handoff-method"><Icon icon={faCreditCard} size={15} />{m.auth_payment_method_card()}</span>
+				<span class="handoff-method"><Icon icon={faLandmark} size={15} />{m.auth_payment_method_sepa()}</span>
 			</div>
 		</div>
 
 		{#if error}
 			<span class="errtext" role="alert">
-				<CircleAlert size={13} strokeWidth={1.75} />
+				<Icon icon={faCircleExclamation} size={13} />
 				<span>{error}</span>
 			</span>
 		{/if}
@@ -108,20 +111,20 @@
 		<div class="actions">
 			<div class="btnrow">
 				<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={onBack}>
-					<ArrowLeft size={17} strokeWidth={1.75} />
+					<Icon icon={faArrowLeft} size={17} />
 				</Button>
 				<Button variant="primary" size="lg" disabled={submitting || !accepted} onclick={pay}>
 					{#if submitting}
 						<span class="spinner"></span>{m.auth_preparing_checkout()}
 					{:else}
-						<Lock size={17} strokeWidth={1.75} />{m.auth_payment_pay({ price: eur(total) })}
+						<Icon icon={faLock} size={17} />{m.auth_payment_pay({ price: eur(total) })}
 					{/if}
 				</Button>
 			</div>
 		</div>
 	</div>
 	<p class="cardnote">
-		<Lock size={14} strokeWidth={1.75} />{m.auth_payment_card_note()}
+		<Icon icon={faLock} size={14} />{m.auth_payment_card_note()}
 	</p>
 	<p class="legal">
 		{sel.period === 'month' ? m.auth_payment_renews_monthly() : m.auth_payment_renews_yearly()}

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faMinus } from '@fortawesome/pro-regular-svg-icons';
 	import { passwordReqs } from './password-policy';
 
 	interface Props {
@@ -17,9 +17,9 @@
 		<div class="req" class:met={r.met}>
 			<span class="rk">
 				{#if r.met}
-					<Check size={11} strokeWidth={2.5} />
+					<Icon icon={faCheck} size={11} />
 				{:else}
-					<Minus size={11} strokeWidth={2.5} />
+					<Icon icon={faMinus} size={11} />
 				{/if}
 			</span>
 			{r.label}
