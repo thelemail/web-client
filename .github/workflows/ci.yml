@@ -8,6 +8,8 @@ on:
     secrets:
       TRUST_READ_TOKEN:
         required: true
+      FONTAWESOME_NPM_AUTH_TOKEN:
+        required: true
 
 permissions:
   contents: read
@@ -51,7 +53,12 @@ jobs:
             echo 'TRUSTROOT_EOF'
           } >> "$GITHUB_ENV"
 
+      - name: Authenticate to the Font Awesome registry
+        run: echo '//npm.fontawesome.com/:_authToken=${FONTAWESOME_NPM_AUTH_TOKEN}' >> ~/.npmrc
+
       - name: Install dependencies
+        env:
+          FONTAWESOME_NPM_AUTH_TOKEN: ${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}
         run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Check the trust roots

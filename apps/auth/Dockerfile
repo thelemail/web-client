@@ -8,12 +8,13 @@ WORKDIR /src
 
 ENV CI=true
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/auth/package.json apps/auth/
 COPY packages/core/package.json packages/core/
 RUN npm install -g corepack@0.36.0 && corepack enable && corepack install
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    --mount=type=secret,id=npmrc,target=/root/.npmrc,required=true \
     pnpm install --frozen-lockfile --ignore-scripts --filter @thelemail/auth...
 
 COPY . .
