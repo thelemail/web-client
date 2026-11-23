@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faMinus, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { portal } from '$core/actions/portal';
 	import type { TrustCheck } from './trust';
 
@@ -36,11 +35,11 @@
 		<div class="tcd-h">
 			<span class="tcd-glyph">
 				{#if check.state === 'pass'}
-					<Check size={15} />
+					<Icon icon={faCheck} size={15} />
 				{:else if check.state === 'fail'}
-					<X size={15} />
+					<Icon icon={faXmark} size={15} />
 				{:else}
-					<Minus size={15} />
+					<Icon icon={faMinus} size={15} />
 				{/if}
 			</span>
 			<h2>{check.label}</h2>

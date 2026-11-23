@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import CreditCard from '@lucide/svelte/icons/credit-card';
-	import Globe from '@lucide/svelte/icons/globe';
-	import HardDrive from '@lucide/svelte/icons/hard-drive';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faCreditCard,
+		faGlobe,
+		faHardDrive
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { page } from '$app/state';
 	import { billing } from '$core/stores/billing.svelte';
 	import { customDomains } from '$core/stores/customDomains.svelte';
@@ -46,20 +49,20 @@
 	<div class="sysalerts" role="status" aria-label={m.mail_alerts_aria()}>
 		{#if paymentOverdue}
 			<div class="sysalert sa-danger">
-				<span class="sa-ic"><CreditCard size={15} /></span>
+				<span class="sa-ic"><Icon icon={faCreditCard} size={15} /></span>
 				<span class="sa-tx">
 					<span class="sa-h">{m.mail_alerts_payment_title()}</span>
 					<span class="sa-d">
 						{m.mail_alerts_payment_detail()}
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_payment_action()}<ArrowRight size={13} /></a>
+				<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_payment_action()}<Icon icon={faArrowRight} size={13} /></a>
 			</div>
 		{/if}
 		{#each lapsing as d (d.id)}
 			{@const args = { domain: d.domain, deadline: formatMoment(d.releaseAt ?? '') }}
 			<div class="sysalert sa-danger">
-				<span class="sa-ic"><Globe size={15} /></span>
+				<span class="sa-ic"><Icon icon={faGlobe} size={15} /></span>
 				<span class="sa-tx">
 					<span class="sa-h">{m.mail_alerts_domain_lapse_title()}</span>
 					<span class="sa-d">
@@ -73,14 +76,14 @@
 				</span>
 				{#if manage}
 					<a class="sa-act" href={`${settingsBase}/domains/${d.id}?step=ownership`}>
-						{m.mail_alerts_domain_lapse_action()}<ArrowRight size={13} />
+						{m.mail_alerts_domain_lapse_action()}<Icon icon={faArrowRight} size={13} />
 					</a>
 				{/if}
 			</div>
 		{/each}
 		{#if failedDomains.length > 0}
 			<div class="sysalert sa-warning">
-				<span class="sa-ic"><Globe size={15} /></span>
+				<span class="sa-ic"><Icon icon={faGlobe} size={15} /></span>
 				<span class="sa-tx">
 					<span class="sa-h">{m.mail_alerts_dns_title()}</span>
 					<span class="sa-d">
@@ -96,13 +99,13 @@
 					</span>
 				</span>
 				<a class="sa-act" href={`${settingsBase}/domains/${failedDomains[0].id}?step=${resumeStep(failedDomains[0])}`}>
-					{m.mail_alerts_dns_action()}<ArrowRight size={13} />
+					{m.mail_alerts_dns_action()}<Icon icon={faArrowRight} size={13} />
 				</a>
 			</div>
 		{/if}
 		{#if storageAlmostFull}
 			<div class="sysalert sa-warning">
-				<span class="sa-ic"><HardDrive size={15} /></span>
+				<span class="sa-ic"><Icon icon={faHardDrive} size={15} /></span>
 				<span class="sa-tx">
 					<span class="sa-h">{m.mail_alerts_storage_title()}</span>
 					<span class="sa-d">
@@ -113,9 +116,9 @@
 					</span>
 				</span>
 				{#if billing.isFree}
-					<a class="sa-act solid" href={`/u/${slot}/billing/choose`}>{m.mail_alerts_storage_upgrade()}<ArrowRight size={13} /></a>
+					<a class="sa-act solid" href={`/u/${slot}/billing/choose`}>{m.mail_alerts_storage_upgrade()}<Icon icon={faArrowRight} size={13} /></a>
 				{:else}
-					<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_storage_manage()}<ArrowRight size={13} /></a>
+					<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_storage_manage()}<Icon icon={faArrowRight} size={13} /></a>
 				{/if}
 			</div>
 		{/if}

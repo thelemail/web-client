@@ -1,23 +1,26 @@
 <script lang="ts">
 	import { m as msg } from '$paraglide/messages.js';
 	import { onMount, untrack } from 'svelte';
-	import Send from '@lucide/svelte/icons/send';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Archive from '@lucide/svelte/icons/archive';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Mail from '@lucide/svelte/icons/mail';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import X from '@lucide/svelte/icons/x';
-	import Check from '@lucide/svelte/icons/check';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import Users from '@lucide/svelte/icons/users';
-	import Maximize2 from '@lucide/svelte/icons/maximize-2';
-	import Minimize2 from '@lucide/svelte/icons/minimize-2';
-	import PanelLeft from '@lucide/svelte/icons/panel-left';
-	import Reply from '@lucide/svelte/icons/reply';
-	import ReplyAll from '@lucide/svelte/icons/reply-all';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faBoxArchive,
+		faCheck,
+		faChevronDown,
+		faCircleExclamation,
+		faDownLeftAndUpRightToCenter,
+		faEllipsis,
+		faEnvelope,
+		faLock,
+		faPaperPlane,
+		faPaperclip,
+		faReply,
+		faReplyAll,
+		faSidebar,
+		faTrashCan,
+		faUpRightAndDownLeftFromCenter,
+		faUsers,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import EmailBody from './EmailBody.svelte';
 	import RecipientField from './RecipientField.svelte';
 	import SendingVeil from './SendingVeil.svelte';
@@ -1064,7 +1067,7 @@
 					disabled={status === 'sending'}
 					onclick={() => onMode('reply')}
 				>
-					<Reply size={15} />{msg.mail_reader_reply()}
+					<Icon icon={faReply} size={15} />{msg.mail_reader_reply()}
 				</button>
 				<button
 					type="button"
@@ -1074,7 +1077,7 @@
 					disabled={status === 'sending'}
 					onclick={() => onMode('all')}
 				>
-					<ReplyAll size={15} />{msg.mail_reader_reply_all()}
+					<Icon icon={faReplyAll} size={15} />{msg.mail_reader_reply_all()}
 				</button>
 			</div>
 		{:else}
@@ -1085,7 +1088,7 @@
 		{/if}
 		{#if (saveStatus !== 'idle' && saveStatus !== 'load-failed') || attStatus}
 			<span class="rt-save" data-state={saveStatus} class:att={attFailed} role="status">
-				{#if attFailed}<CircleAlert size={14} />{:else if saveStatus === 'saved'}<Check size={14} />{/if}{saveStatus === 'loading'
+				{#if attFailed}<Icon icon={faCircleExclamation} size={14} />{:else if saveStatus === 'saved'}<Icon icon={faCheck} size={14} />{/if}{saveStatus === 'loading'
 					? msg.mail_compose_opening()
 					: saveStatus === 'saving'
 						? msg.mail_compose_saving()
@@ -1109,7 +1112,7 @@
 						aria-pressed={pane}
 						onclick={() => onPane(!pane)}
 					>
-						<PanelLeft size={16} />
+						<Icon icon={faSidebar} size={16} />
 					</button>
 				{/if}
 				<button
@@ -1119,7 +1122,7 @@
 					aria-pressed={expanded}
 					onclick={toggleExpand}
 				>
-					{#if expanded}<Minimize2 size={16} />{:else}<Maximize2 size={16} />{/if}
+					{#if expanded}<Icon icon={faDownLeftAndUpRightToCenter} size={16} />{:else}<Icon icon={faUpRightAndDownLeftFromCenter} size={16} />{/if}
 				</button>
 			</span>
 		{/if}
@@ -1133,7 +1136,7 @@
 				disabled={status === 'sending'}
 				onclick={() => void closeKeepingDraft()}
 			>
-				<X size={16} />
+				<Icon icon={faXmark} size={16} />
 			</button>
 		{/if}
 	</div>
@@ -1151,11 +1154,11 @@
 			onManage={() => void goto(`/u/${page.params.slot ?? '0'}/settings/addresses`)}
 		/>
 		{#if othersReplying}
-			<div class="cnote" role="status"><Users size={14} />{othersReplying}</div>
+			<div class="cnote" role="status"><Icon icon={faUsers} size={14} />{othersReplying}</div>
 		{/if}
 		{#if replyToNotice.length > 0}
 			<div class={replyToOffsite ? 'cwarn' : 'cnote'} role="status">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">
 					{replyToOffsite
 						? msg.mail_compose_reply_to_offsite({ list: replyToList, domain: senderDomain })
@@ -1233,11 +1236,11 @@
 
 		<div class="cenc" data-tone={encSummary.tone}>
 			{#if encSummary.tone === 'none' || encSummary.tone === 'partial'}
-				<Mail size={15} />
+				<Icon icon={faEnvelope} size={15} />
 			{:else if encSummary.tone === 'unknown'}
-				<CircleAlert size={15} />
+				<Icon icon={faCircleExclamation} size={15} />
 			{:else}
-				<Lock size={15} />
+				<Icon icon={faLock} size={15} />
 			{/if}
 			<span class="cenc-t">{encSummary.label}</span>
 			<button type="button" class="cenc-d" aria-expanded={encOpen} onclick={() => (encOpen = !encOpen)}>
@@ -1273,7 +1276,7 @@
 					aria-expanded={showQuote}
 					onclick={() => (showQuote = !showQuote)}
 				>
-					<Ellipsis size={16} />
+					<Icon icon={faEllipsis} size={16} />
 				</button>
 				<span class="rq-lbl">{msg.mail_compose_quoted_text()}</span>
 				<button
@@ -1285,7 +1288,7 @@
 						showQuote = false;
 					}}
 				>
-					<X size={13} />
+					<Icon icon={faXmark} size={13} />
 				</button>
 			</div>
 			{#if showQuote && quoteSrcDoc}
@@ -1305,14 +1308,14 @@
 		>
 			{#snippet extra()}
 				<button type="button" class="cbar-lab" onclick={pickFiles}>
-					<Paperclip size={16} />{msg.mail_compose_attach()}
+					<Icon icon={faPaperclip} size={16} />{msg.mail_compose_attach()}
 				</button>
 			{/snippet}
 		</EditorToolbar>
 
 		{#if warn && !canSend && block?.kind !== 'no-sender' && status !== 'sending'}
 			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				{block
 					? sendBlockText(block)
 					: hasInvalid
@@ -1337,7 +1340,7 @@
 			/>
 		{:else if err && err.code === 'unknown'}
 			<div class="cwarn">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				{err.message}
 			</div>
 		{/if}
@@ -1345,12 +1348,12 @@
 		<AttachPreview files={attachments} onRemove={removeAttachment} onRetry={retryAttachment} rows />
 
 		{#if attErr}
-			<div class="cwarn"><CircleAlert size={14} />{attErr}</div>
+			<div class="cwarn"><Icon icon={faCircleExclamation} size={14} />{attErr}</div>
 		{/if}
 
 		{#if load === 'failed'}
 			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{msg.mail_compose_open_draft_failed()} {msg.mail_compose_draft_untouched()}</span>
 				{#if openedDraftId}
 					<button type="button" class="cwarn-act" onclick={() => void hydrateReply(openedDraftId)}>
@@ -1360,7 +1363,7 @@
 			</div>
 		{:else if saveStatus === 'failed'}
 			<div class="cwarn" role="alert">
-				<CircleAlert size={14} />
+				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{msg.mail_compose_save_failed()}</span>
 				<button type="button" class="cwarn-act" onclick={() => void saver.save()}>{msg.common_retry()}</button>
 			</div>
@@ -1380,7 +1383,7 @@
 				{#if status === 'sending'}
 					<span class="send-spin"></span>{msg.mail_compose_sending()}
 				{:else}
-					<Send size={15} />{msg.mail_compose_send()}
+					<Icon icon={faPaperPlane} size={15} />{msg.mail_compose_send()}
 				{/if}
 			</button>
 			{#if canArchive}
@@ -1398,15 +1401,15 @@
 						else showBlock();
 					}}
 				>
-					<ChevronDown size={15} />
+					<Icon icon={faChevronDown} size={15} />
 				</button>
 				{#if sendOpen}
 					<div class="menu rf-menu" role="menu">
 						<button type="button" class="mitem" role="menuitem" onclick={runSend}>
-							<Send size={17} />{msg.mail_compose_send()}
+							<Icon icon={faPaperPlane} size={17} />{msg.mail_compose_send()}
 						</button>
 						<button type="button" class="mitem" role="menuitem" onclick={sendAndArchive}>
-							<Archive size={17} />{msg.mail_compose_send_archive()}
+							<Icon icon={faBoxArchive} size={17} />{msg.mail_compose_send_archive()}
 						</button>
 					</div>
 				{/if}
@@ -1420,7 +1423,7 @@
 			onchange={onFileInputChange}
 		/>
 		<button type="button" class="cf-disc" onclick={discard}>
-			<Trash2 size={16} />{msg.mail_compose_discard_draft()}
+			<Icon icon={faTrashCan} size={16} />{msg.mail_compose_discard_draft()}
 		</button>
 	</div>
 

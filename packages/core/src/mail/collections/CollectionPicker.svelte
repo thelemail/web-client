@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { onMount, tick, type Snippet } from 'svelte';
-	import Search from '@lucide/svelte/icons/search';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faCheck,
+		faMagnifyingGlass,
+		faMinus,
+		faPlus
+	} from '@fortawesome/pro-regular-svg-icons';
 	import type { MailCollectionKind } from '$core/api/types';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import CollectionCreate from './CollectionCreate.svelte';
@@ -168,7 +171,7 @@
 		{#if creating}
 			<div class="pk-create-head">
 				<button type="button" class="pk-back" aria-label={m.mail_picker_back()} onclick={backToList}>
-					<ArrowLeft size={15} />
+					<Icon icon={faArrowLeft} size={15} />
 				</button>
 				<span>{createKind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}</span>
 			</div>
@@ -176,7 +179,7 @@
 		{:else}
 			{@render header?.()}
 			<label class="pk-find">
-				<Search size={14} />
+				<Icon icon={faMagnifyingGlass} size={14} />
 				<input
 					bind:this={input}
 					bind:value={query}
@@ -211,7 +214,7 @@
 							<div class="menu-lbl" id="{uid}-{g.key}">{g.title}</div>
 						{/if}
 						{#each g.rows as { row, index } (row.key)}
-							{@const Icon = row.key === 'create' ? Plus : row.icon}
+							{@const glyph = row.key === 'create' ? faPlus : row.icon}
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<div
 								id={optionId(index)}
@@ -228,7 +231,7 @@
 							>
 								{#if multi && row.check}
 									<span class="pk-box" class:checked={row.check !== 'off'} aria-hidden="true">
-										{#if row.check === 'on'}<Check size={12} />{:else if row.check === 'mixed'}<Minus size={12} />{/if}
+										{#if row.check === 'on'}<Icon icon={faCheck} size={12} />{:else if row.check === 'mixed'}<Icon icon={faMinus} size={12} />{/if}
 									</span>
 								{/if}
 								{#if row.depth}
@@ -236,8 +239,8 @@
 								{/if}
 								{#if row.dot}
 									<span class="lp-dot" style:background={row.dot}></span>
-								{:else if Icon}
-									<Icon size={17} color={row.iconColor ?? 'currentColor'} />
+								{:else if glyph}
+									<Icon icon={glyph} size={17} color={row.iconColor ?? 'currentColor'} />
 								{/if}
 								<span class="lp-name" title={row.path ? `${row.path} / ${row.title}` : undefined}>
 									{#if row.path}<span class="pk-parent">{`${row.path} / `}</span>{/if}{row.title}

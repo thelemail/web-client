@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { onMount } from 'svelte';
-	import Download from '@lucide/svelte/icons/download';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowUpRightFromSquare, faDownload } from '@fortawesome/pro-regular-svg-icons';
 	import { appUpdate } from '$core/stores/appUpdate.svelte';
 
 	onMount(() => appUpdate.start());
@@ -29,7 +29,7 @@
 {#if appUpdate.bannerVisible && appUpdate.available}
 	<div class="sysalerts" role="status" aria-label={m.mail_update_aria()}>
 		<div class="sysalert" class:sa-info={!appUpdate.problem} class:sa-warning={!!appUpdate.problem}>
-			<span class="sa-ic"><Download size={15} /></span>
+			<span class="sa-ic"><Icon icon={faDownload} size={15} /></span>
 			<span class="sa-tx">
 				<span class="sa-h">{m.mail_update_available({ version: appUpdate.available.version })}</span>
 				<span class="sa-d">{detail}</span>
@@ -37,7 +37,7 @@
 			{#if !appUpdate.installing}
 				<span class="sa-acts">
 					<button class="sa-act ghost" onclick={() => appUpdate.openRelease()}>
-						<ExternalLink size={13} />{m.mail_update_release_notes()}
+						<Icon icon={faArrowUpRightFromSquare} size={13} />{m.mail_update_release_notes()}
 					</button>
 					<button class="sa-act ghost" onclick={() => appUpdate.later()}>{m.mail_update_later()}</button>
 					<button class="sa-act solid" onclick={() => appUpdate.install()}>

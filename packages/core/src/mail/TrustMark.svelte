@@ -1,16 +1,19 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import BadgeCheck from '@lucide/svelte/icons/badge-check';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Lock from '@lucide/svelte/icons/lock';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import CircleDashed from '@lucide/svelte/icons/circle-dashed';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Check from '@lucide/svelte/icons/check';
-	import Minus from '@lucide/svelte/icons/minus';
-	import X from '@lucide/svelte/icons/x';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faBadgeCheck,
+		faCheck,
+		faChevronRight,
+		faCircleCheck,
+		faCircleDashed,
+		faKey,
+		faLock,
+		faMinus,
+		faShieldCheck,
+		faShieldExclamation,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { portal } from '$core/actions/portal';
 	import TrustCheckDialog from './TrustCheckDialog.svelte';
 	import { deriveTrust, type MessageTrust, type TrustCheck, type TrustTier } from './trust';
@@ -26,14 +29,14 @@
 	const trust = $derived(source.facts ? deriveTrust(source.facts) : source);
 
 	const MARKS = {
-		official: BadgeCheck,
-		verified: ShieldCheck,
-		encrypted: Lock,
-		delegated: BadgeCheck,
-		authenticated: CircleCheck,
-		none: CircleDashed,
-		attention: KeyRound,
-		failed: ShieldAlert
+		official: faBadgeCheck,
+		verified: faShieldCheck,
+		encrypted: faLock,
+		delegated: faBadgeCheck,
+		authenticated: faCircleCheck,
+		none: faCircleDashed,
+		attention: faKey,
+		failed: faShieldExclamation
 	} satisfies Record<TrustTier, unknown>;
 
 	const Mark = $derived(MARKS[trust.tier]);
@@ -94,7 +97,7 @@
 
 {#if variant === 'static'}
 	<span class="tmark" data-tier={trust.tier} data-variant="icon" title={trust.label}>
-		<Mark size={13} />
+		<Icon icon={Mark} size={13} />
 	</span>
 {:else}
 	<button
@@ -109,7 +112,7 @@
 			toggle();
 		}}
 	>
-		<Mark size={variant === 'chip' ? 12 : 13} />
+		<Icon icon={Mark} size={variant === 'chip' ? 12 : 13} />
 		{#if variant === 'chip'}<span class="tmark-label">{trust.label}</span>{/if}
 	</button>
 {/if}
@@ -129,7 +132,7 @@
 		style:visibility={pos.ready ? 'visible' : 'hidden'}
 	>
 		<div class="tpop-h">
-			<span class="tpop-mark"><Mark size={15} /></span>
+			<span class="tpop-mark"><Icon icon={Mark} size={15} /></span>
 			<span class="tpop-title">{trust.headline}</span>
 		</div>
 		<ul class="tpop-checks">
@@ -138,15 +141,15 @@
 					<button class="tpop-row" onclick={() => (detail = check)}>
 						<span class="tpop-glyph">
 							{#if check.state === 'pass'}
-								<Check size={13} />
+								<Icon icon={faCheck} size={13} />
 							{:else if check.state === 'fail'}
-								<X size={13} />
+								<Icon icon={faXmark} size={13} />
 							{:else}
-								<Minus size={13} />
+								<Icon icon={faMinus} size={13} />
 							{/if}
 						</span>
 						<span class="tpop-txt">{check.label}</span>
-						<ChevronRight size={13} class="tpop-chev" />
+						<Icon icon={faChevronRight} size={13} class="tpop-chev" />
 					</button>
 				</li>
 			{/each}

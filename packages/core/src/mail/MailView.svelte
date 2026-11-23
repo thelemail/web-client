@@ -7,7 +7,14 @@
 	import { goto, snapshot as navSnapshot } from '$app/navigation';
 	import { page } from '$app/state';
 	import { isListShortcut } from './shortcuts';
-	import PenLine from '@lucide/svelte/icons/pen-line';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faBoxArchive,
+		faInbox,
+		faPenLine,
+		faShieldExclamation,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 	import SystemAlerts from './SystemAlerts.svelte';
 	import UpdateBanner from './UpdateBanner.svelte';
 	import LifecycleBanners from '$core/lifecycle/LifecycleBanners.svelte';
@@ -19,10 +26,6 @@
 	import type { SearchView } from './searchView';
 	import Toast from '$core/components/Toast.svelte';
 	import ConfirmDialog from './ConfirmDialog.svelte';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import Archive from '@lucide/svelte/icons/archive';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import MovePicker, { type SystemTarget, type SystemTargetId } from './MovePicker.svelte';
 	import LabelPicker from './LabelPicker.svelte';
 	import PaneDivider from './PaneDivider.svelte';
@@ -1218,11 +1221,11 @@
 		if (!picker || (folders.length === 0 && !picker.query)) return [];
 		const allIn = (route: string) => folders.length > 0 && folders.every((f) => f === route);
 		const out: SystemTarget[] = [];
-		if (!allIn('inbox')) out.push({ id: 'inbox', label: msg.mail_folder_inbox(), icon: Inbox });
-		if (!allIn('archive')) out.push({ id: 'archive', label: msg.mail_folder_archive(), icon: Archive });
+		if (!allIn('inbox')) out.push({ id: 'inbox', label: msg.mail_folder_inbox(), icon: faInbox });
+		if (!allIn('archive')) out.push({ id: 'archive', label: msg.mail_folder_archive(), icon: faBoxArchive });
 		if (picker.query) return out;
-		if (!allIn('spam')) out.push({ id: 'spam', label: msg.mail_folder_spam(), icon: ShieldAlert });
-		if (!allIn('trash')) out.push({ id: 'trash', label: msg.mail_folder_trash(), icon: Trash2 });
+		if (!allIn('spam')) out.push({ id: 'spam', label: msg.mail_folder_spam(), icon: faShieldExclamation });
+		if (!allIn('trash')) out.push({ id: 'trash', label: msg.mail_folder_trash(), icon: faTrashCan });
 		return out;
 	});
 
@@ -1911,7 +1914,7 @@
 
 {#if messageId === null && !composeStore.active}
 	<button class="fab" title={msg.mail_compose()} onclick={() => composeStore.openNew()}>
-		<PenLine size={22} />
+		<Icon icon={faPenLine} size={22} />
 	</button>
 {/if}
 {#snippet deleteBody()}
@@ -1932,7 +1935,7 @@
 {/if}
 {#if pendingDelete}
 	<ConfirmDialog
-		icon={Trash2}
+		icon={faTrashCan}
 		tone="danger"
 		title={pendingDelete.ids.length > 1
 			? msg.mail_delete_title_many({ count: pendingDelete.ids.length })

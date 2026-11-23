@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import { faTrashCan } from '@fortawesome/pro-regular-svg-icons';
 	import type { FolderDestination } from '$core/api/types';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -136,7 +136,7 @@
 {/snippet}
 
 <ConfirmDialog
-	icon={Trash2}
+	icon={faTrashCan}
 	tone="danger"
 	title={folder ? m.mail_collection_delete_folder_title() : m.mail_collection_delete_label_title()}
 	sub={entry.path}

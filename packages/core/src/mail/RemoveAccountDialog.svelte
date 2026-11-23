@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import UserMinus from '@lucide/svelte/icons/user-minus';
+	import { faUserMinus } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -37,7 +37,7 @@
 </script>
 
 <ConfirmDialog
-	icon={UserMinus}
+	icon={faUserMinus}
 	tone="danger"
 	title={m.mail_remove_account_title()}
 	sub={name && name !== email ? `${name} · ${email}` : email}

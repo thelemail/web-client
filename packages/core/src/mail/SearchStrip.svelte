@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { m as msg } from '$paraglide/messages.js';
-	import Search from '@lucide/svelte/icons/search';
-	import X from '@lucide/svelte/icons/x';
-	import ArrowUp from '@lucide/svelte/icons/arrow-up';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowUp,
+		faChevronDown,
+		faMagnifyingGlass,
+		faShieldCheck,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import type { DimensionCoverage, Gap } from '$core/search/coverage';
 	import type { Sort } from '$core/search/sqlite/compile';
@@ -80,7 +83,7 @@
 
 <div class="srch-strip">
 	<div class="ss-row">
-		<Search size={14} aria-hidden="true" />
+		<Icon icon={faMagnifyingGlass} size={14} aria-hidden="true" />
 		<span class="ss-status">{status}</span>
 		{#if search.mode === 'preview'}
 			<span class="ss-mode">{msg.mail_search_preview_only()}</span>
@@ -105,7 +108,7 @@
 						<span class="ss-note">{msg.mail_search_label_many({ count: chip.matches, shown: fmt(chip.matches) })}</span>
 					{/if}
 					<button type="button" class="ss-x" aria-label={msg.mail_search_chip_remove({ chip: chip.text })} title={msg.mail_search_chip_remove({ chip: chip.text })} onclick={() => search.onRemoveChip(chip)}>
-						<X size={11} />
+						<Icon icon={faXmark} size={11} />
 					</button>
 				</span>
 				{#if chip.kind === 'folder' && chip.descendants > 0 && !chip.negated}
@@ -127,12 +130,12 @@
 	{/if}
 	{#if coverageLine || search.paused}
 		<div class="ss-row ss-cover">
-			<ShieldCheck size={13} aria-hidden="true" />
+			<Icon icon={faShieldCheck} size={13} aria-hidden="true" />
 			<span>{coverageLine ?? msg.mail_search_paused()}</span>
 			{#if coverageLine && search.paused}<span class="ss-note">{msg.mail_search_paused()}</span>{/if}
 			{#if shown.length}
 				<button type="button" class="ss-link" aria-expanded={details} aria-controls="{uid}-cov" onclick={() => (details = !details)}>
-					{msg.mail_search_coverage_details()}<ChevronDown size={12} class={details ? 'flip' : ''} />
+					{msg.mail_search_coverage_details()}<Icon icon={faChevronDown} size={12} class={details ? 'flip' : ''} />
 				</button>
 			{/if}
 		</div>
@@ -154,7 +157,7 @@
 	{/if}
 	{#if search.newAvailable}
 		<button type="button" class="new-strip ss-new" onclick={search.onRefresh}>
-			<ArrowUp size={14} />
+			<Icon icon={faArrowUp} size={14} />
 			<span>{msg.mail_search_new_mail()}</span>
 		</button>
 	{/if}

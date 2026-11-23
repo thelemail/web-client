@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Send from '@lucide/svelte/icons/send';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faChevronDown,
+		faChevronUp,
+		faKey,
+		faPaperPlane
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 
 	interface Recipient {
@@ -57,7 +60,7 @@
 	onmousedown={scrimMouseDown}
 >
 	<div class="tofu-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
-		<div class="tofu-crest"><KeyRound size={22} /></div>
+		<div class="tofu-crest"><Icon icon={faKey} size={22} /></div>
 		<div class="tofu-eyebrow">{m.mail_tofu_eyebrow()}</div>
 		<h2 class="tofu-title" id="tofu-title">
 			{m.mail_tofu_title({ name: recipient.name || recipient.email })}
@@ -97,7 +100,7 @@
 
 		<button type="button" class="tofu-what" class:open={what} onclick={() => (what = !what)}>
 			{m.mail_tofu_what_changed()}
-			{#if what}<ChevronUp size={14} />{:else}<ChevronDown size={14} />{/if}
+			{#if what}<Icon icon={faChevronUp} size={14} />{:else}<Icon icon={faChevronDown} size={14} />{/if}
 		</button>
 		{#if what}
 			<div class="tofu-explainer">
@@ -108,7 +111,7 @@
 		<div class="tofu-actions">
 			<Button variant="secondary" onclick={onCancel}>{m.common_cancel()}</Button>
 			<Button variant="caution" onclick={onSendAnyway}>
-				<Send size={15} />{m.mail_tofu_send_anyway()}
+				<Icon icon={faPaperPlane} size={15} />{m.mail_tofu_send_anyway()}
 			</Button>
 		</div>
 	</div>

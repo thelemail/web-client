@@ -1,18 +1,22 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { m as msg } from '$paraglide/messages.js';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Lock from '@lucide/svelte/icons/lock';
-	import LogIn from '@lucide/svelte/icons/log-in';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import WifiOff from '@lucide/svelte/icons/wifi-off';
-	import ServerCrash from '@lucide/svelte/icons/server-crash';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import RotateCw from '@lucide/svelte/icons/rotate-cw';
-	import Timer from '@lucide/svelte/icons/timer';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRightToBracket,
+		faArrowsRotate,
+		faAt,
+		faCircleExclamation,
+		faKey,
+		faLock,
+		faPencil,
+		faRotateRight,
+		faServer,
+		faShieldExclamation,
+		faTimer,
+		faWifiSlash,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Rich from '$core/i18n/Rich.svelte';
 
 	export type InlineErrorCode =
@@ -66,14 +70,13 @@
 	}
 
 	type Tone = 'info' | 'pine' | 'warn';
-	type IconComponent = typeof AtSign;
 
 	interface Conf {
 		tone: Tone;
-		ic: IconComponent;
+		ic: IconDefinition;
 		title: string;
 		actionLabel: string;
-		actionIcon: IconComponent;
+		actionIcon: IconDefinition;
 		onAction: () => void;
 	}
 
@@ -92,119 +95,119 @@
 			case 'recipient_unknown':
 				return {
 					tone: 'info',
-					ic: AtSign,
+					ic: faAt,
 					title: msg.mail_send_err_unknown_title(),
 					actionLabel: msg.mail_send_err_edit_recipient(),
-					actionIcon: Pencil,
+					actionIcon: faPencil,
 					onAction: onEditRecipient
 				};
 			case 'locked':
 				return {
 					tone: 'pine',
-					ic: Lock,
+					ic: faLock,
 					title: msg.mail_send_err_locked_title(),
 					actionLabel: msg.mail_send_err_unlock(),
-					actionIcon: KeyRound,
+					actionIcon: faKey,
 					onAction: onUnlock
 				};
 			case 'no_account':
 				return {
 					tone: 'pine',
-					ic: LogIn,
+					ic: faArrowRightToBracket,
 					title: msg.mail_send_err_signed_out_title(),
 					actionLabel: msg.mail_send_err_sign_in(),
-					actionIcon: LogIn,
+					actionIcon: faArrowRightToBracket,
 					onAction: onUnlock
 				};
 			case 'encrypt':
 				return attempts >= 2
 					? {
 							tone: 'warn',
-							ic: CircleAlert,
+							ic: faCircleExclamation,
 							title: msg.mail_send_err_encrypt_title(),
 							actionLabel: msg.mail_send_err_reload(),
-							actionIcon: RotateCw,
+							actionIcon: faRotateRight,
 							onAction: reloadTab
 						}
 					: {
 							tone: 'warn',
-							ic: CircleAlert,
+							ic: faCircleExclamation,
 							title: msg.mail_send_err_encrypt_title(),
 							actionLabel: msg.common_retry(),
-							actionIcon: RefreshCw,
+							actionIcon: faArrowsRotate,
 							onAction: onRetry
 						};
 			case 'encryption_downgrade':
 				return {
 					tone: 'warn',
-					ic: ShieldAlert,
+					ic: faShieldExclamation,
 					title: msg.mail_send_err_downgrade_title(),
 					actionLabel: msg.mail_send_err_back_to_draft(),
-					actionIcon: Pencil,
+					actionIcon: faPencil,
 					onAction: onDismiss
 				};
 			case 'recipient_key_invalid':
 				return {
 					tone: 'warn',
-					ic: CircleAlert,
+					ic: faCircleExclamation,
 					title: msg.mail_send_err_key_invalid_title(),
 					actionLabel: msg.common_retry(),
-					actionIcon: RefreshCw,
+					actionIcon: faArrowsRotate,
 					onAction: onRetry
 				};
 			case 'rate_limited':
 				return {
 					tone: 'warn',
-					ic: Timer,
+					ic: faTimer,
 					title: msg.mail_send_err_rate_title(),
 					actionLabel: msg.mail_send_err_got_it(),
-					actionIcon: Timer,
+					actionIcon: faTimer,
 					onAction: onDismiss
 				};
 			case 'schedule_unsupported':
 				return {
 					tone: 'info',
-					ic: Timer,
+					ic: faTimer,
 					title: msg.mail_send_err_schedule_title(),
 					actionLabel: msg.mail_send_err_back_to_draft(),
-					actionIcon: Pencil,
+					actionIcon: faPencil,
 					onAction: onDismiss
 				};
 			case 'malware_blocked':
 				return {
 					tone: 'warn',
-					ic: ShieldAlert,
+					ic: faShieldExclamation,
 					title: msg.mail_send_err_malware_title(),
 					actionLabel: msg.mail_send_err_back_to_draft(),
-					actionIcon: Pencil,
+					actionIcon: faPencil,
 					onAction: onDismiss
 				};
 			case 'rejected':
 				return {
 					tone: 'warn',
-					ic: CircleAlert,
+					ic: faCircleExclamation,
 					title: msg.mail_send_err_rejected_title(),
 					actionLabel: msg.mail_send_err_back_to_draft(),
-					actionIcon: Pencil,
+					actionIcon: faPencil,
 					onAction: onDismiss
 				};
 			case 'server_error':
 				return {
 					tone: 'warn',
-					ic: ServerCrash,
+					ic: faServer,
 					title: msg.mail_send_err_server_title(),
 					actionLabel: msg.common_retry(),
-					actionIcon: RefreshCw,
+					actionIcon: faArrowsRotate,
 					onAction: onRetry
 				};
 			case 'network':
 			default:
 				return {
 					tone: 'warn',
-					ic: WifiOff,
+					ic: faWifiSlash,
 					title: msg.mail_send_err_network_title(),
 					actionLabel: msg.common_retry(),
-					actionIcon: RefreshCw,
+					actionIcon: faArrowsRotate,
 					onAction: onRetry
 				};
 		}
@@ -212,7 +215,7 @@
 </script>
 
 <div class={'se-banner se-' + conf.tone} role="alert">
-	<span class="se-ic"><conf.ic size={17} /></span>
+	<span class="se-ic"><Icon icon={conf.ic} size={17} /></span>
 	<div class="se-body">
 		<div class="se-title">{conf.title}</div>
 		<div class="se-text">
@@ -249,10 +252,10 @@
 	</div>
 	<div class="se-acts">
 		<button type="button" class="se-btn primary" onclick={conf.onAction}>
-			<conf.actionIcon size={14} />{conf.actionLabel}
+			<Icon icon={conf.actionIcon} size={14} />{conf.actionLabel}
 		</button>
 		<button type="button" class="se-x" title={msg.mail_send_err_dismiss()} onclick={onDismiss}>
-			<X size={15} />
+			<Icon icon={faXmark} size={15} />
 		</button>
 	</div>
 </div>

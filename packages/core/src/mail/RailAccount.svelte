@@ -4,22 +4,24 @@
 	import { m } from '$paraglide/messages.js';
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import { productLaunched } from '$core/products';
-	import User from '@lucide/svelte/icons/user';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Settings from '@lucide/svelte/icons/settings';
-	import Sun from '@lucide/svelte/icons/sun';
-	import Moon from '@lucide/svelte/icons/moon';
-	import Monitor from '@lucide/svelte/icons/monitor';
-	import LogOut from '@lucide/svelte/icons/log-out';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import Plus from '@lucide/svelte/icons/plus';
-	import UsersRound from '@lucide/svelte/icons/users-round';
-	import Check from '@lucide/svelte/icons/check';
-	import { ChevronDown, ChevronUp } from 'lucide';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRightFromBracket,
+		faAt,
+		faCalendarDays,
+		faCheck,
+		faChevronDown,
+		faChevronRight,
+		faDisplay,
+		faGear,
+		faMoon,
+		faPlus,
+		faShieldCheck,
+		faSun,
+		faUser,
+		faUserGroup
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { tick } from 'svelte';
-	import NavMorph from '$core/components/NavMorph.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -35,7 +37,7 @@
 	import { initialsFor } from './initials';
 	import { paletteFor } from './avatarPalette';
 
-	const themeIcons = { light: Sun, dark: Moon, auto: Monitor } as const;
+	const themeIcons = { light: faSun, dark: faMoon, auto: faDisplay } as const;
 	const ThemeIcon = $derived(themeIcons[theme.pref]);
 
 	interface AccountRow {
@@ -324,7 +326,7 @@
 			<span class="acct-nm" title={displayName}>{displayName}</span>
 			<span class="acct-em" title={displayEmail}>{displayEmail}</span>
 		</span>
-		<span class="uchev"><NavMorph icon={open ? ChevronUp : ChevronDown} size={15} /></span>
+		<span class="uchev" class:open><Icon icon={faChevronDown} size={15} /></span>
 	</button>
 	{#if open}
 		<div
@@ -370,7 +372,7 @@
 						</span>
 						<span class="ar-side" aria-hidden="true">
 							{#if r.current}
-								<span class="ar-cur"><Check size={13} />{m.mail_acct_current()}</span>
+								<span class="ar-cur"><Icon icon={faCheck} size={13} />{m.mail_acct_current()}</span>
 							{:else if action}
 								<span class="ar-act">{action}</span>
 							{:else if r.state === 'ready'}
@@ -379,7 +381,7 @@
 										>{m.mail_acct_unread({ count: r.unread > 99 ? '99+' : String(r.unread) })}</span
 									>
 								{/if}
-								<span class="ar-go"><ChevronRight size={15} /></span>
+								<span class="ar-go"><Icon icon={faChevronRight} size={15} /></span>
 							{/if}
 						</span>
 					</button>
@@ -387,46 +389,46 @@
 			</div>
 			<div class="acct-acts">
 				<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={addAccount}
-					><Plus size={17} />{m.mail_acct_add()}</button
+					><Icon icon={faPlus} size={17} />{m.mail_acct_add()}</button
 				>
 				{#if rows.length > 1}
 					<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={manageAccounts}
-						><UsersRound size={17} />{m.mail_acct_manage()}</button
+						><Icon icon={faUserGroup} size={17} />{m.mail_acct_manage()}</button
 					>
 				{/if}
 			</div>
 			<div class="msep" role="separator"></div>
 			{#if productLaunched('calendar')}
 				<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={openCalendar}>
-					<CalendarDays size={17} />{m.mail_acct_go_calendar()}
+					<Icon icon={faCalendarDays} size={17} />{m.mail_acct_go_calendar()}
 				</button>
 				<div class="msep" role="separator"></div>
 			{/if}
 			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('profile')}
-				><User size={17} />{m.mail_acct_profile()}</button
+				><Icon icon={faUser} size={17} />{m.mail_acct_profile()}</button
 			>
 			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('security')}
-				><ShieldCheck size={17} />{m.mail_acct_security()}{#if twofactor.status}<span class="rt"
+				><Icon icon={faShieldCheck} size={17} />{m.mail_acct_security()}{#if twofactor.status}<span class="rt"
 						>{twofactor.enabled ? m.mail_acct_2fa_on() : m.mail_acct_2fa_off()}</span
 					>{/if}</button
 			>
 			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('addresses')}
-				><AtSign size={17} />{m.mail_acct_aliases()}</button
+				><Icon icon={faAt} size={17} />{m.mail_acct_aliases()}</button
 			>
 			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('profile')}
-				><Settings size={17} />{m.mail_acct_settings()}</button
+				><Icon icon={faGear} size={17} />{m.mail_acct_settings()}</button
 			>
 			<div class="msep" role="separator"></div>
 			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => theme.cycle()}>
-				<ThemeIcon size={17} />{m.mail_acct_appearance()}<span class="rt">{theme.label}</span>
+				<Icon icon={ThemeIcon} size={17} />{m.mail_acct_appearance()}<span class="rt">{theme.label}</span>
 			</button>
 			<div class="msep" role="separator"></div>
 			<button type="button" role="menuitem" tabindex="-1" class="mitem danger" onclick={signOut}
-				><LogOut size={17} />{m.mail_acct_sign_out()}</button
+				><Icon icon={faArrowRightFromBracket} size={17} />{m.mail_acct_sign_out()}</button
 			>
 			{#if rows.length > 1}
 				<button type="button" role="menuitem" tabindex="-1" class="mitem danger" onclick={signOutAll}
-					><LogOut size={17} />{m.mail_acct_sign_out_all()}</button
+					><Icon icon={faArrowRightFromBracket} size={17} />{m.mail_acct_sign_out_all()}</button
 				>
 			{/if}
 		</div>

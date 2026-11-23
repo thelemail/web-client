@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import { faShieldExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
 	import { submitReport, type ReportOutcome } from './report';
 	import type { MessageReportKind } from '$core/api/types';
@@ -58,7 +58,7 @@
 </script>
 
 <ConfirmDialog
-	icon={ShieldAlert}
+	icon={faShieldExclamation}
 	title={m.mail_report_title()}
 	sub={subject}
 	tone="danger"

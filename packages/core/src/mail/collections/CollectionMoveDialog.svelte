@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import FolderInput from '@lucide/svelte/icons/folder-input';
-	import Search from '@lucide/svelte/icons/search';
+	import Icon from '$core/components/Icon.svelte';
+	import { faFolderArrowDown, faMagnifyingGlass } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { ambiguousNames, collectionErrorText, foldName, moveProblem, ruleText } from './rules';
@@ -85,7 +85,7 @@
 		<p class="cfd-p">{folder ? m.mail_collection_move_desc_folder() : m.mail_collection_move_desc_label()}</p>
 		{#if all.length > 8 || filtering}
 			<label class="cm-find">
-				<Search size={14} />
+				<Icon icon={faMagnifyingGlass} size={14} />
 				<input
 					type="search"
 					bind:value={query}
@@ -108,7 +108,7 @@
 {/snippet}
 
 <ConfirmDialog
-	icon={FolderInput}
+	icon={faFolderArrowDown}
 	title={folder ? m.mail_collection_move_folder_title() : m.mail_collection_move_label_title()}
 	sub={entry.path}
 	confirmLabel={m.mail_collection_move_confirm()}

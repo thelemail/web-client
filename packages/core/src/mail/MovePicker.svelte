@@ -1,19 +1,19 @@
 <script lang="ts" module>
-	import type Inbox from '@lucide/svelte/icons/inbox';
 
 	export type SystemTargetId = 'inbox' | 'archive' | 'spam' | 'trash';
 
 	export interface SystemTarget {
 		id: SystemTargetId;
 		label: string;
-		icon: typeof Inbox;
+		icon: IconDefinition;
 	}
 </script>
 
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import type { Snippet } from 'svelte';
 	import { m } from '$paraglide/messages.js';
-	import FolderIcon from '@lucide/svelte/icons/folder';
+	import { faFolder, faInbox } from '@fortawesome/pro-regular-svg-icons';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import CollectionPicker from './collections/CollectionPicker.svelte';
@@ -60,7 +60,7 @@
 			title: e.name,
 			path: tree ? undefined : parentPath(e),
 			depth: tree ? e.depth : 0,
-			icon: FolderIcon,
+			icon: faFolder,
 			iconColor: e.color ? collectionColor(e.color) : undefined,
 			pick: () => onFolder(e.id)
 		};

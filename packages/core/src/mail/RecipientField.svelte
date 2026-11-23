@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import type { Snippet } from 'svelte';
-	import X from '@lucide/svelte/icons/x';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Lock from '@lucide/svelte/icons/lock';
-	import LockOpen from '@lucide/svelte/icons/lock-open';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleExclamation,
+		faLock,
+		faLockOpen,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { chipsFromInput, type Contact, type RecipientChip } from './data';
 	import { insideMailbox } from './address';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -160,18 +163,18 @@
 						fit="cover"
 					/>
 				{:else}
-					<CircleAlert size={13} />
+					<Icon icon={faCircleExclamation} size={13} />
 				{/if}
 				<span class="rtx">{c.name === c.email ? c.email : c.name}</span>
 				{#if c.valid && encStatusFor}
 					{@const es = encStatusFor(c.email)}
 					{#if es === 'encrypted' || es === 'internal'}
 						<span class="renc ok" title={m.mail_recip_encrypted()}
-							><Lock size={11} aria-hidden="true" /><span class="sr-only">{m.mail_recip_encrypted()}</span></span
+							><Icon icon={faLock} size={11} aria-hidden="true" /><span class="sr-only">{m.mail_recip_encrypted()}</span></span
 						>
 					{:else if es === 'cleartext'}
 						<span class="renc warn" title={m.mail_recip_cleartext()}
-							><LockOpen size={11} aria-hidden="true" /><span class="sr-only">{m.mail_recip_cleartext()}</span></span
+							><Icon icon={faLockOpen} size={11} aria-hidden="true" /><span class="sr-only">{m.mail_recip_cleartext()}</span></span
 						>
 					{/if}
 				{/if}
@@ -185,7 +188,7 @@
 						removeChip(i);
 					}}
 				>
-					<X size={12} />
+					<Icon icon={faXmark} size={12} />
 				</button>
 			</span>
 		{/each}
@@ -241,7 +244,7 @@
 		{#if rightSlot}{@render rightSlot()}{/if}
 		{#if onRemoveField}
 			<button type="button" class="recip-x" title={m.mail_recip_remove_field({ field: labelText })} onclick={onRemoveField}>
-				<X size={15} />
+				<Icon icon={faXmark} size={15} />
 			</button>
 		{/if}
 	</div>

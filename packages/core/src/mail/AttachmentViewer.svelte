@@ -16,11 +16,14 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { Portal } from 'bits-ui';
-	import X from '@lucide/svelte/icons/x';
-	import Download from '@lucide/svelte/icons/download';
-	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faChevronLeft,
+		faChevronRight,
+		faDownload,
+		faSpinnerThird,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { auth } from '$core/stores/auth.svelte';
 	import { AttachmentError, downloadAttachment, loadAttachmentBytes } from './attachments';
@@ -236,7 +239,7 @@
 			bind:this={modal}
 		>
 			<div class="apx-head">
-				<span class="apx-ic k-{kind.cls}"><kind.icon size={17} /></span>
+				<span class="apx-ic k-{kind.cls}"><Icon icon={kind.icon} size={17} /></span>
 				<div class="apx-tx">
 					<h2 class="apx-title" id="apx-title" title={name}>{name}</h2>
 					<div class="apx-sub">
@@ -248,29 +251,29 @@
 				</div>
 				{#if items.length > 1}
 					<button type="button" class="apx-x" title={m.mail_preview_prev()} onclick={() => step(-1)}>
-						<ChevronLeft size={17} />
+						<Icon icon={faChevronLeft} size={17} />
 					</button>
 					<button type="button" class="apx-x" title={m.mail_preview_next()} onclick={() => step(1)}>
-						<ChevronRight size={17} />
+						<Icon icon={faChevronRight} size={17} />
 					</button>
 				{/if}
 				{#if item.kind === 'remote'}
 					<Button variant="secondary" size="sm" disabled={downloading} onclick={download}>
 						{#if downloading}
-							<LoaderCircle size={14} class="apx-spin" />{m.mail_attach_downloading()}
+							<Icon icon={faSpinnerThird} size={14} class="apx-spin" />{m.mail_attach_downloading()}
 						{:else}
-							<Download size={14} />{m.mail_attach_download()}
+							<Icon icon={faDownload} size={14} />{m.mail_attach_download()}
 						{/if}
 					</Button>
 				{/if}
 				<button type="button" class="apx-x" title={m.common_close()} onclick={onClose}>
-					<X size={17} />
+					<Icon icon={faXmark} size={17} />
 				</button>
 			</div>
 
 			<div class="apx-body" class:on-image={view.status === 'image'}>
 				{#if view.status === 'loading' || (view.status === 'pdf' && !pdfReady)}
-					<div class="apx-note"><LoaderCircle size={18} class="apx-spin" />{m.mail_preview_loading()}</div>
+					<div class="apx-note"><Icon icon={faSpinnerThird} size={18} class="apx-spin" />{m.mail_preview_loading()}</div>
 				{/if}
 				{#if view.status === 'image'}
 					<button

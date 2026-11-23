@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Search from '@lucide/svelte/icons/search';
-	import X from '@lucide/svelte/icons/x';
-	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
-	import History from '@lucide/svelte/icons/history';
-	import User from '@lucide/svelte/icons/user';
-	import Tag from '@lucide/svelte/icons/tag';
-	import Folder from '@lucide/svelte/icons/folder';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowTurnDownLeft,
+		faClockRotateLeft,
+		faFolder,
+		faMagnifyingGlass,
+		faTag,
+		faUser,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { mailSearch } from '$core/stores/search.svelte';
@@ -261,7 +264,7 @@
 
 <div class="searchwrap">
 	<div class="search" class:invalid>
-		<Search size={16} />
+		<Icon icon={faMagnifyingGlass} size={16} />
 		<input
 			bind:this={inputRef}
 			role="combobox"
@@ -300,7 +303,7 @@
 			<span class="srch-line" class:paused={indexing.state === 'paused'} class:warn={indexing.state === 'attention'} style:width="{indexing.fraction * 100}%" aria-hidden="true"></span>
 		{/if}
 		{#if mailSearch.draft || mailSearch.active}
-			<button class="clr" onclick={clearAll} title={m.mail_search_clear()} aria-label={m.mail_search_clear()}><X size={14} /></button>
+			<button class="clr" onclick={clearAll} title={m.mail_search_clear()} aria-label={m.mail_search_clear()}><Icon icon={faXmark} size={14} /></button>
 		{:else}
 			<span class="kbd">/</span>
 		{/if}
@@ -357,9 +360,9 @@
 								onclick={() => choose(option)}
 								onkeydown={() => {}}
 							>
-								<Search size={14} />
+								<Icon icon={faMagnifyingGlass} size={14} />
 								<span dir="auto">{m.mail_search_show_all({ query: typed })}</span>
-								<CornerDownLeft size={13} />
+								<Icon icon={faArrowTurnDownLeft} size={13} />
 							</div>
 						{:else}
 							<div
@@ -374,19 +377,19 @@
 								onkeydown={() => {}}
 							>
 								{#if option.kind === 'history'}
-									<History size={14} aria-hidden="true" />
+									<Icon icon={faClockRotateLeft} size={14} aria-hidden="true" />
 									<span class="sh-text" dir="auto">{option.text}</span>
 									<span class="sh-kind">{m.mail_search_group_history()}</span>
 								{:else if option.kind === 'person'}
-									<User size={14} aria-hidden="true" />
+									<Icon icon={faUser} size={14} aria-hidden="true" />
 									<span class="sh-text" dir="auto">{option.name || option.address}</span>
 									{#if option.name}<span class="sh-sub" dir="auto">{option.address}</span>{/if}
 								{:else if option.kind === 'collection'}
-									{#if option.type === 'label'}<Tag size={14} aria-hidden="true" />{:else}<Folder size={14} aria-hidden="true" />{/if}
+									{#if option.type === 'label'}<Icon icon={faTag} size={14} aria-hidden="true" />{:else}<Icon icon={faFolder} size={14} aria-hidden="true" />{/if}
 									<span class="sh-text" dir="auto">{option.path}</span>
 									<span class="sh-kind">{option.type === 'label' ? m.mail_search_group_label() : m.mail_search_group_folder()}</span>
 								{:else}
-									<Search size={14} aria-hidden="true" />
+									<Icon icon={faMagnifyingGlass} size={14} aria-hidden="true" />
 									<span class="sh-text" dir="auto">{option.text}</span>
 								{/if}
 							</div>

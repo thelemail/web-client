@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { collectionChip, collectionColor } from './palette';
 
 	interface Props {
@@ -39,7 +40,7 @@
 				onRemove();
 			}}
 		>
-			<X size={11} />
+			<Icon icon={faXmark} size={11} />
 		</button>
 	{/if}
 </span>

@@ -5,10 +5,15 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
-	import { Folder, FolderOpen } from 'lucide';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import NavMorph from '$core/components/NavMorph.svelte';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faChevronRight,
+		faEllipsis,
+		faFolder,
+		faFolderOpen
+	} from '@fortawesome/pro-regular-svg-icons';
+	import { faFolderOpen as faFolderOpenSolid } from '@fortawesome/pro-solid-svg-icons';
+	import StateIcon from '$core/components/StateIcon.svelte';
 	import type { CollectionUnread } from '$core/api/types';
 	import { customFolderRoute, customLabelRoute } from '../data';
 	import { collectionColor } from '../collections/palette';
@@ -349,7 +354,7 @@
 						: m.mail_sidebar_expand_item({ name: e.path })}
 					onclick={() => onToggle(e.id, !open)}
 				>
-					<ChevronRight />
+					<Icon icon={faChevronRight} />
 				</button>
 			{/if}
 			<a
@@ -380,7 +385,7 @@
 					{#if e.kind === 'label'}
 						<span class="ctree-dot"></span>
 					{:else}
-						<NavMorph icon={open || on ? FolderOpen : Folder} />
+						<StateIcon icon={open ? faFolderOpen : faFolder} activeIcon={faFolderOpenSolid} active={on} gesture="drop" size={16} />
 					{/if}
 				</span>
 				<span class="lbl">{e.name}</span>
@@ -397,7 +402,7 @@
 					onMenu(e, ev.currentTarget, link ?? ev.currentTarget);
 				}}
 			>
-				<Ellipsis />
+				<Icon icon={faEllipsis} />
 			</button>
 		</li>
 	{/each}

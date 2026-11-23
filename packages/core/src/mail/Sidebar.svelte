@@ -5,44 +5,48 @@
 	import { goto } from '$app/navigation';
 	import { tick } from 'svelte';
 	import { DropdownMenu } from 'bits-ui';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import {
-		AlarmClock,
-		Archive,
-		ArchiveRestore,
-		ChevronDown,
-		ChevronUp,
-		Clock,
-		FilePen,
-		FileText,
-		Folder,
-		Mail,
-		MailOpen,
-		Send,
-		SendHorizontal,
-		ShieldAlert,
-		ShieldX,
-		Star,
-		Timer,
-		Trash,
-		Trash2,
-		type IconNode
-	} from 'lucide';
-	import NavMorph from '$core/components/NavMorph.svelte';
+		faBoxArchive as faBoxArchiveSolid,
+		faClock as faClockSolid,
+		faEnvelope as faEnvelopeSolid,
+		faFileLines as faFileLinesSolid,
+		faFolder as faFolderSolid,
+		faPaperPlane as faPaperPlaneSolid,
+		faPaperPlaneTop as faPaperPlaneTopSolid,
+		faShieldExclamation as faShieldExclamationSolid,
+		faStar as faStarSolid,
+		faTrashCan as faTrashCanSolid
+	} from '@fortawesome/pro-solid-svg-icons';
+	import StateIcon, { type Gesture } from '$core/components/StateIcon.svelte';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import RailAccount from './RailAccount.svelte';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import Plus from '@lucide/svelte/icons/plus';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import StarIcon from '@lucide/svelte/icons/star';
-	import StarOff from '@lucide/svelte/icons/star-off';
-	import FolderPlus from '@lucide/svelte/icons/folder-plus';
-	import TagIcon from '@lucide/svelte/icons/tag';
-	import FolderInput from '@lucide/svelte/icons/folder-input';
-	import ListTree from '@lucide/svelte/icons/list-tree';
-	import ListCollapse from '@lucide/svelte/icons/list-collapse';
-	import Settings2 from '@lucide/svelte/icons/settings-2';
-	import Search from '@lucide/svelte/icons/search';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faBoxArchive,
+		faChevronDown,
+		faChevronRight,
+		faClock,
+		faEnvelope,
+		faFileLines,
+		faFolder,
+		faFolderArrowDown,
+		faFolderPlus,
+		faListDropdown,
+		faListTree,
+		faMagnifyingGlass,
+		faPaperPlane,
+		faPaperPlaneTop,
+		faPenLine,
+		faPlus,
+		faShieldExclamation,
+		faSliders,
+		faStar,
+		faStarExclamation,
+		faTag,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { FOLDERS, customFolderId, customLabelId, customFolderRoute, customLabelRoute } from './data';
 	import type { CollectionUnread, MailCollectionKind } from '$core/api/types';
 	import { mailCollections } from '$core/stores/mailCollections.svelte';
@@ -130,19 +134,21 @@
 	const slot = $derived(page.params.slot ?? '0');
 	const slotBase = $derived(`/u/${slot}`);
 
-	const folderIcons: Record<string, [IconNode, IconNode]> = {
-		inbox: [Mail, MailOpen],
-		starred: [Star, Star],
-		sent: [Send, SendHorizontal],
-		drafts: [FileText, FilePen],
-		archive: [Archive, ArchiveRestore],
-		snoozed: [Clock, AlarmClock],
-		scheduled: [SendHorizontal, Timer],
-		spam: [ShieldAlert, ShieldX],
-		trash: [Trash2, Trash]
+	type FolderIcon = { icon: IconDefinition; active: IconDefinition; gesture: Gesture };
+
+	const folderIcons: Record<string, FolderIcon> = {
+		inbox: { icon: faEnvelope, active: faEnvelopeSolid, gesture: 'drop' },
+		starred: { icon: faStar, active: faStarSolid, gesture: 'spin' },
+		sent: { icon: faPaperPlane, active: faPaperPlaneSolid, gesture: 'fly' },
+		drafts: { icon: faFileLines, active: faFileLinesSolid, gesture: 'tilt' },
+		archive: { icon: faBoxArchive, active: faBoxArchiveSolid, gesture: 'drop' },
+		snoozed: { icon: faClock, active: faClockSolid, gesture: 'ring' },
+		scheduled: { icon: faPaperPlaneTop, active: faPaperPlaneTopSolid, gesture: 'fly-level' },
+		spam: { icon: faShieldExclamation, active: faShieldExclamationSolid, gesture: 'pulse' },
+		trash: { icon: faTrashCan, active: faTrashCanSolid, gesture: 'shake' }
 	};
 
-	const FALLBACK_ICONS: [IconNode, IconNode] = [Folder, Folder];
+	const FALLBACK_ICON: FolderIcon = { icon: faFolder, active: faFolderSolid, gesture: 'drop' };
 
 	const primary = $derived(FOLDERS.filter((f) => !f.more));
 	const secondary = $derived(FOLDERS.filter((f) => f.more));
@@ -379,7 +385,7 @@
 			aria-expanded={!collapsed.has(section)}
 			onclick={() => toggleSection(section)}
 		>
-			<ChevronRight size={12} />
+			<Icon icon={faChevronRight} size={12} />
 			<span>{title}</span>
 		</button>
 		{#if kind}
@@ -390,7 +396,7 @@
 				title={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
 				onclick={(e) => startCreate(kind, null, e.currentTarget)}
 			>
-				<Plus size={14} />
+				<Icon icon={faPlus} size={14} />
 			</button>
 		{/if}
 	</div>
@@ -434,33 +440,32 @@
 	<a class="brand" href="/" aria-label="Thelemail"><Wordmark /></a>
 
 	<button class="compose" onclick={onCompose}>
-		<PenLine size={17} />{m.mail_sidebar_compose()}
+		<Icon icon={faPenLine} size={17} />{m.mail_sidebar_compose()}
 	</button>
 
 	<nav class="rail-nav" aria-label={m.mail_sidebar_navigation()}>
 		<div class="nav-list">
 			{#each primary as f (f.id)}
-				{@const pair = folderIcons[f.id] ?? FALLBACK_ICONS}
+				{@const fi = folderIcons[f.id] ?? FALLBACK_ICON}
 				{@const on = activeSystemFolder === f.id}
 				{@const c = counts[f.id]}
 				{@const isInbox = f.id === 'inbox'}
 				<a
 					class="fld"
 					class:active={on}
-					class:solid={f.id === 'starred'}
 					class:unread={isInbox && c}
 					href={`${slotBase}/mail/${f.id}`}
 					aria-current={on ? 'page' : undefined}
 					onclick={closeNav}
 				>
-					<NavMorph icon={on ? pair[1] : pair[0]} />
+					<StateIcon icon={fi.icon} activeIcon={fi.active} active={on} gesture={fi.gesture} size={16} />
 					<span class="lbl">{f.label}</span>
 					{#if c}<span class="ct">{c}</span>{/if}
 				</a>
 			{/each}
 			{#if showMore}
 				{#each secondary as f (f.id)}
-					{@const pair = folderIcons[f.id] ?? FALLBACK_ICONS}
+					{@const fi = folderIcons[f.id] ?? FALLBACK_ICON}
 					{@const on = activeSystemFolder === f.id}
 					{@const c = counts[f.id]}
 					<a
@@ -470,7 +475,7 @@
 						aria-current={on ? 'page' : undefined}
 						onclick={closeNav}
 					>
-						<NavMorph icon={on ? pair[1] : pair[0]} />
+						<StateIcon icon={fi.icon} activeIcon={fi.active} active={on} gesture={fi.gesture} size={16} />
 						<span class="lbl">{f.label}</span>
 						{#if c}<span class="ct">{c}</span>{/if}
 					</a>
@@ -482,14 +487,14 @@
 				aria-expanded={showMore}
 				onclick={() => persist({ showMore: !showMore })}
 			>
-				<NavMorph icon={showMore ? ChevronUp : ChevronDown} />
+				<Icon icon={faChevronDown} size={16} class="more-chev" />
 				<span class="lbl">{showMore ? m.mail_sidebar_less() : m.mail_sidebar_more()}</span>
 			</button>
 		</div>
 
 		{#if showFilter}
 			<label class="rail-find">
-				<Search size={14} />
+				<Icon icon={faMagnifyingGlass} size={14} />
 				<input
 					type="search"
 					bind:value={query}
@@ -583,31 +588,31 @@
 							void goto(`${slotBase}/mail/${routeOf(e)}?scope=direct`);
 						}}
 					>
-						<FolderInput />{e.kind === 'folder' ? m.mail_view_only_folder() : m.mail_view_only_label()}
+						<Icon icon={faFolderArrowDown} />{e.kind === 'folder' ? m.mail_view_only_folder() : m.mail_view_only_label()}
 					</DropdownMenu.Item>
 				{/if}
 				<DropdownMenu.Item class="mitem" onSelect={() => void toggleFavorite(e)}>
 					{#if e.favorite}
-						<StarOff />{m.mail_sidebar_remove_favorite()}
+						<Icon icon={faStarExclamation} />{m.mail_sidebar_remove_favorite()}
 					{:else}
-						<StarIcon />{m.mail_sidebar_add_favorite()}
+						<Icon icon={faStar} />{m.mail_sidebar_add_favorite()}
 					{/if}
 				</DropdownMenu.Item>
 				{#if e.depth < MAX_CREATE_DEPTH}
 					<DropdownMenu.Item class="mitem" onSelect={() => startCreate(e.kind, e.id, returnTo)}>
 						{#if e.kind === 'folder'}
-							<FolderPlus />{m.mail_sidebar_new_subfolder()}
+							<Icon icon={faFolderPlus} />{m.mail_sidebar_new_subfolder()}
 						{:else}
-							<TagIcon />{m.mail_sidebar_new_sublabel()}
+							<Icon icon={faTag} />{m.mail_sidebar_new_sublabel()}
 						{/if}
 					</DropdownMenu.Item>
 				{/if}
 				{#if menuHasKids}
 					<DropdownMenu.Item class="mitem" onSelect={() => setExpanded(parentIdsIn(e), true)}>
-						<ListTree />{m.mail_sidebar_expand_all()}
+						<Icon icon={faListTree} />{m.mail_sidebar_expand_all()}
 					</DropdownMenu.Item>
 					<DropdownMenu.Item class="mitem" onSelect={() => setExpanded(parentIdsIn(e), false)}>
-						<ListCollapse />{m.mail_sidebar_collapse_all()}
+						<Icon icon={faListDropdown} />{m.mail_sidebar_collapse_all()}
 					</DropdownMenu.Item>
 				{/if}
 				<DropdownMenu.Separator class="msep" />
@@ -629,7 +634,7 @@
 						void goto(`${slotBase}/settings/collections`);
 					}}
 				>
-					<Settings2 />{m.mail_collection_manage()}
+					<Icon icon={faSliders} />{m.mail_collection_manage()}
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Portal>

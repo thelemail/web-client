@@ -1,16 +1,21 @@
 <script lang="ts">
 	import { m as msg } from '$paraglide/messages.js';
-	import Check from '@lucide/svelte/icons/check';
-	import Star from '@lucide/svelte/icons/star';
-	import Archive from '@lucide/svelte/icons/archive';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Undo2 from '@lucide/svelte/icons/undo-2';
-	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import Mail from '@lucide/svelte/icons/mail';
-	import MailOpen from '@lucide/svelte/icons/mail-open';
-	import MessagesSquare from '@lucide/svelte/icons/messages-square';
-	import Calendar from '@lucide/svelte/icons/calendar';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRotateLeft,
+		faBoxArchive,
+		faCalendar,
+		faCheck,
+		faEnvelope,
+		faEnvelopeOpen,
+		faMessages,
+		faPaperclip,
+		faShieldExclamation,
+		faStar,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
+	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
+	import StateIcon from '$core/components/StateIcon.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Tooltip from '$core/components/ui/tooltip';
 	import type { Snippet } from 'svelte';
@@ -242,11 +247,11 @@
 			aria-hidden="true"
 		>
 			{#if sx < 0}
-				{#if leftAction === 'trash'}<Trash2 size={18} />{:else}<Archive size={18} />{/if}
+				{#if leftAction === 'trash'}<Icon icon={faTrashCan} size={18} />{:else}<Icon icon={faBoxArchive} size={18} />{/if}
 			{:else if m.unread}
-				<MailOpen size={18} />
+				<Icon icon={faEnvelopeOpen} size={18} />
 			{:else}
-				<Mail size={18} />
+				<Icon icon={faEnvelope} size={18} />
 			{/if}
 		</div>
 	{/if}
@@ -280,7 +285,7 @@
 				select(e.shiftKey);
 			}}
 		>
-			<Check size={13} />
+			<Icon icon={faCheck} size={13} />
 		</button>
 	</div>
 	<div class="rowmain">
@@ -288,22 +293,22 @@
 			<span class="sr-only" id="{uid}-st">{rowState}</span>
 			<span class="from" id="{uid}-from">{m.from}</span>
 			{#if m.senderMismatch}
-				<span class="tick forged" title={msg.mail_row_sender_mismatch()}><ShieldAlert size={12} /></span>
+				<span class="tick forged" title={msg.mail_row_sender_mismatch()}><Icon icon={faShieldExclamation} size={12} /></span>
 			{/if}
 			{#if byName}
 				<span class="by">{msg.mail_sent_by({ name: byName })}</span>
 			{/if}
 			{#if threadCount > 1}
 				<span class="thr-ct" title={msg.mail_row_thread_count({ count: threadCount })}>
-					<MessagesSquare size={11} />{threadCount}
+					<Icon icon={faMessages} size={11} />{threadCount}
 				</span>
 			{/if}
 			{#if hasEvent}
-				<span class="tick" title={msg.mail_row_invitation()}><Calendar size={12} /></span>
+				<span class="tick" title={msg.mail_row_invitation()}><Icon icon={faCalendar} size={12} /></span>
 			{/if}
 			{#if nonIcsAttachments.length > 0}
 				<span class="tick" title={msg.mail_row_attached_count({ count: nonIcsAttachments.length })}>
-					<Paperclip size={12} />{nonIcsAttachments.length}
+					<Icon icon={faPaperclip} size={12} />{nonIcsAttachments.length}
 				</span>
 			{/if}
 			{#if wakeAt}
@@ -326,7 +331,7 @@
 						onToggleStar(m.id);
 					}}
 				>
-					<Star size={13} />
+					<StateIcon icon={faStar} activeIcon={faStarSolid} active={m.starred} gesture="spin" size={13} />
 				</button>
 			{/if}
 		</div>
@@ -434,10 +439,10 @@
 	</Tooltip.Root>
 {/snippet}
 
-{#snippet star()}<Star size={15} />{/snippet}
-{#snippet mailOpen()}<MailOpen size={15} />{/snippet}
-{#snippet mail()}<Mail size={15} />{/snippet}
-{#snippet undo()}<Undo2 size={15} />{/snippet}
-{#snippet archive()}<Archive size={15} />{/snippet}
-{#snippet spam()}<ShieldAlert size={15} />{/snippet}
-{#snippet trash()}<Trash2 size={15} />{/snippet}
+{#snippet star()}<StateIcon icon={faStar} activeIcon={faStarSolid} active={m.starred} gesture="spin" size={15} />{/snippet}
+{#snippet mailOpen()}<Icon icon={faEnvelopeOpen} size={15} />{/snippet}
+{#snippet mail()}<Icon icon={faEnvelope} size={15} />{/snippet}
+{#snippet undo()}<Icon icon={faArrowRotateLeft} size={15} />{/snippet}
+{#snippet archive()}<Icon icon={faBoxArchive} size={15} />{/snippet}
+{#snippet spam()}<Icon icon={faShieldExclamation} size={15} />{/snippet}
+{#snippet trash()}<Icon icon={faTrashCan} size={15} />{/snippet}
