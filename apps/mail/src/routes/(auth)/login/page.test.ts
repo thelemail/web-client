@@ -319,7 +319,8 @@ describe('login page identifier step', () => {
 		const markup = (address: string) =>
 			document
 				.querySelector('.sp')!
-				.innerHTML.replaceAll(encodeURIComponent(address), 'ADDR')
+				.innerHTML.replaceAll('<wbr>', '')
+				.replaceAll(encodeURIComponent(address), 'ADDR')
 				.replaceAll(address, 'ADDR')
 				.replace(/"c\d+"/g, '"ID"');
 		render(LoginPage);

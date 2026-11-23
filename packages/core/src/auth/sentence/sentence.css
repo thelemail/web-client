@@ -105,8 +105,10 @@
 }
 .auth .blank input {
 	all: unset;
+	flex: 0 1 auto;
 	min-width: 3ch;
 	max-width: 100%;
+	text-overflow: ellipsis;
 	font: inherit;
 	font-weight: 650;
 	color: var(--fg-strong);
@@ -154,6 +156,8 @@
 }
 .auth .blank .blank-eye {
 	all: unset;
+	flex: 0 0 auto;
+	white-space: nowrap;
 	align-self: center;
 	margin-left: 12px;
 	font-family: var(--font-sans);
@@ -185,6 +189,7 @@
 	outline-offset: 3px;
 }
 .auth .sp-filled.mono {
+	overflow-wrap: break-word;
 	font-family: var(--font-mono);
 	font-size: 0.84em;
 	font-weight: 500;
@@ -302,6 +307,10 @@
 }
 .auth .sp-glue > * {
 	white-space: normal;
+}
+.auth .sp-glue > .blank,
+.auth .sp-glue > .sp-filled {
+	max-width: calc(100% - 0.4em);
 }
 .auth .sp-err {
 	display: flex;
@@ -581,6 +590,15 @@
 	}
 	.auth .sp-words {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 360px) {
+	.auth .sent {
+		font-size: 22px;
+	}
+	.auth .sent.sm {
+		font-size: 20px;
 	}
 }
 

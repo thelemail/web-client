@@ -280,7 +280,7 @@
 		bind:value={email}
 		label={m.common_email_address()}
 		placeholder="you@yourdomain.com"
-		size={30}
+		size={36}
 		mono
 		autocomplete="username"
 		invalid={!!identifyError}
