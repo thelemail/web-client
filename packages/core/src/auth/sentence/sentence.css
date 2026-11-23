@@ -247,6 +247,55 @@
 .auth .sp-msg.bad {
 	color: var(--danger-700);
 }
+.auth .sp-status {
+	--status-lines: 2;
+	margin: 0;
+	min-height: calc(var(--status-lines) * 1lh);
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: var(--fg-muted);
+	text-wrap: pretty;
+}
+.auth .sp-status-line {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+}
+.auth .sp-status-line > svg,
+.auth .sp-status-line > .spinner {
+	flex: 0 0 auto;
+	margin-top: 3px;
+}
+.auth .sp-status[data-tone='ok'] {
+	color: var(--success-700);
+}
+.auth .sp-status[data-tone='bad'] {
+	color: var(--danger-700);
+}
+.auth .sp-busy {
+	display: inline-grid;
+}
+.auth .sp-busy > span,
+.auth .sp-busy::after {
+	grid-area: 1 / 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+.auth .sp-busy::after {
+	content: attr(data-alt);
+	visibility: hidden;
+}
+.auth .sp-busy:not(.on)::after {
+	padding-left: 23px;
+}
+.auth .sp-glue {
+	white-space: nowrap;
+}
+.auth .sp-glue > * {
+	white-space: normal;
+}
 .auth .sp-err {
 	display: flex;
 	align-items: flex-start;
@@ -509,6 +558,9 @@
 	}
 	.auth .sp {
 		gap: 24px;
+	}
+	.auth .sp-status {
+		--status-lines: 3;
 	}
 	.auth .sent {
 		font-size: 25px;

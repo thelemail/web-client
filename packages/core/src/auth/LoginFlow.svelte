@@ -4,7 +4,8 @@
 	import Blank from '$core/auth/sentence/Blank.svelte';
 	import Clause from '$core/auth/sentence/Clause.svelte';
 	import Done from '$core/auth/sentence/Done.svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Status from '$core/auth/sentence/Status.svelte';
+	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
 	import { ApiCallError } from '$core/api/types';
 	import {
 		abandonTwoFactorLogin,
@@ -279,10 +280,11 @@
 		bind:value={email}
 		label={m.common_email_address()}
 		placeholder="you@yourdomain.com"
+		size={26}
 		mono
 		autocomplete="username"
 		invalid={!!identifyError}
-		describedby={identifyError ? 'login-email-err' : undefined}
+		describedby="login-email-err"
 		focus
 		normalize={(raw) => {
 			touched = true;
@@ -301,7 +303,7 @@
 		secret
 		autocomplete="current-password"
 		invalid={!!loginError}
-		describedby={loginError ? 'login-err' : undefined}
+		describedby="login-err"
 		disabled={busy}
 		focus
 	/>{/snippet}
@@ -348,13 +350,9 @@
 					/>
 				</p>
 				<div class="sp-under">
-					{#if identifyError}
-						<p class="sp-msg bad" role="alert" id="login-email-err">
-							<CircleAlert size={14} strokeWidth={1.75} /><span>{identifyError}</span>
-						</p>
-					{:else if addMode}
-						<p class="sp-msg">{m.auth_s_add_note()}</p>
-					{/if}
+					<Status id="login-email-err" tone={identifyError ? 'bad' : 'hint'}>
+						{identifyError ?? (addMode ? m.auth_s_add_note() : '')}
+					</Status>
 					<div class="sp-acts">
 						<Button type="submit" variant="primary" size="lg" disabled={email.trim().length === 0}>
 							{m.auth_sentence_next()}
@@ -376,18 +374,14 @@
 					/>
 				</p>
 				<div class="sp-under">
-					{#if loginError}
-						<p class="sp-err" role="alert" id="login-err">
-							<CircleAlert size={15} strokeWidth={1.75} /><span>{loginError}</span>
-						</p>
-					{/if}
+					<Status id="login-err" tone={loginError ? 'bad' : 'hint'}>{loginError ?? ''}</Status>
 					<div class="sp-acts">
 						<Button type="submit" variant="primary" size="lg" disabled={!canSignIn || busy}>
-							{#if busy}
-								<span class="spinner"></span>{verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
-							{:else}
-								{m.auth_sign_in()}
-							{/if}
+							<BusyLabel
+								{busy}
+								label={m.auth_sign_in()}
+								pending={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
+							/>
 						</Button>
 						<a class="sp-quiet" href={`/recover?email=${encodeURIComponent(identifier)}`}>
 							{m.auth_login_forgot_password()}
