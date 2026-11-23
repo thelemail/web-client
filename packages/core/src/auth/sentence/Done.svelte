@@ -16,6 +16,7 @@
 	} = $props();
 
 	const shown = $derived(secret ? '••••••••' : text);
+	const at = $derived(mono && !secret ? shown.indexOf('@') : -1);
 </script>
 
 {#if onedit}
@@ -26,8 +27,10 @@
 		{disabled}
 		title={m.auth_sentence_change()}
 		aria-label={secret ? m.auth_sentence_change_password() : m.auth_sentence_change_value({ value: text })}
-		onclick={onedit}>{shown}</button
+		onclick={onedit}>{#if at > 0}{shown.slice(0, at + 1)}<wbr />{shown.slice(at + 1)}{:else}{shown}{/if}</button
 	>
 {:else}
-	<span class="sp-filled" class:mono={mono || secret}>{shown}</span>
+	<span class="sp-filled" class:mono={mono || secret}
+		>{#if at > 0}{shown.slice(0, at + 1)}<wbr />{shown.slice(at + 1)}{:else}{shown}{/if}</span
+	>
 {/if}

@@ -319,7 +319,8 @@ describe('login page identifier step', () => {
 		const markup = (address: string) =>
 			document
 				.querySelector('.sp')!
-				.innerHTML.replaceAll(encodeURIComponent(address), 'ADDR')
+				.innerHTML.replaceAll('<wbr>', '')
+				.replaceAll(encodeURIComponent(address), 'ADDR')
 				.replaceAll(address, 'ADDR')
 				.replace(/"c\d+"/g, '"ID"');
 		render(LoginPage);
@@ -481,6 +482,30 @@ describe('login page identifier step', () => {
 
 		expect(document.querySelector<HTMLInputElement>('input[type="password"]')?.value).toBe('hunter22');
 		leaving.resolve();
+	});
+
+	it('stamps the sign-in in place of the status line while the mailbox opens', async () => {
+		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
+		const leaving = Promise.withResolvers<void>();
+		nav.goto.mockReturnValue(leaving.promise);
+		render(LoginPage);
+
+		await submitCredentials();
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalled());
+
+		expect(document.querySelector('.sp-seal')?.textContent).toContain('Signed in');
+		expect(document.querySelector('#login-err')).toBeNull();
+		leaving.resolve();
+	});
+
+	it('takes the stamp back when the mailbox cannot open', async () => {
+		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
+		nav.goto.mockRejectedValue(new Error('navigation failed'));
+		render(LoginPage);
+
+		await submitCredentials();
+		await vi.waitFor(() => expect(document.querySelector('#login-err')?.textContent).toContain('navigation failed'));
+		expect(document.querySelector('.sp-seal')).toBeNull();
 	});
 });
 

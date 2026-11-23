@@ -1,3 +1,8 @@
+.auth .stagebody:has(> .card > :is(.sp, .card-surface)) {
+	justify-content: flex-start;
+	padding-top: clamp(32px, 11vh, 120px);
+}
+
 .auth .card:has(> .sp) {
 	width: 760px;
 }
@@ -100,8 +105,10 @@
 }
 .auth .blank input {
 	all: unset;
+	flex: 0 1 auto;
 	min-width: 3ch;
 	max-width: 100%;
+	text-overflow: ellipsis;
 	font: inherit;
 	font-weight: 650;
 	color: var(--fg-strong);
@@ -149,6 +156,8 @@
 }
 .auth .blank .blank-eye {
 	all: unset;
+	flex: 0 0 auto;
+	white-space: nowrap;
 	align-self: center;
 	margin-left: 12px;
 	font-family: var(--font-sans);
@@ -180,6 +189,7 @@
 	outline-offset: 3px;
 }
 .auth .sp-filled.mono {
+	overflow-wrap: break-word;
 	font-family: var(--font-mono);
 	font-size: 0.84em;
 	font-weight: 500;
@@ -241,6 +251,95 @@
 }
 .auth .sp-msg.bad {
 	color: var(--danger-700);
+}
+.auth .sp-status {
+	--status-lines: 2;
+	margin: 0;
+	min-height: calc(var(--status-lines) * 1lh);
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: var(--fg-muted);
+	text-wrap: pretty;
+}
+.auth .sp-seal {
+	--status-lines: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 9px;
+	min-height: calc(var(--status-lines) * 20.25px);
+	padding-top: 2px;
+}
+.auth .sp-seal.free {
+	min-height: 0;
+}
+.auth .sp-seal-rule {
+	display: block;
+	width: 72px;
+	height: 1px;
+	background: var(--brass-600);
+}
+.auth .sp-seal-mark {
+	margin: 0;
+	font-family: var(--font-mono);
+	font-size: 11.5px;
+	font-weight: 500;
+	line-height: 1.5;
+	letter-spacing: var(--track-caps);
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
+	color: var(--brass-700);
+}
+.auth .sp-status-box {
+	--status-lines: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	min-height: calc(var(--status-lines) * 20.25px);
+}
+.auth .sp-status-line {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+}
+.auth .sp-status-line > svg,
+.auth .sp-status-line > .spinner {
+	flex: 0 0 auto;
+	margin-top: 3px;
+}
+.auth .sp-status[data-tone='ok'] {
+	color: var(--success-700);
+}
+.auth .sp-status[data-tone='bad'] {
+	color: var(--danger-700);
+}
+.auth .sp-busy {
+	display: inline-grid;
+}
+.auth .sp-busy > span,
+.auth .sp-busy::after {
+	grid-area: 1 / 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+.auth .sp-busy::after {
+	content: attr(data-alt);
+	visibility: hidden;
+}
+.auth .sp-busy:not(.on)::after {
+	padding-left: 23px;
+}
+.auth .sp-glue {
+	white-space: nowrap;
+}
+.auth .sp-glue > * {
+	white-space: normal;
+}
+.auth .sp-glue > .blank,
+.auth .sp-glue > .sp-filled {
+	max-width: calc(100% - 0.4em);
 }
 .auth .sp-err {
 	display: flex;
@@ -496,11 +595,19 @@
 }
 
 @media (max-width: 640px) {
+	.auth .stagebody:has(> .card > :is(.sp, .card-surface)) {
+		padding-top: 16px;
+	}
 	.auth .card:has(> .sp) {
 		width: 100%;
 	}
 	.auth .sp {
 		gap: 24px;
+	}
+	.auth .sp-status,
+	.auth .sp-status-box,
+	.auth .sp-seal {
+		--status-lines: 3;
 	}
 	.auth .sent {
 		font-size: 25px;
@@ -516,18 +623,143 @@
 	}
 }
 
-@media (prefers-reduced-motion: no-preference) {
-	.auth .sp-enter {
-		animation: sp-in 0.35s var(--ease-out) both;
+@media (max-width: 360px) {
+	.auth .sent {
+		font-size: 22px;
+	}
+	.auth .sent.sm {
+		font-size: 20px;
 	}
 }
-@keyframes sp-in {
+
+.auth .sp-trail li,
+.auth .sp-work li,
+.auth .sp-checks li {
+	transition: color var(--dur) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.auth .sent {
+		animation: sp-write 560ms var(--ease-out) backwards;
+	}
+	.auth .sent > .sp-cl:not(:first-child) {
+		animation: sp-fade var(--dur-slow) var(--ease-out) backwards;
+	}
+	.auth .sent .blank {
+		animation: sp-blank 420ms var(--ease-out) 180ms backwards;
+	}
+	.auth .sent .sp-filled {
+		animation: sp-settle 900ms var(--ease-out) 120ms backwards;
+	}
+	.auth .sp-under > :not(.sp-status, .sp-words, .sp-seal) {
+		animation: sp-rise var(--dur-slow) var(--ease-out) 140ms backwards;
+	}
+	.auth .sp-status-line {
+		animation: sp-rise var(--dur) var(--ease-out) backwards;
+	}
+	.auth .sp-words .sp-word {
+		animation: sp-rise var(--dur-slow) var(--ease-out) calc(140ms + var(--i, 0) * 22ms) backwards;
+	}
+	.auth .sp-busy.on > span {
+		animation: sp-swap var(--dur) var(--ease-out);
+	}
+	.auth .sp-busy:not(.on) > span {
+		animation: sp-swap-back var(--dur) var(--ease-out);
+	}
+	.auth .sp-trail li.cur::before {
+		animation: sp-dot var(--dur-slow) var(--ease-out);
+	}
+	.auth .sp-trail li.done svg,
+	.auth .sp-work li.done svg,
+	.auth .sp-checks li.met svg {
+		animation: sp-tick var(--dur-slow) var(--ease-out);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.auth .sent,
+	.auth .sent > .sp-cl:not(:first-child),
+	.auth .sp-under > :not(.sp-status, .sp-words, .sp-seal),
+	.auth .sp-status-line {
+		animation: sp-fade var(--dur) linear backwards;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.auth .sp-seal-rule {
+		transform-origin: left center;
+		animation: sp-rule 420ms var(--ease-out) backwards;
+	}
+	.auth .sp-seal-mark {
+		animation: sp-write 560ms var(--ease-out) 200ms backwards;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.auth .sp-seal {
+		animation: sp-fade var(--dur) linear backwards;
+	}
+}
+@keyframes sp-rule {
+	from {
+		transform: scaleX(0);
+	}
+}
+@keyframes sp-write {
+	from {
+		mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+		mask-size: 250% 100%;
+		mask-repeat: no-repeat;
+		mask-position: 100% 0;
+	}
+	to {
+		mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+		mask-size: 250% 100%;
+		mask-repeat: no-repeat;
+		mask-position: 0 0;
+	}
+}
+@keyframes sp-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes sp-rise {
 	from {
 		opacity: 0;
 		transform: translateY(4px);
 	}
-	to {
-		opacity: 1;
-		transform: none;
+}
+@keyframes sp-blank {
+	from {
+		background-color: transparent;
+		box-shadow: inset 0 0 0 var(--pine-500);
+	}
+}
+@keyframes sp-settle {
+	from {
+		box-shadow: inset 0 -2px 0 var(--pine-500);
+	}
+}
+@keyframes sp-swap {
+	from {
+		opacity: 0;
+		transform: translateY(3px);
+	}
+}
+@keyframes sp-swap-back {
+	from {
+		opacity: 0;
+		transform: translateY(-3px);
+	}
+}
+@keyframes sp-dot {
+	from {
+		transform: scale(0);
+	}
+}
+@keyframes sp-tick {
+	from {
+		opacity: 0;
+		transform: scale(0.4);
 	}
 }

@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import Clause from '$core/auth/sentence/Clause.svelte';
+	import Status from '$core/auth/sentence/Status.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { localForkPath } from '$core/fork';
 	import { auth } from '$core/stores/auth.svelte';
@@ -111,7 +112,7 @@
 					<Button variant="secondary" size="lg" onclick={closeTab}>{m.handoff_tab_close()}</Button>
 				</div>
 			{:else}
-				<p class="sp-msg" role="status"><span class="spinner"></span><span>{m.handoff_opening()}</span></p>
+				<Status tone="busy">{m.handoff_opening()}</Status>
 			{/if}
 		</div>
 	</div>

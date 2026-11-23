@@ -13,6 +13,7 @@
 	import { auth } from '$core/stores/session.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import Clause from '$core/auth/sentence/Clause.svelte';
+	import Status from '$core/auth/sentence/Status.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	const slot = page.url.searchParams.get('slot');
@@ -133,9 +134,7 @@
 			{/if}
 		</p>
 		<div class="sp-under">
-			{#if tabOpen}
-				<p class="sp-msg" role="status"><span class="spinner"></span><span>{m.handoff_tab_waiting_line()}</span></p>
-			{/if}
+			<Status tone={tabOpen ? 'busy' : 'hint'}>{tabOpen ? m.handoff_tab_waiting_line() : ''}</Status>
 			<div class="sp-acts">
 				<Button variant="primary" size="lg" onclick={openTab}>{tabOpen ? m.handoff_tab_reopen() : m.handoff_tab_open()}</Button>
 			</div>
@@ -148,30 +147,21 @@
 		</div>
 	</div>
 {:else if mode === 'checking'}
-	<div class="unlockcard" aria-busy="true" aria-live="polite">
-		{#if checking.visible}
-			<p class="unlockmsg">{m.common_loading()}</p>
-		{/if}
+	<div class="sp" aria-busy="true">
+		<Status tone={checking.visible ? 'busy' : 'hint'}>{checking.visible ? m.common_loading() : ''}</Status>
+	</div>
+{:else if mode === 'failed'}
+	<div class="sp">
+		<h1 class="sent sm">{m.handoff_title()}</h1>
+		<div class="sp-under">
+			<p class="sp-msg">{m.handoff_failed()}</p>
+			<div class="sp-acts">
+				<Button variant="primary" size="lg" href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
+			</div>
+		</div>
 	</div>
 {:else}
-	<div class="unlockcard" aria-live="polite">
-		{#if mode === 'failed'}
-			<h1>{m.handoff_title()}</h1>
-			<p class="unlockmsg">{m.handoff_failed()}</p>
-			<Button variant="primary" size="lg" href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
-		{:else}
-			<p class="unlockmsg">{m.handoff_opening()}</p>
-		{/if}
+	<div class="sp">
+		<Status tone="busy">{m.handoff_opening()}</Status>
 	</div>
 {/if}
-
-<style>
-	.unlockcard {
-		display: grid;
-		gap: 0.75rem;
-		justify-items: start;
-	}
-	.unlockmsg {
-		color: var(--muted-foreground);
-	}
-</style>

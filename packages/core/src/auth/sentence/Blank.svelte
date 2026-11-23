@@ -8,6 +8,7 @@
 		id,
 		label,
 		placeholder = '',
+		size = 3,
 		mono = false,
 		secret = false,
 		invalid = false,
@@ -26,6 +27,7 @@
 		id: string;
 		label: string;
 		placeholder?: string;
+		size?: number;
 		mono?: boolean;
 		secret?: boolean;
 		invalid?: boolean;
@@ -43,7 +45,7 @@
 
 	let show = $state(false);
 	let input: HTMLInputElement | undefined = $state();
-	const width = $derived(`${Math.max(value.length, placeholder.length, 3) + 0.4}ch`);
+	const width = $derived(`${Math.max(secret && !show ? 0 : value.length, placeholder.length, size) + 0.4}ch`);
 
 	$effect(() => {
 		if (focus && input && !disabled) input.focus();

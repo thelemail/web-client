@@ -285,7 +285,15 @@
 				/>
 			</p>
 		</div>
-		<div class="form">
+		<form
+			class="form"
+			novalidate
+			onsubmit={(e) => {
+				e.preventDefault();
+				void submitRegistration();
+			}}
+		>
+			<input class="sp-user" type="email" value={invite.inviteeEmail} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 			<PasswordField
 				label={m.common_password()}
 				bind:value={pw}
@@ -300,9 +308,6 @@
 				placeholder={m.auth_register_confirm_placeholder()}
 				autocomplete="new-password"
 				disabled={submitting}
-				onEnter={() => {
-					if (passwordReady) submitRegistration();
-				}}
 				invalid={mismatch}
 				describedby={mismatch ? 'invite-confirm-msg' : undefined}
 			/>
@@ -332,12 +337,12 @@
 					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
 						<ArrowLeft size={17} strokeWidth={1.75} />
 					</Button>
-					<Button variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting} onclick={submitRegistration}>
+					<Button type="submit" variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting}>
 						{submitting ? m.auth_invite_setting_up() : m.auth_invite_create_account()}
 					</Button>
 				</div>
 			</div>
-		</div>
+		</form>
 	</div>
 {:else}
 	<div class="card-surface screen-fade">

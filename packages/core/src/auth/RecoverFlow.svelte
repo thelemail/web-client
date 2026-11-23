@@ -28,6 +28,9 @@
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
 	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Status from '$core/auth/sentence/Status.svelte';
+	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -280,6 +283,7 @@
 	const allMet = $derived(passwordReqs(pw).every((r) => r.met));
 	const matches = $derived(confirm.length > 0 && confirm === pw);
 	const mismatch = $derived(confirm.length > 0 && confirm !== pw);
+	const confirmBad = $derived(mismatch && !pw.startsWith(confirm));
 	const passwordReady = $derived(allMet && matches);
 
 	function startOver() {
@@ -297,6 +301,20 @@
 		phraseStatus = 'idle';
 		phraseError = '';
 		step = 'phrase';
+	}
+
+	function submitAccount(e: SubmitEvent) {
+		e.preventDefault();
+		continueAccount();
+	}
+
+	function submitPassword(e: SubmitEvent) {
+		e.preventDefault();
+		if (pwPart === 'new') {
+			if (allMet) pwPart = 'again';
+		} else {
+			startRekey();
+		}
 	}
 
 	function startRekey() {
@@ -346,11 +364,11 @@
 		bind:value={email}
 		label={m.common_email_address()}
 		placeholder="you@yourdomain.com"
+		size={36}
 		mono
 		autocomplete="username"
 		focus
 		normalize={(raw) => raw.trim()}
-		onenter={continueAccount}
 	/>{/snippet}
 {#snippet emailDone(_: string)}<Done
 		text={email}
@@ -363,13 +381,11 @@
 		bind:value={pw}
 		label={m.auth_recover_new_password_label()}
 		placeholder={m.auth_s_new_password_placeholder()}
+		size={14}
 		mono
 		secret
 		autocomplete="new-password"
 		focus
-		onenter={() => {
-			if (allMet) pwPart = 'again';
-		}}
 	/>{/snippet}
 {#snippet passwordDone(_: string)}<Done text="" secret onedit={() => (pwPart = 'new')} />{/snippet}
 {#snippet confirmBlank(_: string)}<Blank
@@ -377,13 +393,13 @@
 		bind:value={confirm}
 		label={m.auth_recover_confirm_label()}
 		placeholder={m.auth_s_confirm_placeholder()}
+		size={14}
 		mono
 		secret
 		autocomplete="new-password"
-		invalid={mismatch && !pw.startsWith(confirm)}
+		invalid={confirmBad}
 		describedby="recover-confirm-msg"
 		focus
-		onenter={startRekey}
 	/>{/snippet}
 {#snippet pastProof()}<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
 		text={m.auth_s_recover_phrase_ok()}
@@ -420,13 +436,15 @@
 			<Trail items={recLabels} current={step === 'working' ? recLabels.length : trailAt} />
 		{/if}
 		{#if step === 'account'}
-			<p class="sent"><Clause text={m.auth_s_recover_account()} slots={{ email: emailBlank }} /></p>
-			<div class="sp-under">
-				<p class="sp-msg">{m.auth_s_recover_email_hint()}</p>
-				<div class="sp-acts">
-					<Button variant="primary" size="lg" disabled={!emailValid} onclick={continueAccount}>{m.auth_sentence_next()}</Button>
+			<form class="sp-form" novalidate onsubmit={submitAccount}>
+				<p class="sent"><Clause text={m.auth_s_recover_account()} slots={{ email: emailBlank }} /></p>
+				<div class="sp-under">
+					<Status>{m.auth_s_recover_email_hint()}</Status>
+					<div class="sp-acts">
+						<Button type="submit" variant="primary" size="lg" disabled={!emailValid}>{m.auth_sentence_next()}</Button>
+					</div>
 				</div>
-			</div>
+			</form>
 		{:else if step === 'phrase'}
 			<p class="sent">
 				<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
@@ -437,7 +455,7 @@
 				<div class="sp-words">
 					{#each words as w, i (i)}
 						{@const wrong = phraseStatus === 'bad' && badWord(w)}
-						<label class="sp-word" class:bad={wrong}>
+						<label class="sp-word" class:bad={wrong} style:--i={i}>
 							<span class="n">{i + 1}</span>
 							<input
 								value={w}
@@ -450,19 +468,21 @@
 								onpaste={(e) => onPhrasePaste(i, e)}
 								onkeydown={(e) => onPhraseKey(i, e)}
 								aria-invalid={wrong || undefined}
-								aria-describedby={phraseStatus === 'bad' ? 'recover-phrase-err' : undefined}
+								aria-describedby="recover-phrase-err"
 							/>
 						</label>
 					{/each}
 				</div>
-				{#if phraseStatus === 'bad'}
-					<p class="sp-err" role="alert" id="recover-phrase-err"><CircleAlert size={15} strokeWidth={1.75} /><span>{phraseError}</span></p>
-				{:else}
-					<p class="sp-msg">{m.auth_recover_phrase_tip()}</p>
-				{/if}
+				<Status id="recover-phrase-err" tone={phraseStatus === 'bad' ? 'bad' : 'hint'}>
+					{phraseStatus === 'bad' ? phraseError : m.auth_recover_phrase_tip()}
+				</Status>
 				<div class="sp-acts">
 					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
-						{#if phraseStatus === 'checking'}<span class="spinner"></span>{m.auth_recover_phrase_checking()}{:else}{m.auth_recover_phrase_unlock()}{/if}
+						<BusyLabel
+							busy={phraseStatus === 'checking'}
+							label={m.auth_recover_phrase_unlock()}
+							pending={m.auth_recover_phrase_checking()}
+						/>
 					</Button>
 					<button type="button" class="sp-quiet" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>
 						{m.auth_recover_no_phrase()}
@@ -483,37 +503,36 @@
 				</div>
 			</div>
 		{:else if step === 'password'}
-			<p class="sent sm">
-				{@render pastProof()}{#if pwPart === 'new'}<Clause lead
-						text={m.auth_s_recover_password()}
-						slots={{ password: passwordBlank }}
-					/>{:else}<Clause
-						lead
-						text={m.auth_s_recover_password_again()}
-						slots={{ password: passwordDone, confirm: confirmBlank }}
-					/>{/if}
-			</p>
-			<div class="sp-under">
-				{#if pwPart === 'new'}
-					<PasswordChecks {pw} />
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!allMet} onclick={() => (pwPart = 'again')}>{m.auth_sentence_next()}</Button>
-						<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
-					</div>
-				{:else}
-					{#if mismatch && !pw.startsWith(confirm)}
-						<p class="sp-msg bad" role="alert" id="recover-confirm-msg"><CircleAlert size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_mismatch()}</span></p>
-					{:else if matches}
-						<p class="sp-msg ok" id="recover-confirm-msg"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_register_passwords_match()}</span></p>
+			<form class="sp-form" novalidate onsubmit={submitPassword}>
+				<input class="sp-user" type="email" value={email} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+				<p class="sent sm">
+					{@render pastProof()}{#if pwPart === 'new'}<Clause lead
+							text={m.auth_s_recover_password()}
+							slots={{ password: passwordBlank }}
+						/>{:else}<Clause
+							lead
+							text={m.auth_s_recover_password_again()}
+							slots={{ password: passwordDone, confirm: confirmBlank }}
+						/>{/if}
+				</p>
+				<div class="sp-under">
+					{#if pwPart === 'new'}
+						<div class="sp-status-box"><PasswordChecks {pw} /></div>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!allMet}>{m.auth_sentence_next()}</Button>
+							<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
+						</div>
 					{:else}
-						<p class="sp-msg" id="recover-confirm-msg">{m.auth_s_confirm_hint()}</p>
+						<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'}>
+							{confirmBad ? m.auth_register_passwords_mismatch() : matches ? m.auth_register_passwords_match() : m.auth_s_confirm_hint()}
+						</Status>
+						<p class="sp-msg">{m.auth_s_recover_rewrap_note()}</p>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!passwordReady}>{m.auth_recover_reset_password()}</Button>
+						</div>
 					{/if}
-					<p class="sp-msg">{m.auth_s_recover_rewrap_note()}</p>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!passwordReady} onclick={startRekey}>{m.auth_recover_reset_password()}</Button>
-					</div>
-				{/if}
-			</div>
+				</div>
+			</form>
 		{:else if step === 'working'}
 			<p class="sent sm">{m.auth_s_recover_working()}</p>
 			<div class="sp-under">
@@ -531,6 +550,7 @@
 		{:else}
 			<p class="sent sm">{m.auth_s_recover_done()}</p>
 			<div class="sp-under">
+				<Seal label={m.auth_s_seal_reset()} reserve={false} />
 				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_signed_out()}</span></p>
 				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
 				<div class="sp-acts">

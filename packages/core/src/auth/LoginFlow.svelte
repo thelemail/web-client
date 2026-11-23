@@ -4,7 +4,9 @@
 	import Blank from '$core/auth/sentence/Blank.svelte';
 	import Clause from '$core/auth/sentence/Clause.svelte';
 	import Done from '$core/auth/sentence/Done.svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Status from '$core/auth/sentence/Status.svelte';
+	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { ApiCallError } from '$core/api/types';
 	import {
 		abandonTwoFactorLogin,
@@ -56,6 +58,7 @@
 	let touched = false;
 	let pw = $state('');
 	let busy = $state(false);
+	let sealed = $state(false);
 	let verifying = $state(false);
 	let loginError = $state<string | null>(null);
 	let rememberMe = $state(false);
@@ -128,7 +131,13 @@
 	});
 
 	async function navigateAfterLogin(slot: number) {
-		await afterSignIn(slot);
+		sealed = true;
+		try {
+			await afterSignIn(slot);
+		} catch (err) {
+			sealed = false;
+			throw err;
+		}
 	}
 
 	function loginErrorMessage(err: unknown): string {
@@ -279,10 +288,11 @@
 		bind:value={email}
 		label={m.common_email_address()}
 		placeholder="you@yourdomain.com"
+		size={36}
 		mono
 		autocomplete="username"
 		invalid={!!identifyError}
-		describedby={identifyError ? 'login-email-err' : undefined}
+		describedby="login-email-err"
 		focus
 		normalize={(raw) => {
 			touched = true;
@@ -297,11 +307,12 @@
 		bind:value={pw}
 		label={m.common_password()}
 		placeholder={m.auth_s_password_placeholder()}
+		size={14}
 		mono
 		secret
 		autocomplete="current-password"
 		invalid={!!loginError}
-		describedby={loginError ? 'login-err' : undefined}
+		describedby="login-err"
 		disabled={busy}
 		focus
 	/>{/snippet}
@@ -322,6 +333,7 @@
 			email={pendingTwoFactor.email}
 			methods={pendingTwoFactor.methods}
 			busy={twoFaBusy}
+			{sealed}
 			error={twoFaError}
 			keyNotice={twoFaKeyNotice}
 			before={pastSignIn}
@@ -348,13 +360,9 @@
 					/>
 				</p>
 				<div class="sp-under">
-					{#if identifyError}
-						<p class="sp-msg bad" role="alert" id="login-email-err">
-							<CircleAlert size={14} strokeWidth={1.75} /><span>{identifyError}</span>
-						</p>
-					{:else if addMode}
-						<p class="sp-msg">{m.auth_s_add_note()}</p>
-					{/if}
+					<Status id="login-email-err" tone={identifyError ? 'bad' : 'hint'}>
+						{identifyError ?? (addMode ? m.auth_s_add_note() : '')}
+					</Status>
 					<div class="sp-acts">
 						<Button type="submit" variant="primary" size="lg" disabled={email.trim().length === 0}>
 							{m.auth_sentence_next()}
@@ -376,18 +384,18 @@
 					/>
 				</p>
 				<div class="sp-under">
-					{#if loginError}
-						<p class="sp-err" role="alert" id="login-err">
-							<CircleAlert size={15} strokeWidth={1.75} /><span>{loginError}</span>
-						</p>
+					{#if sealed}
+						<Seal label={m.auth_s_seal_signed_in()} />
+					{:else}
+						<Status id="login-err" tone={loginError ? 'bad' : 'hint'}>{loginError ?? ''}</Status>
 					{/if}
 					<div class="sp-acts">
 						<Button type="submit" variant="primary" size="lg" disabled={!canSignIn || busy}>
-							{#if busy}
-								<span class="spinner"></span>{verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
-							{:else}
-								{m.auth_sign_in()}
-							{/if}
+							<BusyLabel
+								busy={busy && !sealed}
+								label={m.auth_sign_in()}
+								pending={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
+							/>
 						</Button>
 						<a class="sp-quiet" href={`/recover?email=${encodeURIComponent(identifier)}`}>
 							{m.auth_login_forgot_password()}
