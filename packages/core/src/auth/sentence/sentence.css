@@ -602,18 +602,115 @@
 	}
 }
 
+.auth .sp-trail li,
+.auth .sp-work li,
+.auth .sp-checks li {
+	transition: color var(--dur) var(--ease-out);
+}
+
 @media (prefers-reduced-motion: no-preference) {
-	.auth .sp-enter {
-		animation: sp-in 0.35s var(--ease-out) both;
+	.auth .sent {
+		animation: sp-write 560ms var(--ease-out) backwards;
+	}
+	.auth .sent > .sp-cl:not(:first-child) {
+		animation: sp-fade var(--dur-slow) var(--ease-out) backwards;
+	}
+	.auth .sent .blank {
+		animation: sp-blank 420ms var(--ease-out) 180ms backwards;
+	}
+	.auth .sent .sp-filled {
+		animation: sp-settle 900ms var(--ease-out) 120ms backwards;
+	}
+	.auth .sp-under > :not(.sp-status, .sp-words) {
+		animation: sp-rise var(--dur-slow) var(--ease-out) 140ms backwards;
+	}
+	.auth .sp-status-line {
+		animation: sp-rise var(--dur) var(--ease-out) backwards;
+	}
+	.auth .sp-words .sp-word {
+		animation: sp-rise var(--dur-slow) var(--ease-out) calc(140ms + var(--i, 0) * 22ms) backwards;
+	}
+	.auth .sp-busy.on > span {
+		animation: sp-swap var(--dur) var(--ease-out);
+	}
+	.auth .sp-busy:not(.on) > span {
+		animation: sp-swap-back var(--dur) var(--ease-out);
+	}
+	.auth .sp-trail li.cur::before {
+		animation: sp-dot var(--dur-slow) var(--ease-out);
+	}
+	.auth .sp-trail li.done svg,
+	.auth .sp-work li.done svg,
+	.auth .sp-checks li.met svg {
+		animation: sp-tick var(--dur-slow) var(--ease-out);
 	}
 }
-@keyframes sp-in {
+
+@media (prefers-reduced-motion: reduce) {
+	.auth .sent,
+	.auth .sent > .sp-cl:not(:first-child),
+	.auth .sp-under > :not(.sp-status, .sp-words),
+	.auth .sp-status-line {
+		animation: sp-fade var(--dur) linear backwards;
+	}
+}
+
+@keyframes sp-write {
+	from {
+		mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+		mask-size: 250% 100%;
+		mask-repeat: no-repeat;
+		mask-position: 100% 0;
+	}
+	to {
+		mask-image: linear-gradient(90deg, #000 40%, transparent 60%);
+		mask-size: 250% 100%;
+		mask-repeat: no-repeat;
+		mask-position: 0 0;
+	}
+}
+@keyframes sp-fade {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes sp-rise {
 	from {
 		opacity: 0;
 		transform: translateY(4px);
 	}
-	to {
-		opacity: 1;
-		transform: none;
+}
+@keyframes sp-blank {
+	from {
+		background-color: transparent;
+		box-shadow: inset 0 0 0 var(--pine-500);
+	}
+}
+@keyframes sp-settle {
+	from {
+		box-shadow: inset 0 -2px 0 var(--pine-500);
+	}
+}
+@keyframes sp-swap {
+	from {
+		opacity: 0;
+		transform: translateY(3px);
+	}
+}
+@keyframes sp-swap-back {
+	from {
+		opacity: 0;
+		transform: translateY(-3px);
+	}
+}
+@keyframes sp-dot {
+	from {
+		transform: scale(0);
+	}
+}
+@keyframes sp-tick {
+	from {
+		opacity: 0;
+		transform: scale(0.4);
 	}
 }

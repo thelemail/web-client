@@ -443,7 +443,7 @@
 				<div class="sp-words">
 					{#each words as w, i (i)}
 						{@const wrong = phraseStatus === 'bad' && badWord(w)}
-						<label class="sp-word" class:bad={wrong}>
+						<label class="sp-word" class:bad={wrong} style:--i={i}>
 							<span class="n">{i + 1}</span>
 							<input
 								value={w}

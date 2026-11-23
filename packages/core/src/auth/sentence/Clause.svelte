@@ -12,7 +12,7 @@
 	const segments = $derived(glueTrailing(richSegments(text)));
 </script>
 
-{lead ? ' ' : ''}<span class:past
+{lead ? ' ' : ''}<span class="sp-cl" class:past
 	>{#each segments as seg, i (i)}{#if seg.tag && slots[seg.tag]}{#if seg.tail}<span class="sp-glue"
 					>{@render slots[seg.tag](seg.text)}{seg.tail}</span
 				>{:else}{@render slots[seg.tag](seg.text)}{/if}{:else}{seg.text}{seg.tail ?? ''}{/if}{/each}</span

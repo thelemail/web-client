@@ -173,7 +173,7 @@
 				<p class="sp-msg rk-meta"><span class="mono">{email}</span><span aria-hidden="true">·</span><span>{m.recovery_start_phrase_meta()}</span></p>
 				<div class="sp-words" aria-label={m.recovery_start_phrase_label()}>
 					{#each words as w, i (i)}
-						<div class="sp-word"><span class="n">{i + 1}</span><b class:rk-hidden={!revealed}>{revealed && w ? w : '••••••'}</b></div>
+						<div class="sp-word" style:--i={i}><span class="n">{i + 1}</span><b class:rk-hidden={!revealed}>{revealed && w ? w : '••••••'}</b></div>
 					{/each}
 					{#if !revealed}
 						<div class="rk-cover">
@@ -259,6 +259,27 @@
 	.rk-hidden {
 		filter: blur(6px);
 		user-select: none;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.sp-word b:not(.rk-hidden) {
+			animation: rk-reveal 520ms var(--ease-out) calc(var(--i, 0) * 30ms) backwards;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.sp-word b:not(.rk-hidden) {
+			animation: rk-fade var(--dur) linear backwards;
+		}
+	}
+	@keyframes rk-reveal {
+		from {
+			filter: blur(6px);
+			opacity: 0.4;
+		}
+	}
+	@keyframes rk-fade {
+		from {
+			opacity: 0;
+		}
 	}
 	.rk-cover {
 		position: absolute;
