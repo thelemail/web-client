@@ -1,15 +1,20 @@
 // @vitest-environment node
 import * as openpgp from 'openpgp';
 import { describe, expect, it } from 'vitest';
-import raw from '../../interop/vectors/product-keys-read-v1.json?raw';
+import readRaw from '../../interop/vectors/product-keys-read-v1.json?raw';
+import successorRaw from '../../interop/vectors/product-keys-successor-v1.json?raw';
 import { utf8 } from './canonical';
+import { mailProfile, stripUserIds } from './convert';
 import { b64decode, sha256 } from './encoding';
 import { ProductKeysError } from './errors';
 import type { Product } from './productBundle';
 import type { ReadInput, StoredBundle } from './read';
 import { readProductKeys } from './read';
 
-const DIGEST = 'ba71af45ec0ee3e1c18e1d35ce075f1d45b6a079afface8912edb13e8ec0a754';
+const FILES = [
+	{ name: 'product key read vectors', raw: readRaw, digest: 'ba71af45ec0ee3e1c18e1d35ce075f1d45b6a079afface8912edb13e8ec0a754' },
+	{ name: 'successor heads built by trust', raw: successorRaw, digest: '3326b6bfa2ae77af61f8b75583465f524701ed3ab394a7abad20d063b7316fc6' }
+];
 
 interface BundleJSON {
 	bundleId: string;
@@ -54,7 +59,12 @@ interface Case {
 	error?: string;
 }
 
-const file = JSON.parse(raw) as { version: number; cases: Case[] };
+interface AliasDigest {
+	name: string;
+	publicKey: string;
+	profileId: string;
+	digest: string;
+}
 
 const bytesOrNull = (s: string | null) => (s === null ? null : b64decode(s));
 const bundles = (bs: BundleJSON[]): StoredBundle[] =>
@@ -97,22 +107,34 @@ async function toInput(i: InputJSON): Promise<ReadInput> {
 	};
 }
 
-describe('product key read vectors', () => {
-	it('is the file trust pins', async () => {
-		const sum = await sha256(utf8(raw));
-		expect(Array.from(sum, (b) => b.toString(16).padStart(2, '0')).join('')).toBe(DIGEST);
-		expect(file.cases.filter((c) => c.mode === 'full').length).toBeGreaterThan(0);
-	});
+for (const f of FILES) {
+	const file = JSON.parse(f.raw) as { version: number; cases: Case[]; aliasDigests?: AliasDigest[] };
 
-	for (const c of file.cases.filter((x) => x.mode === 'full')) {
-		it(c.name, async () => {
-			const run = readProductKeys(await toInput(c.input));
-			if (c.error) {
-				await expect(run).rejects.toBeInstanceOf(ProductKeysError);
-				await expect(run).rejects.toMatchObject({ code: c.error });
-				return;
-			}
-			expect(await run).toEqual(c.result);
+	describe(f.name, () => {
+		it('is the file trust pins', async () => {
+			const sum = await sha256(utf8(f.raw));
+			expect(Array.from(sum, (b) => b.toString(16).padStart(2, '0')).join('')).toBe(f.digest);
+			expect(file.cases.filter((c) => c.mode === 'full').length).toBeGreaterThan(0);
 		});
-	}
-});
+
+		for (const c of file.cases.filter((x) => x.mode === 'full')) {
+			it(c.name, async () => {
+				const run = readProductKeys(await toInput(c.input));
+				if (c.error) {
+					await expect(run).rejects.toBeInstanceOf(ProductKeysError);
+					await expect(run).rejects.toMatchObject({ code: c.error });
+					return;
+				}
+				expect(await run).toEqual(c.result);
+			});
+		}
+
+		for (const d of file.aliasDigests ?? []) {
+			it(`strips ${d.name} like trust`, async () => {
+				const key = await openpgp.readKey({ binaryKey: b64decode(d.publicKey) });
+				expect(await sha256(stripUserIds(key))).toEqual(b64decode(d.digest));
+				expect(mailProfile(key)).toBe(d.profileId);
+			});
+		}
+	});
+}
