@@ -1,3 +1,8 @@
+.auth .stagebody:has(> .card > :is(.sp, .card-surface)) {
+	justify-content: flex-start;
+	padding-top: clamp(32px, 11vh, 120px);
+}
+
 .auth .card:has(> .sp) {
 	width: 760px;
 }
@@ -496,6 +501,9 @@
 }
 
 @media (max-width: 640px) {
+	.auth .stagebody:has(> .card > :is(.sp, .card-surface)) {
+		padding-top: 16px;
+	}
 	.auth .card:has(> .sp) {
 		width: 100%;
 	}
