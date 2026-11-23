@@ -8,9 +8,11 @@
 	import Download from '@lucide/svelte/icons/download';
 	import Printer from '@lucide/svelte/icons/printer';
 	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
 	import RotateCw from '@lucide/svelte/icons/rotate-cw';
 	import AuthShell from '$core/auth/AuthShell.svelte';
+	import Status from '$core/auth/sentence/Status.svelte';
+	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { auth } from '$core/stores/session.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
@@ -35,6 +37,7 @@
 	let material = $state<RecoveryMaterial | null>(null);
 	let generating = $state(false);
 	let generateError = $state('');
+	const preparing = delayed(() => !material && !generateError);
 	let revealed = $state(false);
 	let ack = $state(false);
 	let saved = $state<Record<Way, boolean>>({ pdf: false, copy: false, print: false });
@@ -179,20 +182,18 @@
 									<Eye size={17} />{m.settings_ceremony_recovery_reveal()}
 								</Button>
 							{:else if generateError}
-								<span class="sp-msg bad" role="alert"><CircleAlert size={14} /><span>{generateError}</span></span>
-							{:else}
-								<span class="sp-msg"><span class="spinner"></span><span>{m.settings_ceremony_recovery_generating()}</span></span>
+								<div class="rk-failed">
+									<Status tone="bad">{generateError}</Status>
+									<Button variant="secondary" size="lg" disabled={generating} onclick={generate}>
+										<RotateCw size={15} />{m.recovery_start_retry()}
+									</Button>
+								</div>
+							{:else if preparing.visible}
+								<Status tone="busy">{m.settings_ceremony_recovery_generating()}</Status>
 							{/if}
 						</div>
 					{/if}
 				</div>
-				{#if generateError}
-					<div class="sp-acts">
-						<Button variant="secondary" size="lg" disabled={generating} onclick={generate}>
-							<RotateCw size={15} />{m.recovery_start_retry()}
-						</Button>
-					</div>
-				{/if}
 				<p class="sp-fine">{m.recovery_start_phrase_note()}</p>
 			</div>
 			<div class="sp-under wide">
@@ -207,30 +208,26 @@
 						</button>
 					{/each}
 				</div>
-				{#if saveError}
-					<p class="sp-msg bad" role="alert"><CircleAlert size={14} /><span>{saveError}</span></p>
-				{/if}
 				<label class="sp-tick">
 					<input type="checkbox" bind:checked={ack} />
 					<span>{m.recovery_start_ack()}</span>
 				</label>
 				<div class="sp-acts">
 					<Button variant="primary" size="lg" disabled={!canFinish} onclick={finish}>
-						{#if submitting}<span class="spinner"></span>{m.settings_ceremony_recovery_saving()}{:else}{m.recovery_start_open_mailbox()}{/if}
+						<BusyLabel
+							busy={submitting}
+							label={m.recovery_start_open_mailbox()}
+							pending={m.settings_ceremony_recovery_saving()}
+						/>
 					</Button>
-					{#if !submitError}
-						{#if !revealed && material}
-							<span class="sp-fine">{m.recovery_start_hint_reveal()}</span>
-						{:else if revealed && !anySaved}
-							<span class="sp-fine">{m.recovery_start_hint_save()}</span>
-						{:else if revealed && !ack}
-							<span class="sp-fine">{m.recovery_start_hint_ack()}</span>
-						{/if}
-					{/if}
 				</div>
-				{#if submitError}
-					<p class="sp-err" role="alert"><CircleAlert size={15} /><span>{submitError}</span></p>
-				{/if}
+				<Status tone={submitError || saveError ? 'bad' : 'hint'}>
+					{#if submitError}{submitError}
+					{:else if saveError}{saveError}
+					{:else if !revealed && material}{m.recovery_start_hint_reveal()}
+					{:else if revealed && !anySaved}{m.recovery_start_hint_save()}
+					{:else if revealed && !ack}{m.recovery_start_hint_ack()}{/if}
+				</Status>
 				<p class="sp-fine">{m.recovery_start_footer()}</p>
 			</div>
 		</div>
@@ -270,6 +267,15 @@
 		place-items: center;
 		border-radius: 12px;
 		background: color-mix(in srgb, var(--bg) 62%, transparent);
+	}
+	.rk-failed {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		max-width: 420px;
+		padding: 0 16px;
+		text-align: center;
 	}
 	.rk-keep {
 		font-family: var(--font-mono);
