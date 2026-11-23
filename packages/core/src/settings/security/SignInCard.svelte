@@ -1,18 +1,21 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Pencil from '@lucide/svelte/icons/pencil';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import Fingerprint from '@lucide/svelte/icons/fingerprint';
-	import Usb from '@lucide/svelte/icons/usb';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import Plus from '@lucide/svelte/icons/plus';
-	import ShieldOff from '@lucide/svelte/icons/shield-off';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faCircleExclamation,
+		faFingerprint,
+		faKey,
+		faLifeRing,
+		faLock,
+		faMobile,
+		faPencil,
+		faPlus,
+		faShieldCheck,
+		faShieldSlash,
+		faTriangleExclamation,
+		faUsbDrive
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Badge from '../Badge.svelte';
 	import CeremonyRow from '../CeremonyRow.svelte';
@@ -158,7 +161,7 @@
 
 {#snippet turnOnLink(t: string)}<button type="button" class="notelink" onclick={() => launch('twofa')}>{t}</button>{/snippet}
 
-<Card icon={KeyRound} title={m.settings_security_signin_title()} variant="flat">
+<Card icon={faKey} title={m.settings_security_signin_title()} variant="flat">
 	{#snippet right()}
 		{#if tfStatus}
 			{#if tfStatus.enabled}
@@ -174,7 +177,7 @@
 	{/snippet}
 	<div class="cer-rows">
 		<CeremonyRow
-			icon={Lock}
+			icon={faLock}
 			title={m.settings_security_password_title()}
 			desc={m.settings_security_password_desc()}
 			cta={m.settings_security_password_cta()}
@@ -182,15 +185,15 @@
 		/>
 	</div>
 	<div class="tfa-sub">
-		<ShieldCheckIcon size={13} />{m.settings_security_2fa_methods()}
+		<Icon icon={faShieldCheck} size={13} />{m.settings_security_2fa_methods()}
 		<span class="tfa-sub-note">{m.settings_security_2fa_methods_note()}</span>
 	</div>
 	{#if twofactor.phase === 'error'}
 		<div class="setrow set-loaderr" role="alert">
-			<CircleAlert size={16} />
+			<Icon icon={faCircleExclamation} size={16} />
 			<p>{m.settings_security_2fa_load_failed()}</p>
 			<Button variant="secondary" size="sm" onclick={() => void twofactor.load(auth.accountId)}>
-				<RefreshCw />{m.common_retry()}
+				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		</div>
 	{/if}
@@ -198,7 +201,7 @@
 		{#each tfStatus.webauthnCredentials as cred (cred.id)}
 			<div class="tfa-row">
 				<span class="tfa-ic">
-					{#if cred.kind === 'platform'}<Fingerprint size={18} />{:else}<Usb size={18} />{/if}
+					{#if cred.kind === 'platform'}<Icon icon={faFingerprint} size={18} />{:else}<Icon icon={faUsbDrive} size={18} />{/if}
 				</span>
 				<div class="tfa-info">
 					<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
@@ -207,7 +210,7 @@
 					</div>
 					{#if cred.userVerified === false}
 						<div class="tfa-d tfa-warn">
-							<TriangleAlert size={12} />{m.settings_security_key_no_pin()}
+							<Icon icon={faTriangleExclamation} size={12} />{m.settings_security_key_no_pin()}
 						</div>
 					{/if}
 				</div>
@@ -223,33 +226,33 @@
 		{/each}
 		{#if webauthnSupported()}
 			<div class="tfa-row off">
-				<span class="tfa-ic"><Fingerprint size={18} /></span>
+				<span class="tfa-ic"><Icon icon={faFingerprint} size={18} /></span>
 				<div class="tfa-info">
 					<div class="tfa-t">{m.settings_security_this_device()}</div>
 					<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
 				</div>
 				<div class="tfa-act">
 					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
-						<Plus size={14} />{m.settings_security_setup()}
+						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
 			</div>
 			<div class="tfa-row off">
-				<span class="tfa-ic"><Usb size={18} /></span>
+				<span class="tfa-ic"><Icon icon={faUsbDrive} size={18} /></span>
 				<div class="tfa-info">
 					<div class="tfa-t">{m.settings_security_key()}</div>
 					<div class="tfa-d">{m.settings_security_key_desc()}</div>
 				</div>
 				<div class="tfa-act">
 					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
-						<Plus size={14} />{m.settings_security_setup()}
+						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
 			</div>
 		{/if}
 		{#if tfStatus?.totp?.active}
 			<div class="tfa-row">
-				<span class="tfa-ic"><Smartphone size={18} /></span>
+				<span class="tfa-ic"><Icon icon={faMobile} size={18} /></span>
 				<div class="tfa-info">
 					<div class="tfa-t">{m.settings_security_totp()}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
 					<div class="tfa-d">
@@ -264,21 +267,21 @@
 			</div>
 		{:else}
 			<div class="tfa-row off">
-				<span class="tfa-ic"><Smartphone size={18} /></span>
+				<span class="tfa-ic"><Icon icon={faMobile} size={18} /></span>
 				<div class="tfa-info">
 					<div class="tfa-t">{m.settings_security_totp()}</div>
 					<div class="tfa-d">{m.settings_security_totp_desc()}</div>
 				</div>
 				<div class="tfa-act">
 					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
-						<Plus size={14} />{m.settings_security_setup()}
+						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
 			</div>
 		{/if}
 		{#if tfStatus?.enabled}
 			<div class="tfa-row backup">
-				<span class="tfa-ic"><LifeBuoy size={18} /></span>
+				<span class="tfa-ic"><Icon icon={faLifeRing} size={18} /></span>
 				<div class="tfa-info">
 					<div class="tfa-t">{m.settings_security_backup_codes()}</div>
 					<div class="tfa-d">
@@ -287,19 +290,19 @@
 				</div>
 				<div class="tfa-act">
 					<Button variant="ghost" size="sm" onclick={() => openFactorAction({ kind: 'regenCodes' })}>
-						<RefreshCw size={14} />{m.settings_security_backup_regen()}
+						<Icon icon={faArrowsRotate} size={14} />{m.settings_security_backup_regen()}
 					</Button>
 				</div>
 			</div>
 			{#if tfStatus.backupCodes?.outdated}
 				<div class="card-note warn">
-					<TriangleAlert size={13} />
+					<Icon icon={faTriangleExclamation} size={13} />
 					<span>{m.settings_security_backup_outdated()}</span>
 				</div>
 			{/if}
 		{:else}
 			<div class="card-note warn">
-				<TriangleAlert size={13} />
+				<Icon icon={faTriangleExclamation} size={13} />
 				<span>
 					<Rich text={m.settings_security_2fa_off_note()} tags={{ link: turnOnLink }} />
 				</span>
@@ -345,7 +348,7 @@
 
 {#if factorAction}
 	<ConfirmDialog
-		icon={factorCopy.danger ? ShieldOff : factorAction.kind === 'renameKey' ? Pencil : RefreshCw}
+		icon={factorCopy.danger ? faShieldSlash : factorAction.kind === 'renameKey' ? faPencil : faArrowsRotate}
 		tone={factorCopy.danger ? 'danger' : 'neutral'}
 		title={factorCopy.title}
 		confirmLabel={factorCopy.confirmLabel}

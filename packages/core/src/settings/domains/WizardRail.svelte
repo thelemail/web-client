@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
-	import Clock from '@lucide/svelte/icons/clock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faClock } from '@fortawesome/pro-regular-svg-icons';
 	import { DOMAIN_STEPS, STEP_LABELS, type DomainStep } from './steps';
 	import { m } from '$paraglide/messages.js';
 
@@ -28,7 +28,7 @@
 			onclick={() => onSelect(s)}
 		>
 			<span class="dw-dot" aria-hidden="true">
-				{#if done(s)}<Check size={13} strokeWidth={2} />{:else if running(s)}<Clock size={13} strokeWidth={2} />{:else}{i + 1}{/if}
+				{#if done(s)}<Icon icon={faCheck} size={13} />{:else if running(s)}<Icon icon={faClock} size={13} />{:else}{i + 1}{/if}
 			</span>
 			<span class="dw-lbl">{STEP_LABELS[s]()}</span>
 			{#if done(s)}

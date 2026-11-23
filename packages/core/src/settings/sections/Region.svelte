@@ -1,6 +1,5 @@
 <script lang="ts">
-	import Clock from '@lucide/svelte/icons/clock';
-	import Languages from '@lucide/svelte/icons/languages';
+	import { faClock, faLanguage } from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
@@ -40,7 +39,7 @@
 
 <SecHead desc={m.settings_region_desc()} />
 
-<Card icon={Languages} title={m.settings_region_language_title()}>
+<Card icon={faLanguage} title={m.settings_region_language_title()}>
 	<Row t={m.settings_region_language()} d={m.settings_region_language_desc()}>
 		<Select
 			value={i18n.explicit ? i18n.locale : 'auto'}
@@ -51,7 +50,7 @@
 	</Row>
 </Card>
 
-<Card icon={Clock} title={m.settings_region_time_title()}>
+<Card icon={faClock} title={m.settings_region_time_title()}>
 	<Row t={m.settings_region_time_zone()} d={m.settings_region_time_zone_desc()}>
 		<span class="ctl-aux">{accountSettings.timeZone}</span>
 	</Row>

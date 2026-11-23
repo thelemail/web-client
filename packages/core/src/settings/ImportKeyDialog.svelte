@@ -1,9 +1,12 @@
 <script lang="ts">
-	import Upload from '@lucide/svelte/icons/upload';
-	import FileUp from '@lucide/svelte/icons/file-up';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleCheck,
+		faCircleExclamation,
+		faFileArrowUp,
+		faTriangleExclamation,
+		faUpload
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import CeremonyShell from './CeremonyShell.svelte';
 	import TextInput from './TextInput.svelte';
@@ -92,7 +95,7 @@
 	}
 </script>
 
-<CeremonyShell icon={Upload} eyebrow={m.settings_security_contact_keys_title()} title={m.settings_import_key_title()} {onClose}>
+<CeremonyShell icon={faUpload} eyebrow={m.settings_security_contact_keys_title()} title={m.settings_import_key_title()} {onClose}>
 	<div class="cer-pane">
 		{#if imported}
 			<div class="cer-lede">
@@ -102,7 +105,7 @@
 				<span class="field-lbl">{m.settings_forwarding_fingerprint()}</span>
 				<div class="mono fp">{imported.fingerprint}</div>
 			</div>
-			<div class="field-hint"><CircleCheck size={13} />{m.settings_import_key_pinned()}</div>
+			<div class="field-hint"><Icon icon={faCircleCheck} size={13} />{m.settings_import_key_pinned()}</div>
 		{:else if review}
 			<div class="cer-lede">
 				<p>{m.settings_import_key_review_lede({ address: target })}</p>
@@ -125,12 +128,12 @@
 			</div>
 			{#if mismatch}
 				<div class="inline-warn" role="alert">
-					<TriangleAlert size={15} />
+					<Icon icon={faTriangleExclamation} size={15} />
 					<span>{m.settings_import_key_uid_mismatch({ address: target })}</span>
 				</div>
 			{/if}
 			{#if error}
-				<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		{:else}
 			<div class="cer-lede">
@@ -170,11 +173,11 @@
 					onchange={pickFile}
 				/>
 				<Button variant="ghost" disabled={busy} onclick={() => fileInput?.click()}>
-					<FileUp size={15} />{m.settings_import_key_choose_file()}
+					<Icon icon={faFileArrowUp} size={15} />{m.settings_import_key_choose_file()}
 				</Button>
 			</div>
 			{#if error}
-				<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		{/if}
 	</div>

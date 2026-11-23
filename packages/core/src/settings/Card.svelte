@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { untrack, type Component, type Snippet } from 'svelte';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import Heading from './Heading.svelte';
 	import { getHeadingLevel, setHeadingLevel } from './a11y';
 
 	interface Props extends Omit<HTMLAttributes<HTMLElement>, 'title' | 'class'> {
 		title?: string;
-		icon?: Component<{ size?: number }>;
+		icon?: IconDefinition;
 		right?: Snippet;
 		variant?: 'flat' | 'menus' | 'danger';
 		as?: 'div' | 'section';
@@ -18,7 +20,7 @@
 
 	let {
 		title,
-		icon: IconComponent,
+		icon,
 		right,
 		variant,
 		as = 'div',
@@ -36,7 +38,7 @@
 <svelte:element this={as} {...rest} class={['scard', variant, extra]}>
 	{#if title}
 		<div class={['scard-h', headClass]}>
-			{#if IconComponent}<IconComponent size={16} />{/if}
+			{#if icon}<Icon {icon} size={16} />{/if}
 			<Heading {level} class={['scard-title', titleClass]}>{title}</Heading>
 			{#if right}{@render right()}{/if}
 		</div>

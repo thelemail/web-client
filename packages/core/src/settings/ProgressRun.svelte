@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 
 	interface Props {
 		label: string;
@@ -21,7 +22,7 @@
 			<li class:done={j < i} class:active={j === i}>
 				<span class="cpl-ic">
 					{#if j < i}
-						<Check size={13} />
+						<Icon icon={faCheck} size={13} />
 					{:else if j === i}
 						<span class="spin"></span>
 					{:else}

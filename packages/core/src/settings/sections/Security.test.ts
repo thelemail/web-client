@@ -139,8 +139,8 @@ describe('Security key list', () => {
 		} as unknown as TwoFactorStatus;
 		open();
 		const rows = [...document.querySelectorAll('.tfa-row:not(.off)')].slice(0, 2);
-		expect(rows[0].querySelector('.tfa-ic svg')?.getAttribute('class')).toContain('lucide-fingerprint');
-		expect(rows[1].querySelector('.tfa-ic svg')?.getAttribute('class')).toContain('lucide-usb');
+		expect(rows[0].querySelector('.tfa-ic svg')?.getAttribute('class')).toContain('icon-fingerprint');
+		expect(rows[1].querySelector('.tfa-ic svg')?.getAttribute('class')).toContain('icon-usb-drive');
 		expect(rows[0].textContent).not.toContain('synced passkey');
 		expect(rows[1].textContent).toContain("This key doesn't ask for a PIN");
 	});

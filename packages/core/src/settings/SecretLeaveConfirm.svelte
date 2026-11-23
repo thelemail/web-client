@@ -1,5 +1,5 @@
 <script lang="ts">
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import { faTriangleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { m } from '$paraglide/messages.js';
 
@@ -16,7 +16,7 @@
 
 <div class="leave-layer">
 	<ConfirmDialog
-		icon={TriangleAlert}
+		icon={faTriangleExclamation}
 		tone="danger"
 		title={m.settings_secret_leave_title()}
 		cancelLabel={m.settings_secret_leave_stay()}

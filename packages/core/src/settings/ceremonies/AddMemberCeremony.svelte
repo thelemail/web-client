@@ -1,16 +1,19 @@
 <script lang="ts">
-	import UserPlus from '@lucide/svelte/icons/user-plus';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faBuilding,
+		faCircleExclamation,
+		faCircleInfo,
+		faEnvelopeCircleCheck,
+		faLink,
+		faPaperPlane,
+		faReceipt,
+		faUserCheck,
+		faUserPlus,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { platform } from '$platform';
-	import Building2 from '@lucide/svelte/icons/building-2';
-	import Users from '@lucide/svelte/icons/users';
-	import Receipt from '@lucide/svelte/icons/receipt';
-	import Info from '@lucide/svelte/icons/info';
-	import Link from '@lucide/svelte/icons/link';
-	import Send from '@lucide/svelte/icons/send';
-	import MailCheck from '@lucide/svelte/icons/mail-check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import UserCheck from '@lucide/svelte/icons/user-check';
 	import { browser } from '$app/env';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -142,7 +145,7 @@
 </script>
 
 <CeremonyShell
-	icon={fam ? UserPlus : Building2}
+	icon={fam ? faUserPlus : faBuilding}
 	eyebrow={fam ? m.settings_ceremony_member_eyebrow_family() : m.settings_ceremony_member_eyebrow_org()}
 	title={fam ? m.settings_ceremony_member_title_family() : m.settings_ceremony_member_title_org()}
 	{steps}
@@ -186,15 +189,15 @@
 				</div>
 				{#if usableDomains.length === 0}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />{m.settings_ceremony_member_no_domain()}
+						<Icon icon={faCircleExclamation} size={13} />{m.settings_ceremony_member_no_domain()}
 					</div>
 				{:else if local.length > 0 && !localOk}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />{m.settings_local_part_invalid()}
+						<Icon icon={faCircleExclamation} size={13} />{m.settings_local_part_invalid()}
 					</div>
 				{:else if addrConflict}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />{m.settings_ceremony_member_address_conflict()}
+						<Icon icon={faCircleExclamation} size={13} />{m.settings_ceremony_member_address_conflict()}
 					</div>
 				{/if}
 			</div>
@@ -204,7 +207,7 @@
 					<label for="add-mem-role">{m.settings_ceremony_member_role_label()}</label>
 					<Select id="add-mem-role" value={role} options={roleOptions} onChange={(v) => (role = v)} />
 					<div class="field-hint">
-						<Info size={13} />
+						<Icon icon={faCircleInfo} size={13} />
 						{role === 'Admin'
 							? m.settings_ceremony_member_role_admin_hint()
 							: m.settings_ceremony_member_role_member_hint()}
@@ -227,24 +230,24 @@
 				/>
 				{#if email.length > 0 && !emailOk}
 					<div class="field-hint bad">
-						<CircleAlert size={13} />{m.settings_ceremony_member_email_invalid()}
+						<Icon icon={faCircleExclamation} size={13} />{m.settings_ceremony_member_email_invalid()}
 					</div>
 				{:else}
 					<div class="field-hint">
-						<Link size={13} />{m.settings_ceremony_member_email_hint()}
+						<Icon icon={faLink} size={13} />{m.settings_ceremony_member_email_hint()}
 					</div>
 				{/if}
 			</div>
 
 			{#if submitError}
 				<div class="field-hint bad" role="alert" style="margin-top:8px">
-					<CircleAlert size={13} />{submitError}
+					<Icon icon={faCircleExclamation} size={13} />{submitError}
 				</div>
 			{/if}
 
 			{#if fam}
 				<div class="seat-callout ok">
-					<Users size={17} />
+					<Icon icon={faUsers} size={17} />
 					<div>
 						<b>{m.settings_ceremony_member_seat_uses_family({ total: seatsTotal ?? '' })}</b>
 						{(seatsLeft ?? 0) - 1 >= 0
@@ -254,7 +257,7 @@
 				</div>
 			{:else}
 				<div class="seat-callout">
-					<Receipt size={17} />
+					<Icon icon={faReceipt} size={17} />
 					<div>
 						<b>{m.settings_ceremony_member_seat_adds_org()}</b>
 						{(seatsLeft ?? 0) > 0
@@ -267,7 +270,7 @@
 		</div>
 	{:else}
 		<DoneScreen
-			icon={UserCheck}
+			icon={faUserCheck}
 			title={m.settings_ceremony_member_done_title()}
 			desc={m.settings_ceremony_member_done_desc({ address: invitedAddress })}
 		>
@@ -278,7 +281,7 @@
 
 			<div class="invite-link">
 				<div class="il-label">
-					<Link size={14} />{m.settings_ceremony_member_link_label()}
+					<Icon icon={faLink} size={14} />{m.settings_ceremony_member_link_label()}
 					<span class="il-note">{m.settings_ceremony_member_link_expiry()}</span>
 				</div>
 				<div class="il-row">
@@ -289,18 +292,18 @@
 
 			<div class="cer-reminder">
 				{#if sentToEmail}
-					<MailCheck size={15} /><Rich
+					<Icon icon={faEnvelopeCircleCheck} size={15} /><Rich
 						text={m.settings_ceremony_member_emailed_to({ email: sentToEmail })}
 						tags={{ b: mono }}
 					/>
 				{:else}
-					<Send size={15} />{m.settings_ceremony_member_share_link()}
+					<Icon icon={faPaperPlane} size={15} />{m.settings_ceremony_member_share_link()}
 				{/if}
 			</div>
 
 			{#if !fam}
 				<div class="cer-reminder">
-					<Receipt size={15} />{m.settings_ceremony_member_count({ count: seatsUsed + 1 })}
+					<Icon icon={faReceipt} size={15} />{m.settings_ceremony_member_count({ count: seatsUsed + 1 })}
 				</div>
 			{/if}
 		</DoneScreen>
@@ -312,7 +315,7 @@
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
 				{submitting
 					? m.settings_ceremony_member_creating()
-					: m.settings_ceremony_member_submit()}<ArrowRight size={15} />
+					: m.settings_ceremony_member_submit()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else}
 			<Button variant="primary" onclick={() => {

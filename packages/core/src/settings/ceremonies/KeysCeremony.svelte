@@ -1,11 +1,14 @@
 <script lang="ts">
-	import KeySquare from '@lucide/svelte/icons/key-square';
-	import Check from '@lucide/svelte/icons/check';
-	import Info from '@lucide/svelte/icons/info';
-	import MonitorSmartphone from '@lucide/svelte/icons/monitor-smartphone';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faCheck,
+		faCircleExclamation,
+		faCircleInfo,
+		faKeySkeleton,
+		faLaptopMobile,
+		faTriangleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import ProgressRun from '../ProgressRun.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -169,7 +172,7 @@
 </script>
 
 <CeremonyShell
-	icon={KeySquare}
+	icon={faKeySkeleton}
 	eyebrow={m.settings_ceremony_keys_eyebrow()}
 	title={m.settings_ceremony_keys_title()}
 	{steps}
@@ -182,10 +185,10 @@
 				<p>{m.settings_ceremony_keys_lede()}</p>
 			</div>
 			<ul class="cer-points">
-				<li><Check size={16} /><span>{m.settings_ceremony_keys_point_readable()}</span></li>
-				<li><Info size={16} /><span>{m.settings_ceremony_keys_point_fingerprint()}</span></li>
-				<li><MonitorSmartphone size={16} /><span>{m.settings_ceremony_keys_point_devices()}</span></li>
-				<li><TriangleAlert size={16} /><span>{m.settings_ceremony_keys_point_old_apps()}</span></li>
+				<li><Icon icon={faCheck} size={16} /><span>{m.settings_ceremony_keys_point_readable()}</span></li>
+				<li><Icon icon={faCircleInfo} size={16} /><span>{m.settings_ceremony_keys_point_fingerprint()}</span></li>
+				<li><Icon icon={faLaptopMobile} size={16} /><span>{m.settings_ceremony_keys_point_devices()}</span></li>
+				<li><Icon icon={faTriangleExclamation} size={16} /><span>{m.settings_ceremony_keys_point_old_apps()}</span></li>
 			</ul>
 			<div class="field">
 				<span class="field-lbl">{m.settings_ceremony_keys_current_fingerprint()}</span>
@@ -196,19 +199,19 @@
 				{/if}
 			</div>
 			{#if blocked}
-				<div class="field-hint bad"><CircleAlert size={13} />{blocked}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{blocked}</div>
 			{/if}
 		</div>
 	{:else if step === 1}
 		<div class="cer-pane">
 			<ProgressRun label={m.settings_ceremony_keys_progress()} {lines} {progress} />
 			{#if error}
-				<div class="field-hint bad" role="alert"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		</div>
 	{:else if result}
 		<DoneScreen
-			icon={KeySquare}
+			icon={faKeySkeleton}
 			title={m.settings_ceremony_keys_done_title()}
 			desc={m.settings_ceremony_keys_done_desc()}
 		>
@@ -229,12 +232,12 @@
 		{#if step === 0}
 			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!!blocked || !current} onclick={start}>
-				<RefreshCw size={15} />{m.settings_ceremony_keys_rotate()}
+				<Icon icon={faArrowsRotate} size={15} />{m.settings_ceremony_keys_rotate()}
 			</Button>
 		{:else if step === 1 && error}
 			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" onclick={start}>
-				<RefreshCw size={15} />{m.common_retry()}
+				<Icon icon={faArrowsRotate} size={15} />{m.common_retry()}
 			</Button>
 		{:else if step === 2}
 			<Button variant="primary" onclick={finish}>{m.common_done()}</Button>

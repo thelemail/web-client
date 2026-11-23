@@ -1,18 +1,21 @@
 <script lang="ts">
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { platform } from '$platform';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import Lock from '@lucide/svelte/icons/lock';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Eye from '@lucide/svelte/icons/eye';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Download from '@lucide/svelte/icons/download';
-	import Check from '@lucide/svelte/icons/check';
-	import X from '@lucide/svelte/icons/x';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faCheck,
+		faCircleExclamation,
+		faCopy,
+		faDownload,
+		faEye,
+		faLifeRing,
+		faLock,
+		faShieldCheck,
+		faTriangleExclamation,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import SecretLeaveConfirm from '../SecretLeaveConfirm.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -155,7 +158,7 @@
 </script>
 
 <CeremonyShell
-	icon={LifeBuoy}
+	icon={faLifeRing}
 	eyebrow={m.settings_ceremony_recovery_eyebrow()}
 	title={m.settings_ceremony_recovery_title()}
 	{steps}
@@ -176,12 +179,12 @@
 				{/if}
 			</div>
 			<ul class="cer-points">
-				<li><ShieldCheck size={16} /><span>{m.settings_ceremony_recovery_point_offline()}</span></li>
+				<li><Icon icon={faShieldCheck} size={16} /><span>{m.settings_ceremony_recovery_point_offline()}</span></li>
 				<li>
-					<TriangleAlert size={16} /><span>{m.settings_ceremony_recovery_point_gone()}</span>
+					<Icon icon={faTriangleExclamation} size={16} /><span>{m.settings_ceremony_recovery_point_gone()}</span>
 				</li>
 				<li>
-					<Lock size={16} /><span>{m.settings_ceremony_recovery_point_deed()}</span>
+					<Icon icon={faLock} size={16} /><span>{m.settings_ceremony_recovery_point_deed()}</span>
 				</li>
 			</ul>
 			<div class="cer-ack">
@@ -189,7 +192,7 @@
 				<label for="recovery-ack">{m.settings_ceremony_recovery_ack()}</label>
 			</div>
 			{#if generateError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{generateError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{generateError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1 && setup}
@@ -206,22 +209,22 @@
 				{/each}
 				{#if !revealed}
 					<button type="button" class="phrase-cover" onclick={() => (revealed = true)}>
-						<Eye size={18} />{m.settings_ceremony_recovery_reveal()}
+						<Icon icon={faEye} size={18} />{m.settings_ceremony_recovery_reveal()}
 						<span class="pc-sub">{m.settings_ceremony_recovery_reveal_sub()}</span>
 					</button>
 				{/if}
 			</div>
 			<div class="phrase-acts">
 				<Button variant="secondary" size="sm" disabled={!revealed} onclick={copyPhrase}>
-					<Copy size={14} />{m.common_copy()}
+					<Icon icon={faCopy} size={14} />{m.common_copy()}
 				</Button>
 				<Button variant="secondary" size="sm" disabled={!revealed} onclick={downloadKit}>
-					<Download size={14} />{m.settings_ceremony_recovery_download()}
+					<Icon icon={faDownload} size={14} />{m.settings_ceremony_recovery_download()}
 				</Button>
-				{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_ceremony_recovery_saved()}</span>{/if}
+				{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_ceremony_recovery_saved()}</span>{/if}
 			</div>
 			{#if copyFailed}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{m.settings_secret_copy_failed_phrase()}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{m.settings_secret_copy_failed_phrase()}</span></span>
 			{/if}
 		</div>
 	{:else if step === 2}
@@ -247,25 +250,25 @@
 									k === j ? (e.currentTarget as HTMLInputElement).value : x
 								))}
 						/>
-						{#if ok}<Check size={16} />{:else if bad}<X size={16} />{/if}
+						{#if ok}<Icon icon={faCheck} size={16} />{:else if bad}<Icon icon={faXmark} size={16} />{/if}
 					</div>
 				{/each}
 			</div>
 			<button type="button" class="quiz-back" onclick={() => (step = 1)}>
-				<Eye size={14} />{m.settings_ceremony_recovery_show_again()}
+				<Icon icon={faEye} size={14} />{m.settings_ceremony_recovery_show_again()}
 			</button>
 			{#if submitError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{submitError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{submitError}</span></span>
 			{/if}
 		</div>
 	{:else}
 		<DoneScreen
-			icon={ShieldCheck}
+			icon={faShieldCheck}
 			title={m.settings_ceremony_recovery_done_title()}
 			desc={m.settings_ceremony_recovery_done_desc()}
 		>
 			<div class="cer-reminder">
-				<Lock size={15} />{m.settings_ceremony_recovery_done_reminder()}
+				<Icon icon={faLock} size={15} />{m.settings_ceremony_recovery_done_reminder()}
 			</div>
 		</DoneScreen>
 	{/if}
@@ -277,25 +280,25 @@
 				{#if generating}
 					{m.settings_ceremony_recovery_generating()}
 				{:else}
-					{m.settings_ceremony_recovery_generate()}<ArrowRight size={15} />
+					{m.settings_ceremony_recovery_generate()}<Icon icon={faArrowRight} size={15} />
 				{/if}
 			</Button>
 		{:else if step === 1}
 			<Button variant="ghost" onclick={() => (step = 0)}>
-				<ArrowLeft size={15} />{m.common_back()}
+				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!revealed} onclick={() => (step = 2)}>
-				{m.settings_ceremony_recovery_written_down()}<ArrowRight size={15} />
+				{m.settings_ceremony_recovery_written_down()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 2}
 			<Button variant="ghost" onclick={() => (step = 1)}>
-				<ArrowLeft size={15} />{m.common_back()}
+				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!allCorrect || submitting} onclick={confirmAndStore}>
 				{#if submitting}
 					{m.settings_ceremony_recovery_saving()}
 				{:else}
-					{m.settings_ceremony_recovery_confirm_finish()}<Check size={15} />
+					{m.settings_ceremony_recovery_confirm_finish()}<Icon icon={faCheck} size={15} />
 				{/if}
 			</Button>
 		{:else}

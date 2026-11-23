@@ -1,11 +1,14 @@
 <script lang="ts">
 	import LoadState from '$core/components/LoadState.svelte';
-	import Globe2 from '@lucide/svelte/icons/globe-2';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import EllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faCircleExclamation,
+		faEarthEurope,
+		faEllipsisVertical,
+		faPlus,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { page } from '$app/state';
 
 	import Card from '$core/settings/Card.svelte';
@@ -126,7 +129,7 @@
 
 <SecHead desc={m.settings_domains_desc()} />
 
-<Card icon={Globe2} title={m.settings_domains_title()}>
+<Card icon={faEarthEurope} title={m.settings_domains_title()}>
 
 	{#if !store.loaded && store.error}
 		<LoadState
@@ -165,7 +168,7 @@
 					</div>
 
 					{#if why}
-						<div class="cd-err"><CircleAlert size={14} /><span>{why}</span></div>
+						<div class="cd-err"><Icon icon={faCircleExclamation} size={14} /><span>{why}</span></div>
 					{/if}
 
 					<div class="cd-foot-row">
@@ -175,7 +178,7 @@
 								<Button variant="secondary" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
 							{:else}
 								<Button variant="primary" href={setupHref(d)}>
-									{m.settings_domains_continue_setup()}<ArrowRight size={15} />
+									{m.settings_domains_continue_setup()}<Icon icon={faArrowRight} size={15} />
 								</Button>
 							{/if}
 							{#if manage}
@@ -187,7 +190,7 @@
 										aria-expanded={menuFor === d.id}
 										onclick={() => openMenu(d.id)}
 									>
-										<EllipsisVertical size={16} strokeWidth={1.75} />
+										<Icon icon={faEllipsisVertical} size={16} />
 									</button>
 									{#if menuFor === d.id}
 										<div class="cd-menu" role="menu">
@@ -196,7 +199,7 @@
 												class="cd-menu-item danger"
 												onclick={() => startRemove(d.id)}
 											>
-												<Trash2 size={14} strokeWidth={1.75} />{m.settings_domains_remove()}
+												<Icon icon={faTrashCan} size={14} />{m.settings_domains_remove()}
 											</button>
 										</div>
 									{/if}
@@ -216,13 +219,13 @@
 				desc={m.settings_domains_nudge_desc()}
 			/>
 		{:else}
-			<Button variant="primary" href={`${base}/new`}><Plus size={15} />{m.settings_domains_add()}</Button>
+			<Button variant="primary" href={`${base}/new`}><Icon icon={faPlus} size={15} />{m.settings_domains_add()}</Button>
 		{/if}
 	</div>
 
 	{#if store.loaded && store.error}
 		<div class="cd-err cd-err-card">
-			<CircleAlert size={14} /><span>{store.error}</span>
+			<Icon icon={faCircleExclamation} size={14} /><span>{store.error}</span>
 		</div>
 	{/if}
 </Card>

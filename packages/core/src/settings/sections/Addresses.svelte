@@ -1,19 +1,22 @@
 <script lang="ts">
 	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Users from '@lucide/svelte/icons/users';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Star from '@lucide/svelte/icons/star';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Forward from '@lucide/svelte/icons/forward';
-	import Clock from '@lucide/svelte/icons/clock';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faAt,
+		faCircleExclamation,
+		faClock,
+		faEllipsis,
+		faGlobe,
+		faKey,
+		faPenLine,
+		faPlus,
+		faShare,
+		faStar,
+		faTrashCan,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -198,14 +201,14 @@
 	{#if canAdd}
 		<div class="addr-intro-act">
 			<Button variant="primary" onclick={() => launch('alias')}>
-				<Plus size={14} />{m.settings_address_add_alias()}
+				<Icon icon={faPlus} size={14} />{m.settings_address_add_alias()}
 			</Button>
 		</div>
 	{/if}
 </div>
 
 {#each groups as g (g.domain)}
-	<Card as="section" class="addr-group" headClass="addr-group-h" titleClass="addr-domain" icon={Globe} title={g.domain}>
+	<Card as="section" class="addr-group" headClass="addr-group-h" titleClass="addr-domain" icon={faGlobe} title={g.domain}>
 		{#snippet right()}
 			{#if g.badge}<Badge kind={g.badgeTone}>{g.badge}</Badge>{/if}
 			<span class="addr-count">{g.count}</span>
@@ -217,7 +220,7 @@
 			<div class="addr-row">
 				<a class="addr-main" href={href(row)}>
 					<span class="addr-chip">
-						{#if row.kind === 'shared'}<Users size={15} />{:else}<AtSign size={15} />{/if}
+						{#if row.kind === 'shared'}<Icon icon={faUsers} size={15} />{:else}<Icon icon={faAt} size={15} />{/if}
 					</span>
 					<span class="addr-text">
 						<span class="addr-title">
@@ -231,17 +234,17 @@
 							<span class="addr-sum">
 								{#if row.health === 'suspended'}
 									<span class="warn">
-										<CircleAlert size={12} />{m.settings_address_suspended_line({ domain: row.domain })}
+										<Icon icon={faCircleExclamation} size={12} />{m.settings_address_suspended_line({ domain: row.domain })}
 									</span>
 								{/if}
 								{#if row.signerSummary}
-									<span><KeyRound size={12} />{row.signerSummary}</span>
+									<span><Icon icon={faKey} size={12} />{row.signerSummary}</span>
 								{/if}
 								{#if row.forwardSummary}
-									<span><Forward size={12} />{row.forwardSummary}</span>
+									<span><Icon icon={faShare} size={12} />{row.forwardSummary}</span>
 								{/if}
 								{#if row.pendingSummary}
-									<span class="pending"><Clock size={12} />{row.pendingSummary}</span>
+									<span class="pending"><Icon icon={faClock} size={12} />{row.pendingSummary}</span>
 								{/if}
 							</span>
 						{/if}
@@ -268,32 +271,32 @@
 						aria-expanded={menuFor === row.id}
 						onclick={() => (menuFor = menuFor === row.id ? null : row.id)}
 					>
-						<Ellipsis size={16} />
+						<Icon icon={faEllipsis} size={16} />
 					</button>
 					{#if menuFor === row.id}
 						<div class="addr-menu" role="menu">
 							<button type="button" class="mitem" onclick={() => open(row)}>
-								<ArrowRight size={15} />{m.common_open()}
+								<Icon icon={faArrowRight} size={15} />{m.common_open()}
 							</button>
 							{#if row.canPromote}
 								<button type="button" class="mitem" onclick={() => promote(row)}>
-									<Star size={15} />{m.settings_address_make_primary()}
+									<Icon icon={faStar} size={15} />{m.settings_address_make_primary()}
 								</button>
 							{/if}
 							{#if row.canRename}
 								<button type="button" class="mitem" onclick={() => open(row)}>
-									<PenLine size={15} />{m.settings_address_rename()}
+									<Icon icon={faPenLine} size={15} />{m.settings_address_rename()}
 								</button>
 							{/if}
 							{#if row.canManagePeople}
 								<button type="button" class="mitem" onclick={() => managePeople(row)}>
-									<Users size={15} />{m.settings_address_manage_people()}
+									<Icon icon={faUsers} size={15} />{m.settings_address_manage_people()}
 								</button>
 							{/if}
 							{#if row.canRemove}
 								<span class="msep"></span>
 								<button type="button" class="mitem danger" onclick={() => askRemoval(row)}>
-									<Trash2 size={15} />{m.settings_address_remove()}
+									<Icon icon={faTrashCan} size={15} />{m.settings_address_remove()}
 								</button>
 							{/if}
 						</div>
@@ -352,7 +355,7 @@
 
 {#if pendingRemoval}
 	<ConfirmDialog
-		icon={Trash2}
+		icon={faTrashCan}
 		tone="danger"
 		title={m.settings_address_remove_title()}
 		sub={pendingRemoval.email}

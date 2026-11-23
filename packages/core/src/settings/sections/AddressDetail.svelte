@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import AtSign from '@lucide/svelte/icons/at-sign';
-	import Users from '@lucide/svelte/icons/users';
-	import Star from '@lucide/svelte/icons/star';
-	import Info from '@lucide/svelte/icons/info';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faAt,
+		faCircleExclamation,
+		faCircleInfo,
+		faKey,
+		faStar,
+		faTrashCan,
+		faTriangleExclamation,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -165,7 +168,7 @@
 {:else}
 	<div class="ad-hero">
 		<span class="ad-hero-chip">
-			{#if row.kind === 'shared'}<Users size={20} />{:else}<AtSign size={20} />{/if}
+			{#if row.kind === 'shared'}<Icon icon={faUsers} size={20} />{:else}<Icon icon={faAt} size={20} />{/if}
 		</span>
 		<div class="ad-hero-tx">
 			<div class="ad-hero-title">
@@ -185,7 +188,7 @@
 
 	{#if row.health === 'suspended'}
 		<div class="ad-alert">
-			<span class="ad-alert-ic"><CircleAlert size={15} /></span>
+			<span class="ad-alert-ic"><Icon icon={faCircleExclamation} size={15} /></span>
 			<div class="ad-alert-tx">
 				<b>{m.settings_address_suspended_title()}</b>
 				{m.settings_address_suspended_body({ domain: row.domain })}
@@ -204,7 +207,7 @@
 
 	{#if row.rotationRequired}
 		<div class="ad-alert">
-			<span class="ad-alert-ic"><KeyRound size={15} /></span>
+			<span class="ad-alert-ic"><Icon icon={faKey} size={15} /></span>
 			<div class="ad-alert-tx">
 				<b>{m.settings_address_rotate_title()}</b>
 				{m.settings_address_rotate_body()}
@@ -218,7 +221,7 @@
 	{/if}
 
 	{#if row.canRename || row.isOwnPersonal}
-	<Card icon={AtSign} title={m.settings_address_identity()}>
+	<Card icon={faAt} title={m.settings_address_identity()}>
 		{#if row.canRename}
 			<Row
 				t={m.settings_address_display_name()}
@@ -260,7 +263,7 @@
 						disabled={!row.canPromote || promoting}
 						onclick={() => void promote()}
 					>
-						<Star size={14} />{m.settings_address_make_primary()}
+						<Icon icon={faStar} size={14} />{m.settings_address_make_primary()}
 					</Button>
 				{/if}
 			</Row>
@@ -269,7 +272,7 @@
 	</Card>
 	{:else}
 		<div class="ad-note">
-			<Info size={14} />
+			<Icon icon={faCircleInfo} size={14} />
 			<span>
 				{#if row.kind === 'shared'}
 					{m.settings_address_shared_member_note()}
@@ -281,7 +284,7 @@
 	{/if}
 
 	{#if row.kind === 'shared'}
-		<Card icon={Users} title={m.settings_address_people()}>
+		<Card icon={faUsers} title={m.settings_address_people()}>
 			{#snippet right()}
 				{#if row.usedBy}
 					<span class="card-meta">
@@ -290,7 +293,7 @@
 				{/if}
 				{#if row.canManagePeople}
 					<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
-						<Users size={13} />{m.settings_address_change_people()}
+						<Icon icon={faUsers} size={13} />{m.settings_address_change_people()}
 					</Button>
 				{/if}
 			{/snippet}
@@ -313,7 +316,7 @@
 				</div>
 			{/each}
 			<div class="ad-people-note">
-				<Info size={13} />
+				<Icon icon={faCircleInfo} size={13} />
 				<span>
 					{m.settings_address_people_note()}
 				</span>
@@ -323,7 +326,7 @@
 
 	{#if !ownDomain}
 		<div class="ad-note">
-			<Info size={14} />
+			<Icon icon={faCircleInfo} size={14} />
 			<span>
 				{m.settings_address_own_domain_only({ domain: row.domain })}
 			</span>
@@ -339,7 +342,7 @@
 	{/if}
 
 	{#if row.canRemove}
-		<Card icon={TriangleAlert} title={m.settings_address_remove_card()} variant="danger">
+		<Card icon={faTriangleExclamation} title={m.settings_address_remove_card()} variant="danger">
 			<Row
 				t={row.kind === 'shared'
 					? m.settings_address_remove_shared()
@@ -351,7 +354,7 @@
 				d={m.settings_address_remove_desc()}
 			>
 				<Button variant="danger" size="sm" onclick={() => (removing = true)}>
-					<Trash2 size={14} />{m.settings_address_remove()}
+					<Icon icon={faTrashCan} size={14} />{m.settings_address_remove()}
 				</Button>
 			</Row>
 		</Card>
@@ -372,7 +375,7 @@
 
 	{#if removing}
 		<ConfirmDialog
-			icon={Trash2}
+			icon={faTrashCan}
 			tone="danger"
 			title={m.settings_address_remove_title()}
 			sub={row.email}

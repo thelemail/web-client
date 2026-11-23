@@ -1,13 +1,17 @@
 <script lang="ts">
 	import LoadState from '$core/components/LoadState.svelte';
 	import { i18n } from '$core/i18n/locale.svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowUpRightFromSquare,
+		faBuilding,
+		faCircleExclamation,
+		faDownload,
+		faTrashCan,
+		faUser,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { platform } from '$platform';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import Users from '@lucide/svelte/icons/users';
-	import Building2 from '@lucide/svelte/icons/building-2';
-	import ExternalLink from '@lucide/svelte/icons/external-link';
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Card from '../Card.svelte';
@@ -28,7 +32,6 @@
 	import { Button } from '$core/components/ui/button';
 	import { entryPointVisible, scheduledLine, storeStep } from '$core/lifecycle/downgrade';
 	import { m } from '$paraglide/messages.js';
-	import Download from '@lucide/svelte/icons/download';
 	import { EXPORT_TOOL_URL } from '../exportTool';
 
 	interface Props {
@@ -55,7 +58,7 @@
 	const store = $derived(storeStep(sub));
 	const slot = $derived(page.params.slot ?? '0');
 	const PlanIcon = $derived(
-		type === 'business' ? Building2 : type === 'family' ? Users : UserRound
+		type === 'business' ? faBuilding : type === 'family' ? faUsers : faUser
 	);
 
 	$effect(() => {
@@ -150,7 +153,7 @@
 			<div class="plan-id">
 				<div class="plan-eyebrow">{m.settings_account_current_plan()}</div>
 				<div class="plan-name">
-					<PlanIcon size={18} />
+					<Icon icon={PlanIcon} size={18} />
 					<span>{planName}</span>
 					{#if sub?.status === 'past_due'}
 						<Badge kind="warn">{m.settings_account_payment_problem()}</Badge>
@@ -190,7 +193,7 @@
 							</Button>
 						{/if}
 						<Button variant="ghost" size="sm" disabled={portalBusy} onclick={openPortal}>
-							<ExternalLink size={14} />
+							<Icon icon={faArrowUpRightFromSquare} size={14} />
 							{portalBusy
 								? m.settings_account_opening()
 								: store
@@ -228,13 +231,13 @@
 
 	{#if isSoloFree}
 		{#if isOwner}
-			<Card icon={Users} title={m.settings_account_start_family()}>
+			<Card icon={faUsers} title={m.settings_account_start_family()}>
 				<Row
 					t={m.settings_account_start_family_row()}
 					d={m.settings_account_start_family_desc()}
 				>
 					<Button variant="secondary" size="sm" onclick={() => launch('family')}>
-						<Users size={14} />{m.settings_account_start_family()}
+						<Icon icon={faUsers} size={14} />{m.settings_account_start_family()}
 					</Button>
 				</Row>
 			</Card>
@@ -258,20 +261,20 @@
 	{/if}
 {/if}
 
-<Card icon={Download} title={m.settings_account_export_title()}>
+<Card icon={faDownload} title={m.settings_account_export_title()}>
 	<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 		<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
-			{m.settings_account_export_button()}<ExternalLink size={14} />
+			{m.settings_account_export_button()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 		</Button>
 	</Row>
 </Card>
 
-<Card icon={CircleAlert} title={m.settings_account_delete_title()} variant="danger">
+<Card icon={faCircleExclamation} title={m.settings_account_delete_title()} variant="danger">
 	{#if mailOnly}
 		<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_at_account()}>
 			{#if accountSettings}
 				<Button variant="secondary" size="sm" href={accountSettings}>
-					{m.settings_security_account_origin_cta()}<ExternalLink size={14} />
+					{m.settings_security_account_origin_cta()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 				</Button>
 			{/if}
 		</Row>
@@ -281,7 +284,7 @@
 			d={m.settings_account_delete_desc()}
 		>
 			<Button variant="danger" size="sm" onclick={() => launch('delete')}>
-				<Trash2 size={14} />{m.settings_account_delete_button()}
+				<Icon icon={faTrashCan} size={14} />{m.settings_account_delete_button()}
 			</Button>
 		</Row>
 	{/if}

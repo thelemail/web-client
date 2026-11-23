@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowsRotate, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { settingsDraft } from '$core/stores/settingsDraft.svelte';
@@ -21,10 +21,10 @@
 	{@render children()}
 {:else if accountSettings.status === 'error'}
 	<div class="setrow set-loaderr" role="alert">
-		<CircleAlert size={16} />
+		<Icon icon={faCircleExclamation} size={16} />
 		<p>{m.settings_load_failed()}</p>
 		<Button variant="secondary" size="sm" onclick={settingsDraft.retryLoad}>
-			<RefreshCw />{m.common_retry()}
+			<Icon icon={faArrowsRotate} />{m.common_retry()}
 		</Button>
 	</div>
 {:else}

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { platform } from '$platform';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Download from '@lucide/svelte/icons/download';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCheck,
+		faCircleExclamation,
+		faCopy,
+		faDownload,
+		faShieldCheck
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from './CeremonyShell.svelte';
 	import SecretLeaveConfirm from './SecretLeaveConfirm.svelte';
 	import { auth } from '$core/stores/session.svelte';
@@ -47,7 +50,7 @@
 </script>
 
 <CeremonyShell
-	icon={ShieldCheck}
+	icon={faShieldCheck}
 	eyebrow={m.settings_security_eyebrow()}
 	title={m.settings_security_backup_new_title()}
 	onClose={requestClose}
@@ -66,21 +69,21 @@
 		</div>
 		<div class="phrase-acts">
 			<Button variant="secondary" size="sm" onclick={copyCodes}>
-				<Copy size={14} />{m.common_copy()}
+				<Icon icon={faCopy} size={14} />{m.common_copy()}
 			</Button>
 			<Button variant="secondary" size="sm" onclick={downloadCodes}>
-				<Download size={14} />{m.settings_security_backup_download()}
+				<Icon icon={faDownload} size={14} />{m.settings_security_backup_download()}
 			</Button>
-			{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_security_backup_saved()}</span>{/if}
+			{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_security_backup_saved()}</span>{/if}
 		</div>
 		{#if copyFailed}
-			<div class="field-hint bad" role="alert"><CircleAlert size={13} />{m.settings_secret_copy_failed()}</div>
+			<div class="field-hint bad" role="alert"><Icon icon={faCircleExclamation} size={13} />{m.settings_secret_copy_failed()}</div>
 		{/if}
 	</div>
 
 	{#snippet footer()}
 		<Button variant="primary" disabled={!saved} onclick={onClose}>
-			{m.settings_security_backup_saved_them()}<Check size={15} />
+			{m.settings_security_backup_saved_them()}<Icon icon={faCheck} size={15} />
 		</Button>
 	{/snippet}
 </CeremonyShell>

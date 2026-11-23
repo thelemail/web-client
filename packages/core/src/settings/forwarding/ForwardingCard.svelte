@@ -1,16 +1,19 @@
 <script lang="ts">
 	import { formatKeyId } from '$core/directory/format';
-	import Forward from '@lucide/svelte/icons/forward';
-	import Pause from '@lucide/svelte/icons/pause';
-	import Play from '@lucide/svelte/icons/play';
-	import Mail from '@lucide/svelte/icons/mail';
-	import RotateCw from '@lucide/svelte/icons/rotate-cw';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Check from '@lucide/svelte/icons/check';
-	import Ellipsis from '@lucide/svelte/icons/ellipsis';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import Info from '@lucide/svelte/icons/info';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faCheck,
+		faCircleInfo,
+		faEllipsis,
+		faEnvelope,
+		faPause,
+		faPlay,
+		faPlus,
+		faRotateRight,
+		faShare,
+		faTrashCan
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import Badge from '../Badge.svelte';
@@ -102,7 +105,7 @@
 
 <svelte:window onclick={dismiss} />
 
-<Card icon={Forward} title={m.settings_forwarding_title()} variant="menus">
+<Card icon={faShare} title={m.settings_forwarding_title()} variant="menus">
 	{#snippet right()}
 		<span class="card-meta">
 			{m.settings_forwarding_destinations({ count: live.length })}
@@ -114,7 +117,7 @@
 				disabled={!!blocked}
 				onclick={() => (creating = true)}
 			>
-				<Plus size={13} />{m.settings_forwarding_add()}
+				<Icon icon={faPlus} size={13} />{m.settings_forwarding_add()}
 			</Button>
 		{/if}
 	{/snippet}
@@ -124,11 +127,11 @@
 	</div>
 
 	{#if blocked}
-		<div class="card-note"><Info size={14} />{blocked}</div>
+		<div class="card-note"><Icon icon={faCircleInfo} size={14} />{blocked}</div>
 	{/if}
 
 	{#if flash}
-		<div class="card-flash"><Check size={14} />{flash}</div>
+		<div class="card-flash"><Icon icon={faCheck} size={14} />{flash}</div>
 	{/if}
 
 	{#each items as d (d.id)}
@@ -146,7 +149,7 @@
 				{#if d.mode === 'plain'}<Badge kind="neutral">{m.settings_forwarding_badge_plain()}</Badge>{/if}
 			{/snippet}
 			<div class="rec-dest">
-				<ArrowRight size={12} />
+				<Icon icon={faArrowRight} size={12} />
 				<span class="mono rec-to">{d.destination}</span>
 				{#if keyLine(d)}
 					<span class="rec-dot">·</span>
@@ -171,7 +174,7 @@
 										m.settings_forwarding_resend_done({ destination: d.destination })
 									)}
 							>
-								<Mail size={13} />{m.settings_forwarding_resend()}
+								<Icon icon={faEnvelope} size={13} />{m.settings_forwarding_resend()}
 							</Button>
 						{/if}
 						{#if d.state === 'active'}
@@ -186,7 +189,7 @@
 										m.settings_forwarding_paused_done({ label: d.label })
 									)}
 							>
-								<Pause size={13} />{m.settings_forwarding_pause()}
+								<Icon icon={faPause} size={13} />{m.settings_forwarding_pause()}
 							</Button>
 						{:else if d.state === 'paused'}
 							<Button
@@ -200,7 +203,7 @@
 										m.settings_forwarding_resumed_done({ label: d.label })
 									)}
 							>
-								<Play size={13} />{m.settings_forwarding_resume()}
+								<Icon icon={faPlay} size={13} />{m.settings_forwarding_resume()}
 							</Button>
 						{/if}
 						<div class="addr-menu-wrap">
@@ -211,7 +214,7 @@
 								aria-expanded={menuFor === d.id}
 								onclick={() => (menuFor = menuFor === d.id ? null : d.id)}
 							>
-								<Ellipsis size={16} />
+								<Icon icon={faEllipsis} size={16} />
 							</button>
 							{#if menuFor === d.id}
 								<div class="addr-menu" role="menu">
@@ -224,7 +227,7 @@
 												rotating = d;
 											}}
 										>
-											<RotateCw size={15} />{m.settings_forwarding_replace_key()}
+											<Icon icon={faRotateRight} size={15} />{m.settings_forwarding_replace_key()}
 										</button>
 									{/if}
 									<button
@@ -235,7 +238,7 @@
 											revoking = d;
 										}}
 									>
-										<Trash2 size={15} />{m.settings_forwarding_turn_off()}
+										<Icon icon={faTrashCan} size={15} />{m.settings_forwarding_turn_off()}
 									</button>
 								</div>
 							{/if}

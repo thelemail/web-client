@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import LifeBuoy from '@lucide/svelte/icons/life-buoy';
-	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
-	import KeyRound from '@lucide/svelte/icons/key-round';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faCircleExclamation,
+		faKey,
+		faLifeRing,
+		faShieldCheck,
+		faTriangleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import Card from '../Card.svelte';
@@ -37,7 +40,7 @@
 {#if auth.recoveryState === 'unset'}
 	<div class="recovery-hero">
 		<div class="rh-left">
-			<span class="rh-ic"><LifeBuoy size={26} /></span>
+			<span class="rh-ic"><Icon icon={faLifeRing} size={26} /></span>
 		</div>
 		<div class="rh-body">
 			<div class="rh-eyebrow">{m.settings_security_recovery_recommended()}</div>
@@ -47,16 +50,16 @@
 			</p>
 			<div class="rh-acts">
 				<Button variant="primary" onclick={() => launch('recovery')}>
-					<KeyRound size={15} />{m.settings_security_recovery_setup()}
+					<Icon icon={faKey} size={15} />{m.settings_security_recovery_setup()}
 				</Button>
 			</div>
 		</div>
-		<span class="rh-flag"><TriangleAlert size={13} />{m.settings_security_recovery_not_set()}</span>
+		<span class="rh-flag"><Icon icon={faTriangleExclamation} size={13} />{m.settings_security_recovery_not_set()}</span>
 	</div>
 {:else if auth.recoveryState === 'set'}
 	<Card>
 		<CeremonyRow
-			icon={ShieldCheckIcon}
+			icon={faShieldCheck}
 			title={m.settings_security_recovery_title()}
 			status={m.settings_security_on()}
 			statusKind="ok"
@@ -68,10 +71,10 @@
 {:else if auth.recoveryState === 'error'}
 	<Card>
 		<div class="setrow set-loaderr" role="alert">
-			<CircleAlert size={16} />
+			<Icon icon={faCircleExclamation} size={16} />
 			<p>{m.settings_security_recovery_load_failed()}</p>
 			<Button variant="secondary" size="sm" disabled={retrying} onclick={retry}>
-				<RefreshCw />{m.common_retry()}
+				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		</div>
 	</Card>

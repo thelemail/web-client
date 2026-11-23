@@ -1,17 +1,21 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { platform } from '$platform';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Smartphone from '@lucide/svelte/icons/smartphone';
-	import Usb from '@lucide/svelte/icons/usb';
-	import Fingerprint from '@lucide/svelte/icons/fingerprint';
-	import Pointer from '@lucide/svelte/icons/pointer';
-	import ScanFace from '@lucide/svelte/icons/scan-face';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Download from '@lucide/svelte/icons/download';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowPointer,
+		faArrowRight,
+		faCheck,
+		faCircleExclamation,
+		faCopy,
+		faDownload,
+		faFaceViewfinder,
+		faFingerprint,
+		faMobile,
+		faShieldCheck,
+		faUsbDrive
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import SecretLeaveConfirm from '../SecretLeaveConfirm.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
@@ -50,22 +54,22 @@
 
 	const SETUP: Record<
 		TwoFaSetupMethod,
-		{ icon: typeof Smartphone; t: string; d: string; recommended: boolean }
+		{ icon: IconDefinition; t: string; d: string; recommended: boolean }
 	> = $derived({
 		device: {
-			icon: Fingerprint,
+			icon: faFingerprint,
 			t: m.settings_ceremony_twofa_device_title(),
 			d: m.settings_ceremony_twofa_device_desc(),
 			recommended: true
 		},
 		key: {
-			icon: Usb,
+			icon: faUsbDrive,
 			t: m.settings_ceremony_twofa_key_title(),
 			d: m.settings_ceremony_twofa_key_desc(),
 			recommended: true
 		},
 		totp: {
-			icon: Smartphone,
+			icon: faMobile,
 			t: m.settings_ceremony_twofa_totp_title(),
 			d: m.settings_ceremony_twofa_totp_desc(),
 			recommended: false
@@ -396,7 +400,7 @@
 </script>
 
 <CeremonyShell
-	icon={ShieldCheck}
+	icon={faShieldCheck}
 	eyebrow={m.settings_ceremony_twofa_eyebrow()}
 	title={initialMethod ? addTitle(initialMethod) : m.settings_ceremony_twofa_title()}
 	{steps}
@@ -419,7 +423,7 @@
 						onclick={() => (method = o.v)}
 					>
 						<span class="mo-radio"><span></span></span>
-						<Ic size={20} />
+						<Icon icon={Ic} size={20} />
 						<div class="mo-text">
 							<div class="mo-t">
 								{o.t}{#if o.recommended && !o.disabled}<span class="mo-tag">{m.settings_ceremony_twofa_recommended()}</span>{/if}
@@ -430,7 +434,7 @@
 				{/each}
 			</div>
 			{#if setupError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{setupError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1 && !unlocked}
@@ -504,14 +508,14 @@
 			{/if}
 			{#if hasWebauthn}
 				<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={confirmWithKey}>
-					<Fingerprint size={14} />{m.settings_ceremony_twofa_use_security_key()}
+					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_twofa_use_security_key()}
 				</Button>
 			{/if}
 			{#if noUsableFactor}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{m.settings_ceremony_twofa_confirm_no_method()}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{m.settings_ceremony_twofa_confirm_no_method()}</span></span>
 			{/if}
 			{#if confirmError}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{confirmError}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{confirmError}</span></span>
 			{/if}
 		</div>
 	{:else if step === 1}
@@ -539,7 +543,7 @@
 								title={m.common_copy()}
 								onclick={() => navigator.clipboard.writeText(manualSecret.replaceAll(' ', ''))}
 							>
-								<Copy size={14} />
+								<Icon icon={faCopy} size={14} />
 							</button>
 						</div>
 					{/if}
@@ -561,7 +565,7 @@
 						/>
 					</div>
 					{#if setupError}
-						<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
+						<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{setupError}</span></span>
 					{/if}
 				</div>
 			</div>
@@ -569,7 +573,7 @@
 			{@const isKey = method === 'key'}
 			<div class="cer-pane center">
 				<div class="webauthn">
-					{#if isKey}<Usb size={40} />{:else}<Fingerprint size={40} />{/if}
+					{#if isKey}<Icon icon={faUsbDrive} size={40} />{:else}<Icon icon={faFingerprint} size={40} />{/if}
 				</div>
 				<div class="cer-instruct center">
 					{#if isKey}
@@ -595,12 +599,12 @@
 						<div class="field-hint">{m.settings_ceremony_twofa_key_name_hint()}</div>
 					{:else}
 						<div class="field-hint bad">
-							<CircleAlert size={13} />{m.settings_ceremony_twofa_key_name_required()}
+							<Icon icon={faCircleExclamation} size={13} />{m.settings_ceremony_twofa_key_name_required()}
 						</div>
 					{/if}
 				</div>
 				<Button variant="secondary" disabled={busy || !keyNameOk} onclick={registerKey}>
-					{#if isKey}<Pointer size={15} />{:else}<ScanFace size={15} />{/if}
+					{#if isKey}<Icon icon={faArrowPointer} size={15} />{:else}<Icon icon={faFaceViewfinder} size={15} />{/if}
 					{#if busy}
 						{m.settings_ceremony_twofa_waiting()}
 					{:else}
@@ -608,7 +612,7 @@
 					{/if}
 				</Button>
 				{#if setupError}
-					<span class="errtext" role="alert"><CircleAlert size={13} /><span>{setupError}</span></span>
+					<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{setupError}</span></span>
 				{/if}
 			</div>
 		{/if}
@@ -636,20 +640,20 @@
 			</div>
 			<div class="phrase-acts">
 				<Button variant="secondary" size="sm" onclick={copyCodes}>
-					<Copy size={14} />{m.common_copy()}
+					<Icon icon={faCopy} size={14} />{m.common_copy()}
 				</Button>
 				<Button variant="secondary" size="sm" onclick={downloadCodes}>
-					<Download size={14} />{m.settings_ceremony_twofa_download()}
+					<Icon icon={faDownload} size={14} />{m.settings_ceremony_twofa_download()}
 				</Button>
-				{#if saved}<span class="phrase-saved"><Check size={13} />{m.settings_ceremony_twofa_saved()}</span>{/if}
+				{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_ceremony_twofa_saved()}</span>{/if}
 			</div>
 			{#if copyFailed}
-				<span class="errtext" role="alert"><CircleAlert size={13} /><span>{m.settings_secret_copy_failed()}</span></span>
+				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{m.settings_secret_copy_failed()}</span></span>
 			{/if}
 		</div>
 	{:else}
 		<DoneScreen
-			icon={ShieldCheck}
+			icon={faShieldCheck}
 			title={onTitle(method)}
 			desc={method === 'totp'
 				? m.settings_ceremony_twofa_done_desc_totp()
@@ -666,7 +670,7 @@
 				{#if busy}
 					{m.settings_ceremony_twofa_preparing()}
 				{:else}
-					{m.common_continue()}<ArrowRight size={15} />
+					{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 				{/if}
 			</Button>
 		{:else if step === 1 && !unlocked}
@@ -674,14 +678,14 @@
 				{#if initialMethod}
 					{m.common_cancel()}
 				{:else}
-					<ArrowLeft size={15} />{m.common_back()}
+					<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 				{/if}
 			</Button>
 			<Button variant="primary" disabled={busy || !canConfirm} onclick={confirmWithCode}>
 				{#if busy}
 					{m.settings_ceremony_twofa_confirming()}
 				{:else}
-					{m.settings_ceremony_twofa_confirm()}<ArrowRight size={15} />
+					{m.settings_ceremony_twofa_confirm()}<Icon icon={faArrowRight} size={15} />
 				{/if}
 			</Button>
 		{:else if step === 1}
@@ -689,7 +693,7 @@
 				{#if initialMethod}
 					{m.common_cancel()}
 				{:else}
-					<ArrowLeft size={15} />{m.common_back()}
+					<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 				{/if}
 			</Button>
 			{#if method === 'totp'}
@@ -697,13 +701,13 @@
 					{#if busy}
 						{m.settings_ceremony_twofa_verifying()}
 					{:else}
-						{m.settings_ceremony_twofa_verify()}<ArrowRight size={15} />
+						{m.settings_ceremony_twofa_verify()}<Icon icon={faArrowRight} size={15} />
 					{/if}
 				</Button>
 			{/if}
 		{:else if step === 2}
 			<Button variant="primary" disabled={!saved} onclick={() => (step = 3)}>
-				{m.settings_ceremony_twofa_saved_them()}<Check size={15} />
+				{m.settings_ceremony_twofa_saved_them()}<Icon icon={faCheck} size={15} />
 			</Button>
 		{:else}
 			<Button variant="primary" onclick={finish}>{m.common_done()}</Button>

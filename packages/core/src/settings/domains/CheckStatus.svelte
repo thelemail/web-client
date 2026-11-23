@@ -1,8 +1,11 @@
 <script lang="ts">
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Info from '@lucide/svelte/icons/info';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleCheck,
+		faCircleExclamation,
+		faCircleInfo,
+		faClock
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { reasonMessage, stageCheckState, type CheckStage } from './steps';
 	import type { CustomDomain } from '$core/api/customDomains';
@@ -46,11 +49,11 @@
 
 {#if checkState === 'verified'}
 	<div class="dw-note ok">
-		<CircleCheck size={15} /><span>{OK[stage]()}</span>
+		<Icon icon={faCircleCheck} size={15} /><span>{OK[stage]()}</span>
 	</div>
 {:else if checkState === 'running' && check}
 	<div class="dw-note">
-		<Clock size={15} />
+		<Icon icon={faClock} size={15} />
 		<span>
 			<b>{RUNNING[stage]()}</b>
 			{check.lastCheckedAt
@@ -63,25 +66,25 @@
 		</span>
 	</div>
 	{#if reason}
-		<div class="dw-note warn"><CircleAlert size={15} /><span>{reason}</span></div>
+		<div class="dw-note warn"><Icon icon={faCircleExclamation} size={15} /><span>{reason}</span></div>
 	{/if}
 {:else if checkState === 'expired' && check}
 	<div class="dw-note warn">
-		<CircleAlert size={15} />
+		<Icon icon={faCircleExclamation} size={15} />
 		<span>
 			{m.settings_domains_check_expired({ deadline: formatMoment(check.deadlineAt) })}
 			{restart}
 		</span>
 	</div>
 	{#if reason}
-		<div class="dw-note warn"><CircleAlert size={15} /><span>{reason}</span></div>
+		<div class="dw-note warn"><Icon icon={faCircleExclamation} size={15} /><span>{reason}</span></div>
 	{/if}
 {:else if canStart}
 	<div class="dw-note">
-		<Info size={15} /><span>{m.settings_domains_check_idle()}</span>
+		<Icon icon={faCircleInfo} size={15} /><span>{m.settings_domains_check_idle()}</span>
 	</div>
 {:else if !manage && actionable}
 	<div class="dw-note">
-		<Info size={15} /><span>{m.settings_domains_check_idle_member()}</span>
+		<Icon icon={faCircleInfo} size={15} /><span>{m.settings_domains_check_idle_member()}</span>
 	</div>
 {/if}

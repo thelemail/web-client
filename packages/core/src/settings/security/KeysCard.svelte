@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import KeySquare from '@lucide/svelte/icons/key-square';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Download from '@lucide/svelte/icons/download';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faDownload,
+		faKeySkeleton,
+		faTriangleExclamation
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import Badge from '../Badge.svelte';
@@ -45,13 +48,13 @@
 	}
 </script>
 
-<Card icon={KeySquare} title={m.settings_security_keys_title()}>
+<Card icon={faKeySkeleton} title={m.settings_security_keys_title()}>
 	{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
 		{@const accountId = auth.accountId}
 		{@const mismatch = accountKeys.verification === 'unverified'}
 		<div class="key-unverified" role="alert">
-			<TriangleAlert size={16} />
+			<Icon icon={faTriangleExclamation} size={16} />
 			<div class="key-unverified-body">
 				<div class="key-unverified-t">
 					{mismatch ? m.settings_security_key_unverified_title() : m.settings_security_key_unchecked_title()}
@@ -110,7 +113,7 @@
 			</div>
 		{:else}
 			<CeremonyRow
-				icon={RefreshCw}
+				icon={faArrowsRotate}
 				title={m.settings_security_rotate_title()}
 				desc={m.settings_security_rotate_desc()}
 				cta={m.settings_security_rotate_cta()}
@@ -121,7 +124,7 @@
 	{/if}
 	<Row t={m.settings_security_export_title()} d={m.settings_security_export_desc()}>
 		<Button variant="secondary" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
-			<Download size={14} />{m.settings_security_export_key()}
+			<Icon icon={faDownload} size={14} />{m.settings_security_export_key()}
 		</Button>
 	</Row>
 </Card>

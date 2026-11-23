@@ -2,13 +2,16 @@
 	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { page } from '$app/state';
-	import Camera from '@lucide/svelte/icons/camera';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCamera,
+		faCircleInfo,
+		faPenLine,
+		faSpinnerThird,
+		faTrashCan,
+		faUser
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { apiBlobPut } from '$core/api/client';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import Info from '@lucide/svelte/icons/info';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import Loader2 from '@lucide/svelte/icons/loader-2';
 	import Avatar from '$core/components/Avatar.svelte';
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
@@ -361,9 +364,9 @@
 				disabled={avatarBusy}
 			>
 				{#if avatarBusy}
-					<Loader2 size={14} class="spin" />
+					<Icon icon={faSpinnerThird} size={14} class="spin" />
 				{:else}
-					<Camera size={14} />
+					<Icon icon={faCamera} size={14} />
 				{/if}
 			</button>
 			{#if auth.avatarUrl}
@@ -374,7 +377,7 @@
 					onclick={onAvatarClear}
 					disabled={avatarBusy}
 				>
-					<Trash2 size={12} />
+					<Icon icon={faTrashCan} size={12} />
 				</button>
 			{/if}
 			<input
@@ -431,7 +434,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Card icon={PenLine} title={m.settings_profile_signature()}>
+<Card icon={faPenLine} title={m.settings_profile_signature()}>
 	{#snippet right()}
 		<span class="sig-picker">
 			<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
@@ -454,7 +457,7 @@
 			<LoadState kind="loading" label={m.common_loading()} />
 		{:else if sigIdentity}
 			<div class="sig-idnote">
-				<UserRound size={13} /><Rich
+				<Icon icon={faUser} size={13} /><Rich
 					text={m.settings_profile_signature_editing({ name: sigIdentity.name || sigIdentity.email })}
 					tags={{ b: bold }}
 				/>
@@ -472,12 +475,12 @@
 			/>
 			<div class="sig-hint">
 				{#if sigIdentity.shared}
-					<Info size={13} /><Rich
+					<Icon icon={faCircleInfo} size={13} /><Rich
 						text={m.settings_profile_signature_hint_shared({ email: sigIdentity.email })}
 						tags={{ b: bold }}
 					/>
 				{:else}
-					<Info size={13} /><Rich
+					<Icon icon={faCircleInfo} size={13} /><Rich
 						text={m.settings_profile_signature_hint({ email: sigIdentity.email })}
 						tags={{ b: bold }}
 					/>

@@ -1,11 +1,14 @@
 <script lang="ts">
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Link from '@lucide/svelte/icons/link';
-	import MailCheck from '@lucide/svelte/icons/mail-check';
-	import UserCheck from '@lucide/svelte/icons/user-check';
-	import UserPlus from '@lucide/svelte/icons/user-plus';
-	import Users from '@lucide/svelte/icons/users';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRight,
+		faCircleExclamation,
+		faEnvelopeCircleCheck,
+		faLink,
+		faUserCheck,
+		faUserPlus,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { platform } from '$platform';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import CopyBtn from '../CopyBtn.svelte';
@@ -87,7 +90,7 @@
 </script>
 
 <CeremonyShell
-	icon={UserPlus}
+	icon={faUserPlus}
 	eyebrow={m.settings_ceremony_family_eyebrow()}
 	title={m.settings_ceremony_family_invite_title({ family: familyName })}
 	steps={[m.settings_ceremony_family_invite_step_person(), m.settings_ceremony_family_invite_step_invite()]}
@@ -113,7 +116,7 @@
 					spellcheck="false"
 				/>
 				{#if localProblem}
-					<div class="field-hint bad"><CircleAlert size={13} />{localProblem}</div>
+					<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{localProblem}</div>
 				{:else}
 					<div class="field-hint">
 						{m.settings_ceremony_family_invite_email_hint({ domain: platformDomains.displayHosted() })}
@@ -123,12 +126,12 @@
 
 			{#if submitError}
 				<div class="field-hint bad" style="margin-top:8px">
-					<CircleAlert size={13} />{submitError}
+					<Icon icon={faCircleExclamation} size={13} />{submitError}
 				</div>
 			{/if}
 
 			<div class="seat-callout ok">
-				<Users size={17} />
+				<Icon icon={faUsers} size={17} />
 				<div>
 					<b>{m.settings_ceremony_family_invite_seat_uses({ total: seatsTotal ?? '' })}</b>
 					{(seatsLeft ?? 0) - 1 >= 0
@@ -140,13 +143,13 @@
 		</div>
 	{:else}
 		<DoneScreen
-			icon={UserCheck}
+			icon={faUserCheck}
 			title={m.settings_ceremony_family_invite_done_title()}
 			desc={m.settings_ceremony_family_invite_done_desc({ email: invited })}
 		>
 			<div class="invite-link">
 				<div class="il-label">
-					<Link size={14} />{m.settings_ceremony_family_invite_link_label()}
+					<Icon icon={faLink} size={14} />{m.settings_ceremony_family_invite_link_label()}
 					<span class="il-note">{m.settings_ceremony_family_invite_link_expiry()}</span>
 				</div>
 				<div class="il-row">
@@ -156,7 +159,7 @@
 			</div>
 
 			<div class="cer-reminder">
-				<MailCheck size={15} /><Rich
+				<Icon icon={faEnvelopeCircleCheck} size={15} /><Rich
 					text={m.settings_ceremony_family_invite_also_sent({ email: invited })}
 					tags={{ b: mono }}
 				/>
@@ -171,7 +174,7 @@
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
 				{submitting
 					? m.settings_ceremony_family_invite_sending()
-					: m.settings_ceremony_family_invite_submit()}<ArrowRight size={15} />
+					: m.settings_ceremony_family_invite_submit()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else}
 			<Button

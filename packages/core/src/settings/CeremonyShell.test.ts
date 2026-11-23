@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/svelte';
 import { createRawSnippet } from 'svelte';
-import KeyRound from '@lucide/svelte/icons/key-round';
+import { faKey } from '@fortawesome/pro-regular-svg-icons';
 import CeremonyShell from './CeremonyShell.svelte';
 import { m } from '$paraglide/messages.js';
 
@@ -12,7 +12,7 @@ const children = createRawSnippet(() => ({ render: () => '<p>body</p>' }));
 describe('CeremonyShell', () => {
 	it('is named by its visible title heading', () => {
 		render(CeremonyShell, {
-			props: { icon: KeyRound, eyebrow: 'Security', title: 'Change password', onClose: vi.fn(), children }
+			props: { icon: faKey, eyebrow: 'Security', title: 'Change password', onClose: vi.fn(), children }
 		});
 		const dialog = screen.getByRole('dialog', { name: 'Change password' });
 		const heading = within(dialog).getByRole('heading', { level: 2, name: 'Change password' });
@@ -22,7 +22,7 @@ describe('CeremonyShell', () => {
 	it('marks the current step and announces completed ones', () => {
 		render(CeremonyShell, {
 			props: {
-				icon: KeyRound,
+				icon: faKey,
 				eyebrow: 'Security',
 				title: 'Two-step',
 				steps: ['Method', 'Verify', 'Done'],

@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { formatFingerprintHex } from '$core/directory/format';
 	import { platform } from '$platform';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Download from '@lucide/svelte/icons/download';
-	import KeyRound from '@lucide/svelte/icons/key-round';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCircleExclamation,
+		faCopy,
+		faDownload,
+		faKey
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -108,7 +111,7 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <CeremonyShell
-	icon={KeyRound}
+	icon={faKey}
 	eyebrow={m.settings_delegation_title()}
 	title={step === 0
 		? m.settings_delegation_authorize_title({ email: address.email })
@@ -146,7 +149,7 @@
 			</div>
 
 			{#if error}
-				<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		{:else}
 			<div class="cer-lede">
@@ -168,17 +171,17 @@
 
 			<div class="key-actions">
 				<Button variant="ghost" onclick={copyKey}>
-					<Copy size={15} />
+					<Icon icon={faCopy} size={15} />
 					{copied ? m.common_copied() : m.common_copy()}
 				</Button>
 				<Button variant="ghost" onclick={downloadKey}>
-					<Download size={15} />
+					<Icon icon={faDownload} size={15} />
 					{m.settings_forwarding_download()}
 				</Button>
 			</div>
 
 			{#if error}
-				<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		{/if}
 	</div>

@@ -1,13 +1,14 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { trapFocus } from '$core/actions/trapFocus';
-	import type { Snippet, Component } from 'svelte';
-	import X from '@lucide/svelte/icons/x';
-	import Check from '@lucide/svelte/icons/check';
+	import type { Snippet } from 'svelte';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { setHeadingLevel, setRowNames } from './a11y';
 
 	interface Props {
-		icon: Component;
+		icon: IconDefinition;
 		eyebrow: string;
 		title: string;
 		tone?: 'danger';
@@ -20,7 +21,7 @@
 	}
 
 	let {
-		icon: IconComponent,
+		icon,
 		eyebrow,
 		title,
 		tone,
@@ -59,13 +60,13 @@
 		onmousedown={(e) => e.stopPropagation()}
 	>
 		<header class="cer-head">
-			<span class="cer-ic"><IconComponent size={19} /></span>
+			<span class="cer-ic"><Icon {icon} size={19} /></span>
 			<div class="cer-htext">
 				<div class="cer-eyebrow">{eyebrow}</div>
 				<h2 class="cer-title" id="{uid}-title">{title}</h2>
 			</div>
 			<button type="button" class="cer-close" onclick={onClose} aria-label={m.common_close()}>
-				<X size={18} />
+				<Icon icon={faXmark} size={18} />
 			</button>
 		</header>
 
@@ -77,7 +78,7 @@
 						aria-current={i === step ? 'step' : undefined}
 					>
 						<span class="cs-dot" aria-hidden="true">
-							{#if i < step}<Check size={12} />{:else}{i + 1}{/if}
+							{#if i < step}<Icon icon={faCheck} size={12} />{:else}{i + 1}{/if}
 						</span>
 						<span class="cs-lbl">{label}</span>
 						{#if i < step}<span class="sr-only">{m.settings_step_completed()}</span>{/if}

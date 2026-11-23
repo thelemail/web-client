@@ -1,9 +1,12 @@
 <script lang="ts">
-	import Users from '@lucide/svelte/icons/users';
-	import User from '@lucide/svelte/icons/user';
-	import Plus from '@lucide/svelte/icons/plus';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCheck,
+		faCircleExclamation,
+		faPlus,
+		faUser,
+		faUsers
+	} from '@fortawesome/pro-regular-svg-icons';
 	import CeremonyShell from '../CeremonyShell.svelte';
 	import DoneScreen from '../DoneScreen.svelte';
 	import Select from '../Select.svelte';
@@ -256,7 +259,7 @@
 </script>
 
 <CeremonyShell
-	icon={Users}
+	icon={faUsers}
 	eyebrow={m.settings_ceremony_alias_eyebrow()}
 	title={mode === 'members'
 		? m.settings_ceremony_alias_title_members()
@@ -280,7 +283,7 @@
 				<div class="field-hint">{m.settings_ceremony_alias_loading_domains()}</div>
 			{:else if presetUnverified}
 				<div class="inline-warn">
-					<CircleAlert size={15} />
+					<Icon icon={faCircleExclamation} size={15} />
 					<span
 						>{presetLapsing
 							? m.settings_ceremony_alias_domain_lapsing()
@@ -289,7 +292,7 @@
 				</div>
 			{:else if domainOptions.length === 0}
 				<div class="inline-warn">
-					<CircleAlert size={15} />
+					<Icon icon={faCircleExclamation} size={15} />
 					<span
 						><Rich text={m.settings_ceremony_alias_need_domain()} tags={{ b: bold }} /></span
 					>
@@ -328,7 +331,7 @@
 					</div>
 					{#if local.length > 0 && !localOk}
 						<div class="field-hint bad">
-							<CircleAlert size={13} />{m.settings_local_part_invalid()}
+							<Icon icon={faCircleExclamation} size={13} />{m.settings_local_part_invalid()}
 						</div>
 					{/if}
 				</div>
@@ -347,7 +350,7 @@
 						>
 							<Label class="choice" for="alias-kind-single" data-on={!shared}>
 								<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
-								<span class="choice-ic"><User size={16} /></span>
+								<span class="choice-ic"><Icon icon={faUser} size={16} /></span>
 								<span class="choice-tx">
 									<span class="choice-t">{m.settings_ceremony_alias_kind_single()}</span>
 									<span class="choice-d">
@@ -357,7 +360,7 @@
 							</Label>
 							<Label class="choice" for="alias-kind-shared" data-on={shared}>
 								<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
-								<span class="choice-ic"><Users size={16} /></span>
+								<span class="choice-ic"><Icon icon={faUsers} size={16} /></span>
 								<span class="choice-tx">
 									<span class="choice-t">{m.settings_ceremony_alias_kind_shared()}</span>
 									<span class="choice-d">
@@ -428,7 +431,7 @@
 
 			{#if shared && changed && mode === 'members'}
 				<div class="inline-warn">
-					<CircleAlert size={15} />
+					<Icon icon={faCircleExclamation} size={15} />
 					<span>
 						{m.settings_ceremony_alias_rekey_warning()}
 						{#if adding.length}
@@ -442,7 +445,7 @@
 			{/if}
 
 			{#if submitError}
-				<div class="field-hint bad"><CircleAlert size={13} />{submitError}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{submitError}</div>
 			{/if}
 			{#if progress}
 				<div class="field-hint">{progress}…</div>
@@ -450,7 +453,7 @@
 		</div>
 	{:else}
 		<DoneScreen
-			icon={Users}
+			icon={faUsers}
 			title={mode === 'members'
 				? m.settings_ceremony_alias_done_title_members()
 				: m.settings_ceremony_alias_done_title_create()}
@@ -473,7 +476,7 @@
 		{:else if step === peopleStep}
 			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!canSubmit || submitting} onclick={submit}>
-				{#if mode === 'members'}<Check size={15} />{:else}<Plus size={15} />{/if}
+				{#if mode === 'members'}<Icon icon={faCheck} size={15} />{:else}<Icon icon={faPlus} size={15} />{/if}
 				{submitting
 					? m.settings_ceremony_alias_saving()
 					: mode === 'members'

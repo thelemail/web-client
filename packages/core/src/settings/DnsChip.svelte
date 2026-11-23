@@ -1,8 +1,11 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import Clock from '@lucide/svelte/icons/clock';
-	import X from '@lucide/svelte/icons/x';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCheck,
+		faClock,
+		faTriangleExclamation,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import type { DnsState } from './types';
 
 	interface Props {
@@ -12,11 +15,11 @@
 
 	let { kind, label }: Props = $props();
 
-	const Icon = $derived(
-		kind === 'ok' ? Check : kind === 'warn' ? TriangleAlert : kind === 'pending' ? Clock : X
+	const glyph = $derived(
+		kind === 'ok' ? faCheck : kind === 'warn' ? faTriangleExclamation : kind === 'pending' ? faClock : faXmark
 	);
 </script>
 
 <span class={'dns-chip d-' + kind}>
-	<Icon size={12} />{label}
+	<Icon icon={glyph} size={12} />{label}
 </span>
