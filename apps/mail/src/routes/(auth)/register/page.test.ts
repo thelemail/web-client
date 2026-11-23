@@ -228,8 +228,10 @@ describe('register page', () => {
 		await submitPassword();
 		await vi.waitFor(() => expect(goto).toHaveBeenCalled());
 
-		expect(document.body.textContent).toContain('Setting up camille@temail.org.');
+		expect(document.body.textContent).toContain('camille@temail.org is yours.');
 		expect(document.body.textContent).toContain('Opening your mailbox');
+		expect(document.querySelector('.sp-seal')?.textContent).toContain('Account created');
+		expect(document.querySelector('.sp-seal time')?.getAttribute('datetime')).toMatch(/^\d{4}-/);
 		expect(document.querySelector('#register-confirm')).toBeNull();
 		leaving.resolve();
 	});

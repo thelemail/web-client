@@ -30,6 +30,7 @@
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
 	import Status from '$core/auth/sentence/Status.svelte';
 	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -535,6 +536,7 @@
 		{:else}
 			<p class="sent sm">{m.auth_s_recover_done()}</p>
 			<div class="sp-under">
+				<Seal label={m.auth_s_seal_reset()} reserve={false} />
 				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_signed_out()}</span></p>
 				<p class="sp-msg ok"><CircleCheck size={14} strokeWidth={1.75} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
 				<div class="sp-acts">

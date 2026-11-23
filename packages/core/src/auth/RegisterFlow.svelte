@@ -23,6 +23,7 @@
 	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import type { PlanCode } from '$core/api/billing';
 	import Status from '$core/auth/sentence/Status.svelte';
+	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import CircleCheck from '@lucide/svelte/icons/circle-check';
@@ -434,10 +435,18 @@
 	<div class="sp">
 		<Trail items={trail} current={submitting || leaving ? 3 : partIndex} />
 		{#if submitting || leaving}
-			<p class="sent sm"><Clause text={m.auth_s_register_working()} slots={{ address: addressFixed }} /></p>
+			{#if leaving}
+				<p class="sent sm"><Clause text={m.auth_s_register_ready()} slots={{ address: addressFixed }} /></p>
+			{:else}
+				<p class="sent sm"><Clause text={m.auth_s_register_working()} slots={{ address: addressFixed }} /></p>
+			{/if}
 			<div class="sp-under">
 				<WorkSteps lines={workLines} at={leaving ? 2 : stage} />
-				<p class="sp-fine">{m.auth_s_work_note()}</p>
+				{#if leaving}
+					<Seal label={m.auth_s_seal_created()} />
+				{:else}
+					<p class="sp-fine">{m.auth_s_work_note()}</p>
+				{/if}
 			</div>
 		{:else}
 			<p class="sent">
