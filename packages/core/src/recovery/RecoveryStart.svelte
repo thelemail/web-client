@@ -3,12 +3,15 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
-	import Eye from '@lucide/svelte/icons/eye';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Download from '@lucide/svelte/icons/download';
-	import Printer from '@lucide/svelte/icons/printer';
-	import Check from '@lucide/svelte/icons/check';
-	import RotateCw from '@lucide/svelte/icons/rotate-cw';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCheck,
+		faCopy,
+		faDownload,
+		faEye,
+		faPrint,
+		faRotateRight
+	} from '@fortawesome/pro-regular-svg-icons';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import Status from '$core/auth/sentence/Status.svelte';
 	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
@@ -58,14 +61,14 @@
 		[
 			{
 				key: 'pdf' as const,
-				icon: Download,
+				icon: faDownload,
 				title: m.recovery_start_way_pdf(),
 				sub: m.recovery_start_way_pdf_sub(),
 				run: downloadPdf
 			},
 			{
 				key: 'copy' as const,
-				icon: Copy,
+				icon: faCopy,
 				title: m.recovery_start_way_copy(),
 				sub: m.recovery_start_way_copy_sub(),
 				run: copyPhrase
@@ -74,7 +77,7 @@
 				? [
 						{
 							key: 'print' as const,
-							icon: Printer,
+							icon: faPrint,
 							title: m.recovery_start_way_print(),
 							sub: m.recovery_start_way_print_sub(),
 							run: printPhrase
@@ -179,13 +182,13 @@
 						<div class="rk-cover">
 							{#if material}
 								<Button variant="secondary" size="lg" onclick={() => (revealed = true)}>
-									<Eye size={17} />{m.settings_ceremony_recovery_reveal()}
+									<Icon icon={faEye} size={17} />{m.settings_ceremony_recovery_reveal()}
 								</Button>
 							{:else if generateError}
 								<div class="rk-failed">
 									<Status tone="bad">{generateError}</Status>
 									<Button variant="secondary" size="lg" disabled={generating} onclick={generate}>
-										<RotateCw size={15} />{m.recovery_start_retry()}
+										<Icon icon={faRotateRight} size={15} />{m.recovery_start_retry()}
 									</Button>
 								</div>
 							{:else if preparing.visible}
@@ -202,7 +205,7 @@
 					{#each ways as way (way.key)}
 						<button type="button" class="rk-way" class:saved={saved[way.key]} disabled={!revealed} onclick={way.run}>
 							<b>
-								{#if saved[way.key]}<Check size={15} strokeWidth={2.2} />{:else}<way.icon size={15} />{/if}{way.title}
+								{#if saved[way.key]}<Icon icon={faCheck} size={15} />{:else}<Icon icon={way.icon} size={15} />{/if}{way.title}
 							</b>
 							<span>{way.sub}</span>
 						</button>

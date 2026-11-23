@@ -2,13 +2,16 @@
 	import { isReauthenticationRequired } from '$core/auth/reauth.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import CircleArrowDown from '@lucide/svelte/icons/circle-arrow-down';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import CircleX from '@lucide/svelte/icons/circle-x';
-	import Check from '@lucide/svelte/icons/check';
-	import MailCheck from '@lucide/svelte/icons/mail-check';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faCheck,
+		faCircleArrowDown,
+		faCircleCheck,
+		faCircleXmark,
+		faEnvelopeCircleCheck
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { billing } from '$core/stores/billing.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { cancelSubscription, resumeSubscription, changePlan } from '$core/api/billing';
@@ -134,10 +137,10 @@
 			<div class="actions">
 				<div class="btnrow">
 					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
-						<ArrowLeft />
+						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" onclick={toConfirm}>
-						{m.common_continue()}<ArrowRight />
+						{m.common_continue()}<Icon icon={faArrowRight} />
 					</Button>
 				</div>
 			</div>
@@ -154,7 +157,7 @@
 				<h1>{m.lc_cancel_offer_title()}</h1>
 			</div>
 			<div class="lc-offer">
-				<span class="of-ic"><CircleArrowDown size={22} /></span>
+				<span class="of-ic"><Icon icon={faCircleArrowDown} size={22} /></span>
 				<span class="of-tx"
 					><b>{m.lc_cancel_offer_heading()}</b><p>
 						{m.lc_cancel_offer_body()}
@@ -163,7 +166,7 @@
 			</div>
 			<div class="actions" style="margin-top:18px">
 				<Button variant="primary" size="lg" block disabled={busy} onclick={acceptCheaper}>
-					<CircleArrowDown size={17} />{m.lc_cancel_offer_accept()}
+					<Icon icon={faCircleArrowDown} size={17} />{m.lc_cancel_offer_accept()}
 				</Button>
 				{#if canMoveToFree}
 					<Button
@@ -206,10 +209,10 @@
 			<div class="actions">
 				<div class="btnrow">
 					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = showOffer ? 1 : 0)}>
-						<ArrowLeft />
+						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="dangerSolid" size="lg" disabled={busy} onclick={confirmCancel}>
-						<CircleX />{m.lc_cancel_confirm_submit()}
+						<Icon icon={faCircleXmark} />{m.lc_cancel_confirm_submit()}
 					</Button>
 				</div>
 			</div>
@@ -220,17 +223,17 @@
 	<div class="card lc-mid">
 		<div class="card-surface screen-fade">
 			<div class="welcome">
-				<div class="seal"><Check size={20} /></div>
+				<div class="seal"><Icon icon={faCheck} size={20} /></div>
 				<h1>{m.lc_cancel_done_title()}</h1>
 				<p><Rich text={m.lc_cancel_done_paid({ date: fmt.med(paidThrough) })} tags={{ b: bold }} /></p>
 			</div>
 			<div class="lc-mail-confirm">
-				<MailCheck size={18} />
+				<Icon icon={faEnvelopeCircleCheck} size={18} />
 				<span><Rich text={m.lc_cancel_done_email({ email: ctx.email })} tags={{ email: mono }} /></span>
 			</div>
 			<div class="actions" style="margin-top:22px">
 				<Button variant="primary" size="lg" block onclick={() => goto(`/u/${slot}/mail/inbox`)}>
-					<ArrowLeft />{m.lc_back_to_your_mailbox()}
+					<Icon icon={faArrowLeft} />{m.lc_back_to_your_mailbox()}
 				</Button>
 				<Button variant="ghost" size="lg" block disabled={busy} onclick={() => keepPlan(m.lc_cancel_plan_kept())}>
 					{m.lc_cancel_done_keep()}
@@ -242,5 +245,5 @@
 {/if}
 
 {#if toast}
-	<div class="lc-toast"><CircleCheck size={16} />{toast}</div>
+	<div class="lc-toast"><Icon icon={faCircleCheck} size={16} />{toast}</div>
 {/if}

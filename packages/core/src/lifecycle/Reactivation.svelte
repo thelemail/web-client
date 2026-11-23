@@ -1,25 +1,29 @@
 <script lang="ts">
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { goto } from '$app/navigation';
 	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import Wordmark from '$core/components/Wordmark.svelte';
-	import Database from '@lucide/svelte/icons/database';
-	import Check from '@lucide/svelte/icons/check';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import CreditCard from '@lucide/svelte/icons/credit-card';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
-	import Zap from '@lucide/svelte/icons/zap';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Mail from '@lucide/svelte/icons/mail';
-	import Inbox from '@lucide/svelte/icons/inbox';
-	import Clock from '@lucide/svelte/icons/clock';
-	import BellRing from '@lucide/svelte/icons/bell-ring';
-	import CornerUpLeft from '@lucide/svelte/icons/corner-up-left';
-	import UserRound from '@lucide/svelte/icons/user-round';
-	import UsersRound from '@lucide/svelte/icons/users-round';
-	import BriefcaseBusiness from '@lucide/svelte/icons/briefcase-business';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faArrowTurnLeftUp,
+		faBellRing,
+		faBolt,
+		faBriefcase,
+		faCheck,
+		faCircleExclamation,
+		faClock,
+		faCreditCard,
+		faDatabase,
+		faEnvelope,
+		faInbox,
+		faLock,
+		faRotateLeft,
+		faUser,
+		faUserGroup
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { auth } from '$core/stores/auth.svelte';
 	import { billing } from '$core/stores/billing.svelte';
 	import { createCheckoutSession, createBillingPortalSession } from '$core/api/billing';
@@ -34,10 +38,10 @@
 	let { ctx }: { ctx: LifecycleContext } = $props();
 
 	const slot = $derived(page.params.slot ?? '0');
-	const PLAN_ICONS: Record<string, typeof UserRound> = {
-		'user-round': UserRound,
-		'users-round': UsersRound,
-		'briefcase-business': BriefcaseBusiness
+	const PLAN_ICONS: Record<string, IconDefinition> = {
+		'user-round': faUser,
+		'users-round': faUserGroup,
+		'briefcase-business': faBriefcase
 	};
 
 	const RE_PLANS: ReactivationPlan[] = $derived([
@@ -177,7 +181,7 @@
 				<p>{m.lc_restore_choose_intro()}</p>
 			</div>
 			<div class="lc-stored">
-				<span class="si"><Database size={18} /></span>
+				<span class="si"><Icon icon={faDatabase} size={18} /></span>
 				<span class="st">
 					<Rich text={m.lc_restore_stored({ gb: stored })} tags={{ b: bold }} />
 				</span>
@@ -216,7 +220,7 @@
 						onclick={() => !lk && (tier = p.id)}
 					>
 						{#if p.badge}<span class="mostbadge">{p.badge}</span>{/if}
-						<span class="tc-pick" aria-hidden="true"><Check size={13} /></span>
+						<span class="tc-pick" aria-hidden="true"><Icon icon={faCheck} size={13} /></span>
 						<span class="tc-name">{p.name}</span>
 						<span class="tc-framing serif">{p.framing}</span>
 						<span class="tc-price"><b class="serif">{eur(priceOf(p))}</b><span class="tc-per mono"
@@ -230,7 +234,7 @@
 						</span>
 						{#if lk}
 							<span class="lc-lock-note">
-								<Lock size={14} />{m.lc_restore_lock_note({ stored, gb: p.gb })}
+								<Icon icon={faLock} size={14} />{m.lc_restore_lock_note({ stored, gb: p.gb })}
 							</span>
 						{/if}
 					</button>
@@ -239,10 +243,10 @@
 			<div class="actions">
 				<div class="btnrow">
 					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
-						<ArrowLeft />
+						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" onclick={() => (step = 1)}>
-						{m.lc_restore_continue({ plan: sel.name, price: eur(selPrice), period: periodWord })}<ArrowRight />
+						{m.lc_restore_continue({ plan: sel.name, price: eur(selPrice), period: periodWord })}<Icon icon={faArrowRight} />
 					</Button>
 				</div>
 			</div>
@@ -260,7 +264,7 @@
 				<h1>{m.lc_restore_confirm_title()}</h1>
 			</div>
 			<div class="osum">
-				<span class="os-ic"><SelIcon size={17} /></span>
+				<span class="os-ic"><Icon icon={SelIcon} size={17} /></span>
 				<span class="os-text">
 					<span class="os-name">{m.lc_restore_plan_name({ plan: sel.name })}</span>
 					<span class="os-sub"
@@ -277,29 +281,29 @@
 				</span>
 			</div>
 			<div class="osum" style="margin-bottom:18px">
-				<span class="os-ic"><CreditCard size={17} /></span>
+				<span class="os-ic"><Icon icon={faCreditCard} size={17} /></span>
 				<span class="os-text">
 					<span class="os-name">{m.lc_restore_checkout_title()}</span>
 					<span class="os-sub">{m.lc_restore_checkout_detail()}</span>
 				</span>
 			</div>
 			{#if notice}
-				<p class="lc-restore-notice"><CircleAlert size={15} />{notice}</p>
+				<p class="lc-restore-notice"><Icon icon={faCircleExclamation} size={15} />{notice}</p>
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
 					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
-						<ArrowLeft />
+						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={busy} onclick={pay}>
-						{#if busy}<span class="spinner"></span>{m.lc_restore_busy()}{:else}<RotateCcw />{m.lc_restore_pay(
+						{#if busy}<span class="spinner"></span>{m.lc_restore_busy()}{:else}<Icon icon={faRotateLeft} />{m.lc_restore_pay(
 								{ price: eur(selPrice) }
 							)}{/if}
 					</Button>
 				</div>
 			</div>
 			<p class="cardnote">
-				<Zap size={14} />{m.lc_restore_instant()}
+				<Icon icon={faBolt} size={14} />{m.lc_restore_instant()}
 			</p>
 		</div>
 	</div>
@@ -314,7 +318,7 @@
 			<ul class="lc-welcome-truths">
 				{#if ctx.cameFromSuspended}
 					<li>
-						<CornerUpLeft size={16} />
+						<Icon icon={faArrowTurnLeftUp} size={16} />
 						<span
 							><Rich
 								text={m.lc_restore_truth_returned({ date: fmt.med(ctx.dates.suspend) })}
@@ -324,22 +328,22 @@
 					</li>
 				{:else}
 					<li>
-						<Inbox size={16} />
+						<Icon icon={faInbox} size={16} />
 						<span><Rich text={m.lc_restore_truth_arrived()} tags={{ b: bold }} /></span>
 					</li>
 				{/if}
 				<li>
-					<Clock size={16} />
+					<Icon icon={faClock} size={16} />
 					<span><Rich text={m.lc_restore_truth_scheduled()} tags={{ b: bold }} /></span>
 				</li>
 				<li>
-					<BellRing size={16} />
+					<Icon icon={faBellRing} size={16} />
 					<span><Rich text={m.lc_restore_truth_newsletters()} tags={{ b: bold }} /></span>
 				</li>
 			</ul>
 			<div class="actions" style="margin-top:22px">
 				<Button variant="primary" size="lg" block onclick={enterMailbox}>
-					<Mail />{m.lc_restore_enter_mailbox()}
+					<Icon icon={faEnvelope} />{m.lc_restore_enter_mailbox()}
 				</Button>
 			</div>
 		</div>
