@@ -1,0 +1,656 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "full read of a password change successor",
+      "mode": "full",
+      "input": {
+        "accountId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+        "amk": "jXjMueB1aAS1l0l+Z0D5gZMMZHGCRLbC5Oj6kGP9Yk4=",
+        "keyPassword": "cmVhZC12ZWN0b3Jz",
+        "mailKeys": [
+          "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA=="
+        ],
+        "authorityKey": "xioGavBkQBsAAAAg/LZrFcg9YYlotBz6eqkP3pPNbxNFap42CtNRC2XKJTvClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGlCMOkPG5BFqysiH4TMXIh2h4bIg4370YM1VgRAqTL/YAAAAAdAQQgl5cj1S/ikNAhy8t5QiVfghgyQVy/NFFQmdUvK5tw92ZVERkKSY5WqD1iXF0q5sbGD1CwmWEOMVBxPGsU1kDUqGR6aQxpKnunU9oG1snEwU=",
+        "head": {
+          "raw": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"amkEpoch\":0,\"authEpoch\":2,\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"authorityProfileId\":\"account-authority-ed25519-v1\",\"authorityPublicKeyDigest\":\"rbjEOBc7v/nCqdYdvQRdTqUxNYXrRrdZ50zN87DagXM=\",\"bundleDescriptorHashes\":[\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"lxEL1ncuxT7cTYKFNW73ovv8X41xBZi2iLXB2BYKGHY=\",\"5ne+nmWfA4V/Em4v2DSyYTCms6ly1qf6EZBprVTmJmQ=\"],\"credentialDescriptorHashes\":[\"ToyUX/+GNIMLdRLpVsra5OHT0kVmMGPhwv9CQm54jJ8=\"],\"cryptoGeneration\":0,\"currentEncryptionKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"currentSigningKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"historyEventCount\":1,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"keyEpoch\":1,\"keyHistoryRoot\":\"C6GcN6V59ifTsfx4KR2v2fz54E2ANDfxmrIjXqy8PQA=\",\"migrationId\":null,\"minimumWriteProfile\":null,\"observedSessionEpoch\":1,\"policyVersion\":0,\"previousHeadHash\":\"lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=\",\"productDescriptors\":[{\"delegationHash\":\"L+BvGxD2z+0fdpY2Aa0psB88mC4jKKJED50f5PFKjoE=\",\"identityManifestHash\":\"WSzVZhfVvOQ8Saimg4VsA88WcGHdyvM43lSyUs8qpio=\",\"identityManifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"identityManifestRevision\":1,\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"5ne+nmWfA4V/Em4v2DSyYTCms6ly1qf6EZBprVTmJmQ=\",\"rootBundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"rootBundleRevision\":1},{\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityManifestHash\":\"4iEu0fRpxf1vSDrCxOVGR31FxJfvqFWEPCUD917Nch4=\",\"identityManifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"identityManifestRevision\":1,\"product\":\"calendar\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"rootBundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"rootBundleRevision\":1}],\"recoveryEpoch\":0,\"slotDescriptorHashes\":[\"1pZBgwTTwfq3SbdCaGG5G879wuqi+tXLD7DUcNL/NZ8=\"],\"stateRevision\":2,\"type\":\"thelemail-account-crypto-head/v2\"}",
+          "mac": "akSSHkMwVt0J9xrtwja7BlZ660sD0rVR+YkQZUEpSX8=",
+          "previousHeadHash": "lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=",
+          "authoritySignature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAErPEK+/Iq/mBOMuuOlOttCjhtxroAZKcNM6OJOsjpMrUSRKSqoaWYmjsSw5cpKNfs7YCqVg2ok58TQok1iSq3UKnR8DWIl7TvSWipDoYAztABEE",
+          "legacySignature": null,
+          "transitionSignature": null
+        },
+        "secretBundles": [
+          {
+            "bundleId": "e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092\",\"ciphertext\":\"8gdq8Vfh38bwZy2ZRCViDOoy0zF4hbgE1sdDzL8+OGvav061TmY1TvE2uNImaG84GXmM/xCe0FEY2VM6pqXEGmkkfs6fRcOzjKVlyWuC4OY3BioiAL+hCMFOmf8N9w6umP2xxUejBEc8cYIZ8PeSeT/U/+PXwGjBSoyPzcl5mip9wKh3y+g+ADGbDShJ8pAVdI1pvEPC8KDc5zSf8MC2Zuh1YNLhIQ+wrjHb51HTrW8N6qhS09t0Yb3cGF4bpw3EwwlTofQ7tDFfCgQlrB/2jZSAtZ5DEozXt+POFQ1om+Tdc/FDCTHeqbA+4Ho3NXKFSLM2ojdYM1bMooJwH0m8oy14eM8vfGgqqpEqe7NUvGaLLUMmyq3i8jrtPRi48R8oe3qDJ+hUW8PoTENqhLK9bsm9rrI7DQ+2y934FCGauh1m2Cig5qH1Vt/tnEfHWH0eDRkmGYc7HxdHSkLBKZm4Jb1VTceU29YZjRvCx8gaPsi7nCcXuE9fm/lZDK8DsdTtBCPUug+BSkIxZ4dsHQtOlBVKxQJka6p6BtooK31T5rUrSXCOnVg4CnARWrd1rpmnrjo/A41YcFgL9K2Vi9abH7Wv5IeqykiwkhMSGttJp+sOAWQyB8J2J8aUDwRQ7E8KjZv7Be6ht1KuAL66ivW7LXUlSYMHOatezZQx4YX3YaHxmUBStGxn3NUqpqVEEGYYrEfMBehhxVqMPPUaU13Gktq8HYNvMDXH53rzwwg794XpyTpWdl2in+OUN10Akrru83EzslOSm+3qpzrafwppTBx+CElgBYWk+Yc2X+y3XmckeVS+T5s7pztyh5i7tOwIew==\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"jZHOkVyzEOVVkeoa\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"lhK9iYG7a/noPv/mW5zGZ6YjZhzY1BImnRz2WB3dkKo=\",\"version\":2}"
+          },
+          {
+            "bundleId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"ciphertext\":\"4qrfjBbJH1EVT8MshiYMReQPwvvXDUGCsokfhYq+RYJE+c13Sl5UweLk6AOkUWggt4zMcyuFRg958Qn+2rcwNfiU1iUDyoZ9S9ZXOSx4HKIR0ER8NxQ6QMoDlE26oUbxJ0jM898nlk0iU0b9l1GOYfjfllY1u7ejeQ79gqUeR+dudyBhLJCVAFPxEuS4hUCiStMJJgjKcGmv31IgwB0lmqzug/M4SW5NStvV7WXNAG7c7v40bqNlgLyUobUZ3F44mNDvjzjN+SEzMuQLijBqONChsXhsSechz0dyL3mQx+wBX5Z2//b/WUM1L4Spy5mMnxmeEDllCEYfRMVAUny5TKGCMqKZLuprJslkDAZJqZo/QoSKE8ZW+SZCja9w2PwZxsQn03ET+8D2umCql/vnWyTPPvidYMcbnE2v1Op7cVcM0Wh+GmqVMUR4jYWvTEZ43NfG2yOJrcQlMrHbva33uanGK1aZJQUYrsWrgFH/a/9qH32Wj2PEYPI1B8o13t0KWv/vAP01wrfwwAB4vPRC/+6lM5rxDw48iuVQO4kwFo+08P43ZS0ZyDgSDHEErZcZggFW\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vxaW2ZNWaCc1jZH4\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"8QqM0jhQ5XuAxfWXoPY+BTAI6ajmP5J9MpEWFY8a+qs=\",\"version\":2}"
+          },
+          {
+            "bundleId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"ciphertext\":\"6/7f0dJSg6YXzlcfeNUYdMdHIkTnQ11ir+cpgQj57Zu8SEq/ytvzvokAheDdm0n7xRtE+BcuKio0WumkPunMzI6dFY1xWz9+KcNcaGYft5HYOBuplL64oVTKAfdfetdnLZNW/60GWlNCUhnlQGN/nT4okUYIGwOa5VuDaXwO1tSPZlJRSdvmp++EXeFjT3tme8jxUcYamzLcl7TAicPu+wdPKj71xIloUsReDx5NjxDPhCYNWRAyTrn+DoKVUq7jn32INFcDBFzFMajANBpmQ//kzW5CmhAHXNNimEpeDfTS8ClsYRlgG4XN3BXrUEIR5/2KK4G0hooAsFx2onUxzEEaLymkigk27yFy8lnT2rOeRA0xonwxN/eCeupx4tZeYkrlfyvXVge6AP3oojxaXADB5mKbNd1u7beoAe4M4KeOI3SxWUXYvqIzJiJFBbsJHFWfeR9ZJPZDNLEoYG20UYN0m0bs+3rSd48U+em/gsY1KhttQ2KUskG4qkrLVapSy+y8Du7mofkerTaTzQqf4AnaT8XnIKiKwiG/4mfSSd8qB1lYxOjxTMmSj9MdJWEAqgCXvYXBGKA=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vKg3l4TP1BDWtRI8\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"J5gby8BEejxXOTz7oZgvhjyuH1b4Bf7KSp+TKHoD74k=\",\"version\":2}"
+          }
+        ],
+        "products": [
+          {
+            "product": "app",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5e\",\"byteLength\":2704,\"ciphertextHash\":\"IYe7qJa3fQoiFBl6YcIigPnj4ADQlLtN+BQrJIAgm0M=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"L+BvGxD2z+0fdpY2Aa0psB88mC4jKKJED50f5PFKjoE=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"usage\":\"mail-identity\"}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"previousManifestHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":1,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAGZlEC5zWODRtUiptA1TKf93uuAMLjlneVIO3Qy8XssAgxUl+i2YVseDr3tWgojGdoCO0n/l1xWopeHd/+SsPNjtZiwyMLhpwbHTe0qBrXRcroAN"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"purposes\":[\"mail.state\"],\"recipientKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"recipientProfileId\":\"mail-classic-v1\",\"recipientPublicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"signingKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"signingProfileId\":\"mail-classic-v1\",\"signingPublicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAA0fEOXXjcQtVL3grw6iAwZ8ZEmn28OGx3B6tXnumyKsDTkLU7oEq4DzWKPGn2pgEBbWq/QWnk7vZJxT3Vax4y4Otgt4YYmwMeBdMvfZqn7idAAO",
+              "signingPublicKey": "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":1,\"entries\":[{\"byteLength\":128,\"ciphertextHash\":\"ayIwQ8SwjoJZCbWUeh8B7oFE415wdIvQr/c7LQ6Mz48=\",\"contentRevision\":3,\"keyEpoch\":1,\"kind\":\"mail.settings\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"mail-classic-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"18c9d0e1-f2a3-4b4c-9d6e-7f8091a2b3c5\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":null,\"previousPageHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":1,\"signerKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavBkQCKhBmQQkLz9TlIQCnj76ZiZvluxEmS2PYoGacmfKGpkIcW0AAAAAM/TEBotcezExtTcvrPpNx9SVgkEFX6rLmKr6PklPwSWvbIYinDVRWPyea4rnnP/WEPn0Fy8wJDR7yQUyJAxgoLOGaenMvOLR70uRTLKxk9xdaII"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5e",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5e\",\"ciphertext\":\"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\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"X+JvvsW9yo8oPTZ3\",\"product\":\"app\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"JWJA9OAtQVU/2BvRnFgEw7k6AksMq1lS2uiHrj/RY1c=\",\"version\":1}"
+              }
+            ]
+          },
+          {
+            "product": "calendar",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"byteLength\":1717,\"ciphertextHash\":\"kbxqXhe6hviO+4JUnVVTM3rNQ0SLrv3+uwjTDFclR44=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"privateAvailability\":\"available\",\"profileId\":\"calendar-identity-v1\",\"publicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"usage\":\"calendar-identity\"}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"previousManifestHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAEg/EG4MtItdFRDT6YXAf8TGKSSGqBNe/UJuW3CmR8uxzCkMspgdABoOglUOwdKhu6XV4fGNzh59ZkPvtNAJspwxCJRNT+I+dfH0AygdvlGEQdwL"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"signingKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAANO4EALD8mWzBg3KabwrwEHeVdP9WpWoKwGe9dqkV4WGflpQ48z5xKJS23dLnLYwf1B/+SMsSKhBwLW9KJbc6kQZTPKdC6bj9ntNWa++nPw9xloO",
+              "signingPublicKey": "xioGavBkQBsAAAAgmd+MxSpIyvCE1rGVTEhQyeA3LIOLFOZXjg4X6UGY9/zClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG20PRpM95hyrQhxkjb3BuFRhsNXc0clGdXIdbTAuIHugAAAAA6x0QAm+EC6+syex2f7bfqSY5cSghuhe8Cwbbebkw9BkLAYpbV6cv8vZFOsHgIJrz6LZaPrRD3qMo5lD9gI7ban91K5sTgMTOiAqJTm6n83lxtQnOKgZq8GRAGQAAACAOZ3mwa8XwC0Lr9LCa2hl7cUc7Nl/h4/CoChrnS8ZiZ8KLBhgbCAAAACwFgmrwZEACmwwioQbbQ9Gkz3mHKtCHGSNvcG4VGGw1dzRyUZ1ch1tMC4ge6AAAAACXiRC4ygLl9fbqsqRcGOSw6CHchR3bxBC5I3T3DvgXilyIeHfeqYZ1KPX3cgYJTIgoCLciJW2j2ReQuETRJeyzeMbQ8UhkZ238YavCUrsj9HHBBQ=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":1,\"entries\":[{\"byteLength\":256,\"ciphertextHash\":\"ngoNryWaOAPt1VGAB2kNk2/YW0AgGS+zMexdiF7xy3o=\",\"contentRevision\":1,\"keyEpoch\":1,\"kind\":\"calendar-key\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"calendar-identity-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"29d0e1f2-a3b4-4c5d-8e7f-8091a2b3c4d6\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":null,\"previousPageHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"signerKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavBkQCKhBttD0aTPeYcq0IcZI29wbhUYbDV3NHJRnVyHW0wLiB7oAAAAAKTJEOv0txLF1NW2Sn0LDc0WzbmH1efqB9FSbDVxT0sFOz0RhX3qVFeAg4yhDzhzEIudA/X2fxBh5BveWiZa5oPUS3i5g7IpxfMdbM7sOdFBQSgI"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"ciphertext\":\"d+8n0AXciT8+lXt5XIWQLr5dNESuduFYFb8J5BrlI+UbdttV7C3ADNGk7HYxfUlgPWZcir+MyzK3RhEKYWPXvuShT5NQgzA57cuXPWE/37gQznLZBxqnbfAJjnIJd2zFgOprAYG6LxReRCFzjvrRhtWyCv1DYBCjqAuebft6ee6xQZAI6nrN6QAFIEBN5NRv3/qVo+7PoNCS51PH+71EzRK/CBexUzeTAlxp/Z6LSGTAUwmAM+1BvmBHmfH7jDcoF/9fxO9KWFy+N2lhJhTINIwaVxFEon+EqimsjksTfAHvAAZIuTi4KbB8tmBqJwvqcTI8AgGibSHu2aC16GZfHFK0XXf+9Y9ulMnAYosFZrNnqAtiJagBPkYd8pV1gae0p3Eyv+6CFqjVF5XwALCD3VrTaWYupJn3jEVWl7uINlByMxLadTl+BJyZZ8C0SIDgTPOLoq4wnQtxdmFfPfsNBr0VKzyvziu7rhDyAnRQGAm1kZlaq54ToJNqRF9soMx5lvNHwZi/BYohShjfjDNnR9wOgMC/SwAnW9aHy+KgbC2ktw2V/fxlRBVf6ppKSfGkYO5XKHv28A/yU4MxWtU2kCuhauYFIQEI8X4tyjkquaO0P7shw8DcxrfuQcnhB06RBRk2zh4hLcUPYteKvGTCx95RRbWxyp1ikumge822t8p/3HGC4cStZlZ9zxtqchcWqn/G+3MF5ZXyvoW6gclli3Th660yrQDMiwubkhzArWtiN46LJ0heWSvdZtSnL+RLooct4BG3wpfLnUcWUMEaJjPn4b5vPresLb+MONy8dLnwBdQpF4mIdo5thVp9CPx9qmL9w1dcHLgXrDSxUlj+G82hHo+6zp1m/Y9zTEmA66R6dNqLmX2znFmWb6NMLXDFTKK/aZj0XhkvCd4ebjzGmV/jFNrRwFhDGcVAj5VCZCUlswjLet5JCSA+8SDraJjfLjeizbavKLm3QjkJdAKGXkNPykjU0GcXUZ1kdu7j4oorkf3ZFSj8X1+HF7fZQP3FOcN9l2R1VWGPBXZUuHu6ltIUKneKwnfe0r63jCBA46qrtwBKONgfGGBBE0Ttjf2e/Ic/+PMCuPBHju1BayYruEfi1Be/igz8/TnpUoKKuu0Bx9+ieK8cPoifJcTbhDpk9OaXTPSbdMY54IzSvfT5o6r6mTqowoZshpwON3eDyXTz/Z1Pqo11hQhYBhM8FH9vHOym4Fb0Wz2NQAt3dDEmJwex1Q7GUANJERpeq5WaY6exwkwHZPZPGAy18Q6s7x+baqtydUxH2hLom//sqoCjSLrQ9/btb028Q6CvBnZ6PqO+WGUom+RKUs1F53KZWnyGgYHllukKW06FEccogWanyIX23AcnpDNNTkVXNYNd\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vVIaNRF7UgoCuE62\",\"product\":\"calendar\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"hKCFgUt8IBcRX12PR6Sze5wMj+//n3FGqx6RML2Fb6g=\",\"version\":1}"
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "authorityKeyId": "e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa",
+        "stateRevision": 2,
+        "products": [
+          {
+            "product": "app",
+            "entries": [
+              {
+                "keyId": "15c00c9b-8dd1-574f-964e-4426207f2776",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.import-dedup",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "6bbc5204-8f80-58f6-894a-72c4ef59d0ba",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "78070d84-ac49-5b91-adae-e90da507ebde",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.search-index",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          },
+          {
+            "product": "calendar",
+            "entries": [
+              {
+                "keyId": "dd46a759-63a2-5baf-97f2-3b1e01b9072f",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "calendar.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          }
+        ],
+        "importDedupMatches": true,
+        "searchLeafMatches": true
+      }
+    },
+    {
+      "name": "full read of an alias change successor",
+      "mode": "full",
+      "input": {
+        "accountId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+        "amk": "jXjMueB1aAS1l0l+Z0D5gZMMZHGCRLbC5Oj6kGP9Yk4=",
+        "keyPassword": "cmVhZC12ZWN0b3Jz",
+        "mailKeys": [
+          "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA=="
+        ],
+        "authorityKey": "xioGavBkQBsAAAAg/LZrFcg9YYlotBz6eqkP3pPNbxNFap42CtNRC2XKJTvClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGlCMOkPG5BFqysiH4TMXIh2h4bIg4370YM1VgRAqTL/YAAAAAdAQQgl5cj1S/ikNAhy8t5QiVfghgyQVy/NFFQmdUvK5tw92ZVERkKSY5WqD1iXF0q5sbGD1CwmWEOMVBxPGsU1kDUqGR6aQxpKnunU9oG1snEwU=",
+        "head": {
+          "raw": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"amkEpoch\":0,\"authEpoch\":1,\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"authorityProfileId\":\"account-authority-ed25519-v1\",\"authorityPublicKeyDigest\":\"rbjEOBc7v/nCqdYdvQRdTqUxNYXrRrdZ50zN87DagXM=\",\"bundleDescriptorHashes\":[\"Dej7O610OtqVbQ2RTaVHscdV2ZxLbEZqv2syGrlmkTY=\",\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"lxEL1ncuxT7cTYKFNW73ovv8X41xBZi2iLXB2BYKGHY=\"],\"credentialDescriptorHashes\":[\"UEwmRqLMUnbvqYQJ3U3HVs3F46QAdgeEroQZY5aHWIk=\"],\"cryptoGeneration\":0,\"currentEncryptionKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"currentSigningKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"historyEventCount\":1,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"keyEpoch\":1,\"keyHistoryRoot\":\"C6GcN6V59ifTsfx4KR2v2fz54E2ANDfxmrIjXqy8PQA=\",\"migrationId\":null,\"minimumWriteProfile\":null,\"observedSessionEpoch\":1,\"policyVersion\":0,\"previousHeadHash\":\"lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=\",\"productDescriptors\":[{\"delegationHash\":\"L+BvGxD2z+0fdpY2Aa0psB88mC4jKKJED50f5PFKjoE=\",\"identityManifestHash\":\"wgiUAMYQwuqDRnWaRD+DSOPtTmUhFty1MWpnt3Vwpc0=\",\"identityManifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"identityManifestRevision\":2,\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"Dej7O610OtqVbQ2RTaVHscdV2ZxLbEZqv2syGrlmkTY=\",\"rootBundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"rootBundleRevision\":2},{\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityManifestHash\":\"4iEu0fRpxf1vSDrCxOVGR31FxJfvqFWEPCUD917Nch4=\",\"identityManifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"identityManifestRevision\":1,\"product\":\"calendar\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"rootBundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"rootBundleRevision\":1}],\"recoveryEpoch\":0,\"slotDescriptorHashes\":[\"1pZBgwTTwfq3SbdCaGG5G879wuqi+tXLD7DUcNL/NZ8=\"],\"stateRevision\":2,\"type\":\"thelemail-account-crypto-head/v2\"}",
+          "mac": "9fH7ExQn147a1V7OQmdARqagyRDMI402y8XkjgKyCoU=",
+          "previousHeadHash": "lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=",
+          "authoritySignature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAMayEIPsWnx6GB8jv+GZCkeSJ1jkoTpcpi1sCCMywv/EqEmSe092vBi9olmafrH0SBWSEjtPRhfZxzzSQd1RRSK2lY4tTOAY1jPwZoOs9j+GCKgK",
+          "legacySignature": null,
+          "transitionSignature": null
+        },
+        "secretBundles": [
+          {
+            "bundleId": "e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092\",\"ciphertext\":\"8gdq8Vfh38bwZy2ZRCViDOoy0zF4hbgE1sdDzL8+OGvav061TmY1TvE2uNImaG84GXmM/xCe0FEY2VM6pqXEGmkkfs6fRcOzjKVlyWuC4OY3BioiAL+hCMFOmf8N9w6umP2xxUejBEc8cYIZ8PeSeT/U/+PXwGjBSoyPzcl5mip9wKh3y+g+ADGbDShJ8pAVdI1pvEPC8KDc5zSf8MC2Zuh1YNLhIQ+wrjHb51HTrW8N6qhS09t0Yb3cGF4bpw3EwwlTofQ7tDFfCgQlrB/2jZSAtZ5DEozXt+POFQ1om+Tdc/FDCTHeqbA+4Ho3NXKFSLM2ojdYM1bMooJwH0m8oy14eM8vfGgqqpEqe7NUvGaLLUMmyq3i8jrtPRi48R8oe3qDJ+hUW8PoTENqhLK9bsm9rrI7DQ+2y934FCGauh1m2Cig5qH1Vt/tnEfHWH0eDRkmGYc7HxdHSkLBKZm4Jb1VTceU29YZjRvCx8gaPsi7nCcXuE9fm/lZDK8DsdTtBCPUug+BSkIxZ4dsHQtOlBVKxQJka6p6BtooK31T5rUrSXCOnVg4CnARWrd1rpmnrjo/A41YcFgL9K2Vi9abH7Wv5IeqykiwkhMSGttJp+sOAWQyB8J2J8aUDwRQ7E8KjZv7Be6ht1KuAL66ivW7LXUlSYMHOatezZQx4YX3YaHxmUBStGxn3NUqpqVEEGYYrEfMBehhxVqMPPUaU13Gktq8HYNvMDXH53rzwwg794XpyTpWdl2in+OUN10Akrru83EzslOSm+3qpzrafwppTBx+CElgBYWk+Yc2X+y3XmckeVS+T5s7pztyh5i7tOwIew==\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"jZHOkVyzEOVVkeoa\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"lhK9iYG7a/noPv/mW5zGZ6YjZhzY1BImnRz2WB3dkKo=\",\"version\":2}"
+          },
+          {
+            "bundleId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70",
+            "revision": 2,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"ciphertext\":\"N9+G4MPsKTTd+w5nPTEhEUT3K7RckuL45anUZpa6sgbIYSaxvX1qJrEImdmIvW8W51js25kepKCvICe1WsEJa6SQYNXVR6zLv7GMxCEeaiFuCpIsLU2pNbGzXy99/NPhjaNfd7zpgAI4hbP/nDLRrluaR/sJDh+GOInPoFXuZuN33FRfx2V1YV95ooOlLWiVZP7my+MVQ9U4jgbQfqXJmT4iTFb7HgGfsoaOLD0qz4lo408LtbTsa5gd1IMPADHiRWYlJlN8hmaYmavKjB/XXCCbYek5SH3SiX71qwDusIrxwVe47AgvZWNjL8Fu6QxjjA49z1LKN9KxbyFmaY4HK5blT6EQqcz9NASx/PRR05wT5kQzeUspXXEcO1yJbSkw8QeUK8TZi7Vfr1TyBHJh6z8oyXlMfkRkiMKQTdWw0dIwK+qh6emTq6mSIoIRH0rKc0XkxGN9kFLfc7YmcqYsF80uE+3GNrbUtNv1KUwK13HZzdPSu+1ltECRF2QJObuNCw+hwp+pnHCloWTD+v4dd01ZCZwiXy5KTEgsxgqSEi+OTGU2zP9EfY7bGuNGXvgfzEOd\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"6ha3XCLc6xF5TfqG\",\"purpose\":\"secret-bundle\",\"revision\":2,\"salt\":\"GT0O5xCJzNPiiw6TTZy/Hx5FW9JOOHMy2Rw2L21xKSA=\",\"version\":2}"
+          },
+          {
+            "bundleId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"ciphertext\":\"6/7f0dJSg6YXzlcfeNUYdMdHIkTnQ11ir+cpgQj57Zu8SEq/ytvzvokAheDdm0n7xRtE+BcuKio0WumkPunMzI6dFY1xWz9+KcNcaGYft5HYOBuplL64oVTKAfdfetdnLZNW/60GWlNCUhnlQGN/nT4okUYIGwOa5VuDaXwO1tSPZlJRSdvmp++EXeFjT3tme8jxUcYamzLcl7TAicPu+wdPKj71xIloUsReDx5NjxDPhCYNWRAyTrn+DoKVUq7jn32INFcDBFzFMajANBpmQ//kzW5CmhAHXNNimEpeDfTS8ClsYRlgG4XN3BXrUEIR5/2KK4G0hooAsFx2onUxzEEaLymkigk27yFy8lnT2rOeRA0xonwxN/eCeupx4tZeYkrlfyvXVge6AP3oojxaXADB5mKbNd1u7beoAe4M4KeOI3SxWUXYvqIzJiJFBbsJHFWfeR9ZJPZDNLEoYG20UYN0m0bs+3rSd48U+em/gsY1KhttQ2KUskG4qkrLVapSy+y8Du7mofkerTaTzQqf4AnaT8XnIKiKwiG/4mfSSd8qB1lYxOjxTMmSj9MdJWEAqgCXvYXBGKA=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vKg3l4TP1BDWtRI8\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"J5gby8BEejxXOTz7oZgvhjyuH1b4Bf7KSp+TKHoD74k=\",\"version\":2}"
+          }
+        ],
+        "products": [
+          {
+            "product": "app",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"fd5a369c-6ae9-46e5-b780-651f960b88fd\",\"byteLength\":4092,\"ciphertextHash\":\"91L/eapLh5v8UiC7AvsPTUEhuZDx4ehQ4qbWT97Mox4=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"L+BvGxD2z+0fdpY2Aa0psB88mC4jKKJED50f5PFKjoE=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"usage\":\"mail-identity\"},{\"keyEpoch\":1,\"keyId\":\"92208e5c-28c0-5eb7-9747-daad2243ce40\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"GwLGgswsa88GB+S0LeneDgnIEwmfmt1J190HLEJ4lzg=\",\"usage\":\"mail-alias\"}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"previousManifestHash\":\"WSzVZhfVvOQ8Saimg4VsA88WcGHdyvM43lSyUs8qpio=\",\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAJl8EJDmyaxWaxK4h1gjX2qXEhE3oVU3K6LJhif18sYNXVJVCe2hHEl4U9+hI61ZDsPBg3EyEOesrzIJ2m3JFtjaNfsCQpk5i71lVyayJwGlA7sB"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"purposes\":[\"mail.state\"],\"recipientKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"recipientProfileId\":\"mail-classic-v1\",\"recipientPublicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"signingKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"signingProfileId\":\"mail-classic-v1\",\"signingPublicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAA0fEOXXjcQtVL3grw6iAwZ8ZEmn28OGx3B6tXnumyKsDTkLU7oEq4DzWKPGn2pgEBbWq/QWnk7vZJxT3Vax4y4Otgt4YYmwMeBdMvfZqn7idAAO",
+              "signingPublicKey": "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":1,\"entries\":[{\"byteLength\":128,\"ciphertextHash\":\"ayIwQ8SwjoJZCbWUeh8B7oFE415wdIvQr/c7LQ6Mz48=\",\"contentRevision\":3,\"keyEpoch\":1,\"kind\":\"mail.settings\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"mail-classic-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"18c9d0e1-f2a3-4b4c-9d6e-7f8091a2b3c5\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":null,\"previousPageHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":1,\"signerKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavBkQCKhBmQQkLz9TlIQCnj76ZiZvluxEmS2PYoGacmfKGpkIcW0AAAAAM/TEBotcezExtTcvrPpNx9SVgkEFX6rLmKr6PklPwSWvbIYinDVRWPyea4rnnP/WEPn0Fy8wJDR7yQUyJAxgoLOGaenMvOLR70uRTLKxk9xdaII"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "fd5a369c-6ae9-46e5-b780-651f960b88fd",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"fd5a369c-6ae9-46e5-b780-651f960b88fd\",\"ciphertext\":\"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\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"r9hcO5XCGFFwSLWP\",\"product\":\"app\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"BwryM2VjIu73wL7hrAn3OlEo9gPYpGPdR9Xa74mdEes=\",\"version\":1}"
+              }
+            ]
+          },
+          {
+            "product": "calendar",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"byteLength\":1717,\"ciphertextHash\":\"kbxqXhe6hviO+4JUnVVTM3rNQ0SLrv3+uwjTDFclR44=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"privateAvailability\":\"available\",\"profileId\":\"calendar-identity-v1\",\"publicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"usage\":\"calendar-identity\"}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"previousManifestHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAEg/EG4MtItdFRDT6YXAf8TGKSSGqBNe/UJuW3CmR8uxzCkMspgdABoOglUOwdKhu6XV4fGNzh59ZkPvtNAJspwxCJRNT+I+dfH0AygdvlGEQdwL"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"signingKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAANO4EALD8mWzBg3KabwrwEHeVdP9WpWoKwGe9dqkV4WGflpQ48z5xKJS23dLnLYwf1B/+SMsSKhBwLW9KJbc6kQZTPKdC6bj9ntNWa++nPw9xloO",
+              "signingPublicKey": "xioGavBkQBsAAAAgmd+MxSpIyvCE1rGVTEhQyeA3LIOLFOZXjg4X6UGY9/zClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG20PRpM95hyrQhxkjb3BuFRhsNXc0clGdXIdbTAuIHugAAAAA6x0QAm+EC6+syex2f7bfqSY5cSghuhe8Cwbbebkw9BkLAYpbV6cv8vZFOsHgIJrz6LZaPrRD3qMo5lD9gI7ban91K5sTgMTOiAqJTm6n83lxtQnOKgZq8GRAGQAAACAOZ3mwa8XwC0Lr9LCa2hl7cUc7Nl/h4/CoChrnS8ZiZ8KLBhgbCAAAACwFgmrwZEACmwwioQbbQ9Gkz3mHKtCHGSNvcG4VGGw1dzRyUZ1ch1tMC4ge6AAAAACXiRC4ygLl9fbqsqRcGOSw6CHchR3bxBC5I3T3DvgXilyIeHfeqYZ1KPX3cgYJTIgoCLciJW2j2ReQuETRJeyzeMbQ8UhkZ238YavCUrsj9HHBBQ=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":1,\"entries\":[{\"byteLength\":256,\"ciphertextHash\":\"ngoNryWaOAPt1VGAB2kNk2/YW0AgGS+zMexdiF7xy3o=\",\"contentRevision\":1,\"keyEpoch\":1,\"kind\":\"calendar-key\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"calendar-identity-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"29d0e1f2-a3b4-4c5d-8e7f-8091a2b3c4d6\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":null,\"previousPageHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"signerKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavBkQCKhBttD0aTPeYcq0IcZI29wbhUYbDV3NHJRnVyHW0wLiB7oAAAAAKTJEOv0txLF1NW2Sn0LDc0WzbmH1efqB9FSbDVxT0sFOz0RhX3qVFeAg4yhDzhzEIudA/X2fxBh5BveWiZa5oPUS3i5g7IpxfMdbM7sOdFBQSgI"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"ciphertext\":\"d+8n0AXciT8+lXt5XIWQLr5dNESuduFYFb8J5BrlI+UbdttV7C3ADNGk7HYxfUlgPWZcir+MyzK3RhEKYWPXvuShT5NQgzA57cuXPWE/37gQznLZBxqnbfAJjnIJd2zFgOprAYG6LxReRCFzjvrRhtWyCv1DYBCjqAuebft6ee6xQZAI6nrN6QAFIEBN5NRv3/qVo+7PoNCS51PH+71EzRK/CBexUzeTAlxp/Z6LSGTAUwmAM+1BvmBHmfH7jDcoF/9fxO9KWFy+N2lhJhTINIwaVxFEon+EqimsjksTfAHvAAZIuTi4KbB8tmBqJwvqcTI8AgGibSHu2aC16GZfHFK0XXf+9Y9ulMnAYosFZrNnqAtiJagBPkYd8pV1gae0p3Eyv+6CFqjVF5XwALCD3VrTaWYupJn3jEVWl7uINlByMxLadTl+BJyZZ8C0SIDgTPOLoq4wnQtxdmFfPfsNBr0VKzyvziu7rhDyAnRQGAm1kZlaq54ToJNqRF9soMx5lvNHwZi/BYohShjfjDNnR9wOgMC/SwAnW9aHy+KgbC2ktw2V/fxlRBVf6ppKSfGkYO5XKHv28A/yU4MxWtU2kCuhauYFIQEI8X4tyjkquaO0P7shw8DcxrfuQcnhB06RBRk2zh4hLcUPYteKvGTCx95RRbWxyp1ikumge822t8p/3HGC4cStZlZ9zxtqchcWqn/G+3MF5ZXyvoW6gclli3Th660yrQDMiwubkhzArWtiN46LJ0heWSvdZtSnL+RLooct4BG3wpfLnUcWUMEaJjPn4b5vPresLb+MONy8dLnwBdQpF4mIdo5thVp9CPx9qmL9w1dcHLgXrDSxUlj+G82hHo+6zp1m/Y9zTEmA66R6dNqLmX2znFmWb6NMLXDFTKK/aZj0XhkvCd4ebjzGmV/jFNrRwFhDGcVAj5VCZCUlswjLet5JCSA+8SDraJjfLjeizbavKLm3QjkJdAKGXkNPykjU0GcXUZ1kdu7j4oorkf3ZFSj8X1+HF7fZQP3FOcN9l2R1VWGPBXZUuHu6ltIUKneKwnfe0r63jCBA46qrtwBKONgfGGBBE0Ttjf2e/Ic/+PMCuPBHju1BayYruEfi1Be/igz8/TnpUoKKuu0Bx9+ieK8cPoifJcTbhDpk9OaXTPSbdMY54IzSvfT5o6r6mTqowoZshpwON3eDyXTz/Z1Pqo11hQhYBhM8FH9vHOym4Fb0Wz2NQAt3dDEmJwex1Q7GUANJERpeq5WaY6exwkwHZPZPGAy18Q6s7x+baqtydUxH2hLom//sqoCjSLrQ9/btb028Q6CvBnZ6PqO+WGUom+RKUs1F53KZWnyGgYHllukKW06FEccogWanyIX23AcnpDNNTkVXNYNd\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vVIaNRF7UgoCuE62\",\"product\":\"calendar\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"hKCFgUt8IBcRX12PR6Sze5wMj+//n3FGqx6RML2Fb6g=\",\"version\":1}"
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "authorityKeyId": "e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa",
+        "stateRevision": 2,
+        "products": [
+          {
+            "product": "app",
+            "entries": [
+              {
+                "keyId": "6bbc5204-8f80-58f6-894a-72c4ef59d0ba",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "8c35194a-f17f-494f-98b8-43d501e7803d",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.import-dedup",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "92208e5c-28c0-5eb7-9747-daad2243ce40",
+                "scopeId": "4bf2a3b4-c5d6-4e7f-8091-a2b3c4d5e6f8",
+                "purpose": "mail.alias",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "bb0a6af1-fee4-45c7-b996-eb0c42214343",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.search-index",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          },
+          {
+            "product": "calendar",
+            "entries": [
+              {
+                "keyId": "dd46a759-63a2-5baf-97f2-3b1e01b9072f",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "calendar.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          }
+        ],
+        "importDedupMatches": true,
+        "searchLeafMatches": true
+      }
+    },
+    {
+      "name": "full read of a rotation successor",
+      "mode": "full",
+      "input": {
+        "accountId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+        "amk": "jXjMueB1aAS1l0l+Z0D5gZMMZHGCRLbC5Oj6kGP9Yk4=",
+        "keyPassword": "cmVhZC12ZWN0b3Jz",
+        "mailKeys": [
+          "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA==",
+          "xioGavBkQBsAAAAgdD6zsXVRKp9937xTupvgVl6w/EoQJnar2OJECHZ42R3ClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAi38QPG4oH1ScX4JXj6GvB9UAGP5I9z/jdJK4edOU4h0Q8h+3lZgXiz2evCqdhyoQvGKSD0I9/9YTLYmhx2blM8xBczJsSq4WRFbLYHjP9mzdIQfNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAIlYQGsQVQb3YeX0NreGt37vJoLVClUleN56E0j+VtZjay/usk6DokfTZyRciYCATC7/7NTDr/EKDaNewUM3nE6tSHgx2p2f7AlvQCtH2t7JhgAvOKgZq8GRAGQAAACClaknCipG8bV27JCoCOX6s7n1Q+T9hWsgpNNeTqhM3QMKLBhgbCAAAACwFgmrwZEACmwwioQa8osk8tWCX/wL45PkMJ0ukED4gJ6tDj4Nc6StL7k7IhQAAAAAELhAiyW5+cComYK25yhjZbcoF1VsVZbqRBUGW+3gTMv2QnhQGJcM4+Od3JyZsf1h5nHCisQ+KoMLKQ/+PGPa0fC8kTTs/c/SpP8yhx77GinLYBw=="
+        ],
+        "authorityKey": "xioGavBkQBsAAAAg/LZrFcg9YYlotBz6eqkP3pPNbxNFap42CtNRC2XKJTvClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGlCMOkPG5BFqysiH4TMXIh2h4bIg4370YM1VgRAqTL/YAAAAAdAQQgl5cj1S/ikNAhy8t5QiVfghgyQVy/NFFQmdUvK5tw92ZVERkKSY5WqD1iXF0q5sbGD1CwmWEOMVBxPGsU1kDUqGR6aQxpKnunU9oG1snEwU=",
+        "head": {
+          "raw": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"amkEpoch\":0,\"authEpoch\":1,\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"authorityProfileId\":\"account-authority-ed25519-v1\",\"authorityPublicKeyDigest\":\"rbjEOBc7v/nCqdYdvQRdTqUxNYXrRrdZ50zN87DagXM=\",\"bundleDescriptorHashes\":[\"J1VdudQreXpkjN2KHhCGyla3dCfZl3+ByGkcIhZndZY=\",\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"lxEL1ncuxT7cTYKFNW73ovv8X41xBZi2iLXB2BYKGHY=\"],\"credentialDescriptorHashes\":[\"UEwmRqLMUnbvqYQJ3U3HVs3F46QAdgeEroQZY5aHWIk=\"],\"cryptoGeneration\":0,\"currentEncryptionKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"currentSigningKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"historyEventCount\":2,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"keyEpoch\":2,\"keyHistoryRoot\":\"C6GcN6V59ifTsfx4KR2v2fz54E2ANDfxmrIjXqy8PQA=\",\"migrationId\":null,\"minimumWriteProfile\":null,\"observedSessionEpoch\":1,\"policyVersion\":0,\"previousHeadHash\":\"lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=\",\"productDescriptors\":[{\"delegationHash\":\"yJfmd2y88o8euLt2bK0u69HodslhszBjFHuo9slYpFw=\",\"identityManifestHash\":\"CSm4YU6ohxm3MRQg9YJfuo5yWCji0ntb8rPccHYrLZ8=\",\"identityManifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"identityManifestRevision\":2,\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"J1VdudQreXpkjN2KHhCGyla3dCfZl3+ByGkcIhZndZY=\",\"rootBundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"rootBundleRevision\":2},{\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityManifestHash\":\"4iEu0fRpxf1vSDrCxOVGR31FxJfvqFWEPCUD917Nch4=\",\"identityManifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"identityManifestRevision\":1,\"product\":\"calendar\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"rootBundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"rootBundleRevision\":1}],\"recoveryEpoch\":0,\"slotDescriptorHashes\":[\"1pZBgwTTwfq3SbdCaGG5G879wuqi+tXLD7DUcNL/NZ8=\"],\"stateRevision\":2,\"type\":\"thelemail-account-crypto-head/v2\"}",
+          "mac": "ufw4ZxZNYVuWF7C1tLYTfi11GORbQ+0fmjJnv6Xshwo=",
+          "previousHeadHash": "lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=",
+          "authoritySignature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAAwKEJjAfcbKjyFjH+tPYesjXbtirtFS88LcVwJpPuw9ExZAjHfCP2z/c1YehUmbx7R70XR8lX1geprPwJ0unXNg5H5eP0gTQmHMI3wmlxv57+wG",
+          "legacySignature": null,
+          "transitionSignature": null
+        },
+        "secretBundles": [
+          {
+            "bundleId": "e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092\",\"ciphertext\":\"8gdq8Vfh38bwZy2ZRCViDOoy0zF4hbgE1sdDzL8+OGvav061TmY1TvE2uNImaG84GXmM/xCe0FEY2VM6pqXEGmkkfs6fRcOzjKVlyWuC4OY3BioiAL+hCMFOmf8N9w6umP2xxUejBEc8cYIZ8PeSeT/U/+PXwGjBSoyPzcl5mip9wKh3y+g+ADGbDShJ8pAVdI1pvEPC8KDc5zSf8MC2Zuh1YNLhIQ+wrjHb51HTrW8N6qhS09t0Yb3cGF4bpw3EwwlTofQ7tDFfCgQlrB/2jZSAtZ5DEozXt+POFQ1om+Tdc/FDCTHeqbA+4Ho3NXKFSLM2ojdYM1bMooJwH0m8oy14eM8vfGgqqpEqe7NUvGaLLUMmyq3i8jrtPRi48R8oe3qDJ+hUW8PoTENqhLK9bsm9rrI7DQ+2y934FCGauh1m2Cig5qH1Vt/tnEfHWH0eDRkmGYc7HxdHSkLBKZm4Jb1VTceU29YZjRvCx8gaPsi7nCcXuE9fm/lZDK8DsdTtBCPUug+BSkIxZ4dsHQtOlBVKxQJka6p6BtooK31T5rUrSXCOnVg4CnARWrd1rpmnrjo/A41YcFgL9K2Vi9abH7Wv5IeqykiwkhMSGttJp+sOAWQyB8J2J8aUDwRQ7E8KjZv7Be6ht1KuAL66ivW7LXUlSYMHOatezZQx4YX3YaHxmUBStGxn3NUqpqVEEGYYrEfMBehhxVqMPPUaU13Gktq8HYNvMDXH53rzwwg794XpyTpWdl2in+OUN10Akrru83EzslOSm+3qpzrafwppTBx+CElgBYWk+Yc2X+y3XmckeVS+T5s7pztyh5i7tOwIew==\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"jZHOkVyzEOVVkeoa\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"lhK9iYG7a/noPv/mW5zGZ6YjZhzY1BImnRz2WB3dkKo=\",\"version\":2}"
+          },
+          {
+            "bundleId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70",
+            "revision": 2,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"ciphertext\":\"Aq2AzhT8NeiJlnJn5GOtL6xPJvFO+DI45OOXulAyhDbAZVU/e4r8BAis/khF7Bs2WHLgtiFSfWTjSRwPj/fIy+UAmTxa5Hr615TUA4Nzr97iSMQLA/Gv72VUM+IU710+0utVk+ivm8tE4/SkEtV57bOK27U6k74+X61oZeM0MmNKaKR4r0UvggLbrM1BDnJMXUIxyHa3ganeTWKlyM+ZZANZ1QvxLaGULBgtXrtxyA0DSUDfFQcjt54uildBW31SlwqlnJ2QrP5Gocvx9qXC37iWSn5JJ2RtSzNRfcEhFhlt8uP5tPYU6/5KAhhPuts/p2BX1NV/8kWoI20Qtjx+BgKY8MQh2QTpNuEs69lP/BztbWlLcQLy35CgWM/DmP1REQK6FW9Yt5cOZRx+ogSSBKGS8lQuOzm6QvToFjj7pBciEd3XKvcXNKSrDUQ/++vu2gh3hZFiUVSm5up2E6+dJMmy0xoTXhntUFjly9xvD9VYqfKh28l3lX/Pj6K8XZFQK8r0l8tGwyuISjucShT+SUytxBIgbGeGM7cZRbwlLtyUWPZXngH+fGTnxLDdTVRJnwDs\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"XoDa/9Wx6YAyweu5\",\"purpose\":\"secret-bundle\",\"revision\":2,\"salt\":\"lEfTRATKkNWOW0U7T2zZq7DYnd4fWWKvlirX65iD7yw=\",\"version\":2}"
+          },
+          {
+            "bundleId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"ciphertext\":\"6/7f0dJSg6YXzlcfeNUYdMdHIkTnQ11ir+cpgQj57Zu8SEq/ytvzvokAheDdm0n7xRtE+BcuKio0WumkPunMzI6dFY1xWz9+KcNcaGYft5HYOBuplL64oVTKAfdfetdnLZNW/60GWlNCUhnlQGN/nT4okUYIGwOa5VuDaXwO1tSPZlJRSdvmp++EXeFjT3tme8jxUcYamzLcl7TAicPu+wdPKj71xIloUsReDx5NjxDPhCYNWRAyTrn+DoKVUq7jn32INFcDBFzFMajANBpmQ//kzW5CmhAHXNNimEpeDfTS8ClsYRlgG4XN3BXrUEIR5/2KK4G0hooAsFx2onUxzEEaLymkigk27yFy8lnT2rOeRA0xonwxN/eCeupx4tZeYkrlfyvXVge6AP3oojxaXADB5mKbNd1u7beoAe4M4KeOI3SxWUXYvqIzJiJFBbsJHFWfeR9ZJPZDNLEoYG20UYN0m0bs+3rSd48U+em/gsY1KhttQ2KUskG4qkrLVapSy+y8Du7mofkerTaTzQqf4AnaT8XnIKiKwiG/4mfSSd8qB1lYxOjxTMmSj9MdJWEAqgCXvYXBGKA=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vKg3l4TP1BDWtRI8\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"J5gby8BEejxXOTz7oZgvhjyuH1b4Bf7KSp+TKHoD74k=\",\"version\":2}"
+          }
+        ],
+        "products": [
+          {
+            "product": "app",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"da78a39d-8041-4262-8a95-f65cc59d103c\",\"byteLength\":4096,\"ciphertextHash\":\"juOkA68DWjuaCS1fd37M4i8SHs5s+1zGlEI60V0Z86k=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"yJfmd2y88o8euLt2bK0u69HodslhszBjFHuo9slYpFw=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"usage\":\"mail-identity\"},{\"keyEpoch\":2,\"keyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"usage\":\"mail-identity\"}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"previousManifestHash\":\"WSzVZhfVvOQ8Saimg4VsA88WcGHdyvM43lSyUs8qpio=\",\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAGp6EI7gQW4UOaKPyzJ7ZJADpm7U1jesvc6BN9TwwvngXTOw8DodXDjEPaD77jGQuS5UMjxVDGVVMWUFxmogyVklwC8YpF4tz+vWhn85UVLM6scE"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":2,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"previousDelegationHash\":\"L+BvGxD2z+0fdpY2Aa0psB88mC4jKKJED50f5PFKjoE=\",\"product\":\"app\",\"productKeyEpoch\":1,\"purposes\":[\"mail.state\"],\"recipientKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"recipientProfileId\":\"mail-classic-v1\",\"recipientPublicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"signingKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"signingProfileId\":\"mail-classic-v1\",\"signingPublicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAALjsEOSnbwokqEl7bQdj1JenLW91wLlUFA3rT+tgZVXJVktBHOWchETALPudPbkIsbOQZ7wbJAN5Ctz32X36Ko13QAPDunLlblcpy6mb0KDTLR8C",
+              "signingPublicKey": "xioGavBkQBsAAAAgdD6zsXVRKp9937xTupvgVl6w/EoQJnar2OJECHZ42R3ClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAi38QPG4oH1ScX4JXj6GvB9UAGP5I9z/jdJK4edOU4h0Q8h+3lZgXiz2evCqdhyoQvGKSD0I9/9YTLYmhx2blM8xBczJsSq4WRFbLYHjP9mzdIQfNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAIlYQGsQVQb3YeX0NreGt37vJoLVClUleN56E0j+VtZjay/usk6DokfTZyRciYCATC7/7NTDr/EKDaNewUM3nE6tSHgx2p2f7AlvQCtH2t7JhgAvOKgZq8GRAGQAAACClaknCipG8bV27JCoCOX6s7n1Q+T9hWsgpNNeTqhM3QMKLBhgbCAAAACwFgmrwZEACmwwioQa8osk8tWCX/wL45PkMJ0ukED4gJ6tDj4Nc6StL7k7IhQAAAAAELhAiyW5+cComYK25yhjZbcoF1VsVZbqRBUGW+3gTMv2QnhQGJcM4+Od3JyZsf1h5nHCisQ+KoMLKQ/+PGPa0fC8kTTs/c/SpP8yhx77GinLYBw=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":2,\"entries\":[{\"byteLength\":128,\"ciphertextHash\":\"ayIwQ8SwjoJZCbWUeh8B7oFE415wdIvQr/c7LQ6Mz48=\",\"contentRevision\":3,\"keyEpoch\":1,\"kind\":\"mail.settings\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"mail-classic-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"18c9d0e1-f2a3-4b4c-9d6e-7f8091a2b3c5\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":\"fGenwu6f3E5ePxP/TNoAZQFXXWzabxKfG/Dhvhj5SkU=\",\"previousPageHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"signerKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavByUCKhBryiyTy1YJf/Avjk+QwnS6QQPiAnq0OPg1zpK0vuTsiFAAAAAOeOEC0vx+YA3NnUniiTuYTWJhUz2PwJitln64zIbsuK6hOtrZ3BXzu3XLg2WeVKemHaoxuLyiO1IwBR98WTgsjv3LiWJOdLkiIpEPhlS/rBoqIC"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "da78a39d-8041-4262-8a95-f65cc59d103c",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"da78a39d-8041-4262-8a95-f65cc59d103c\",\"ciphertext\":\"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\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"gmtM1M115q0KDqT0\",\"product\":\"app\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"f5lyVuopaHdn2JeU0ijClfXarfA93jK3zb3JAuUr+fY=\",\"version\":1}"
+              }
+            ]
+          },
+          {
+            "product": "calendar",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"byteLength\":1717,\"ciphertextHash\":\"kbxqXhe6hviO+4JUnVVTM3rNQ0SLrv3+uwjTDFclR44=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"privateAvailability\":\"available\",\"profileId\":\"calendar-identity-v1\",\"publicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"usage\":\"calendar-identity\"}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"previousManifestHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAEg/EG4MtItdFRDT6YXAf8TGKSSGqBNe/UJuW3CmR8uxzCkMspgdABoOglUOwdKhu6XV4fGNzh59ZkPvtNAJspwxCJRNT+I+dfH0AygdvlGEQdwL"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"signingKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAANO4EALD8mWzBg3KabwrwEHeVdP9WpWoKwGe9dqkV4WGflpQ48z5xKJS23dLnLYwf1B/+SMsSKhBwLW9KJbc6kQZTPKdC6bj9ntNWa++nPw9xloO",
+              "signingPublicKey": "xioGavBkQBsAAAAgmd+MxSpIyvCE1rGVTEhQyeA3LIOLFOZXjg4X6UGY9/zClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG20PRpM95hyrQhxkjb3BuFRhsNXc0clGdXIdbTAuIHugAAAAA6x0QAm+EC6+syex2f7bfqSY5cSghuhe8Cwbbebkw9BkLAYpbV6cv8vZFOsHgIJrz6LZaPrRD3qMo5lD9gI7ban91K5sTgMTOiAqJTm6n83lxtQnOKgZq8GRAGQAAACAOZ3mwa8XwC0Lr9LCa2hl7cUc7Nl/h4/CoChrnS8ZiZ8KLBhgbCAAAACwFgmrwZEACmwwioQbbQ9Gkz3mHKtCHGSNvcG4VGGw1dzRyUZ1ch1tMC4ge6AAAAACXiRC4ygLl9fbqsqRcGOSw6CHchR3bxBC5I3T3DvgXilyIeHfeqYZ1KPX3cgYJTIgoCLciJW2j2ReQuETRJeyzeMbQ8UhkZ238YavCUrsj9HHBBQ=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":1,\"entries\":[{\"byteLength\":256,\"ciphertextHash\":\"ngoNryWaOAPt1VGAB2kNk2/YW0AgGS+zMexdiF7xy3o=\",\"contentRevision\":1,\"keyEpoch\":1,\"kind\":\"calendar-key\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"calendar-identity-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"29d0e1f2-a3b4-4c5d-8e7f-8091a2b3c4d6\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":null,\"previousPageHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"signerKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavBkQCKhBttD0aTPeYcq0IcZI29wbhUYbDV3NHJRnVyHW0wLiB7oAAAAAKTJEOv0txLF1NW2Sn0LDc0WzbmH1efqB9FSbDVxT0sFOz0RhX3qVFeAg4yhDzhzEIudA/X2fxBh5BveWiZa5oPUS3i5g7IpxfMdbM7sOdFBQSgI"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"ciphertext\":\"d+8n0AXciT8+lXt5XIWQLr5dNESuduFYFb8J5BrlI+UbdttV7C3ADNGk7HYxfUlgPWZcir+MyzK3RhEKYWPXvuShT5NQgzA57cuXPWE/37gQznLZBxqnbfAJjnIJd2zFgOprAYG6LxReRCFzjvrRhtWyCv1DYBCjqAuebft6ee6xQZAI6nrN6QAFIEBN5NRv3/qVo+7PoNCS51PH+71EzRK/CBexUzeTAlxp/Z6LSGTAUwmAM+1BvmBHmfH7jDcoF/9fxO9KWFy+N2lhJhTINIwaVxFEon+EqimsjksTfAHvAAZIuTi4KbB8tmBqJwvqcTI8AgGibSHu2aC16GZfHFK0XXf+9Y9ulMnAYosFZrNnqAtiJagBPkYd8pV1gae0p3Eyv+6CFqjVF5XwALCD3VrTaWYupJn3jEVWl7uINlByMxLadTl+BJyZZ8C0SIDgTPOLoq4wnQtxdmFfPfsNBr0VKzyvziu7rhDyAnRQGAm1kZlaq54ToJNqRF9soMx5lvNHwZi/BYohShjfjDNnR9wOgMC/SwAnW9aHy+KgbC2ktw2V/fxlRBVf6ppKSfGkYO5XKHv28A/yU4MxWtU2kCuhauYFIQEI8X4tyjkquaO0P7shw8DcxrfuQcnhB06RBRk2zh4hLcUPYteKvGTCx95RRbWxyp1ikumge822t8p/3HGC4cStZlZ9zxtqchcWqn/G+3MF5ZXyvoW6gclli3Th660yrQDMiwubkhzArWtiN46LJ0heWSvdZtSnL+RLooct4BG3wpfLnUcWUMEaJjPn4b5vPresLb+MONy8dLnwBdQpF4mIdo5thVp9CPx9qmL9w1dcHLgXrDSxUlj+G82hHo+6zp1m/Y9zTEmA66R6dNqLmX2znFmWb6NMLXDFTKK/aZj0XhkvCd4ebjzGmV/jFNrRwFhDGcVAj5VCZCUlswjLet5JCSA+8SDraJjfLjeizbavKLm3QjkJdAKGXkNPykjU0GcXUZ1kdu7j4oorkf3ZFSj8X1+HF7fZQP3FOcN9l2R1VWGPBXZUuHu6ltIUKneKwnfe0r63jCBA46qrtwBKONgfGGBBE0Ttjf2e/Ic/+PMCuPBHju1BayYruEfi1Be/igz8/TnpUoKKuu0Bx9+ieK8cPoifJcTbhDpk9OaXTPSbdMY54IzSvfT5o6r6mTqowoZshpwON3eDyXTz/Z1Pqo11hQhYBhM8FH9vHOym4Fb0Wz2NQAt3dDEmJwex1Q7GUANJERpeq5WaY6exwkwHZPZPGAy18Q6s7x+baqtydUxH2hLom//sqoCjSLrQ9/btb028Q6CvBnZ6PqO+WGUom+RKUs1F53KZWnyGgYHllukKW06FEccogWanyIX23AcnpDNNTkVXNYNd\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vVIaNRF7UgoCuE62\",\"product\":\"calendar\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"hKCFgUt8IBcRX12PR6Sze5wMj+//n3FGqx6RML2Fb6g=\",\"version\":1}"
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "authorityKeyId": "e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa",
+        "stateRevision": 2,
+        "products": [
+          {
+            "product": "app",
+            "entries": [
+              {
+                "keyId": "196bc004-a2da-47c7-8126-f818bcc79780",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.search-index",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "53125c10-281b-48a3-b3f9-f8c33bdb7086",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.import-dedup",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "6bbc5204-8f80-58f6-894a-72c4ef59d0ba",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "c90a464b-a14f-5916-9f49-f1e0799df9ec",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.identity",
+                "keyEpoch": 2,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          },
+          {
+            "product": "calendar",
+            "entries": [
+              {
+                "keyId": "dd46a759-63a2-5baf-97f2-3b1e01b9072f",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "calendar.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          }
+        ],
+        "importDedupMatches": true,
+        "searchLeafMatches": true
+      }
+    },
+    {
+      "name": "native read of a rotation successor",
+      "mode": "products",
+      "input": {
+        "accountId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+        "amk": "jXjMueB1aAS1l0l+Z0D5gZMMZHGCRLbC5Oj6kGP9Yk4=",
+        "keyPassword": "cmVhZC12ZWN0b3Jz",
+        "mailKeys": [
+          "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA==",
+          "xioGavBkQBsAAAAgdD6zsXVRKp9937xTupvgVl6w/EoQJnar2OJECHZ42R3ClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAi38QPG4oH1ScX4JXj6GvB9UAGP5I9z/jdJK4edOU4h0Q8h+3lZgXiz2evCqdhyoQvGKSD0I9/9YTLYmhx2blM8xBczJsSq4WRFbLYHjP9mzdIQfNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAIlYQGsQVQb3YeX0NreGt37vJoLVClUleN56E0j+VtZjay/usk6DokfTZyRciYCATC7/7NTDr/EKDaNewUM3nE6tSHgx2p2f7AlvQCtH2t7JhgAvOKgZq8GRAGQAAACClaknCipG8bV27JCoCOX6s7n1Q+T9hWsgpNNeTqhM3QMKLBhgbCAAAACwFgmrwZEACmwwioQa8osk8tWCX/wL45PkMJ0ukED4gJ6tDj4Nc6StL7k7IhQAAAAAELhAiyW5+cComYK25yhjZbcoF1VsVZbqRBUGW+3gTMv2QnhQGJcM4+Od3JyZsf1h5nHCisQ+KoMLKQ/+PGPa0fC8kTTs/c/SpP8yhx77GinLYBw=="
+        ],
+        "authorityKey": "xioGavBkQBsAAAAg/LZrFcg9YYlotBz6eqkP3pPNbxNFap42CtNRC2XKJTvClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGlCMOkPG5BFqysiH4TMXIh2h4bIg4370YM1VgRAqTL/YAAAAAdAQQgl5cj1S/ikNAhy8t5QiVfghgyQVy/NFFQmdUvK5tw92ZVERkKSY5WqD1iXF0q5sbGD1CwmWEOMVBxPGsU1kDUqGR6aQxpKnunU9oG1snEwU=",
+        "head": {
+          "raw": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"amkEpoch\":0,\"authEpoch\":1,\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"authorityProfileId\":\"account-authority-ed25519-v1\",\"authorityPublicKeyDigest\":\"rbjEOBc7v/nCqdYdvQRdTqUxNYXrRrdZ50zN87DagXM=\",\"bundleDescriptorHashes\":[\"J1VdudQreXpkjN2KHhCGyla3dCfZl3+ByGkcIhZndZY=\",\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"lxEL1ncuxT7cTYKFNW73ovv8X41xBZi2iLXB2BYKGHY=\"],\"credentialDescriptorHashes\":[\"UEwmRqLMUnbvqYQJ3U3HVs3F46QAdgeEroQZY5aHWIk=\"],\"cryptoGeneration\":0,\"currentEncryptionKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"currentSigningKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"historyEventCount\":2,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"keyEpoch\":2,\"keyHistoryRoot\":\"C6GcN6V59ifTsfx4KR2v2fz54E2ANDfxmrIjXqy8PQA=\",\"migrationId\":null,\"minimumWriteProfile\":null,\"observedSessionEpoch\":1,\"policyVersion\":0,\"previousHeadHash\":\"lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=\",\"productDescriptors\":[{\"delegationHash\":\"yJfmd2y88o8euLt2bK0u69HodslhszBjFHuo9slYpFw=\",\"identityManifestHash\":\"CSm4YU6ohxm3MRQg9YJfuo5yWCji0ntb8rPccHYrLZ8=\",\"identityManifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"identityManifestRevision\":2,\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"J1VdudQreXpkjN2KHhCGyla3dCfZl3+ByGkcIhZndZY=\",\"rootBundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"rootBundleRevision\":2},{\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityManifestHash\":\"4iEu0fRpxf1vSDrCxOVGR31FxJfvqFWEPCUD917Nch4=\",\"identityManifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"identityManifestRevision\":1,\"product\":\"calendar\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"rootBundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"rootBundleRevision\":1}],\"recoveryEpoch\":0,\"slotDescriptorHashes\":[\"1pZBgwTTwfq3SbdCaGG5G879wuqi+tXLD7DUcNL/NZ8=\"],\"stateRevision\":2,\"type\":\"thelemail-account-crypto-head/v2\"}",
+          "mac": "ufw4ZxZNYVuWF7C1tLYTfi11GORbQ+0fmjJnv6Xshwo=",
+          "previousHeadHash": "lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=",
+          "authoritySignature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAAwKEJjAfcbKjyFjH+tPYesjXbtirtFS88LcVwJpPuw9ExZAjHfCP2z/c1YehUmbx7R70XR8lX1geprPwJ0unXNg5H5eP0gTQmHMI3wmlxv57+wG",
+          "legacySignature": null,
+          "transitionSignature": null
+        },
+        "secretBundles": [
+          {
+            "bundleId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70",
+            "revision": 2,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"ciphertext\":\"Aq2AzhT8NeiJlnJn5GOtL6xPJvFO+DI45OOXulAyhDbAZVU/e4r8BAis/khF7Bs2WHLgtiFSfWTjSRwPj/fIy+UAmTxa5Hr615TUA4Nzr97iSMQLA/Gv72VUM+IU710+0utVk+ivm8tE4/SkEtV57bOK27U6k74+X61oZeM0MmNKaKR4r0UvggLbrM1BDnJMXUIxyHa3ganeTWKlyM+ZZANZ1QvxLaGULBgtXrtxyA0DSUDfFQcjt54uildBW31SlwqlnJ2QrP5Gocvx9qXC37iWSn5JJ2RtSzNRfcEhFhlt8uP5tPYU6/5KAhhPuts/p2BX1NV/8kWoI20Qtjx+BgKY8MQh2QTpNuEs69lP/BztbWlLcQLy35CgWM/DmP1REQK6FW9Yt5cOZRx+ogSSBKGS8lQuOzm6QvToFjj7pBciEd3XKvcXNKSrDUQ/++vu2gh3hZFiUVSm5up2E6+dJMmy0xoTXhntUFjly9xvD9VYqfKh28l3lX/Pj6K8XZFQK8r0l8tGwyuISjucShT+SUytxBIgbGeGM7cZRbwlLtyUWPZXngH+fGTnxLDdTVRJnwDs\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"XoDa/9Wx6YAyweu5\",\"purpose\":\"secret-bundle\",\"revision\":2,\"salt\":\"lEfTRATKkNWOW0U7T2zZq7DYnd4fWWKvlirX65iD7yw=\",\"version\":2}"
+          }
+        ],
+        "products": [
+          {
+            "product": "app",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"da78a39d-8041-4262-8a95-f65cc59d103c\",\"byteLength\":4096,\"ciphertextHash\":\"juOkA68DWjuaCS1fd37M4i8SHs5s+1zGlEI60V0Z86k=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"yJfmd2y88o8euLt2bK0u69HodslhszBjFHuo9slYpFw=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"usage\":\"mail-identity\"},{\"keyEpoch\":2,\"keyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"usage\":\"mail-identity\"}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"previousManifestHash\":\"WSzVZhfVvOQ8Saimg4VsA88WcGHdyvM43lSyUs8qpio=\",\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAGp6EI7gQW4UOaKPyzJ7ZJADpm7U1jesvc6BN9TwwvngXTOw8DodXDjEPaD77jGQuS5UMjxVDGVVMWUFxmogyVklwC8YpF4tz+vWhn85UVLM6scE"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":2,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"previousDelegationHash\":\"L+BvGxD2z+0fdpY2Aa0psB88mC4jKKJED50f5PFKjoE=\",\"product\":\"app\",\"productKeyEpoch\":1,\"purposes\":[\"mail.state\"],\"recipientKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"recipientProfileId\":\"mail-classic-v1\",\"recipientPublicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"signingKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"signingProfileId\":\"mail-classic-v1\",\"signingPublicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAALjsEOSnbwokqEl7bQdj1JenLW91wLlUFA3rT+tgZVXJVktBHOWchETALPudPbkIsbOQZ7wbJAN5Ctz32X36Ko13QAPDunLlblcpy6mb0KDTLR8C",
+              "signingPublicKey": "xioGavBkQBsAAAAgdD6zsXVRKp9937xTupvgVl6w/EoQJnar2OJECHZ42R3ClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAi38QPG4oH1ScX4JXj6GvB9UAGP5I9z/jdJK4edOU4h0Q8h+3lZgXiz2evCqdhyoQvGKSD0I9/9YTLYmhx2blM8xBczJsSq4WRFbLYHjP9mzdIQfNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAIlYQGsQVQb3YeX0NreGt37vJoLVClUleN56E0j+VtZjay/usk6DokfTZyRciYCATC7/7NTDr/EKDaNewUM3nE6tSHgx2p2f7AlvQCtH2t7JhgAvOKgZq8GRAGQAAACClaknCipG8bV27JCoCOX6s7n1Q+T9hWsgpNNeTqhM3QMKLBhgbCAAAACwFgmrwZEACmwwioQa8osk8tWCX/wL45PkMJ0ukED4gJ6tDj4Nc6StL7k7IhQAAAAAELhAiyW5+cComYK25yhjZbcoF1VsVZbqRBUGW+3gTMv2QnhQGJcM4+Od3JyZsf1h5nHCisQ+KoMLKQ/+PGPa0fC8kTTs/c/SpP8yhx77GinLYBw=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":2,\"entries\":[{\"byteLength\":128,\"ciphertextHash\":\"ayIwQ8SwjoJZCbWUeh8B7oFE415wdIvQr/c7LQ6Mz48=\",\"contentRevision\":3,\"keyEpoch\":1,\"kind\":\"mail.settings\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"mail-classic-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"18c9d0e1-f2a3-4b4c-9d6e-7f8091a2b3c5\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":\"fGenwu6f3E5ePxP/TNoAZQFXXWzabxKfG/Dhvhj5SkU=\",\"previousPageHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"signerKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavByUCKhBryiyTy1YJf/Avjk+QwnS6QQPiAnq0OPg1zpK0vuTsiFAAAAAOeOEC0vx+YA3NnUniiTuYTWJhUz2PwJitln64zIbsuK6hOtrZ3BXzu3XLg2WeVKemHaoxuLyiO1IwBR98WTgsjv3LiWJOdLkiIpEPhlS/rBoqIC"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "da78a39d-8041-4262-8a95-f65cc59d103c",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"da78a39d-8041-4262-8a95-f65cc59d103c\",\"ciphertext\":\"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\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"gmtM1M115q0KDqT0\",\"product\":\"app\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"f5lyVuopaHdn2JeU0ijClfXarfA93jK3zb3JAuUr+fY=\",\"version\":1}"
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "authorityKeyId": "e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa",
+        "stateRevision": 2,
+        "products": [
+          {
+            "product": "app",
+            "entries": [
+              {
+                "keyId": "196bc004-a2da-47c7-8126-f818bcc79780",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.search-index",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "53125c10-281b-48a3-b3f9-f8c33bdb7086",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.import-dedup",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "6bbc5204-8f80-58f6-894a-72c4ef59d0ba",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.identity",
+                "keyEpoch": 1,
+                "availability": "available",
+                "held": true
+              },
+              {
+                "keyId": "c90a464b-a14f-5916-9f49-f1e0799df9ec",
+                "scopeId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+                "purpose": "mail.identity",
+                "keyEpoch": 2,
+                "availability": "available",
+                "held": true
+              }
+            ],
+            "dataManifestPages": 1
+          }
+        ],
+        "importDedupMatches": true,
+        "searchLeafMatches": true
+      }
+    },
+    {
+      "name": "rotation successor read with the previous delegation",
+      "mode": "full",
+      "input": {
+        "accountId": "9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c",
+        "amk": "jXjMueB1aAS1l0l+Z0D5gZMMZHGCRLbC5Oj6kGP9Yk4=",
+        "keyPassword": "cmVhZC12ZWN0b3Jz",
+        "mailKeys": [
+          "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA==",
+          "xioGavBkQBsAAAAgdD6zsXVRKp9937xTupvgVl6w/EoQJnar2OJECHZ42R3ClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAi38QPG4oH1ScX4JXj6GvB9UAGP5I9z/jdJK4edOU4h0Q8h+3lZgXiz2evCqdhyoQvGKSD0I9/9YTLYmhx2blM8xBczJsSq4WRFbLYHjP9mzdIQfNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGvKLJPLVgl/8C+OT5DCdLpBA+ICerQ4+DXOkrS+5OyIUAAAAAIlYQGsQVQb3YeX0NreGt37vJoLVClUleN56E0j+VtZjay/usk6DokfTZyRciYCATC7/7NTDr/EKDaNewUM3nE6tSHgx2p2f7AlvQCtH2t7JhgAvOKgZq8GRAGQAAACClaknCipG8bV27JCoCOX6s7n1Q+T9hWsgpNNeTqhM3QMKLBhgbCAAAACwFgmrwZEACmwwioQa8osk8tWCX/wL45PkMJ0ukED4gJ6tDj4Nc6StL7k7IhQAAAAAELhAiyW5+cComYK25yhjZbcoF1VsVZbqRBUGW+3gTMv2QnhQGJcM4+Od3JyZsf1h5nHCisQ+KoMLKQ/+PGPa0fC8kTTs/c/SpP8yhx77GinLYBw=="
+        ],
+        "authorityKey": "xioGavBkQBsAAAAg/LZrFcg9YYlotBz6eqkP3pPNbxNFap42CtNRC2XKJTvClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGlCMOkPG5BFqysiH4TMXIh2h4bIg4370YM1VgRAqTL/YAAAAAdAQQgl5cj1S/ikNAhy8t5QiVfghgyQVy/NFFQmdUvK5tw92ZVERkKSY5WqD1iXF0q5sbGD1CwmWEOMVBxPGsU1kDUqGR6aQxpKnunU9oG1snEwU=",
+        "head": {
+          "raw": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"amkEpoch\":0,\"authEpoch\":1,\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"authorityProfileId\":\"account-authority-ed25519-v1\",\"authorityPublicKeyDigest\":\"rbjEOBc7v/nCqdYdvQRdTqUxNYXrRrdZ50zN87DagXM=\",\"bundleDescriptorHashes\":[\"J1VdudQreXpkjN2KHhCGyla3dCfZl3+ByGkcIhZndZY=\",\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"lxEL1ncuxT7cTYKFNW73ovv8X41xBZi2iLXB2BYKGHY=\"],\"credentialDescriptorHashes\":[\"UEwmRqLMUnbvqYQJ3U3HVs3F46QAdgeEroQZY5aHWIk=\"],\"cryptoGeneration\":0,\"currentEncryptionKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"currentSigningKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"historyEventCount\":2,\"issuedAt\":\"2026-11-08T13:00:00Z\",\"keyEpoch\":2,\"keyHistoryRoot\":\"C6GcN6V59ifTsfx4KR2v2fz54E2ANDfxmrIjXqy8PQA=\",\"migrationId\":null,\"minimumWriteProfile\":null,\"observedSessionEpoch\":1,\"policyVersion\":0,\"previousHeadHash\":\"lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=\",\"productDescriptors\":[{\"delegationHash\":\"yJfmd2y88o8euLt2bK0u69HodslhszBjFHuo9slYpFw=\",\"identityManifestHash\":\"CSm4YU6ohxm3MRQg9YJfuo5yWCji0ntb8rPccHYrLZ8=\",\"identityManifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"identityManifestRevision\":2,\"product\":\"app\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"J1VdudQreXpkjN2KHhCGyla3dCfZl3+ByGkcIhZndZY=\",\"rootBundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"rootBundleRevision\":2},{\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityManifestHash\":\"4iEu0fRpxf1vSDrCxOVGR31FxJfvqFWEPCUD917Nch4=\",\"identityManifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"identityManifestRevision\":1,\"product\":\"calendar\",\"productKeyEpoch\":1,\"rootBundleCiphertextHash\":\"gUAiIM0k9eTe+IhuxWXsBYMlO+I1/OOzw1FvoMF6Okk=\",\"rootBundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"rootBundleRevision\":1}],\"recoveryEpoch\":0,\"slotDescriptorHashes\":[\"1pZBgwTTwfq3SbdCaGG5G879wuqi+tXLD7DUcNL/NZ8=\"],\"stateRevision\":2,\"type\":\"thelemail-account-crypto-head/v2\"}",
+          "mac": "ufw4ZxZNYVuWF7C1tLYTfi11GORbQ+0fmjJnv6Xshwo=",
+          "previousHeadHash": "lnrfXyg8PRjvJnP3j8Ku4LndL3lr9s8QGDt570ykBP0=",
+          "authoritySignature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAAwKEJjAfcbKjyFjH+tPYesjXbtirtFS88LcVwJpPuw9ExZAjHfCP2z/c1YehUmbx7R70XR8lX1geprPwJ0unXNg5H5eP0gTQmHMI3wmlxv57+wG",
+          "legacySignature": null,
+          "transitionSignature": null
+        },
+        "secretBundles": [
+          {
+            "bundleId": "e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"e5f6a7b8-c9d0-4e1f-8a3b-4c5d6e7f8092\",\"ciphertext\":\"8gdq8Vfh38bwZy2ZRCViDOoy0zF4hbgE1sdDzL8+OGvav061TmY1TvE2uNImaG84GXmM/xCe0FEY2VM6pqXEGmkkfs6fRcOzjKVlyWuC4OY3BioiAL+hCMFOmf8N9w6umP2xxUejBEc8cYIZ8PeSeT/U/+PXwGjBSoyPzcl5mip9wKh3y+g+ADGbDShJ8pAVdI1pvEPC8KDc5zSf8MC2Zuh1YNLhIQ+wrjHb51HTrW8N6qhS09t0Yb3cGF4bpw3EwwlTofQ7tDFfCgQlrB/2jZSAtZ5DEozXt+POFQ1om+Tdc/FDCTHeqbA+4Ho3NXKFSLM2ojdYM1bMooJwH0m8oy14eM8vfGgqqpEqe7NUvGaLLUMmyq3i8jrtPRi48R8oe3qDJ+hUW8PoTENqhLK9bsm9rrI7DQ+2y934FCGauh1m2Cig5qH1Vt/tnEfHWH0eDRkmGYc7HxdHSkLBKZm4Jb1VTceU29YZjRvCx8gaPsi7nCcXuE9fm/lZDK8DsdTtBCPUug+BSkIxZ4dsHQtOlBVKxQJka6p6BtooK31T5rUrSXCOnVg4CnARWrd1rpmnrjo/A41YcFgL9K2Vi9abH7Wv5IeqykiwkhMSGttJp+sOAWQyB8J2J8aUDwRQ7E8KjZv7Be6ht1KuAL66ivW7LXUlSYMHOatezZQx4YX3YaHxmUBStGxn3NUqpqVEEGYYrEfMBehhxVqMPPUaU13Gktq8HYNvMDXH53rzwwg794XpyTpWdl2in+OUN10Akrru83EzslOSm+3qpzrafwppTBx+CElgBYWk+Yc2X+y3XmckeVS+T5s7pztyh5i7tOwIew==\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"jZHOkVyzEOVVkeoa\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"lhK9iYG7a/noPv/mW5zGZ6YjZhzY1BImnRz2WB3dkKo=\",\"version\":2}"
+          },
+          {
+            "bundleId": "c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70",
+            "revision": 2,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"c3d4e5f6-a7b8-4c9d-8e1f-2a3b4c5d6e70\",\"ciphertext\":\"Aq2AzhT8NeiJlnJn5GOtL6xPJvFO+DI45OOXulAyhDbAZVU/e4r8BAis/khF7Bs2WHLgtiFSfWTjSRwPj/fIy+UAmTxa5Hr615TUA4Nzr97iSMQLA/Gv72VUM+IU710+0utVk+ivm8tE4/SkEtV57bOK27U6k74+X61oZeM0MmNKaKR4r0UvggLbrM1BDnJMXUIxyHa3ganeTWKlyM+ZZANZ1QvxLaGULBgtXrtxyA0DSUDfFQcjt54uildBW31SlwqlnJ2QrP5Gocvx9qXC37iWSn5JJ2RtSzNRfcEhFhlt8uP5tPYU6/5KAhhPuts/p2BX1NV/8kWoI20Qtjx+BgKY8MQh2QTpNuEs69lP/BztbWlLcQLy35CgWM/DmP1REQK6FW9Yt5cOZRx+ogSSBKGS8lQuOzm6QvToFjj7pBciEd3XKvcXNKSrDUQ/++vu2gh3hZFiUVSm5up2E6+dJMmy0xoTXhntUFjly9xvD9VYqfKh28l3lX/Pj6K8XZFQK8r0l8tGwyuISjucShT+SUytxBIgbGeGM7cZRbwlLtyUWPZXngH+fGTnxLDdTVRJnwDs\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"XoDa/9Wx6YAyweu5\",\"purpose\":\"secret-bundle\",\"revision\":2,\"salt\":\"lEfTRATKkNWOW0U7T2zZq7DYnd4fWWKvlirX65iD7yw=\",\"version\":2}"
+          },
+          {
+            "bundleId": "d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81",
+            "revision": 1,
+            "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"amkEpoch\":0,\"bundleId\":\"d4e5f6a7-b8c9-4d0e-9f2a-3b4c5d6e7f81\",\"ciphertext\":\"6/7f0dJSg6YXzlcfeNUYdMdHIkTnQ11ir+cpgQj57Zu8SEq/ytvzvokAheDdm0n7xRtE+BcuKio0WumkPunMzI6dFY1xWz9+KcNcaGYft5HYOBuplL64oVTKAfdfetdnLZNW/60GWlNCUhnlQGN/nT4okUYIGwOa5VuDaXwO1tSPZlJRSdvmp++EXeFjT3tme8jxUcYamzLcl7TAicPu+wdPKj71xIloUsReDx5NjxDPhCYNWRAyTrn+DoKVUq7jn32INFcDBFzFMajANBpmQ//kzW5CmhAHXNNimEpeDfTS8ClsYRlgG4XN3BXrUEIR5/2KK4G0hooAsFx2onUxzEEaLymkigk27yFy8lnT2rOeRA0xonwxN/eCeupx4tZeYkrlfyvXVge6AP3oojxaXADB5mKbNd1u7beoAe4M4KeOI3SxWUXYvqIzJiJFBbsJHFWfeR9ZJPZDNLEoYG20UYN0m0bs+3rSd48U+em/gsY1KhttQ2KUskG4qkrLVapSy+y8Du7mofkerTaTzQqf4AnaT8XnIKiKwiG/4mfSSd8qB1lYxOjxTMmSj9MdJWEAqgCXvYXBGKA=\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vKg3l4TP1BDWtRI8\",\"purpose\":\"secret-bundle\",\"revision\":1,\"salt\":\"J5gby8BEejxXOTz7oZgvhjyuH1b4Bf7KSp+TKHoD74k=\",\"version\":2}"
+          }
+        ],
+        "products": [
+          {
+            "product": "app",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"da78a39d-8041-4262-8a95-f65cc59d103c\",\"byteLength\":4096,\"ciphertextHash\":\"juOkA68DWjuaCS1fd37M4i8SHs5s+1zGlEI60V0Z86k=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"yJfmd2y88o8euLt2bK0u69HodslhszBjFHuo9slYpFw=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"usage\":\"mail-identity\"},{\"keyEpoch\":2,\"keyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"privateAvailability\":\"available\",\"profileId\":\"mail-classic-v1\",\"publicKeyDigest\":\"q0gXUsRiofX6aIX/3R4hgkn+GyVikEwUtyBT2zI73W4=\",\"usage\":\"mail-identity\"}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"f6a7b8c9-d0e1-4f2a-9b4c-5d6e7f8091a3\",\"previousManifestHash\":\"WSzVZhfVvOQ8Saimg4VsA88WcGHdyvM43lSyUs8qpio=\",\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavByUCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAGp6EI7gQW4UOaKPyzJ7ZJADpm7U1jesvc6BN9TwwvngXTOw8DodXDjEPaD77jGQuS5UMjxVDGVVMWUFxmogyVklwC8YpF4tz+vWhn85UVLM6scE"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"purposes\":[\"mail.state\"],\"recipientKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"recipientProfileId\":\"mail-classic-v1\",\"recipientPublicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"signingKeyId\":\"6bbc5204-8f80-58f6-894a-72c4ef59d0ba\",\"signingProfileId\":\"mail-classic-v1\",\"signingPublicKeyDigest\":\"ghgeMig57P2BzCPSDX1S0YfShewN4ADXUAlu6o0ioZ4=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAA0fEOXXjcQtVL3grw6iAwZ8ZEmn28OGx3B6tXnumyKsDTkLU7oEq4DzWKPGn2pgEBbWq/QWnk7vZJxT3Vax4y4Otgt4YYmwMeBdMvfZqn7idAAO",
+              "signingPublicKey": "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":2,\"entries\":[{\"byteLength\":128,\"ciphertextHash\":\"ayIwQ8SwjoJZCbWUeh8B7oFE415wdIvQr/c7LQ6Mz48=\",\"contentRevision\":3,\"keyEpoch\":1,\"kind\":\"mail.settings\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"mail-classic-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T13:00:00Z\",\"manifestId\":\"18c9d0e1-f2a3-4b4c-9d6e-7f8091a2b3c5\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":\"fGenwu6f3E5ePxP/TNoAZQFXXWzabxKfG/Dhvhj5SkU=\",\"previousPageHash\":null,\"product\":\"app\",\"productKeyEpoch\":1,\"revision\":2,\"signerKeyId\":\"c90a464b-a14f-5916-9f49-f1e0799df9ec\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavByUCKhBryiyTy1YJf/Avjk+QwnS6QQPiAnq0OPg1zpK0vuTsiFAAAAAOeOEC0vx+YA3NnUniiTuYTWJhUz2PwJitln64zIbsuK6hOtrZ3BXzu3XLg2WeVKemHaoxuLyiO1IwBR98WTgsjv3LiWJOdLkiIpEPhlS/rBoqIC"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "da78a39d-8041-4262-8a95-f65cc59d103c",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"da78a39d-8041-4262-8a95-f65cc59d103c\",\"ciphertext\":\"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\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"gmtM1M115q0KDqT0\",\"product\":\"app\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"f5lyVuopaHdn2JeU0ijClfXarfA93jK3zb3JAuUr+fY=\",\"version\":1}"
+              }
+            ]
+          },
+          {
+            "product": "calendar",
+            "identityManifest": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"bundles\":[{\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"byteLength\":1717,\"ciphertextHash\":\"kbxqXhe6hviO+4JUnVVTM3rNQ0SLrv3+uwjTDFclR44=\",\"profileId\":\"product-bundle-v1\",\"revision\":1}],\"delegationHash\":\"H/J3H3Ok8QUehTG4cMbQgFsxxFaTKnoNifuFMVBlP6w=\",\"identityKeys\":[{\"keyEpoch\":1,\"keyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"privateAvailability\":\"available\",\"profileId\":\"calendar-identity-v1\",\"publicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"usage\":\"calendar-identity\"}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"07b8c9d0-e1f2-4a3b-8c5d-6e7f8091a2b4\",\"previousManifestHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"type\":\"thelemail-product-identity-manifest/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAAEg/EG4MtItdFRDT6YXAf8TGKSSGqBNe/UJuW3CmR8uxzCkMspgdABoOglUOwdKhu6XV4fGNzh59ZkPvtNAJspwxCJRNT+I+dfH0AygdvlGEQdwL"
+            },
+            "delegation": {
+              "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"authorityEpoch\":1,\"authorityKeyId\":\"e0cef8de-9a06-5c9c-9f75-9efa8a3ee6fa\",\"delegationRevision\":1,\"issuedAt\":\"2026-11-08T12:00:00Z\",\"previousDelegationHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"purposes\":[\"calendar.freebusy\",\"calendar.grant\",\"calendar.invite\",\"calendar.reply\",\"calendar.state\"],\"recipientKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"recipientProfileId\":\"calendar-identity-v1\",\"recipientPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"signingKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"signingProfileId\":\"calendar-identity-v1\",\"signingPublicKeyDigest\":\"7kDT8vad3X8tW7UWljIsnO4+/bYB4Pd6+1fSbKiYPa8=\",\"type\":\"thelemail-product-delegation/v1\"}",
+              "signature": "wogGABsIAAAAKQWCavBkQCKhBpQjDpDxuQRasrIh+EzFyIdoeGyION+9GDNVYEQKky/2AAAAANO4EALD8mWzBg3KabwrwEHeVdP9WpWoKwGe9dqkV4WGflpQ48z5xKJS23dLnLYwf1B/+SMsSKhBwLW9KJbc6kQZTPKdC6bj9ntNWa++nPw9xloO",
+              "signingPublicKey": "xioGavBkQBsAAAAgmd+MxSpIyvCE1rGVTEhQyeA3LIOLFOZXjg4X6UGY9/zClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEG20PRpM95hyrQhxkjb3BuFRhsNXc0clGdXIdbTAuIHugAAAAA6x0QAm+EC6+syex2f7bfqSY5cSghuhe8Cwbbebkw9BkLAYpbV6cv8vZFOsHgIJrz6LZaPrRD3qMo5lD9gI7ban91K5sTgMTOiAqJTm6n83lxtQnOKgZq8GRAGQAAACAOZ3mwa8XwC0Lr9LCa2hl7cUc7Nl/h4/CoChrnS8ZiZ8KLBhgbCAAAACwFgmrwZEACmwwioQbbQ9Gkz3mHKtCHGSNvcG4VGGw1dzRyUZ1ch1tMC4ge6AAAAACXiRC4ygLl9fbqsqRcGOSw6CHchR3bxBC5I3T3DvgXilyIeHfeqYZ1KPX3cgYJTIgoCLciJW2j2ReQuETRJeyzeMbQ8UhkZ238YavCUrsj9HHBBQ=="
+            },
+            "dataManifest": [
+              {
+                "record": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"delegationRevision\":1,\"entries\":[{\"byteLength\":256,\"ciphertextHash\":\"ngoNryWaOAPt1VGAB2kNk2/YW0AgGS+zMexdiF7xy3o=\",\"contentRevision\":1,\"keyEpoch\":1,\"kind\":\"calendar-key\",\"membershipRevision\":1,\"objectId\":\"3ae1f2a3-b4c5-4d6e-9f80-91a2b3c4d5e7\",\"profileId\":\"calendar-identity-v1\",\"scopeId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"tombstone\":false}],\"issuedAt\":\"2026-11-08T12:00:00Z\",\"manifestId\":\"29d0e1f2-a3b4-4c5d-8e7f-8091a2b3c4d6\",\"page\":1,\"pageCount\":1,\"previousManifestHash\":null,\"previousPageHash\":null,\"product\":\"calendar\",\"productKeyEpoch\":1,\"revision\":1,\"signerKeyId\":\"dd46a759-63a2-5baf-97f2-3b1e01b9072f\",\"type\":\"thelemail-product-data-manifest/v1\"}",
+                "signature": "wogGABsIAAAAKQWCavBkQCKhBttD0aTPeYcq0IcZI29wbhUYbDV3NHJRnVyHW0wLiB7oAAAAAKTJEOv0txLF1NW2Sn0LDc0WzbmH1efqB9FSbDVxT0sFOz0RhX3qVFeAg4yhDzhzEIudA/X2fxBh5BveWiZa5oPUS3i5g7IpxfMdbM7sOdFBQSgI"
+              }
+            ],
+            "bundles": [
+              {
+                "bundleId": "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f",
+                "revision": 1,
+                "bundle": "{\"accountId\":\"9c1e5a7b-3d2f-4e6a-8b0c-1d2e3f4a5b6c\",\"aead\":\"aes-256-gcm\",\"bundleId\":\"b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6f\",\"ciphertext\":\"d+8n0AXciT8+lXt5XIWQLr5dNESuduFYFb8J5BrlI+UbdttV7C3ADNGk7HYxfUlgPWZcir+MyzK3RhEKYWPXvuShT5NQgzA57cuXPWE/37gQznLZBxqnbfAJjnIJd2zFgOprAYG6LxReRCFzjvrRhtWyCv1DYBCjqAuebft6ee6xQZAI6nrN6QAFIEBN5NRv3/qVo+7PoNCS51PH+71EzRK/CBexUzeTAlxp/Z6LSGTAUwmAM+1BvmBHmfH7jDcoF/9fxO9KWFy+N2lhJhTINIwaVxFEon+EqimsjksTfAHvAAZIuTi4KbB8tmBqJwvqcTI8AgGibSHu2aC16GZfHFK0XXf+9Y9ulMnAYosFZrNnqAtiJagBPkYd8pV1gae0p3Eyv+6CFqjVF5XwALCD3VrTaWYupJn3jEVWl7uINlByMxLadTl+BJyZZ8C0SIDgTPOLoq4wnQtxdmFfPfsNBr0VKzyvziu7rhDyAnRQGAm1kZlaq54ToJNqRF9soMx5lvNHwZi/BYohShjfjDNnR9wOgMC/SwAnW9aHy+KgbC2ktw2V/fxlRBVf6ppKSfGkYO5XKHv28A/yU4MxWtU2kCuhauYFIQEI8X4tyjkquaO0P7shw8DcxrfuQcnhB06RBRk2zh4hLcUPYteKvGTCx95RRbWxyp1ikumge822t8p/3HGC4cStZlZ9zxtqchcWqn/G+3MF5ZXyvoW6gclli3Th660yrQDMiwubkhzArWtiN46LJ0heWSvdZtSnL+RLooct4BG3wpfLnUcWUMEaJjPn4b5vPresLb+MONy8dLnwBdQpF4mIdo5thVp9CPx9qmL9w1dcHLgXrDSxUlj+G82hHo+6zp1m/Y9zTEmA66R6dNqLmX2znFmWb6NMLXDFTKK/aZj0XhkvCd4ebjzGmV/jFNrRwFhDGcVAj5VCZCUlswjLet5JCSA+8SDraJjfLjeizbavKLm3QjkJdAKGXkNPykjU0GcXUZ1kdu7j4oorkf3ZFSj8X1+HF7fZQP3FOcN9l2R1VWGPBXZUuHu6ltIUKneKwnfe0r63jCBA46qrtwBKONgfGGBBE0Ttjf2e/Ic/+PMCuPBHju1BayYruEfi1Be/igz8/TnpUoKKuu0Bx9+ieK8cPoifJcTbhDpk9OaXTPSbdMY54IzSvfT5o6r6mTqowoZshpwON3eDyXTz/Z1Pqo11hQhYBhM8FH9vHOym4Fb0Wz2NQAt3dDEmJwex1Q7GUANJERpeq5WaY6exwkwHZPZPGAy18Q6s7x+baqtydUxH2hLom//sqoCjSLrQ9/btb028Q6CvBnZ6PqO+WGUom+RKUs1F53KZWnyGgYHllukKW06FEccogWanyIX23AcnpDNNTkVXNYNd\",\"kdf\":\"hkdf-sha256\",\"nonce\":\"vVIaNRF7UgoCuE62\",\"product\":\"calendar\",\"productKeyEpoch\":1,\"purpose\":\"product-bundle\",\"revision\":1,\"salt\":\"hKCFgUt8IBcRX12PR6Sze5wMj+//n3FGqx6RML2Fb6g=\",\"version\":1}"
+              }
+            ]
+          }
+        ]
+      },
+      "error": "context"
+    }
+  ],
+  "aliasDigests": [
+    {
+      "name": "v6 alias key with a user id",
+      "publicKey": "xioGavBkQBsAAAAgTBLVxGb7ejv646oTFv06/dpPHexYKyNIfTE7WGwCXEfClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGBhX+eHicaygsgcEksDYOjY66f15fVz7d3qNTOeTTsaQAAAAAlS8QCgRSSmZ8yJ8lrTh864O7XgtGb1IrdrFA/HP1JpZFLRb6/75sLEeKklmNRKL1RGm9rhM1V304wAacR690p8/jdZ3vKzVfj8emd7P0vz7IcgnNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGBhX+eHicaygsgcEksDYOjY66f15fVz7d3qNTOeTTsaQAAAAA828Qx4bNanwnzfTpvN/YoJio2pIWTtheex52b8E447Qm1tfz4ct3F8u+Lr8TNN/JPj8Nm3sgXzN4Yug96Lvkq7f8bRwXNby8a+njWRYe6vU91ArOKgZq8GRAGQAAACCEcdGxIki3h9VmasTChWAJIusaX6DzSFMET6OVMh8EWsKLBhgbCAAAACwFgmrwZEACmwwioQYGFf54eJxrKCyBwSSwNg6Njrp/Xl9XPt3eo1M55NOxpAAAAAC42xBk07TY0IYhIsa2oCfhvvXu4WP3CvV1K2rk3gimFTmuLnfo5GeuzG7A9cleeDFbDqrwcxM+0TqDJNRw7W/+E1ugr43hzwpdK3xtIjxhXznyDg==",
+      "profileId": "mail-classic-v1",
+      "digest": "GwLGgswsa88GB+S0LeneDgnIEwmfmt1J190HLEJ4lzg="
+    },
+    {
+      "name": "v6 mail key with a user id",
+      "publicKey": "xioGavBkQBsAAAAgyka8I1aA49g5nyKB0SQeSbPLmwNuHrf/avLSyNq82sHClwYfGwgAAAA4BYJq8GRAAgsHAhUIAhYAApsDAh4BIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAAy7QQyvj/oj+aWC8ho1UnTg2idm1ic8vUySf0ZcdIeWp9xAgMgeFIe5Sjnr6DSYG6v45RSnIOLp1spnCXWdbbs1btM8HrrzToIiXf+AYKvv4ZtAHNIkNhbGxvd2F5IDxjYWxsb3dheUB0aGVsZW1haWwudGVzdD7CiwYTGwgAAAAsBYJq8GRAAhkBIqEGZBCQvP1OUhAKePvpmJm+W7ESZLY9igZpyZ8oamQhxbQAAAAALd4Q+oqQdG5NV0R6XtFl0S+gMlo0eDlmoYGa4PdrZ3yA53U3X7n732BV8ca2bbxG04CIMkb+4XLZL1/N5tACY68d04BUM1wa6Qe7Nxd497MIVA/OKgZq8GRAGQAAACCyAKYgGsHKgve9jdn69qVU7B4RXFlkTfOLU7rnplEodMKLBhgbCAAAACwFgmrwZEACmwwioQZkEJC8/U5SEAp4++mYmb5bsRJktj2KBmnJnyhqZCHFtAAAAADrvBDIJxZ5qe25WpSp5CU4iC/nZpCqomeSmjykc582hJ9dJ4Gwq6KhUlcJ2nnP924ZkHE+cg0y35i5kdEr50BxZRmrK42IA5n6bJKrcTVwiBTEDA==",
+      "profileId": "mail-classic-v1",
+      "digest": "MsUOGtXYX7CbCdO+JzafAWJa8JPGuFT8U/gsTQAp83o="
+    }
+  ]
+}
