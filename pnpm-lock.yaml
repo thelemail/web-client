@@ -51,6 +51,9 @@ importers:
         specifier: ^6.3.0
         version: 6.3.0
     devDependencies:
+      '@fortawesome/pro-regular-svg-icons':
+        specifier: ^7.3.1
+        version: 7.3.1
       '@inlang/paraglide-js':
         specifier: ^2.25.4
         version: 2.25.4(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))
@@ -356,6 +359,9 @@ importers:
         specifier: ^7.2.4
         version: 7.2.4
     devDependencies:
+      '@fortawesome/pro-regular-svg-icons':
+        specifier: ^7.3.1
+        version: 7.3.1
       '@inlang/paraglide-js':
         specifier: ^2.25.4
         version: 2.25.4(typescript@6.0.3)(vite@8.3.5(@types/node@26.6.5)(jiti@2.7.0))

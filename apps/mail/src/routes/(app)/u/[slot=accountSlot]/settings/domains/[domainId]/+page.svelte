@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowLeft, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 
@@ -80,12 +80,12 @@
 
 <SecHead desc={m.settings_domains_setup_desc()} />
 
-<p class="dw-back"><Button variant="ghost" href={base}><ArrowLeft size={15} />{m.settings_domains_wizard_all_domains()}</Button></p>
+<p class="dw-back"><Button variant="ghost" href={base}><Icon icon={faArrowLeft} size={15} />{m.settings_domains_wizard_all_domains()}</Button></p>
 
 {#if loadError}
-	<div class="dw-note bad"><CircleAlert size={15} /><span>{loadError}</span></div>
+	<div class="dw-note bad"><Icon icon={faCircleExclamation} size={15} /><span>{loadError}</span></div>
 {:else if !domain && loaded}
-	<div class="dw-note bad"><CircleAlert size={15} /><span>{m.settings_domains_not_found()}</span></div>
+	<div class="dw-note bad"><Icon icon={faCircleExclamation} size={15} /><span>{m.settings_domains_not_found()}</span></div>
 {:else if !domain}
 	<div class="dw-note"><span>{m.settings_domains_loading_one()}</span></div>
 {:else}

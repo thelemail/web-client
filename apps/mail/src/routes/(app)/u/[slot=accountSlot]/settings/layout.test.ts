@@ -53,8 +53,8 @@ describe('settings layout', () => {
 		await tick();
 		const toast = container.ownerDocument.querySelector('.set-toast')!;
 		expect(toast.classList.contains('err')).toBe(true);
-		expect(toast.querySelector('.lucide-circle-check')).toBeNull();
-		expect(toast.querySelector('.lucide-circle-alert')).not.toBeNull();
+		expect(toast.querySelector('.icon-circle-check')).toBeNull();
+		expect(toast.querySelector('.icon-circle-exclamation')).not.toBeNull();
 	});
 
 	it('keeps the success check for a successful toast', async () => {
@@ -65,7 +65,7 @@ describe('settings layout', () => {
 		await tick();
 		const toast = container.ownerDocument.querySelector('.set-toast')!;
 		expect(toast.classList.contains('err')).toBe(false);
-		expect(toast.querySelector('.lucide-circle-check')).not.toBeNull();
+		expect(toast.querySelector('.icon-circle-check')).not.toBeNull();
 	});
 
 	it('keeps a not saved state with a retry in the indicator after a failed save', async () => {
@@ -78,7 +78,7 @@ describe('settings layout', () => {
 		const indicator = container.querySelector('.autosave')!;
 		expect(indicator.classList.contains('error')).toBe(true);
 		expect(indicator.textContent).toContain('Not saved');
-		expect(indicator.querySelector('.lucide-check')).toBeNull();
+		expect(indicator.querySelector('.icon-check')).toBeNull();
 		await fireEvent.click(screen.getByRole('button', { name: /not saved, try again/i }));
 		expect(retry).toHaveBeenCalled();
 		retry.mockRestore();

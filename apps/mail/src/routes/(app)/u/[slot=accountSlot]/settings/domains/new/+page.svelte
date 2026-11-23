@@ -1,9 +1,12 @@
 <script lang="ts">
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Info from '@lucide/svelte/icons/info';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faCircleExclamation,
+		faCircleInfo,
+		faGlobe
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
@@ -70,13 +73,13 @@
 		/>
 	</div>
 {:else}
-<Card icon={Globe} title={m.settings_domains_new_title()}>
+<Card icon={faGlobe} title={m.settings_domains_new_title()}>
 
 	<div class="dw-pane">
 		<div class="field">
 			<label for="new-domain-name">{m.settings_domains_new_name()}</label>
 			<div class="input-prefix">
-				<span class="ip-ic"><Globe size={16} /></span>
+				<span class="ip-ic"><Icon icon={faGlobe} size={16} /></span>
 				<input
 					id="new-domain-name"
 					class="tin mono"
@@ -89,24 +92,24 @@
 			</div>
 			{#if name.length > 0 && !valid}
 				<div class="field-hint bad">
-					<CircleAlert size={13} /><Rich text={m.settings_domains_new_invalid()} tags={{ mono }} />
+					<Icon icon={faCircleExclamation} size={13} /><Rich text={m.settings_domains_new_invalid()} tags={{ mono }} />
 				</div>
 			{/if}
 			{#if error}
-				<div class="field-hint bad"><CircleAlert size={13} />{error}</div>
+				<div class="field-hint bad"><Icon icon={faCircleExclamation} size={13} />{error}</div>
 			{/if}
 		</div>
 		<div class="dw-note">
-			<Info size={15} />
+			<Icon icon={faCircleInfo} size={15} />
 			<span>{m.settings_domains_new_dns_note()}</span>
 		</div>
 	</div>
 
 	<div class="dw-foot">
-		<Button variant="ghost" href={base}><ArrowLeft size={15} />{m.common_cancel()}</Button>
+		<Button variant="ghost" href={base}><Icon icon={faArrowLeft} size={15} />{m.common_cancel()}</Button>
 		<span class="dw-spacer"></span>
 		<Button variant="primary" disabled={!valid || submitting} onclick={submit}>
-			{submitting ? m.settings_domains_new_adding() : m.common_continue()}<ArrowRight size={15} />
+			{submitting ? m.settings_domains_new_adding() : m.common_continue()}<Icon icon={faArrowRight} size={15} />
 		</Button>
 	</div>
 </Card>

@@ -5,8 +5,8 @@
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { subscriptionPlanLabel } from '$core/auth/plans';
-	import Mail from '@lucide/svelte/icons/mail';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCircleCheck, faEnvelope } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -77,7 +77,7 @@
 		<div class="card-surface screen-fade">
 			<div class="welcome">
 				{#if phase === 'active'}
-					<span class="return-check"><CircleCheck size={44} strokeWidth={1.5} /></span>
+					<span class="return-check"><Icon icon={faCircleCheck} size={44} /></span>
 					<h1>{m.billing_return_active_title()}</h1>
 					<p>
 						{#if planLabel}
@@ -88,7 +88,7 @@
 					</p>
 					<div class="actions" style="margin-top:24px">
 						<Button variant="primary" size="lg" block onclick={() => goto(`/u/${slot}/mail/inbox`)}>
-							<Mail size={17} strokeWidth={1.75} />{m.billing_open_mailbox()}
+							<Icon icon={faEnvelope} size={17} />{m.billing_open_mailbox()}
 						</Button>
 					</div>
 				{:else if phase === 'slow'}

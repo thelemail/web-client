@@ -5,13 +5,16 @@
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import Stepper from '$core/auth/Stepper.svelte';
 	import Wordmark from '$core/components/Wordmark.svelte';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import CircleCheck from '@lucide/svelte/icons/circle-check';
-	import Check from '@lucide/svelte/icons/check';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Mail from '@lucide/svelte/icons/mail';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowLeft,
+		faArrowRight,
+		faCheck,
+		faCircleCheck,
+		faCircleExclamation,
+		faEnvelope,
+		faLock
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { registrationInit } from '$core/api/auth';
 	import { ApiCallError } from '$core/api/types';
 	import { previewWorkspaceInvite, registerAndAcceptInvite, type WorkspaceInvitePreview } from '$core/api/workspaces';
@@ -242,7 +245,7 @@
 				<div class="lab"><label for="invite-email">{m.auth_invite_email_label()}</label></div>
 				<div class="locked" id="invite-email">
 					<span class="lval">{invite.inviteeEmail}</span>
-					<span class="lk"><Lock size={13} strokeWidth={1.75} />{m.auth_invite_set_by_admin()}</span>
+					<span class="lk"><Icon icon={faLock} size={13} />{m.auth_invite_set_by_admin()}</span>
 				</div>
 				<span class="hint">{m.auth_invite_email_hint()}</span>
 			</div>
@@ -264,7 +267,7 @@
 			</div>
 			<div class="actions">
 				<Button variant="primary" size="lg" block disabled={!nameReady} onclick={() => (step = 1)}>
-					{m.common_continue()}<ArrowRight size={17} strokeWidth={1.75} />
+					{m.common_continue()}<Icon icon={faArrowRight} size={17} />
 				</Button>
 			</div>
 		</div>
@@ -313,18 +316,18 @@
 			/>
 			{#if mismatch}
 				<span class="errtext" role="alert" id="invite-confirm-msg" style="margin-top:-8px">
-					<CircleAlert size={13} strokeWidth={1.75} />
+					<Icon icon={faCircleExclamation} size={13} />
 					<span>{m.auth_register_passwords_mismatch()}</span>
 				</span>
 			{:else if matches}
 				<span class="oktext" style="margin-top:-8px">
-					<CircleCheck size={13} strokeWidth={1.75} />
+					<Icon icon={faCircleCheck} size={13} />
 					<span>{m.auth_register_passwords_match()}</span>
 				</span>
 			{/if}
 			{#if submitError}
 				<span class="errtext" role="alert" style="margin-top:-4px">
-					<CircleAlert size={13} strokeWidth={1.75} />
+					<Icon icon={faCircleExclamation} size={13} />
 					<span>{submitError}</span>
 				</span>
 			{/if}
@@ -335,7 +338,7 @@
 			<div class="actions">
 				<div class="btnrow">
 					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
-						<ArrowLeft size={17} strokeWidth={1.75} />
+						<Icon icon={faArrowLeft} size={17} />
 					</Button>
 					<Button type="submit" variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting}>
 						{submitting ? m.auth_invite_setting_up() : m.auth_invite_create_account()}
@@ -353,11 +356,11 @@
 			<div class="addrcard">
 				<span class="av">{initials}</span>
 				<span class="em">{invite.inviteeEmail}</span>
-				<span class="vbadge"><Check size={13} strokeWidth={2.5} /></span>
+				<span class="vbadge"><Icon icon={faCheck} size={13} /></span>
 			</div>
 			<div class="actions" style="margin-top:24px">
 				<Button variant="primary" size="lg" block onclick={() => goto(landingSlot !== null ? `/u/${landingSlot}/mail/inbox` : '/login')}>
-					<Mail size={17} strokeWidth={1.75} />{m.auth_invite_enter()}
+					<Icon icon={faEnvelope} size={17} />{m.auth_invite_enter()}
 				</Button>
 			</div>
 		</div>
