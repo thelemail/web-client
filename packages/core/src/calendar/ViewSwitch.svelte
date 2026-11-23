@@ -1,5 +1,6 @@
 <script lang="ts">
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Icon from '$core/components/Icon.svelte';
+	import { faChevronDown } from '@fortawesome/pro-regular-svg-icons';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import * as ToggleGroup from '$core/components/ui/toggle-group';
 	import { m } from '$paraglide/messages.js';
@@ -36,7 +37,7 @@
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger class="viewdrop">
-		{current?.label() ?? m.cal_view_fallback()}<ChevronDown size={15} />
+		{current?.label() ?? m.cal_view_fallback()}<Icon icon={faChevronDown} size={15} />
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="cal-surface cal-menu w-40" align="end">
 		{#each VIEWS as view (view.value)}

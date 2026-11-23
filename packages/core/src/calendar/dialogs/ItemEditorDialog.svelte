@@ -1,8 +1,11 @@
 <script lang="ts">
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import ListTodo from '@lucide/svelte/icons/list-todo';
-	import Lock from '@lucide/svelte/icons/lock';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCalendarDays,
+		faListCheck,
+		faLock,
+		faShieldCheck
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
@@ -322,7 +325,7 @@
 
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
-		{#if kind === 'task'}<ListTodo size={18} color="var(--brass-600)" />{:else if kind === 'hold'}<Lock size={18} color="var(--brass-600)" />{:else}<CalendarDays size={18} color="var(--brass-600)" />{/if}
+		{#if kind === 'task'}<Icon icon={faListCheck} size={18} color="var(--brass-600)" />{:else if kind === 'hold'}<Icon icon={faLock} size={18} color="var(--brass-600)" />{:else}<Icon icon={faCalendarDays} size={18} color="var(--brass-600)" />{/if}
 		<Dialog.Title class="dt">
 			{thisOnly ? m.cal_editor_title_this_only({ title: dialogTitle }) : dialogTitle}
 		</Dialog.Title>
@@ -482,7 +485,7 @@
 			</div>
 		</div>
 
-		<DisclosureBoundary heading={m.cal_boundary_heading_device()} headingIcon={ShieldCheck} lines={boundary} />
+		<DisclosureBoundary heading={m.cal_boundary_heading_device()} headingIcon={faShieldCheck} lines={boundary} />
 
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>

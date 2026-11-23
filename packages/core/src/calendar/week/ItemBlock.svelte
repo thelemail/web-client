@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 	import * as Popover from '$core/components/ui/popover';
 	import EventPopover from '../EventPopover.svelte';
 	import { cal, type WeekBlock } from '../state.svelte';
@@ -31,7 +32,7 @@
 				style:--depth={block.depth}
 			>
 				<span class="ev-t">
-					{#if block.kind === 'task'}<span class="tk-box"><Check size={9} /></span>{/if}{block.title}
+					{#if block.kind === 'task'}<span class="tk-box"><Icon icon={faCheck} size={9} /></span>{/if}{block.title}
 				</span>
 				<span class="ev-w">{block.when}</span>
 			</button>

@@ -1,13 +1,16 @@
 <script lang="ts">
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import Clock from '@lucide/svelte/icons/clock';
-	import Eye from '@lucide/svelte/icons/eye';
-	import Mail from '@lucide/svelte/icons/mail';
-	import Paperclip from '@lucide/svelte/icons/paperclip';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Timer from '@lucide/svelte/icons/timer';
-	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowRotateLeft,
+		faCalendarDays,
+		faCircleExclamation,
+		faClock,
+		faEnvelope,
+		faEye,
+		faPaperclip,
+		faShieldCheck,
+		faTimer
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
@@ -29,8 +32,8 @@
 			title: 'Museum trip — Jules',
 			why: 'One explicit date in the message body, and the class matches Jules on the Family calendar.',
 			rows: [
-				{ icon: CalendarDays, text: 'Thu 25 June · all day · departs 08:30, returns 17:00' },
-				{ icon: Paperclip, text: 'Keeps the message and autorisation-sortie-5eB.pdf' }
+				{ icon: faCalendarDays, text: 'Thu 25 June · all day · departs 08:30, returns 17:00' },
+				{ icon: faPaperclip, text: 'Keeps the message and autorisation-sortie-5eB.pdf' }
 			],
 			needsOwner: false
 		},
@@ -42,8 +45,8 @@
 			title: 'Return signed consent form',
 			why: 'A deadline sentence with no time — 18:00 assumed from the school’s office hours, editable.',
 			rows: [
-				{ icon: Clock, text: 'Due Wed 17 June, 18:00 · estimate 10 min' },
-				{ icon: Timer, text: 'Timeboxed Wed 17:00 if you accept the suggestion' }
+				{ icon: faClock, text: 'Due Wed 17 June, 18:00 · estimate 10 min' },
+				{ icon: faTimer, text: 'Timeboxed Wed 17:00 if you accept the suggestion' }
 			],
 			needsOwner: true
 		},
@@ -55,8 +58,8 @@
 			title: 'Pay museum trip fee — €18',
 			why: 'An amount and a second, later deadline. Kept separate so one can be done without the other.',
 			rows: [
-				{ icon: Clock, text: 'Due Mon 22 June · estimate 5 min' },
-				{ icon: Undo2, text: 'No payment is set up. This is a reminder only.' }
+				{ icon: faClock, text: 'Due Mon 22 June · estimate 5 min' },
+				{ icon: faArrowRotateLeft, text: 'No payment is set up. This is a reminder only.' }
 			],
 			needsOwner: false
 		}
@@ -78,7 +81,7 @@
 		{ tone: 'no', text: m.cal_mailc_no_invitation() },
 		{
 			tone: 'yes',
-			icon: Undo2,
+			icon: faArrowRotateLeft,
 			text: m.cal_mailc_reversible()
 		}
 	]);
@@ -88,7 +91,7 @@
 
 <Dialog.Content class="cal-surface cal-dlg wide" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
-		<Mail size={18} color="var(--brass-600)" />
+		<Icon icon={faEnvelope} size={18} color="var(--brass-600)" />
 		<Dialog.Title class="dt">{m.cal_mailc_title()}</Dialog.Title>
 		<PrivacyChip tone="private" label={m.cal_mailc_parsed_here()} />
 	</Dialog.Header>
@@ -117,14 +120,14 @@
 				<p>Cordialement,<br />Le secrétariat</p>
 			</div>
 			<div class="msg-att">
-				<Paperclip size={17} />
+				<Icon icon={faPaperclip} size={17} />
 				<span class="fn">autorisation-sortie-5eB.pdf</span>
 				<span class="fs">214 KB</span>
 			</div>
 			<div class="limits">
 				<DisclosureBoundary
 					heading={m.cal_mailc_how_read()}
-					headingIcon={ShieldCheck}
+					headingIcon={faShieldCheck}
 					lines={howRead}
 					noIcon="x"
 				/>
@@ -148,7 +151,7 @@
 						<div class="pr-t">{proposal.title}</div>
 						<div class="pr-rows">
 							{#each proposal.rows as row (row.text)}
-								<div class="pr-row"><row.icon size={14} /><span>{row.text}</span></div>
+								<div class="pr-row"><Icon icon={row.icon} size={14} /><span>{row.text}</span></div>
 							{/each}
 						</div>
 						<div class="pr-why"><Rich text={m.cal_mailc_why({ why: proposal.why })} tags={{ b: bold }} /></div>
@@ -169,14 +172,14 @@
 							</div>
 							{#if cal.mailOwnerMissing}
 								<div class="own-req">
-									<CircleAlert size={13} />{m.cal_mailc_owner_required()}
+									<Icon icon={faCircleExclamation} size={13} />{m.cal_mailc_owner_required()}
 								</div>
 							{/if}
 						{/if}
 					</div>
 				</div>
 			{/each}
-			<DisclosureBoundary heading={m.cal_mailc_if_confirm()} headingIcon={Eye} lines={ifConfirmed} noIcon="x" />
+			<DisclosureBoundary heading={m.cal_mailc_if_confirm()} headingIcon={faEye} lines={ifConfirmed} noIcon="x" />
 		</div>
 	</div>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ArrowLeftRight from '@lucide/svelte/icons/arrow-left-right';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Icon from '$core/components/Icon.svelte';
+	import { faArrowRight, faArrowsLeftRight } from '@fortawesome/pro-regular-svg-icons';
 	import { Switch } from '$core/components/ui/switch';
 	import * as Table from '$core/components/ui/table';
 	import { m } from '$paraglide/messages.js';
@@ -51,7 +51,7 @@
 					<span class="cal-nm2" style:--c={row.from.color}><i></i>{row.from.name}</span>
 				</Table.Cell>
 				<Table.Cell class="arrow">
-					{#if row.both}<ArrowLeftRight size={15} />{:else}<ArrowRight size={15} />{/if}
+					{#if row.both}<Icon icon={faArrowsLeftRight} size={15} />{:else}<Icon icon={faArrowRight} size={15} />{/if}
 				</Table.Cell>
 				<Table.Cell>
 					<span class="cal-nm2" style:--c={row.to.color}><i></i>{row.to.name}</span>

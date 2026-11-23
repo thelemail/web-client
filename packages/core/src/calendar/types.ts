@@ -1,4 +1,4 @@
-import type { Component } from 'svelte';
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 import type { CalendarItem, ItemKind, Partstat, Privacy } from './model';
 import type { Occurrence } from './recur';
 
@@ -22,7 +22,7 @@ export interface BoundaryLine {
 	tone: BoundaryTone;
 	text: string;
 	mono?: string;
-	icon?: Component;
+	icon?: IconDefinition;
 }
 
 export interface GuestChip {

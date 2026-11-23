@@ -1,12 +1,15 @@
 <script lang="ts">
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import CloudOff from '@lucide/svelte/icons/cloud-off';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import Send from '@lucide/svelte/icons/send';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import UserCheck from '@lucide/svelte/icons/user-check';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faArrowsRotate,
+		faCalendarDays,
+		faCloudSlash,
+		faPaperPlane,
+		faPenLine,
+		faTrashCan,
+		faTriangleExclamation,
+		faUserCheck
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
 	import * as Table from '$core/components/ui/table';
@@ -17,19 +20,19 @@
 	import { calendarStore } from '../store.svelte';
 
 	function iconFor(rec: OutboxRecord) {
-		if (rec.status === 'blocked') return TriangleAlert;
+		if (rec.status === 'blocked') return faTriangleExclamation;
 		switch (rec.op.kind) {
 			case 'item.put':
-				return PenLine;
+				return faPenLine;
 			case 'item.delete':
 			case 'calendar.delete':
-				return Trash2;
+				return faTrashCan;
 			case 'state.put':
-				return UserCheck;
+				return faUserCheck;
 			case 'invite.send':
-				return Send;
+				return faPaperPlane;
 			default:
-				return CalendarDays;
+				return faCalendarDays;
 		}
 	}
 
@@ -74,13 +77,13 @@
 
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
-		<RefreshCw size={18} color="var(--brass-600)" />
+		<Icon icon={faArrowsRotate} size={18} color="var(--brass-600)" />
 		<Dialog.Title class="dt">{m.cal_queue_title()}</Dialog.Title>
 	</Dialog.Header>
 
 	<div class="cal-dlg-body">
 		<div class="sysbar" class:warn={cal.systemBarTone === 'warn'} class:info={cal.systemBarTone === 'info'}>
-			{#if !calendarStore.online}<CloudOff size={16} />{:else}<RefreshCw size={16} />{/if}
+			{#if !calendarStore.online}<Icon icon={faCloudSlash} size={16} />{:else}<Icon icon={faArrowsRotate} size={16} />{/if}
 			<span>{cal.systemBarText}</span>
 			<div class="grow"></div>
 			<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>{m.cal_queue_send_now()}</button>
@@ -88,7 +91,7 @@
 
 		{#if !calendarStore.queue.length}
 			<div class="qrow">
-				<span class="qi"><RefreshCw size={16} /></span>
+				<span class="qi"><Icon icon={faArrowsRotate} size={16} /></span>
 				<div>
 					<div class="qt">{m.cal_queue_empty()}</div>
 					<div class="qs">{m.cal_queue_empty_desc()}</div>
@@ -97,9 +100,9 @@
 		{/if}
 
 		{#each calendarStore.queue as entry (entry.seq)}
-			{@const Icon = iconFor(entry)}
+			{@const glyph = iconFor(entry)}
 			<div class="qrow">
-				<span class="qi"><Icon size={16} /></span>
+				<span class="qi"><Icon icon={glyph} size={16} /></span>
 				<div>
 					<div class="qt">{entry.op.label}</div>
 					<div class="qs">{subFor(entry)}</div>

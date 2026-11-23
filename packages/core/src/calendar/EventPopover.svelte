@@ -1,18 +1,22 @@
 <script lang="ts">
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import Check from '@lucide/svelte/icons/check';
-	import CircleAlert from '@lucide/svelte/icons/circle-alert';
-	import ClockArrowLeft from '@lucide/svelte/icons/clock-arrow-left';
-	import Copy from '@lucide/svelte/icons/copy';
-	import Mail from '@lucide/svelte/icons/mail';
-	import MapPin from '@lucide/svelte/icons/map-pin';
-	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
-	import Users from '@lucide/svelte/icons/users';
-	import Video from '@lucide/svelte/icons/video';
-	import X from '@lucide/svelte/icons/x';
+	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCalendarDays,
+		faCheck,
+		faCircleExclamation,
+		faClockRotateLeft,
+		faCopy,
+		faEnvelope,
+		faLocationDot,
+		faNotebook,
+		faPenLine,
+		faShieldCheck,
+		faTrashCan,
+		faUsers,
+		faVideo,
+		faXmark
+	} from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Popover from '$core/components/ui/popover';
 	import { m } from '$paraglide/messages.js';
@@ -29,10 +33,10 @@
 
 	let { selection, onClose }: Props = $props();
 
-	const RSVP: { value: Partstat; label: () => string; icon: typeof Check; cls: string }[] = [
-		{ value: 'accepted', label: () => m.cal_rsvp_yes(), icon: Check, cls: 'yes' },
-		{ value: 'tentative', label: () => m.cal_rsvp_maybe(), icon: CircleAlert, cls: 'maybe' },
-		{ value: 'declined', label: () => m.cal_rsvp_no(), icon: X, cls: 'no' }
+	const RSVP: { value: Partstat; label: () => string; icon: IconDefinition; cls: string }[] = [
+		{ value: 'accepted', label: () => m.cal_rsvp_yes(), icon: faCheck, cls: 'yes' },
+		{ value: 'tentative', label: () => m.cal_rsvp_maybe(), icon: faCircleExclamation, cls: 'maybe' },
+		{ value: 'declined', label: () => m.cal_rsvp_no(), icon: faXmark, cls: 'no' }
 	];
 
 	function edit() {
@@ -75,17 +79,17 @@
 		<div class="grow"></div>
 		{#if selection.canEdit}
 			<button type="button" class="evpop-ic" aria-label={m.common_edit()} onclick={edit}>
-				<PenLine size={17} />
+				<Icon icon={faPenLine} size={17} />
 			</button>
 			<button type="button" class="evpop-ic" aria-label={m.cal_pop_duplicate_aria()} onclick={duplicate}>
-				<Copy size={17} />
+				<Icon icon={faCopy} size={17} />
 			</button>
 			<button type="button" class="evpop-ic danger" aria-label={m.common_delete()} onclick={remove}>
-				<Trash2 size={17} />
+				<Icon icon={faTrashCan} size={17} />
 			</button>
 		{/if}
 		<button type="button" class="evpop-ic" aria-label={m.common_close()} onclick={onClose}>
-			<X size={17} />
+			<Icon icon={faXmark} size={17} />
 		</button>
 	</div>
 	<div class="evpop-body">
@@ -99,13 +103,13 @@
 		<div class="evpop-rows">
 			{#if selection.loc}
 				<div class="evpop-row">
-					<MapPin size={17} />
+					<Icon icon={faLocationDot} size={17} />
 					<div class="er-main">{selection.loc}</div>
 				</div>
 			{/if}
 			{#if selection.video}
 				<div class="evpop-row">
-					<Video size={17} />
+					<Icon icon={faVideo} size={17} />
 					<div class="er-main">
 						<a href={selection.video} target="_blank" rel="noreferrer">{selection.video}</a>
 					</div>
@@ -113,13 +117,13 @@
 			{/if}
 			{#if selection.notes}
 				<div class="evpop-row">
-					<NotebookPen size={17} />
+					<Icon icon={faNotebook} size={17} />
 					<div class="er-main evpop-notes">{selection.notes}</div>
 				</div>
 			{/if}
 			{#if selection.thread}
 				<div class="evpop-row">
-					<Mail size={17} />
+					<Icon icon={faEnvelope} size={17} />
 					<div class="er-main">
 						{selection.thread}
 						<div class="er-sub">{m.cal_pop_thread_note()}</div>
@@ -127,7 +131,7 @@
 				</div>
 			{/if}
 			<div class="evpop-row">
-				<CalendarDays size={17} />
+				<Icon icon={faCalendarDays} size={17} />
 				<div class="er-main">
 					{selection.calName}
 					<div class="er-sub">{selection.organizer}</div>
@@ -135,7 +139,7 @@
 			</div>
 			{#if selection.guests}
 				<div class="evpop-row">
-					<Users size={17} />
+					<Icon icon={faUsers} size={17} />
 					<div class="er-main">
 						<div class="evpop-guests">
 							{#each selection.guests as guest (guest.name + guest.sub)}
@@ -153,11 +157,11 @@
 			{/if}
 			<DisclosureBoundary
 				heading={m.cal_boundary_heading_device()}
-				headingIcon={ShieldCheck}
+				headingIcon={faShieldCheck}
 				lines={selection.boundary}
 			/>
 			<div class="evpop-row">
-				<ClockArrowLeft size={17} />
+				<Icon icon={faClockRotateLeft} size={17} />
 				<div class="er-main">
 					{selection.prov}
 					<div class="er-sub">
@@ -178,7 +182,7 @@
 						class:on={selection.myPartstat === option.value}
 						onclick={() => respond(option.value)}
 					>
-						<option.icon size={14} />{option.label()}
+						<Icon icon={option.icon} size={14} />{option.label()}
 					</button>
 				{/each}
 			</div>

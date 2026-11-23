@@ -1,4 +1,4 @@
-import X from '@lucide/svelte/icons/x';
+import { faXmark } from '@fortawesome/pro-regular-svg-icons';
 import { initialsFor } from '$core/mail/initials';
 import { paletteFor } from '$core/mail/avatarPalette';
 import { m } from '$paraglide/messages.js';
@@ -96,7 +96,7 @@ function boundaryFor(item: CalendarItem, ctx: DescribeContext): BoundaryLine[] {
 	if ((item.attendees ?? []).length) {
 		lines.push({
 			tone: 'no',
-			icon: X,
+			icon: faXmark,
 			text: m.cal_desc_envelope()
 		});
 	}

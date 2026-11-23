@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Check from '@lucide/svelte/icons/check';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Popover from '$core/components/ui/popover';
 	import { auth } from '$core/stores/auth.svelte';
@@ -89,7 +90,7 @@
 									class:done={row.seen}
 									onclick={() => cal.toggleAck(row.occ.item.id, row.seen)}
 								>
-									<Check size={13} />{row.seenLabel}
+									<Icon icon={faCheck} size={13} />{row.seenLabel}
 								</button>
 							</div>
 						</div>

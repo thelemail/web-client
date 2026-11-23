@@ -1,12 +1,15 @@
 <script lang="ts">
-	import CalendarClock from '@lucide/svelte/icons/calendar-clock';
-	import CalendarDays from '@lucide/svelte/icons/calendar-days';
-	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
-	import ChevronDown from '@lucide/svelte/icons/chevron-down';
-	import Globe from '@lucide/svelte/icons/globe';
-	import ListTodo from '@lucide/svelte/icons/list-todo';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Plus from '@lucide/svelte/icons/plus';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faCalendarClock,
+		faCalendarDays,
+		faCalendarPlus,
+		faChevronDown,
+		faGlobe,
+		faListCheck,
+		faLock,
+		faPlus
+	} from '@fortawesome/pro-regular-svg-icons';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
@@ -16,30 +19,30 @@
 
 <DropdownMenu.Root bind:open>
 	<DropdownMenu.Trigger class="create">
-		<span class="cr-main"><Plus size={18} />{m.cal_create()}</span>
-		<span class="cr-caret"><ChevronDown size={15} /></span>
+		<span class="cr-main"><Icon icon={faPlus} size={18} />{m.cal_create()}</span>
+		<span class="cr-caret"><Icon icon={faChevronDown} size={15} /></span>
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="cal-surface cal-menu w-60" align="start">
 		<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'event' })}>
-			<CalendarDays size={16} />{m.cal_create_event()}<span class="rt">E</span>
+			<Icon icon={faCalendarDays} size={16} />{m.cal_create_event()}<span class="rt">E</span>
 		</DropdownMenu.Item>
 		<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'task' })}>
-			<ListTodo size={16} />{m.cal_create_task()}<span class="rt">T</span>
+			<Icon icon={faListCheck} size={16} />{m.cal_create_task()}<span class="rt">T</span>
 		</DropdownMenu.Item>
 		<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'hold' })}>
-			<Lock size={16} />{m.cal_create_hold()}<span class="rt">H</span>
+			<Icon icon={faLock} size={16} />{m.cal_create_hold()}<span class="rt">H</span>
 		</DropdownMenu.Item>
 		<DropdownMenu.Separator />
 		<DropdownMenu.Item onSelect={() => cal.openCalendarDialog({ mode: 'create' })}>
-			<CalendarPlus size={16} />{m.cal_create_calendar()}
+			<Icon icon={faCalendarPlus} size={16} />{m.cal_create_calendar()}
 		</DropdownMenu.Item>
 		{#if import.meta.env.DEV}
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => (cal.dialog = 'offer')}>
-				<CalendarClock size={16} />{m.cal_create_proposal()}<span class="rt">P</span>
+				<Icon icon={faCalendarClock} size={16} />{m.cal_create_proposal()}<span class="rt">P</span>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => cal.goTo('booking')}>
-				<Globe size={16} />{m.cal_create_booking()}
+				<Icon icon={faGlobe} size={16} />{m.cal_create_booking()}
 			</DropdownMenu.Item>
 		{/if}
 	</DropdownMenu.Content>

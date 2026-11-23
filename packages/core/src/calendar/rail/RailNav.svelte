@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Globe from '@lucide/svelte/icons/globe';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import Users from '@lucide/svelte/icons/users';
+	import Icon from '$core/components/Icon.svelte';
+	import { faGlobe, faShieldCheck, faUsers } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
 </script>
@@ -13,7 +12,7 @@
 		class:on={cal.view === 'agenda'}
 		onclick={() => cal.goTo('agenda')}
 	>
-		<Users size={16} />{m.cal_nav_agenda()}{#if cal.agendaBadge}<span class="rn-c">{cal.agendaBadge}</span>{/if}
+		<Icon icon={faUsers} size={16} />{m.cal_nav_agenda()}{#if cal.agendaBadge}<span class="rn-c">{cal.agendaBadge}</span>{/if}
 	</button>
 	<button
 		type="button"
@@ -21,7 +20,7 @@
 		class:on={cal.view === 'avail'}
 		onclick={() => cal.goTo('avail')}
 	>
-		<ShieldCheck size={16} />{m.cal_nav_availability()}
+		<Icon icon={faShieldCheck} size={16} />{m.cal_nav_availability()}
 	</button>
 	{#if import.meta.env.DEV}
 		<button
@@ -30,7 +29,7 @@
 			class:on={cal.view === 'booking'}
 			onclick={() => cal.goTo('booking')}
 		>
-			<Globe size={16} />{m.cal_nav_booking()}
+			<Icon icon={faGlobe} size={16} />{m.cal_nav_booking()}
 		</button>
 	{/if}
 </div>

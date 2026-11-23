@@ -1,9 +1,12 @@
 <script lang="ts">
-	import Clock from '@lucide/svelte/icons/clock';
-	import Hourglass from '@lucide/svelte/icons/hourglass';
-	import Mail from '@lucide/svelte/icons/mail';
-	import Repeat from '@lucide/svelte/icons/repeat';
-	import User from '@lucide/svelte/icons/user';
+	import Icon from '$core/components/Icon.svelte';
+	import {
+		faClock,
+		faEnvelope,
+		faHourglass,
+		faRepeat,
+		faUser
+	} from '@fortawesome/pro-regular-svg-icons';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { m } from '$paraglide/messages.js';
 	import { cal, type TaskRowView } from '../state.svelte';
@@ -33,16 +36,16 @@
 			{task.title}
 		</button>
 		<div class="tkr-meta">
-			<span class="mchip" class:late={task.late}><Clock size={12} />{task.due}</span>
+			<span class="mchip" class:late={task.late}><Icon icon={faClock} size={12} />{task.due}</span>
 			{#if task.est}
-				<span class="mchip"><Hourglass size={12} />{task.est}</span>
+				<span class="mchip"><Icon icon={faHourglass} size={12} />{task.est}</span>
 			{/if}
-			<span class="mchip"><User size={12} />{task.owner}</span>
+			<span class="mchip"><Icon icon={faUser} size={12} />{task.owner}</span>
 			{#if task.roll}
-				<span class="mchip roll"><Repeat size={12} />{task.roll}</span>
+				<span class="mchip roll"><Icon icon={faRepeat} size={12} />{task.roll}</span>
 			{/if}
 			{#if task.fromMail}
-				<span class="mchip"><Mail size={12} />{m.cal_task_from_mail()}</span>
+				<span class="mchip"><Icon icon={faEnvelope} size={12} />{m.cal_task_from_mail()}</span>
 			{/if}
 		</div>
 	</div>

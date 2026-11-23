@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Eye from '@lucide/svelte/icons/eye';
-	import Globe from '@lucide/svelte/icons/globe';
-	import Lock from '@lucide/svelte/icons/lock';
+	import Icon from '$core/components/Icon.svelte';
+	import { faEye, faGlobe, faLock } from '@fortawesome/pro-regular-svg-icons';
 
 	interface Props {
 		tone: 'private' | 'busy' | 'external';
@@ -10,7 +9,7 @@
 
 	let { tone, label }: Props = $props();
 
-	const Icon = $derived(tone === 'private' ? Lock : tone === 'busy' ? Eye : Globe);
+	const glyph = $derived(tone === 'private' ? faLock : tone === 'busy' ? faEye : faGlobe);
 </script>
 
-<span class="pmode {tone}"><Icon size={12} />{label}</span>
+<span class="pmode {tone}"><Icon icon={glyph} size={12} />{label}</span>

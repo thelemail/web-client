@@ -1,7 +1,6 @@
 <script lang="ts">
-	import Eye from '@lucide/svelte/icons/eye';
-	import Lock from '@lucide/svelte/icons/lock';
-	import Users from '@lucide/svelte/icons/users';
+	import Icon from '$core/components/Icon.svelte';
+	import { faEye, faLock, faUsers } from '@fortawesome/pro-regular-svg-icons';
 	import { accountSettings, type CalendarPrivacyDefault } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from '../state.svelte';
@@ -36,7 +35,7 @@
 		}
 	];
 
-	const ICONS = { private: Lock, busy: Eye, shared: Users };
+	const ICONS = { private: faLock, busy: faEye, shared: faUsers };
 
 	const NOTE: Record<CalendarPrivacyDefault, () => string> = {
 		private: () => m.cal_privacy_note_private(),
@@ -56,7 +55,7 @@
 
 <div class="pcards">
 	{#each MODES as mode (mode.value)}
-		{@const Icon = ICONS[mode.value]}
+		{@const glyph = ICONS[mode.value]}
 		<button
 			type="button"
 			class="pcard"
@@ -64,7 +63,7 @@
 			onclick={() => choose(mode.value)}
 		>
 			<span class="pc-t" style:--icon-tone={mode.tone}>
-				<Icon size={16} color={mode.tone} />{mode.label()}
+				<Icon icon={glyph} size={16} color={mode.tone} />{mode.label()}
 			</span>
 			<span class="pc-d">{mode.body()}</span>
 			<span class="pc-f">

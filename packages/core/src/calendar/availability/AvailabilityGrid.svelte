@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Icon from '$core/components/Icon.svelte';
+	import { faShieldCheck, faTriangleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { paletteFor } from '$core/mail/avatarPalette';
@@ -112,7 +112,7 @@
 			{/each}
 		</div>
 		{#if lane.worst && lane.worst !== 'verified'}
-			<div class="avail-trust"><TriangleAlert size={13} />{TRUST_COPY[lane.worst]?.()}</div>
+			<div class="avail-trust"><Icon icon={faTriangleExclamation} size={13} />{TRUST_COPY[lane.worst]?.()}</div>
 		{/if}
 	{/each}
 
@@ -122,10 +122,10 @@
 
 	<div class="avail-tally">
 		{#if unverified > 0}
-			<TriangleAlert size={14} />
+			<Icon icon={faTriangleExclamation} size={14} />
 			{m.cal_avail_tally_partial({ verified: board.counts.verified, total: board.counts.total })}
 		{:else if board.counts.total > 0}
-			<ShieldCheck size={14} />
+			<Icon icon={faShieldCheck} size={14} />
 			{m.cal_avail_tally_all()}
 		{/if}
 	</div>

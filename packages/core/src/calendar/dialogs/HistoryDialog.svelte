@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
-	import ClockArrowLeft from '@lucide/svelte/icons/clock-arrow-left';
-	import PenLine from '@lucide/svelte/icons/pen-line';
-	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import Icon from '$core/components/Icon.svelte';
+	import { faClockRotateLeft, faPenLine, faTrashCan } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
 	import { m } from '$paraglide/messages.js';
@@ -80,7 +79,7 @@
 
 <Dialog.Content class="cal-surface cal-dlg" showCloseButton>
 	<Dialog.Header class="cal-dlg-h">
-		<ClockArrowLeft size={18} color="var(--brass-600)" />
+		<Icon icon={faClockRotateLeft} size={18} color="var(--brass-600)" />
 		<Dialog.Title class="dt">{m.cal_history_title()}</Dialog.Title>
 	</Dialog.Header>
 
@@ -91,12 +90,12 @@
 
 		{#if loading}
 			<div class="qrow">
-				<span class="qi"><ClockArrowLeft size={16} /></span>
+				<span class="qi"><Icon icon={faClockRotateLeft} size={16} /></span>
 				<div><div class="qt">{m.common_loading()}</div></div>
 			</div>
 		{:else if !revisions.length}
 			<div class="qrow">
-				<span class="qi"><ClockArrowLeft size={16} /></span>
+				<span class="qi"><Icon icon={faClockRotateLeft} size={16} /></span>
 				<div>
 					<div class="qt">{m.cal_history_empty()}</div>
 					<div class="qs">{m.cal_history_empty_desc()}</div>
@@ -105,10 +104,10 @@
 		{/if}
 
 		{#each revisions as rev (rev.rev)}
-			{@const Icon = rev.deleted ? Trash2 : PenLine}
+			{@const glyph = rev.deleted ? faTrashCan : faPenLine}
 			{@const isCurrent = current?.rev === rev.rev}
 			<div class="qrow">
-				<span class="qi"><Icon size={16} /></span>
+				<span class="qi"><Icon icon={glyph} size={16} /></span>
 				<div>
 					<div class="qt">{rev.item?.title ?? m.cal_history_sealed()}</div>
 					<div class="qs">
