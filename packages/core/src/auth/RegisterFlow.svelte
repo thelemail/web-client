@@ -190,6 +190,11 @@
 	const canCreate = $derived(addressReady && passwordReady && (paid || terms));
 	const workLines = $derived([m.auth_s_work_keys(), m.auth_s_work_account(), m.auth_s_work_open()]);
 
+	function submitPart(e: SubmitEvent) {
+		e.preventDefault();
+		advance();
+	}
+
 	function advance() {
 		if (part === 'address' && handleReady) part = 'name';
 		else if (part === 'name' && nameReady) part = 'password';
@@ -385,7 +390,6 @@
 		describedby="register-handle-msg"
 		focus
 		normalize={(raw) => raw.toLowerCase().replace(/\s+/g, '')}
-		onenter={advance}
 		suffix={domainPick}
 	/>{/snippet}
 {#snippet addressDone(_: string)}<Done text={address} mono disabled={submitting} onedit={() => (part = 'address')} />{/snippet}
@@ -398,7 +402,6 @@
 		autocomplete="nickname"
 		maxlength={120}
 		focus
-		onenter={advance}
 	/>{/snippet}
 {#snippet nameDone(_: string)}<Done text={fullName.trim()} disabled={submitting} onedit={() => (part = 'name')} />{/snippet}
 {#snippet passwordBlank(_: string)}<Blank
@@ -411,7 +414,6 @@
 		secret
 		autocomplete="new-password"
 		focus
-		onenter={advance}
 	/>{/snippet}
 {#snippet passwordDone(_: string)}<Done text="" secret disabled={submitting} onedit={() => (part = 'password')} />{/snippet}
 {#snippet confirmBlank(_: string)}<Blank
@@ -427,7 +429,6 @@
 		describedby="register-confirm-msg"
 		disabled={submitting}
 		focus
-		onenter={advance}
 	/>{/snippet}
 {#snippet addressFixed(_: string)}<Done text={address} mono />{/snippet}
 
@@ -449,89 +450,94 @@
 				{/if}
 			</div>
 		{:else}
-			<p class="sent">
-				<Clause
-					text={m.auth_s_register_address()}
-					past={partIndex > 0}
-					slots={{ address: part === 'address' ? addressBlank : addressDone }}
-				/>
-				{#if partIndex >= 1}
-					<Clause lead
-						text={m.auth_s_register_name()}
-						past={partIndex > 1}
-						slots={{ name: part === 'name' ? nameBlank : nameDone }}
-					/>
+			<form class="sp-form" novalidate onsubmit={submitPart}>
+				{#if partIndex >= 2}
+					<input class="sp-user" type="email" value={address} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 				{/if}
-				{#if part === 'password'}
-					<Clause lead text={m.auth_s_register_password()} slots={{ password: passwordBlank }} />
-				{:else if part === 'confirm'}
-					<Clause lead
-						text={m.auth_s_register_password_again()}
-						slots={{ password: passwordDone, confirm: confirmBlank }}
+				<p class="sent">
+					<Clause
+						text={m.auth_s_register_address()}
+						past={partIndex > 0}
+						slots={{ address: part === 'address' ? addressBlank : addressDone }}
 					/>
-				{/if}
-			</p>
-			<div class="sp-under">
-				{#if part === 'address'}
-					{#if addMode && auth.email}
-						<p class="sp-msg">{m.auth_s_add_note()}</p>
+					{#if partIndex >= 1}
+						<Clause lead
+							text={m.auth_s_register_name()}
+							past={partIndex > 1}
+							slots={{ name: part === 'name' ? nameBlank : nameDone }}
+						/>
 					{/if}
-					{#if audience === 'family'}
-						<p class="sp-msg"><span><Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} /></span></p>
-					{:else if audience === 'business'}
-						<p class="sp-msg"><span><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></span></p>
+					{#if part === 'password'}
+						<Clause lead text={m.auth_s_register_password()} slots={{ password: passwordBlank }} />
+					{:else if part === 'confirm'}
+						<Clause lead
+							text={m.auth_s_register_password_again()}
+							slots={{ password: passwordDone, confirm: confirmBlank }}
+						/>
 					{/if}
-					<Status id="register-handle-msg" tone={handleTone}>
-						{#if status === 'invalid'}{m.auth_s_handle_invalid()}
-						{:else if status === 'taken'}{m.auth_s_handle_taken({ address })}
-						{:else if checking.visible}{m.auth_register_handle_checking()}
-						{:else if status === 'available'}{m.auth_s_handle_free({ address })}
-						{:else if status === 'unknown'}<Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} />
-						{:else}{m.auth_s_handle_hint()}{/if}
-					</Status>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!handleReady} onclick={advance}>{m.auth_sentence_next()}</Button>
-					</div>
-				{:else if part === 'name'}
-					<Status>{m.auth_s_name_hint()}</Status>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!nameReady} onclick={advance}>{m.auth_sentence_next()}</Button>
-					</div>
-				{:else if part === 'password'}
-					<div class="sp-status-box"><PasswordChecks {pw} /></div>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!allMet} onclick={advance}>{m.auth_sentence_next()}</Button>
-					</div>
-				{:else}
-					<Status id="register-confirm-msg" tone={confirmTone}>
-						{#if submitError}{submitError}
-						{:else if confirmBad}{m.auth_register_passwords_mismatch()}
-						{:else if matches}{m.auth_register_passwords_match()}
-						{:else}{m.auth_s_confirm_hint()}{/if}
-					</Status>
-					{#if !paid}
-						<label class="sp-tick">
-							<input type="checkbox" bind:checked={terms} />
-							<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
-						</label>
-					{/if}
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!canCreate} onclick={continueFromPassword}>
-							{paid ? m.common_continue() : m.auth_s_create_account()}
-						</Button>
-						{#if !paid}
-							<span class="sp-fine">{m.auth_s_free_plan_line()}</span>
+				</p>
+				<div class="sp-under">
+					{#if part === 'address'}
+						{#if addMode && auth.email}
+							<p class="sp-msg">{m.auth_s_add_note()}</p>
 						{/if}
-					</div>
-					{#if paid}
-						<button type="button" class="sp-quiet" onclick={chooseFree}>{m.auth_register_free_instead()}</button>
-						<p class="sp-fine">{m.auth_register_legal_paid()}</p>
+						{#if audience === 'family'}
+							<p class="sp-msg"><span><Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} /></span></p>
+						{:else if audience === 'business'}
+							<p class="sp-msg"><span><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></span></p>
+						{/if}
+						<Status id="register-handle-msg" tone={handleTone}>
+							{#if status === 'invalid'}{m.auth_s_handle_invalid()}
+							{:else if status === 'taken'}{m.auth_s_handle_taken({ address })}
+							{:else if checking.visible}{m.auth_register_handle_checking()}
+							{:else if status === 'available'}{m.auth_s_handle_free({ address })}
+							{:else if status === 'unknown'}<Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} />
+							{:else}{m.auth_s_handle_hint()}{/if}
+						</Status>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!handleReady}>{m.auth_sentence_next()}</Button>
+						</div>
+					{:else if part === 'name'}
+						<Status>{m.auth_s_name_hint()}</Status>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!nameReady}>{m.auth_sentence_next()}</Button>
+						</div>
+					{:else if part === 'password'}
+						<div class="sp-status-box"><PasswordChecks {pw} /></div>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!allMet}>{m.auth_sentence_next()}</Button>
+						</div>
 					{:else}
-						<button type="button" class="sp-quiet" disabled={!passwordReady} onclick={choosePaid}>{m.auth_register_paid_instead()}</button>
-						<p class="sp-fine">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
+						<Status id="register-confirm-msg" tone={confirmTone}>
+							{#if submitError}{submitError}
+							{:else if confirmBad}{m.auth_register_passwords_mismatch()}
+							{:else if matches}{m.auth_register_passwords_match()}
+							{:else}{m.auth_s_confirm_hint()}{/if}
+						</Status>
+						{#if !paid}
+							<label class="sp-tick">
+								<input type="checkbox" bind:checked={terms} />
+								<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
+							</label>
+						{/if}
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!canCreate}>
+								{paid ? m.common_continue() : m.auth_s_create_account()}
+							</Button>
+							{#if !paid}
+								<span class="sp-fine">{m.auth_s_free_plan_line()}</span>
+							{/if}
+						</div>
+						{#if paid}
+							<button type="button" class="sp-quiet" onclick={chooseFree}>{m.auth_register_free_instead()}</button>
+							<p class="sp-fine">{m.auth_register_legal_paid()}</p>
+						{:else}
+							<button type="button" class="sp-quiet" disabled={!passwordReady} onclick={choosePaid}>{m.auth_register_paid_instead()}</button>
+							<p class="sp-fine">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
+						{/if}
 					{/if}
-				{/if}
-			</div>
+				</div>
+			</form>
 			<div class="sp-foot">
 				<span><Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} /></span>
 			</div>

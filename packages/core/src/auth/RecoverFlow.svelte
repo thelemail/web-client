@@ -303,6 +303,20 @@
 		step = 'phrase';
 	}
 
+	function submitAccount(e: SubmitEvent) {
+		e.preventDefault();
+		continueAccount();
+	}
+
+	function submitPassword(e: SubmitEvent) {
+		e.preventDefault();
+		if (pwPart === 'new') {
+			if (allMet) pwPart = 'again';
+		} else {
+			startRekey();
+		}
+	}
+
 	function startRekey() {
 		if (!passwordReady || step === 'working') return;
 		workIdx = 1;
@@ -355,7 +369,6 @@
 		autocomplete="username"
 		focus
 		normalize={(raw) => raw.trim()}
-		onenter={continueAccount}
 	/>{/snippet}
 {#snippet emailDone(_: string)}<Done
 		text={email}
@@ -373,9 +386,6 @@
 		secret
 		autocomplete="new-password"
 		focus
-		onenter={() => {
-			if (allMet) pwPart = 'again';
-		}}
 	/>{/snippet}
 {#snippet passwordDone(_: string)}<Done text="" secret onedit={() => (pwPart = 'new')} />{/snippet}
 {#snippet confirmBlank(_: string)}<Blank
@@ -390,7 +400,6 @@
 		invalid={confirmBad}
 		describedby="recover-confirm-msg"
 		focus
-		onenter={startRekey}
 	/>{/snippet}
 {#snippet pastProof()}<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
 		text={m.auth_s_recover_phrase_ok()}
@@ -427,13 +436,15 @@
 			<Trail items={recLabels} current={step === 'working' ? recLabels.length : trailAt} />
 		{/if}
 		{#if step === 'account'}
-			<p class="sent"><Clause text={m.auth_s_recover_account()} slots={{ email: emailBlank }} /></p>
-			<div class="sp-under">
-				<Status>{m.auth_s_recover_email_hint()}</Status>
-				<div class="sp-acts">
-					<Button variant="primary" size="lg" disabled={!emailValid} onclick={continueAccount}>{m.auth_sentence_next()}</Button>
+			<form class="sp-form" novalidate onsubmit={submitAccount}>
+				<p class="sent"><Clause text={m.auth_s_recover_account()} slots={{ email: emailBlank }} /></p>
+				<div class="sp-under">
+					<Status>{m.auth_s_recover_email_hint()}</Status>
+					<div class="sp-acts">
+						<Button type="submit" variant="primary" size="lg" disabled={!emailValid}>{m.auth_sentence_next()}</Button>
+					</div>
 				</div>
-			</div>
+			</form>
 		{:else if step === 'phrase'}
 			<p class="sent">
 				<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
@@ -492,33 +503,36 @@
 				</div>
 			</div>
 		{:else if step === 'password'}
-			<p class="sent sm">
-				{@render pastProof()}{#if pwPart === 'new'}<Clause lead
-						text={m.auth_s_recover_password()}
-						slots={{ password: passwordBlank }}
-					/>{:else}<Clause
-						lead
-						text={m.auth_s_recover_password_again()}
-						slots={{ password: passwordDone, confirm: confirmBlank }}
-					/>{/if}
-			</p>
-			<div class="sp-under">
-				{#if pwPart === 'new'}
-					<div class="sp-status-box"><PasswordChecks {pw} /></div>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!allMet} onclick={() => (pwPart = 'again')}>{m.auth_sentence_next()}</Button>
-						<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
-					</div>
-				{:else}
-					<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'}>
-						{confirmBad ? m.auth_register_passwords_mismatch() : matches ? m.auth_register_passwords_match() : m.auth_s_confirm_hint()}
-					</Status>
-					<p class="sp-msg">{m.auth_s_recover_rewrap_note()}</p>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" disabled={!passwordReady} onclick={startRekey}>{m.auth_recover_reset_password()}</Button>
-					</div>
-				{/if}
-			</div>
+			<form class="sp-form" novalidate onsubmit={submitPassword}>
+				<input class="sp-user" type="email" value={email} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+				<p class="sent sm">
+					{@render pastProof()}{#if pwPart === 'new'}<Clause lead
+							text={m.auth_s_recover_password()}
+							slots={{ password: passwordBlank }}
+						/>{:else}<Clause
+							lead
+							text={m.auth_s_recover_password_again()}
+							slots={{ password: passwordDone, confirm: confirmBlank }}
+						/>{/if}
+				</p>
+				<div class="sp-under">
+					{#if pwPart === 'new'}
+						<div class="sp-status-box"><PasswordChecks {pw} /></div>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!allMet}>{m.auth_sentence_next()}</Button>
+							<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
+						</div>
+					{:else}
+						<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'}>
+							{confirmBad ? m.auth_register_passwords_mismatch() : matches ? m.auth_register_passwords_match() : m.auth_s_confirm_hint()}
+						</Status>
+						<p class="sp-msg">{m.auth_s_recover_rewrap_note()}</p>
+						<div class="sp-acts">
+							<Button type="submit" variant="primary" size="lg" disabled={!passwordReady}>{m.auth_recover_reset_password()}</Button>
+						</div>
+					{/if}
+				</div>
+			</form>
 		{:else if step === 'working'}
 			<p class="sent sm">{m.auth_s_recover_working()}</p>
 			<div class="sp-under">
