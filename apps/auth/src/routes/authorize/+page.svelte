@@ -66,6 +66,11 @@
 				return;
 			}
 			auth.activate(rec.accountId);
+			await auth.loadProfile(rec.accountId);
+			if (auth.deletionFor(rec.accountId)) {
+				await goto(`/u/${rec.slot}/deletion-pending`);
+				return;
+			}
 			if (!(await ensureConverted(rec.accountId))) {
 				fail(m.handoff_auth_unavailable());
 				return;

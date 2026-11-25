@@ -11,7 +11,9 @@ const session = vi.hoisted(() => ({
 		tryRefresh: vi.fn(async () => true),
 		ensureVaultUnlocked: vi.fn(async () => true),
 		vaultUnlockedFor: vi.fn(() => true),
-		sessionLost: vi.fn(() => false)
+		sessionLost: vi.fn(() => false),
+		loadProfile: vi.fn(async () => undefined),
+		deletionFor: vi.fn((): { purgeAt: string } | null => null)
 	}
 }));
 vi.mock('$core/stores/session.svelte', () => session);
@@ -109,6 +111,17 @@ describe('authorize without a named account', () => {
 		await vi.waitFor(() => expect(flow.clearPendingAuthorize).toHaveBeenCalled());
 		expect(nav.goto).not.toHaveBeenCalled();
 		expect(flow.grantRequest).not.toHaveBeenCalled();
+	});
+});
+
+describe('authorize for an account pending deletion', () => {
+	it('shows the cancel screen on the account origin instead of granting', async () => {
+		flow.expected = 'acct-named';
+		session.auth.deletionFor.mockReturnValueOnce({ purgeAt: '2026-12-02T00:00:00Z' });
+		render(Page);
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/1/deletion-pending'));
+		expect(flow.grantRequest).not.toHaveBeenCalled();
+		expect(flow.clearPendingAuthorize).not.toHaveBeenCalled();
 	});
 });
 
