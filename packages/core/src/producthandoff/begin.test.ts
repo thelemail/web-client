@@ -3,6 +3,9 @@ import { utf8 } from '$core/keystore/productkeys/canonical';
 import { sha256 } from '$core/keystore/productkeys/encoding';
 import { b64url } from '$core/keystore/handoff/wire';
 
+const local = vi.hoisted(() => ({ list: [] as { accountId: string; slot: number }[] }));
+vi.mock('$core/stores/accounts.svelte', () => ({ accounts: local }));
+
 const created = vi.hoisted(() => ({ requests: [] as Record<string, unknown>[], tamper: null as null | ((d: Record<string, unknown>) => void) }));
 
 vi.mock('$core/products', () => ({ productTarget: (audience: string) => (audience === 'auth' ? { audience, origin: 'https://auth.thelemail.test' } : null) }));
@@ -42,6 +45,7 @@ const assign = vi.fn();
 beforeEach(() => {
 	created.requests = [];
 	created.tamper = null;
+	local.list = [];
 	assign.mockReset();
 	Object.defineProperty(window, 'location', { configurable: true, value: { ...window.location, origin: window.location.origin, assign } });
 });
@@ -61,6 +65,17 @@ describe('starting a handoff', () => {
 		await startHandoff({ expectedAccountId: null, route: '/', remember: false });
 		expect(created.requests[0]).toMatchObject({ expectedAccountId: null, existingSessionId: null });
 		expect(new URLSearchParams(new URL(assign.mock.calls[0][0] as string).hash.slice(1)).has('hint')).toBe(false);
+	});
+
+	it('tells the account origin which index each local account has and what the person came to do', async () => {
+		local.list = [
+			{ accountId: ACCOUNT, slot: 0 },
+			{ accountId: SESSION, slot: 3 }
+		];
+		await startHandoff({ expectedAccountId: null, route: '/', remember: false, intent: 'register' });
+		const fragment = new URLSearchParams(new URL(assign.mock.calls[0][0] as string).hash.slice(1));
+		expect(fragment.get('slots')).toBe(`${ACCOUNT}.0,${SESSION}.3`);
+		expect(fragment.get('intent')).toBe('register');
 	});
 
 	it('refuses a descriptor that names another existing session', async () => {

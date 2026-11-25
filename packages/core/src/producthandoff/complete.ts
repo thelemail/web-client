@@ -14,6 +14,7 @@ import { auth } from '$core/stores/auth.svelte';
 import type { AcknowledgementResponse, RedemptionResponse } from './api';
 import { acknowledge, adoption, bootstrap, cancel, productBundle, productKeys, redeem } from './api';
 import { HANDOFF_TAB_PREFIX, HandoffError } from './begin';
+import { decodeSlots, layoutWith, parseSlot, type SlotMap } from './slots';
 
 export interface CompletedHandoff {
 	accountId: string;
@@ -45,14 +46,23 @@ async function withRetry<T>(deadline: number, fn: () => Promise<T>): Promise<T> 
 	}
 }
 
-function parseFragment(fragment: string): { code: string; state: string; requestId: string; iss: string } {
+interface CallbackFragment {
+	code: string;
+	state: string;
+	requestId: string;
+	iss: string;
+	slot: number | null;
+	slots: SlotMap | null;
+}
+
+function parseFragment(fragment: string): CallbackFragment {
 	const p = new URLSearchParams(fragment.replace(/^#/, ''));
 	const code = p.get('code');
 	const state = p.get('state');
 	const requestId = p.get('request');
 	const iss = p.get('iss');
 	if (!code || !state || !requestId || !iss) throw new HandoffError('missing');
-	return { code, state, requestId, iss };
+	return { code, state, requestId, iss, slot: parseSlot(p.get('slot')), slots: decodeSlots(p.get('slots')) };
 }
 
 async function loadKeys(token: string) {
@@ -92,7 +102,7 @@ async function startCalendarFresh(accountId: string): Promise<void> {
 
 export async function completeHandoff(fragment: string): Promise<CompletedHandoff> {
 	const authTarget = productTarget('auth');
-	const { code, state, requestId, iss } = parseFragment(fragment);
+	const { code, state, requestId, iss, slot: authSlot, slots: authSlots } = parseFragment(fragment);
 	if (!authTarget || iss !== authTarget.origin) throw new HandoffError('issuer');
 	if (sessionStorage.getItem(HANDOFF_TAB_PREFIX + requestId) !== state) throw new HandoffError('restart');
 	const rec = await getRequest(requestId);
@@ -144,15 +154,18 @@ export async function completeHandoff(fragment: string): Promise<CompletedHandof
 		const committed = await keystore.commitHandoff({ accountId: red.accountId, requestId });
 		if (!committed.ok) throw new HandoffError('invalid');
 		const now = Date.now();
-		const slot = existing?.slot ?? accounts.allocateSlot();
-		await accounts.upsert({
+		const layout = layoutWith(red.accountId, authSlot, authSlots);
+		const slot = layout?.get(red.accountId) ?? existing?.slot ?? accounts.allocateSlot();
+		const record = {
 			accountId: red.accountId,
 			slot,
 			email: existing?.email ?? '',
 			addedAt: existing?.addedAt ?? now,
 			lastActiveAt: now,
-			sessionOrigin: 'host'
-		});
+			sessionOrigin: 'host' as const
+		};
+		if (layout) await accounts.alignSlots(layout, record);
+		else await accounts.upsert(record);
 		auth.addSession(red.accessToken, red.expiresIn, red.accountId, ack.csrfToken);
 		if (currentProduct === 'calendar' && existing?.sessionOrigin !== 'host') await startCalendarFresh(red.accountId);
 		await deleteRequest(requestId).catch(() => undefined);

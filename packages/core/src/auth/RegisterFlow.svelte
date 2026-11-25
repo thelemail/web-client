@@ -40,10 +40,12 @@
 
 	let {
 		afterRegister,
-		checkout
+		checkout,
+		remember = false
 	}: {
 		afterRegister: (slot: number) => Promise<unknown>;
 		checkout: (slot: number, order: RegisterCheckout) => Promise<unknown>;
+		remember?: boolean;
 	} = $props();
 
 	const addMode = $derived(page.url.searchParams.get('addAccount') === '1');
@@ -291,7 +293,7 @@
 		}
 		stage = 2;
 		try {
-			const outcome = await performLogin({ email, password });
+			const outcome = await performLogin({ email, password, rememberMe: remember });
 			if (outcome.status !== 'complete') {
 				throw new Error('unexpected two-factor challenge on a fresh account');
 			}

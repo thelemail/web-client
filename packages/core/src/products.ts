@@ -49,6 +49,15 @@ export function appOrigin(): string {
 	return productTarget('app')?.origin ?? '/';
 }
 
+export function mailStartUrl(accountId: string, slot: number): string {
+	const fragment = new URLSearchParams({ account: accountId, route: `/u/${slot}/mail/inbox` });
+	return `${appOrigin()}/auth/start#${fragment.toString()}`;
+}
+
+export function registerStartUrl(): string {
+	return `${appOrigin()}/auth/start#intent=register`;
+}
+
 export function handOffToApp(): never {
 	const target = appOrigin();
 	if (typeof window !== 'undefined' && target !== '/') {

@@ -9,10 +9,15 @@ const session = vi.hoisted(() => ({
 		accountId: 'acct-active' as string | null,
 		activate: vi.fn(),
 		tryRefresh: vi.fn(async () => true),
-		ensureVaultUnlocked: vi.fn(async () => true)
+		ensureVaultUnlocked: vi.fn(async () => true),
+		vaultUnlockedFor: vi.fn(() => true),
+		sessionLost: vi.fn(() => false)
 	}
 }));
 vi.mock('$core/stores/session.svelte', () => session);
+
+const ACTIVE = '5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47';
+const OTHER = '8e1f4c2a-7b3d-4a5e-b6c9-0d2e3f4a5b6c';
 
 const known = vi.hoisted(() => ({
 	list: [] as { accountId: string; slot: number }[],
@@ -25,9 +30,13 @@ const flow = vi.hoisted(() => ({
 	takeAuthorizeFragment: vi.fn(() => '#request=x'),
 	hint: null as string | null,
 	authorizeHint: vi.fn(() => flow.hint),
-	locateRequest: vi.fn(async () => ({ descriptor: { expectedAccountId: flow.expected } })),
-	grantRequest: vi.fn(async () => 'http://app.test/auth/callback#code'),
-	clearPendingAuthorize: vi.fn()
+	intent: null as 'register' | null,
+	authorizeIntent: vi.fn(() => flow.intent),
+	locateRequest: vi.fn(async () => ({ requestId: 'req-1', descriptor: { expectedAccountId: flow.expected } })),
+	grantRequest: vi.fn(async () => 'http://app.test/auth/callback#code=c'),
+	clearPendingAuthorize: vi.fn(),
+	markLoginTried: vi.fn((id: string) => sessionStorage.setItem('tried', id)),
+	loginTried: vi.fn((id: string) => sessionStorage.getItem('tried') === id)
 }));
 vi.mock('$core/producthandoff/authorize', () => flow);
 vi.mock('$core/auth/product-keys', () => ({ ensureConverted: vi.fn(async () => true) }));
@@ -39,7 +48,9 @@ const replace = vi.fn();
 
 beforeEach(() => {
 	sessionStorage.clear();
+	known.list = [];
 	flow.expected = null;
+	flow.intent = null;
 	flow.hint = null;
 	session.auth.accountId = 'acct-active';
 	for (const fn of [nav.goto, flow.grantRequest, flow.clearPendingAuthorize, session.auth.activate, replace]) fn.mockClear();
@@ -63,11 +74,41 @@ describe('authorize without a named account', () => {
 		expect(flow.grantRequest).not.toHaveBeenCalled();
 	});
 
-	it('grants the account that was just signed in', async () => {
-		sessionStorage.setItem('thelemail-authorize-login', '1');
+	it('grants the account that was just signed in and hands back its index', async () => {
+		sessionStorage.setItem('tried', 'req-1');
+		known.list = [
+			{ accountId: ACTIVE, slot: 0 },
+			{ accountId: OTHER, slot: 1 }
+		];
 		render(Page);
 		await vi.waitFor(() => expect(flow.grantRequest).toHaveBeenCalledWith('acct-active', expect.anything()));
-		expect(replace).toHaveBeenCalledWith('http://app.test/auth/callback#code');
+		const p = new URLSearchParams(new URL(replace.mock.calls[0][0] as string).hash.slice(1));
+		expect(p.get('code')).toBe('c');
+		expect(p.get('slot')).toBe('0');
+		expect(p.get('slots')).toBe(`${ACTIVE}.0,${OTHER}.1`);
+	});
+
+	it('sends the person to sign in when the earlier sign-in was for another request', async () => {
+		sessionStorage.setItem('tried', 'req-old');
+		render(Page);
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/login'));
+		expect(flow.grantRequest).not.toHaveBeenCalled();
+		expect(sessionStorage.getItem('tried')).toBe('req-1');
+	});
+
+	it('opens registration when the product asked for a new account', async () => {
+		flow.intent = 'register';
+		render(Page);
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/register'));
+	});
+
+	it('stops instead of looping when sign-in for this request already happened', async () => {
+		sessionStorage.setItem('tried', 'req-1');
+		session.auth.tryRefresh.mockResolvedValueOnce(false);
+		render(Page);
+		await vi.waitFor(() => expect(flow.clearPendingAuthorize).toHaveBeenCalled());
+		expect(nav.goto).not.toHaveBeenCalled();
+		expect(flow.grantRequest).not.toHaveBeenCalled();
 	});
 });
 

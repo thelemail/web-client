@@ -12,7 +12,10 @@ vi.mock('$app/state', () => ({
 vi.mock('$platform', () => ({ platform: {} }));
 vi.mock('$core/lifecycle/lifecycle.svelte', () => ({ lifecycle: { setAccount: vi.fn() } }));
 vi.mock('$core/realtime/realtime.svelte', () => ({ realtime: { start: vi.fn() } }));
-vi.mock('$core/stores/accounts.svelte', () => ({ accounts: { list: [] } }));
+const known = vi.hoisted(() => ({ list: [] as { accountId: string; slot: number }[] }));
+vi.mock('$core/stores/accounts.svelte', () => ({
+	accounts: { list: known.list, byId: (id: string) => known.list.find((r) => r.accountId === id) ?? null }
+}));
 vi.mock('$core/keystore/keystore-client', () => ({ keystore: { subscribe: () => () => {} } }));
 vi.mock('$core/stores/auth.svelte', () => ({
 	auth: {
@@ -39,6 +42,7 @@ afterEach(() => {
 	goto.mockReset();
 	searchStart.mockClear();
 	lost.value = false;
+	known.list.length = 0;
 });
 
 describe('account slot layout', () => {
@@ -71,5 +75,12 @@ describe('account slot layout', () => {
 		await view.rerender({ data: { accountId: 'acc-2', slot: 3 }, children });
 		flushSync();
 		expect(searchStart).toHaveBeenLastCalledWith('acc-2');
+	});
+
+	it('moves the tab with its account when the account origin gives it another index', () => {
+		known.list.push({ accountId: 'acc-1', slot: 4 });
+		render(SlotLayout, { props: { data: { accountId: 'acc-1', slot: 2 }, children } });
+		flushSync();
+		expect(goto).toHaveBeenCalledWith('/u/4/mail/inbox?q=x', { replace: true });
 	});
 });

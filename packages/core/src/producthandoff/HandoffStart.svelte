@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { signInAtAuth, unlockAtAuth } from '$core/custody/unlock';
+	import { localForkPath } from '$core/fork';
 	import { appOrigin } from '$core/products';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -20,11 +22,20 @@
 		return accountId ? unlockAtAuth(accountId, route) : signInAtAuth(route);
 	}
 
+	async function open(accountId: string | null, route: string): Promise<void> {
+		if (params.get('tab') === '1') return inTab(accountId, route);
+		if (accountId) {
+			await accounts.load();
+			const known = accounts.byId(accountId);
+			if (known) return goto(localForkPath(route, known.slot), { replace: true });
+		}
+		return startFor(accountId, route, params.get('intent') === 'register' ? 'register' : undefined);
+	}
+
 	onMount(() => {
 		const account = params.get('account');
 		const accountId = account && /^[0-9a-f-]{36}$/.test(account) ? account : null;
-		const route = params.get('route') ?? '/';
-		void (params.get('tab') === '1' ? inTab(accountId, route) : startFor(accountId, route)).catch(() => {
+		void open(accountId, params.get('route') ?? '/').catch(() => {
 			error = m.handoff_failed();
 		});
 	});
