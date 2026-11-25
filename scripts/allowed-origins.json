@@ -20,7 +20,9 @@
     "https://foo.bar",
     "https://sveltekit-redirect.invalid",
     "https://emscripten.org",
-    "https://sqlite.org"
+    "https://sqlite.org",
+    "https://rolldown.rs",
+    "https://web.dev"
   ],
   "loopbackHandBack": [
     {

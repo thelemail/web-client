@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync } from 'node:fs';
+import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
-import { dirname, extname, join } from 'node:path';
+import { dirname, extname, join, relative } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { Plugin } from 'vite';
@@ -174,6 +174,40 @@ function locate(pinned: Pinned, cacheDir: string): { assets: ModelAssets; locate
 	}
 	const total = pinned.files.reduce((sum, f) => sum + f.size, 0);
 	return { assets: { name: pinned.name, hash: '', total, files, licenses }, located };
+}
+
+const ORT_BUNDLE = /onnxruntime-web\/dist\/ort\.wasm\.bundle\.min\.mjs$/;
+const ORT_WASM_URL = 'new URL("ort-wasm-simd-threaded.wasm",import.meta.url)';
+const ORT_WASM_REFS = 2;
+
+export function ortRuntimeUrl(): Plugin {
+	return {
+		name: 'thelemail:ort-runtime-url',
+		enforce: 'pre',
+		transform(code, id) {
+			if (!ORT_BUNDLE.test(id.split('?')[0])) return null;
+			const found = code.split(ORT_WASM_URL).length - 1;
+			if (found !== ORT_WASM_REFS) throw new Error(`model assets: expected ${ORT_WASM_REFS} runtime URL references in ${id}, found ${found}`);
+			return { code: code.replaceAll(ORT_WASM_URL, 'new URL("data:application/wasm,")'), map: null };
+		}
+	};
+}
+
+export function modelWorkerModules(appDir: string): Plugin {
+	return {
+		name: 'thelemail:model-worker-modules',
+		apply: 'build',
+		generateBundle(_options, bundle) {
+			const chunks = Object.values(bundle).filter((o) => o.type === 'chunk' && o.isEntry && /(^|\/)model\.worker-[\w-]+\.js$/.test(o.fileName));
+			if (chunks.length === 0) return;
+			const modules = Object.values(bundle)
+				.flatMap((o) => (o.type === 'chunk' ? o.moduleIds : []))
+				.map((id) => relative(WORKSPACE, id.split('?')[0]))
+				.sort();
+			mkdirSync(join(appDir, 'build-meta'), { recursive: true });
+			writeFileSync(join(appDir, 'build-meta', 'model-worker.json'), JSON.stringify({ chunks: chunks.map((c) => c.fileName), modules }));
+		}
+	};
 }
 
 export function modelAssets(options: ModelAssetOptions = {}): Plugin {

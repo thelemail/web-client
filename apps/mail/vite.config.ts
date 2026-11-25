@@ -7,7 +7,7 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { inlineScriptHashes, loadBuildEnv, parserOriginOf, resolveOrigins } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
 import { chunkGraph } from '../../scripts/chunk-graph.ts';
-import { modelAssets } from '../../scripts/model-assets.ts';
+import { modelAssets, modelWorkerModules, ortRuntimeUrl } from '../../scripts/model-assets.ts';
 import { pdfjsAssets } from '../../scripts/pdfjs-assets.ts';
 import { defineConfig } from 'vite';
 
@@ -98,6 +98,6 @@ export default defineConfig({
 	},
 	worker: {
 		format: 'es',
-		plugins: () => [modelAssets({ emit: false })]
+		plugins: () => [modelAssets({ emit: false }), ortRuntimeUrl(), modelWorkerModules(import.meta.dirname)]
 	}
 });
