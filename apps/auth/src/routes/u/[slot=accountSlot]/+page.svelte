@@ -2,7 +2,6 @@
 	import { goto } from '$app/navigation';
 	import { m } from '$paraglide/messages.js';
 	import { auth } from '$core/stores/session.svelte';
-	import { appOrigin } from '$core/products';
 	import { EXPORT_TOOL_URL } from '$core/settings/exportTool';
 	import SecHead from '$core/settings/SecHead.svelte';
 	import SecGroup from '$core/settings/security/SecGroup.svelte';
@@ -74,7 +73,7 @@
 			<header class="set-head">
 				<h1>{m.settings_nav_security()}</h1>
 				<div class="set-head-actions">
-					<Button variant="ghost" href={appOrigin()}>{m.auth_signed_in_open_mailbox()}</Button>
+					<Button variant="ghost" href={`/u/${data.slot}/mail`}>{m.auth_signed_in_open_mailbox()}</Button>
 					<Button variant="secondary" onclick={signOut} disabled={signingOut}>
 						{m.settings_security_sign_out()}
 					</Button>
