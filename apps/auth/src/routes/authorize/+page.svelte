@@ -11,6 +11,8 @@
 	import {
 		authorizeHint,
 		authorizeIntent,
+		authorizeRegisterQuery,
+		authorizeRoute,
 		clearPendingAuthorize,
 		grantRequest,
 		locateRequest,
@@ -45,7 +47,7 @@
 		}
 		markLoginTried(requestId);
 		const hint = authorizeHint(fragment);
-		if (authorizeIntent(fragment) === 'register' && slot === null) await goto('/register');
+		if (authorizeIntent(fragment) === 'register' && slot === null) await goto(`/register${authorizeRegisterQuery(fragment)}`);
 		else if (slot !== null) await goto(`/login?slot=${slot}`);
 		else if (hint) await goto(`/login?${new URLSearchParams({ hint }).toString()}`);
 		else await goto('/login');
@@ -77,8 +79,9 @@
 			}
 			await Promise.race([syncAddressUids(rec.accountId), new Promise((resolve) => setTimeout(resolve, UID_SYNC_WAIT_MS))]);
 			const callback = await grantRequest(rec.accountId, req);
+			const route = authorizeRoute();
 			clearPendingAuthorize();
-			window.location.replace(withSlots(callback, rec.slot, slotsOf(accounts.list)));
+			window.location.replace(withSlots(callback, rec.slot, slotsOf(accounts.list), route));
 		} catch (err) {
 			const code = err instanceof ApiCallError ? err.envelope?.error?.code : undefined;
 			fail(code === 'handoff_account_mismatch' ? m.handoff_auth_other_account() : m.handoff_auth_invalid());

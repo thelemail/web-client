@@ -34,6 +34,10 @@ const flow = vi.hoisted(() => ({
 	authorizeHint: vi.fn(() => flow.hint),
 	intent: null as 'register' | null,
 	authorizeIntent: vi.fn(() => flow.intent),
+	registerQuery: '',
+	authorizeRegisterQuery: vi.fn(() => flow.registerQuery),
+	route: null as string | null,
+	authorizeRoute: vi.fn(() => flow.route),
 	locateRequest: vi.fn(async () => ({ requestId: 'req-1', descriptor: { expectedAccountId: flow.expected } })),
 	grantRequest: vi.fn(async () => 'http://app.test/auth/callback#code=c'),
 	clearPendingAuthorize: vi.fn(),
@@ -53,6 +57,8 @@ beforeEach(() => {
 	known.list = [];
 	flow.expected = null;
 	flow.intent = null;
+	flow.registerQuery = '';
+	flow.route = null;
 	flow.hint = null;
 	session.auth.accountId = 'acct-active';
 	for (const fn of [nav.goto, flow.grantRequest, flow.clearPendingAuthorize, session.auth.activate, replace]) fn.mockClear();
@@ -100,8 +106,18 @@ describe('authorize without a named account', () => {
 
 	it('opens registration when the product asked for a new account', async () => {
 		flow.intent = 'register';
+		flow.registerQuery = '?plan=family&billing=monthly';
 		render(Page);
-		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/register'));
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/register?plan=family&billing=monthly'));
+	});
+
+	it('hands back where checkout continues after a paid registration', async () => {
+		sessionStorage.setItem('tried', 'req-1');
+		flow.route = '/u/0/billing/start?plan=family&interval=month&type=family';
+		render(Page);
+		await vi.waitFor(() => expect(replace).toHaveBeenCalled());
+		const p = new URLSearchParams(new URL(replace.mock.calls[0][0] as string).hash.slice(1));
+		expect(p.get('route')).toBe('/u/0/billing/start?plan=family&interval=month&type=family');
 	});
 
 	it('stops instead of looping when sign-in for this request already happened', async () => {

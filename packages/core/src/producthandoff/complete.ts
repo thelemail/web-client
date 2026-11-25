@@ -13,7 +13,7 @@ import { accounts } from '$core/stores/accounts.svelte';
 import { auth } from '$core/stores/auth.svelte';
 import type { AcknowledgementResponse, RedemptionResponse } from './api';
 import { acknowledge, adoption, bootstrap, cancel, productBundle, productKeys, redeem } from './api';
-import { HANDOFF_TAB_PREFIX, HandoffError } from './begin';
+import { HANDOFF_TAB_PREFIX, HandoffError, safeRoute } from './begin';
 import { decodeSlots, layoutWith, parseSlot, type SlotMap } from './slots';
 
 export interface CompletedHandoff {
@@ -53,6 +53,7 @@ interface CallbackFragment {
 	iss: string;
 	slot: number | null;
 	slots: SlotMap | null;
+	route: string | null;
 }
 
 function parseFragment(fragment: string): CallbackFragment {
@@ -62,7 +63,8 @@ function parseFragment(fragment: string): CallbackFragment {
 	const requestId = p.get('request');
 	const iss = p.get('iss');
 	if (!code || !state || !requestId || !iss) throw new HandoffError('missing');
-	return { code, state, requestId, iss, slot: parseSlot(p.get('slot')), slots: decodeSlots(p.get('slots')) };
+	const route = p.get('route');
+	return { code, state, requestId, iss, slot: parseSlot(p.get('slot')), slots: decodeSlots(p.get('slots')), route: route && safeRoute(route) === route ? route : null };
 }
 
 async function loadKeys(token: string) {
@@ -102,7 +104,7 @@ async function startCalendarFresh(accountId: string): Promise<void> {
 
 export async function completeHandoff(fragment: string): Promise<CompletedHandoff> {
 	const authTarget = productTarget('auth');
-	const { code, state, requestId, iss, slot: authSlot, slots: authSlots } = parseFragment(fragment);
+	const { code, state, requestId, iss, slot: authSlot, slots: authSlots, route: authRoute } = parseFragment(fragment);
 	if (!authTarget || iss !== authTarget.origin) throw new HandoffError('issuer');
 	if (sessionStorage.getItem(HANDOFF_TAB_PREFIX + requestId) !== state) throw new HandoffError('restart');
 	const rec = await getRequest(requestId);
@@ -170,7 +172,7 @@ export async function completeHandoff(fragment: string): Promise<CompletedHandof
 		if (currentProduct === 'calendar' && existing?.sessionOrigin !== 'host') await startCalendarFresh(red.accountId);
 		await deleteRequest(requestId).catch(() => undefined);
 		sessionStorage.removeItem(HANDOFF_TAB_PREFIX + requestId);
-		return { accountId: red.accountId, slot, route: rec.route };
+		return { accountId: red.accountId, slot, route: authRoute ?? rec.route };
 	} catch (err) {
 		if (adopted) await keystore.discardHandoff({ accountId: red.accountId, requestId }).catch(() => undefined);
 		await cancel(requestId, csrfToken).catch(() => undefined);

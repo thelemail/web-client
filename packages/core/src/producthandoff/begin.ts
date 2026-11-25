@@ -5,9 +5,11 @@ import { b64url, challengeS256, parseDescriptor } from '$core/keystore/handoff/w
 import { productTarget } from '$core/products';
 import { accounts } from '$core/stores/accounts.svelte';
 import { bootstrap, createRequest } from './api';
+import { registerParams } from './pending';
 import { encodeSlots, slotsOf } from './slots';
 
 export const HANDOFF_TAB_PREFIX = 'thelemail-handoff:';
+
 
 export class HandoffError extends Error {
 	readonly code: string;
@@ -30,6 +32,7 @@ export interface StartOptions {
 	existingSessionId?: string | null;
 	hint?: string | null;
 	intent?: 'register';
+	registerQuery?: string;
 }
 
 export async function startHandoff(opts: StartOptions): Promise<void> {
@@ -87,6 +90,8 @@ export async function startHandoff(opts: StartOptions): Promise<void> {
 	const fragment = new URLSearchParams({ request: descriptor.requestId, digest: created.descriptorDigest });
 	if (opts.hint) fragment.set('hint', opts.hint);
 	if (opts.intent) fragment.set('intent', opts.intent);
+	const register = registerParams(opts.registerQuery);
+	if (opts.intent === 'register' && register) fragment.set('register', register);
 	if (accounts.list.length > 0) fragment.set('slots', encodeSlots(slotsOf(accounts.list)));
 	window.location.assign(`${authTarget.origin}/authorize#${fragment.toString()}`);
 }
