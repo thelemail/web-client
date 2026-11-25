@@ -26,6 +26,7 @@ class SearchRuntime {
 	#prefs: SearchPrefs | null = null;
 	#listeners = new Set<(prefs: SearchPrefs | null) => void>();
 	#clientListeners = new Set<() => void>();
+	#attachListeners = new Set<() => void>();
 	#channel: BroadcastChannel | null = null;
 	#legacyDropped = false;
 	#fullSearch: () => boolean = () => false;
@@ -34,6 +35,7 @@ class SearchRuntime {
 		if (!searchSupported()) return () => {};
 		this.#accountId = accountId;
 		this.#fullSearch = fullSearch;
+		this.#attachChanged();
 		this.#listen();
 		const cancelIdle = afterBoot(() => {
 			this.#dropLegacy();
@@ -48,6 +50,7 @@ class SearchRuntime {
 			if (this.#accountId === accountId) {
 				this.#accountId = null;
 				this.#setPrefs(null);
+				this.#attachChanged();
 			}
 			void this.#stop(accountId, false);
 		};
@@ -59,6 +62,17 @@ class SearchRuntime {
 
 	get prefs(): SearchPrefs | null {
 		return this.#prefs;
+	}
+
+	subscribeAttach(listener: () => void): () => void {
+		this.#attachListeners.add(listener);
+		return () => this.#attachListeners.delete(listener);
+	}
+
+	#attachChanged(): void {
+		queueMicrotask(() => {
+			for (const l of this.#attachListeners) l();
+		});
 	}
 
 	subscribeClient(listener: () => void): () => void {

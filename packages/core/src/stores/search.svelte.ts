@@ -107,6 +107,7 @@ class MailSearchStore {
 	#watching: SearchClient | null = null;
 	#unwatch: (() => void) | null = null;
 	#watchRun = 0;
+	#attached = $state(0);
 
 	get text(): string {
 		return this.committed;
@@ -121,6 +122,7 @@ class MailSearchStore {
 	}
 
 	get fullSearch(): boolean {
+		void this.#attached;
 		return !platform.mirror && searchRuntime.fullSearch;
 	}
 
@@ -201,12 +203,14 @@ class MailSearchStore {
 		const offPrefs = searchRuntime.subscribePrefs((prefs) => {
 			this.prefs = prefs?.accountId === accountId ? prefs : null;
 		});
+		const offAttach = searchRuntime.subscribeAttach(() => this.#attached++);
 		const offClient = searchRuntime.subscribeClient(() => this.#watchClient());
 		const offLock = keystore.subscribeAccount(accountId, (b) => {
 			if (b.type === 'locked' || b.type === 'cleared' || b.type === 'clearedAll') this.#reset();
 		});
 		return () => {
 			offPrefs();
+			offAttach();
 			offClient();
 			offLock();
 			this.#unwatchClient();

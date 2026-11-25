@@ -54,6 +54,7 @@ vi.mock('$core/search/lazy', () => ({
 	searchRuntime: {
 		focus: (...a: unknown[]) => runtime.focus(...a),
 		client: () => (runtime.client ? Promise.resolve(runtime.client) : null),
+		subscribeAttach: () => () => {},
 		subscribeClient: (cb: () => void) => {
 			runtime.clientListeners.add(cb);
 			cb();
