@@ -64,7 +64,7 @@ export function coverageOf(status: SearchStatus | null, relevant: readonly Dimen
 	return { dimensions, inventoryDone, complete, syncedAt: sync?.syncedAt ?? null, waitingOn: sync?.waiting ?? null };
 }
 
-export type ProgressState = 'listing' | 'previews' | 'reading' | 'paused' | 'attention';
+export type ProgressState = 'listing' | 'previews' | 'reading' | 'paused' | 'attention' | 'model' | 'preparing' | 'meaning';
 
 export interface Progress {
 	state: ProgressState;
@@ -84,8 +84,23 @@ export function progressOf(status: SearchStatus | null): Progress | null {
 	}
 	const preview = status.mode === 'preview';
 	const d = view.dimensions.find((x) => x.dimension === (preview ? Dimension.metadata : Dimension.body));
-	if (!d || !d.total || !d.gaps.waiting) return null;
+	if (d?.total && d.gaps.waiting) {
+		const done = d.done + d.excluded;
+		const state: ProgressState = status.paused ? 'paused' : d.gaps.locked || d.gaps.failed ? 'attention' : preview ? 'previews' : 'reading';
+		return { state, done, total: d.total, fraction: done / d.total };
+	}
+	return preview ? null : meaningProgress(status, view);
+}
+
+function meaningProgress(status: SearchStatus, view: CoverageView): Progress | null {
+	const engine = status.semantic;
+	if (!engine || engine.state === 'unavailable') return null;
+	if (engine.state === 'downloading') {
+		return { state: 'model', done: engine.loaded, total: engine.total, fraction: engine.total ? Math.min(1, engine.loaded / engine.total) : 0 };
+	}
+	if (engine.state === 'loading') return { state: 'preparing', done: 0, total: 0, fraction: 1 };
+	const d = view.dimensions.find((x) => x.dimension === Dimension.semantic);
+	if (!d?.total || !d.gaps.waiting) return null;
 	const done = d.done + d.excluded;
-	const state: ProgressState = status.paused ? 'paused' : d.gaps.locked || d.gaps.failed ? 'attention' : preview ? 'previews' : 'reading';
-	return { state, done, total: d.total, fraction: done / d.total };
+	return { state: status.paused ? 'paused' : 'meaning', done, total: d.total, fraction: done / d.total };
 }

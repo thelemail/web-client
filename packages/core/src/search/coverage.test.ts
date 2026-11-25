@@ -105,4 +105,39 @@ describe('progressOf', () => {
 		expect(progressOf(status(coverage))).toBeNull();
 		expect(progressOf(null)).toBeNull();
 	});
+
+	it('shows the model download, then preparation, once message text is done', () => {
+		const coverage = [
+			{ dimension: Dimension.body, state: Coverage.complete, count: 100 },
+			{ dimension: Dimension.semantic, state: Coverage.pending, count: 100 }
+		];
+		const downloading = { ...status(coverage), semantic: { state: 'downloading' as const, loaded: 30_000_000, total: 120_000_000 } };
+		expect(progressOf(downloading)).toEqual({ state: 'model', done: 30_000_000, total: 120_000_000, fraction: 0.25 });
+		expect(progressOf({ ...status(coverage), semantic: { state: 'loading' } })?.state).toBe('preparing');
+	});
+
+	it('keeps message text first while it is still being read', () => {
+		const coverage = [
+			{ dimension: Dimension.body, state: Coverage.complete, count: 40 },
+			{ dimension: Dimension.body, state: Coverage.pending, count: 60 }
+		];
+		expect(progressOf({ ...status(coverage), semantic: { state: 'downloading', loaded: 1, total: 2 } })?.state).toBe('reading');
+	});
+
+	it('follows meaning coverage while the model works, and stops when it is done or unavailable', () => {
+		const working = [
+			{ dimension: Dimension.body, state: Coverage.complete, count: 100 },
+			{ dimension: Dimension.semantic, state: Coverage.complete, count: 30 },
+			{ dimension: Dimension.semantic, state: Coverage.pending, count: 70 }
+		];
+		expect(progressOf({ ...status(working), semantic: { state: 'ready' } })).toEqual({ state: 'meaning', done: 30, total: 100, fraction: 0.3 });
+		expect(progressOf({ ...status(working), semantic: { state: 'ready' }, paused: true })?.state).toBe('paused');
+		expect(progressOf({ ...status(working), semantic: { state: 'unavailable', reason: 'memory' } })).toBeNull();
+		expect(progressOf({ ...status(working), semantic: null })).toBeNull();
+		const done = [
+			{ dimension: Dimension.body, state: Coverage.complete, count: 100 },
+			{ dimension: Dimension.semantic, state: Coverage.complete, count: 100 }
+		];
+		expect(progressOf({ ...status(done), semantic: { state: 'ready' } })).toBeNull();
+	});
 });

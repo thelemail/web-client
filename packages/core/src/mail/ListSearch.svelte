@@ -97,6 +97,12 @@
 		if (!p) return '';
 		const args = { done: fmt(p.done), total: fmt(p.total) };
 		switch (p.state) {
+			case 'model':
+				return m.mail_search_progress_model({ done: mb(p.done), total: mb(p.total) });
+			case 'preparing':
+				return m.mail_search_progress_preparing();
+			case 'meaning':
+				return m.mail_search_progress_meaning(args);
 			case 'listing':
 				return m.mail_search_progress_listing(args);
 			case 'previews':
@@ -114,6 +120,9 @@
 
 	function fmt(n: number): string {
 		return new Intl.NumberFormat().format(n);
+	}
+	function mb(bytes: number): string {
+		return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(bytes / 1_000_000);
 	}
 	const activeId = $derived(open && highlight >= 0 && highlight < options.length ? `${uid}-${options[highlight].key}` : undefined);
 	const showLooking = $derived(typed.length > 0 && mailSearch.previewing && mailSearch.preview.length === 0);
