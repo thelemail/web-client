@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "rm -f build-meta/model-worker.json && vite build",
     "preview": "vite preview",
     "prepare": "pnpm i18n:compile && svelte-kit sync || echo ''",
     "check": "pnpm i18n:compile && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "vitest run --config vitest.browser.config.ts",
-    "verify:bundle": "node ../../scripts/check-build-origins.mjs",
+    "verify:bundle": "node ../../scripts/check-build-origins.mjs && node ../../scripts/check-model-bundle.mjs",
     "verify:size": "node ../../scripts/check-initial-size.ts",
     "i18n:compile": "node ../../scripts/i18n-compile.ts"
   },

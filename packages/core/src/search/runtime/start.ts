@@ -26,6 +26,7 @@ function parser(): MessagePort | null {
 
 const deps: ClientDeps = {
 	spawn: () => new Worker(new URL('./search.worker.ts', import.meta.url), { type: 'module', name: 'thelemail-search' }),
+	spawnModel: () => new Worker(new URL('../model/model.worker.ts', import.meta.url), { type: 'module', name: 'thelemail-model' }),
 	broker,
 	openRoot: (args, port) => keystore.openSearchRoot(args, port),
 	records: searchRecords,

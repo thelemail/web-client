@@ -1086,7 +1086,29 @@ export interface DeriveSearchDbKeyArgs {
 
 export type DeriveSearchDbKeyResponse = { ok: true; key: Uint8Array } | SearchSessionRefusal;
 
-export type SearchSessionCommand = 'sealSearchArtifact' | 'openSearchArtifact' | 'deriveSearchDbKey' | 'deriveSearchHistoryKey' | 'closeSearchSession';
+export type SearchSessionCommand =
+	| 'sealSearchArtifact'
+	| 'openSearchArtifact'
+	| 'deriveSearchDbKey'
+	| 'deriveSearchHistoryKey'
+	| 'claimModelLease'
+	| 'renewModelLease'
+	| 'releaseModelLease'
+	| 'closeSearchSession';
+
+export type ClaimModelLeaseResponse = { ok: true; fence: number } | { ok: false; code: 'busy'; retryMs: number } | SearchSessionRefusal;
+
+export interface ModelLeaseArgs {
+	fence: number;
+}
+
+export type RenewModelLeaseResponse = { ok: true; live: boolean } | SearchSessionRefusal;
+
+export interface SearchSessionEvent {
+	type: 'event';
+	event: 'modelFenced';
+	fence: number;
+}
 
 export interface SearchSessionRequest {
 	id: string;

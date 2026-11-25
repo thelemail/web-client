@@ -13,9 +13,10 @@
 	import { mailSearch } from '$core/stores/search.svelte';
 	import { formatWhenLong } from '$core/mail/data';
 	import { m } from '$paraglide/messages.js';
+	import { MODEL_DOWNLOAD_BYTES } from '$core/search/model/download';
 
 	let prefs = $state.raw<SearchPrefs | null>(null);
-	let confirm = $state<'clear' | 'rebuild' | 'cloud' | null>(null);
+	let confirm = $state<'clear' | 'rebuild' | 'cloud' | 'meaning' | null>(null);
 	let busy = $state(false);
 	let failed = $state<string | null>(null);
 	let retried = $state(false);
@@ -37,7 +38,8 @@
 		[Dimension.metadata]: m.mail_search_dim_metadata,
 		[Dimension.body]: m.mail_search_dim_body,
 		[Dimension.attachmentMetadata]: m.mail_search_dim_attachment_names,
-		[Dimension.attachmentText]: m.mail_search_dim_attachment_text
+		[Dimension.attachmentText]: m.mail_search_dim_attachment_text,
+		[Dimension.semantic]: m.mail_search_dim_meaning
 	};
 	const GAP_LABEL: Record<Gap, (p: { count: string }) => string> = {
 		waiting: m.mail_search_gap_waiting,
@@ -81,6 +83,32 @@
 		return m.settings_search_cloud_ready();
 	});
 
+	const mb = (bytes: number) => new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(bytes / 1_000_000);
+	const meaning = $derived(prefs?.semantic ?? false);
+	const engine = $derived(status?.semantic ?? null);
+	const meaningLine = $derived.by(() => {
+		if (!meaning || phase !== 'ready' || !engine) return null;
+		switch (engine.state) {
+			case 'downloading':
+				return m.settings_search_meaning_downloading({ done: mb(engine.loaded), total: mb(engine.total) });
+			case 'loading':
+				return m.settings_search_meaning_loading();
+			case 'waiting':
+				return m.settings_search_meaning_waiting();
+			case 'unavailable':
+				if (engine.reason === 'assets') return m.settings_search_meaning_download_failed();
+				if (engine.reason === 'memory') return m.settings_search_meaning_no_memory();
+				return m.settings_search_meaning_unsupported();
+			default:
+				return null;
+		}
+	});
+
+	function toggleMeaning(on: boolean) {
+		if (on) confirm = 'meaning';
+		else void run(() => searchRuntime.setSemantic(false));
+	}
+
 	function toggleCloud(on: boolean) {
 		if (on) void run(() => searchRuntime.setCloudSync(true));
 		else confirm = 'cloud';
@@ -103,12 +131,24 @@
 		else confirm = 'clear';
 	}
 
+	const CONFIRM: Record<NonNullable<typeof confirm>, { title: () => string; sub: () => string; action: () => string }> = {
+		clear: { title: m.settings_search_clear_confirm_title, sub: m.settings_search_clear_confirm_body, action: m.settings_search_clear_action },
+		cloud: { title: m.settings_search_cloud_off_confirm_title, sub: m.settings_search_cloud_off_confirm_body, action: m.settings_search_cloud_off_action },
+		rebuild: { title: m.settings_search_rebuild_confirm_title, sub: m.settings_search_rebuild_confirm_body, action: m.settings_search_rebuild_action },
+		meaning: {
+			title: m.settings_search_meaning_confirm_title,
+			sub: () => m.settings_search_meaning_confirm_body({ size: mb(MODEL_DOWNLOAD_BYTES) }),
+			action: m.settings_search_meaning_confirm_action
+		}
+	};
+
 	async function confirmed() {
 		const which = confirm;
 		await run(async () => {
 			if (which === 'clear') await searchRuntime.clear();
 			else if (which === 'rebuild') await searchRuntime.rebuild();
 			else if (which === 'cloud') await searchRuntime.setCloudSync(false);
+			else if (which === 'meaning') await searchRuntime.setSemantic(true);
 			mailSearch.refresh();
 		});
 		confirm = null;
@@ -145,6 +185,16 @@
 		</div>
 	</div>
 	{#if saved}
+		<Row t={m.settings_search_meaning()} d={meaning ? m.settings_search_meaning_on_desc() : m.settings_search_meaning_off_desc()}>
+			<Toggle on={meaning} disabled={busy || prefs === null} onChange={toggleMeaning} />
+		</Row>
+		{#if meaningLine}
+			<div class="setrow col" role="status" aria-live="polite">
+				<div class="info">
+					<div class="t">{meaningLine}</div>
+				</div>
+			</div>
+		{/if}
 		<Row t={m.settings_search_pause()} d={m.settings_search_pause_desc()}>
 			<Toggle on={prefs?.paused ?? false} disabled={busy} onChange={(v) => void run(() => searchRuntime.setPaused(v))} />
 		</Row>
@@ -203,10 +253,10 @@
 
 {#if confirm}
 	<ConfirmDialog
-		title={confirm === 'clear' ? m.settings_search_clear_confirm_title() : confirm === 'cloud' ? m.settings_search_cloud_off_confirm_title() : m.settings_search_rebuild_confirm_title()}
-		sub={confirm === 'clear' ? m.settings_search_clear_confirm_body() : confirm === 'cloud' ? m.settings_search_cloud_off_confirm_body() : m.settings_search_rebuild_confirm_body()}
-		tone={confirm === 'rebuild' ? 'neutral' : 'danger'}
-		confirmLabel={confirm === 'clear' ? m.settings_search_clear_action() : confirm === 'cloud' ? m.settings_search_cloud_off_action() : m.settings_search_rebuild_action()}
+		title={CONFIRM[confirm].title()}
+		sub={CONFIRM[confirm].sub()}
+		tone={confirm === 'rebuild' || confirm === 'meaning' ? 'neutral' : 'danger'}
+		confirmLabel={CONFIRM[confirm].action()}
 		{busy}
 		onConfirm={confirmed}
 		onClose={() => (confirm = null)}

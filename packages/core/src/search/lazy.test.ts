@@ -14,13 +14,16 @@ vi.mock('$core/keystore/keystore-client', () => ({
 	}
 }));
 
-type Prefs = { accountId: string; consent: 'saved' | 'declined' | null; paused: boolean; history: boolean };
+type Prefs = { accountId: string; consent: 'saved' | 'declined' | null; paused: boolean; history: boolean; semantic: boolean };
 const stored = vi.hoisted(() => ({ prefs: new Map<string, Prefs>(), record: null as unknown }));
 const deletePrefs = vi.fn();
+const dropAssets = vi.fn(async () => {});
+vi.mock('./model/assets', () => ({ dropAssets: () => dropAssets() }));
 vi.mock('./runtime/records', () => {
-	const base = (accountId: string): Prefs => ({ accountId, consent: null, paused: false, history: false });
+	const base = (accountId: string): Prefs => ({ accountId, consent: null, paused: false, history: false, semantic: false });
 	return {
 		defaultPrefs: base,
+		semanticInUse: async () => [...stored.prefs.values()].some((p) => p.semantic),
 		searchRecords: { get: async () => stored.record },
 		searchPrefs: {
 			get: async (id: string) => ({ ...base(id), ...stored.prefs.get(id) }),
@@ -71,7 +74,7 @@ async function settle() {
 }
 
 function consent(value: Prefs['consent']) {
-	stored.prefs.set('acc-1', { accountId: 'acc-1', consent: value, paused: false, history: false });
+	stored.prefs.set('acc-1', { accountId: 'acc-1', consent: value, paused: false, history: false, semantic: false });
 }
 
 beforeEach(() => {
@@ -192,6 +195,50 @@ describe('searchRuntime', () => {
 		expect(shutdown).toHaveBeenCalledWith({ wipe: true });
 		expect(startSearch).toHaveBeenCalledTimes(2);
 		expect(startSearch).toHaveBeenLastCalledWith('acc-1', 'saved');
+		detach();
+	});
+
+	it('turns search by meaning on with a restart and keeps the model while in use', async () => {
+		consent('saved');
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		dropAssets.mockClear();
+		await runtime.setSemantic(true);
+		await settle();
+		expect(stored.prefs.get('acc-1')?.semantic).toBe(true);
+		expect(shutdown).toHaveBeenCalledWith({ wipe: false });
+		expect(startSearch).toHaveBeenCalledTimes(2);
+		expect(dropAssets).not.toHaveBeenCalled();
+		detach();
+	});
+
+	it('drops the downloaded model when no account uses search by meaning any more', async () => {
+		consent('saved');
+		stored.prefs.set('acc-1', { ...stored.prefs.get('acc-1')!, semantic: true });
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		dropAssets.mockClear();
+		await runtime.setSemantic(false);
+		await settle();
+		expect(stored.prefs.get('acc-1')?.semantic).toBe(false);
+		expect(dropAssets).toHaveBeenCalledTimes(1);
+		detach();
+	});
+
+	it('turns search by meaning off with full search', async () => {
+		consent('saved');
+		stored.prefs.set('acc-1', { ...stored.prefs.get('acc-1')!, semantic: true });
+		const runtime = await fresh();
+		const detach = runtime.attach('acc-1');
+		runtime.focus();
+		await settle();
+		await runtime.clear();
+		await settle();
+		expect(stored.prefs.get('acc-1')?.semantic).toBe(false);
 		detach();
 	});
 

@@ -6,6 +6,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
+import { modelAssets, ortRuntimeUrl } from '../../scripts/model-assets.ts';
 import { defineConfig } from 'vite';
 
 const workspaceRoot = '../..';
@@ -61,7 +62,8 @@ export default defineConfig({
 			version: {
 				pollInterval: 60000
 			}
-		})
+		}),
+		modelAssets({ emit: false })
 	],
 	envPrefix: ['VITE_', 'PUBLIC_'],
 	envDir: workspaceRoot,
@@ -80,6 +82,7 @@ export default defineConfig({
 		]
 	},
 	worker: {
-		format: 'es'
+		format: 'es',
+		plugins: () => [modelAssets({ emit: false }), ortRuntimeUrl()]
 	}
 });

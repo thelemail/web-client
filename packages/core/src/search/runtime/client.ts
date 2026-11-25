@@ -19,8 +19,8 @@ import {
 	type QueryReply,
 	type QueryRequestOptions,
 	type Reply,
-	type ResyncEvent,
-	type SearchStatus
+	type SearchStatus,
+	type WorkerEvent
 } from './protocol';
 import type { PrefStore, RecordStore, SearchRecord } from './records';
 import type { Conditions } from './scheduler';
@@ -47,6 +47,7 @@ export interface ClientState {
 
 export interface ClientDeps {
 	spawn(): Worker;
+	spawnModel?(): Worker;
 	broker(): MessagePort | null;
 	openRoot(args: { accountId: string; bundle?: Uint8Array }, port: MessagePort): Promise<OpenSearchRootResponse>;
 	records: RecordStore;
@@ -169,6 +170,7 @@ interface Ownership {
 	syncing: Promise<void> | null;
 	again: boolean;
 	retry: ReturnType<typeof setTimeout> | null;
+	model: Worker | null;
 }
 
 function delay(ms: number): Promise<void> {
@@ -388,7 +390,8 @@ export class SearchClient {
 			stopBridge: null,
 			syncing: null,
 			again: false,
-			retry: null
+			retry: null,
+			model: null
 		};
 		this.#owned = owned;
 		this.#seeking++;
@@ -478,9 +481,12 @@ export class SearchClient {
 		const control = new Rpc((message, transfer) => worker.postMessage(message, transfer));
 		owned.worker = worker;
 		owned.control = control;
-		worker.onmessage = (e: MessageEvent<Reply | ResyncEvent>) => {
-			if ('type' in e.data) void this.#resync(owned);
-			else control.settle(e.data);
+		worker.onmessage = (e: MessageEvent<Reply | WorkerEvent>) => {
+			const m = e.data;
+			if (!('type' in m)) control.settle(m);
+			else if (m.type === 'resync') void this.#resync(owned);
+			else if (m.op === 'spawn') this.#spawnModel(owned);
+			else this.#stopModel(owned);
 		};
 		worker.onerror = () => {
 			control.fail('crashed');
@@ -506,9 +512,10 @@ export class SearchClient {
 						bridge,
 						parser,
 						paused: prefs.paused,
+						semantic: prefs.semantic,
 						syncPending: true
 					}
-				: { op: 'memory', bridge, parser, mode: this.mode, paused: prefs.paused };
+				: { op: 'memory', bridge, parser, mode: this.mode, paused: prefs.paused, semantic: prefs.semantic };
 		const transfer: Transferable[] = [];
 		if (keystore) transfer.push(keystore);
 		if (bridge) transfer.push(bridge);
@@ -536,6 +543,40 @@ export class SearchClient {
 		this.#post({ op: 'own', accountId: this.accountId });
 		if (record) void this.#resync(owned);
 		return 'ready';
+	}
+
+	#spawnModel(owned: Ownership): void {
+		const control = owned.control;
+		if (!control) return;
+		this.#stopModel(owned);
+		const send = (port: MessagePort | null) => {
+			void control.call({ op: 'model', port } satisfies ControlRequest, undefined, port ? [port] : []).catch(() => port?.close());
+		};
+		if (this.#owned !== owned || !this.#deps.spawnModel) {
+			send(null);
+			return;
+		}
+		let model: Worker;
+		try {
+			model = this.#deps.spawnModel();
+		} catch {
+			send(null);
+			return;
+		}
+		owned.model = model;
+		const channel = new MessageChannel();
+		model.onerror = () => {
+			if (owned.model !== model) return;
+			this.#stopModel(owned);
+			send(null);
+		};
+		model.postMessage({ op: 'init', port: channel.port1 }, [channel.port1]);
+		send(channel.port2);
+	}
+
+	#stopModel(owned: Ownership): void {
+		owned.model?.terminate();
+		owned.model = null;
 	}
 
 	#resync(owned: Ownership): Promise<void> {
@@ -591,6 +632,7 @@ export class SearchClient {
 		owned.stopBridge?.();
 		owned.stopBridge = null;
 		this.#post({ op: 'release', accountId: this.accountId });
+		this.#stopModel(owned);
 		this.#dropLink(false);
 		if (owned.worker && owned.control) {
 			await owned.control.call({ op: 'close', wipe } satisfies ControlRequest, CLOSE_TIMEOUT_MS).catch(() => undefined);

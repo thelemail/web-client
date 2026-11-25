@@ -6,6 +6,7 @@ import type { SyncProgress } from '../sync/jobs';
 import type { CoverageCount, QueueCounts } from '../sync/store';
 import type { SearchSyncLimits } from '../../api/types';
 import type { ArtifactCounts } from '../artifacts/store';
+import type { ModelState } from '../model/link';
 
 export type Persistence = 'persistent' | 'session';
 export type Limit = 'session' | 'quota';
@@ -23,6 +24,7 @@ export interface SearchStatus {
 	sync: SyncStatus | null;
 	artifacts: ArtifactStatus | null;
 	cloud: CloudState | null;
+	semantic: ModelState | null;
 }
 
 export type CloudState = 'on' | 'off' | 'locked' | 'unavailable' | 'stale' | 'error';
@@ -55,9 +57,11 @@ export type ControlRequest =
 			bridge?: MessagePort;
 			parser?: MessagePort;
 			paused: boolean;
+			semantic: boolean;
 			syncPending: boolean;
 	  }
-	| { op: 'memory'; bridge?: MessagePort; parser?: MessagePort; mode: Mode; paused: boolean }
+	| { op: 'memory'; bridge?: MessagePort; parser?: MessagePort; mode: Mode; paused: boolean; semantic: boolean }
+	| { op: 'model'; port: MessagePort | null }
 	| { op: 'connect'; port: MessagePort }
 	| { op: 'sync'; sync: SyncAttach | null; cloud: CloudState | null }
 	| { op: 'activity'; conditions: Conditions }
@@ -103,6 +107,13 @@ export interface ProgressEvent {
 export interface ResyncEvent {
 	type: 'resync';
 }
+
+export interface ModelEvent {
+	type: 'model';
+	op: 'spawn' | 'stop';
+}
+
+export type WorkerEvent = ResyncEvent | ModelEvent;
 
 export type ClientMessage = Reply | StatusEvent | ProgressEvent;
 

@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const [base, buildDir] = process.argv.slice(2);
@@ -90,6 +90,13 @@ for (const path of FILES_200) await expect(path, 200, { cache: 'no-cache' });
 const asset = firstImmutableAsset(buildDir);
 if (!asset) failures.push(`no immutable asset under ${buildDir}/_app/immutable`);
 else await expect(asset, 200, { cache: 'public, max-age=31536000, immutable' });
+
+const models = join(buildDir, '_app/immutable/models');
+if (existsSync(models)) {
+	const [smallest] = readdirSync(models).sort((a, b) => statSync(join(models, a)).size - statSync(join(models, b)).size);
+	if (!smallest) failures.push(`no model asset under ${models}`);
+	else await expect(`/_app/immutable/models/${smallest}`, 200, { cache: 'public, max-age=31536000, immutable' });
+}
 
 if (failures.length) {
 	console.error(`static host check failed for ${buildDir}:`);

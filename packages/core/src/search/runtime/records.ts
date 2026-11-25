@@ -22,6 +22,7 @@ export interface SearchPrefs {
 	consent: Consent | null;
 	paused: boolean;
 	history: boolean;
+	semantic: boolean;
 }
 
 export interface RecordStore {
@@ -37,7 +38,7 @@ export interface PrefStore {
 }
 
 export function defaultPrefs(accountId: string): SearchPrefs {
-	return { accountId, consent: null, paused: false, history: false };
+	return { accountId, consent: null, paused: false, history: false, semantic: false };
 }
 
 const DB_NAME = 'thelemail-search-keys';
@@ -106,6 +107,11 @@ export const searchPrefs: PrefStore = {
 		await run(PREFS, 'readwrite', (s) => s.delete(accountId));
 	}
 };
+
+export async function semanticInUse(): Promise<boolean> {
+	const all = (await run(PREFS, 'readonly', (s) => s.getAll())) as Partial<SearchPrefs>[];
+	return all.some((p) => p.semantic === true);
+}
 
 export function memoryRecords(): RecordStore {
 	const records = new Map<string, SearchRecord>();

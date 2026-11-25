@@ -7,6 +7,7 @@ import { SearchHistory, historyKey } from './history';
 import { QueryEngine, type Provisional, type QueryOptions } from './run';
 import type { Coverage, Dimension, SearchDocument, SourceKey, SourceMetadata } from './types';
 import { SearchWriter, integrityCheck, maintain, type AttachmentText, type MaintenanceStep } from './writer';
+import { PassageStore } from '../model/store';
 
 export type HarnessRequest =
 	| { op: 'opfs' }
@@ -38,7 +39,10 @@ export type HarnessRequest =
 	| { op: 'historyKey'; key: Uint8Array }
 	| { op: 'historyAdd'; query: string; now: number }
 	| { op: 'historyList'; now: number }
-	| { op: 'historyClear' };
+	| { op: 'historyClear' }
+	| { op: 'passages'; method: PassageMethod; args: unknown[] };
+
+export type PassageMethod = 'adopt' | 'clear' | 'seed' | 'pending' | 'input' | 'put' | 'mark' | 'retryFailed' | 'count';
 
 export type HarnessReply = { id: number; ok: true; value: unknown } | { id: number; ok: false; error: string };
 
@@ -227,6 +231,10 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 		case 'historyClear':
 			history!.clear();
 			return null;
+		case 'passages': {
+			const store = new PassageStore(db!, writer!) as unknown as Record<PassageMethod, (...args: unknown[]) => unknown>;
+			return store[r.method](...r.args);
+		}
 	}
 }
 
