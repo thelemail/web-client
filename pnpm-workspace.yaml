@@ -9,6 +9,7 @@ overrides:
   '@tailwindcss/typography>postcss-selector-parser': ^6.1.5
 allowBuilds:
   core-js: false
+  protobufjs: false
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
