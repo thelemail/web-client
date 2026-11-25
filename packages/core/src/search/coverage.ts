@@ -31,7 +31,7 @@ const GAP_OF: Partial<Record<Coverage, Gap>> = {
 	[Coverage.timeout]: 'timeout'
 };
 
-export const SHOWN_DIMENSIONS: readonly Dimension[] = [Dimension.metadata, Dimension.body, Dimension.attachmentMetadata, Dimension.attachmentText];
+export const SHOWN_DIMENSIONS: readonly Dimension[] = [Dimension.metadata, Dimension.body, Dimension.attachmentMetadata, Dimension.attachmentText, Dimension.semantic];
 
 export function coverageOf(status: SearchStatus | null, relevant: readonly Dimension[]): CoverageView {
 	const sync = status?.sync ?? null;

@@ -3,7 +3,7 @@ import { keystore } from '$core/keystore/keystore-client';
 import type { Broadcast } from '$core/keystore/protocol';
 import { platform } from '$platform';
 import type { SearchClient } from './runtime/client';
-import { defaultPrefs, searchPrefs, searchRecords, type Consent, type SearchPrefs } from './runtime/records';
+import { defaultPrefs, searchPrefs, searchRecords, semanticInUse, type Consent, type SearchPrefs } from './runtime/records';
 
 interface Running {
 	accountId: string;
@@ -108,8 +108,9 @@ class SearchRuntime {
 	}
 
 	async clear(): Promise<void> {
-		await this.#update({ consent: 'declined', history: false });
+		await this.#update({ consent: 'declined', history: false, semantic: false });
 		await this.#restart(true);
+		await this.#dropUnusedModel();
 	}
 
 	async rebuild(): Promise<void> {
@@ -130,6 +131,20 @@ class SearchRuntime {
 
 	async retryFailed(): Promise<void> {
 		await this.#running?.client.then((c) => c.retryFailed()).catch(() => undefined);
+	}
+
+	async setSemantic(semantic: boolean): Promise<void> {
+		const accountId = this.#accountId;
+		if (!accountId || (semantic && !this.fullSearch)) return;
+		await this.#update({ semantic });
+		await this.#restart(false, false);
+		this.#channel?.postMessage({ accountId, restart: true });
+		if (!semantic) await this.#dropUnusedModel();
+	}
+
+	async #dropUnusedModel(): Promise<void> {
+		if (await semanticInUse().catch(() => true)) return;
+		await import('./model/assets').then((m) => m.dropAssets()).catch(() => undefined);
 	}
 
 	async setCloudSync(enabled: boolean): Promise<void> {
@@ -239,7 +254,9 @@ class SearchRuntime {
 	#onKeystore(accountId: string, b: Broadcast): void {
 		if (b.type === 'locked') void this.#stop(accountId, false);
 		else if (b.type === 'cleared' || b.type === 'clearedAll') {
-			void this.#stop(accountId, true).then(() => searchPrefs.delete(accountId).catch(() => undefined));
+			void this.#stop(accountId, true)
+				.then(() => searchPrefs.delete(accountId).catch(() => undefined))
+				.then(() => this.#dropUnusedModel());
 		} else if (b.type === 'vaultChanged') void this.#running?.client.then((c) => c.retry()).catch(() => undefined);
 		else if (b.type === 'aliasKeysChanged' || b.type === 'accountKeysChanged') this.#tell(accountId, 'describe', { retryLocked: true });
 	}
