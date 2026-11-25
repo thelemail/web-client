@@ -50,6 +50,8 @@ const STATEMENTS = {
 	deleteLiteral: 'DELETE FROM literals WHERE id = ?',
 	attachmentStates: 'SELECT q.state FROM attachment_queue q JOIN sources s ON s.kind = q.kind AND s.source_id = q.source_id AND s.content_rev = q.content_rev WHERE s.id = ?',
 	deleteDimension: 'DELETE FROM coverage WHERE source = ? AND dimension = ?',
+	deletePassages: 'DELETE FROM passages WHERE source = ?',
+	deletePassageRefs: 'DELETE FROM passage_refs WHERE source = ?',
 	deleteOtherCoverage: 'DELETE FROM coverage WHERE source = ? AND dimension != ?',
 	readCheckpoint: 'SELECT cursor FROM checkpoints WHERE job = ?',
 	writeCheckpoint: 'INSERT OR REPLACE INTO checkpoints (job, cursor) VALUES (?, ?)',
@@ -204,6 +206,13 @@ export class SearchWriter {
 		this.#run('deleteParticipants', [id]);
 		this.#run('deleteAttachments', [id]);
 		this.#run('deleteCoverage', [id]);
+		this.#clearPassages(id);
+	}
+
+	#clearPassages(id: number): void {
+		this.#run('deletePassageRefs', [id]);
+		this.#run('deletePassages', [id]);
+		this.#run('deleteDimension', [id, Dimension.semantic]);
 	}
 
 	#deletePart(part: number): void {
@@ -224,6 +233,7 @@ export class SearchWriter {
 		this.#run('deleteParticipants', [id]);
 		this.#run('deleteAttachments', [id]);
 		this.#run('deleteOtherCoverage', [id, Dimension.attachmentText]);
+		this.#clearPassages(id);
 	}
 
 	#refreshAttachmentCoverage(id: number, clear = true): void {
@@ -350,6 +360,7 @@ export class SearchWriter {
 			const existing = this.#find(key);
 			if (!existing || existing.contentRev !== text.contentRevision) return false;
 			for (const part of this.#column<number>('attachmentPartIds', [existing.id, Field.attachmentText, text.attachmentId])) this.#deletePart(part);
+			this.#clearPassages(existing.id);
 			text.parts.forEach((p, locator) => {
 				if (!p.text) return;
 				const part = this.#addPart(existing.id, Field.attachmentText, p.text, text.attachmentId, locator, p.place);

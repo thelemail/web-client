@@ -196,6 +196,27 @@ export const MIGRATIONS: readonly string[] = [
 		PRIMARY KEY (kind, source_id)
 	) WITHOUT ROWID;
 	CREATE INDEX artifact_index_listed ON artifact_index (kind, source_id, content_rev) WHERE state = 0;
+	`,
+	`
+	CREATE TABLE passages (
+		source INTEGER NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+		ordinal INTEGER NOT NULL,
+		epoch INTEGER NOT NULL,
+		field INTEGER NOT NULL,
+		attachment_id TEXT,
+		place TEXT,
+		vector BLOB NOT NULL,
+		PRIMARY KEY (source, ordinal)
+	) WITHOUT ROWID;
+
+	CREATE TABLE passage_refs (
+		source INTEGER NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+		ordinal INTEGER NOT NULL,
+		part INTEGER NOT NULL,
+		start INTEGER NOT NULL,
+		end INTEGER NOT NULL,
+		PRIMARY KEY (source, ordinal, part, start)
+	) WITHOUT ROWID;
 	`
 ];
 
@@ -218,7 +239,9 @@ const REQUIRED_TABLES = [
 	'source_aliases',
 	'history',
 	'attachment_queue',
-	'artifact_index'
+	'artifact_index',
+	'passages',
+	'passage_refs'
 ];
 
 export type SchemaState =
