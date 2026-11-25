@@ -344,3 +344,83 @@ describe('unlock epoch', () => {
 		expect(await gone).toBe(true);
 	});
 });
+
+describe('model lease', () => {
+	type Claimed = { ok: true; fence: number } | { ok: false; code: string; retryMs?: number };
+	type Renewed = { ok: true; live: boolean } | { ok: false; code: string };
+
+	function events(port: MessagePort): unknown[] {
+		const out: unknown[] = [];
+		port.addEventListener('message', (ev: MessageEvent) => {
+			if (ev.data?.type === 'event') out.push(ev.data);
+		});
+		port.start();
+		return out;
+	}
+
+	afterEach(() => vi.restoreAllMocks());
+
+	it('gives one holder a fence and keeps it on a repeated claim', async () => {
+		const { port } = await session(ACCOUNT);
+		const first = await ask<Claimed>(port, 'claimModelLease');
+		if (first === SILENT || !first.ok) throw new Error('claim refused');
+		expect(await ask<Claimed>(port, 'claimModelLease')).toEqual({ ok: true, fence: first.fence });
+		expect(await ask<Renewed>(port, 'renewModelLease', { fence: first.fence })).toEqual({ ok: true, live: true });
+		expect(await ask<Renewed>(port, 'renewModelLease', { fence: first.fence + 1 })).toEqual({ ok: true, live: false });
+	});
+
+	it('keeps a second account waiting while the holder renews', async () => {
+		const a = await session(ACCOUNT);
+		const b = await session(OTHER);
+		const held = await ask<Claimed>(a.port, 'claimModelLease');
+		if (held === SILENT || !held.ok) throw new Error('claim refused');
+		const waiting = await ask<Claimed>(b.port, 'claimModelLease');
+		expect(waiting).toMatchObject({ ok: false, code: 'busy' });
+		await ask(a.port, 'releaseModelLease', { fence: held.fence });
+		const next = await ask<Claimed>(b.port, 'claimModelLease');
+		if (next === SILENT || !next.ok) throw new Error('claim refused');
+		expect(next.fence).toBeGreaterThan(held.fence);
+		expect(await ask<Renewed>(a.port, 'renewModelLease', { fence: held.fence })).toEqual({ ok: true, live: false });
+	});
+
+	it('fences a stale holder, waits for it to let go, then hands over', async () => {
+		const now = vi.spyOn(Date, 'now');
+		now.mockReturnValue(1_000_000);
+		const a = await session(ACCOUNT);
+		const b = await session(OTHER);
+		const fencedEvents = events(a.port);
+		const held = await ask<Claimed>(a.port, 'claimModelLease');
+		if (held === SILENT || !held.ok) throw new Error('claim refused');
+		now.mockReturnValue(1_000_000 + 31_000);
+		expect(await ask<Claimed>(b.port, 'claimModelLease')).toMatchObject({ ok: false, code: 'busy' });
+		expect(fencedEvents).toEqual([{ type: 'event', event: 'modelFenced', fence: held.fence }]);
+		expect(await ask<Renewed>(a.port, 'renewModelLease', { fence: held.fence })).toEqual({ ok: true, live: false });
+		await ask(a.port, 'releaseModelLease', { fence: held.fence });
+		expect(await ask<Claimed>(b.port, 'claimModelLease')).toMatchObject({ ok: true });
+	});
+
+	it('hands over after the release wait when a fenced holder never answers', async () => {
+		const now = vi.spyOn(Date, 'now');
+		now.mockReturnValue(2_000_000);
+		const a = await session(ACCOUNT);
+		const b = await session(OTHER);
+		await ask<Claimed>(a.port, 'claimModelLease');
+		now.mockReturnValue(2_000_000 + 31_000);
+		expect(await ask<Claimed>(b.port, 'claimModelLease')).toMatchObject({ ok: false, code: 'busy' });
+		now.mockReturnValue(2_000_000 + 31_000 + 5 * 60_000);
+		expect(await ask<Claimed>(b.port, 'claimModelLease')).toMatchObject({ ok: true });
+	});
+
+	it('frees the lease when the holder locks', async () => {
+		const a = await session(ACCOUNT);
+		const b = await session(OTHER);
+		await ask<Claimed>(a.port, 'claimModelLease');
+		handleLock({ accountId: ACCOUNT });
+		expect(await ask<Claimed>(b.port, 'claimModelLease')).toMatchObject({ ok: true });
+	});
+
+	it('refuses a lease renewal without a fence', async () => {
+		const { port } = await session(ACCOUNT);
+		expect(await ask(port, 'renewModelLease', {})).toEqual({ ok: false, code: 'invalid' });
+	});
+});

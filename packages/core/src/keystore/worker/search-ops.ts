@@ -1,13 +1,17 @@
 /// <reference lib="webworker" />
 
 import type {
+	ClaimModelLeaseResponse,
 	CloseSearchSessionArgs,
 	DeriveSearchDbKeyArgs,
+	ModelLeaseArgs,
 	OpenSearchArtifactArgs,
 	OpenSearchRootArgs,
 	OpenSearchRootResponse,
+	RenewModelLeaseResponse,
 	SealSearchArtifactArgs,
 	SearchArtifactRef,
+	SearchSessionEvent,
 	SearchSessionRefusal,
 	SearchSessionRequest,
 	SearchSessionResponse
@@ -23,6 +27,8 @@ import type { VaultState } from './state';
 import { onVaultGone, vaults } from './state';
 
 const MAX_SESSIONS_PER_ACCOUNT = 8;
+export const MODEL_LEASE_STALE_MS = 30_000;
+export const MODEL_RELEASE_WAIT_MS = 5 * 60_000;
 
 interface Session {
 	accountId: string;
@@ -33,9 +39,18 @@ interface Session {
 	root: Uint8Array;
 }
 
+interface Lease {
+	session: Session;
+	fence: number;
+	at: number;
+}
+
 const epochs = new Map<string, number>();
 const sessions = new Set<Session>();
 let everyAccountEpoch = 0;
+let fences = 0;
+let lease: Lease | null = null;
+let fenced: Lease | null = null;
 
 export function unlockEpoch(accountId: string): number {
 	return everyAccountEpoch + (epochs.get(accountId) ?? 0);
@@ -43,6 +58,8 @@ export function unlockEpoch(accountId: string): number {
 
 function end(s: Session): void {
 	if (!sessions.delete(s)) return;
+	if (lease?.session === s) lease = null;
+	if (fenced?.session === s) fenced = null;
 	s.root.fill(0);
 	s.port.onmessage = null;
 	s.port.close();
@@ -64,6 +81,51 @@ function live(s: Session): boolean {
 	end(s);
 	return false;
 }
+
+function claimModel(s: Session, now: number): ClaimModelLeaseResponse {
+	if (lease?.session === s) {
+		lease.at = now;
+		return { ok: true, fence: lease.fence };
+	}
+	if (lease && live(lease.session) && now - lease.at < MODEL_LEASE_STALE_MS) {
+		return { ok: false, code: 'busy', retryMs: MODEL_LEASE_STALE_MS - (now - lease.at) };
+	}
+	if (lease) {
+		const old = lease;
+		lease = null;
+		if (live(old.session)) {
+			fenced = { ...old, at: now };
+			old.session.port.postMessage({ type: 'event', event: 'modelFenced', fence: old.fence } satisfies SearchSessionEvent);
+		}
+	}
+	if (fenced && live(fenced.session) && now - fenced.at < MODEL_RELEASE_WAIT_MS) {
+		return { ok: false, code: 'busy', retryMs: Math.min(MODEL_LEASE_STALE_MS, MODEL_RELEASE_WAIT_MS - (now - fenced.at)) };
+	}
+	fenced = null;
+	lease = { session: s, fence: ++fences, at: now };
+	return { ok: true, fence: lease.fence };
+}
+
+function renewModel(s: Session, fence: number, now: number): RenewModelLeaseResponse {
+	if (lease?.session !== s || lease.fence !== fence) return { ok: true, live: false };
+	lease.at = now;
+	return { ok: true, live: true };
+}
+
+function releaseModel(s: Session, fence: number): RenewModelLeaseResponse {
+	if (lease?.session === s && lease.fence === fence) lease = null;
+	if (fenced?.session === s && fenced.fence === fence) fenced = null;
+	return { ok: true, live: false };
+}
+
+function leaseCommand(s: Session, msg: SearchSessionRequest): unknown {
+	const fence = (msg.args as ModelLeaseArgs | undefined)?.fence;
+	if (msg.cmd === 'claimModelLease') return claimModel(s, Date.now());
+	if (!Number.isSafeInteger(fence)) return { ok: false, code: 'invalid' } satisfies SearchSessionRefusal;
+	return msg.cmd === 'renewModelLease' ? renewModel(s, fence!, Date.now()) : releaseModel(s, fence!);
+}
+
+const LEASE_COMMANDS: readonly string[] = ['claimModelLease', 'renewModelLease', 'releaseModelLease'];
 
 function refusal(err: unknown): SearchSessionRefusal {
 	if (err instanceof ProductKeysError) return { ok: false, code: err.code === 'too-large' ? 'too_large' : 'invalid' };
@@ -125,6 +187,10 @@ async function serve(s: Session, msg: SearchSessionRequest): Promise<void> {
 	if (!live(s)) return;
 	if (msg.cmd === 'closeSearchSession') {
 		end(s);
+		return;
+	}
+	if (LEASE_COMMANDS.includes(msg.cmd)) {
+		s.port.postMessage({ type: 'response', id: msg.id, value: leaseCommand(s, msg) } satisfies SearchSessionResponse);
 		return;
 	}
 	const root = s.root.slice();
