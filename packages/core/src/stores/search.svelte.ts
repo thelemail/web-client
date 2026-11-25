@@ -22,7 +22,7 @@ const DESKTOP_LIMIT = 200;
 const PREVIEW_ROWS = 6;
 const NO_COMPLETIONS: Completions = { terms: [], people: [] };
 
-export type SearchPhase = 'idle' | 'starting' | 'searching' | 'ready' | 'failed' | 'locked' | 'unavailable';
+export type SearchPhase = 'idle' | 'starting' | 'searching' | 'ready' | 'failed' | 'locked' | 'unconverted' | 'unavailable';
 
 function messageFromHit(hit: SearchHit): Message {
 	const display = hit.senderDisplay || hit.senderAddress || m.mailbox_unknown_sender();
@@ -67,7 +67,7 @@ function ready(client: SearchClient): Promise<void> {
 		};
 		off = client.subscribe((s) => {
 			if (s.phase === 'ready') finish();
-			else if (s.phase === 'locked' || s.phase === 'failed' || s.phase === 'closed') finish(new Error(s.phase));
+			else if (s.phase === 'locked' || s.phase === 'unconverted' || s.phase === 'failed' || s.phase === 'closed') finish(new Error(s.phase));
 		});
 		if (done) off();
 	});
@@ -133,7 +133,7 @@ class MailSearchStore {
 		if (!this.active) return 'idle';
 		if (this.queryError) return 'failed';
 		const client = this.client?.phase;
-		if (!platform.mirror && (client === 'locked' || client === 'failed')) return client === 'locked' ? 'locked' : 'unavailable';
+		if (!platform.mirror && (client === 'locked' || client === 'unconverted' || client === 'failed')) return client === 'failed' ? 'unavailable' : client;
 		if (this.failed) return 'failed';
 		if (this.searching) return this.summary || this.provisional ? 'searching' : 'starting';
 		return 'ready';

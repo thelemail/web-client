@@ -19,6 +19,7 @@ interface Rig {
 	records: RecordStore;
 	workers: Worker[];
 	locked: boolean;
+	unconverted: boolean;
 	opened: number;
 	client(overrides?: Partial<ClientDeps>): SearchClient;
 }
@@ -36,6 +37,7 @@ function rig(): Rig {
 		records: memoryRecords(),
 		workers: [],
 		locked: false,
+		unconverted: false,
 		opened: 0,
 		client(overrides = {}) {
 			const deps: ClientDeps = {
@@ -50,6 +52,10 @@ function rig(): Rig {
 					if (self.locked) {
 						port.close();
 						return { ok: false, code: 'locked' };
+					}
+					if (self.unconverted) {
+						port.close();
+						return { ok: false, code: 'unavailable' };
 					}
 					self.opened++;
 					port.onmessage = (e) => {
@@ -211,6 +217,18 @@ describe('search runtime', () => {
 		await until(a, (s) => s.phase === 'locked');
 		expect(r.workers).toHaveLength(0);
 		r.locked = false;
+		a.retry();
+		await until(a, ready('owner'));
+	});
+
+	it('waits for the account to finish converting, apart from a locked vault', async () => {
+		const r = rig();
+		r.unconverted = true;
+		const a = r.client();
+		a.start();
+		await until(a, (s) => s.phase === 'unconverted');
+		expect(r.workers).toHaveLength(0);
+		r.unconverted = false;
 		a.retry();
 		await until(a, ready('owner'));
 	});

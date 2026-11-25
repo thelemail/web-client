@@ -317,6 +317,13 @@ describe('mailSearch on the local index', () => {
 		expect(mailSearch.results).toEqual([]);
 	});
 
+	it('tells an account that has not finished converting apart from a locked one', async () => {
+		client.set({ phase: 'unconverted', role: null, status: null });
+		mailSearch.commit('budget');
+		await vi.waitFor(() => expect(mailSearch.phase).toBe('unconverted'));
+		expect(mailSearch.results).toEqual([]);
+	});
+
 	it('drops earlier rows when the device can no longer search', async () => {
 		answers([row('m1')]);
 		mailSearch.commit('budget');

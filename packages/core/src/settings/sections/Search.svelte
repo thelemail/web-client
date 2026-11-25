@@ -11,6 +11,7 @@
 	import type { SearchPrefs } from '$core/search/runtime/records';
 	import { Dimension } from '$core/search/sqlite/types';
 	import { mailSearch } from '$core/stores/search.svelte';
+	import { canFinishSearchSetup, finishSearchSetup } from '$core/search/finish-setup';
 	import { formatWhenLong } from '$core/mail/data';
 	import { m } from '$paraglide/messages.js';
 	import { MODEL_DOWNLOAD_BYTES } from '$core/search/model/download';
@@ -57,6 +58,7 @@
 	const statusLine = $derived.by(() => {
 		if (!saved) return m.settings_search_off_status();
 		if (phase === 'locked') return m.mail_search_locked_detail();
+		if (phase === 'unconverted') return m.mail_search_unconverted_detail();
 		if (phase === 'failed') return m.mail_search_unavailable_detail();
 		if (!status) return m.mail_search_starting();
 		if (status.limited === 'quota') return m.mail_search_quota();
@@ -167,6 +169,9 @@
 	<div class="setrow col" role="status" aria-live="polite">
 		<div class="info">
 			<div class="t">{statusLine}</div>
+			{#if phase === 'unconverted' && canFinishSearchSetup()}
+				<Button variant="secondary" size="sm" onclick={finishSearchSetup}>{m.mail_search_unconverted_action()}</Button>
+			{/if}
 			{#if saved && status}
 				<ul class="srch-cov-list">
 					{#each coverage.dimensions.filter((d) => DIMENSION_LABEL[d.dimension]) as d (d.dimension)}
