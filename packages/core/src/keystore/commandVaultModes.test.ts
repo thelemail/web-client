@@ -162,9 +162,9 @@ describe('commandVaultModes', () => {
 		}
 	);
 
-	it('lets both product vaults adopt a handoff and no account vault', () => {
+	it('lets both product vaults adopt a handoff, replacing a legacy account vault', () => {
 		for (const cmd of ['adoptHandoff', 'commitHandoff', 'discardHandoff'] as const) {
-			expect(commandVaultModes[cmd]).toEqual(['mail', 'calendar']);
+			expect(commandVaultModes[cmd]).toEqual(['account', 'mail', 'calendar']);
 		}
 	});
 

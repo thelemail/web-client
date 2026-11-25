@@ -133,6 +133,16 @@ function sameProductRoot(a: VaultState, b: VaultState): boolean {
 	return diff === 0;
 }
 
+export function dropLegacy(accountId: string): void {
+	const v = vaults.get(accountId);
+	if (!v || v.product) return;
+	v.masterKey?.fill(0);
+	v.masterKey = undefined;
+	v.keyPassword = '';
+	v.wrapKey = undefined;
+	vaults.delete(accountId);
+}
+
 export function installVault(v: VaultState): void {
 	const prev = vaults.get(v.accountId);
 	if (prev && prev !== v) {

@@ -79,9 +79,9 @@ describe('mail worker command gate', () => {
 		}
 	});
 
-	it('adopts a handoff only where no legacy vault is unlocked', () => {
+	it('adopts a handoff over a legacy vault as well as a mail one', () => {
 		for (const cmd of ['adoptHandoff', 'commitHandoff', 'discardHandoff'] as const) {
-			expect(commandAllowed(cmd, { accountId: LEGACY })).toBe(false);
+			expect(commandAllowed(cmd, { accountId: LEGACY })).toBe(true);
 			expect(commandAllowed(cmd, { accountId: MAIL })).toBe(true);
 			expect(commandAllowed(cmd, { accountId: LOCKED_MAIL })).toBe(true);
 			expect(commandAllowed(cmd, { accountId: UNKNOWN })).toBe(true);

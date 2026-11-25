@@ -29,6 +29,13 @@ vi.mock('$app/state', () => ({
 }));
 vi.mock('$platform', () => ({ platform: {} }));
 
+const moved = vi.hoisted(() => ({ signInMovedToAuth: vi.fn() }));
+vi.mock('$core/custody/unlock', () => moved);
+vi.mock('$core/products', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$core/products')>()),
+	productTarget: (audience: string) => (audience === 'auth' ? { origin: 'https://auth.thelemail.test' } : null)
+}));
+
 const OPERATION = 'op-rec';
 const PHRASE = [...Array(11).fill('abandon'), 'about'];
 
@@ -37,6 +44,7 @@ function button(label: string) {
 }
 
 async function enterPhrase() {
+	await vi.waitFor(() => expect(button(m.auth_sentence_next())).toBeDefined());
 	await fireEvent.click(button(m.auth_sentence_next())!);
 	await vi.waitFor(() => expect(document.querySelectorAll('.sp-words input')).toHaveLength(12));
 	const inputs = document.querySelectorAll<HTMLInputElement>('.sp-words input');
@@ -74,11 +82,35 @@ beforeEach(() => {
 		fn.mockReset();
 	}
 	recovery.discardRecovery.mockResolvedValue(undefined);
+	moved.signInMovedToAuth.mockReset();
+	moved.signInMovedToAuth.mockResolvedValue(false);
 });
 
 afterEach(() => {
 	cleanup();
 	vi.useRealTimers();
+});
+
+describe('recover page routing', () => {
+	it('sends recovery to the account origin once sign-in has moved there', async () => {
+		const assign = vi.fn();
+		vi.stubGlobal('location', { ...window.location, assign });
+		try {
+			moved.signInMovedToAuth.mockResolvedValue(true);
+			render(RecoverPage);
+
+			await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://auth.thelemail.test/recover?email=r@thelemail.com'));
+			expect(button(m.auth_sentence_next())).toBeUndefined();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('recovers here while sign-in is still on mail', async () => {
+		render(RecoverPage);
+
+		await vi.waitFor(() => expect(button(m.auth_sentence_next())).toBeDefined());
+	});
 });
 
 describe('recover page OPAQUE cleanup', () => {
