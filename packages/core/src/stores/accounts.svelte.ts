@@ -4,8 +4,10 @@ import {
 	deleteAccountSlot,
 	getAllAccountSlots,
 	putAccountSlot,
+	replaceAccountSlots,
 	type AccountSlotRecord
 } from '$core/keystore/idb';
+import { alignRecords, pickSlot, type SlotMap } from '$core/producthandoff/slots';
 import { syncSessionHint } from './session-hint';
 
 const CHANNEL_NAME = 'thelemail:accounts';
@@ -59,11 +61,26 @@ class AccountsStore {
 		return this.list.find((r) => r.accountId === accountId) ?? null;
 	}
 
-	allocateSlot(): number {
-		const used = new Set(this.list.map((r) => r.slot));
-		let n = 0;
-		while (used.has(n)) n++;
-		return n;
+	allocateSlot(prefer?: number | null, reserved?: Iterable<number>): number {
+		return pickSlot(this.list.map((r) => r.slot), prefer, reserved);
+	}
+
+	async alignSlots(target: SlotMap, incoming?: AccountSlotRecord): Promise<void> {
+		const all = await getAllAccountSlots();
+		const rest = all.filter((r) => r.accountId !== incoming?.accountId);
+		const records = incoming ? [...rest, this.#withSession(incoming, all)] : rest;
+		const next = alignRecords(records, target);
+		const before = new Map(all.map((r) => [r.accountId, r.slot]));
+		const unchanged = !incoming && next.every((r) => before.get(r.accountId) === r.slot);
+		if (!unchanged) await replaceAccountSlots(next);
+		await this.#reload();
+		if (!unchanged) this.#broadcast();
+	}
+
+	#withSession(record: AccountSlotRecord, all: AccountSlotRecord[]): AccountSlotRecord {
+		const sessionId = this.#sessions.get(record.accountId) ?? record.sessionId ?? all.find((r) => r.accountId === record.accountId)?.sessionId;
+		this.#sessions.delete(record.accountId);
+		return sessionId ? { ...record, sessionId } : record;
 	}
 
 	get lastActiveSlot(): number | null {
@@ -76,9 +93,7 @@ class AccountsStore {
 	}
 
 	async upsert(record: AccountSlotRecord): Promise<void> {
-		const sessionId = this.#sessions.get(record.accountId) ?? record.sessionId ?? this.byId(record.accountId)?.sessionId;
-		this.#sessions.delete(record.accountId);
-		await putAccountSlot(sessionId ? { ...record, sessionId } : record);
+		await putAccountSlot(this.#withSession(record, this.list));
 		await this.#reload();
 		this.#broadcast();
 	}

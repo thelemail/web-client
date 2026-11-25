@@ -90,6 +90,19 @@ export async function putAccountSlot(rec: AccountSlotRecord): Promise<void> {
 	await reqAsPromise(store.put(rec));
 }
 
+export async function replaceAccountSlots(records: AccountSlotRecord[]): Promise<void> {
+	const db = await openDb();
+	await new Promise<void>((resolve, reject) => {
+		const tx = db.transaction(ACCOUNTS_STORE, 'readwrite');
+		const store = tx.objectStore(ACCOUNTS_STORE);
+		store.clear();
+		for (const r of records) store.put(r);
+		tx.oncomplete = () => resolve();
+		tx.onerror = () => reject(tx.error);
+		tx.onabort = () => reject(tx.error);
+	});
+}
+
 export async function deleteAccountSlot(accountId: string): Promise<void> {
 	const store = await accountsTxn('readwrite');
 	await reqAsPromise(store.delete(accountId));
