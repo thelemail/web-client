@@ -11,7 +11,7 @@
 	import type { SearchPrefs } from '$core/search/runtime/records';
 	import { Dimension } from '$core/search/sqlite/types';
 	import { mailSearch } from '$core/stores/search.svelte';
-	import { canFinishSearchSetup, finishSearchSetup } from '$core/search/finish-setup';
+	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import { formatWhenLong } from '$core/mail/data';
 	import { m } from '$paraglide/messages.js';
 	import { MODEL_DOWNLOAD_BYTES } from '$core/search/model/download';

@@ -9,7 +9,7 @@
 		faXmark
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
-	import { canFinishSearchSetup, finishSearchSetup } from '$core/search/finish-setup';
+	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { DimensionCoverage, Gap } from '$core/search/coverage';
 	import type { Sort } from '$core/search/sqlite/compile';
 	import { formatWhenLong } from './data';

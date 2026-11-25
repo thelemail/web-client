@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, within } from '@testing-library/svelte';
 const finish = vi.hoisted(() => ({ canFinishSearchSetup: vi.fn(() => true), finishSearchSetup: vi.fn() }));
-vi.mock('$core/search/finish-setup', () => finish);
+vi.mock('$core/custody/search-setup', () => finish);
 
 import MessageList from './MessageList.svelte';
 import { EMPTY_FILTERS, type Message } from './data';

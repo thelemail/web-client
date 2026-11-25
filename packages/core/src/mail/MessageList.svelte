@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { canFinishSearchSetup, finishSearchSetup } from '$core/search/finish-setup';
+	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
