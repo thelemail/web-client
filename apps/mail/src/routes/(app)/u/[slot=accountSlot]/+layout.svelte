@@ -5,6 +5,7 @@
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import { realtime } from '$core/realtime/realtime.svelte';
 	import { accounts } from '$core/stores/accounts.svelte';
+	import { followAccountSlot } from '$core/stores/follow-slot.svelte';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
@@ -18,6 +19,11 @@
 
 	const accountId = $derived(data.accountId);
 	const slot = $derived(data.slot);
+
+	followAccountSlot(
+		() => accountId,
+		() => slot
+	);
 
 	$effect(() => {
 		lifecycle.setAccount(accountId);
