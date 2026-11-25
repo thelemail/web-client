@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Field } from '../sqlite/types';
-import type { EmbeddedPassage, EmbedInput, ModelMessage, ModelRequest } from './protocol';
+import type { EmbeddedPassage, EmbedInput, ModelCall, ModelMessage } from './protocol';
 
 let worker: Worker;
 let port: MessagePort;
 let next = 0;
 const progress: number[] = [];
 
-function call<T>(request: Omit<ModelRequest, 'id'>): Promise<T> {
+function call<T>(request: ModelCall): Promise<T> {
 	const id = next++;
 	return new Promise((resolve, reject) => {
 		const listener = (e: MessageEvent<ModelMessage>) => {

@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+/// <reference path="./virtual.d.ts" />
 import manifest from 'virtual:model-assets';
 import { browserAssetDeps } from './assets';
 import { Embedder, failureOf } from './engine';

@@ -22,6 +22,8 @@ export type ModelRequest =
 	| { op: 'query'; id: number; text: string }
 	| { op: 'cancel'; id: number };
 
+export type ModelCall = { [K in ModelRequest['op']]: Omit<Extract<ModelRequest, { op: K }>, 'id'> }[ModelRequest['op']];
+
 export type ModelReply = { type: 'reply'; id: number; ok: true; value: unknown } | { type: 'reply'; id: number; ok: false; reason: ModelFailure };
 
 export interface ModelProgress {

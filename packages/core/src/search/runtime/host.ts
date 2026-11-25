@@ -1,13 +1,6 @@
 /// <reference lib="webworker" />
 import type { Database } from '@thelemail/sqlite-wasm';
-import type {
-	DeriveSearchDbKeyResponse,
-	OpenSearchArtifactResponse,
-	SealSearchArtifactResponse,
-	SearchSessionCommand,
-	SearchSessionRequest,
-	SearchSessionResponse
-} from '../../keystore/protocol';
+import type { DeriveSearchDbKeyResponse, OpenSearchArtifactResponse, SealSearchArtifactResponse, SearchSessionRequest } from '../../keystore/protocol';
 import { deleteSearchDb, loadSqlite, openMemorySearchDb, openSearchDb, pauseSearchPool, pruneSearchDb, wipeSearchPool } from '../sqlite/engine';
 import { SearchHistory, historyKey } from '../sqlite/history';
 import { QueryEngine, yieldTask } from '../sqlite/run';
@@ -19,6 +12,8 @@ import type { SyncProgress } from '../sync/jobs';
 import { SyncStore } from '../sync/store';
 import { ArtifactStore } from '../artifacts/store';
 import { attachGeneration, type SyncSession } from '../artifacts/jobs';
+import { ModelLink } from '../model/link';
+import { PassageStore } from '../model/store';
 import {
 	directoryFor,
 	fileFor,
@@ -33,14 +28,15 @@ import {
 	type SearchStatus,
 	type StatusEvent,
 	type CloudState,
+	type ModelEvent,
 	type ResyncEvent,
 	type SyncAttach,
 	type SyncStatus
 } from './protocol';
-import { admit, requestPersistence } from './quota';
+import { admit, requestPersistence, type Admission } from './quota';
 import { Scheduler, type Job, type JobClass } from './scheduler';
+import { sessionCall } from './session';
 
-const KEY_TIMEOUT_MS = 10_000;
 const MAX_SESSIONS_PER_CLIENT = 4;
 const HEAVY: readonly JobClass[] = ['body', 'attachments', 'embeddings', 'artifacts'];
 
@@ -52,6 +48,9 @@ export interface JobContext {
 	readonly bridge: BridgeCaller | null;
 	readonly extractor: ExtractorPort;
 	readonly progress: SyncProgress;
+	readonly model: ModelLink | null;
+	readonly passages: PassageStore | null;
+	admit(bytes: number): Promise<Admission>;
 	sync(): SyncSession | null;
 	syncSettled(): boolean;
 	batch(job: string): Batch;
@@ -93,24 +92,8 @@ interface Open {
 	file: string | null;
 	sources: number;
 	sync: SyncStatus | null;
-}
-
-function sessionCall<T>(port: MessagePort, cmd: SearchSessionCommand, args: unknown): Promise<T | null> {
-	return new Promise((resolve) => {
-		const id = crypto.randomUUID();
-		const finish = (value: T | null) => {
-			clearTimeout(timer);
-			port.removeEventListener('message', listener);
-			resolve(value);
-		};
-		const listener = (e: MessageEvent<SearchSessionResponse>) => {
-			if (e.data?.type === 'response' && e.data.id === id) finish(e.data.value as T);
-		};
-		const timer = setTimeout(() => finish(null), KEY_TIMEOUT_MS);
-		port.addEventListener('message', listener);
-		port.start();
-		port.postMessage({ id, cmd, args } satisfies SearchSessionRequest);
-	});
+	model: ModelLink | null;
+	passages: PassageStore;
 }
 
 type SyncSlot = { state: 'off' } | { state: 'pending' } | { state: 'on'; session: SyncSession; port: MessagePort };
@@ -153,6 +136,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 	let installationSalt: Uint8Array | null = null;
 	let sync: SyncSlot = { state: 'off' };
 	let cloud: CloudState | null = null;
+	let spawning: ((port: MessagePort | null) => void) | null = null;
 	const clients = new Map<MessagePort, Client>();
 	const inflight = new Set<Promise<unknown>>();
 
@@ -168,7 +152,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			generation: o.engine.generation,
 			sync: o.sync,
 			artifacts: artifactStatus(o),
-			cloud
+			cloud,
+			semantic: o.model?.state ?? null
 		};
 	}
 
@@ -199,7 +184,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		file: string | null,
 		port: MessagePort | undefined,
 		parser: MessagePort | undefined,
-		paused: boolean
+		paused: boolean,
+		semantic: boolean
 	): Promise<void> {
 		const sqlite = await loadSqlite();
 		const writer = new SearchWriter(db);
@@ -225,14 +211,18 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			directory,
 			file,
 			sources: 0,
-			sync: null
+			sync: null,
+			model: null,
+			passages: new PassageStore(db, writer)
 		};
 		open = o;
+		if (semantic && mode === 'saved') o.model = new ModelLink(modelHost(o));
+		else o.passages.clear();
 		writer.onInsert(() => {
 			if (o.progress.phase === 'live') engine.generation++;
 		});
 		count(o);
-		const admission = persistence === 'session' ? async () => ({ ok: true }) as const : admit;
+		const admission = persistence === 'session' ? async (): Promise<Admission> => ({ ok: true }) : admit;
 		const ctx: JobContext = {
 			db,
 			writer,
@@ -241,6 +231,9 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			bridge,
 			extractor: o.extractor,
 			progress: o.progress,
+			model: o.model,
+			passages: o.passages,
+			admit: admission,
 			sync: () => (open === o && sync.state === 'on' ? sync.session : null),
 			syncSettled: () => sync.state === 'off' || (sync.state === 'on' && sync.session.listed),
 			batch: (job) => new Batch(writer, job, admission, () => scheduler.wake('maintenance')),
@@ -266,6 +259,32 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		if (paused) scheduler.pause(HEAVY);
 	}
 
+	function modelHost(o: Open): ConstructorParameters<typeof ModelLink>[0] {
+		return {
+			keystore: () => (open === o ? keystore : null),
+			spawn: () =>
+				new Promise((resolve) => {
+					spawning?.(null);
+					spawning = resolve;
+					scope.postMessage({ type: 'model', op: 'spawn' } satisfies ModelEvent);
+				}),
+			stop: () => scope.postMessage({ type: 'model', op: 'stop' } satisfies ModelEvent),
+			changed: publish
+		};
+	}
+
+	function model(port: MessagePort | null): void {
+		const waiting = spawning;
+		spawning = null;
+		if (waiting) {
+			waiting(open?.model ? port : null);
+			if (!open?.model) port?.close();
+			return;
+		}
+		if (port) port.close();
+		else open?.model?.crashed();
+	}
+
 	async function init(r: Extract<ControlRequest, { op: 'init' }>): Promise<InitResult> {
 		if (open) await close(false);
 		keystore = r.keystore;
@@ -284,19 +303,26 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		}
 		if (result.ok) {
 			sync = r.syncPending ? { state: 'pending' } : { state: 'off' };
-			await attach(result.db, 'persistent', 'saved', directory, file, r.bridge, r.parser, r.paused);
+			await attach(result.db, 'persistent', 'saved', directory, file, r.bridge, r.parser, r.paused, r.semantic);
 			void requestPersistence();
 			await pruneSearchDb(directory, file).catch(() => undefined);
 			return { ok: true, status: status(), rebuilt: result.rebuilt };
 		}
 		if (result.code === 'bad-key') return { ok: false, code: 'failed' };
-		return memory(r.bridge, r.parser, 'saved', r.paused, true);
+		return memory(r.bridge, r.parser, 'saved', r.paused, r.semantic, true);
 	}
 
-	async function memory(bridge: MessagePort | undefined, parser: MessagePort | undefined, mode: Mode, paused: boolean, keepKeystore = false): Promise<InitResult> {
+	async function memory(
+		bridge: MessagePort | undefined,
+		parser: MessagePort | undefined,
+		mode: Mode,
+		paused: boolean,
+		semantic: boolean,
+		keepKeystore = false
+	): Promise<InitResult> {
 		if (open) await close(false, keepKeystore);
 		try {
-			await attach(await openMemorySearchDb(), 'session', mode, null, null, bridge, parser, paused);
+			await attach(await openMemorySearchDb(), 'session', mode, null, null, bridge, parser, paused, semantic);
 		} catch {
 			return { ok: false, code: 'failed' };
 		}
@@ -306,6 +332,9 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 	async function close(wipe: boolean, keepKeystore = false): Promise<void> {
 		const o = open;
 		open = null;
+		o?.model?.close();
+		spawning?.(null);
+		spawning = null;
 		endSync(sync);
 		sync = { state: 'off' };
 		cloud = null;
@@ -452,6 +481,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 					o.store.retryFailed();
 					o.store.retryLocked();
 				});
+				o.scheduler.tell('embeddings', 'retry');
 				o.scheduler.wake();
 				return null;
 			}
@@ -488,7 +518,10 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			case 'init':
 				return init(r);
 			case 'memory':
-				return memory(r.bridge, r.parser, r.mode, r.paused);
+				return memory(r.bridge, r.parser, r.mode, r.paused, r.semantic);
+			case 'model':
+				model(r.port);
+				return null;
 			case 'connect':
 				if (!open) {
 					r.port.close();
