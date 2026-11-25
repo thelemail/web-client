@@ -9,6 +9,7 @@
 		faXmark
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { DimensionCoverage, Gap } from '$core/search/coverage';
 	import type { Sort } from '$core/search/sqlite/compile';
 	import { formatWhenLong } from './data';
@@ -49,6 +50,7 @@
 	const status = $derived.by(() => {
 		if (search.mode === 'desktop') return msg.mail_list_search_all();
 		if (search.phase === 'locked') return msg.mail_search_locked();
+		if (search.phase === 'unconverted') return msg.mail_search_unconverted();
 		if (search.phase === 'unavailable') return msg.mail_search_unavailable();
 		if (search.phase === 'failed') return search.error ? msg.mail_search_query_invalid() : msg.mail_search_failed();
 		if (search.phase === 'starting') return msg.mail_search_starting();
@@ -85,6 +87,9 @@
 	<div class="ss-row">
 		<Icon icon={faMagnifyingGlass} size={14} aria-hidden="true" />
 		<span class="ss-status">{status}</span>
+		{#if search.phase === 'unconverted' && canFinishSearchSetup()}
+			<button type="button" class="ss-link" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</button>
+		{/if}
 		{#if search.mode === 'preview'}
 			<span class="ss-mode">{msg.mail_search_preview_only()}</span>
 			{#if search.canEnable && search.consent !== null}

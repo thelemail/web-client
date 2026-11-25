@@ -1,35 +1,27 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { platform } from '$platform';
 	import RegisterFlow from '$core/auth/RegisterFlow.svelte';
-	import type { RegisterCheckout } from '$core/auth/register-checkout';
+	import { startCheckout } from '$core/auth/register-checkout';
 	import { resolveReturnTo } from '$core/auth/return-to';
-	import { createCheckoutSession } from '$core/api/billing';
-	import { changeMyWorkspaceType } from '$core/api/workspaces';
+	import { signInMovedToAuth } from '$core/custody/unlock';
+	import { startFor } from '$core/producthandoff/fallback';
 
-	async function checkout(slot: number, order: RegisterCheckout) {
-		try {
-			if (order.workspaceType !== 'personal') {
-				await changeMyWorkspaceType({ type: order.workspaceType });
-			}
-			const origin = platform.returnOrigin();
-			const { url } = await createCheckoutSession({
-				planCode: order.planCode,
-				interval: order.interval,
-				seats: order.seats,
-				successUrl: `${origin}/u/${slot}/billing/return`,
-				cancelUrl: `${origin}/u/${slot}/billing/choose?canceled=1`
+	let mode = $state<'checking' | 'here' | 'auth'>('checking');
+
+	onMount(async () => {
+		if (await signInMovedToAuth()) {
+			mode = 'auth';
+			await startFor(null, '/', 'register', page.url.search).catch(() => {
+				mode = 'here';
 			});
-			platform.openExternal(url);
-		} catch (err) {
-			console.error('register: checkout session failed', err);
-			await goto(`/u/${slot}/billing/choose`);
+			return;
 		}
-	}
+		mode = 'here';
+	});
 </script>
 
-<RegisterFlow
-	afterRegister={(slot) => goto(resolveReturnTo(page.url.searchParams.get('redirect'), slot))}
-	{checkout}
-/>
+{#if mode === 'here'}
+	<RegisterFlow afterRegister={(slot) => goto(resolveReturnTo(page.url.searchParams.get('redirect'), slot))} checkout={startCheckout} />
+{/if}

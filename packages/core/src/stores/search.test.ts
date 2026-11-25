@@ -54,6 +54,7 @@ vi.mock('$core/search/lazy', () => ({
 	searchRuntime: {
 		focus: (...a: unknown[]) => runtime.focus(...a),
 		client: () => (runtime.client ? Promise.resolve(runtime.client) : null),
+		subscribeAttach: () => () => {},
 		subscribeClient: (cb: () => void) => {
 			runtime.clientListeners.add(cb);
 			cb();
@@ -314,6 +315,13 @@ describe('mailSearch on the local index', () => {
 		client.set({ phase: 'locked', role: null, status: null });
 		mailSearch.commit('budget');
 		await vi.waitFor(() => expect(mailSearch.phase).toBe('locked'));
+		expect(mailSearch.results).toEqual([]);
+	});
+
+	it('tells an account that has not finished converting apart from a locked one', async () => {
+		client.set({ phase: 'unconverted', role: null, status: null });
+		mailSearch.commit('budget');
+		await vi.waitFor(() => expect(mailSearch.phase).toBe('unconverted'));
 		expect(mailSearch.results).toEqual([]);
 	});
 

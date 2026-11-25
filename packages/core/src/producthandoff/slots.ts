@@ -65,8 +65,9 @@ export function alignRecords(records: readonly AccountSlotRecord[], target: Slot
 	return placed.sort((a, b) => a.slot - b.slot);
 }
 
-export function withSlots(callback: string, slot: number, map: SlotMap): string {
+export function withSlots(callback: string, slot: number, map: SlotMap, route?: string | null): string {
 	const extra = new URLSearchParams({ slot: String(slot), slots: encodeSlots(map) });
+	if (route) extra.set('route', route);
 	return `${callback}${callback.includes('#') ? '&' : '#'}${extra.toString()}`;
 }
 

@@ -3,9 +3,9 @@ import { handOffToApp } from '$core/products';
 import type { AccountSlotRecord } from '$core/keystore/idb';
 import { startHandoff } from './begin';
 
-export async function startFor(accountId: string | null, route: string, intent?: 'register'): Promise<never> {
+export async function startFor(accountId: string | null, route: string, intent?: 'register', registerQuery?: string): Promise<never> {
 	try {
-		await startHandoff({ expectedAccountId: accountId, route, remember: true, ...(intent ? { intent } : {}) });
+		await startHandoff({ expectedAccountId: accountId, route, remember: true, ...(intent ? { intent, registerQuery } : {}) });
 	} catch (err) {
 		if (err instanceof ApiCallError && err.envelope?.error?.code === 'auth_origin_unavailable') return handOffToApp();
 		throw err;

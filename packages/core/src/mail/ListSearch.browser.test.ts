@@ -59,6 +59,7 @@ vi.mock('$core/search/lazy', () => {
 		searchRuntime: {
 			focus: async () => {},
 			client: () => Promise.resolve(client),
+			subscribeAttach: () => () => {},
 			subscribeClient: (cb: () => void) => {
 				cb();
 				return () => {};

@@ -2,6 +2,21 @@ import { decodeSlots, type SlotMap } from './slots';
 
 const PENDING_KEY = 'thelemail-authorize';
 const LOGIN_TRIED_KEY = 'thelemail-authorize-login';
+const ROUTE_KEY = 'thelemail-authorize-route';
+
+const REGISTER_KEYS = ['plan', 'billing', 'src'] as const;
+
+export function registerParams(query: string | null | undefined): string | null {
+	if (!query) return null;
+	const from = new URLSearchParams(query.replace(/^[?#]/, ''));
+	const kept = new URLSearchParams();
+	for (const key of REGISTER_KEYS) {
+		const value = from.get(key);
+		if (value && /^[a-z0-9_-]{1,32}$/i.test(value)) kept.set(key, value);
+	}
+	const out = kept.toString();
+	return out === '' ? null : out;
+}
 
 export function takeAuthorizeFragment(): string | null {
 	const w = window as unknown as { __thelemailAuthorize?: string };
@@ -41,6 +56,22 @@ export function hasPendingAuthorize(): boolean {
 export function clearPendingAuthorize(): void {
 	sessionStorage.removeItem(PENDING_KEY);
 	sessionStorage.removeItem(LOGIN_TRIED_KEY);
+	sessionStorage.removeItem(ROUTE_KEY);
+}
+
+export function authorizeRegisterQuery(fragment: string | null): string {
+	if (!fragment) return '';
+	const raw = new URLSearchParams(fragment.replace(/^#/, '')).get('register');
+	const register = registerParams(raw);
+	return register ? `?${register}` : '';
+}
+
+export function setAuthorizeRoute(route: string): void {
+	sessionStorage.setItem(ROUTE_KEY, route);
+}
+
+export function authorizeRoute(): string | null {
+	return sessionStorage.getItem(ROUTE_KEY);
 }
 
 export function markLoginTried(requestId: string): void {

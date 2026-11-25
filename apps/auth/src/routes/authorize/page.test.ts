@@ -11,7 +11,9 @@ const session = vi.hoisted(() => ({
 		tryRefresh: vi.fn(async () => true),
 		ensureVaultUnlocked: vi.fn(async () => true),
 		vaultUnlockedFor: vi.fn(() => true),
-		sessionLost: vi.fn(() => false)
+		sessionLost: vi.fn(() => false),
+		loadProfile: vi.fn(async () => undefined),
+		deletionFor: vi.fn((): { purgeAt: string } | null => null)
 	}
 }));
 vi.mock('$core/stores/session.svelte', () => session);
@@ -32,6 +34,10 @@ const flow = vi.hoisted(() => ({
 	authorizeHint: vi.fn(() => flow.hint),
 	intent: null as 'register' | null,
 	authorizeIntent: vi.fn(() => flow.intent),
+	registerQuery: '',
+	authorizeRegisterQuery: vi.fn(() => flow.registerQuery),
+	route: null as string | null,
+	authorizeRoute: vi.fn(() => flow.route),
 	locateRequest: vi.fn(async () => ({ requestId: 'req-1', descriptor: { expectedAccountId: flow.expected } })),
 	grantRequest: vi.fn(async () => 'http://app.test/auth/callback#code=c'),
 	clearPendingAuthorize: vi.fn(),
@@ -51,6 +57,8 @@ beforeEach(() => {
 	known.list = [];
 	flow.expected = null;
 	flow.intent = null;
+	flow.registerQuery = '';
+	flow.route = null;
 	flow.hint = null;
 	session.auth.accountId = 'acct-active';
 	for (const fn of [nav.goto, flow.grantRequest, flow.clearPendingAuthorize, session.auth.activate, replace]) fn.mockClear();
@@ -98,8 +106,18 @@ describe('authorize without a named account', () => {
 
 	it('opens registration when the product asked for a new account', async () => {
 		flow.intent = 'register';
+		flow.registerQuery = '?plan=family&billing=monthly';
 		render(Page);
-		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/register'));
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/register?plan=family&billing=monthly'));
+	});
+
+	it('hands back where checkout continues after a paid registration', async () => {
+		sessionStorage.setItem('tried', 'req-1');
+		flow.route = '/u/0/billing/start?plan=family&interval=month&type=family';
+		render(Page);
+		await vi.waitFor(() => expect(replace).toHaveBeenCalled());
+		const p = new URLSearchParams(new URL(replace.mock.calls[0][0] as string).hash.slice(1));
+		expect(p.get('route')).toBe('/u/0/billing/start?plan=family&interval=month&type=family');
 	});
 
 	it('stops instead of looping when sign-in for this request already happened', async () => {
@@ -109,6 +127,17 @@ describe('authorize without a named account', () => {
 		await vi.waitFor(() => expect(flow.clearPendingAuthorize).toHaveBeenCalled());
 		expect(nav.goto).not.toHaveBeenCalled();
 		expect(flow.grantRequest).not.toHaveBeenCalled();
+	});
+});
+
+describe('authorize for an account pending deletion', () => {
+	it('shows the cancel screen on the account origin instead of granting', async () => {
+		flow.expected = 'acct-named';
+		session.auth.deletionFor.mockReturnValueOnce({ purgeAt: '2026-12-02T00:00:00Z' });
+		render(Page);
+		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalledWith('/u/1/deletion-pending'));
+		expect(flow.grantRequest).not.toHaveBeenCalled();
+		expect(flow.clearPendingAuthorize).not.toHaveBeenCalled();
 	});
 });
 

@@ -36,7 +36,7 @@ const SALT_BYTES = 32;
 const MAX_CRASHES = 3;
 const RESYNC_RETRY_MS = 60_000;
 
-export type Phase = 'starting' | 'ready' | 'locked' | 'failed' | 'closed';
+export type Phase = 'starting' | 'ready' | 'locked' | 'unconverted' | 'failed' | 'closed';
 export type Role = 'owner' | 'follower';
 
 export interface ClientState {
@@ -227,7 +227,7 @@ export class SearchClient {
 	}
 
 	retry(): void {
-		if (this.#closed || (this.#state.phase !== 'locked' && this.#state.phase !== 'failed')) return;
+		if (this.#closed || (this.#state.phase !== 'locked' && this.#state.phase !== 'unconverted' && this.#state.phase !== 'failed')) return;
 		this.#crashes = 0;
 		this.#set({ phase: 'starting', role: null, status: null });
 		this.#lastSign = Date.now();
@@ -357,7 +357,7 @@ export class SearchClient {
 		if (this.#closed || !this.#suspended) return;
 		this.#suspended = false;
 		this.#lastSign = Date.now();
-		if (this.#state.phase === 'locked' || this.#state.phase === 'failed') return;
+		if (this.#state.phase === 'locked' || this.#state.phase === 'unconverted' || this.#state.phase === 'failed') return;
 		this.#contest?.rejoin();
 		void this.#seek();
 	};
@@ -429,7 +429,7 @@ export class SearchClient {
 		void this.#seek();
 	}
 
-	async #root(port: MessagePort): Promise<{ record: SearchRecord } | { code: 'locked' | 'failed' }> {
+	async #root(port: MessagePort): Promise<{ record: SearchRecord } | { code: 'locked' | 'unconverted' | 'failed' }> {
 		const { accountId } = this;
 		const stored = await this.#deps.records.get(accountId);
 		const opened = await this.#deps.openRoot({ accountId, bundle: stored?.bundle }, port);
@@ -446,7 +446,8 @@ export class SearchClient {
 			await this.#deps.records.put(record);
 			return { record };
 		}
-		if (opened.code === 'locked' || opened.code === 'unavailable') return { code: 'locked' };
+		if (opened.code === 'locked') return { code: 'locked' };
+		if (opened.code === 'unavailable') return { code: 'unconverted' };
 		if (!stored) return { code: 'failed' };
 		await this.#deps.records.delete(accountId);
 		return { code: 'failed' };
@@ -471,7 +472,7 @@ export class SearchClient {
 					keystore = channel.port1;
 				} else {
 					channel.port1.close();
-					if (root.code === 'locked') return 'locked';
+					if (root.code === 'locked' || root.code === 'unconverted') return root.code;
 				}
 			}
 			if (!record || !keystore) return 'failed';

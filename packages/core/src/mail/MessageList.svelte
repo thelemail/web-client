@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
@@ -171,7 +172,7 @@
 	const fmt = (n: number) => new Intl.NumberFormat().format(n);
 	const activeFilters = $derived(countActiveFilters(filters));
 
-	const searchEmpty = $derived.by<{ title: string; detail: string; retry: boolean } | null>(() => {
+	const searchEmpty = $derived.by<{ title: string; detail: string; retry: boolean; finish?: boolean } | null>(() => {
 		if (!search) return null;
 		switch (search.phase) {
 			case 'failed':
@@ -180,6 +181,8 @@
 					: { title: msg.mail_search_failed(), detail: msg.mail_search_failed_detail(), retry: true };
 			case 'locked':
 				return { title: msg.mail_search_locked(), detail: msg.mail_search_locked_detail(), retry: false };
+			case 'unconverted':
+				return { title: msg.mail_search_unconverted(), detail: msg.mail_search_unconverted_detail(), retry: false, finish: canFinishSearchSetup() };
 			case 'unavailable':
 				return { title: msg.mail_search_unavailable(), detail: msg.mail_search_unavailable_detail(), retry: true };
 			case 'starting':
@@ -813,7 +816,9 @@
 				{#if errorParts}
 					<code class="q-err" dir="auto">{errorParts.before}<mark>{errorParts.bad}</mark>{errorParts.after}</code>
 				{/if}
-				{#if search && searchEmpty?.retry}
+				{#if search && searchEmpty?.finish}
+					<button class="empty-clear" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</button>
+				{:else if search && searchEmpty?.retry}
 					<button class="empty-clear" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</button>
 				{:else if search}
 					<button class="empty-clear" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</button>

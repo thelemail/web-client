@@ -78,6 +78,12 @@ describe('starting a handoff', () => {
 		expect(fragment.get('intent')).toBe('register');
 	});
 
+	it('carries only the plan, billing period and source into a registration', async () => {
+		await startHandoff({ expectedAccountId: null, route: '/', remember: false, intent: 'register', registerQuery: '?plan=family&billing=monthly&src=pricing&redirect=https://evil.test' });
+		const fragment = new URLSearchParams(new URL(assign.mock.calls[0][0] as string).hash.slice(1));
+		expect(fragment.get('register')).toBe('plan=family&billing=monthly&src=pricing');
+	});
+
 	it('refuses a descriptor that names another existing session', async () => {
 		created.tamper = (d) => {
 			d.existingSessionId = '7c1e2d3f-4a5b-4c6d-8e7f-90a1b2c3d4e5';

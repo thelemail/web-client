@@ -6,7 +6,8 @@ const session = vi.hoisted(() => ({
 	activate: vi.fn(),
 	tryRefresh: vi.fn(async () => true),
 	ensureVaultUnlocked: vi.fn(async () => true),
-	loadProfile: vi.fn(async () => true)
+	loadProfile: vi.fn(async () => true),
+	deletionFor: vi.fn((): { purgeAt: string } | null => null)
 }));
 const accounts = vi.hoisted(() => ({
 	bySlot: vi.fn((slot: number) => (slot === 1 ? { accountId: 'acct-1', slot: 1 } : undefined))
@@ -22,8 +23,8 @@ import { load } from './+layout';
 
 type LoadEvent = Parameters<typeof load>[0];
 
-function event(slot: string): LoadEvent {
-	return { parent: async () => ({}), params: { slot } } as unknown as LoadEvent;
+function event(slot: string, path = `/u/${slot}`): LoadEvent {
+	return { parent: async () => ({}), params: { slot }, url: new URL(`http://auth.test${path}`) } as unknown as LoadEvent;
 }
 
 async function redirectOf(slot: string): Promise<string | null> {
@@ -81,5 +82,16 @@ describe('account guard', () => {
 		await expect(load(event('1'))).resolves.toEqual({ accountId: 'acct-1', slot: 1 });
 		expect(order).toEqual(['refresh', 'restore']);
 		expect(session.activate).toHaveBeenCalledWith('acct-1');
+	});
+});
+
+describe('an account pending deletion', () => {
+	it('goes to the cancel screen and skips key conversion', async () => {
+		session.isAuthenticated = true;
+		session.vaultUnlocked = true;
+		session.deletionFor.mockReturnValueOnce({ purgeAt: '2026-12-02T00:00:00Z' });
+		productKeys.ensureProductKeys.mockClear();
+		expect(await redirectOf('1')).toBe('/u/1/deletion-pending');
+		expect(productKeys.ensureProductKeys).not.toHaveBeenCalled();
 	});
 });

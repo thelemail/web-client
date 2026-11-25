@@ -4,7 +4,7 @@ import { accounts } from '$core/stores/accounts.svelte';
 import { ensureProductKeys } from '$core/auth/product-keys';
 import type { LayoutLoad } from './$types';
 
-export const load: LayoutLoad = async ({ parent, params }) => {
+export const load: LayoutLoad = async ({ parent, params, url }) => {
 	await parent();
 	const slot = Number(params.slot);
 	const record = accounts.bySlot(slot);
@@ -20,6 +20,10 @@ export const load: LayoutLoad = async ({ parent, params }) => {
 		throw redirect(307, `/login?slot=${slot}`);
 	}
 	await auth.loadProfile(accountId);
-	void ensureProductKeys(accountId).catch((err) => console.warn('product keys: conversion failed', err));
+	const pendingPath = `/u/${slot}/deletion-pending`;
+	const deletion = auth.deletionFor(accountId);
+	if (deletion && url.pathname !== pendingPath) throw redirect(307, pendingPath);
+	if (!deletion && url.pathname === pendingPath) throw redirect(307, `/u/${slot}`);
+	if (!deletion) void ensureProductKeys(accountId).catch((err) => console.warn('product keys: conversion failed', err));
 	return { accountId, slot };
 };

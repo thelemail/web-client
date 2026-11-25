@@ -2,9 +2,10 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import RegisterFlow from '$core/auth/RegisterFlow.svelte';
+	import { checkoutRoute, type RegisterCheckout } from '$core/auth/register-checkout';
 	import { requestPersistence } from '$core/auth/storage-persistence';
-	import { hasPendingAuthorize } from '$core/producthandoff/pending';
-	import { appOrigin, productTarget, registerStartUrl } from '$core/products';
+	import { hasPendingAuthorize, setAuthorizeRoute } from '$core/producthandoff/pending';
+	import { productTarget, registerStartUrl } from '$core/products';
 	import { auth } from '$core/stores/session.svelte';
 
 	let ready = $state(false);
@@ -19,8 +20,9 @@
 		await goto(auth.recoveryEnabled === false ? `/u/${slot}/recovery` : `/u/${slot}/mail`);
 	}
 
-	async function checkout() {
-		window.location.assign(`${appOrigin()}/login`);
+	async function checkout(slot: number, order: RegisterCheckout) {
+		setAuthorizeRoute(checkoutRoute(slot, order));
+		await afterRegister(slot);
 	}
 </script>
 

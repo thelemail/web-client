@@ -1,5 +1,8 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { render, within } from '@testing-library/svelte';
+const finish = vi.hoisted(() => ({ canFinishSearchSetup: vi.fn(() => true), finishSearchSetup: vi.fn() }));
+vi.mock('$core/custody/search-setup', () => finish);
+
 import MessageList from './MessageList.svelte';
 import { EMPTY_FILTERS, type Message } from './data';
 import { mailActionsFor } from './actions';
@@ -264,6 +267,15 @@ describe('MessageList search states', () => {
 	it('says search is locked rather than empty', () => {
 		const { container } = mount({ list: [], search: view({ phase: 'locked', groups: null, matches: null, final: false }) });
 		expect(container.querySelector('.empty-list .t')?.textContent).toBe('Search is locked');
+	});
+
+	it('asks for the password once when the account has not finished converting', () => {
+		const { container } = mount({ list: [], search: view({ phase: 'unconverted', groups: null, matches: null, final: false }) });
+		expect(container.querySelector('.empty-list .t')?.textContent).toBe('Search needs one more step');
+		const button = container.querySelector('.empty-clear') as HTMLButtonElement;
+		expect(button.textContent).toContain('Confirm password');
+		button.click();
+		expect(finish.finishSearchSetup).toHaveBeenCalled();
 	});
 
 	it('offers a retry when the device cannot search', () => {
