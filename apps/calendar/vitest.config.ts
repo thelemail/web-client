@@ -1,11 +1,9 @@
 import { defineConfig, mergeConfig } from 'vitest/config';
-import { modelAssets } from '../../scripts/model-assets.ts';
 import viteConfig from './vite.config';
 
 export default mergeConfig(
 	viteConfig,
 	defineConfig({
-		plugins: [modelAssets({ emit: false })],
 		resolve: { conditions: ['browser'] },
 		test: {
 			environment: 'jsdom',
