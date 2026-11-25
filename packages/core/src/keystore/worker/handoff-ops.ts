@@ -28,7 +28,7 @@ import type {
 import type { ProductVault } from './product-vault';
 import { decodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
-import { broadcast, cachedRecords, indexKeys, installVault, productAccounts, vaults, wipeProductRoot } from './state';
+import { broadcast, cachedRecords, dropLegacy, indexKeys, installVault, opaqueOps, pendingRotations, productAccounts, vaults, wipeProductRoot } from './state';
 
 interface PendingAdoption {
 	accountId: string;
@@ -200,6 +200,9 @@ async function commitMailAdoption(requestId: string, p: PendingAdoption): Promis
 	);
 	productAccounts.add(p.accountId);
 	cachedRecords.set(p.accountId, record);
+	pendingRotations.delete(p.accountId);
+	opaqueOps.forgetAccount(p.accountId);
+	dropLegacy(p.accountId);
 	await deleteVault(p.accountId);
 	await deleteStaged(requestId);
 }
@@ -219,6 +222,7 @@ export async function handleCommitHandoff(args: CommitHandoffArgs): Promise<Comm
 	indexKeys.delete(p.accountId);
 	pending.delete(args.requestId);
 	broadcast({ type: 'vaultChanged', accountId: p.accountId, email: p.state.email });
+	if (currentProduct === 'app') broadcast({ type: 'custodyChanged', accountId: p.accountId, email: p.state.email });
 	return { ok: true };
 }
 

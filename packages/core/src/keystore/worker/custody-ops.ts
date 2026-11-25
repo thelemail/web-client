@@ -31,7 +31,7 @@ import type {
 import type { ProductVault } from './product-vault';
 import { decodeProductVault, encodeProductVault, PRODUCT_VAULT_VERSION, productVaultState, reopenProductRecord, sealProductRecord, wipeProductVault } from './product-vault';
 import type { VaultState } from './state';
-import { broadcast, cachedRecords, fingerprintHexOf, indexKeys, installVault, opaqueOps, pendingRotations, productAccounts, vaults, wipeProductRoot } from './state';
+import { broadcast, cachedRecords, dropLegacy, fingerprintHexOf, indexKeys, installVault, opaqueOps, pendingRotations, productAccounts, vaults, wipeProductRoot } from './state';
 
 interface PendingCustody {
 	accountId: string;
@@ -192,16 +192,6 @@ function checkJournal(args: CustodyCommitArgs | CustodyRetireArgs, state: Custod
 		return { ok: false, code: 'invalid', message: `journal does not record ${state} for this migration` };
 	}
 	return null;
-}
-
-function dropLegacy(accountId: string): void {
-	const v = vaults.get(accountId);
-	if (!v || v.product) return;
-	v.masterKey?.fill(0);
-	v.masterKey = undefined;
-	v.keyPassword = '';
-	v.wrapKey = undefined;
-	vaults.delete(accountId);
 }
 
 export async function handleCustodyCommit(args: CustodyCommitArgs): Promise<CustodyCommitResponse> {

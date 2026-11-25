@@ -230,6 +230,61 @@ describe('mail adopts a handoff from the auth origin', () => {
 		expect(restored.aliasKeys.has(fp(alias))).toBe(true);
 	});
 
+	it('replaces a remembered legacy vault that is still unlocked', async () => {
+		legacyDb.records.set(ACCOUNT, { accountId: ACCOUNT, email: EMAIL, authScheme: 'opaque_v1', wrappedMasterKey: 'd3JhcHBlZA==', armoredEncryptedPrivateKey: 'legacy', updatedAt: 1 });
+		const masterKey = crypto.getRandomValues(new Uint8Array(32));
+		const legacy = { accountId: ACCOUNT, email: EMAIL, masterKey, keyPassword: KEY_PASSWORD, wrapKey: {} as CryptoKey, privateKey: keys[1] } as unknown as import('./state').VaultState;
+		state.vaults.set(ACCOUNT, legacy);
+		state.pendingRotations.set(ACCOUNT, {} as never);
+		const seen: { type: string }[] = [];
+		const port = { postMessage: (m: { type: string }) => seen.push(m) } as unknown as MessagePort;
+		state.ports.add(port);
+		try {
+			const args = await adoption(b64encode(crypto.getRandomValues(new Uint8Array(32))));
+			expect(gate.vaultModeOf(ACCOUNT)).toBe('account');
+			for (const cmd of ['adoptHandoff', 'commitHandoff', 'discardHandoff'] as const) expect(gate.commandAllowed(cmd, args)).toBe(true);
+			expect(await handleAdoptHandoff(args)).toMatchObject({ ok: true, durable: true });
+			expect(state.vaults.get(ACCOUNT)).toBe(legacy);
+			expect(legacyDb.records.has(ACCOUNT)).toBe(true);
+
+			expect(await handleCommitHandoff({ accountId: ACCOUNT, requestId: args.requestId })).toEqual({ ok: true });
+
+			expect(masterKey.every((b) => b === 0)).toBe(true);
+			expect(legacy.masterKey).toBeUndefined();
+			expect(legacy.keyPassword).toBe('');
+			expect(legacy.wrapKey).toBeUndefined();
+			expect(state.vaults.get(ACCOUNT)?.product).toBe('app');
+			expect(state.vaults.get(ACCOUNT)?.masterKey).toBeUndefined();
+			expect(state.pendingRotations.has(ACCOUNT)).toBe(false);
+			expect(legacyDb.records.has(ACCOUNT)).toBe(false);
+			expect(custodyDb.journals.get(ACCOUNT)).toMatchObject({ state: 'complete' });
+			expect(gate.vaultModeOf(ACCOUNT)).toBe('mail');
+			expect(gate.commandAllowed('prepareKeyRotation', { accountId: ACCOUNT })).toBe(false);
+			expect(seen.map((m) => m.type)).toEqual(['vaultChanged', 'custodyChanged']);
+		} finally {
+			state.ports.delete(port);
+			state.pendingRotations.clear();
+		}
+	});
+
+	it('keeps a remembered legacy vault when the handoff is discarded', async () => {
+		legacyDb.records.set(ACCOUNT, { accountId: ACCOUNT, email: EMAIL, authScheme: 'opaque_v1', armoredEncryptedPrivateKey: 'legacy', updatedAt: 1 });
+		const masterKey = new Uint8Array(32).fill(9);
+		const legacy = { accountId: ACCOUNT, email: EMAIL, masterKey, keyPassword: KEY_PASSWORD, privateKey: keys[1] } as unknown as import('./state').VaultState;
+		state.vaults.set(ACCOUNT, legacy);
+		const args = await adoption(b64encode(crypto.getRandomValues(new Uint8Array(32))));
+		expect(await handleAdoptHandoff(args)).toMatchObject({ ok: true });
+		await handleDiscardHandoff({ accountId: ACCOUNT, requestId: args.requestId });
+
+		expect(state.vaults.get(ACCOUNT)).toBe(legacy);
+		expect(legacy.masterKey).toBe(masterKey);
+		expect(masterKey.every((b) => b === 9)).toBe(true);
+		expect(legacy.keyPassword).toBe(KEY_PASSWORD);
+		expect(legacyDb.records.has(ACCOUNT)).toBe(true);
+		expect(custodyDb.vaults.size + custodyDb.journals.size + handoffDb.staged.size).toBe(0);
+		expect(gate.vaultModeOf(ACCOUNT)).toBe('account');
+	});
+
 	it('completes a migration that was waiting for its first auth visit', async () => {
 		const waiting: CustodyJournal = { accountId: ACCOUNT, schema: 1, migrationId: 'op-earlier', state: 'auth-ready', target: { kind: 'candidate', digest: 'ZA==' }, exchange: null, sessionId: 'child', startedAt: 5, updatedAt: 6, failure: null };
 		custodyDb.journals.set(ACCOUNT, waiting);
