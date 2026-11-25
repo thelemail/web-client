@@ -25,5 +25,5 @@
 </script>
 
 {#if ready}
-	<RegisterFlow {afterRegister} {checkout} />
+	<RegisterFlow {afterRegister} {checkout} remember />
 {/if}
