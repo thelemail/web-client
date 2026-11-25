@@ -28,6 +28,7 @@ import { auth } from '$core/stores/session.svelte';
 import { accounts } from '$core/stores/accounts.svelte';
 import { bytesToHex } from '$core/keys/encode';
 import { isAuthOrigin } from '$core/products';
+import { pendingProductSlots } from '$core/producthandoff/pending';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
 
@@ -522,7 +523,8 @@ async function finishLoginSession(
 		slot = existing.slot;
 		await accounts.upsert({ ...existing, email, lastActiveAt: now });
 	} else {
-		slot = accounts.allocateSlot();
+		const product = isAuthOrigin ? pendingProductSlots() : null;
+		slot = accounts.allocateSlot(product?.get(accountId), product?.values());
 		await accounts.upsert({ accountId, slot, email, addedAt: now, lastActiveAt: now });
 	}
 	auth.vaultOpened(accountId);

@@ -10,37 +10,12 @@ import type { StoredBundle } from '$core/keystore/productkeys/read';
 import { productOrigins } from '$core/products';
 import { HandoffError } from './begin';
 
-const PENDING_KEY = 'thelemail-authorize';
+export * from './pending';
 
 export interface LocatedRequest {
 	requestId: string;
 	digest: string;
 	descriptor: Descriptor;
-}
-
-export function takeAuthorizeFragment(): string | null {
-	const w = window as unknown as { __thelemailAuthorize?: string };
-	const fresh = w.__thelemailAuthorize;
-	delete w.__thelemailAuthorize;
-	if (fresh) {
-		sessionStorage.setItem(PENDING_KEY, fresh);
-		return fresh;
-	}
-	return sessionStorage.getItem(PENDING_KEY);
-}
-
-export function authorizeHint(fragment: string | null): string | null {
-	if (!fragment) return null;
-	const hint = new URLSearchParams(fragment.replace(/^#/, '')).get('hint');
-	return hint && hint.length <= 254 && /^[^\s@]+@[^\s@]+$/.test(hint) ? hint : null;
-}
-
-export function hasPendingAuthorize(): boolean {
-	return sessionStorage.getItem(PENDING_KEY) !== null;
-}
-
-export function clearPendingAuthorize(): void {
-	sessionStorage.removeItem(PENDING_KEY);
 }
 
 export async function locateRequest(fragment: string): Promise<LocatedRequest> {

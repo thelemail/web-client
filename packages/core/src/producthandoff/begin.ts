@@ -3,7 +3,9 @@ import { bytesEqual, sha256 } from '$core/keystore/productkeys/encoding';
 import { putRequest, purgeExpiredRequests } from '$core/keystore/handoff/store';
 import { b64url, challengeS256, parseDescriptor } from '$core/keystore/handoff/wire';
 import { productTarget } from '$core/products';
+import { accounts } from '$core/stores/accounts.svelte';
 import { bootstrap, createRequest } from './api';
+import { encodeSlots, slotsOf } from './slots';
 
 export const HANDOFF_TAB_PREFIX = 'thelemail-handoff:';
 
@@ -27,6 +29,7 @@ export interface StartOptions {
 	freshAuth?: boolean;
 	existingSessionId?: string | null;
 	hint?: string | null;
+	intent?: 'register';
 }
 
 export async function startHandoff(opts: StartOptions): Promise<void> {
@@ -83,5 +86,7 @@ export async function startHandoff(opts: StartOptions): Promise<void> {
 	sessionStorage.setItem(HANDOFF_TAB_PREFIX + descriptor.requestId, state);
 	const fragment = new URLSearchParams({ request: descriptor.requestId, digest: created.descriptorDigest });
 	if (opts.hint) fragment.set('hint', opts.hint);
+	if (opts.intent) fragment.set('intent', opts.intent);
+	if (accounts.list.length > 0) fragment.set('slots', encodeSlots(slotsOf(accounts.list)));
 	window.location.assign(`${authTarget.origin}/authorize#${fragment.toString()}`);
 }

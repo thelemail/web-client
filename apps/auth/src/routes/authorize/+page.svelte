@@ -10,14 +10,17 @@
 	import { auth } from '$core/stores/session.svelte';
 	import {
 		authorizeHint,
+		authorizeIntent,
 		clearPendingAuthorize,
 		grantRequest,
 		locateRequest,
+		loginTried,
+		markLoginTried,
 		takeAuthorizeFragment
 	} from '$core/producthandoff/authorize';
+	import { slotsOf, withSlots } from '$core/producthandoff/slots';
 	import { m } from '$paraglide/messages.js';
 
-	const LOGIN_TRIED = 'thelemail-authorize-login';
 	const UID_SYNC_WAIT_MS = 4000;
 	const fragment = takeAuthorizeFragment();
 	let error = $state<string | null>(null);
@@ -32,18 +35,18 @@
 
 	function fail(message: string) {
 		clearPendingAuthorize();
-		sessionStorage.removeItem(LOGIN_TRIED);
 		error = message;
 	}
 
-	async function signIn(slot: number | null) {
-		if (sessionStorage.getItem(LOGIN_TRIED)) {
+	async function signIn(requestId: string, slot: number | null) {
+		if (loginTried(requestId)) {
 			fail(m.handoff_auth_other_account());
 			return;
 		}
-		sessionStorage.setItem(LOGIN_TRIED, '1');
+		markLoginTried(requestId);
 		const hint = authorizeHint(fragment);
-		if (slot !== null) await goto(`/login?slot=${slot}`);
+		if (authorizeIntent(fragment) === 'register' && slot === null) await goto('/register');
+		else if (slot !== null) await goto(`/login?slot=${slot}`);
 		else if (hint) await goto(`/login?${new URLSearchParams({ hint }).toString()}`);
 		else await goto('/login');
 	}
@@ -56,10 +59,10 @@
 		try {
 			const req = await locateRequest(fragment);
 			const expected = req.descriptor.expectedAccountId;
-			const chosen = sessionStorage.getItem(LOGIN_TRIED) && auth.accountId ? accounts.byId(auth.accountId) : null;
+			const chosen = loginTried(req.requestId) && auth.accountId ? accounts.byId(auth.accountId) : null;
 			const rec = expected ? accounts.byId(expected) : chosen;
 			if (!rec || !(await ready(rec.accountId))) {
-				await signIn(rec?.slot ?? null);
+				await signIn(req.requestId, rec?.slot ?? null);
 				return;
 			}
 			auth.activate(rec.accountId);
@@ -70,8 +73,7 @@
 			await Promise.race([syncAddressUids(rec.accountId), new Promise((resolve) => setTimeout(resolve, UID_SYNC_WAIT_MS))]);
 			const callback = await grantRequest(rec.accountId, req);
 			clearPendingAuthorize();
-			sessionStorage.removeItem(LOGIN_TRIED);
-			window.location.replace(callback);
+			window.location.replace(withSlots(callback, rec.slot, slotsOf(accounts.list)));
 		} catch (err) {
 			const code = err instanceof ApiCallError ? err.envelope?.error?.code : undefined;
 			fail(code === 'handoff_account_mismatch' ? m.handoff_auth_other_account() : m.handoff_auth_invalid());

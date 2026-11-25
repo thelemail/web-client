@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AccountSlotRecord } from '$core/keystore/idb';
-import { alignRecords, decodeSlots, encodeSlots, parseSlot, pickSlot, slotsOf } from './slots';
+import { alignRecords, decodeSlots, encodeSlots, layoutWith, parseSlot, pickSlot, slotsOf, withSlots } from './slots';
 
 const A = '5d2a8f3e-1c4b-4e7a-9f60-3b8d2c1e0a47';
 const B = '8e1f4c2a-7b3d-4a5e-b6c9-0d2e3f4a5b6c';
@@ -67,5 +67,21 @@ describe('lining accounts up with the account origin', () => {
 	it('keeps every other field of a moved record', () => {
 		const [moved] = alignRecords([{ ...rec(A, 0), sessionId: 's', sessionOrigin: 'host' }], slotsOf([rec(A, 4)]));
 		expect(moved).toEqual({ ...rec(A, 4), email: '0@thelemail.test', sessionId: 's', sessionOrigin: 'host' });
+	});
+});
+
+describe('the callback from the account origin', () => {
+	it('adds the index and the map to the callback fragment', () => {
+		const url = withSlots('https://app.thelemail.test/auth/callback#code=c&state=s', 2, slotsOf([rec(A, 2), rec(B, 0)]));
+		const p = new URLSearchParams(new URL(url).hash.slice(1));
+		expect(p.get('code')).toBe('c');
+		expect(p.get('slot')).toBe('2');
+		expect(decodeSlots(p.get('slots'))).toEqual(slotsOf([rec(B, 0), rec(A, 2)]));
+	});
+
+	it('trusts the index over a map that disagrees and keeps older callbacks working', () => {
+		expect(layoutWith(A, 1, slotsOf([rec(A, 0), rec(B, 1)]))).toEqual(new Map([[A, 1]]));
+		expect(layoutWith(A, 0, null)).toEqual(new Map([[A, 0]]));
+		expect(layoutWith(A, null, slotsOf([rec(A, 0)]))).toBeNull();
 	});
 });

@@ -64,3 +64,18 @@ export function alignRecords(records: readonly AccountSlotRecord[], target: Slot
 	}
 	return placed.sort((a, b) => a.slot - b.slot);
 }
+
+export function withSlots(callback: string, slot: number, map: SlotMap): string {
+	const extra = new URLSearchParams({ slot: String(slot), slots: encodeSlots(map) });
+	return `${callback}${callback.includes('#') ? '&' : '#'}${extra.toString()}`;
+}
+
+export function layoutWith(accountId: string, slot: number | null, slots: SlotMap | null): SlotMap | null {
+	if (slot === null) return null;
+	const map: SlotMap = new Map(slots ?? []);
+	if (map.get(accountId) !== slot) {
+		for (const [id, n] of map) if (n === slot) map.delete(id);
+		map.set(accountId, slot);
+	}
+	return map;
+}
