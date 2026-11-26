@@ -3,6 +3,7 @@ import manifest from 'virtual:model-assets';
 import type { JobFactory } from '../runtime/host';
 import { Coverage } from '../sqlite/types';
 import { semanticEpoch } from './epoch';
+import { modelId } from './store';
 import { VECTOR_BYTES } from './pool';
 
 export const UNAVAILABLE_RETRY_MS = 7 * 24 * 60 * 60_000;
@@ -32,11 +33,12 @@ export const embeddingsJob: JobFactory = (ctx) => {
 				return 'idle';
 			}
 			epoch ??= await semanticEpoch(manifest.hash);
-			store.adopt(epoch);
+			store.adopt(epoch, modelId(manifest.hash));
 			store.seed();
 			while (!step.shouldYield()) {
 				const batch = store.pending(PICK);
 				if (batch.length === 0) {
+					store.promote();
 					link.idleSoon();
 					return 'idle';
 				}

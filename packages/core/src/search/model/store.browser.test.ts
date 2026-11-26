@@ -7,6 +7,7 @@ import type { EmbeddedPassage } from './protocol';
 import type { PendingSource } from './store';
 
 const EPOCH = 123_456;
+const MODEL = 77;
 let h: Harness;
 
 function store<T>(method: PassageMethod, ...args: unknown[]): Promise<T> {
@@ -31,7 +32,7 @@ async function semantic(sourceId: string): Promise<number | null> {
 beforeEach(async () => {
 	h = new Harness();
 	await h.call({ op: 'memory' });
-	await store('adopt', EPOCH);
+	await store('adopt', EPOCH, MODEL);
 });
 
 afterEach(() => h.terminate());
@@ -118,17 +119,64 @@ describe('passage store', () => {
 		expect(await store('count')).toBe(0);
 	});
 
-	it('starts over on a new epoch and wipes everything when switched off', async () => {
+	it('builds a new epoch beside the live one and switches when it is covered', async () => {
+		await h.call({ op: 'put', doc: document('a') });
+		await h.call({ op: 'put', doc: document('b') });
+		await store('seed');
+		await store('put', await idOf('a'), 1, EPOCH, [passage(0.5, 1)]);
+		expect(await store('promote')).toBe(false);
+		await store('put', await idOf('b'), 1, EPOCH, [passage(0.5, 1)]);
+		expect(await store('promote')).toBe(true);
+		expect(await store('scanEpoch', MODEL)).toEqual({ epoch: EPOCH, current: true, rebuilding: false });
+
+		expect(await store('adopt', EPOCH, MODEL)).toBe(false);
+		expect(await store('adopt', EPOCH + 1, MODEL)).toBe(true);
+		expect(await store('count', EPOCH)).toBe(2);
+		expect(await semantic('a')).toBeNull();
+		await store('seed');
+		expect(await store('scanEpoch', MODEL)).toEqual({ epoch: EPOCH, current: false, rebuilding: false });
+		await store('put', await idOf('a'), 1, EPOCH + 1, [passage(0.25, 1)]);
+		expect(await store('promote')).toBe(false);
+		await store('put', await idOf('b'), 1, EPOCH + 1, [passage(0.25, 1)]);
+		expect(await store('promote')).toBe(true);
+		expect(await store('count', EPOCH)).toBe(0);
+		expect(await store('count', EPOCH + 1)).toBe(2);
+		expect(await store('scanEpoch', MODEL)).toEqual({ epoch: EPOCH + 1, current: true, rebuilding: false });
+	});
+
+	it('never scans an epoch made by another model', async () => {
+		await h.call({ op: 'put', doc: document('a') });
+		await h.call({ op: 'put', doc: document('b') });
+		await store('seed');
+		await store('put', await idOf('a'), 1, EPOCH, [passage(0.5, 1)]);
+		await store('put', await idOf('b'), 1, EPOCH, [passage(0.5, 1)]);
+		await store('promote');
+		expect(await store('scanEpoch', MODEL + 1)).toBeNull();
+		await store('adopt', EPOCH + 1, MODEL + 1);
+		await store('seed');
+		expect(await store('scanEpoch', MODEL + 1)).toEqual({ epoch: EPOCH + 1, current: true, rebuilding: true });
+		expect(await store('scanEpoch', MODEL)).toEqual({ epoch: EPOCH, current: false, rebuilding: false });
+	});
+
+	it('drops an unfinished epoch when another replaces it', async () => {
+		await h.call({ op: 'put', doc: document('a') });
+		await h.call({ op: 'put', doc: document('b') });
+		await store('seed');
+		await store('put', await idOf('a'), 1, EPOCH, [passage(0.5, 1)]);
+		await store('adopt', EPOCH + 1, MODEL);
+		expect(await store('count', EPOCH)).toBe(0);
+		expect(await store('target')).toBe(EPOCH + 1);
+	});
+
+	it('wipes everything when switched off', async () => {
 		await h.call({ op: 'put', doc: document('m') });
 		await store('seed');
 		await store('put', await idOf('m'), 1, EPOCH, [passage(0.5, 1)]);
-		expect(await store('adopt', EPOCH)).toBe(false);
-		expect(await store('adopt', EPOCH + 1)).toBe(true);
+		await store('promote');
+		expect(await store('clear')).toBe(true);
 		expect(await store('count')).toBe(0);
 		expect(await semantic('m')).toBeNull();
-		await store('seed');
-		expect(await store('clear')).toBe(true);
-		expect(await semantic('m')).toBeNull();
+		expect(await store('scanEpoch', MODEL)).toBeNull();
 		expect(await store('clear')).toBe(false);
 	});
 

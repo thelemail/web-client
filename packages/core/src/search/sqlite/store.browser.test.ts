@@ -54,7 +54,31 @@ async function ftsRows(h: Harness): Promise<{ parts: number; partsFts: number; l
 	return { parts, partsFts, literals, literalsFts };
 }
 
-const UNDO_PASSAGES = `DROP TABLE passage_refs;
+const UNDO_VECTORS = `DROP TABLE vector_index;
+	DROP TABLE vector_uploads;
+	DROP TABLE passage_refs;
+	DROP TABLE passages;
+	CREATE TABLE passages (
+		source INTEGER NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+		ordinal INTEGER NOT NULL,
+		epoch INTEGER NOT NULL,
+		field INTEGER NOT NULL,
+		attachment_id TEXT,
+		place TEXT,
+		vector BLOB NOT NULL,
+		PRIMARY KEY (source, ordinal)
+	) WITHOUT ROWID;
+	CREATE TABLE passage_refs (
+		source INTEGER NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+		ordinal INTEGER NOT NULL,
+		part INTEGER NOT NULL,
+		start INTEGER NOT NULL,
+		end INTEGER NOT NULL,
+		PRIMARY KEY (source, ordinal, part, start)
+	) WITHOUT ROWID`;
+
+const UNDO_PASSAGES = `${UNDO_VECTORS};
+	DROP TABLE passage_refs;
 	DROP TABLE passages`;
 
 const UNDO_ARTIFACTS = `${UNDO_PASSAGES};
@@ -412,6 +436,27 @@ describe('encrypted file', () => {
 		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: true })).toEqual({ ok: true, rebuilt: true });
 		expect(await h.select('SELECT count(*) FROM sources')).toEqual([[0]]);
 		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+	});
+
+	it('upgrades a version 8 database in place and keeps its passages under their epoch', async (ctx) => {
+		if (!opfs) ctx.skip();
+		const dir = directory();
+		const key = randomKey();
+		const h = harness();
+		await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false });
+		await h.call({ op: 'put', doc: document('m1') });
+		await h.call({
+			op: 'exec',
+			sql: `${UNDO_VECTORS};
+				INSERT INTO passages (source, ordinal, epoch, field, vector) SELECT id, 0, 42, 3, zeroblob(768) FROM sources;
+				INSERT INTO passage_refs (source, ordinal, part, start, end) SELECT id, 0, 1, 0, 5 FROM sources;
+				UPDATE meta SET value = 8 WHERE key = 'schema_version'`
+		});
+		expect(await h.call({ op: 'open', directory: dir, file: '/index.db', key, rebuild: false })).toEqual({ ok: true, rebuilt: false });
+		expect(await h.select("SELECT value FROM meta WHERE key = 'schema_version'")).toEqual([[SCHEMA_VERSION]]);
+		expect(await h.select('SELECT epoch, ordinal, length(vector) FROM passages')).toEqual([[42, 0, 768]]);
+		expect(await h.select('SELECT epoch, part, start, end FROM passage_refs')).toEqual([[42, 1, 0, 5]]);
+		expect(await h.select('SELECT count(*) FROM vector_uploads')).toEqual([[0]]);
 	});
 
 	it('upgrades a version 7 database in place and starts without passages', async (ctx) => {

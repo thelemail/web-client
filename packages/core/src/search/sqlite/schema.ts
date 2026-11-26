@@ -217,6 +217,59 @@ export const MIGRATIONS: readonly string[] = [
 		end INTEGER NOT NULL,
 		PRIMARY KEY (source, ordinal, part, start)
 	) WITHOUT ROWID;
+	`,
+	`
+	CREATE TABLE passages_next (
+		epoch INTEGER NOT NULL,
+		source INTEGER NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+		ordinal INTEGER NOT NULL,
+		field INTEGER NOT NULL,
+		attachment_id TEXT,
+		place TEXT,
+		vector BLOB NOT NULL,
+		PRIMARY KEY (epoch, source, ordinal)
+	) WITHOUT ROWID;
+	INSERT INTO passages_next (epoch, source, ordinal, field, attachment_id, place, vector)
+		SELECT epoch, source, ordinal, field, attachment_id, place, vector FROM passages;
+
+	CREATE TABLE passage_refs_next (
+		epoch INTEGER NOT NULL,
+		source INTEGER NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
+		ordinal INTEGER NOT NULL,
+		part INTEGER NOT NULL,
+		start INTEGER NOT NULL,
+		end INTEGER NOT NULL,
+		PRIMARY KEY (epoch, source, ordinal, part, start)
+	) WITHOUT ROWID;
+	INSERT INTO passage_refs_next (epoch, source, ordinal, part, start, end)
+		SELECT p.epoch, r.source, r.ordinal, r.part, r.start, r.end FROM passage_refs r JOIN passages p ON p.source = r.source AND p.ordinal = r.ordinal;
+
+	DROP TABLE passage_refs;
+	DROP TABLE passages;
+	ALTER TABLE passages_next RENAME TO passages;
+	ALTER TABLE passage_refs_next RENAME TO passage_refs;
+	CREATE INDEX passages_source ON passages (source);
+	CREATE INDEX passage_refs_source ON passage_refs (source);
+
+	CREATE TABLE vector_uploads (
+		source INTEGER PRIMARY KEY REFERENCES sources (id) ON DELETE CASCADE,
+		epoch INTEGER NOT NULL,
+		state INTEGER NOT NULL,
+		rev INTEGER NOT NULL DEFAULT 0,
+		upload_at INTEGER NOT NULL DEFAULT 0
+	);
+	CREATE INDEX vector_uploads_due ON vector_uploads (upload_at) WHERE state = 1;
+
+	CREATE TABLE vector_index (
+		source_id TEXT NOT NULL,
+		content_rev INTEGER NOT NULL,
+		component_epoch INTEGER NOT NULL,
+		extraction_rev INTEGER NOT NULL,
+		seq INTEGER NOT NULL,
+		state INTEGER NOT NULL DEFAULT 0,
+		PRIMARY KEY (source_id, component_epoch)
+	) WITHOUT ROWID;
+	CREATE INDEX vector_index_listed ON vector_index (source_id, content_rev) WHERE state = 0;
 	`
 ];
 
@@ -241,7 +294,9 @@ const REQUIRED_TABLES = [
 	'attachment_queue',
 	'artifact_index',
 	'passages',
-	'passage_refs'
+	'passage_refs',
+	'vector_uploads',
+	'vector_index'
 ];
 
 export type SchemaState =

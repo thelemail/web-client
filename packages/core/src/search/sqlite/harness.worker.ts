@@ -42,7 +42,7 @@ export type HarnessRequest =
 	| { op: 'historyClear' }
 	| { op: 'passages'; method: PassageMethod; args: unknown[] };
 
-export type PassageMethod = 'adopt' | 'clear' | 'seed' | 'pending' | 'input' | 'put' | 'mark' | 'retryFailed' | 'count';
+export type PassageMethod = 'adopt' | 'promote' | 'scanEpoch' | 'target' | 'clear' | 'seed' | 'pending' | 'input' | 'put' | 'mark' | 'retryFailed' | 'count';
 
 export type HarnessReply = { id: number; ok: true; value: unknown } | { id: number; ok: false; error: string };
 
