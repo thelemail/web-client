@@ -42,8 +42,8 @@
 		faXmark
 	} from '@fortawesome/pro-regular-svg-icons';
 	import MessageRow from './MessageRow.svelte';
-	import { loadSearchRelated, loadSearchStrip, loadedSearchRelated, loadedSearchStrip, type SearchRelatedComponent, type SearchStripComponent } from './searchStrip';
-	import type { RelatedView, SearchView } from './searchView';
+	import { loadSearchStrip, loadedSearchStrip, type SearchStripComponent } from './searchStrip';
+	import type { SearchView } from './searchView';
 	import ListSkeleton from './ListSkeleton.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
@@ -178,12 +178,8 @@
 	$effect(() => {
 		if (search && !SearchStrip) void loadSearchStrip().then((c) => (SearchStrip = c));
 	});
-	let SearchRelated = $state.raw<SearchRelatedComponent | null>(loadedSearchRelated());
-	$effect(() => {
-		if (search?.related && !SearchRelated) void loadSearchRelated().then((c) => (SearchRelated = c));
-	});
-	const related = $derived(search?.related ?? null);
-	const relatedMain = $derived(!!related?.main && list.length === 0 && !(related.status === 'ready' && related.rows.length === 0));
+	const relatedRows = $derived(search?.related?.status === 'ready' ? search.related.rows : []);
+	const relatedPending = $derived(list.length === 0 && search?.related?.status === 'loading');
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
@@ -268,7 +264,6 @@
 		return Math.max(base, open);
 	});
 	const allRowsShown = $derived(rowCap >= list.length);
-	const relatedAfter = $derived(!!related && !related.main && list.length > 0 && exhausted && allRowsShown);
 	const shownGroups = $derived.by(() => {
 		if (allRowsShown) return groups;
 		let left = rowCap;
@@ -552,14 +547,6 @@
 		{onToggleRead}
 		tips={rowTips}
 	/>
-{/snippet}
-
-{#snippet relatedBlock(Block: SearchRelatedComponent, view: RelatedView)}
-	<Block related={view} onMore={search!.onMoreRelated} onRetry={search!.onRetryRelated}>
-		{#each view.rows as m (m.id)}
-			{@render row(m)}
-		{/each}
-	</Block>
 {/snippet}
 
 <section class="list">
@@ -907,11 +894,9 @@
 			{#if firstLoad.visible}
 				<ListSkeleton />
 			{/if}
-		{:else if relatedMain && related && SearchRelated}
-			{@render relatedBlock(SearchRelated, related)}
-		{:else if relatedMain}
+		{:else if list.length === 0 && relatedRows.length === 0 && relatedPending}
 			<div class="list-state" aria-busy="true"></div>
-		{:else if list.length === 0}
+		{:else if list.length === 0 && relatedRows.length === 0}
 			<EmptyState
 				class="empty-list"
 				icon={search ? faMagnifyingGlass : activeFilters > 0 ? faFilter : faInbox}
@@ -942,18 +927,20 @@
 					{@render row(m)}
 				{/each}
 			{/each}
+			{#if allRowsShown}
+				{#each relatedRows as m (m.id)}
+					{@render row(m)}
+				{/each}
+			{/if}
 			<Tooltip.Shared tether={rowTips} />
 		{/if}
-		{#if relatedAfter && related && SearchRelated}
-			{@render relatedBlock(SearchRelated, related)}
-		{/if}
-		{#if ((!searchActive || list.length > 0) && allRowsShown) || (relatedMain && related?.status === 'ready')}
+		{#if (!searchActive || list.length > 0 || relatedRows.length > 0) && allRowsShown}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
-				{:else if exhausted && list.length > 0 && !offline && !relatedAfter}
+				{:else if exhausted && (list.length > 0 || relatedRows.length > 0) && !offline}
 					<span class="lf-hair"></span>
 					<span class="lf-text">{msg.mail_list_end()}</span>
 					<span class="lf-hair"></span>

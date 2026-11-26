@@ -12,7 +12,6 @@ export interface RelatedView {
 	status: RelatedStatus;
 	main: boolean;
 	rows: Message[];
-	more: boolean;
 	incomplete: number;
 	capped: number;
 	rebuilding: boolean;
@@ -39,7 +38,6 @@ export interface SearchView {
 	limited: 'session' | 'quota' | null;
 	settingsHref: string;
 	related: RelatedView | null;
-	onMoreRelated: () => void;
 	onRetryRelated: () => void;
 	onSort: (sort: Sort) => void;
 	onExactFolders: (exact: boolean) => void;

@@ -1670,14 +1670,12 @@
 				? {
 						status: mailSearch.related.status,
 						main: mailSearch.related.main,
-						rows: mailSearch.relatedShown,
-						more: mailSearch.relatedMore,
+						rows: mailSearch.exactExhausted ? mailSearch.relatedShown : [],
 						incomplete: mailSearch.related.summary?.incomplete ?? 0,
 						capped: mailSearch.related.summary?.capped ?? 0,
 						rebuilding: mailSearch.related.summary?.rebuilding ?? false
 					}
 				: null,
-			onMoreRelated: () => mailSearch.expandRelated(),
 			onRetryRelated: () => mailSearch.retryRelated(),
 			onSort: (sort) => mailSearch.setSort(sort),
 			onExactFolders: (exact) => mailSearch.setExactFolders(exact),
