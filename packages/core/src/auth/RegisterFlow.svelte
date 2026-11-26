@@ -3,12 +3,12 @@
 	import { onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { passwordReqs } from '$core/auth/password-policy';
-	import Blank from '$core/auth/sentence/Blank.svelte';
-	import Clause from '$core/auth/sentence/Clause.svelte';
-	import Done from '$core/auth/sentence/Done.svelte';
-	import Trail from '$core/auth/sentence/Trail.svelte';
-	import PasswordChecks from '$core/auth/sentence/PasswordChecks.svelte';
-	import WorkSteps from '$core/auth/sentence/WorkSteps.svelte';
+	import TextField from '$core/auth/form/TextField.svelte';
+	import PasswordField from '$core/auth/PasswordField.svelte';
+	import PasswordChecks from '$core/auth/form/PasswordChecks.svelte';
+	import WorkSteps from '$core/auth/form/WorkSteps.svelte';
+	import Status from '$core/auth/form/Status.svelte';
+	import { handleSuggestions } from '$core/auth/handle-suggestions';
 	import PlanStep from '$core/auth/PlanStep.svelte';
 	import PaymentStep from '$core/auth/PaymentStep.svelte';
 	import {
@@ -22,11 +22,9 @@
 	import { performLogin } from '$core/auth/perform-login';
 	import { createProofOfWork, withProofOfWork } from '$core/auth/proof-of-work';
 	import type { PlanCode } from '$core/api/billing';
-	import Status from '$core/auth/sentence/Status.svelte';
-	import Seal from '$core/auth/sentence/Seal.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import Icon from '$core/components/Icon.svelte';
-	import { faChevronDown, faCircleCheck } from '@fortawesome/pro-regular-svg-icons';
+	import { faCheck, faCircleCheck } from '@fortawesome/pro-regular-svg-icons';
 	import { checkAddressAvailability, registrationInit, register } from '$core/api/auth';
 	import { endSignupSession, signupSession } from '$core/auth/signup-session';
 	import { ApiCallError } from '$core/api/types';
@@ -64,19 +62,13 @@
 	const HANDLE_RE = /^[a-z0-9]([a-z0-9._-]{1,28})[a-z0-9]$/;
 
 	let step = $state<0 | 2 | 3 | 4>(0);
-	const PARTS = ['address', 'name', 'password', 'confirm'] as const;
-	type Part = (typeof PARTS)[number];
-	let part = $state<Part>('address');
-	const partIndex = $derived(PARTS.indexOf(part));
+	let part = $state<'address' | 'details'>('address');
 	let terms = $state(false);
 	let stage = $state(0);
 	let paid = $state(preselected !== null);
 	let fullName = $state('');
 	let handle = $state('');
-	let pickedDomain = $state<string | null>(null);
-	const mailDomain = $derived(
-		pickedDomain && platformDomains.offers(pickedDomain) ? pickedDomain : platformDomains.default
-	);
+	const mailDomain = $derived(platformDomains.default);
 	const address = $derived(`${handle}@${mailDomain}`);
 	let pw = $state('');
 	let confirm = $state('');
@@ -99,13 +91,16 @@
 	const proof = createProofOfWork();
 
 	$effect(() => {
-		if (step === 0 && partIndex >= 2) untrack(() => proof.prepare(address));
+		if (step === 0 && part === 'details') untrack(() => proof.prepare(address));
 	});
 
 	$effect(() => () => proof.dispose());
 
+	let suggestions = $state<string[]>([]);
+
 	$effect(() => {
 		const h = handle.trim().toLowerCase();
+		suggestions = [];
 		if (!h) {
 			status = 'idle';
 			return;
@@ -120,7 +115,9 @@
 			}
 			try {
 				const { available } = await checkAddressAvailability(h, signupSession());
-				if (!cancelled) status = available ? 'available' : 'taken';
+				if (cancelled) return;
+				status = available ? 'available' : 'taken';
+				if (!available) void suggest(h, () => cancelled);
 			} catch {
 				if (!cancelled) status = 'unknown';
 			}
@@ -131,6 +128,19 @@
 		};
 	});
 
+	async function suggest(h: string, stale: () => boolean) {
+		const candidates = handleSuggestions(h).filter((c) => HANDLE_RE.test(c));
+		const results = await Promise.all(
+			candidates.map((c) =>
+				checkAddressAvailability(c, signupSession())
+					.then((r) => r.available)
+					.catch(() => false)
+			)
+		);
+		if (stale()) return;
+		suggestions = candidates.filter((_, i) => results[i]).slice(0, 3);
+	}
+
 	const labels = $derived(
 		paid
 			? [
@@ -140,24 +150,6 @@
 					m.auth_step_payment()
 				]
 			: [m.auth_step_address(), m.auth_step_password()]
-	);
-	const trail = $derived(
-		paid
-			? [
-					m.auth_step_address(),
-					m.auth_step_account_name(),
-					m.auth_step_password(),
-					m.auth_step_confirm(),
-					m.auth_step_plan(),
-					m.auth_step_payment()
-				]
-			: [
-					m.auth_step_address(),
-					m.auth_step_account_name(),
-					m.auth_step_password(),
-					m.auth_step_confirm(),
-					m.auth_step_recovery()
-				]
 	);
 	const totalSteps = $derived(labels.length);
 	const product = $derived(findPlan(sel).product);
@@ -190,18 +182,17 @@
 	);
 	const confirmTone = $derived(submitError || confirmBad ? 'bad' : matches ? 'ok' : 'hint');
 	const canCreate = $derived(addressReady && passwordReady && (paid || terms));
+	const freeAddress = $derived(handle.trim() ? address : `yourname@${mailDomain}`);
 	const workLines = $derived([m.auth_s_work_keys(), m.auth_s_work_account(), m.auth_s_work_open()]);
 
-	function submitPart(e: SubmitEvent) {
+	function submitAddress(e: SubmitEvent) {
 		e.preventDefault();
-		advance();
+		if (handleReady) part = 'details';
 	}
 
-	function advance() {
-		if (part === 'address' && handleReady) part = 'name';
-		else if (part === 'name' && nameReady) part = 'password';
-		else if (part === 'password' && allMet) part = 'confirm';
-		else if (part === 'confirm') continueFromPassword();
+	function submitDetails(e: SubmitEvent) {
+		e.preventDefault();
+		continueFromPassword();
 	}
 
 	const planLabel = $derived.by(() => {
@@ -237,7 +228,7 @@
 		paid = false;
 		sel = { product: 'personal', tier: null, seats: 3, period: sel.period };
 		step = 0;
-		part = 'confirm';
+		part = 'details';
 	}
 
 	function continueFromPassword() {
@@ -361,6 +352,7 @@
 	<button type="button" class="linklike" disabled={submitting} onclick={chooseFree}>{t}</button>
 {/snippet}
 {#snippet domain(t: string)}<span class="mono">{t}</span>{/snippet}
+{#snippet addressTag(_: string)}<span class="mono">{address}</span>{/snippet}
 {#snippet signInLink(t: string)}<a href={signInHref}>{t}</a>{/snippet}
 {#snippet terms_(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
@@ -369,182 +361,146 @@
 		<Rich text={m.auth_register_free_foot()} tags={{ free: freeButton }} />
 	</p>
 {/snippet}
-{#snippet domainPick()}
-	<span aria-hidden="true">@</span>{#if platformDomains.list.length > 1}<select
-			aria-label={m.auth_register_domain_label()}
-			value={mailDomain}
-			onchange={(e) => (pickedDomain = e.currentTarget.value)}
-		>
-			{#each platformDomains.list as d (d)}
-				<option value={d}>{d}</option>
-			{/each}
-		</select><Icon icon={faChevronDown} size={14} />{:else}{domainReady ? mailDomain : ''}{/if}
+{#snippet domainSuffix()}@{mailDomain}{/snippet}
+{#snippet changeAddress()}<button type="button" class="aux" disabled={submitting} onclick={() => (part = 'address')}>{m.auth_login_change_email()}</button>{/snippet}
+{#snippet freeSide()}
+	<aside class="af-side" aria-label={m.auth_register_side_label()}>
+		<h2>{m.auth_register_side_title()}</h2>
+		<p class="plan"><b>{m.auth_plan_free_name()}</b><span>{m.auth_register_side_price()}</span></p>
+		<ul>
+			<li><Icon icon={faCheck} size={15} /><span><Rich text={m.auth_register_side_address({ address: freeAddress })} tags={{ b: domain }} /></span></li>
+			<li><Icon icon={faCheck} size={15} /><span>{m.auth_register_side_storage()}</span></li>
+			<li><Icon icon={faCheck} size={15} /><span>{m.auth_register_side_no_card()}</span></li>
+			<li><Icon icon={faCheck} size={15} /><span>{m.auth_register_side_upgrade()}</span></li>
+		</ul>
+		<p class="af-fine">{m.auth_register_side_keys()}</p>
+	</aside>
 {/snippet}
-{#snippet addressBlank(_: string)}<Blank
-		id="register-handle"
-		bind:value={handle}
-		label={m.common_email_address()}
-		placeholder={m.auth_s_handle_placeholder()}
-		size={12}
-		mono
-		maxlength={30}
-		invalid={status === 'invalid' || status === 'taken'}
-		describedby="register-handle-msg"
-		focus
-		normalize={(raw) => raw.toLowerCase().replace(/\s+/g, '')}
-		suffix={domainPick}
-	/>{/snippet}
-{#snippet addressDone(_: string)}<Done text={address} mono disabled={submitting} onedit={() => (part = 'address')} />{/snippet}
-{#snippet nameBlank(_: string)}<Blank
-		id="register-name"
-		bind:value={fullName}
-		label={m.auth_s_name_label()}
-		placeholder={m.auth_s_name_placeholder()}
-		size={14}
-		autocomplete="nickname"
-		maxlength={120}
-		focus
-	/>{/snippet}
-{#snippet nameDone(_: string)}<Done text={fullName.trim()} disabled={submitting} onedit={() => (part = 'name')} />{/snippet}
-{#snippet passwordBlank(_: string)}<Blank
-		id="register-password"
-		bind:value={pw}
-		label={m.common_password()}
-		placeholder={m.auth_s_new_password_placeholder()}
-		size={14}
-		mono
-		secret
-		autocomplete="new-password"
-		focus
-	/>{/snippet}
-{#snippet passwordDone(_: string)}<Done text="" secret disabled={submitting} onedit={() => (part = 'password')} />{/snippet}
-{#snippet confirmBlank(_: string)}<Blank
-		id="register-confirm"
-		bind:value={confirm}
-		label={m.auth_register_confirm_label()}
-		placeholder={m.auth_s_confirm_placeholder()}
-		size={14}
-		mono
-		secret
-		autocomplete="new-password"
-		invalid={confirmBad}
-		describedby="register-confirm-msg"
-		disabled={submitting}
-		focus
-	/>{/snippet}
-{#snippet addressFixed(_: string)}<Done text={address} mono />{/snippet}
 
 {#if step === 0}
-	<div class="sp">
-		<Trail items={trail} current={submitting || leaving ? 3 : partIndex} />
-		{#if submitting || leaving}
+	{#if submitting || leaving}
+		<div class="card-surface" aria-live="polite">
+			<div class="card-head">
+				<h1>{leaving ? m.auth_register_ready_title() : m.auth_register_working_title()}</h1>
+				<p><Rich text={m.auth_register_working_for({ address })} tags={{ b: domain }} /></p>
+			</div>
+			<WorkSteps lines={workLines} at={leaving ? workLines.length : stage} />
 			{#if leaving}
-				<p class="sent sm"><Clause text={m.auth_s_register_ready()} slots={{ address: addressFixed }} /></p>
+				<Status tone="ok">{m.auth_register_ready_line()}</Status>
 			{:else}
-				<p class="sent sm"><Clause text={m.auth_s_register_working()} slots={{ address: addressFixed }} /></p>
+				<p class="af-fine">{m.auth_s_work_note()}</p>
 			{/if}
-			<div class="sp-under">
-				<WorkSteps lines={workLines} at={leaving ? 2 : stage} />
-				{#if leaving}
-					<Seal label={m.auth_s_seal_created()} />
-				{:else}
-					<p class="sp-fine">{m.auth_s_work_note()}</p>
-				{/if}
-			</div>
-		{:else}
-			<form class="sp-form" novalidate onsubmit={submitPart}>
-				{#if partIndex >= 2}
-					<input class="sp-user" type="email" value={address} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
-				{/if}
-				<p class="sent">
-					<Clause
-						text={m.auth_s_register_address()}
-						past={partIndex > 0}
-						slots={{ address: part === 'address' ? addressBlank : addressDone }}
-					/>
-					{#if partIndex >= 1}
-						<Clause lead
-							text={m.auth_s_register_name()}
-							past={partIndex > 1}
-							slots={{ name: part === 'name' ? nameBlank : nameDone }}
-						/>
-					{/if}
-					{#if part === 'password'}
-						<Clause lead text={m.auth_s_register_password()} slots={{ password: passwordBlank }} />
-					{:else if part === 'confirm'}
-						<Clause lead
-							text={m.auth_s_register_password_again()}
-							slots={{ password: passwordDone, confirm: confirmBlank }}
-						/>
-					{/if}
-				</p>
-				<div class="sp-under">
-					{#if part === 'address'}
-						{#if addMode && auth.email}
-							<p class="sp-msg">{m.auth_s_add_note()}</p>
-						{/if}
-						{#if audience === 'family'}
-							<p class="sp-msg"><span><Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} /></span></p>
-						{:else if audience === 'business'}
-							<p class="sp-msg"><span><Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} /></span></p>
-						{/if}
-						<Status id="register-handle-msg" tone={handleTone}>
-							{#if status === 'invalid'}{m.auth_s_handle_invalid()}
-							{:else if status === 'taken'}{m.auth_s_handle_taken({ address })}
-							{:else if checking.visible}{m.auth_register_handle_checking()}
-							{:else if status === 'available'}{m.auth_s_handle_free({ address })}
-							{:else if status === 'unknown'}<Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} />
-							{:else}{m.auth_s_handle_hint()}{/if}
-						</Status>
-						<div class="sp-acts">
-							<Button type="submit" variant="primary" size="lg" disabled={!handleReady}>{m.auth_sentence_next()}</Button>
-						</div>
-					{:else if part === 'name'}
-						<Status>{m.auth_s_name_hint()}</Status>
-						<div class="sp-acts">
-							<Button type="submit" variant="primary" size="lg" disabled={!nameReady}>{m.auth_sentence_next()}</Button>
-						</div>
-					{:else if part === 'password'}
-						<div class="sp-status-box"><PasswordChecks {pw} /></div>
-						<div class="sp-acts">
-							<Button type="submit" variant="primary" size="lg" disabled={!allMet}>{m.auth_sentence_next()}</Button>
-						</div>
-					{:else}
-						<Status id="register-confirm-msg" tone={confirmTone}>
-							{#if submitError}{submitError}
-							{:else if confirmBad}{m.auth_register_passwords_mismatch()}
-							{:else if matches}{m.auth_register_passwords_match()}
-							{:else}{m.auth_s_confirm_hint()}{/if}
-						</Status>
-						{#if !paid}
-							<label class="sp-tick">
-								<input type="checkbox" bind:checked={terms} />
-								<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
-							</label>
-						{/if}
-						<div class="sp-acts">
-							<Button type="submit" variant="primary" size="lg" disabled={!canCreate}>
-								{paid ? m.common_continue() : m.auth_s_create_account()}
-							</Button>
-							{#if !paid}
-								<span class="sp-fine">{m.auth_s_free_plan_line()}</span>
-							{/if}
-						</div>
-						{#if paid}
-							<button type="button" class="sp-quiet" onclick={chooseFree}>{m.auth_register_free_instead()}</button>
-							<p class="sp-fine">{m.auth_register_legal_paid()}</p>
-						{:else}
-							<button type="button" class="sp-quiet" disabled={!passwordReady} onclick={choosePaid}>{m.auth_register_paid_instead()}</button>
-							<p class="sp-fine">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
-						{/if}
-					{/if}
+		</div>
+	{:else if part === 'address'}
+		<div class={paid ? '' : 'af-split'}>
+			<form class="card-surface" novalidate onsubmit={submitAddress}>
+				<div class="card-head">
+					<h1>{heading}</h1>
+					<p>
+						{#if audience === 'family'}<Rich text={m.auth_register_lede_family({ domain: mailDomain })} tags={{ domain }} />
+						{:else if audience === 'business'}<Rich text={m.auth_register_lede_business({ domain: mailDomain })} tags={{ domain }} />
+						{:else}{m.auth_register_address_sub()}{/if}
+					</p>
 				</div>
+				{#if addMode && auth.email}
+					<p class="af-note">{m.auth_s_add_note()}</p>
+				{/if}
+				<div class="form">
+					<TextField
+						id="register-handle"
+						bind:value={handle}
+						label={m.auth_register_username_label()}
+						placeholder={m.auth_s_handle_placeholder()}
+						mono
+						maxlength={30}
+						invalid={status === 'invalid' || status === 'taken'}
+						describedby="register-handle-msg"
+						focus
+						normalize={(raw) => raw.toLowerCase().replace(/\s+/g, '')}
+						suffix={domainReady ? domainSuffix : undefined}
+					/>
+				</div>
+				<Status id="register-handle-msg" tone={handleTone}>
+					{#if status === 'invalid'}{m.auth_s_handle_invalid()}
+					{:else if status === 'taken'}{suggestions.length > 0 ? m.auth_register_handle_taken_pick({ address }) : m.auth_s_handle_taken({ address })}
+					{:else if checking.visible}{m.auth_register_handle_checking()}
+					{:else if status === 'available'}{m.auth_s_handle_free({ address })}
+					{:else if status === 'unknown'}<Rich text={m.auth_register_handle_available({ address })} tags={{ b: domain }} />
+					{:else}{m.auth_register_handle_hint()}{/if}
+				</Status>
+				{#if status === 'taken' && suggestions.length > 0}
+					<div class="af-chips">
+						{#each suggestions as s (s)}
+							<button type="button" class="af-chip" onclick={() => (handle = s)}>{s}@{mailDomain}</button>
+						{/each}
+					</div>
+				{/if}
+				<Button type="submit" variant="primary" size="lg" block disabled={!handleReady}>{m.common_continue()}</Button>
+				<p class="af-row"><Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} /></p>
 			</form>
-			<div class="sp-foot">
-				<span><Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} /></span>
+			{#if !paid}{@render freeSide()}{/if}
+		</div>
+	{:else}
+		<form class="card-surface" novalidate onsubmit={submitDetails}>
+			<input class="af-hidden-user" type="email" value={address} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+			<div class="card-head">
+				<h1>{m.auth_register_details_title()}</h1>
+				<p><Rich text={m.auth_register_details_for({ address })} tags={{ b: domain }} /></p>
 			</div>
-		{/if}
-	</div>
+			<div class="form">
+				<TextField id="register-address" value={address} label={m.common_email_address()} mono readonly aux={changeAddress} />
+				<div class="field">
+					<TextField
+						id="register-name"
+						bind:value={fullName}
+						label={m.auth_register_name_label()}
+						autocomplete="name"
+						maxlength={120}
+						describedby="register-name-hint"
+						focus
+					/>
+					<p class="af-fine" id="register-name-hint">{m.auth_s_name_hint()}</p>
+				</div>
+				<div class="field">
+					<PasswordField id="register-password" label={m.common_password()} bind:value={pw} autocomplete="new-password" disabled={submitting} />
+					<PasswordChecks {pw} />
+				</div>
+				<div class="field">
+					<PasswordField
+						id="register-confirm"
+						label={m.auth_register_confirm_label()}
+						bind:value={confirm}
+						autocomplete="new-password"
+						invalid={confirmBad}
+						describedby="register-confirm-msg"
+						disabled={submitting}
+					/>
+					<Status id="register-confirm-msg" tone={confirmTone}>
+						{#if submitError}{submitError}
+						{:else if confirmBad}{m.auth_register_passwords_mismatch()}
+						{:else if matches}{m.auth_register_passwords_match()}
+						{:else}{m.auth_s_confirm_hint()}{/if}
+					</Status>
+				</div>
+				{#if !paid}
+					<label class="af-tick">
+						<input type="checkbox" bind:checked={terms} />
+						<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
+					</label>
+				{/if}
+			</div>
+			<Button type="submit" variant="primary" size="lg" block disabled={!canCreate}>
+				{paid ? m.common_continue() : m.auth_s_create_account()}
+			</Button>
+			{#if paid}
+				<p class="af-row"><button type="button" class="af-link" onclick={chooseFree}>{m.auth_register_free_instead()}</button></p>
+				<p class="af-fine center">{m.auth_register_legal_paid()}</p>
+			{:else}
+				<p class="af-row"><button type="button" class="af-link" disabled={!passwordReady} onclick={choosePaid}>{m.auth_register_paid_instead()}</button></p>
+				<p class="af-fine center">{m.auth_register_legal_free({ domains: platformDomains.display('conjunction') })}</p>
+			{/if}
+		</form>
+	{/if}
 {:else if step === 2}
 	<PlanStep
 		bind:sel
@@ -552,7 +508,7 @@
 		busy={submitting}
 		onBack={() => {
 			step = 0;
-			part = 'confirm';
+			part = 'details';
 		}}
 		onNext={() => (step = 3)}
 		footer={freeFoot}
@@ -569,18 +525,17 @@
 		onPay={submitRegistration}
 	/>
 {:else}
-	<div class="sp">
-		<p class="sent sm"><Clause text={m.auth_s_submitted()} slots={{ address: addressFixed }} /></p>
-		<div class="sp-under">
-			{#if planLabel}
-				<p class="sp-msg ok">
-					<Icon icon={faCircleCheck} size={14} />
-					<span><Rich text={m.auth_register_plan_pending({ plan: planLabel })} tags={{ b: domain }} /></span>
-				</p>
-			{/if}
-			<div class="sp-acts">
-				<Button variant="primary" size="lg" onclick={() => goto(signInHref)}>{m.auth_sign_in()}</Button>
-			</div>
+	<div class="card-surface">
+		<div class="card-head">
+			<h1>{m.auth_register_submitted_title()}</h1>
+			<p><Rich text={m.auth_s_submitted()} tags={{ address: addressTag }} /></p>
 		</div>
+		{#if planLabel}
+			<p class="af-note ok">
+				<Icon icon={faCircleCheck} size={15} />
+				<span><Rich text={m.auth_register_plan_pending({ plan: planLabel })} tags={{ b: domain }} /></span>
+			</p>
+		{/if}
+		<Button variant="primary" size="lg" block onclick={() => goto(signInHref)}>{m.auth_sign_in()}</Button>
 	</div>
 {/if}

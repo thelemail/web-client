@@ -35,23 +35,17 @@ function button(label: string) {
 	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
 }
 
-async function next() {
-	await vi.waitFor(() => expect(button('Next')?.disabled).toBe(false));
-	await fireEvent.click(button('Next')!);
-}
-
 async function continueToPassword(handle: string) {
 	await fireEvent.input(document.querySelector('#register-handle')!, { target: { value: handle } });
-	await next();
+	await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
+	await fireEvent.click(button('Continue')!);
 	await fireEvent.input(document.querySelector('#register-name')!, { target: { value: 'Camille Roux' } });
-	await next();
 }
 
 async function submitPassword() {
 	await fireEvent.input(document.querySelector('#register-password')!, { target: { value: 'Quiet-harbour-lantern-47' } });
-	await next();
 	await fireEvent.input(document.querySelector('#register-confirm')!, { target: { value: 'Quiet-harbour-lantern-47' } });
-	await fireEvent.click(document.querySelector('.sp-tick input')!);
+	await fireEvent.click(document.querySelector('.af-tick input')!);
 	await fireEvent.click(button('Create my account')!);
 }
 
@@ -70,19 +64,17 @@ afterEach(() => {
 });
 
 describe('register page with several signup domains', () => {
-	it('offers only the signup domains and registers on the picked one', async () => {
+	it('registers on the default domain without offering a choice', async () => {
 		keystore.opaqueStartRegistration.mockRejectedValue(new Error('stop'));
 		render(RegisterPage);
 
-		await vi.waitFor(() => expect(select()).not.toBeNull());
-		expect(select()!.value).toBe('temail.org');
-		expect([...select()!.options].map((o) => o.value)).toEqual(['temail.org', 'example.net']);
+		await vi.waitFor(() => expect(document.querySelector('.af-suffix')?.textContent).toBe('@temail.org'));
+		expect(select()).toBeNull();
 
-		await fireEvent.change(select()!, { target: { value: 'example.net' } });
 		await continueToPassword('camille');
 		await submitPassword();
 
 		await vi.waitFor(() => expect(keystore.opaqueStartRegistration).toHaveBeenCalled());
-		expect(keystore.opaqueStartRegistration.mock.calls[0][0].email).toBe('camille@example.net');
+		expect(keystore.opaqueStartRegistration.mock.calls[0][0].email).toBe('camille@temail.org');
 	});
 });
