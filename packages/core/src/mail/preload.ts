@@ -3,6 +3,6 @@ import { loadEditorKit } from './editor/loadKit';
 
 export function preloadMailModules(): () => void {
 	return afterBoot(() => {
-		void loadEditorKit().catch(() => {});
+		void Promise.allSettled([loadEditorKit(), import('./render/parseMime'), import('./render/sanitizeHtml')]);
 	});
 }

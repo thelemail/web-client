@@ -1,5 +1,4 @@
-import { parseMimeBody, ParseError, type ParsedAttachment, type InlineImage } from './parseMime';
-import { sanitizeHtml } from './sanitizeHtml';
+import type { ParsedAttachment, InlineImage } from './parseMime';
 import { plainToHtml } from './plainToHtml';
 import { splitQuotedHtml, splitQuotedText } from './quoteSplit';
 import type { CalendarEvent } from './icalParse';
@@ -76,6 +75,7 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 	let calendarEvents: CalendarEvent[] = [];
 
 	if (input.mime && input.mime.trim().length > 0) {
+		const { parseMimeBody, ParseError } = await import('./parseMime');
 		try {
 			const parsed = await parseMimeBody(input.mime);
 			html = parsed.html;
@@ -102,6 +102,7 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 	let contentHtml: string | undefined;
 
 	if (hasHtml) {
+		const { sanitizeHtml } = await import('./sanitizeHtml');
 		const sanitized = sanitizeHtml(html!, {
 			inlineImages,
 			stripTracking: input.stripTracking
