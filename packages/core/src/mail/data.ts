@@ -135,6 +135,7 @@ export interface SearchMatch {
 	quoted: boolean;
 	filename: string | null;
 	place: string | null;
+	channel: 'words' | 'meaning' | 'both' | null;
 }
 
 export function plainSubject(s: unknown): string {

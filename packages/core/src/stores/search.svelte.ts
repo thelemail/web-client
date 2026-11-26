@@ -9,8 +9,8 @@ import type { CoverageView, Progress } from '$core/search/coverage';
 import type { ParsedQuery, QueryError, Range } from '$core/search/query/ast';
 import type { ClientState, SearchClient } from '$core/search/runtime/client';
 import type { SearchPrefs } from '$core/search/runtime/records';
-import type { Sort } from '$core/search/sqlite/compile';
-import type { Completions, QuerySummary } from '$core/search/sqlite/run';
+import type { QueryContext, Sort } from '$core/search/sqlite/compile';
+import type { Completions, MeaningSummary, QuerySummary } from '$core/search/sqlite/run';
 import type { Suggestion } from '$core/search/sqlite/suggest';
 import { platform } from '$platform';
 import { m } from '$paraglide/messages.js';
@@ -21,6 +21,27 @@ const DEBOUNCE_MS = 180;
 const DESKTOP_LIMIT = 200;
 const PREVIEW_ROWS = 6;
 const NO_COMPLETIONS: Completions = { terms: [], people: [] };
+export const RELATED_ROWS = 5;
+export const RELATED_EXPANDED = 25;
+
+export type RelatedStatus = 'loading' | 'ready' | 'tooLong' | 'preparing' | 'busy' | 'failed';
+
+export interface Related {
+	status: RelatedStatus;
+	main: boolean;
+	rows: Message[];
+	summary: MeaningSummary | null;
+	expanded: boolean;
+}
+
+interface RelatedRequest {
+	run: number;
+	client: SearchClient;
+	query: ParsedQuery;
+	ctx: QueryContext;
+	exclude: number;
+	main: boolean;
+}
 
 export type SearchPhase = 'idle' | 'starting' | 'searching' | 'ready' | 'failed' | 'locked' | 'unconverted' | 'unavailable';
 
@@ -92,6 +113,7 @@ class MailSearchStore {
 	history = $state.raw<string[]>([]);
 	client = $state.raw<ClientState | null>(null);
 	prefs = $state.raw<SearchPrefs | null>(null);
+	related = $state.raw<Related | null>(null);
 
 	#ui = $state.raw<Ui | null>(null);
 	#parsed = $state.raw<ParsedQuery | null>(null);
@@ -104,6 +126,10 @@ class MailSearchStore {
 	#session: { id: number; client: SearchClient } | null = null;
 	#pages = 0;
 	#abort: AbortController | null = null;
+	#relatedAbort: AbortController | null = null;
+	#relatedSession: { id: number; client: SearchClient } | null = null;
+	#relatedPages = 0;
+	#relatedRequest: RelatedRequest | null = null;
 	#watching: SearchClient | null = null;
 	#unwatch: (() => void) | null = null;
 	#watchRun = 0;
@@ -177,7 +203,31 @@ class MailSearchStore {
 	}
 
 	get exhausted(): boolean {
+		if (this.related?.main) return this.related.status !== 'ready' || !this.related.summary || this.#relatedPages >= this.related.summary.pages;
 		return !this.summary || this.#pages >= this.summary.pages;
+	}
+
+	get relatedShown(): Message[] {
+		const related = this.related;
+		if (!related || related.status !== 'ready') return [];
+		if (related.main) return related.rows;
+		return related.rows.slice(0, related.expanded ? RELATED_EXPANDED : RELATED_ROWS);
+	}
+
+	get relatedMore(): boolean {
+		const related = this.related;
+		return !!related && related.status === 'ready' && !related.main && !related.expanded && related.rows.length > RELATED_ROWS;
+	}
+
+	expandRelated(): void {
+		if (this.related && !this.related.main) this.related = { ...this.related, expanded: true };
+	}
+
+	retryRelated(): void {
+		const request = this.#relatedRequest;
+		if (!request || request.run !== this.#run) return;
+		this.#cancelRelated();
+		void this.#executeRelated(request);
 	}
 
 	get newAvailable(): boolean {
@@ -351,6 +401,7 @@ class MailSearchStore {
 	}
 
 	async loadMore(): Promise<void> {
+		if (this.related?.main) return this.#loadMoreRelated();
 		const session = this.#session;
 		const summary = this.summary;
 		const run = this.#run;
@@ -376,19 +427,46 @@ class MailSearchStore {
 		}
 	}
 
+	async #loadMoreRelated(): Promise<void> {
+		const session = this.#relatedSession;
+		const related = this.related;
+		const run = this.#run;
+		if (!session || !related?.summary || this.loadingMore || this.#relatedPages >= related.summary.pages) return;
+		this.loadingMore = true;
+		this.moreFailed = false;
+		try {
+			const page = await session.client.page(session.id, this.#relatedPages);
+			if (run !== this.#run || this.#relatedSession !== session) return;
+			if (!page.ok) {
+				if (page.reason === 'invalidated') this.refresh();
+				else this.moreFailed = true;
+				return;
+			}
+			const ui = await this.#load();
+			if (run !== this.#run || this.#relatedSession !== session || !this.related) return;
+			this.#relatedPages += 1;
+			this.related = { ...this.related, rows: [...this.related.rows, ...page.groups.map(ui.messageFromRow)] };
+		} catch {
+			if (run === this.#run) this.moreFailed = true;
+		} finally {
+			if (run === this.#run) this.loadingMore = false;
+		}
+	}
+
 	clear(): void {
 		this.setDraft('');
 		this.commit('');
 	}
 
 	findResult(id: string): Message | null {
-		return this.results.find((r) => r.id === id) ?? this.preview.find((r) => r.id === id) ?? null;
+		return this.results.find((r) => r.id === id) ?? this.related?.rows.find((r) => r.id === id) ?? this.preview.find((r) => r.id === id) ?? null;
 	}
 
 	patch(id: string, patch: Partial<Message>): void {
 		const apply = (list: Message[]) => (list.some((r) => r.id === id) ? list.map((r) => (r.id === id ? { ...r, ...patch } : r)) : list);
 		this.results = apply(this.results);
 		this.preview = apply(this.preview);
+		if (this.related) this.related = { ...this.related, rows: apply(this.related.rows) };
 	}
 
 	historyMatches(prefix: string): string[] {
@@ -396,7 +474,19 @@ class MailSearchStore {
 		return this.history.filter((h) => h.toLowerCase().startsWith(p) && h !== prefix.trim());
 	}
 
+	#cancelRelated(): void {
+		this.#relatedAbort?.abort();
+		this.#relatedAbort = null;
+		const session = this.#relatedSession;
+		this.#relatedSession = null;
+		this.#relatedPages = 0;
+		this.related = null;
+		if (session) void session.client.closeQuery(session.id);
+	}
+
 	#cancel(): void {
+		this.#cancelRelated();
+		this.#relatedRequest = null;
 		this.#abort?.abort();
 		this.#abort = null;
 		const session = this.#session;
@@ -484,6 +574,11 @@ class MailSearchStore {
 			this.provisional = null;
 			this.results = first.groups.map(ui.messageFromRow);
 			this.searching = false;
+			if (this.prefs?.semantic && this.mode === 'saved' && ui.relatedAllowed(parsed.query.eligibility, reply.summary.matches)) {
+				const request: RelatedRequest = { run, client, query: parsed.query, ctx, exclude: reply.summary.id, main: reply.summary.matches === 0 };
+				this.#relatedRequest = request;
+				void this.#executeRelated(request);
+			}
 			if (this.prefs?.history) void this.#remember(client, text);
 		} catch {
 			if (!current()) return;
@@ -492,6 +587,54 @@ class MailSearchStore {
 			this.provisional = null;
 			this.failed = true;
 			this.searching = false;
+		}
+	}
+
+	async #executeRelated(request: RelatedRequest): Promise<void> {
+		const accountId = this.#accountId;
+		const current = () => request.run === this.#run && this.#accountId === accountId && this.#relatedRequest === request;
+		const abort = new AbortController();
+		this.#relatedAbort = abort;
+		const settle = (status: RelatedStatus, rows: Message[] = [], summary: MeaningSummary | null = null) => {
+			this.related = { status, main: request.main, rows, summary, expanded: false };
+		};
+		settle('loading');
+		try {
+			const ui = await this.#load();
+			if (!current()) return;
+			const reply = await request.client.meaning(request.query, request.ctx, { group: 'thread', exclude: request.exclude }, abort.signal);
+			if (!current()) {
+				if (reply.ok) void request.client.closeQuery(reply.summary.id);
+				return;
+			}
+			if (!reply.ok) {
+				if ('cancelled' in reply) return;
+				if ('error' in reply) return settle('failed');
+				switch (reply.unavailable) {
+					case 'tooLong':
+						return settle('tooLong');
+					case 'busy':
+						return settle('busy');
+					case 'model':
+					case 'empty':
+						return settle('preparing');
+					default:
+						this.related = null;
+						return;
+				}
+			}
+			this.#relatedSession = { id: reply.summary.id, client: request.client };
+			const first = reply.summary.pages > 0 ? await request.client.page(reply.summary.id, 0) : { ok: true as const, groups: [] };
+			if (!current()) return;
+			if (!first.ok) {
+				if (first.reason === 'invalidated') this.refresh();
+				else settle('failed');
+				return;
+			}
+			this.#relatedPages = reply.summary.pages > 0 ? 1 : 0;
+			settle('ready', first.groups.map(ui.messageFromRow), reply.summary);
+		} catch {
+			if (current()) settle('failed');
 		}
 	}
 
