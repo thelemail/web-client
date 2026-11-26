@@ -5161,5 +5161,22 @@
 	"handoff_checkout_title": "Taking you to checkout",
 	"handoff_checkout_lede": "You’ll pay on our payment provider’s secure page, then come back here to your mailbox.",
 	"handoff_checkout_host": "Secure checkout",
-	"cal_create_more": "More things to create"
+	"cal_create_more": "More things to create",
+	"mail_search_related_title": "Related results",
+	"mail_search_related_note": "These may use different words from your search.",
+	"mail_search_related_no_exact": "No exact matches",
+	"mail_search_related_similar": "Here is mail with a similar meaning. The wording may differ.",
+	"mail_search_related_more": "More related",
+	"mail_search_related_loading": "Looking for similar mail…",
+	"mail_search_related_empty": "Nothing similar found.",
+	"mail_search_related_too_long": "This search is too long to look for similar mail. Shorten it to see related results.",
+	"mail_search_related_preparing": "Similar results are getting ready on this device.",
+	"mail_search_related_busy": "Similar results are in use in another tab.",
+	"mail_search_related_failed": "Couldn’t look for similar mail.",
+	"mail_search_related_incomplete": "Some older mail isn’t ready for similar results yet.",
+	"mail_search_related_capped": "Similar results cover your most recent mail.",
+	"mail_search_related_rebuilding": "Similar results are being updated and may be incomplete.",
+	"mail_search_channel_words": "Words matched",
+	"mail_search_channel_meaning": "Similar meaning",
+	"mail_search_channel_both": "Both"
 }
