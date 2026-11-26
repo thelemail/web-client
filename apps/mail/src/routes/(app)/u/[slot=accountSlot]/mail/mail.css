@@ -1088,23 +1088,6 @@
 .mail-app .mrow .hit-ct { flex: 0 0 auto; font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; }
 .mail-app .mrow .hit-in { font-weight: 600; color: var(--fg-muted); margin-inline-end: 6px; }
 .mail-app .mrow .kind-chip.chan { color: var(--fg-muted); background: var(--neutral-fill); border-color: transparent; font-weight: 500; }
-.mail-app .srch-related { border-top: 1px solid var(--border); }
-.mail-app .srch-related.main { border-top: none; }
-.mail-app .srch-related .sr-head { display: flex; align-items: flex-start; gap: 8px; padding: 14px 18px 8px; }
-.mail-app .srch-related .sr-head svg { flex: 0 0 auto; margin-top: 2px; color: var(--fg-faint); }
-.mail-app .srch-related .sr-titles { min-width: 0; }
-.mail-app .srch-related h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--fg-strong); }
-.mail-app .srch-related p { margin: 2px 0 0; font-size: 12px; color: var(--fg-muted); }
-.mail-app .srch-related .sr-state { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 32px; padding: 0 18px 8px 40px; font-size: 12.5px; color: var(--fg-muted); }
-.mail-app .srch-related .sr-state.warn { color: var(--brass-700); }
-.mail-app .srch-related .sr-state .lf-spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--pine-100); border-top-color: var(--primary); animation: lf-spin 0.8s linear infinite; }
-.mail-app .srch-related .sr-cover { min-height: 0; }
-.mail-app .srch-related .sr-more { display: flex; justify-content: center; padding: 10px 16px 18px; }
-@media (prefers-reduced-motion: reduce) { .mail-app .srch-related .sr-state .lf-spin { animation: none; } }
-@media (max-width: 640px) {
-	.mail-app .srch-related .sr-head { padding: 12px 12px 6px; }
-	.mail-app .srch-related .sr-state { padding: 0 12px 8px 34px; }
-}
 .mail-app .empty-list .q-err { font-family: var(--font-mono); font-size: 12px; color: var(--fg); background: var(--bg-sunken); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 4px 8px; max-width: 100%; overflow-wrap: anywhere; }
 .mail-app .empty-list .q-err mark { background: none; color: var(--danger-700); text-decoration: underline wavy var(--danger-500); text-underline-offset: 3px; }
 @media (max-width: 640px) {

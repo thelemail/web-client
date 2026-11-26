@@ -61,7 +61,7 @@
 		</div>
 	{:else if related.status === 'loading'}
 		<div class="sr-state" role="status">
-			{#if slow.visible}<span class="lf-spin" aria-hidden="true"></span><span>{msg.mail_search_related_loading()}</span>{/if}
+			{#if slow.visible}<span class="sr-spin" aria-hidden="true"></span><span>{msg.mail_search_related_loading()}</span>{/if}
 		</div>
 	{:else if related.rows.length === 0}
 		<div class="sr-state" role="status"><span>{msg.mail_search_related_empty()}</span></div>
@@ -79,3 +79,28 @@
 	{/if}
 	<span class="sr-only" role="status" aria-live="polite">{announce}</span>
 </section>
+
+<style>
+	.srch-related { border-top: 1px solid var(--border); }
+	.srch-related.main { border-top: none; }
+	.sr-head { display: flex; align-items: flex-start; gap: 8px; padding: 14px 18px 8px; }
+	.sr-head :global(svg) { flex: 0 0 auto; margin-top: 2px; color: var(--fg-faint); }
+	.sr-titles { min-width: 0; }
+	h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--fg-strong); }
+	p { margin: 2px 0 0; font-size: 12px; color: var(--fg-muted); }
+	.sr-state { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 32px; padding: 0 18px 8px 40px; font-size: 12.5px; color: var(--fg-muted); }
+	.sr-state.warn { color: var(--brass-700); }
+	.sr-spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--pine-100); border-top-color: var(--primary); }
+	.sr-cover { min-height: 0; }
+	.sr-more { display: flex; justify-content: center; padding: 10px 16px 18px; }
+	@media (prefers-reduced-motion: no-preference) {
+		.sr-spin { animation: sr-spin 0.8s linear infinite; }
+	}
+	@keyframes sr-spin {
+		to { transform: rotate(360deg); }
+	}
+	@media (max-width: 640px) {
+		.sr-head { padding: 12px 12px 6px; }
+		.sr-state { padding: 0 12px 8px 34px; }
+	}
+</style>
