@@ -2,7 +2,7 @@
 	import './layout.css';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import favicon from '$core/assets/favicon.svg';
+	import favicon from '$core/assets/favicon-email.svg';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { platform } from '$platform';
@@ -39,7 +39,8 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href="/favicon.ico" sizes="32x32" />
+	<link rel="icon" href={favicon} type="image/svg+xml" />
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </svelte:head>
 <div data-app-ready style="display: contents">{@render children()}</div>
