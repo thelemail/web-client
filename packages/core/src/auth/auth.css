@@ -472,18 +472,18 @@
 	color: var(--success-700);
 }
 
-.auth .switch {
+.auth .af-switch {
 	text-align: center;
 	font-size: 14px;
 	color: var(--fg-muted);
 	margin: 0;
 }
-.auth .switch a,
-.auth .switch .linklike {
+.auth .af-switch a,
+.auth .af-switch .linklike {
 	color: var(--link);
 	font-weight: 600;
 }
-.auth .switch a:hover {
+.auth .af-switch a:hover {
 	text-decoration: underline;
 }
 .auth .legal {

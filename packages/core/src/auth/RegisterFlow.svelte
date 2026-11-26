@@ -361,7 +361,7 @@
 {#snippet terms_(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet freeFoot()}
-	<p class="switch">
+	<p class="af-switch">
 		<Rich text={m.auth_register_free_foot()} tags={{ free: freeButton }} />
 	</p>
 {/snippet}

@@ -698,13 +698,6 @@
 	}
 }
 
-.card {
-	border: 1px solid var(--border-soft);
-	border-radius: var(--radius-surface);
-	background: var(--surface);
-	overflow: hidden;
-}
-
 .toast-bar {
 	display: flex;
 	align-items: center;

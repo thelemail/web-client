@@ -271,7 +271,7 @@
 				</Button>
 			</div>
 		</div>
-		<p class="switch">
+		<p class="af-switch">
 			<Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} />
 		</p>
 	</div>

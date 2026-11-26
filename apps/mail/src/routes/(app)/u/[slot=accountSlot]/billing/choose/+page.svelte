@@ -159,7 +159,7 @@
 </svelte:head>
 
 {#snippet signOutFoot()}
-	<p class="switch">
+	<p class="af-switch">
 		{m.billing_choose_signed_in_as({ email: auth.email ?? m.billing_choose_this_account() })}
 		<button type="button" class="linklike" onclick={signOut}>{m.billing_choose_sign_out()}</button>
 	</p>
