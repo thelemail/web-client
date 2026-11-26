@@ -5114,7 +5114,7 @@
   "auth_register_side_label": "Ce que comprend l’offre gratuite",
   "auth_register_side_title": "Tout ce qu’il faut pour commencer",
   "auth_register_side_price": "aussi longtemps que vous voulez",
-  "auth_register_side_address": "Votre propre adresse, <b>{address}</b>",
+  "auth_register_side_address": "Votre propre adresse <b>@{domain}</b>",
   "auth_register_side_storage": "1 Go de stockage pour vos e-mails",
   "auth_register_side_no_card": "Ni carte bancaire, ni numéro de téléphone",
   "auth_register_side_upgrade": "Votre propre domaine et plus de stockage avec une offre payante, quand vous le souhaitez",
@@ -5159,5 +5159,6 @@
   "handoff_open_mail_lede": "Vous êtes connecté. Direction <b>{host}</b>.",
   "handoff_checkout_title": "Vers le paiement",
   "handoff_checkout_lede": "Vous paierez sur la page sécurisée de notre prestataire de paiement, puis reviendrez à votre boîte.",
-  "handoff_checkout_host": "Paiement sécurisé"
+  "handoff_checkout_host": "Paiement sécurisé",
+  "cal_create_more": "Créer autre chose"
 }

@@ -5114,7 +5114,7 @@
 	"auth_register_side_label": "What the free plan includes",
 	"auth_register_side_title": "Everything you need to start",
 	"auth_register_side_price": "for as long as you like",
-	"auth_register_side_address": "Your own address, <b>{address}</b>",
+	"auth_register_side_address": "Your own <b>@{domain}</b> address",
 	"auth_register_side_storage": "1 GB of mail storage",
 	"auth_register_side_no_card": "No card and no phone number",
 	"auth_register_side_upgrade": "Your own domain and more storage on a paid plan, whenever you’re ready",
@@ -5159,5 +5159,6 @@
 	"handoff_open_mail_lede": "You’re signed in. Taking you to <b>{host}</b>.",
 	"handoff_checkout_title": "Taking you to checkout",
 	"handoff_checkout_lede": "You’ll pay on our payment provider’s secure page, then come back here to your mailbox.",
-	"handoff_checkout_host": "Secure checkout"
+	"handoff_checkout_host": "Secure checkout",
+	"cal_create_more": "More things to create"
 }

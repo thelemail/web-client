@@ -5114,7 +5114,7 @@
 	"auth_register_side_label": "O que inclui o plano gratuito",
 	"auth_register_side_title": "Tudo o que precisa para começar",
 	"auth_register_side_price": "durante o tempo que quiser",
-	"auth_register_side_address": "O seu próprio endereço, <b>{address}</b>",
+	"auth_register_side_address": "O seu próprio endereço <b>@{domain}</b>",
 	"auth_register_side_storage": "1 GB de armazenamento de correio",
 	"auth_register_side_no_card": "Sem cartão e sem número de telefone",
 	"auth_register_side_upgrade": "O seu próprio domínio e mais armazenamento num plano pago, quando quiser",
@@ -5159,5 +5159,6 @@
 	"handoff_open_mail_lede": "Sessão iniciada. A levá-lo para <b>{host}</b>.",
 	"handoff_checkout_title": "A seguir para o pagamento",
 	"handoff_checkout_lede": "Vai pagar na página segura do nosso fornecedor de pagamentos e depois volta à sua caixa de correio.",
-	"handoff_checkout_host": "Pagamento seguro"
+	"handoff_checkout_host": "Pagamento seguro",
+	"cal_create_more": "Criar outro tipo"
 }

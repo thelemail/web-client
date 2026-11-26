@@ -5114,7 +5114,7 @@
 	"auth_register_side_label": "Was der kostenlose Tarif enthält",
 	"auth_register_side_title": "Alles, was Sie zum Start brauchen",
 	"auth_register_side_price": "so lange Sie möchten",
-	"auth_register_side_address": "Ihre eigene Adresse, <b>{address}</b>",
+	"auth_register_side_address": "Eine eigene <b>@{domain}</b>-Adresse",
 	"auth_register_side_storage": "1 GB Speicher für E-Mails",
 	"auth_register_side_no_card": "Keine Karte und keine Telefonnummer",
 	"auth_register_side_upgrade": "Eigene Domain und mehr Speicher mit einem bezahlten Tarif, wann immer Sie möchten",
@@ -5159,5 +5159,6 @@
 	"handoff_open_mail_lede": "Sie sind angemeldet. Es geht weiter zu <b>{host}</b>.",
 	"handoff_checkout_title": "Weiter zur Bezahlung",
 	"handoff_checkout_lede": "Sie bezahlen auf der sicheren Seite unseres Zahlungsanbieters und kommen danach zu Ihrem Postfach zurück.",
-	"handoff_checkout_host": "Sichere Bezahlung"
+	"handoff_checkout_host": "Sichere Bezahlung",
+	"cal_create_more": "Weitere Elemente erstellen"
 }

@@ -186,7 +186,6 @@
 	);
 	const confirmTone = $derived(submitError || confirmBad ? 'bad' : matches ? 'ok' : 'hint');
 	const canCreate = $derived(addressReady && passwordReady && (paid || terms));
-	const freeAddress = $derived(handle.trim() ? address : `yourname@${mailDomain}`);
 	const workLines = $derived([m.auth_s_work_keys(), m.auth_s_work_account(), m.auth_s_work_open()]);
 
 	function submitAddress(e: SubmitEvent) {
@@ -372,7 +371,7 @@
 		<h2>{m.auth_register_side_title()}</h2>
 		<p class="plan"><b>{m.auth_plan_free_name()}</b><span>{m.auth_register_side_price()}</span></p>
 		<ul>
-			<li><Icon icon={faCheck} size={15} /><span><Rich text={m.auth_register_side_address({ address: freeAddress })} tags={{ b: domain }} /></span></li>
+			<li><Icon icon={faCheck} size={15} /><span><Rich text={m.auth_register_side_address({ domain: mailDomain })} tags={{ b: domain }} /></span></li>
 			<li><Icon icon={faCheck} size={15} /><span>{m.auth_register_side_storage()}</span></li>
 			<li><Icon icon={faCheck} size={15} /><span>{m.auth_register_side_no_card()}</span></li>
 			<li><Icon icon={faCheck} size={15} /><span>{m.auth_register_side_upgrade()}</span></li>
