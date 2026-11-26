@@ -1,6 +1,7 @@
 import type { Database } from '@thelemail/sqlite-wasm';
 import type { SearchWriter } from '../sqlite/writer';
-import { Coverage, Dimension, Field } from '../sqlite/types';
+import { Coverage, Dimension, Field, SourceKind } from '../sqlite/types';
+import { ArtifactState } from '../sync/store';
 import { encodeHalf } from './pool';
 import type { EmbeddedPassage, EmbedInput } from './protocol';
 import { RECIPE } from './recipe';
@@ -156,9 +157,10 @@ export class PassageStore {
 				JOIN coverage b ON b.source = c.source AND b.dimension = ?
 				LEFT JOIN coverage a ON a.source = c.source AND a.dimension = ?
 				WHERE c.dimension = ? AND c.state = ? AND b.state NOT IN (${WAITING.join(', ')}) AND (a.state IS NULL OR a.state NOT IN (${WAITING.join(', ')}))
+				AND NOT EXISTS (SELECT 1 FROM vector_index v WHERE s.kind = ? AND v.source_id = s.source_id AND v.content_rev = s.content_rev AND v.component_epoch = ? AND v.state = 0)
 				ORDER BY s.date DESC, s.id DESC
 				LIMIT ?`,
-				[Dimension.body, Dimension.attachmentText, Dimension.semantic, Coverage.pending, limit]
+				[Dimension.body, Dimension.attachmentText, Dimension.semantic, Coverage.pending, SourceKind.message, this.#meta(EPOCH_KEY) ?? -1, limit]
 			) as [number, number, number][]
 		).map(([id, contentRev, body]) => ({ id, contentRev, body: body as Coverage }));
 	}
@@ -183,7 +185,7 @@ export class PassageStore {
 		return rev === contentRev && state === Coverage.pending;
 	}
 
-	put(id: number, contentRev: number, epoch: number, passages: readonly EmbeddedPassage[]): boolean {
+	put(id: number, contentRev: number, epoch: number, passages: readonly EmbeddedPassage[], hydratedRev: number | null = null): boolean {
 		return this.#writer.atomic(() => {
 			if (this.#meta(EPOCH_KEY) !== epoch || !this.#current(id, contentRev)) return false;
 			this.#db.exec('DELETE FROM passage_refs WHERE epoch = ? AND source = ?', { bind: [epoch, id] });
@@ -199,6 +201,14 @@ export class PassageStore {
 				}
 			});
 			this.#db.exec('UPDATE coverage SET state = ? WHERE source = ? AND dimension = ?', { bind: [Coverage.complete, id, Dimension.semantic] });
+			if (this.#db.selectValue('SELECT kind FROM sources WHERE id = ?', [id]) === SourceKind.message) {
+				const state = hydratedRev === null ? ArtifactState.due : ArtifactState.clean;
+				this.#db.exec(
+					`INSERT INTO vector_uploads (source, epoch, state, rev, upload_at) VALUES (?, ?, ?, ?, 0)
+					ON CONFLICT (source) DO UPDATE SET epoch = excluded.epoch, state = excluded.state, rev = max(rev, excluded.rev), upload_at = 0`,
+					{ bind: [id, epoch, state, hydratedRev ?? 0] }
+				);
+			}
 			this.#writer.touchVectors(id);
 			return true;
 		});
