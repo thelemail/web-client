@@ -19,7 +19,7 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
-	import Seg from '../Seg.svelte';
+	import { Segmented, type SegmentedOption } from '$core/components/ui/segmented';
 	import SignatureSource from './SignatureSource.svelte';
 	import { SignatureImage } from '$core/mail/editor/signatureImage';
 	import { sanitizeSignatureHtml } from '$core/mail/render/sanitizeSignature';
@@ -58,10 +58,10 @@
 	let pasteUndo = $state<string | null>(null);
 	let fileInputRef: HTMLInputElement | undefined = $state();
 
-	const modeOptions: { v: SignatureMode; l: string }[] = $derived([
-		{ v: 'rich', l: m.settings_signature_mode_rich() },
-		{ v: 'html', l: 'HTML' },
-		{ v: 'markdown', l: 'Markdown' }
+	const modeOptions: SegmentedOption<SignatureMode>[] = $derived([
+		{ value: 'rich', label: m.settings_signature_mode_rich() },
+		{ value: 'html', label: 'HTML' },
+		{ value: 'markdown', label: 'Markdown' }
 	]);
 
 	const sourcePlaceholder = $derived.by(() => {
@@ -309,7 +309,11 @@
 </script>
 
 <div class="sig-modes">
-	<Seg value={mode} options={modeOptions} label={m.settings_signature_mode_aria()} onChange={switchMode} />
+	<Segmented
+		bind:value={() => mode, (v) => v && switchMode(v)}
+		options={modeOptions}
+		aria-label={m.settings_signature_mode_aria()}
+	/>
 </div>
 
 {#if locked}

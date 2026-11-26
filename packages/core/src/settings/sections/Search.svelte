@@ -3,7 +3,7 @@
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Card from '../Card.svelte';
-	import Toggle from '../Toggle.svelte';
+	import { Switch } from '$core/components/ui/switch';
 	import { Button } from '$core/components/ui/button';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { searchRuntime } from '$core/search/lazy';
@@ -164,7 +164,14 @@
 		t={m.settings_search_index()}
 		d={!available ? m.settings_search_index_unavailable_desc() : saved ? m.settings_search_index_on_desc() : m.settings_search_index_off_desc()}
 	>
-		<Toggle on={saved} disabled={busy || prefs === null || !available} onChange={toggleIndex} />
+		{#snippet children(row)}
+			<Switch
+				bind:checked={() => saved, toggleIndex}
+				disabled={busy || prefs === null || !available}
+				aria-labelledby={row.labelId}
+				aria-describedby={row.descId}
+			/>
+		{/snippet}
 	</Row>
 	<div class="setrow col" role="status" aria-live="polite">
 		<div class="info">
@@ -191,7 +198,14 @@
 	</div>
 	{#if saved}
 		<Row t={m.settings_search_meaning()} d={meaning ? m.settings_search_meaning_on_desc() : m.settings_search_meaning_off_desc()}>
-			<Toggle on={meaning} disabled={busy || prefs === null} onChange={toggleMeaning} />
+			{#snippet children(row)}
+				<Switch
+					bind:checked={() => meaning, toggleMeaning}
+					disabled={busy || prefs === null}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 		{#if meaningLine}
 			<div class="setrow col" role="status" aria-live="polite">
@@ -201,7 +215,14 @@
 			</div>
 		{/if}
 		<Row t={m.settings_search_pause()} d={m.settings_search_pause_desc()}>
-			<Toggle on={prefs?.paused ?? false} disabled={busy} onChange={(v) => void run(() => searchRuntime.setPaused(v))} />
+			{#snippet children(row)}
+				<Switch
+					bind:checked={() => prefs?.paused ?? false, (v) => void run(() => searchRuntime.setPaused(v))}
+					disabled={busy}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 		<Row t={m.settings_search_retry()} d={retried ? m.settings_search_retry_started() : m.settings_search_retry_desc({ count: fmt(failures) })}>
 			<Button
@@ -229,9 +250,16 @@
 {#if saved}
 	<Card title={m.settings_search_cloud_title()}>
 		<Row t={m.settings_search_cloud()} d={cloud === 'off' ? m.settings_search_cloud_off_desc() : m.settings_search_cloud_on_desc()}>
-			{#if cloud !== null && phase === 'ready'}
-				<Toggle on={cloud !== 'off'} disabled={busy || cloud === 'unavailable'} onChange={toggleCloud} />
-			{/if}
+			{#snippet children(row)}
+				{#if cloud !== null && phase === 'ready'}
+					<Switch
+						bind:checked={() => cloud !== 'off', toggleCloud}
+						disabled={busy || cloud === 'unavailable'}
+						aria-labelledby={row.labelId}
+						aria-describedby={row.descId}
+					/>
+				{/if}
+			{/snippet}
 		</Row>
 		{#if cloudLine}
 			<div class="setrow col" role="status" aria-live="polite">
@@ -251,7 +279,14 @@
 
 	<Card title={m.settings_search_history_title()}>
 		<Row t={m.settings_search_history()} d={m.settings_search_history_desc()}>
-			<Toggle on={prefs?.history ?? false} disabled={busy} onChange={(v) => void run(() => searchRuntime.setHistory(v))} />
+			{#snippet children(row)}
+				<Switch
+					bind:checked={() => prefs?.history ?? false, (v) => void run(() => searchRuntime.setHistory(v))}
+					disabled={busy}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 	</Card>
 {/if}

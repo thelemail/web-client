@@ -101,7 +101,7 @@
 		</ul>
 
 		<label class="cer-ack danger">
-			<input type="checkbox" bind:checked={ack} />
+			<input type="checkbox" class="check" bind:checked={ack} />
 			<span>{m.settings_domains_remove_ack()}</span>
 		</label>
 

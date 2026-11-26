@@ -4,9 +4,10 @@
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
-	import Seg from '../Seg.svelte';
+	import { Segmented } from '$core/components/ui/segmented';
 	import Card from '../Card.svelte';
 	import { m } from '$paraglide/messages.js';
+	import { faDisplay, faMoon, faSun } from '@fortawesome/pro-regular-svg-icons';
 </script>
 
 <SecHead desc={m.settings_appearance_desc()} />
@@ -14,15 +15,18 @@
 <Card title={m.settings_appearance_theme_title()}>
 	<SettingsGate controls={['select']}>
 		<Row t={m.settings_appearance_colour_mode()} d={m.settings_appearance_colour_mode_desc()}>
-			<Seg
-				value={theme.pref}
-				options={[
-					{ v: 'light', l: THEME_META.light.label(), icon: 'sun' },
-					{ v: 'dark', l: THEME_META.dark.label(), icon: 'moon' },
-					{ v: 'auto', l: THEME_META.auto.label(), icon: 'monitor' }
-				]}
-				onChange={(v) => settingsDraft.setTheme(v as ThemePref)}
-			/>
+			{#snippet children(row)}
+				<Segmented
+					bind:value={() => theme.pref, (v) => v && settingsDraft.setTheme(v)}
+					options={[
+						{ value: 'light' as ThemePref, label: THEME_META.light.label(), icon: faSun },
+						{ value: 'dark' as ThemePref, label: THEME_META.dark.label(), icon: faMoon },
+						{ value: 'auto' as ThemePref, label: THEME_META.auto.label(), icon: faDisplay }
+					]}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 	</SettingsGate>
 </Card>

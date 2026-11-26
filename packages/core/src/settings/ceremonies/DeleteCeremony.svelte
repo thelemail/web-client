@@ -270,11 +270,11 @@
 	{:else if step === 1}
 		<div class="cer-pane">
 			<label class="cer-ack danger">
-				<input type="checkbox" bind:checked={ackA} />
+				<input type="checkbox" class="check" bind:checked={ackA} />
 				<span>{m.settings_ceremony_delete_ack_destroyed()}</span>
 			</label>
 			<label class="cer-ack danger">
-				<input type="checkbox" bind:checked={ackB} />
+				<input type="checkbox" class="check" bind:checked={ackB} />
 				<span>{m.settings_ceremony_delete_ack_exported()}</span>
 			</label>
 			<div class="field">

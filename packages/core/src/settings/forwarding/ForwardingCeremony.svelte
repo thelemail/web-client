@@ -16,7 +16,7 @@
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
-	import Seg from '../Seg.svelte';
+	import { Segmented, type SegmentedOption } from '$core/components/ui/segmented';
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { Label } from '$core/components/ui/label';
@@ -36,9 +36,9 @@
 
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-	const modeChoices = $derived([
-		{ v: 'encrypted', l: m.settings_forwarding_mode_encrypted() },
-		{ v: 'plain', l: m.settings_forwarding_mode_plain() }
+	const modeChoices: SegmentedOption<ReadDelegationMode>[] = $derived([
+		{ value: 'encrypted', label: m.settings_forwarding_mode_encrypted() },
+		{ value: 'plain', label: m.settings_forwarding_mode_plain() }
 	]);
 
 	let step = $state(0);
@@ -161,12 +161,7 @@
 
 				<div class="field">
 					<span class="field-lbl" id="forwarding-mode-lbl">{m.settings_forwarding_where()}</span>
-					<Seg
-						value={mode}
-						options={modeChoices}
-						labelledby="forwarding-mode-lbl"
-						onChange={(v) => (mode = v as ReadDelegationMode)}
-					/>
+					<Segmented bind:value={mode} options={modeChoices} aria-labelledby="forwarding-mode-lbl" />
 					<div class="field-hint">
 						{#if plain}
 							{m.settings_forwarding_plain_hint()}

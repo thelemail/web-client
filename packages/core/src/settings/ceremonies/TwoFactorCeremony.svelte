@@ -40,6 +40,7 @@
 	import { twofactor } from '$core/stores/twofactor.svelte';
 	import type { CeremonyKind, TwoFaSetupMethod } from '../data';
 	import { Button } from '$core/components/ui/button';
+	import { RadioGroup, RadioGroupItem } from '$core/components/ui/radio-group';
 	import { BACKUP_CODE_MAX_LENGTH, BACKUP_CODE_PLACEHOLDER, backupCodesFile } from '$core/auth/backup-codes';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -412,27 +413,25 @@
 			<div class="cer-lede">
 				<p>{m.settings_ceremony_twofa_lede()}</p>
 			</div>
-			<div class="method-opts">
+			<RadioGroup
+				class="method-opts"
+				aria-label={m.settings_ceremony_twofa_step_method()}
+				bind:value={() => method, (v) => (method = v as TwoFaSetupMethod)}
+			>
 				{#each methodOpts as o (o.v)}
 					{@const Ic = o.icon}
-					<button
-						type="button"
-						class="method-opt"
-						class:on={method === o.v}
-						disabled={o.disabled}
-						onclick={() => (method = o.v)}
-					>
-						<span class="mo-radio"><span></span></span>
+					<label class="method-opt" class:on={method === o.v} for="twofa-method-{o.v}">
+						<RadioGroupItem id="twofa-method-{o.v}" value={o.v} disabled={o.disabled} />
 						<Icon icon={Ic} size={20} />
-						<div class="mo-text">
-							<div class="mo-t">
+						<span class="mo-text">
+							<span class="mo-t">
 								{o.t}{#if o.recommended && !o.disabled}<span class="mo-tag">{m.settings_ceremony_twofa_recommended()}</span>{/if}
-							</div>
-							<div class="mo-d">{o.note ?? o.d}</div>
-						</div>
-					</button>
+							</span>
+							<span class="mo-d">{o.note ?? o.d}</span>
+						</span>
+					</label>
 				{/each}
-			</div>
+			</RadioGroup>
 			{#if setupError}
 				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{setupError}</span></span>
 			{/if}

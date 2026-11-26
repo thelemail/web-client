@@ -3,7 +3,7 @@
 	import { faCircleExclamation, faInbox } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
-	import Toggle from '../Toggle.svelte';
+	import { Switch } from '$core/components/ui/switch';
 	import Select from '../Select.svelte';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
@@ -89,7 +89,13 @@
 			t={m.settings_catchall_route_mail()}
 			d={m.settings_catchall_route_mail_desc()}
 		>
-			<Toggle on={enabled} onChange={onToggle} />
+			{#snippet children(row)}
+				<Switch
+					bind:checked={() => enabled, onToggle}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 		{#if enabled}
 			<Row t={m.settings_catchall_deliver_to()} d={m.settings_catchall_deliver_to_desc()}>
