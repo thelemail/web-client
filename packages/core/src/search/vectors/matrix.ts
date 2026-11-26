@@ -124,6 +124,11 @@ export class VectorMatrix {
 		return this.#omitted;
 	}
 
+	omit(source: number): void {
+		this.remove(source);
+		this.#omitted.add(source);
+	}
+
 	has(source: number): boolean {
 		return this.#entries.has(source);
 	}

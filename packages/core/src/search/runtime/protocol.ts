@@ -1,6 +1,7 @@
 import type { ParsedQuery } from '../query/ast';
 import type { Grouping, QueryContext, Sort } from '../sqlite/compile';
-import type { Completions, PageResult, Provisional, QueryOutcome } from '../sqlite/run';
+import type { Completions, MeaningSummary, PageResult, Provisional, QueryOutcome } from '../sqlite/run';
+import type { QueryError } from '../query/ast';
 import type { Conditions, JobClass } from './scheduler';
 import type { SyncProgress } from '../sync/jobs';
 import type { CoverageCount, QueueCounts } from '../sync/store';
@@ -73,8 +74,13 @@ export interface QueryRequestOptions {
 	group: Grouping;
 }
 
+export interface MeaningRequestOptions {
+	group: Grouping;
+}
+
 export type ClientRequest =
 	| { op: 'query'; token: number; query: ParsedQuery; ctx: QueryContext; options: QueryRequestOptions }
+	| { op: 'meaning'; token: number; query: ParsedQuery; ctx: QueryContext; options: MeaningRequestOptions }
 	| { op: 'cancel'; token: number }
 	| { op: 'page'; session: number; index: number }
 	| { op: 'closeQuery'; session: number }
@@ -90,6 +96,14 @@ export type ClientRequest =
 	| { op: 'bye' };
 
 export type QueryReply = QueryOutcome | { ok: false; cancelled: true };
+
+export type MeaningUnavailable = 'off' | 'words' | 'empty' | 'model' | 'busy' | 'tooLong';
+
+export type MeaningReply =
+	| { ok: true; summary: MeaningSummary }
+	| { ok: false; error: QueryError }
+	| { ok: false; unavailable: MeaningUnavailable }
+	| { ok: false; cancelled: true };
 
 export type Reply = { id: number; ok: true; value: unknown } | { id: number; ok: false; error: string };
 
@@ -119,6 +133,7 @@ export type ClientMessage = Reply | StatusEvent | ProgressEvent;
 
 export interface ClientResults {
 	query: QueryReply;
+	meaning: MeaningReply;
 	page: PageResult;
 	status: SearchStatus;
 	complete: Completions;

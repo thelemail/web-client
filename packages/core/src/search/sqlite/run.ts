@@ -1,5 +1,10 @@
 import type { BindValue, CApi, Database, SqlValue } from '@thelemail/sqlite-wasm';
 import type { ParsedQuery, QueryError } from '../query/ast';
+import { meaningSplit } from '../query/classify';
+import { DIMENSIONS } from '../model/pool';
+import { decoded, type VectorCache } from '../vectors/cache';
+import { quantize } from '../vectors/matrix';
+import { GroupHeap } from '../vectors/topk';
 import { SQLITE_INTERRUPT, resultCode } from './capi';
 import {
 	WEIGHTS,
@@ -19,11 +24,11 @@ import {
 	type Step
 } from './compile';
 import { highlight, type Excerpt, type ExcerptPart, type Span } from './excerpt';
-import { bounded, registerFunctions } from './functions';
+import { bounded, registerFunctions, significant } from './functions';
 import { suggest, type Suggestion } from './suggest';
 import { Tokenizer, nearWithin } from './tokenizer';
 import { COLLECTION_TYPE } from './writer';
-import { Dimension, Field, Role, SourceKind, type SourceKey } from './types';
+import { Coverage, Dimension, Field, Role, SourceKind, type SourceKey } from './types';
 
 export const PAGE_SIZE = 50;
 export const SELECTIVE = 2000;
@@ -39,6 +44,11 @@ const PROGRESS_EVERY_MS = 250;
 const PART_CHARS = 100_000;
 const RECIPIENTS = 3;
 const COMPLETIONS = 8;
+export const MEANING_GROUPS = 1000;
+const CANDIDATE_GROUPS = 2000;
+const CANDIDATE_PASSAGES = 4;
+const SCAN_ROWS = 8192;
+const PASSAGE_CHARS = 400;
 
 export interface QueryOptions {
 	sort: Sort;
@@ -69,6 +79,42 @@ export interface QuerySummary {
 
 export type QueryOutcome = { ok: true; summary: QuerySummary } | { ok: false; error: QueryError };
 
+export interface MeaningEpoch {
+	epoch: number;
+	current: boolean;
+	rebuilding: boolean;
+}
+
+export interface MeaningOptions {
+	group: Grouping;
+	vector: Float32Array;
+	epoch: MeaningEpoch;
+	cache: VectorCache;
+	signal?: AbortSignal;
+}
+
+export interface MeaningSummary {
+	id: number;
+	groups: number;
+	pages: number;
+	eligible: number;
+	incomplete: number;
+	capped: number;
+	scanned: number;
+	rebuilding: boolean;
+	generation: number;
+	resolved: Resolution[];
+}
+
+export type MeaningOutcome = { ok: true; summary: MeaningSummary } | { ok: false; error: QueryError } | { ok: false; reason: 'words' };
+
+export interface MatchedPassage {
+	field: Field;
+	attachmentId: string | null;
+	place: string | null;
+	text: string;
+}
+
 export interface ResultGroup {
 	key: string;
 	threadId: string | null;
@@ -98,6 +144,7 @@ export interface ResultRow extends ResultGroup {
 	excerpt: Excerpt | null;
 	filename: string | null;
 	fields: Field[];
+	passage?: MatchedPassage;
 }
 
 export type PageResult = { ok: true; groups: ResultRow[] } | { ok: false; reason: 'invalidated' | 'closed' };
@@ -115,6 +162,29 @@ interface Session {
 	summary: QuerySummary | null;
 	highlights: Highlight[];
 	generation: number;
+	passages?: Map<string, { epoch: number; source: number; ordinal: number }>;
+}
+
+interface Member {
+	source: number;
+	group: number;
+	kind: SourceKind;
+	sid: string;
+	date: number;
+	thread: string | null;
+}
+
+interface Rescored {
+	group: number;
+	member: number;
+	ordinal: number;
+	score: number;
+}
+
+function dot(a: Float32Array, b: Float32Array): number {
+	let sum = 0;
+	for (let d = 0; d < DIMENSIONS; d++) sum += a[d] * b[d];
+	return sum;
 }
 
 const ORDER: Readonly<Record<Sort, readonly (readonly [string, boolean])[]>> = {
@@ -206,6 +276,33 @@ export class QueryEngine {
 		}
 	}
 
+	async meaning(query: ParsedQuery, ctx: QueryContext, options: MeaningOptions): Promise<MeaningOutcome> {
+		const split = meaningSplit(query.root);
+		if (!split) return { ok: false, reason: 'words' };
+		const compiled = compile({ ...query, root: split.rest }, ctx);
+		if (!compiled.ok) return compiled;
+		const id = ++this.#next;
+		const session: Session = {
+			prefix: `temp.q${id}`,
+			sort: 'relevance',
+			tables: [],
+			invalid: false,
+			summary: null,
+			highlights: [],
+			generation: this.generation,
+			passages: new Map()
+		};
+		this.#sessions.set(id, session);
+		try {
+			const summary = await this.#meaning(id, session, compiled.plan, options);
+			session.summary = { id, matches: summary.groups, groups: summary.groups, pages: summary.pages, incomplete: summary.incomplete, excluded: 0, suggestions: [], generation: summary.generation, dims: [Dimension.semantic], resolved: summary.resolved };
+			return { ok: true, summary };
+		} catch (err) {
+			this.close(id);
+			throw err;
+		}
+	}
+
 	page(id: number, index: number): PageResult {
 		const session = this.#sessions.get(id);
 		if (!session?.summary) return { ok: false, reason: 'closed' };
@@ -246,7 +343,24 @@ export class QueryEngine {
 				},
 				session.highlights
 			)
-		);
+		).map((row) => {
+			const at = session.passages?.get(row.key);
+			const passage = at ? this.#passage(at.epoch, at.source, at.ordinal) : null;
+			return passage ? { ...row, passage } : row;
+		});
+	}
+
+	#passage(epoch: number, source: number, ordinal: number): MatchedPassage | null {
+		const head = this.#db.selectArray('SELECT field, attachment_id, place FROM passages WHERE epoch = ? AND source = ? AND ordinal = ?', [epoch, source, ordinal]) as
+			| [number, string | null, string | null]
+			| undefined;
+		if (!head) return null;
+		const ref = this.#db.selectArray(
+			'SELECT p.text, r.start, r.end FROM passage_refs r JOIN parts p ON p.id = r.part WHERE r.epoch = ? AND r.source = ? AND r.ordinal = ? ORDER BY r.part, r.start LIMIT 1',
+			[epoch, source, ordinal]
+		) as [string, number, number] | undefined;
+		const text = ref ? ref[0].slice(ref[1], Math.min(ref[2], ref[1] + PASSAGE_CHARS)) : '';
+		return { field: head[0] as Field, attachmentId: head[1], place: head[2], text };
 	}
 
 	#hydrate(group: ResultGroup, highlights: readonly Highlight[]): ResultRow {
@@ -537,6 +651,140 @@ export class QueryEngine {
 			suggestions,
 			generation: session.generation,
 			dims,
+			resolved: plan.resolved
+		};
+	}
+
+	async #meaning(id: number, session: Session, plan: Plan, options: MeaningOptions): Promise<MeaningSummary> {
+		const signal = options.signal;
+		const checkpoint = async () => {
+			signal?.throwIfAborted();
+			await yieldTask();
+			signal?.throwIfAborted();
+		};
+		const sources = this.#range('sources');
+		const leafTables: string[] = [];
+		for (const [k, leaf] of plan.leaves.entries()) {
+			const table = this.#table(session, `l${k}`, 'source INTEGER PRIMARY KEY, score REAL NOT NULL');
+			leafTables.push(table);
+			for (const step of leaf.steps) await this.#step(step, table, null, sources, checkpoint);
+		}
+		const universe = universeOf(plan);
+		const expr = render(plan.expr, plan, (leaf) => leafTables[leaf]);
+		const { epoch } = options.epoch;
+		const matrix = await options.cache.ready(epoch, checkpoint);
+
+		const covered: Fragment = options.epoch.current
+			? { sql: 'EXISTS (SELECT 1 FROM coverage c WHERE c.source = s.id AND c.dimension = ? AND c.state = ?)', params: [Dimension.semantic, Coverage.complete] }
+			: { sql: 'EXISTS (SELECT 1 FROM passages p WHERE p.epoch = ? AND p.source = s.id)', params: [epoch] };
+		const select = `SELECT s.id, ${GROUP_KEY[options.group]}, s.kind, s.source_id, s.date, CASE WHEN s.kind = ${SourceKind.message} THEN s.thread_id END, ${covered.sql}
+			FROM sources s WHERE s.id BETWEEN ? AND ? AND ${universe.sql} AND ${expr.sql}`;
+		const memberOf = new Int32Array(sources[1] + 1).fill(-1);
+		const members: Member[] = [];
+		const groupIds = new Map<string, number>();
+		const groupKeys: string[] = [];
+		let incomplete = 0;
+		let capped = 0;
+		await this.#sliced('sources', sources, checkpoint, (lo, hi) => {
+			const rows = this.#db.selectArrays(select, [...covered.params, lo, hi, ...universe.params, ...expr.params]) as [number, string, number, string, number, string | null, number][];
+			for (const [source, key, kind, sid, date, thread, done] of rows) {
+				let group = groupIds.get(key);
+				if (group === undefined) {
+					group = groupKeys.length;
+					groupKeys.push(key);
+					groupIds.set(key, group);
+				}
+				memberOf[source] = members.length;
+				members.push({ source, group, kind: kind as SourceKind, sid, date, thread });
+				if (matrix.omitted.has(source)) {
+					capped++;
+					incomplete++;
+				} else if (!done) incomplete++;
+			}
+		});
+
+		const query = new Int8Array(DIMENSIONS);
+		const queryScale = quantize(options.vector, query);
+		const heap = new GroupHeap(CANDIDATE_GROUPS, CANDIDATE_PASSAGES);
+		const groupOf = Int32Array.from(members, (m) => m.group);
+		for (let row = 0; row < matrix.size; row += SCAN_ROWS) {
+			await checkpoint();
+			matrix.scan(row, row + SCAN_ROWS, query, queryScale, memberOf, (r, m, score) => heap.offer(groupOf[m], score, r));
+		}
+		await checkpoint();
+
+		const rank = (a: Rescored, b: Rescored) => {
+			const x = members[a.member];
+			const y = members[b.member];
+			return b.score - a.score || y.date - x.date || x.kind - y.kind || (x.sid < y.sid ? -1 : x.sid > y.sid ? 1 : 0);
+		};
+		const finals: Rescored[] = [];
+		const memberScores = new Map<number, number>();
+		const read = this.#db.prepare('SELECT vector FROM passages WHERE epoch = ? AND source = ? AND ordinal = ?');
+		try {
+			for (const held of heap.groups()) {
+				let best: Rescored | null = null;
+				for (const { item: row } of held.items) {
+					const source = matrix.sourceAt(row);
+					const ordinal = matrix.ordinalAt(row);
+					const member = memberOf[source];
+					if (member < 0) continue;
+					let vector: Float32Array | null = null;
+					try {
+						read.bind([epoch, source, ordinal]);
+						if (read.step()) vector = decoded(read.get(0) as Uint8Array);
+					} finally {
+						read.reset(true);
+					}
+					if (!vector) continue;
+					const scored: Rescored = { group: held.group, member, ordinal, score: significant(dot(vector, options.vector)) };
+					memberScores.set(member, Math.max(memberScores.get(member) ?? -Infinity, scored.score));
+					if (!best || rank(scored, best) < 0) best = scored;
+				}
+				if (best) finals.push(best);
+			}
+		} finally {
+			read.finalize();
+		}
+		finals.sort(rank);
+		finals.length = Math.min(finals.length, MEANING_GROUPS);
+
+		const order = orderBy('relevance');
+		const matches = this.#table(session, 'm', 'source INTEGER PRIMARY KEY, grp TEXT NOT NULL, thread TEXT, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [`grp, ${order}`]);
+		const groups = this.#table(session, 'g', 'grp TEXT PRIMARY KEY, thread TEXT, n INTEGER NOT NULL, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [order]);
+		const kept = new Set(finals.map((f) => f.group));
+		const counts = new Map<number, number>();
+		this.#atomic(() => {
+			const insertMember = this.#db.prepare(`INSERT INTO ${matches} (source, grp, thread, tier, score, date, kind, sid) VALUES (?, ?, ?, 0, ?, ?, ?, ?)`);
+			const insertGroup = this.#db.prepare(`INSERT INTO ${groups} (grp, thread, n, tier, score, date, kind, sid) VALUES (?, ?, ?, 0, ?, ?, ?, ?)`);
+			try {
+				for (const [member, score] of memberScores) {
+					const m = members[member];
+					if (!kept.has(m.group)) continue;
+					counts.set(m.group, (counts.get(m.group) ?? 0) + 1);
+					insertMember.bind([m.source, groupKeys[m.group], m.thread, score, m.date, m.kind, m.sid]).stepReset();
+				}
+				for (const f of finals) {
+					const m = members[f.member];
+					const key = groupKeys[f.group];
+					insertGroup.bind([key, m.thread, counts.get(f.group) ?? 1, f.score, m.date, m.kind, m.sid]).stepReset();
+					session.passages!.set(key, { epoch, source: m.source, ordinal: f.ordinal });
+				}
+			} finally {
+				insertMember.finalize();
+				insertGroup.finalize();
+			}
+		});
+		return {
+			id,
+			groups: finals.length,
+			pages: Math.ceil(finals.length / PAGE_SIZE),
+			eligible: members.length,
+			incomplete,
+			capped,
+			scanned: matrix.live,
+			rebuilding: options.epoch.rebuilding,
+			generation: session.generation,
 			resolved: plan.resolved
 		};
 	}

@@ -4,10 +4,15 @@ import { deleteSearchDb, loadSqlite, openMemorySearchDb, openSearchDb, pauseSear
 import type { ParsedQuery } from '../query/ast';
 import type { QueryContext } from './compile';
 import { SearchHistory, historyKey } from './history';
-import { QueryEngine, type Provisional, type QueryOptions } from './run';
+import { QueryEngine, type MeaningEpoch, type Provisional, type QueryOptions } from './run';
+import type { Grouping } from './compile';
 import type { Coverage, Dimension, SearchDocument, SourceKey, SourceMetadata } from './types';
 import { SearchWriter, integrityCheck, maintain, type AttachmentText, type MaintenanceStep } from './writer';
 import { PassageStore } from '../model/store';
+import { encodeHalf } from '../model/pool';
+import { VectorCache } from '../vectors/cache';
+import { Corpus, type CorpusShape } from '../vectors/corpus';
+import { Coverage as CoverageState, Dimension as Dimensions, Flag, SourceKind } from './types';
 
 export type HarnessRequest =
 	| { op: 'opfs' }
@@ -40,7 +45,12 @@ export type HarnessRequest =
 	| { op: 'historyAdd'; query: string; now: number }
 	| { op: 'historyList'; now: number }
 	| { op: 'historyClear' }
-	| { op: 'passages'; method: PassageMethod; args: unknown[] };
+	| { op: 'passages'; method: PassageMethod; args: unknown[] }
+	| { op: 'meaning'; token: number; query: ParsedQuery; ctx: QueryContext; group: Grouping; vector: Float32Array; epoch: MeaningEpoch }
+	| { op: 'vectorCache'; capacity: number }
+	| { op: 'vectorStats' }
+	| { op: 'synthetic'; shape: CorpusShape; epoch: number; model: number }
+	| { op: 'reference'; shape: CorpusShape; query: number; group: Grouping; after: number | null; k: number };
 
 export type PassageMethod = 'adopt' | 'promote' | 'scanEpoch' | 'target' | 'clear' | 'seed' | 'pending' | 'input' | 'put' | 'mark' | 'retryFailed' | 'count';
 
@@ -51,17 +61,71 @@ let writer: SearchWriter | null = null;
 let engine: QueryEngine | null = null;
 const running = new Map<number, AbortController>();
 let history: SearchHistory | null = null;
+let cache: VectorCache | null = null;
 
 async function attach(next: Database) {
 	db = next;
 	writer = new SearchWriter(next);
 	engine = new QueryEngine(next, (await loadSqlite()).capi);
 	writer.onDelete((source) => engine?.invalidate(source));
+	cache = new VectorCache(next, writer);
+}
+
+function synthetic(shape: CorpusShape, epoch: number, model: number): number {
+	const corpus = new Corpus(shape);
+	const d = db!;
+	const meta = d.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)');
+	const source = d.prepare(`INSERT INTO sources (kind, source_id, content_rev, metadata_rev, thread_id, message_id, list_id, date, size, flags, known_flags,
+		source_rev, extraction, extractor_epoch, size_version, warnings) VALUES (?, ?, 1, 1, ?, NULL, NULL, ?, 1000, ?, ?, 1, 1, 0, 1, 0)`);
+	const coverage = d.prepare('INSERT INTO coverage (source, dimension, state) VALUES (?, ?, ?)');
+	const passage = d.prepare('INSERT INTO passages (epoch, source, ordinal, field, attachment_id, place, vector) VALUES (?, ?, ?, 3, NULL, NULL, ?)');
+	try {
+		d.transaction('IMMEDIATE', () => {
+			for (const [k, v] of [['semantic_epoch', epoch], ['semantic_model', model], ['semantic_live', epoch], ['semantic_live_model', model]] as const) meta.bind([k, v]).stepReset();
+			for (let i = 0; i < shape.sources; i++) {
+				const flags = Flag.inbox | (corpus.spam(i) ? Flag.spam : 0);
+				source.bind([SourceKind.message, corpus.sourceId(i), corpus.threadId(i), corpus.date(i), flags, Flag.read | Flag.inbox | Flag.spam]).stepReset();
+				const id = Number(d.selectValue('SELECT last_insert_rowid()'));
+				coverage.bind([id, Dimensions.body, CoverageState.complete]).stepReset();
+				coverage.bind([id, Dimensions.semantic, CoverageState.complete]).stepReset();
+				for (let o = 0; o < shape.per; o++) passage.bind([epoch, id, o, encodeHalf(corpus.vector(i, o))]).stepReset();
+			}
+		});
+	} finally {
+		meta.finalize();
+		source.finalize();
+		coverage.finalize();
+		passage.finalize();
+	}
+	return shape.sources * shape.per;
+}
+
+function reference(shape: CorpusShape, k: number, group: Grouping, after: number | null, limit: number): string[] {
+	const corpus = new Corpus(shape);
+	const q = corpus.query(k);
+	const best = new Map<string, [number, number]>();
+	for (let i = 0; i < shape.sources; i++) {
+		if (corpus.spam(i) || (after !== null && corpus.date(i) < after)) continue;
+		for (let o = 0; o < shape.per; o++) {
+			const v = corpus.vector(i, o);
+			let score = 0;
+			for (let d = 0; d < v.length; d++) score += v[d] * q[d];
+			const key = corpus.groupKey(i, group);
+			const held = best.get(key);
+			if (!held || score > held[0]) best.set(key, [score, corpus.date(i)]);
+		}
+	}
+	return [...best]
+		.sort((a, b) => b[1][0] - a[1][0] || b[1][1] - a[1][1])
+		.slice(0, limit)
+		.map(([key]) => key);
 }
 
 function close() {
 	for (const c of running.values()) c.abort();
 	running.clear();
+	cache?.dispose();
+	cache = null;
 	engine?.dispose();
 	writer?.close();
 	db?.close();
@@ -235,6 +299,30 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			const store = new PassageStore(db!, writer!) as unknown as Record<PassageMethod, (...args: unknown[]) => unknown>;
 			return store[r.method](...r.args);
 		}
+		case 'meaning': {
+			const controller = new AbortController();
+			running.set(r.token, controller);
+			try {
+				return await engine!.meaning(r.query, r.ctx, { group: r.group, vector: r.vector, epoch: r.epoch, cache: cache!, signal: controller.signal });
+			} catch (err) {
+				if (controller.signal.aborted) return { cancelled: true };
+				throw err;
+			} finally {
+				running.delete(r.token);
+			}
+		}
+		case 'vectorCache':
+			cache?.dispose();
+			cache = new VectorCache(db!, writer!, r.capacity);
+			return null;
+		case 'vectorStats': {
+			const m = cache?.matrix;
+			return m ? { bytes: m.bytes, live: m.live, size: m.size, omitted: m.omitted.size } : null;
+		}
+		case 'synthetic':
+			return synthetic(r.shape, r.epoch, r.model);
+		case 'reference':
+			return reference(r.shape, r.query, r.group, r.after, r.k);
 	}
 }
 

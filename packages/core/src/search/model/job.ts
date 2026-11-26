@@ -7,6 +7,7 @@ import { modelId } from './store';
 import { VECTOR_BYTES } from './pool';
 
 export const UNAVAILABLE_RETRY_MS = 7 * 24 * 60 * 60_000;
+export const MODEL_ID = modelId(manifest.hash);
 const PICK = 8;
 const RECORD_BYTES = VECTOR_BYTES + 32;
 const EMBEDDABLE: readonly Coverage[] = [Coverage.complete, Coverage.partial];
@@ -33,7 +34,7 @@ export const embeddingsJob: JobFactory = (ctx) => {
 				return 'idle';
 			}
 			epoch ??= await semanticEpoch(manifest.hash);
-			store.adopt(epoch, modelId(manifest.hash));
+			store.adopt(epoch, MODEL_ID);
 			store.seed();
 			while (!step.shouldYield()) {
 				const batch = store.pending(PICK);
