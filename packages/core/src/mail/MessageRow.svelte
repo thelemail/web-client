@@ -5,7 +5,6 @@
 		faArrowRotateLeft,
 		faBoxArchive,
 		faCalendar,
-		faCheck,
 		faEnvelope,
 		faEnvelopeOpen,
 		faMessages,
@@ -277,17 +276,15 @@
 		/>
 		<button
 			type="button"
-			class="row-ck"
-			class:on={checked}
+			class="check row-ck"
+			data-state={checked ? 'checked' : 'unchecked'}
 			aria-label={msg.mail_row_select()}
 			aria-pressed={checked}
 			onclick={(e) => {
 				e.stopPropagation();
 				select(e.shiftKey);
 			}}
-		>
-			<Icon icon={faCheck} size={13} />
-		</button>
+		></button>
 	</div>
 	<div class="rowmain">
 		<div class="r1">

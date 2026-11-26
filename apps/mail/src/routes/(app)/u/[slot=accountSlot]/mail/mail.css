@@ -54,26 +54,18 @@
 .mail-app .meter i { display: block; height: 100%; border-radius: 99px; background: var(--primary); transition: width var(--dur) var(--ease); }
 .mail-app .meter.paused i, .mail-app .srch-line.paused { background: var(--fg-faint); }
 .mail-app .meter.warn i, .mail-app .srch-line.warn { background: var(--brass-500); }
-.mail-app .srch-line { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--primary); transition: width var(--dur) var(--ease); pointer-events: none; }
+.mail-app .srch-track { position: absolute; inset: 0; border-radius: var(--radius-h40); overflow: hidden; pointer-events: none; }
+.mail-app .srch-line { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--primary); transition: width var(--dur) var(--ease); }
 @media (prefers-reduced-motion: reduce) { .mail-app .meter i, .mail-app .srch-line { transition: none; } }
 
 .mail-app .mailmain { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
-.mail-app .search { position: relative; overflow: hidden; display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 0 11px; height: 34px; color: var(--fg-faint); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
-.mail-app .search svg { flex: 0 0 auto; }
-.mail-app .search:hover { border-color: var(--border-strong); }
-.mail-app .search:focus-within { border-color: var(--pine-500); box-shadow: 0 0 0 3px color-mix(in oklch, var(--focus-ring) 50%, transparent); }
-.mail-app .search input { border: none; background: none; outline: none; font-size: 13px; color: var(--fg); width: 100%; min-width: 0; letter-spacing: var(--track-snug); }
-.mail-app .search input:focus, .mail-app .search input:focus-visible { outline: none; box-shadow: none; }
-.mail-app .search input::placeholder { color: var(--fg-faint); }
-.mail-app .search .kbd { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-faint); border: 1px solid var(--border); border-radius: var(--radius-check); padding: 1px 5px; background: var(--bg-raised); flex: 0 0 auto; }
-.mail-app .search:focus-within .kbd { opacity: 0; }
-.mail-app .search .clr { display: flex; border: none; background: none; color: var(--fg-muted); padding: 2px; border-radius: var(--radius-control-compact); flex: 0 0 auto; }
-.mail-app .search .clr:hover { background: var(--bg-sunken); color: var(--fg-strong); }
+.mail-app .search:focus-within > kbd { opacity: 0; }
+.mail-app .search > .clr { position: absolute; right: 8px; display: flex; border: none; background: none; color: var(--fg-muted); padding: 4px; border-radius: var(--radius-control-compact); }
+.mail-app .search > .clr:hover { background: var(--bg-sunken); color: var(--fg-strong); }
+.mail-app .search:has(> .clr) > .field-input { padding-right: 40px; }
 
 .mail-app .searchwrap { position: relative; }
-.mail-app .srch-op { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-muted); border: 1px solid var(--border); border-radius: var(--radius-control-compact); padding: 2px 6px; background: var(--bg-raised); cursor: pointer; }
-.mail-app .srch-op:hover { border-color: var(--border-strong); color: var(--fg-strong); background: var(--bg-sunken); }
 .mail-app .srch-pop { position: absolute; z-index: 40; top: calc(100% + 5px); left: 0; right: 0; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-menu); box-shadow: var(--shadow-md); max-height: min(420px, 70vh); overflow-y: auto; }
 .mail-app .srch-list { display: flex; flex-wrap: wrap; gap: 2px 4px; }
 .mail-app .srch-progress { display: grid; gap: 7px; padding: 9px 8px 5px; font-size: 12px; line-height: 1.45; color: var(--fg-muted); }
@@ -84,13 +76,14 @@
 .mail-app .srch-match .sm-subj { color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .srch-match .sm-when { font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; }
 .mail-app .srch-opchip { display: inline-flex; padding: 3px 1px; }
-.mail-app .srch-opchip.on .srch-op { border-color: var(--pine-600); color: var(--fg-strong); background: var(--pine-100); }
+.mail-app .srch-opchip .chip { cursor: pointer; }
+.mail-app .srch-opchip:hover .chip { background: var(--neutral-hover); color: var(--fg-strong); }
+.mail-app .srch-opchip.on .chip { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
 .mail-app .srch-all { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 2px; padding: 8px; font-size: 13px; font-weight: 500; color: var(--pine-700); border-top: 1px solid var(--border); border-radius: 0 0 var(--radius-control-compact) var(--radius-control-compact); }
 .mail-app .srch-all > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .srch-all svg { flex: 0 0 auto; color: var(--fg-faint); }
 .mail-app .srch-match.on, .mail-app .srch-all.on, .mail-app .srch-match:hover, .mail-app .srch-all:hover { background: var(--bg-sunken); }
 .mail-app .srch-note { width: 100%; padding: 6px 8px 4px; font-size: 12px; color: var(--fg-faint); }
-.mail-app .search.invalid { border-color: var(--danger-500); }
 .mail-app .srch-hint { display: flex; align-items: center; gap: 9px; width: 100%; padding: 6px 8px; font-size: 13px; color: var(--fg); }
 .mail-app .srch-hint svg { flex: 0 0 auto; color: var(--fg-faint); }
 .mail-app .srch-hint .sh-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -180,10 +173,7 @@
 .mail-app .list-h .ttl-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .mail-app .list-h .ttl-name.ttl-wait { display: inline-block; width: 96px; height: 14px; border-radius: var(--radius-xs); background: color-mix(in oklab, var(--fg-strong) 8%, transparent); }
 .mail-app .list-h .ttl-ct { flex: 0 0 auto; font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .02em; color: var(--fg-faint); font-variant-numeric: tabular-nums; }
-.mail-app .list-h .seg { display: inline-flex; flex: 0 0 auto; margin-left: auto; padding: 2px; gap: 2px; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--bg-raised); }
-.mail-app .list-h .seg button { height: 26px; padding: 0 11px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); font-size: 12.5px; font-weight: 500; letter-spacing: var(--track-snug); white-space: nowrap; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
-.mail-app .list-h .seg button:hover { color: var(--fg-strong); }
-.mail-app .list-h .seg button[aria-pressed='true'] { background: var(--surface); color: var(--fg-strong); font-weight: 600; box-shadow: var(--shadow-xs); }
+.mail-app .list-h .seg { flex: 0 0 auto; margin-left: auto; }
 .mail-app .list-h .seg + .lh-actions { padding-left: 2px; }
 .mail-app .list-h .ttl + .lh-actions { margin-left: auto; }
 .mail-app .list { container: list / inline-size; }
@@ -191,7 +181,7 @@
 	.mail-app .list-h { gap: 2px; padding-left: 8px; padding-right: 6px; }
 	.mail-app .list-h .lh-actions { gap: 0; padding-left: 0; }
 	.mail-app .list-h .lh-btn { width: 28px; min-width: 28px; }
-	.mail-app .list-h .seg button { padding: 0 8px; }
+	.mail-app .list-h .seg .segmented-item { padding: 0 8px; }
 }
 @container list (max-width: 340px) {
 	.mail-app .list-h .ttl-ct { display: none; }
@@ -200,11 +190,8 @@
 .mail-app .mail-top { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--border); background: var(--bg); }
 .mail-app .mail-top .searchwrap { flex: 1 1 auto; min-width: 0; max-width: 760px; }
 .mail-app .mail-top .mt-rule { flex: 0 0 auto; width: 1px; height: 22px; margin: 0 6px 0 auto; background: var(--border); }
-.mail-app .view-strip { display: flex; align-items: center; gap: 4px; padding: 7px 15px; font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-muted); background: var(--bg-raised); border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; }
-.mail-app .view-strip .list-sub-dot { color: var(--fg-faint); padding: 0 2px; }
-.mail-app .view-strip .list-sub-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; padding: 0; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-faint); cursor: pointer; }
-.mail-app .view-strip .list-sub-x:hover { background: var(--bg-sunken); color: var(--pine-700); }
-.mail-app .view-strip .list-sub-x svg { width: 11px; height: 11px; }
+.mail-app .view-strip { display: flex; align-items: center; gap: 6px; padding: 6px 15px; background: var(--bg-raised); border-bottom: 1px solid var(--border); overflow: hidden; }
+.mail-app .view-strip .chip { flex: 0 1 auto; min-width: 0; }
 .mail-app .lh-btn.refreshing svg { animation: mail-svspin .8s linear infinite; }
 
 .mail-app .lh-sort { position: relative; display: flex; }
@@ -225,12 +212,7 @@
 .mail-app .fm-clear:hover { text-decoration: underline; }
 .mail-app .fm-cap { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-faint); margin: 2px 2px 8px; }
 .mail-app .fm-chips { display: flex; flex-wrap: wrap; gap: 7px; }
-.mail-app .fchip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--bg-raised); color: var(--fg); font-size: 13px; font-weight: 500; cursor: pointer; transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
-.mail-app .fchip svg { width: 15px; height: 15px; color: var(--fg-muted); }
-.mail-app .fchip .fdot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
-.mail-app .fchip:hover { background: var(--bg-sunken); border-color: var(--border-strong); }
-.mail-app .fchip.on { background: var(--pine-100); border-color: var(--link); color: var(--pine-700); font-weight: 600; }
-.mail-app .fchip.on svg { color: var(--pine-600); }
+.mail-app .fm-chips .fdot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
 .mail-app .filter-menu .msep { margin: 12px 0 11px; }
 .mail-app .empty-clear { margin-top: 16px; }
 
@@ -273,10 +255,8 @@
 .mail-app .coll-picker .pk-box svg, .mail-app .coll-picker .pk-row.active .pk-box svg { width: 12px; height: 12px; color: var(--primary-fg); }
 .mail-app .coll-picker .pk-empty { padding: 10px 11px; font-size: 13px; color: var(--fg-faint); }
 .mail-app .coll-picker .pk-scope { display: flex; flex-direction: column; gap: 5px; margin: 2px 2px 8px; }
-.mail-app .coll-picker .pk-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 2px; border-radius: var(--radius-control); background: var(--bg-sunken); }
-.mail-app .coll-picker .pk-seg button { height: 26px; padding: 0 8px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); font: inherit; font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-.mail-app .coll-picker .pk-seg button.on { background: var(--surface); color: var(--fg-strong); box-shadow: var(--shadow-sm); }
-.mail-app .coll-picker .pk-seg button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.mail-app .coll-picker .pk-seg .segmented-item { padding: 0 8px; }
+.mail-app .coll-picker .pk-seg .segmented-item span { overflow: hidden; text-overflow: ellipsis; }
 .mail-app .coll-picker .pk-scope-text { margin: 0; padding: 0 4px; font-size: 12px; color: var(--fg-muted); }
 .mail-app .coll-picker .pk-scope-note { margin: 0; padding: 0 4px; font-size: 11.5px; color: var(--fg-faint); }
 .mail-app .coll-picker .pk-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 8px 4px 2px; border-top: 1px solid var(--border); margin-top: 6px; }
@@ -330,10 +310,7 @@
 .mail-app .mrow .mrow-open:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .mail-app .mrow .lead { position: relative; z-index: 2; width: 22px; height: 22px; margin-top: 1px; }
 .mail-app .mrow .seal { width: 22px; height: 22px; font-size: 9px; font-weight: 600; border-radius: var(--radius-avatar); }
-.mail-app .mrow .row-ck { position: absolute; inset: 0; width: 22px; height: 22px; border-radius: var(--radius-check); display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1.5px solid var(--border-control); padding: 0; opacity: 0; transform: scale(.86); transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease-out); }
-.mail-app .mrow .row-ck svg { width: 13px; height: 13px; color: var(--fg-muted); }
-.mail-app .mrow .row-ck.on { background: var(--primary); border-color: var(--primary); }
-.mail-app .mrow .row-ck.on svg { color: var(--primary-fg); }
+.mail-app .mrow .row-ck { position: absolute; inset: 2px; opacity: 0; transform: scale(.86); transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
 .mail-app .mrow:hover .row-ck,
 .mail-app .mrow.checking .row-ck,
 .mail-app .mrow .row-ck:focus-visible { opacity: 1; pointer-events: auto; transform: none; }
@@ -361,17 +338,12 @@
 .mail-app .mrow .tick.forged { color: var(--danger-700); }
 .mail-app .mrow .row-chips { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; min-width: 0; max-width: 50%; overflow: hidden; align-self: center; }
 
-.mail-app .lchip,
 .mail-app .locchip,
 .mail-app .lchip-more { display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 11px; line-height: 1; font-weight: 500; letter-spacing: 0; white-space: nowrap; flex: 0 1 auto; min-width: 0; }
-.mail-app .lchip { background: var(--chip-bg); color: var(--chip-fg); max-width: 140px; }
-.mail-app .lchip.partial { background: transparent; border: 1px dashed var(--chip-fg); padding: 0 5px; }
+.mail-app .lchip { --chip-h: 18px; gap: 4px; padding: 0 6px; border-radius: 5px; font-size: 11px; flex: 0 1 auto; min-width: 0; max-width: 140px; }
+.mail-app .lchip.partial { background: transparent; border-style: dashed; border-color: var(--border-strong); }
 .mail-app .lchip-dot { width: 6px; height: 6px; border-radius: 2px; flex: 0 0 auto; }
-.mail-app .lchip-name,
 .mail-app .locchip-name { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.mail-app .lchip-x { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-right: -3px; border: none; border-radius: 3px; background: none; color: inherit; padding: 0; opacity: .7; cursor: pointer; }
-.mail-app .lchip-x:hover { opacity: 1; background: color-mix(in oklch, var(--chip-fg) 14%, transparent); }
-.mail-app .lchip-x:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; opacity: 1; }
 .mail-app .locchip { background: none; color: var(--fg-muted); box-shadow: inset 0 0 0 1px var(--border-strong); max-width: 150px; }
 .mail-app .lchip-more { background: var(--bg-sunken); color: var(--fg-muted); font-family: var(--font-mono); flex: 0 0 auto; }
 
@@ -444,8 +416,8 @@
 .mail-app .reader-h .thr-pill { display: inline-flex; align-items: center; height: 24px; margin-left: 12px; padding: 0 10px; vertical-align: 4px; border-radius: var(--radius-pill); background: var(--bg-sunken); color: var(--fg-muted); font-size: 12.5px; font-weight: 500; letter-spacing: 0; white-space: nowrap; }
 .mail-app .reply-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 30px; }
 .mail-app .reader-h .reader-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 10px; }
-.mail-app .reader-h .reader-chips .lchip { height: 22px; max-width: 220px; padding: 0 8px; font-size: 12px; }
-.mail-app .reader-h .reader-chips .lchip.partial { padding: 0 7px; }
+.mail-app .reader-h .reader-chips .lchip { --chip-h: 24px; max-width: 220px; padding: 0 9px; border-radius: 999px; font-size: 12px; }
+.mail-app .reader-h .reader-chips .lchip.chip-removable { padding-right: 4px; }
 .mail-app .reader-h .reader-chips .locchip { height: 22px; max-width: 240px; padding: 0 8px; font-size: 12px; }
 
 .mail-app .letterhead { container-type: inline-size; container-name: msghead; display: flex; align-items: flex-start; gap: 12px; margin: 22px 0 18px; }
@@ -533,11 +505,7 @@
 .mail-app .replybox .rf-menu { top: auto; right: auto; left: 0; bottom: calc(100% + 8px); width: 218px; }
 .mail-app .replybox .rbx-mid { display: contents; }
 .mail-app .replybox .rt-acts { display: flex; align-items: center; gap: 2px; margin-left: 4px; }
-.mail-app .replybox .rt-mode { margin-right: auto; display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--bg-raised); }
-.mail-app .replybox .rt-mode button { display: inline-flex; align-items: center; gap: 7px; height: 28px; white-space: nowrap; padding: 0 11px; border: none; border-radius: var(--radius-control-compact); background: none; color: var(--fg-muted); font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
-.mail-app .replybox .rt-mode button:hover { color: var(--fg-strong); }
-.mail-app .replybox .rt-mode button.on { background: var(--surface); color: var(--fg-strong); font-weight: 600; box-shadow: var(--shadow-xs); }
-.mail-app .replybox .rt-mode button:disabled { opacity: .5; pointer-events: none; }
+.mail-app .replybox .rt-mode { margin-right: auto; }
 
 .mail-app .reader.ws { position: relative; --ws-pane: clamp(360px, 38%, 520px); }
 .mail-app .mailbody:has(> .reader.ws) > :is(.list, .pane-divider) { display: none; }
@@ -570,8 +538,8 @@
 	.mail-app .reader.ws > :is(.reader-bar, .reader-scroll) { visibility: hidden; }
 	.mail-app .reader.ws .replybox.expanded { left: 0; }
 	.mail-app .replybox.expanded .rt { gap: 6px; padding: 0 6px 0 12px; }
-	.mail-app .replybox .rt-mode button { padding: 0 9px; }
-	.mail-app .replybox .rt-mode button svg { display: none; }
+	.mail-app .replybox .rt-mode .segmented-item { padding: 0 9px; }
+	.mail-app .replybox .rt-mode .segmented-item svg { display: none; }
 	.mail-app .replybox.expanded .rt-save { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 }
 
@@ -605,7 +573,6 @@
 .mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger .ft-name { font-weight: 500; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .from-trigger .ft-email { font-size: 12.5px; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .from-menu { left: 80px; }
-.mail-app :is(.compose-layer .compose-win, .replybox) .rchip { background: var(--surface); padding: 2px 6px 2px 2px; color: var(--fg-strong); }
 .mail-app :is(.compose-layer .compose-win, .replybox) .ccbcc button { font-size: 13px; font-weight: 400; }
 .mail-app :is(.compose-layer .compose-win, .replybox) .cenc { display: flex; align-items: center; gap: 8px; padding: 6px 16px 8px 80px; border-bottom: 1px solid var(--border); font-size: 12.5px; color: var(--fg-muted); }
 .mail-app :is(.compose-layer .compose-win, .replybox) .cenc svg { flex: 0 0 auto; }
@@ -738,14 +705,11 @@
 :is(.compose-layer, .mail-app .replybox) .recip-box { position: relative; flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 24px; border-radius: var(--radius-control); min-width: 0; }
 :is(.compose-layer, .mail-app .replybox) .recip-input { border: none; outline: none; background: none; font-size: 14px; color: var(--fg); flex: 1 1 90px; min-width: 90px; padding: 3px 2px; line-height: 1.4; font-family: inherit; }
 :is(.compose-layer, .mail-app .replybox) .recip-input::placeholder { color: var(--fg-faint); }
-:is(.compose-layer, .mail-app .replybox) .rchip { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-sunken); border: 1px solid var(--border-strong); border-radius: var(--radius-control); padding: 2px 4px 2px 2px; font-size: 13px; color: var(--fg); max-width: 100%; }
-:is(.compose-layer, .mail-app .replybox) .rchip .rtx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-:is(.compose-layer, .mail-app .replybox) .rchip .rm { display: inline-flex; background: none; border: none; color: var(--fg-faint); cursor: pointer; padding: 2px; border-radius: var(--radius-check); flex: 0 0 auto; }
-:is(.compose-layer, .mail-app .replybox) .rchip .rm:hover { background: var(--border-strong); color: var(--fg); }
-:is(.compose-layer, .mail-app .replybox) .rchip.bad { background: var(--danger-100); border-color: var(--danger-500); }
-:is(.compose-layer, .mail-app .replybox) .rchip.bad > svg { width: 13px; height: 13px; color: var(--danger-700); margin-left: 3px; }
-:is(.compose-layer, .mail-app .replybox) .rchip.bad .rtx { color: var(--danger-700); font-family: var(--font-mono); font-size: 12px; }
-:is(.compose-layer, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(0, 0, 0, .06); }
+:is(.compose-layer, .mail-app .replybox) .rchip > .chip-label { display: inline-flex; align-items: center; gap: 5px; }
+:is(.compose-layer, .mail-app .replybox) .rchip .rtx { overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad { background: var(--danger-100); border-color: var(--danger-500); color: var(--danger-700); }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad > svg { margin-left: 3px; }
+:is(.compose-layer, .mail-app .replybox) .rchip.bad .rtx { font-family: var(--font-mono); font-size: 12px; }
 :is(.compose-layer, .mail-app .replybox) .rchip .renc { display: inline-flex; align-items: center; flex: 0 0 auto; }
 :is(.compose-layer, .mail-app .replybox) .rchip .renc.ok { color: var(--success-700); }
 :is(.compose-layer, .mail-app .replybox) .rchip .renc.warn { color: var(--warning-700); }
@@ -1066,7 +1030,6 @@
 
 [data-theme='dark'] .sw-ovl { background: rgba(0, 0, 0, 0.6); }
 
-[data-theme='dark'] :is(.compose-layer, .mail-app .replybox) .rchip.bad .rm:hover { background: rgba(255, 255, 255, 0.1); }
 
 .mail-app .sysalerts { flex: 0 0 auto; display: flex; flex-direction: column; position: relative; z-index: 60; }
 .mail-app .sysalert { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 7px 18px; font-size: 13.5px; line-height: 1.45; border-bottom: 1px solid var(--border); }
@@ -1132,7 +1095,7 @@
 }
 
 @media (max-width: 640px) {
-	.mail-app .search .kbd { display: none; }
+	.mail-app .search > kbd { display: none; }
 
 	.mail-app .sysalert { padding: 6px 10px; min-height: 42px; gap: 9px; }
 
@@ -1198,10 +1161,7 @@
 .mail-app .srch-strip .ss-link { display: inline-flex; align-items: center; gap: 3px; border: none; background: none; padding: 0 2px; font: inherit; font-weight: 600; color: var(--pine-700); cursor: pointer; border-radius: var(--radius-control-compact); }
 .mail-app .srch-strip .ss-link:hover { text-decoration: underline; }
 .mail-app .srch-strip .ss-link .flip { transform: rotate(180deg); }
-.mail-app .srch-strip .ss-sort { display: inline-flex; margin-inline-start: auto; border: 1px solid var(--border); border-radius: var(--radius-control-compact); overflow: hidden; background: var(--surface); }
-.mail-app .srch-strip .ss-sort button { border: none; background: none; padding: 3px 9px; font: inherit; font-size: 12px; color: var(--fg-muted); cursor: pointer; }
-.mail-app .srch-strip .ss-sort button + button { border-inline-start: 1px solid var(--border); }
-.mail-app .srch-strip .ss-sort button.on { color: var(--fg-strong); background: var(--pine-100); font-weight: 600; }
+.mail-app .srch-strip .ss-sort { margin-inline-start: auto; }
 .mail-app .srch-strip .srch-chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-strong); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 1px 2px 1px 6px; background: var(--surface); flex: 0 1 auto; min-width: 0; }
 .mail-app .srch-strip .srch-chip > span[dir] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mail-app .srch-strip .srch-chip.neg { text-decoration: line-through; text-decoration-color: var(--fg-faint); }
@@ -1333,6 +1293,6 @@
 }
 
 @media (pointer: coarse) {
-	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .view-strip .list-sub-x) { position: relative; }
-	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .view-strip .list-sub-x, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
+	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm) { position: relative; }
+	.mail-app :is(.replybox .rq .rq-rm, .compose-win .rq .rq-rm, .ctree-chev, .mrow .row-ck)::after { content: ""; position: absolute; inset: -11px; }
 }

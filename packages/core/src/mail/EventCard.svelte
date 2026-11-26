@@ -287,16 +287,16 @@
 			</span>
 		{:else}
 			<span class="evt-q">{m.cal_card_going()}</span>
-			<div class="evt-seg">
-				<button type="button" class="evt-opt yes" disabled={sending} onclick={() => choose('accepted')}>
+			<div class="evt-seg" role="group" aria-label={m.cal_card_going()}>
+				<Button size="sm" disabled={sending} onclick={() => choose('accepted')}>
 					<Icon icon={faCheck} size={15} />{m.cal_rsvp_yes()}
-				</button>
-				<button type="button" class="evt-opt maybe" disabled={sending} onclick={() => choose('tentative')}>
+				</Button>
+				<Button size="sm" disabled={sending} onclick={() => choose('tentative')}>
 					<Icon icon={faCircleQuestion} size={15} />{m.cal_rsvp_maybe()}
-				</button>
-				<button type="button" class="evt-opt no" disabled={sending} onclick={() => choose('declined')}>
+				</Button>
+				<Button size="sm" disabled={sending} onclick={() => choose('declined')}>
 					<Icon icon={faXmark} size={15} />{m.cal_rsvp_no()}
-				</button>
+				</Button>
 			</div>
 		{/if}
 	</div>
@@ -477,56 +477,7 @@
 	}
 	.evt-seg {
 		display: inline-flex;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-control);
-		overflow: hidden;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-	}
-	.evt-opt {
-		display: inline-flex;
-		align-items: center;
 		gap: 6px;
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--fg);
-		padding: 8px 13px;
-		background: var(--surface);
-		border: none;
-		border-right: 1px solid var(--border);
-		cursor: pointer;
-	}
-	.evt-opt:last-child {
-		border-right: none;
-	}
-	.evt-opt :global(svg) {
-		width: 15px;
-		height: 15px;
-		color: var(--fg-faint);
-	}
-	.evt-opt:disabled {
-		opacity: 0.55;
-		cursor: not-allowed;
-	}
-	.evt-opt.yes:hover:not(:disabled) {
-		background: var(--pine-100);
-		color: var(--pine-700);
-	}
-	.evt-opt.yes:hover:not(:disabled) :global(svg) {
-		color: var(--pine-600);
-	}
-	.evt-opt.maybe:hover:not(:disabled) {
-		background: var(--brass-100);
-		color: var(--brass-700);
-	}
-	.evt-opt.maybe:hover:not(:disabled) :global(svg) {
-		color: var(--brass-600);
-	}
-	.evt-opt.no:hover:not(:disabled) {
-		background: var(--danger-100);
-		color: var(--danger-700);
-	}
-	.evt-opt.no:hover:not(:disabled) :global(svg) {
-		color: var(--danger-500);
 	}
 	.evt-ack {
 		display: inline-flex;

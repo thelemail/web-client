@@ -64,7 +64,7 @@
 
 		{#if existingCount > 0}
 			<label class="cfd-check">
-				<input type="checkbox" bind:checked={moveExisting} disabled={busy} />
+				<input type="checkbox" class="check" bind:checked={moveExisting} disabled={busy} />
 				<span>
 					<span class="cfd-check-t">
 						{m.mail_block_move_existing({ count: existingCount })}

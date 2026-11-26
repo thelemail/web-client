@@ -5,6 +5,8 @@
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { Chip } from '$core/components/ui/chip';
+	import { Segmented } from '$core/components/ui/segmented';
 	import {
 		faAlarmClock,
 		faArrowDown,
@@ -484,11 +486,12 @@
 	{#if anyChecked}
 		<div class="bulk">
 			<button
-				class="ck"
-				class:on={allChecked || inQuery}
+				type="button"
+				class="check"
+				data-state={allChecked || inQuery ? 'checked' : 'indeterminate'}
 				aria-label={allChecked || inQuery ? msg.mail_list_clear_selection() : msg.mail_list_select_all()}
-				onclick={onToggleAll}><Icon icon={faCheck} size={12} /></button
-			>
+				onclick={onToggleAll}
+			></button>
 			<span class="cnt">
 				{inQuery
 					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: viewName })
@@ -619,14 +622,15 @@
 					</span>
 				{/if}
 			</h1>
-			<div class="seg" role="group" aria-label={msg.mail_list_show()}>
-				<button type="button" aria-pressed={!filters.unread} onclick={() => setUnreadOnly(false)}>
-					{msg.mail_list_all()}
-				</button>
-				<button type="button" aria-pressed={filters.unread} onclick={() => setUnreadOnly(true)}>
-					{msg.mail_list_filter_unread()}
-				</button>
-			</div>
+			<Segmented
+				class="seg"
+				aria-label={msg.mail_list_show()}
+				bind:value={() => (filters.unread ? 'unread' : 'all'), (v) => setUnreadOnly(v === 'unread')}
+				options={[
+					{ value: 'all', label: msg.mail_list_all() },
+					{ value: 'unread', label: msg.mail_list_filter_unread() }
+				]}
+			/>
 			<div class="lh-actions">
 				{#if onRefresh}
 					<Button
@@ -711,43 +715,23 @@
 							</div>
 							<div class="fm-cap">{msg.mail_list_show_only()}</div>
 							<div class="fm-chips">
-								<button
-									class="fchip"
-									class:on={filters.unread}
-									aria-pressed={filters.unread}
-									onclick={() => toggleFlag('unread')}
-								>
-									<Icon icon={faEnvelope} size={15} />{msg.mail_list_filter_unread()}
-								</button>
-								<button
-									class="fchip"
-									class:on={filters.starred}
-									aria-pressed={filters.starred}
-									onclick={() => toggleFlag('starred')}
-								>
-									<Icon icon={faStar} size={15} />{msg.mail_list_filter_starred()}
-								</button>
-								<button
-									class="fchip"
-									class:on={filters.attach}
-									aria-pressed={filters.attach}
-									onclick={() => toggleFlag('attach')}
-								>
-									<Icon icon={faPaperclip} size={15} />{msg.mail_list_filter_attach()}
-								</button>
+								<Chip bind:pressed={() => filters.unread, () => toggleFlag('unread')}>
+									{#snippet leading()}<Icon icon={faEnvelope} size={15} />{/snippet}
+									{msg.mail_list_filter_unread()}
+								</Chip>
+								<Chip bind:pressed={() => filters.starred, () => toggleFlag('starred')}>
+									{#snippet leading()}<Icon icon={faStar} size={15} />{/snippet}
+									{msg.mail_list_filter_starred()}
+								</Chip>
+								<Chip bind:pressed={() => filters.attach, () => toggleFlag('attach')}>
+									{#snippet leading()}<Icon icon={faPaperclip} size={15} />{/snippet}
+									{msg.mail_list_filter_attach()}
+								</Chip>
 								{#if collectionKind && (showScope || filters.direct)}
-									<button
-										class="fchip"
-										class:on={!!filters.direct}
-										aria-pressed={!!filters.direct}
-										onclick={() => toggleFlag('direct')}
-									>
-										{#if collectionKind === 'label'}
-											<Icon icon={faTag} size={15} />{msg.mail_view_only_label()}
-										{:else}
-											<Icon icon={faFolder} size={15} />{msg.mail_view_only_folder()}
-										{/if}
-									</button>
+									<Chip bind:pressed={() => !!filters.direct, () => toggleFlag('direct')}>
+										{#snippet leading()}<Icon icon={collectionKind === 'label' ? faTag : faFolder} size={15} />{/snippet}
+										{collectionKind === 'label' ? msg.mail_view_only_label() : msg.mail_view_only_folder()}
+									</Chip>
 								{/if}
 							</div>
 							{#if collectionKind !== 'label'}
@@ -756,15 +740,10 @@
 								<div class="fm-chips">
 									{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
 										{@const on = filters.labels.includes(l.id)}
-										<button
-											class="fchip"
-											class:on
-											aria-pressed={on}
-											title={l.path}
-											onclick={() => toggleLabel(l.id)}
-										>
-											<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
-										</button>
+										<Chip title={l.path} bind:pressed={() => on, () => toggleLabel(l.id)}>
+											{#snippet leading()}<span class="fdot" style:background={collectionColor(l.color)}></span>{/snippet}
+											{l.name}
+										</Chip>
 									{:else}
 										<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
 									{/each}
@@ -779,19 +758,14 @@
 	{#if !anyChecked && (sort !== 'newest' || activeFilters > 0)}
 		<div class="view-strip">
 			{#if sort !== 'newest'}
-				<span>{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}</span>
-				<button type="button" class="list-sub-x" title={msg.mail_list_reset_sort()} onclick={() => onSort('newest')}>
-					<Icon icon={faXmark} size={11} />
-				</button>
-			{/if}
-			{#if sort !== 'newest' && activeFilters > 0}
-				<span class="list-sub-dot">·</span>
+				<Chip size="sm" removeLabel={msg.mail_list_reset_sort()} onremove={() => onSort('newest')}>
+					{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}
+				</Chip>
 			{/if}
 			{#if activeFilters > 0}
-				<span>{msg.mail_list_filters_active({ count: activeFilters })}</span>
-				<button type="button" class="list-sub-x" title={msg.mail_list_clear_filters()} onclick={clearFilters}>
-					<Icon icon={faXmark} size={11} />
-				</button>
+				<Chip size="sm" removeLabel={msg.mail_list_clear_filters()} onremove={clearFilters}>
+					{msg.mail_list_filters_active({ count: activeFilters })}
+				</Chip>
 			{/if}
 		</div>
 	{/if}

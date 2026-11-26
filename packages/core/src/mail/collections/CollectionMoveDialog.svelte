@@ -66,6 +66,7 @@
 	<label class="cm-opt" class:off={!!why} style:--depth={depth} title={path ?? title}>
 		<input
 			type="radio"
+			class="radio"
 			name={`${uid}-target`}
 			{value}
 			bind:group={choice}

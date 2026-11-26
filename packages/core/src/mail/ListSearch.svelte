@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Chip } from '$core/components/ui/chip';
 	import {
 		faArrowTurnDownLeft,
 		faClockRotateLeft,
@@ -272,10 +273,11 @@
 <svelte:document onkeydown={handleKey} />
 
 <div class="searchwrap">
-	<div class="search" class:invalid>
-		<Icon icon={faMagnifyingGlass} size={16} />
+	<div class="search-field search">
+		<Icon icon={faMagnifyingGlass} size={15} />
 		<input
 			bind:this={inputRef}
+			class="field-input"
 			role="combobox"
 			aria-expanded={open && options.length > 0}
 			aria-controls={open && options.length > 0 ? listId : undefined}
@@ -309,12 +311,14 @@
 		{/if}
 		{#if indexing}
 			<span id={progressId} class="sr-only">{progressText}</span>
-			<span class="srch-line" class:paused={indexing.state === 'paused'} class:warn={indexing.state === 'attention'} style:width="{indexing.fraction * 100}%" aria-hidden="true"></span>
+			<span class="srch-track" aria-hidden="true">
+				<span class="srch-line" class:paused={indexing.state === 'paused'} class:warn={indexing.state === 'attention'} style:width="{indexing.fraction * 100}%"></span>
+			</span>
 		{/if}
 		{#if mailSearch.draft || mailSearch.active}
 			<button class="clr" onclick={clearAll} title={m.mail_search_clear()} aria-label={m.mail_search_clear()}><Icon icon={faXmark} size={14} /></button>
 		{:else}
-			<span class="kbd">/</span>
+			<kbd aria-hidden="true">/</kbd>
 		{/if}
 	</div>
 	{#if open}
@@ -350,7 +354,7 @@
 								onclick={() => choose(option)}
 								onkeydown={() => {}}
 							>
-								<span class="srch-op">{option.op}</span>
+								<Chip size="sm">{option.op}</Chip>
 							</div>
 						{:else if option.kind === 'all'}
 							{#if showLooking}

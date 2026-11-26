@@ -104,16 +104,16 @@
 				<fieldset class="cd-dest" disabled={busy}>
 					<legend class="cc-lbl">{m.mail_collection_delete_where()}</legend>
 					<label class="cd-opt">
-						<input type="radio" name={`${uid}-dest`} value="archive" bind:group={destination} />
+						<input type="radio" class="radio" name={`${uid}-dest`} value="archive" bind:group={destination} />
 						<span>{m.mail_folder_archive()}</span>
 					</label>
 					<label class="cd-opt">
-						<input type="radio" name={`${uid}-dest`} value="inbox" bind:group={destination} />
+						<input type="radio" class="radio" name={`${uid}-dest`} value="inbox" bind:group={destination} />
 						<span>{m.mail_folder_inbox()}</span>
 					</label>
 					{#if others.length > 0}
 						<label class="cd-opt">
-							<input type="radio" name={`${uid}-dest`} value="folder" bind:group={destination} />
+							<input type="radio" class="radio" name={`${uid}-dest`} value="folder" bind:group={destination} />
 							<span>{m.mail_collection_delete_other_folder()}</span>
 						</label>
 						{#if destination === 'folder'}

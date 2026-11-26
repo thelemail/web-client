@@ -3,6 +3,7 @@
 	import { onMount, untrack } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { Segmented } from '$core/components/ui/segmented';
 	import {
 		faBoxArchive,
 		faCheck,
@@ -1059,28 +1060,16 @@
 >
 	<div class="rt">
 		{#if expanded && onMode}
-			<div class="rt-mode" role="radiogroup" aria-label={msg.mail_compose_reply_mode()}>
-				<button
-					type="button"
-					role="radio"
-					aria-checked={mode === 'reply'}
-					class:on={mode === 'reply'}
-					disabled={status === 'sending'}
-					onclick={() => onMode('reply')}
-				>
-					<Icon icon={faReply} size={15} />{msg.mail_reader_reply()}
-				</button>
-				<button
-					type="button"
-					role="radio"
-					aria-checked={mode === 'all'}
-					class:on={mode === 'all'}
-					disabled={status === 'sending'}
-					onclick={() => onMode('all')}
-				>
-					<Icon icon={faReplyAll} size={15} />{msg.mail_reader_reply_all()}
-				</button>
-			</div>
+			<Segmented
+				class="rt-mode"
+				aria-label={msg.mail_compose_reply_mode()}
+				disabled={status === 'sending'}
+				bind:value={() => mode, (next) => onMode?.(next)}
+				options={[
+					{ value: 'reply', label: msg.mail_reader_reply(), icon: faReply },
+					{ value: 'all', label: msg.mail_reader_reply_all(), icon: faReplyAll }
+				]}
+			/>
 		{:else}
 			<h2 class="rt-t">{modeLabel}</h2>
 		{/if}
