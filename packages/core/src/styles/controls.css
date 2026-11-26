@@ -10,6 +10,8 @@
 	padding: 0;
 	border: 1.5px solid var(--border-control);
 	background: var(--surface);
+	background-image: none;
+	box-shadow: none;
 	color: var(--primary-fg);
 	cursor: pointer;
 	appearance: none;
