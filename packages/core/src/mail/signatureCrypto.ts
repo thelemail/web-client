@@ -2,7 +2,6 @@ import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { bytesToB64, b64ToBytes, b64ToHex } from '$core/keys/encode';
 import * as attframe from '$core/mail/attframe';
-import { sanitizeSignatureHtml } from '$core/mail/render/sanitizeSignature';
 import type { SignatureRecord, UpsertSignatureInput } from '$core/api/signatures';
 
 export type SignatureMode = 'rich' | 'html' | 'markdown';
@@ -28,17 +27,20 @@ export function emptyDoc(): SignatureDoc {
 	return { v: 1, mode: 'rich', source: '', bodyHtml: '', images: [] };
 }
 
-function clean(html: string): string {
-	return sanitizeSignatureHtml(html, { keepRemoteImages: true });
+type Clean = (html: string) => string;
+
+async function loadClean(): Promise<Clean> {
+	const { sanitizeSignatureHtml } = await import('$core/mail/render/sanitizeSignature');
+	return (html) => sanitizeSignatureHtml(html, { keepRemoteImages: true });
 }
 
-export function legacyDoc(bodyHtml: string): SignatureDoc {
+function legacyDoc(clean: Clean, bodyHtml: string): SignatureDoc {
 	const html = clean(bodyHtml);
 	return { v: 1, mode: 'rich', source: html, bodyHtml: html, images: [] };
 }
 
-function normalize(raw: unknown, fallbackHtml: string): SignatureDoc {
-	if (!raw || typeof raw !== 'object') return legacyDoc(fallbackHtml);
+function normalize(clean: Clean, raw: unknown, fallbackHtml: string): SignatureDoc {
+	if (!raw || typeof raw !== 'object') return legacyDoc(clean, fallbackHtml);
 	const d = raw as Partial<SignatureDoc>;
 	const mode: SignatureMode =
 		d.mode === 'html' || d.mode === 'markdown' || d.mode === 'rich' ? d.mode : 'rich';
@@ -62,7 +64,7 @@ export async function openSignature(
 	record: SignatureRecord
 ): Promise<OpenedSignature> {
 	if (!record.sealedBody) {
-		return { ok: true, doc: legacyDoc(record.bodyHtml ?? ''), legacy: true };
+		return { ok: true, doc: legacyDoc(await loadClean(), record.bodyHtml ?? ''), legacy: true };
 	}
 	const res = await keystore.decrypt({
 		accountId,
@@ -73,8 +75,9 @@ export async function openSignature(
 		return { ok: false, reason: res.code === 'locked' ? 'locked' : 'unreadable' };
 	}
 	const text = 'plaintext' in res ? res.plaintext : new TextDecoder().decode(res.plaintextBinary);
+	const clean = await loadClean();
 	try {
-		return { ok: true, doc: normalize(JSON.parse(text), ''), legacy: false };
+		return { ok: true, doc: normalize(clean, JSON.parse(text), ''), legacy: false };
 	} catch {
 		return { ok: false, reason: 'unreadable' };
 	}
