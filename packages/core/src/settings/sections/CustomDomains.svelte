@@ -37,6 +37,7 @@
 	import UpgradeNudge from '$core/settings/UpgradeNudge.svelte';
 	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { m } from '$paraglide/messages.js';
 
 	const LIST_POLL_MS = 60_000;
@@ -46,25 +47,12 @@
 	const base = $derived(`/u/${slot}/settings/domains`);
 	const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
 
-	let menuFor = $state<string | null>(null);
 	let removeId = $state<string | null>(null);
 	let now = $state(serverNow());
 
 	const removeTarget = $derived(store.items.find((d) => d.id === removeId) ?? null);
 
-	function openMenu(id: string) {
-		menuFor = menuFor === id ? null : id;
-	}
-
-	function dismiss(e: Event) {
-		if (menuFor === null) return;
-		const t = e.target;
-		if (t instanceof Element && t.closest('.cd-menu-wrap')) return;
-		menuFor = null;
-	}
-
 	function startRemove(id: string) {
-		menuFor = null;
 		removeId = id;
 	}
 
@@ -122,11 +110,6 @@
 	});
 </script>
 
-<svelte:window
-	onpointerdown={dismiss}
-	onkeydown={(e) => e.key === 'Escape' && (menuFor = null)}
-/>
-
 <SecHead desc={m.settings_domains_desc()} />
 
 <Card icon={faEarthEurope} title={m.settings_domains_title()}>
@@ -182,28 +165,20 @@
 								</Button>
 							{/if}
 							{#if manage}
-								<span class="cd-menu-wrap">
-									<Button
-										variant="ghost"
-										size="icon-sm"
-										aria-label={m.settings_domains_actions_aria()}
-										aria-expanded={menuFor === d.id}
-										onclick={() => openMenu(d.id)}
-									>
-										<Icon icon={faEllipsisVertical} size={16} />
-									</Button>
-									{#if menuFor === d.id}
-										<div class="cd-menu" role="menu">
-											<button
-												type="button"
-												class="cd-menu-item danger"
-												onclick={() => startRemove(d.id)}
-											>
-												<Icon icon={faTrashCan} size={14} />{m.settings_domains_remove()}
-											</button>
-										</div>
-									{/if}
-								</span>
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger>
+										{#snippet child({ props })}
+											<Button {...props} variant="ghost" size="icon-sm" aria-label={m.settings_domains_actions_aria()}>
+												<Icon icon={faEllipsisVertical} size={16} />
+											</Button>
+										{/snippet}
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content align="end">
+										<DropdownMenu.Item variant="danger" onSelect={() => startRemove(d.id)}>
+											<Icon icon={faTrashCan} size={14} />{m.settings_domains_remove()}
+										</DropdownMenu.Item>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
 							{/if}
 						</span>
 					</div>
@@ -317,44 +292,6 @@
 		align-items: center;
 		gap: 8px;
 		margin-left: auto;
-	}
-	.cd-menu-wrap {
-		position: relative;
-		display: inline-flex;
-	}
-	.cd-menu {
-		position: absolute;
-		right: 0;
-		top: 36px;
-		z-index: 40;
-		display: flex;
-		flex-direction: column;
-		min-width: 180px;
-		padding: 4px;
-		background: var(--surface);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-menu);
-		box-shadow: var(--shadow-lg);
-	}
-	.cd-menu-item {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 10px;
-		font-family: inherit;
-		font-size: 13px;
-		text-align: left;
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-control-compact);
-		color: var(--fg);
-		cursor: pointer;
-	}
-	.cd-menu-item:hover {
-		background: var(--bg-sunken);
-	}
-	.cd-menu-item.danger {
-		color: var(--danger-700);
 	}
 
 	.cd-empty {

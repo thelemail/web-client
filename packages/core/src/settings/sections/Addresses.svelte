@@ -28,6 +28,7 @@
 	import AliasCeremony from '../ceremonies/AliasCeremony.svelte';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 
 	import type { CeremonyKind } from '../data';
 	import { addresses } from '$core/stores/addresses.svelte';
@@ -57,7 +58,6 @@
 
 	let { launch }: Props = $props();
 
-	let menuFor = $state<string | null>(null);
 	let managingId = $state<string | null>(null);
 	let pendingRemoval = $state<{ email: string; run: () => Promise<void> } | null>(null);
 	let removalBusy = $state(false);
@@ -115,19 +115,10 @@
 	}
 
 	function open(row: AddressRow) {
-		menuFor = null;
 		void goto(href(row));
 	}
 
-	function dismiss(e: Event) {
-		if (menuFor === null) return;
-		const t = e.target;
-		if (t instanceof Element && t.closest('.addr-menu-wrap')) return;
-		menuFor = null;
-	}
-
 	async function promote(row: AddressRow) {
-		menuFor = null;
 		promoteFailedId = null;
 		try {
 			await makePrimary(row.id);
@@ -137,12 +128,10 @@
 	}
 
 	function managePeople(row: AddressRow) {
-		menuFor = null;
 		if (row.sharedAliasId) managingId = row.sharedAliasId;
 	}
 
 	function askRemoval(row: AddressRow) {
-		menuFor = null;
 		removalError = null;
 		const workspaceId = workspaces.workspace?.id;
 		if (row.kind === 'shared' && row.sharedAliasId && workspaceId) {
@@ -187,7 +176,6 @@
 	}
 </script>
 
-<svelte:window onclick={dismiss} />
 
 <div class="addr-intro">
 	<div class="addr-intro-tx">
@@ -264,43 +252,41 @@
 					<span class="addr-used-tx">{row.usedBy}</span>
 				</div>
 				<div class="addr-menu-wrap">
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						aria-label={m.settings_address_actions()}
-						aria-expanded={menuFor === row.id}
-						onclick={() => (menuFor = menuFor === row.id ? null : row.id)}
-					>
-						<Icon icon={faEllipsis} size={16} />
-					</Button>
-					{#if menuFor === row.id}
-						<div class="addr-menu" role="menu">
-							<button type="button" class="mitem" onclick={() => open(row)}>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger>
+							{#snippet child({ props })}
+								<Button {...props} variant="ghost" size="icon-sm" aria-label={m.settings_address_actions()}>
+									<Icon icon={faEllipsis} size={16} />
+								</Button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							<DropdownMenu.Item onSelect={() => open(row)}>
 								<Icon icon={faArrowRight} size={15} />{m.common_open()}
-							</button>
+							</DropdownMenu.Item>
 							{#if row.canPromote}
-								<button type="button" class="mitem" onclick={() => promote(row)}>
+								<DropdownMenu.Item onSelect={() => promote(row)}>
 									<Icon icon={faStar} size={15} />{m.settings_address_make_primary()}
-								</button>
+								</DropdownMenu.Item>
 							{/if}
 							{#if row.canRename}
-								<button type="button" class="mitem" onclick={() => open(row)}>
+								<DropdownMenu.Item onSelect={() => open(row)}>
 									<Icon icon={faPenLine} size={15} />{m.settings_address_rename()}
-								</button>
+								</DropdownMenu.Item>
 							{/if}
 							{#if row.canManagePeople}
-								<button type="button" class="mitem" onclick={() => managePeople(row)}>
+								<DropdownMenu.Item onSelect={() => managePeople(row)}>
 									<Icon icon={faUsers} size={15} />{m.settings_address_manage_people()}
-								</button>
+								</DropdownMenu.Item>
 							{/if}
 							{#if row.canRemove}
-								<span class="msep"></span>
-								<button type="button" class="mitem danger" onclick={() => askRemoval(row)}>
+								<DropdownMenu.Separator />
+								<DropdownMenu.Item variant="danger" onSelect={() => askRemoval(row)}>
 									<Icon icon={faTrashCan} size={15} />{m.settings_address_remove()}
-								</button>
+								</DropdownMenu.Item>
 							{/if}
-						</div>
-					{/if}
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				</div>
 			</div>
 			{#if promoteFailedId === row.id}

@@ -24,6 +24,7 @@
 	import RevokeForwardingDialog from './RevokeForwardingDialog.svelte';
 	import { deliveryLabel, deliveryTone, summarise } from './deliveryStatus';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { billing } from '$core/stores/billing.svelte';
 	import { readDelegations } from '$core/stores/readDelegations.svelte';
 	import type { ReadDelegation } from '$core/api/readDelegations';
@@ -41,7 +42,6 @@
 	let revoking = $state<ReadDelegation | null>(null);
 	let flash = $state<string | null>(null);
 	let busyId = $state<string | null>(null);
-	let menuFor = $state<string | null>(null);
 
 	const items = $derived(readDelegations.for(addressId));
 	const live = $derived(items.filter((d) => d.state !== 'revoked'));
@@ -81,15 +81,7 @@
 		return 'var(--fg-muted)';
 	}
 
-	function dismiss(e: Event) {
-		if (menuFor === null) return;
-		const t = e.target;
-		if (t instanceof Element && t.closest('.addr-menu-wrap')) return;
-		menuFor = null;
-	}
-
 	async function run(d: ReadDelegation, action: () => Promise<void>, done: string) {
-		menuFor = null;
 		busyId = d.id;
 		flash = null;
 		try {
@@ -102,8 +94,6 @@
 		}
 	}
 </script>
-
-<svelte:window onclick={dismiss} />
 
 <Card icon={faShare} title={m.settings_forwarding_title()} variant="menus">
 	{#snippet right()}
@@ -207,41 +197,25 @@
 							</Button>
 						{/if}
 						<div class="addr-menu-wrap">
-							<Button
-								variant="ghost"
-								size="icon-sm"
-								aria-label={m.settings_forwarding_actions()}
-								aria-expanded={menuFor === d.id}
-								onclick={() => (menuFor = menuFor === d.id ? null : d.id)}
-							>
-								<Icon icon={faEllipsis} size={16} />
-							</Button>
-							{#if menuFor === d.id}
-								<div class="addr-menu" role="menu">
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									{#snippet child({ props })}
+										<Button {...props} variant="ghost" size="icon-sm" aria-label={m.settings_forwarding_actions()}>
+											<Icon icon={faEllipsis} size={16} />
+										</Button>
+									{/snippet}
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content align="end">
 									{#if d.mode !== 'plain' && !blocked}
-										<button
-											type="button"
-											class="mitem"
-											onclick={() => {
-												menuFor = null;
-												rotating = d;
-											}}
-										>
+										<DropdownMenu.Item onSelect={() => (rotating = d)}>
 											<Icon icon={faRotateRight} size={15} />{m.settings_forwarding_replace_key()}
-										</button>
+										</DropdownMenu.Item>
 									{/if}
-									<button
-										type="button"
-										class="mitem danger"
-										onclick={() => {
-											menuFor = null;
-											revoking = d;
-										}}
-									>
+									<DropdownMenu.Item variant="danger" onSelect={() => (revoking = d)}>
 										<Icon icon={faTrashCan} size={15} />{m.settings_forwarding_turn_off()}
-									</button>
-								</div>
-							{/if}
+									</DropdownMenu.Item>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
 						</div>
 					</div>
 				{/if}

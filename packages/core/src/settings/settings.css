@@ -891,6 +891,7 @@
 .settings-app .addr-plan { margin: 8px 0 0; font-size: 12.5px; color: var(--fg-faint); line-height: 1.5; }
 
 .settings-app .addr-group { overflow: visible; }
+.settings-app .addr-menu-wrap { display: flex; justify-content: flex-end; }
 .settings-app .addr-group-h { padding: 13px 18px 12px; }
 .settings-app .addr-group-h .addr-domain { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--fg-strong); margin: 0; }
 .settings-app .addr-group-h .badge { margin-left: 0; }
@@ -923,14 +924,6 @@
 .settings-app .avstack :global(.av) + :global(.av) { margin-left: -7px; }
 .settings-app .addr-row:hover .avstack :global(.av) { box-shadow: 0 0 0 2px var(--bg-raised); }
 
-.settings-app .addr-menu-wrap { position: relative; display: flex; justify-content: flex-end; }
-.settings-app .addr-menu { position: absolute; right: 0; top: 34px; z-index: 40; display: flex; flex-direction: column; width: 240px; padding: 5px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); }
-.settings-app .mitem { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: none; background: none; padding: 8px 10px; border-radius: var(--radius-control-compact); font-family: inherit; font-size: 13px; color: var(--fg); font-weight: 500; }
-.settings-app .mitem svg { width: 15px; height: 15px; color: var(--fg-muted); flex: 0 0 auto; }
-.settings-app .mitem:hover { background: var(--bg-sunken); color: var(--fg-strong); }
-.settings-app .mitem.danger { color: var(--danger-700); }
-.settings-app .mitem.danger svg { color: var(--danger-700); }
-.settings-app .msep { display: block; height: 1px; margin: 4px 6px; background: var(--border); }
 
 .settings-app .addr-note { margin: 0 0 16px; font-size: 12.5px; color: var(--fg-muted); }
 .settings-app .addr-note.err { color: var(--warning-700); }

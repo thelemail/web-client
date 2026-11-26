@@ -2,7 +2,7 @@
 	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
-	import { DropdownMenu } from 'bits-ui';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faEllipsis,
@@ -199,9 +199,9 @@
 	{#if menu && menuEntry}
 		{@const e = menuEntry}
 		{@const returnTo = menu.anchor}
-		<DropdownMenu.Portal to=".settings-app">
-			<DropdownMenu.Content
+		<DropdownMenu.Content
 				class="coll-set-menu"
+				portalProps={{ to: '.settings-app' }}
 				customAnchor={returnTo}
 				side="bottom"
 				align="end"
@@ -216,8 +216,8 @@
 					if (returnTo.isConnected) returnTo.focus();
 				}}
 			>
-				<div class="coll-set-menu-title" title={e.path}>{e.path}</div>
-				<DropdownMenu.Item class="mitem" onSelect={() => void run(e, () => mailCollections.setFavorite(e.id, !e.favorite))}>
+				<DropdownMenu.Label class="coll-menu-title" title={e.path}>{e.path}</DropdownMenu.Label>
+				<DropdownMenu.Item onSelect={() => void run(e, () => mailCollections.setFavorite(e.id, !e.favorite))}>
 					{#if e.favorite}
 						<Icon icon={faStarExclamation} />{m.mail_sidebar_remove_favorite()}
 					{:else}
@@ -226,7 +226,6 @@
 				</DropdownMenu.Item>
 				{#if e.depth + 1 < MAX_COLLECTION_DEPTH}
 					<DropdownMenu.Item
-						class="mitem"
 						onSelect={() => {
 							handedOff = true;
 							startCreate(e.kind, e.id);
@@ -239,7 +238,7 @@
 						{/if}
 					</DropdownMenu.Item>
 				{/if}
-				<DropdownMenu.Separator class="msep" />
+				<DropdownMenu.Separator />
 				<CollectionManageItems
 					entry={e}
 					index={menuSibs.indexOf(e.id)}
@@ -251,7 +250,6 @@
 					onDelete={() => handOff((d) => d.remove(e, returnTo))}
 				/>
 			</DropdownMenu.Content>
-		</DropdownMenu.Portal>
 	{/if}
 </DropdownMenu.Root>
 

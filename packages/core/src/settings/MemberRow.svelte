@@ -16,6 +16,7 @@
 	import type { AccountMember } from './types';
 	import { memberRoleLabel } from './memberRole';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 
 	export type MemberRowAction =
 		| { kind: 'promote' }
@@ -52,7 +53,6 @@
 		onAction
 	}: Props = $props();
 
-	let menuOpen = $state(false);
 	let mode = $state<'idle' | 'confirm-remove' | 'confirm-revoke'>('idle');
 
 	const hasActions = $derived(
@@ -62,23 +62,16 @@
 
 	const roleLabel = $derived(memberRoleLabel(member.role));
 
-	function toggleMenu() {
-		menuOpen = !menuOpen;
-	}
-
 	async function resend() {
 		if (!canResend || !onAction) return;
-		menuOpen = false;
 		await onAction({ kind: 'resend' });
 	}
 
 	function startRemove() {
-		menuOpen = false;
 		mode = 'confirm-remove';
 	}
 
 	function startRevoke() {
-		menuOpen = false;
 		mode = 'confirm-revoke';
 	}
 
@@ -99,12 +92,10 @@
 	}
 
 	async function doPromote() {
-		menuOpen = false;
 		if (onAction) await onAction({ kind: 'promote' });
 	}
 
 	async function doDemote() {
-		menuOpen = false;
 		if (onAction) await onAction({ kind: 'demote' });
 	}
 </script>
@@ -121,44 +112,42 @@
 	{#if hasActions}
 		<div class="mbr-actions">
 			{#if mode === 'idle'}
-				<Button
-					variant="ghost"
-					size="icon-sm"
-					aria-label={m.settings_member_actions()}
-					onclick={toggleMenu}
-					disabled={busy}
-				>
-					<Icon icon={faEllipsisVertical} size={16} />
-				</Button>
-				{#if menuOpen}
-					<div class="mbr-menu" role="menu">
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger disabled={busy}>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm" aria-label={m.settings_member_actions()}>
+								<Icon icon={faEllipsisVertical} size={16} />
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end">
 						{#if canResend}
-							<button type="button" class="mbr-menu-item" onclick={resend}>
+							<DropdownMenu.Item onSelect={resend}>
 								<Icon icon={faCopy} size={14} />{m.settings_member_resend()}
-							</button>
+							</DropdownMenu.Item>
 						{/if}
 						{#if canPromote}
-							<button type="button" class="mbr-menu-item" onclick={doPromote}>
+							<DropdownMenu.Item onSelect={doPromote}>
 								<Icon icon={faShieldCheck} size={14} />{m.settings_member_make_admin()}
-							</button>
+							</DropdownMenu.Item>
 						{/if}
 						{#if canDemote}
-							<button type="button" class="mbr-menu-item" onclick={doDemote}>
+							<DropdownMenu.Item onSelect={doDemote}>
 								<Icon icon={faUser} size={14} />{m.settings_member_make_member()}
-							</button>
+							</DropdownMenu.Item>
 						{/if}
 						{#if canRevoke}
-							<button type="button" class="mbr-menu-item danger" onclick={startRevoke}>
+							<DropdownMenu.Item variant="danger" onSelect={startRevoke}>
 								<Icon icon={faTrashCan} size={14} />{m.settings_member_revoke_invite()}
-							</button>
+							</DropdownMenu.Item>
 						{/if}
 						{#if canRemove}
-							<button type="button" class="mbr-menu-item danger" onclick={startRemove}>
+							<DropdownMenu.Item variant="danger" onSelect={startRemove}>
 								<Icon icon={faTrashCan} size={14} />{m.settings_member_remove_from_workspace()}
-							</button>
+							</DropdownMenu.Item>
 						{/if}
-					</div>
-				{/if}
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			{:else if mode === 'confirm-remove'}
 				<span class="mbr-confirm">{m.settings_member_remove_confirm({ name: member.name })}</span>
 				<Button variant="neutral" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
@@ -195,41 +184,6 @@
 		align-items: center;
 		gap: 8px;
 		margin-left: 8px;
-	}
-	.mbr-menu {
-		position: absolute;
-		right: 0;
-		top: 36px;
-		z-index: 40;
-		display: flex;
-		flex-direction: column;
-		min-width: 200px;
-		padding: 4px;
-		background: var(--surface);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-menu);
-		box-shadow:
-			0 4px 16px rgba(0, 0, 0, 0.08),
-			0 0 0 1px rgba(0, 0, 0, 0.02);
-	}
-	.mbr-menu-item {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 10px;
-		font-size: 13px;
-		text-align: left;
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-control-compact);
-		color: var(--fg);
-		cursor: pointer;
-	}
-	.mbr-menu-item:hover {
-		background: var(--bg-sunken);
-	}
-	.mbr-menu-item.danger {
-		color: var(--danger-700);
 	}
 	.mbr-feedback {
 		display: flex;
