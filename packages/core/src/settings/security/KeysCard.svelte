@@ -9,7 +9,7 @@
 	} from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import CeremonyRow from '../CeremonyRow.svelte';
 	import CopyBtn from '../CopyBtn.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -49,7 +49,7 @@
 </script>
 
 <Card icon={faKeySkeleton} title={m.settings_security_keys_title()}>
-	{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
+	{#snippet right()}<Badge tone="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
 		{@const accountId = auth.accountId}
 		{@const mismatch = accountKeys.verification === 'unverified'}

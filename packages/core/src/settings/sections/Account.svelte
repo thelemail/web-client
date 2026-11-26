@@ -15,7 +15,7 @@
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Card from '../Card.svelte';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import MembershipCard from '../MembershipCard.svelte';
 	import type { CeremonyKind } from '../data';
 	import { page } from '$app/state';
@@ -156,7 +156,7 @@
 					<Icon icon={PlanIcon} size={18} />
 					<span>{planName}</span>
 					{#if sub?.status === 'past_due'}
-						<Badge kind="warn">{m.settings_account_payment_problem()}</Badge>
+						<Badge tone="warning">{m.settings_account_payment_problem()}</Badge>
 					{/if}
 				</div>
 				<div class="plan-price">

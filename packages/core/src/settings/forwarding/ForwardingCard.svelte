@@ -16,7 +16,7 @@
 	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import RecordRow from '../RecordRow.svelte';
 	import UpgradeNudge from '../UpgradeNudge.svelte';
@@ -138,15 +138,15 @@
 		<RecordRow label={d.label} top>
 			{#snippet badges()}
 				{#if d.state === 'active'}
-					<Badge kind="ok" dot>{m.settings_forwarding_badge_active()}</Badge>
+					<Badge tone="success" status>{m.settings_forwarding_badge_active()}</Badge>
 				{:else if d.state === 'pending_verification'}
-					<Badge kind="info" dot>{m.settings_forwarding_badge_pending()}</Badge>
+					<Badge tone="info" status>{m.settings_forwarding_badge_pending()}</Badge>
 				{:else if d.state === 'paused'}
-					<Badge kind="neutral" dot>{m.settings_forwarding_badge_paused()}</Badge>
+					<Badge tone="neutral" status>{m.settings_forwarding_badge_paused()}</Badge>
 				{:else}
-					<Badge kind="warn" dot>{m.settings_forwarding_badge_off()}</Badge>
+					<Badge tone="warning" status>{m.settings_forwarding_badge_off()}</Badge>
 				{/if}
-				{#if d.mode === 'plain'}<Badge kind="neutral">{m.settings_forwarding_badge_plain()}</Badge>{/if}
+				{#if d.mode === 'plain'}<Badge tone="neutral">{m.settings_forwarding_badge_plain()}</Badge>{/if}
 			{/snippet}
 			<div class="rec-dest">
 				<Icon icon={faArrowRight} size={12} />

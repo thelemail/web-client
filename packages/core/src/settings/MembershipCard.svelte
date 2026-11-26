@@ -12,7 +12,7 @@
 	import { page } from '$app/state';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
-	import Badge from './Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from './Card.svelte';
 	import MemberRow, { type MemberRowAction, type MemberRowFeedback } from './MemberRow.svelte';
 	import { memberActionError } from './member-errors';
@@ -224,7 +224,7 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 <Card id="members" tabindex={-1} icon={cardIcon} {title}>
-	{#snippet right()}<Badge kind="pine">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
+	{#snippet right()}<Badge tone="brand">{workspaces.workspace?.name ?? ''}</Badge>{/snippet}
 
 	{#if !isPersonal}
 		<div class="seat-bar">

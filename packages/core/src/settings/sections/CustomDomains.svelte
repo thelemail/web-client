@@ -12,7 +12,7 @@
 	import { page } from '$app/state';
 
 	import Card from '$core/settings/Card.svelte';
-	import Badge from '$core/settings/Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import SecHead from '$core/settings/SecHead.svelte';
 	import RemoveDomainDialog from '$core/settings/domains/RemoveDomainDialog.svelte';
 	import {
@@ -150,7 +150,7 @@
 				<div class="cd-row" class:live>
 					<div class="cd-main">
 						<span class="cd-name mono">{d.domain}</span>
-						<Badge kind={badge.kind} dot>{badge.label}</Badge>
+						<Badge tone={badge.kind} status>{badge.label}</Badge>
 					</div>
 
 					<div class="cd-progress" aria-label={m.settings_domains_progress_aria()}>

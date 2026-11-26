@@ -17,7 +17,7 @@
 		faUsbDrive
 	} from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import CeremonyRow from '../CeremonyRow.svelte';
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
@@ -165,14 +165,14 @@
 	{#snippet right()}
 		{#if tfStatus}
 			{#if tfStatus.enabled}
-				<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
+				<Badge tone="success" status>{m.settings_security_2fa_on()}</Badge>
 			{:else}
-				<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
+				<Badge tone="warning" status>{m.settings_security_2fa_off()}</Badge>
 			{/if}
 		{:else if twofactor.phase === 'error'}
-			<Badge kind="neutral">{m.settings_security_2fa_unknown()}</Badge>
+			<Badge tone="neutral">{m.settings_security_2fa_unknown()}</Badge>
 		{:else}
-			<Badge kind="neutral">{m.settings_security_2fa_checking()}</Badge>
+			<Badge tone="neutral">{m.settings_security_2fa_checking()}</Badge>
 		{/if}
 	{/snippet}
 	<div class="cer-rows">
@@ -204,7 +204,7 @@
 					{#if cred.kind === 'platform'}<Icon icon={faFingerprint} size={18} />{:else}<Icon icon={faUsbDrive} size={18} />{/if}
 				</span>
 				<div class="tfa-info">
-					<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+					<div class="tfa-t">{cred.name}<Badge tone="success">{m.settings_security_on()}</Badge></div>
 					<div class="tfa-d">
 						{keyMeta(cred)}
 					</div>
@@ -254,7 +254,7 @@
 			<div class="tfa-row">
 				<span class="tfa-ic"><Icon icon={faMobile} size={18} /></span>
 				<div class="tfa-info">
-					<div class="tfa-t">{m.settings_security_totp()}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+					<div class="tfa-t">{m.settings_security_totp()}<Badge tone="success">{m.settings_security_on()}</Badge></div>
 					<div class="tfa-d">
 						{m.settings_security_totp_meta({ date: fmtDate(tfStatus.totp.createdAt) })}
 					</div>

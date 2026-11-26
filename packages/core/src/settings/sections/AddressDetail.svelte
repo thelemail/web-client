@@ -14,7 +14,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import TextInput from '../TextInput.svelte';
@@ -173,13 +173,13 @@
 		<div class="ad-hero-tx">
 			<div class="ad-hero-title">
 				<span class="ad-name">{row.title}</span>
-				{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
-				{#if row.kind === 'shared'}<Badge kind="neutral">{m.settings_address_shared()}</Badge>{/if}
-				{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
+				{#if row.isPrimary}<Badge tone="brand">{m.settings_address_primary()}</Badge>{/if}
+				{#if row.kind === 'shared'}<Badge tone="neutral">{m.settings_address_shared()}</Badge>{/if}
+				{#if row.rotationRequired}<Badge tone="warning" status>{m.settings_address_needs_new_key()}</Badge>{/if}
 				{#if row.health === 'suspended'}
-					<Badge kind="warn" dot>{m.settings_address_suspended()}</Badge>
+					<Badge tone="warning" status>{m.settings_address_suspended()}</Badge>
 				{:else if row.health === 'paused'}
-					<Badge kind="warn" dot>{m.settings_domains_status_paused()}</Badge>
+					<Badge tone="warning" status>{m.settings_domains_status_paused()}</Badge>
 				{/if}
 			</div>
 			<div class="ad-lede">{ledeFor(ctx, row)}</div>
@@ -255,7 +255,7 @@
 				d={blockNote ? `${m.settings_address_primary_desc()} ${blockNote}` : m.settings_address_primary_desc()}
 			>
 				{#if row.isPrimary}
-					<Badge kind="pine">{m.settings_address_primary()}</Badge>
+					<Badge tone="brand">{m.settings_address_primary()}</Badge>
 				{:else}
 					<Button
 						variant="tonal"

@@ -5,7 +5,7 @@
 	import { faCheck, faCircleInfo, faKey, faPlus } from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import RecordRow from '../RecordRow.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
@@ -78,11 +78,11 @@
 		<RecordRow label={d.label}>
 			{#snippet badges()}
 				{#if status === 'revoked'}
-					<Badge kind="warn" dot>{m.settings_delegation_badge_revoked()}</Badge>
+					<Badge tone="warning" status>{m.settings_delegation_badge_revoked()}</Badge>
 				{:else if status === 'expired'}
-					<Badge kind="neutral" dot>{m.settings_delegation_badge_expired()}</Badge>
+					<Badge tone="neutral" status>{m.settings_delegation_badge_expired()}</Badge>
 				{:else}
-					<Badge kind="ok" dot>{m.settings_delegation_badge_active()}</Badge>
+					<Badge tone="success" status>{m.settings_delegation_badge_active()}</Badge>
 				{/if}
 			{/snippet}
 			<div class="rec-meta">

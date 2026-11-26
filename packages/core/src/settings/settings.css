@@ -124,13 +124,6 @@
 .settings-app .tin.w-narrow { width: 108px; }
 .settings-app .tin.w-mid { width: 240px; }
 
-.settings-app .badge { font-size: 11px; font-weight: 600; border-radius: var(--radius-pill); padding: 3px 9px; display: inline-flex; align-items: center; gap: 5px; line-height: 1.5; white-space: nowrap; }
-.settings-app .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.settings-app .b-ok { background: var(--success-100); color: var(--success-700); }
-.settings-app .b-warn { background: var(--warning-100); color: var(--warning-700); }
-.settings-app .b-info { background: var(--info-100); color: var(--info-700); }
-.settings-app .b-pine { background: var(--pine-100); color: var(--pine-700); }
-.settings-app .b-neutral { background: var(--bg-sunken); color: var(--fg-muted); }
 
 .settings-app .profile { display: flex; align-items: center; gap: 18px; padding: 20px 18px; }
 .settings-app .profile .pf-av { width: 64px; height: 64px; font-size: 24px; flex: 0 0 auto; box-shadow: var(--shadow-sm); }

@@ -20,7 +20,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import CatchAllCard from './CatchAllCard.svelte';
@@ -210,7 +210,7 @@
 {#each groups as g (g.domain)}
 	<Card as="section" class="addr-group" headClass="addr-group-h" titleClass="addr-domain" icon={faGlobe} title={g.domain}>
 		{#snippet right()}
-			{#if g.badge}<Badge kind={g.badgeTone}>{g.badge}</Badge>{/if}
+			{#if g.badge}<Badge tone={g.badgeTone}>{g.badge}</Badge>{/if}
 			<span class="addr-count">{g.count}</span>
 		{/snippet}
 		<div class="addr-cols">
@@ -225,9 +225,9 @@
 					<span class="addr-text">
 						<span class="addr-title">
 							<span class="addr-name">{row.title}</span>
-							{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
-							{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
-							{#if row.health === 'suspended'}<Badge kind="warn" dot>{m.settings_address_suspended()}</Badge>{/if}
+							{#if row.isPrimary}<Badge tone="brand">{m.settings_address_primary()}</Badge>{/if}
+							{#if row.rotationRequired}<Badge tone="warning" status>{m.settings_address_needs_new_key()}</Badge>{/if}
+							{#if row.health === 'suspended'}<Badge tone="warning" status>{m.settings_address_suspended()}</Badge>{/if}
 						</span>
 						<span class="addr-mail">{row.email}</span>
 						{#if row.signerSummary || row.forwardSummary || row.pendingSummary || row.health === 'suspended'}

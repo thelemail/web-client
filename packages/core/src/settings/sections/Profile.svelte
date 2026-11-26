@@ -18,7 +18,7 @@
 	import Select from '../Select.svelte';
 	import TextInput from '../TextInput.svelte';
 	import { Switch } from '$core/components/ui/switch';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import { memberRoleLabel } from '../memberRole';
 	import SignatureEditor from './SignatureEditor.svelte';
@@ -393,7 +393,7 @@
 			<div class="pf-mail">{email}</div>
 			{#if roleLabel}
 				<div class="pf-tags">
-					<Badge kind="pine" dot>{roleLabel}</Badge>
+					<Badge tone="brand" status>{roleLabel}</Badge>
 				</div>
 			{/if}
 			{#if avatarError}
@@ -461,7 +461,7 @@
 					text={m.settings_profile_signature_editing({ name: sigIdentity.name || sigIdentity.email })}
 					tags={{ b: bold }}
 				/>
-				{#if sigIdentity.shared}<Badge kind="pine">{m.settings_profile_shared()}</Badge>{/if}
+				{#if sigIdentity.shared}<Badge tone="brand">{m.settings_profile_shared()}</Badge>{/if}
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}

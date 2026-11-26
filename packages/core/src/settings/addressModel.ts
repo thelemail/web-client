@@ -59,7 +59,7 @@ export interface AddressGroup {
 	domain: string;
 	ownDomain: boolean;
 	badge?: string;
-	badgeTone?: 'pine' | 'neutral' | 'warn';
+	badgeTone?: 'brand' | 'neutral' | 'warning';
 	count: string;
 	rows: AddressRow[];
 }
@@ -311,8 +311,8 @@ export function groupByDomain(ctx: ModelContext, rows: AddressRow[]): AddressGro
 }
 
 const GROUP_TONE: Record<BadgeKind, NonNullable<AddressGroup['badgeTone']>> = {
-	ok: 'pine',
-	warn: 'warn',
+	success: 'brand',
+	warning: 'warning',
 	info: 'neutral',
 	neutral: 'neutral'
 };
