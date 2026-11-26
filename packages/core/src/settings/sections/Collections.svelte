@@ -104,7 +104,7 @@
 {#snippet card(kind: MailCollectionKind)}
 	{@const entries = all(kind)}
 	{@const folder = kind === 'folder'}
-	<Card icon={folder ? faFolder : faTag} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
+	<Card title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
 		{#snippet right()}
 			{#if mailCollections.loaded}
 				<span class="card-meta">

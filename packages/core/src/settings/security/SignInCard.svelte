@@ -5,7 +5,6 @@
 		faArrowsRotate,
 		faCircleExclamation,
 		faFingerprint,
-		faKey,
 		faLifeRing,
 		faLock,
 		faMobile,
@@ -161,7 +160,7 @@
 
 {#snippet turnOnLink(t: string)}<button type="button" class="notelink" onclick={() => launch('twofa')}>{t}</button>{/snippet}
 
-<Card icon={faKey} title={m.settings_security_signin_title()} variant="flat">
+<Card title={m.settings_security_signin_title()}>
 	{#snippet right()}
 		{#if tfStatus}
 			{#if tfStatus.enabled}

@@ -152,7 +152,7 @@
 	onSelect={onStep}
 />
 
-<Card icon={stepHead.icon} title={stepHead.title}>
+<Card title={stepHead.title}>
 
 	<div class="dw-pane">
 		{#if lapsing && domain.ownershipMissingSince && domain.releaseAt}

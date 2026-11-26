@@ -8,7 +8,6 @@
 		faKey,
 		faStar,
 		faTrashCan,
-		faTriangleExclamation,
 		faUsers
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
@@ -221,7 +220,7 @@
 	{/if}
 
 	{#if row.canRename || row.isOwnPersonal}
-	<Card icon={faAt} title={m.settings_address_identity()}>
+	<Card title={m.settings_address_identity()}>
 		{#if row.canRename}
 			<Row
 				t={m.settings_address_display_name()}
@@ -284,7 +283,7 @@
 	{/if}
 
 	{#if row.kind === 'shared'}
-		<Card icon={faUsers} title={m.settings_address_people()}>
+		<Card title={m.settings_address_people()}>
 			{#snippet right()}
 				{#if row.usedBy}
 					<span class="card-meta">
@@ -342,7 +341,7 @@
 	{/if}
 
 	{#if row.canRemove}
-		<Card icon={faTriangleExclamation} title={m.settings_address_remove_card()} variant="danger">
+		<Card title={m.settings_address_remove_card()} variant="danger">
 			<Row
 				t={row.kind === 'shared'
 					? m.settings_address_remove_shared()

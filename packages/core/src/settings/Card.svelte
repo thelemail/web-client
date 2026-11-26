@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-	import Icon from '$core/components/Icon.svelte';
 	import { untrack, type Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import Heading from './Heading.svelte';
@@ -8,9 +6,8 @@
 
 	interface Props extends Omit<HTMLAttributes<HTMLElement>, 'title' | 'class'> {
 		title?: string;
-		icon?: IconDefinition;
 		right?: Snippet;
-		variant?: 'flat' | 'menus' | 'danger';
+		variant?: 'menus' | 'danger';
 		as?: 'div' | 'section';
 		class?: string;
 		headClass?: string;
@@ -20,7 +17,6 @@
 
 	let {
 		title,
-		icon,
 		right,
 		variant,
 		as = 'div',
@@ -35,13 +31,14 @@
 	setHeadingLevel(untrack(() => title) ? level + 1 : level);
 </script>
 
-<svelte:element this={as} {...rest} class={['scard', variant, extra]}>
-	{#if title}
+{#if title}
+	<svelte:element this={as} {...rest} class={['scard-group', variant, extra]}>
 		<div class={['scard-h', headClass]}>
-			{#if icon}<Icon {icon} size={16} />{/if}
 			<Heading {level} class={['scard-title', titleClass]}>{title}</Heading>
 			{#if right}{@render right()}{/if}
 		</div>
-	{/if}
-	{@render children()}
-</svelte:element>
+		<div class={['scard', variant]}>{@render children()}</div>
+	</svelte:element>
+{:else}
+	<svelte:element this={as} {...rest} class={['scard', variant, extra]}>{@render children()}</svelte:element>
+{/if}

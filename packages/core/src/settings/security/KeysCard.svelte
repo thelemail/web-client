@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
-	import {
-		faArrowsRotate,
-		faDownload,
-		faKeySkeleton,
-		faTriangleExclamation
-	} from '@fortawesome/pro-regular-svg-icons';
+	import { faArrowsRotate, faDownload, faTriangleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import { Badge } from '$core/components/ui/badge';
@@ -48,7 +43,7 @@
 	}
 </script>
 
-<Card icon={faKeySkeleton} title={m.settings_security_keys_title()}>
+<Card title={m.settings_security_keys_title()}>
 	{#snippet right()}<Badge tone="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
 		{@const accountId = auth.accountId}

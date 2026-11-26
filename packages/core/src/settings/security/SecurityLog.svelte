@@ -137,7 +137,7 @@
 	}
 </script>
 
-<Card icon={faScroll} title={m.settings_security_log()}>
+<Card title={m.settings_security_log()}>
 	{#if secEvents === null}
 		{#if secLoadFailed}
 			<LoadState

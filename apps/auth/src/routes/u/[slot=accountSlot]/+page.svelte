@@ -24,8 +24,6 @@
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faArrowUpRightFromSquare,
-		faCircleExclamation,
-		faDownload,
 		faTrashCan
 	} from '@fortawesome/pro-regular-svg-icons';
 
@@ -93,7 +91,7 @@
 						<KeysCard {launch} />
 					</SecGroup>
 
-					<Card icon={faDownload} title={m.settings_account_export_title()}>
+					<Card title={m.settings_account_export_title()}>
 						<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 							<Button
 								variant="neutral"
@@ -111,7 +109,7 @@
 						<SecurityLog />
 					</SecGroup>
 
-					<Card icon={faCircleExclamation} title={m.settings_account_delete_title()} variant="danger">
+					<Card title={m.settings_account_delete_title()} variant="danger">
 						<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_desc()}>
 							<Button variant="danger" size="sm" onclick={() => launch('delete')}>
 								<Icon icon={faTrashCan} size={14} />{m.settings_account_delete_button()}

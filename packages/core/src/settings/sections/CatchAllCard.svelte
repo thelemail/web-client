@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
-	import { faCircleExclamation, faInbox } from '@fortawesome/pro-regular-svg-icons';
+	import { faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import { Switch } from '$core/components/ui/switch';
@@ -74,7 +74,7 @@
 	}
 </script>
 
-<Card icon={faInbox} title={m.settings_catchall_title()}>
+<Card title={m.settings_catchall_title()}>
 	{#if eligibleAddresses.length === 0 && !enabled}
 		<div class="setrow">
 			<div class="info">

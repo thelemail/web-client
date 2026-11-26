@@ -5,8 +5,6 @@
 	import {
 		faArrowUpRightFromSquare,
 		faBuilding,
-		faCircleExclamation,
-		faDownload,
 		faTrashCan,
 		faUser,
 		faUsers
@@ -231,7 +229,7 @@
 
 	{#if isSoloFree}
 		{#if isOwner}
-			<Card icon={faUsers} title={m.settings_account_start_family()}>
+			<Card title={m.settings_account_start_family()}>
 				<Row
 					t={m.settings_account_start_family_row()}
 					d={m.settings_account_start_family_desc()}
@@ -261,7 +259,7 @@
 	{/if}
 {/if}
 
-<Card icon={faDownload} title={m.settings_account_export_title()}>
+<Card title={m.settings_account_export_title()}>
 	<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 		<Button variant="neutral" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
 			{m.settings_account_export_button()}<Icon icon={faArrowUpRightFromSquare} size={14} />
@@ -269,7 +267,7 @@
 	</Row>
 </Card>
 
-<Card icon={faCircleExclamation} title={m.settings_account_delete_title()} variant="danger">
+<Card title={m.settings_account_delete_title()} variant="danger">
 	{#if mailOnly}
 		<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_at_account()}>
 			{#if accountSettings}

@@ -113,7 +113,7 @@
 
 <SecHead desc={m.settings_blocked_desc()} />
 
-<Card icon={faUserXmark} title={m.settings_blocked_title()}>
+<Card title={m.settings_blocked_title()}>
 	{#snippet right()}
 		<span class="card-meta">{m.settings_blocked_count({ count: entries.length })}</span>
 	{/snippet}

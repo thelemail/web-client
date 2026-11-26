@@ -8,7 +8,6 @@
 		faCircleExclamation,
 		faClock,
 		faEllipsis,
-		faGlobe,
 		faKey,
 		faPenLine,
 		faPlus,
@@ -196,7 +195,7 @@
 </div>
 
 {#each groups as g (g.domain)}
-	<Card as="section" class="addr-group" headClass="addr-group-h" titleClass="addr-domain" icon={faGlobe} title={g.domain}>
+	<Card as="section" class="addr-group" headClass="addr-group-h" titleClass="addr-domain" title={g.domain}>
 		{#snippet right()}
 			{#if g.badge}<Badge tone={g.badgeTone}>{g.badge}</Badge>{/if}
 			<span class="addr-count">{g.count}</span>

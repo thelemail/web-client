@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
-	import { faUpload, faUsers } from '@fortawesome/pro-regular-svg-icons';
+	import { faUpload } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import ImportKeyDialog from '../ImportKeyDialog.svelte';
@@ -10,7 +10,7 @@
 	let importOpen = $state(false);
 </script>
 
-<Card icon={faUsers} title={m.settings_security_contact_keys_title()}>
+<Card title={m.settings_security_contact_keys_title()}>
 	<Row t={m.settings_security_contact_keys_row()} d={m.settings_security_contact_keys_desc()}>
 		<Button variant="tonal" size="sm" onclick={() => (importOpen = true)}>
 			<Icon icon={faUpload} size={14} />{m.settings_security_contact_keys_import()}

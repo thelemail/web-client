@@ -6,7 +6,6 @@
 	import {
 		faCamera,
 		faCircleInfo,
-		faPenLine,
 		faSpinnerThird,
 		faTrashCan,
 		faUser
@@ -434,7 +433,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Card icon={faPenLine} title={m.settings_profile_signature()}>
+<Card title={m.settings_profile_signature()}>
 	{#snippet right()}
 		<span class="sig-picker">
 			<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>

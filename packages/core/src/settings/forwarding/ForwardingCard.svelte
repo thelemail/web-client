@@ -12,7 +12,6 @@
 		faPlay,
 		faPlus,
 		faRotateRight,
-		faShare,
 		faShareFromSquare,
 		faTrashCan
 	} from '@fortawesome/pro-regular-svg-icons';
@@ -97,7 +96,7 @@
 	}
 </script>
 
-<Card icon={faShare} title={m.settings_forwarding_title()} variant="menus">
+<Card title={m.settings_forwarding_title()} variant="menus">
 	{#snippet right()}
 		<span class="card-meta">
 			{m.settings_forwarding_destinations({ count: live.length })}

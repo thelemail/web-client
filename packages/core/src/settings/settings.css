@@ -89,15 +89,15 @@
 .settings-app .sec-h p { font-size: 13.5px; color: var(--fg-muted); margin: 0; line-height: 1.55; max-width: 64ch; }
 .settings-app .sec-group { display: flex; flex-direction: column; gap: 16px; }
 .settings-app .sec-group + .sec-group { margin-top: 36px; }
-.settings-app .sec-group > .scard + .scard,
+.settings-app .sec-group > :is(.scard, .scard-group) + :is(.scard, .scard-group),
 .settings-app .sec-group > .recovery-hero { margin: 0; }
 .settings-app .sec-group-h { font-size: 15px; font-weight: 600; color: var(--fg-strong); margin: 0 0 -4px; letter-spacing: -.005em; }
 
-.settings-app .scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: var(--shadow-xs); overflow: hidden; }
-.settings-app .scard + .scard { margin-top: 16px; }
-.settings-app .scard-h { display: flex; align-items: center; gap: 10px; padding: 14px 18px 13px; border-bottom: 1px solid var(--border); background: none; }
-.settings-app .scard-h svg { width: 16px; height: 16px; color: var(--fg-muted); }
-.settings-app .scard-h .scard-title { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); margin: 0; white-space: nowrap; }
+.settings-app .scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-surface); overflow: hidden; }
+.settings-app .scard-group { display: flex; flex-direction: column; gap: 8px; }
+.settings-app :is(.scard, .scard-group) + :is(.scard, .scard-group) { margin-top: 20px; }
+.settings-app .scard-h { display: flex; align-items: center; gap: 10px; min-height: 22px; padding: 0 4px; }
+.settings-app .scard-h .scard-title { font-size: 12px; font-weight: 600; color: var(--fg-muted); margin: 0; white-space: nowrap; }
 .settings-app .scard-h .badge { margin-left: auto; }
 
 .settings-app .setrow { display: flex; align-items: center; gap: 18px; padding: 15px 18px; border-bottom: 1px solid var(--border); }
@@ -126,7 +126,7 @@
 
 
 .settings-app .profile { display: flex; align-items: center; gap: 18px; padding: 20px 18px; }
-.settings-app .profile .pf-av { width: 64px; height: 64px; font-size: 24px; flex: 0 0 auto; box-shadow: var(--shadow-sm); }
+.settings-app .profile .pf-av { width: 64px; height: 64px; font-size: 24px; flex: 0 0 auto; }
 .settings-app .profile .pf-info { min-width: 0; flex: 1; }
 .settings-app .profile .pf-name { font-family: var(--font-sans); font-feature-settings: normal; font-size: 20px; font-weight: 500; color: var(--fg-strong); line-height: 1.2; }
 .settings-app .profile .pf-mail { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-muted); margin-top: 4px; }
@@ -181,9 +181,7 @@
 .settings-app .sovereign .sv-body .acts { display: flex; gap: 9px; margin-top: 13px; flex-wrap: wrap; }
 
 .settings-app .scard.danger { border-color: var(--danger-100); }
-.settings-app .scard.danger .scard-h { background: var(--danger-100); border-color: transparent; }
-.settings-app .scard.danger .scard-h svg { color: var(--danger-700); }
-.settings-app .scard.danger .scard-h .scard-title { color: var(--danger-700); }
+.settings-app .scard-group.danger .scard-title { color: var(--danger-700); }
 
 .set-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); background: var(--bg-inverse); color: var(--fg-on-pine); font-size: 13px; font-weight: 500; padding: 12px 17px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; z-index: 100; animation: set-toastin var(--dur) var(--ease-out); font-family: var(--font-sans); width: max-content; max-width: calc(100vw - 32px); }
 @keyframes set-toastin { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
@@ -204,9 +202,8 @@
 .settings-app .setrow .t { font-size: 14px; }
 .settings-app .setrow .d { font-size: 12.5px; }
 
-.settings-app .scard.flat > .scard-h { border-bottom: none; }
-.settings-app .scard .card-meta { margin-left: auto; font-size: 11.5px; color: var(--fg-faint); font-weight: 500; }
-.settings-app .scard .card-meta + * { margin-left: 8px; }
+.settings-app .scard-h .card-meta { margin-left: auto; font-size: 11.5px; color: var(--fg-faint); font-weight: 500; }
+.settings-app .scard-h .card-meta + * { margin-left: 8px; }
 .settings-app .card-note { display: flex; gap: 9px; align-items: flex-start; padding: 11px 18px; font-size: 12px; color: var(--fg-muted); line-height: 1.5; background: var(--bg-raised); border-bottom: 1px solid var(--border); }
 .settings-app .card-note svg { width: 13px; height: 13px; color: var(--fg-faint); flex: 0 0 auto; margin-top: 2px; }
 .settings-app .ctl-stack { display: inline-flex; align-items: center; gap: 10px; }
@@ -362,7 +359,7 @@
 .settings-app .exp-body code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-sunken); border-radius: var(--radius-xs); padding: 1px 5px; color: var(--fg); }
 .settings-app .exp-body .acts { display: flex; gap: 9px; margin-top: 13px; flex-wrap: wrap; }
 
-.settings-app .recovery-hero { display: flex; gap: 18px; align-items: flex-start; padding: 22px; border-radius: var(--radius-surface); background: var(--bg-inverse); color: var(--fg-on-pine); box-shadow: var(--shadow-md); position: relative; overflow: hidden; margin-bottom: 16px; }
+.settings-app .recovery-hero { display: flex; gap: 18px; align-items: flex-start; padding: 22px; border-radius: var(--radius-surface); background: var(--bg-inverse); color: var(--fg-on-pine); position: relative; overflow: hidden; margin-bottom: 16px; }
 .settings-app .recovery-hero::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .03) 0, rgba(255, 255, 255, .03) 1px, transparent 1px, transparent 7px); pointer-events: none; }
 .settings-app .settings-app .rh-left { flex: 0 0 auto; }
 .settings-app .rh-ic { width: 52px; height: 52px; border-radius: var(--radius-control); background: color-mix(in oklab, var(--brass-on-inverse) 18%, transparent); color: var(--brass-on-inverse); display: flex; align-items: center; justify-content: center; border: 1px solid color-mix(in oklab, var(--brass-on-inverse) 40%, transparent); }
@@ -572,8 +569,8 @@
 .settings-app .bill-note svg { flex: 0 0 auto; margin-top: 1px; color: var(--fg-faint); }
 
 .settings-app .upgrade-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.settings-app .upgrade-list + .scard { margin-top: 16px; }
-.settings-app .upgrade-nudge { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 15px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-surface); box-shadow: var(--shadow-xs); cursor: pointer; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.settings-app .upgrade-list + :is(.scard, .scard-group) { margin-top: 16px; }
+.settings-app .upgrade-nudge { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 15px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-surface); cursor: pointer; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease); }
 .settings-app .upgrade-nudge:hover { border-color: var(--pine-500); background: var(--bg-raised); transform: translateY(-1px); }
 .settings-app .upgrade-nudge .up-ic { width: 40px; height: 40px; border-radius: var(--radius-control); flex: 0 0 auto; display: flex; align-items: center; justify-content: center; background: var(--pine-100); color: var(--pine-700); }
 .settings-app .upgrade-nudge .up-body { flex: 1; min-width: 0; }
@@ -869,10 +866,9 @@
 .settings-app .addr-lede { margin: 0; font-size: 13.5px; color: var(--fg-muted); line-height: 1.55; max-width: 62ch; text-wrap: pretty; }
 .settings-app .addr-plan { margin: 8px 0 0; font-size: 12.5px; color: var(--fg-faint); line-height: 1.5; }
 
-.settings-app .addr-group { overflow: visible; }
+.settings-app .addr-group > .scard { overflow: visible; }
 .settings-app .addr-menu-wrap { display: flex; justify-content: flex-end; }
-.settings-app .addr-group-h { padding: 13px 18px 12px; }
-.settings-app .addr-group-h .addr-domain { font-family: var(--font-mono); font-size: 13.5px; font-weight: 500; color: var(--fg-strong); margin: 0; }
+.settings-app .addr-group-h .addr-domain { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; color: var(--fg-muted); margin: 0; }
 .settings-app .addr-group-h .badge { margin-left: 0; }
 .settings-app .addr-count { margin-left: auto; font-size: 11.5px; color: var(--fg-faint); font-weight: 500; }
 

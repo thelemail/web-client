@@ -6,7 +6,6 @@
 	import {
 		faCheck,
 		faCircleInfo,
-		faKey,
 		faPlus,
 		faUserPen
 	} from '@fortawesome/pro-regular-svg-icons';
@@ -54,7 +53,7 @@
 	}
 </script>
 
-<Card icon={faKey} title={m.settings_delegation_title()}>
+<Card title={m.settings_delegation_title()}>
 	{#snippet right()}
 		<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
 		{#if billing.canAddDomains}

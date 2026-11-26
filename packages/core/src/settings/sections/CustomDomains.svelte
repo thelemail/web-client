@@ -5,7 +5,6 @@
 	import {
 		faArrowRight,
 		faCircleExclamation,
-		faEarthEurope,
 		faEllipsisVertical,
 		faGlobe,
 		faPlus,
@@ -114,7 +113,7 @@
 
 <SecHead desc={m.settings_domains_desc()} />
 
-<Card icon={faEarthEurope} title={m.settings_domains_title()}>
+<Card title={m.settings_domains_title()}>
 
 	{#if !store.loaded && store.error}
 		<LoadState
