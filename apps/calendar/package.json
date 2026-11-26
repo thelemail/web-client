@@ -1,7 +1,7 @@
 {
   "name": "@thelemail/calendar",
   "private": true,
-  "version": "0.18.1",
+  "version": "0.19.0",
   "type": "module",
   "scripts": {
     "dev": "PUBLIC_THELEMAIL_PRODUCT=calendar vite dev --port 5176 --strictPort",
