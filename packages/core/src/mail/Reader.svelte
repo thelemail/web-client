@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '$core/components/ui/badge';
 	import { m as msg } from '$paraglide/messages.js';
 	import { openCalendar as openCalendarProduct } from '$core/handoff';
 	import type { MessagePreviewRecipient } from './preview';
@@ -993,7 +994,7 @@
 					<h1 bind:this={headingEl} tabindex="-1">
 						{plainSubject(m.subj)}
 						{#if threadCount > 1}
-							<span class="thr-pill">{msg.mail_thread_pill({ count: threadCount })}</span>
+							<Badge class="thr-pill">{msg.mail_thread_pill({ count: threadCount })}</Badge>
 						{/if}
 						{#if caps.showStar}
 							<button

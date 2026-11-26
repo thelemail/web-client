@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '$core/components/ui/badge';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { platform } from '$platform';
 	import Icon from '$core/components/Icon.svelte';
@@ -425,7 +426,7 @@
 						<Icon icon={Ic} size={20} />
 						<span class="mo-text">
 							<span class="mo-t">
-								{o.t}{#if o.recommended && !o.disabled}<span class="mo-tag">{m.settings_ceremony_twofa_recommended()}</span>{/if}
+								{o.t}{#if o.recommended && !o.disabled}<Badge tone="brand" size="sm" class="mo-tag">{m.settings_ceremony_twofa_recommended()}</Badge>{/if}
 							</span>
 							<span class="mo-d">{o.note ?? o.d}</span>
 						</span>

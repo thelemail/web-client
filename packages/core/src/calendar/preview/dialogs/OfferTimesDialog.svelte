@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '$core/components/ui/badge';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faCalendarClock,
@@ -67,7 +68,7 @@
 						<div class="sl-when">
 							{SLOTS[index].when}<span class="mono">{SLOTS[index].mono}</span>
 						</div>
-						<span class="sl-tag" class:tight={SLOTS[index].tight}>{SLOTS[index].tag}</span>
+						<Badge tone={SLOTS[index].tight ? 'warning' : 'success'} size="sm">{SLOTS[index].tag}</Badge>
 						<button
 							type="button"
 							class="sl-x"

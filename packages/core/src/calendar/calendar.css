@@ -1229,19 +1229,6 @@
 }
 .cal-app .bk-s { font-size: 13px; color: var(--fg-muted); margin-top: 5px; line-height: 1.5; }
 .cal-app .bk-meta { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.cal-app .bk-tag {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	font-family: var(--font-mono);
-	font-size: 10.5px;
-	color: var(--fg-muted);
-	background: var(--bg-sunken);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-xs);
-	padding: 3px 7px;
-}
-.cal-app .bk-tag svg { color: var(--fg-faint); }
 .cal-app .bk-body { display: grid; grid-template-columns: 1fr 268px; gap: 26px; padding-top: 20px; }
 .cal-app .bk-days { display: flex; gap: 7px; margin-bottom: 16px; }
 .cal-app .bk-day {
@@ -1651,18 +1638,6 @@
 	margin-top: 2px;
 	font-weight: 400;
 }
-.cal-surface .sl-tag {
-	font-family: var(--font-mono);
-	font-size: 10px;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-	padding: 3px 8px;
-	border-radius: var(--radius-pill);
-	background: var(--success-100);
-	color: var(--success-700);
-	white-space: nowrap;
-}
-.cal-surface .sl-tag.tight { background: var(--warning-100); color: var(--warning-700); }
 .cal-surface .sl-x {
 	border: none;
 	background: none;
