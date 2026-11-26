@@ -18,6 +18,7 @@
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import type { TipTether } from '$core/components/ui/tooltip/shared';
 	import { afterRowsPaint } from './rowActions';
+	import { on } from 'svelte/events';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
@@ -224,7 +225,7 @@
 	data-id={m.id}
 	onfocusout={onFocusOut}
 	onfocusin={showActions}
-	onpointerenter={showActions}
+	{@attach (el) => on(el, 'pointerenter', showActions)}
 	class:unread={m.unread}
 	class:active
 	class:fresh
