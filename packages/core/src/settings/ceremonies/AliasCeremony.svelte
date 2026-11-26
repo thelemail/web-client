@@ -302,7 +302,7 @@
 					<label for="alias-name">{m.settings_ceremony_alias_display_name()}</label>
 					<input
 						id="alias-name"
-						class="tin"
+						class="field-input tin"
 						bind:value={name}
 						maxlength="120"
 						placeholder={m.settings_ceremony_alias_display_name_placeholder()}
@@ -315,7 +315,7 @@
 					<div class="alias-compose">
 						<input
 							id="alias-local"
-							class="tin mono"
+							class="field-input tin mono"
 							bind:value={local}
 							placeholder="support"
 							autocomplete="off"

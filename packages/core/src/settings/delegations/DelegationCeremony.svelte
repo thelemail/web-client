@@ -132,7 +132,7 @@
 				<label for="delegation-label">{m.settings_delegation_name_label()}</label>
 				<input
 					id="delegation-label"
-					class="tin"
+					class="field-input tin"
 					bind:value={label}
 					maxlength="60"
 					placeholder={m.settings_delegation_name_placeholder()}
@@ -162,7 +162,7 @@
 			</div>
 
 			<textarea
-				class="tin mono keyblock"
+				class="field-input tin mono keyblock"
 				aria-label={m.settings_key_block_aria()}
 				readonly
 				rows="8"

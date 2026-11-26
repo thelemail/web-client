@@ -331,7 +331,7 @@
 			<input
 				{@attach selectOnMount}
 				bind:value={renameValue}
-				class="cfd-input"
+				class="field-input cfd-input"
 				maxlength={KEY_NAME_MAX_LENGTH}
 				autocomplete="off"
 				spellcheck={false}

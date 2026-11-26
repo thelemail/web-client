@@ -90,6 +90,7 @@
 	{#if custom}
 		<div class="sp-custom">
 			<input
+				class="field-input field-sm"
 				type="datetime-local"
 				bind:value={customValue}
 				min={toLocalInput(bounds.min)}

@@ -167,7 +167,7 @@
 		<div class="alias-row bs-add">
 			<div class="alias-info">
 				<input
-					class="tin mono"
+					class="field-input field-sm tin mono"
 					type="email"
 					aria-label={m.settings_blocked_add_aria()}
 					placeholder="name@example.com"

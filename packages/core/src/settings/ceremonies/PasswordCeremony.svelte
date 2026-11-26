@@ -456,7 +456,7 @@
 					id="cur-pw"
 					aria-invalid={!!verifyError || undefined}
 					aria-describedby={verifyError ? 'cur-pw-err' : undefined}
-					class="tin"
+					class="field-input tin"
 					type="password"
 					bind:value={cur}
 					placeholder={m.settings_ceremony_password_current_placeholder()}
@@ -485,7 +485,7 @@
 					</label>
 					<input
 						id="pwc-2fa-code"
-						class="tin mono"
+						class="field-input tin mono"
 						class:otp={twoFaMode === 'totp'}
 						class:bcode={twoFaMode !== 'totp'}
 						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
@@ -536,7 +536,7 @@
 				<label for="new-pw">{m.settings_ceremony_password_new()}</label>
 				<input
 					id="new-pw"
-					class="tin"
+					class="field-input tin"
 					type="password"
 					bind:value={pw}
 					placeholder={m.settings_ceremony_password_new_placeholder()}
@@ -567,7 +567,7 @@
 					id="new-pw2"
 					aria-invalid={(pw2.length > 0 && !match) || undefined}
 					aria-describedby={pw2.length > 0 && !match ? 'new-pw2-err' : undefined}
-					class="tin"
+					class="field-input tin"
 					type="password"
 					bind:value={pw2}
 					placeholder={m.settings_ceremony_password_confirm_placeholder()}

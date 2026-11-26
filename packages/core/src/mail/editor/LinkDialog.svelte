@@ -42,7 +42,7 @@
 			<input
 				{@attach focusInput}
 				bind:value
-				class="cfd-input"
+				class="field-input cfd-input"
 				type="url"
 				inputmode="url"
 				autocomplete="off"

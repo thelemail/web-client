@@ -128,17 +128,11 @@
 .settings-app .seg button.on { background: var(--surface); color: var(--accent-foreground); font-weight: 600; box-shadow: var(--shadow-xs); }
 
 .settings-app .sel { position: relative; display: inline-flex; align-items: center; }
-.settings-app .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--fg); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
-.settings-app .sel select:hover { border-color: var(--border-control); }
-.settings-app .sel select:focus-visible { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.settings-app .sel select { min-width: 148px; }
 .settings-app .sel .chev { position: absolute; right: 11px; display: flex; color: var(--fg-faint); pointer-events: none; }
 
 .settings-app .tin,
-.cer-scrim .tin { font-family: inherit; font-size: 13.5px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 9px 13px; width: 100%; box-shadow: var(--shadow-xs); transition: border-color var(--dur), box-shadow var(--dur); }
-.settings-app .tin:hover,
-.cer-scrim .tin:hover { border-color: var(--border-control); }
-.settings-app .tin:focus,
-.cer-scrim .tin:focus { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.cer-scrim .tin { box-shadow: none; }
 .settings-app .tin.mono,
 .cer-scrim .tin.mono { font-family: var(--font-mono); font-size: 13px; }
 .settings-app .tin.w-narrow { width: 108px; }
@@ -659,9 +653,7 @@
 .settings-app .alias-compose .sel,
 .cer-scrim .alias-compose .sel { flex: 0 0 auto; }
 .cer-scrim .sel { position: relative; display: inline-flex; align-items: center; }
-.cer-scrim .sel select { appearance: none; -webkit-appearance: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--fg); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 8px 34px 8px 13px; cursor: pointer; box-shadow: var(--shadow-xs); min-width: 148px; transition: border-color var(--dur); }
-.cer-scrim .sel select:hover { border-color: var(--border-control); }
-.cer-scrim .sel select:focus-visible { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
+.cer-scrim .sel select { min-width: 148px; }
 .cer-scrim .sel select:disabled { cursor: default; padding-right: 13px; background: var(--bg-raised); box-shadow: none; }
 .cer-scrim .sel select:disabled:hover { border-color: var(--border-strong); }
 .cer-scrim .sel:has(select:disabled) .chev { display: none; }

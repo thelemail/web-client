@@ -238,7 +238,7 @@
 					<div class="quiz-row" class:ok class:bad>
 						<span class="quiz-n" id="quiz-word-{q.i}">{m.settings_ceremony_recovery_word_n({ n: q.i + 1 })}</span>
 						<input
-							class="tin mono"
+							class="field-input tin mono"
 							aria-labelledby="quiz-word-{q.i}"
 							value={val}
 							placeholder="…"

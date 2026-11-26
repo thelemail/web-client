@@ -5,6 +5,7 @@
 @import '../../../../packages/core/src/styles/tokens.css';
 @import '../../../../packages/core/src/styles/shapes.css';
 @import '../../../../packages/core/src/styles/button.css';
+@import '../../../../packages/core/src/styles/field.css';
 
 @custom-variant dark (&:is([data-theme='dark'] *));
 @plugin '@tailwindcss/forms';

@@ -1,0 +1,92 @@
+.field-input {
+	--fld-h: var(--control-h-md);
+	--fld-r: var(--radius-h40);
+	--fld-px: 12px;
+	display: block;
+	width: 100%;
+	min-width: 0;
+	height: var(--fld-h);
+	padding: 0 var(--fld-px);
+	border: 1px solid var(--border-control);
+	border-radius: var(--fld-r);
+	background: var(--surface);
+	color: var(--fg-strong);
+	font-family: inherit;
+	font-size: 14px;
+	line-height: 1.3;
+	transition:
+		border-color var(--dur) var(--ease),
+		outline-color var(--dur) var(--ease);
+}
+.field-input::placeholder {
+	color: var(--fg-muted);
+}
+.field-input:focus,
+.field-input:focus-visible {
+	border-color: var(--primary);
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+	box-shadow: none;
+}
+.field-input[aria-invalid='true'] {
+	border-color: var(--danger-500);
+}
+.field-input[aria-invalid='true']:focus {
+	outline-color: var(--danger-500);
+}
+.field-input:disabled {
+	background: var(--bg-sunken);
+	color: var(--fg-faint);
+	cursor: not-allowed;
+}
+.field-input[readonly] {
+	background: var(--bg-raised);
+}
+
+.field-sm {
+	--fld-h: var(--control-h-sm);
+	--fld-r: var(--radius-h32);
+	--fld-px: 10px;
+	font-size: 13px;
+}
+.field-lg {
+	--fld-h: var(--control-h-lg);
+	--fld-r: var(--radius-h48);
+	--fld-px: 14px;
+	font-size: 15px;
+}
+
+select.field-input {
+	appearance: none;
+	-webkit-appearance: none;
+	padding-right: 34px;
+	cursor: pointer;
+	background-image:
+		linear-gradient(45deg, transparent 50%, var(--fg-muted) 50%),
+		linear-gradient(135deg, var(--fg-muted) 50%, transparent 50%);
+	background-position:
+		calc(100% - 18px) 50%,
+		calc(100% - 13px) 50%;
+	background-size: 5px 5px;
+	background-repeat: no-repeat;
+}
+.sel select.field-input {
+	background-image: none;
+}
+textarea.field-input {
+	height: auto;
+	min-height: calc(var(--fld-h) * 1.6);
+	padding: 9px var(--fld-px);
+	resize: vertical;
+	line-height: 1.5;
+}
+
+@media (pointer: coarse) {
+	.field-input:not(.field-lg, .field-sm) {
+		--fld-h: var(--control-h-touch);
+		--fld-r: var(--radius-h44);
+	}
+	.field-input {
+		font-size: max(16px, 1em);
+	}
+}

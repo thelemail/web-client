@@ -79,7 +79,7 @@
 	</div>
 	{#if selected === CUSTOM}
 		<input
-			class="sch-input"
+			class="field-input sch-input"
 			type="datetime-local"
 			bind:value={customValue}
 			min={toLocalInput(bounds.min)}

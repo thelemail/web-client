@@ -154,7 +154,7 @@
 				<label class="field-lbl" for="ik-armored">{m.settings_import_key_armored()}</label>
 				<textarea
 					id="ik-armored"
-					class="tin mono keyblock"
+					class="field-input tin mono keyblock"
 					rows="8"
 					placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"
 					value={armoredKey}

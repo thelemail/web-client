@@ -107,7 +107,7 @@
 				<label for="fam-inv-email">{m.settings_ceremony_family_invite_email_label()}</label>
 				<input
 					id="fam-inv-email"
-					class="tin mono"
+					class="field-input tin mono"
 					type="email"
 					bind:value={email}
 					placeholder="jules@{platformDomains.default}"

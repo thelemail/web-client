@@ -286,7 +286,7 @@
 				>
 				<input
 					id="del-confirm"
-					class="tin mono"
+					class="field-input tin mono"
 					bind:value={confirmText}
 					placeholder={target}
 					autocomplete="off"
@@ -302,7 +302,7 @@
 				<label for="del-pw">{m.settings_ceremony_delete_current_password()}</label>
 				<input
 					id="del-pw"
-					class="tin"
+					class="field-input tin"
 					type="password"
 					bind:value={cur}
 					placeholder={m.settings_ceremony_delete_current_password_placeholder()}
@@ -322,7 +322,7 @@
 					</label>
 					<input
 						id="del-2fa-code"
-						class="tin mono"
+						class="field-input tin mono"
 						class:otp={twoFaMode === 'totp'}
 						class:bcode={twoFaMode !== 'totp'}
 						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}

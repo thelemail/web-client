@@ -34,6 +34,7 @@
 
 <div class="cc-field">
 	<input
+		class="field-input"
 		{id}
 		type="text"
 		bind:value

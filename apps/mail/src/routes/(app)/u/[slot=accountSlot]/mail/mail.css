@@ -1180,7 +1180,6 @@
 .mail-app .snooze-picker .sp-when { font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); }
 .mail-app .snooze-picker .sp-row:hover .sp-when { color: var(--pine-600); }
 .mail-app .snooze-picker .sp-custom { display: flex; flex-direction: column; gap: 7px; padding: 4px 11px 6px; }
-.mail-app .snooze-picker .sp-custom input { font-family: inherit; font-size: 13px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 7px 9px; }
 .mail-app .snooze-picker .sp-hint { font-size: 11.5px; line-height: 1.45; color: var(--fg-muted); }
 .mail-app .snooze-picker .sp-hint.bad { color: var(--danger-700); }
 
@@ -1255,7 +1254,7 @@
 .cfd-scrim .sch-opt:disabled { opacity: .55; pointer-events: none; }
 .cfd-scrim .sch-name { flex: 1; }
 .cfd-scrim .sch-when { font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--fg-faint); }
-.cfd-scrim .sch-input { width: 100%; font-family: inherit; font-size: 13px; color: var(--fg); background: var(--surface); border: 1px solid var(--border-control); border-radius: var(--radius-control); padding: 9px 11px; margin-bottom: 10px; }
+.cfd-scrim .sch-input { margin-bottom: 10px; }
 
 @media (prefers-reduced-motion: reduce) {
 	.mail-app .lh-btn.refreshing svg { animation: none; opacity: .5; }

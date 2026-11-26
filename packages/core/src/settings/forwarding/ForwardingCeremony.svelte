@@ -180,7 +180,7 @@
 					<label for="forwarding-label">{m.settings_forwarding_name_label()}</label>
 					<input
 						id="forwarding-label"
-						class="tin"
+						class="field-input tin"
 						bind:value={label}
 						maxlength="60"
 						placeholder={m.settings_forwarding_name_placeholder()}
@@ -194,7 +194,7 @@
 					<label for="forwarding-destination">{m.settings_forwarding_to_label()}</label>
 					<input
 						id="forwarding-destination"
-						class="tin"
+						class="field-input tin"
 						type="email"
 						bind:value={destination}
 						maxlength="254"
@@ -268,7 +268,7 @@
 			</div>
 
 			<textarea
-				class="tin mono keyblock"
+				class="field-input tin mono keyblock"
 				aria-label={m.settings_key_block_aria()}
 				readonly
 				rows="8"

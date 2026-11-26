@@ -72,7 +72,7 @@
 			<label for="fam-start-name">{m.settings_ceremony_family_start_name_label()}</label>
 			<input
 				id="fam-start-name"
-				class="tin"
+				class="field-input tin"
 				bind:value={name}
 				maxlength="120"
 				autocomplete="off"

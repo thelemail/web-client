@@ -134,7 +134,7 @@
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
 			id="reauth-password"
-			class="cfd-input"
+			class="field-input cfd-input"
 			type="password"
 			autocomplete="current-password"
 			autofocus
@@ -155,7 +155,7 @@
 			</label>
 			<input
 				id="reauth-code"
-				class="cfd-input cfd-mono"
+				class="field-input cfd-input cfd-mono"
 				maxlength={mode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
 				inputmode={mode === 'totp' ? 'numeric' : 'text'}
 				autocomplete={mode === 'totp' ? 'one-time-code' : 'off'}

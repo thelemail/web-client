@@ -117,7 +117,7 @@
 							<span>{m.mail_collection_delete_other_folder()}</span>
 						</label>
 						{#if destination === 'folder'}
-							<select class="cd-select" bind:value={folderId} aria-label={m.mail_collection_delete_other_folder()}>
+							<select class="field-input field-sm cd-select" bind:value={folderId} aria-label={m.mail_collection_delete_other_folder()}>
 								<option value="" disabled>{m.mail_collection_delete_pick_folder()}</option>
 								{#each others as f (f.id)}
 									<option value={f.id}>{f.path}</option>

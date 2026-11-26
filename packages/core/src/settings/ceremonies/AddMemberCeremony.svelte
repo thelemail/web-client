@@ -167,7 +167,7 @@
 				<div class="alias-compose">
 					<input
 						id="add-mem-local"
-						class="tin mono"
+						class="field-input tin mono"
 						bind:value={local}
 						placeholder={fam ? 'jules' : 'camille'}
 						autocomplete="off"
@@ -222,7 +222,7 @@
 				</label>
 				<input
 					id="add-mem-email"
-					class="tin mono"
+					class="field-input tin mono"
 					type="email"
 					bind:value={email}
 					placeholder={m.settings_ceremony_member_email_placeholder()}

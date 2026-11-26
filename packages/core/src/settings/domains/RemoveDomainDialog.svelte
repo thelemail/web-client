@@ -109,7 +109,7 @@
 			<label for="rm-domain-confirm"><Rich text={m.settings_domains_remove_type_confirm({ domain: target })} tags={{ mono }} /></label>
 			<input
 				id="rm-domain-confirm"
-				class="tin mono"
+				class="field-input tin mono"
 				bind:value={confirmText}
 				placeholder={target}
 				autocomplete="off"
