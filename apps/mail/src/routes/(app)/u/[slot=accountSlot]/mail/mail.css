@@ -248,7 +248,7 @@
 .mail-app .mrow.unread::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--primary); }
 .mail-app .mrow.active::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--brass-500); }
 
-.mail-app .mrow { touch-action: pan-y; content-visibility: auto; contain-intrinsic-size: auto 58px; }
+.mail-app .mrow { touch-action: pan-y; }
 .mail-app .mrow.swiping { overflow: hidden; }
 .mail-app .mrow.swiping .qa { opacity: 0; pointer-events: none; }
 .mail-app .mrow.swiping > :not(.swipe-under, .qa) { transform: translateX(var(--sx, 0)); }
