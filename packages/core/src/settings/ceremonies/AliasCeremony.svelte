@@ -29,8 +29,8 @@
 	import { createWorkspaceAlias } from '$core/api/aliases';
 	import type { SharedAlias, SharedAliasMemberGrant } from '$core/api/aliases';
 	import { Checkbox } from '$core/components/ui/checkbox';
-	import { RadioGroup, RadioGroupItem } from '$core/components/ui/radio-group';
 	import { Label } from '$core/components/ui/label';
+	import { OptionTiles } from '$core/components/ui/option-tiles';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -342,33 +342,26 @@
 				{:else}
 					<div class="field">
 						<span class="field-lbl" id="alias-kind-lbl">{m.settings_ceremony_alias_who_uses()}</span>
-						<RadioGroup
-							class="choice-set two"
+						<OptionTiles
+							columns={2}
 							aria-labelledby="alias-kind-lbl"
 							value={shared ? 'shared' : 'single'}
 							onValueChange={(v) => (sharedPicked = v === 'shared')}
-						>
-							<Label class="choice" for="alias-kind-single" data-on={!shared}>
-								<RadioGroupItem id="alias-kind-single" value="single" class="choice-mark" />
-								<span class="choice-ic"><Icon icon={faUser} size={16} /></span>
-								<span class="choice-tx">
-									<span class="choice-t">{m.settings_ceremony_alias_kind_single()}</span>
-									<span class="choice-d">
-										{m.settings_ceremony_alias_kind_single_desc()}
-									</span>
-								</span>
-							</Label>
-							<Label class="choice" for="alias-kind-shared" data-on={shared}>
-								<RadioGroupItem id="alias-kind-shared" value="shared" class="choice-mark" />
-								<span class="choice-ic"><Icon icon={faUsers} size={16} /></span>
-								<span class="choice-tx">
-									<span class="choice-t">{m.settings_ceremony_alias_kind_shared()}</span>
-									<span class="choice-d">
-										{m.settings_ceremony_alias_kind_shared_desc()}
-									</span>
-								</span>
-							</Label>
-						</RadioGroup>
+							options={[
+								{
+									value: 'single',
+									title: m.settings_ceremony_alias_kind_single(),
+									description: m.settings_ceremony_alias_kind_single_desc(),
+									icon: faUser
+								},
+								{
+									value: 'shared',
+									title: m.settings_ceremony_alias_kind_shared(),
+									description: m.settings_ceremony_alias_kind_shared_desc(),
+									icon: faUsers
+								}
+							]}
+						/>
 					</div>
 				{/if}
 				<div class="identity-preview">
@@ -392,41 +385,38 @@
 				</p>
 			</div>
 			{#if shared}
-				<div class="choice-set">
-					{#each members as m (m.accountId)}
-						<Label class="choice" for={`am-${m.accountId}`} data-on={picked.includes(m.accountId)}>
-							<Checkbox
-								id={`am-${m.accountId}`}
-								class="choice-mark"
-								checked={picked.includes(m.accountId)}
-								onCheckedChange={() => toggle(m.accountId)}
-							/>
-							<Avatar initials={initialsOf(m.fullName, m.email)} size={28} />
-							<span class="choice-tx">
-								<span class="choice-t">{m.fullName || m.email}</span>
-								<span class="choice-d">{m.email}</span>
+				<div class="option-tiles option-tiles-cols" style="--tile-cols: 1" role="group" aria-labelledby="alias-people-lbl">
+					{#each members as member (member.accountId)}
+						{@const on = picked.includes(member.accountId)}
+						<Label class="option-tile" for={`am-${member.accountId}`} data-state={on ? 'checked' : 'unchecked'}>
+							<span class="option-tile-head">
+								<Avatar initials={initialsOf(member.fullName, member.email)} size={28} />
+								<span class="option-tile-text">
+									<span class="option-tile-title">{member.fullName || member.email}</span>
+									<span class="option-tile-desc">{member.email}</span>
+								</span>
+								<Checkbox id={`am-${member.accountId}`} checked={on} onCheckedChange={() => toggle(member.accountId)} />
 							</span>
 						</Label>
 					{/each}
 				</div>
 			{:else}
-				<RadioGroup
-					class="choice-set"
+				<OptionTiles
+					columns={1}
 					aria-labelledby="alias-people-lbl"
 					value={picked[0] ?? ''}
 					onValueChange={(v) => (picked = v ? [v] : [])}
+					options={members.map((member) => ({
+						value: member.accountId,
+						title: member.fullName || member.email,
+						description: member.email
+					}))}
 				>
-					{#each members as m (m.accountId)}
-						<Label class="choice" for={`am-${m.accountId}`} data-on={picked.includes(m.accountId)}>
-							<RadioGroupItem id={`am-${m.accountId}`} value={m.accountId} class="choice-mark" />
-							<Avatar initials={initialsOf(m.fullName, m.email)} size={28} />
-							<span class="choice-tx">
-								<span class="choice-t">{m.fullName || m.email}</span>
-								<span class="choice-d">{m.email}</span>
-							</span>
-						</Label>
-					{/each}
-				</RadioGroup>
+					{#snippet leading(option)}
+						{@const member = members.find((x) => x.accountId === option.value)}
+						<Avatar initials={initialsOf(member?.fullName ?? '', option.description ?? '')} size={28} />
+					{/snippet}
+				</OptionTiles>
 			{/if}
 
 			{#if shared && changed && mode === 'members'}

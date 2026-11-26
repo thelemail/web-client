@@ -503,16 +503,6 @@
 .cer-panel .quiz-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; border: none; background: none; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--pine-700); cursor: pointer; }
 .cer-panel .quiz-back svg { width: 14px; height: 14px; }
 
-.cer-panel .method-opts { display: flex; flex-direction: column; gap: 9px; }
-.cer-panel .method-opt { display: flex; align-items: center; gap: 13px; padding: 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); background: var(--surface); text-align: left; transition: border-color var(--dur), background var(--dur); cursor: pointer; }
-.cer-panel .method-opt > svg { width: 20px; height: 20px; color: var(--fg-muted); flex: 0 0 auto; }
-.cer-panel .method-opt:hover { background: var(--bg-raised); }
-.cer-panel .method-opt.on { border-color: var(--pine-500); background: var(--pine-100); }
-.cer-panel .method-opt.on > svg { color: var(--pine-600); }
-.cer-panel .mo-text { display: flex; flex-direction: column; min-width: 0; }
-.cer-panel .mo-t { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); }
-.cer-panel .mo-tag { margin-left: 8px; }
-.cer-panel .mo-d { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
 
 .cer-panel .cer-pane.two-col { flex-direction: row; gap: 20px; align-items: flex-start; }
 .cer-panel .qr { width: 148px; height: 148px; flex: 0 0 auto; padding: 10px; background: #fff; border: 1px solid var(--border-strong); border-radius: var(--radius-control); }
@@ -668,7 +658,6 @@
 
 .cer-panel .lbl-opt { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg-faint); background: var(--bg-sunken); border-radius: var(--radius-pill); padding: 1px 7px; margin-left: 6px; }
 
-.cer-panel .choice-list { display: flex; flex-direction: column; gap: 9px; }
 
 .cer-panel .plan-pick { display: flex; flex-direction: column; gap: 9px; }
 
@@ -873,15 +862,6 @@
 .settings-app .dw-done-stat { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: var(--radius-pill); background: var(--success-100); color: var(--success-700); font-size: 11.5px; font-weight: 600; }
 .settings-app .dw-done-stat svg { width: 13px; height: 13px; flex: 0 0 auto; }
 
-.cer-panel .choice-set { display: flex; flex-direction: column; gap: 8px; }
-.cer-panel .choice { display: flex; align-items: flex-start; gap: 11px; padding: 12px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); cursor: pointer; transition: border-color 120ms ease, background 120ms ease; }
-.cer-panel .choice:hover { border-color: var(--border-strong); background: var(--bg-raised); }
-.cer-panel .choice[data-on='true'] { border-color: var(--pine-700); background: var(--pine-100); }
-.cer-panel .choice-mark { margin-top: 2px; flex: 0 0 auto; }
-.cer-panel .choice-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.cer-panel .choice-t { font-size: 13px; font-weight: 600; color: var(--fg-strong); }
-.cer-panel .choice-d { font-size: 12px; color: var(--fg-muted); line-height: 1.5; overflow-wrap: anywhere; }
-.cer-panel .choice-set .avatar { margin-top: 1px; }
 
 .settings-app .addr-intro { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 22px; }
 .settings-app .addr-intro-tx { min-width: 0; flex: 1; }
@@ -984,9 +964,6 @@
 .settings-app .ad-note { display: flex; gap: 10px; align-items: flex-start; padding: 13px 16px; margin-bottom: 16px; border: 1px dashed var(--border-strong); border-radius: var(--radius-surface); font-size: 12.5px; color: var(--fg-muted); line-height: 1.5; }
 .settings-app .ad-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--fg-faint); }
 
-.cer-panel .choice-set.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cer-panel .choice-set.two .choice-mark { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.cer-panel .choice-ic { display: flex; margin-top: 1px; flex: 0 0 auto; color: var(--pine-600); }
 
 .settings-app .scard.menus { overflow: visible; }
 .settings-app .scard.menus .rec-row:last-child { border-radius: 0 0 var(--radius-surface) var(--radius-surface); }

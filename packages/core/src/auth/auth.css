@@ -630,9 +630,6 @@
 }
 
 .auth .prodtabs {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
 	margin-bottom: 16px;
 }
 .auth .periodseg {
@@ -640,72 +637,12 @@
 	width: fit-content;
 	margin: 0 auto 18px;
 }
-.auth .prodtab {
-	position: relative;
-	text-align: left;
-	background: var(--surface);
-	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-control);
-	padding: 13px 15px 12px;
-	display: flex;
-	flex-direction: column;
-	gap: 5px;
-	box-shadow: var(--shadow-xs);
-	cursor: pointer;
-	transition:
-		border-color var(--dur),
-		background var(--dur),
-		box-shadow var(--dur);
-}
-.auth .prodtab:hover {
-	border-color: var(--pine-500);
-}
-.auth .prodtab.cur {
-	border-color: var(--pine-600);
-	box-shadow:
-		0 0 0 1px var(--pine-600),
-		var(--shadow-xs);
-	background: var(--pine-100);
-}
-.auth .prodtab .pt-top {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	font-size: 14px;
-	font-weight: 600;
-	color: var(--fg-strong);
-}
-.auth .prodtab .pt-top svg {
-	color: var(--fg-muted);
-}
-.auth .prodtab.cur .pt-top svg {
-	color: var(--pine-700);
-}
-.auth .prodtab .pt-from {
+.auth .prodtabs .pt-from {
 	font-size: 11.5px;
 	color: var(--fg-muted);
 	white-space: nowrap;
 }
-.auth .prodtab:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px var(--focus-ring);
-}
 
-.auth .mostbadge {
-	position: absolute;
-	top: -9px;
-	right: 12px;
-	z-index: 1;
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.07em;
-	text-transform: uppercase;
-	color: var(--primary-fg);
-	padding: 3px 9px;
-	border-radius: var(--radius-pill);
-	background: var(--brass-600);
-	white-space: nowrap;
-}
 
 .auth .seats {
 	display: flex;
@@ -741,101 +678,42 @@
 	text-align: right;
 }
 
-.auth .tiers {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 14px;
-}
-.auth .tiercard {
-	position: relative;
-	text-align: left;
-	display: flex;
-	flex-direction: column;
-	background: var(--surface);
-	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-surface);
-	padding: 18px 20px 14px;
-	box-shadow: var(--shadow-xs);
-	cursor: pointer;
-	transition:
-		border-color var(--dur),
-		box-shadow var(--dur);
-}
-.auth .tiercard:hover {
-	border-color: var(--pine-500);
-}
-.auth .tiercard.sel {
-	border-color: var(--pine-600);
-	box-shadow:
-		0 0 0 1px var(--pine-600),
-		var(--shadow-md);
-}
-.auth .tiercard:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px var(--focus-ring);
-}
-.auth .tiercard .tc-pick {
-	position: absolute;
-	top: 14px;
-	right: 14px;
-	width: 22px;
-	height: 22px;
-	border-radius: 50%;
-	border: 1.5px solid var(--border-strong);
-	background: var(--surface);
-	color: transparent;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: all var(--dur);
-}
-.auth .tiercard.sel .tc-pick {
-	border-color: var(--primary);
-	background: var(--primary);
-	color: var(--primary-fg);
-}
-.auth .tiercard .tc-name {
-	font-size: 14px;
-	font-weight: 700;
-	color: var(--fg-strong);
-	letter-spacing: 0.01em;
-}
-.auth .tiercard .tc-framing {
+.auth .tiers .tc-framing {
 	font-style: italic;
 	font-size: 13px;
 	color: var(--fg-muted);
 	margin-top: 2px;
 	min-height: 18px;
 }
-.auth .tiercard .tc-price {
+.auth .tiers .tc-price {
 	display: flex;
 	align-items: baseline;
 	gap: 7px;
 	margin-top: 10px;
 }
-.auth .tiercard .tc-price b {
+.auth .tiers .tc-price b {
 	font-weight: 500;
 	font-size: 32px;
 	line-height: 1;
 	letter-spacing: -0.02em;
 	color: var(--fg-strong);
 }
-.auth .tiercard .tc-per {
+.auth .tiers .tc-per {
 	font-size: 12px;
 	color: var(--fg-muted);
 	white-space: nowrap;
 }
-.auth .tiercard .tc-charge {
+.auth .tiers .tc-charge {
 	font-size: 12px;
 	color: var(--fg-muted);
 	margin-top: 5px;
 }
-.auth .tiercard .tc-saving {
+.auth .tiers .tc-saving {
 	font-size: 12px;
 	color: var(--pine-700);
 	margin-top: 3px;
 }
-.auth .tiercard .tc-total {
+.auth .tiers .tc-total {
 	font-size: 12px;
 	color: var(--fg-muted);
 	margin-top: 7px;
@@ -848,17 +726,17 @@
 		background var(--dur),
 		color var(--dur);
 }
-.auth .tiercard .tc-total.on {
+.auth .tiers .tc-total.on {
 	background: var(--pine-100);
 	color: var(--pine-700);
 	font-weight: 600;
 }
-.auth .tiercard .tc-rows {
+.auth .tiers .tc-rows {
 	display: flex;
 	flex-direction: column;
 	margin-top: 14px;
 }
-.auth .tiercard .trow {
+.auth .tiers .trow {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
@@ -867,10 +745,10 @@
 	border-top: 1px solid var(--border);
 	font-size: 12.5px;
 }
-.auth .tiercard .trow .tk {
+.auth .tiers .trow .tk {
 	color: var(--fg-muted);
 }
-.auth .tiercard .trow .tv {
+.auth .tiers .trow .tv {
 	color: var(--fg-strong);
 	font-weight: 500;
 	font-size: 12px;
@@ -961,16 +839,8 @@
 	.auth .card:has(> .card-surface.wide) {
 		width: 432px;
 	}
-	.auth .prodtabs {
-		grid-template-columns: 1fr;
-	}
-	.auth .prodtab {
-		flex-direction: row;
-		align-items: center;
-		justify-content: space-between;
-	}
-	.auth .tiers {
-		grid-template-columns: 1fr;
+	.auth :is(.prodtabs, .tiers) {
+		--tile-cols: 1;
 	}
 	.auth .seats .seats-note {
 		display: none;
