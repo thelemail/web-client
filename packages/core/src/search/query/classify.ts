@@ -43,3 +43,19 @@ export function eligibilityOf(root: QueryNode | null): Eligibility {
 	if (ordinary === 0) return 'words';
 	return ordinary >= 2 ? 'related' : 'meaning';
 }
+
+export interface MeaningSplit {
+	text: string;
+	rest: QueryNode | null;
+}
+
+export function meaningSplit(root: QueryNode | null): MeaningSplit | null {
+	if (!root || eligibilityOf(root) === 'words') return null;
+	const words: string[] = [];
+	const rest: QueryNode[] = [];
+	for (const part of conjuncts(root)) {
+		if (part.kind === 'term' && part.lane === 'word') words.push(part.text);
+		else rest.push(part);
+	}
+	return { text: words.join(' '), rest: rest.length === 0 ? null : rest.length === 1 ? rest[0] : { kind: 'and', children: rest, range: root.range } };
+}

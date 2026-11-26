@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { meaningSplit } from './classify';
 import { parseQuery } from './index';
 import type { ParsedQuery, QueryError, QueryErrorCode, QuerySnapshot } from './ast';
 
@@ -278,6 +279,24 @@ describe('parseQuery eligibility', () => {
 
 	it.each(cases)('%s', (input, expected) => {
 		expect(ok(input).eligibility).toBe(expected);
+	});
+});
+
+describe('meaningSplit', () => {
+	it('keeps every filter, phrase and negation as the hard part and embeds only the ordinary words', () => {
+		const split = meaningSplit(ok('from:alice@calloway.test flight "AB-1047" refund -label:personal after:2026-01-01').root);
+		expect(split?.text).toBe('flight refund');
+		expect(split?.rest?.kind).toBe('and');
+		const kinds = split?.rest?.kind === 'and' ? split.rest.children.map((c) => c.kind) : [];
+		expect(kinds).toEqual(['participant', 'phrase', 'not', 'date']);
+	});
+
+	it('leaves nothing to filter on a plain query and refuses a Words-only one', () => {
+		expect(meaningSplit(ok('hotel invoice').root)).toEqual({ text: 'hotel invoice', rest: null });
+		expect(meaningSplit(ok('budget is:unread').root)?.rest?.kind).toBe('state');
+		expect(meaningSplit(ok('a OR b').root)).toBeNull();
+		expect(meaningSplit(ok('"just a phrase"').root)).toBeNull();
+		expect(meaningSplit(null)).toBeNull();
 	});
 });
 
