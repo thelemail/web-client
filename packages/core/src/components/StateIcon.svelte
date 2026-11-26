@@ -24,8 +24,10 @@
 		const now = active;
 		if (el && gesture && now && was === false) {
 			const cls = `go-${gesture}`;
-			el.classList.remove(cls);
-			void el.offsetWidth;
+			if (el.classList.contains(cls)) {
+				el.classList.remove(cls);
+				void el.offsetWidth;
+			}
 			el.classList.add(cls);
 		}
 		was = now;
