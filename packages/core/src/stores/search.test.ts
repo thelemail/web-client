@@ -569,6 +569,18 @@ describe('mailSearch related results', () => {
 		expect(mailSearch.phase).toBe('ready');
 	});
 
+	it('tries again once the model is ready', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'meaning' })]);
+		client.meaning.mockResolvedValueOnce({ ok: false, unavailable: 'model' });
+		client.set({ status: status({ semantic: { state: 'loading' } }) });
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('preparing'));
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary() });
+		client.set({ status: status({ semantic: { state: 'ready' } }) });
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
+		expect(client.meaning).toHaveBeenCalledTimes(2);
+	});
+
 	it('retries after a failure', async () => {
 		exactThenRelated([row('e1')], [row('r1', { channel: 'words' })]);
 		client.meaning.mockRejectedValueOnce(new Error('boom'));

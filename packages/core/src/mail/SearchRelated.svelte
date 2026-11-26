@@ -55,7 +55,7 @@
 		<div class={['sr-state', { warn: related.status === 'failed' || related.status === 'tooLong' }]} role={related.status === 'failed' ? 'alert' : 'status'}>
 			{#if related.status === 'failed' || related.status === 'tooLong'}<Icon icon={faCircleExclamation} size={13} aria-hidden="true" />{/if}
 			<span>{notice}</span>
-			{#if related.status === 'failed' || related.status === 'busy'}
+			{#if related.status !== 'tooLong'}
 				<Button variant="neutral" size="sm" onclick={onRetry}><Icon icon={faArrowsRotate} size={13} />{msg.common_retry()}</Button>
 			{/if}
 		</div>

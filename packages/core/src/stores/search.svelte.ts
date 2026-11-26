@@ -279,7 +279,9 @@ class MailSearchStore {
 			this.#unwatchClient();
 			this.#watching = client;
 			this.#unwatch = client.subscribe((state) => {
+				const wasReady = this.client?.status?.semantic?.state === 'ready';
 				this.client = state;
+				if (!wasReady && state.status?.semantic?.state === 'ready' && this.#related?.state?.status === 'preparing') this.retryRelated();
 				if (state.phase === 'ready' && this.prefs?.history && !this.history.length) void this.#loadHistory(client);
 			});
 		});
