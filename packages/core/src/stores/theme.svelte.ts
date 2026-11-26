@@ -7,9 +7,9 @@ export type ResolvedTheme = 'light' | 'dark';
 const KEY = 'thelemail.theme';
 
 export const THEME_META: Record<ThemePref, { label: () => string }> = {
-	light: { label: () => m.settings_theme_parchment() },
-	dark: { label: () => m.settings_theme_inkwell() },
-	auto: { label: () => m.settings_theme_auto() }
+	light: { label: () => m.settings_theme_light() },
+	dark: { label: () => m.settings_theme_dark() },
+	auto: { label: () => m.settings_theme_system() }
 };
 
 const THEME_CYCLE: Record<ThemePref, ThemePref> = {
