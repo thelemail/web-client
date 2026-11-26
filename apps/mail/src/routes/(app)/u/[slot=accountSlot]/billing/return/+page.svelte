@@ -74,7 +74,7 @@
 
 <AuthShell>
 	<div class="card">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				{#if phase === 'active'}
 					<span class="return-check"><Icon icon={faCircleCheck} size={44} /></span>

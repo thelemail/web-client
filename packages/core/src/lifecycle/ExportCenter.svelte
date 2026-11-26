@@ -29,7 +29,7 @@
 {#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <div class="card lc-mid">
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="card-head">
 			<p class="eyebrow">{m.lc_export_eyebrow()}</p>
 			<h1>{m.lc_export_title()}</h1>

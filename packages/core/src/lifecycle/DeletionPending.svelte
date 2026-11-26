@@ -58,7 +58,7 @@
 
 <AuthShell>
 	<div class="card">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<span class="pending-icon"><Icon icon={faCalendarClock} size={44} /></span>
 				<h1>{m.lc_deletion_title()}</h1>

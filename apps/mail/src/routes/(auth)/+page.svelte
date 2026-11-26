@@ -75,7 +75,7 @@
 	<title>{m.auth_picker_page_title()}</title>
 </svelte:head>
 
-<div class="card-surface screen-fade">
+<div class="card-surface">
 	<div class="card-head">
 		<p class="eyebrow">{m.auth_picker_eyebrow()}</p>
 		<h1>{m.auth_picker_title()}</h1>

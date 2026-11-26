@@ -20,6 +20,7 @@
 		type PerformLoginOutcome
 	} from '$core/auth/perform-login';
 	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
+	import { unfold } from '$core/auth/form/unfold';
 	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
 	import { isLoginIdentifier, loginIdentifier } from '$core/auth/login-identifier';
 	import { auth } from '$core/stores/session.svelte';
@@ -325,7 +326,7 @@
 			<p>{lede}</p>
 		</div>
 		{#if loginError}
-			<p class="af-error" id="login-err" role="alert"><Icon icon={faCircleExclamation} size={16} /><span>{loginError}</span></p>
+			<p class="af-error" id="login-err" role="alert" transition:unfold><Icon icon={faCircleExclamation} size={16} /><span>{loginError}</span></p>
 		{/if}
 		{#if step === 'identify'}
 			<TextField
@@ -345,9 +346,7 @@
 					return raw.trim();
 				}}
 			/>
-			{#if identifyError}
-				<Status id="login-email-err" tone="bad">{identifyError}</Status>
-			{/if}
+			<Status id="login-email-err" tone={identifyError ? 'bad' : 'hint'} reserve>{identifyError ?? ''}</Status>
 			<Button type="submit" variant="primary" size="lg" block disabled={email.trim().length === 0}>
 				{m.common_continue()}
 			</Button>
@@ -362,6 +361,7 @@
 				readonly
 				aux={changeLink}
 			/>
+			<div class="form" in:unfold>
 			<PasswordField
 				id="login-password"
 				label={m.common_password()}
@@ -377,8 +377,9 @@
 				<input type="checkbox" bind:checked={rememberMe} disabled={busy} />
 				<span>{m.auth_login_remember_me()}<small>{m.auth_login_remember_hint()}</small></span>
 			</label>
+			</div>
 			{#if sealed}
-				<Status tone="ok">{m.auth_login_signed_in()}</Status>
+				<div transition:unfold><Status tone="ok">{m.auth_login_signed_in()}</Status></div>
 			{/if}
 			<Button type="submit" variant="primary" size="lg" block disabled={!canSignIn || busy}>
 				<BusyLabel

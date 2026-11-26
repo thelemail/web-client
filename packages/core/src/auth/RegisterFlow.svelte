@@ -9,6 +9,9 @@
 	import WorkSteps from '$core/auth/form/WorkSteps.svelte';
 	import Status from '$core/auth/form/Status.svelte';
 	import { handleSuggestions } from '$core/auth/handle-suggestions';
+	import { unfold } from '$core/auth/form/unfold';
+	import DoneMark from '$core/auth/form/DoneMark.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import PlanStep from '$core/auth/PlanStep.svelte';
 	import PaymentStep from '$core/auth/PaymentStep.svelte';
 	import {
@@ -152,6 +155,7 @@
 			: [m.auth_step_address(), m.auth_step_password()]
 	);
 	const totalSteps = $derived(labels.length);
+	const pillTotal = $derived(paid ? 4 : 3);
 	const product = $derived(findPlan(sel).product);
 	const audience = $derived(paid ? product.id : 'personal');
 
@@ -380,13 +384,15 @@
 {#if step === 0}
 	{#if submitting || leaving}
 		<div class="card-surface" aria-live="polite">
+			<StepPills total={pillTotal} current={pillTotal - 1} fraction={leaving ? 1 : (stage + 1) / (workLines.length + 1)} />
+			{#if leaving}<div class="af-done" in:unfold><DoneMark /></div>{/if}
 			<div class="card-head">
 				<h1>{leaving ? m.auth_register_ready_title() : m.auth_register_working_title()}</h1>
 				<p><Rich text={m.auth_register_working_for({ address })} tags={{ b: domain }} /></p>
 			</div>
 			<WorkSteps lines={workLines} at={leaving ? workLines.length : stage} />
 			{#if leaving}
-				<Status tone="ok">{m.auth_register_ready_line()}</Status>
+				<div in:unfold><Status tone="ok">{m.auth_register_ready_line()}</Status></div>
 			{:else}
 				<p class="af-fine">{m.auth_s_work_note()}</p>
 			{/if}
@@ -394,6 +400,7 @@
 	{:else if part === 'address'}
 		<div class={paid ? '' : 'af-split'}>
 			<form class="card-surface" novalidate onsubmit={submitAddress}>
+				<StepPills total={pillTotal} current={0} />
 				<div class="card-head">
 					<h1>{heading}</h1>
 					<p>
@@ -403,7 +410,7 @@
 					</p>
 				</div>
 				{#if addMode && auth.email}
-					<p class="af-note">{m.auth_s_add_note()}</p>
+					<p class="af-note" transition:unfold>{m.auth_s_add_note()}</p>
 				{/if}
 				<div class="form">
 					<TextField
@@ -420,7 +427,7 @@
 						suffix={domainReady ? domainSuffix : undefined}
 					/>
 				</div>
-				<Status id="register-handle-msg" tone={handleTone}>
+				<Status id="register-handle-msg" tone={handleTone} reserve>
 					{#if status === 'invalid'}{m.auth_s_handle_invalid()}
 					{:else if status === 'taken'}{suggestions.length > 0 ? m.auth_register_handle_taken_pick({ address }) : m.auth_s_handle_taken({ address })}
 					{:else if checking.visible}{m.auth_register_handle_checking()}
@@ -429,7 +436,7 @@
 					{:else}{m.auth_register_handle_hint()}{/if}
 				</Status>
 				{#if status === 'taken' && suggestions.length > 0}
-					<div class="af-chips">
+					<div class="af-chips" transition:unfold>
 						{#each suggestions as s (s)}
 							<button type="button" class="af-chip" onclick={() => (handle = s)}>{s}@{mailDomain}</button>
 						{/each}
@@ -442,6 +449,7 @@
 		</div>
 	{:else}
 		<form class="card-surface" novalidate onsubmit={submitDetails}>
+			<StepPills total={pillTotal} current={1} />
 			<input class="af-hidden-user" type="email" value={address} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 			<div class="card-head">
 				<h1>{m.auth_register_details_title()}</h1>
@@ -475,7 +483,7 @@
 						describedby="register-confirm-msg"
 						disabled={submitting}
 					/>
-					<Status id="register-confirm-msg" tone={confirmTone}>
+					<Status id="register-confirm-msg" tone={confirmTone} reserve>
 						{#if submitError}{submitError}
 						{:else if confirmBad}{m.auth_register_passwords_mismatch()}
 						{:else if matches}{m.auth_register_passwords_match()}

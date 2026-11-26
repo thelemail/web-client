@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import Stepper from '$core/auth/Stepper.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import {
 		PRODUCTS,
 		MIN_SEATS,
@@ -100,9 +100,9 @@
 	}
 </script>
 
-<div class="card-surface screen-fade wide">
+<div class="card-surface wide">
 	{#if showStepper}
-		<Stepper step={2} {labels} />
+		<StepPills total={labels.length} current={2} />
 	{/if}
 	<div class="card-head">
 		{#if eyebrowText}

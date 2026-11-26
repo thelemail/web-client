@@ -74,7 +74,7 @@
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
 {#if joined}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="card-head">
 			<Icon icon={faCircleCheck} size={28} />
 			<h1>{m.auth_family_invite_joined_title({ workspace: invite.workspaceName })}</h1>
@@ -87,7 +87,7 @@
 		</div>
 	</div>
 {:else if !signedInAsInvitee}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="invite">
 			<span class="iav">{inviterInitials}</span>
 			<span class="itext">
@@ -145,7 +145,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="invite">
 			<span class="iav">{inviterInitials}</span>
 			<span class="itext">

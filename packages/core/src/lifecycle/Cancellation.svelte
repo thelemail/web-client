@@ -116,7 +116,7 @@
 
 {#if step === 0}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
 				<h1>{m.lc_cancel_survey_title()}</h1>
@@ -151,7 +151,7 @@
 	</div>
 {:else if step === 1}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
 				<h1>{m.lc_cancel_offer_title()}</h1>
@@ -186,7 +186,7 @@
 	</div>
 {:else if step === 2}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
 				<h1>{m.lc_cancel_confirm_title()}</h1>
@@ -221,7 +221,7 @@
 	</div>
 {:else}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<div class="seal"><Icon icon={faCheck} size={20} /></div>
 				<h1>{m.lc_cancel_done_title()}</h1>

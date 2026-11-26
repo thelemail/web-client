@@ -14,6 +14,7 @@
 	import TextField from '$core/auth/form/TextField.svelte';
 	import Status from '$core/auth/form/Status.svelte';
 	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
+	import { unfold } from '$core/auth/form/unfold';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -26,6 +27,7 @@
 		error: string | null;
 		keyNotice?: string | null;
 		lede?: Snippet;
+		top?: Snippet;
 		backLabel?: string;
 		onTotp: (code: string) => void;
 		onBackupCode: (code: string) => void;
@@ -41,6 +43,7 @@
 		error,
 		keyNotice = null,
 		lede,
+		top,
 		backLabel,
 		onTotp,
 		onBackupCode,
@@ -123,6 +126,7 @@
 
 {#if view === 'switch'}
 	<div class="card-surface">
+		{@render top?.()}
 		<div class="card-head">
 			<h1>{m.auth_2fa_switch_title()}</h1>
 			<p>{m.auth_2fa_switch_lede()}</p>
@@ -152,6 +156,7 @@
 			else if (method === 'backup') verifyBackup();
 		}}
 	>
+		{@render top?.()}
 		<div class="card-head">
 			<h1>{m.auth_2fa_title()}</h1>
 			<p>
@@ -160,7 +165,7 @@
 				{:else}<Rich text={m.auth_2fa_key_lede({ email })} tags={{ addr }} />{/if}
 			</p>
 		</div>
-		{#if lede}<p class="af-note">{@render lede()}</p>{/if}
+		{#if lede}<p class="af-note" transition:unfold>{@render lede()}</p>{/if}
 		{#if method === 'app'}
 			<CodeCells
 				id="twofa-code"
@@ -174,9 +179,9 @@
 				onenter={verifyCode}
 			/>
 			{#if sealed}
-				<Status tone="ok">{m.auth_login_signed_in()}</Status>
+				<Status tone="ok" reserve>{m.auth_login_signed_in()}</Status>
 			{:else}
-				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'}>
+				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'} reserve>
 					{showBad ? m.auth_2fa_code_mismatch() : m.auth_2fa_code_refresh()}
 				</Status>
 			{/if}
@@ -185,9 +190,9 @@
 			</Button>
 		{:else if method === 'key'}
 			{#if sealed}
-				<Status tone="ok">{m.auth_login_signed_in()}</Status>
+				<Status tone="ok" reserve>{m.auth_login_signed_in()}</Status>
 			{:else}
-				<Status id="twofa-msg" tone={busy ? 'busy' : showBad ? 'bad' : 'hint'}>
+				<Status id="twofa-msg" tone={busy ? 'busy' : showBad ? 'bad' : 'hint'} reserve>
 					{#if busy}
 						<Rich text={m.auth_2fa_key_busy()} tags={{ b: bold }} />
 					{:else if showBad}
@@ -217,9 +222,9 @@
 				normalize={backupCase}
 			/>
 			{#if sealed}
-				<Status tone="ok">{m.auth_login_signed_in()}</Status>
-			{:else if showBad}
-				<Status id="twofa-msg" tone="bad">{m.auth_2fa_backup_invalid()}</Status>
+				<Status tone="ok" reserve>{m.auth_login_signed_in()}</Status>
+			{:else}
+				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'} reserve>{showBad ? m.auth_2fa_backup_invalid() : ''}</Status>
 			{/if}
 			<Button type="submit" variant="primary" size="lg" block disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy}>
 				<BusyLabel busy={busy && !sealed} label={m.auth_2fa_use_backup()} pending={m.auth_2fa_checking()} />

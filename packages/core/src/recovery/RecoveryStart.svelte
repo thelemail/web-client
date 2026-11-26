@@ -217,7 +217,7 @@
 				<input type="checkbox" bind:checked={ack} />
 				<span>{m.recovery_start_ack()}</span>
 			</label>
-			<Status tone={submitError || saveError ? 'bad' : 'hint'}>
+			<Status tone={submitError || saveError ? 'bad' : 'hint'} reserve>
 				{#if submitError}{submitError}
 				{:else if saveError}{saveError}
 				{:else if !revealed && material}{m.recovery_start_hint_reveal()}

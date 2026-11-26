@@ -65,6 +65,15 @@
 	line-height: 1.45;
 	color: var(--fg-muted);
 	text-wrap: pretty;
+	transition: color var(--dur) var(--ease-out);
+}
+.auth .af-status.reserve {
+	min-height: calc(2 * 1lh);
+}
+@media (max-width: 480px) {
+	.auth .af-status.reserve {
+		min-height: calc(3 * 1lh);
+	}
 }
 .auth .af-status > svg,
 .auth .af-status > .spinner {
@@ -228,6 +237,7 @@
 	display: flex;
 	gap: 4px;
 	align-items: center;
+	height: 18px;
 }
 .auth .af-meter > i {
 	flex: 1;
@@ -246,7 +256,11 @@
 	background: var(--success-500);
 }
 .auth .af-meter-label {
-	width: 72px;
+	flex: 0 0 84px;
+	height: 18px;
+	line-height: 18px;
+	white-space: nowrap;
+	overflow: hidden;
 	text-align: right;
 	font-size: 12px;
 	font-weight: 600;
@@ -286,11 +300,18 @@
 
 .auth .af-chips {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 6px;
+	overflow-x: auto;
+	scrollbar-width: none;
+	mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+.auth .af-chips::-webkit-scrollbar {
+	display: none;
 }
 .auth .af-chip {
 	all: unset;
+	flex: 0 0 auto;
 	box-sizing: border-box;
 	height: 32px;
 	padding: 0 12px;
@@ -688,9 +709,30 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-	.auth .af-status,
+	.auth .card-surface,
+	.auth .af-side {
+		animation: af-card-in var(--dur-slow) var(--ease-out) backwards;
+	}
+	.auth .af-side {
+		animation-delay: 80ms;
+	}
+	.auth .af-status > span,
 	.auth .af-error {
 		animation: af-rise var(--dur) var(--ease-out) backwards;
+	}
+	.auth .af-mark path {
+		stroke-dasharray: 24;
+		stroke-dashoffset: 24;
+		animation: af-draw 420ms var(--ease-out) 200ms forwards;
+	}
+	.auth .af-chip {
+		animation: af-rise var(--dur) var(--ease-out) backwards;
+	}
+	.auth .af-chip:nth-child(2) {
+		animation-delay: 50ms;
+	}
+	.auth .af-chip:nth-child(3) {
+		animation-delay: 100ms;
 	}
 	.auth .af-busy.on > span {
 		animation: af-swap var(--dur) var(--ease-out);
@@ -700,7 +742,22 @@
 		animation: af-tick var(--dur-slow) var(--ease-out);
 	}
 	.auth .af-mark {
-		animation: af-pop 320ms var(--ease-out);
+		animation: af-pop 320ms var(--ease-out) backwards;
+	}
+	.auth .af-tick input[type='checkbox']:checked::after,
+	.auth .accept input[type='checkbox']:checked::after {
+		animation: af-tick var(--dur) var(--ease-out);
+	}
+}
+@keyframes af-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+}
+@keyframes af-draw {
+	to {
+		stroke-dashoffset: 0;
 	}
 }
 @keyframes af-rise {
@@ -732,4 +789,114 @@
 	display: flex;
 	justify-content: center;
 	padding: 48px 0;
+}
+
+.auth .af-steps {
+	list-style: none;
+	display: flex;
+	justify-content: center;
+	gap: 5px;
+	margin: -12px 0 0;
+	padding: 0;
+}
+.auth .af-steps li {
+	width: 28px;
+	height: 4px;
+	border-radius: 2px;
+	background: var(--border);
+	overflow: hidden;
+}
+.auth .af-steps li::after {
+	content: '';
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--primary);
+	transform-origin: left center;
+	transform: scaleX(0);
+	transition: transform 520ms var(--ease-out);
+}
+.auth .af-steps li.done::after {
+	transform: scaleX(1);
+}
+.auth .af-steps li.cur::after {
+	transform: scaleX(var(--fill, 1));
+}
+
+.auth .af-route {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	min-width: 0;
+}
+.auth .af-host {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+	max-width: 42%;
+	height: 30px;
+	padding: 0 11px;
+	border-radius: 999px;
+	border: 1px solid var(--border);
+	background: var(--bg-raised);
+	font-family: var(--font-mono);
+	font-size: 12px;
+	color: var(--fg-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.auth .af-host.secure {
+	border-color: color-mix(in oklab, var(--primary) 45%, transparent);
+	background: var(--pine-100);
+	color: var(--pine-700);
+}
+.auth .af-host svg {
+	flex: 0 0 auto;
+}
+.auth .af-track {
+	position: relative;
+	flex: 0 0 56px;
+	height: 2px;
+	border-radius: 1px;
+	background: var(--border);
+	overflow: hidden;
+}
+.auth .af-track i {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 18px;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.auth .af-steps li.cur::after {
+		animation: af-fill 620ms var(--ease-out) 120ms backwards;
+	}
+	.auth .af-track i {
+		animation: af-travel 1.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+	}
+}
+@keyframes af-fill {
+	from {
+		transform: scaleX(0);
+	}
+}
+@keyframes af-travel {
+	from {
+		transform: translateX(-18px);
+	}
+	to {
+		transform: translateX(56px);
+	}
+}
+@media (max-width: 480px) {
+	.auth .af-track {
+		flex-basis: 28px;
+	}
 }

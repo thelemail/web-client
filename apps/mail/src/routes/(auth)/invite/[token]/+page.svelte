@@ -3,7 +3,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
-	import Stepper from '$core/auth/Stepper.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import Wordmark from '$core/components/Wordmark.svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -187,14 +187,14 @@
 </svelte:head>
 
 {#if previewLoading}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_invite_verifying_eyebrow()}</p>
 			<h1>{m.auth_invite_verifying_title()}</h1>
 		</div>
 	</div>
 {:else if previewError || !invite}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_invite_unavailable_eyebrow()}</p>
 			<h1>{m.auth_invite_unavailable_title()}</h1>
@@ -207,8 +207,8 @@
 {:else if invite.kind === 'join'}
 	<JoinFamilyInvite {invite} token={page.params.token ?? ''} />
 {:else if step === 0}
-	<div class="card-surface screen-fade">
-		<Stepper step={0} labels={inviteLabels} />
+	<div class="card-surface">
+		<StepPills total={inviteLabels.length} current={0} />
 		{#if auth.email}
 			<div class="invite" style="background:var(--bg-sunken);border:1px solid var(--border-strong);padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
@@ -276,8 +276,8 @@
 		</p>
 	</div>
 {:else if step === 1}
-	<div class="card-surface screen-fade">
-		<Stepper step={1} labels={inviteLabels} />
+	<div class="card-surface">
+		<StepPills total={inviteLabels.length} current={1} />
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_step_of({ step: 2, total: 2 })}</p>
 			<h1>{m.auth_register_password_title()}</h1>
@@ -348,7 +348,7 @@
 		</form>
 	</div>
 {:else}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="welcome">
 			<Wordmark class="brandmark brandmark-lg" size="large" />
 			<h1>{m.auth_invite_done_title()}</h1>

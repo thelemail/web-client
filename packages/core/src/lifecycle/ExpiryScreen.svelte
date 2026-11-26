@@ -64,7 +64,7 @@
 {#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <div class="card lc-mid">
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<Wordmark size="large" class="lc-mark" />
 		<div class="card-head">
 			<p class="eyebrow">{m.lc_expiry_eyebrow()}</p>

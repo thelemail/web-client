@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Stepper from '$core/auth/Stepper.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import { findPlan, planTotal, eur, pricePerPeriod, type PlanSelection } from '$core/auth/plans';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -56,8 +56,8 @@
 {#snippet terms(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
 
-<div class="card-surface screen-fade">
-	<Stepper step={3} {labels} compact />
+<div class="card-surface">
+	<StepPills total={labels.length} current={3} />
 	<div class="card-head">
 		<p class="eyebrow">{m.auth_step_of({ step: 4, total: 4 })}</p>
 		<h1>{m.auth_payment_heading()}</h1>

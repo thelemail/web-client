@@ -124,7 +124,7 @@
 	<title>{m.auth_migrator_passkey_page_title()}</title>
 </svelte:head>
 
-<div class="card-surface screen-fade">
+<div class="card-surface">
 	<div class="card-head">
 		<p class="eyebrow">{m.auth_migrator_passkey_eyebrow()}</p>
 		{#if terminal}

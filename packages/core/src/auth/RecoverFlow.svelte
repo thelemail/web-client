@@ -22,11 +22,14 @@
 	} from '$core/auth/perform-recovery';
 	import { TwoFactorExpiredError, TwoFactorRejectedError } from '$core/auth/perform-login';
 	import TwoFactorChallenge from '$core/auth/TwoFactorChallenge.svelte';
+	import { unfold } from '$core/auth/form/unfold';
+	import DoneMark from '$core/auth/form/DoneMark.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import { webauthnFailure, webauthnFailureMessage } from '$core/auth/webauthn';
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
 	import Icon from '$core/components/Icon.svelte';
-	import { faCheck, faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
+	import { faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Status from '$core/auth/form/Status.svelte';
 	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -48,6 +51,8 @@
 	let twoFaError = $state<string | null>(null);
 	let twoFaKeyNotice = $state<string | null>(null);
 	let twoFaFailures = $state(0);
+	let withTwoFactor = $state(false);
+	const pillTotal = $derived(withTwoFactor ? 4 : 3);
 
 	let email = $state(page.url.searchParams.get('email') ?? '');
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
@@ -142,6 +147,7 @@
 				twoFaError = null;
 				twoFaKeyNotice = null;
 				twoFaFailures = 0;
+				withTwoFactor = true;
 				step = 'twofa';
 				return;
 			}
@@ -345,10 +351,12 @@
 			onBack={() => resetToPhraseStep('')}
 		>
 			{#snippet lede()}{m.auth_recover_2fa_lede()}{/snippet}
+			{#snippet top()}<StepPills total={pillTotal} current={1} />{/snippet}
 		</TwoFactorChallenge>
 	{/if}
 {:else if step === 'phrase'}
 	<form class="card-surface" novalidate onsubmit={submitPhrase}>
+		<StepPills total={pillTotal} current={0} />
 		<div class="card-head">
 			<h1>{m.auth_recover_title()}</h1>
 			<p>{m.auth_recover_sub()}</p>
@@ -390,7 +398,7 @@
 						</label>
 					{/each}
 				</div>
-				<Status id="recover-phrase-err" tone={phraseStatus === 'bad' ? 'bad' : 'hint'}>
+				<Status id="recover-phrase-err" tone={phraseStatus === 'bad' ? 'bad' : 'hint'} reserve>
 					{phraseStatus === 'bad' ? phraseError : m.auth_recover_phrase_tip()}
 				</Status>
 			</div>
@@ -425,6 +433,7 @@
 	</div>
 {:else if step === 'password'}
 	<form class="card-surface" novalidate onsubmit={submitPassword}>
+		<StepPills total={pillTotal} current={pillTotal - 2} />
 		<input class="af-hidden-user" type="email" value={email} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 		<div class="card-head">
 			<h1>{m.auth_recover_password_title()}</h1>
@@ -444,7 +453,7 @@
 					invalid={confirmBad}
 					describedby="recover-confirm-msg"
 				/>
-				<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'}>
+				<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'} reserve>
 					{confirmBad ? m.auth_register_passwords_mismatch() : matches ? m.auth_register_passwords_match() : m.auth_s_confirm_hint()}
 				</Status>
 			</div>
@@ -455,13 +464,14 @@
 	</form>
 {:else if step === 'working'}
 	<div class="card-surface" aria-live="polite">
+		<StepPills total={pillTotal} current={pillTotal - 1} fraction={Math.min(workIdx, workLines.length) / workLines.length} />
 		<div class="card-head">
 			<h1>{m.auth_recover_working_title()}</h1>
 			<p>{m.auth_s_recover_working_note()}</p>
 		</div>
 		<WorkSteps lines={workLines} at={workIdx} failed={!!workError} />
 		{#if workError}
-			<p class="af-error" role="alert"><Icon icon={faCircleExclamation} size={16} /><span>{workError}</span></p>
+			<p class="af-error" role="alert" transition:unfold><Icon icon={faCircleExclamation} size={16} /><span>{workError}</span></p>
 			<Button variant="primary" size="lg" block onclick={startOver}>{m.auth_recover_start_over()}</Button>
 			<p class="af-row"><button type="button" class="af-link muted" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button></p>
 		{/if}
@@ -469,7 +479,7 @@
 {:else}
 	<div class="card-surface">
 		<div class="af-done">
-			<span class="af-mark"><Icon icon={faCheck} size={28} /></span>
+			<DoneMark />
 			<div class="card-head">
 				<h1>{m.auth_recover_done_title()}</h1>
 				<p>{m.auth_s_recover_done()}</p>

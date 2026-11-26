@@ -174,7 +174,7 @@
 
 {#if step === 0}
 	<div class="card">
-		<div class="card-surface wide screen-fade">
+		<div class="card-surface wide">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_restore_eyebrow()}</p>
 				<h1>{m.lc_restore_choose_title()}</h1>
@@ -258,7 +258,7 @@
 {:else if step === 1}
 	{@const SelIcon = PLAN_ICONS[sel.icon]}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_restore_eyebrow()}</p>
 				<h1>{m.lc_restore_confirm_title()}</h1>
@@ -309,7 +309,7 @@
 	</div>
 {:else}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<Wordmark size="large" class="brandmark brandmark-lg" />
 				<h1>{m.lc_restore_welcome_title()}</h1>

@@ -6,15 +6,17 @@
 	let {
 		id,
 		tone = 'hint',
+		reserve = false,
 		children
 	}: {
 		id?: string;
 		tone?: 'hint' | 'ok' | 'bad' | 'busy';
+		reserve?: boolean;
 		children?: Snippet;
 	} = $props();
 </script>
 
-<p class="af-status" {id} data-tone={tone} role={tone === 'bad' ? 'alert' : 'status'}>
+<p class="af-status" class:reserve {id} data-tone={tone} role={tone === 'bad' ? 'alert' : 'status'}>
 	{#if children}
 		{#if tone === 'bad'}<Icon icon={faCircleExclamation} size={14} />{:else if tone === 'ok'}<Icon
 				icon={faCircleCheck}
