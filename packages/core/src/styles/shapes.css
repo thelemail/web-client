@@ -25,6 +25,10 @@
 	--radius-h40: 9px;
 	--radius-h44: 10px;
 	--radius-h48: 10.5px;
+	--z-sheet: 1000;
+	--z-dialog: 1100;
+	--z-popover: 1200;
+	--z-toast: 1300;
 }
 
 @theme inline {

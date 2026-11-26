@@ -38,7 +38,7 @@
 		position: fixed;
 		bottom: max(24px, env(safe-area-inset-bottom, 0px));
 		left: calc(50% + var(--toast-shift, 0px));
-		z-index: 100;
+		z-index: var(--z-toast);
 		transform: translateX(-50%);
 	}
 	@media (max-width: 1000px) {
