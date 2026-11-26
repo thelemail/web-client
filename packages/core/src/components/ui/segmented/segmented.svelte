@@ -7,6 +7,7 @@
 		icon?: IconDefinition;
 		disabled?: boolean;
 		hideLabel?: boolean;
+		ariaLabel?: string;
 	}
 </script>
 
@@ -71,7 +72,7 @@
 			value={option.value}
 			disabled={option.disabled}
 			class="segmented-item"
-			aria-label={option.hideLabel ? option.label : undefined}
+			aria-label={option.ariaLabel ?? (option.hideLabel ? option.label : undefined)}
 			title={option.hideLabel ? option.label : undefined}
 		>
 			{#if option.icon}<Icon icon={option.icon} size={14} />{/if}

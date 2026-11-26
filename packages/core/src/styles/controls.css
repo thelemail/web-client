@@ -234,6 +234,14 @@
 		border-color var(--dur) var(--ease),
 		color var(--dur) var(--ease);
 }
+.chip-lead {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+}
+.chip:has(> .chip-lead > :is(.av, img)) {
+	padding-left: 3px;
+}
 .chip > .chip-label {
 	min-width: 0;
 	overflow: hidden;

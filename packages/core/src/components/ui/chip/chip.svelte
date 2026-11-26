@@ -15,6 +15,7 @@
 		disabled = false,
 		leading,
 		children,
+		onclick,
 		class: className,
 		...restProps
 	}: Omit<HTMLAttributes<HTMLElement>, "children"> & {
@@ -30,17 +31,19 @@
 	} = $props();
 
 	const toggle = $derived(pressed !== undefined);
+	const action = $derived(!toggle && !href && !onremove && onclick !== undefined);
 	const classes = $derived(cn("chip", size === "sm" && "chip-sm", onremove && "chip-removable", className));
 
-	function flip() {
+	function flip(e: MouseEvent & { currentTarget: EventTarget & HTMLElement }) {
 		pressed = !pressed;
 		onPressedChange?.(pressed);
+		onclick?.(e);
 	}
 </script>
 
 {#snippet body()}
 	{#if toggle}<Icon icon={faCheck} size={13} class="chip-check" />{/if}
-	{@render leading?.()}
+	{#if leading}<span class="chip-lead">{@render leading()}</span>{/if}
 	<span class="chip-label">{@render children()}</span>
 {/snippet}
 
@@ -48,8 +51,10 @@
 	<button type="button" data-slot="chip" class={classes} aria-pressed={pressed} {disabled} onclick={flip} {...restProps}>
 		{@render body()}
 	</button>
+{:else if action}
+	<button type="button" data-slot="chip" class={classes} {disabled} {onclick} {...restProps}>{@render body()}</button>
 {:else if href}
-	<a data-slot="chip" class={classes} {href} {...restProps}>{@render body()}</a>
+	<a data-slot="chip" class={classes} {href} {onclick} {...restProps}>{@render body()}</a>
 {:else}
 	<span data-slot="chip" class={classes} {...restProps}>
 		{@render body()}
