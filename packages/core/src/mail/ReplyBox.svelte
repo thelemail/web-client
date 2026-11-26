@@ -1089,8 +1089,7 @@
 						variant="ghost"
 						size="icon-sm"
 						class="rt-pane"
-						title={pane ? msg.mail_compose_hide_conversation() : msg.mail_compose_show_conversation()}
-						aria-label={pane ? msg.mail_compose_hide_conversation() : msg.mail_compose_show_conversation()}
+						tooltip={pane ? msg.mail_compose_hide_conversation() : msg.mail_compose_show_conversation()}
 						aria-pressed={pane}
 						onclick={() => onPane(!pane)}
 					>
@@ -1101,8 +1100,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class="rt-size"
-					title={expanded ? msg.mail_compose_collapse() : msg.mail_compose_expand()}
-					aria-label={expanded ? msg.mail_compose_collapse() : msg.mail_compose_expand()}
+					tooltip={expanded ? msg.mail_compose_collapse() : msg.mail_compose_expand()}
 					aria-pressed={expanded}
 					onclick={toggleExpand}
 				>
@@ -1115,8 +1113,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				title={msg.common_close()}
-				aria-label={msg.common_close()}
+				tooltip={msg.common_close()}
 				busy={closing}
 				disabled={status === 'sending'}
 				onclick={() => void closeKeepingDraft()}

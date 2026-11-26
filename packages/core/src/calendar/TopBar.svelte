@@ -14,7 +14,6 @@
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import { SearchField } from '$core/components/ui/search-field';
-	import * as Tooltip from '$core/components/ui/tooltip';
 	import { m } from '$paraglide/messages.js';
 	import ViewSwitch from './ViewSwitch.svelte';
 	import { cal } from './state.svelte';
@@ -106,19 +105,17 @@
 
 	<div class="tb-actions">
 		{#each actions as action (action.key)}
-			<Tooltip.Provider delayDuration={300}>
-				<Tooltip.Root>
-					<Tooltip.Trigger onclick={action.run}>
-						{#snippet child({ props })}
-							<Button {...props} variant="ghost" size="icon-sm" aria-label={action.label} aria-pressed={action.toggle ? action.on : action.on || undefined}>
-								<Icon icon={action.icon} size={18} />
-								{#if action.dot}<i class="nd"></i>{/if}
-							</Button>
-						{/snippet}
-					</Tooltip.Trigger>
-					<Tooltip.Content>{action.label}</Tooltip.Content>
-				</Tooltip.Root>
-			</Tooltip.Provider>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				tooltip={action.label}
+				tooltipSide="bottom"
+				aria-pressed={action.toggle ? action.on : action.on || undefined}
+				onclick={action.run}
+			>
+				<Icon icon={action.icon} size={18} />
+				{#if action.dot}<i class="nd"></i>{/if}
+			</Button>
 		{/each}
 	</div>
 </div>

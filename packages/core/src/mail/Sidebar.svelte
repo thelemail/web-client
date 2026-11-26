@@ -378,8 +378,7 @@
 			<Button
 				variant="ghost"
 				size="icon-xs"
-				aria-label={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
-				title={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
+				tooltip={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
 				onclick={(e) => startCreate(kind, null, e.currentTarget)}
 			>
 				<Icon icon={faPlus} size={14} />

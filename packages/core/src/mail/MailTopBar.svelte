@@ -3,7 +3,6 @@
 	import { page } from '$app/state';
 	import Icon from '$core/components/Icon.svelte';
 	import { faBars, faCircleQuestion, faGear } from '@fortawesome/pro-regular-svg-icons';
-	import * as Tooltip from '$core/components/ui/tooltip';
 	import { Button } from '$core/components/ui/button';
 	import { platform } from '$platform';
 	import { mailNav } from '$core/stores/nav.svelte';
@@ -39,32 +38,16 @@
 	</Button>
 	<ListSearch {placeholder} operators={view === null} />
 	<span class="mt-rule" aria-hidden="true"></span>
-	<Tooltip.Provider delayDuration={150} disableHoverableContent>
-		<Tooltip.Root>
-			<Tooltip.Trigger aria-label={m.mail_top_help()} onclick={() => platform.openLink(HELP_URL)}>
-				{#snippet child({ props })}
-					<Button {...props} variant="ghost" size="icon-sm">
-						<Icon icon={faCircleQuestion} size={18} />
-					</Button>
-				{/snippet}
-			</Tooltip.Trigger>
-			<Tooltip.Content side="bottom" sideOffset={6}>{m.mail_top_help()}</Tooltip.Content>
-		</Tooltip.Root>
-		<Tooltip.Root>
-			<Tooltip.Trigger>
-				{#snippet child({ props })}
-					<Button
-						{...props}
-						variant="ghost"
-						size="icon-sm"
-						href={`/u/${slot}/settings`}
-						aria-label={m.mail_acct_settings()}
-					>
-						<Icon icon={faGear} size={18} />
-					</Button>
-				{/snippet}
-			</Tooltip.Trigger>
-			<Tooltip.Content side="bottom" sideOffset={6}>{m.mail_acct_settings()}</Tooltip.Content>
-		</Tooltip.Root>
-	</Tooltip.Provider>
+	<Button
+		variant="ghost"
+		size="icon-sm"
+		tooltip={m.mail_top_help()}
+		tooltipSide="bottom"
+		onclick={() => platform.openLink(HELP_URL)}
+	>
+		<Icon icon={faCircleQuestion} size={18} />
+	</Button>
+	<Button variant="ghost" size="icon-sm" href={`/u/${slot}/settings`} tooltip={m.mail_acct_settings()} tooltipSide="bottom">
+		<Icon icon={faGear} size={18} />
+	</Button>
 </header>

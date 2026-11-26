@@ -258,8 +258,7 @@
 		<Button
 			variant="ghost"
 			size="icon-xs"
-			aria-label={msg.mail_send_err_dismiss()}
-			title={msg.mail_send_err_dismiss()}
+			tooltip={msg.mail_send_err_dismiss()}
 			onclick={onDismiss}
 		>
 			<Icon icon={faXmark} size={15} />

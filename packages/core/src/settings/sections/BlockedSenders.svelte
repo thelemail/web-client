@@ -153,8 +153,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				title={m.settings_blocked_unblock()}
-				aria-label={m.settings_blocked_unblock()}
+				tooltip={m.settings_blocked_unblock()}
 				disabled={removing === e.id}
 				onclick={() => remove(e)}
 			>

@@ -6,6 +6,7 @@
 	import { applyLink, currentLink } from './link';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { deviceOf } from '$core/settings/keyName';
 	import {
 		faLink,
 		faListOl,
@@ -63,6 +64,9 @@
 	}
 	const bold = () => editor?.chain().focus().toggleBold().run();
 	const italic = () => editor?.chain().focus().toggleItalic().run();
+	const mac = deviceOf(navigator) === 'Mac';
+	const keys = (key: string, shift = false) => (mac ? `${shift ? '⇧' : ''}⌘${key}` : `Ctrl+${shift ? 'Shift+' : ''}${key}`);
+
 	const underline = () => editor?.chain().focus().toggleUnderline().run();
 	const ul = () => editor?.chain().focus().toggleBulletList().run();
 	const ol = () => editor?.chain().focus().toggleOrderedList().run();
@@ -87,26 +91,26 @@
 </script>
 
 <div class="cbar" role="toolbar" aria-label={m.mail_toolbar_aria()}>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_bold()} aria-label={m.mail_toolbar_bold()} aria-pressed={active.bold} onclick={bold}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_bold()} shortcut={keys('B')} aria-pressed={active.bold} onclick={bold}>
 		<b>B</b>
 	</Button>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_italic()} aria-label={m.mail_toolbar_italic()} aria-pressed={active.italic} onclick={italic}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_italic()} shortcut={keys('I')} aria-pressed={active.italic} onclick={italic}>
 		<i>I</i>
 	</Button>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_underline()} aria-label={m.mail_toolbar_underline()} aria-pressed={active.underline} onclick={underline}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_underline()} shortcut={keys('U')} aria-pressed={active.underline} onclick={underline}>
 		<u>U</u>
 	</Button>
 	<span class="cbar-sep"></span>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_bulleted()} aria-label={m.mail_toolbar_bulleted()} aria-pressed={active.ul} onclick={ul}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_bulleted()} shortcut={keys('8', true)} aria-pressed={active.ul} onclick={ul}>
 		<Icon icon={faListUl} size={16} />
 	</Button>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_numbered()} aria-label={m.mail_toolbar_numbered()} aria-pressed={active.ol} onclick={ol}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_numbered()} shortcut={keys('7', true)} aria-pressed={active.ol} onclick={ol}>
 		<Icon icon={faListOl} size={16} />
 	</Button>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_link()} aria-label={m.mail_toolbar_link()} aria-pressed={active.link} onclick={link}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_link()} aria-pressed={active.link} onclick={link}>
 		<Icon icon={faLink} size={16} />
 	</Button>
-	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_quote()} aria-label={m.mail_toolbar_quote()} aria-pressed={active.quote} onclick={quote}>
+	<Button variant="ghost" size="icon-sm" tooltip={m.mail_toolbar_quote()} shortcut={keys('B', true)} aria-pressed={active.quote} onclick={quote}>
 		<Icon icon={faQuoteLeft} size={16} />
 	</Button>
 	{#if signature?.present}
@@ -114,8 +118,7 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			title={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
-			aria-label={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
+			tooltip={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
 			aria-pressed={signature.on}
 			disabled={signature.disabled}
 			onclick={() => signature.onToggle(!signature.on)}

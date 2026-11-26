@@ -975,8 +975,7 @@
 		<Button
 			variant="ghost"
 			size="icon-xs"
-			title={m.mail_compose_open()}
-			aria-label={m.mail_compose_open()}
+			tooltip={m.mail_compose_open()}
 			onclick={(e) => {
 				e.stopPropagation();
 				onFocus?.();
@@ -985,8 +984,7 @@
 		<Button
 			variant="ghost"
 			size="icon-xs"
-			title={m.common_close()}
-			aria-label={m.common_close()}
+			tooltip={m.common_close()}
 			aria-busy={closing}
 			onclick={(e) => {
 				e.stopPropagation();
@@ -1021,8 +1019,7 @@
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					title={m.mail_compose_hide_forwarded()}
-					aria-label={m.mail_compose_hide_forwarded()}
+					tooltip={m.mail_compose_hide_forwarded()}
 					onclick={() => (refOpen = false)}
 				>
 					<Icon icon={faXmark} size={16} />
@@ -1073,8 +1070,7 @@
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					title={refOpen ? m.mail_compose_hide_forwarded() : m.mail_compose_show_forwarded()}
-					aria-label={refOpen ? m.mail_compose_hide_forwarded() : m.mail_compose_show_forwarded()}
+					tooltip={refOpen ? m.mail_compose_hide_forwarded() : m.mail_compose_show_forwarded()}
 					aria-pressed={refOpen}
 					onclick={() => (refOpen = !refOpen)}
 				>
@@ -1084,8 +1080,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				title={m.mail_compose_minimize()}
-				aria-label={m.mail_compose_minimize()}
+				tooltip={m.mail_compose_minimize()}
 				onclick={() => onMinimize?.()}
 			>
 				<Icon icon={faMinus} size={16} />
@@ -1094,8 +1089,7 @@
 				variant="ghost"
 				size="icon-sm"
 				class="ch-size"
-				title={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
-				aria-label={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
+				tooltip={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
 				aria-pressed={expanded}
 				onclick={() => onExpand?.(!expanded)}
 			>
@@ -1104,8 +1098,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				title={m.common_close()}
-				aria-label={m.common_close()}
+				tooltip={m.common_close()}
 				busy={closing}
 				onclick={() => void closeKeepingDraft()}
 			>

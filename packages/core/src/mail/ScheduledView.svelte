@@ -90,8 +90,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class="lh-btn"
-					aria-label={m.mail_refresh()}
-					title={m.mail_refresh()}
+					tooltip={m.mail_refresh()}
 					onclick={() => scheduled.refresh()}
 				>
 					<Icon icon={faArrowsRotate} size={16} />

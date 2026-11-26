@@ -250,10 +250,10 @@
 					</div>
 				</div>
 				{#if items.length > 1}
-					<Button variant="ghost" size="icon-sm" aria-label={m.mail_preview_prev()} title={m.mail_preview_prev()} onclick={() => step(-1)}>
+					<Button variant="ghost" size="icon-sm" tooltip={m.mail_preview_prev()} onclick={() => step(-1)}>
 						<Icon icon={faChevronLeft} size={17} />
 					</Button>
-					<Button variant="ghost" size="icon-sm" aria-label={m.mail_preview_next()} title={m.mail_preview_next()} onclick={() => step(1)}>
+					<Button variant="ghost" size="icon-sm" tooltip={m.mail_preview_next()} onclick={() => step(1)}>
 						<Icon icon={faChevronRight} size={17} />
 					</Button>
 				{/if}
@@ -268,7 +268,7 @@
 						<Icon icon={faDownload} size={14} />{m.mail_attach_download()}
 					</Button>
 				{/if}
-				<Button variant="ghost" size="icon-sm" aria-label={m.common_close()} title={m.common_close()} onclick={onClose}>
+				<Button variant="ghost" size="icon-sm" tooltip={m.common_close()} onclick={onClose}>
 					<Icon icon={faXmark} size={17} />
 				</Button>
 			</div>

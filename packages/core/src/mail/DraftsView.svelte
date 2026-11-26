@@ -88,8 +88,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class="lh-btn"
-					aria-label={m.mail_refresh()}
-					title={m.mail_refresh()}
+					tooltip={m.mail_refresh()}
 					onclick={() => drafts.refresh()}
 				>
 					<Icon icon={faArrowsRotate} size={16} />
@@ -150,8 +149,7 @@
 								variant="ghostDanger"
 								size="icon-sm"
 								class="ddel"
-								aria-label={m.mail_drafts_discard()}
-								title={m.mail_drafts_discard()}
+								tooltip={m.mail_drafts_discard()}
 								onclick={(e) => discardRow(e, d)}
 							>
 								<Icon icon={faTrashCan} size={16} />

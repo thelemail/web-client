@@ -36,7 +36,6 @@
 	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import { platform } from '$platform';
-	import * as Tooltip from '$core/components/ui/tooltip';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
@@ -705,42 +704,30 @@
 				variant="ghost"
 				size="icon-sm"
 				class="rb-back"
-				aria-label={msg.mail_skeleton_back()}
-				title={msg.mail_skeleton_back()}
+				tooltip={msg.mail_skeleton_back()}
 				onclick={() => onBack?.()}
 			>
 				<Icon icon={faArrowLeft} size={17} />
 			</Button>
-			<Tooltip.Provider delayDuration={150} disableHoverableContent>
 			{#if caps.showReply}
 				{#each replyButtons as m (m)}
 					{@const label = m === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply()}
-					<Tooltip.Root>
-						<Tooltip.Trigger
-							aria-label={label}
-							aria-pressed={replyMode === m}
-							data-mutates
-							onclick={() => toggleReplyMode(m)}
-						>
-							{#snippet child({ props })}
-								<Button {...props} variant={m === replyButtons[0] ? 'primary' : 'neutral'} size="sm" class="rb-reply">
-									{#if m === 'all'}<Icon icon={faReplyAll} size={15} />{:else}<Icon icon={faReply} size={15} />{/if}<span class="rb-t">{label}</span>
-								</Button>
-							{/snippet}
-						</Tooltip.Trigger>
-						<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
-					</Tooltip.Root>
+					<Button
+						variant={m === replyButtons[0] ? 'primary' : 'neutral'}
+						size="sm"
+						class="rb-reply"
+						tooltip={label}
+						tooltipSide="bottom"
+						aria-pressed={replyMode === m}
+						data-mutates
+						onclick={() => toggleReplyMode(m)}
+					>
+						{#if m === 'all'}<Icon icon={faReplyAll} size={15} />{:else}<Icon icon={faReply} size={15} />{/if}<span class="rb-t">{label}</span>
+					</Button>
 				{/each}
-				<Tooltip.Root>
-					<Tooltip.Trigger aria-label={msg.mail_reader_forward()} data-mutates onclick={forward}>
-						{#snippet child({ props })}
-							<Button {...props} variant="neutral" size="sm" class="rb-reply">
-								<Icon icon={faShare} size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
-							</Button>
-						{/snippet}
-					</Tooltip.Trigger>
-					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_forward()}</Tooltip.Content>
-				</Tooltip.Root>
+				<Button variant="neutral" size="sm" class="rb-reply" tooltip={msg.mail_reader_forward()} tooltipSide="bottom" data-mutates onclick={forward}>
+					<Icon icon={faShare} size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
+				</Button>
 			{/if}
 			{#if caps.showReply}
 				<span class="rb-sep" aria-hidden="true"></span>
@@ -880,7 +867,6 @@
 				{@render barIcon(msg.mail_reader_previous(), () => onPrev?.(), prevIcon, { disabled: !onPrev })}
 				{@render barIcon(msg.mail_reader_next(), () => onNext?.(), nextIcon, { disabled: !onNext })}
 			</div>
-			</Tooltip.Provider>
 		</div>
 		<div class="reader-scroll">
 			{#key m.id}
@@ -1173,21 +1159,17 @@
 	icon: Snippet,
 	opts: { mutates?: boolean; danger?: boolean; disabled?: boolean } = {}
 )}
-	<Tooltip.Root>
-		<Tooltip.Trigger
-			aria-label={label}
-			disabled={opts.disabled}
-			data-mutates={opts.mutates ? '' : undefined}
-			onclick={run}
-		>
-			{#snippet child({ props })}
-				<Button {...props} variant={opts.danger ? 'ghostDanger' : 'ghost'} size="icon-sm">
-					{@render icon()}
-				</Button>
-			{/snippet}
-		</Tooltip.Trigger>
-		<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
-	</Tooltip.Root>
+	<Button
+		variant={opts.danger ? 'ghostDanger' : 'ghost'}
+		size="icon-sm"
+		tooltip={label}
+		tooltipSide="bottom"
+		disabled={opts.disabled}
+		data-mutates={opts.mutates ? '' : undefined}
+		onclick={run}
+	>
+		{@render icon()}
+	</Button>
 {/snippet}
 
 {#snippet undoIcon()}<Icon icon={faArrowRotateLeft} size={17} />{/snippet}

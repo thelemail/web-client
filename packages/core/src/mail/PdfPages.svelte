@@ -188,8 +188,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				aria-label={m.mail_preview_zoom_out()}
-				title={m.mail_preview_zoom_out()}
+				tooltip={m.mail_preview_zoom_out()}
 				disabled={zoomIndex === 0}
 				onclick={() => setZoom(zoomIndex - 1)}
 			>
@@ -199,8 +198,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				aria-label={m.mail_preview_zoom_in()}
-				title={m.mail_preview_zoom_in()}
+				tooltip={m.mail_preview_zoom_in()}
 				disabled={zoomIndex === ZOOMS.length - 1}
 				onclick={() => setZoom(zoomIndex + 1)}
 			>

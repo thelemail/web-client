@@ -211,8 +211,7 @@
 									variant="ghost"
 									size="icon-sm"
 									data-picker={moveKey}
-									title={m.mail_entry_move()}
-									aria-label={m.mail_entry_move()}
+									tooltip={m.mail_entry_move()}
 									aria-haspopup="dialog"
 									aria-expanded={openPicker === moveKey}
 									onclick={(ev) => {
@@ -229,8 +228,7 @@
 									variant="ghost"
 									size="icon-sm"
 									data-picker={labelsKey}
-									title={m.mail_entry_labels()}
-									aria-label={m.mail_entry_labels()}
+									tooltip={m.mail_entry_labels()}
 									aria-haspopup="dialog"
 									aria-expanded={openPicker === labelsKey}
 									onclick={(ev) => {

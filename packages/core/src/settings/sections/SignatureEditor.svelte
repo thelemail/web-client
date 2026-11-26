@@ -324,22 +324,21 @@
 
 {#if mode === 'rich'}
 	<div class="sig-tools">
-		<Button variant="ghost" size="icon-sm" title={m.settings_signature_bold()} aria-label={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Icon icon={faBold} size={16} /></Button>
-		<Button variant="ghost" size="icon-sm" title={m.settings_signature_italic()} aria-label={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Icon icon={faItalic} size={16} /></Button>
-		<Button variant="ghost" size="icon-sm" title={m.settings_signature_link()} aria-label={m.settings_signature_link()} onclick={setLink} disabled={locked}><Icon icon={faLink} size={16} /></Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Icon icon={faBold} size={16} /></Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Icon icon={faItalic} size={16} /></Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_link()} onclick={setLink} disabled={locked}><Icon icon={faLink} size={16} /></Button>
 		<span class="divr"></span>
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			title={m.settings_signature_insert_image()}
-			aria-label={m.settings_signature_insert_image()}
+			tooltip={m.settings_signature_insert_image()}
 			onclick={pickImage}
 			busy={imageBusy}
 			disabled={locked}
 		>
 			{#if imageBusy}<Icon icon={faSpinnerThird} size={16} class="spin" />{:else}<Icon icon={faImage} size={16} />{/if}
 		</Button>
-		<Button variant="ghost" size="icon-sm" title={m.settings_signature_inline_code()} aria-label={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Icon icon={faCode} size={16} /></Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Icon icon={faCode} size={16} /></Button>
 	</div>
 	<div bind:this={mountEl} class="sig-edit-mount"></div>
 {:else}
@@ -347,8 +346,7 @@
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			title={m.settings_signature_insert_image()}
-			aria-label={m.settings_signature_insert_image()}
+			tooltip={m.settings_signature_insert_image()}
 			onclick={pickImage}
 			busy={imageBusy}
 			disabled={locked}

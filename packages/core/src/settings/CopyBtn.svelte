@@ -43,7 +43,7 @@
 	size={small ? 'icon-xs' : 'sm'}
 	class={['copy-btn', result === 'copied' && 'done', result === 'failed' && 'failed']}
 	onclick={copy}
-	title={result === 'failed' ? m.common_copy_failed() : m.settings_copy_to_clipboard()}
+	tooltip={result === 'failed' ? m.common_copy_failed() : m.settings_copy_to_clipboard()}
 	aria-label={label ?? m.common_copy()}
 >
 	{#if result === 'copied'}<Icon icon={faCheck} size={iconSize} />{:else if result === 'failed'}<Icon icon={faCircleExclamation}

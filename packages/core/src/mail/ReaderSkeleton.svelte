@@ -32,8 +32,7 @@
 			variant="ghost"
 			size="icon-sm"
 			class="rb-back"
-			aria-label={m.mail_skeleton_back()}
-			title={m.mail_skeleton_back()}
+			tooltip={m.mail_skeleton_back()}
 			onclick={() => onBack?.()}
 		>
 			<Icon icon={faArrowLeft} size={17} />

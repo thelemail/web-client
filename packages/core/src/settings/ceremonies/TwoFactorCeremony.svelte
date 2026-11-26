@@ -540,8 +540,7 @@
 							<Button
 								variant="ghost"
 								size="icon-xs"
-								title={m.common_copy()}
-								aria-label={m.common_copy()}
+								tooltip={m.common_copy()}
 								onclick={() => navigator.clipboard.writeText(manualSecret.replaceAll(' ', ''))}
 							>
 								<Icon icon={faCopy} size={14} />

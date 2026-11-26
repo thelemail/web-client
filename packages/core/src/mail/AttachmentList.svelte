@@ -163,8 +163,7 @@
 							variant="ghost"
 							size="icon-sm"
 							class="dl"
-							aria-label={m.common_retry()}
-							title={m.common_retry()}
+							tooltip={m.common_retry()}
 							onclick={() => hydrate(chip)}
 						>
 							<Icon icon={faRotateRight} size={16} />
@@ -174,8 +173,7 @@
 							variant="ghost"
 							size="icon-sm"
 							class="dl"
-							aria-label={s.kind === 'downloading' ? m.mail_attach_downloading() : m.mail_attach_download()}
-							title={s.kind === 'downloading' ? m.mail_attach_downloading() : m.mail_attach_download()}
+							tooltip={s.kind === 'downloading' ? m.mail_attach_downloading() : m.mail_attach_download()}
 							busy={s.kind === 'downloading'}
 							disabled={s.kind !== 'ready' && s.kind !== 'downloading'}
 							onclick={() => download(chip)}

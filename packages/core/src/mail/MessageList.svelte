@@ -484,8 +484,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class="lh-btn"
-					aria-label={msg.mail_list_mark_read()}
-					title={msg.mail_list_mark_read()}
+					tooltip={msg.mail_list_mark_read()}
 					onclick={() => onBulk('read')}
 				>
 					<Icon icon={faEnvelopeOpen} size={16} />
@@ -497,8 +496,7 @@
 					size="icon-sm"
 					class="lh-btn"
 					data-mutates
-					aria-label={msg.mail_action_restore()}
-					title={msg.mail_action_restore()}
+					tooltip={msg.mail_action_restore()}
 					onclick={() => onBulk('restore')}
 				>
 					<Icon icon={faArrowRotateLeft} size={16} />
@@ -510,8 +508,7 @@
 					size="icon-sm"
 					class="lh-btn"
 					data-mutates
-					aria-label={msg.mail_action_archive()}
-					title={msg.mail_action_archive()}
+					tooltip={msg.mail_action_archive()}
 					onclick={() => onBulk('archive')}
 				>
 					<Icon icon={faBoxArchive} size={16} />
@@ -524,8 +521,7 @@
 					class="lh-btn"
 					data-mutates
 					data-picker="bulk-move"
-					aria-label={msg.mail_reader_move_to()}
-					title={msg.mail_reader_move_to()}
+					tooltip={msg.mail_reader_move_to()}
 					aria-haspopup="dialog"
 					aria-expanded={openPicker === 'bulk-move'}
 					onclick={(e) => onPicker('move', e.currentTarget)}
@@ -540,8 +536,7 @@
 					class="lh-btn"
 					data-mutates
 					data-picker="bulk-labels"
-					aria-label={msg.mail_list_labels()}
-					title={msg.mail_list_labels()}
+					tooltip={msg.mail_list_labels()}
 					aria-haspopup="dialog"
 					aria-expanded={openPicker === 'bulk-labels'}
 					onclick={(e) => onPicker('labels', e.currentTarget)}
@@ -554,8 +549,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class="lh-btn"
-					aria-label={msg.mail_action_report_spam()}
-					title={msg.mail_action_report_spam()}
+					tooltip={msg.mail_action_report_spam()}
 					onclick={() => onBulk('spam')}
 				>
 					<Icon icon={faShieldExclamation} size={16} />
@@ -567,8 +561,7 @@
 					size="icon-sm"
 					class="lh-btn"
 					data-mutates
-					aria-label={msg.mail_action_trash()}
-					title={msg.mail_action_trash()}
+					tooltip={msg.mail_action_trash()}
 					onclick={() => onBulk('trash')}
 				>
 					<Icon icon={faTrashCan} size={16} />
@@ -580,8 +573,7 @@
 					size="icon-sm"
 					class="lh-btn"
 					data-mutates
-					aria-label={msg.mail_action_delete_forever()}
-					title={msg.mail_action_delete_forever()}
+					tooltip={msg.mail_action_delete_forever()}
 					onclick={() => onBulk('delete')}
 				>
 					<Icon icon={faTrashCan} size={16} />
@@ -618,8 +610,7 @@
 						variant="ghost"
 						size="icon-sm"
 						class={['lh-btn', { refreshing }]}
-						aria-label={msg.mail_refresh()}
-						title={msg.mail_refresh()}
+						tooltip={msg.mail_refresh()}
 						disabled={refreshing}
 						onclick={doRefresh}
 					>
@@ -630,8 +621,7 @@
 					variant="ghost"
 					size="icon-sm"
 					class="lh-btn"
-					aria-label={msg.mail_list_select_all()}
-					title={msg.mail_list_select_all()}
+					tooltip={msg.mail_list_select_all()}
 					onclick={onToggleAll}
 				>
 					<Icon icon={faSquareCheck} size={16} />
@@ -785,8 +775,7 @@
 						variant="ghost"
 						size="icon-xs"
 						class="snz-x"
-						aria-label={msg.mail_list_dismiss()}
-						title={msg.mail_list_dismiss()}
+						tooltip={msg.mail_list_dismiss()}
 						onclick={onDismissReturned}
 					>
 						<Icon icon={faXmark} size={13} />
