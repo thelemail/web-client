@@ -15,7 +15,7 @@
 		LABEL_CURVE25519_LEGACY,
 		LABEL_CURVE25519_V4,
 		LABEL_CURVE25519_V6
-	} from '$core/directory/keyLabel';
+	} from '$core/directory/labels';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
 	import Rich from '$core/i18n/Rich.svelte';

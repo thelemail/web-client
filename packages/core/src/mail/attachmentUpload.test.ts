@@ -29,13 +29,8 @@ vi.mock('$core/api/accounts', async () => {
 	const { lookupDirectory } = await import('$core/directory/lookup');
 	return { lookupAccount: lookupDirectory };
 });
-vi.mock('$core/directory/verify', () => {
-	class DirectoryVerificationError extends Error {
-		details = {};
-		constructor(public code: string) {
-			super(code);
-		}
-	}
+vi.mock('$core/directory/verify', async () => {
+	const { DirectoryVerificationError } = await import('$core/directory/errors');
 	return {
 		DirectoryVerificationError,
 		verifyDirectoryLookup: async (
@@ -46,7 +41,7 @@ vi.mock('$core/directory/verify', () => {
 			h.accepted.push({ email: lookup.email, acceptFingerprint: opts.acceptFingerprint });
 			const code = h.failures[lookup.email];
 			if (code && !(code === 'fingerprint_changed' && opts.acceptFingerprint === lookup.publicKeyArmored)) {
-				throw new DirectoryVerificationError(code);
+				throw new DirectoryVerificationError(code as never, code);
 			}
 			return { statement: { accountId: lookup.accountId } };
 		}

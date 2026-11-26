@@ -3,13 +3,8 @@ import * as openpgp from 'openpgp';
 import { describe, expect, it } from 'vitest';
 
 import { generateCurve25519Key } from '$core/keys/pgpKeys';
-import {
-	keyLabel,
-	labelMatchesKey,
-	LABEL_CURVE25519_LEGACY,
-	LABEL_CURVE25519_V4,
-	LABEL_CURVE25519_V6
-} from './keyLabel';
+import { keyLabel, labelMatchesKey } from './keyLabel';
+import { LABEL_CURVE25519_LEGACY, LABEL_CURVE25519_V4, LABEL_CURVE25519_V6 } from './labels';
 
 const date = new Date(Date.now() - 60_000);
 

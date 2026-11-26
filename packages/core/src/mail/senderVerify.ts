@@ -3,20 +3,17 @@ import { lookupDirectory } from '$core/directory/lookup';
 import { acceptExternalKey, lookupExternalKey } from '$core/api/externalKeys';
 import { getMyWorkspace } from '$core/api/workspaces';
 import { ApiCallError, type ExternalKeyTrust } from '$core/api/types';
-import {
-	verifyDirectoryLookup,
-	verifiedPreviousKey,
-	DirectoryVerificationError,
-	type DirectoryStatement,
-	type KeyTransitionResult,
-	type TlogOutcome
+import type {
+	DirectoryStatement,
+	KeyTransitionResult,
+	TlogOutcome
 } from '$core/directory/verify';
 import { b64ToHex } from '$core/keys/encode';
 import { keystore } from '$core/keystore/keystore-client';
-import { verifyDelegation } from '$core/directory/delegation';
-import type {
-	DirectoryVerificationCode,
-	DirectoryVerificationDetails
+import {
+	DirectoryVerificationError,
+	type DirectoryVerificationCode,
+	type DirectoryVerificationDetails
 } from '$core/directory/errors';
 
 export interface DirectoryTrust {
@@ -104,7 +101,10 @@ export async function directoryTrust(
 	}
 	let value: DirectoryTrust;
 	try {
-		const lookup = await lookupDirectory(address);
+		const [lookup, { verifyDirectoryLookup }] = await Promise.all([
+			lookupDirectory(address),
+			import('$core/directory/verify')
+		]);
 		const res = await verifyDirectoryLookup(lookup, address, opts);
 		const mine = await ownWorkspaceId(accountId);
 		value = {
@@ -223,7 +223,10 @@ export async function previousSenderKey(
 	const listed = trust?.ok && trust.statement?.keyTransitions.some((t) => t.previousKeyFingerprint === fingerprint);
 	if (listed) {
 		try {
-			const lookup = await lookupDirectory(address, { previousKeyFingerprint: fingerprint });
+			const [lookup, { verifyDirectoryLookup, verifiedPreviousKey }] = await Promise.all([
+				lookupDirectory(address, { previousKeyFingerprint: fingerprint }),
+				import('$core/directory/verify')
+			]);
 			const res = await verifyDirectoryLookup(lookup, address);
 			const found = await verifiedPreviousKey(res.statement, lookup.previousKey, fingerprint);
 			if (found) {
@@ -256,6 +259,7 @@ export async function delegatedSignerTrust(
 		const lookup = await lookupAccount(address);
 		const match = lookup.delegations?.find((d) => d.id === delegationId);
 		if (match) {
+			const { verifyDelegation } = await import('$core/directory/delegation');
 			const statement = await verifyDelegation(match, address);
 			value = {
 				label: match.label,
