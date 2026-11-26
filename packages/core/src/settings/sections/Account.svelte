@@ -299,7 +299,7 @@
 	.plan-warn {
 		margin-top: 8px;
 		font-size: var(--text-sm, 13px);
-		color: var(--warning-500, #c08431);
+		color: var(--warning-500);
 	}
 	.plan-wait {
 		display: inline-block;

@@ -202,7 +202,7 @@
 <style>
 	.fp {
 		font-size: 12px;
-		color: var(--ink-700);
+		color: var(--fg);
 		word-break: break-all;
 	}
 
@@ -214,7 +214,7 @@
 		flex-direction: column;
 		gap: 4px;
 		font-size: 12.5px;
-		color: var(--ink-700);
+		color: var(--fg);
 		overflow-wrap: anywhere;
 	}
 

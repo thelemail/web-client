@@ -214,7 +214,7 @@
 	}
 	.dropzone.drag {
 		border-color: var(--pine-600);
-		background: var(--pine-50);
+		background: var(--pine-100);
 	}
 	.dz-t {
 		font-weight: 600;

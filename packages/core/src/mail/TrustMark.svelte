@@ -229,7 +229,7 @@
 	}
 	.tmark[data-tier='verified'] {
 		background: var(--success-700);
-		color: var(--paper-0);
+		color: var(--primary-fg);
 		border-color: var(--success-700);
 	}
 	.tmark[data-tier='encrypted'] {
@@ -309,11 +309,11 @@
 	}
 	.tpop[data-tier='official'] .tpop-mark {
 		background: var(--brass-700);
-		color: var(--paper-0);
+		color: var(--primary-fg);
 	}
 	.tpop[data-tier='verified'] .tpop-mark {
 		background: var(--success-700);
-		color: var(--paper-0);
+		color: var(--primary-fg);
 	}
 	.tpop[data-tier='encrypted'] .tpop-mark {
 		background: var(--success-100);

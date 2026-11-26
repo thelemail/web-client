@@ -313,7 +313,7 @@
 <style>
 	.fp {
 		font-size: 12px;
-		color: var(--ink-700);
+		color: var(--fg);
 		word-break: break-all;
 	}
 

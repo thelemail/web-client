@@ -68,7 +68,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 20px;
-		background: color-mix(in oklab, var(--ink-900) 38%, transparent);
+		background: color-mix(in oklab, var(--fg-strong) 38%, transparent);
 	}
 
 	.tcd {

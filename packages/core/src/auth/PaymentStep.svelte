@@ -52,7 +52,7 @@
 	}
 </script>
 
-{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet addr(t: string)}<span class="mono" style="color:var(--fg)">{t}</span>{/snippet}
 {#snippet terms(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
 
@@ -139,7 +139,7 @@
 		padding: 16px;
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md, 8px);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.handoff-lead {
 		display: flex;
@@ -147,7 +147,7 @@
 		align-items: flex-start;
 		margin: 0;
 		font-size: var(--text-sm, 13px);
-		color: var(--ink-700);
+		color: var(--fg);
 		line-height: 1.5;
 	}
 	.handoff-lead :global(svg) {
@@ -166,8 +166,8 @@
 		padding: 4px 10px;
 		border: 1px solid var(--border);
 		border-radius: var(--radius-pill, 999px);
-		background: var(--paper-0);
+		background: var(--bg);
 		font-size: var(--text-xs, 12px);
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 </style>

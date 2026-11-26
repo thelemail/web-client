@@ -6,7 +6,7 @@ export const COLLECTION_COLORS = {
 	info: 'var(--info-500)',
 	warning: 'var(--warning-500)',
 	danger: 'var(--danger-500)',
-	ink: 'var(--ink-400)'
+	ink: 'var(--fg-faint)'
 } as const;
 
 export type CollectionColor = keyof typeof COLLECTION_COLORS;
@@ -34,7 +34,7 @@ const CHIP_TONES: Record<CollectionColor, { bg: string; fg: string }> = {
 	info: { bg: 'var(--info-100)', fg: 'var(--info-700)' },
 	warning: { bg: 'var(--warning-100)', fg: 'var(--warning-700)' },
 	danger: { bg: 'var(--danger-100)', fg: 'var(--danger-700)' },
-	ink: { bg: 'var(--paper-100)', fg: 'var(--ink-700)' }
+	ink: { bg: 'var(--bg-sunken)', fg: 'var(--fg)' }
 };
 
 export function collectionChip(key: string | null | undefined): { bg: string; fg: string } {

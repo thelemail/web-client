@@ -100,7 +100,7 @@
 <style>
 	.pending-icon {
 		display: inline-flex;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-bottom: 6px;
 	}
 </style>

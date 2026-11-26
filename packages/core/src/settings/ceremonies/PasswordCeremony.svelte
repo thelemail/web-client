@@ -653,7 +653,7 @@
 		align-items: center;
 		gap: 5px;
 		font-size: 12px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 	.pwc-req.met {
 		color: var(--pine-700);

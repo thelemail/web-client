@@ -232,6 +232,6 @@
 		color: var(--fg-muted);
 	}
 	.terms li.caveat :global(svg) {
-		color: var(--ink-400);
+		color: var(--fg-faint);
 	}
 </style>

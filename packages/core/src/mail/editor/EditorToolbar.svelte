@@ -139,8 +139,8 @@
 		gap: 1px;
 		flex: 0 0 auto;
 		padding: 6px 13px;
-		border-top: 1px solid var(--border, #e6dfcd);
-		background: var(--paper-50, #f6f1e3);
+		border-top: 1px solid var(--border);
+		background: var(--bg-raised);
 	}
 	.cbar button {
 		width: 30px;
@@ -151,18 +151,18 @@
 		background: none;
 		border: none;
 		border-radius: var(--radius-control-compact);
-		color: var(--ink-600, #4a4d3f);
+		color: var(--fg-muted);
 		cursor: pointer;
 		font-size: 14px;
 		font-family: var(--font-sans);
 	}
 	.cbar button:hover {
-		background: var(--paper-150, #ece4d0);
-		color: var(--fg, #1f221b);
+		background: var(--border-soft);
+		color: var(--fg);
 	}
 	.cbar button.on {
-		background: var(--paper-200, #e0d6bf);
-		color: var(--fg-strong, #1f221b);
+		background: var(--border-strong);
+		color: var(--fg-strong);
 	}
 	.cbar button:disabled {
 		opacity: 0.45;
@@ -175,7 +175,7 @@
 	.cbar-sep {
 		width: 1px;
 		height: 18px;
-		background: var(--border-strong, #cfc4ad);
+		background: var(--border-strong);
 		margin: 0 6px;
 	}
 </style>

@@ -256,7 +256,7 @@
 	}
 	.cd-row.live {
 		border-color: var(--border);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.cd-main {
 		display: flex;
@@ -283,7 +283,7 @@
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
-		background: var(--paper-200);
+		background: var(--border-strong);
 		flex: 0 0 auto;
 	}
 	.cd-stage.done .cd-pip {
@@ -331,11 +331,11 @@
 		border-radius: var(--radius-control-compact);
 		background: transparent;
 		border: 1px solid transparent;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		cursor: pointer;
 	}
 	.cd-menu-btn:hover {
-		background: var(--paper-200);
+		background: var(--bg-sunken);
 	}
 	.cd-menu {
 		position: absolute;
@@ -362,11 +362,11 @@
 		background: transparent;
 		border: none;
 		border-radius: var(--radius-control-compact);
-		color: var(--ink-700);
+		color: var(--fg);
 		cursor: pointer;
 	}
 	.cd-menu-item:hover {
-		background: var(--paper-200);
+		background: var(--bg-sunken);
 	}
 	.cd-menu-item.danger {
 		color: var(--danger-700);

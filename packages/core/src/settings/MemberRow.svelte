@@ -205,11 +205,11 @@
 		border-radius: var(--radius-control-compact);
 		background: transparent;
 		border: 1px solid transparent;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		cursor: pointer;
 	}
 	.mbr-act-btn:hover {
-		background: var(--paper-200);
+		background: var(--bg-sunken);
 	}
 	.mbr-menu {
 		position: absolute;
@@ -237,11 +237,11 @@
 		background: transparent;
 		border: none;
 		border-radius: var(--radius-control-compact);
-		color: var(--ink-700);
+		color: var(--fg);
 		cursor: pointer;
 	}
 	.mbr-menu-item:hover {
-		background: var(--paper-200);
+		background: var(--bg-sunken);
 	}
 	.mbr-menu-item.danger {
 		color: var(--danger-700);
@@ -252,10 +252,10 @@
 		gap: 9px;
 		padding: 10px 18px;
 		border-bottom: 1px solid var(--border);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 		font-size: 12.5px;
 		line-height: 1.5;
-		color: var(--ink-700);
+		color: var(--fg);
 	}
 	.mbr-feedback :global(svg) {
 		flex: 0 0 auto;
@@ -301,7 +301,7 @@
 		cursor: pointer;
 	}
 	.mbr-fb-x:hover {
-		background: var(--paper-200);
+		background: var(--bg-sunken);
 	}
 	.mbr-fb-x :global(svg) {
 		margin: 0;
@@ -309,6 +309,6 @@
 	}
 	.mbr-confirm {
 		font-size: 13px;
-		color: var(--ink-700);
+		color: var(--fg);
 	}
 </style>

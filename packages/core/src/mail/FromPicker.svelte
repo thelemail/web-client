@@ -195,7 +195,7 @@
 			src={revoked || current.kind === 'Alias' ? null : avatarUrl}
 			fit="cover"
 			size={22}
-			bg={revoked ? 'var(--paper-100)' : current.bg}
+			bg={revoked ? 'var(--bg-sunken)' : current.bg}
 			fg={revoked ? 'var(--fg-faint)' : current.fg}
 		/>
 		<span class="ft-name">{face.name}</span>
@@ -228,7 +228,7 @@
 			{/if}
 			{#if revoked && !query}
 				<div class="fm-item gone" role="menuitemradio" aria-checked="true" aria-disabled="true">
-					<Avatar initials={face.init} size={30} bg="var(--paper-100)" fg="var(--fg-faint)" />
+					<Avatar initials={face.init} size={30} bg="var(--bg-sunken)" fg="var(--fg-faint)" />
 					<span class="fm-tx">
 						<span class="fm-top">
 							<b>{revoked.name}</b>

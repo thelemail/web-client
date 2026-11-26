@@ -196,7 +196,7 @@
 		background: var(--surface);
 	}
 	.sch-row:hover {
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 	}
 	.sch-main {
 		flex: 1;
@@ -220,7 +220,7 @@
 		flex: 0 0 auto;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--accent-quiet);
+		color: var(--brass-600);
 	}
 	.sch-subj {
 		font-size: 13px;
@@ -238,7 +238,7 @@
 	}
 	.sch-prev {
 		font-size: 12.5px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-top: 2px;
 		white-space: nowrap;
 		overflow: hidden;
@@ -249,7 +249,7 @@
 		font-family: inherit;
 		font-size: 12.5px;
 		font-weight: 600;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		background: none;
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-control-compact);
@@ -273,7 +273,7 @@
 		text-align: center;
 		padding: 56px 24px;
 		gap: 6px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 	.sch-empty .ring {
 		display: flex;
@@ -282,7 +282,7 @@
 		width: 64px;
 		height: 64px;
 		border-radius: 50%;
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 		color: var(--brass-600);
 		margin-bottom: 8px;
 	}
@@ -294,7 +294,7 @@
 	}
 	.sch-empty .d {
 		font-size: 13px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		max-width: 300px;
 	}
 	.sch-retry {
@@ -319,14 +319,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.sch-side-in {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 12px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		text-align: center;
 	}
 	.sch-side-in p {

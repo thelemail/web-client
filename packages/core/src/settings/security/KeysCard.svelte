@@ -133,7 +133,7 @@
 	.key-meta {
 		margin-top: 6px;
 		font-size: 12.5px;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px 10px;
@@ -141,7 +141,7 @@
 
 	.key-earlier {
 		font-family: var(--font-mono);
-		color: var(--ink-700);
+		color: var(--fg);
 	}
 
 	.key-warn {

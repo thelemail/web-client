@@ -1957,11 +1957,11 @@
 	.empty-folder {
 		padding: 48px 24px;
 		text-align: center;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 	.empty-folder .sub {
 		margin-top: 6px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		font-size: 13px;
 	}
 	.reader-missing {
@@ -1970,12 +1970,12 @@
 		align-items: center;
 		justify-content: center;
 		padding: 48px 24px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		text-align: center;
 		gap: 6px;
 	}
 	.reader-missing .sub {
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		font-size: 13px;
 	}
 	.reader-missing .back {

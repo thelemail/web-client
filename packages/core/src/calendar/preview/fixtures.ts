@@ -92,8 +92,8 @@ export const PEOPLE: Record<PreviewPersonId, PreviewPerson> = {
 		name: 'R. Panurge',
 		full: 'R. Panurge',
 		email: 'panurge@quart-livre.example',
-		bg: 'var(--paper-150)',
-		fg: 'var(--ink-600)',
+		bg: 'var(--border-soft)',
+		fg: 'var(--fg-muted)',
 		external: true
 	}
 };

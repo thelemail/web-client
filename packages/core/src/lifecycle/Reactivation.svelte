@@ -357,15 +357,15 @@
 		gap: 8px;
 		margin: 0 0 16px;
 		padding: 11px 14px;
-		border: 1px solid var(--danger-500, #b5453a);
+		border: 1px solid var(--danger-500);
 		border-radius: var(--radius-md, 8px);
-		background: color-mix(in srgb, var(--danger-500, #b5453a) 8%, transparent);
+		background: color-mix(in srgb, var(--danger-500) 8%, transparent);
 		font-size: var(--text-sm, 13px);
-		color: var(--ink-700, #3a4032);
+		color: var(--fg);
 	}
 	.lc-restore-notice :global(svg) {
 		flex-shrink: 0;
 		margin-top: 1px;
-		color: var(--danger-500, #b5453a);
+		color: var(--danger-500);
 	}
 </style>

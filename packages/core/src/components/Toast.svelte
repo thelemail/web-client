@@ -42,8 +42,9 @@
 		gap: 9px;
 		padding: 12px 17px;
 		border-radius: var(--radius-md);
-		background: var(--pine-900);
+		background: var(--bg-inverse);
 		color: var(--fg-on-pine);
+		border: 1px solid color-mix(in oklab, var(--border-soft) 25%, transparent);
 		font-family: var(--font-sans);
 		font-size: 13px;
 		font-weight: 500;
@@ -51,18 +52,15 @@
 		animation: toast-in var(--dur) var(--ease-out);
 	}
 	.toast.error > :global(svg) {
-		color: var(--brass-500);
+		color: var(--brass-on-inverse);
 	}
 	.undo {
 		margin-left: 6px;
 		border: none;
 		background: none;
-		color: var(--brass-500);
+		color: var(--brass-on-inverse);
 		font-weight: 600;
 		cursor: pointer;
-	}
-	:global([data-theme='dark']) .toast {
-		border: 1px solid var(--border-dark);
 	}
 	@media (max-width: 1000px) {
 		.toast {

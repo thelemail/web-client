@@ -375,8 +375,8 @@
 	.sig-edit-mount {
 		min-height: 130px;
 		padding: 12px 14px;
-		background: var(--paper-50);
-		border: 1px solid var(--paper-200);
+		background: var(--bg-raised);
+		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-control);
 		font-size: 14px;
 		line-height: 1.55;

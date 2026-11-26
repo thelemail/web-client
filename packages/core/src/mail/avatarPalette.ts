@@ -8,7 +8,7 @@ const PALETTE: ReadonlyArray<AvatarPalette> = [
 	{ bg: 'var(--pine-100)', fg: 'var(--pine-700)' },
 	{ bg: 'var(--info-100)', fg: 'var(--info-700)' },
 	{ bg: 'var(--success-100)', fg: 'var(--success-700)' },
-	{ bg: 'var(--paper-200)', fg: 'var(--ink-700)' }
+	{ bg: 'var(--bg-raised)', fg: 'var(--fg-muted)' }
 ];
 
 export function paletteFor(seed: string): AvatarPalette {

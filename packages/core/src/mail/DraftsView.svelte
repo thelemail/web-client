@@ -187,10 +187,10 @@
 		background: var(--surface);
 	}
 	.drow:hover {
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 	}
 	.drow.active {
-		background: var(--paper-200);
+		background: var(--pine-100);
 	}
 	.dmain {
 		flex: 1;
@@ -214,7 +214,7 @@
 		flex: 0 0 auto;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 	}
 	.dsubj {
 		font-size: 13px;
@@ -232,7 +232,7 @@
 	}
 	.dprev {
 		font-size: 12.5px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-top: 2px;
 		white-space: nowrap;
 		overflow: hidden;
@@ -250,7 +250,7 @@
 		gap: 3px;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 	}
 	.ddel {
 		display: inline-flex;
@@ -261,7 +261,7 @@
 		border: none;
 		background: none;
 		border-radius: var(--radius-control-compact);
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		cursor: pointer;
 		opacity: 0;
 	}
@@ -280,7 +280,7 @@
 		text-align: center;
 		padding: 56px 24px;
 		gap: 6px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 	.drafts-empty .ring {
 		display: flex;
@@ -289,7 +289,7 @@
 		width: 64px;
 		height: 64px;
 		border-radius: 50%;
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 		color: var(--brass-600);
 		margin-bottom: 8px;
 	}
@@ -300,7 +300,7 @@
 	}
 	.drafts-empty .d {
 		font-size: 13px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		max-width: 280px;
 	}
 	.dretry,
@@ -326,14 +326,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.ds-inner {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 12px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		text-align: center;
 	}
 	.ds-inner p {

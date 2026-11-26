@@ -178,8 +178,8 @@ describe('chipsFromInput', () => {
 				name: 'Victor Hugo',
 				email: 'victor@example.com',
 				init: 'V',
-				bg: 'var(--paper-200)',
-				fg: 'var(--ink-700)',
+				bg: 'var(--bg-raised)',
+				fg: 'var(--fg-muted)',
 				valid: true
 			}
 		]);

@@ -177,7 +177,7 @@
 </script>
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
-{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet addr(t: string)}<span class="mono" style="color:var(--fg)">{t}</span>{/snippet}
 {#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
 {#snippet terms(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
@@ -210,7 +210,7 @@
 	<div class="card-surface screen-fade">
 		<Stepper step={0} labels={inviteLabels} />
 		{#if auth.email}
-			<div class="invite" style="background:var(--paper-100);border:1px solid var(--border-strong);padding:12px 14px;margin-bottom:14px">
+			<div class="invite" style="background:var(--bg-sunken);border:1px solid var(--border-strong);padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
 					<span class="iname"
 						><Rich text={m.auth_invite_signed_in_as({ email: auth.email })} tags={{ b: bold }} /></span

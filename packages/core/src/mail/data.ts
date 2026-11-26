@@ -262,8 +262,8 @@ export function chipsFromInput(input: string, contacts: readonly Contact[] = [])
 			name: display,
 			email: m.address,
 			init: (display[0] || '?').toUpperCase(),
-			bg: 'var(--paper-200)',
-			fg: 'var(--ink-700)',
+			bg: 'var(--bg-raised)',
+			fg: 'var(--fg-muted)',
 			valid: isEmail(m.address)
 		};
 	});

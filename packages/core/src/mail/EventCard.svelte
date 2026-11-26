@@ -325,8 +325,8 @@
 	}
 	.evt-cal .m {
 		display: block;
-		background: var(--pine-700);
-		color: var(--fg-on-pine);
+		background: var(--primary);
+		color: var(--primary-fg);
 		font: 600 10px/1 var(--font-sans, system-ui, sans-serif);
 		letter-spacing: 0.07em;
 		padding: 6px 0;
@@ -354,7 +354,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 	.evt-kicker :global(svg) {
 		width: 13px;
@@ -380,13 +380,13 @@
 		align-items: center;
 		gap: 8px;
 		font-size: 12.5px;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		min-width: 0;
 	}
 	.evt-meta :global(svg) {
 		width: 14px;
 		height: 14px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		flex: 0 0 auto;
 	}
 	.mono {
@@ -407,7 +407,7 @@
 		gap: 12px;
 		padding: 12px 18px;
 		border-top: 1px solid var(--border);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.evt-faces {
 		display: flex;
@@ -421,11 +421,11 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-avatar);
-		background: var(--paper-200);
-		color: var(--ink-700);
+		background: var(--bg-raised);
+		color: var(--fg-muted);
 		font-size: 11.5px;
 		font-weight: 600;
-		box-shadow: 0 0 0 2px var(--paper-50);
+		box-shadow: 0 0 0 2px var(--bg-raised);
 		margin-left: -7px;
 	}
 	.evt-faces .av:first-child {
@@ -438,11 +438,11 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-avatar);
-		background: var(--paper-200);
-		color: var(--ink-700);
+		background: var(--bg-raised);
+		color: var(--fg-muted);
 		font-size: 11px;
 		font-weight: 600;
-		box-shadow: 0 0 0 2px var(--paper-50);
+		box-shadow: 0 0 0 2px var(--bg-raised);
 		margin-left: -7px;
 	}
 	.evt-who {
@@ -485,7 +485,7 @@
 		gap: 6px;
 		font-size: 13px;
 		font-weight: 600;
-		color: var(--ink-700);
+		color: var(--fg);
 		padding: 8px 13px;
 		background: var(--surface);
 		border: none;
@@ -498,14 +498,14 @@
 	.evt-opt :global(svg) {
 		width: 15px;
 		height: 15px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 	}
 	.evt-opt:disabled {
 		opacity: 0.55;
 		cursor: not-allowed;
 	}
 	.evt-opt.yes:hover:not(:disabled) {
-		background: var(--pine-50);
+		background: var(--pine-100);
 		color: var(--pine-700);
 	}
 	.evt-opt.yes:hover:not(:disabled) :global(svg) {
@@ -550,7 +550,7 @@
 		border-radius: var(--radius-control-compact);
 	}
 	.evt-change:hover {
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 	}
 
 	.r-yes {
@@ -573,13 +573,6 @@
 		padding: 8px 18px 13px;
 		font-size: 12px;
 		color: var(--danger-700);
-	}
-
-	:global([data-theme='dark']) .evt-cal .m {
-		background: #234132;
-	}
-	:global([data-theme='dark']) .r-yes .evt-cal .m {
-		background: #2c6b3f;
 	}
 
 	@media (max-width: 640px) {

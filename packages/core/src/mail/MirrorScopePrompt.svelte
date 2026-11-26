@@ -72,7 +72,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 24px;
-		background: rgba(20, 39, 30, 0.44);
+		background: var(--scrim);
 		backdrop-filter: blur(3px);
 		font-family: var(--font-sans);
 		color: var(--fg);

@@ -74,7 +74,7 @@
 	.sk {
 		position: relative;
 		overflow: hidden;
-		background: var(--paper-150, #ece4d0);
+		background: var(--skeleton);
 		border-radius: 4px;
 	}
 	.sk::after {
@@ -85,7 +85,7 @@
 		background: linear-gradient(
 			90deg,
 			transparent 0,
-			color-mix(in srgb, var(--surface, #faf7eb) 78%, transparent) 50%,
+			color-mix(in srgb, var(--surface) 78%, transparent) 50%,
 			transparent 100%
 		);
 		animation: sk-sweep 1.5s ease infinite;
@@ -119,20 +119,20 @@
 		font-family: var(--font-mono, 'IBM Plex Mono', ui-monospace, monospace);
 		font-size: 11.5px;
 		letter-spacing: 0.02em;
-		color: var(--ink-500, #6b7360);
+		color: var(--fg-muted);
 		margin-bottom: 26px;
 	}
 	.sk-status :global(svg) {
 		width: 13px;
 		height: 13px;
-		color: var(--brass-600, #a87c3d);
+		color: var(--brass-600);
 	}
 	.sk-spin {
 		width: 14px;
 		height: 14px;
 		border-radius: 50%;
-		border: 2px solid var(--pine-100, #d4e3d6);
-		border-top-color: var(--pine-600, #2e5440);
+		border: 2px solid var(--pine-100);
+		border-top-color: var(--pine-600);
 		animation: svspin 0.8s linear infinite;
 		flex: 0 0 auto;
 	}
@@ -169,7 +169,7 @@
 	}
 
 	.sk-body {
-		border-top: 1px solid var(--border, #e6dfcd);
+		border-top: 1px solid var(--border);
 		padding-top: 24px;
 	}
 	.sk-body .sk-line.tall {
@@ -190,7 +190,7 @@
 		}
 		.sk-spin {
 			animation: none;
-			border-top-color: var(--pine-300, #aac3ab);
+			border-top-color: var(--primary);
 		}
 	}
 	@keyframes sk-pulse {

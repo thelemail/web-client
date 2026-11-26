@@ -126,7 +126,7 @@
 		width: 36px;
 		height: 36px;
 		margin-bottom: 12px;
-		border: 3px solid var(--paper-100);
+		border: 3px solid var(--bg-sunken);
 		border-top-color: var(--pine-700);
 		border-radius: 50%;
 		animation: return-spin 0.9s linear infinite;

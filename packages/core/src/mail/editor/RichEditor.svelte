@@ -136,7 +136,7 @@
 	}
 	.rich-editor.empty :global(.cbody.ProseMirror p.is-editor-empty:first-child::before) {
 		content: attr(data-placeholder);
-		color: var(--fg-faint, #9a8f7d);
+		color: var(--fg-faint);
 		pointer-events: none;
 		float: left;
 		height: 0;
@@ -153,13 +153,13 @@
 		padding-left: 22px;
 	}
 	.rich-editor :global(.cbody a) {
-		color: var(--link, #2b5aa3);
+		color: var(--link);
 		text-decoration: underline;
 	}
 	.rich-editor :global(.cbody .eb-quote) {
 		margin: 0 0 12px;
 		padding-left: 12px;
-		border-left: 3px solid var(--paper-200, #d6cbb6);
-		color: var(--ink-700, #43473a);
+		border-left: 3px solid var(--border-strong);
+		color: var(--fg);
 	}
 </style>

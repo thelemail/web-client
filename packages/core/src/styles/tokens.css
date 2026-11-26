@@ -34,6 +34,7 @@
 
 	--focus-ring:     var(--pine-500);
 	--scrim:          rgba(11, 13, 16, 0.54);
+	--skeleton:       var(--bg-sunken);
 
 	--shadow-xs:    0 1px 1px rgba(16, 18, 20, 0.04);
 	--shadow-sm:    0 1px 2px rgba(16, 18, 20, 0.06), 0 1px 1px rgba(16, 18, 20, 0.04);
@@ -94,6 +95,7 @@
 	--primary-fg:     #000E06;
 	--link:           #93CDAD;
 	--selection:      #28523C8C;
+	--skeleton:       var(--surface-muted);
 
 	--pine-100: #1E3328; --pine-500: #4F9F77; --pine-600: #6EB992; --pine-700: #90D2AE;
 	--brass-100: #392B14; --brass-500: #B28324; --brass-600: #CC9E4B; --brass-700: #E4BA72;
