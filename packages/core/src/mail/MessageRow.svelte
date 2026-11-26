@@ -17,7 +17,7 @@
 	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import type { TipTether } from '$core/components/ui/tooltip/shared';
-	import { afterRowsPaint } from './rowActions';
+	import { whenRowNear } from './rowActions';
 	import { on } from 'svelte/events';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -215,7 +215,10 @@
 	});
 
 	let actions = $state(false);
-	$effect(() => afterRowsPaint(() => (actions = true)));
+	$effect(() => {
+		if (!rowEl || actions) return;
+		return whenRowNear(rowEl, () => (actions = true));
+	});
 	const showActions = () => (actions = true);
 </script>
 
