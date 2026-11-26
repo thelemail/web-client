@@ -162,10 +162,7 @@
 		</div>
 	</section>
 	<div class="sch-side">
-		<div class="sch-side-in">
-			<Icon icon={faPaperPlaneTop} size={40} />
-			<p>{m.mail_scheduled_side()}</p>
-		</div>
+		<EmptyState icon={faPaperPlaneTop} title={m.mail_scheduled_side()} />
 	</div>
 </div>
 
@@ -272,17 +269,5 @@
 		align-items: center;
 		justify-content: center;
 		background: var(--bg-raised);
-	}
-	.sch-side-in {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 12px;
-		color: var(--fg-faint);
-		text-align: center;
-	}
-	.sch-side-in p {
-		font-size: 13px;
-		max-width: 240px;
 	}
 </style>

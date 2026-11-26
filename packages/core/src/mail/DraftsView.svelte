@@ -174,10 +174,7 @@
 		</div>
 	</section>
 	<div class="drafts-side">
-		<div class="ds-inner">
-			<Icon icon={faFileLines} size={40} />
-			<p>{m.mail_drafts_side()}</p>
-		</div>
+		<EmptyState icon={faFileLines} title={m.mail_drafts_side()} />
 	</div>
 </div>
 
@@ -284,16 +281,5 @@
 		align-items: center;
 		justify-content: center;
 		background: var(--bg-raised);
-	}
-	.ds-inner {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 12px;
-		color: var(--fg-faint);
-		text-align: center;
-	}
-	.ds-inner p {
-		font-size: 13px;
 	}
 </style>
