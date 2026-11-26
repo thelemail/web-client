@@ -978,7 +978,6 @@
 }
 .cal-app .agrow:hover {
 	border-color: var(--border-strong);
-	box-shadow: var(--shadow-xs);
 	transform: translateY(-1px);
 }
 .cal-app .ag-tm { font-family: var(--font-mono); font-size: 12px; color: var(--fg-muted); text-align: right; }
@@ -1070,7 +1069,6 @@
 	background: var(--surface);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-surface);
-	box-shadow: var(--shadow-xs);
 	overflow: hidden;
 	margin-bottom: 18px;
 }
@@ -1299,7 +1297,6 @@
 	border-radius: 50%;
 	flex: 0 0 auto;
 	background: var(--brass-600);
-	box-shadow: var(--shadow-xs);
 	position: relative;
 }
 .cal-app .bk-seal .wax::after {
@@ -1370,7 +1367,7 @@
 	transition: border-color var(--dur), box-shadow var(--dur);
 }
 .cal-app .tkrow .check { margin-top: 2px; }
-.cal-app .tkrow:hover { border-color: var(--border-strong); box-shadow: var(--shadow-xs); }
+.cal-app .tkrow:hover { border-color: var(--border-strong); }
 .cal-app .tkrow.boxed { background: var(--bg-raised); border-style: dashed; }
 .cal-app .tkrow.done { opacity: 0.55; }
 .cal-app .tkrow.done .tkr-t { text-decoration: line-through; }

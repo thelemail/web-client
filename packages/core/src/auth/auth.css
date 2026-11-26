@@ -371,7 +371,6 @@
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
 	background: var(--bg-raised);
-	box-shadow: var(--shadow-xs);
 	padding: 11px 13px;
 }
 .auth .locked .lval {
@@ -847,63 +846,6 @@
 	}
 }
 
-.remember {
-	display: flex;
-	align-items: center;
-	gap: 9px;
-	cursor: pointer;
-	font-size: 13px;
-	font-weight: 500;
-	color: var(--fg);
-	user-select: none;
-	width: fit-content;
-}
-.remember input {
-	position: absolute;
-	opacity: 0;
-	width: 0;
-	height: 0;
-}
-.remember .box {
-	width: 18px;
-	height: 18px;
-	border-radius: var(--radius-check);
-	border: 1px solid var(--border-control);
-	background: var(--surface);
-	box-shadow: var(--shadow-xs);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--primary-fg);
-	flex: 0 0 auto;
-	transition:
-		background var(--dur),
-		border-color var(--dur);
-}
-.remember .box svg {
-	width: 13px;
-	height: 13px;
-	opacity: 0;
-	transform: scale(0.6);
-	transition:
-		opacity var(--dur),
-		transform var(--dur);
-}
-.remember input:checked + .box {
-	background: var(--primary);
-	border-color: var(--primary);
-}
-.remember input:checked + .box svg {
-	opacity: 1;
-	transform: none;
-}
-.remember input:focus-visible + .box {
-	box-shadow: 0 0 0 3px var(--focus-ring);
-}
-.remember:hover .box {
-	border-color: var(--pine-500);
-}
-
 .auth .keynote {
 	display: flex;
 	gap: 11px;
@@ -1129,7 +1071,6 @@
 	background: var(--surface);
 	border: 1px solid var(--border);
 	border-radius: var(--radius-panel);
-	box-shadow: var(--shadow-xs);
 }
 .auth .sistrip .si-tx {
 	flex: 1;
@@ -1173,7 +1114,6 @@
 	border: 1px solid var(--border);
 	border-left: 3px solid var(--warning-700);
 	border-radius: var(--radius-panel);
-	box-shadow: var(--shadow-xs);
 }
 .auth .stnotice svg {
 	flex: 0 0 auto;
