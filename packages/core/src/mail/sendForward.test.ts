@@ -72,7 +72,7 @@ vi.mock('$core/api/messages', () => ({
 }));
 
 import { sendInternalMessage } from './send';
-import { bytesToB64, hexToBytes } from '$core/crypto';
+import { bytesToB64, hexToBytes } from '$core/keys/encode';
 
 const party = (address: string) => ({ display: '', address });
 

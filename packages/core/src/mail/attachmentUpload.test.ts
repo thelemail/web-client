@@ -93,7 +93,7 @@ vi.mock('$core/api/client', () => ({
 
 import { UploadOrchestrator, uploadFailure, type Attachment } from './attachmentUpload';
 import { ApiCallError } from '$core/api/types';
-import { bytesToB64, hexToBytes } from '$core/crypto';
+import { bytesToB64, hexToBytes } from '$core/keys/encode';
 
 function fingerprintOf(key: string): string {
 	return bytesToB64(hexToBytes(key.replace(/[^0-9a-f]/g, '').padEnd(40, '0').slice(0, 40)));

@@ -1,5 +1,4 @@
-import { bytesToB64 } from '$core/crypto';
-import { hexToB64 } from '$core/keys/encode';
+import { hexToB64, bytesToB64 } from '$core/keys/encode';
 import { keystore } from '$core/keystore/keystore-client';
 import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { m } from '$paraglide/messages.js';

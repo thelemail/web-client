@@ -6,9 +6,6 @@ vi.mock('$core/api/messages', () => ({
 	fetchRemoteImages: (...a: unknown[]) => fetchRemoteImages(...a),
 	resolveBimi: (...a: unknown[]) => resolveBimi(...a)
 }));
-vi.mock('$core/crypto', () => ({
-	b64ToBytes: (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
-}));
 
 import { buildInlinedBody } from './inlineImages';
 import type { ParsedEml } from './parseEml';

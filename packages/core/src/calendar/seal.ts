@@ -1,8 +1,7 @@
 import type { CalendarMemberGrant, CalendarRole, CalendarRow } from '$core/api/calendars';
 import type { CalendarKeyMember } from '$core/keystore/protocol';
 import { keystore } from '$core/keystore/keystore-client';
-import { b64ToBytes, bytesToB64 } from '$core/crypto';
-import { b64ToHex } from '$core/keys/encode';
+import { b64ToHex, b64ToBytes, bytesToB64 } from '$core/keys/encode';
 import { aliasKeys } from '$core/stores/aliasKeys.svelte';
 import { calendarKeys } from '$core/stores/calendarKeys.svelte';
 import { m } from '$paraglide/messages.js';

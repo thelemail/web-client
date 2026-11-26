@@ -14,8 +14,9 @@ vi.mock('$core/keystore/keystore-client', () => ({ keystore: { getPublicKey } })
 vi.mock('$core/mail/send', () => ({ senderKey }));
 vi.mock('./identity', () => ({ resolveCalendarIdentity: vi.fn() }));
 vi.mock('./signing', () => ({ calendarSigningContext: vi.fn() }));
-vi.mock('$core/crypto', () => ({
-	b64ToBytes: (v: string) => new Uint8Array(),
+vi.mock('$core/keys/encode', async (original) => ({
+	...(await original<typeof import('$core/keys/encode')>()),
+	b64ToBytes: () => new Uint8Array(),
 	bytesToB64: () => ''
 }));
 

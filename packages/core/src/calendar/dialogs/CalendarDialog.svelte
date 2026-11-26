@@ -13,7 +13,7 @@
 	import * as Dialog from '$core/components/ui/dialog';
 	import { Segmented } from '$core/components/ui/segmented';
 	import { keystore } from '$core/keystore/keystore-client';
-	import { bytesToB64 } from '$core/crypto';
+	import { bytesToB64 } from '$core/keys/encode';
 	import { addresses } from '$core/stores/addresses.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { calendarKeys } from '$core/stores/calendarKeys.svelte';

@@ -1,6 +1,6 @@
 import { addBlockedSender } from '$core/api/blockedSenders';
 import type { BlockedSender } from '$core/api/types';
-import { b64ToBytes, bytesToB64 } from '$core/crypto';
+import { b64ToBytes, bytesToB64 } from '$core/keys/encode';
 import { keystore } from '$core/keystore/keystore-client';
 import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { m } from '$paraglide/messages.js';

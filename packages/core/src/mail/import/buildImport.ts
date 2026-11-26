@@ -1,6 +1,6 @@
 import { keystore } from '$core/keystore/keystore-client';
 import { apiBlobPut } from '$core/api/client';
-import { bytesToB64 } from '$core/crypto';
+import { bytesToB64 } from '$core/keys/encode';
 import { senderKey, SendError, type KeyMaterial } from '../send';
 import { buildMIME } from '../mime';
 import { build as buildAttFrame } from '$core/mail/attframe';

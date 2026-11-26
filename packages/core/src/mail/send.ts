@@ -2,11 +2,10 @@ import * as openpgp from 'openpgp';
 import { auth } from '$core/stores/auth.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { accountKeys } from '$core/stores/accountKeys.svelte';
-import { bytesToB64, hexToBytes } from '$core/crypto';
 import { sendInternal } from '$core/api/messages';
 import { lookupDirectory } from '$core/directory/lookup';
 import { ApiCallError, type ErrorCode, type ExternalKeyTrust } from '$core/api/types';
-import { b64ToHex } from '$core/keys/encode';
+import { b64ToHex, bytesToB64, hexToBytes } from '$core/keys/encode';
 import type {
 	AttachmentDescriptor,
 	ForwardCopy,

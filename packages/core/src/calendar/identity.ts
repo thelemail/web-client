@@ -1,7 +1,7 @@
 import { ApiCallError } from '$core/api/types';
 import type { CalendarIdentityResponse } from '$core/api/calendars';
 import { lookupCalendarIdentity } from '$core/api/calendars';
-import { bytesToHex } from '$core/crypto';
+import { bytesToHex } from '$core/keys/encode';
 import { DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX } from '$core/directory/signing-key';
 import { parseStatementBytes } from '$core/directory/statement';
 import { verifyDirectoryRecord } from '$core/directory/verify';
