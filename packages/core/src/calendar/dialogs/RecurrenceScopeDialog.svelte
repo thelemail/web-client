@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Icon from '$core/components/Icon.svelte';
 	import { faRepeat } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
 	import * as Dialog from '$core/components/ui/dialog';
@@ -61,27 +60,26 @@
 	}
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg cal-dlg-narrow" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		<Icon icon={faRepeat} size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">
+<Dialog.Content size="sm" class="cal-surface">
+	<Dialog.Header icon={faRepeat}>
+		<Dialog.Title>
 			{request.action === 'delete'
 				? m.cal_scope_title_delete({ kind: kindLabel })
 				: m.cal_scope_title_edit({ kind: kindLabel })}
 		</Dialog.Title>
 	</Dialog.Header>
-	<div class="cal-dlg-body">
-		<p class="cal-dlg-lead">
+	<div>
+		<p class="dialog-p">
 			{request.action === 'delete'
 				? m.cal_scope_lead_delete({ title: request.occ.title })
 				: m.cal_scope_lead_edit({ title: request.occ.title })}
 		</p>
 		<div class="scope-options">
-			<Button variant="secondary" disabled={busy} onclick={() => apply('this')}>
+			<Button variant="neutral" disabled={busy} onclick={() => apply('this')}>
 				{m.cal_scope_only_this()}
 			</Button>
 			{#if request.action === 'delete'}
-				<Button variant="secondary" disabled={busy} onclick={() => apply('following')}>
+				<Button variant="neutral" disabled={busy} onclick={() => apply('following')}>
 					{m.cal_scope_following()}
 				</Button>
 			{/if}
@@ -90,9 +88,8 @@
 			</Button>
 		</div>
 	</div>
-	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">{m.cal_scope_guests_note()}</span>
-		<div class="grow"></div>
-		<Button variant="ghost" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
+	<Dialog.Footer>
+		<span class="dialog-note">{m.cal_scope_guests_note()}</span>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

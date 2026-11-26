@@ -1,4 +1,4 @@
-const OWN_KEYS = 'nav, [role="tree"], [role="menu"], [role="dialog"]';
+const OWN_KEYS = 'nav, [role="tree"], [role="menu"], [role="dialog"], [role="alertdialog"]';
 
 export function isListShortcut(e: KeyboardEvent): boolean {
 	if (e.defaultPrevented) return false;

@@ -1,11 +1,17 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import { formatKeyId } from '$core/directory/format';
 	import { i18n } from '$core/i18n/locale.svelte';
 	import Icon from '$core/components/Icon.svelte';
-	import { faCheck, faCircleInfo, faKey, faPlus } from '@fortawesome/pro-regular-svg-icons';
+	import {
+		faCheck,
+		faCircleInfo,
+		faPlus,
+		faUserPen
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import RecordRow from '../RecordRow.svelte';
 	import DelegationCeremony from './DelegationCeremony.svelte';
@@ -47,12 +53,12 @@
 	}
 </script>
 
-<Card icon={faKey} title={m.settings_delegation_title()}>
+<Card title={m.settings_delegation_title()}>
 	{#snippet right()}
 		<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
 		{#if billing.canAddDomains}
 			<Button
-				variant="secondary"
+				variant="tonal"
 				size="sm"
 				disabled={!!blocked}
 				onclick={() => (creating = true)}
@@ -78,11 +84,11 @@
 		<RecordRow label={d.label}>
 			{#snippet badges()}
 				{#if status === 'revoked'}
-					<Badge kind="warn" dot>{m.settings_delegation_badge_revoked()}</Badge>
+					<Badge tone="warning" status>{m.settings_delegation_badge_revoked()}</Badge>
 				{:else if status === 'expired'}
-					<Badge kind="neutral" dot>{m.settings_delegation_badge_expired()}</Badge>
+					<Badge tone="neutral" status>{m.settings_delegation_badge_expired()}</Badge>
 				{:else}
-					<Badge kind="ok" dot>{m.settings_delegation_badge_active()}</Badge>
+					<Badge tone="success" status>{m.settings_delegation_badge_active()}</Badge>
 				{/if}
 			{/snippet}
 			<div class="rec-meta">
@@ -106,7 +112,7 @@
 	{/each}
 
 	{#if items.length === 0 && !delegations.loading}
-		<div class="card-empty">{m.settings_delegation_empty()}</div>
+		<EmptyState compact icon={faUserPen} title={m.settings_delegation_empty()} />
 	{/if}
 
 	{#if delegations.error}

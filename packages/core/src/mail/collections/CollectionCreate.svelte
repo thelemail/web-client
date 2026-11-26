@@ -58,7 +58,7 @@
 <form class="cc-form" onsubmit={submit} novalidate>
 	<NameField bind:value={name} {kind} {problem} {label} reveal={tried} disabled={saving} autofocus />
 	{#if parents.length > 0}
-		<select bind:value={parentId} aria-label={m.mail_collection_parent()} disabled={saving}>
+		<select class="field-input field-sm" bind:value={parentId} aria-label={m.mail_collection_parent()} disabled={saving}>
 			<option value="">{m.mail_collection_no_parent()}</option>
 			{#each parents as p (p.id)}
 				<option value={p.id}>{p.path}</option>

@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { onDestroy, untrack } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faBold,
 		faCode,
@@ -18,7 +19,7 @@
 	import Underline from '@tiptap/extension-underline';
 	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
-	import Seg from '../Seg.svelte';
+	import { Segmented, type SegmentedOption } from '$core/components/ui/segmented';
 	import SignatureSource from './SignatureSource.svelte';
 	import { SignatureImage } from '$core/mail/editor/signatureImage';
 	import { sanitizeSignatureHtml } from '$core/mail/render/sanitizeSignature';
@@ -57,10 +58,10 @@
 	let pasteUndo = $state<string | null>(null);
 	let fileInputRef: HTMLInputElement | undefined = $state();
 
-	const modeOptions: { v: SignatureMode; l: string }[] = $derived([
-		{ v: 'rich', l: m.settings_signature_mode_rich() },
-		{ v: 'html', l: 'HTML' },
-		{ v: 'markdown', l: 'Markdown' }
+	const modeOptions: SegmentedOption<SignatureMode>[] = $derived([
+		{ value: 'rich', label: m.settings_signature_mode_rich() },
+		{ value: 'html', label: 'HTML' },
+		{ value: 'markdown', label: 'Markdown' }
 	]);
 
 	const sourcePlaceholder = $derived.by(() => {
@@ -308,7 +309,11 @@
 </script>
 
 <div class="sig-modes">
-	<Seg value={mode} options={modeOptions} label={m.settings_signature_mode_aria()} onChange={switchMode} />
+	<Segmented
+		bind:value={() => mode, (v) => v && switchMode(v)}
+		options={modeOptions}
+		aria-label={m.settings_signature_mode_aria()}
+	/>
 </div>
 
 {#if locked}
@@ -319,21 +324,35 @@
 
 {#if mode === 'rich'}
 	<div class="sig-tools">
-		<button type="button" title={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Icon icon={faBold} size={16} /></button>
-		<button type="button" title={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Icon icon={faItalic} size={16} /></button>
-		<button type="button" title={m.settings_signature_link()} onclick={setLink} disabled={locked}><Icon icon={faLink} size={16} /></button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_bold()} onclick={toggleBold} disabled={locked}><Icon icon={faBold} size={16} /></Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_italic()} onclick={toggleItalic} disabled={locked}><Icon icon={faItalic} size={16} /></Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_link()} onclick={setLink} disabled={locked}><Icon icon={faLink} size={16} /></Button>
 		<span class="divr"></span>
-		<button type="button" title={m.settings_signature_insert_image()} onclick={pickImage} disabled={imageBusy || locked}>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			tooltip={m.settings_signature_insert_image()}
+			onclick={pickImage}
+			busy={imageBusy}
+			disabled={locked}
+		>
 			{#if imageBusy}<Icon icon={faSpinnerThird} size={16} class="spin" />{:else}<Icon icon={faImage} size={16} />{/if}
-		</button>
-		<button type="button" title={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Icon icon={faCode} size={16} /></button>
+		</Button>
+		<Button variant="ghost" size="icon-sm" tooltip={m.settings_signature_inline_code()} onclick={toggleCode} disabled={locked}><Icon icon={faCode} size={16} /></Button>
 	</div>
 	<div bind:this={mountEl} class="sig-edit-mount"></div>
 {:else}
 	<div class="sig-tools">
-		<button type="button" title={m.settings_signature_insert_image()} onclick={pickImage} disabled={imageBusy || locked}>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			tooltip={m.settings_signature_insert_image()}
+			onclick={pickImage}
+			busy={imageBusy}
+			disabled={locked}
+		>
 			{#if imageBusy}<Icon icon={faSpinnerThird} size={16} class="spin" />{:else}<Icon icon={faImage} size={16} />{/if}
-		</button>
+		</Button>
 	</div>
 	<SignatureSource
 		value={source}
@@ -375,8 +394,8 @@
 	.sig-edit-mount {
 		min-height: 130px;
 		padding: 12px 14px;
-		background: var(--paper-50);
-		border: 1px solid var(--paper-200);
+		background: var(--bg-raised);
+		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-control);
 		font-size: 14px;
 		line-height: 1.55;

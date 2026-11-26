@@ -116,7 +116,7 @@
 
 {#if step === 0}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
 				<h1>{m.lc_cancel_survey_title()}</h1>
@@ -136,7 +136,7 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" onclick={toConfirm}>
@@ -151,7 +151,7 @@
 	</div>
 {:else if step === 1}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
 				<h1>{m.lc_cancel_offer_title()}</h1>
@@ -170,7 +170,7 @@
 				</Button>
 				{#if canMoveToFree}
 					<Button
-						variant="secondary"
+						variant="tonal"
 						size="lg"
 						block
 						href={`/u/${slot}/lifecycle/downgrade`}
@@ -186,7 +186,7 @@
 	</div>
 {:else if step === 2}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_cancel_eyebrow()}</p>
 				<h1>{m.lc_cancel_confirm_title()}</h1>
@@ -208,7 +208,7 @@
 			</ul>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = showOffer ? 1 : 0)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => (step = showOffer ? 1 : 0)}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="dangerSolid" size="lg" disabled={busy} onclick={confirmCancel}>
@@ -221,7 +221,7 @@
 	</div>
 {:else}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<div class="seal"><Icon icon={faCheck} size={20} /></div>
 				<h1>{m.lc_cancel_done_title()}</h1>

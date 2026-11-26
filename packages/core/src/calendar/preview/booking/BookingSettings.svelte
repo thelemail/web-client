@@ -78,7 +78,7 @@
 					<div class="sr-s">{m.cal_bkset_assign_desc()}</div>
 				</div>
 				<span class="ownchip">
-					<Avatar initials="FR" size={20} bg="#234132" fg="#EEF2EA" />François
+					<Avatar initials="FR" size={20} bg="var(--pine-100)" fg="var(--pine-700)" />François
 				</span>
 			</div>
 		</div>

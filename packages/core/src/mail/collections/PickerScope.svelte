@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
+	import { Segmented } from '$core/components/ui/segmented';
 
 	type Scope = 'conversation' | 'message';
 
@@ -15,27 +16,16 @@
 {#if toggle || text || future}
 	<div class="pk-scope">
 		{#if toggle}
-			<div class="pk-seg" role="radiogroup" aria-label={m.mail_scope_label()}>
-				<button
-					type="button"
-					role="radio"
-					class:on={toggle.value === 'conversation'}
-					aria-checked={toggle.value === 'conversation'}
-					onmousedown={(e) => e.preventDefault()}
-					onclick={() => toggle?.onChange('conversation')}
-				>
-					{m.mail_scope_conversation({ count: toggle.count })}
-				</button>
-				<button
-					type="button"
-					role="radio"
-					class:on={toggle.value === 'message'}
-					aria-checked={toggle.value === 'message'}
-					onmousedown={(e) => e.preventDefault()}
-					onclick={() => toggle?.onChange('message')}
-				>
-					{m.mail_scope_latest()}
-				</button>
+			<div class="pk-seg" role="presentation" onmousedown={(e) => e.preventDefault()}>
+				<Segmented
+					block
+					aria-label={m.mail_scope_label()}
+					bind:value={() => toggle?.value, (v) => toggle?.onChange(v)}
+					options={[
+						{ value: 'conversation', label: m.mail_scope_conversation({ count: toggle.count }) },
+						{ value: 'message', label: m.mail_scope_latest() }
+					]}
+				/>
 			</div>
 		{:else if text}
 			<p class="pk-scope-text">{text}</p>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowsRotate,
 		faCloudSlash,
@@ -28,8 +29,8 @@
 		<span class="sb-count">{m.cal_sysbar_queued({ count })}</span>
 	{/if}
 	<div class="grow"></div>
-	<button type="button" class="sb-a" onclick={() => (cal.dialog = 'sync')}>{m.cal_sysbar_review_queue()}</button>
+	<Button variant="neutral" size="sm" onclick={() => (cal.dialog = 'sync')}>{m.cal_sysbar_review_queue()}</Button>
 	{#if !calendarStore.online || calendarStore.halted}
-		<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>{m.cal_sysbar_retry_now()}</button>
+		<Button variant="neutral" size="sm" onclick={() => calendarStore.flush()}>{m.cal_sysbar_retry_now()}</Button>
 	{/if}
 </div>

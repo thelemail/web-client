@@ -68,10 +68,10 @@
 			{/each}
 		</div>
 		<div class="phrase-acts">
-			<Button variant="secondary" size="sm" onclick={copyCodes}>
+			<Button variant="neutral" size="sm" onclick={copyCodes}>
 				<Icon icon={faCopy} size={14} />{m.common_copy()}
 			</Button>
-			<Button variant="secondary" size="sm" onclick={downloadCodes}>
+			<Button variant="neutral" size="sm" onclick={downloadCodes}>
 				<Icon icon={faDownload} size={14} />{m.settings_security_backup_download()}
 			</Button>
 			{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_security_backup_saved()}</span>{/if}

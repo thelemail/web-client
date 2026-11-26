@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '$core/components/ui/badge';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faArrowRight,
@@ -167,7 +168,7 @@
 				<div class="alias-compose">
 					<input
 						id="add-mem-local"
-						class="tin mono"
+						class="field-input tin mono"
 						bind:value={local}
 						placeholder={fam ? 'jules' : 'camille'}
 						autocomplete="off"
@@ -222,7 +223,7 @@
 				</label>
 				<input
 					id="add-mem-email"
-					class="tin mono"
+					class="field-input tin mono"
 					type="email"
 					bind:value={email}
 					placeholder={m.settings_ceremony_member_email_placeholder()}
@@ -276,7 +277,7 @@
 		>
 			<div class="done-pill">
 				<span class="mono">{invitedAddress}</span>
-				{#if !fam}<span class="dp-tag">{roleLabel}</span>{/if}
+				{#if !fam}<Badge tone="brand" size="sm">{roleLabel}</Badge>{/if}
 			</div>
 
 			<div class="invite-link">
@@ -311,7 +312,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
 				{submitting
 					? m.settings_ceremony_member_creating()

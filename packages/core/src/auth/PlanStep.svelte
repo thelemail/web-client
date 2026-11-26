@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import Stepper from '$core/auth/Stepper.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import {
 		PRODUCTS,
 		MIN_SEATS,
@@ -20,7 +20,6 @@
 		faArrowLeft,
 		faArrowRight,
 		faBriefcase,
-		faCheck,
 		faMinus,
 		faPlus,
 		faShieldCheck,
@@ -28,6 +27,8 @@
 		faUserGroup
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { OptionTiles } from '$core/components/ui/option-tiles';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { m } from '$paraglide/messages.js';
 
 	let {
@@ -56,7 +57,6 @@
 		footer?: Snippet | null;
 	} = $props();
 
-	const eyebrowText = $derived(eyebrow ?? m.auth_step_of({ step: 3, total: 4 }));
 	const headingText = $derived(heading ?? m.auth_plan_heading());
 	const ctaText = $derived(ctaVerb ?? m.auth_plan_cta_continue_payment());
 	const busyText = $derived(busyLabel ?? m.auth_preparing_checkout());
@@ -100,141 +100,113 @@
 	}
 </script>
 
-<div class="card-surface screen-fade wide">
+<div class="card-surface wide">
 	{#if showStepper}
-		<Stepper step={2} {labels} />
+		<StepPills total={labels.length} current={2} />
 	{/if}
 	<div class="card-head">
-		{#if eyebrowText}
-			<p class="eyebrow">{eyebrowText}</p>
+		{#if eyebrow}
+			<p class="eyebrow">{eyebrow}</p>
 		{/if}
 		<h1>{headingText}</h1>
 		<p>{product.tagline}</p>
 	</div>
 
-	<div class="prodtabs" role="radiogroup" aria-label={m.auth_plan_product_group()}>
-		{#each PRODUCTS as p (p.id)}
-			{@const ProductIcon = ICONS[p.id]}
-			<button
-				type="button"
-				role="radio"
-				aria-checked={p.id === product.id}
-				class="prodtab"
-				class:cur={p.id === product.id}
-				onclick={() => pickProduct(p.id)}
-			>
-				{#if p.badge}
-					<span class="mostbadge">{p.badge}</span>
-				{/if}
-				<span class="pt-top">
-					<Icon icon={ProductIcon} size={16} />
-					<span class="pt-name">{p.name}</span>
-				</span>
-				<span class="pt-from mono">
-					{p.perMailbox
-						? m.auth_plan_from_per_mailbox({ price: eur(perMonth(p.tiers[0])) })
-						: m.auth_plan_from({ price: eur(perMonth(p.tiers[0])) })}
-				</span>
-			</button>
-		{/each}
-	</div>
+	<OptionTiles
+		class="prodtabs"
+		columns={3}
+		aria-label={m.auth_plan_product_group()}
+		value={product.id}
+		onValueChange={(v) => pickProduct(v as ProductId)}
+		options={PRODUCTS.map((p) => ({ value: p.id, title: p.name, icon: ICONS[p.id], badge: p.badge }))}
+	>
+		{#snippet tile(option)}
+			{@const p = PRODUCTS.find((x) => x.id === option.value)!}
+			<span class="pt-from mono">
+				{p.perMailbox
+					? m.auth_plan_from_per_mailbox({ price: eur(perMonth(p.tiers[0])) })
+					: m.auth_plan_from({ price: eur(perMonth(p.tiers[0])) })}
+			</span>
+		{/snippet}
+	</OptionTiles>
 
-	<div class="periodtabs" role="radiogroup" aria-label={m.auth_plan_period_group()}>
-		<button
-			type="button"
-			role="radio"
-			aria-checked={!monthly}
-			class="periodtab"
-			class:cur={!monthly}
-			onclick={() => pickPeriod('year')}
-		>
-			{m.auth_plan_period_annual()}
-		</button>
-		<button
-			type="button"
-			role="radio"
-			aria-checked={monthly}
-			class="periodtab"
-			class:cur={monthly}
-			onclick={() => pickPeriod('month')}
-		>
-			{m.auth_plan_period_monthly()}
-		</button>
-	</div>
+	<Segmented
+		value={sel.period}
+		options={[
+			{ value: 'year', label: m.auth_plan_period_annual() },
+			{ value: 'month', label: m.auth_plan_period_monthly() }
+		]}
+		onValueChange={pickPeriod}
+		aria-label={m.auth_plan_period_group()}
+		class="periodseg"
+	/>
 
 	{#if product.perMailbox}
 		<div class="seats">
 			<span class="seats-lab">{m.auth_plan_seats_label()}</span>
 			<span class="seats-ctl">
-				<button
-					type="button"
-					class="seatbtn"
+				<Button
+					variant="neutral"
+					size="icon-sm"
 					aria-label={m.auth_plan_seats_fewer()}
 					disabled={sel.seats <= MIN_SEATS}
 					onclick={() => setSeats(sel.seats - 1)}
 				>
 					<Icon icon={faMinus} size={15} />
-				</button>
+				</Button>
 				<span class="seats-n mono">{sel.seats}</span>
-				<button
-					type="button"
-					class="seatbtn"
+				<Button
+					variant="neutral"
+					size="icon-sm"
 					aria-label={m.auth_plan_seats_more()}
 					disabled={sel.seats >= MAX_SEATS}
 					onclick={() => setSeats(sel.seats + 1)}
 				>
 					<Icon icon={faPlus} size={15} />
-				</button>
+				</Button>
 			</span>
 			<span class="seats-note">{m.auth_plan_seats_note({ min: MIN_SEATS })}</span>
 		</div>
 	{/if}
 
-	<div class="tiers" role="radiogroup" aria-label={m.auth_plan_tier_group()}>
-		{#each product.tiers as t (t.id)}
-			{@const seld = t.id === sel.tier}
-			<button
-				type="button"
-				role="radio"
-				aria-checked={seld}
-				class="tiercard"
-				class:sel={seld}
-				onclick={() => pickTier(t.id)}
-			>
-				{#if t.badge}
-					<span class="mostbadge">{t.badge}</span>
-				{/if}
-				<span class="tc-pick" aria-hidden="true"><Icon icon={faCheck} size={13} /></span>
-				<span class="tc-name">{t.name}</span>
-				{#if t.framing}
-					<span class="tc-framing serif">{t.framing}</span>
-				{:else}
-					<span class="tc-framing serif">&nbsp;</span>
-				{/if}
-				<span class="tc-price">
-					<b class="serif">{eur(perMonth(t))}</b>
-					<span class="tc-per mono">{product.perMailbox ? m.auth_plan_per_mailbox_month() : m.auth_plan_per_month()}</span>
+	<OptionTiles
+		class="tiers"
+		columns={2}
+		aria-label={m.auth_plan_tier_group()}
+		value={sel.tier ?? undefined}
+		onValueChange={pickTier}
+		options={product.tiers.map((t) => ({ value: t.id, title: t.name, badge: t.badge }))}
+	>
+		{#snippet tile(option, selected)}
+			{@const t = product.tiers.find((x) => x.id === option.value)!}
+			{#if t.framing}
+				<span class="tc-framing serif">{t.framing}</span>
+			{:else}
+				<span class="tc-framing serif">&nbsp;</span>
+			{/if}
+			<span class="tc-price">
+				<b class="serif">{eur(perMonth(t))}</b>
+				<span class="tc-per mono">{product.perMailbox ? m.auth_plan_per_mailbox_month() : m.auth_plan_per_month()}</span>
+			</span>
+			<span class="tc-charge mono">{chargeNote(t)}</span>
+			{#if monthly}
+				<span class="tc-saving mono">{savingNote(t)}</span>
+			{/if}
+			{#if product.perMailbox}
+				<span class="tc-total mono" class:on={selected}>
+					{m.auth_plan_seats_total({
+						count: sel.seats,
+						total: pricePerPeriod(t.prices[sel.period] * sel.seats, sel.period)
+					})}
 				</span>
-				<span class="tc-charge mono">{chargeNote(t)}</span>
-				{#if monthly}
-					<span class="tc-saving mono">{savingNote(t)}</span>
-				{/if}
-				{#if product.perMailbox}
-					<span class="tc-total mono" class:on={seld}>
-						{m.auth_plan_seats_total({
-							count: sel.seats,
-							total: pricePerPeriod(t.prices[sel.period] * sel.seats, sel.period)
-						})}
-					</span>
-				{/if}
-				<span class="tc-rows">
-					{#each t.rows as [k, v] (k)}
-						<span class="trow"><span class="tk">{k}</span><span class="tv mono">{v}</span></span>
-					{/each}
-				</span>
-			</button>
-		{/each}
-	</div>
+			{/if}
+			<span class="tc-rows">
+				{#each t.rows as [k, v] (k)}
+					<span class="trow"><span class="tk">{k}</span><span class="tv mono">{v}</span></span>
+				{/each}
+			</span>
+		{/snippet}
+	</OptionTiles>
 
 	<p class="bothline">
 		<Icon icon={faShieldCheck} size={15} />
@@ -244,14 +216,12 @@
 	<div class="actions">
 		<div class="btnrow">
 			{#if onBack}
-				<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={onBack}>
+				<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={onBack}>
 					<Icon icon={faArrowLeft} size={17} />
 				</Button>
 			{/if}
-			<Button variant="primary" size="lg" disabled={!tier || busy} onclick={onNext}>
-				{#if busy}
-					<span class="spinner"></span>{busyText}
-				{:else if tier}
+			<Button variant="primary" size="lg" disabled={!tier} {busy} busyLabel={busyText} onclick={onNext}>
+				{#if tier}
 					{m.auth_plan_cta({
 						verb: ctaText,
 						plan: tier.name,

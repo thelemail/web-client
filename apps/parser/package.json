@@ -4,7 +4,7 @@
   "version": "0.1.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --host 127.0.0.1 --strictPort",
     "build": "rm -rf build-meta && vite build && node ../../scripts/parser-headers.ts",
     "preview": "vite preview",
     "prepare": "svelte-kit sync || echo ''",

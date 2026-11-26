@@ -75,7 +75,7 @@
 	<title>{m.auth_picker_page_title()}</title>
 </svelte:head>
 
-<div class="card-surface screen-fade">
+<div class="card-surface">
 	<div class="card-head">
 		<p class="eyebrow">{m.auth_picker_eyebrow()}</p>
 		<h1>{m.auth_picker_title()}</h1>
@@ -95,8 +95,8 @@
 						src={row.avatarUrl}
 						fit="cover"
 						size={38}
-						bg={row.unlocked ? 'var(--pine-700)' : 'var(--pine-100)'}
-						fg={row.unlocked ? '#EEF2EA' : 'var(--pine-700)'}
+						bg={row.unlocked ? 'var(--primary)' : 'var(--pine-100)'}
+						fg={row.unlocked ? 'var(--primary-fg)' : 'var(--pine-700)'}
 					/>
 					<span class="ap-tx">
 						{#if row.name}

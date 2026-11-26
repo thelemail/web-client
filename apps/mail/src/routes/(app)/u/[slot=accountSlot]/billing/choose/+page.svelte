@@ -159,7 +159,7 @@
 </svelte:head>
 
 {#snippet signOutFoot()}
-	<p class="switch">
+	<p class="af-switch">
 		{m.billing_choose_signed_in_as({ email: auth.email ?? m.billing_choose_this_account() })}
 		<button type="button" class="linklike" onclick={signOut}>{m.billing_choose_sign_out()}</button>
 	</p>
@@ -170,19 +170,20 @@
 <AuthShell>
 	<div class="card">
 		{#if platform.billing === 'handoff'}
-			<div class="card-surface screen-fade">
+			<div class="card-surface">
 				<div class="welcome">
 					<h1>{m.billing_choose_handoff_title()}</h1>
 					<p>
 						{m.billing_choose_handoff_body()}
 					</p>
-					<button
-						type="button"
-						class="primary"
+					<Button
+						variant="primary"
+						size="lg"
+						block
 						onclick={() => platform.openExternal(`${platform.returnOrigin()}/u/${slot}/billing/choose`)}
 					>
 						{m.billing_choose_handoff_open()}
-					</button>
+					</Button>
 					<button type="button" class="linklike" onclick={() => billing.refresh()}>
 						{m.billing_choose_handoff_done()}
 					</button>
@@ -191,7 +192,7 @@
 		{:else if !ready}
 			<LoadState kind="loading" label={m.common_loading()} rows={3} />
 		{:else if switched}
-			<div class="card-surface screen-fade">
+			<div class="card-surface">
 				<div class="welcome">
 					<span class="switch-check"><Icon icon={faCircleCheck} size={44} /></span>
 					<h1>{m.billing_choose_switched_title()}</h1>
@@ -216,7 +217,7 @@
 				{@render signOutFoot()}
 			</div>
 		{:else if alreadyActive && !isOwner}
-			<div class="card-surface screen-fade">
+			<div class="card-surface">
 				<div class="welcome">
 					<h1>{m.billing_choose_member_active_title()}</h1>
 					<p>{m.billing_choose_member_active_body()}</p>
@@ -247,7 +248,7 @@
 				footer={signOutFoot}
 			/>
 		{:else if paymentProblem}
-			<div class="card-surface screen-fade">
+			<div class="card-surface">
 				<div class="welcome">
 					<h1>{m.billing_choose_past_due_title()}</h1>
 					<p>
@@ -267,7 +268,7 @@
 				{@render signOutFoot()}
 			</div>
 		{:else if !isOwner && workspaces.workspace}
-			<div class="card-surface screen-fade">
+			<div class="card-surface">
 				<div class="welcome">
 					<h1>{m.billing_choose_member_pending_title()}</h1>
 					<p>

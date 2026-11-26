@@ -70,7 +70,7 @@
 		<div class="avail-note">
 			<span>{availability.error}</span>
 			<Button
-				variant="secondary"
+				variant="neutral"
 				size="sm"
 				onclick={() => availability.load(cal.weekWindow.from, cal.weekWindow.to, true)}
 			>

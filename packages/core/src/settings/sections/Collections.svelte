@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
-	import { DropdownMenu } from 'bits-ui';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faEllipsis,
@@ -103,7 +104,7 @@
 {#snippet card(kind: MailCollectionKind)}
 	{@const entries = all(kind)}
 	{@const folder = kind === 'folder'}
-	<Card icon={folder ? faFolder : faTag} title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
+	<Card title={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
 		{#snippet right()}
 			{#if mailCollections.loaded}
 				<span class="card-meta">
@@ -123,9 +124,11 @@
 				onRetry={() => void mailCollections.load()}
 			/>
 		{:else if entries.length === 0}
-			<div class="coll-set-empty">
-				{folder ? m.settings_collections_no_folders() : m.settings_collections_no_labels()}
-			</div>
+			<EmptyState
+				compact
+				icon={folder ? faFolder : faTag}
+				title={folder ? m.settings_collections_no_folders() : m.settings_collections_no_labels()}
+			/>
 		{/if}
 
 		<ul class="coll-set-list" aria-label={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>
@@ -148,8 +151,9 @@
 					{#if e.sealed}
 						<span class="coll-set-locked" title={m.settings_collections_locked_row()}><Icon icon={faLock} size={14} /></span>
 					{:else}
-						<button
-							type="button"
+						<Button
+							variant="ghost"
+							size="icon-sm"
 							class="rowmenu"
 							aria-label={m.mail_sidebar_actions({ name: e.path })}
 							aria-haspopup="menu"
@@ -157,7 +161,7 @@
 							onclick={(ev) => (menu = { id: e.id, anchor: ev.currentTarget })}
 						>
 							<Icon icon={faEllipsis} size={16} />
-						</button>
+						</Button>
 					{/if}
 				</li>
 			{/each}
@@ -169,7 +173,7 @@
 				{#key c.key}
 					<CollectionCreate kind={c.kind} parent={c.parent} onCreated={created} />
 				{/key}
-				<Button variant="ghost" size="sm" onclick={() => (creating = null)}>{m.common_cancel()}</Button>
+				<Button variant="neutral" size="sm" onclick={() => (creating = null)}>{m.common_cancel()}</Button>
 			</div>
 		{:else}
 			<AddRow
@@ -198,9 +202,9 @@
 	{#if menu && menuEntry}
 		{@const e = menuEntry}
 		{@const returnTo = menu.anchor}
-		<DropdownMenu.Portal to=".settings-app">
-			<DropdownMenu.Content
+		<DropdownMenu.Content
 				class="coll-set-menu"
+				portalProps={{ to: '.settings-app' }}
 				customAnchor={returnTo}
 				side="bottom"
 				align="end"
@@ -215,8 +219,8 @@
 					if (returnTo.isConnected) returnTo.focus();
 				}}
 			>
-				<div class="coll-set-menu-title" title={e.path}>{e.path}</div>
-				<DropdownMenu.Item class="mitem" onSelect={() => void run(e, () => mailCollections.setFavorite(e.id, !e.favorite))}>
+				<DropdownMenu.Label class="coll-menu-title" title={e.path}>{e.path}</DropdownMenu.Label>
+				<DropdownMenu.Item onSelect={() => void run(e, () => mailCollections.setFavorite(e.id, !e.favorite))}>
 					{#if e.favorite}
 						<Icon icon={faStarExclamation} />{m.mail_sidebar_remove_favorite()}
 					{:else}
@@ -225,7 +229,6 @@
 				</DropdownMenu.Item>
 				{#if e.depth + 1 < MAX_COLLECTION_DEPTH}
 					<DropdownMenu.Item
-						class="mitem"
 						onSelect={() => {
 							handedOff = true;
 							startCreate(e.kind, e.id);
@@ -238,7 +241,7 @@
 						{/if}
 					</DropdownMenu.Item>
 				{/if}
-				<DropdownMenu.Separator class="msep" />
+				<DropdownMenu.Separator />
 				<CollectionManageItems
 					entry={e}
 					index={menuSibs.indexOf(e.id)}
@@ -250,7 +253,6 @@
 					onDelete={() => handOff((d) => d.remove(e, returnTo))}
 				/>
 			</DropdownMenu.Content>
-		</DropdownMenu.Portal>
 	{/if}
 </DropdownMenu.Root>
 

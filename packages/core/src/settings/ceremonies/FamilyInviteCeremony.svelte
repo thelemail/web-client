@@ -107,7 +107,7 @@
 				<label for="fam-inv-email">{m.settings_ceremony_family_invite_email_label()}</label>
 				<input
 					id="fam-inv-email"
-					class="tin mono"
+					class="field-input tin mono"
 					type="email"
 					bind:value={email}
 					placeholder="jules@{platformDomains.default}"
@@ -170,7 +170,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
 				{submitting
 					? m.settings_ceremony_family_invite_sending()

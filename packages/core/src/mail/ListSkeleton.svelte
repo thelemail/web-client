@@ -17,11 +17,11 @@
 			<span class="lsk-av"></span>
 			<div class="lsk-tx">
 				<div class="lsk-top">
-					<span class="lsk-bar lsk-from"></span>
-					<span class="lsk-bar lsk-when"></span>
+					<span class="skeleton lsk-bar lsk-from"></span>
+					<span class="skeleton lsk-bar lsk-when"></span>
 				</div>
-				<span class="lsk-bar lsk-subj" style:width={WIDTHS[i % WIDTHS.length]}></span>
-				<span class="lsk-bar lsk-prev"></span>
+				<span class="skeleton lsk-bar lsk-subj" style:width={WIDTHS[i % WIDTHS.length]}></span>
+				<span class="skeleton lsk-bar lsk-prev"></span>
 			</div>
 		</div>
 	{/each}
@@ -53,11 +53,8 @@
 		gap: 12px;
 	}
 	.lsk-bar {
-		display: block;
 		height: 9px;
 		border-radius: var(--radius-xs);
-		background: color-mix(in oklab, var(--fg-strong) 8%, transparent);
-		animation: lsk-pulse 1.4s ease-in-out infinite;
 	}
 	.lsk-from {
 		width: 34%;
@@ -70,19 +67,9 @@
 		height: 8px;
 		opacity: 0.6;
 	}
-	@keyframes lsk-pulse {
-		50% {
-			opacity: 0.5;
-		}
-	}
 	@media (max-width: 1000px) {
 		.lsk-row {
 			padding: 12px 12px 12px 10px;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.lsk-bar {
-			animation: none;
 		}
 	}
 </style>

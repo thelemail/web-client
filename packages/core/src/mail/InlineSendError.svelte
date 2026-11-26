@@ -2,6 +2,7 @@
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowRightToBracket,
 		faArrowsRotate,
@@ -251,12 +252,17 @@
 		</div>
 	</div>
 	<div class="se-acts">
-		<button type="button" class="se-btn primary" onclick={conf.onAction}>
+		<Button variant={conf.tone === 'warn' ? 'caution' : 'primary'} size="sm" onclick={conf.onAction}>
 			<Icon icon={conf.actionIcon} size={14} />{conf.actionLabel}
-		</button>
-		<button type="button" class="se-x" title={msg.mail_send_err_dismiss()} onclick={onDismiss}>
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon-xs"
+			tooltip={msg.mail_send_err_dismiss()}
+			onclick={onDismiss}
+		>
 			<Icon icon={faXmark} size={15} />
-		</button>
+		</Button>
 	</div>
 </div>
 

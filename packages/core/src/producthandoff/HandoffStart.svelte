@@ -2,10 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { signInAtAuth, unlockAtAuth } from '$core/custody/unlock';
 	import { localForkPath } from '$core/fork';
-	import { appOrigin } from '$core/products';
+	import { appOrigin, productHost } from '$core/products';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { startFor } from './fallback';
@@ -14,6 +15,7 @@
 	const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 	history.replaceState(null, '', window.location.pathname);
 	let error = $state<string | null>(null);
+	const registering = params.get('intent') === 'register';
 
 	async function inTab(accountId: string | null, route: string): Promise<never> {
 		window.opener = null;
@@ -42,24 +44,24 @@
 </script>
 
 <AuthShell>
-	<div class="card handoffcard" aria-live="polite">
+	<div class="card" aria-live="polite">
 		{#if error}
-			<h1>{m.handoff_title()}</h1>
-			<p class="handoffmsg">{error}</p>
-			<Button variant="primary" size="lg" href={appOrigin()}>{m.cal_fork_back()}</Button>
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.handoff_title()}</h1>
+					<p>{error}</p>
+				</div>
+				<Button variant="primary" size="lg" block href={appOrigin()}>{m.cal_fork_back()}</Button>
+			</div>
 		{:else}
-			<p class="handoffmsg">{m.handoff_opening()}</p>
+			<HandoffCard
+				title={registering ? m.handoff_to_auth_register_title() : m.handoff_start_title()}
+				lede={registering
+					? m.handoff_to_auth_register_lede({ host: productHost('auth') })
+					: m.handoff_start_lede({ host: productHost('auth') })}
+				to={productHost('auth')}
+				retry={() => location.assign(appOrigin())}
+			/>
 		{/if}
 	</div>
 </AuthShell>
-
-<style>
-	.handoffcard {
-		display: grid;
-		gap: 0.75rem;
-		justify-items: start;
-	}
-	.handoffmsg {
-		color: var(--muted-foreground);
-	}
-</style>

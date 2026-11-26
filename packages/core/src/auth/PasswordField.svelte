@@ -5,6 +5,7 @@
 	import { m } from '$paraglide/messages.js';
 
 	let {
+		id: givenId,
 		label,
 		value = $bindable(''),
 		placeholder,
@@ -14,8 +15,11 @@
 		invalid = false,
 		describedby,
 		focusOnMount = false,
+		focus = false,
+		mono = true,
 		disabled = false
 	}: {
+		id?: string;
 		label: string;
 		value: string;
 		placeholder?: string;
@@ -25,11 +29,19 @@
 		invalid?: boolean;
 		describedby?: string;
 		focusOnMount?: boolean;
+		focus?: boolean;
+		mono?: boolean;
 		disabled?: boolean;
 	} = $props();
 
 	let show = $state(false);
-	const id = $props.id();
+	let input: HTMLInputElement | undefined = $state();
+	const fallbackId = $props.id();
+	const id = $derived(givenId ?? fallbackId);
+
+	$effect(() => {
+		if (focus && input && !disabled) input.focus();
+	});
 </script>
 
 <div class="field">
@@ -40,8 +52,10 @@
 	<div class="pw">
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
+			bind:this={input}
 			{id}
 			class="inp"
+			class:mono
 			type={show ? 'text' : 'password'}
 			bind:value
 			{placeholder}
@@ -51,7 +65,10 @@
 			autofocus={focusOnMount}
 			{disabled}
 			onkeydown={(e) => {
-				if (e.key === 'Enter' && onEnter) onEnter();
+				if (e.key === 'Enter' && onEnter) {
+					e.preventDefault();
+					onEnter();
+				}
 			}}
 		/>
 		<button

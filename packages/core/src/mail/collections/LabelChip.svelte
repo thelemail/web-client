@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Icon from '$core/components/Icon.svelte';
-	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
-	import { collectionChip, collectionColor } from './palette';
+	import { Chip } from '$core/components/ui/chip';
+	import { collectionColor } from './palette';
 
 	interface Props {
 		name: string;
@@ -14,33 +13,24 @@
 
 	let { name, path, color, partial = false, onRemove }: Props = $props();
 
-	const tone = $derived(collectionChip(color));
 	const described = $derived(partial ? m.mail_label_chip_partial({ label: path }) : path);
+
+	function keepRemoveLocal(e: MouseEvent) {
+		if ((e.target as Element).closest('.chip-remove')) e.stopPropagation();
+	}
 </script>
 
-<span
-	class="lchip"
-	class:partial
-	style:--chip-bg={tone.bg}
-	style:--chip-fg={tone.fg}
+<Chip
+	size="sm"
+	class={['lchip', { partial }]}
 	title={described}
+	removeLabel={onRemove ? m.mail_label_chip_remove({ label: path }) : undefined}
+	onremove={onRemove}
+	onclick={onRemove ? keepRemoveLocal : undefined}
 >
-	<span class="lchip-dot" style:background={collectionColor(color)} aria-hidden="true"></span>
-	<span class="lchip-name" aria-hidden={partial || undefined}>{name}</span>
+	{#snippet leading()}<span class="lchip-dot" style:background={collectionColor(color)} aria-hidden="true"></span>{/snippet}
+	<span aria-hidden={partial || undefined}>{name}</span>
 	{#if partial}
 		<span class="sr-only">{described}</span>
 	{/if}
-	{#if onRemove}
-		<button
-			type="button"
-			class="lchip-x"
-			aria-label={m.mail_label_chip_remove({ label: path })}
-			onclick={(e) => {
-				e.stopPropagation();
-				onRemove();
-			}}
-		>
-			<Icon icon={faXmark} size={11} />
-		</button>
-	{/if}
-</span>
+</Chip>

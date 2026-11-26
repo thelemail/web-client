@@ -20,6 +20,7 @@
 
 <span class="sel">
 	<select
+		class="field-input field-sm"
 		{id}
 		{value}
 		aria-label={ariaLabel}

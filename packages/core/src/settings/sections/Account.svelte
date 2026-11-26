@@ -5,8 +5,6 @@
 	import {
 		faArrowUpRightFromSquare,
 		faBuilding,
-		faCircleExclamation,
-		faDownload,
 		faTrashCan,
 		faUser,
 		faUsers
@@ -15,7 +13,7 @@
 	import SecHead from '../SecHead.svelte';
 	import Row from '../Row.svelte';
 	import Card from '../Card.svelte';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import MembershipCard from '../MembershipCard.svelte';
 	import type { CeremonyKind } from '../data';
 	import { page } from '$app/state';
@@ -156,7 +154,7 @@
 					<Icon icon={PlanIcon} size={18} />
 					<span>{planName}</span>
 					{#if sub?.status === 'past_due'}
-						<Badge kind="warn">{m.settings_account_payment_problem()}</Badge>
+						<Badge tone="warning">{m.settings_account_payment_problem()}</Badge>
 					{/if}
 				</div>
 				<div class="plan-price">
@@ -180,7 +178,7 @@
 					</div>
 				{/if}
 			</div>
-			<div class="plan-acts">
+			<div class="plan-acts on-inverse">
 				{#if isOwner}
 					{#if isFree}
 						<Button variant="primary" size="sm" onclick={choosePlan}>
@@ -231,12 +229,12 @@
 
 	{#if isSoloFree}
 		{#if isOwner}
-			<Card icon={faUsers} title={m.settings_account_start_family()}>
+			<Card title={m.settings_account_start_family()}>
 				<Row
 					t={m.settings_account_start_family_row()}
 					d={m.settings_account_start_family_desc()}
 				>
-					<Button variant="secondary" size="sm" onclick={() => launch('family')}>
+					<Button variant="tonal" size="sm" onclick={() => launch('family')}>
 						<Icon icon={faUsers} size={14} />{m.settings_account_start_family()}
 					</Button>
 				</Row>
@@ -261,19 +259,19 @@
 	{/if}
 {/if}
 
-<Card icon={faDownload} title={m.settings_account_export_title()}>
+<Card title={m.settings_account_export_title()}>
 	<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
-		<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
+		<Button variant="neutral" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
 			{m.settings_account_export_button()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 		</Button>
 	</Row>
 </Card>
 
-<Card icon={faCircleExclamation} title={m.settings_account_delete_title()} variant="danger">
+<Card title={m.settings_account_delete_title()} variant="danger">
 	{#if mailOnly}
 		<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_at_account()}>
 			{#if accountSettings}
-				<Button variant="secondary" size="sm" href={accountSettings}>
+				<Button variant="neutral" size="sm" href={accountSettings}>
 					{m.settings_security_account_origin_cta()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 				</Button>
 			{/if}
@@ -299,7 +297,7 @@
 	.plan-warn {
 		margin-top: 8px;
 		font-size: var(--text-sm, 13px);
-		color: var(--warning-500, #c08431);
+		color: var(--warning-500);
 	}
 	.plan-wait {
 		display: inline-block;

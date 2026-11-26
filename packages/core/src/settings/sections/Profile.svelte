@@ -6,7 +6,6 @@
 	import {
 		faCamera,
 		faCircleInfo,
-		faPenLine,
 		faSpinnerThird,
 		faTrashCan,
 		faUser
@@ -17,8 +16,8 @@
 	import Row from '../Row.svelte';
 	import Select from '../Select.svelte';
 	import TextInput from '../TextInput.svelte';
-	import Toggle from '../Toggle.svelte';
-	import Badge from '../Badge.svelte';
+	import { Switch } from '$core/components/ui/switch';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import { memberRoleLabel } from '../memberRole';
 	import SignatureEditor from './SignatureEditor.svelte';
@@ -352,8 +351,8 @@
 				src={auth.avatarUrl}
 				fit="cover"
 				size={64}
-				bg="var(--pine-700)"
-				fg="#EEF2EA"
+				bg="var(--pine-100)"
+				fg="var(--pine-700)"
 				class="pf-av"
 			/>
 			<button
@@ -393,7 +392,7 @@
 			<div class="pf-mail">{email}</div>
 			{#if roleLabel}
 				<div class="pf-tags">
-					<Badge kind="pine" dot>{roleLabel}</Badge>
+					<Badge tone="brand" status>{roleLabel}</Badge>
 				</div>
 			{/if}
 			{#if avatarError}
@@ -434,7 +433,7 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Card icon={faPenLine} title={m.settings_profile_signature()}>
+<Card title={m.settings_profile_signature()}>
 	{#snippet right()}
 		<span class="sig-picker">
 			<span class="sig-picker-lbl">{m.settings_profile_signature_for()}</span>
@@ -461,7 +460,7 @@
 					text={m.settings_profile_signature_editing({ name: sigIdentity.name || sigIdentity.email })}
 					tags={{ b: bold }}
 				/>
-				{#if sigIdentity.shared}<Badge kind="pine">{m.settings_profile_shared()}</Badge>{/if}
+				{#if sigIdentity.shared}<Badge tone="brand">{m.settings_profile_shared()}</Badge>{/if}
 			</div>
 			<SignatureEditor
 				addressId={sigIdentity.id}
@@ -490,27 +489,39 @@
 				t={m.settings_profile_signature_default()}
 				d={m.settings_profile_signature_default_desc()}
 			>
-				<Toggle
-					on={signatureEnabled}
-					disabled={signatureLocked}
-					onChange={(v) => {
-						signatureEnabled = v;
-						recomputeSignatureDirty();
-					}}
-				/>
+				{#snippet children(row)}
+					<Switch
+						bind:checked={
+							() => signatureEnabled,
+							(v) => {
+								signatureEnabled = v;
+								recomputeSignatureDirty();
+							}
+						}
+						disabled={signatureLocked}
+						aria-labelledby={row.labelId}
+						aria-describedby={row.descId}
+					/>
+				{/snippet}
 			</Row>
 			<Row
 				t={m.settings_profile_signature_replies()}
 				d={m.settings_profile_signature_replies_desc()}
 			>
-				<Toggle
-					on={signatureAppendOnReply}
-					disabled={signatureLocked || !signatureEnabled}
-					onChange={(v) => {
-						signatureAppendOnReply = v;
-						recomputeSignatureDirty();
-					}}
-				/>
+				{#snippet children(row)}
+					<Switch
+						bind:checked={
+							() => signatureAppendOnReply,
+							(v) => {
+								signatureAppendOnReply = v;
+								recomputeSignatureDirty();
+							}
+						}
+						disabled={signatureLocked || !signatureEnabled}
+						aria-labelledby={row.labelId}
+						aria-describedby={row.descId}
+					/>
+				{/snippet}
 			</Row>
 		{:else}
 			<div class="muted">{m.settings_profile_signature_empty()}</div>

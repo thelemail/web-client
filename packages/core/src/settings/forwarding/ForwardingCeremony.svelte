@@ -16,7 +16,7 @@
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
-	import Seg from '../Seg.svelte';
+	import { Segmented, type SegmentedOption } from '$core/components/ui/segmented';
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { Label } from '$core/components/ui/label';
@@ -36,9 +36,9 @@
 
 	const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-	const modeChoices = $derived([
-		{ v: 'encrypted', l: m.settings_forwarding_mode_encrypted() },
-		{ v: 'plain', l: m.settings_forwarding_mode_plain() }
+	const modeChoices: SegmentedOption<ReadDelegationMode>[] = $derived([
+		{ value: 'encrypted', label: m.settings_forwarding_mode_encrypted() },
+		{ value: 'plain', label: m.settings_forwarding_mode_plain() }
 	]);
 
 	let step = $state(0);
@@ -161,12 +161,7 @@
 
 				<div class="field">
 					<span class="field-lbl" id="forwarding-mode-lbl">{m.settings_forwarding_where()}</span>
-					<Seg
-						value={mode}
-						options={modeChoices}
-						labelledby="forwarding-mode-lbl"
-						onChange={(v) => (mode = v as ReadDelegationMode)}
-					/>
+					<Segmented bind:value={mode} options={modeChoices} aria-labelledby="forwarding-mode-lbl" />
 					<div class="field-hint">
 						{#if plain}
 							{m.settings_forwarding_plain_hint()}
@@ -180,7 +175,7 @@
 					<label for="forwarding-label">{m.settings_forwarding_name_label()}</label>
 					<input
 						id="forwarding-label"
-						class="tin"
+						class="field-input tin"
 						bind:value={label}
 						maxlength="60"
 						placeholder={m.settings_forwarding_name_placeholder()}
@@ -194,7 +189,7 @@
 					<label for="forwarding-destination">{m.settings_forwarding_to_label()}</label>
 					<input
 						id="forwarding-destination"
-						class="tin"
+						class="field-input tin"
 						type="email"
 						bind:value={destination}
 						maxlength="254"
@@ -268,7 +263,7 @@
 			</div>
 
 			<textarea
-				class="tin mono keyblock"
+				class="field-input tin mono keyblock"
 				aria-label={m.settings_key_block_aria()}
 				readonly
 				rows="8"
@@ -294,7 +289,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button disabled={!canContinue} onclick={create}>
 				{busy
 					? m.settings_forwarding_setting_up()
@@ -313,7 +308,7 @@
 <style>
 	.fp {
 		font-size: 12px;
-		color: var(--ink-700);
+		color: var(--fg);
 		word-break: break-all;
 	}
 

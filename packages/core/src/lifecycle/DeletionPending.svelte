@@ -58,7 +58,7 @@
 
 <AuthShell>
 	<div class="card">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<span class="pending-icon"><Icon icon={faCalendarClock} size={44} /></span>
 				<h1>{m.lc_deletion_title()}</h1>
@@ -88,7 +88,7 @@
 						<Icon icon={faArrowRotateLeft} size={17} />
 						{busy ? m.lc_deletion_restoring() : m.lc_deletion_keep()}
 					</Button>
-					<Button variant="secondary" size="lg" block disabled={busy} onclick={signOut}>
+					<Button variant="neutral" size="lg" block disabled={busy} onclick={signOut}>
 						<Icon icon={faArrowRightFromBracket} size={17} />{m.lc_deletion_sign_out()}
 					</Button>
 				</div>
@@ -100,7 +100,7 @@
 <style>
 	.pending-icon {
 		display: inline-flex;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-bottom: 6px;
 	}
 </style>

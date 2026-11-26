@@ -75,18 +75,17 @@
 	);
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		<Icon icon={faArrowsRotate} size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">{m.cal_queue_title()}</Dialog.Title>
+<Dialog.Content size="lg" class="cal-surface">
+	<Dialog.Header icon={faArrowsRotate}>
+		<Dialog.Title>{m.cal_queue_title()}</Dialog.Title>
 	</Dialog.Header>
 
-	<div class="cal-dlg-body">
+	<div>
 		<div class="sysbar" class:warn={cal.systemBarTone === 'warn'} class:info={cal.systemBarTone === 'info'}>
 			{#if !calendarStore.online}<Icon icon={faCloudSlash} size={16} />{:else}<Icon icon={faArrowsRotate} size={16} />{/if}
 			<span>{cal.systemBarText}</span>
 			<div class="grow"></div>
-			<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>{m.cal_queue_send_now()}</button>
+			<Button variant="neutral" size="sm" onclick={() => calendarStore.flush()}>{m.cal_queue_send_now()}</Button>
 		</div>
 
 		{#if !calendarStore.queue.length}
@@ -108,7 +107,7 @@
 					<div class="qs">{subFor(entry)}</div>
 					{#if entry.status === 'blocked'}
 						<div class="qactions">
-							<Button variant="secondary" size="sm" onclick={() => calendarStore.keepMine(entry.seq)}>
+							<Button variant="neutral" size="sm" onclick={() => calendarStore.keepMine(entry.seq)}>
 								{m.cal_queue_keep_mine()}
 							</Button>
 							<Button variant="ghost" size="sm" onclick={() => calendarStore.takeTheirs(entry.seq)}>
@@ -154,9 +153,8 @@
 		</div>
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">{m.cal_queue_note()}</span>
-		<div class="grow"></div>
+	<Dialog.Footer>
+		<span class="dialog-note">{m.cal_queue_note()}</span>
 		<Button variant="primary" onclick={() => (cal.dialog = null)}>{m.common_close()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

@@ -4,7 +4,7 @@ import { m } from '$paraglide/messages.js';
 export type DomainStep = 'ownership' | 'sending' | 'recipients' | 'routing' | 'done';
 export type CheckStage = DNSRecordPhase;
 export type StageCheckState = 'idle' | 'running' | 'expired' | 'verified';
-export type BadgeKind = 'ok' | 'warn' | 'info' | 'neutral';
+export type BadgeKind = 'success' | 'warning' | 'info' | 'neutral';
 export type DomainState =
 	| 'lapsing'
 	| 'paused'
@@ -241,13 +241,13 @@ export function domainState(d: CustomDomain): DomainState {
 }
 
 const STATE_KIND: Record<DomainState, BadgeKind> = {
-	lapsing: 'warn',
-	paused: 'warn',
+	lapsing: 'warning',
+	paused: 'warning',
 	verifying: 'info',
-	expired: 'warn',
-	live: 'ok',
-	failed: 'warn',
-	not_receiving: 'warn',
+	expired: 'warning',
+	live: 'success',
+	failed: 'warning',
+	not_receiving: 'warning',
 	ready: 'info',
 	owned: 'info',
 	not_started: 'neutral'

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '$core/components/ui/badge';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faCalendarClock,
@@ -51,10 +52,9 @@
 	const pollColumns = $derived(cal.pollColumns.length || 1);
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg wide" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		<Icon icon={faCalendarClock} size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">{m.cal_offer_title({ name: 'R. Panurge' })}</Dialog.Title>
+<Dialog.Content size="xl" class="cal-surface">
+	<Dialog.Header icon={faCalendarClock}>
+		<Dialog.Title>{m.cal_offer_title({ name: 'R. Panurge' })}</Dialog.Title>
 		<PrivacyChip tone="external" label={m.cal_offer_leaves()} />
 	</Dialog.Header>
 
@@ -67,7 +67,7 @@
 						<div class="sl-when">
 							{SLOTS[index].when}<span class="mono">{SLOTS[index].mono}</span>
 						</div>
-						<span class="sl-tag" class:tight={SLOTS[index].tight}>{SLOTS[index].tag}</span>
+						<Badge tone={SLOTS[index].tight ? 'warning' : 'success'} size="sm">{SLOTS[index].tag}</Badge>
 						<button
 							type="button"
 							class="sl-x"
@@ -79,7 +79,7 @@
 					</div>
 				{/each}
 			</div>
-			<Button variant="secondary" block class="mt-3" onclick={() => cal.addSlot()}>
+			<Button variant="tonal" block class="mt-3" onclick={() => cal.addSlot()}>
 				{m.cal_offer_suggest_more()}
 			</Button>
 			<div class="limits">
@@ -130,10 +130,9 @@
 		</div>
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
-		<div class="grow"></div>
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_offer_hold_all()}</Button>
+	<Dialog.Footer>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
+		<Button variant="tonal" onclick={() => (cal.dialog = null)}>{m.cal_offer_hold_all()}</Button>
 		<Button variant="primary" onclick={() => cal.confirmOffer()}>{m.cal_offer_insert()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

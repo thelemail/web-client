@@ -5,7 +5,6 @@
 		faArrowRotateLeft,
 		faBoxArchive,
 		faCalendar,
-		faCheck,
 		faEnvelope,
 		faEnvelopeOpen,
 		faMessages,
@@ -17,7 +16,7 @@
 	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
-	import * as Tooltip from '$core/components/ui/tooltip';
+	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
 	import { swipe, swipeThreshold, type SwipeDirection } from '$core/actions/swipe';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
@@ -276,17 +275,15 @@
 		/>
 		<button
 			type="button"
-			class="row-ck"
-			class:on={checked}
+			class="check row-ck"
+			data-state={checked ? 'checked' : 'unchecked'}
 			aria-label={msg.mail_row_select()}
 			aria-pressed={checked}
 			onclick={(e) => {
 				e.stopPropagation();
 				select(e.shiftKey);
 			}}
-		>
-			<Icon icon={faCheck} size={13} />
-		</button>
+		></button>
 	</div>
 	<div class="rowmain">
 		<div class="r1">
@@ -383,36 +380,34 @@
 		</div>
 	</div>
 	<div class="qa">
-		<Tooltip.Provider delayDuration={150} disableHoverableContent>
-			{#if caps.showStar}
-				{@render qaButton(m.starred ? msg.mail_action_unstar() : msg.mail_action_star(), () => onToggleStar(m.id), star, {
-					cls: m.starred ? 'star on' : 'star',
-					pressed: m.starred
-				})}
-			{/if}
-			{#if caps.showMarkRead}
-				{@render qaButton(
-					m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread(),
-					() => onToggleRead(m.id),
-					m.unread ? mailOpen : mail
-				)}
-			{/if}
-			{#if caps.showRestore}
-				{@render qaButton(msg.mail_action_restore(), () => onRestore?.(m.id), undo, { mutates: true })}
-			{/if}
-			{#if caps.showArchive}
-				{@render qaButton(msg.mail_action_archive(), () => onArchive(m.id), archive, { mutates: true })}
-			{/if}
-			{#if caps.showSpam && onSpam}
-				{@render qaButton(msg.mail_action_report_spam(), () => onSpam?.(m.id), spam)}
-			{/if}
-			{#if caps.showTrash}
-				{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true })}
-			{/if}
-			{#if caps.showDelete}
-				{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true })}
-			{/if}
-		</Tooltip.Provider>
+		{#if caps.showStar}
+			{@render qaButton(m.starred ? msg.mail_action_unstar() : msg.mail_action_star(), () => onToggleStar(m.id), star, {
+				pressed: m.starred,
+				star: true
+			})}
+		{/if}
+		{#if caps.showMarkRead}
+			{@render qaButton(
+				m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread(),
+				() => onToggleRead(m.id),
+				m.unread ? mailOpen : mail
+			)}
+		{/if}
+		{#if caps.showRestore}
+			{@render qaButton(msg.mail_action_restore(), () => onRestore?.(m.id), undo, { mutates: true })}
+		{/if}
+		{#if caps.showArchive}
+			{@render qaButton(msg.mail_action_archive(), () => onArchive(m.id), archive, { mutates: true })}
+		{/if}
+		{#if caps.showSpam && onSpam}
+			{@render qaButton(msg.mail_action_report_spam(), () => onSpam?.(m.id), spam)}
+		{/if}
+		{#if caps.showTrash}
+			{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true, danger: true })}
+		{/if}
+		{#if caps.showDelete}
+			{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true, danger: true })}
+		{/if}
 	</div>
 </div>
 
@@ -420,23 +415,22 @@
 	label: string,
 	run: () => void,
 	icon: Snippet,
-	opts: { cls?: string; pressed?: boolean; mutates?: boolean } = {}
+	opts: { pressed?: boolean; mutates?: boolean; danger?: boolean; star?: boolean } = {}
 )}
-	<Tooltip.Root>
-		<Tooltip.Trigger
-			class={opts.cls}
-			aria-label={label}
-			aria-pressed={opts.pressed}
-			data-mutates={opts.mutates ? '' : undefined}
-			onclick={(e: MouseEvent) => {
-				e.stopPropagation();
-				run();
-			}}
-		>
-			{@render icon()}
-		</Tooltip.Trigger>
-		<Tooltip.Content side="top" sideOffset={6}>{label}</Tooltip.Content>
-	</Tooltip.Root>
+	<Button
+		variant={opts.danger ? 'ghostDanger' : 'ghost'}
+		size="icon-sm"
+		class={opts.star ? 'btn-star' : undefined}
+		tooltip={label}
+		aria-pressed={opts.pressed}
+		data-mutates={opts.mutates ? '' : undefined}
+		onclick={(e: MouseEvent) => {
+			e.stopPropagation();
+			run();
+		}}
+	>
+		{@render icon()}
+	</Button>
 {/snippet}
 
 {#snippet star()}<StateIcon icon={faStar} activeIcon={faStarSolid} active={m.starred} gesture="spin" size={15} />{/snippet}

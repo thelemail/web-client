@@ -13,8 +13,7 @@
 		faRotateRight
 	} from '@fortawesome/pro-regular-svg-icons';
 	import AuthShell from '$core/auth/AuthShell.svelte';
-	import Status from '$core/auth/sentence/Status.svelte';
-	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { auth } from '$core/stores/session.svelte';
@@ -170,69 +169,64 @@
 
 <AuthShell strip={false}>
 	<div class="card rk-screen">
-		<div class="sp">
-			<p class="sent sm">{m.auth_s_recovery_sentence()}</p>
-			<div class="sp-under wide">
-				<p class="sp-msg rk-meta"><span class="mono">{email}</span><span aria-hidden="true">·</span><span>{m.recovery_start_phrase_meta()}</span></p>
-				<div class="sp-words" aria-label={m.recovery_start_phrase_label()}>
-					{#each words as w, i (i)}
-						<div class="sp-word" style:--i={i}><span class="n">{i + 1}</span><b class:rk-hidden={!revealed}>{revealed && w ? w : '••••••'}</b></div>
-					{/each}
-					{#if !revealed}
-						<div class="rk-cover">
-							{#if material}
-								<Button variant="secondary" size="lg" onclick={() => (revealed = true)}>
-									<Icon icon={faEye} size={17} />{m.settings_ceremony_recovery_reveal()}
-								</Button>
-							{:else if generateError}
-								<div class="rk-failed">
-									<Status tone="bad">{generateError}</Status>
-									<Button variant="secondary" size="lg" disabled={generating} onclick={generate}>
-										<Icon icon={faRotateRight} size={15} />{m.recovery_start_retry()}
-									</Button>
-								</div>
-							{:else if preparing.visible}
-								<Status tone="busy">{m.settings_ceremony_recovery_generating()}</Status>
-							{/if}
-						</div>
-					{/if}
-				</div>
-				<p class="sp-fine">{m.recovery_start_phrase_note()}</p>
+		<div class="card-surface">
+			<div class="card-head">
+				<h1>{m.recovery_start_title()}</h1>
+				<p>{m.auth_s_recovery_sentence()}</p>
 			</div>
-			<div class="sp-under wide">
-				<p class="sp-msg rk-keep">{m.auth_s_recovery_keep()}</p>
-				<div class="rk-ways">
+			<div class="af-phrase">
+				<p class="rk-meta"><span class="mono">{email}</span><span aria-hidden="true">·</span><span>{m.recovery_start_phrase_meta()}</span></p>
+				<div class="af-words" aria-label={m.recovery_start_phrase_label()}>
+					{#each words as w, i (i)}
+						<div class="af-word" style:--i={i}><span class="n">{i + 1}</span><b class:rk-hidden={!revealed}>{revealed && w ? w : '••••••'}</b></div>
+					{/each}
+				</div>
+				{#if !revealed}
+					<div class="rk-cover">
+						{#if material}
+							<Button variant="tonal" size="lg" onclick={() => (revealed = true)}>
+								<Icon icon={faEye} size={17} />{m.settings_ceremony_recovery_reveal()}
+							</Button>
+						{:else if generateError}
+							<div class="rk-failed">
+								<Status tone="bad">{generateError}</Status>
+								<Button variant="neutral" size="lg" disabled={generating} onclick={generate}>
+									<Icon icon={faRotateRight} size={15} />{m.recovery_start_retry()}
+								</Button>
+							</div>
+						{:else if preparing.visible}
+							<Status tone="busy">{m.settings_ceremony_recovery_generating()}</Status>
+						{/if}
+					</div>
+				{/if}
+			</div>
+			<p class="af-fine">{m.recovery_start_phrase_note()}</p>
+			<div class="field">
+				<div class="lab"><span class="lbl">{m.auth_s_recovery_keep()}</span></div>
+				<div class="af-options">
 					{#each ways as way (way.key)}
-						<button type="button" class="rk-way" class:saved={saved[way.key]} disabled={!revealed} onclick={way.run}>
-							<b>
-								{#if saved[way.key]}<Icon icon={faCheck} size={15} />{:else}<Icon icon={way.icon} size={15} />{/if}{way.title}
-							</b>
-							<span>{way.sub}</span>
+						<button type="button" class="af-option" class:done={saved[way.key]} disabled={!revealed} onclick={way.run}>
+							<span class="ic">{#if saved[way.key]}<Icon icon={faCheck} size={17} />{:else}<Icon icon={way.icon} size={17} />{/if}</span>
+							<span class="tx"><b>{way.title}</b><span>{way.sub}</span></span>
 						</button>
 					{/each}
 				</div>
-				<label class="sp-tick">
-					<input type="checkbox" bind:checked={ack} />
-					<span>{m.recovery_start_ack()}</span>
-				</label>
-				<div class="sp-acts">
-					<Button variant="primary" size="lg" disabled={!canFinish} onclick={finish}>
-						<BusyLabel
-							busy={submitting}
-							label={m.recovery_start_open_mailbox()}
-							pending={m.settings_ceremony_recovery_saving()}
-						/>
-					</Button>
-				</div>
-				<Status tone={submitError || saveError ? 'bad' : 'hint'}>
-					{#if submitError}{submitError}
-					{:else if saveError}{saveError}
-					{:else if !revealed && material}{m.recovery_start_hint_reveal()}
-					{:else if revealed && !anySaved}{m.recovery_start_hint_save()}
-					{:else if revealed && !ack}{m.recovery_start_hint_ack()}{/if}
-				</Status>
-				<p class="sp-fine">{m.recovery_start_footer()}</p>
 			</div>
+			<label class="af-tick">
+				<input type="checkbox" class="check" bind:checked={ack} />
+				<span>{m.recovery_start_ack()}</span>
+			</label>
+			<Status tone={submitError || saveError ? 'bad' : 'hint'} reserve>
+				{#if submitError}{submitError}
+				{:else if saveError}{saveError}
+				{:else if !revealed && material}{m.recovery_start_hint_reveal()}
+				{:else if revealed && !anySaved}{m.recovery_start_hint_save()}
+				{:else if revealed && !ack}{m.recovery_start_hint_ack()}{/if}
+			</Status>
+			<Button variant="primary" size="lg" block disabled={!canFinish && !submitting} busy={submitting} busyLabel={m.settings_ceremony_recovery_saving()} onclick={finish}>
+				{m.recovery_start_open_mailbox()}
+			</Button>
+			<p class="af-fine center">{m.recovery_start_footer()}</p>
 		</div>
 	</div>
 
@@ -256,20 +250,25 @@
 
 <style>
 	.rk-meta {
-		gap: 8px;
+		display: flex;
 		flex-wrap: wrap;
+		gap: 8px;
+		margin: 2px 2px 10px;
+		font-family: var(--font-mono);
+		font-size: 11.5px;
+		color: var(--fg-muted);
 	}
 	.rk-hidden {
 		filter: blur(6px);
 		user-select: none;
 	}
 	@media (prefers-reduced-motion: no-preference) {
-		.sp-word b:not(.rk-hidden) {
+		.af-word b:not(.rk-hidden) {
 			animation: rk-reveal 520ms var(--ease-out) calc(var(--i, 0) * 30ms) backwards;
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.sp-word b:not(.rk-hidden) {
+		.af-word b:not(.rk-hidden) {
 			animation: rk-fade var(--dur) linear backwards;
 		}
 	}
@@ -286,11 +285,11 @@
 	}
 	.rk-cover {
 		position: absolute;
-		inset: -4px;
+		inset: 0;
 		display: grid;
 		place-items: center;
-		border-radius: 12px;
-		background: color-mix(in srgb, var(--bg) 62%, transparent);
+		border-radius: 16px;
+		background: color-mix(in srgb, var(--bg-raised) 55%, transparent);
 	}
 	.rk-failed {
 		display: flex;
@@ -301,64 +300,13 @@
 		padding: 0 16px;
 		text-align: center;
 	}
-	.rk-keep {
-		font-family: var(--font-mono);
-		font-size: 11.5px;
-		letter-spacing: var(--track-caps);
-		text-transform: uppercase;
-		color: var(--fg-faint);
-	}
-	.rk-ways {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-		gap: 8px;
-	}
-	.rk-way {
-		all: unset;
-		box-sizing: border-box;
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-		padding: 12px 14px;
-		border-radius: 10px;
-		border: 1px solid var(--border-control);
-		background: var(--surface);
-		cursor: pointer;
-		transition: border-color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
-	}
-	.rk-way:hover:not(:disabled) {
-		border-color: var(--border-strong);
-	}
-	.rk-way:focus-visible {
-		outline: 2px solid var(--focus-ring);
-		outline-offset: 2px;
-	}
-	.rk-way:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-	.rk-way.saved {
-		border-color: var(--pine-500);
-		background: var(--accent);
-	}
-	.rk-way b {
-		display: flex;
-		align-items: center;
-		gap: 7px;
-		font-size: 14px;
-		color: var(--fg-strong);
-	}
-	.rk-way span {
-		font-size: 12.5px;
-		line-height: 1.4;
-		color: var(--fg-muted);
-	}
 
 	.rk-print {
 		display: none;
 	}
 	@media print {
 		:global(.auth .topbar),
+		:global(.auth .pagefoot),
 		:global(.auth .stnotice),
 		.rk-screen {
 			display: none !important;

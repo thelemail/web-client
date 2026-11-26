@@ -2,9 +2,14 @@
 	import { m } from '$paraglide/messages.js';
 	import { onMount } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import {
 		faArrowsRotate,
+		faCircleExclamation,
 		faClock,
+		faMagnifyingGlass,
 		faPaperPlaneTop,
 		faPenLine
 	} from '@fortawesome/pro-regular-svg-icons';
@@ -85,30 +90,32 @@
 				{/if}
 			</h1>
 			<div class="lh-actions">
-				<button class="lh-btn" title={m.mail_refresh()} onclick={() => scheduled.refresh()}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					tooltip={m.mail_refresh()}
+					onclick={() => scheduled.refresh()}
+				>
 					<Icon icon={faArrowsRotate} size={16} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<div class="scroll">
 			{#if scheduled.loading && list.length === 0}
-				<div class="sch-empty"><div class="t">{m.common_loading()}</div></div>
+				<LoadState kind="loading" label={m.common_loading()} rows={4} />
 			{:else if scheduled.loadError && list.length === 0}
-				<div class="sch-empty">
-					<div class="t">{m.mail_scheduled_load_failed()}</div>
-					<div class="d">{scheduled.loadError}</div>
-					<button class="sch-retry" onclick={() => scheduled.refresh()}>{m.mail_retry()}</button>
-				</div>
+				<EmptyState tone="error" icon={faCircleExclamation} title={m.mail_scheduled_load_failed()} description={scheduled.loadError}>
+					{#snippet action()}
+						<Button variant="neutral" size="sm" onclick={() => scheduled.refresh()}>{m.mail_retry()}</Button>
+					{/snippet}
+				</EmptyState>
 			{:else if list.length === 0}
-				<div class="sch-empty">
-					<div class="ring"><Icon icon={faClock} size={28} /></div>
-					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_scheduled_empty()}</div>
-					<div class="d">
-						{mailSearch.text.trim()
-							? m.mail_scheduled_no_matches()
-							: m.mail_scheduled_empty_detail()}
-					</div>
-				</div>
+				<EmptyState
+					icon={mailSearch.text.trim() ? faMagnifyingGlass : faClock}
+					title={mailSearch.text.trim() ? m.mail_no_matches() : m.mail_scheduled_empty()}
+					description={mailSearch.text.trim() ? m.mail_scheduled_no_matches() : m.mail_scheduled_empty_detail()}
+				/>
 			{:else}
 				{#each list as r (r.id)}
 					<div class="sch-row">
@@ -124,8 +131,9 @@
 							</div>
 							<div class="sch-prev">{r.snippet || m.mail_scheduled_no_preview()}</div>
 						</div>
-						<button
-							type="button"
+						<Button
+							variant="danger"
+							size="sm"
 							class="sch-cancel"
 							disabled={lifecycle.readOnly}
 							onclick={() => {
@@ -134,29 +142,32 @@
 							}}
 						>
 							{m.common_cancel()}
-						</button>
+						</Button>
 					</div>
 				{/each}
 				{#if !scheduled.exhausted}
 					<div class="sch-more">
-						<button onclick={() => scheduled.loadMore()} disabled={scheduled.loadingMore}>
-							{scheduled.loadingMore ? m.common_loading() : m.mail_load_more()}
-						</button>
+						<Button
+							variant="neutral"
+							size="sm"
+							busy={scheduled.loadingMore}
+							busyLabel={m.common_loading()}
+							onclick={() => scheduled.loadMore()}
+						>
+							{m.mail_load_more()}
+						</Button>
 					</div>
 				{/if}
 			{/if}
 		</div>
 	</section>
 	<div class="sch-side">
-		<div class="sch-side-in">
-			<Icon icon={faPaperPlaneTop} size={40} />
-			<p>{m.mail_scheduled_side()}</p>
-		</div>
+		<EmptyState icon={faPaperPlaneTop} title={m.mail_scheduled_side()} />
 	</div>
 </div>
 
 {#snippet cancelBody()}
-	<p class="cfd-p">{m.mail_scheduled_cancel_body()}</p>
+	<p class="dialog-p">{m.mail_scheduled_cancel_body()}</p>
 {/snippet}
 
 {#if pendingCancel}
@@ -196,7 +207,7 @@
 		background: var(--surface);
 	}
 	.sch-row:hover {
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 	}
 	.sch-main {
 		flex: 1;
@@ -220,7 +231,7 @@
 		flex: 0 0 auto;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--accent-quiet);
+		color: var(--brass-600);
 	}
 	.sch-subj {
 		font-size: 13px;
@@ -238,99 +249,25 @@
 	}
 	.sch-prev {
 		font-size: 12.5px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-top: 2px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	.sch-cancel {
+	.sch-row :global(.sch-cancel) {
 		flex: 0 0 auto;
-		font-family: inherit;
-		font-size: 12.5px;
-		font-weight: 600;
-		color: var(--ink-600);
-		background: none;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-control-compact);
-		padding: 5px 11px;
-		cursor: pointer;
-	}
-	.sch-cancel:hover {
-		background: var(--danger-100);
-		border-color: var(--danger-500);
-		color: var(--danger-700);
-	}
-	.sch-cancel:disabled {
-		opacity: 0.5;
-		pointer-events: none;
-	}
-	.sch-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		padding: 56px 24px;
-		gap: 6px;
-		color: var(--ink-500);
-	}
-	.sch-empty .ring {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		background: var(--paper-100);
-		color: var(--brass-600);
-		margin-bottom: 8px;
-	}
-	.sch-empty .t {
-		font-family: var(--font-sans);
-		font-feature-settings: normal;
-		font-size: 17px;
-		color: var(--fg-strong);
-	}
-	.sch-empty .d {
-		font-size: 13px;
-		color: var(--ink-400);
-		max-width: 300px;
-	}
-	.sch-retry {
-		margin-top: 10px;
 	}
 	.sch-more {
 		display: flex;
 		justify-content: center;
 		padding: 14px;
 	}
-	.sch-more button {
-		font-size: 12.5px;
-		color: var(--pine-700);
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-control-compact);
-		padding: 6px 14px;
-		cursor: pointer;
-	}
 	.sch-side {
 		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--paper-50);
-	}
-	.sch-side-in {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 12px;
-		color: var(--ink-400);
-		text-align: center;
-	}
-	.sch-side-in p {
-		font-size: 13px;
-		max-width: 240px;
+		background: var(--bg-raised);
 	}
 </style>

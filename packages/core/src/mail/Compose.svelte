@@ -4,6 +4,8 @@
 	import { platform } from '$platform';
 	import { page } from '$app/state';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import {
 		faArrowLeft,
 		faCheck,
@@ -139,8 +141,8 @@
 		name: auth.fullName ?? auth.email ?? 'Me',
 		email: auth.email ?? '',
 		init: initialsFor(auth.fullName, auth.email),
-		bg: 'var(--pine-700)',
-		fg: '#EEF2EA',
+		bg: 'var(--pine-100)',
+		fg: 'var(--pine-700)',
 		org: '',
 		kind: 'Default'
 	});
@@ -179,7 +181,6 @@
 	let err = $state<SendError | null>(null);
 	let attempts = $state(0);
 	let sendOpen = $state(false);
-	let sendRef: HTMLDivElement | undefined = $state();
 	let scheduleOpen = $state(false);
 	let pendingScheduledAt = $state<string | null>(null);
 
@@ -758,11 +759,6 @@
 		}
 	}
 
-	function handleDocMouseDown(e: MouseEvent) {
-		const t = e.target as Node;
-		if (sendOpen && sendRef && !sendRef.contains(t)) sendOpen = false;
-	}
-
 	function focusTo() {
 		const input = winRef?.querySelector<HTMLInputElement>('.recip-input');
 		input?.focus();
@@ -958,7 +954,7 @@
 	});
 </script>
 
-<svelte:document onkeydown={handleKey} onmousedown={handleDocMouseDown} />
+<svelte:document onkeydown={handleKey} />
 
 {#if min}
 	<div
@@ -976,24 +972,24 @@
 		<Icon icon={faPenLine} size={15} />
 		<span class="dock-t">{subjLine}</span>
 		{#if attention}<span class="dock-flag"><Icon icon={faCircleExclamation} size={13} />{attention}</span>{/if}
-		<button
-			type="button"
-			class="dock-b"
-			title={m.mail_compose_open()}
+		<Button
+			variant="ghost"
+			size="icon-xs"
+			tooltip={m.mail_compose_open()}
 			onclick={(e) => {
 				e.stopPropagation();
 				onFocus?.();
-			}}><Icon icon={faChevronUp} size={16} /></button
+			}}><Icon icon={faChevronUp} size={16} /></Button
 		>
-		<button
-			type="button"
-			class="dock-b"
-			title={m.common_close()}
+		<Button
+			variant="ghost"
+			size="icon-xs"
+			tooltip={m.common_close()}
 			aria-busy={closing}
 			onclick={(e) => {
 				e.stopPropagation();
 				void closeKeepingDraft();
-			}}><Icon icon={faXmark} size={16} /></button
+			}}><Icon icon={faXmark} size={16} /></Button
 		>
 	</div>
 {/if}
@@ -1020,9 +1016,14 @@
 		<aside class="compose-ref" aria-label={m.mail_forwarded_chip()}>
 			<div class="cref-h">
 				<Icon icon={faArrowLeft} size={16} /><span>{m.mail_forwarded_chip()}</span>
-				<button type="button" class="chx" title={m.mail_compose_hide_forwarded()} onclick={() => (refOpen = false)}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					tooltip={m.mail_compose_hide_forwarded()}
+					onclick={() => (refOpen = false)}
+				>
 					<Icon icon={faXmark} size={16} />
-				</button>
+				</Button>
 			</div>
 			<div class="cref-b">
 				{#if fwdMsg}
@@ -1052,9 +1053,9 @@
 	{/if}
 	<div class="compose-h">
 		{#if expanded}
-			<button type="button" class="ch-back" onclick={() => onExpand?.(false)}>
+			<Button variant="ghost" size="sm" class="ch-return" onclick={() => onExpand?.(false)}>
 				<Icon icon={faArrowLeft} size={16} />{backLabel}
-			</button>
+			</Button>
 		{/if}
 		<h2 class="ch-t">{fwd || forwardDraft ? m.mail_reader_forward() : m.mail_compose_new_message()}</h2>
 		{#if draftAccountEmail}
@@ -1066,32 +1067,43 @@
 		<span class="ch-rule" aria-hidden="true"></span>
 		<div class="ch-actions">
 			{#if expanded && fwdQuote && !quoteRemoved}
-				<button
-					type="button"
-					class="chx"
-					class:on={refOpen}
-					title={refOpen ? m.mail_compose_hide_forwarded() : m.mail_compose_show_forwarded()}
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					tooltip={refOpen ? m.mail_compose_hide_forwarded() : m.mail_compose_show_forwarded()}
 					aria-pressed={refOpen}
 					onclick={() => (refOpen = !refOpen)}
 				>
 					<Icon icon={faSidebar} size={16} />
-				</button>
+				</Button>
 			{/if}
-			<button type="button" class="chx" title={m.mail_compose_minimize()} onclick={() => onMinimize?.()}>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				tooltip={m.mail_compose_minimize()}
+				onclick={() => onMinimize?.()}
+			>
 				<Icon icon={faMinus} size={16} />
-			</button>
-			<button
-				type="button"
-				class="chx size"
-				title={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				class="ch-size"
+				tooltip={expanded ? m.mail_compose_collapse() : m.mail_compose_expand()}
 				aria-pressed={expanded}
 				onclick={() => onExpand?.(!expanded)}
 			>
 				{#if expanded}<Icon icon={faDownLeftAndUpRightToCenter} size={16} />{:else}<Icon icon={faUpRightAndDownLeftFromCenter} size={16} />{/if}
-			</button>
-			<button type="button" class="chx x" title={m.common_close()} aria-busy={closing} onclick={() => void closeKeepingDraft()}>
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				tooltip={m.common_close()}
+				busy={closing}
+				onclick={() => void closeKeepingDraft()}
+			>
 				<Icon icon={faXmark} size={16} />
-			</button>
+			</Button>
 		</div>
 	</div>
 
@@ -1099,9 +1111,9 @@
 			<div class="cwarn" role="alert">
 				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{m.mail_compose_open_draft_failed()} {m.mail_compose_draft_untouched()}</span>
-				<button type="button" class="cwarn-act" onclick={() => draftId && void hydrateDraft(draftId)}>
+				<Button variant="neutral" size="sm" class="cwarn-btn" onclick={() => draftId && void hydrateDraft(draftId)}>
 					{m.common_retry()}
-				</button>
+				</Button>
 			</div>
 		{/if}
 
@@ -1269,9 +1281,9 @@
 			}}
 		>
 			{#snippet extra()}
-				<button type="button" class="cbar-lab" onclick={pickFiles}>
+				<Button variant="ghost" size="sm" onclick={pickFiles}>
 					<Icon icon={faPaperclip} size={16} />{m.mail_compose_attach()}
-				</button>
+				</Button>
 			{/snippet}
 		</EditorToolbar>
 
@@ -1309,70 +1321,75 @@
 			<div class="cwarn" role="alert">
 				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{m.mail_compose_save_failed()}</span>
-				<button type="button" class="cwarn-act" onclick={retrySave}>{m.common_retry()}</button>
+				<Button variant="neutral" size="sm" class="cwarn-btn" onclick={retrySave}>{m.common_retry()}</Button>
 			</div>
 		{/if}
 
 		<div class="compose-f" inert={load !== 'ready'}>
-			<div
-				class="send-split"
-				class:off={!canSend}
-				class:sending={status === 'sending'}
-				bind:this={sendRef}
-			>
-				<button
-					type="button"
-					class="send"
+			<div class="btn-split">
+				<Button
+					variant="primary"
+					busy={status === 'sending'}
+					busyLabel={m.mail_compose_sending()}
+					aria-disabled={!canSend || status === 'sending'}
 					onclick={runSend}
-					disabled={status === 'sending'}
-					aria-disabled={!canSend}
 				>
-					{#if status === 'sending'}
-						<span class="send-spin"></span>{m.mail_compose_sending()}
-					{:else}
-						<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send()}
-					{/if}
-				</button>
-				<button
-					type="button"
-					class="send-caret"
-					title={m.mail_compose_send_options()}
-					disabled={status === 'sending'}
-					aria-disabled={!canSend}
-					onclick={() => {
-						if (canSend) sendOpen = !sendOpen;
-						else showBlock();
-					}}
+					<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send()}
+				</Button>
+				<DropdownMenu.Root
+					bind:open={
+						() => sendOpen,
+						(next) => {
+							if (next && !canSend) {
+								showBlock();
+								return;
+							}
+							sendOpen = next;
+						}
+					}
 				>
-					<Icon icon={faChevronDown} size={15} />
-				</button>
-				{#if sendOpen}
-					<div class="send-menu" role="menu">
-						<button type="button" onclick={runSend}><Icon icon={faPaperPlane} size={16} />{m.mail_compose_send_now()}</button>
-						<button type="button" onclick={openSchedule}><Icon icon={faClock} size={16} />{m.mail_compose_schedule()}</button>
-					</div>
-				{/if}
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="primary"
+								size="icon"
+								tooltip={m.mail_compose_send_options()}
+								busy={status === 'sending'}
+								aria-disabled={!canSend || status === 'sending'}
+							>
+								<Icon icon={faChevronDown} size={15} />
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" side="top">
+						<DropdownMenu.Item onSelect={runSend}>
+							<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send_now()}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onSelect={openSchedule}>
+							<Icon icon={faClock} size={16} />{m.mail_compose_schedule()}
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			</div>
 
-			<button
-				type="button"
-				class="cf-sched"
-				class:off={!canSend}
+			<Button
+				variant="neutral"
 				disabled={status === 'sending'}
 				aria-disabled={!canSend}
 				onclick={openSchedule}
 			>
 				<Icon icon={faClock} size={16} />{m.mail_compose_schedule()}
-			</button>
+			</Button>
 
-			<button type="button" class="cf-disc" onclick={askDiscard}>
+			<Button variant="ghostDanger" class="cf-end" onclick={askDiscard}>
 				<Icon icon={faTrashCan} size={16} />{m.mail_compose_discard_draft()}
-			</button>
+			</Button>
 		</div>
 </div>
 
 {#snippet discardBody()}
-	<p class="cfd-p">{m.mail_compose_discard_body()}</p>
+	<p class="dialog-p">{m.mail_compose_discard_body()}</p>
 {/snippet}
 
 {#if confirmDiscard}
@@ -1451,3 +1468,21 @@
 		onCancel={clearErr}
 	/>
 {/if}
+
+<style>
+	.compose-h :global(.ch-return) {
+		margin-right: 6px;
+	}
+	.cwarn :global(.cwarn-btn) {
+		flex: 0 0 auto;
+		margin-left: auto;
+	}
+	.compose-f :global(.cf-end) {
+		margin-left: auto;
+	}
+	@media (max-width: 640px) {
+		.compose-h :global(.ch-size) {
+			display: none;
+		}
+	}
+</style>

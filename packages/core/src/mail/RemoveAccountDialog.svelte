@@ -48,7 +48,7 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">
+		<p class="dialog-p">
 			<Rich
 				text={mirrored
 					? m.mail_remove_account_body_mirrored({ email })
@@ -59,4 +59,4 @@
 	{/snippet}
 </ConfirmDialog>
 
-{#snippet mono(t: string)}<span class="cfd-mono">{t}</span>{/snippet}
+{#snippet mono(t: string)}<span class="dialog-mono">{t}</span>{/snippet}

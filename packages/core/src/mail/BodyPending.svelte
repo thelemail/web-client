@@ -34,7 +34,7 @@
 		font-family: var(--font-mono);
 		font-size: 11.5px;
 		letter-spacing: 0.02em;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-bottom: 20px;
 	}
 	.bp-status :global(svg) {
@@ -53,7 +53,7 @@
 		height: 13px;
 		margin-bottom: 13px;
 		border-radius: 5px;
-		background: var(--paper-150);
+		background: var(--skeleton);
 		animation: bp-pulse 1.6s ease infinite;
 	}
 	.bp-gap {
@@ -72,7 +72,7 @@
 	@media (prefers-reduced-motion: reduce) {
 		.bp-spin {
 			animation: none;
-			border-top-color: var(--pine-300);
+			border-top-color: var(--primary);
 		}
 		.bp-line {
 			animation: none;

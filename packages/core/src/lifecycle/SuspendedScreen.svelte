@@ -4,6 +4,7 @@
 	import { page } from '$app/state';
 	import Wordmark from '$core/components/Wordmark.svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowTurnLeftUp,
 		faCircleCheck,
@@ -64,7 +65,7 @@
 {#snippet bold(text: string)}<b>{text}</b>{/snippet}
 {#snippet mono(text: string)}<span class="mono">{text}</span>{/snippet}
 
-<div class="lc-gate">
+<div class="lc-gate on-inverse">
 	<div class="lc-gate-top"><Wordmark size="large" /></div>
 	<div class="lc-gate-body">
 		<div class="lc-gate-card">
@@ -89,18 +90,18 @@
 				</div>
 			</div>
 			<div class="lc-gate-actions">
-				<button class="lc-gbtn primary" onclick={restore}>
+				<Button variant="primary" size="lg" block onclick={restore}>
 					<Icon icon={faRotateLeft} size={17} />{m.lc_suspended_restore()}
-				</button>
-				<button class="lc-gbtn ghost" onclick={() => goto(`/u/${slot}/lifecycle/export`)}>
+				</Button>
+				<Button variant="neutral" size="lg" block onclick={() => goto(`/u/${slot}/lifecycle/export`)}>
 					<Icon icon={faDownload} size={17} />{m.lc_download_my_data()}
-				</button>
-				<button class="lc-gbtn ghost" onclick={() => (emailOpen = !emailOpen)}>
+				</Button>
+				<Button variant="neutral" size="lg" block onclick={() => (emailOpen = !emailOpen)}>
 					<Icon icon={faKey} size={17} />{m.lc_suspended_add_email()}
-				</button>
-				<button class="lc-gbtn ghost" onclick={() => flash(m.lc_suspended_support_toast())}>
+				</Button>
+				<Button variant="neutral" size="lg" block onclick={() => flash(m.lc_suspended_support_toast())}>
 					<Icon icon={faLifeRing} size={17} />{m.lc_suspended_contact_support()}
-				</button>
+				</Button>
 			</div>
 			{#if emailOpen}
 				<div class="lc-email-form">
@@ -123,9 +124,9 @@
 								bind:value={emailValue}
 								disabled={emailBusy}
 							/>
-							<button class="lc-gbtn primary" disabled={!emailValid || emailBusy} onclick={submitEmail}>
+							<Button variant="primary" size="lg" disabled={!emailValid || emailBusy} onclick={submitEmail}>
 								{m.lc_suspended_send_link()}
-							</button>
+							</Button>
 						</div>
 					{/if}
 				</div>

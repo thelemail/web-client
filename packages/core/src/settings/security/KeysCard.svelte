@@ -1,15 +1,10 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
-	import {
-		faArrowsRotate,
-		faDownload,
-		faKeySkeleton,
-		faTriangleExclamation
-	} from '@fortawesome/pro-regular-svg-icons';
+	import { faArrowsRotate, faDownload, faTriangleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import CeremonyRow from '../CeremonyRow.svelte';
 	import CopyBtn from '../CopyBtn.svelte';
 	import { Button } from '$core/components/ui/button';
@@ -48,8 +43,8 @@
 	}
 </script>
 
-<Card icon={faKeySkeleton} title={m.settings_security_keys_title()}>
-	{#snippet right()}<Badge kind="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
+<Card title={m.settings_security_keys_title()}>
+	{#snippet right()}<Badge tone="neutral">{m.settings_security_advanced()}</Badge>{/snippet}
 	{#if (accountKeys.verification === 'unverified' || accountKeys.verification === 'unreachable') && auth.accountId}
 		{@const accountId = auth.accountId}
 		{@const mismatch = accountKeys.verification === 'unverified'}
@@ -60,7 +55,7 @@
 					{mismatch ? m.settings_security_key_unverified_title() : m.settings_security_key_unchecked_title()}
 				</div>
 				<p>{mismatch ? m.settings_security_key_unverified() : m.settings_security_key_unchecked()}</p>
-				<Button variant="secondary" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
+				<Button variant="neutral" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
 			</div>
 		</div>
 	{/if}
@@ -123,7 +118,7 @@
 	</div>
 	{/if}
 	<Row t={m.settings_security_export_title()} d={m.settings_security_export_desc()}>
-		<Button variant="secondary" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
+		<Button variant="neutral" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
 			<Icon icon={faDownload} size={14} />{m.settings_security_export_key()}
 		</Button>
 	</Row>
@@ -133,7 +128,7 @@
 	.key-meta {
 		margin-top: 6px;
 		font-size: 12.5px;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px 10px;
@@ -141,7 +136,7 @@
 
 	.key-earlier {
 		font-family: var(--font-mono);
-		color: var(--ink-700);
+		color: var(--fg);
 	}
 
 	.key-warn {

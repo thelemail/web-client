@@ -12,7 +12,7 @@
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 	import CeremonyShell from '../CeremonyShell.svelte';
-	import Seg from '../Seg.svelte';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { Button } from '$core/components/ui/button';
 	import { auth } from '$core/stores/auth.svelte';
 	import { delegations } from '$core/stores/delegations.svelte';
@@ -27,9 +27,9 @@
 	let { address, onClose }: Props = $props();
 
 	const expiryChoices = $derived([
-		{ v: '90', l: m.settings_delegation_expiry_90d() },
-		{ v: '365', l: m.settings_delegation_expiry_1y() },
-		{ v: '730', l: m.settings_delegation_expiry_2y() }
+		{ value: '90', label: m.settings_delegation_expiry_90d() },
+		{ value: '365', label: m.settings_delegation_expiry_1y() },
+		{ value: '730', label: m.settings_delegation_expiry_2y() }
 	]);
 
 	let step = $state(0);
@@ -132,7 +132,7 @@
 				<label for="delegation-label">{m.settings_delegation_name_label()}</label>
 				<input
 					id="delegation-label"
-					class="tin"
+					class="field-input tin"
 					bind:value={label}
 					maxlength="60"
 					placeholder={m.settings_delegation_name_placeholder()}
@@ -144,7 +144,7 @@
 
 			<div class="field">
 				<span class="field-lbl" id="delegation-expiry-lbl">{m.settings_delegation_expiry_label()}</span>
-				<Seg value={expiry} options={expiryChoices} labelledby="delegation-expiry-lbl" onChange={(v) => (expiry = v)} />
+				<Segmented bind:value={expiry} options={expiryChoices} aria-labelledby="delegation-expiry-lbl" />
 				<div class="field-hint">{m.settings_delegation_expiry_hint()}</div>
 			</div>
 
@@ -162,7 +162,7 @@
 			</div>
 
 			<textarea
-				class="tin mono keyblock"
+				class="field-input tin mono keyblock"
 				aria-label={m.settings_key_block_aria()}
 				readonly
 				rows="8"
@@ -188,7 +188,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button disabled={!canCreate} onclick={create}>
 				{busy ? m.settings_delegation_generating() : m.settings_delegation_generate()}
 			</Button>
@@ -203,7 +203,7 @@
 <style>
 	.fp {
 		font-size: 12px;
-		color: var(--ink-700);
+		color: var(--fg);
 		word-break: break-all;
 	}
 

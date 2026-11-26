@@ -154,7 +154,7 @@
 				<label class="field-lbl" for="ik-armored">{m.settings_import_key_armored()}</label>
 				<textarea
 					id="ik-armored"
-					class="tin mono keyblock"
+					class="field-input tin mono keyblock"
 					rows="8"
 					placeholder="-----BEGIN PGP PUBLIC KEY BLOCK-----"
 					value={armoredKey}
@@ -186,12 +186,12 @@
 		{#if imported}
 			<Button variant="primary" onclick={onClose}>{m.common_done()}</Button>
 		{:else if review}
-			<Button variant="ghost" disabled={busy} onclick={back}>{m.common_back()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={back}>{m.common_back()}</Button>
 			<Button variant="primary" disabled={busy} onclick={pin}>
 				{busy ? m.settings_import_key_pinning() : m.settings_import_key_pin()}
 			</Button>
 		{:else}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!canReview} onclick={inspect}>
 				{m.settings_import_key_review()}
 			</Button>
@@ -202,7 +202,7 @@
 <style>
 	.fp {
 		font-size: 12px;
-		color: var(--ink-700);
+		color: var(--fg);
 		word-break: break-all;
 	}
 
@@ -214,7 +214,7 @@
 		flex-direction: column;
 		gap: 4px;
 		font-size: 12.5px;
-		color: var(--ink-700);
+		color: var(--fg);
 		overflow-wrap: anywhere;
 	}
 

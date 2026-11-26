@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowLeft,
 		faAt,
@@ -97,9 +98,9 @@
 <svelte:window onresize={settle} />
 
 <nav class="set-nav" aria-label={m.settings_nav_aria()}>
-	<a class="set-back" href={`/u/${slot}/mail/inbox`}>
+	<Button variant="ghost" block class="set-back" href={`/u/${slot}/mail/inbox`} aria-label={m.settings_nav_back_to_inbox()}>
 		<Icon icon={faArrowLeft} size={16} /><span class="lbl">{m.settings_nav_back_to_inbox()}</span>
-	</a>
+	</Button>
 	<div
 		class="nav-groups"
 		bind:this={strip}

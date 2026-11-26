@@ -9,6 +9,7 @@
 		faXmark
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { DimensionCoverage, Gap } from '$core/search/coverage';
 	import type { Sort } from '$core/search/sqlite/compile';
@@ -97,11 +98,12 @@
 			{/if}
 		{/if}
 		{#if search.mode !== 'desktop'}
-			<div class="ss-sort" role="group" aria-label={msg.mail_search_sort_label()}>
-				{#each SORTS as s (s.id)}
-					<button type="button" class:on={search.sort === s.id} aria-pressed={search.sort === s.id} onclick={() => search.onSort(s.id)}>{s.label()}</button>
-				{/each}
-			</div>
+			<Segmented
+				class="ss-sort"
+				aria-label={msg.mail_search_sort_label()}
+				bind:value={() => search.sort, (v) => search.onSort(v)}
+				options={SORTS.map((s) => ({ value: s.id, label: s.label() }))}
+			/>
 		{/if}
 	</div>
 	{#if search.chips.length}
@@ -118,7 +120,7 @@
 				</span>
 				{#if chip.kind === 'folder' && chip.descendants > 0 && !chip.negated}
 					<label class="ss-exact">
-						<input type="checkbox" checked={search.exactFolders} onchange={(e) => search.onExactFolders(e.currentTarget.checked)} />
+						<input type="checkbox" class="check" checked={search.exactFolders} onchange={(e) => search.onExactFolders(e.currentTarget.checked)} />
 						{msg.mail_search_exact_folder()}
 					</label>
 				{/if}

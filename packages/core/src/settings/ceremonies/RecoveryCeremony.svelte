@@ -215,10 +215,10 @@
 				{/if}
 			</div>
 			<div class="phrase-acts">
-				<Button variant="secondary" size="sm" disabled={!revealed} onclick={copyPhrase}>
+				<Button variant="neutral" size="sm" disabled={!revealed} onclick={copyPhrase}>
 					<Icon icon={faCopy} size={14} />{m.common_copy()}
 				</Button>
-				<Button variant="secondary" size="sm" disabled={!revealed} onclick={downloadKit}>
+				<Button variant="neutral" size="sm" disabled={!revealed} onclick={downloadKit}>
 					<Icon icon={faDownload} size={14} />{m.settings_ceremony_recovery_download()}
 				</Button>
 				{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_ceremony_recovery_saved()}</span>{/if}
@@ -238,7 +238,7 @@
 					<div class="quiz-row" class:ok class:bad>
 						<span class="quiz-n" id="quiz-word-{q.i}">{m.settings_ceremony_recovery_word_n({ n: q.i + 1 })}</span>
 						<input
-							class="tin mono"
+							class="field-input tin mono"
 							aria-labelledby="quiz-word-{q.i}"
 							value={val}
 							placeholder="…"
@@ -275,7 +275,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ack || generating} onclick={generate}>
 				{#if generating}
 					{m.settings_ceremony_recovery_generating()}
@@ -284,14 +284,14 @@
 				{/if}
 			</Button>
 		{:else if step === 1}
-			<Button variant="ghost" onclick={() => (step = 0)}>
+			<Button variant="neutral" onclick={() => (step = 0)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!revealed} onclick={() => (step = 2)}>
 				{m.settings_ceremony_recovery_written_down()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 2}
-			<Button variant="ghost" onclick={() => (step = 1)}>
+			<Button variant="neutral" onclick={() => (step = 1)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!allCorrect || submitting} onclick={confirmAndStore}>

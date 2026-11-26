@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ICAL from 'ical.js';
+	import { Chip } from '$core/components/ui/chip';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { m } from '$paraglide/messages.js';
 	import { weekdayName } from '$core/i18n/intl';
 
@@ -81,11 +83,18 @@
 </script>
 
 <div class="rec">
-	<div class="seg">
-		{#each [['NONE', m.cal_rec_once()], ['DAILY', m.cal_rec_daily()], ['WEEKLY', m.cal_rec_weekly()], ['MONTHLY', m.cal_rec_monthly()], ['YEARLY', m.cal_rec_yearly()]] as [key, label] (key)}
-			<button type="button" class:on={freq === key} onclick={() => pick(key as Freq)}>{label}</button>
-		{/each}
-	</div>
+	<Segmented
+		value={freq}
+		options={[
+			{ value: 'NONE', label: m.cal_rec_once() },
+			{ value: 'DAILY', label: m.cal_rec_daily() },
+			{ value: 'WEEKLY', label: m.cal_rec_weekly() },
+			{ value: 'MONTHLY', label: m.cal_rec_monthly() },
+			{ value: 'YEARLY', label: m.cal_rec_yearly() }
+		]}
+		onValueChange={pick}
+		block
+	/>
 	{#if freq !== 'NONE'}
 		<button type="button" class="rec-more" onclick={() => (custom = !custom)}>
 			{custom ? m.cal_rec_fewer() : m.cal_rec_more()}
@@ -93,9 +102,13 @@
 		{#if freq === 'WEEKLY'}
 			<div class="rec-days">
 				{#each DAYS as d (d)}
-					<button type="button" class:on={byday.includes(d)} aria-label={weekdayName(DAY_INDEX[d], 'long')} onclick={() => toggleDay(d)}>
+					<Chip
+						size="sm"
+						bind:pressed={() => byday.includes(d), () => toggleDay(d)}
+						aria-label={weekdayName(DAY_INDEX[d], 'long')}
+					>
 						{weekdayName(DAY_INDEX[d], 'narrow')}
-					</button>
+					</Chip>
 				{/each}
 			</div>
 		{/if}

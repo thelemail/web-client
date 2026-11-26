@@ -113,7 +113,7 @@
 
 <SecHead desc={m.settings_blocked_desc()} />
 
-<Card icon={faUserXmark} title={m.settings_blocked_title()}>
+<Card title={m.settings_blocked_title()}>
 	{#snippet right()}
 		<span class="card-meta">{m.settings_blocked_count({ count: entries.length })}</span>
 	{/snippet}
@@ -150,15 +150,15 @@
 				<div class="alias-addr">{e.address ?? m.settings_blocked_address_encrypted()}</div>
 				<div class="alias-target">{m.settings_blocked_on({ date: formatDate(e.createdAt) })}</div>
 			</div>
-			<button
-				type="button"
-				class="rowmenu"
-				title={m.settings_blocked_unblock()}
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				tooltip={m.settings_blocked_unblock()}
 				disabled={removing === e.id}
 				onclick={() => remove(e)}
 			>
 				<Icon icon={faTrashCan} size={15} />
-			</button>
+			</Button>
 		</div>
 	{/each}
 
@@ -166,7 +166,7 @@
 		<div class="alias-row bs-add">
 			<div class="alias-info">
 				<input
-					class="tin mono"
+					class="field-input field-sm tin mono"
 					type="email"
 					aria-label={m.settings_blocked_add_aria()}
 					placeholder="name@example.com"
@@ -182,10 +182,10 @@
 				/>
 				{#if addError}<div class="alias-target bs-adderr">{addError}</div>{/if}
 			</div>
-			<Button variant="secondary" size="sm" disabled={addBusy} onclick={() => void add()}>
+			<Button variant="tonal" size="sm" disabled={addBusy} onclick={() => void add()}>
 				{m.settings_blocked_block()}
 			</Button>
-			<Button variant="ghost" size="sm" disabled={addBusy} onclick={() => {
+			<Button variant="neutral" size="sm" disabled={addBusy} onclick={() => {
 					adding = false;
 					newAddress = '';
 					addError = null;
@@ -199,7 +199,7 @@
 </Card>
 
 {#snippet unblockBody()}
-	<p class="cfd-p">{m.settings_blocked_unblock_body()}</p>
+	<p class="dialog-p">{m.settings_blocked_unblock_body()}</p>
 {/snippet}
 
 {#if pendingUnblock}

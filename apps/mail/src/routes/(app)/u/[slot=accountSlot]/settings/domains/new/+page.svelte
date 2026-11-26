@@ -73,7 +73,7 @@
 		/>
 	</div>
 {:else}
-<Card icon={faGlobe} title={m.settings_domains_new_title()}>
+<Card title={m.settings_domains_new_title()}>
 
 	<div class="dw-pane">
 		<div class="field">

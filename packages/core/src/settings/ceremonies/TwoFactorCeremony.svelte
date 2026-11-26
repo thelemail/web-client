@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { OptionTiles } from '$core/components/ui/option-tiles';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { platform } from '$platform';
 	import Icon from '$core/components/Icon.svelte';
@@ -412,27 +413,19 @@
 			<div class="cer-lede">
 				<p>{m.settings_ceremony_twofa_lede()}</p>
 			</div>
-			<div class="method-opts">
-				{#each methodOpts as o (o.v)}
-					{@const Ic = o.icon}
-					<button
-						type="button"
-						class="method-opt"
-						class:on={method === o.v}
-						disabled={o.disabled}
-						onclick={() => (method = o.v)}
-					>
-						<span class="mo-radio"><span></span></span>
-						<Icon icon={Ic} size={20} />
-						<div class="mo-text">
-							<div class="mo-t">
-								{o.t}{#if o.recommended && !o.disabled}<span class="mo-tag">{m.settings_ceremony_twofa_recommended()}</span>{/if}
-							</div>
-							<div class="mo-d">{o.note ?? o.d}</div>
-						</div>
-					</button>
-				{/each}
-			</div>
+			<OptionTiles
+				columns={1}
+				aria-label={m.settings_ceremony_twofa_step_method()}
+				bind:value={() => method, (v) => (method = v as TwoFaSetupMethod)}
+				options={methodOpts.map((o) => ({
+					value: o.v,
+					title: o.t,
+					description: o.note ?? o.d,
+					icon: o.icon,
+					badge: o.recommended && !o.disabled ? m.settings_ceremony_twofa_recommended() : undefined,
+					disabled: o.disabled
+				}))}
+			/>
 			{#if setupError}
 				<span class="errtext" role="alert"><Icon icon={faCircleExclamation} size={13} /><span>{setupError}</span></span>
 			{/if}
@@ -450,7 +443,7 @@
 				<label for="twofa-pw">{m.settings_ceremony_twofa_password()}</label>
 				<input
 					id="twofa-pw"
-					class="tin"
+					class="field-input tin"
 					type="password"
 					bind:value={password}
 					placeholder={m.settings_ceremony_twofa_password_placeholder()}
@@ -470,7 +463,7 @@
 					</label>
 					<input
 						id="twofa-proof-code"
-						class="tin mono"
+						class="field-input tin mono"
 						class:otp={twoFaMode === 'totp'}
 						class:bcode={twoFaMode !== 'totp'}
 						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
@@ -507,7 +500,7 @@
 				</button>
 			{/if}
 			{#if hasWebauthn}
-				<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={confirmWithKey}>
+				<Button variant="tonal" size="sm" disabled={busy || password.length === 0} onclick={confirmWithKey}>
 					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_twofa_use_security_key()}
 				</Button>
 			{/if}
@@ -537,21 +530,21 @@
 					{#if manualSecret}
 						<div class="codeblock sm">
 							<span class="v">{manualSecret}</span>
-							<button
-								type="button"
-								class="cp"
-								title={m.common_copy()}
+							<Button
+								variant="ghost"
+								size="icon-xs"
+								tooltip={m.common_copy()}
 								onclick={() => navigator.clipboard.writeText(manualSecret.replaceAll(' ', ''))}
 							>
 								<Icon icon={faCopy} size={14} />
-							</button>
+							</Button>
 						</div>
 					{/if}
 					<div class="field">
 						<label for="otp-code">{m.settings_ceremony_twofa_code_label()}</label>
 						<input
 							id="otp-code"
-							class="tin mono otp"
+							class="field-input tin mono otp"
 							maxlength={6}
 							inputmode="numeric"
 							autocomplete="one-time-code"
@@ -589,7 +582,7 @@
 					<label for="twofa-key-name">{m.settings_ceremony_twofa_key_name_label()}</label>
 					<input
 						id="twofa-key-name"
-						class="tin"
+						class="field-input tin"
 						bind:value={keyName}
 						maxlength={KEY_NAME_MAX_LENGTH}
 						autocomplete="off"
@@ -603,7 +596,7 @@
 						</div>
 					{/if}
 				</div>
-				<Button variant="secondary" disabled={busy || !keyNameOk} onclick={registerKey}>
+				<Button variant="tonal" disabled={busy || !keyNameOk} onclick={registerKey}>
 					{#if isKey}<Icon icon={faArrowPointer} size={15} />{:else}<Icon icon={faFaceViewfinder} size={15} />{/if}
 					{#if busy}
 						{m.settings_ceremony_twofa_waiting()}
@@ -639,10 +632,10 @@
 				{/each}
 			</div>
 			<div class="phrase-acts">
-				<Button variant="secondary" size="sm" onclick={copyCodes}>
+				<Button variant="neutral" size="sm" onclick={copyCodes}>
 					<Icon icon={faCopy} size={14} />{m.common_copy()}
 				</Button>
-				<Button variant="secondary" size="sm" onclick={downloadCodes}>
+				<Button variant="neutral" size="sm" onclick={downloadCodes}>
 					<Icon icon={faDownload} size={14} />{m.settings_ceremony_twofa_download()}
 				</Button>
 				{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_ceremony_twofa_saved()}</span>{/if}
@@ -665,7 +658,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={busy} onclick={beginSetup}>
 				{#if busy}
 					{m.settings_ceremony_twofa_preparing()}

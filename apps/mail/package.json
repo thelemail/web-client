@@ -4,7 +4,7 @@
   "version": "0.18.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "vite dev --port 5175 --strictPort",
     "build": "rm -f build-meta/model-worker.json && vite build",
     "preview": "vite preview",
     "prepare": "pnpm i18n:compile && svelte-kit sync || echo ''",
@@ -33,7 +33,7 @@
     "@types/turndown": "^5.0.6",
     "@vitest/browser-playwright": "^4.1.12",
     "@vitest/coverage-v8": "^4.1.12",
-    "bits-ui": "^2.18.1",
+    "bits-ui": "^2.22.0",
     "clsx": "^2.1.1",
     "jsdom": "^29.1.1",
     "playwright": "^1.63.0",

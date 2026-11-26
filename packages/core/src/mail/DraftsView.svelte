@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import {
 		faArrowsRotate,
+		faCircleExclamation,
 		faFileLines,
+		faMagnifyingGlass,
 		faPaperclip,
 		faPenLine,
 		faTrashCan
@@ -83,30 +88,32 @@
 				{/if}
 			</h1>
 			<div class="lh-actions">
-				<button class="lh-btn" title={m.mail_refresh()} onclick={() => drafts.refresh()}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					tooltip={m.mail_refresh()}
+					onclick={() => drafts.refresh()}
+				>
 					<Icon icon={faArrowsRotate} size={16} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<div class="scroll">
 			{#if drafts.loading && list.length === 0}
-				<div class="drafts-empty"><div class="t">{m.common_loading()}</div></div>
+				<LoadState kind="loading" label={m.common_loading()} rows={4} />
 			{:else if drafts.loadError && list.length === 0}
-				<div class="drafts-empty">
-					<div class="t">{m.mail_drafts_load_failed()}</div>
-					<div class="d">{drafts.loadError}</div>
-					<button class="dretry" onclick={() => drafts.refresh()}>{m.mail_retry()}</button>
-				</div>
+				<EmptyState tone="error" icon={faCircleExclamation} title={m.mail_drafts_load_failed()} description={drafts.loadError}>
+					{#snippet action()}
+						<Button variant="neutral" size="sm" onclick={() => drafts.refresh()}>{m.mail_retry()}</Button>
+					{/snippet}
+				</EmptyState>
 			{:else if list.length === 0}
-				<div class="drafts-empty">
-					<div class="ring"><Icon icon={faFileLines} size={28} /></div>
-					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_drafts_empty()}</div>
-					<div class="d">
-						{mailSearch.text.trim()
-							? m.mail_drafts_no_matches()
-							: m.mail_drafts_empty_detail()}
-					</div>
-				</div>
+				<EmptyState
+					icon={mailSearch.text.trim() ? faMagnifyingGlass : faFileLines}
+					title={mailSearch.text.trim() ? m.mail_no_matches() : m.mail_drafts_empty()}
+					description={mailSearch.text.trim() ? m.mail_drafts_no_matches() : m.mail_drafts_empty_detail()}
+				/>
 			{:else}
 				{#each list as d (d.id)}
 					<div
@@ -138,32 +145,36 @@
 							{#if d.attachmentCount > 0}
 								<span class="datt"><Icon icon={faPaperclip} size={14} />{d.attachmentCount}</span>
 							{/if}
-							<button
-								type="button"
+							<Button
+								variant="ghostDanger"
+								size="icon-sm"
 								class="ddel"
-								title={m.mail_drafts_discard()}
+								tooltip={m.mail_drafts_discard()}
 								onclick={(e) => discardRow(e, d)}
 							>
 								<Icon icon={faTrashCan} size={16} />
-							</button>
+							</Button>
 						</div>
 					</div>
 				{/each}
 				{#if !drafts.exhausted}
 					<div class="dmore">
-						<button onclick={() => drafts.loadMore()} disabled={drafts.loadingMore}>
-							{drafts.loadingMore ? m.common_loading() : m.mail_load_more()}
-						</button>
+						<Button
+							variant="neutral"
+							size="sm"
+							busy={drafts.loadingMore}
+							busyLabel={m.common_loading()}
+							onclick={() => drafts.loadMore()}
+						>
+							{m.mail_load_more()}
+						</Button>
 					</div>
 				{/if}
 			{/if}
 		</div>
 	</section>
 	<div class="drafts-side">
-		<div class="ds-inner">
-			<Icon icon={faFileLines} size={40} />
-			<p>{m.mail_drafts_side()}</p>
-		</div>
+		<EmptyState icon={faFileLines} title={m.mail_drafts_side()} />
 	</div>
 </div>
 
@@ -187,10 +198,10 @@
 		background: var(--surface);
 	}
 	.drow:hover {
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 	}
 	.drow.active {
-		background: var(--paper-200);
+		background: var(--pine-100);
 	}
 	.dmain {
 		flex: 1;
@@ -214,7 +225,7 @@
 		flex: 0 0 auto;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 	}
 	.dsubj {
 		font-size: 13px;
@@ -232,7 +243,7 @@
 	}
 	.dprev {
 		font-size: 12.5px;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 		margin-top: 2px;
 		white-space: nowrap;
 		overflow: hidden;
@@ -250,93 +261,25 @@
 		gap: 3px;
 		font-family: var(--font-mono);
 		font-size: 11px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 	}
-	.ddel {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: none;
-		background: none;
-		border-radius: var(--radius-control-compact);
-		color: var(--ink-400);
-		cursor: pointer;
+	.dmeta :global(.ddel) {
 		opacity: 0;
 	}
-	.drow:hover .ddel {
+	.drow:hover :global(.ddel),
+	.dmeta :global(.ddel:focus-visible) {
 		opacity: 1;
-	}
-	.ddel:hover {
-		background: var(--danger-100);
-		color: var(--danger-700);
-	}
-	.drafts-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		padding: 56px 24px;
-		gap: 6px;
-		color: var(--ink-500);
-	}
-	.drafts-empty .ring {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		background: var(--paper-100);
-		color: var(--brass-600);
-		margin-bottom: 8px;
-	}
-	.drafts-empty .t {
-		font-family: var(--font-sans); font-feature-settings: normal;
-		font-size: 17px;
-		color: var(--fg-strong);
-	}
-	.drafts-empty .d {
-		font-size: 13px;
-		color: var(--ink-400);
-		max-width: 280px;
-	}
-	.dretry,
-	.drafts-empty .dretry {
-		margin-top: 10px;
 	}
 	.dmore {
 		display: flex;
 		justify-content: center;
 		padding: 14px;
 	}
-	.dmore button {
-		font-size: 12.5px;
-		color: var(--pine-700);
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-control-compact);
-		padding: 6px 14px;
-		cursor: pointer;
-	}
 	.drafts-side {
 		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--paper-50);
-	}
-	.ds-inner {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 12px;
-		color: var(--ink-400);
-		text-align: center;
-	}
-	.ds-inner p {
-		font-size: 13px;
+		background: var(--bg-raised);
 	}
 </style>

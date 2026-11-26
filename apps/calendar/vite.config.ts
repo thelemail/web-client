@@ -6,6 +6,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { inlineScriptHashes, loadBuildEnv, resolveOrigins } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
+import { devEdge } from '../../scripts/dev-edge.ts';
 import { modelAssets, ortRuntimeUrl } from '../../scripts/model-assets.ts';
 import { defineConfig } from 'vite';
 
@@ -70,7 +71,8 @@ export default defineConfig({
 	server: {
 		fs: {
 			allow: [workspaceRoot]
-		}
+		},
+		proxy: devEdge()
 	},
 	resolve: {
 		alias: [

@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { faClock, faLanguage } from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
-	import Seg from '../Seg.svelte';
+	import { Segmented } from '$core/components/ui/segmented';
 	import Card from '../Card.svelte';
 	import Select from '../Select.svelte';
 	import { formatDateLong } from '$core/mail/data';
@@ -39,7 +38,7 @@
 
 <SecHead desc={m.settings_region_desc()} />
 
-<Card icon={faLanguage} title={m.settings_region_language_title()}>
+<Card title={m.settings_region_language_title()}>
 	<Row t={m.settings_region_language()} d={m.settings_region_language_desc()}>
 		<Select
 			value={i18n.explicit ? i18n.locale : 'auto'}
@@ -50,31 +49,37 @@
 	</Row>
 </Card>
 
-<Card icon={faClock} title={m.settings_region_time_title()}>
+<Card title={m.settings_region_time_title()}>
 	<Row t={m.settings_region_time_zone()} d={m.settings_region_time_zone_desc()}>
 		<span class="ctl-aux">{accountSettings.timeZone}</span>
 	</Row>
 	<SettingsGate controls={['select', 'select']}>
 		<Row t={m.settings_region_date_format()}>
-			<Seg
-				value={s.dateFmt}
-				options={[
-					{ v: 'dmy', l: sample('dmy') },
-					{ v: 'mdy', l: sample('mdy') },
-					{ v: 'iso', l: sample('iso') }
-				]}
-				onChange={(v) => set('dateFmt', v)}
-			/>
+			{#snippet children(row)}
+				<Segmented
+					bind:value={() => s.dateFmt, (v) => v && set('dateFmt', v)}
+					options={[
+						{ value: 'dmy', label: sample('dmy') },
+						{ value: 'mdy', label: sample('mdy') },
+						{ value: 'iso', label: sample('iso') }
+					]}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 		<Row t={m.settings_region_time_format()}>
-			<Seg
-				value={s.timeFmt}
-				options={[
-					{ v: '24', l: m.settings_region_time_24h() },
-					{ v: '12', l: m.settings_region_time_12h() }
-				]}
-				onChange={(v) => set('timeFmt', v)}
-			/>
+			{#snippet children(row)}
+				<Segmented
+					bind:value={() => s.timeFmt, (v) => v && set('timeFmt', v)}
+					options={[
+						{ value: '24', label: m.settings_region_time_24h() },
+						{ value: '12', label: m.settings_region_time_12h() }
+					]}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 	</SettingsGate>
 </Card>

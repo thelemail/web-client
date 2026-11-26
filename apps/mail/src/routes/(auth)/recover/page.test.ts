@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { m } from '$paraglide/messages.js';
 import RecoverPage from './+page.svelte';
 
@@ -40,14 +40,12 @@ const OPERATION = 'op-rec';
 const PHRASE = [...Array(11).fill('abandon'), 'about'];
 
 function button(label: string) {
-	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+	return (screen.queryByRole('button', { name: label }) as HTMLButtonElement | null) ?? undefined;
 }
 
 async function enterPhrase() {
-	await vi.waitFor(() => expect(button(m.auth_sentence_next())).toBeDefined());
-	await fireEvent.click(button(m.auth_sentence_next())!);
-	await vi.waitFor(() => expect(document.querySelectorAll('.sp-words input')).toHaveLength(12));
-	const inputs = document.querySelectorAll<HTMLInputElement>('.sp-words input');
+	await vi.waitFor(() => expect(document.querySelectorAll('.af-words input')).toHaveLength(12));
+	const inputs = document.querySelectorAll<HTMLInputElement>('.af-words input');
 	for (const [i, word] of PHRASE.entries()) {
 		await fireEvent.input(inputs[i], { target: { value: word } });
 	}
@@ -100,7 +98,7 @@ describe('recover page routing', () => {
 			render(RecoverPage);
 
 			await vi.waitFor(() => expect(assign).toHaveBeenCalledWith('https://auth.thelemail.test/recover?email=r@thelemail.com'));
-			expect(button(m.auth_sentence_next())).toBeUndefined();
+			expect(button(m.auth_recover_phrase_unlock())).toBeUndefined();
 		} finally {
 			vi.unstubAllGlobals();
 		}
@@ -109,7 +107,8 @@ describe('recover page routing', () => {
 	it('recovers here while sign-in is still on mail', async () => {
 		render(RecoverPage);
 
-		await vi.waitFor(() => expect(button(m.auth_sentence_next())).toBeDefined());
+		await vi.waitFor(() => expect(button(m.auth_recover_phrase_unlock())).toBeDefined());
+		expect(document.querySelector<HTMLInputElement>('#rec-email')!.value).toBe('r@thelemail.com');
 	});
 });
 
@@ -177,8 +176,11 @@ describe('recover page OPAQUE cleanup', () => {
 	it('refuses short and common passwords and accepts a plain long one', async () => {
 		render(RecoverPage);
 		await reachNewPassword();
-		const fill = (value: string) => fireEvent.input(document.querySelector('#rec-password')!, { target: { value } });
-		const blocked = () => button(m.auth_sentence_next())?.disabled;
+		const fill = async (value: string) => {
+			await fireEvent.input(document.querySelector('#rec-password')!, { target: { value } });
+			await fireEvent.input(document.querySelector('#rec-confirm')!, { target: { value } });
+		};
+		const blocked = () => button(m.auth_recover_reset_password())?.disabled;
 
 		await fill('Password1234');
 		expect(blocked()).toBe(true);
@@ -187,7 +189,6 @@ describe('recover page OPAQUE cleanup', () => {
 		await fill('harbour lamp');
 		expect(blocked()).toBe(false);
 
-		await fireEvent.click(button(m.auth_sentence_next())!);
 		await fireEvent.input(document.querySelector('#rec-confirm')!, { target: { value: 'harbour lam' } });
 		expect(button(m.auth_recover_reset_password())?.disabled).toBe(true);
 		await fireEvent.input(document.querySelector('#rec-confirm')!, { target: { value: 'harbour lamp' } });

@@ -65,3 +65,13 @@ export function handOffToApp(): never {
 	}
 	return new Promise<never>(() => {}) as never;
 }
+
+export function productHost(audience: string): string {
+	const origin = productTarget(audience)?.origin;
+	if (!origin) return '';
+	try {
+		return new URL(origin).host;
+	} catch {
+		return '';
+	}
+}

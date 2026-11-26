@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faDownload, faPaperclip, faRotateRight } from '@fortawesome/pro-regular-svg-icons';
 	import {
 		AttachmentError,
@@ -158,20 +159,27 @@
 						</div>
 					</svelte:element>
 					{#if s.kind === 'error'}
-						<button type="button" class="dl" title={m.common_retry()} onclick={() => hydrate(chip)}>
-							<Icon icon={faRotateRight} size={16} />
-						</button>
-					{:else}
-						<button
-							type="button"
+						<Button
+							variant="ghost"
+							size="icon-sm"
 							class="dl"
-							class:busy={s.kind === 'downloading'}
-							title={s.kind === 'downloading' ? m.mail_attach_downloading() : m.mail_attach_download()}
-							disabled={s.kind !== 'ready'}
+							tooltip={m.common_retry()}
+							onclick={() => hydrate(chip)}
+						>
+							<Icon icon={faRotateRight} size={16} />
+						</Button>
+					{:else}
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="dl"
+							tooltip={s.kind === 'downloading' ? m.mail_attach_downloading() : m.mail_attach_download()}
+							busy={s.kind === 'downloading'}
+							disabled={s.kind !== 'ready' && s.kind !== 'downloading'}
 							onclick={() => download(chip)}
 						>
 							<Icon icon={faDownload} size={16} />
-						</button>
+						</Button>
 					{/if}
 				</div>
 			{/each}

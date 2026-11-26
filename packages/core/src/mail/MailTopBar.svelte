@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import Icon from '$core/components/Icon.svelte';
 	import { faBars, faCircleQuestion, faGear } from '@fortawesome/pro-regular-svg-icons';
-	import * as Tooltip from '$core/components/ui/tooltip';
+	import { Button } from '$core/components/ui/button';
 	import { platform } from '$platform';
 	import { mailNav } from '$core/stores/nav.svelte';
 	import { auth } from '$core/stores/auth.svelte';
@@ -26,33 +26,28 @@
 </script>
 
 <header class="mail-top">
-	<button
-		type="button"
+	<Button
+		variant="ghost"
+		size="icon-sm"
 		class="lh-nav"
 		aria-label={m.mail_menu()}
 		aria-expanded={mailNav.open}
 		onclick={(e) => mailNav.toggle(e.currentTarget)}
 	>
 		<Icon icon={faBars} size={18} />
-	</button>
+	</Button>
 	<ListSearch {placeholder} operators={view === null} />
 	<span class="mt-rule" aria-hidden="true"></span>
-	<Tooltip.Provider delayDuration={150} disableHoverableContent>
-		<Tooltip.Root>
-			<Tooltip.Trigger class="mt-btn" aria-label={m.mail_top_help()} onclick={() => platform.openLink(HELP_URL)}>
-				<Icon icon={faCircleQuestion} size={18} />
-			</Tooltip.Trigger>
-			<Tooltip.Content side="bottom" sideOffset={6}>{m.mail_top_help()}</Tooltip.Content>
-		</Tooltip.Root>
-		<Tooltip.Root>
-			<Tooltip.Trigger>
-				{#snippet child({ props })}
-					<a {...props} class="mt-btn" href={`/u/${slot}/settings`} aria-label={m.mail_acct_settings()}>
-						<Icon icon={faGear} size={18} />
-					</a>
-				{/snippet}
-			</Tooltip.Trigger>
-			<Tooltip.Content side="bottom" sideOffset={6}>{m.mail_acct_settings()}</Tooltip.Content>
-		</Tooltip.Root>
-	</Tooltip.Provider>
+	<Button
+		variant="ghost"
+		size="icon-sm"
+		tooltip={m.mail_top_help()}
+		tooltipSide="bottom"
+		onclick={() => platform.openLink(HELP_URL)}
+	>
+		<Icon icon={faCircleQuestion} size={18} />
+	</Button>
+	<Button variant="ghost" size="icon-sm" href={`/u/${slot}/settings`} tooltip={m.mail_acct_settings()} tooltipSide="bottom">
+		<Icon icon={faGear} size={18} />
+	</Button>
 </header>

@@ -5,7 +5,6 @@
 		faArrowsRotate,
 		faCircleExclamation,
 		faFingerprint,
-		faKey,
 		faLifeRing,
 		faLock,
 		faMobile,
@@ -17,7 +16,7 @@
 		faUsbDrive
 	} from '@fortawesome/pro-regular-svg-icons';
 	import Card from '../Card.svelte';
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import CeremonyRow from '../CeremonyRow.svelte';
 	import TwoFactorBackupCodesDialog from '../TwoFactorBackupCodesDialog.svelte';
 	import ConfirmDialog from '$core/mail/ConfirmDialog.svelte';
@@ -161,18 +160,18 @@
 
 {#snippet turnOnLink(t: string)}<button type="button" class="notelink" onclick={() => launch('twofa')}>{t}</button>{/snippet}
 
-<Card icon={faKey} title={m.settings_security_signin_title()} variant="flat">
+<Card title={m.settings_security_signin_title()}>
 	{#snippet right()}
 		{#if tfStatus}
 			{#if tfStatus.enabled}
-				<Badge kind="ok" dot>{m.settings_security_2fa_on()}</Badge>
+				<Badge tone="success" status>{m.settings_security_2fa_on()}</Badge>
 			{:else}
-				<Badge kind="warn" dot>{m.settings_security_2fa_off()}</Badge>
+				<Badge tone="warning" status>{m.settings_security_2fa_off()}</Badge>
 			{/if}
 		{:else if twofactor.phase === 'error'}
-			<Badge kind="neutral">{m.settings_security_2fa_unknown()}</Badge>
+			<Badge tone="neutral">{m.settings_security_2fa_unknown()}</Badge>
 		{:else}
-			<Badge kind="neutral">{m.settings_security_2fa_checking()}</Badge>
+			<Badge tone="neutral">{m.settings_security_2fa_checking()}</Badge>
 		{/if}
 	{/snippet}
 	<div class="cer-rows">
@@ -192,7 +191,7 @@
 		<div class="setrow set-loaderr" role="alert">
 			<Icon icon={faCircleExclamation} size={16} />
 			<p>{m.settings_security_2fa_load_failed()}</p>
-			<Button variant="secondary" size="sm" onclick={() => void twofactor.load(auth.accountId)}>
+			<Button variant="neutral" size="sm" onclick={() => void twofactor.load(auth.accountId)}>
 				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		</div>
@@ -204,7 +203,7 @@
 					{#if cred.kind === 'platform'}<Icon icon={faFingerprint} size={18} />{:else}<Icon icon={faUsbDrive} size={18} />{/if}
 				</span>
 				<div class="tfa-info">
-					<div class="tfa-t">{cred.name}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+					<div class="tfa-t">{cred.name}<Badge tone="success">{m.settings_security_on()}</Badge></div>
 					<div class="tfa-d">
 						{keyMeta(cred)}
 					</div>
@@ -232,7 +231,7 @@
 					<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
 				</div>
 				<div class="tfa-act">
-					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
+					<Button variant="tonal" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
 						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
@@ -244,7 +243,7 @@
 					<div class="tfa-d">{m.settings_security_key_desc()}</div>
 				</div>
 				<div class="tfa-act">
-					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
+					<Button variant="tonal" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
 						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
@@ -254,7 +253,7 @@
 			<div class="tfa-row">
 				<span class="tfa-ic"><Icon icon={faMobile} size={18} /></span>
 				<div class="tfa-info">
-					<div class="tfa-t">{m.settings_security_totp()}<Badge kind="ok">{m.settings_security_on()}</Badge></div>
+					<div class="tfa-t">{m.settings_security_totp()}<Badge tone="success">{m.settings_security_on()}</Badge></div>
 					<div class="tfa-d">
 						{m.settings_security_totp_meta({ date: fmtDate(tfStatus.totp.createdAt) })}
 					</div>
@@ -273,7 +272,7 @@
 					<div class="tfa-d">{m.settings_security_totp_desc()}</div>
 				</div>
 				<div class="tfa-act">
-					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
+					<Button variant="tonal" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
 						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
@@ -314,8 +313,8 @@
 			{#each [0, 1] as i (i)}
 				<div class="setrow" aria-hidden="true">
 					<div class="info">
-						<span class="sk-bar sk-t"></span>
-						<span class="sk-bar sk-d"></span>
+						<span class="skeleton sk-bar sk-t"></span>
+						<span class="skeleton sk-bar sk-d"></span>
 					</div>
 				</div>
 			{/each}
@@ -324,14 +323,14 @@
 </Card>
 
 {#snippet factorBody()}
-	<p class="cfd-p">{factorCopy.desc}</p>
+	<p class="dialog-p">{factorCopy.desc}</p>
 	{#if factorAction?.kind === 'renameKey'}
-		<label class="cfd-field">
-			<span class="cfd-label">{m.settings_ceremony_twofa_key_name_label()}</span>
+		<label class="dialog-field">
+			<span class="dialog-label">{m.settings_ceremony_twofa_key_name_label()}</span>
 			<input
 				{@attach selectOnMount}
 				bind:value={renameValue}
-				class="cfd-input"
+				class="field-input"
 				maxlength={KEY_NAME_MAX_LENGTH}
 				autocomplete="off"
 				spellcheck={false}

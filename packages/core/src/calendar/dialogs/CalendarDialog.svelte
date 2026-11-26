@@ -11,6 +11,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import * as Dialog from '$core/components/ui/dialog';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { bytesToB64 } from '$core/crypto';
 	import { addresses } from '$core/stores/addresses.svelte';
@@ -237,26 +238,22 @@
 	}
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		{#if request.mode === 'delete'}
-			<Icon icon={faTrashCan} size={18} color="var(--danger-500)" />
-		{:else if request.mode === 'share'}
-			<Icon icon={faKey} size={18} color="var(--brass-600)" />
-		{:else}
-			<Icon icon={faCalendarPlus} size={18} color="var(--brass-600)" />
-		{/if}
-		<Dialog.Title class="dt">{title}</Dialog.Title>
+<Dialog.Content size="lg" class="cal-surface">
+	<Dialog.Header
+		icon={request.mode === 'delete' ? faTrashCan : request.mode === 'share' ? faKey : faCalendarPlus}
+		tone={request.mode === 'delete' ? 'danger' : 'brand'}
+	>
+		<Dialog.Title>{title}</Dialog.Title>
 	</Dialog.Header>
 
-	<div class="cal-dlg-body cal-form">
+	<div class="cal-form">
 		{#if request.mode === 'delete'}
-			<p class="cal-dlg-lead">{m.cal_caldlg_delete_lead({ name: existing?.name ?? '' })}</p>
+			<p class="dialog-p">{m.cal_caldlg_delete_lead({ name: existing?.name ?? '' })}</p>
 		{:else}
 			{#if request.mode === 'create' || request.mode === 'edit'}
 				<label class="cal-field">
 					<span>{m.cal_caldlg_name()}</span>
-					<input type="text" bind:value={name} maxlength="120" placeholder={m.cal_caldlg_name_placeholder()} />
+					<input class="field-input" type="text" bind:value={name} maxlength="120" placeholder={m.cal_caldlg_name_placeholder()} />
 				</label>
 				<div class="cal-field">
 					<span>{m.cal_caldlg_colour()}</span>
@@ -275,39 +272,43 @@
 				</div>
 				<label class="cal-field">
 					<span>{m.cal_caldlg_description()}</span>
-					<input type="text" bind:value={description} maxlength="240" placeholder={m.cal_caldlg_optional()} />
+					<input class="field-input" type="text" bind:value={description} maxlength="240" placeholder={m.cal_caldlg_optional()} />
 				</label>
 				<div class="cal-field">
 					<span>{m.cal_caldlg_default_privacy()}</span>
-					<div class="seg">
-						{#each [['private', m.cal_privacy_private()], ['busy', m.cal_privacy_busy()], ['shared', m.cal_privacy_shared()]] as [value, label] (value)}
-							<button
-								type="button"
-								class:on={defaultPrivacy === value}
-								onclick={() => (defaultPrivacy = value as Privacy)}
-							>
-								{label}
-							</button>
-						{/each}
-					</div>
+					<Segmented
+						bind:value={defaultPrivacy}
+						options={[
+							{ value: 'private', label: m.cal_privacy_private() },
+							{ value: 'busy', label: m.cal_privacy_busy() },
+							{ value: 'shared', label: m.cal_privacy_shared() }
+						]}
+						aria-label={m.cal_caldlg_default_privacy()}
+						block
+					/>
 				</div>
 			{/if}
 
 			{#if request.mode === 'create'}
 				<div class="cal-field">
 					<span>{m.cal_caldlg_who()}</span>
-					<div class="seg">
-						<button type="button" class:on={kind === 'personal'} onclick={() => (kind = 'personal')}>{m.cal_caldlg_who_me()}</button>
-						<button type="button" class:on={kind === 'shared'} disabled={!canShare} onclick={() => (kind = 'shared')}>{m.cal_caldlg_who_members()}</button>
-						<button type="button" class:on={kind === 'role'} disabled={!isAdmin || !sharedAddresses.length} onclick={() => (kind = 'role')}>{m.cal_caldlg_who_address()}</button>
-					</div>
+					<Segmented
+						bind:value={kind}
+						options={[
+							{ value: 'personal', label: m.cal_caldlg_who_me() },
+							{ value: 'shared', label: m.cal_caldlg_who_members(), disabled: !canShare },
+							{ value: 'role', label: m.cal_caldlg_who_address(), disabled: !isAdmin || !sharedAddresses.length }
+						]}
+						aria-label={m.cal_caldlg_who()}
+						block
+					/>
 				</div>
 			{/if}
 
 			{#if request.mode === 'create' && kind === 'role'}
 				<label class="cal-field">
 					<span>{m.cal_caldlg_shared_address()}</span>
-					<select bind:value={aliasAddressId}>
+					<select class="field-input" bind:value={aliasAddressId}>
 						<option value="">{m.cal_caldlg_choose_address()}</option>
 						{#each sharedAddresses as addr (addr.id)}
 							<option value={addr.id}>{addr.email}</option>
@@ -334,7 +335,7 @@
 									<span class="member-mail">{member.email}</span>
 								</label>
 								{#if role}
-									<select value={role} onchange={(e) => setRole(member.accountId, (e.currentTarget as HTMLSelectElement).value as CalendarRole)}>
+									<select class="field-input" value={role} onchange={(e) => setRole(member.accountId, (e.currentTarget as HTMLSelectElement).value as CalendarRole)}>
 										<option value="owner">{m.cal_role_owner()}</option>
 										<option value="editor">{m.cal_role_editor()}</option>
 										<option value="viewer">{m.cal_role_viewer()}</option>
@@ -353,9 +354,8 @@
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<div class="grow"></div>
-		<Button variant="ghost" disabled={busy} onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
+	<Dialog.Footer>
+		<Button variant="neutral" disabled={busy} onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 		<Button variant={request.mode === 'delete' ? 'dangerSolid' : 'primary'} disabled={busy} onclick={submit}>
 			{request.mode === 'delete' ? m.common_delete() : request.mode === 'share' ? m.cal_caldlg_save_members() : request.mode === 'edit' ? m.common_save() : m.cal_caldlg_create()}
 		</Button>

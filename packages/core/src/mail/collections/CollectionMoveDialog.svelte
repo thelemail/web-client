@@ -58,7 +58,7 @@
 		const el = node.querySelector<HTMLElement>(
 			'input[type="search"], input:checked:not(:disabled), input:not(:disabled), button:not(:disabled)'
 		);
-		(el ?? node.closest('.cfd-modal')?.querySelector<HTMLElement>('.cfd-actions button'))?.focus();
+		(el ?? node.closest('.dialog')?.querySelector<HTMLElement>('.dialog-footer button'))?.focus();
 	}
 </script>
 
@@ -66,6 +66,7 @@
 	<label class="cm-opt" class:off={!!why} style:--depth={depth} title={path ?? title}>
 		<input
 			type="radio"
+			class="radio"
 			name={`${uid}-target`}
 			{value}
 			bind:group={choice}
@@ -82,7 +83,7 @@
 
 {#snippet body()}
 	<div class="cc-body" {@attach focusFirst}>
-		<p class="cfd-p">{folder ? m.mail_collection_move_desc_folder() : m.mail_collection_move_desc_label()}</p>
+		<p class="dialog-p">{folder ? m.mail_collection_move_desc_folder() : m.mail_collection_move_desc_label()}</p>
 		{#if all.length > 8 || filtering}
 			<label class="cm-find">
 				<Icon icon={faMagnifyingGlass} size={14} />

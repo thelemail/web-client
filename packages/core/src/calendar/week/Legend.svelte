@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faClock } from '@fortawesome/pro-regular-svg-icons';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -26,8 +27,8 @@
 		<span class="lg"><i class="lg-sw {kind.key}"></i><b>{kind.name()}</b> {kind.note()}</span>
 	{/each}
 	<span class="lg-spacer"></span>
-	<button type="button" class="ackbtn" onclick={() => (cal.fullDay = !cal.fullDay)}>
+	<Button variant="ghost" size="sm" onclick={() => (cal.fullDay = !cal.fullDay)}>
 		<Icon icon={faClock} size={13} />{cal.fullDay ? m.cal_legend_hide_early() : m.cal_legend_show_midnight()}
-	</button>
+	</Button>
 	<PrivacyChip tone={chip.tone} label={chip.label} />
 </div>

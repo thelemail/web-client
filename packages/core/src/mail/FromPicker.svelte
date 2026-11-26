@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import { tick } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
+	import * as Popover from '$core/components/ui/popover';
 	import {
 		faCheck,
 		faChevronDown,
@@ -41,8 +42,8 @@
 		onManage
 	}: Props = $props();
 
-	let row: HTMLDivElement | undefined = $state();
-	let menu: HTMLDivElement | undefined = $state();
+	let menu: HTMLElement | null = $state(null);
+	let returnFocus = true;
 	let filter: HTMLInputElement | undefined = $state();
 	let query = $state('');
 	let typed = '';
@@ -77,22 +78,27 @@
 		list[(i + list.length) % list.length].focus();
 	}
 
-	async function show(focusFirst: boolean): Promise<void> {
+	function show(): void {
 		query = '';
+		returnFocus = true;
 		open = true;
-		await tick();
-		if (filterable) filter?.focus();
-		else if (focusFirst) {
-			const list = items();
-			const at = list.findIndex((b) => b.getAttribute('aria-checked') === 'true');
-			focusItem(at < 0 ? 0 : at);
-		}
 	}
 
 	function hide(refocus: boolean): void {
+		returnFocus = refocus;
 		open = false;
 		query = '';
-		if (refocus) trigger?.focus();
+	}
+
+	function focusInitial(e: Event): void {
+		e.preventDefault();
+		if (filterable) {
+			filter?.focus();
+			return;
+		}
+		const list = items();
+		const at = list.findIndex((b) => b.getAttribute('aria-checked') === 'true');
+		focusItem(at < 0 ? 0 : at);
 	}
 
 	function pick(email: string): void {
@@ -102,13 +108,13 @@
 
 	export function choose(): void {
 		trigger?.focus();
-		void show(true);
+		show();
 	}
 
 	function onTriggerKey(e: KeyboardEvent): void {
-		if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+		if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
 			e.preventDefault();
-			void show(true);
+			show();
 		}
 	}
 
@@ -133,11 +139,7 @@
 	function onMenuKey(e: KeyboardEvent): void {
 		const list = items();
 		const at = list.indexOf(document.activeElement as HTMLButtonElement);
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			e.stopPropagation();
-			hide(true);
-		} else if (e.key === 'Tab') {
+		if (e.key === 'Tab') {
 			hide(false);
 		} else if (e.target === filter) {
 			if (e.key === 'ArrowDown') {
@@ -168,47 +170,51 @@
 			} else typeAhead(e.key.toLowerCase());
 		}
 	}
-
-	function onDocDown(e: MouseEvent): void {
-		if (open && row && !row.contains(e.target as Node)) hide(false);
-	}
 </script>
 
-<svelte:document onmousedown={onDocDown} />
-
-<div class="from-row" bind:this={row}>
+<div class="from-row">
 	<span class="recip-label">{m.mail_compose_from()}</span>
-	<button
-		type="button"
-		class="from-trigger"
-		class:open
-		class:revoked={!!revoked}
-		bind:this={trigger}
-		aria-haspopup="menu"
-		aria-expanded={open}
-		aria-describedby={revoked ? `${uid}-revoked` : undefined}
-		onclick={() => (open ? hide(false) : void show(false))}
-		onkeydown={onTriggerKey}
-	>
-		<Avatar
-			initials={face.init}
-			src={revoked || current.kind === 'Alias' ? null : avatarUrl}
-			fit="cover"
-			size={22}
-			bg={revoked ? 'var(--paper-100)' : current.bg}
-			fg={revoked ? 'var(--fg-faint)' : current.fg}
-		/>
-		<span class="ft-name">{face.name}</span>
-		<span class="ft-email">&lt;{face.email}&gt;</span>
-		<Icon icon={faChevronDown} size={15} />
-	</button>
-	{#if open}
-		<div
+	<Popover.Root bind:open>
+		<Popover.Trigger>
+			{#snippet child({ props })}
+				<button
+					{...props}
+					type="button"
+					class="from-trigger"
+					class:open
+					class:revoked={!!revoked}
+					bind:this={trigger}
+					aria-describedby={revoked ? `${uid}-revoked` : undefined}
+					onkeydown={(e) => {
+						(props.onkeydown as ((e: KeyboardEvent) => void) | undefined)?.(e);
+						onTriggerKey(e);
+					}}
+				>
+					<Avatar
+						initials={face.init}
+						src={revoked || current.kind === 'Alias' ? null : avatarUrl}
+						fit="cover"
+						size={22}
+						bg={revoked ? 'var(--bg-sunken)' : current.bg}
+						fg={revoked ? 'var(--fg-faint)' : current.fg}
+					/>
+					<span class="ft-name">{face.name}</span>
+					<span class="ft-email">&lt;{face.email}&gt;</span>
+					<Icon icon={faChevronDown} size={15} />
+				</button>
+			{/snippet}
+		</Popover.Trigger>
+		<Popover.Content
+			bind:ref={menu}
 			class="from-menu"
-			role="menu"
-			tabindex="-1"
+			align="start"
+			sideOffset={4}
 			aria-label={m.mail_compose_send_from_account({ account })}
-			bind:this={menu}
+			portalProps={{ disabled: true }}
+			onOpenAutoFocus={focusInitial}
+			onCloseAutoFocus={(e) => {
+				if (!returnFocus) e.preventDefault();
+			}}
 			onkeydown={onMenuKey}
 		>
 			<div class="fm-h">{m.mail_compose_send_from_account({ account })}</div>
@@ -226,52 +232,54 @@
 					/>
 				</label>
 			{/if}
-			{#if revoked && !query}
-				<div class="fm-item gone" role="menuitemradio" aria-checked="true" aria-disabled="true">
-					<Avatar initials={face.init} size={30} bg="var(--paper-100)" fg="var(--fg-faint)" />
-					<span class="fm-tx">
-						<span class="fm-top">
-							<b>{revoked.name}</b>
-							<span class="fm-kind gone">{m.mail_compose_from_gone()}</span>
+			<div class="fm-list" role="menu" aria-label={m.mail_compose_send_from_account({ account })}>
+				{#if revoked && !query}
+					<div class="fm-item gone" role="menuitemradio" aria-checked="true" aria-disabled="true">
+						<Avatar initials={face.init} size={30} bg="var(--bg-sunken)" fg="var(--fg-faint)" />
+						<span class="fm-tx">
+							<span class="fm-top">
+								<b>{revoked.name}</b>
+								<span class="fm-kind gone">{m.mail_compose_from_gone()}</span>
+							</span>
+							<span class="fm-em">{revoked.email}</span>
 						</span>
-						<span class="fm-em">{revoked.email}</span>
-					</span>
-				</div>
-			{/if}
-			{#each shown as id, i (id.email + '-' + i)}
-				<button
-					type="button"
-					class="fm-item"
-					class:on={id.email === selected}
-					role="menuitemradio"
-					aria-checked={id.email === selected}
-					tabindex="-1"
-					data-name={id.name.toLowerCase()}
-					data-email={id.email.toLowerCase()}
-					onclick={() => pick(id.email)}
-				>
-					<Avatar
-						initials={id.init}
-						src={id.kind === 'Alias' ? null : avatarUrl}
-						fit="cover"
-						size={30}
-						bg={id.bg}
-						fg={id.fg}
-					/>
-					<span class="fm-tx">
-						<span class="fm-top">
-							<b>{id.name}</b>
-							<span class="fm-kind">{kindLabel(id.kind)}</span>
+					</div>
+				{/if}
+				{#each shown as id, i (id.email + '-' + i)}
+					<button
+						type="button"
+						class="fm-item"
+						class:on={id.email === selected}
+						role="menuitemradio"
+						aria-checked={id.email === selected}
+						tabindex="-1"
+						data-name={id.name.toLowerCase()}
+						data-email={id.email.toLowerCase()}
+						onclick={() => pick(id.email)}
+					>
+						<Avatar
+							initials={id.init}
+							src={id.kind === 'Alias' ? null : avatarUrl}
+							fit="cover"
+							size={30}
+							bg={id.bg}
+							fg={id.fg}
+						/>
+						<span class="fm-tx">
+							<span class="fm-top">
+								<b>{id.name}</b>
+								<span class="fm-kind">{kindLabel(id.kind)}</span>
+							</span>
+							<span class="fm-em">{id.email}</span>
+							{#if id.org}<span class="fm-org">{id.org}</span>{/if}
 						</span>
-						<span class="fm-em">{id.email}</span>
-						{#if id.org}<span class="fm-org">{id.org}</span>{/if}
-					</span>
-					{#if id.email === selected}<Icon icon={faCheck} size={17} />{/if}
-				</button>
-			{/each}
-			{#if shown.length === 0}
-				<div class="fm-none">{m.mail_compose_from_no_match()}</div>
-			{/if}
+						{#if id.email === selected}<Icon icon={faCheck} size={17} />{/if}
+					</button>
+				{/each}
+				{#if shown.length === 0}
+					<div class="fm-none">{m.mail_compose_from_no_match()}</div>
+				{/if}
+			</div>
 			<div class="fm-foot">
 				<span>{m.mail_compose_from_account_only()}</span>
 				{#if onManage}
@@ -287,15 +295,22 @@
 					</button>
 				{/if}
 			</div>
-		</div>
-	{/if}
+		</Popover.Content>
+	</Popover.Root>
 </div>
 {#if revoked}
 	<div class="cwarn" role="alert">
 		<Icon icon={faCircleExclamation} size={14} />
 		<span class="cwarn-t" id="{uid}-revoked">{m.mail_compose_from_revoked({ address: revoked.email })}</span>
-		<button type="button" class="cwarn-act" onclick={choose}>{m.mail_compose_choose_address()}</button>
+		<Button variant="neutral" size="sm" class="cwarn-btn" onclick={choose}>{m.mail_compose_choose_address()}</Button>
 	</div>
 {:else if noSender}
 	<div class="cnote"><Icon icon={faCircleExclamation} size={14} />{m.mail_compose_no_sender()}</div>
 {/if}
+
+<style>
+	.cwarn :global(.cwarn-btn) {
+		flex: 0 0 auto;
+		margin-left: auto;
+	}
+</style>

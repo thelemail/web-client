@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
+	import * as Dialog from '$core/components/ui/dialog';
 	import { faCheck, faMinus, faXmark } from '@fortawesome/pro-regular-svg-icons';
-	import { portal } from '$core/actions/portal';
 	import type { TrustCheck } from './trust';
 
 	interface Props {
@@ -12,39 +12,23 @@
 
 	let { check, onClose }: Props = $props();
 
-	let panel: HTMLDivElement | undefined = $state();
-
-	$effect(() => {
-		panel?.focus();
-	});
+	const glyph = $derived(check.state === 'pass' ? faCheck : check.state === 'fail' ? faXmark : faMinus);
+	const tone = $derived(check.state === 'pass' ? 'success' : check.state === 'fail' ? 'danger' : 'neutral');
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && onClose()} />
-
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="tcd-scrim" use:portal onmousedown={(e) => e.target === e.currentTarget && onClose()}>
-	<div
-		class="tcd"
-		bind:this={panel}
-		tabindex="-1"
-		role="dialog"
-		aria-modal="true"
-		aria-label={check.label}
-		data-state={check.state}
-	>
-		<div class="tcd-h">
-			<span class="tcd-glyph">
-				{#if check.state === 'pass'}
-					<Icon icon={faCheck} size={15} />
-				{:else if check.state === 'fail'}
-					<Icon icon={faXmark} size={15} />
-				{:else}
-					<Icon icon={faMinus} size={15} />
-				{/if}
-			</span>
-			<h2>{check.label}</h2>
-		</div>
-		<p class="tcd-explain">{check.explain}</p>
+<Dialog.Root
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open) onClose();
+		}
+	}
+>
+	<Dialog.Content size="sm">
+		<Dialog.Header icon={glyph} {tone}>
+			<Dialog.Title>{check.label}</Dialog.Title>
+			<Dialog.Description>{check.explain}</Dialog.Description>
+		</Dialog.Header>
 		{#if check.rows.length > 0}
 			<dl class="tcd-rows">
 				{#each check.rows as row, i (row.label + i)}
@@ -55,91 +39,20 @@
 				{/each}
 			</dl>
 		{/if}
-		<button class="tcd-close" onclick={onClose}>{m.common_close()}</button>
-	</div>
-</div>
+		<Dialog.Footer>
+			<Button variant="neutral" onclick={onClose}>{m.common_close()}</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
 
 <style>
-	.tcd-scrim {
-		position: fixed;
-		inset: 0;
-		z-index: 90;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 20px;
-		background: color-mix(in oklab, var(--ink-900) 38%, transparent);
-	}
-
-	.tcd {
-		width: 100%;
-		max-width: 420px;
-		max-height: calc(100dvh - 40px);
-		overflow-y: auto;
-		background: var(--surface);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-panel);
-		box-shadow: var(--shadow-lg);
-		padding: 20px 22px 18px;
-	}
-
-	.tcd:focus {
-		outline: none;
-	}
-
-	.tcd-h {
-		display: flex;
-		align-items: flex-start;
-		gap: 10px;
-		margin-bottom: 10px;
-	}
-
-	.tcd-glyph {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 26px;
-		height: 26px;
-		border-radius: 50%;
-		flex: 0 0 auto;
-		margin-top: 1px;
-	}
-	.tcd[data-state='pass'] .tcd-glyph {
-		background: var(--success-100);
-		color: var(--success-700);
-	}
-	.tcd[data-state='absent'] .tcd-glyph {
-		color: var(--fg-faint);
-		box-shadow: inset 0 0 0 1px var(--border);
-	}
-	.tcd[data-state='fail'] .tcd-glyph {
-		background: var(--danger-100);
-		color: var(--danger-700);
-	}
-
-	.tcd h2 {
-		margin: 0;
-		font-size: 15px;
-		font-weight: 600;
-		line-height: 1.3;
-		letter-spacing: var(--track-snug);
-		color: var(--fg-strong);
-	}
-
-	.tcd-explain {
-		margin: 0;
-		font-size: 13px;
-		line-height: 1.5;
-		color: var(--fg);
-	}
-
 	.tcd-rows {
-		margin: 14px 0 0;
-		padding: 12px 0 0;
-		border-top: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		margin: 0;
+		padding-top: 12px;
+		border-top: 1px solid var(--border-soft);
 	}
 	.tcd-rows div {
 		display: grid;
@@ -148,31 +61,15 @@
 		align-items: baseline;
 	}
 	.tcd-rows dt {
-		font-size: 11px;
 		color: var(--fg-faint);
+		font-size: 11.5px;
 	}
 	.tcd-rows dd {
 		margin: 0;
-		font-family: var(--font-mono);
-		font-size: 10.5px;
-		line-height: 1.5;
 		color: var(--fg);
+		font-family: var(--font-mono);
+		font-size: 11px;
+		line-height: 1.5;
 		word-break: break-word;
-	}
-
-	.tcd-close {
-		margin-top: 18px;
-		width: 100%;
-		padding: 8px 12px;
-		font-size: 13px;
-		font-weight: 560;
-		color: var(--fg-strong);
-		background: var(--surface-muted);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-control);
-		cursor: pointer;
-	}
-	.tcd-close:hover {
-		border-color: var(--border-strong);
 	}
 </style>

@@ -2,8 +2,9 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
-	import Clause from '$core/auth/sentence/Clause.svelte';
-	import Status from '$core/auth/sentence/Status.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
+	import { productHost } from '$core/products';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { localForkPath } from '$core/fork';
 	import { auth } from '$core/stores/auth.svelte';
@@ -81,40 +82,41 @@
 	}
 </script>
 
-{#snippet account(_: string)}<span class="acct">{address}</span>{/snippet}
+{#snippet account(_: string)}<span class="mono">{address}</span>{/snippet}
 {#snippet count(_: string)}<span class="tabnum">{left}</span>{/snippet}
 
 <AuthShell strip={false}>
-	<div class="card">
-		<div class="sp" aria-live="polite">
-			{#if error}
-				<p class="sent sm">{error}</p>
-				<div class="sp-acts">
-					<Button variant="primary" size="lg" href="/">{m.handoff_restart()}</Button>
+	<div class="card" aria-live="polite">
+		{#if error}
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.handoff_title()}</h1>
+					<p>{error}</p>
 				</div>
-			{:else if phase === 'counting'}
-				<p class="sent sm">
-					<Clause text={address ? m.handoff_tab_done_sentence() : m.handoff_tab_done_plain()} slots={{ account, count }} />
-				</p>
-				<div class="sp-under">
-					<div class="sp-bar" aria-hidden="true"><i style:width="{((CLOSE_AFTER - left + 1) / CLOSE_AFTER) * 100}%"></i></div>
-					<p class="sp-fine">{m.handoff_tab_closes()}</p>
-					<div class="sp-acts">
-						<Button variant="primary" size="lg" onclick={closeTab}>{m.handoff_tab_go_now()}</Button>
-						<button type="button" class="sp-quiet" onclick={stay}>{m.handoff_tab_stay()}</button>
-					</div>
+				<Button variant="primary" size="lg" block href="/">{m.handoff_restart()}</Button>
+			</div>
+		{:else if phase === 'counting'}
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.handoff_tab_done_title()}</h1>
+					<p><Rich text={address ? m.handoff_tab_done_sentence() : m.handoff_tab_done_plain()} tags={{ account, count }} /></p>
 				</div>
-			{:else if phase === 'stayed'}
-				<p class="sent sm">
-					{#if address}<Clause text={m.handoff_tab_stayed_sentence()} slots={{ account }} />{:else}{m.handoff_tab_stayed_plain()}{/if}
-				</p>
-				<div class="sp-acts">
-					<Button variant="secondary" size="lg" onclick={closeTab}>{m.handoff_tab_close()}</Button>
+				<div class="af-bar" aria-hidden="true"><i style:width="{((CLOSE_AFTER - left + 1) / CLOSE_AFTER) * 100}%"></i></div>
+				<p class="af-fine center">{m.handoff_tab_closes()}</p>
+				<Button variant="primary" size="lg" block onclick={closeTab}>{m.handoff_tab_go_now()}</Button>
+				<p class="af-row"><button type="button" class="af-link muted" onclick={stay}>{m.handoff_tab_stay()}</button></p>
+			</div>
+		{:else if phase === 'stayed'}
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.handoff_tab_done_title()}</h1>
+					<p>{#if address}<Rich text={m.handoff_tab_stayed_sentence()} tags={{ account }} />{:else}{m.handoff_tab_stayed_plain()}{/if}</p>
 				</div>
-			{:else}
-				<Status tone="busy">{m.handoff_opening()}</Status>
-			{/if}
-		</div>
+				<Button variant="neutral" size="lg" block onclick={closeTab}>{m.handoff_tab_close()}</Button>
+			</div>
+		{:else}
+			<HandoffCard title={m.handoff_finish_title()} lede={m.handoff_finish_lede()} from={productHost('auth')} to={location.host} secure="from" />
+		{/if}
 	</div>
 </AuthShell>
 

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-	import { trapFocus } from '$core/actions/trapFocus';
 	import type { Snippet } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
-	import { faCheck, faXmark } from '@fortawesome/pro-regular-svg-icons';
+	import * as Dialog from '$core/components/ui/dialog';
+	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { setHeadingLevel, setRowNames } from './a11y';
 
@@ -33,42 +33,22 @@
 		footer
 	}: Props = $props();
 
-	const uid = $props.id();
-
 	setRowNames(undefined);
 	setHeadingLevel(3);
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') onClose();
-	}
-
-	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) onClose();
-	}
 </script>
 
-<svelte:document onkeydown={handleKey} />
-
-<div class="cer-scrim" role="presentation" onmousedown={scrimMouseDown}>
-	<div
-		class={'cer-panel' + (tone ? ' tone-' + tone : '')}
-		role="dialog"
-		aria-modal="true"
-		use:trapFocus
-		aria-labelledby="{uid}-title"
-		tabindex="-1"
-		onmousedown={(e) => e.stopPropagation()}
-	>
-		<header class="cer-head">
-			<span class="cer-ic"><Icon {icon} size={19} /></span>
-			<div class="cer-htext">
-				<div class="cer-eyebrow">{eyebrow}</div>
-				<h2 class="cer-title" id="{uid}-title">{title}</h2>
-			</div>
-			<button type="button" class="cer-close" onclick={onClose} aria-label={m.common_close()}>
-				<Icon icon={faXmark} size={18} />
-			</button>
-		</header>
+<Dialog.Root
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open) onClose();
+		}
+	}
+>
+	<Dialog.Content class={'cer-panel' + (tone ? ' tone-' + tone : '')}>
+		<Dialog.Header {icon} {eyebrow} tone={tone ?? 'brand'}>
+			<Dialog.Title>{title}</Dialog.Title>
+		</Dialog.Header>
 
 		{#if steps && steps.length > 1}
 			<ol class="cer-steps">
@@ -89,6 +69,6 @@
 		{/if}
 
 		<div class="cer-body">{@render children()}</div>
-		{#if footer && !hideFooter}<footer class="cer-foot">{@render footer()}</footer>{/if}
-	</div>
-</div>
+		{#if footer && !hideFooter}<Dialog.Footer class="cer-foot">{@render footer()}</Dialog.Footer>{/if}
+	</Dialog.Content>
+</Dialog.Root>

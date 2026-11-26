@@ -2,7 +2,7 @@
 	import SecHead from '../SecHead.svelte';
 	import SettingsGate from '../SettingsGate.svelte';
 	import Row from '../Row.svelte';
-	import Seg from '../Seg.svelte';
+	import { Segmented } from '$core/components/ui/segmented';
 	import Select from '../Select.svelte';
 	import Card from '../Card.svelte';
 	import type { SettingsState } from '../data';
@@ -34,14 +34,17 @@
 			/>
 		</Row>
 		<Row t={m.settings_sending_reply_button()} d={m.settings_sending_reply_button_desc()}>
-			<Seg
-				value={s.replyDefault}
-				options={[
-					{ v: 'reply', l: m.settings_sending_reply() },
-					{ v: 'all', l: m.settings_sending_reply_all() }
-				]}
-				onChange={(v) => set('replyDefault', v)}
-			/>
+			{#snippet children(row)}
+				<Segmented
+					bind:value={() => s.replyDefault, (v) => v && set('replyDefault', v)}
+					options={[
+						{ value: 'reply', label: m.settings_sending_reply() },
+						{ value: 'all', label: m.settings_sending_reply_all() }
+					]}
+					aria-labelledby={row.labelId}
+					aria-describedby={row.descId}
+				/>
+			{/snippet}
 		</Row>
 	</SettingsGate>
 </Card>

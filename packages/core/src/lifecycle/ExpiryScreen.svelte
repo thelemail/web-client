@@ -64,7 +64,7 @@
 {#snippet bold(text: string)}<b>{text}</b>{/snippet}
 
 <div class="card lc-mid">
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<Wordmark size="large" class="lc-mark" />
 		<div class="card-head">
 			<p class="eyebrow">{m.lc_expiry_eyebrow()}</p>
@@ -91,11 +91,11 @@
 		<div class="lc-cta">
 			<Button variant="primary" size="lg" disabled={busy} onclick={choosePlan}><Icon icon={faSparkles} size={17} />{m.lc_expiry_choose_plan()}</Button>
 			{#if canMoveToFree}
-				<Button variant="secondary" size="lg" disabled={busy} onclick={moveToFree}>
+				<Button variant="tonal" size="lg" disabled={busy} onclick={moveToFree}>
 					<Icon icon={faCircleArrowDown} size={17} />{m.lc_expiry_move_to_free()}
 				</Button>
 			{/if}
-			<Button variant="secondary" size="lg" disabled={busy} onclick={downloadData}>
+			<Button variant="neutral" size="lg" disabled={busy} onclick={downloadData}>
 				<Icon icon={faDownload} size={17} />{m.lc_download_my_data()}
 			</Button>
 			<Button variant="ghost" size="lg" disabled={busy} onclick={continueReadOnly}>{m.lc_expiry_continue_read_only()}</Button>

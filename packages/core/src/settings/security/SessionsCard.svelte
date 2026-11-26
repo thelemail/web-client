@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
-	import { faArrowRightFromBracket, faLaptopMobile } from '@fortawesome/pro-regular-svg-icons';
+	import { faArrowRightFromBracket } from '@fortawesome/pro-regular-svg-icons';
 	import { untrack } from 'svelte';
 	import Card from '../Card.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
@@ -124,7 +124,7 @@
 	}
 </script>
 
-<Card icon={faLaptopMobile} title={m.settings_security_sessions()}>
+<Card title={m.settings_security_sessions()}>
 	{#if sessions === null}
 		{#if loadFailed}
 			<LoadState
@@ -183,7 +183,7 @@
 	{/if}
 </Card>
 
-{#snippet revokeAllBody()}<p class="cfd-p">{m.settings_security_revoke_all_desc()}</p>{/snippet}
+{#snippet revokeAllBody()}<p class="dialog-p">{m.settings_security_revoke_all_desc()}</p>{/snippet}
 
 {#if confirmAll}
 	<ConfirmDialog

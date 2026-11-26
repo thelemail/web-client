@@ -26,7 +26,7 @@
 	}: Props = $props();
 
 	const row = getRowNames();
-	const classes = $derived(['tin', mono && 'mono', w && 'w-' + w].filter(Boolean).join(' '));
+	const classes = $derived(['field-input', 'tin', mono && 'mono', w && 'w-' + w].filter(Boolean).join(' '));
 </script>
 
 <input

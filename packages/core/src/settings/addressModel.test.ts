@@ -241,7 +241,7 @@ describe('groupByDomain', () => {
 		const groups = groupByDomain(c, rows);
 		expect(groups.map((g) => g.domain)).toEqual(['abbaye.example', 'thelemail.com']);
 		expect(groups[0].badge).toBe('Live');
-		expect(groups[0].badgeTone).toBe('pine');
+		expect(groups[0].badgeTone).toBe('brand');
 		expect(groups[0].count).toBe('2 addresses');
 		expect(groups[1].badge).toBe('Included with your plan');
 		expect(groups[1].count).toBe('1 address');
@@ -308,26 +308,26 @@ describe('groupByDomain', () => {
 
 	it('marks a domain group that no longer receives mail', () => {
 		const d = liveDomain({ status: 'pending', ownershipVerifiedAt: null, actionableStage: 'ownership' });
-		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warn' });
+		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warning' });
 	});
 
 	it('marks a paused domain group', () => {
-		expect(badgeFor(liveDomain({ dormantAt: '2026-09-10T00:00:00Z' }))).toEqual({ badge: 'Paused', badgeTone: 'warn' });
+		expect(badgeFor(liveDomain({ dormantAt: '2026-09-10T00:00:00Z' }))).toEqual({ badge: 'Paused', badgeTone: 'warning' });
 	});
 
 	it('flags a domain whose ownership record went missing', () => {
 		const d = liveDomain({ ownershipMissingSince: '2026-09-10T00:00:00Z', actionableStage: 'ownership' });
-		expect(badgeFor(d)).toEqual({ badge: 'Ownership record missing', badgeTone: 'warn' });
+		expect(badgeFor(d)).toEqual({ badge: 'Ownership record missing', badgeTone: 'warning' });
 	});
 
 	it('says a domain without verified MX is not receiving mail', () => {
 		const d = liveDomain({ status: 'ready', mxVerifiedAt: null, actionableStage: 'routing' });
-		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warn' });
+		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warning' });
 	});
 
 	it('counts the listed addresses even when the domain row lags behind', () => {
 		const d = liveDomain({ status: 'ready', mxVerifiedAt: null, addressCount: 0, actionableStage: 'routing' });
-		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warn' });
+		expect(badgeFor(d)).toEqual({ badge: 'Not receiving mail', badgeTone: 'warning' });
 	});
 
 	it('makes no claim about a domain it has no row for', () => {
@@ -358,7 +358,7 @@ describe('groupByDomain', () => {
 		['live', liveDomain()]
 	] as const)('uses the Domains badge for a %s domain', (_, d) => {
 		const { label, kind } = domainBadge(d);
-		const tone = kind === 'ok' ? 'pine' : kind === 'warn' ? 'warn' : 'neutral';
+		const tone = kind === 'success' ? 'brand' : kind === 'warning' ? 'warning' : 'neutral';
 		expect(badgeFor(d)).toEqual({ badge: label, badgeTone: tone });
 	});
 });

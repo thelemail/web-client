@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faChevronLeft, faChevronRight } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { shiftAnchor } from '../range';
@@ -12,20 +13,22 @@
 <div class="mini">
 	<div class="mini-h">
 		<div class="mt">{cal.miniMonthLabel}</div>
-		<button
-			type="button"
+		<Button
+			variant="ghost"
+			size="icon-xs"
 			aria-label={m.cal_mini_prev_month()}
 			onclick={() => (cal.anchor = shiftAnchor(cal.anchor, 'month', -1))}
 		>
 			<Icon icon={faChevronLeft} size={16} />
-		</button>
-		<button
-			type="button"
+		</Button>
+		<Button
+			variant="ghost"
+			size="icon-xs"
 			aria-label={m.cal_mini_next_month()}
 			onclick={() => (cal.anchor = shiftAnchor(cal.anchor, 'month', 1))}
 		>
 			<Icon icon={faChevronRight} size={16} />
-		</button>
+		</Button>
 	</div>
 	<div class="mini-grid">
 		{#each dows as d, i (i)}

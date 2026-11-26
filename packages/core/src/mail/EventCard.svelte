@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faCalendar,
 		faCalendarPlus,
@@ -263,9 +264,15 @@
 					<a class="evt-change" href="/u/{slot}/calendar">{m.common_open()}</a>
 				</span>
 			{:else}
-				<button type="button" class="evt-opt add" disabled={adding} onclick={addToCalendar}>
-					<Icon icon={faCalendarPlus} size={15} />{adding ? m.cal_card_adding() : m.cal_card_add()}
-				</button>
+				<Button
+					variant="neutral"
+					size="sm"
+					busy={adding}
+					busyLabel={m.cal_card_adding()}
+					onclick={addToCalendar}
+				>
+					<Icon icon={faCalendarPlus} size={15} />{m.cal_card_add()}
+				</Button>
 			{/if}
 		</div>
 	{/if}
@@ -280,16 +287,16 @@
 			</span>
 		{:else}
 			<span class="evt-q">{m.cal_card_going()}</span>
-			<div class="evt-seg">
-				<button type="button" class="evt-opt yes" disabled={sending} onclick={() => choose('accepted')}>
+			<div class="evt-seg" role="group" aria-label={m.cal_card_going()}>
+				<Button size="sm" disabled={sending} onclick={() => choose('accepted')}>
 					<Icon icon={faCheck} size={15} />{m.cal_rsvp_yes()}
-				</button>
-				<button type="button" class="evt-opt maybe" disabled={sending} onclick={() => choose('tentative')}>
+				</Button>
+				<Button size="sm" disabled={sending} onclick={() => choose('tentative')}>
 					<Icon icon={faCircleQuestion} size={15} />{m.cal_rsvp_maybe()}
-				</button>
-				<button type="button" class="evt-opt no" disabled={sending} onclick={() => choose('declined')}>
+				</Button>
+				<Button size="sm" disabled={sending} onclick={() => choose('declined')}>
 					<Icon icon={faXmark} size={15} />{m.cal_rsvp_no()}
-				</button>
+				</Button>
 			</div>
 		{/if}
 	</div>
@@ -325,8 +332,8 @@
 	}
 	.evt-cal .m {
 		display: block;
-		background: var(--pine-700);
-		color: var(--fg-on-pine);
+		background: var(--primary);
+		color: var(--primary-fg);
 		font: 600 10px/1 var(--font-sans, system-ui, sans-serif);
 		letter-spacing: 0.07em;
 		padding: 6px 0;
@@ -354,7 +361,7 @@
 		font-weight: 600;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 	.evt-kicker :global(svg) {
 		width: 13px;
@@ -380,13 +387,13 @@
 		align-items: center;
 		gap: 8px;
 		font-size: 12.5px;
-		color: var(--ink-600);
+		color: var(--fg-muted);
 		min-width: 0;
 	}
 	.evt-meta :global(svg) {
 		width: 14px;
 		height: 14px;
-		color: var(--ink-400);
+		color: var(--fg-faint);
 		flex: 0 0 auto;
 	}
 	.mono {
@@ -407,7 +414,7 @@
 		gap: 12px;
 		padding: 12px 18px;
 		border-top: 1px solid var(--border);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.evt-faces {
 		display: flex;
@@ -421,11 +428,11 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-avatar);
-		background: var(--paper-200);
-		color: var(--ink-700);
+		background: var(--bg-raised);
+		color: var(--fg-muted);
 		font-size: 11.5px;
 		font-weight: 600;
-		box-shadow: 0 0 0 2px var(--paper-50);
+		box-shadow: 0 0 0 2px var(--bg-raised);
 		margin-left: -7px;
 	}
 	.evt-faces .av:first-child {
@@ -438,11 +445,11 @@
 		width: 26px;
 		height: 26px;
 		border-radius: var(--radius-avatar);
-		background: var(--paper-200);
-		color: var(--ink-700);
+		background: var(--bg-raised);
+		color: var(--fg-muted);
 		font-size: 11px;
 		font-weight: 600;
-		box-shadow: 0 0 0 2px var(--paper-50);
+		box-shadow: 0 0 0 2px var(--bg-raised);
 		margin-left: -7px;
 	}
 	.evt-who {
@@ -455,10 +462,6 @@
 		align-items: center;
 		gap: 11px;
 		padding: 11px 18px 0;
-	}
-	.evt-cal-row .evt-opt.add {
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-control);
 	}
 	.evt-rsvp {
 		display: flex;
@@ -474,56 +477,7 @@
 	}
 	.evt-seg {
 		display: inline-flex;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-control);
-		overflow: hidden;
-		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-	}
-	.evt-opt {
-		display: inline-flex;
-		align-items: center;
 		gap: 6px;
-		font-size: 13px;
-		font-weight: 600;
-		color: var(--ink-700);
-		padding: 8px 13px;
-		background: var(--surface);
-		border: none;
-		border-right: 1px solid var(--border);
-		cursor: pointer;
-	}
-	.evt-opt:last-child {
-		border-right: none;
-	}
-	.evt-opt :global(svg) {
-		width: 15px;
-		height: 15px;
-		color: var(--ink-400);
-	}
-	.evt-opt:disabled {
-		opacity: 0.55;
-		cursor: not-allowed;
-	}
-	.evt-opt.yes:hover:not(:disabled) {
-		background: var(--pine-50);
-		color: var(--pine-700);
-	}
-	.evt-opt.yes:hover:not(:disabled) :global(svg) {
-		color: var(--pine-600);
-	}
-	.evt-opt.maybe:hover:not(:disabled) {
-		background: var(--brass-100);
-		color: var(--brass-700);
-	}
-	.evt-opt.maybe:hover:not(:disabled) :global(svg) {
-		color: var(--brass-600);
-	}
-	.evt-opt.no:hover:not(:disabled) {
-		background: var(--danger-100);
-		color: var(--danger-700);
-	}
-	.evt-opt.no:hover:not(:disabled) :global(svg) {
-		color: var(--danger-500);
 	}
 	.evt-ack {
 		display: inline-flex;
@@ -550,7 +504,7 @@
 		border-radius: var(--radius-control-compact);
 	}
 	.evt-change:hover {
-		background: var(--paper-100);
+		background: var(--bg-sunken);
 	}
 
 	.r-yes {
@@ -573,13 +527,6 @@
 		padding: 8px 18px 13px;
 		font-size: 12px;
 		color: var(--danger-700);
-	}
-
-	:global([data-theme='dark']) .evt-cal .m {
-		background: #234132;
-	}
-	:global([data-theme='dark']) .r-yes .evt-cal .m {
-		background: #2c6b3f;
 	}
 
 	@media (max-width: 640px) {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Badge } from '$core/components/ui/badge';
 	import Icon from '$core/components/Icon.svelte';
 	import { faAt, faClock, faLock, faVideo } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -22,9 +23,9 @@
 				<div class="bk-t">{m.cal_bkprev_title()}</div>
 				<div class="bk-s">{m.cal_bkprev_desc()}</div>
 				<div class="bk-meta">
-					<span class="bk-tag"><Icon icon={faClock} size={12} />{m.cal_bkprev_duration()}</span>
-					<span class="bk-tag"><Icon icon={faVideo} size={12} />{m.cal_bkprev_link_note()}</span>
-					<span class="bk-tag"><Icon icon={faAt} size={12} />bookings@thelema.co</span>
+					<Badge icon={faClock}>{m.cal_bkprev_duration()}</Badge>
+					<Badge icon={faVideo}>{m.cal_bkprev_link_note()}</Badge>
+					<Badge icon={faAt}>bookings@thelema.co</Badge>
 				</div>
 			</div>
 		</div>

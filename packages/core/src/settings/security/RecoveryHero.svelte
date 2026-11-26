@@ -48,7 +48,7 @@
 			<p class="rh-desc">
 				<Rich text={m.settings_security_recovery_desc_unset()} tags={{ b: bold }} />
 			</p>
-			<div class="rh-acts">
+			<div class="rh-acts on-inverse">
 				<Button variant="primary" onclick={() => launch('recovery')}>
 					<Icon icon={faKey} size={15} />{m.settings_security_recovery_setup()}
 				</Button>
@@ -73,7 +73,7 @@
 		<div class="setrow set-loaderr" role="alert">
 			<Icon icon={faCircleExclamation} size={16} />
 			<p>{m.settings_security_recovery_load_failed()}</p>
-			<Button variant="secondary" size="sm" disabled={retrying} onclick={retry}>
+			<Button variant="neutral" size="sm" disabled={retrying} onclick={retry}>
 				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		</div>
@@ -83,8 +83,8 @@
 		<span class="sr-only">{m.settings_security_recovery_checking()}</span>
 		<div class="setrow" aria-hidden="true">
 			<div class="info">
-				<span class="sk-bar sk-t"></span>
-				<span class="sk-bar sk-d"></span>
+				<span class="skeleton sk-bar sk-t"></span>
+				<span class="skeleton sk-bar sk-d"></span>
 			</div>
 		</div>
 	</Card>

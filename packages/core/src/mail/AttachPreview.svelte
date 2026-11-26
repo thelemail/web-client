@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faPaperclip, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { SvelteMap } from 'svelte/reactivity';
 	import type { Attachment } from './attachmentUpload';
@@ -123,14 +124,14 @@
 					{#if rows && failed(a) && (onRetry || onRemove)}
 						<span class="apv-acts">
 							{#if onRetry && a.failure !== 'refused'}
-								<button type="button" class="apv-act" data-retry={a.id} onclick={() => onRetry(a.id)}>
+								<Button variant="neutral" size="sm" class="apv-act" data-retry={a.id} onclick={() => onRetry(a.id)}>
 									{m.common_retry()}
-								</button>
+								</Button>
 							{/if}
 							{#if onRemove}
-								<button type="button" class="apv-act quiet" onclick={() => onRemove(a.id)}>
+								<Button variant="ghost" size="sm" class="apv-act" onclick={() => onRemove(a.id)}>
 									{m.common_remove()}
-								</button>
+								</Button>
 							{/if}
 						</span>
 					{:else if onRemove}

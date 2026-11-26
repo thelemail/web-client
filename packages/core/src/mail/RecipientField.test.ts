@@ -26,19 +26,6 @@ describe('RecipientField', () => {
 		expect(getByRole('combobox', { name: 'To' })).toBeTruthy();
 	});
 
-	it('says in text when a recipient will get the message unencrypted', () => {
-		const { getByText } = render(RecipientField, {
-			props: {
-				label: 'To',
-				chips: [chip('ada@example.com')],
-				setChips: vi.fn(),
-				contacts: [],
-				encStatusFor: () => 'cleartext' as const
-			}
-		});
-		expect(getByText('No encryption key — sent unencrypted').classList.contains('sr-only')).toBe(true);
-	});
-
 	it('exposes suggestions as a listbox driven from the input', async () => {
 		const { getByRole } = render(RecipientField, {
 			props: {

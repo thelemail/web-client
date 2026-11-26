@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { onMount } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faArrowUpRightFromSquare, faDownload } from '@fortawesome/pro-regular-svg-icons';
 	import { appUpdate } from '$core/stores/appUpdate.svelte';
 
@@ -36,13 +37,13 @@
 			</span>
 			{#if !appUpdate.installing}
 				<span class="sa-acts">
-					<button class="sa-act ghost" onclick={() => appUpdate.openRelease()}>
+					<Button variant="neutral" size="sm" class="sa-act" onclick={() => appUpdate.openRelease()}>
 						<Icon icon={faArrowUpRightFromSquare} size={13} />{m.mail_update_release_notes()}
-					</button>
-					<button class="sa-act ghost" onclick={() => appUpdate.later()}>{m.mail_update_later()}</button>
-					<button class="sa-act solid" onclick={() => appUpdate.install()}>
+					</Button>
+					<Button variant="neutral" size="sm" class="sa-act" onclick={() => appUpdate.later()}>{m.mail_update_later()}</Button>
+					<Button variant="primary" size="sm" class="sa-act" onclick={() => appUpdate.install()}>
 						{m.mail_update_install()}
-					</button>
+					</Button>
 				</span>
 			{/if}
 		</div>

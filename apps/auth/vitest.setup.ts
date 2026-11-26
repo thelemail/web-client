@@ -32,3 +32,19 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 			dispatchEvent: () => false
 		}) as unknown as MediaQueryList;
 }
+
+if (typeof Element !== 'undefined' && !Element.prototype.animate) {
+	Element.prototype.animate = function () {
+		const animation = {
+			onfinish: null as (() => void) | null,
+			cancel: () => {},
+			finish: () => {},
+			play: () => {},
+			pause: () => {},
+			currentTime: 0,
+			playState: 'finished'
+		};
+		queueMicrotask(() => animation.onfinish?.());
+		return animation as unknown as Animation;
+	};
+}

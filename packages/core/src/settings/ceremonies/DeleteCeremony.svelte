@@ -262,7 +262,7 @@
 			<div class="export-nudge">
 				<Icon icon={faDownload} size={17} />
 				<div><Rich text={m.settings_ceremony_delete_export_nudge()} tags={{ b: bold }} /></div>
-				<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
+				<Button variant="neutral" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
 					{m.settings_ceremony_delete_export_archive()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 				</Button>
 			</div>
@@ -270,11 +270,11 @@
 	{:else if step === 1}
 		<div class="cer-pane">
 			<label class="cer-ack danger">
-				<input type="checkbox" bind:checked={ackA} />
+				<input type="checkbox" class="check" bind:checked={ackA} />
 				<span>{m.settings_ceremony_delete_ack_destroyed()}</span>
 			</label>
 			<label class="cer-ack danger">
-				<input type="checkbox" bind:checked={ackB} />
+				<input type="checkbox" class="check" bind:checked={ackB} />
 				<span>{m.settings_ceremony_delete_ack_exported()}</span>
 			</label>
 			<div class="field">
@@ -286,7 +286,7 @@
 				>
 				<input
 					id="del-confirm"
-					class="tin mono"
+					class="field-input tin mono"
 					bind:value={confirmText}
 					placeholder={target}
 					autocomplete="off"
@@ -302,7 +302,7 @@
 				<label for="del-pw">{m.settings_ceremony_delete_current_password()}</label>
 				<input
 					id="del-pw"
-					class="tin"
+					class="field-input tin"
 					type="password"
 					bind:value={cur}
 					placeholder={m.settings_ceremony_delete_current_password_placeholder()}
@@ -322,7 +322,7 @@
 					</label>
 					<input
 						id="del-2fa-code"
-						class="tin mono"
+						class="field-input tin mono"
 						class:otp={twoFaMode === 'totp'}
 						class:bcode={twoFaMode !== 'totp'}
 						maxlength={twoFaMode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
@@ -359,7 +359,7 @@
 				</button>
 			{/if}
 			{#if hasWebauthn}
-				<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
+				<Button variant="neutral" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
 					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_delete_use_security_key()}
 				</Button>
 			{/if}
@@ -377,7 +377,7 @@
 
 	{#snippet footer()}
 		{#if blocked && step < 3}
-			<Button variant="ghost" onclick={onClose}>{m.common_close()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_close()}</Button>
 			<Button variant="primary" onclick={openMembers}>{m.settings_ceremony_delete_open_settings()}</Button>
 		{:else if step === 0}
 			<Button variant="ghost" onclick={onClose}>{m.settings_ceremony_delete_keep()}</Button>
@@ -385,14 +385,14 @@
 				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 1}
-			<Button variant="ghost" onclick={() => (step = 0)}>
+			<Button variant="neutral" onclick={() => (step = 0)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={!canContinue} onclick={() => (step = 2)}>
 				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 2}
-			<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
+			<Button variant="neutral" disabled={busy} onclick={() => (step = 1)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>

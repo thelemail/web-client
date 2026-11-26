@@ -11,6 +11,7 @@
 	import { chipsFromInput, type Contact, type RecipientChip } from './data';
 	import { insideMailbox } from './address';
 	import Avatar from '$core/components/Avatar.svelte';
+	import { Chip } from '$core/components/ui/chip';
 	import { personAvatars } from '$core/stores/personAvatars.svelte';
 
 	export type RecipientEncStatus =
@@ -139,6 +140,10 @@
 		setChips(chips.filter((_, j) => j !== i));
 	}
 
+	function keepRemoveLocal(e: MouseEvent) {
+		if ((e.target as Element).closest('.chip-remove')) e.stopPropagation();
+	}
+
 	$effect(() => {
 		if (autoFocus) inputRef?.focus();
 	});
@@ -152,19 +157,28 @@
 	<span class="recip-label" id="{uid}-label">{labelText}</span>
 	<div class="recip-box" class:focus={focused} onmousedown={boxMouseDown} role="presentation">
 		{#each chips as c, i (i)}
-			<span class="rchip" class:bad={!c.valid} title={c.email}>
-				{#if c.valid}
-					<Avatar
-						initials={c.init}
-						bg={c.bg}
-						fg={c.fg}
-						size={18}
-						src={personAvatars.avatarUrl(c.email)}
-						fit="cover"
-					/>
-				{:else}
-					<Icon icon={faCircleExclamation} size={13} />
-				{/if}
+			<Chip
+				size="sm"
+				class={['rchip', { bad: !c.valid }]}
+				title={c.email}
+				removeLabel={m.mail_recip_remove_chip({ address: c.email })}
+				onremove={() => removeChip(i)}
+				onclick={keepRemoveLocal}
+			>
+				{#snippet leading()}
+					{#if c.valid}
+						<Avatar
+							initials={c.init}
+							bg={c.bg}
+							fg={c.fg}
+							size={18}
+							src={personAvatars.avatarUrl(c.email)}
+							fit="cover"
+						/>
+					{:else}
+						<Icon icon={faCircleExclamation} size={13} />
+					{/if}
+				{/snippet}
 				<span class="rtx">{c.name === c.email ? c.email : c.name}</span>
 				{#if c.valid && encStatusFor}
 					{@const es = encStatusFor(c.email)}
@@ -178,19 +192,7 @@
 						>
 					{/if}
 				{/if}
-				<button
-					type="button"
-					class="rm"
-					title={m.common_remove()}
-					aria-label={m.mail_recip_remove_chip({ address: c.email })}
-					onclick={(e) => {
-						e.stopPropagation();
-						removeChip(i);
-					}}
-				>
-					<Icon icon={faXmark} size={12} />
-				</button>
-			</span>
+			</Chip>
 		{/each}
 		<input
 			bind:this={inputRef}

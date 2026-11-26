@@ -8,8 +8,7 @@
 		faFileArrowUp,
 		faLock,
 		faSpinnerThird,
-		faTriangleExclamation,
-		faUpload
+		faTriangleExclamation
 	} from '@fortawesome/pro-regular-svg-icons';
 	import SecHead from '../SecHead.svelte';
 	import Card from '../Card.svelte';
@@ -95,7 +94,7 @@
 
 <SecHead desc={m.settings_import_desc()} />
 
-<Card icon={faUpload} title={m.settings_import_title()}>
+<Card title={m.settings_import_title()}>
 	{#if importBatch.locked}
 		<div class="card-note warn">
 			<Icon icon={faLock} size={13} />
@@ -214,7 +213,7 @@
 	}
 	.dropzone.drag {
 		border-color: var(--pine-600);
-		background: var(--pine-50);
+		background: var(--pine-100);
 	}
 	.dz-t {
 		font-weight: 600;

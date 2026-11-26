@@ -103,7 +103,7 @@
 
 {#if loading}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_downgrade_eyebrow()}</p>
 				<h1>{m.lc_downgrade_loading_title()}</h1>
@@ -112,7 +112,7 @@
 	</div>
 {:else if done}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<div class="seal"><Icon icon={faCheck} size={20} /></div>
 			</div>
@@ -145,7 +145,7 @@
 	</div>
 {:else if ineligible}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_downgrade_plan_eyebrow()}</p>
 				<h1>{m.lc_downgrade_plan_for({ workspace: workspaceName })}</h1>
@@ -163,7 +163,7 @@
 	</div>
 {:else if preview}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_downgrade_eyebrow()}</p>
 				<h1>{m.lc_downgrade_title()}</h1>
@@ -206,7 +206,7 @@
 				</ol>
 				<div class="actions" style="margin-top:14px">
 					<Button
-						variant="secondary"
+						variant="neutral"
 						size="lg"
 						block
 						href={store.url}
@@ -231,9 +231,8 @@
 			<div class="actions">
 				<div class="btnrow">
 					<Button
-						variant="secondary"
-						size="lg"
-						class="btn-back"
+						variant="neutral"
+						size="icon-lg"
 						aria-label={m.common_back()}
 						href={`/u/${slot}/mail/inbox`}
 					>
@@ -260,7 +259,7 @@
 	</div>
 {:else}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_downgrade_eyebrow()}</p>
 				<h1>{m.lc_downgrade_load_error_title()}</h1>
@@ -282,10 +281,10 @@
 		gap: 8px;
 		margin: 14px 0 0;
 		padding: 11px 14px;
-		border: 1px solid var(--danger-500, #b5453a);
+		border: 1px solid var(--danger-500);
 		border-radius: var(--radius-md, 8px);
-		background: color-mix(in srgb, var(--danger-500, #b5453a) 8%, transparent);
+		background: color-mix(in srgb, var(--danger-500) 8%, transparent);
 		font-size: var(--text-sm, 13px);
-		color: var(--ink-700, #3a4032);
+		color: var(--fg);
 	}
 </style>

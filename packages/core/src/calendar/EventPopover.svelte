@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faCalendarDays,
 		faCheck,
@@ -33,11 +33,11 @@
 
 	let { selection, onClose }: Props = $props();
 
-	const RSVP: { value: Partstat; label: () => string; icon: IconDefinition; cls: string }[] = [
-		{ value: 'accepted', label: () => m.cal_rsvp_yes(), icon: faCheck, cls: 'yes' },
-		{ value: 'tentative', label: () => m.cal_rsvp_maybe(), icon: faCircleExclamation, cls: 'maybe' },
-		{ value: 'declined', label: () => m.cal_rsvp_no(), icon: faXmark, cls: 'no' }
-	];
+	const RSVP = $derived<{ value: Partstat; label: string; icon: typeof faCheck }[]>([
+		{ value: 'accepted', label: m.cal_rsvp_yes(), icon: faCheck },
+		{ value: 'tentative', label: m.cal_rsvp_maybe(), icon: faCircleExclamation },
+		{ value: 'declined', label: m.cal_rsvp_no(), icon: faXmark }
+	]);
 
 	function edit() {
 		onClose();
@@ -78,19 +78,19 @@
 	<div class="evpop-top">
 		<div class="grow"></div>
 		{#if selection.canEdit}
-			<button type="button" class="evpop-ic" aria-label={m.common_edit()} onclick={edit}>
+			<Button variant="ghost" size="icon-sm" aria-label={m.common_edit()} onclick={edit}>
 				<Icon icon={faPenLine} size={17} />
-			</button>
-			<button type="button" class="evpop-ic" aria-label={m.cal_pop_duplicate_aria()} onclick={duplicate}>
+			</Button>
+			<Button variant="ghost" size="icon-sm" aria-label={m.cal_pop_duplicate_aria()} onclick={duplicate}>
 				<Icon icon={faCopy} size={17} />
-			</button>
-			<button type="button" class="evpop-ic danger" aria-label={m.common_delete()} onclick={remove}>
+			</Button>
+			<Button variant="ghostDanger" size="icon-sm" aria-label={m.common_delete()} onclick={remove}>
 				<Icon icon={faTrashCan} size={17} />
-			</button>
+			</Button>
 		{/if}
-		<button type="button" class="evpop-ic" aria-label={m.common_close()} onclick={onClose}>
+		<Button variant="ghost" size="icon-sm" aria-label={m.common_close()} onclick={onClose}>
 			<Icon icon={faXmark} size={17} />
-		</button>
+		</Button>
 	</div>
 	<div class="evpop-body">
 		<div class="evpop-h">
@@ -174,16 +174,16 @@
 			</div>
 		</div>
 		{#if selection.rsvp}
-			<div class="evpop-rsvp">
+			<div class="evpop-rsvp" role="group" aria-label={m.cal_card_going()}>
 				{#each RSVP as option (option.value)}
-					<button
-						type="button"
-						class={option.cls}
-						class:on={selection.myPartstat === option.value}
+					<Button
+						size="sm"
+						variant={selection.myPartstat === option.value ? 'tonal' : 'neutral'}
+						aria-pressed={selection.myPartstat === option.value}
 						onclick={() => respond(option.value)}
 					>
-						<Icon icon={option.icon} size={14} />{option.label()}
-					</button>
+						<Icon icon={option.icon} size={14} />{option.label}
+					</Button>
 				{/each}
 			</div>
 		{/if}

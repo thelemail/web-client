@@ -56,8 +56,8 @@
 		width: 100%;
 		min-height: 150px;
 		padding: 12px 14px;
-		background: var(--paper-50);
-		border: 1px solid var(--paper-200);
+		background: var(--bg-raised);
+		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-control);
 		font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
 		font-size: 12.5px;
@@ -79,7 +79,7 @@
 	.sig-preview {
 		min-height: 60px;
 		padding: 12px 14px;
-		border: 1px dashed var(--paper-200);
+		border: 1px dashed var(--border-strong);
 		border-radius: var(--radius-control);
 		font-size: 14px;
 		line-height: 1.55;

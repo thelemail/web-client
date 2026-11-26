@@ -230,12 +230,12 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!!blocked || !current} onclick={start}>
 				<Icon icon={faArrowsRotate} size={15} />{m.settings_ceremony_keys_rotate()}
 			</Button>
 		{:else if step === 1 && error}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" onclick={start}>
 				<Icon icon={faArrowsRotate} size={15} />{m.common_retry()}
 			</Button>

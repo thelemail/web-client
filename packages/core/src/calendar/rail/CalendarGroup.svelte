@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faEye, faKey, faPlus } from '@fortawesome/pro-regular-svg-icons';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import { Label } from '$core/components/ui/label';
@@ -25,14 +26,14 @@
 	<div class="gh">
 		<span>{title}</span>
 		{#if addable}
-			<button
-				type="button"
-				class="addbtn"
+			<Button
+				variant="ghost"
+				size="icon-xs"
 				aria-label={m.cal_group_add_aria()}
 				onclick={() => cal.openCalendarDialog({ mode: 'create' })}
 			>
 				<Icon icon={faPlus} size={13} />
-			</button>
+			</Button>
 		{/if}
 	</div>
 	{#if !calendars.length && emptyText && calendarStore.loaded}
@@ -49,7 +50,6 @@
 				id="cal-{entry.id}"
 				checked={entry.on}
 				onCheckedChange={() => cal.toggleCalendar(entry.id)}
-				class="size-[17px] border-(--cc) data-[state=checked]:border-(--cc) data-[state=checked]:bg-(--cc) data-[state=checked]:text-(--paper-0)"
 			/>
 			<Label for="cal-{entry.id}" class="cal-nm {group === 'role' ? 'role' : ''}">{entry.name}</Label>
 			{#if entry.badge === 'key'}

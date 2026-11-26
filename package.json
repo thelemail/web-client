@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @thelemail/mail dev",
+    "dev:stack": "pnpm --parallel --filter './apps/*' dev",
     "build": "pnpm --recursive --filter './apps/*' build",
     "check": "pnpm --recursive --filter './apps/*' check",
     "test": "pnpm --recursive --filter './apps/*' test",

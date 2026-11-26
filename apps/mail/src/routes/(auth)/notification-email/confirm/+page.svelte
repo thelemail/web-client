@@ -68,7 +68,7 @@
 	<title>{m.auth_notification_confirm_page_title()}</title>
 </svelte:head>
 
-<div class="card-surface screen-fade">
+<div class="card-surface">
 	{#if !token}
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_notification_confirm_eyebrow()}</p>

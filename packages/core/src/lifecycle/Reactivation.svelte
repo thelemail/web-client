@@ -32,6 +32,7 @@
 	import { fmt } from './dates';
 	import type { LifecycleContext, ReactivationPlan } from './types';
 	import { Button } from '$core/components/ui/button';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 
@@ -174,7 +175,7 @@
 
 {#if step === 0}
 	<div class="card">
-		<div class="card-surface wide screen-fade">
+		<div class="card-surface wide">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_restore_eyebrow()}</p>
 				<h1>{m.lc_restore_choose_title()}</h1>
@@ -187,28 +188,15 @@
 				</span>
 			</div>
 			<div class="tiers">
-				<div class="periodtabs" role="radiogroup" aria-label={m.lc_restore_period_label()}>
-					<button
-						type="button"
-						role="radio"
-						aria-checked={!monthly}
-						class="periodtab"
-						class:cur={!monthly}
-						onclick={() => (period = 'year')}
-					>
-						{m.lc_restore_period_annual()}
-					</button>
-					<button
-						type="button"
-						role="radio"
-						aria-checked={monthly}
-						class="periodtab"
-						class:cur={monthly}
-						onclick={() => (period = 'month')}
-					>
-						{m.lc_restore_period_monthly()}
-					</button>
-				</div>
+				<Segmented
+					bind:value={period}
+					options={[
+						{ value: 'year', label: m.lc_restore_period_annual() },
+						{ value: 'month', label: m.lc_restore_period_monthly() }
+					]}
+					aria-label={m.lc_restore_period_label()}
+					class="periodseg"
+				/>
 				{#each RE_PLANS as p (p.id)}
 					{@const lk = locked(p)}
 					<button
@@ -242,7 +230,7 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" onclick={() => (step = 1)}>
@@ -258,7 +246,7 @@
 {:else if step === 1}
 	{@const SelIcon = PLAN_ICONS[sel.icon]}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="card-head">
 				<p class="eyebrow">{m.lc_restore_eyebrow()}</p>
 				<h1>{m.lc_restore_confirm_title()}</h1>
@@ -292,13 +280,11 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
 						<Icon icon={faArrowLeft} />
 					</Button>
-					<Button variant="primary" size="lg" disabled={busy} onclick={pay}>
-						{#if busy}<span class="spinner"></span>{m.lc_restore_busy()}{:else}<Icon icon={faRotateLeft} />{m.lc_restore_pay(
-								{ price: eur(selPrice) }
-							)}{/if}
+					<Button variant="primary" size="lg" {busy} busyLabel={m.lc_restore_busy()} onclick={pay}>
+						<Icon icon={faRotateLeft} />{m.lc_restore_pay({ price: eur(selPrice) })}
 					</Button>
 				</div>
 			</div>
@@ -309,7 +295,7 @@
 	</div>
 {:else}
 	<div class="card lc-mid">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				<Wordmark size="large" class="brandmark brandmark-lg" />
 				<h1>{m.lc_restore_welcome_title()}</h1>
@@ -357,15 +343,15 @@
 		gap: 8px;
 		margin: 0 0 16px;
 		padding: 11px 14px;
-		border: 1px solid var(--danger-500, #b5453a);
+		border: 1px solid var(--danger-500);
 		border-radius: var(--radius-md, 8px);
-		background: color-mix(in srgb, var(--danger-500, #b5453a) 8%, transparent);
+		background: color-mix(in srgb, var(--danger-500) 8%, transparent);
 		font-size: var(--text-sm, 13px);
-		color: var(--ink-700, #3a4032);
+		color: var(--fg);
 	}
 	.lc-restore-notice :global(svg) {
 		flex-shrink: 0;
 		margin-top: 1px;
-		color: var(--danger-500, #b5453a);
+		color: var(--danger-500);
 	}
 </style>

@@ -18,14 +18,14 @@
 <div class="rail-acct">
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class="acct-btn">
-			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-700)" fg="#EEF2EA" />
+			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-100)" fg="var(--pine-700)" />
 			<span class="acct-tx">
 				<span class="acct-nm" title={displayName}>{displayName}</span>
 				<span class="acct-em" title={displayEmail}>{displayEmail}</span>
 			</span>
 			<span class="uchev"><Icon icon={faChevronDown} size={15} /></span>
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="cal-surface cal-menu w-64" align="start" side="top">
+		<DropdownMenu.Content class="w-64" align="start" side="top">
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/mail/inbox`)}>
 				<Icon icon={faEnvelope} size={17} />{m.cal_account_go_to_mail()}
 			</DropdownMenu.Item>

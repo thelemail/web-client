@@ -37,7 +37,7 @@
 		</div>
 		<div class="cr-desc">{desc}</div>
 	</div>
-	<Button variant={tone === 'danger' ? 'danger' : 'secondary'} size="sm" onclick={onLaunch}>
+	<Button variant={tone === 'danger' ? 'danger' : 'neutral'} size="sm" onclick={onLaunch}>
 		{cta}<Icon icon={faArrowRight} size={14} />
 	</Button>
 </div>

@@ -3,7 +3,7 @@
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import PasswordField from '$core/auth/PasswordField.svelte';
-	import Stepper from '$core/auth/Stepper.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import Wordmark from '$core/components/Wordmark.svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -177,7 +177,7 @@
 </script>
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
-{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet addr(t: string)}<span class="mono" style="color:var(--fg)">{t}</span>{/snippet}
 {#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
 {#snippet terms(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
@@ -187,14 +187,14 @@
 </svelte:head>
 
 {#if previewLoading}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_invite_verifying_eyebrow()}</p>
 			<h1>{m.auth_invite_verifying_title()}</h1>
 		</div>
 	</div>
 {:else if previewError || !invite}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_invite_unavailable_eyebrow()}</p>
 			<h1>{m.auth_invite_unavailable_title()}</h1>
@@ -207,10 +207,10 @@
 {:else if invite.kind === 'join'}
 	<JoinFamilyInvite {invite} token={page.params.token ?? ''} />
 {:else if step === 0}
-	<div class="card-surface screen-fade">
-		<Stepper step={0} labels={inviteLabels} />
+	<div class="card-surface">
+		<StepPills total={inviteLabels.length} current={0} />
 		{#if auth.email}
-			<div class="invite" style="background:var(--paper-100);border:1px solid var(--border-strong);padding:12px 14px;margin-bottom:14px">
+			<div class="invite" style="background:var(--bg-sunken);border:1px solid var(--border-strong);padding:12px 14px;margin-bottom:14px">
 				<span class="itext">
 					<span class="iname"
 						><Rich text={m.auth_invite_signed_in_as({ email: auth.email })} tags={{ b: bold }} /></span
@@ -271,13 +271,13 @@
 				</Button>
 			</div>
 		</div>
-		<p class="switch">
+		<p class="af-switch">
 			<Rich text={m.auth_register_have_account()} tags={{ link: signInLink }} />
 		</p>
 	</div>
 {:else if step === 1}
-	<div class="card-surface screen-fade">
-		<Stepper step={1} labels={inviteLabels} />
+	<div class="card-surface">
+		<StepPills total={inviteLabels.length} current={1} />
 		<div class="card-head">
 			<p class="eyebrow">{m.auth_step_of({ step: 2, total: 2 })}</p>
 			<h1>{m.auth_register_password_title()}</h1>
@@ -296,7 +296,7 @@
 				void submitRegistration();
 			}}
 		>
-			<input class="sp-user" type="email" value={invite.inviteeEmail} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+			<input class="af-hidden-user" type="email" value={invite.inviteeEmail} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 			<PasswordField
 				label={m.common_password()}
 				bind:value={pw}
@@ -332,12 +332,12 @@
 				</span>
 			{/if}
 			<label class="accept">
-				<input type="checkbox" bind:checked={accepted} required />
+				<input class="check" type="checkbox" bind:checked={accepted} required />
 				<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms, privacy }} /></span>
 			</label>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
 						<Icon icon={faArrowLeft} size={17} />
 					</Button>
 					<Button type="submit" variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting}>
@@ -348,7 +348,7 @@
 		</form>
 	</div>
 {:else}
-	<div class="card-surface screen-fade">
+	<div class="card-surface">
 		<div class="welcome">
 			<Wordmark class="brandmark brandmark-lg" size="large" />
 			<h1>{m.auth_invite_done_title()}</h1>

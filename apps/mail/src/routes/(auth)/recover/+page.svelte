@@ -2,10 +2,11 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import RecoverFlow from '$core/auth/RecoverFlow.svelte';
-	import Status from '$core/auth/sentence/Status.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { signInMovedToAuth } from '$core/custody/unlock';
-	import { productTarget } from '$core/products';
+	import { productHost, productTarget } from '$core/products';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	let mode = $state<'checking' | 'here' | 'auth'>('checking');
@@ -24,8 +25,15 @@
 
 {#if mode === 'here'}
 	<RecoverFlow />
+{:else if mode === 'auth'}
+	<HandoffCard
+		title={m.handoff_to_auth_recover_title()}
+		lede={m.handoff_to_auth_recover_lede({ host: productHost('auth') })}
+		to={productHost('auth')}
+		retry={() => location.reload()}
+	/>
 {:else}
-	<div class="sp" aria-busy="true">
+	<div class="af-wait" aria-busy="true">
 		<Status tone={checking.visible ? 'busy' : 'hint'}>{checking.visible ? m.common_loading() : ''}</Status>
 	</div>
 {/if}

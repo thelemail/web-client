@@ -94,7 +94,7 @@
 			</label>
 			<input
 				id="revoke-delegation-confirm"
-				class="tin"
+				class="field-input tin"
 				bind:value={confirmText}
 				placeholder={target}
 				autocomplete="off"

@@ -8,13 +8,12 @@
 		faKey,
 		faStar,
 		faTrashCan,
-		faTriangleExclamation,
 		faUsers
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import Badge from '../Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import Card from '../Card.svelte';
 	import Row from '../Row.svelte';
 	import TextInput from '../TextInput.svelte';
@@ -173,13 +172,13 @@
 		<div class="ad-hero-tx">
 			<div class="ad-hero-title">
 				<span class="ad-name">{row.title}</span>
-				{#if row.isPrimary}<Badge kind="pine">{m.settings_address_primary()}</Badge>{/if}
-				{#if row.kind === 'shared'}<Badge kind="neutral">{m.settings_address_shared()}</Badge>{/if}
-				{#if row.rotationRequired}<Badge kind="warn" dot>{m.settings_address_needs_new_key()}</Badge>{/if}
+				{#if row.isPrimary}<Badge tone="brand">{m.settings_address_primary()}</Badge>{/if}
+				{#if row.kind === 'shared'}<Badge tone="neutral">{m.settings_address_shared()}</Badge>{/if}
+				{#if row.rotationRequired}<Badge tone="warning" status>{m.settings_address_needs_new_key()}</Badge>{/if}
 				{#if row.health === 'suspended'}
-					<Badge kind="warn" dot>{m.settings_address_suspended()}</Badge>
+					<Badge tone="warning" status>{m.settings_address_suspended()}</Badge>
 				{:else if row.health === 'paused'}
-					<Badge kind="warn" dot>{m.settings_domains_status_paused()}</Badge>
+					<Badge tone="warning" status>{m.settings_domains_status_paused()}</Badge>
 				{/if}
 			</div>
 			<div class="ad-lede">{ledeFor(ctx, row)}</div>
@@ -195,7 +194,7 @@
 			</div>
 			{#if manage && domainRow}
 				<Button
-					variant="secondary"
+					variant="tonal"
 					size="sm"
 					href={`/u/${slot}/settings/domains/${domainRow.id}?step=${resumeStep(domainRow)}`}
 				>
@@ -213,7 +212,7 @@
 				{m.settings_address_rotate_body()}
 			</div>
 			{#if row.canManagePeople}
-				<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
+				<Button variant="tonal" size="sm" onclick={() => (managingPeople = true)}>
 					{m.settings_address_manage_people()}
 				</Button>
 			{/if}
@@ -221,7 +220,7 @@
 	{/if}
 
 	{#if row.canRename || row.isOwnPersonal}
-	<Card icon={faAt} title={m.settings_address_identity()}>
+	<Card title={m.settings_address_identity()}>
 		{#if row.canRename}
 			<Row
 				t={m.settings_address_display_name()}
@@ -237,7 +236,7 @@
 						w="mid"
 					/>
 					<Button
-						variant={dirty ? 'primary' : 'secondary'}
+						variant={dirty ? 'primary' : 'neutral'}
 						size="sm"
 						disabled={!dirty || saving}
 						onclick={() => void saveName()}
@@ -255,10 +254,10 @@
 				d={blockNote ? `${m.settings_address_primary_desc()} ${blockNote}` : m.settings_address_primary_desc()}
 			>
 				{#if row.isPrimary}
-					<Badge kind="pine">{m.settings_address_primary()}</Badge>
+					<Badge tone="brand">{m.settings_address_primary()}</Badge>
 				{:else}
 					<Button
-						variant="secondary"
+						variant="tonal"
 						size="sm"
 						disabled={!row.canPromote || promoting}
 						onclick={() => void promote()}
@@ -284,7 +283,7 @@
 	{/if}
 
 	{#if row.kind === 'shared'}
-		<Card icon={faUsers} title={m.settings_address_people()}>
+		<Card title={m.settings_address_people()}>
 			{#snippet right()}
 				{#if row.usedBy}
 					<span class="card-meta">
@@ -292,7 +291,7 @@
 					</span>
 				{/if}
 				{#if row.canManagePeople}
-					<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
+					<Button variant="tonal" size="sm" onclick={() => (managingPeople = true)}>
 						<Icon icon={faUsers} size={13} />{m.settings_address_change_people()}
 					</Button>
 				{/if}
@@ -342,7 +341,7 @@
 	{/if}
 
 	{#if row.canRemove}
-		<Card icon={faTriangleExclamation} title={m.settings_address_remove_card()} variant="danger">
+		<Card title={m.settings_address_remove_card()} variant="danger">
 			<Row
 				t={row.kind === 'shared'
 					? m.settings_address_remove_shared()
@@ -363,11 +362,11 @@
 	{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
 
 	{#snippet removalBody()}
-		<p class="cfd-p">
+		<p class="dialog-p">
 			<Rich text={m.settings_address_remove_confirm_body({ email: row.email })} tags={{ mono }} />
 		</p>
 		{#if row.kind === 'shared' && row.people.length}
-			<p class="cfd-p">
+			<p class="dialog-p">
 				{m.settings_address_remove_confirm_people({ count: row.people.length })}
 			</p>
 		{/if}

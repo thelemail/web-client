@@ -89,10 +89,9 @@
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 
-<Dialog.Content class="cal-surface cal-dlg wide" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		<Icon icon={faEnvelope} size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">{m.cal_mailc_title()}</Dialog.Title>
+<Dialog.Content size="xl" class="cal-surface">
+	<Dialog.Header icon={faEnvelope}>
+		<Dialog.Title>{m.cal_mailc_title()}</Dialog.Title>
 		<PrivacyChip tone="private" label={m.cal_mailc_parsed_here()} />
 	</Dialog.Header>
 
@@ -143,7 +142,6 @@
 						id="prop-{proposal.key}"
 						checked={on}
 						onCheckedChange={() => cal.toggleMailProposal(proposal.key)}
-						class="mt-0.5 size-[18px]"
 						aria-label={proposal.title}
 					/>
 					<div class="pr-main">
@@ -183,11 +181,10 @@
 		</div>
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_mailc_not_now()}</Button>
-		<span class="note">{m.cal_mailc_nothing_changed()}</span>
-		<div class="grow"></div>
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_mailc_edit_each()}</Button>
+	<Dialog.Footer>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.cal_mailc_not_now()}</Button>
+		<span class="dialog-note">{m.cal_mailc_nothing_changed()}</span>
+		<Button variant="tonal" onclick={() => (cal.dialog = null)}>{m.cal_mailc_edit_each()}</Button>
 		<Button
 			variant="primary"
 			disabled={cal.mailOwnerMissing || !cal.mailSelectedCount}

@@ -126,15 +126,15 @@
 
 {#snippet form()}
 	{#if methodsFailed}
-		<Button variant="secondary" size="sm" onclick={loadMethods}>{m.common_retry()}</Button>
+		<Button variant="neutral" size="sm" onclick={loadMethods}>{m.common_retry()}</Button>
 	{/if}
-	<p class="cfd-p">{needsFactor ? m.reauth_lede_factor() : m.reauth_lede()}</p>
-	<div class="cfd-field reauth-field">
-		<label class="cfd-label" for="reauth-password">{m.settings_ceremony_twofa_password()}</label>
+	<p class="dialog-p">{needsFactor ? m.reauth_lede_factor() : m.reauth_lede()}</p>
+	<div class="dialog-field reauth-field">
+		<label class="dialog-label" for="reauth-password">{m.settings_ceremony_twofa_password()}</label>
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
 			id="reauth-password"
-			class="cfd-input"
+			class="field-input"
 			type="password"
 			autocomplete="current-password"
 			autofocus
@@ -147,15 +147,15 @@
 		/>
 	</div>
 	{#if needsCode}
-		<div class="cfd-field reauth-field">
-			<label class="cfd-label" for="reauth-code">
+		<div class="dialog-field reauth-field">
+			<label class="dialog-label" for="reauth-code">
 				{mode === 'totp'
 					? m.settings_ceremony_twofa_authenticator_code()
 					: m.settings_ceremony_twofa_backup_code()}
 			</label>
 			<input
 				id="reauth-code"
-				class="cfd-input cfd-mono"
+				class="field-input dialog-mono"
 				maxlength={mode === 'totp' ? 6 : BACKUP_CODE_MAX_LENGTH}
 				inputmode={mode === 'totp' ? 'numeric' : 'text'}
 				autocomplete={mode === 'totp' ? 'one-time-code' : 'off'}
@@ -190,35 +190,29 @@
 		</Button>
 	{/if}
 	{#if hasWebauthn}
-		<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={submitKey}>
+		<Button variant="tonal" size="sm" disabled={busy || password.length === 0} onclick={submitKey}>
 			<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_twofa_use_security_key()}
 		</Button>
 	{/if}
 	{#if needsFactor && !needsCode && !hasWebauthn}
-		<p class="cfd-hint">{m.settings_ceremony_twofa_confirm_no_method()}</p>
+		<p class="dialog-hint">{m.settings_ceremony_twofa_confirm_no_method()}</p>
 	{/if}
 {/snippet}
 
-<div class="reauth-layer">
-	<ConfirmDialog
-		icon={faShieldCheck}
-		title={m.reauth_title()}
-		sub={email}
-		confirmLabel={m.reauth_continue()}
-		{busy}
-		disabled={!canSubmit}
-		error={error || null}
-		body={form}
-		onConfirm={submitCode}
-		onClose={cancel}
-	/>
-</div>
+<ConfirmDialog
+	icon={faShieldCheck}
+	title={m.reauth_title()}
+	sub={email}
+	confirmLabel={m.reauth_continue()}
+	{busy}
+	disabled={!canSubmit}
+	error={error || null}
+	body={form}
+	onConfirm={submitCode}
+	onClose={cancel}
+/>
 
 <style>
-	.reauth-layer :global(.cfd-scrim) {
-		z-index: 1100;
-	}
-
 	.reauth-field {
 		margin-bottom: 12px;
 	}

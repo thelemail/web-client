@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { faShieldExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import ConfirmDialog from './ConfirmDialog.svelte';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { submitReport, type ReportOutcome } from './report';
 	import type { MessageReportKind } from '$core/api/types';
 	import { auth } from '$core/stores/auth.svelte';
@@ -69,30 +70,23 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">{m.mail_report_body()}</p>
+		<p class="dialog-p">{m.mail_report_body()}</p>
 
-		<div class="cfd-seg" role="radiogroup" aria-label={m.mail_report_reason_aria()}>
-			{#each KINDS as k (k.id)}
-				<button
-					type="button"
-					class="cfd-segb"
-					class:on={kind === k.id}
-					role="radio"
-					aria-checked={kind === k.id}
-					disabled={busy}
-					onclick={() => (kind = k.id)}
-				>
-					{k.label()}
-				</button>
-			{/each}
-		</div>
-		<p class="cfd-hint">{hint}</p>
+		<Segmented
+			size="md"
+			block
+			aria-label={m.mail_report_reason_aria()}
+			disabled={busy}
+			bind:value={kind}
+			options={KINDS.map((k) => ({ value: k.id, label: k.label() }))}
+		/>
+		<p class="dialog-hint">{hint}</p>
 
-		<label class="cfd-check">
-			<input type="checkbox" bind:checked={includeHeaders} disabled={busy} />
+		<label class="dialog-check">
+			<input type="checkbox" class="check" bind:checked={includeHeaders} disabled={busy} />
 			<span>
-				<span class="cfd-check-t">{m.mail_report_include_headers()}</span>
-				<span class="cfd-check-d">
+				<span class="dialog-check-t">{m.mail_report_include_headers()}</span>
+				<span class="dialog-check-d">
 					{senderAddress
 						? m.mail_report_include_headers_detail_sender({ sender: senderAddress })
 						: m.mail_report_include_headers_detail()}

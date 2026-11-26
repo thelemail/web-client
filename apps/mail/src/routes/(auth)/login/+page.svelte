@@ -12,8 +12,10 @@
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { auth } from '$core/stores/session.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
-	import Clause from '$core/auth/sentence/Clause.svelte';
-	import Status from '$core/auth/sentence/Status.svelte';
+	import Status from '$core/auth/form/Status.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
+	import { productHost } from '$core/products';
+	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
 	const slot = page.url.searchParams.get('slot');
@@ -124,44 +126,45 @@
 {#if mode === 'password'}
 	<LoginFlow {intercept} afterSignIn={signedIn} />
 {:else if mode === 'tab'}
-	{#snippet account(_: string)}<span class="acct">{tabEmail}</span>{/snippet}
-	<div class="sp" aria-live="polite">
-		<p class="sent sm">
-			{#if tabEmail}
-				<Clause text={tabOpen ? m.handoff_tab_waiting_sentence() : m.handoff_tab_ask_sentence()} slots={{ account }} />
-			{:else}
-				{tabOpen ? m.handoff_tab_waiting_new() : m.handoff_tab_ask_new()}
+	{#snippet account(_: string)}<span class="mono">{tabEmail}</span>{/snippet}
+	<div class="card-surface" aria-live="polite">
+		<div class="card-head">
+			<h1>{tabOpen ? m.handoff_tab_waiting_title() : m.handoff_tab_ask_title()}</h1>
+			<p>
+				{#if tabEmail}
+					<Rich text={tabOpen ? m.handoff_tab_waiting_sentence() : m.handoff_tab_ask_sentence()} tags={{ account }} />
+				{:else}
+					{tabOpen ? m.handoff_tab_waiting_new() : m.handoff_tab_ask_new()}
+				{/if}
+			</p>
+		</div>
+		{#if tabOpen}<Status tone="busy">{m.handoff_tab_waiting_line()}</Status>{/if}
+		<Button variant="primary" size="lg" block onclick={openTab}>{tabOpen ? m.handoff_tab_reopen() : m.handoff_tab_open()}</Button>
+		<p class="af-row">
+			<button type="button" class="af-link" onclick={continueHere}>{m.handoff_tab_here()}</button>
+			{#if backTo}
+				<span aria-hidden="true">·</span>
+				<a class="af-link muted" href={backTo}>{m.handoff_tab_back()}</a>
 			{/if}
 		</p>
-		<div class="sp-under">
-			<Status tone={tabOpen ? 'busy' : 'hint'}>{tabOpen ? m.handoff_tab_waiting_line() : ''}</Status>
-			<div class="sp-acts">
-				<Button variant="primary" size="lg" onclick={openTab}>{tabOpen ? m.handoff_tab_reopen() : m.handoff_tab_open()}</Button>
-			</div>
-			<div class="sp-acts">
-				<button type="button" class="sp-quiet" onclick={continueHere}>{m.handoff_tab_here()}</button>
-				{#if backTo}
-					<a class="sp-quiet" href={backTo}>{m.handoff_tab_back()}</a>
-				{/if}
-			</div>
-		</div>
 	</div>
 {:else if mode === 'checking'}
-	<div class="sp" aria-busy="true">
+	<div class="af-wait" aria-busy="true">
 		<Status tone={checking.visible ? 'busy' : 'hint'}>{checking.visible ? m.common_loading() : ''}</Status>
 	</div>
 {:else if mode === 'failed'}
-	<div class="sp">
-		<h1 class="sent sm">{m.handoff_title()}</h1>
-		<div class="sp-under">
-			<p class="sp-msg">{m.handoff_failed()}</p>
-			<div class="sp-acts">
-				<Button variant="primary" size="lg" href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
-			</div>
+	<div class="card-surface">
+		<div class="card-head">
+			<h1>{m.handoff_title()}</h1>
+			<p>{m.handoff_failed()}</p>
 		</div>
+		<Button variant="primary" size="lg" block href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
 	</div>
 {:else}
-	<div class="sp">
-		<Status tone="busy">{m.handoff_opening()}</Status>
-	</div>
+	<HandoffCard
+		title={m.handoff_to_auth_title()}
+		lede={m.handoff_to_auth_lede({ host: productHost('auth') })}
+		to={productHost('auth')}
+		retry={() => location.reload()}
+	/>
 {/if}

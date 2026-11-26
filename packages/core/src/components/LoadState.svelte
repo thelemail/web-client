@@ -26,7 +26,7 @@
 		<Icon icon={faCircleExclamation} size={16} />
 		<p>{label}</p>
 		{#if onRetry}
-			<Button variant="secondary" size="sm" disabled={retrying} onclick={onRetry}>
+			<Button variant="neutral" size="sm" disabled={retrying} onclick={onRetry}>
 				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		{/if}
@@ -40,8 +40,8 @@
 			{:else}
 				{#each Array.from({ length: rows }, (_, i) => i) as i (i)}
 					<div class="load-row" aria-hidden="true">
-						<span class="load-bar t"></span>
-						<span class="load-bar d"></span>
+						<span class="skeleton load-bar t"></span>
+						<span class="skeleton load-bar d"></span>
 					</div>
 				{/each}
 			{/if}
@@ -74,12 +74,6 @@
 	.load-row {
 		padding: 14px 16px;
 	}
-	.load-skel :global(.load-bar) {
-		display: block;
-		border-radius: var(--radius-xs);
-		background: color-mix(in oklab, var(--fg-strong) 8%, transparent);
-		animation: load-pulse 1.4s ease-in-out infinite;
-	}
 	.load-bar.t {
 		width: min(44%, 200px);
 		height: 11px;
@@ -89,15 +83,5 @@
 		height: 8px;
 		margin-top: 9px;
 		opacity: 0.65;
-	}
-	@keyframes load-pulse {
-		50% {
-			opacity: 0.5;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.load-skel :global(.load-bar) {
-			animation: none;
-		}
 	}
 </style>

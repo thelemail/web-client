@@ -1,10 +1,11 @@
 <script lang="ts">
-	import Wordmark from '$core/components/Wordmark.svelte';
+	import Logo from '$core/components/Logo.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { tick } from 'svelte';
-	import { DropdownMenu } from 'bits-ui';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
+	import * as Popover from '$core/components/ui/popover';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import {
 		faBoxArchive as faBoxArchiveSolid,
@@ -19,10 +20,10 @@
 		faTrashCan as faTrashCanSolid
 	} from '@fortawesome/pro-solid-svg-icons';
 	import StateIcon, { type Gesture } from '$core/components/StateIcon.svelte';
-	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import Toast from '$core/components/Toast.svelte';
 	import RailAccount from './RailAccount.svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faBoxArchive,
 		faChevronDown,
@@ -303,7 +304,7 @@
 
 	type CreateState = { kind: MailCollectionKind; parent: string | null; anchor: HTMLElement };
 	let creating = $state<CreateState | null>(null);
-	let createPanel = $state<HTMLDivElement>();
+	let createRestore = true;
 
 	function startCreate(kind: MailCollectionKind, parent: string | null, anchor: HTMLElement) {
 		creating = { kind, parent, anchor };
@@ -312,7 +313,10 @@
 	function closeCreate(restore = true) {
 		const anchor = creating?.anchor;
 		creating = null;
-		if (restore && anchor?.isConnected) anchor.focus();
+		if (!restore || !anchor) return;
+		void tick().then(() => {
+			if (anchor.isConnected) anchor.focus();
+		});
 	}
 
 	function created(entry: CollectionEntry) {
@@ -320,20 +324,6 @@
 		closeCreate();
 		if (parent) setExpanded([parent], true);
 		announcement = entry.path;
-	}
-
-	function onCreateKeydown(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		e.preventDefault();
-		e.stopPropagation();
-		closeCreate();
-	}
-
-	function onWindowPointerDown(e: PointerEvent) {
-		if (!creating) return;
-		const t = e.target as Node;
-		if (createPanel?.contains(t) || creating.anchor.contains(t)) return;
-		closeCreate(false);
 	}
 
 	let rail = $state<HTMLElement>();
@@ -374,7 +364,6 @@
 	}
 </script>
 
-<svelte:window onpointerdown={onWindowPointerDown} />
 
 {#snippet sectionHead(section: MailSidebarSection, title: string, kind?: MailCollectionKind)}
 	<div class="fgroup fgroup-sec">
@@ -389,15 +378,14 @@
 			<span>{title}</span>
 		</button>
 		{#if kind}
-			<button
-				type="button"
-				class="addbtn"
-				aria-label={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
-				title={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
+			<Button
+				variant="ghost"
+				size="icon-xs"
+				tooltip={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
 				onclick={(e) => startCreate(kind, null, e.currentTarget)}
 			>
 				<Icon icon={faPlus} size={14} />
-			</button>
+			</Button>
 		{/if}
 	</div>
 {/snippet}
@@ -437,11 +425,11 @@
 {/snippet}
 
 <aside class="rail" bind:this={rail} aria-label={m.mail_sidebar_navigation()}>
-	<a class="brand" href="/" aria-label="Thelemail"><Wordmark /></a>
+	<a class="brand" href="/" aria-label="Thelemail"><Logo /></a>
 
-	<button class="compose" onclick={onCompose}>
+	<Button variant="primary" block class="compose" onclick={onCompose}>
 		<Icon icon={faPenLine} size={17} />{m.mail_sidebar_compose()}
-	</button>
+	</Button>
 
 	<nav class="rail-nav" aria-label={m.mail_sidebar_navigation()}>
 		<div class="nav-list">
@@ -562,9 +550,9 @@
 	{#if menu && menuEntry && menuAnchor}
 		{@const e = menuEntry}
 		{@const returnTo = menu.returnTo}
-		<DropdownMenu.Portal to=".mail-app">
-			<DropdownMenu.Content
-				class="menu menu-portal coll-menu"
+		<DropdownMenu.Content
+				class="coll-menu"
+				portalProps={{ to: '.mail-app' }}
 				customAnchor={menuAnchor}
 				side="bottom"
 				align="start"
@@ -579,10 +567,9 @@
 					if (!creating && returnTo.isConnected) returnTo.focus();
 				}}
 			>
-				<div class="menu-lbl coll-menu-title" title={e.path}>{e.path}</div>
+				<DropdownMenu.Label class="coll-menu-title" title={e.path}>{e.path}</DropdownMenu.Label>
 				{#if menuHasKids}
 					<DropdownMenu.Item
-						class="mitem"
 						onSelect={() => {
 							closeNav();
 							void goto(`${slotBase}/mail/${routeOf(e)}?scope=direct`);
@@ -591,7 +578,7 @@
 						<Icon icon={faFolderArrowDown} />{e.kind === 'folder' ? m.mail_view_only_folder() : m.mail_view_only_label()}
 					</DropdownMenu.Item>
 				{/if}
-				<DropdownMenu.Item class="mitem" onSelect={() => void toggleFavorite(e)}>
+				<DropdownMenu.Item onSelect={() => void toggleFavorite(e)}>
 					{#if e.favorite}
 						<Icon icon={faStarExclamation} />{m.mail_sidebar_remove_favorite()}
 					{:else}
@@ -599,7 +586,7 @@
 					{/if}
 				</DropdownMenu.Item>
 				{#if e.depth < MAX_CREATE_DEPTH}
-					<DropdownMenu.Item class="mitem" onSelect={() => startCreate(e.kind, e.id, returnTo)}>
+					<DropdownMenu.Item onSelect={() => startCreate(e.kind, e.id, returnTo)}>
 						{#if e.kind === 'folder'}
 							<Icon icon={faFolderPlus} />{m.mail_sidebar_new_subfolder()}
 						{:else}
@@ -608,14 +595,14 @@
 					</DropdownMenu.Item>
 				{/if}
 				{#if menuHasKids}
-					<DropdownMenu.Item class="mitem" onSelect={() => setExpanded(parentIdsIn(e), true)}>
+					<DropdownMenu.Item onSelect={() => setExpanded(parentIdsIn(e), true)}>
 						<Icon icon={faListTree} />{m.mail_sidebar_expand_all()}
 					</DropdownMenu.Item>
-					<DropdownMenu.Item class="mitem" onSelect={() => setExpanded(parentIdsIn(e), false)}>
+					<DropdownMenu.Item onSelect={() => setExpanded(parentIdsIn(e), false)}>
 						<Icon icon={faListDropdown} />{m.mail_sidebar_collapse_all()}
 					</DropdownMenu.Item>
 				{/if}
-				<DropdownMenu.Separator class="msep" />
+				<DropdownMenu.Separator />
 				<CollectionManageItems
 					entry={e}
 					index={menuIndex}
@@ -626,9 +613,8 @@
 					onShift={(delta) => moveAndRefocus(e, delta, returnTo)}
 					onDelete={() => handOff((d) => d.remove(e, returnTo))}
 				/>
-				<DropdownMenu.Separator class="msep" />
+				<DropdownMenu.Separator />
 				<DropdownMenu.Item
-					class="mitem"
 					onSelect={() => {
 						closeNav();
 						void goto(`${slotBase}/settings/collections`);
@@ -637,36 +623,42 @@
 					<Icon icon={faSliders} />{m.mail_collection_manage()}
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
-		</DropdownMenu.Portal>
 	{/if}
 </DropdownMenu.Root>
 
 {#if creating}
 	{@const c = creating}
-	<AnchoredMenu
-		anchor={c.anchor}
-		bind:panel={createPanel}
-		role="dialog"
-		label={c.parent
-			? c.kind === 'folder'
-				? m.mail_sidebar_new_subfolder()
-				: m.mail_sidebar_new_sublabel()
-			: c.kind === 'folder'
-				? m.mail_collection_new_folder()
-				: m.mail_collection_new_label()}
-		extraClass="coll-create"
+	{@const createLabel = c.parent
+		? c.kind === 'folder'
+			? m.mail_sidebar_new_subfolder()
+			: m.mail_sidebar_new_sublabel()
+		: c.kind === 'folder'
+			? m.mail_collection_new_folder()
+			: m.mail_collection_new_label()}
+	<Popover.Root
+		bind:open={
+			() => true,
+			(next) => {
+				if (!next) closeCreate(createRestore);
+			}
+		}
 	>
-		<div onkeydown={onCreateKeydown} role="presentation">
-			<div class="menu-lbl">
-				{#if c.parent}
-					{c.kind === 'folder' ? m.mail_sidebar_new_subfolder() : m.mail_sidebar_new_sublabel()}
-				{:else}
-					{c.kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
-				{/if}
-			</div>
+		<Popover.Content
+			class="coll-create"
+			customAnchor={c.anchor}
+			side="bottom"
+			align="start"
+			collisionPadding={12}
+			aria-label={createLabel}
+			portalProps={{ to: '.mail-app' }}
+			onEscapeKeydown={() => (createRestore = true)}
+			onInteractOutside={() => (createRestore = false)}
+			onCloseAutoFocus={(ev) => ev.preventDefault()}
+		>
+			<p class="popover-label">{createLabel}</p>
 			<CollectionCreate kind={c.kind} parent={c.parent} onCreated={created} />
-		</div>
-	</AnchoredMenu>
+		</Popover.Content>
+	</Popover.Root>
 {/if}
 
 <CollectionDialogs bind:this={dialogs} onDeleted={deleted} />

@@ -250,25 +250,27 @@
 					</div>
 				</div>
 				{#if items.length > 1}
-					<button type="button" class="apx-x" title={m.mail_preview_prev()} onclick={() => step(-1)}>
+					<Button variant="ghost" size="icon-sm" tooltip={m.mail_preview_prev()} onclick={() => step(-1)}>
 						<Icon icon={faChevronLeft} size={17} />
-					</button>
-					<button type="button" class="apx-x" title={m.mail_preview_next()} onclick={() => step(1)}>
+					</Button>
+					<Button variant="ghost" size="icon-sm" tooltip={m.mail_preview_next()} onclick={() => step(1)}>
 						<Icon icon={faChevronRight} size={17} />
-					</button>
-				{/if}
-				{#if item.kind === 'remote'}
-					<Button variant="secondary" size="sm" disabled={downloading} onclick={download}>
-						{#if downloading}
-							<Icon icon={faSpinnerThird} size={14} class="apx-spin" />{m.mail_attach_downloading()}
-						{:else}
-							<Icon icon={faDownload} size={14} />{m.mail_attach_download()}
-						{/if}
 					</Button>
 				{/if}
-				<button type="button" class="apx-x" title={m.common_close()} onclick={onClose}>
+				{#if item.kind === 'remote'}
+					<Button
+						variant="neutral"
+						size="sm"
+						busy={downloading}
+						busyLabel={m.mail_attach_downloading()}
+						onclick={download}
+					>
+						<Icon icon={faDownload} size={14} />{m.mail_attach_download()}
+					</Button>
+				{/if}
+				<Button variant="ghost" size="icon-sm" tooltip={m.common_close()} onclick={onClose}>
 					<Icon icon={faXmark} size={17} />
-				</button>
+				</Button>
 			</div>
 
 			<div class="apx-body" class:on-image={view.status === 'image'}>
@@ -293,7 +295,7 @@
 				{:else if view.status === 'error'}
 					<div class="apx-note err" role="alert">
 						{view.message}
-						<Button variant="secondary" size="sm" onclick={() => (attempt += 1)}>{m.common_retry()}</Button>
+						<Button variant="neutral" size="sm" onclick={() => (attempt += 1)}>{m.common_retry()}</Button>
 					</div>
 				{:else if view.status !== 'loading'}
 					<div class="apx-note">

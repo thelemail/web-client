@@ -4,6 +4,12 @@
 	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
+	import { Chip } from '$core/components/ui/chip';
+	import { EmptyState } from '$core/components/ui/empty-state';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
+	import * as Popover from '$core/components/ui/popover';
+	import { Segmented } from '$core/components/ui/segmented';
 	import {
 		faAlarmClock,
 		faArrowDown,
@@ -12,13 +18,15 @@
 		faArrowUp,
 		faArrowsRotate,
 		faBoxArchive,
-		faCheck,
 		faCircleExclamation,
 		faEnvelope,
 		faEnvelopeOpen,
+		faFilter,
 		faFolder,
 		faFolderArrowDown,
 		faFont,
+		faInbox,
+		faMagnifyingGlass,
 		faPaperclip,
 		faShieldExclamation,
 		faSliders,
@@ -242,26 +250,7 @@
 	});
 
 	let sortOpen = $state(false);
-	let sortRef: HTMLDivElement | undefined = $state();
 	let filterOpen = $state(false);
-	let filterRef: HTMLDivElement | undefined = $state();
-
-	function handleDocMouseDown(e: MouseEvent) {
-		const t = e.target as Node;
-		if (sortOpen && sortRef && !sortRef.contains(t)) sortOpen = false;
-		if (filterOpen && filterRef && !filterRef.contains(t)) filterOpen = false;
-	}
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		if (sortOpen) {
-			sortOpen = false;
-			e.stopPropagation();
-		} else if (filterOpen) {
-			filterOpen = false;
-			e.stopPropagation();
-		}
-	}
 
 	function pickSort(id: SortId) {
 		onSort(id);
@@ -477,17 +466,17 @@
 	}
 </script>
 
-<svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
 
 <section class="list">
 	{#if anyChecked}
 		<div class="bulk">
 			<button
-				class="ck"
-				class:on={allChecked || inQuery}
+				type="button"
+				class="check"
+				data-state={allChecked || inQuery ? 'checked' : 'indeterminate'}
 				aria-label={allChecked || inQuery ? msg.mail_list_clear_selection() : msg.mail_list_select_all()}
-				onclick={onToggleAll}><Icon icon={faCheck} size={12} /></button
-			>
+				onclick={onToggleAll}
+			></button>
 			<span class="cnt">
 				{inQuery
 					? msg.mail_list_selected_all_matching({ count: fmt(querySelected ?? 0), view: viewName })
@@ -495,62 +484,104 @@
 			</span>
 			<div class="grow"></div>
 			{#if caps.showMarkRead && !inQuery}
-				<button class="lh-btn" title={msg.mail_list_mark_read()} onclick={() => onBulk('read')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					tooltip={msg.mail_list_mark_read()}
+					onclick={() => onBulk('read')}
+				>
 					<Icon icon={faEnvelopeOpen} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showRestore && !inQuery}
-				<button class="lh-btn" data-mutates title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					tooltip={msg.mail_action_restore()}
+					onclick={() => onBulk('restore')}
+				>
 					<Icon icon={faArrowRotateLeft} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showArchive}
-				<button class="lh-btn" data-mutates title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					tooltip={msg.mail_action_archive()}
+					onclick={() => onBulk('archive')}
+				>
 					<Icon icon={faBoxArchive} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showMove && onPicker}
-				<button
+				<Button
+					variant="ghost"
+					size="icon-sm"
 					class="lh-btn"
-					class:on={openPicker === 'bulk-move'}
 					data-mutates
 					data-picker="bulk-move"
-					title={msg.mail_reader_move_to()}
+					tooltip={msg.mail_reader_move_to()}
 					aria-haspopup="dialog"
 					aria-expanded={openPicker === 'bulk-move'}
 					onclick={(e) => onPicker('move', e.currentTarget)}
 				>
 					<Icon icon={faFolderArrowDown} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showLabels && onPicker}
-				<button
+				<Button
+					variant="ghost"
+					size="icon-sm"
 					class="lh-btn"
-					class:on={openPicker === 'bulk-labels'}
 					data-mutates
 					data-picker="bulk-labels"
-					title={msg.mail_list_labels()}
+					tooltip={msg.mail_list_labels()}
 					aria-haspopup="dialog"
 					aria-expanded={openPicker === 'bulk-labels'}
 					onclick={(e) => onPicker('labels', e.currentTarget)}
 				>
 					<Icon icon={faTag} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showSpam && !inQuery}
-				<button class="lh-btn" title={msg.mail_action_report_spam()} onclick={() => onBulk('spam')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					tooltip={msg.mail_action_report_spam()}
+					onclick={() => onBulk('spam')}
+				>
 					<Icon icon={faShieldExclamation} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showTrash && !inQuery}
-				<button class="lh-btn" data-mutates title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					tooltip={msg.mail_action_trash()}
+					onclick={() => onBulk('trash')}
+				>
 					<Icon icon={faTrashCan} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showDelete && !inQuery}
-				<button class="lh-btn lh-btn-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
+				<Button
+					variant="ghostDanger"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					tooltip={msg.mail_action_delete_forever()}
+					onclick={() => onBulk('delete')}
+				>
 					<Icon icon={faTrashCan} size={16} />
-				</button>
+				</Button>
 			{/if}
 		</div>
 	{:else}
@@ -568,160 +599,127 @@
 					</span>
 				{/if}
 			</h1>
-			<div class="seg" role="group" aria-label={msg.mail_list_show()}>
-				<button type="button" aria-pressed={!filters.unread} onclick={() => setUnreadOnly(false)}>
-					{msg.mail_list_all()}
-				</button>
-				<button type="button" aria-pressed={filters.unread} onclick={() => setUnreadOnly(true)}>
-					{msg.mail_list_filter_unread()}
-				</button>
-			</div>
+			<Segmented
+				class="seg"
+				aria-label={msg.mail_list_show()}
+				bind:value={() => (filters.unread ? 'unread' : 'all'), (v) => setUnreadOnly(v === 'unread')}
+				options={[
+					{ value: 'all', label: msg.mail_list_all() },
+					{ value: 'unread', label: msg.mail_list_filter_unread() }
+				]}
+			/>
 			<div class="lh-actions">
 				{#if onRefresh}
-					<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
-						<Icon icon={faArrowsRotate} size={16} />
-					</button>
-				{/if}
-				<button class="lh-btn" title={msg.mail_list_select_all()} onclick={onToggleAll}>
-					<Icon icon={faSquareCheck} size={16} />
-				</button>
-				<div class="lh-sort" bind:this={sortRef}>
-					<button
-						class="lh-btn"
-						class:on={sortOpen}
-						title={msg.mail_list_sort()}
-						aria-haspopup="menu"
-						aria-expanded={sortOpen}
-						onclick={() => (sortOpen = !sortOpen)}
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						class={['lh-btn', { refreshing }]}
+						tooltip={msg.mail_refresh()}
+						disabled={refreshing}
+						onclick={doRefresh}
 					>
-						<Icon icon={faArrowDownArrowUp} size={16} />
-					</button>
-					{#if sortOpen}
-						<div class="menu sort-menu" role="menu">
-							<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
+						<Icon icon={faArrowsRotate} size={16} />
+					</Button>
+				{/if}
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					tooltip={msg.mail_list_select_all()}
+					onclick={onToggleAll}
+				>
+					<Icon icon={faSquareCheck} size={16} />
+				</Button>
+				<DropdownMenu.Root bind:open={sortOpen}>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm" class="lh-btn" tooltip={msg.mail_list_sort()}>
+								<Icon icon={faArrowDownArrowUp} size={16} />
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" class="sort-menu" portalProps={{ to: '.mail-app' }}>
+						<DropdownMenu.RadioGroup value={sort} onValueChange={(v) => pickSort(v as SortId)}>
+							<DropdownMenu.GroupHeading>{msg.mail_list_sort_by()}</DropdownMenu.GroupHeading>
 							{#each SORT_OPTIONS as o (o.id)}
 								{@const SIcon = sortIcons[o.icon] ?? faArrowDown}
-								<button
-									class="mitem"
-									class:active={sort === o.id}
-									role="menuitemradio"
-									aria-checked={sort === o.id}
-									onclick={() => pickSort(o.id)}
-								>
+								<DropdownMenu.RadioItem value={o.id}>
 									<Icon icon={SIcon} size={16} />{o.label}
-									{#if sort === o.id}
-										<span class="mck"><Icon icon={faCheck} size={16} /></span>
-									{/if}
-								</button>
+								</DropdownMenu.RadioItem>
 							{/each}
-						</div>
-					{/if}
-				</div>
-				<div class="lh-filter" bind:this={filterRef}>
-					<button
-						class="lh-btn"
-						class:on={filterOpen || activeFilters > 0}
-						title={msg.mail_list_filter()}
-						aria-haspopup="dialog"
-						aria-expanded={filterOpen}
-						onclick={() => (filterOpen = !filterOpen)}
-					>
-						<Icon icon={faSliders} size={16} />
-						{#if activeFilters > 0}
-							<span class="fbadge">{activeFilters}</span>
-						{/if}
-					</button>
-					{#if filterOpen}
-						<div class="menu filter-menu" role="dialog" aria-label={msg.mail_list_filter_aria()}>
-							<div class="fm-head">
-								<span class="menu-lbl">{msg.mail_list_filter()}</span>
+						</DropdownMenu.RadioGroup>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+				<Popover.Root bind:open={filterOpen}>
+					<Popover.Trigger>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm" class="lh-btn lh-filter" tooltip={msg.mail_list_filter()}>
+								<Icon icon={faSliders} size={16} />
 								{#if activeFilters > 0}
-									<button class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
+									<span class="fbadge">{activeFilters}</span>
 								{/if}
-							</div>
-							<div class="fm-cap">{msg.mail_list_show_only()}</div>
-							<div class="fm-chips">
-								<button
-									class="fchip"
-									class:on={filters.unread}
-									aria-pressed={filters.unread}
-									onclick={() => toggleFlag('unread')}
-								>
-									<Icon icon={faEnvelope} size={15} />{msg.mail_list_filter_unread()}
-								</button>
-								<button
-									class="fchip"
-									class:on={filters.starred}
-									aria-pressed={filters.starred}
-									onclick={() => toggleFlag('starred')}
-								>
-									<Icon icon={faStar} size={15} />{msg.mail_list_filter_starred()}
-								</button>
-								<button
-									class="fchip"
-									class:on={filters.attach}
-									aria-pressed={filters.attach}
-									onclick={() => toggleFlag('attach')}
-								>
-									<Icon icon={faPaperclip} size={15} />{msg.mail_list_filter_attach()}
-								</button>
-								{#if collectionKind && (showScope || filters.direct)}
-									<button
-										class="fchip"
-										class:on={!!filters.direct}
-										aria-pressed={!!filters.direct}
-										onclick={() => toggleFlag('direct')}
-									>
-										{#if collectionKind === 'label'}
-											<Icon icon={faTag} size={15} />{msg.mail_view_only_label()}
-										{:else}
-											<Icon icon={faFolder} size={15} />{msg.mail_view_only_folder()}
-										{/if}
-									</button>
-								{/if}
-							</div>
-							{#if collectionKind !== 'label'}
-								<div class="msep"></div>
-								<div class="fm-cap">{msg.mail_list_labels()}</div>
-								<div class="fm-chips">
-									{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
-										{@const on = filters.labels.includes(l.id)}
-										<button
-											class="fchip"
-											class:on
-											aria-pressed={on}
-											title={l.path}
-											onclick={() => toggleLabel(l.id)}
-										>
-											<span class="fdot" style:background={collectionColor(l.color)}></span>{l.name}
-										</button>
-									{:else}
-										<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
-									{/each}
-								</div>
+							</Button>
+						{/snippet}
+					</Popover.Trigger>
+					<Popover.Content align="end" class="filter-menu" aria-label={msg.mail_list_filter_aria()} portalProps={{ to: '.mail-app' }}>
+						<div class="fm-head">
+							<p class="popover-label">{msg.mail_list_filter()}</p>
+							{#if activeFilters > 0}
+								<button type="button" class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
 							{/if}
 						</div>
-					{/if}
-				</div>
+						<div class="fm-cap">{msg.mail_list_show_only()}</div>
+						<div class="fm-chips">
+							<Chip bind:pressed={() => filters.unread, () => toggleFlag('unread')}>
+								{#snippet leading()}<Icon icon={faEnvelope} size={15} />{/snippet}
+								{msg.mail_list_filter_unread()}
+							</Chip>
+							<Chip bind:pressed={() => filters.starred, () => toggleFlag('starred')}>
+								{#snippet leading()}<Icon icon={faStar} size={15} />{/snippet}
+								{msg.mail_list_filter_starred()}
+							</Chip>
+							<Chip bind:pressed={() => filters.attach, () => toggleFlag('attach')}>
+								{#snippet leading()}<Icon icon={faPaperclip} size={15} />{/snippet}
+								{msg.mail_list_filter_attach()}
+							</Chip>
+							{#if collectionKind && (showScope || filters.direct)}
+								<Chip bind:pressed={() => !!filters.direct, () => toggleFlag('direct')}>
+									{#snippet leading()}<Icon icon={collectionKind === 'label' ? faTag : faFolder} size={15} />{/snippet}
+									{collectionKind === 'label' ? msg.mail_view_only_label() : msg.mail_view_only_folder()}
+								</Chip>
+							{/if}
+						</div>
+						{#if collectionKind !== 'label'}
+							<div class="menu-sep fm-sep"></div>
+							<div class="fm-cap">{msg.mail_list_labels()}</div>
+							<div class="fm-chips">
+								{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
+									{@const on = filters.labels.includes(l.id)}
+									<Chip title={l.path} bind:pressed={() => on, () => toggleLabel(l.id)}>
+										{#snippet leading()}<span class="fdot" style:background={collectionColor(l.color)}></span>{/snippet}
+										{l.name}
+									</Chip>
+								{:else}
+									<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
+								{/each}
+							</div>
+						{/if}
+					</Popover.Content>
+				</Popover.Root>
 			</div>
 		</div>
 	{/if}
 	{#if !anyChecked && (sort !== 'newest' || activeFilters > 0)}
 		<div class="view-strip">
 			{#if sort !== 'newest'}
-				<span>{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}</span>
-				<button type="button" class="list-sub-x" title={msg.mail_list_reset_sort()} onclick={() => onSort('newest')}>
-					<Icon icon={faXmark} size={11} />
-				</button>
-			{/if}
-			{#if sort !== 'newest' && activeFilters > 0}
-				<span class="list-sub-dot">·</span>
+				<Chip size="sm" removeLabel={msg.mail_list_reset_sort()} onremove={() => onSort('newest')}>
+					{msg.mail_list_sorted_by({ sort: SORT_OPTIONS.find((o) => o.id === sort)?.label ?? '' })}
+				</Chip>
 			{/if}
 			{#if activeFilters > 0}
-				<span>{msg.mail_list_filters_active({ count: activeFilters })}</span>
-				<button type="button" class="list-sub-x" title={msg.mail_list_clear_filters()} onclick={clearFilters}>
-					<Icon icon={faXmark} size={11} />
-				</button>
+				<Chip size="sm" removeLabel={msg.mail_list_clear_filters()} onremove={clearFilters}>
+					{msg.mail_list_filters_active({ count: activeFilters })}
+				</Chip>
 			{/if}
 		</div>
 	{/if}
@@ -777,9 +775,15 @@
 				<Icon icon={faAlarmClock} size={15} />
 				<span>{msg.mail_list_snooze_returned({ count: returnedCount })}</span>
 				{#if onDismissReturned}
-					<button type="button" class="snz-x" title={msg.mail_list_dismiss()} onclick={onDismissReturned}>
+					<Button
+						variant="ghost"
+						size="icon-xs"
+						class="snz-x"
+						tooltip={msg.mail_list_dismiss()}
+						onclick={onDismissReturned}
+					>
 						<Icon icon={faXmark} size={13} />
-					</button>
+					</Button>
 				{/if}
 			</div>
 		{/if}
@@ -809,23 +813,27 @@
 				<ListSkeleton />
 			{/if}
 		{:else if list.length === 0}
-			<div class="empty-list">
-				<span class="el-rule"></span>
-				<div class="t">{emptyTitle}</div>
-				<div class="d">{emptyDetail}</div>
+			<EmptyState
+				class="empty-list"
+				icon={search ? faMagnifyingGlass : activeFilters > 0 ? faFilter : faInbox}
+				title={emptyTitle}
+				description={emptyDetail}
+			>
 				{#if errorParts}
 					<code class="q-err" dir="auto">{errorParts.before}<mark>{errorParts.bad}</mark>{errorParts.after}</code>
 				{/if}
-				{#if search && searchEmpty?.finish}
-					<button class="empty-clear" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</button>
-				{:else if search && searchEmpty?.retry}
-					<button class="empty-clear" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</button>
-				{:else if search}
-					<button class="empty-clear" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</button>
-				{:else if activeFilters > 0}
-					<button class="empty-clear" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</button>
-				{/if}
-			</div>
+				{#snippet action()}
+					{#if search && searchEmpty?.finish}
+						<Button variant="neutral" size="sm" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</Button>
+					{:else if search && searchEmpty?.retry}
+						<Button variant="neutral" size="sm" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</Button>
+					{:else if search}
+						<Button variant="neutral" size="sm" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</Button>
+					{:else if activeFilters > 0}
+						<Button variant="neutral" size="sm" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</Button>
+					{/if}
+				{/snippet}
+			</EmptyState>
 		{:else}
 			{#each groups as { g, items } (g ?? 'all')}
 				{#if g}
@@ -858,7 +866,7 @@
 		{#if !searchActive || list.length > 0}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
-					<button class="lf-retry" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</button>
+					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
 				{:else if exhausted && list.length > 0 && !offline}

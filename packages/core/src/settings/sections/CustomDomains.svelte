@@ -1,18 +1,19 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import LoadState from '$core/components/LoadState.svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faArrowRight,
 		faCircleExclamation,
-		faEarthEurope,
 		faEllipsisVertical,
+		faGlobe,
 		faPlus,
 		faTrashCan
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { page } from '$app/state';
 
 	import Card from '$core/settings/Card.svelte';
-	import Badge from '$core/settings/Badge.svelte';
+	import { Badge } from '$core/components/ui/badge';
 	import SecHead from '$core/settings/SecHead.svelte';
 	import RemoveDomainDialog from '$core/settings/domains/RemoveDomainDialog.svelte';
 	import {
@@ -37,6 +38,7 @@
 	import UpgradeNudge from '$core/settings/UpgradeNudge.svelte';
 	import type { CustomDomain } from '$core/api/customDomains';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { m } from '$paraglide/messages.js';
 
 	const LIST_POLL_MS = 60_000;
@@ -46,25 +48,12 @@
 	const base = $derived(`/u/${slot}/settings/domains`);
 	const LADDER = DOMAIN_STEPS.filter((s) => s !== 'done');
 
-	let menuFor = $state<string | null>(null);
 	let removeId = $state<string | null>(null);
 	let now = $state(serverNow());
 
 	const removeTarget = $derived(store.items.find((d) => d.id === removeId) ?? null);
 
-	function openMenu(id: string) {
-		menuFor = menuFor === id ? null : id;
-	}
-
-	function dismiss(e: Event) {
-		if (menuFor === null) return;
-		const t = e.target;
-		if (t instanceof Element && t.closest('.cd-menu-wrap')) return;
-		menuFor = null;
-	}
-
 	function startRemove(id: string) {
-		menuFor = null;
 		removeId = id;
 	}
 
@@ -122,14 +111,9 @@
 	});
 </script>
 
-<svelte:window
-	onpointerdown={dismiss}
-	onkeydown={(e) => e.key === 'Escape' && (menuFor = null)}
-/>
-
 <SecHead desc={m.settings_domains_desc()} />
 
-<Card icon={faEarthEurope} title={m.settings_domains_title()}>
+<Card title={m.settings_domains_title()}>
 
 	{#if !store.loaded && store.error}
 		<LoadState
@@ -140,7 +124,7 @@
 	{:else if !store.loaded}
 		<LoadState kind="loading" label={m.settings_domains_loading()} />
 	{:else if empty}
-		<div class="cd-empty">{m.settings_domains_empty()}</div>
+		<EmptyState compact icon={faGlobe} title={m.settings_domains_empty()} />
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
@@ -150,7 +134,7 @@
 				<div class="cd-row" class:live>
 					<div class="cd-main">
 						<span class="cd-name mono">{d.domain}</span>
-						<Badge kind={badge.kind} dot>{badge.label}</Badge>
+						<Badge tone={badge.kind} status>{badge.label}</Badge>
 					</div>
 
 					<div class="cd-progress" aria-label={m.settings_domains_progress_aria()}>
@@ -175,35 +159,27 @@
 						<span class="cd-meta">{meta(d)}</span>
 						<span class="cd-acts">
 							{#if live}
-								<Button variant="secondary" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
+								<Button variant="tonal" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
 							{:else}
 								<Button variant="primary" href={setupHref(d)}>
 									{m.settings_domains_continue_setup()}<Icon icon={faArrowRight} size={15} />
 								</Button>
 							{/if}
 							{#if manage}
-								<span class="cd-menu-wrap">
-									<button
-										type="button"
-										class="cd-menu-btn"
-										aria-label={m.settings_domains_actions_aria()}
-										aria-expanded={menuFor === d.id}
-										onclick={() => openMenu(d.id)}
-									>
-										<Icon icon={faEllipsisVertical} size={16} />
-									</button>
-									{#if menuFor === d.id}
-										<div class="cd-menu" role="menu">
-											<button
-												type="button"
-												class="cd-menu-item danger"
-												onclick={() => startRemove(d.id)}
-											>
-												<Icon icon={faTrashCan} size={14} />{m.settings_domains_remove()}
-											</button>
-										</div>
-									{/if}
-								</span>
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger>
+										{#snippet child({ props })}
+											<Button {...props} variant="ghost" size="icon-sm" aria-label={m.settings_domains_actions_aria()}>
+												<Icon icon={faEllipsisVertical} size={16} />
+											</Button>
+										{/snippet}
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content align="end">
+										<DropdownMenu.Item variant="danger" onSelect={() => startRemove(d.id)}>
+											<Icon icon={faTrashCan} size={14} />{m.settings_domains_remove()}
+										</DropdownMenu.Item>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
 							{/if}
 						</span>
 					</div>
@@ -256,7 +232,7 @@
 	}
 	.cd-row.live {
 		border-color: var(--border);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.cd-main {
 		display: flex;
@@ -283,7 +259,7 @@
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
-		background: var(--paper-200);
+		background: var(--border-strong);
 		flex: 0 0 auto;
 	}
 	.cd-stage.done .cd-pip {
@@ -318,66 +294,7 @@
 		gap: 8px;
 		margin-left: auto;
 	}
-	.cd-menu-wrap {
-		position: relative;
-		display: inline-flex;
-	}
-	.cd-menu-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 30px;
-		height: 30px;
-		border-radius: var(--radius-control-compact);
-		background: transparent;
-		border: 1px solid transparent;
-		color: var(--ink-600);
-		cursor: pointer;
-	}
-	.cd-menu-btn:hover {
-		background: var(--paper-200);
-	}
-	.cd-menu {
-		position: absolute;
-		right: 0;
-		top: 34px;
-		z-index: 40;
-		display: flex;
-		flex-direction: column;
-		min-width: 180px;
-		padding: 4px;
-		background: var(--surface);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-menu);
-		box-shadow: var(--shadow-lg);
-	}
-	.cd-menu-item {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 8px 10px;
-		font-family: inherit;
-		font-size: 13px;
-		text-align: left;
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-control-compact);
-		color: var(--ink-700);
-		cursor: pointer;
-	}
-	.cd-menu-item:hover {
-		background: var(--paper-200);
-	}
-	.cd-menu-item.danger {
-		color: var(--danger-700);
-	}
 
-	.cd-empty {
-		padding: 18px;
-		text-align: center;
-		color: var(--fg-muted);
-		font-size: 13px;
-	}
 	.cd-err {
 		display: flex;
 		gap: 7px;

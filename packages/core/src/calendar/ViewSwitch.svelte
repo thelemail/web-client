@@ -1,8 +1,9 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faChevronDown } from '@fortawesome/pro-regular-svg-icons';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
-	import * as ToggleGroup from '$core/components/ui/toggle-group';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { m } from '$paraglide/messages.js';
 	import { cal } from './state.svelte';
 	import type { View } from './types';
@@ -14,32 +15,26 @@
 	];
 
 	const current = $derived(VIEWS.find((v) => v.value === cal.view));
+	const options = $derived(VIEWS.map((v) => ({ value: v.value, label: v.label(), ariaLabel: m.cal_view_aria({ view: v.label() }) })));
 </script>
 
-<ToggleGroup.Root
-	type="single"
-	variant="outline"
-	size="sm"
+<Segmented
 	value={cal.view}
-	onValueChange={(value) => value && cal.goTo(value as View)}
+	{options}
+	onValueChange={(value) => cal.goTo(value)}
+	aria-label={m.cal_view_fallback()}
 	class="viewseg"
->
-	{#each VIEWS as view (view.value)}
-		<ToggleGroup.Item
-			value={view.value}
-			aria-label={m.cal_view_aria({ view: view.label() })}
-			class="font-semibold data-[state=on]:text-pine-700"
-		>
-			{view.label()}
-		</ToggleGroup.Item>
-	{/each}
-</ToggleGroup.Root>
+/>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class="viewdrop">
-		{current?.label() ?? m.cal_view_fallback()}<Icon icon={faChevronDown} size={15} />
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<Button {...props} variant="neutral" size="sm" class="viewdrop">
+				{current?.label() ?? m.cal_view_fallback()}<Icon icon={faChevronDown} size={15} />
+			</Button>
+		{/snippet}
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content class="cal-surface cal-menu w-40" align="end">
+	<DropdownMenu.Content class="w-40" align="end">
 		{#each VIEWS as view (view.value)}
 			<DropdownMenu.Item onSelect={() => cal.goTo(view.value)}>{view.label()}</DropdownMenu.Item>
 		{/each}

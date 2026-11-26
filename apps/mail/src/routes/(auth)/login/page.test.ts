@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { m } from '$paraglide/messages.js';
 import { ApiCallError, type ErrorCode } from '$core/api/types';
 import LoginPage from './+page.svelte';
@@ -79,7 +79,7 @@ let pending: {
 };
 
 function button(label: string) {
-	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+	return (screen.queryByRole('button', { name: label }) as HTMLButtonElement | null) ?? undefined;
 }
 
 function plain(text: string) {
@@ -87,7 +87,7 @@ function plain(text: string) {
 }
 
 function changeEmail() {
-	return document.querySelector<HTMLButtonElement>('button.sp-filled');
+	return document.querySelector<HTMLButtonElement>('.field .lab button.aux');
 }
 
 async function enterEmail(value = 'r@thelemail.com') {
@@ -318,7 +318,7 @@ describe('login page identifier step', () => {
 	it('renders the same password step for any address', async () => {
 		const markup = (address: string) =>
 			document
-				.querySelector('.sp')!
+				.querySelector('.card-surface')!
 				.innerHTML.replaceAll('<wbr>', '')
 				.replaceAll(encodeURIComponent(address), 'ADDR')
 				.replaceAll(address, 'ADDR')
@@ -434,7 +434,8 @@ describe('login page identifier step', () => {
 		expect(document.querySelector('input[type="password"]')).toBeNull();
 		expect(document.querySelector('#login-identifier')).toBeNull();
 		expect(document.querySelector('#login-email')).toBeNull();
-		expect(document.body.textContent).toContain(m.handoff_opening());
+		expect(document.querySelector('h1')?.textContent).toBe(m.handoff_to_auth_title());
+		expect(document.body.textContent).toContain(m.handoff_redirecting());
 		expect(login.performLogin).not.toHaveBeenCalled();
 	});
 
@@ -484,7 +485,7 @@ describe('login page identifier step', () => {
 		leaving.resolve();
 	});
 
-	it('stamps the sign-in in place of the status line while the mailbox opens', async () => {
+	it('says it is signed in while the mailbox opens', async () => {
 		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 		const leaving = Promise.withResolvers<void>();
 		nav.goto.mockReturnValue(leaving.promise);
@@ -493,19 +494,19 @@ describe('login page identifier step', () => {
 		await submitCredentials();
 		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalled());
 
-		expect(document.querySelector('.sp-seal')?.textContent).toContain('Signed in');
+		expect(document.querySelector('.af-status[data-tone="ok"]')?.textContent).toContain(m.auth_login_signed_in());
 		expect(document.querySelector('#login-err')).toBeNull();
 		leaving.resolve();
 	});
 
-	it('takes the stamp back when the mailbox cannot open', async () => {
+	it('drops the signed-in line when the mailbox cannot open', async () => {
 		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 		nav.goto.mockRejectedValue(new Error('navigation failed'));
 		render(LoginPage);
 
 		await submitCredentials();
 		await vi.waitFor(() => expect(document.querySelector('#login-err')?.textContent).toContain('navigation failed'));
-		expect(document.querySelector('.sp-seal')).toBeNull();
+		expect(document.querySelector('.af-status[data-tone="ok"]')).toBeNull();
 	});
 });
 

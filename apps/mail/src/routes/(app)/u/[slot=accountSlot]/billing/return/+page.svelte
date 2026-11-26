@@ -74,7 +74,7 @@
 
 <AuthShell>
 	<div class="card">
-		<div class="card-surface screen-fade">
+		<div class="card-surface">
 			<div class="welcome">
 				{#if phase === 'active'}
 					<span class="return-check"><Icon icon={faCircleCheck} size={44} /></span>
@@ -98,7 +98,7 @@
 						{m.billing_return_slow_body()}
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<Button variant="secondary" size="lg" block disabled={checking} onclick={checkNow}>
+						<Button variant="neutral" size="lg" block disabled={checking} onclick={checkNow}>
 							{checking ? m.common_loading() : m.billing_return_check_again()}
 						</Button>
 					</div>
@@ -126,7 +126,7 @@
 		width: 36px;
 		height: 36px;
 		margin-bottom: 12px;
-		border: 3px solid var(--paper-100);
+		border: 3px solid var(--bg-sunken);
 		border-top-color: var(--pine-700);
 		border-radius: 50%;
 		animation: return-spin 0.9s linear infinite;

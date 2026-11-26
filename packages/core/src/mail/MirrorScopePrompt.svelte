@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import { platform } from '$platform';
+	import { faHardDrive } from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import * as Dialog from '$core/components/ui/dialog';
 
 	interface Props {
 		accountId: string;
@@ -45,72 +46,20 @@
 	}
 </script>
 
-{#if asking}
-	<div class="msp-scrim" role="dialog" aria-modal="true" use:trapFocus aria-labelledby="msp-title">
-		<div class="msp-modal">
-			<h2 id="msp-title">{m.mail_mirror_scope_title()}</h2>
-			<p>{m.mail_mirror_scope_body()}</p>
-			<div class="msp-actions">
-				<Button variant="primary" disabled={busy} onclick={() => choose(90)}>
-					{m.mail_mirror_scope_90_days()}
-				</Button>
-				<Button variant="secondary" disabled={busy} onclick={() => choose(null)}>
-					{m.mail_mirror_scope_all()}
-				</Button>
-			</div>
-			<p class="msp-note">{m.mail_mirror_scope_note()}</p>
-		</div>
-	</div>
-{/if}
-
-<style>
-	.msp-scrim {
-		position: fixed;
-		inset: 0;
-		z-index: 130;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 24px;
-		background: rgba(20, 39, 30, 0.44);
-		backdrop-filter: blur(3px);
-		font-family: var(--font-sans);
-		color: var(--fg);
-	}
-
-	.msp-modal {
-		width: 466px;
-		max-width: 100%;
-		background: var(--surface);
-		border: 1px solid var(--border);
-		border-top: 3px solid var(--pine-600);
-		border-radius: var(--radius-panel);
-		box-shadow: var(--shadow-lg);
-		padding: 22px 24px 18px;
-	}
-
-	.msp-modal h2 {
-		margin: 0 0 8px;
-		font-size: 19px;
-		font-weight: 600;
-		letter-spacing: -0.01em;
-	}
-
-	.msp-modal p {
-		margin: 0;
-		font-size: 13.5px;
-		line-height: 1.55;
-		color: var(--fg-muted);
-	}
-
-	.msp-actions {
-		display: flex;
-		gap: 10px;
-		margin-top: 20px;
-	}
-
-	.msp-note {
-		margin-top: 14px;
-		font-size: 12.5px;
-	}
-</style>
+<Dialog.Root open={asking}>
+	<Dialog.Content showCloseButton={false} escapeKeydownBehavior="ignore" interactOutsideBehavior="ignore">
+		<Dialog.Header icon={faHardDrive}>
+			<Dialog.Title>{m.mail_mirror_scope_title()}</Dialog.Title>
+			<Dialog.Description>{m.mail_mirror_scope_body()}</Dialog.Description>
+		</Dialog.Header>
+		<p class="dialog-hint">{m.mail_mirror_scope_note()}</p>
+		<Dialog.Footer>
+			<Button variant="tonal" disabled={busy} onclick={() => choose(null)}>
+				{m.mail_mirror_scope_all()}
+			</Button>
+			<Button variant="primary" disabled={busy} onclick={() => choose(90)}>
+				{m.mail_mirror_scope_90_days()}
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

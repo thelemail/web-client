@@ -1,12 +1,9 @@
 <script lang="ts">
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
-	import { trapFocus } from '$core/actions/trapFocus';
-	import { m } from '$paraglide/messages.js';
-	import Icon from '$core/components/Icon.svelte';
-	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
-	import './confirm-dialog.css';
 	import type { Snippet } from 'svelte';
+	import { m } from '$paraglide/messages.js';
 	import { Button } from '$core/components/ui/button';
+	import * as Dialog from '$core/components/ui/dialog';
 
 	interface Props {
 		icon?: IconDefinition;
@@ -19,6 +16,7 @@
 		disabled?: boolean;
 		error?: string | null;
 		body?: Snippet;
+		wide?: boolean;
 		extraClass?: string;
 		onConfirm: () => void;
 		onCancel?: () => void;
@@ -26,7 +24,7 @@
 	}
 
 	let {
-		icon: glyph,
+		icon,
 		title,
 		sub = '',
 		tone = 'neutral',
@@ -36,82 +34,79 @@
 		disabled = false,
 		error = null,
 		body,
+		wide = false,
 		extraClass = '',
 		onConfirm,
 		onCancel,
 		onClose
 	}: Props = $props();
 
-	const uid = $props.id();
-	const titleId = `${uid}-title`;
-
-	function close() {
-		if (busy) return;
-		onClose();
-	}
+	let cancelRef = $state<HTMLElement | null>(null);
+	let confirmRef = $state<HTMLElement | null>(null);
+	let contentRef = $state<HTMLElement | null>(null);
 
 	function cancel() {
 		if (busy) return;
 		(onCancel ?? onClose)();
 	}
 
-	function handleKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		e.stopPropagation();
-		close();
-	}
-
-	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) close();
+	function autoFocus(e: Event) {
+		e.preventDefault();
+		if (contentRef?.contains(document.activeElement)) return;
+		const field = contentRef?.querySelector<HTMLElement>(
+			'[data-autofocus], [autofocus], input:not([type="hidden"]):not(:disabled), textarea:not(:disabled), select:not(:disabled)'
+		);
+		(field ?? (tone === 'danger' ? cancelRef : confirmRef) ?? cancelRef)?.focus();
 	}
 </script>
 
-<svelte:document onkeydowncapture={handleKey} />
-
-<div
-	class="cfd-scrim {extraClass}"
-	role="dialog"
-	aria-modal="true"
-	use:trapFocus
-	aria-labelledby={titleId}
-	tabindex="-1"
-	onmousedown={scrimMouseDown}
+<Dialog.Root
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open && !busy) onClose();
+		}
+	}
 >
-	<div class="cfd-modal {tone}" role="presentation" onmousedown={(e) => e.stopPropagation()}>
-		<div class="cfd-head">
-			{#if glyph}
-				<span class="cfd-ic"><Icon icon={glyph} size={17} /></span>
+	<Dialog.Content
+		bind:ref={contentRef}
+		size={wide ? 'wide' : 'md'}
+		alert={tone === 'danger'}
+		class={extraClass}
+		showCloseButton={!busy}
+		escapeKeydownBehavior={busy ? 'ignore' : 'close'}
+		interactOutsideBehavior={busy ? 'ignore' : 'close'}
+		onOpenAutoFocus={autoFocus}
+	>
+		<Dialog.Header {icon} tone={tone === 'danger' ? 'danger' : 'brand'}>
+			<Dialog.Title>{title}</Dialog.Title>
+			{#if sub}
+				<Dialog.Description class="dialog-sub" title={sub}>{sub}</Dialog.Description>
 			{/if}
-			<div class="cfd-tx">
-				<h2 class="cfd-title" id={titleId}>{title}</h2>
-				{#if sub}
-					<div class="cfd-sub" title={sub}>{sub}</div>
-				{/if}
-			</div>
-			<button type="button" class="cfd-x" title={m.common_close()} disabled={busy} onclick={close}>
-				<Icon icon={faXmark} size={16} />
-			</button>
-		</div>
+		</Dialog.Header>
 
 		{#if body}
-			<div class="cfd-body">{@render body()}</div>
+			<div class="dialog-body">{@render body()}</div>
 		{/if}
 
 		{#if error}
-			<div class="cfd-err" role="alert">{error}</div>
+			<div class="dialog-err" role="alert">{error}</div>
 		{/if}
 
-		<div class="cfd-actions">
-			<Button variant="secondary" disabled={busy} onclick={cancel}>
+		<Dialog.Footer>
+			<Button bind:ref={cancelRef} variant="neutral" disabled={busy} onclick={cancel}>
 				{cancelLabel ?? m.common_cancel()}
 			</Button>
 			<Button
+				bind:ref={confirmRef}
 				variant={tone === 'danger' ? 'danger' : 'primary'}
-				disabled={busy || disabled}
+				disabled={disabled}
+				{busy}
+				busyLabel={m.mail_confirm_working()}
 				onclick={onConfirm}
 			>
-				{busy ? m.mail_confirm_working() : confirmLabel}
+				{confirmLabel}
 			</Button>
-		</div>
-	</div>
-</div>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

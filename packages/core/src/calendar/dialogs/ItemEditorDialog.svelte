@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Icon from '$core/components/Icon.svelte';
 	import {
 		faCalendarDays,
 		faListCheck,
@@ -7,7 +6,9 @@
 		faShieldCheck
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { Chip } from '$core/components/ui/chip';
 	import * as Dialog from '$core/components/ui/dialog';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { domainOf, platformDomains } from '$core/stores/platformDomains.svelte';
@@ -215,6 +216,18 @@
 		reminderPick = '';
 	}
 
+	const visibilityOptions = $derived([
+		{ value: 'private' as const, label: m.cal_privacy_private() },
+		{ value: 'busy' as const, label: m.cal_privacy_busy() },
+		...(kind === 'hold' ? [] : [{ value: 'shared' as const, label: m.cal_privacy_shared() }])
+	]);
+
+	function pickKind(next: ItemKind) {
+		kind = next;
+		if (next === 'task') scheduled = false;
+		if (next === 'hold' && privacy === 'shared') privacy = 'busy';
+	}
+
 	function reminderLabel(minutes: number): string {
 		if (minutes === 0) return m.cal_reminder_at_time();
 		if (minutes === 1440) return m.cal_reminder_days_before({ count: 1 });
@@ -323,31 +336,35 @@
 	}
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		{#if kind === 'task'}<Icon icon={faListCheck} size={18} color="var(--brass-600)" />{:else if kind === 'hold'}<Icon icon={faLock} size={18} color="var(--brass-600)" />{:else}<Icon icon={faCalendarDays} size={18} color="var(--brass-600)" />{/if}
-		<Dialog.Title class="dt">
+<Dialog.Content size="lg" class="cal-surface">
+	<Dialog.Header icon={kind === 'task' ? faListCheck : kind === 'hold' ? faLock : faCalendarDays}>
+		<Dialog.Title>
 			{thisOnly ? m.cal_editor_title_this_only({ title: dialogTitle }) : dialogTitle}
 		</Dialog.Title>
 	</Dialog.Header>
 
-	<div class="cal-dlg-body cal-form">
+	<div class="cal-form">
 		{#if !isEdit}
-			<div class="seg kind-seg">
-				<button type="button" class:on={kind === 'event'} onclick={() => (kind = 'event')}>{m.cal_editor_kind_event()}</button>
-				<button type="button" class:on={kind === 'task'} onclick={() => ((kind = 'task'), (scheduled = false))}>{m.cal_editor_kind_task()}</button>
-				<button type="button" class:on={kind === 'hold'} onclick={() => ((kind = 'hold'), (privacy = privacy === 'shared' ? 'busy' : privacy))}>{m.cal_editor_kind_hold()}</button>
-			</div>
+			<Segmented
+				value={kind}
+				options={[
+					{ value: 'event', label: m.cal_editor_kind_event() },
+					{ value: 'task', label: m.cal_editor_kind_task() },
+					{ value: 'hold', label: m.cal_editor_kind_hold() }
+				]}
+				onValueChange={pickKind}
+				class="kind-seg"
+			/>
 		{/if}
 
 		<label class="cal-field">
 			<span>{kind === 'hold' ? m.cal_editor_hold_label() : m.cal_editor_title()}</span>
-			<input type="text" bind:value={title} maxlength="200" placeholder={kind === 'hold' ? m.cal_editor_placeholder_hold() : kind === 'task' ? m.cal_editor_placeholder_task() : m.cal_editor_placeholder_event()} />
+			<input class="field-input" type="text" bind:value={title} maxlength="200" placeholder={kind === 'hold' ? m.cal_editor_placeholder_hold() : kind === 'task' ? m.cal_editor_placeholder_task() : m.cal_editor_placeholder_event()} />
 		</label>
 
 		<label class="cal-field">
 			<span>{m.cal_editor_calendar()}</span>
-			<select bind:value={calendarId} disabled={isEdit && !!source?.attendees?.length}>
+			<select class="field-input" bind:value={calendarId} disabled={isEdit && !!source?.attendees?.length}>
 				{#each writable as c (c.id)}
 					<option value={c.id}>{c.name}</option>
 				{/each}
@@ -358,21 +375,21 @@
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_due_date()}</span>
-					<input type="date" bind:value={dueDate} />
+					<input class="field-input" type="date" bind:value={dueDate} />
 				</label>
 				<label>
 					<span>{m.cal_editor_time()}</span>
-					<input type="time" bind:value={dueTime} />
+					<input class="field-input" type="time" bind:value={dueTime} />
 				</label>
 			</div>
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_estimate()}</span>
-					<input type="number" min="0" step="5" bind:value={estimate} placeholder="30" />
+					<input class="field-input" type="number" min="0" step="5" bind:value={estimate} placeholder="30" />
 				</label>
 				<label>
 					<span>{m.cal_editor_owner()}</span>
-					<select bind:value={ownerEmail}>
+					<select class="field-input" bind:value={ownerEmail}>
 						<option value="">{m.cal_editor_unassigned()}</option>
 						{#each members as member (member.accountId)}
 							<option value={member.email}>{member.fullName || member.email}</option>
@@ -381,7 +398,7 @@
 				</label>
 			</div>
 			<label class="cal-check">
-				<input type="checkbox" bind:checked={scheduled} />
+				<input type="checkbox" class="check" bind:checked={scheduled} />
 				{m.cal_editor_timebox()}
 			</label>
 		{/if}
@@ -390,33 +407,33 @@
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_starts()}</span>
-					<input type="date" bind:value={startDate} onchange={() => { if (!endDate || endDate < startDate) endDate = startDate; }} />
+					<input class="field-input" type="date" bind:value={startDate} onchange={() => { if (!endDate || endDate < startDate) endDate = startDate; }} />
 				</label>
 				{#if !allDay}
 					<label>
 						<span>&nbsp;</span>
-						<input type="time" bind:value={startTime} />
+						<input class="field-input" type="time" bind:value={startTime} />
 					</label>
 				{/if}
 			</div>
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_ends()}</span>
-					<input type="date" bind:value={endDate} min={startDate} />
+					<input class="field-input" type="date" bind:value={endDate} min={startDate} />
 				</label>
 				{#if !allDay}
 					<label>
 						<span>&nbsp;</span>
-						<input type="time" bind:value={endTime} />
+						<input class="field-input" type="time" bind:value={endTime} />
 					</label>
 				{/if}
 			</div>
 			<div class="cal-inline">
-				<label class="cal-check"><input type="checkbox" bind:checked={allDay} />{m.cal_editor_all_day()}</label>
+				<label class="cal-check"><input type="checkbox" class="check" bind:checked={allDay} />{m.cal_editor_all_day()}</label>
 				{#if !allDay}
-					<label class="cal-check"><input type="checkbox" bind:checked={floating} />{m.cal_editor_floating()}</label>
+					<label class="cal-check"><input type="checkbox" class="check" bind:checked={floating} />{m.cal_editor_floating()}</label>
 					{#if !floating}
-						<select class="tz" bind:value={timeZone} aria-label={m.cal_editor_time_zone_aria()}>
+						<select class="field-input tz" bind:value={timeZone} aria-label={m.cal_editor_time_zone_aria()}>
 							{#each zones as z (z)}
 								<option value={z}>{z}</option>
 							{/each}
@@ -440,11 +457,11 @@
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_location()}</span>
-					<input type="text" bind:value={location} maxlength="240" placeholder={m.cal_editor_location_placeholder()} />
+					<input class="field-input" type="text" bind:value={location} maxlength="240" placeholder={m.cal_editor_location_placeholder()} />
 				</label>
 				<label>
 					<span>{m.cal_editor_video()}</span>
-					<input type="url" bind:value={videoUrl} maxlength="500" placeholder="https://" />
+					<input class="field-input" type="url" bind:value={videoUrl} maxlength="500" placeholder="https://" />
 				</label>
 			</div>
 		{/if}
@@ -452,7 +469,7 @@
 		{#if kind !== 'hold'}
 			<label class="cal-field">
 				<span>{m.cal_editor_notes()}</span>
-				<textarea rows="3" bind:value={notes} maxlength="8000"></textarea>
+				<textarea class="field-input" rows="3" bind:value={notes} maxlength="8000"></textarea>
 			</label>
 		{/if}
 
@@ -460,12 +477,15 @@
 			<span>{m.cal_editor_reminders()}</span>
 			<div class="reminders">
 				{#each reminders as minutes (minutes)}
-					<span class="guest-chip">
+					<Chip
+						size="sm"
+						onremove={() => (reminders = reminders.filter((x) => x !== minutes))}
+						removeLabel={m.cal_editor_remove_reminder_aria()}
+					>
 						{reminderLabel(minutes)}
-						<button type="button" aria-label={m.cal_editor_remove_reminder_aria()} onclick={() => (reminders = reminders.filter((x) => x !== minutes))}>×</button>
-					</span>
+					</Chip>
 				{/each}
-				<select bind:value={reminderPick} onchange={addReminder} aria-label={m.cal_editor_add_reminder_aria()}>
+				<select class="field-input" bind:value={reminderPick} onchange={addReminder} aria-label={m.cal_editor_add_reminder_aria()}>
 					<option value="">{m.cal_editor_add_reminder()}</option>
 					{#each REMINDER_PRESETS as value (value)}
 						<option value={String(value)}>{reminderLabel(value)}</option>
@@ -476,13 +496,12 @@
 
 		<div class="cal-field">
 			<span>{m.cal_editor_visibility()}</span>
-			<div class="seg">
-				<button type="button" class:on={privacy === 'private'} onclick={() => (privacy = 'private')}>{m.cal_privacy_private()}</button>
-				<button type="button" class:on={privacy === 'busy'} onclick={() => (privacy = 'busy')}>{m.cal_privacy_busy()}</button>
-				{#if kind !== 'hold'}
-					<button type="button" class:on={privacy === 'shared'} onclick={() => (privacy = 'shared')}>{m.cal_privacy_shared()}</button>
-				{/if}
-			</div>
+			<Segmented
+				bind:value={privacy}
+				options={visibilityOptions}
+				aria-label={m.cal_editor_visibility()}
+				block
+			/>
 		</div>
 
 		<DisclosureBoundary heading={m.cal_boundary_heading_device()} headingIcon={faShieldCheck} lines={boundary} />
@@ -490,10 +509,9 @@
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">{calendarStore.online ? m.cal_editor_note_online() : m.cal_editor_note_offline()}</span>
-		<div class="grow"></div>
-		<Button variant="ghost" disabled={busy} onclick={() => cal.closeEditor()}>{m.common_cancel()}</Button>
+	<Dialog.Footer>
+		<span class="dialog-note">{calendarStore.online ? m.cal_editor_note_online() : m.cal_editor_note_offline()}</span>
+		<Button variant="neutral" disabled={busy} onclick={() => cal.closeEditor()}>{m.common_cancel()}</Button>
 		<Button variant="primary" disabled={busy} onclick={save}>{isEdit ? m.common_save() : m.common_add()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

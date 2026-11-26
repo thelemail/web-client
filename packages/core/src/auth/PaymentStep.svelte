@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Stepper from '$core/auth/Stepper.svelte';
+	import StepPills from '$core/auth/form/StepPills.svelte';
 	import { findPlan, planTotal, eur, pricePerPeriod, type PlanSelection } from '$core/auth/plans';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -52,14 +52,13 @@
 	}
 </script>
 
-{#snippet addr(t: string)}<span class="mono" style="color:var(--ink-700)">{t}</span>{/snippet}
+{#snippet addr(t: string)}<span class="mono" style="color:var(--fg)">{t}</span>{/snippet}
 {#snippet terms(t: string)}<a href="https://thelemail.com/terms" target="_blank" rel="noopener">{t}</a>{/snippet}
 {#snippet privacy(t: string)}<a href="https://thelemail.com/privacy" target="_blank" rel="noopener">{t}</a>{/snippet}
 
-<div class="card-surface screen-fade">
-	<Stepper step={3} {labels} compact />
+<div class="card-surface">
+	<StepPills total={labels.length} current={3} />
 	<div class="card-head">
-		<p class="eyebrow">{m.auth_step_of({ step: 4, total: 4 })}</p>
 		<h1>{m.auth_payment_heading()}</h1>
 		<p><Rich text={m.auth_payment_for({ address })} tags={{ addr }} /></p>
 	</div>
@@ -104,21 +103,24 @@
 		{/if}
 
 		<label class="accept">
-			<input type="checkbox" bind:checked={accepted} required />
+			<input type="checkbox" class="check" bind:checked={accepted} required />
 			<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms, privacy }} /></span>
 		</label>
 
 		<div class="actions">
 			<div class="btnrow">
-				<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={onBack}>
+				<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} disabled={submitting} onclick={onBack}>
 					<Icon icon={faArrowLeft} size={17} />
 				</Button>
-				<Button variant="primary" size="lg" disabled={submitting || !accepted} onclick={pay}>
-					{#if submitting}
-						<span class="spinner"></span>{m.auth_preparing_checkout()}
-					{:else}
-						<Icon icon={faLock} size={17} />{m.auth_payment_pay({ price: eur(total) })}
-					{/if}
+				<Button
+					variant="primary"
+					size="lg"
+					disabled={!accepted}
+					busy={submitting}
+					busyLabel={m.auth_preparing_checkout()}
+					onclick={pay}
+				>
+					<Icon icon={faLock} size={17} />{m.auth_payment_pay({ price: eur(total) })}
 				</Button>
 			</div>
 		</div>
@@ -139,7 +141,7 @@
 		padding: 16px;
 		border: 1px solid var(--border-strong);
 		border-radius: var(--radius-md, 8px);
-		background: var(--paper-50);
+		background: var(--bg-raised);
 	}
 	.handoff-lead {
 		display: flex;
@@ -147,7 +149,7 @@
 		align-items: flex-start;
 		margin: 0;
 		font-size: var(--text-sm, 13px);
-		color: var(--ink-700);
+		color: var(--fg);
 		line-height: 1.5;
 	}
 	.handoff-lead :global(svg) {
@@ -166,8 +168,8 @@
 		padding: 4px 10px;
 		border: 1px solid var(--border);
 		border-radius: var(--radius-pill, 999px);
-		background: var(--paper-0);
+		background: var(--bg);
 		font-size: var(--text-xs, 12px);
-		color: var(--ink-500);
+		color: var(--fg-muted);
 	}
 </style>
