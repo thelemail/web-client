@@ -48,7 +48,7 @@
 			<p class="rh-desc">
 				<Rich text={m.settings_security_recovery_desc_unset()} tags={{ b: bold }} />
 			</p>
-			<div class="rh-acts">
+			<div class="rh-acts on-inverse">
 				<Button variant="primary" onclick={() => launch('recovery')}>
 					<Icon icon={faKey} size={15} />{m.settings_security_recovery_setup()}
 				</Button>

@@ -537,14 +537,15 @@
 					{#if manualSecret}
 						<div class="codeblock sm">
 							<span class="v">{manualSecret}</span>
-							<button
-								type="button"
-								class="cp"
+							<Button
+								variant="ghost"
+								size="icon-xs"
 								title={m.common_copy()}
+								aria-label={m.common_copy()}
 								onclick={() => navigator.clipboard.writeText(manualSecret.replaceAll(' ', ''))}
 							>
 								<Icon icon={faCopy} size={14} />
-							</button>
+							</Button>
 						</div>
 					{/if}
 					<div class="field">

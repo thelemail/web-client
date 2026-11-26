@@ -148,8 +148,9 @@
 					{#if e.sealed}
 						<span class="coll-set-locked" title={m.settings_collections_locked_row()}><Icon icon={faLock} size={14} /></span>
 					{:else}
-						<button
-							type="button"
+						<Button
+							variant="ghost"
+							size="icon-sm"
 							class="rowmenu"
 							aria-label={m.mail_sidebar_actions({ name: e.path })}
 							aria-haspopup="menu"
@@ -157,7 +158,7 @@
 							onclick={(ev) => (menu = { id: e.id, anchor: ev.currentTarget })}
 						>
 							<Icon icon={faEllipsis} size={16} />
-						</button>
+						</Button>
 					{/if}
 				</li>
 			{/each}

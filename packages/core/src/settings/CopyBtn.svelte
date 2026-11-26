@@ -2,6 +2,7 @@
 	import Icon from '$core/components/Icon.svelte';
 	import { faCheck, faCircleExclamation, faCopy } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
+	import { Button } from '$core/components/ui/button';
 
 	interface Props {
 		text: string;
@@ -37,12 +38,10 @@
 	const iconSize = $derived(small ? 13 : 14);
 </script>
 
-<button
-	type="button"
-	class="copy-btn"
-	class:sm={small}
-	class:done={result === 'copied'}
-	class:failed={result === 'failed'}
+<Button
+	variant="neutral"
+	size={small ? 'icon-xs' : 'sm'}
+	class={['copy-btn', result === 'copied' && 'done', result === 'failed' && 'failed']}
 	onclick={copy}
 	title={result === 'failed' ? m.common_copy_failed() : m.settings_copy_to_clipboard()}
 	aria-label={label ?? m.common_copy()}
@@ -51,5 +50,5 @@
 			size={iconSize}
 		/>{:else}<Icon icon={faCopy} size={iconSize} />{/if}
 	{#if !small}<span aria-hidden="true">{status || (label ?? m.common_copy())}</span>{/if}
-</button>
+</Button>
 <span class="sr-only" aria-live="polite">{status}</span>

@@ -150,15 +150,16 @@
 				<div class="alias-addr">{e.address ?? m.settings_blocked_address_encrypted()}</div>
 				<div class="alias-target">{m.settings_blocked_on({ date: formatDate(e.createdAt) })}</div>
 			</div>
-			<button
-				type="button"
-				class="rowmenu"
+			<Button
+				variant="ghost"
+				size="icon-sm"
 				title={m.settings_blocked_unblock()}
+				aria-label={m.settings_blocked_unblock()}
 				disabled={removing === e.id}
 				onclick={() => remove(e)}
 			>
 				<Icon icon={faTrashCan} size={15} />
-			</button>
+			</Button>
 		</div>
 	{/each}
 

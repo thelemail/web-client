@@ -180,7 +180,7 @@
 					</div>
 				{/if}
 			</div>
-			<div class="plan-acts">
+			<div class="plan-acts on-inverse">
 				{#if isOwner}
 					{#if isFree}
 						<Button variant="primary" size="sm" onclick={choosePlan}>

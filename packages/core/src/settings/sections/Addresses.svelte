@@ -264,15 +264,15 @@
 					<span class="addr-used-tx">{row.usedBy}</span>
 				</div>
 				<div class="addr-menu-wrap">
-					<button
-						type="button"
-						class="rowmenu"
+					<Button
+						variant="ghost"
+						size="icon-sm"
 						aria-label={m.settings_address_actions()}
 						aria-expanded={menuFor === row.id}
 						onclick={() => (menuFor = menuFor === row.id ? null : row.id)}
 					>
 						<Icon icon={faEllipsis} size={16} />
-					</button>
+					</Button>
 					{#if menuFor === row.id}
 						<div class="addr-menu" role="menu">
 							<button type="button" class="mitem" onclick={() => open(row)}>

@@ -121,15 +121,15 @@
 	{#if hasActions}
 		<div class="mbr-actions">
 			{#if mode === 'idle'}
-				<button
-					type="button"
-					class="mbr-act-btn"
+				<Button
+					variant="ghost"
+					size="icon-sm"
 					aria-label={m.settings_member_actions()}
 					onclick={toggleMenu}
 					disabled={busy}
 				>
 					<Icon icon={faEllipsisVertical} size={16} />
-				</button>
+				</Button>
 				{#if menuOpen}
 					<div class="mbr-menu" role="menu">
 						{#if canResend}
@@ -181,9 +181,9 @@
 			{/if}
 		</div>
 		{#if onDismiss}
-			<button type="button" class="mbr-fb-x" aria-label={m.settings_member_dismiss()} onclick={onDismiss}>
+			<Button variant="ghost" size="icon-xs" aria-label={m.settings_member_dismiss()} onclick={onDismiss}>
 				<Icon icon={faXmark} size={14} />
-			</button>
+			</Button>
 		{/if}
 	</div>
 {/if}
@@ -196,25 +196,10 @@
 		gap: 8px;
 		margin-left: 8px;
 	}
-	.mbr-act-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border-radius: var(--radius-control-compact);
-		background: transparent;
-		border: 1px solid transparent;
-		color: var(--fg-muted);
-		cursor: pointer;
-	}
-	.mbr-act-btn:hover {
-		background: var(--bg-sunken);
-	}
 	.mbr-menu {
 		position: absolute;
 		right: 0;
-		top: 32px;
+		top: 36px;
 		z-index: 40;
 		display: flex;
 		flex-direction: column;
@@ -257,7 +242,7 @@
 		line-height: 1.5;
 		color: var(--fg);
 	}
-	.mbr-feedback :global(svg) {
+	.mbr-feedback > :global(svg) {
 		flex: 0 0 auto;
 		margin-top: 2px;
 		color: var(--success-700);
@@ -266,7 +251,7 @@
 		background: color-mix(in oklab, var(--danger-100) 45%, transparent);
 		color: var(--danger-700);
 	}
-	.mbr-feedback.err :global(svg) {
+	.mbr-feedback.err > :global(svg) {
 		color: var(--danger-500);
 	}
 	.mbr-fb-body {
@@ -287,25 +272,6 @@
 		font-size: 12px;
 		overflow-wrap: anywhere;
 		user-select: all;
-	}
-	.mbr-fb-x {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 24px;
-		height: 24px;
-		border: none;
-		border-radius: var(--radius-control-compact);
-		background: transparent;
-		color: inherit;
-		cursor: pointer;
-	}
-	.mbr-fb-x:hover {
-		background: var(--bg-sunken);
-	}
-	.mbr-fb-x :global(svg) {
-		margin: 0;
-		color: inherit;
 	}
 	.mbr-confirm {
 		font-size: 13px;

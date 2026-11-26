@@ -3,6 +3,7 @@
 	import { trapFocus } from '$core/actions/trapFocus';
 	import type { Snippet } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faCheck, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { m } from '$paraglide/messages.js';
 	import { setHeadingLevel, setRowNames } from './a11y';
@@ -65,9 +66,9 @@
 				<div class="cer-eyebrow">{eyebrow}</div>
 				<h2 class="cer-title" id="{uid}-title">{title}</h2>
 			</div>
-			<button type="button" class="cer-close" onclick={onClose} aria-label={m.common_close()}>
+			<Button variant="ghost" size="icon-sm" onclick={onClose} aria-label={m.common_close()}>
 				<Icon icon={faXmark} size={18} />
-			</button>
+			</Button>
 		</header>
 
 		{#if steps && steps.length > 1}

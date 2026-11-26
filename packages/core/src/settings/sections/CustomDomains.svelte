@@ -183,15 +183,15 @@
 							{/if}
 							{#if manage}
 								<span class="cd-menu-wrap">
-									<button
-										type="button"
-										class="cd-menu-btn"
+									<Button
+										variant="ghost"
+										size="icon-sm"
 										aria-label={m.settings_domains_actions_aria()}
 										aria-expanded={menuFor === d.id}
 										onclick={() => openMenu(d.id)}
 									>
 										<Icon icon={faEllipsisVertical} size={16} />
-									</button>
+									</Button>
 									{#if menuFor === d.id}
 										<div class="cd-menu" role="menu">
 											<button
@@ -322,25 +322,10 @@
 		position: relative;
 		display: inline-flex;
 	}
-	.cd-menu-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 30px;
-		height: 30px;
-		border-radius: var(--radius-control-compact);
-		background: transparent;
-		border: 1px solid transparent;
-		color: var(--fg-muted);
-		cursor: pointer;
-	}
-	.cd-menu-btn:hover {
-		background: var(--bg-sunken);
-	}
 	.cd-menu {
 		position: absolute;
 		right: 0;
-		top: 34px;
+		top: 36px;
 		z-index: 40;
 		display: flex;
 		flex-direction: column;

@@ -207,15 +207,15 @@
 							</Button>
 						{/if}
 						<div class="addr-menu-wrap">
-							<button
-								type="button"
-								class="rowmenu"
+							<Button
+								variant="ghost"
+								size="icon-sm"
 								aria-label={m.settings_forwarding_actions()}
 								aria-expanded={menuFor === d.id}
 								onclick={() => (menuFor = menuFor === d.id ? null : d.id)}
 							>
 								<Icon icon={faEllipsis} size={16} />
-							</button>
+							</Button>
 							{#if menuFor === d.id}
 								<div class="addr-menu" role="menu">
 									{#if d.mode !== 'plain' && !blocked}
