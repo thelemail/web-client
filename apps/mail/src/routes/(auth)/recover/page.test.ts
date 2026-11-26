@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { m } from '$paraglide/messages.js';
 import RecoverPage from './+page.svelte';
 
@@ -40,7 +40,7 @@ const OPERATION = 'op-rec';
 const PHRASE = [...Array(11).fill('abandon'), 'about'];
 
 function button(label: string) {
-	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+	return screen.queryByRole('button', { name: label }) ?? undefined;
 }
 
 async function enterPhrase() {

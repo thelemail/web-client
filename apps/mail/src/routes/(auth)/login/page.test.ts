@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { m } from '$paraglide/messages.js';
 import { ApiCallError, type ErrorCode } from '$core/api/types';
 import LoginPage from './+page.svelte';
@@ -79,7 +79,7 @@ let pending: {
 };
 
 function button(label: string) {
-	return [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
+	return screen.queryByRole('button', { name: label }) ?? undefined;
 }
 
 function plain(text: string) {
