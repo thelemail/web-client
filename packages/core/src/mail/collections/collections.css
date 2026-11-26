@@ -65,14 +65,8 @@
 .settings-app .coll-set-note svg { flex: 0 0 auto; margin-top: 3px; color: var(--fg-faint); }
 .settings-app .coll-set-err { margin-bottom: 14px; padding: 10px 14px; font-size: 12.5px; line-height: 1.5; color: var(--danger-700); background: var(--danger-100); border-radius: var(--radius-md); }
 .settings-app .coll-set-live { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.settings-app .coll-set-menu { z-index: 60; width: 260px; max-width: calc(100vw - 24px); max-height: min(440px, calc(100dvh - 24px)); overflow-y: auto; overscroll-behavior: contain; padding: 5px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--radius-menu); box-shadow: var(--shadow-lg); font-family: var(--font-sans); color: var(--fg); outline: none; }
-.settings-app .coll-set-menu .coll-set-menu-title { padding: 6px 10px 7px; font-size: 12px; font-weight: 500; color: var(--fg-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.settings-app .coll-set-menu .mitem { cursor: pointer; outline: none; }
-.settings-app .coll-set-menu .mitem[data-highlighted] { background: var(--bg-sunken); color: var(--fg-strong); }
-.settings-app .coll-set-menu .mitem.danger[data-highlighted] { background: var(--danger-100); color: var(--danger-700); }
-.settings-app .coll-set-menu .mitem[data-disabled] { opacity: .45; pointer-events: none; }
+.settings-app .coll-set-menu { width: 260px; }
+.menu .coll-menu-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; }
 @media (max-width: 640px) {
 	.settings-app .coll-set-row { padding-left: calc(14px + min(var(--depth, 0), 4) * 14px); }
-	.settings-app .coll-set-menu { width: calc(100vw - 24px); }
-	.settings-app .coll-set-menu .mitem { min-height: 44px; }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
-	import { DropdownMenu } from 'bits-ui';
+	import { DropdownMenu as MenuPrimitive } from 'bits-ui';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faArrowDown,
@@ -37,10 +38,10 @@
 	}
 </script>
 
-<DropdownMenu.Item class="mitem" onSelect={onEdit}>
+<DropdownMenu.Item onSelect={onEdit}>
 	<Icon icon={faPencil} />{m.mail_collection_rename()}
 </DropdownMenu.Item>
-<DropdownMenu.RadioGroup
+<MenuPrimitive.RadioGroup
 	class="coll-swatches"
 	aria-label={m.mail_collection_color()}
 	value={current}
@@ -49,7 +50,7 @@
 	}}
 >
 	{#each swatches as key (key)}
-		<DropdownMenu.RadioItem
+		<MenuPrimitive.RadioItem
 			class="coll-swatch"
 			value={key}
 			aria-label={colorName(key)}
@@ -61,25 +62,24 @@
 				class:none={key === NONE}
 				style:background={key === NONE ? undefined : COLLECTION_COLORS[key as keyof typeof COLLECTION_COLORS]}
 			></span>
-		</DropdownMenu.RadioItem>
+		</MenuPrimitive.RadioItem>
 	{/each}
-</DropdownMenu.RadioGroup>
-<DropdownMenu.Item class="mitem" onSelect={onMove}>
+</MenuPrimitive.RadioGroup>
+<DropdownMenu.Item onSelect={onMove}>
 	<Icon icon={faFolderArrowDown} />{m.mail_collection_move_to()}
 </DropdownMenu.Item>
 {#if siblings > 1}
-	<DropdownMenu.Item class="mitem" disabled={index <= 0} onSelect={() => onShift(-1)}>
+	<DropdownMenu.Item disabled={index <= 0} onSelect={() => onShift(-1)}>
 		<Icon icon={faArrowUp} />{m.mail_sidebar_move_up()}
 	</DropdownMenu.Item>
 	<DropdownMenu.Item
-		class="mitem"
 		disabled={index < 0 || index >= siblings - 1}
 		onSelect={() => onShift(1)}
 	>
 		<Icon icon={faArrowDown} />{m.mail_sidebar_move_down()}
 	</DropdownMenu.Item>
 {/if}
-<DropdownMenu.Separator class="msep" />
-<DropdownMenu.Item class="mitem danger" onSelect={onDelete}>
+<DropdownMenu.Separator />
+<DropdownMenu.Item variant="danger" onSelect={onDelete}>
 	<Icon icon={faTrashCan} />{folder ? m.mail_collection_delete_folder_item() : m.mail_collection_delete_label_item()}
 </DropdownMenu.Item>

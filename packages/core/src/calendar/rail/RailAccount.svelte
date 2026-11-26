@@ -25,7 +25,7 @@
 			</span>
 			<span class="uchev"><Icon icon={faChevronDown} size={15} /></span>
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="cal-surface cal-menu w-64" align="start" side="top">
+		<DropdownMenu.Content class="w-64" align="start" side="top">
 			<DropdownMenu.Item onSelect={() => goto(`/u/${slot}/mail/inbox`)}>
 				<Icon icon={faEnvelope} size={17} />{m.cal_account_go_to_mail()}
 			</DropdownMenu.Item>

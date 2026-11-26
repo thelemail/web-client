@@ -21,8 +21,8 @@
 		faUser,
 		faUserGroup
 	} from '@fortawesome/pro-regular-svg-icons';
-	import { tick } from 'svelte';
 	import Avatar from '$core/components/Avatar.svelte';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { signInMovedToAuth, signInMovedToAuthKnown } from '$core/custody/unlock';
@@ -53,13 +53,7 @@
 		unread: number;
 	}
 
-	const uid = $props.id();
-	const menuId = `acct-menu-${uid}`;
-
 	let open = $state(false);
-	let rootRef: HTMLDivElement | undefined = $state();
-	let triggerRef: HTMLButtonElement | undefined = $state();
-	let menuRef: HTMLDivElement | undefined = $state();
 
 	const initials = $derived(initialsFor(auth.fullName, auth.email));
 	const displayName = $derived(auth.fullName ?? auth.email ?? '');
@@ -146,96 +140,23 @@
 		return at > 0 ? [address.slice(0, at), address.slice(at)] : [address];
 	}
 
-	function items(): HTMLElement[] {
-		return menuRef ? [...menuRef.querySelectorAll<HTMLElement>('[role="menuitem"]')] : [];
-	}
-
-	function focusItem(index: number) {
-		const list = items();
-		if (list.length === 0) return;
-		list[(index + list.length) % list.length].focus();
-	}
-
-	async function openMenu(focus: 'first' | 'last' | 'menu') {
-		open = true;
+	function prepare() {
 		void signInMovedToAuth();
 		if (auth.accountId) twofactor.ensure(auth.accountId);
 		if (accounts.list.some((r) => auth.fullNameFor(r.accountId) === null)) {
 			void auth.loadSignedInProfiles();
 		}
 		void accountReadiness.probe(accounts.list.map((r) => r.accountId).filter((id) => id !== auth.accountId));
-		await tick();
-		if (focus === 'menu') menuRef?.focus();
-		else focusItem(focus === 'first' ? 0 : -1);
-	}
-
-	function closeMenu(restoreFocus: boolean) {
-		if (!open) return;
-		open = false;
-		if (restoreFocus) triggerRef?.focus();
-	}
-
-	function toggleMenu() {
-		if (open) closeMenu(true);
-		else void openMenu('menu');
-	}
-
-	function onTriggerKey(e: KeyboardEvent) {
-		if (open) return;
-		if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			void openMenu('first');
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
-			void openMenu('last');
-		}
-	}
-
-	function onMenuKey(e: KeyboardEvent) {
-		const list = items();
-		const at = list.indexOf(document.activeElement as HTMLElement);
-		switch (e.key) {
-			case 'ArrowDown':
-				e.preventDefault();
-				focusItem(at + 1);
-				break;
-			case 'ArrowUp':
-				e.preventDefault();
-				focusItem(at < 0 ? -1 : at - 1);
-				break;
-			case 'Home':
-				e.preventDefault();
-				focusItem(0);
-				break;
-			case 'End':
-				e.preventDefault();
-				focusItem(-1);
-				break;
-			case 'Escape':
-				e.preventDefault();
-				e.stopPropagation();
-				closeMenu(true);
-				break;
-			case 'Tab':
-				closeMenu(false);
-				break;
-		}
-	}
-
-	function handleDocClick(e: MouseEvent) {
-		if (open && rootRef && !rootRef.contains(e.target as Node)) closeMenu(false);
 	}
 
 	async function releaseWork(): Promise<boolean> {
 		return !leavePending() || (await settleForLeave());
 	}
 
-	async function choose(r: AccountRow) {
-		if (r.current) {
-			closeMenu(true);
-			return;
-		}
+	async function choose(e: Event, r: AccountRow) {
+		if (r.current) return;
 		if (r.state === 'unavailable') {
+			e.preventDefault();
 			void accountReadiness.probe([r.id], true);
 			return;
 		}
@@ -244,7 +165,6 @@
 		if (locked && !leavePending() && auth.vaultUnlocked && (auth.mailOnlyFor(r.id) || signInMovedToAuthKnown())) {
 			openAuthTab(r.id, inbox);
 		}
-		closeMenu(false);
 		if (!(await releaseWork())) return;
 		if (locked) {
 			await goto(`/login?slot=${r.slot}&redirect=${encodeURIComponent(inbox)}`);
@@ -259,7 +179,6 @@
 	}
 
 	async function signOut() {
-		closeMenu(false);
 		await accountTransition.run('signout', null, async () => {
 			const id = auth.accountId;
 			if (id) await auth.logoutAccount(id);
@@ -274,7 +193,6 @@
 	}
 
 	async function signOutAll() {
-		closeMenu(false);
 		await accountTransition.run('signout', null, async () => {
 			await auth.logoutAll();
 			await goto('/login');
@@ -282,85 +200,68 @@
 	}
 
 	async function openCalendar() {
-		closeMenu(false);
 		const slot = Number(page.params.slot ?? '0');
 		if (!auth.accountId) return;
 		await openCalendarProduct(auth.accountId, slot);
 	}
 
 	async function openSettingsSection(id: string) {
-		closeMenu(false);
 		const slot = page.params.slot ?? '0';
 		await goto(`/u/${slot}/settings/${id}`);
 	}
 
 	async function manageAccounts() {
-		closeMenu(false);
 		await goto('/');
 	}
 
 	async function addAccount() {
 		if (auth.vaultUnlocked && signInMovedToAuthKnown()) openAuthTab(null, '/');
-		closeMenu(false);
 		await goto('/login?addAccount=1');
 	}
 </script>
 
-<svelte:document onmousedown={handleDocClick} />
-
-<div class="rail-acct" bind:this={rootRef}>
-	<button
-		bind:this={triggerRef}
-		class="acct-btn"
-		onclick={toggleMenu}
-		onkeydown={onTriggerKey}
-		aria-haspopup="menu"
-		aria-expanded={open}
-		aria-controls={open ? menuId : undefined}
+<div class="rail-acct">
+	<DropdownMenu.Root
+		bind:open
+		onOpenChange={(next) => {
+			if (next) prepare();
+		}}
 	>
-		<span class="av-wrap">
-			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-100)" fg="var(--pine-700)" />
-			{#if hasBackgroundUnread}<span class="acct-dot" aria-hidden="true"></span>{/if}
-		</span>
-		<span class="acct-tx">
-			<span class="acct-nm" title={displayName}>{displayName}</span>
-			<span class="acct-em" title={displayEmail}>{displayEmail}</span>
-		</span>
-		<span class="uchev" class:open><Icon icon={faChevronDown} size={15} /></span>
-	</button>
-	{#if open}
-		<div
-			class="menu acct-menu"
-			id={menuId}
-			role="menu"
-			tabindex="-1"
+		<DropdownMenu.Trigger>
+			{#snippet child({ props })}
+				<button {...props} type="button" class="acct-btn">
+					<span class="av-wrap">
+						<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-100)" fg="var(--pine-700)" />
+						{#if hasBackgroundUnread}<span class="acct-dot" aria-hidden="true"></span>{/if}
+					</span>
+					<span class="acct-tx">
+						<span class="acct-nm" title={displayName}>{displayName}</span>
+						<span class="acct-em" title={displayEmail}>{displayEmail}</span>
+					</span>
+					<span class="uchev" class:open><Icon icon={faChevronDown} size={15} /></span>
+				</button>
+			{/snippet}
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content
+			class="acct-menu"
+			side="top"
+			align="start"
+			sideOffset={8}
+			portalProps={{ to: '.mail-app' }}
 			aria-label={m.mail_acct_accounts()}
-			bind:this={menuRef}
-			onkeydown={onMenuKey}
 		>
-			<div class="acct-h">{m.mail_acct_accounts()}</div>
-			<div class="acct-list" role="group" aria-label={m.mail_acct_accounts()}>
+			<DropdownMenu.Group class="acct-list" aria-label={m.mail_acct_accounts()}>
+				<DropdownMenu.GroupHeading>{m.mail_acct_accounts()}</DropdownMenu.GroupHeading>
 				{#each rows as r (r.id)}
 					{@const action = r.current ? null : actionLabel(r.state)}
-					<button
-						type="button"
-						role="menuitem"
-						tabindex="-1"
-						class="acct-row"
-						class:cur={r.current}
-						data-state={r.state}
+					<DropdownMenu.Item
+						class={'acct-row' + (r.current ? ' cur' : '')}
+						data-account-state={r.state}
 						aria-current={r.current ? 'true' : undefined}
 						aria-label={rowLabel(r)}
-						onclick={() => choose(r)}
+						onSelect={(e) => void choose(e, r)}
 					>
-						<Avatar
-							initials={r.init}
-							src={auth.avatarUrlFor(r.id)}
-							fit="cover"
-							size={34}
-							bg={r.bg}
-							fg={r.fg}
-						/>
+						<Avatar initials={r.init} src={auth.avatarUrlFor(r.id)} fit="cover" size={34} bg={r.bg} fg={r.fg} />
 						<span class="ar-tx">
 							{#if r.name}<span class="ar-nm">{r.name}</span>{/if}
 							<span class="ar-em" class:solo={!r.name}
@@ -377,60 +278,48 @@
 								<span class="ar-act">{action}</span>
 							{:else if r.state === 'ready'}
 								{#if r.unread > 0}
-									<span class="ar-unread"
-										>{m.mail_acct_unread({ count: r.unread > 99 ? '99+' : String(r.unread) })}</span
-									>
+									<span class="ar-unread">{m.mail_acct_unread({ count: r.unread > 99 ? '99+' : String(r.unread) })}</span>
 								{/if}
 								<span class="ar-go"><Icon icon={faChevronRight} size={15} /></span>
 							{/if}
 						</span>
-					</button>
+					</DropdownMenu.Item>
 				{/each}
-			</div>
-			<div class="acct-acts">
-				<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={addAccount}
-					><Icon icon={faPlus} size={17} />{m.mail_acct_add()}</button
-				>
-				{#if rows.length > 1}
-					<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={manageAccounts}
-						><Icon icon={faUserGroup} size={17} />{m.mail_acct_manage()}</button
-					>
-				{/if}
-			</div>
-			<div class="msep" role="separator"></div>
-			{#if productLaunched('calendar')}
-				<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={openCalendar}>
-					<Icon icon={faCalendarDays} size={17} />{m.mail_acct_go_calendar()}
-				</button>
-				<div class="msep" role="separator"></div>
-			{/if}
-			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('profile')}
-				><Icon icon={faUser} size={17} />{m.mail_acct_profile()}</button
-			>
-			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('security')}
-				><Icon icon={faShieldCheck} size={17} />{m.mail_acct_security()}{#if twofactor.status}<span class="rt"
-						>{twofactor.enabled ? m.mail_acct_2fa_on() : m.mail_acct_2fa_off()}</span
-					>{/if}</button
-			>
-			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('addresses')}
-				><Icon icon={faAt} size={17} />{m.mail_acct_aliases()}</button
-			>
-			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => openSettingsSection('profile')}
-				><Icon icon={faGear} size={17} />{m.mail_acct_settings()}</button
-			>
-			<div class="msep" role="separator"></div>
-			<button type="button" role="menuitem" tabindex="-1" class="mitem" onclick={() => theme.cycle()}>
-				<Icon icon={ThemeIcon} size={17} />{m.mail_acct_appearance()}<span class="rt">{theme.label}</span>
-			</button>
-			<div class="msep" role="separator"></div>
-			<button type="button" role="menuitem" tabindex="-1" class="mitem danger" onclick={signOut}
-				><Icon icon={faArrowRightFromBracket} size={17} />{m.mail_acct_sign_out()}</button
-			>
+			</DropdownMenu.Group>
+			<DropdownMenu.Item onSelect={addAccount}><Icon icon={faPlus} size={16} />{m.mail_acct_add()}</DropdownMenu.Item>
 			{#if rows.length > 1}
-				<button type="button" role="menuitem" tabindex="-1" class="mitem danger" onclick={signOutAll}
-					><Icon icon={faArrowRightFromBracket} size={17} />{m.mail_acct_sign_out_all()}</button
-				>
+				<DropdownMenu.Item onSelect={manageAccounts}><Icon icon={faUserGroup} size={16} />{m.mail_acct_manage()}</DropdownMenu.Item>
 			{/if}
-		</div>
-	{/if}
+			<DropdownMenu.Separator />
+			{#if productLaunched('calendar')}
+				<DropdownMenu.Item onSelect={openCalendar}><Icon icon={faCalendarDays} size={16} />{m.mail_acct_go_calendar()}</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+			{/if}
+			<DropdownMenu.Item onSelect={() => openSettingsSection('profile')}><Icon icon={faUser} size={16} />{m.mail_acct_profile()}</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={() => openSettingsSection('security')}>
+				<Icon icon={faShieldCheck} size={16} />{m.mail_acct_security()}
+				{#if twofactor.status}<span class="menu-meta">{twofactor.enabled ? m.mail_acct_2fa_on() : m.mail_acct_2fa_off()}</span>{/if}
+			</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={() => openSettingsSection('addresses')}><Icon icon={faAt} size={16} />{m.mail_acct_aliases()}</DropdownMenu.Item>
+			<DropdownMenu.Item onSelect={() => openSettingsSection('profile')}><Icon icon={faGear} size={16} />{m.mail_acct_settings()}</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item
+				onSelect={(e) => {
+					e.preventDefault();
+					theme.cycle();
+				}}
+			>
+				<Icon icon={ThemeIcon} size={16} />{m.mail_acct_appearance()}<span class="menu-meta">{theme.label}</span>
+			</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item variant="danger" onSelect={signOut}>
+				<Icon icon={faArrowRightFromBracket} size={16} />{m.mail_acct_sign_out()}
+			</DropdownMenu.Item>
+			{#if rows.length > 1}
+				<DropdownMenu.Item variant="danger" onSelect={signOutAll}>
+					<Icon icon={faArrowRightFromBracket} size={16} />{m.mail_acct_sign_out_all()}
+				</DropdownMenu.Item>
+			{/if}
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
 </div>

@@ -26,7 +26,7 @@
 	<DropdownMenu.Trigger class="cal-x" aria-label={m.cal_menu_options_aria({ name })}>
 		<Icon icon={faEllipsis} size={15} />
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content class="cal-surface cal-menu w-56" align="end">
+	<DropdownMenu.Content class="w-56" align="end">
 		{#if view?.canManage}
 			<DropdownMenu.Item onSelect={() => cal.openCalendarDialog({ mode: 'edit', calendarId })}>
 				<Icon icon={faPenLine} size={16} />{m.cal_menu_rename()}

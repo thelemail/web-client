@@ -37,6 +37,7 @@
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import { platform } from '$platform';
 	import * as Tooltip from '$core/components/ui/tooltip';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -54,7 +55,6 @@
 	import UnsubscribeDialog from './UnsubscribeDialog.svelte';
 	import { unsubscribeMethod, type UnsubscribeMethod } from './unsubscribe';
 	import SnoozePicker from './SnoozePicker.svelte';
-	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import EventCard from './EventCard.svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -171,7 +171,6 @@
 	});
 
 	let moreOpen = $state(false);
-	let moreRef: HTMLDivElement | undefined = $state();
 	let snoozeRef = $state<HTMLElement | null>(null);
 	let headingEl: HTMLHeadingElement | undefined = $state();
 	let headingFocusedFor: string | null = null;
@@ -184,7 +183,6 @@
 		if (untrack(() => replyDraft)) return;
 		if (canTakeFocus(document.activeElement)) el.focus({ preventScroll: true });
 	});
-	let morePanel: HTMLDivElement | undefined = $state();
 
 	let snoozePickerOpen = $state(false);
 	let headersOpen = $state(false);
@@ -224,21 +222,6 @@
 	const alsoInMailbox = $derived(
 		blockOpen && senderAddress ? (blockedSenderCount?.(senderAddress) ?? 0) : 0
 	);
-
-	function handleDocMouseDown(e: MouseEvent) {
-		const inMore =
-			(moreRef && moreRef.contains(e.target as Node)) ||
-			(morePanel && morePanel.contains(e.target as Node));
-		if (moreOpen && !inMore) moreOpen = false;
-	}
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		if (moreOpen) {
-			moreOpen = false;
-			e.stopPropagation();
-		}
-	}
 
 	let lastMessageId: string | null = null;
 	$effect(() => {
@@ -704,7 +687,6 @@
 	});
 </script>
 
-<svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
 
 <section class="reader" class:ws={wsOn} class:ws-pane={wsOn && replyWorkspace.pane}>
 	{#if !m}
@@ -828,151 +810,64 @@
 				{#if caps.showDelete}
 					{@render barIcon(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trashIcon, { mutates: true, danger: true })}
 				{/if}
-			<div class="rb-more" bind:this={moreRef}>
-				<Tooltip.Root>
-					<Tooltip.Trigger
-						aria-label={msg.mail_reader_more()}
-						aria-haspopup="menu"
-						aria-expanded={moreOpen}
-						onclick={() => (moreOpen = !moreOpen)}
-					>
-						{#snippet child({ props })}
-							<Button {...props} variant="ghost" size="icon-sm">
-								<Icon icon={faEllipsis} size={17} />
-							</Button>
-						{/snippet}
-					</Tooltip.Trigger>
-					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_more()}</Tooltip.Content>
-				</Tooltip.Root>
-				{#if moreOpen}
-					<AnchoredMenu anchor={moreRef} bind:panel={morePanel} extraClass="more-menu">
-						{#if caps.showMarkRead && m.unread}
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									onMarkRead?.(m.id);
-									moreOpen = false;
-								}}
-							>
-								<Icon icon={faEnvelopeOpen} size={17} />{msg.mail_action_mark_read()}
-							</button>
-						{:else if caps.showMarkRead}
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									onMarkUnread?.(m.id);
-									moreOpen = false;
-								}}
-							>
-								<Icon icon={faEnvelope} size={17} />{msg.mail_action_mark_unread()}
-							</button>
-						{/if}
-						{#if caps.showUnsnooze && onUnsnooze}
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									onUnsnooze?.(m.id);
-								}}
-							>
-								<Icon icon={faAlarmExclamation} size={17} />{msg.mail_reader_unsnooze()}
-							</button>
-						{/if}
-						<div class="msep"></div>
-						<button
-							type="button"
-							class="mitem"
-							role="menuitem"
-							onclick={() => (moreOpen = false)}
-						>
-							<Icon icon={faBellSlash} size={17} />{msg.mail_reader_mute()}
-						</button>
-						<div class="msep"></div>
-						<button
-							type="button"
-							class="mitem"
-							role="menuitem"
-							onclick={() => {
-								moreOpen = false;
-								headersOpen = true;
-							}}
-						>
-							<Icon icon={faCode} size={17} />{msg.mail_reader_view_headers()}
-						</button>
-						<button
-							type="button"
-							class="mitem"
-							role="menuitem"
-							onclick={() => {
-								if (typeof window !== 'undefined') window.print();
-								moreOpen = false;
-							}}
-						>
-							<Icon icon={faPrint} size={17} />{msg.mail_reader_print()}<span class="rt">{printShortcut}</span>
-						</button>
-						{#if productLaunched('calendar')}
-							<div class="msep"></div>
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									void sendToCalendar('event');
-								}}
-							>
-								<Icon icon={faCalendarPlus} size={17} />{msg.mail_reader_create_event()}
-							</button>
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									void sendToCalendar('task');
-								}}
-							>
-								<Icon icon={faListCheck} size={17} />{msg.mail_reader_create_task()}
-							</button>
-						{/if}
-						{#if canBlock || canReport}
-							<div class="msep"></div>
-						{/if}
-						{#if canBlock}
-							<button
-								type="button"
-								class="mitem"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									blockOpen = true;
-								}}
-							>
-								<Icon icon={faUserXmark} size={17} />{msg.mail_reader_block_sender()}
-							</button>
-						{/if}
-						{#if canReport}
-							<button
-								type="button"
-								class="mitem danger"
-								role="menuitem"
-								onclick={() => {
-									moreOpen = false;
-									reportOpen = true;
-								}}
-							>
-								<Icon icon={faShieldExclamation} size={17} />{msg.mail_reader_report()}
-							</button>
-						{/if}
-					</AnchoredMenu>
-				{/if}
-			</div>
+			<DropdownMenu.Root bind:open={moreOpen}>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button {...props} variant="ghost" size="icon-sm" tooltip={msg.mail_reader_more()}>
+							<Icon icon={faEllipsis} size={17} />
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" class="more-menu" portalProps={{ to: '.mail-app' }}>
+					{#if caps.showMarkRead && m.unread}
+						<DropdownMenu.Item onSelect={() => onMarkRead?.(m.id)}>
+							<Icon icon={faEnvelopeOpen} size={16} />{msg.mail_action_mark_read()}
+						</DropdownMenu.Item>
+					{:else if caps.showMarkRead}
+						<DropdownMenu.Item onSelect={() => onMarkUnread?.(m.id)}>
+							<Icon icon={faEnvelope} size={16} />{msg.mail_action_mark_unread()}
+						</DropdownMenu.Item>
+					{/if}
+					{#if caps.showUnsnooze && onUnsnooze}
+						<DropdownMenu.Item onSelect={() => onUnsnooze?.(m.id)}>
+							<Icon icon={faAlarmExclamation} size={16} />{msg.mail_reader_unsnooze()}
+						</DropdownMenu.Item>
+					{/if}
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item>
+						<Icon icon={faBellSlash} size={16} />{msg.mail_reader_mute()}
+					</DropdownMenu.Item>
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item onSelect={() => (headersOpen = true)}>
+						<Icon icon={faCode} size={16} />{msg.mail_reader_view_headers()}
+					</DropdownMenu.Item>
+					<DropdownMenu.Item onSelect={() => window.print()}>
+						<Icon icon={faPrint} size={16} />{msg.mail_reader_print()}<DropdownMenu.Shortcut>{printShortcut}</DropdownMenu.Shortcut>
+					</DropdownMenu.Item>
+					{#if productLaunched('calendar')}
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item onSelect={() => void sendToCalendar('event')}>
+							<Icon icon={faCalendarPlus} size={16} />{msg.mail_reader_create_event()}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onSelect={() => void sendToCalendar('task')}>
+							<Icon icon={faListCheck} size={16} />{msg.mail_reader_create_task()}
+						</DropdownMenu.Item>
+					{/if}
+					{#if canBlock || canReport}
+						<DropdownMenu.Separator />
+					{/if}
+					{#if canBlock}
+						<DropdownMenu.Item onSelect={() => (blockOpen = true)}>
+							<Icon icon={faUserXmark} size={16} />{msg.mail_reader_block_sender()}
+						</DropdownMenu.Item>
+					{/if}
+					{#if canReport}
+						<DropdownMenu.Item variant="danger" onSelect={() => (reportOpen = true)}>
+							<Icon icon={faShieldExclamation} size={16} />{msg.mail_reader_report()}
+						</DropdownMenu.Item>
+					{/if}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 			{#if snoozePickerOpen && m}
 				<SnoozePicker
 					anchor={snoozeRef ?? undefined}

@@ -3,6 +3,7 @@
 	import { onMount, untrack } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import { Segmented } from '$core/components/ui/segmented';
 	import {
 		faBoxArchive,
@@ -262,7 +263,6 @@
 	let editor: Editor | null = $state(null);
 	let boxRef: HTMLDivElement | undefined = $state();
 	let sendOpen = $state(false);
-	let sendRef: HTMLDivElement | undefined = $state();
 
 	const userIdentity = $derived<SendIdentity>({
 		name: auth.fullName ?? auth.email ?? 'Me',
@@ -803,10 +803,6 @@
 
 	const modeLabel = $derived(mode === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply());
 
-	function handleDocMouseDown(e: MouseEvent) {
-		if (sendOpen && sendRef && !sendRef.contains(e.target as Node)) sendOpen = false;
-	}
-
 	let lastFocus: HTMLElement | null = null;
 
 	function trackFocus(e: FocusEvent) {
@@ -825,11 +821,6 @@
 
 	function handleKey(e: KeyboardEvent) {
 		if (e.key !== 'Escape') return;
-		if (sendOpen) {
-			sendOpen = false;
-			e.stopPropagation();
-			return;
-		}
 		if (fromOpen) {
 			fromOpen = false;
 			e.stopPropagation();
@@ -1044,7 +1035,7 @@
 	});
 </script>
 
-<svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
+<svelte:document onkeydown={handleKey} />
 
 <div
 	class="replybox"
@@ -1365,7 +1356,7 @@
 	</div>
 
 	<div class="rf">
-		<div class="rf-send" bind:this={sendRef}>
+		<div class="rf-send">
 			<div class:btn-split={canArchive}>
 				<Button
 					variant="primary"
@@ -1379,35 +1370,44 @@
 					<Icon icon={faPaperPlane} size={15} />{msg.mail_compose_send()}
 				</Button>
 				{#if canArchive}
-					<Button
-						variant="primary"
-						size="icon-sm"
-						data-mutates
-						title={msg.mail_compose_send_options()}
-						aria-label={msg.mail_compose_send_options()}
-						aria-haspopup="menu"
-						aria-expanded={sendOpen}
-						busy={status === 'sending'}
-						aria-disabled={!canSend || status === 'sending'}
-						onclick={() => {
-							if (canSend) sendOpen = !sendOpen;
-							else showBlock();
-						}}
+					<DropdownMenu.Root
+						bind:open={
+							() => sendOpen,
+							(next) => {
+								if (next && !canSend) {
+									showBlock();
+									return;
+								}
+								sendOpen = next;
+							}
+						}
 					>
-						<Icon icon={faChevronDown} size={15} />
-					</Button>
+						<DropdownMenu.Trigger>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="primary"
+									size="icon-sm"
+									data-mutates
+									tooltip={msg.mail_compose_send_options()}
+									busy={status === 'sending'}
+									aria-disabled={!canSend || status === 'sending'}
+								>
+									<Icon icon={faChevronDown} size={15} />
+								</Button>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start" side="top" portalProps={{ to: '.mail-app' }}>
+							<DropdownMenu.Item onSelect={runSend}>
+								<Icon icon={faPaperPlane} size={16} />{msg.mail_compose_send()}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onSelect={sendAndArchive}>
+								<Icon icon={faBoxArchive} size={16} />{msg.mail_compose_send_archive()}
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				{/if}
 			</div>
-			{#if canArchive && sendOpen}
-				<div class="menu rf-menu" role="menu">
-					<button type="button" class="mitem" role="menuitem" onclick={runSend}>
-						<Icon icon={faPaperPlane} size={17} />{msg.mail_compose_send()}
-					</button>
-					<button type="button" class="mitem" role="menuitem" onclick={sendAndArchive}>
-						<Icon icon={faBoxArchive} size={17} />{msg.mail_compose_send_archive()}
-					</button>
-				</div>
-			{/if}
 		</div>
 		<input
 			bind:this={fileInput}

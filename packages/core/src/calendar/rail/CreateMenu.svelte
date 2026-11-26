@@ -30,15 +30,15 @@
 				</Button>
 			{/snippet}
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="cal-surface cal-menu w-60" align="start">
+		<DropdownMenu.Content class="w-60" align="start">
 			<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'event' })}>
-				<Icon icon={faCalendarDays} size={16} />{m.cal_create_event()}<span class="rt">E</span>
+				<Icon icon={faCalendarDays} size={16} />{m.cal_create_event()}<DropdownMenu.Shortcut>E</DropdownMenu.Shortcut>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'task' })}>
-				<Icon icon={faListCheck} size={16} />{m.cal_create_task()}<span class="rt">T</span>
+				<Icon icon={faListCheck} size={16} />{m.cal_create_task()}<DropdownMenu.Shortcut>T</DropdownMenu.Shortcut>
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onSelect={() => cal.openEditor({ mode: 'create', kind: 'hold' })}>
-				<Icon icon={faLock} size={16} />{m.cal_create_hold()}<span class="rt">H</span>
+				<Icon icon={faLock} size={16} />{m.cal_create_hold()}<DropdownMenu.Shortcut>H</DropdownMenu.Shortcut>
 			</DropdownMenu.Item>
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onSelect={() => cal.openCalendarDialog({ mode: 'create' })}>
@@ -47,7 +47,7 @@
 			{#if import.meta.env.DEV}
 				<DropdownMenu.Separator />
 				<DropdownMenu.Item onSelect={() => (cal.dialog = 'offer')}>
-					<Icon icon={faCalendarClock} size={16} />{m.cal_create_proposal()}<span class="rt">P</span>
+					<Icon icon={faCalendarClock} size={16} />{m.cal_create_proposal()}<DropdownMenu.Shortcut>P</DropdownMenu.Shortcut>
 				</DropdownMenu.Item>
 				<DropdownMenu.Item onSelect={() => cal.goTo('booking')}>
 					<Icon icon={faGlobe} size={16} />{m.cal_create_booking()}

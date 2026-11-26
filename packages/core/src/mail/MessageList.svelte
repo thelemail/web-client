@@ -6,6 +6,8 @@
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { Chip } from '$core/components/ui/chip';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
+	import * as Popover from '$core/components/ui/popover';
 	import { Segmented } from '$core/components/ui/segmented';
 	import {
 		faAlarmClock,
@@ -15,7 +17,6 @@
 		faArrowUp,
 		faArrowsRotate,
 		faBoxArchive,
-		faCheck,
 		faCircleExclamation,
 		faEnvelope,
 		faEnvelopeOpen,
@@ -245,26 +246,7 @@
 	});
 
 	let sortOpen = $state(false);
-	let sortRef: HTMLDivElement | undefined = $state();
 	let filterOpen = $state(false);
-	let filterRef: HTMLDivElement | undefined = $state();
-
-	function handleDocMouseDown(e: MouseEvent) {
-		const t = e.target as Node;
-		if (sortOpen && sortRef && !sortRef.contains(t)) sortOpen = false;
-		if (filterOpen && filterRef && !filterRef.contains(t)) filterOpen = false;
-	}
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		if (sortOpen) {
-			sortOpen = false;
-			e.stopPropagation();
-		} else if (filterOpen) {
-			filterOpen = false;
-			e.stopPropagation();
-		}
-	}
 
 	function pickSort(id: SortId) {
 		onSort(id);
@@ -480,7 +462,6 @@
 	}
 </script>
 
-<svelte:document onmousedown={handleDocMouseDown} onkeydown={handleKey} />
 
 <section class="list">
 	{#if anyChecked}
@@ -655,103 +636,82 @@
 				>
 					<Icon icon={faSquareCheck} size={16} />
 				</Button>
-				<div class="lh-sort" bind:this={sortRef}>
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						class="lh-btn"
-						aria-label={msg.mail_list_sort()}
-						title={msg.mail_list_sort()}
-						aria-haspopup="menu"
-						aria-expanded={sortOpen}
-						onclick={() => (sortOpen = !sortOpen)}
-					>
-						<Icon icon={faArrowDownArrowUp} size={16} />
-					</Button>
-					{#if sortOpen}
-						<div class="menu sort-menu" role="menu">
-							<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
+				<DropdownMenu.Root bind:open={sortOpen}>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm" class="lh-btn" tooltip={msg.mail_list_sort()}>
+								<Icon icon={faArrowDownArrowUp} size={16} />
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" class="sort-menu" portalProps={{ to: '.mail-app' }}>
+						<DropdownMenu.RadioGroup value={sort} onValueChange={(v) => pickSort(v as SortId)}>
+							<DropdownMenu.GroupHeading>{msg.mail_list_sort_by()}</DropdownMenu.GroupHeading>
 							{#each SORT_OPTIONS as o (o.id)}
 								{@const SIcon = sortIcons[o.icon] ?? faArrowDown}
-								<button
-									class="mitem"
-									class:active={sort === o.id}
-									role="menuitemradio"
-									aria-checked={sort === o.id}
-									onclick={() => pickSort(o.id)}
-								>
+								<DropdownMenu.RadioItem value={o.id}>
 									<Icon icon={SIcon} size={16} />{o.label}
-									{#if sort === o.id}
-										<span class="mck"><Icon icon={faCheck} size={16} /></span>
-									{/if}
-								</button>
+								</DropdownMenu.RadioItem>
 							{/each}
-						</div>
-					{/if}
-				</div>
-				<div class="lh-filter" bind:this={filterRef}>
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						class="lh-btn"
-						aria-label={msg.mail_list_filter()}
-						title={msg.mail_list_filter()}
-						aria-haspopup="dialog"
-						aria-expanded={filterOpen}
-						onclick={() => (filterOpen = !filterOpen)}
-					>
-						<Icon icon={faSliders} size={16} />
-						{#if activeFilters > 0}
-							<span class="fbadge">{activeFilters}</span>
-						{/if}
-					</Button>
-					{#if filterOpen}
-						<div class="menu filter-menu" role="dialog" aria-label={msg.mail_list_filter_aria()}>
-							<div class="fm-head">
-								<span class="menu-lbl">{msg.mail_list_filter()}</span>
+						</DropdownMenu.RadioGroup>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+				<Popover.Root bind:open={filterOpen}>
+					<Popover.Trigger>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm" class="lh-btn lh-filter" tooltip={msg.mail_list_filter()}>
+								<Icon icon={faSliders} size={16} />
 								{#if activeFilters > 0}
-									<button class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
+									<span class="fbadge">{activeFilters}</span>
 								{/if}
-							</div>
-							<div class="fm-cap">{msg.mail_list_show_only()}</div>
-							<div class="fm-chips">
-								<Chip bind:pressed={() => filters.unread, () => toggleFlag('unread')}>
-									{#snippet leading()}<Icon icon={faEnvelope} size={15} />{/snippet}
-									{msg.mail_list_filter_unread()}
-								</Chip>
-								<Chip bind:pressed={() => filters.starred, () => toggleFlag('starred')}>
-									{#snippet leading()}<Icon icon={faStar} size={15} />{/snippet}
-									{msg.mail_list_filter_starred()}
-								</Chip>
-								<Chip bind:pressed={() => filters.attach, () => toggleFlag('attach')}>
-									{#snippet leading()}<Icon icon={faPaperclip} size={15} />{/snippet}
-									{msg.mail_list_filter_attach()}
-								</Chip>
-								{#if collectionKind && (showScope || filters.direct)}
-									<Chip bind:pressed={() => !!filters.direct, () => toggleFlag('direct')}>
-										{#snippet leading()}<Icon icon={collectionKind === 'label' ? faTag : faFolder} size={15} />{/snippet}
-										{collectionKind === 'label' ? msg.mail_view_only_label() : msg.mail_view_only_folder()}
-									</Chip>
-								{/if}
-							</div>
-							{#if collectionKind !== 'label'}
-								<div class="msep"></div>
-								<div class="fm-cap">{msg.mail_list_labels()}</div>
-								<div class="fm-chips">
-									{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
-										{@const on = filters.labels.includes(l.id)}
-										<Chip title={l.path} bind:pressed={() => on, () => toggleLabel(l.id)}>
-											{#snippet leading()}<span class="fdot" style:background={collectionColor(l.color)}></span>{/snippet}
-											{l.name}
-										</Chip>
-									{:else}
-										<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
-									{/each}
-								</div>
+							</Button>
+						{/snippet}
+					</Popover.Trigger>
+					<Popover.Content align="end" class="filter-menu" aria-label={msg.mail_list_filter_aria()} portalProps={{ to: '.mail-app' }}>
+						<div class="fm-head">
+							<p class="popover-label">{msg.mail_list_filter()}</p>
+							{#if activeFilters > 0}
+								<button type="button" class="fm-clear" onclick={clearFilters}>{msg.mail_list_clear_all()}</button>
 							{/if}
 						</div>
-					{/if}
-				</div>
+						<div class="fm-cap">{msg.mail_list_show_only()}</div>
+						<div class="fm-chips">
+							<Chip bind:pressed={() => filters.unread, () => toggleFlag('unread')}>
+								{#snippet leading()}<Icon icon={faEnvelope} size={15} />{/snippet}
+								{msg.mail_list_filter_unread()}
+							</Chip>
+							<Chip bind:pressed={() => filters.starred, () => toggleFlag('starred')}>
+								{#snippet leading()}<Icon icon={faStar} size={15} />{/snippet}
+								{msg.mail_list_filter_starred()}
+							</Chip>
+							<Chip bind:pressed={() => filters.attach, () => toggleFlag('attach')}>
+								{#snippet leading()}<Icon icon={faPaperclip} size={15} />{/snippet}
+								{msg.mail_list_filter_attach()}
+							</Chip>
+							{#if collectionKind && (showScope || filters.direct)}
+								<Chip bind:pressed={() => !!filters.direct, () => toggleFlag('direct')}>
+									{#snippet leading()}<Icon icon={collectionKind === 'label' ? faTag : faFolder} size={15} />{/snippet}
+									{collectionKind === 'label' ? msg.mail_view_only_label() : msg.mail_view_only_folder()}
+								</Chip>
+							{/if}
+						</div>
+						{#if collectionKind !== 'label'}
+							<div class="menu-sep fm-sep"></div>
+							<div class="fm-cap">{msg.mail_list_labels()}</div>
+							<div class="fm-chips">
+								{#each mailCollections.labels.filter((l) => !l.sealed) as l (l.id)}
+									{@const on = filters.labels.includes(l.id)}
+									<Chip title={l.path} bind:pressed={() => on, () => toggleLabel(l.id)}>
+										{#snippet leading()}<span class="fdot" style:background={collectionColor(l.color)}></span>{/snippet}
+										{l.name}
+									</Chip>
+								{:else}
+									<span class="fm-empty">{msg.mail_collection_no_labels()}</span>
+								{/each}
+							</div>
+						{/if}
+					</Popover.Content>
+				</Popover.Root>
 			</div>
 		</div>
 	{/if}

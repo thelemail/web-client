@@ -11,7 +11,7 @@
 		faPlus
 	} from '@fortawesome/pro-regular-svg-icons';
 	import type { MailCollectionKind } from '$core/api/types';
-	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
+	import * as Popover from '$core/components/ui/popover';
 	import CollectionCreate from './CollectionCreate.svelte';
 	import type { PickerRow, PickerSection } from './picker';
 	import type { CollectionEntry } from './tree';
@@ -51,7 +51,7 @@
 	}: Props = $props();
 
 	const uid = $props.id();
-	let panel: HTMLDivElement | undefined = $state();
+	let panel: HTMLElement | null = $state(null);
 	let input: HTMLInputElement | undefined = $state();
 	let creating = $state<{ name: string; parent: string | null } | null>(null);
 	let cursor = $state(0);
@@ -144,10 +144,8 @@
 		}
 	}
 
-	function onPanelKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
+	function onEscape(e: KeyboardEvent) {
 		e.preventDefault();
-		e.stopPropagation();
 		if (creating) {
 			backToList();
 		} else if (query) {
@@ -157,101 +155,118 @@
 		}
 	}
 
-	function onDocMouseDown(e: MouseEvent) {
-		const target = e.target as Node;
-		if (panel?.contains(target) || anchor?.contains(target)) return;
-		onDismiss();
-	}
 </script>
 
-<svelte:document onmousedown={onDocMouseDown} />
 
-<AnchoredMenu {anchor} bind:panel extraClass="label-picker coll-picker" role="dialog" {label}>
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div class="pk" onkeydown={onPanelKey}>
-		{#if creating}
-			<div class="pk-create-head">
-				<Button variant="ghost" size="icon-sm" aria-label={m.mail_picker_back()} onclick={backToList}>
-					<Icon icon={faArrowLeft} size={15} />
-				</Button>
-				<span>{createKind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}</span>
-			</div>
-			<CollectionCreate kind={createKind} name={creating.name} parent={creating.parent} onCreated={created} />
-		{:else}
-			{@render header?.()}
-			<label class="pk-find">
-				<Icon icon={faMagnifyingGlass} size={14} />
-				<input
-					bind:this={input}
-					bind:value={query}
-					type="text"
-					role="combobox"
-					autocomplete="off"
-					spellcheck="false"
-					aria-expanded="true"
-					aria-controls="{uid}-list"
-					aria-activedescendant={rows.length > 0 ? optionId(active) : undefined}
-					aria-label={placeholder}
-					{placeholder}
-					oninput={() => (cursor = 0)}
-					onkeydown={onInputKey}
-				/>
-			</label>
-			<div
-				class="pk-list"
-				id="{uid}-list"
-				role="listbox"
-				aria-label={label}
-				aria-multiselectable={multi || undefined}
-			>
-				{#if searching && !matched}
-					<div class="pk-empty">{m.mail_sidebar_find_empty()}</div>
-				{/if}
-				{#each groups as g (g.key)}
-					<div role="group" aria-labelledby={g.title ? `${uid}-${g.key}` : undefined}>
-						{#if g.key === 'create'}
-							<div class="msep"></div>
-						{:else if g.title}
-							<div class="menu-lbl" id="{uid}-{g.key}">{g.title}</div>
-						{/if}
-						{#each g.rows as { row, index } (row.key)}
-							{@const glyph = row.key === 'create' ? faPlus : row.icon}
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
-							<div
-								id={optionId(index)}
-								class="mitem lp-row pk-row"
-								class:active={index === active}
-								class:on={row.check === 'on'}
-								role="option"
-								aria-selected={multi ? row.check === 'on' : index === active}
-								aria-checked={multi && row.check ? (row.check === 'mixed' ? 'mixed' : row.check === 'on') : undefined}
-								tabindex="-1"
-								onmousedown={(e) => e.preventDefault()}
-								onmousemove={() => (cursor = index)}
-								onclick={() => row.pick()}
-							>
-								{#if multi && row.check}
-									<span class="pk-box" class:checked={row.check !== 'off'} aria-hidden="true">
-										{#if row.check === 'on'}<Icon icon={faCheck} size={12} />{:else if row.check === 'mixed'}<Icon icon={faMinus} size={12} />{/if}
+<Popover.Root
+	bind:open={
+		() => true,
+		(next) => {
+			if (!next) onDismiss();
+		}
+	}
+>
+	<Popover.Content
+		bind:ref={panel}
+		class="coll-picker"
+		customAnchor={anchor}
+		side="bottom"
+		align="end"
+		collisionPadding={12}
+		aria-label={label}
+		portalProps={{ to: '.mail-app' }}
+		onOpenAutoFocus={(e) => e.preventDefault()}
+		onCloseAutoFocus={(e) => e.preventDefault()}
+		onEscapeKeydown={onEscape}
+		onInteractOutside={(e) => {
+			if (anchor?.contains(e.target as Node)) e.preventDefault();
+		}}
+	>
+		<div class="pk">
+			{#if creating}
+				<div class="pk-create-head">
+					<Button variant="ghost" size="icon-sm" aria-label={m.mail_picker_back()} onclick={backToList}>
+						<Icon icon={faArrowLeft} size={15} />
+					</Button>
+					<span>{createKind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}</span>
+				</div>
+				<CollectionCreate kind={createKind} name={creating.name} parent={creating.parent} onCreated={created} />
+			{:else}
+				{@render header?.()}
+				<label class="pk-find">
+					<Icon icon={faMagnifyingGlass} size={14} />
+					<input
+						bind:this={input}
+						bind:value={query}
+						type="text"
+						role="combobox"
+						autocomplete="off"
+						spellcheck="false"
+						aria-expanded="true"
+						aria-controls="{uid}-list"
+						aria-activedescendant={rows.length > 0 ? optionId(active) : undefined}
+						aria-label={placeholder}
+						{placeholder}
+						oninput={() => (cursor = 0)}
+						onkeydown={onInputKey}
+					/>
+				</label>
+				<div
+					class="pk-list"
+					id="{uid}-list"
+					role="listbox"
+					aria-label={label}
+					aria-multiselectable={multi || undefined}
+				>
+					{#if searching && !matched}
+						<div class="pk-empty">{m.mail_sidebar_find_empty()}</div>
+					{/if}
+					{#each groups as g (g.key)}
+						<div role="group" aria-labelledby={g.title ? `${uid}-${g.key}` : undefined}>
+							{#if g.key === 'create'}
+								<div class="menu-sep"></div>
+							{:else if g.title}
+								<div class="menu-label" id="{uid}-{g.key}">{g.title}</div>
+							{/if}
+							{#each g.rows as { row, index } (row.key)}
+								{@const glyph = row.key === 'create' ? faPlus : row.icon}
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<div
+									id={optionId(index)}
+									class="menu-item lp-row pk-row"
+									class:active={index === active}
+									class:on={row.check === 'on'}
+									role="option"
+									aria-selected={multi ? row.check === 'on' : index === active}
+									aria-checked={multi && row.check ? (row.check === 'mixed' ? 'mixed' : row.check === 'on') : undefined}
+									tabindex="-1"
+									onmousedown={(e) => e.preventDefault()}
+									onmousemove={() => (cursor = index)}
+									onclick={() => row.pick()}
+								>
+									{#if multi && row.check}
+										<span class="pk-box" class:checked={row.check !== 'off'} aria-hidden="true">
+											{#if row.check === 'on'}<Icon icon={faCheck} size={12} />{:else if row.check === 'mixed'}<Icon icon={faMinus} size={12} />{/if}
+										</span>
+									{/if}
+									{#if row.depth}
+										<span class="lp-indent" style:width="{row.depth * 14}px"></span>
+									{/if}
+									{#if row.dot}
+										<span class="lp-dot" style:background={row.dot}></span>
+									{:else if glyph}
+										<Icon icon={glyph} size={17} color={row.iconColor ?? 'currentColor'} />
+									{/if}
+									<span class="lp-name" title={row.path ? `${row.path} / ${row.title}` : undefined}>
+										{#if row.path}<span class="pk-parent">{`${row.path} / `}</span>{/if}{row.title}
 									</span>
-								{/if}
-								{#if row.depth}
-									<span class="lp-indent" style:width="{row.depth * 14}px"></span>
-								{/if}
-								{#if row.dot}
-									<span class="lp-dot" style:background={row.dot}></span>
-								{:else if glyph}
-									<Icon icon={glyph} size={17} color={row.iconColor ?? 'currentColor'} />
-								{/if}
-								<span class="lp-name" title={row.path ? `${row.path} / ${row.title}` : undefined}>
-									{#if row.path}<span class="pk-parent">{`${row.path} / `}</span>{/if}{row.title}
-								</span>
-							</div>
-						{/each}
-					</div>
-				{/each}
-			</div>
-			{@render footer?.()}
-		{/if}
-	</div>
-</AnchoredMenu>
+								</div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+				{@render footer?.()}
+			{/if}
+		</div>
+	</Popover.Content>
+</Popover.Root>

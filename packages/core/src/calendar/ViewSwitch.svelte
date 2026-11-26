@@ -34,7 +34,7 @@
 			</Button>
 		{/snippet}
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content class="cal-surface cal-menu w-40" align="end">
+	<DropdownMenu.Content class="w-40" align="end">
 		{#each VIEWS as view (view.value)}
 			<DropdownMenu.Item onSelect={() => cal.goTo(view.value)}>{view.label()}</DropdownMenu.Item>
 		{/each}

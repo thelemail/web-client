@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import {
 		faArrowLeft,
 		faCheck,
@@ -180,7 +181,6 @@
 	let err = $state<SendError | null>(null);
 	let attempts = $state(0);
 	let sendOpen = $state(false);
-	let sendRef: HTMLDivElement | undefined = $state();
 	let scheduleOpen = $state(false);
 	let pendingScheduledAt = $state<string | null>(null);
 
@@ -759,11 +759,6 @@
 		}
 	}
 
-	function handleDocMouseDown(e: MouseEvent) {
-		const t = e.target as Node;
-		if (sendOpen && sendRef && !sendRef.contains(t)) sendOpen = false;
-	}
-
 	function focusTo() {
 		const input = winRef?.querySelector<HTMLInputElement>('.recip-input');
 		input?.focus();
@@ -959,7 +954,7 @@
 	});
 </script>
 
-<svelte:document onkeydown={handleKey} onmousedown={handleDocMouseDown} />
+<svelte:document onkeydown={handleKey} />
 
 {#if min}
 	<div
@@ -1338,40 +1333,51 @@
 		{/if}
 
 		<div class="compose-f" inert={load !== 'ready'}>
-			<div class="send-group" bind:this={sendRef}>
-				<div class="btn-split">
-					<Button
-						variant="primary"
-						busy={status === 'sending'}
-						busyLabel={m.mail_compose_sending()}
-						aria-disabled={!canSend || status === 'sending'}
-						onclick={runSend}
-					>
-						<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send()}
-					</Button>
-					<Button
-						variant="primary"
-						size="icon"
-						title={m.mail_compose_send_options()}
-						aria-label={m.mail_compose_send_options()}
-						aria-haspopup="menu"
-						aria-expanded={sendOpen}
-						busy={status === 'sending'}
-						aria-disabled={!canSend || status === 'sending'}
-						onclick={() => {
-							if (canSend) sendOpen = !sendOpen;
-							else showBlock();
-						}}
-					>
-						<Icon icon={faChevronDown} size={15} />
-					</Button>
-				</div>
-				{#if sendOpen}
-					<div class="send-menu" role="menu">
-						<button type="button" onclick={runSend}><Icon icon={faPaperPlane} size={16} />{m.mail_compose_send_now()}</button>
-						<button type="button" onclick={openSchedule}><Icon icon={faClock} size={16} />{m.mail_compose_schedule()}</button>
-					</div>
-				{/if}
+			<div class="btn-split">
+				<Button
+					variant="primary"
+					busy={status === 'sending'}
+					busyLabel={m.mail_compose_sending()}
+					aria-disabled={!canSend || status === 'sending'}
+					onclick={runSend}
+				>
+					<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send()}
+				</Button>
+				<DropdownMenu.Root
+					bind:open={
+						() => sendOpen,
+						(next) => {
+							if (next && !canSend) {
+								showBlock();
+								return;
+							}
+							sendOpen = next;
+						}
+					}
+				>
+					<DropdownMenu.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="primary"
+								size="icon"
+								tooltip={m.mail_compose_send_options()}
+								busy={status === 'sending'}
+								aria-disabled={!canSend || status === 'sending'}
+							>
+								<Icon icon={faChevronDown} size={15} />
+							</Button>
+						{/snippet}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="start" side="top">
+						<DropdownMenu.Item onSelect={runSend}>
+							<Icon icon={faPaperPlane} size={16} />{m.mail_compose_send_now()}
+						</DropdownMenu.Item>
+						<DropdownMenu.Item onSelect={openSchedule}>
+							<Icon icon={faClock} size={16} />{m.mail_compose_schedule()}
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			</div>
 
 			<Button
@@ -1477,10 +1483,6 @@
 	.cwarn :global(.cwarn-btn) {
 		flex: 0 0 auto;
 		margin-left: auto;
-	}
-	.send-group {
-		position: relative;
-		display: inline-flex;
 	}
 	.compose-f :global(.cf-end) {
 		margin-left: auto;
