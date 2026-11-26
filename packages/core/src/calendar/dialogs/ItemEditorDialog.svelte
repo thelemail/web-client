@@ -342,12 +342,12 @@
 
 		<label class="cal-field">
 			<span>{kind === 'hold' ? m.cal_editor_hold_label() : m.cal_editor_title()}</span>
-			<input type="text" bind:value={title} maxlength="200" placeholder={kind === 'hold' ? m.cal_editor_placeholder_hold() : kind === 'task' ? m.cal_editor_placeholder_task() : m.cal_editor_placeholder_event()} />
+			<input class="field-input" type="text" bind:value={title} maxlength="200" placeholder={kind === 'hold' ? m.cal_editor_placeholder_hold() : kind === 'task' ? m.cal_editor_placeholder_task() : m.cal_editor_placeholder_event()} />
 		</label>
 
 		<label class="cal-field">
 			<span>{m.cal_editor_calendar()}</span>
-			<select bind:value={calendarId} disabled={isEdit && !!source?.attendees?.length}>
+			<select class="field-input" bind:value={calendarId} disabled={isEdit && !!source?.attendees?.length}>
 				{#each writable as c (c.id)}
 					<option value={c.id}>{c.name}</option>
 				{/each}
@@ -358,21 +358,21 @@
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_due_date()}</span>
-					<input type="date" bind:value={dueDate} />
+					<input class="field-input" type="date" bind:value={dueDate} />
 				</label>
 				<label>
 					<span>{m.cal_editor_time()}</span>
-					<input type="time" bind:value={dueTime} />
+					<input class="field-input" type="time" bind:value={dueTime} />
 				</label>
 			</div>
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_estimate()}</span>
-					<input type="number" min="0" step="5" bind:value={estimate} placeholder="30" />
+					<input class="field-input" type="number" min="0" step="5" bind:value={estimate} placeholder="30" />
 				</label>
 				<label>
 					<span>{m.cal_editor_owner()}</span>
-					<select bind:value={ownerEmail}>
+					<select class="field-input" bind:value={ownerEmail}>
 						<option value="">{m.cal_editor_unassigned()}</option>
 						{#each members as member (member.accountId)}
 							<option value={member.email}>{member.fullName || member.email}</option>
@@ -390,24 +390,24 @@
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_starts()}</span>
-					<input type="date" bind:value={startDate} onchange={() => { if (!endDate || endDate < startDate) endDate = startDate; }} />
+					<input class="field-input" type="date" bind:value={startDate} onchange={() => { if (!endDate || endDate < startDate) endDate = startDate; }} />
 				</label>
 				{#if !allDay}
 					<label>
 						<span>&nbsp;</span>
-						<input type="time" bind:value={startTime} />
+						<input class="field-input" type="time" bind:value={startTime} />
 					</label>
 				{/if}
 			</div>
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_ends()}</span>
-					<input type="date" bind:value={endDate} min={startDate} />
+					<input class="field-input" type="date" bind:value={endDate} min={startDate} />
 				</label>
 				{#if !allDay}
 					<label>
 						<span>&nbsp;</span>
-						<input type="time" bind:value={endTime} />
+						<input class="field-input" type="time" bind:value={endTime} />
 					</label>
 				{/if}
 			</div>
@@ -416,7 +416,7 @@
 				{#if !allDay}
 					<label class="cal-check"><input type="checkbox" bind:checked={floating} />{m.cal_editor_floating()}</label>
 					{#if !floating}
-						<select class="tz" bind:value={timeZone} aria-label={m.cal_editor_time_zone_aria()}>
+						<select class="field-input tz" bind:value={timeZone} aria-label={m.cal_editor_time_zone_aria()}>
 							{#each zones as z (z)}
 								<option value={z}>{z}</option>
 							{/each}
@@ -440,11 +440,11 @@
 			<div class="cal-field two">
 				<label>
 					<span>{m.cal_editor_location()}</span>
-					<input type="text" bind:value={location} maxlength="240" placeholder={m.cal_editor_location_placeholder()} />
+					<input class="field-input" type="text" bind:value={location} maxlength="240" placeholder={m.cal_editor_location_placeholder()} />
 				</label>
 				<label>
 					<span>{m.cal_editor_video()}</span>
-					<input type="url" bind:value={videoUrl} maxlength="500" placeholder="https://" />
+					<input class="field-input" type="url" bind:value={videoUrl} maxlength="500" placeholder="https://" />
 				</label>
 			</div>
 		{/if}
@@ -452,7 +452,7 @@
 		{#if kind !== 'hold'}
 			<label class="cal-field">
 				<span>{m.cal_editor_notes()}</span>
-				<textarea rows="3" bind:value={notes} maxlength="8000"></textarea>
+				<textarea class="field-input" rows="3" bind:value={notes} maxlength="8000"></textarea>
 			</label>
 		{/if}
 
@@ -465,7 +465,7 @@
 						<button type="button" aria-label={m.cal_editor_remove_reminder_aria()} onclick={() => (reminders = reminders.filter((x) => x !== minutes))}>×</button>
 					</span>
 				{/each}
-				<select bind:value={reminderPick} onchange={addReminder} aria-label={m.cal_editor_add_reminder_aria()}>
+				<select class="field-input" bind:value={reminderPick} onchange={addReminder} aria-label={m.cal_editor_add_reminder_aria()}>
 					<option value="">{m.cal_editor_add_reminder()}</option>
 					{#each REMINDER_PRESETS as value (value)}
 						<option value={String(value)}>{reminderLabel(value)}</option>

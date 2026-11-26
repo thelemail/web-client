@@ -69,60 +69,13 @@
 }
 
 .cal-app .create {
-	position: relative;
 	display: flex;
-	align-items: stretch;
-	height: var(--control-h-md);
 	margin: 0 2px 8px;
-	border-radius: var(--radius-h40);
-	box-shadow: var(--shadow-sm);
 	flex: 0 0 auto;
 }
-button.create {
-	border: none;
-	background: none;
-	padding: 0;
-	cursor: pointer;
-	width: 100%;
-}
-.cal-app .create:focus-visible {
-	outline: 2px solid var(--focus-ring);
-	outline-offset: 2px;
-}
-.cal-app .cr-main {
+.cal-app .create .cr-main {
 	flex: 1 1 auto;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	border: none;
-	background: var(--primary);
-	color: var(--primary-fg);
-	font-size: 14.5px;
-	font-weight: 600;
-	border-radius: var(--radius-h40) 0 0 var(--radius-h40);
-	padding: 0 16px;
-	cursor: pointer;
-	transition: background-color var(--dur) var(--ease);
 }
-.cal-app .cr-caret {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: 36px;
-	border: none;
-	background: var(--primary);
-	color: var(--primary-fg);
-	border-left: 1px solid color-mix(in oklab, var(--primary-fg) 22%, transparent);
-	border-radius: 0 var(--radius-h40) var(--radius-h40) 0;
-	cursor: pointer;
-	transition: background-color var(--dur) var(--ease);
-}
-@media (hover: hover) {
-	.cal-app .cr-main:hover,
-	.cal-app .cr-caret:hover { background: var(--primary-hover); }
-}
-.cal-app .create:active :is(.cr-main, .cr-caret) { background: var(--primary-press); }
 
 .cal-app .rail-scroll {
 	flex: 1;
@@ -2010,29 +1963,9 @@ button.create {
 }
 .cal-surface .cal-field.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .cal-surface .cal-field.two label { display: flex; flex-direction: column; gap: 6px; }
-.cal-surface .cal-form input[type='text'],
-.cal-surface .cal-form input[type='url'],
-.cal-surface .cal-form input[type='date'],
-.cal-surface .cal-form input[type='time'],
-.cal-surface .cal-form input[type='number'],
-.cal-surface .cal-form select,
-.cal-surface .cal-form textarea {
-	width: 100%;
-	border: 1px solid var(--border-control);
-	border-radius: var(--radius-control);
-	background: var(--surface);
-	color: var(--fg-strong);
-	font-size: 13.5px;
-	padding: 8px 10px;
-	font-family: inherit;
-}
-.cal-surface .cal-form input:focus,
-.cal-surface .cal-form select:focus,
-.cal-surface .cal-form textarea:focus { outline: none; border-color: var(--pine-500); box-shadow: 0 0 0 3px var(--focus-ring); }
-.cal-surface .cal-form textarea { resize: vertical; min-height: 64px; }
 .cal-surface .cal-check { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--fg); }
 .cal-surface .cal-inline { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.cal-surface .cal-inline select.tz { width: auto; max-width: 260px; padding: 5px 8px; font-size: 12.5px; }
+.cal-surface .cal-inline select.tz { width: auto; max-width: 260px; --fld-h: var(--control-h-sm); --fld-r: var(--radius-h32); font-size: 12.5px; }
 .cal-surface .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: var(--radius-control); overflow: hidden; background: var(--surface); }
 .cal-surface .seg button {
 	border: none;

@@ -256,7 +256,7 @@
 			{#if request.mode === 'create' || request.mode === 'edit'}
 				<label class="cal-field">
 					<span>{m.cal_caldlg_name()}</span>
-					<input type="text" bind:value={name} maxlength="120" placeholder={m.cal_caldlg_name_placeholder()} />
+					<input class="field-input" type="text" bind:value={name} maxlength="120" placeholder={m.cal_caldlg_name_placeholder()} />
 				</label>
 				<div class="cal-field">
 					<span>{m.cal_caldlg_colour()}</span>
@@ -275,7 +275,7 @@
 				</div>
 				<label class="cal-field">
 					<span>{m.cal_caldlg_description()}</span>
-					<input type="text" bind:value={description} maxlength="240" placeholder={m.cal_caldlg_optional()} />
+					<input class="field-input" type="text" bind:value={description} maxlength="240" placeholder={m.cal_caldlg_optional()} />
 				</label>
 				<div class="cal-field">
 					<span>{m.cal_caldlg_default_privacy()}</span>
@@ -307,7 +307,7 @@
 			{#if request.mode === 'create' && kind === 'role'}
 				<label class="cal-field">
 					<span>{m.cal_caldlg_shared_address()}</span>
-					<select bind:value={aliasAddressId}>
+					<select class="field-input" bind:value={aliasAddressId}>
 						<option value="">{m.cal_caldlg_choose_address()}</option>
 						{#each sharedAddresses as addr (addr.id)}
 							<option value={addr.id}>{addr.email}</option>
@@ -334,7 +334,7 @@
 									<span class="member-mail">{member.email}</span>
 								</label>
 								{#if role}
-									<select value={role} onchange={(e) => setRole(member.accountId, (e.currentTarget as HTMLSelectElement).value as CalendarRole)}>
+									<select class="field-input" value={role} onchange={(e) => setRole(member.accountId, (e.currentTarget as HTMLSelectElement).value as CalendarRole)}>
 										<option value="owner">{m.cal_role_owner()}</option>
 										<option value="editor">{m.cal_role_editor()}</option>
 										<option value="viewer">{m.cal_role_viewer()}</option>
