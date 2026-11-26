@@ -314,8 +314,8 @@
 			{#each [0, 1] as i (i)}
 				<div class="setrow" aria-hidden="true">
 					<div class="info">
-						<span class="sk-bar sk-t"></span>
-						<span class="sk-bar sk-d"></span>
+						<span class="skeleton sk-bar sk-t"></span>
+						<span class="skeleton sk-bar sk-d"></span>
 					</div>
 				</div>
 			{/each}

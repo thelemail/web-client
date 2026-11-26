@@ -37,13 +37,13 @@
 		>
 			<Icon icon={faArrowLeft} size={17} />
 		</Button>
-		<span class="sk sk-pill" style="width:86px"></span>
-		<span class="sk sk-pill" style="width:94px"></span>
-		<span class="sk sk-pill" style="width:90px"></span>
+		<span class="skeleton sk sk-pill" style="width:86px"></span>
+		<span class="skeleton sk sk-pill" style="width:94px"></span>
+		<span class="skeleton sk sk-pill" style="width:90px"></span>
 		<div class="grow"></div>
-		<span class="sk sk-sq"></span>
-		<span class="sk sk-sq"></span>
-		<span class="sk sk-sq"></span>
+		<span class="skeleton sk sk-sq"></span>
+		<span class="skeleton sk sk-sq"></span>
+		<span class="skeleton sk sk-sq"></span>
 	</div>
 	<div class="reader-scroll">
 		<div class="reader-inner">
@@ -53,23 +53,23 @@
 				<span>{m.mail_skeleton_decrypting()}</span>
 			</div>
 			<div class="reader-h sk-h">
-				<div class="sk sk-title" style="width:84%"></div>
-				<div class="sk sk-title" style="width:51%; margin-top:11px"></div>
+				<div class="skeleton sk sk-title" style="width:84%"></div>
+				<div class="skeleton sk sk-title" style="width:51%; margin-top:11px"></div>
 			</div>
 			<div class="sk-meta">
-				<div class="sk sk-av"></div>
+				<div class="skeleton sk sk-av"></div>
 				<div class="sk-meta-tx">
-					<div class="sk sk-line" style="width:130px; height:14px"></div>
-					<div class="sk sk-line" style="width:198px; height:12px; margin-top:8px"></div>
+					<div class="skeleton sk sk-line" style="width:130px; height:14px"></div>
+					<div class="skeleton sk sk-line" style="width:198px; height:12px; margin-top:8px"></div>
 				</div>
-				<div class="sk sk-line sk-when" style="width:66px; height:12px"></div>
+				<div class="skeleton sk sk-line sk-when" style="width:66px; height:12px"></div>
 			</div>
 			<div class="sk-body">
 				{#each BODY as w, i (i)}
 					{#if w === null}
 						<div class="sk-gap"></div>
 					{:else}
-						<div class="sk sk-line tall" style="width:{w}"></div>
+						<div class="skeleton sk sk-line tall" style="width:{w}"></div>
 					{/if}
 				{/each}
 			</div>
@@ -79,28 +79,7 @@
 
 <style>
 	.sk {
-		position: relative;
-		overflow: hidden;
-		background: var(--skeleton);
 		border-radius: 4px;
-	}
-	.sk::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		transform: translateX(-100%);
-		background: linear-gradient(
-			90deg,
-			transparent 0,
-			color-mix(in srgb, var(--surface) 78%, transparent) 50%,
-			transparent 100%
-		);
-		animation: sk-sweep 1.5s ease infinite;
-	}
-	@keyframes sk-sweep {
-		100% {
-			transform: translateX(100%);
-		}
 	}
 
 	.reader-bar.sk-bar {
@@ -189,24 +168,9 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.sk::after {
-			animation: none;
-		}
-		.sk {
-			animation: sk-pulse 1.6s ease infinite;
-		}
 		.sk-spin {
 			animation: none;
 			border-top-color: var(--primary);
-		}
-	}
-	@keyframes sk-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.55;
 		}
 	}
 </style>

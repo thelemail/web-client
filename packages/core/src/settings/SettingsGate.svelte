@@ -33,10 +33,10 @@
 		{#each controls as control, i (i)}
 			<div class="setrow" aria-hidden="true">
 				<div class="info">
-					<span class="sk-bar sk-t"></span>
-					<span class="sk-bar sk-d"></span>
+					<span class="skeleton sk-bar sk-t"></span>
+					<span class="skeleton sk-bar sk-d"></span>
 				</div>
-				<div class="ctl"><span class="sk-bar sk-c {control}"></span></div>
+				<div class="ctl"><span class="skeleton sk-bar sk-c {control}"></span></div>
 			</div>
 		{/each}
 	</div>

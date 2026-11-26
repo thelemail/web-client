@@ -83,8 +83,8 @@
 		<span class="sr-only">{m.settings_security_recovery_checking()}</span>
 		<div class="setrow" aria-hidden="true">
 			<div class="info">
-				<span class="sk-bar sk-t"></span>
-				<span class="sk-bar sk-d"></span>
+				<span class="skeleton sk-bar sk-t"></span>
+				<span class="skeleton sk-bar sk-d"></span>
 			</div>
 		</div>
 	</Card>
