@@ -76,6 +76,12 @@
 
 	const stacked = $derived(busyLabel !== undefined);
 	const passthrough = $derived(restProps as Record<string, unknown>);
+	const expanded = $derived(passthrough["aria-expanded"] === true || passthrough["aria-expanded"] === "true");
+	let tipOpen = $state(false);
+
+	$effect(() => {
+		if (expanded) tipOpen = false;
+	});
 
 	function guard(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) {
 		if (busy) {
@@ -129,7 +135,16 @@
 {/snippet}
 
 {#if tooltip}
-	<Tooltip.Root>
+	<Tooltip.Root
+		ignoreNonKeyboardFocus
+		disabled={expanded}
+		bind:open={
+			() => tipOpen && !expanded,
+			(next) => {
+				tipOpen = next && !expanded;
+			}
+		}
+	>
 		<Tooltip.Trigger {...passthrough} aria-label={(passthrough["aria-label"] as string | undefined) ?? tooltip} onclick={guard}>
 			{#snippet child({ props })}
 				{@render element(props)}
