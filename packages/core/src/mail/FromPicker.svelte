@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faCheck,
 		faChevronDown,
@@ -294,8 +295,15 @@
 	<div class="cwarn" role="alert">
 		<Icon icon={faCircleExclamation} size={14} />
 		<span class="cwarn-t" id="{uid}-revoked">{m.mail_compose_from_revoked({ address: revoked.email })}</span>
-		<button type="button" class="cwarn-act" onclick={choose}>{m.mail_compose_choose_address()}</button>
+		<Button variant="neutral" size="sm" class="cwarn-btn" onclick={choose}>{m.mail_compose_choose_address()}</Button>
 	</div>
 {:else if noSender}
 	<div class="cnote"><Icon icon={faCircleExclamation} size={14} />{m.mail_compose_no_sender()}</div>
 {/if}
+
+<style>
+	.cwarn :global(.cwarn-btn) {
+		flex: 0 0 auto;
+		margin-left: auto;
+	}
+</style>

@@ -5,6 +5,7 @@
 	import LinkDialog from './LinkDialog.svelte';
 	import { applyLink, currentLink } from './link';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faLink,
 		faListOl,
@@ -86,41 +87,41 @@
 </script>
 
 <div class="cbar" role="toolbar" aria-label={m.mail_toolbar_aria()}>
-	<button type="button" title={m.mail_toolbar_bold()} class:on={active.bold} aria-pressed={active.bold} onclick={bold}>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_bold()} aria-label={m.mail_toolbar_bold()} aria-pressed={active.bold} onclick={bold}>
 		<b>B</b>
-	</button>
-	<button type="button" title={m.mail_toolbar_italic()} class:on={active.italic} aria-pressed={active.italic} onclick={italic}>
+	</Button>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_italic()} aria-label={m.mail_toolbar_italic()} aria-pressed={active.italic} onclick={italic}>
 		<i>I</i>
-	</button>
-	<button type="button" title={m.mail_toolbar_underline()} class:on={active.underline} aria-pressed={active.underline} onclick={underline}>
+	</Button>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_underline()} aria-label={m.mail_toolbar_underline()} aria-pressed={active.underline} onclick={underline}>
 		<u>U</u>
-	</button>
+	</Button>
 	<span class="cbar-sep"></span>
-	<button type="button" title={m.mail_toolbar_bulleted()} class:on={active.ul} aria-pressed={active.ul} onclick={ul}>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_bulleted()} aria-label={m.mail_toolbar_bulleted()} aria-pressed={active.ul} onclick={ul}>
 		<Icon icon={faListUl} size={16} />
-	</button>
-	<button type="button" title={m.mail_toolbar_numbered()} class:on={active.ol} aria-pressed={active.ol} onclick={ol}>
+	</Button>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_numbered()} aria-label={m.mail_toolbar_numbered()} aria-pressed={active.ol} onclick={ol}>
 		<Icon icon={faListOl} size={16} />
-	</button>
-	<button type="button" title={m.mail_toolbar_link()} class:on={active.link} aria-pressed={active.link} onclick={link}>
+	</Button>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_link()} aria-label={m.mail_toolbar_link()} aria-pressed={active.link} onclick={link}>
 		<Icon icon={faLink} size={16} />
-	</button>
-	<button type="button" title={m.mail_toolbar_quote()} class:on={active.quote} aria-pressed={active.quote} onclick={quote}>
+	</Button>
+	<Button variant="ghost" size="icon-sm" title={m.mail_toolbar_quote()} aria-label={m.mail_toolbar_quote()} aria-pressed={active.quote} onclick={quote}>
 		<Icon icon={faQuoteLeft} size={16} />
-	</button>
+	</Button>
 	{#if signature?.present}
 		<span class="cbar-sep"></span>
-		<button
-			type="button"
+		<Button
+			variant="ghost"
+			size="icon-sm"
 			title={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
 			aria-label={signature.on ? m.mail_toolbar_remove_signature() : m.mail_toolbar_add_signature()}
-			class:on={signature.on}
 			aria-pressed={signature.on}
 			disabled={signature.disabled}
 			onclick={() => signature.onToggle(!signature.on)}
 		>
 			<Icon icon={faPenLine} size={16} />
-		</button>
+		</Button>
 	{/if}
 	{#if extra}
 		<span class="cbar-sep"></span>
@@ -141,36 +142,6 @@
 		padding: 6px 13px;
 		border-top: 1px solid var(--border);
 		background: var(--bg-raised);
-	}
-	.cbar button {
-		width: 30px;
-		height: 30px;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		background: none;
-		border: none;
-		border-radius: var(--radius-control-compact);
-		color: var(--fg-muted);
-		cursor: pointer;
-		font-size: 14px;
-		font-family: var(--font-sans);
-	}
-	.cbar button:hover {
-		background: var(--border-soft);
-		color: var(--fg);
-	}
-	.cbar button.on {
-		background: var(--border-strong);
-		color: var(--fg-strong);
-	}
-	.cbar button:disabled {
-		opacity: 0.45;
-		cursor: default;
-	}
-	.cbar button :global(svg) {
-		width: 16px;
-		height: 16px;
 	}
 	.cbar-sep {
 		width: 1px;

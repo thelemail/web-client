@@ -2,6 +2,7 @@
 	import { m as msg } from '$paraglide/messages.js';
 	import { onMount, untrack } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faBoxArchive,
 		faCheck,
@@ -1104,40 +1105,44 @@
 		{#if onExpand}
 			<span class="rt-acts">
 				{#if expanded && onPane}
-					<button
-						type="button"
-						class="rt-x"
-						class:on={pane}
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						class="rt-pane"
 						title={pane ? msg.mail_compose_hide_conversation() : msg.mail_compose_show_conversation()}
+						aria-label={pane ? msg.mail_compose_hide_conversation() : msg.mail_compose_show_conversation()}
 						aria-pressed={pane}
 						onclick={() => onPane(!pane)}
 					>
 						<Icon icon={faSidebar} size={16} />
-					</button>
+					</Button>
 				{/if}
-				<button
-					type="button"
-					class="rt-x rt-size"
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="rt-size"
 					title={expanded ? msg.mail_compose_collapse() : msg.mail_compose_expand()}
+					aria-label={expanded ? msg.mail_compose_collapse() : msg.mail_compose_expand()}
 					aria-pressed={expanded}
 					onclick={toggleExpand}
 				>
 					{#if expanded}<Icon icon={faDownLeftAndUpRightToCenter} size={16} />{:else}<Icon icon={faUpRightAndDownLeftFromCenter} size={16} />{/if}
-				</button>
+				</Button>
 			</span>
 		{/if}
 		{#if onClose}
 			<span class="rt-rule" aria-hidden="true"></span>
-			<button
-				type="button"
-				class="rt-x"
+			<Button
+				variant="ghost"
+				size="icon-sm"
 				title={msg.common_close()}
-				aria-busy={closing}
+				aria-label={msg.common_close()}
+				busy={closing}
 				disabled={status === 'sending'}
 				onclick={() => void closeKeepingDraft()}
 			>
 				<Icon icon={faXmark} size={16} />
-			</button>
+			</Button>
 		{/if}
 	</div>
 	<div class="rbx-mid">
@@ -1164,9 +1169,9 @@
 						? msg.mail_compose_reply_to_offsite({ list: replyToList, domain: senderDomain })
 						: msg.mail_compose_reply_to_note({ list: replyToList })}
 				</span>
-				<button type="button" class="cwarn-act" onclick={replyToSenderInstead}>
+				<Button variant="neutral" size="sm" class="cwarn-btn" onclick={replyToSenderInstead}>
 					{msg.mail_compose_reply_to_sender_instead()}
-				</button>
+				</Button>
 			</div>
 		{/if}
 
@@ -1307,9 +1312,9 @@
 			}}
 		>
 			{#snippet extra()}
-				<button type="button" class="cbar-lab" onclick={pickFiles}>
+				<Button variant="ghost" size="sm" onclick={pickFiles}>
 					<Icon icon={faPaperclip} size={16} />{msg.mail_compose_attach()}
-				</button>
+				</Button>
 			{/snippet}
 		</EditorToolbar>
 
@@ -1356,63 +1361,63 @@
 				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{msg.mail_compose_open_draft_failed()} {msg.mail_compose_draft_untouched()}</span>
 				{#if openedDraftId}
-					<button type="button" class="cwarn-act" onclick={() => void hydrateReply(openedDraftId)}>
+					<Button variant="neutral" size="sm" class="cwarn-btn" onclick={() => void hydrateReply(openedDraftId)}>
 						{msg.common_retry()}
-					</button>
+					</Button>
 				{/if}
 			</div>
 		{:else if saveStatus === 'failed'}
 			<div class="cwarn" role="alert">
 				<Icon icon={faCircleExclamation} size={14} />
 				<span class="cwarn-t">{msg.mail_compose_save_failed()}</span>
-				<button type="button" class="cwarn-act" onclick={() => void saver.save()}>{msg.common_retry()}</button>
+				<Button variant="neutral" size="sm" class="cwarn-btn" onclick={() => void saver.save()}>{msg.common_retry()}</Button>
 			</div>
 		{/if}
 	</div>
 
 	<div class="rf">
-		<div class="rf-send" class:split={canArchive} bind:this={sendRef}>
-			<button
-				type="button"
-				class="rb-btn primary"
-				class:off={!canSend}
-				onclick={runSend}
-				disabled={status === 'sending'}
-				aria-disabled={!canSend}
-			>
-				{#if status === 'sending'}
-					<span class="send-spin"></span>{msg.mail_compose_sending()}
-				{:else}
-					<Icon icon={faPaperPlane} size={15} />{msg.mail_compose_send()}
-				{/if}
-			</button>
-			{#if canArchive}
-				<button
-					type="button"
-					class="rf-caret"
-					class:on={sendOpen}
-					title={msg.mail_compose_send_options()}
-					aria-haspopup="menu"
-					aria-expanded={sendOpen}
-					disabled={status === 'sending'}
-					aria-disabled={!canSend}
-					onclick={() => {
-						if (canSend) sendOpen = !sendOpen;
-						else showBlock();
-					}}
+		<div class="rf-send" bind:this={sendRef}>
+			<div class:btn-split={canArchive}>
+				<Button
+					variant="primary"
+					size="sm"
+					data-mutates
+					busy={status === 'sending'}
+					busyLabel={msg.mail_compose_sending()}
+					aria-disabled={!canSend || status === 'sending'}
+					onclick={runSend}
 				>
-					<Icon icon={faChevronDown} size={15} />
-				</button>
-				{#if sendOpen}
-					<div class="menu rf-menu" role="menu">
-						<button type="button" class="mitem" role="menuitem" onclick={runSend}>
-							<Icon icon={faPaperPlane} size={17} />{msg.mail_compose_send()}
-						</button>
-						<button type="button" class="mitem" role="menuitem" onclick={sendAndArchive}>
-							<Icon icon={faBoxArchive} size={17} />{msg.mail_compose_send_archive()}
-						</button>
-					</div>
+					<Icon icon={faPaperPlane} size={15} />{msg.mail_compose_send()}
+				</Button>
+				{#if canArchive}
+					<Button
+						variant="primary"
+						size="icon-sm"
+						data-mutates
+						title={msg.mail_compose_send_options()}
+						aria-label={msg.mail_compose_send_options()}
+						aria-haspopup="menu"
+						aria-expanded={sendOpen}
+						busy={status === 'sending'}
+						aria-disabled={!canSend || status === 'sending'}
+						onclick={() => {
+							if (canSend) sendOpen = !sendOpen;
+							else showBlock();
+						}}
+					>
+						<Icon icon={faChevronDown} size={15} />
+					</Button>
 				{/if}
+			</div>
+			{#if canArchive && sendOpen}
+				<div class="menu rf-menu" role="menu">
+					<button type="button" class="mitem" role="menuitem" onclick={runSend}>
+						<Icon icon={faPaperPlane} size={17} />{msg.mail_compose_send()}
+					</button>
+					<button type="button" class="mitem" role="menuitem" onclick={sendAndArchive}>
+						<Icon icon={faBoxArchive} size={17} />{msg.mail_compose_send_archive()}
+					</button>
+				</div>
 			{/if}
 		</div>
 		<input
@@ -1422,9 +1427,9 @@
 			class="att-hidden-input"
 			onchange={onFileInputChange}
 		/>
-		<button type="button" class="cf-disc" onclick={discard}>
+		<Button variant="ghostDanger" size="sm" class="cf-end" onclick={discard}>
 			<Icon icon={faTrashCan} size={16} />{msg.mail_compose_discard_draft()}
-		</button>
+		</Button>
 	</div>
 
 	{#if status === 'sending'}
@@ -1487,3 +1492,19 @@
 		onCancel={clearErr}
 	/>
 {/if}
+
+<style>
+	.cwarn :global(.cwarn-btn),
+	.cnote :global(.cwarn-btn) {
+		flex: 0 0 auto;
+		margin-left: auto;
+	}
+	.rf :global(.cf-end) {
+		margin-left: auto;
+	}
+	@media (max-width: 860px) {
+		.replybox.expanded .rt-acts :global(.rt-pane) {
+			display: none;
+		}
+	}
+</style>
