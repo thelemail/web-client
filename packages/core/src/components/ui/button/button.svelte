@@ -11,6 +11,7 @@
 				tonal: "btn-tonal",
 				neutral: "btn-neutral",
 				ghost: "btn-ghost",
+				ghostDanger: "btn-ghost-danger",
 				danger: "btn-danger",
 				dangerSolid: "btn-danger-solid",
 				caution: "btn-caution"
@@ -19,6 +20,7 @@
 				sm: "btn-sm",
 				md: "",
 				lg: "btn-lg",
+				"icon-xs": "btn-xs btn-icon",
 				"icon-sm": "btn-sm btn-icon",
 				icon: "btn-icon",
 				"icon-lg": "btn-lg btn-icon"

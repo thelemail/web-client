@@ -55,9 +55,29 @@
 	--btn-fs: 15.5px;
 	--btn-icon: 18px;
 }
+.btn-xs {
+	--btn-h: var(--control-h-xs);
+	--btn-r: var(--radius-h24);
+	--btn-fs: 12px;
+	--btn-px: 8px;
+	--btn-gap: 4px;
+	--btn-icon: 14px;
+}
 .btn-icon {
 	width: var(--btn-h);
 	padding: 0;
+}
+.btn-split {
+	display: inline-flex;
+}
+.btn-split > .btn:not(:first-child) {
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+	border-inline-start-color: color-mix(in oklab, currentColor 22%, transparent);
+}
+.btn-split > .btn:not(:last-child) {
+	border-start-end-radius: 0;
+	border-end-end-radius: 0;
 }
 .btn-block {
 	width: 100%;
@@ -78,9 +98,16 @@
 .btn-ghost {
 	color: var(--fg-muted);
 }
+.btn-ghost-danger {
+	color: var(--fg-muted);
+}
 .btn-danger {
 	background: var(--danger-100);
 	color: var(--danger-700);
+}
+.btn:is(.btn-ghost, .btn-ghost-danger):is([aria-pressed='true'], [aria-expanded='true'], [data-state='open']) {
+	background: var(--pine-100);
+	color: var(--pine-700);
 }
 .btn-danger-solid {
 	background: var(--danger-500);
@@ -106,6 +133,10 @@
 		background: var(--ghost-hover);
 		color: var(--fg-strong);
 	}
+	.btn-ghost-danger:hover {
+		background: var(--danger-100);
+		color: var(--danger-700);
+	}
 	.btn-danger:hover {
 		background: var(--danger-soft-hover);
 	}
@@ -125,7 +156,7 @@
 	color: var(--fg-faint);
 	cursor: not-allowed;
 }
-.btn-ghost:is(:disabled, [aria-disabled='true']) {
+.btn:is(.btn-ghost, .btn-ghost-danger):is(:disabled, [aria-disabled='true']) {
 	background: transparent;
 }
 
@@ -206,8 +237,13 @@
 }
 
 @media (pointer: coarse) {
-	.btn:not(.btn-lg) {
+	.btn:not(.btn-lg, .btn-sm, .btn-xs, .btn-icon) {
 		--btn-h: var(--control-h-touch);
 		--btn-r: var(--radius-h44);
+	}
+	.btn:is(.btn-sm, .btn-xs, .btn-icon):not(.btn-lg)::after {
+		content: '';
+		position: absolute;
+		inset: min(0px, calc((var(--btn-h) - var(--control-h-touch)) / 2));
 	}
 }
