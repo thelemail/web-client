@@ -5,11 +5,12 @@ import { serve, type JobFactory } from './host';
 
 const mail: JobFactory = (ctx) => {
 	let total = 0;
+	let texts: string[] | null = null;
 	return {
 		name: 'mail',
 		class: 'body',
 		receive(message) {
-			total = (message as { total: number }).total;
+			({ total, texts = null } = message as { total: number; texts?: string[] });
 			ctx.wake('mail');
 		},
 		async step(step) {
@@ -18,7 +19,7 @@ const mail: JobFactory = (ctx) => {
 			if (next >= total) return 'idle';
 			while (next < total && !step.shouldYield()) {
 				const id = next++;
-				const text = id % 2 ? `The ferry to the island leaves at nine. Ticket ${id}.` : `Invoice ${id} for the office chairs is overdue.`;
+				const text = texts ? texts[id] : id % 2 ? `The ferry to the island leaves at nine. Ticket ${id}.` : `Invoice ${id} for the office chairs is overdue.`;
 				if (batch.add(document(`m${id}`, { subject: `Message ${id}`, parts: [{ field: 3, text }] }), String(next))) break;
 			}
 			const committed = await batch.commit();
