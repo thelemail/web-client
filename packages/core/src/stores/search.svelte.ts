@@ -178,9 +178,15 @@ class MailSearchStore {
 		return this.summary?.matches ?? this.provisional?.matches ?? null;
 	}
 
-	get exhausted(): boolean {
-		if (this.#related?.state?.main) return this.#related.exhausted;
+	get exactExhausted(): boolean {
 		return !this.summary || this.#pages >= this.summary.pages;
+	}
+
+	get exhausted(): boolean {
+		const exact = this.exactExhausted;
+		const related = this.#related;
+		if (!exact || !related?.state) return exact;
+		return related.state.status !== 'loading' && related.exhausted;
 	}
 
 	get related(): Related | null {
@@ -189,14 +195,6 @@ class MailSearchStore {
 
 	get relatedShown(): Message[] {
 		return this.#related?.shown ?? [];
-	}
-
-	get relatedMore(): boolean {
-		return this.#related?.more ?? false;
-	}
-
-	expandRelated(): void {
-		this.#related?.expand();
 	}
 
 	retryRelated(): void {
@@ -379,10 +377,10 @@ class MailSearchStore {
 	}
 
 	async loadMore(): Promise<void> {
-		if (this.#related?.state?.main) return this.#loadMoreRelated(this.#related);
 		const session = this.#session;
 		const summary = this.summary;
 		const run = this.#run;
+		if (summary && this.#pages >= summary.pages && this.#related) return this.#loadMoreRelated(this.#related);
 		if (!session || !summary || this.loadingMore || this.#pages >= summary.pages) return;
 		this.loadingMore = true;
 		this.moreFailed = false;
@@ -596,10 +594,28 @@ class MailSearchStore {
 				return;
 			}
 			const page = reply.summary.pages > 0 ? await client.page(reply.summary.id, 0) : null;
-			void client.closeQuery(reply.summary.id);
-			if (!current()) return;
-			this.preview = page?.ok ? page.groups.slice(0, PREVIEW_ROWS).map(ui.messageFromRow) : [];
-			this.previewing = false;
+			if (!current()) {
+				void client.closeQuery(reply.summary.id);
+				return;
+			}
+			const exact = page?.ok ? page.groups.slice(0, PREVIEW_ROWS).map(ui.messageFromRow) : [];
+			const similar = exact.length < PREVIEW_ROWS && this.prefs?.semantic && this.mode === 'saved' && ui.relatedAllowed(parsed.query.eligibility, reply.summary.matches);
+			this.preview = exact;
+			this.previewing = !!similar && exact.length === 0;
+			if (!similar) {
+				void client.closeQuery(reply.summary.id);
+				return;
+			}
+			const related = new ui.RelatedRun({ client, query: parsed.query, ctx, exclude: reply.summary.id, main: exact.length === 0 }, ui.messageFromRow);
+			try {
+				await related.start();
+				if (!current()) return;
+				this.preview = [...exact, ...related.shown].slice(0, PREVIEW_ROWS);
+				this.previewing = false;
+			} finally {
+				related.close();
+				void client.closeQuery(reply.summary.id);
+			}
 		} catch {
 			if (!current()) return;
 			this.preview = [];

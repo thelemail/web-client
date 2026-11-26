@@ -4,9 +4,6 @@ import type { SearchClient } from './runtime/client';
 import type { QueryContext } from './sqlite/compile';
 import type { MeaningSummary, ResultRow } from './sqlite/run';
 
-export const RELATED_ROWS = 5;
-export const RELATED_EXPANDED = 25;
-
 export type RelatedStatus = 'loading' | 'ready' | 'tooLong' | 'preparing' | 'busy' | 'failed';
 
 export interface Related {
@@ -14,7 +11,6 @@ export interface Related {
 	main: boolean;
 	rows: Message[];
 	summary: MeaningSummary | null;
-	expanded: boolean;
 }
 
 export interface RelatedRequest {
@@ -45,22 +41,12 @@ export class RelatedRun {
 
 	get shown(): Message[] {
 		const s = this.state;
-		if (!s || s.status !== 'ready') return [];
-		return s.main ? s.rows : s.rows.slice(0, s.expanded ? RELATED_EXPANDED : RELATED_ROWS);
-	}
-
-	get more(): boolean {
-		const s = this.state;
-		return !!s && s.status === 'ready' && !s.main && !s.expanded && s.rows.length > RELATED_ROWS;
+		return s && s.status === 'ready' ? s.rows : [];
 	}
 
 	get exhausted(): boolean {
 		const s = this.state;
 		return !s || s.status !== 'ready' || !s.summary || this.#pages >= s.summary.pages;
-	}
-
-	expand(): void {
-		if (this.state && !this.state.main) this.state = { ...this.state, expanded: true };
 	}
 
 	find(id: string): Message | null {
@@ -91,7 +77,7 @@ export class RelatedRun {
 		const abort = new AbortController();
 		this.#abort = abort;
 		const settle = (status: RelatedStatus, rows: Message[] = [], summary: MeaningSummary | null = null) => {
-			this.state = { status, main, rows, summary, expanded: false };
+			this.state = { status, main, rows, summary };
 		};
 		settle('loading');
 		try {

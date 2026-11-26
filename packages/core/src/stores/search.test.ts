@@ -491,17 +491,28 @@ describe('mailSearch related results', () => {
 		expect(mailSearch.findResult('r1')?.id).toBe('r1');
 	});
 
-	it('shows five related rows, then up to twenty-five', async () => {
-		const many = Array.from({ length: 30 }, (_, i) => row(`r${i}`, { channel: 'both' }));
-		exactThenRelated([row('e1')], many);
-		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary({ groups: 30 }) });
+	it('pages related rows in after the last exact page', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'both' })]);
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary({ groups: 60, pages: 2 }) });
 		mailSearch.commit('flight refund');
 		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
-		expect(mailSearch.relatedShown).toHaveLength(5);
-		expect(mailSearch.relatedMore).toBe(true);
-		mailSearch.expandRelated();
-		expect(mailSearch.relatedShown).toHaveLength(25);
-		expect(mailSearch.relatedMore).toBe(false);
+		expect(mailSearch.exactExhausted).toBe(true);
+		expect(mailSearch.relatedShown.map((r) => r.id)).toEqual(['r1']);
+		expect(mailSearch.exhausted).toBe(false);
+		await mailSearch.loadMore();
+		expect(client.page).toHaveBeenLastCalledWith(7, 1);
+		expect(mailSearch.exhausted).toBe(true);
+	});
+
+	it('fills the popup with similar mail after the exact previews', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'meaning' }), row('r2', { channel: 'meaning' })]);
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary() });
+		mailSearch.setDraft('flight refund');
+		await vi.waitFor(() => expect(mailSearch.preview.map((r) => r.id)).toEqual(['e1', 'r1', 'r2']));
+		expect(mailSearch.previewing).toBe(false);
+		expect(mailSearch.preview[1].match?.channel).toBe('meaning');
+		await vi.waitFor(() => expect(client.closeQuery).toHaveBeenCalledWith(1));
+		expect(client.closeQuery).toHaveBeenCalledWith(7);
 	});
 
 	it('makes related results the main list when nothing matches exactly, and pages them', async () => {

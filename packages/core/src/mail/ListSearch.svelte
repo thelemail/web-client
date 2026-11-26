@@ -269,6 +269,8 @@
 		dismissed = false;
 		highlight = -1;
 	}
+
+	const CHANNEL = { words: m.mail_search_channel_words, meaning: m.mail_search_channel_meaning, both: m.mail_search_channel_both } as const;
 </script>
 
 <svelte:document onkeydown={handleKey} />
@@ -341,7 +343,10 @@
 							>
 								<span class="sm-from" dir="auto">{option.msg.from}</span>
 								<span class="sm-subj" dir="auto">{option.msg.subj}</span>
-								<span class="sm-when">{formatRowTime(new Date(option.msg.epoch))}</span>
+								<span class="sm-when">
+									{#if option.msg.match?.channel}<span class="sm-chan">{CHANNEL[option.msg.match.channel]()}</span>{/if}
+									{formatRowTime(new Date(option.msg.epoch))}
+								</span>
 							</div>
 						{:else if option.kind === 'op'}
 							<div

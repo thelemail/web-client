@@ -41,7 +41,7 @@ import { admit, requestPersistence, type Admission } from './quota';
 import { Scheduler, type Job, type JobClass } from './scheduler';
 import { sessionCall } from './session';
 
-const MAX_SESSIONS_PER_CLIENT = 4;
+const MAX_SESSIONS_PER_CLIENT = 8;
 const HEAVY: readonly JobClass[] = ['body', 'attachments', 'embeddings', 'artifacts'];
 
 export interface JobContext {
