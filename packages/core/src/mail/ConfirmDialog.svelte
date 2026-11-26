@@ -70,6 +70,7 @@
 >
 	<Dialog.Content
 		size={wide ? 'wide' : 'md'}
+		alert={tone === 'danger'}
 		class={extraClass}
 		showCloseButton={!busy}
 		escapeKeydownBehavior={busy ? 'ignore' : 'close'}

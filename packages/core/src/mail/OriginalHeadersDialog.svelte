@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
-	import { faCheck, faCode, faCopy, faXmark } from '@fortawesome/pro-regular-svg-icons';
+	import { faCheck, faCode, faCopy } from '@fortawesome/pro-regular-svg-icons';
 	import { auth } from '$core/stores/auth.svelte';
 	import { DecryptionError } from './decrypt';
 	import { loadOriginalHeaders } from './originalHeaders';
 	import { Button } from '$core/components/ui/button';
+	import * as Dialog from '$core/components/ui/dialog';
 
 	interface Props {
 		messageId: string;
@@ -77,52 +77,35 @@
 			copied = false;
 		}
 	}
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key !== 'Escape') return;
-		e.stopPropagation();
-		onClose();
-	}
-
-	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) onClose();
-	}
 </script>
 
-<svelte:document onkeydowncapture={handleKey} />
-
-<div
-	class="oh-scrim"
-	role="dialog"
-	aria-modal="true"
-	use:trapFocus
-	aria-labelledby="oh-title"
-	tabindex="-1"
-	onmousedown={scrimMouseDown}
+<Dialog.Root
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open) onClose();
+		}
+	}
 >
-	<div class="oh-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
-		<div class="oh-head">
-			<span class="oh-ic"><Icon icon={faCode} size={17} /></span>
-			<div class="oh-tx">
-				<h2 class="oh-title" id="oh-title">{m.mail_headers_title()}</h2>
-				{#if subject}
-					<div class="oh-sub" title={subject}>{subject}</div>
-				{/if}
-			</div>
-			<Button variant="ghost" size="icon-sm" aria-label={m.common_close()} title={m.common_close()} onclick={onClose}>
-				<Icon icon={faXmark} size={16} />
-			</Button>
+	<Dialog.Content size="lg">
+		<Dialog.Header icon={faCode}>
+			<Dialog.Title>{m.mail_headers_title()}</Dialog.Title>
+			{#if subject}
+				<Dialog.Description class="dialog-sub" title={subject}>{subject}</Dialog.Description>
+			{/if}
+		</Dialog.Header>
+
+		<div class="dialog-body">
+			{#if view.status === 'loading'}
+				<div class="oh-note">{m.mail_headers_loading()}</div>
+			{:else if view.status === 'error'}
+				<div class="oh-note err" role="alert">{view.message}</div>
+			{:else}
+				<pre class="oh-pre">{view.headers}</pre>
+			{/if}
 		</div>
 
-		{#if view.status === 'loading'}
-			<div class="oh-note">{m.mail_headers_loading()}</div>
-		{:else if view.status === 'error'}
-			<div class="oh-note err" role="alert">{view.message}</div>
-		{:else}
-			<pre class="oh-pre">{view.headers}</pre>
-		{/if}
-
-		<div class="oh-actions">
+		<Dialog.Footer>
 			<Button variant="neutral" onclick={onClose}>{m.common_close()}</Button>
 			<Button variant="primary" disabled={view.status !== 'ready'} onclick={copy}>
 				{#if copied}
@@ -131,6 +114,6 @@
 					<Icon icon={faCopy} size={15} />{m.common_copy()}
 				{/if}
 			</Button>
-		</div>
-	</div>
-</div>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -9,6 +8,7 @@
 		faPaperPlane
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import * as Dialog from '$core/components/ui/dialog';
 
 	interface Recipient {
 		name: string;
@@ -38,81 +38,68 @@
 	}: Props = $props();
 
 	let what = $state(false);
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') onCancel();
-	}
-
-	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) onCancel();
-	}
 </script>
 
-<svelte:document onkeydown={handleKey} />
-
-<div
-	class="tofu-scrim"
-	role="alertdialog"
-	aria-modal="true"
-	use:trapFocus
-	aria-labelledby="tofu-title"
-	tabindex="-1"
-	onmousedown={scrimMouseDown}
+<Dialog.Root
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open) onCancel();
+		}
+	}
 >
-	<div class="tofu-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
-		<div class="tofu-crest"><Icon icon={faKey} size={22} /></div>
-		<div class="tofu-eyebrow">{m.mail_tofu_eyebrow()}</div>
-		<h2 class="tofu-title" id="tofu-title">
-			{m.mail_tofu_title({ name: recipient.name || recipient.email })}
-		</h2>
-		<p class="tofu-lede">
-			{#if shared}
-				{m.mail_tofu_lede_shared()}
-			{:else}
-				{m.mail_tofu_lede()}
-			{/if}
-		</p>
+	<Dialog.Content alert showCloseButton={false}>
+		<Dialog.Header icon={faKey} tone="warning" eyebrow={m.mail_tofu_eyebrow()}>
+			<Dialog.Title>{m.mail_tofu_title({ name: recipient.name || recipient.email })}</Dialog.Title>
+			<Dialog.Description>
+				{#if shared}
+					{m.mail_tofu_lede_shared()}
+				{:else}
+					{m.mail_tofu_lede()}
+				{/if}
+			</Dialog.Description>
+		</Dialog.Header>
 
-		<div class="tofu-fp">
-			{#if previousLastSeen}
-				<div class="tofu-fprow">
-					<span class="tofu-fk">{m.mail_tofu_last_seen()}</span>
-					<span class="tofu-fv">{previousLastSeen}</span>
+		<div class="dialog-body">
+			<div class="tofu-fp">
+				{#if previousLastSeen}
+					<div class="tofu-fprow">
+						<span class="tofu-fk">{m.mail_tofu_last_seen()}</span>
+						<span class="tofu-fv">{previousLastSeen}</span>
+					</div>
+				{/if}
+				{#if previousFirstSeen}
+					<div class="tofu-fprow">
+						<span class="tofu-fk">{m.mail_tofu_first_seen()}</span>
+						<span class="tofu-fv">{previousFirstSeen}</span>
+					</div>
+				{/if}
+				{#if previousFingerprint}
+					<div class="tofu-fprow">
+						<span class="tofu-fk">{m.mail_tofu_previously_pinned()}</span>
+						<span class="tofu-fv mono">{previousFingerprint}</span>
+					</div>
+				{/if}
+				<div class="tofu-fprow now">
+					<span class="tofu-fk">{m.mail_tofu_now()}</span>
+					<span class="tofu-fv mono">{currentFingerprint}</span>
 				</div>
-			{/if}
-			{#if previousFirstSeen}
-				<div class="tofu-fprow">
-					<span class="tofu-fk">{m.mail_tofu_first_seen()}</span>
-					<span class="tofu-fv">{previousFirstSeen}</span>
-				</div>
-			{/if}
-			{#if previousFingerprint}
-				<div class="tofu-fprow">
-					<span class="tofu-fk">{m.mail_tofu_previously_pinned()}</span>
-					<span class="tofu-fv mono">{previousFingerprint}</span>
-				</div>
-			{/if}
-			<div class="tofu-fprow now">
-				<span class="tofu-fk">{m.mail_tofu_now()}</span>
-				<span class="tofu-fv mono">{currentFingerprint}</span>
 			</div>
+
+			<button type="button" class="tofu-what" aria-expanded={what} onclick={() => (what = !what)}>
+				{m.mail_tofu_what_changed()}
+				{#if what}<Icon icon={faChevronUp} size={14} />{:else}<Icon icon={faChevronDown} size={14} />{/if}
+			</button>
+			{#if what}
+				<p class="dialog-hint tofu-explainer">{m.mail_tofu_explainer()}</p>
+			{/if}
 		</div>
 
-		<button type="button" class="tofu-what" class:open={what} onclick={() => (what = !what)}>
-			{m.mail_tofu_what_changed()}
-			{#if what}<Icon icon={faChevronUp} size={14} />{:else}<Icon icon={faChevronDown} size={14} />{/if}
-		</button>
-		{#if what}
-			<div class="tofu-explainer">
-				{m.mail_tofu_explainer()}
-			</div>
-		{/if}
-
-		<div class="tofu-actions">
+		<Dialog.Footer>
 			<Button variant="neutral" onclick={onCancel}>{m.common_cancel()}</Button>
 			<Button variant="caution" onclick={onSendAnyway}>
 				<Icon icon={faPaperPlane} size={15} />{m.mail_tofu_send_anyway()}
 			</Button>
-		</div>
-	</div>
-</div>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

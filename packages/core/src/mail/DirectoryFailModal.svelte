@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { trapFocus } from '$core/actions/trapFocus';
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -18,6 +17,7 @@
 		LABEL_CURVE25519_V6
 	} from '$core/directory/keyLabel';
 	import { Button } from '$core/components/ui/button';
+	import * as Dialog from '$core/components/ui/dialog';
 	import Rich from '$core/i18n/Rich.svelte';
 
 	interface Recipient {
@@ -164,88 +164,72 @@
 		);
 		return { plain: plainFor(inner), rows };
 	});
-
-	function handleKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') onCancel();
-	}
-
-	function scrimMouseDown(e: MouseEvent) {
-		if (e.target === e.currentTarget) onCancel();
-	}
 </script>
 
-<svelte:document onkeydown={handleKey} />
-
-<div
-	class="dv-scrim"
-	role="alertdialog"
-	aria-modal="true"
-	use:trapFocus
-	aria-labelledby="dv-title"
-	tabindex="-1"
-	onmousedown={scrimMouseDown}
+<Dialog.Root
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open) onCancel();
+		}
+	}
 >
-	<div class="dv-modal on-inverse" role="presentation" onmousedown={(e) => e.stopPropagation()}>
-		<div class="dv-crest">
-			<span class="dv-seal"><Icon icon={faShieldExclamation} size={26} /></span>
-			<span class="dv-eyebrow">{m.mail_dirfail_eyebrow()}</span>
-		</div>
+	<Dialog.Content alert size="wide" showCloseButton={false}>
+		<Dialog.Header icon={faShieldExclamation} tone="danger" eyebrow={m.mail_dirfail_eyebrow()}>
+			<Dialog.Title>{m.mail_dirfail_title()}</Dialog.Title>
+			<Dialog.Description>
+				<Rich text={m.mail_dirfail_lede({ name: recipient.name || recipient.email })} tags={{ b: bold }} />
+			</Dialog.Description>
+		</Dialog.Header>
 
-		<h2 class="dv-title" id="dv-title">
-			{m.mail_dirfail_title()}
-		</h2>
-		<p class="dv-lede">
-			<Rich text={m.mail_dirfail_lede({ name: recipient.name || recipient.email })} tags={{ b: bold }} />
-		</p>
-
-		<div class="dv-finding">
-			<div class="dv-finding-h">{m.mail_dirfail_what_we_found()}</div>
-			<p>{finding.plain}</p>
-		</div>
-
-		<div class="dv-assure">
-			<Icon icon={faLock} size={14} />
-			{m.mail_dirfail_assure()}
-		</div>
-
-		<div class="dv-fold">
-			<button type="button" class="dv-disclose" class:open={tech} onclick={() => (tech = !tech)}>
-				<Icon icon={faChevronRight} size={15} />{m.mail_dirfail_show_details()}
-			</button>
-			{#if tech}
-				<div class="dv-tech">
-					{#each finding.rows as [k, v], i (i)}
-						<div class="dv-techrow">
-							<span class="dv-tk">{k}</span>
-							<span class="dv-tv">{v}</span>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</div>
-
-		<button type="button" class="dv-what" class:open={what} onclick={() => (what = !what)}>
-			{m.mail_dirfail_what_is_this()}
-			{#if what}<Icon icon={faChevronUp} size={14} />{:else}<Icon icon={faChevronDown} size={14} />{/if}
-		</button>
-		{#if what}
-			<div class="dv-explainer">
-				<Rich text={m.mail_dirfail_explainer()} tags={{ i: italic }} />
+		<div class="dialog-body dv-body">
+			<div class="dv-finding">
+				<p class="dv-finding-h">{m.mail_dirfail_what_we_found()}</p>
+				<p>{finding.plain}</p>
 			</div>
-		{/if}
 
-		<div class="dv-actions">
+			<p class="dv-assure">
+				<Icon icon={faLock} size={14} />
+				{m.mail_dirfail_assure()}
+			</p>
+
+			<div>
+				<button type="button" class="dv-disclose rot" aria-expanded={tech} onclick={() => (tech = !tech)}>
+					<Icon icon={faChevronRight} size={14} />{m.mail_dirfail_show_details()}
+				</button>
+				{#if tech}
+					<dl class="dv-tech">
+						{#each finding.rows as [k, v], i (i)}
+							<div class="dv-techrow">
+								<dt>{k}</dt>
+								<dd>{v}</dd>
+							</div>
+						{/each}
+					</dl>
+				{/if}
+			</div>
+
+			<div>
+				<button type="button" class="dv-disclose" aria-expanded={what} onclick={() => (what = !what)}>
+					{#if what}<Icon icon={faChevronUp} size={14} />{:else}<Icon icon={faChevronDown} size={14} />{/if}{m.mail_dirfail_what_is_this()}
+				</button>
+				{#if what}
+					<p class="dialog-hint dv-explainer"><Rich text={m.mail_dirfail_explainer()} tags={{ i: italic }} /></p>
+				{/if}
+			</div>
+		</div>
+
+		<Dialog.Footer>
+			<Button variant="neutral" onclick={onCancel}>{m.mail_dirfail_back_to_draft()}</Button>
+			<Button variant="tonal" tooltip={m.mail_dirfail_retry_title()} onclick={onRetry}>
+				<Icon icon={faArrowsRotate} size={15} />{m.common_retry()}
+			</Button>
 			<Button variant="primary" onclick={onEditRecipient}>
 				<Icon icon={faPencil} size={15} />{m.mail_dirfail_edit_recipient()}
 			</Button>
-			<Button variant="ghost" onclick={onRetry} title={m.mail_dirfail_retry_title()}>
-				<Icon icon={faArrowsRotate} size={15} />{m.common_retry()}
-			</Button>
-			<div class="dv-spacer"></div>
-			<button type="button" class="linklike" onclick={onCancel}>{m.mail_dirfail_back_to_draft()}</button>
-		</div>
-	</div>
-</div>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>
 
 {#snippet bold(t: string)}<b>{t}</b>{/snippet}
 {#snippet italic(t: string)}<i>{t}</i>{/snippet}
