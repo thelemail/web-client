@@ -1,7 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { signatures } from '$core/stores/signatures.svelte';
-
-export const SIGNATURE_IMAGE_ATTR = 'data-thelemail-sig-image';
+import { SIGNATURE_IMAGE_ATTR } from './signatureAttrs';
 
 export const SignatureImage = Node.create({
 	name: 'signatureImage',

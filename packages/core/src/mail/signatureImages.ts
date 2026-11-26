@@ -7,7 +7,7 @@ import {
 } from '$core/api/signatures';
 import { signatures } from '$core/stores/signatures.svelte';
 import { sealSignatureImage } from './signatureCrypto';
-import { SIGNATURE_IMAGE_ATTR } from './editor/signatureImage';
+import { SIGNATURE_IMAGE_ATTR } from './editor/signatureAttrs';
 import { b64ToBytes } from '$core/keys/encode';
 import { m } from '$paraglide/messages.js';
 

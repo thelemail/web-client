@@ -1,6 +1,6 @@
 import { m } from '$paraglide/messages.js';
 import { serverNow } from '$core/api/serverclock';
-import { bytesToB64 } from '$core/crypto';
+import { bytesToB64 } from '$core/keys/encode';
 import { requireConfirmedOwnKey } from '$core/stores/accountKeys.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import type { ReadDelegationMode } from '$core/api/readDelegations';

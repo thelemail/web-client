@@ -1,5 +1,5 @@
 import { getMessage } from '$core/api/messages';
-import { bytesToB64 } from '$core/crypto';
+import { bytesToB64 } from '$core/keys/encode';
 import { platform } from '$platform';
 import type { MessageDetail } from '$core/api/types';
 import type { MirrorMessage } from '$core/platform/types';

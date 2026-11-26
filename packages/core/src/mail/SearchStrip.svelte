@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatNumber } from '$core/i18n/intl';
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -23,7 +24,7 @@
 	let { search }: Props = $props();
 
 	const uid = $props.id();
-	const fmt = (n: number) => new Intl.NumberFormat().format(n);
+	const fmt = (n: number) => formatNumber(n);
 	const SORTS: { id: Sort; label: () => string }[] = [
 		{ id: 'relevance', label: msg.mail_search_sort_relevance },
 		{ id: 'newest', label: msg.mail_search_sort_newest },

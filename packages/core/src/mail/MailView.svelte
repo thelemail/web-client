@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatNumber } from '$core/i18n/intl';
 	import ReaderSkeleton from './ReaderSkeleton.svelte';
 	import { trackOpenRow, withOpenRow, type StickyRow } from './stickyRow';
 	import LoadState from '$core/components/LoadState.svelte';
@@ -1263,7 +1264,7 @@
 	);
 
 	function formatCount(n: number): string {
-		return new Intl.NumberFormat().format(n);
+		return formatNumber(n);
 	}
 
 	function takePicker() {

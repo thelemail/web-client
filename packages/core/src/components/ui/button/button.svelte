@@ -2,6 +2,7 @@
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from "svelte/elements";
 	import { type VariantProps, tv } from "tailwind-variants";
 	import { cn, type WithElementRef } from "$core/utils.js";
+	import type { TipTether } from "$core/components/ui/tooltip/shared";
 
 	export const buttonVariants = tv({
 		base: "btn",
@@ -48,6 +49,7 @@
 			busyLabel?: string;
 			tooltip?: string;
 			tooltipSide?: "top" | "bottom" | "left" | "right";
+			tooltipTether?: TipTether;
 			shortcut?: string;
 		};
 </script>
@@ -69,6 +71,7 @@
 		onclick,
 		tooltip,
 		tooltipSide = "top",
+		tooltipTether,
 		shortcut,
 		children,
 		...restProps
@@ -134,7 +137,19 @@
 	{/if}
 {/snippet}
 
-{#if tooltip}
+{#if tooltip && tooltipTether}
+	<Tooltip.Trigger
+		{...passthrough}
+		tether={tooltipTether}
+		payload={{ label: tooltip, shortcut }}
+		aria-label={(passthrough["aria-label"] as string | undefined) ?? tooltip}
+		onclick={guard}
+	>
+		{#snippet child({ props })}
+			{@render element(props)}
+		{/snippet}
+	</Tooltip.Trigger>
+{:else if tooltip}
 	<Tooltip.Root
 		ignoreNonKeyboardFocus
 		disabled={expanded}

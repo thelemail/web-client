@@ -1,12 +1,10 @@
-import * as openpgp from 'openpgp';
 import { auth } from '$core/stores/auth.svelte';
 import { keystore } from '$core/keystore/keystore-client';
 import { accountKeys } from '$core/stores/accountKeys.svelte';
-import { bytesToB64, hexToBytes } from '$core/crypto';
 import { sendInternal } from '$core/api/messages';
 import { lookupDirectory } from '$core/directory/lookup';
 import { ApiCallError, type ErrorCode, type ExternalKeyTrust } from '$core/api/types';
-import { b64ToHex } from '$core/keys/encode';
+import { b64ToHex, bytesToB64, hexToBytes } from '$core/keys/encode';
 import type {
 	AttachmentDescriptor,
 	ForwardCopy,
@@ -16,10 +14,8 @@ import type {
 	SendEnvelope
 } from '$core/api/types';
 import type { Attachment as ComposeAttachment } from './attachmentUpload';
-import { verifyDirectoryLookup, DirectoryVerificationError } from '$core/directory/verify';
-import { verifyReadDelegate } from '$core/directory/read-delegation';
+import { DirectoryVerificationError } from '$core/directory/errors';
 import type { DirectoryVerificationCode } from '$core/directory/verify';
-import { DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX } from '$core/directory/signing-key';
 import { formatDay, formatFingerprintHex, formatVerifiedAt } from '$core/directory/format';
 import type { MessagePreview, MessagePreviewRecipient } from './preview';
 import type { ReplyParty } from './replyRecipients';
@@ -242,7 +238,8 @@ export type { KeyMaterial };
 
 async function fingerprintFromArmored(armoredPublicKey: string): Promise<string> {
 	try {
-		const k = await openpgp.readKey({ armoredKey: armoredPublicKey });
+		const { readKey } = await import('openpgp');
+		const k = await readKey({ armoredKey: armoredPublicKey });
 		const fp = k.getFingerprint();
 		const bytes = typeof fp === 'string' ? hexToBytes(fp) : new Uint8Array(fp as ArrayLike<number>);
 		return bytesToB64(bytes);
@@ -279,7 +276,8 @@ export interface ResolveOptions {
 
 function directoryPayload(
 	e: DirectoryVerificationError,
-	requestedAddress: string
+	requestedAddress: string,
+	signerFingerprintHex: string
 ): SendErrorPayload {
 	const d = e.details;
 	const fmt = (hex?: string) => (hex ? formatFingerprintHex(hex) : undefined);
@@ -291,7 +289,7 @@ function directoryPayload(
 		signedKeyFingerprint: fmt(d.signedKeyFingerprint),
 		servedKeyFingerprint: fmt(d.servedKeyFingerprint),
 		expectedSignerFingerprint: fmt(
-			d.expectedSignerFingerprint ?? DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX
+			d.expectedSignerFingerprint ?? signerFingerprintHex
 		),
 		actualSignerFingerprint: fmt(d.actualSignerFingerprint),
 		previousFingerprint: fmt(d.previousFingerprint),
@@ -318,12 +316,12 @@ export function externalKeyChangePayload(address: string, trust: ExternalKeyTrus
 	};
 }
 
-export function unverifiedRecipientPayload(requestedAddress: string): SendErrorPayload {
+export function unverifiedRecipientPayload(requestedAddress: string, signerFingerprintHex: string): SendErrorPayload {
 	return {
 		kind: 'directory',
 		address: requestedAddress,
 		requestedAddress,
-		expectedSignerFingerprint: formatFingerprintHex(DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX)
+		expectedSignerFingerprint: formatFingerprintHex(signerFingerprintHex)
 	};
 }
 
@@ -361,7 +359,9 @@ async function verifiedReadDelegates(
 	address: string
 ): Promise<VerifiedReadDelegate[]> {
 	const out: VerifiedReadDelegate[] = [];
-	for (const d of delegates ?? []) {
+	if (!delegates?.length) return out;
+	const { verifyReadDelegate } = await import('$core/directory/read-delegation');
+	for (const d of delegates) {
 		try {
 			await verifyReadDelegate(d, address);
 			out.push({ id: d.id, publicKeyArmored: d.publicKeyArmored });
@@ -387,6 +387,10 @@ export async function resolveRecipient(
 		throw sendErrorFromApi(e, m.send_error_recipient_lookup_failed());
 	}
 
+	const [{ verifyDirectoryLookup }, { DIRECTORY_SIGNING_KEY_FINGERPRINT_HEX: signer }] = await Promise.all([
+		import('$core/directory/verify'),
+		import('$core/directory/signing-key')
+	]);
 	let verified;
 	try {
 		verified = await verifyDirectoryLookup(lookup, normalised, {
@@ -408,14 +412,14 @@ export async function resolveRecipient(
 					? m.send_error_recipient_key_pending({ address: emailAddress })
 					: m.send_error_directory_failed({ address: emailAddress, code: e.code }),
 				e.code,
-				directoryPayload(e, normalised)
+				directoryPayload(e, normalised, signer)
 			);
 		}
 		throw new SendError(
 			'directory_verification_failed',
 			e instanceof Error ? e.message : 'verify',
 			undefined,
-			unverifiedRecipientPayload(normalised)
+			unverifiedRecipientPayload(normalised, signer)
 		);
 	}
 

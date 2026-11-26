@@ -22,7 +22,14 @@ const ROUTES = [
 
 const FORBIDDEN = [
 	/packages\/core\/src\/search\/(?!lazy\.ts$|runtime\/records\.ts$)/,
-	/node_modules\/.*@thelemail\/sqlite-wasm\//
+	/node_modules\/.*@thelemail\/sqlite-wasm\//,
+	/node_modules\/.*@tiptap\//,
+	/node_modules\/.*prosemirror-/,
+	/node_modules\/.*linkifyjs\//,
+	/node_modules\/.*postal-mime\/src\/(?!decode-strings\.js$)/,
+	/node_modules\/.*dompurify\//,
+	/node_modules\/.*openpgp\//,
+	/node_modules\/.*ical\.js\//
 ];
 
 export function initialClosure(chunks: readonly ChunkNode[]): Closure {

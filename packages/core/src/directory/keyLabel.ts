@@ -1,8 +1,6 @@
 import * as openpgp from 'openpgp';
+import { LABEL_CURVE25519_LEGACY, LABEL_CURVE25519_V4, LABEL_CURVE25519_V6 } from './labels';
 
-export const LABEL_CURVE25519_V6 = 'openpgp-curve25519-v6';
-export const LABEL_CURVE25519_V4 = 'openpgp-curve25519-v4';
-export const LABEL_CURVE25519_LEGACY = 'openpgp-curve25519-legacy';
 
 export const MISLABELLED_V4_CUTOFF = Date.parse('2026-09-21T00:00:00Z');
 

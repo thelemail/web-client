@@ -1,6 +1,5 @@
 import * as openpgp from 'openpgp';
-import { b64ToBytes } from '$core/crypto';
-import { b64ToHex } from '$core/keys/encode';
+import { b64ToHex, b64ToBytes } from '$core/keys/encode';
 import { canonicalise, type BusyStatement } from './busycanon';
 import { signedWhileCurrent } from '$core/directory/retired';
 import type { CalendarAuthority } from '$core/keystore/productkeys/calendar';

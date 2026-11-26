@@ -89,6 +89,13 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ['@thelemail/sqlite-wasm']
 	},
+	build: {
+		rolldownOptions: {
+			treeshake: {
+				moduleSideEffects: (id) => (/[\\/]node_modules[\\/]postal-mime[\\/]/.test(id) ? false : undefined)
+			}
+		}
+	},
 	resolve: {
 		alias: [
 			{ find: /^core-js\/stable$/, replacement: '/src/lib/empty-module.ts' },

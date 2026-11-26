@@ -1,5 +1,5 @@
 import type { Editor } from '@tiptap/core';
-import { SIGNATURE_ATTR } from './editor/signatureBlock';
+import { SIGNATURE_ATTR } from './editor/signatureAttrs';
 
 export interface SignatureRange {
 	from: number;

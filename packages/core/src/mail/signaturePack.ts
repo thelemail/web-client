@@ -1,6 +1,6 @@
 import { signatures } from '$core/stores/signatures.svelte';
 import { unwrapSignatureSentinel } from './signatureRegion';
-import { SIGNATURE_IMAGE_ATTR } from './editor/signatureImage';
+import { SIGNATURE_IMAGE_ATTR } from './editor/signatureAttrs';
 
 export interface RelatedPart {
 	contentId: string;

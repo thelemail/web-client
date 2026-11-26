@@ -7,7 +7,7 @@ import { locale } from './locale.svelte';
 import { parseAddressList } from './address';
 import { m } from '$paraglide/messages.js';
 import { i18n } from '$core/i18n/locale.svelte';
-import { dateParts, intlLocale } from '$core/i18n/intl';
+import { dateFormat, dateParts, intlLocale } from '$core/i18n/intl';
 import { customFolderRoute as customRoute } from './folderRoute';
 import { isEmail } from '$core/email';
 
@@ -307,7 +307,7 @@ export function bucketFromEpoch(epoch: number, nowMs: number = Date.now()): DayB
 
 export function formatClock(date: Date): string {
 	const h12 = locale.timeFormat === '12';
-	return new Intl.DateTimeFormat(intlLocale(h12 ? 'en-US' : 'en-GB'), {
+	return dateFormat(intlLocale(h12 ? 'en-US' : 'en-GB'), {
 		hour: h12 ? 'numeric' : '2-digit',
 		minute: '2-digit',
 		hour12: h12,
@@ -316,7 +316,7 @@ export function formatClock(date: Date): string {
 }
 
 export function formatWeekday(date: Date, long = false): string {
-	return new Intl.DateTimeFormat(intlLocale('en-GB'), {
+	return dateFormat(intlLocale('en-GB'), {
 		weekday: long ? 'long' : 'short',
 		timeZone: locale.timeZone
 	}).format(date);
@@ -337,17 +337,17 @@ export function formatDateShort(date: Date): string {
 	switch (locale.dateFormat) {
 		case 'mdy':
 			if (i18n.locale !== 'en') return monthFirst(date, false);
-			return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', timeZone: z }).format(
+			return dateFormat('en-US', { month: 'short', day: '2-digit', timeZone: z }).format(
 				date
 			);
 		case 'iso':
-			return new Intl.DateTimeFormat('en-CA', {
+			return dateFormat('en-CA', {
 				month: '2-digit',
 				day: '2-digit',
 				timeZone: z
 			}).format(date);
 		default:
-			return new Intl.DateTimeFormat(intlLocale('en-GB'), {
+			return dateFormat(intlLocale('en-GB'), {
 				day: '2-digit',
 				month: 'short',
 				timeZone: z
@@ -360,21 +360,21 @@ export function formatDateLong(date: Date, pattern = locale.dateFormat): string 
 	switch (pattern) {
 		case 'mdy':
 			if (i18n.locale !== 'en') return monthFirst(date, true);
-			return new Intl.DateTimeFormat('en-US', {
+			return dateFormat('en-US', {
 				month: 'short',
 				day: 'numeric',
 				year: 'numeric',
 				timeZone: z
 			}).format(date);
 		case 'iso':
-			return new Intl.DateTimeFormat('en-CA', {
+			return dateFormat('en-CA', {
 				year: 'numeric',
 				month: '2-digit',
 				day: '2-digit',
 				timeZone: z
 			}).format(date);
 		default:
-			return new Intl.DateTimeFormat(intlLocale('en-GB'), {
+			return dateFormat(intlLocale('en-GB'), {
 				day: 'numeric',
 				month: 'short',
 				year: 'numeric',

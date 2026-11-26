@@ -1,4 +1,4 @@
-import { bytesToB64 } from '$core/crypto';
+import { bytesToB64 } from '$core/keys/encode';
 import { keystore } from '$core/keystore/keystore-client';
 import { m } from '$paraglide/messages.js';
 import type { BusyStatement } from './busycanon';

@@ -1,5 +1,5 @@
 import { apiBlobPut } from '$core/api/client';
-import { bytesToB64 } from '$core/crypto';
+import { bytesToB64 } from '$core/keys/encode';
 import { issueAttachmentUploadUrls } from '$core/api/messages';
 import { build as buildAttFrame } from '$core/mail/attframe';
 import {

@@ -14,7 +14,7 @@ import {
 	openSignature,
 	openSignatureImage,
 	sealSignature,
-	legacyDoc,
+	emptyDoc,
 	type SealTarget,
 	type SignatureDoc
 } from '$core/mail/signatureCrypto';
@@ -155,7 +155,7 @@ class SignaturesStore {
 			accountId: rec.accountId,
 			addressId: rec.addressId,
 			addressEmail: addresses.getById(rec.addressId)?.email ?? '',
-			doc: legacyDoc(''),
+			doc: emptyDoc(),
 			bodyHtml: '',
 			enabled: rec.enabled,
 			appendOnReply: rec.appendOnReply,

@@ -1,6 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-
-export const SIGNATURE_ATTR = 'data-thelemail-signature';
+import { SIGNATURE_ATTR } from './signatureAttrs';
 
 export const SignatureBlock = Node.create({
 	name: 'signatureBlock',

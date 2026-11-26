@@ -1618,6 +1618,7 @@
 	"mail_sidebar_storage": "ARMAZENAMENTO",
 	"mail_editor_placeholder": "Escreva a sua mensagem…",
 	"mail_editor_aria": "Corpo da mensagem",
+	"mail_editor_load_failed": "Não foi possível carregar o editor.",
 	"mail_thread_you": "Eu",
 	"mail_thread_cc": "Cc: {list}",
 	"mail_thread_to": "Para: {list}",

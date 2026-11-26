@@ -20,7 +20,7 @@ vi.mock('$core/api/accounts', () => ({ lookupAccount: vi.fn() }));
 vi.mock('$core/api/calendars', () => ({ lookupCalendarIdentity: h.lookup }));
 
 import { ApiCallError } from '$core/api/types';
-import { bytesToHex } from '$core/crypto';
+import { bytesToHex } from '$core/keys/encode';
 import { signStatement, toBase64 } from '$core/directory/fixtures/signedStatement';
 import { keyId, sha256 } from '$core/keystore/productkeys/encoding';
 import { transcriptHash } from '$core/keystore/productkeys/envelope';

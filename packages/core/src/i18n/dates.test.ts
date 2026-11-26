@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { withLocale } from './locale.svelte';
 import { weekdayNames } from './intl';
-import { formatDateLong, formatDateShort, formatWeekday } from '$core/mail/data';
+import { formatClock, formatDateLong, formatDateShort, formatWeekday } from '$core/mail/data';
+import { locale } from '$core/mail/locale.svelte';
 import { dateLabel, longWhen, monthName, monthYearLabel, rangeTitle } from '$core/calendar/format';
 import type { Occurrence } from '$core/calendar/recur';
 
@@ -57,5 +58,35 @@ describe('other languages', () => {
 			expect(longWhen(allDay, undefined, true)).toBe('Thu 5 March · all day');
 			expect(longWhen(allDay)).not.toBe('Thu 5 March · all day');
 		});
+	});
+});
+
+describe('reused formats', () => {
+	it('follow a change of language and back', () => {
+		const en = formatDateShort(date);
+		const de = withLocale('de', () => formatDateShort(date));
+		expect(de).not.toBe(en);
+		expect(formatDateShort(date)).toBe(en);
+		expect(withLocale('de', () => formatDateShort(date))).toBe(de);
+	});
+
+	it('follow a change of clock style and back', () => {
+		const at = new Date(Date.UTC(2026, 2, 5, 15, 4));
+		const zone = locale.timeZone;
+		const clock = (h12: boolean) =>
+			new Intl.DateTimeFormat(h12 ? 'en-US' : 'en-GB', {
+				hour: h12 ? 'numeric' : '2-digit',
+				minute: '2-digit',
+				hour12: h12,
+				timeZone: zone
+			}).format(at);
+		try {
+			locale.set({ dateFormat: 'dmy', timeFormat: '12' });
+			expect(formatClock(at)).toBe(clock(true));
+			locale.set({ dateFormat: 'dmy', timeFormat: '24' });
+			expect(formatClock(at)).toBe(clock(false));
+		} finally {
+			locale.reset();
+		}
 	});
 });

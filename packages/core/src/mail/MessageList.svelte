@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { formatNumber } from '$core/i18n/intl';
 	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import * as Tooltip from '$core/components/ui/tooltip';
+	import { createTipTether } from '$core/components/ui/tooltip/shared';
 	import { Chip } from '$core/components/ui/chip';
 	import { EmptyState } from '$core/components/ui/empty-state';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
@@ -168,6 +171,7 @@
 		showScope = false
 	}: Props = $props();
 
+	const rowTips = createTipTether();
 	const viewName = $derived(folderLabel ?? '');
 	const searchActive = $derived(search !== null);
 	let SearchStrip = $state.raw<SearchStripComponent | null>(loadedSearchStrip());
@@ -177,7 +181,7 @@
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
-	const fmt = (n: number) => new Intl.NumberFormat().format(n);
+	const fmt = (n: number) => formatNumber(n);
 	const activeFilters = $derived(countActiveFilters(filters));
 
 	const searchEmpty = $derived.by<{ title: string; detail: string; retry: boolean; finish?: boolean } | null>(() => {
@@ -242,11 +246,46 @@
 		if (isDateSort(sort)) {
 			const nowMs = Date.now();
 			const order = sort === 'oldest' ? GROUP_ORDER.slice().reverse() : GROUP_ORDER;
-			return order
-				.map((g) => ({ g, items: list.filter((m) => bucketFromEpoch(m.epoch, nowMs) === g) }))
-				.filter((x) => x.items.length);
+			const buckets = new Map(order.map((g) => [g, [] as typeof list]));
+			for (const m of list) buckets.get(bucketFromEpoch(m.epoch, nowMs))?.push(m);
+			return order.map((g) => ({ g, items: buckets.get(g)! })).filter((x) => x.items.length);
 		}
 		return [{ g: null as string | null, items: list }];
+	});
+
+	const FIRST_ROWS = 24;
+	const MORE_ROWS = 40;
+	let rowCapState = $state({ view: '', count: FIRST_ROWS });
+	const rowCap = $derived.by(() => {
+		const base = rowCapState.view === viewKey ? rowCapState.count : FIRST_ROWS;
+		const open = activeId ? list.findIndex((m) => m.id === activeId) + 1 : 0;
+		return Math.max(base, open);
+	});
+	const allRowsShown = $derived(rowCap >= list.length);
+	const shownGroups = $derived.by(() => {
+		if (allRowsShown) return groups;
+		let left = rowCap;
+		const out: typeof groups = [];
+		for (const group of groups) {
+			if (left <= 0) break;
+			const items = group.items.length > left ? group.items.slice(0, left) : group.items;
+			out.push({ g: group.g, items });
+			left -= items.length;
+		}
+		return out;
+	});
+
+	$effect(() => {
+		if (allRowsShown) return;
+		const next = { view: viewKey, count: rowCap + MORE_ROWS };
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const frame = requestAnimationFrame(() => {
+			timer = setTimeout(() => (rowCapState = next), 0);
+		});
+		return () => {
+			cancelAnimationFrame(frame);
+			clearTimeout(timer);
+		};
 	});
 
 	let sortOpen = $state(false);
@@ -297,7 +336,7 @@
 					if (e.isIntersecting && !exhausted && !loadingMore) onLoadMore?.();
 				}
 			},
-			{ root: scrollEl, rootMargin: '320px 0px 0px 0px' }
+			{ root: scrollEl, rootMargin: '0px 0px 320px 0px' }
 		);
 		observer.observe(sentinelEl);
 		return () => observer?.disconnect();
@@ -329,7 +368,16 @@
 	}
 
 	function rowEl(id: string): HTMLElement | undefined {
-		return rowEls().find((r) => r.dataset.id === id);
+		return scrollEl?.querySelector<HTMLElement>(`.mrow[data-id="${CSS.escape(id)}"]`) ?? undefined;
+	}
+
+	function revealRow(id: string) {
+		const row = rowEl(id);
+		if (!row || !scrollEl) return;
+		const box = row.getBoundingClientRect();
+		const view = scrollEl.getBoundingClientRect();
+		if (box.top >= view.top && box.bottom <= view.bottom) return;
+		row.scrollIntoView?.({ block: 'nearest' });
 	}
 
 	function captureAnchor(): Anchor | null {
@@ -383,10 +431,15 @@
 
 	$effect(() => {
 		const view = viewKey;
+		const complete = allRowsShown;
 		void rowIds;
 		untrack(() => {
 			if (!scrollEl) return;
 			if (pendingRestore && pendingRestore.view === view && list.length > 0) {
+				if (!complete) {
+					rowCapState = { view, count: list.length };
+					return;
+				}
 				scrollEl.scrollTop = pendingRestore.top;
 				lastTop = pendingRestore.top;
 				pendingRestore = null;
@@ -404,6 +457,10 @@
 
 	export function restoreScroll(position: { view: string; top: number }) {
 		pendingRestore = position;
+		if (!allRowsShown && position.view === viewKey) {
+			rowCapState = { view: viewKey, count: list.length };
+			return;
+		}
 		if (scrollEl && position.view === viewKey && list.length > 0) {
 			scrollEl.scrollTop = position.top;
 			lastTop = position.top;
@@ -427,7 +484,7 @@
 			const prev = lastActive;
 			lastActive = id;
 			if (id) {
-				rowEl(id)?.scrollIntoView?.({ block: 'nearest' });
+				revealRow(id);
 				return;
 			}
 			if (!prev || !scrollEl) return;
@@ -835,7 +892,7 @@
 				{/snippet}
 			</EmptyState>
 		{:else}
-			{#each groups as { g, items } (g ?? 'all')}
+			{#each shownGroups as { g, items } (g ?? 'all')}
 				{#if g}
 					<div class="daygrp"><span class="l">{dayBucketLabel(g)}</span><span class="rule"></span></div>
 				{/if}
@@ -859,11 +916,13 @@
 						{onDelete}
 						{onSpam}
 						{onToggleRead}
+						tips={rowTips}
 					/>
 				{/each}
 			{/each}
+			<Tooltip.Shared tether={rowTips} />
 		{/if}
-		{#if !searchActive || list.length > 0}
+		{#if (!searchActive || list.length > 0) && allRowsShown}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>

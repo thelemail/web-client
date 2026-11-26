@@ -14,9 +14,17 @@ export const LOCALE_DEFAULTS: LocaleSettings = {
 class LocaleStore {
 	dateFormat = $state<DateFormat>(LOCALE_DEFAULTS.dateFormat);
 	timeFormat = $state<TimeFormat>(LOCALE_DEFAULTS.timeFormat);
+	#zone: string | null = null;
+
+	constructor() {
+		if (typeof document !== 'undefined') {
+			document.addEventListener('visibilitychange', () => (this.#zone = null));
+		}
+	}
 
 	get timeZone(): string {
-		return Intl.DateTimeFormat().resolvedOptions().timeZone;
+		this.#zone ??= Intl.DateTimeFormat().resolvedOptions().timeZone;
+		return this.#zone;
 	}
 
 	get value(): LocaleSettings {

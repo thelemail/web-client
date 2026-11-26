@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { onDestroy, untrack } from 'svelte';
-	import { Editor } from '@tiptap/core';
-	import StarterKit from '@tiptap/starter-kit';
-	import Underline from '@tiptap/extension-underline';
-	import Link from '@tiptap/extension-link';
-	import Placeholder from '@tiptap/extension-placeholder';
-	import { SignatureBlock } from './signatureBlock';
-	import { SignatureImage } from './signatureImage';
+	import type { Editor } from '@tiptap/core';
+	import { Button } from '$core/components/ui/button';
+	import { loadEditorKit, loadedEditorKit, type EditorKit } from './loadKit';
 
 	interface Props {
 		html?: string;
@@ -32,51 +28,34 @@
 	}: Props = $props();
 
 	let mountEl: HTMLDivElement | undefined = $state();
+	let kit = $state.raw<EditorKit | null>(loadedEditorKit());
+	let failed = $state(false);
 	let suppressWrite = false;
 
-	$effect(() => {
-		if (!mountEl) return;
-		const initialHtml = untrack(() => html);
-		const initialEditable = !untrack(() => disabled);
-		const initialPlaceholder = untrack(() => placeholder);
-		const initialClass = untrack(() => cls);
-		const initialAria = untrack(() => ariaLabel);
-		const initialAutofocus = untrack(() => autofocus);
+	function fetchKit() {
+		failed = false;
+		loadEditorKit().then(
+			(k) => (kit = k),
+			() => (failed = true)
+		);
+	}
 
-		const e = new Editor({
+	if (!loadedEditorKit()) fetchKit();
+
+	$effect(() => {
+		if (!mountEl || !kit) return;
+		const setup = untrack(() => ({
+			html: html || '',
+			editable: !disabled,
+			placeholder,
+			className: cls,
+			ariaLabel,
+			autofocus
+		}));
+		const e = kit.createEditor({
+			...setup,
 			element: mountEl,
-			autofocus: initialAutofocus ? 'start' : false,
-			extensions: [
-				StarterKit.configure({
-					heading: false,
-					codeBlock: false,
-					horizontalRule: false,
-					strike: false,
-					blockquote: { HTMLAttributes: { class: 'eb-quote' } }
-				}),
-				Underline,
-				Link.configure({
-					openOnClick: false,
-					autolink: true,
-					HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' }
-				}),
-				Placeholder.configure({ placeholder: initialPlaceholder }),
-				SignatureBlock,
-				SignatureImage
-			],
-			content: initialHtml || '',
-			editable: initialEditable,
-			editorProps: {
-				attributes: {
-					class: initialClass,
-					role: 'textbox',
-					'aria-label': initialAria,
-					'aria-multiline': 'true',
-					tabindex: '0',
-					spellcheck: 'true'
-				}
-			},
-			onUpdate({ editor: ed }) {
+			onUpdate(ed) {
 				suppressWrite = true;
 				html = ed.getHTML();
 				text = ed.getText();
@@ -117,7 +96,14 @@
 	class="rich-editor"
 	class:empty={isEmpty}
 	data-placeholder={placeholder}
-></div>
+>
+	{#if failed}
+		<div class="rich-editor-failed" role="alert">
+			<span>{m.mail_editor_load_failed()}</span>
+			<Button variant="neutral" size="sm" onclick={fetchKit}>{m.common_retry()}</Button>
+		</div>
+	{/if}
+</div>
 
 <style>
 	.rich-editor {
@@ -125,6 +111,14 @@
 		min-height: 170px;
 		display: flex;
 		flex-direction: column;
+	}
+	.rich-editor-failed {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 16px 17px;
+		font-size: 14px;
+		color: var(--fg-muted);
 	}
 	.rich-editor :global(.cbody) {
 		flex: 1 1 auto;
