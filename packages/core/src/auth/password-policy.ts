@@ -29,3 +29,12 @@ export function passwordReqs(p: string): PasswordReq[] {
 		{ k: 'common', label: m.auth_password_req_not_common(), met: p !== '' && !isCommonPassword(p) }
 	];
 }
+
+export function passwordStrength(p: string): 0 | 1 | 2 | 3 | 4 {
+	if (!p) return 0;
+	const length = passwordLength(p);
+	if (length < PASSWORD_MIN_LENGTH) return length < 8 ? 1 : 2;
+	if (isCommonPassword(p)) return 1;
+	const classes = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^a-zA-Z0-9]/].filter((r) => r.test(p)).length;
+	return length >= 16 || classes >= 3 ? 4 : 3;
+}
