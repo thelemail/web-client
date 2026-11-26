@@ -434,7 +434,8 @@ describe('login page identifier step', () => {
 		expect(document.querySelector('input[type="password"]')).toBeNull();
 		expect(document.querySelector('#login-identifier')).toBeNull();
 		expect(document.querySelector('#login-email')).toBeNull();
-		expect(document.body.textContent).toContain(m.handoff_opening());
+		expect(document.querySelector('h1')?.textContent).toBe(m.handoff_to_auth_title());
+		expect(document.body.textContent).toContain(m.handoff_redirecting());
 		expect(login.performLogin).not.toHaveBeenCalled();
 	});
 

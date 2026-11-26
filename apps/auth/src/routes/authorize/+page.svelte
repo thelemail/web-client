@@ -2,7 +2,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
-	import Status from '$core/auth/form/Status.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
+	import { productHost } from '$core/products';
 	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 	import { ApiCallError } from '$core/api/types';
 	import { ensureConverted } from '$core/auth/product-keys';
@@ -100,7 +101,12 @@
 				</div>
 			</div>
 		{:else}
-			<div class="af-wait"><Status tone="busy">{m.handoff_auth_returning()}</Status></div>
+			<HandoffCard
+				title={m.handoff_return_title()}
+				lede={m.handoff_return_lede({ host: productHost('app') })}
+				to={productHost('app')}
+				secure="from"
+			/>
 		{/if}
 	</div>
 </AuthShell>

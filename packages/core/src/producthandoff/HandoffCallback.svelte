@@ -2,7 +2,8 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
-	import Status from '$core/auth/form/Status.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
+	import { productHost } from '$core/products';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { localForkPath } from '$core/fork';
@@ -114,7 +115,7 @@
 				<Button variant="secondary" size="lg" block onclick={closeTab}>{m.handoff_tab_close()}</Button>
 			</div>
 		{:else}
-			<div class="af-wait"><Status tone="busy">{m.handoff_opening()}</Status></div>
+			<HandoffCard title={m.handoff_finish_title()} lede={m.handoff_finish_lede()} from={productHost('auth')} to={location.host} secure="from" />
 		{/if}
 	</div>
 </AuthShell>

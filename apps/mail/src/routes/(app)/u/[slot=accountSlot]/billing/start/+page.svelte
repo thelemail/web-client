@@ -2,19 +2,29 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Status from '$core/auth/form/Status.svelte';
+	import AuthShell from '$core/auth/AuthShell.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
 	import { orderFromQuery, startCheckout } from '$core/auth/register-checkout';
 	import { m } from '$paraglide/messages.js';
 
 	let { data } = $props();
 
-	onMount(() => {
+	function go() {
 		const order = orderFromQuery(page.url.searchParams);
 		if (order) void startCheckout(data.slot, order);
 		else void goto(`/u/${data.slot}/billing/choose`, { replace: true });
-	});
+	}
+
+	onMount(go);
 </script>
 
-<div class="af-wait" aria-busy="true">
-	<Status tone="busy">{m.common_loading()}</Status>
-</div>
+<AuthShell strip={false}>
+	<div class="card">
+		<HandoffCard
+			title={m.handoff_checkout_title()}
+			lede={m.handoff_checkout_lede()}
+			to={m.handoff_checkout_host()}
+			retry={go}
+		/>
+	</div>
+</AuthShell>

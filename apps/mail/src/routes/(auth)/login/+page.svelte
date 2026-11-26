@@ -13,6 +13,8 @@
 	import { auth } from '$core/stores/session.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import Status from '$core/auth/form/Status.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
+	import { productHost } from '$core/products';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
@@ -159,7 +161,10 @@
 		<Button variant="primary" size="lg" block href={page.url.pathname + page.url.search}>{m.handoff_restart()}</Button>
 	</div>
 {:else}
-	<div class="af-wait" aria-busy="true">
-		<Status tone="busy">{m.handoff_opening()}</Status>
-	</div>
+	<HandoffCard
+		title={m.handoff_to_auth_title()}
+		lede={m.handoff_to_auth_lede({ host: productHost('auth') })}
+		to={productHost('auth')}
+		retry={() => location.reload()}
+	/>
 {/if}

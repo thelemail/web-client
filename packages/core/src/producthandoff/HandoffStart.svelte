@@ -2,11 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
-	import Status from '$core/auth/form/Status.svelte';
+	import HandoffCard from '$core/auth/form/HandoffCard.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { signInAtAuth, unlockAtAuth } from '$core/custody/unlock';
 	import { localForkPath } from '$core/fork';
-	import { appOrigin } from '$core/products';
+	import { appOrigin, productHost } from '$core/products';
 	import { accounts } from '$core/stores/accounts.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { startFor } from './fallback';
@@ -15,6 +15,7 @@
 	const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
 	history.replaceState(null, '', window.location.pathname);
 	let error = $state<string | null>(null);
+	const registering = params.get('intent') === 'register';
 
 	async function inTab(accountId: string | null, route: string): Promise<never> {
 		window.opener = null;
@@ -53,7 +54,14 @@
 				<Button variant="primary" size="lg" block href={appOrigin()}>{m.cal_fork_back()}</Button>
 			</div>
 		{:else}
-			<div class="af-wait"><Status tone="busy">{m.handoff_opening()}</Status></div>
+			<HandoffCard
+				title={registering ? m.handoff_to_auth_register_title() : m.handoff_start_title()}
+				lede={registering
+					? m.handoff_to_auth_register_lede({ host: productHost('auth') })
+					: m.handoff_start_lede({ host: productHost('auth') })}
+				to={productHost('auth')}
+				retry={() => location.assign(appOrigin())}
+			/>
 		{/if}
 	</div>
 </AuthShell>
