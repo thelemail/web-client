@@ -13,7 +13,7 @@
 <Card icon={faShieldCheck} title={m.settings_security_account_origin_title()}>
 	<Row t={m.settings_security_account_origin_title()} d={m.settings_security_account_origin_desc()}>
 		{#if href}
-			<Button variant="secondary" size="sm" {href}>
+			<Button variant="neutral" size="sm" {href}>
 				{m.settings_security_account_origin_cta()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 			</Button>
 		{/if}

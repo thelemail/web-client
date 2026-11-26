@@ -121,7 +121,7 @@
 					{#if !isCurrent && rev.item && !rev.deleted}
 						<div class="qactions">
 							<Button
-								variant="secondary"
+								variant="neutral"
 								size="sm"
 								disabled={restoring !== null}
 								onclick={() => restore(rev)}
@@ -141,6 +141,6 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.common_close()}</Button>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.common_close()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

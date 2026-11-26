@@ -242,7 +242,7 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" onclick={() => (step = 1)}>
@@ -292,7 +292,7 @@
 			{/if}
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" disabled={busy} onclick={pay}>

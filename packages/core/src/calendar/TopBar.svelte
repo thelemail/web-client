@@ -73,7 +73,7 @@
 	</button>
 
 	{#if cal.isDated}
-		<Button variant="secondary" size="sm" onclick={() => cal.goToday()}>
+		<Button variant="neutral" size="sm" onclick={() => cal.goToday()}>
 			<Icon icon={faCalendarClock} size={15} />{m.cal_topbar_today()}
 		</Button>
 		<div class="nav-arrows">

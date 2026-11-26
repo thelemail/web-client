@@ -23,7 +23,7 @@
 	<div class="setrow set-loaderr" role="alert">
 		<Icon icon={faCircleExclamation} size={16} />
 		<p>{m.settings_load_failed()}</p>
-		<Button variant="secondary" size="sm" onclick={settingsDraft.retryLoad}>
+		<Button variant="neutral" size="sm" onclick={settingsDraft.retryLoad}>
 			<Icon icon={faArrowsRotate} />{m.common_retry()}
 		</Button>
 	</div>

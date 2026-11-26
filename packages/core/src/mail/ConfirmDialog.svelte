@@ -102,7 +102,7 @@
 		{/if}
 
 		<div class="cfd-actions">
-			<Button variant="secondary" disabled={busy} onclick={cancel}>
+			<Button variant="neutral" disabled={busy} onclick={cancel}>
 				{cancelLabel ?? m.common_cancel()}
 			</Button>
 			<Button

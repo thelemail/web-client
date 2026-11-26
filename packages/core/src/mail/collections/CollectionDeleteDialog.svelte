@@ -91,7 +91,7 @@
 						: m.mail_collection_delete_blocked_label({ count: children.length })}
 				</p>
 				<div class="cd-lift">
-					<Button variant="secondary" size="sm" disabled={busy} onclick={() => void liftChildren()}>
+					<Button variant="neutral" size="sm" disabled={busy} onclick={() => void liftChildren()}>
 						{parent
 							? m.mail_collection_delete_lift_into({ path: parent.path })
 							: m.mail_collection_delete_lift_top()}

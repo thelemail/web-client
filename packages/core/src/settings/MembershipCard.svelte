@@ -281,7 +281,7 @@
 			<span class="mbr-note">{personalNote()}</span>
 		{:else if mayInvite && hasRoom}
 			<Button
-				variant="secondary"
+				variant="tonal"
 				size="sm"
 				onclick={() => launch(mode === 'existing-account' ? 'familyInvite' : 'member')}
 			>
@@ -303,7 +303,7 @@
 				{/if}
 			{/if}
 		{:else if domainGated && canManage}
-			<Button variant="secondary" size="sm" disabled>
+			<Button variant="tonal" size="sm" disabled>
 				<Icon icon={faUserPlus} size={14} />{addLabel}
 			</Button>
 			<div class="seat-full">
@@ -311,7 +311,7 @@
 				<span>{m.settings_member_domain_gate_manage()}</span>
 			</div>
 			<Button
-				variant="secondary"
+				variant="tonal"
 				size="sm"
 				href={customDomains.items.length > 0 ? `/u/${slot}/settings/domains` : `/u/${slot}/settings/domains/new`}
 			>

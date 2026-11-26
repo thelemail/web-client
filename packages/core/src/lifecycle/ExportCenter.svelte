@@ -50,7 +50,7 @@
 		<div class="lc-cta" style="margin-top:6px">
 			{#each DOWNLOADS as d (d.os)}
 				{@const glyph = d.Icon}
-				<Button variant="secondary" size="lg" href={d.href} target="_blank" rel="noreferrer noopener">
+				<Button variant="neutral" size="lg" href={d.href} target="_blank" rel="noreferrer noopener">
 					<Icon icon={glyph} size={17} />{d.os}
 				</Button>
 			{/each}

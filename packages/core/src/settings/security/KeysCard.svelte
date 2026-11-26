@@ -60,7 +60,7 @@
 					{mismatch ? m.settings_security_key_unverified_title() : m.settings_security_key_unchecked_title()}
 				</div>
 				<p>{mismatch ? m.settings_security_key_unverified() : m.settings_security_key_unchecked()}</p>
-				<Button variant="secondary" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
+				<Button variant="neutral" size="sm" onclick={() => accountKeys.load(accountId)}>{m.common_retry()}</Button>
 			</div>
 		</div>
 	{/if}
@@ -123,7 +123,7 @@
 	</div>
 	{/if}
 	<Row t={m.settings_security_export_title()} d={m.settings_security_export_desc()}>
-		<Button variant="secondary" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
+		<Button variant="neutral" size="sm" disabled={!ownKey} onclick={exportPublicKey}>
 			<Icon icon={faDownload} size={14} />{m.settings_security_export_key()}
 		</Button>
 	</Row>

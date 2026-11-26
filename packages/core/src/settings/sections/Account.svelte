@@ -236,7 +236,7 @@
 					t={m.settings_account_start_family_row()}
 					d={m.settings_account_start_family_desc()}
 				>
-					<Button variant="secondary" size="sm" onclick={() => launch('family')}>
+					<Button variant="tonal" size="sm" onclick={() => launch('family')}>
 						<Icon icon={faUsers} size={14} />{m.settings_account_start_family()}
 					</Button>
 				</Row>
@@ -263,7 +263,7 @@
 
 <Card icon={faDownload} title={m.settings_account_export_title()}>
 	<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
-		<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
+		<Button variant="neutral" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
 			{m.settings_account_export_button()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 		</Button>
 	</Row>
@@ -273,7 +273,7 @@
 	{#if mailOnly}
 		<Row t={m.settings_account_delete_row()} d={m.settings_account_delete_at_account()}>
 			{#if accountSettings}
-				<Button variant="secondary" size="sm" href={accountSettings}>
+				<Button variant="neutral" size="sm" href={accountSettings}>
 					{m.settings_security_account_origin_cta()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 				</Button>
 			{/if}

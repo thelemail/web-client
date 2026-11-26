@@ -26,7 +26,7 @@
 	{#if showCloseButton}
 		<DialogPrimitive.Close>
 			{#snippet child({ props })}
-				<Button variant="secondary" {...props}>{m.common_close()}</Button>
+				<Button variant="neutral" {...props}>{m.common_close()}</Button>
 			{/snippet}
 		</DialogPrimitive.Close>
 	{/if}

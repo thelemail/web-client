@@ -195,7 +195,7 @@
 			</div>
 			{#if manage && domainRow}
 				<Button
-					variant="secondary"
+					variant="tonal"
 					size="sm"
 					href={`/u/${slot}/settings/domains/${domainRow.id}?step=${resumeStep(domainRow)}`}
 				>
@@ -213,7 +213,7 @@
 				{m.settings_address_rotate_body()}
 			</div>
 			{#if row.canManagePeople}
-				<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
+				<Button variant="tonal" size="sm" onclick={() => (managingPeople = true)}>
 					{m.settings_address_manage_people()}
 				</Button>
 			{/if}
@@ -237,7 +237,7 @@
 						w="mid"
 					/>
 					<Button
-						variant={dirty ? 'primary' : 'secondary'}
+						variant={dirty ? 'primary' : 'neutral'}
 						size="sm"
 						disabled={!dirty || saving}
 						onclick={() => void saveName()}
@@ -258,7 +258,7 @@
 					<Badge kind="pine">{m.settings_address_primary()}</Badge>
 				{:else}
 					<Button
-						variant="secondary"
+						variant="tonal"
 						size="sm"
 						disabled={!row.canPromote || promoting}
 						onclick={() => void promote()}
@@ -292,7 +292,7 @@
 					</span>
 				{/if}
 				{#if row.canManagePeople}
-					<Button variant="secondary" size="sm" onclick={() => (managingPeople = true)}>
+					<Button variant="tonal" size="sm" onclick={() => (managingPeople = true)}>
 						<Icon icon={faUsers} size={13} />{m.settings_address_change_people()}
 					</Button>
 				{/if}

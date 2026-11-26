@@ -136,7 +136,7 @@
 			</div>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => goto(`/u/${slot}/mail/inbox`)}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="primary" size="lg" onclick={toConfirm}>
@@ -170,7 +170,7 @@
 				</Button>
 				{#if canMoveToFree}
 					<Button
-						variant="secondary"
+						variant="tonal"
 						size="lg"
 						block
 						href={`/u/${slot}/lifecycle/downgrade`}
@@ -208,7 +208,7 @@
 			</ul>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={() => (step = showOffer ? 1 : 0)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => (step = showOffer ? 1 : 0)}>
 						<Icon icon={faArrowLeft} />
 					</Button>
 					<Button variant="dangerSolid" size="lg" disabled={busy} onclick={confirmCancel}>

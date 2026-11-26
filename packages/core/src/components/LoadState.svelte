@@ -26,7 +26,7 @@
 		<Icon icon={faCircleExclamation} size={16} />
 		<p>{label}</p>
 		{#if onRetry}
-			<Button variant="secondary" size="sm" disabled={retrying} onclick={onRetry}>
+			<Button variant="neutral" size="sm" disabled={retrying} onclick={onRetry}>
 				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		{/if}

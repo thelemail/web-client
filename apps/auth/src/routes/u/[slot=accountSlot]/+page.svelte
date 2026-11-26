@@ -74,7 +74,7 @@
 				<h1>{m.settings_nav_security()}</h1>
 				<div class="set-head-actions">
 					<Button variant="ghost" href={`/u/${data.slot}/mail`}>{m.auth_signed_in_open_mailbox()}</Button>
-					<Button variant="secondary" onclick={signOut} disabled={signingOut}>
+					<Button variant="neutral" onclick={signOut} disabled={signingOut}>
 						{m.settings_security_sign_out()}
 					</Button>
 				</div>
@@ -96,7 +96,7 @@
 					<Card icon={faDownload} title={m.settings_account_export_title()}>
 						<Row t={m.settings_account_export_row()} d={m.settings_account_export_desc()}>
 							<Button
-								variant="secondary"
+								variant="neutral"
 								size="sm"
 								href={EXPORT_TOOL_URL}
 								target="_blank"

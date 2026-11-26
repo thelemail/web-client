@@ -88,7 +88,7 @@
 						<Icon icon={faArrowRotateLeft} size={17} />
 						{busy ? m.lc_deletion_restoring() : m.lc_deletion_keep()}
 					</Button>
-					<Button variant="secondary" size="lg" block disabled={busy} onclick={signOut}>
+					<Button variant="neutral" size="lg" block disabled={busy} onclick={signOut}>
 						<Icon icon={faArrowRightFromBracket} size={17} />{m.lc_deletion_sign_out()}
 					</Button>
 				</div>

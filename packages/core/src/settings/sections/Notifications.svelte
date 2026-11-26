@@ -140,7 +140,7 @@
 					<Icon icon={faArrowsRotate} />{m.settings_notify_check_again()}
 				</Button>
 				{#if canOpenSystemSettings}
-					<Button variant="secondary" size="sm" onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}>
+					<Button variant="neutral" size="sm" onclick={() => platform.openExternal(SYSTEM_SETTINGS_URL)}>
 						<Icon icon={faArrowUpRightFromSquare} />{onWindows ? m.settings_notify_open_windows_settings() : m.settings_notify_open_system_settings()}
 					</Button>
 				{/if}
@@ -156,7 +156,7 @@
 <Card title={m.settings_notify_reminders_title()}>
 	<Row t={m.settings_notify_reminders_browser()} d={reminderSummary}>
 		{#if reminders === 'default'}
-			<Button variant="secondary" size="sm" onclick={enableReminders}>{m.settings_notify_reminders_allow()}</Button>
+			<Button variant="tonal" size="sm" onclick={enableReminders}>{m.settings_notify_reminders_allow()}</Button>
 		{/if}
 	</Row>
 	<SettingsGate controls={['select']}>

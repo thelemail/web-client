@@ -507,7 +507,7 @@
 				</button>
 			{/if}
 			{#if hasWebauthn}
-				<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={confirmWithKey}>
+				<Button variant="tonal" size="sm" disabled={busy || password.length === 0} onclick={confirmWithKey}>
 					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_twofa_use_security_key()}
 				</Button>
 			{/if}
@@ -603,7 +603,7 @@
 						</div>
 					{/if}
 				</div>
-				<Button variant="secondary" disabled={busy || !keyNameOk} onclick={registerKey}>
+				<Button variant="tonal" disabled={busy || !keyNameOk} onclick={registerKey}>
 					{#if isKey}<Icon icon={faArrowPointer} size={15} />{:else}<Icon icon={faFaceViewfinder} size={15} />{/if}
 					{#if busy}
 						{m.settings_ceremony_twofa_waiting()}
@@ -639,10 +639,10 @@
 				{/each}
 			</div>
 			<div class="phrase-acts">
-				<Button variant="secondary" size="sm" onclick={copyCodes}>
+				<Button variant="neutral" size="sm" onclick={copyCodes}>
 					<Icon icon={faCopy} size={14} />{m.common_copy()}
 				</Button>
-				<Button variant="secondary" size="sm" onclick={downloadCodes}>
+				<Button variant="neutral" size="sm" onclick={downloadCodes}>
 					<Icon icon={faDownload} size={14} />{m.settings_ceremony_twofa_download()}
 				</Button>
 				{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_ceremony_twofa_saved()}</span>{/if}

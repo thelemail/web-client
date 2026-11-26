@@ -337,7 +337,7 @@
 			</label>
 			<div class="actions">
 				<div class="btnrow">
-					<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
+					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} disabled={submitting} onclick={() => (step = 0)}>
 						<Icon icon={faArrowLeft} size={17} />
 					</Button>
 					<Button type="submit" variant="primary" size="lg" disabled={!passwordReady || !accepted || submitting}>

@@ -12,7 +12,7 @@
 
 <Card icon={faUsers} title={m.settings_security_contact_keys_title()}>
 	<Row t={m.settings_security_contact_keys_row()} d={m.settings_security_contact_keys_desc()}>
-		<Button variant="secondary" size="sm" onclick={() => (importOpen = true)}>
+		<Button variant="tonal" size="sm" onclick={() => (importOpen = true)}>
 			<Icon icon={faUpload} size={14} />{m.settings_security_contact_keys_import()}
 		</Button>
 	</Row>

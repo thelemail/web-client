@@ -77,11 +77,11 @@
 				: m.cal_scope_lead_edit({ title: request.occ.title })}
 		</p>
 		<div class="scope-options">
-			<Button variant="secondary" disabled={busy} onclick={() => apply('this')}>
+			<Button variant="neutral" disabled={busy} onclick={() => apply('this')}>
 				{m.cal_scope_only_this()}
 			</Button>
 			{#if request.action === 'delete'}
-				<Button variant="secondary" disabled={busy} onclick={() => apply('following')}>
+				<Button variant="neutral" disabled={busy} onclick={() => apply('following')}>
 					{m.cal_scope_following()}
 				</Button>
 			{/if}

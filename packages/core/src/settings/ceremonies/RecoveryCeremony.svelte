@@ -215,10 +215,10 @@
 				{/if}
 			</div>
 			<div class="phrase-acts">
-				<Button variant="secondary" size="sm" disabled={!revealed} onclick={copyPhrase}>
+				<Button variant="neutral" size="sm" disabled={!revealed} onclick={copyPhrase}>
 					<Icon icon={faCopy} size={14} />{m.common_copy()}
 				</Button>
-				<Button variant="secondary" size="sm" disabled={!revealed} onclick={downloadKit}>
+				<Button variant="neutral" size="sm" disabled={!revealed} onclick={downloadKit}>
 					<Icon icon={faDownload} size={14} />{m.settings_ceremony_recovery_download()}
 				</Button>
 				{#if saved}<span class="phrase-saved"><Icon icon={faCheck} size={13} />{m.settings_ceremony_recovery_saved()}</span>{/if}

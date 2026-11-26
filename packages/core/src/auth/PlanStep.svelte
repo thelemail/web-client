@@ -244,7 +244,7 @@
 	<div class="actions">
 		<div class="btnrow">
 			{#if onBack}
-				<Button variant="secondary" size="lg" class="btn-back" aria-label={m.common_back()} onclick={onBack}>
+				<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={onBack}>
 					<Icon icon={faArrowLeft} size={17} />
 				</Button>
 			{/if}

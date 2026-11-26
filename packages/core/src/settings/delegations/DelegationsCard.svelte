@@ -52,7 +52,7 @@
 		<span class="card-meta">{m.settings_delegation_active_count({ count: active.length })}</span>
 		{#if billing.canAddDomains}
 			<Button
-				variant="secondary"
+				variant="tonal"
 				size="sm"
 				disabled={!!blocked}
 				onclick={() => (creating = true)}

@@ -123,7 +123,7 @@
 		{/if}
 
 		<div class="oh-actions">
-			<Button variant="secondary" onclick={onClose}>{m.common_close()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_close()}</Button>
 			<Button variant="primary" disabled={view.status !== 'ready'} onclick={copy}>
 				{#if copied}
 					<Icon icon={faCheck} size={15} />{m.common_copied()}

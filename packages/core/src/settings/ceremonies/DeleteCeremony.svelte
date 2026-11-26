@@ -262,7 +262,7 @@
 			<div class="export-nudge">
 				<Icon icon={faDownload} size={17} />
 				<div><Rich text={m.settings_ceremony_delete_export_nudge()} tags={{ b: bold }} /></div>
-				<Button variant="secondary" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
+				<Button variant="neutral" size="sm" href={EXPORT_TOOL_URL} target="_blank" rel="noreferrer noopener">
 					{m.settings_ceremony_delete_export_archive()}<Icon icon={faArrowUpRightFromSquare} size={14} />
 				</Button>
 			</div>
@@ -359,7 +359,7 @@
 				</button>
 			{/if}
 			{#if hasWebauthn}
-				<Button variant="secondary" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
+				<Button variant="neutral" size="sm" disabled={busy || cur.length === 0} onclick={submitWithWebauthn}>
 					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_delete_use_security_key()}
 				</Button>
 			{/if}

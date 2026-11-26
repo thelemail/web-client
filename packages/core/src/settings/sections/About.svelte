@@ -67,7 +67,7 @@
 					<Icon icon={faArrowsRotate} />{m.settings_about_check()}
 				</Button>
 				{#if available}
-					<Button variant="secondary" size="sm" onclick={() => appUpdate.openRelease()}>
+					<Button variant="neutral" size="sm" onclick={() => appUpdate.openRelease()}>
 						<Icon icon={faArrowUpRightFromSquare} />{m.settings_about_release_notes()}
 					</Button>
 					{#if !status?.blocked}

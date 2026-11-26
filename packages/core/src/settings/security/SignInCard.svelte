@@ -192,7 +192,7 @@
 		<div class="setrow set-loaderr" role="alert">
 			<Icon icon={faCircleExclamation} size={16} />
 			<p>{m.settings_security_2fa_load_failed()}</p>
-			<Button variant="secondary" size="sm" onclick={() => void twofactor.load(auth.accountId)}>
+			<Button variant="neutral" size="sm" onclick={() => void twofactor.load(auth.accountId)}>
 				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		</div>
@@ -232,7 +232,7 @@
 					<div class="tfa-d">{m.settings_security_this_device_desc()}</div>
 				</div>
 				<div class="tfa-act">
-					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
+					<Button variant="tonal" size="sm" onclick={() => launch('twofa', { method: 'device' })}>
 						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
@@ -244,7 +244,7 @@
 					<div class="tfa-d">{m.settings_security_key_desc()}</div>
 				</div>
 				<div class="tfa-act">
-					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
+					<Button variant="tonal" size="sm" onclick={() => launch('twofa', { method: 'key' })}>
 						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>
@@ -273,7 +273,7 @@
 					<div class="tfa-d">{m.settings_security_totp_desc()}</div>
 				</div>
 				<div class="tfa-act">
-					<Button variant="secondary" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
+					<Button variant="tonal" size="sm" onclick={() => launch('twofa', { method: 'totp' })}>
 						<Icon icon={faPlus} size={14} />{m.settings_security_setup()}
 					</Button>
 				</div>

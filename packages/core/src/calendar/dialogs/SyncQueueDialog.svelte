@@ -108,7 +108,7 @@
 					<div class="qs">{subFor(entry)}</div>
 					{#if entry.status === 'blocked'}
 						<div class="qactions">
-							<Button variant="secondary" size="sm" onclick={() => calendarStore.keepMine(entry.seq)}>
+							<Button variant="neutral" size="sm" onclick={() => calendarStore.keepMine(entry.seq)}>
 								{m.cal_queue_keep_mine()}
 							</Button>
 							<Button variant="ghost" size="sm" onclick={() => calendarStore.takeTheirs(entry.seq)}>

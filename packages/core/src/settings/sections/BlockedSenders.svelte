@@ -182,7 +182,7 @@
 				/>
 				{#if addError}<div class="alias-target bs-adderr">{addError}</div>{/if}
 			</div>
-			<Button variant="secondary" size="sm" disabled={addBusy} onclick={() => void add()}>
+			<Button variant="tonal" size="sm" disabled={addBusy} onclick={() => void add()}>
 				{m.settings_blocked_block()}
 			</Button>
 			<Button variant="ghost" size="sm" disabled={addBusy} onclick={() => {

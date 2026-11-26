@@ -109,7 +109,7 @@
 		{/if}
 
 		<div class="tofu-actions">
-			<Button variant="secondary" onclick={onCancel}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onCancel}>{m.common_cancel()}</Button>
 			<Button variant="caution" onclick={onSendAnyway}>
 				<Icon icon={faPaperPlane} size={15} />{m.mail_tofu_send_anyway()}
 			</Button>

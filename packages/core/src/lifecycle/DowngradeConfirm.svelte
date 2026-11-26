@@ -206,7 +206,7 @@
 				</ol>
 				<div class="actions" style="margin-top:14px">
 					<Button
-						variant="secondary"
+						variant="neutral"
 						size="lg"
 						block
 						href={store.url}
@@ -231,9 +231,8 @@
 			<div class="actions">
 				<div class="btnrow">
 					<Button
-						variant="secondary"
-						size="lg"
-						class="btn-back"
+						variant="neutral"
+						size="icon-lg"
 						aria-label={m.common_back()}
 						href={`/u/${slot}/mail/inbox`}
 					>

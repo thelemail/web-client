@@ -522,7 +522,7 @@
 				</button>
 			{/if}
 			{#if hasWebauthn}
-				<Button variant="secondary" size="sm" disabled={twoFaBusy} onclick={submitTwoFaWebauthn}>
+				<Button variant="tonal" size="sm" disabled={twoFaBusy} onclick={submitTwoFaWebauthn}>
 					<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_password_use_security_key()}
 				</Button>
 			{/if}

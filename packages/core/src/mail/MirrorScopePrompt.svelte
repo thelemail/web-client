@@ -54,7 +54,7 @@
 				<Button variant="primary" disabled={busy} onclick={() => choose(90)}>
 					{m.mail_mirror_scope_90_days()}
 				</Button>
-				<Button variant="secondary" disabled={busy} onclick={() => choose(null)}>
+				<Button variant="tonal" disabled={busy} onclick={() => choose(null)}>
 					{m.mail_mirror_scope_all()}
 				</Button>
 			</div>

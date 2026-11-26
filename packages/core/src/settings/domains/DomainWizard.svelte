@@ -205,7 +205,7 @@
 				</div>
 			{/if}
 			<div class="dw-addr-acts">
-				<Button variant="secondary" disabled={!manage || !usable(domain)} onclick={() => (addingAlias = true)}>
+				<Button variant="tonal" disabled={!manage || !usable(domain)} onclick={() => (addingAlias = true)}>
 					<Icon icon={faPlus} size={14} />{m.settings_domains_wizard_add_address()}
 				</Button>
 			</div>
@@ -256,7 +256,7 @@
 		{/if}
 		<span class="dw-spacer"></span>
 		{#if mayCheck}
-			<Button variant="secondary" disabled={starting} onclick={() => void startCheck()}>
+			<Button variant="neutral" disabled={starting} onclick={() => void startCheck()}>
 				<Icon icon={faArrowsRotate} size={14} />{starting ? m.settings_domains_wizard_checking() : m.settings_domains_wizard_check_dns()}
 			</Button>
 		{/if}

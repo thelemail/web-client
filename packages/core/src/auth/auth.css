@@ -448,10 +448,8 @@
 .auth .btnrow .btn {
 	flex: 1;
 }
-.auth .btnrow .btn-back {
+.auth .btnrow .btn-icon {
 	flex: 0 0 auto;
-	width: 46px;
-	padding: 12px 0;
 }
 
 .auth .reqs {

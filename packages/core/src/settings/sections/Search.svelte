@@ -170,7 +170,7 @@
 		<div class="info">
 			<div class="t">{statusLine}</div>
 			{#if phase === 'unconverted' && canFinishSearchSetup()}
-				<Button variant="secondary" size="sm" onclick={finishSearchSetup}>{m.mail_search_unconverted_action()}</Button>
+				<Button variant="tonal" size="sm" onclick={finishSearchSetup}>{m.mail_search_unconverted_action()}</Button>
 			{/if}
 			{#if saved && status}
 				<ul class="srch-cov-list">

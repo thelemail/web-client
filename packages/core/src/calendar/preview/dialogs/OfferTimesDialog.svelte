@@ -79,7 +79,7 @@
 					</div>
 				{/each}
 			</div>
-			<Button variant="secondary" block class="mt-3" onclick={() => cal.addSlot()}>
+			<Button variant="tonal" block class="mt-3" onclick={() => cal.addSlot()}>
 				{m.cal_offer_suggest_more()}
 			</Button>
 			<div class="limits">
@@ -131,9 +131,9 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 		<div class="grow"></div>
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_offer_hold_all()}</Button>
+		<Button variant="tonal" onclick={() => (cal.dialog = null)}>{m.cal_offer_hold_all()}</Button>
 		<Button variant="primary" onclick={() => cal.confirmOffer()}>{m.cal_offer_insert()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

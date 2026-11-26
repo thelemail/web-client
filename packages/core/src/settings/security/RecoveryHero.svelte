@@ -73,7 +73,7 @@
 		<div class="setrow set-loaderr" role="alert">
 			<Icon icon={faCircleExclamation} size={16} />
 			<p>{m.settings_security_recovery_load_failed()}</p>
-			<Button variant="secondary" size="sm" disabled={retrying} onclick={retry}>
+			<Button variant="neutral" size="sm" disabled={retrying} onclick={retry}>
 				<Icon icon={faArrowsRotate} />{m.common_retry()}
 			</Button>
 		</div>

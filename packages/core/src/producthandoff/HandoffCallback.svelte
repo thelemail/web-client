@@ -112,7 +112,7 @@
 					<h1>{m.handoff_tab_done_title()}</h1>
 					<p>{#if address}<Rich text={m.handoff_tab_stayed_sentence()} tags={{ account }} />{:else}{m.handoff_tab_stayed_plain()}{/if}</p>
 				</div>
-				<Button variant="secondary" size="lg" block onclick={closeTab}>{m.handoff_tab_close()}</Button>
+				<Button variant="neutral" size="lg" block onclick={closeTab}>{m.handoff_tab_close()}</Button>
 			</div>
 		{:else}
 			<HandoffCard title={m.handoff_finish_title()} lede={m.handoff_finish_lede()} from={productHost('auth')} to={location.host} secure="from" />

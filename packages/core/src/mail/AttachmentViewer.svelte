@@ -258,7 +258,7 @@
 					</button>
 				{/if}
 				{#if item.kind === 'remote'}
-					<Button variant="secondary" size="sm" disabled={downloading} onclick={download}>
+					<Button variant="neutral" size="sm" disabled={downloading} onclick={download}>
 						{#if downloading}
 							<Icon icon={faSpinnerThird} size={14} class="apx-spin" />{m.mail_attach_downloading()}
 						{:else}
@@ -293,7 +293,7 @@
 				{:else if view.status === 'error'}
 					<div class="apx-note err" role="alert">
 						{view.message}
-						<Button variant="secondary" size="sm" onclick={() => (attempt += 1)}>{m.common_retry()}</Button>
+						<Button variant="neutral" size="sm" onclick={() => (attempt += 1)}>{m.common_retry()}</Button>
 					</div>
 				{:else if view.status !== 'loading'}
 					<div class="apx-note">

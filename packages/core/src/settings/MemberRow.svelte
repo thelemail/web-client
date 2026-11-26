@@ -161,11 +161,11 @@
 				{/if}
 			{:else if mode === 'confirm-remove'}
 				<span class="mbr-confirm">{m.settings_member_remove_confirm({ name: member.name })}</span>
-				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
+				<Button variant="neutral" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
 				<Button variant="dangerSolid" size="sm" onclick={confirmRemove} disabled={busy}>{m.common_remove()}</Button>
 			{:else if mode === 'confirm-revoke'}
 				<span class="mbr-confirm">{m.settings_member_revoke_confirm({ email: member.addr })}</span>
-				<Button variant="secondary" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
+				<Button variant="neutral" size="sm" onclick={cancel} disabled={busy}>{m.common_cancel()}</Button>
 				<Button variant="dangerSolid" size="sm" onclick={confirmRevoke} disabled={busy}>{m.settings_member_revoke()}</Button>
 			{/if}
 		</div>

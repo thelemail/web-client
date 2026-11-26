@@ -126,7 +126,7 @@
 
 {#snippet form()}
 	{#if methodsFailed}
-		<Button variant="secondary" size="sm" onclick={loadMethods}>{m.common_retry()}</Button>
+		<Button variant="neutral" size="sm" onclick={loadMethods}>{m.common_retry()}</Button>
 	{/if}
 	<p class="cfd-p">{needsFactor ? m.reauth_lede_factor() : m.reauth_lede()}</p>
 	<div class="cfd-field reauth-field">
@@ -190,7 +190,7 @@
 		</Button>
 	{/if}
 	{#if hasWebauthn}
-		<Button variant="secondary" size="sm" disabled={busy || password.length === 0} onclick={submitKey}>
+		<Button variant="tonal" size="sm" disabled={busy || password.length === 0} onclick={submitKey}>
 			<Icon icon={faFingerprint} size={14} />{m.settings_ceremony_twofa_use_security_key()}
 		</Button>
 	{/if}

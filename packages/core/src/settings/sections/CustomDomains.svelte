@@ -175,7 +175,7 @@
 						<span class="cd-meta">{meta(d)}</span>
 						<span class="cd-acts">
 							{#if live}
-								<Button variant="secondary" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
+								<Button variant="tonal" href={setupHref(d)}>{m.settings_domains_review_setup()}</Button>
 							{:else}
 								<Button variant="primary" href={setupHref(d)}>
 									{m.settings_domains_continue_setup()}<Icon icon={faArrowRight} size={15} />

@@ -98,7 +98,7 @@
 						{m.billing_return_slow_body()}
 					</p>
 					<div class="actions" style="margin-top:24px">
-						<Button variant="secondary" size="lg" block disabled={checking} onclick={checkNow}>
+						<Button variant="neutral" size="lg" block disabled={checking} onclick={checkNow}>
 							{checking ? m.common_loading() : m.billing_return_check_again()}
 						</Button>
 					</div>

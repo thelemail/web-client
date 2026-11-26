@@ -112,7 +112,7 @@
 		</span>
 		{#if billing.canAddDomains}
 			<Button
-				variant="secondary"
+				variant="tonal"
 				size="sm"
 				disabled={!!blocked}
 				onclick={() => (creating = true)}

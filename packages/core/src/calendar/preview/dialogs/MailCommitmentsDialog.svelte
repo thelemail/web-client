@@ -184,10 +184,10 @@
 	</div>
 
 	<Dialog.Footer class="cal-dlg-foot">
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_mailc_not_now()}</Button>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.cal_mailc_not_now()}</Button>
 		<span class="note">{m.cal_mailc_nothing_changed()}</span>
 		<div class="grow"></div>
-		<Button variant="secondary" onclick={() => (cal.dialog = null)}>{m.cal_mailc_edit_each()}</Button>
+		<Button variant="tonal" onclick={() => (cal.dialog = null)}>{m.cal_mailc_edit_each()}</Button>
 		<Button
 			variant="primary"
 			disabled={cal.mailOwnerMissing || !cal.mailSelectedCount}
