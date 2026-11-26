@@ -54,34 +54,6 @@
 	--dur-slow:  320ms;
 
 	--track-display:  -0.035em;
-
-	--paper-0:   var(--bg);
-	--paper-50:  var(--bg-raised);
-	--paper-100: var(--bg-sunken);
-	--paper-150: var(--border-soft);
-	--paper-200: var(--border-strong);
-	--ink-900: var(--fg-strong);
-	--ink-800: var(--fg);
-	--ink-700: var(--fg);
-	--ink-600: var(--fg-muted);
-	--ink-500: var(--fg-muted);
-	--ink-400: var(--fg-faint);
-	--ink-300: var(--border-control);
-	--pine-975: var(--bg-inverse);
-	--pine-950: var(--bg-inverse);
-	--pine-900: var(--bg-inverse);
-	--pine-800: var(--bg-inverse);
-	--pine-400: var(--pine-500);
-	--pine-300: var(--link);
-	--pine-200: var(--pine-100);
-	--pine-50:  var(--pine-100);
-	--brass-400: var(--brass-500);
-	--border-dark: color-mix(in oklab, var(--fg-on-pine) 25%, transparent);
-	--fg-on-pine-muted: color-mix(in oklab, var(--fg-on-pine) 72%, transparent);
-	--on-fill: var(--primary-fg);
-	--accent-quiet: var(--brass-600);
-	--chip-bg: var(--pine-100);
-	--chip-fg: var(--pine-700);
 }
 
 ::selection {
