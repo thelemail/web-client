@@ -253,7 +253,7 @@
 		return [{ g: null as string | null, items: list }];
 	});
 
-	const FIRST_ROWS = 40;
+	const FIRST_ROWS = 24;
 	const MORE_ROWS = 40;
 	let rowCapState = $state({ view: '', count: FIRST_ROWS });
 	const rowCap = $derived.by(() => {
