@@ -43,7 +43,7 @@
 	} from '@fortawesome/pro-regular-svg-icons';
 	import MessageRow from './MessageRow.svelte';
 	import { loadSearchRelated, loadSearchStrip, loadedSearchRelated, loadedSearchStrip, type SearchRelatedComponent, type SearchStripComponent } from './searchStrip';
-	import type { SearchView } from './searchView';
+	import type { RelatedView, SearchView } from './searchView';
 	import ListSkeleton from './ListSkeleton.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
@@ -554,6 +554,14 @@
 	/>
 {/snippet}
 
+{#snippet relatedBlock(Block: SearchRelatedComponent, view: RelatedView)}
+	<Block related={view} onMore={search!.onMoreRelated} onRetry={search!.onRetryRelated}>
+		{#each view.rows as m (m.id)}
+			{@render row(m)}
+		{/each}
+	</Block>
+{/snippet}
+
 <section class="list">
 	{#if anyChecked}
 		<div class="bulk">
@@ -900,11 +908,7 @@
 				<ListSkeleton />
 			{/if}
 		{:else if relatedMain && related && SearchRelated}
-			<SearchRelated {related} onMore={search!.onMoreRelated} onRetry={search!.onRetryRelated}>
-				{#each related.rows as m (m.id)}
-					{@render row(m)}
-				{/each}
-			</SearchRelated>
+			{@render relatedBlock(SearchRelated, related)}
 		{:else if relatedMain}
 			<div class="list-state" aria-busy="true"></div>
 		{:else if list.length === 0}
@@ -941,11 +945,7 @@
 			<Tooltip.Shared tether={rowTips} />
 		{/if}
 		{#if relatedAfter && related && SearchRelated}
-			<SearchRelated {related} onMore={search!.onMoreRelated} onRetry={search!.onRetryRelated}>
-				{#each related.rows as m (m.id)}
-					{@render row(m)}
-				{/each}
-			</SearchRelated>
+			{@render relatedBlock(SearchRelated, related)}
 		{/if}
 		{#if ((!searchActive || list.length > 0) && allRowsShown) || (relatedMain && related?.status === 'ready')}
 			<div class="list-foot" bind:this={sentinelEl}>

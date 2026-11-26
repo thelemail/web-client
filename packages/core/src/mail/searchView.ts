@@ -4,7 +4,8 @@ import type { Range } from '$core/search/query/ast';
 import type { Consent } from '$core/search/runtime/records';
 import type { Sort } from '$core/search/sqlite/compile';
 import type { Suggestion } from '$core/search/sqlite/suggest';
-import type { RelatedStatus, SearchPhase } from '$core/stores/search.svelte';
+import type { RelatedStatus } from '$core/search/related.svelte';
+import type { SearchPhase } from '$core/stores/search.svelte';
 import type { Message } from './data';
 
 export interface RelatedView {

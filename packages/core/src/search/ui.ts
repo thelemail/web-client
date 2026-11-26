@@ -16,6 +16,7 @@ import { Field, Flag, SourceKind } from './sqlite/types';
 export { chipsOf, replaceRange, type Chip } from './chips';
 export { coverageOf, progressOf } from './coverage';
 export { relatedAllowed } from './query/classify';
+export { RelatedRun } from './related.svelte';
 
 export function parse(text: string): ReturnType<typeof parseQuery> {
 	return parseQuery(text, { now: Date.now(), timeZone: locale.timeZone });
