@@ -47,6 +47,9 @@ const COMPLETIONS = 8;
 export const MEANING_GROUPS = 1000;
 const CANDIDATE_GROUPS = 2000;
 const CANDIDATE_PASSAGES = 4;
+const RESCORE_GROUPS = 256;
+const RESCORE_MARGIN = 0.02;
+const RESCORE_BATCH = 512;
 const SCAN_ROWS = 8192;
 const PASSAGE_CHARS = 400;
 
@@ -165,18 +168,9 @@ interface Session {
 	passages?: Map<string, { epoch: number; source: number; ordinal: number }>;
 }
 
-interface Member {
-	source: number;
-	group: number;
-	kind: SourceKind;
-	sid: string;
-	date: number;
-	thread: string | null;
-}
-
 interface Rescored {
 	group: number;
-	member: number;
+	source: number;
 	ordinal: number;
 	score: number;
 }
@@ -307,7 +301,7 @@ export class QueryEngine {
 		const session = this.#sessions.get(id);
 		if (!session?.summary) return { ok: false, reason: 'closed' };
 		if (session.invalid) return { ok: false, reason: 'invalidated' };
-		return { ok: true, groups: this.#rows(session, index) };
+		return { ok: true, groups: this.#atomic(() => this.#rows(session, index)) };
 	}
 
 	#rows(session: Session, index: number): ResultRow[] {
@@ -542,7 +536,7 @@ export class QueryEngine {
 	}
 
 	#range(table: string): [number, number] {
-		const row = this.#db.selectArray(`SELECT min(rowid), max(rowid) FROM ${table}`) as SqlValue[];
+		const row = this.#db.selectArray(`SELECT (SELECT min(rowid) FROM ${table}), (SELECT max(rowid) FROM ${table})`) as SqlValue[];
 		return row[0] === null ? [1, 0] : [Number(row[0]), Number(row[1])];
 	}
 
@@ -677,74 +671,154 @@ export class QueryEngine {
 		const covered: Fragment = options.epoch.current
 			? { sql: 'EXISTS (SELECT 1 FROM coverage c WHERE c.source = s.id AND c.dimension = ? AND c.state = ?)', params: [Dimension.semantic, Coverage.complete] }
 			: { sql: 'EXISTS (SELECT 1 FROM passages p WHERE p.epoch = ? AND p.source = s.id)', params: [epoch] };
-		const select = `SELECT s.id, ${GROUP_KEY[options.group]}, s.kind, s.source_id, s.date, CASE WHEN s.kind = ${SourceKind.message} THEN s.thread_id END, ${covered.sql}
-			FROM sources s WHERE s.id BETWEEN ? AND ? AND ${universe.sql} AND ${expr.sql}`;
-		const memberOf = new Int32Array(sources[1] + 1).fill(-1);
-		const members: Member[] = [];
-		const groupIds = new Map<string, number>();
-		const groupKeys: string[] = [];
+		const size = sources[1] + 1;
+		const groupOf = new Int32Array(size).fill(-1);
+		const threadGroups = new Map<string, number>();
+		const byThread = options.group === 'thread';
+		const omitted = matrix.omitted;
+		let eligible = 0;
 		let incomplete = 0;
-		let capped = 0;
-		await this.#sliced('sources', sources, checkpoint, (lo, hi) => {
-			const rows = this.#db.selectArrays(select, [...covered.params, lo, hi, ...universe.params, ...expr.params]) as [number, string, number, string, number, string | null, number][];
-			for (const [source, key, kind, sid, date, thread, done] of rows) {
-				let group = groupIds.get(key);
-				if (group === undefined) {
-					group = groupKeys.length;
-					groupKeys.push(key);
-					groupIds.set(key, group);
+		const ids = byThread ? `group_concat(s.id || char(31) || ifnull(CASE WHEN s.kind = ${SourceKind.message} THEN s.thread_id END, ''), char(30))` : 'group_concat(s.id)';
+		const select = this.#db.prepare(`SELECT ${ids}, coalesce(sum(NOT ${covered.sql}), 0) FROM sources s WHERE s.id BETWEEN ? AND ? AND ${universe.sql} AND ${expr.sql}`);
+		try {
+			await this.#sliced('sources', sources, checkpoint, (lo, hi) => {
+				let list: string | null = null;
+				let missing = 0;
+				select.bind([...covered.params, lo, hi, ...universe.params, ...expr.params]);
+				try {
+					if (select.step()) {
+						list = select.getString(0);
+						missing = select.getInt(1) ?? 0;
+					}
+				} finally {
+					select.reset(true);
 				}
-				memberOf[source] = members.length;
-				members.push({ source, group, kind: kind as SourceKind, sid, date, thread });
-				if (matrix.omitted.has(source)) {
-					capped++;
-					incomplete++;
-				} else if (!done) incomplete++;
-			}
-		});
+				incomplete += missing;
+				if (!list) return;
+				if (!byThread) {
+					for (const id of list.split(',')) {
+						groupOf[Number(id)] = Number(id);
+						eligible++;
+					}
+					return;
+				}
+				for (const entry of list.split('\x1e')) {
+					const cut = entry.indexOf('\x1f');
+					const source = Number(entry.slice(0, cut));
+					const thread = entry.slice(cut + 1);
+					let group = source;
+					if (thread) {
+						let t = threadGroups.get(thread);
+						if (t === undefined) {
+							t = size + threadGroups.size;
+							threadGroups.set(thread, t);
+						}
+						group = t;
+					}
+					groupOf[source] = group;
+					eligible++;
+				}
+			});
+		} finally {
+			select.finalize();
+		}
+		let capped = 0;
+		for (const source of omitted) if (source < size && groupOf[source] >= 0) capped++;
+		incomplete += capped;
 
 		const query = new Int8Array(DIMENSIONS);
 		const queryScale = quantize(options.vector, query);
 		const heap = new GroupHeap(CANDIDATE_GROUPS, CANDIDATE_PASSAGES);
-		const groupOf = Int32Array.from(members, (m) => m.group);
 		for (let row = 0; row < matrix.size; row += SCAN_ROWS) {
 			await checkpoint();
-			matrix.scan(row, row + SCAN_ROWS, query, queryScale, memberOf, (r, m, score) => heap.offer(groupOf[m], score, r));
+			matrix.scan(row, row + SCAN_ROWS, query, queryScale, groupOf, (r, group, score) => heap.offer(group, score, r));
 		}
 		await checkpoint();
 
-		const rank = (a: Rescored, b: Rescored) => {
-			const x = members[a.member];
-			const y = members[b.member];
-			return b.score - a.score || y.date - x.date || x.kind - y.kind || (x.sid < y.sid ? -1 : x.sid > y.sid ? 1 : 0);
+		const held = heap.groups();
+		const kinds = new Map<number, number>();
+		const dates = new Map<number, number>();
+		const sids = new Map<number, string>();
+		const threads = new Map<number, string | null>();
+		const head = this.#db.prepare(`SELECT kind, date, source_id, CASE WHEN kind = ${SourceKind.message} THEN thread_id END FROM sources WHERE id = ?`);
+		try {
+			this.#atomic(() => {
+				for (const g of held) {
+					for (const item of g.items) {
+						const source = matrix.sourceAt(item.item);
+						if (kinds.has(source)) continue;
+						try {
+							head.bind([source]);
+							if (!head.step()) continue;
+							kinds.set(source, head.getInt(0)!);
+							dates.set(source, head.getInt(1)!);
+							sids.set(source, head.getString(2)!);
+							threads.set(source, head.getString(3));
+						} finally {
+							head.reset(true);
+						}
+					}
+				}
+			});
+		} finally {
+			head.finalize();
+		}
+		const groupKeys = new Map<number, string>();
+		const keyOf = (group: number, source: number) => {
+			let key = groupKeys.get(group);
+			if (key === undefined) {
+				const thread = threads.get(source) ?? null;
+				key = group >= size && thread !== null ? `t${thread}` : `${kinds.get(source)}:${sids.get(source)}`;
+				groupKeys.set(group, key);
+			}
+			return key;
 		};
-		const finals: Rescored[] = [];
-		const memberScores = new Map<number, number>();
+		const exact = new Map<number, number>();
+		const wanted: number[] = [];
+		for (const g of held.slice(0, RESCORE_GROUPS)) {
+			for (const item of g.items) if (item.score >= g.score - RESCORE_MARGIN) wanted.push(item.item);
+		}
+		wanted.sort((a, b) => matrix.sourceAt(a) - matrix.sourceAt(b) || matrix.ordinalAt(a) - matrix.ordinalAt(b));
 		const read = this.#db.prepare('SELECT vector FROM passages WHERE epoch = ? AND source = ? AND ordinal = ?');
 		try {
-			for (const held of heap.groups()) {
-				let best: Rescored | null = null;
-				for (const { item: row } of held.items) {
-					const source = matrix.sourceAt(row);
-					const ordinal = matrix.ordinalAt(row);
-					const member = memberOf[source];
-					if (member < 0) continue;
-					let vector: Float32Array | null = null;
-					try {
-						read.bind([epoch, source, ordinal]);
-						if (read.step()) vector = decoded(read.get(0) as Uint8Array);
-					} finally {
-						read.reset(true);
+			for (let i = 0; i < wanted.length; i += RESCORE_BATCH) {
+				await checkpoint();
+				this.#atomic(() => {
+					for (const row of wanted.slice(i, i + RESCORE_BATCH)) {
+						let vector: Float32Array | null = null;
+						try {
+							read.bind([epoch, matrix.sourceAt(row), matrix.ordinalAt(row)]);
+							if (read.step()) vector = decoded(read.get(0) as Uint8Array);
+						} finally {
+							read.reset(true);
+						}
+						if (vector) exact.set(row, significant(dot(vector, options.vector)));
 					}
-					if (!vector) continue;
-					const scored: Rescored = { group: held.group, member, ordinal, score: significant(dot(vector, options.vector)) };
-					memberScores.set(member, Math.max(memberScores.get(member) ?? -Infinity, scored.score));
-					if (!best || rank(scored, best) < 0) best = scored;
-				}
-				if (best) finals.push(best);
+				});
 			}
 		} finally {
 			read.finalize();
+		}
+
+		const rank = (a: Rescored, b: Rescored) => {
+			const x = sids.get(a.source)!;
+			const y = sids.get(b.source)!;
+			return b.score - a.score || dates.get(b.source)! - dates.get(a.source)! || kinds.get(a.source)! - kinds.get(b.source)! || (x < y ? -1 : x > y ? 1 : 0);
+		};
+		const finals: Rescored[] = [];
+		const memberScores = new Map<number, number>();
+		for (const [i, g] of held.entries()) {
+			let best: Rescored | null = null;
+			for (const item of g.items) {
+				const source = matrix.sourceAt(item.item);
+				if (groupOf[source] !== g.group || !kinds.has(source)) continue;
+				const score = i < RESCORE_GROUPS ? exact.get(item.item) : significant(item.score);
+				if (score === undefined) continue;
+				memberScores.set(source, Math.max(memberScores.get(source) ?? -Infinity, score));
+				const scored: Rescored = { group: g.group, source, ordinal: matrix.ordinalAt(item.item), score };
+				if (!best || rank(scored, best) < 0) best = scored;
+			}
+			if (best) finals.push(best);
 		}
 		finals.sort(rank);
 		finals.length = Math.min(finals.length, MEANING_GROUPS);
@@ -758,17 +832,16 @@ export class QueryEngine {
 			const insertMember = this.#db.prepare(`INSERT INTO ${matches} (source, grp, thread, tier, score, date, kind, sid) VALUES (?, ?, ?, 0, ?, ?, ?, ?)`);
 			const insertGroup = this.#db.prepare(`INSERT INTO ${groups} (grp, thread, n, tier, score, date, kind, sid) VALUES (?, ?, ?, 0, ?, ?, ?, ?)`);
 			try {
-				for (const [member, score] of memberScores) {
-					const m = members[member];
-					if (!kept.has(m.group)) continue;
-					counts.set(m.group, (counts.get(m.group) ?? 0) + 1);
-					insertMember.bind([m.source, groupKeys[m.group], m.thread, score, m.date, m.kind, m.sid]).stepReset();
+				for (const [source, score] of memberScores) {
+					const group = groupOf[source];
+					if (!kept.has(group)) continue;
+					counts.set(group, (counts.get(group) ?? 0) + 1);
+					insertMember.bind([source, keyOf(group, source), threads.get(source) ?? null, score, dates.get(source)!, kinds.get(source)!, sids.get(source)!]).stepReset();
 				}
 				for (const f of finals) {
-					const m = members[f.member];
-					const key = groupKeys[f.group];
-					insertGroup.bind([key, m.thread, counts.get(f.group) ?? 1, f.score, m.date, m.kind, m.sid]).stepReset();
-					session.passages!.set(key, { epoch, source: m.source, ordinal: f.ordinal });
+					const key = keyOf(f.group, f.source);
+					insertGroup.bind([key, threads.get(f.source) ?? null, counts.get(f.group) ?? 1, f.score, dates.get(f.source)!, kinds.get(f.source)!, sids.get(f.source)!]).stepReset();
+					session.passages!.set(key, { epoch, source: f.source, ordinal: f.ordinal });
 				}
 			} finally {
 				insertMember.finalize();
@@ -779,7 +852,7 @@ export class QueryEngine {
 			id,
 			groups: finals.length,
 			pages: Math.ceil(finals.length / PAGE_SIZE),
-			eligible: members.length,
+			eligible,
 			incomplete,
 			capped,
 			scanned: matrix.live,

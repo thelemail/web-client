@@ -111,7 +111,9 @@ export class VectorCache {
 		try {
 			for (let i = 0; i < dirty.length; i += REFRESH_BATCH) {
 				await checkpoint();
-				for (const source of dirty.slice(i, i + REFRESH_BATCH)) this.#reload(matrix, source, head, rows);
+				this.#db.transaction('DEFERRED', () => {
+					for (const source of dirty.slice(i, i + REFRESH_BATCH)) this.#reload(matrix, source, head, rows);
+				});
 			}
 		} catch (err) {
 			for (const source of dirty) this.#dirty.add(source);
