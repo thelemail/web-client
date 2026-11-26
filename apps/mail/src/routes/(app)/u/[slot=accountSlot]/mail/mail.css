@@ -359,7 +359,7 @@
 .mail-app .rec-eyebrow .tag { color: var(--brass-600); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .mail-app .rec-eyebrow .ln { flex: 1; height: 1px; background: var(--border-strong); }
 
-.mail-app .reader-h h1 { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 600; font-size: 26px; line-height: 1.2; letter-spacing: -.022em; color: var(--fg-strong); margin: 0; font-variant-emoji: text; overflow-wrap: anywhere; }
+.mail-app .reader-h h1 { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 700; font-size: 23px; line-height: 1.2; letter-spacing: -.01em; color: var(--fg-strong); margin: 0; font-variant-emoji: text; overflow-wrap: anywhere; }
 .mail-app .reader-h h1:focus { outline: none; }
 .mail-app .reader-h h1 .star-big { vertical-align: middle; border: none; background: none; color: var(--fg-faint); padding: 0; margin-left: 9px; transition: color var(--dur-fast) var(--ease); }
 .mail-app .reader-h h1 .star-big:hover { color: var(--brass-500); }
@@ -383,8 +383,8 @@
 .mail-app .letterhead .prov .tmark-slot { display: block; width: 1px; height: 25px; }
 .mail-app .letterhead .when { font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-faint); white-space: nowrap; }
 
-.mail-app .sealbar { display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface), var(--bg-raised)); padding: 14px 18px; margin: 0 0 26px; box-shadow: var(--shadow-xs); }
-.mail-app .waxseal { width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; color: var(--primary-fg); position: relative; background: var(--brass-600); box-shadow: var(--shadow-xs); }
+.mail-app .sealbar { display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface), var(--bg-raised)); padding: 14px 18px; margin: 0 0 26px; }
+.mail-app .waxseal { width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; color: var(--primary-fg); position: relative; background: var(--brass-600); }
 .mail-app .waxseal::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1px dashed color-mix(in oklab, var(--primary-fg) 45%, transparent); }
 .mail-app .sealbar .txt { min-width: 0; flex: 1; }
 .mail-app .sealbar .txt .h { font-size: 13.5px; font-weight: 600; color: var(--fg-strong); }
@@ -425,7 +425,7 @@
 @keyframes att-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 @keyframes att-spin { to { transform: rotate(360deg); } }
 
-.mail-app .cal-card { display: flex; gap: 13px; margin: 0 0 14px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: linear-gradient(180deg, var(--bg), var(--bg-raised)); box-shadow: var(--shadow-xs); }
+.mail-app .cal-card { display: flex; gap: 13px; margin: 0 0 14px; padding: 14px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: linear-gradient(180deg, var(--bg), var(--bg-raised)); }
 .mail-app .cal-ic { width: 38px; height: 38px; border-radius: var(--radius-md); background: var(--brass-100); color: var(--brass-700); display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
 .mail-app .cal-ic svg { width: 20px; height: 20px; }
 .mail-app .cal-body { flex: 1 1 auto; min-width: 0; }
@@ -440,7 +440,7 @@
 
 .mail-app .quoted-email { margin-top: 14px; padding-left: 14px; border-left: 2px solid var(--border-strong); }
 
-.mail-app .replybox { margin-top: 28px; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: var(--surface); box-shadow: var(--shadow-sm); overflow: hidden; position: relative; }
+.mail-app .replybox { margin-top: 28px; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: var(--surface); overflow: hidden; position: relative; }
 .mail-app .replybox .rt { display: flex; align-items: center; gap: 6px; height: 46px; padding: 0 10px 0 16px; border-bottom: 1px solid var(--border); }
 .mail-app .replybox .rt-t { margin: 0 auto 0 0; font-size: 15px; font-weight: 600; letter-spacing: -.012em; color: var(--fg-strong); }
 .mail-app .replybox .rt-save { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--fg-muted); white-space: nowrap; }
@@ -692,8 +692,8 @@
 .mail-app .apv-head { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 10px; }
 .mail-app .apv-head svg { width: 13px; height: 13px; color: var(--pine-700); }
 .mail-app .apv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.mail-app .apv-card { position: relative; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: var(--surface); overflow: hidden; box-shadow: var(--shadow-xs); transition: box-shadow var(--dur-fast), border-color var(--dur-fast); }
-.mail-app .apv-card:hover { box-shadow: var(--shadow-sm); border-color: var(--link); }
+.mail-app .apv-card { position: relative; border: 1px solid var(--border-strong); border-radius: var(--radius-surface); background: var(--surface); overflow: hidden; transition: border-color var(--dur-fast); }
+.mail-app .apv-card:hover { border-color: var(--link); }
 .mail-app .apv-thumb { height: 92px; display: flex; align-items: center; justify-content: center; position: relative; background: var(--bg-sunken); border-bottom: 1px solid var(--border); }
 .mail-app button.apv-thumb { width: 100%; margin: 0; padding: 0; border: none; border-bottom: 1px solid var(--border); font: inherit; cursor: zoom-in; }
 .mail-app button.apv-thumb:focus-visible { outline: 2px solid var(--pine-500); outline-offset: -2px; }
@@ -1014,7 +1014,6 @@
 
 	.mail-app .reader-scroll { padding: 0 16px; }
 	.mail-app .reader-inner { margin: 18px 0 32px; }
-	.mail-app .reader-h h1 { font-size: 23px; }
 	.mail-app .reader-bar .rb-reply .rb-t { display: none; }
 	.mail-app .reader-bar .rb-reply { width: var(--btn-h); padding: 0; }
 	.mail-app .letterhead { flex-wrap: wrap; gap: 10px; }

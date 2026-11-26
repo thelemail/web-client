@@ -54,7 +54,7 @@
 			</div>
 			<div class="reader-h sk-h">
 				<div class="skeleton sk sk-title" style="width:84%"></div>
-				<div class="skeleton sk sk-title" style="width:51%; margin-top:11px"></div>
+				<div class="skeleton sk sk-title" style="width:51%; margin-top:4px"></div>
 			</div>
 			<div class="sk-meta">
 				<div class="skeleton sk sk-av"></div>
@@ -129,7 +129,7 @@
 	}
 
 	.sk-h .sk-title {
-		height: 27px;
+		height: 24px;
 		border-radius: 6px;
 	}
 
