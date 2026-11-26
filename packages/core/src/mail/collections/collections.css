@@ -13,32 +13,29 @@
 .cc-colors .cc-swatch:disabled { cursor: default; opacity: .5; }
 .cc-form .btn { align-self: flex-start; }
 
-.cfd-scrim.coll-dialog { z-index: 250; }
-.cfd-scrim .cm-find { display: flex; align-items: center; gap: 7px; margin: 2px 0 10px; padding: 0 10px; height: var(--control-h-sm); border: 1px solid var(--border-control); border-radius: var(--radius-h32); color: var(--fg-faint); }
-.cfd-scrim .cm-find:focus-within { border-color: var(--primary); outline: 2px solid var(--focus-ring); outline-offset: 1px; }
-.cfd-scrim .cm-find input { flex: 1; min-width: 0; border: none; background: none; outline: none; font: inherit; font-size: 13px; color: var(--fg); }
-.cfd-scrim .cm-list { display: flex; flex-direction: column; gap: 1px; max-height: min(46dvh, 380px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 2px 0; }
-.cfd-scrim .cm-opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px 8px calc(10px + var(--depth, 0) * 16px); border-radius: var(--radius-control-compact); cursor: pointer; }
-.cfd-scrim .cm-opt:hover { background: var(--bg-sunken); }
-.cfd-scrim .cm-opt:has(input:checked) { background: var(--pine-100); }
-.cfd-scrim .cm-opt.off { cursor: default; }
-.cfd-scrim .cm-opt.off:hover { background: none; }
-.cfd-scrim .cm-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.cfd-scrim .cm-name { font-size: 13.5px; font-weight: 500; color: var(--fg-strong); overflow-wrap: anywhere; }
-.cfd-scrim .cm-opt.off .cm-name { color: var(--fg-faint); }
-.cfd-scrim .cm-path { font-size: 12px; color: var(--fg-muted); overflow-wrap: anywhere; }
-.cfd-scrim .cm-why { font-size: 11.5px; line-height: 1.45; color: var(--fg-faint); }
-.cfd-scrim .cm-empty { margin: 8px 10px; font-size: 13px; color: var(--fg-faint); }
-.cfd-scrim .cd-lift { margin: 2px 0 12px; }
-.cfd-scrim .cd-dest { border: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.cfd-scrim .cd-dest legend { padding: 0; margin-bottom: 6px; }
-.cfd-scrim .cd-opt { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-control-compact); font-size: 13.5px; color: var(--fg-strong); cursor: pointer; }
-.cfd-scrim .cd-opt:hover { background: var(--bg-sunken); }
-.cfd-scrim .cd-select { margin: 4px 0 4px 38px; width: calc(100% - 38px); }
+.dialog .cm-find { display: flex; align-items: center; gap: 7px; margin: 2px 0 10px; padding: 0 10px; height: var(--control-h-sm); border: 1px solid var(--border-control); border-radius: var(--radius-h32); color: var(--fg-faint); }
+.dialog .cm-find:focus-within { border-color: var(--primary); outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.dialog .cm-find input { flex: 1; min-width: 0; border: none; background: none; outline: none; font: inherit; font-size: 13px; color: var(--fg); }
+.dialog .cm-list { display: flex; flex-direction: column; gap: 1px; max-height: min(46dvh, 380px); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 2px 0; }
+.dialog .cm-opt { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px 8px calc(10px + var(--depth, 0) * 16px); border-radius: var(--radius-control-compact); cursor: pointer; }
+.dialog .cm-opt:hover { background: var(--bg-sunken); }
+.dialog .cm-opt:has(input:checked) { background: var(--pine-100); }
+.dialog .cm-opt.off { cursor: default; }
+.dialog .cm-opt.off:hover { background: none; }
+.dialog .cm-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dialog .cm-name { font-size: 13.5px; font-weight: 500; color: var(--fg-strong); overflow-wrap: anywhere; }
+.dialog .cm-opt.off .cm-name { color: var(--fg-faint); }
+.dialog .cm-path { font-size: 12px; color: var(--fg-muted); overflow-wrap: anywhere; }
+.dialog .cm-why { font-size: 11.5px; line-height: 1.45; color: var(--fg-faint); }
+.dialog .cm-empty { margin: 8px 10px; font-size: 13px; color: var(--fg-faint); }
+.dialog .cd-lift { margin: 2px 0 12px; }
+.dialog .cd-dest { border: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.dialog .cd-dest legend { padding: 0; margin-bottom: 6px; }
+.dialog .cd-opt { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-control-compact); font-size: 13.5px; color: var(--fg-strong); cursor: pointer; }
+.dialog .cd-opt:hover { background: var(--bg-sunken); }
+.dialog .cd-select { margin: 4px 0 4px 38px; width: calc(100% - 38px); }
 @media (max-width: 560px) {
-	.cfd-scrim.coll-dialog { padding: 12px; align-items: flex-end; }
-	.cfd-scrim.coll-dialog .cfd-modal { max-height: calc(100dvh - 24px); }
-	.cfd-scrim .cm-opt, .cfd-scrim .cd-opt { min-height: 44px; }
+	.dialog .cm-opt, .dialog .cd-opt { min-height: 44px; }
 }
 
 .coll-swatches { display: flex; flex-wrap: wrap; gap: 2px; padding: 4px 7px 6px; }

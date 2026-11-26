@@ -324,14 +324,14 @@
 </Card>
 
 {#snippet factorBody()}
-	<p class="cfd-p">{factorCopy.desc}</p>
+	<p class="dialog-p">{factorCopy.desc}</p>
 	{#if factorAction?.kind === 'renameKey'}
-		<label class="cfd-field">
-			<span class="cfd-label">{m.settings_ceremony_twofa_key_name_label()}</span>
+		<label class="dialog-field">
+			<span class="dialog-label">{m.settings_ceremony_twofa_key_name_label()}</span>
 			<input
 				{@attach selectOnMount}
 				bind:value={renameValue}
-				class="field-input cfd-input"
+				class="field-input"
 				maxlength={KEY_NAME_MAX_LENGTH}
 				autocomplete="off"
 				spellcheck={false}

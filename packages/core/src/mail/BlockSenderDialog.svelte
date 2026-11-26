@@ -57,19 +57,19 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">
+		<p class="dialog-p">
 			<Rich text={m.mail_block_body({ address })} tags={{ mono }} />
 		</p>
-		<p class="cfd-p">{m.mail_block_unblock_hint()}</p>
+		<p class="dialog-p">{m.mail_block_unblock_hint()}</p>
 
 		{#if existingCount > 0}
-			<label class="cfd-check">
+			<label class="dialog-check">
 				<input type="checkbox" class="check" bind:checked={moveExisting} disabled={busy} />
 				<span>
-					<span class="cfd-check-t">
+					<span class="dialog-check-t">
 						{m.mail_block_move_existing({ count: existingCount })}
 					</span>
-					<span class="cfd-check-d">
+					<span class="dialog-check-d">
 						{m.mail_block_move_existing_detail()}
 					</span>
 				</span>
@@ -78,4 +78,4 @@
 	{/snippet}
 </ConfirmDialog>
 
-{#snippet mono(t: string)}<span class="cfd-mono">{t}</span>{/snippet}
+{#snippet mono(t: string)}<span class="dialog-mono">{t}</span>{/snippet}

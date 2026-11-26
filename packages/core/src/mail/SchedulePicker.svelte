@@ -49,7 +49,7 @@
 </script>
 
 {#snippet body()}
-	<p class="cfd-p">{m.mail_schedule_body()}</p>
+	<p class="dialog-p">{m.mail_schedule_body()}</p>
 	<div class="sch-list">
 		{#each presets as p (p.id)}
 			<button
@@ -89,9 +89,9 @@
 		/>
 	{/if}
 	{#if rangeError}
-		<p class="cfd-hint">{RANGE_MESSAGES[rangeError]()}</p>
+		<p class="dialog-hint">{RANGE_MESSAGES[rangeError]()}</p>
 	{:else if when}
-		<p class="cfd-hint">{m.mail_schedule_goes_out({ when: formatWhenLong(when, now).toLowerCase() })}</p>
+		<p class="dialog-hint">{m.mail_schedule_goes_out({ when: formatWhenLong(when, now).toLowerCase() })}</p>
 	{/if}
 {/snippet}
 

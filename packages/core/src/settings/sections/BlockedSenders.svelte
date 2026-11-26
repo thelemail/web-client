@@ -200,7 +200,7 @@
 </Card>
 
 {#snippet unblockBody()}
-	<p class="cfd-p">{m.settings_blocked_unblock_body()}</p>
+	<p class="dialog-p">{m.settings_blocked_unblock_body()}</p>
 {/snippet}
 
 {#if pendingUnblock}

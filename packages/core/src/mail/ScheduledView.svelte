@@ -171,7 +171,7 @@
 </div>
 
 {#snippet cancelBody()}
-	<p class="cfd-p">{m.mail_scheduled_cancel_body()}</p>
+	<p class="dialog-p">{m.mail_scheduled_cancel_body()}</p>
 {/snippet}
 
 {#if pendingCancel}

@@ -77,7 +77,7 @@
 		const el = node.querySelector<HTMLElement>(
 			'input[type="search"], input:checked:not(:disabled), input:not(:disabled), button:not(:disabled)'
 		);
-		(el ?? node.closest('.cfd-modal')?.querySelector<HTMLElement>('.cfd-actions button'))?.focus();
+		(el ?? node.closest('.dialog')?.querySelector<HTMLElement>('.dialog-footer button'))?.focus();
 	}
 </script>
 
@@ -85,7 +85,7 @@
 	{#key children.length === 0}
 		<div class="cc-body" {@attach focusFirst}>
 			{#if children.length > 0}
-				<p class="cfd-p">
+				<p class="dialog-p">
 					{folder
 						? m.mail_collection_delete_blocked_folder({ count: children.length })
 						: m.mail_collection_delete_blocked_label({ count: children.length })}
@@ -97,7 +97,7 @@
 							: m.mail_collection_delete_lift_top()}
 					</Button>
 				</div>
-				<p class="cfd-hint">
+				<p class="dialog-hint">
 					{folder ? m.mail_collection_delete_blocked_hint_folder() : m.mail_collection_delete_blocked_hint_label()}
 				</p>
 			{:else if folder}
@@ -126,10 +126,10 @@
 						{/if}
 					{/if}
 				</fieldset>
-				<p class="cfd-p">{m.mail_collection_delete_folder_body({ place: placeName })}</p>
-				<p class="cfd-hint">{m.mail_collection_delete_folder_hint({ place: placeName })}</p>
+				<p class="dialog-p">{m.mail_collection_delete_folder_body({ place: placeName })}</p>
+				<p class="dialog-hint">{m.mail_collection_delete_folder_hint({ place: placeName })}</p>
 			{:else}
-				<p class="cfd-p">{m.mail_collection_delete_label_body()}</p>
+				<p class="dialog-p">{m.mail_collection_delete_label_body()}</p>
 			{/if}
 		</div>
 	{/key}

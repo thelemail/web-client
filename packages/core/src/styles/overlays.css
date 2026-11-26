@@ -1,14 +1,14 @@
 .dialog-overlay {
 	position: fixed;
 	inset: 0;
-	z-index: 50;
+	z-index: var(--z-dialog);
 	background: var(--scrim);
 }
 .dialog {
 	position: fixed;
 	top: 50%;
 	left: 50%;
-	z-index: 50;
+	z-index: var(--z-dialog);
 	display: grid;
 	gap: 16px;
 	width: min(var(--dialog-w, 440px), calc(100% - 32px));
@@ -80,6 +80,82 @@
 	justify-content: flex-end;
 	gap: 8px;
 	margin-top: 4px;
+}
+.dialog-sub {
+	overflow: hidden;
+	font-size: 12.5px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.dialog-body {
+	min-height: 0;
+	overflow-y: auto;
+}
+.dialog-body > .segmented {
+	margin: 4px 0 8px;
+}
+.dialog-p {
+	margin: 0 0 10px;
+	color: var(--fg-muted);
+	font-size: 14px;
+	line-height: 1.55;
+}
+.dialog-p:last-child {
+	margin-bottom: 0;
+}
+.dialog-mono {
+	color: var(--fg);
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+}
+.dialog-hint {
+	margin: 0 0 12px;
+	color: var(--fg-faint);
+	font-size: 12.5px;
+	line-height: 1.5;
+}
+.dialog-field {
+	display: grid;
+	gap: 6px;
+}
+.dialog-label {
+	color: var(--fg-muted);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+.dialog-check {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 11px 13px;
+	border: 1px solid var(--border-soft);
+	border-radius: var(--radius-control);
+	background: var(--bg-raised);
+	cursor: pointer;
+}
+.dialog-check .check {
+	margin-top: 1px;
+}
+.dialog-check-t {
+	display: block;
+	color: var(--fg-strong);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+.dialog-check-d {
+	display: block;
+	margin-top: 3px;
+	color: var(--fg-muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
+.dialog-err {
+	padding: 9px 12px;
+	border-radius: var(--radius-control);
+	background: var(--danger-100);
+	color: var(--danger-700);
+	font-size: 13px;
+	line-height: 1.5;
 }
 .dialog-close {
 	position: absolute;
@@ -171,7 +247,7 @@
 }
 
 .menu {
-	z-index: 60;
+	z-index: var(--z-popover);
 	min-width: 200px;
 	max-height: var(--bits-dropdown-menu-content-available-height, 70dvh);
 	overflow-x: hidden;
@@ -273,7 +349,7 @@
 }
 
 .tooltip {
-	z-index: 70;
+	z-index: var(--z-popover);
 	display: inline-flex;
 	align-items: center;
 	gap: 8px;

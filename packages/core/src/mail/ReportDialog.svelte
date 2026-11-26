@@ -70,10 +70,9 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">{m.mail_report_body()}</p>
+		<p class="dialog-p">{m.mail_report_body()}</p>
 
 		<Segmented
-			class="cfd-seg"
 			size="md"
 			block
 			aria-label={m.mail_report_reason_aria()}
@@ -81,13 +80,13 @@
 			bind:value={kind}
 			options={KINDS.map((k) => ({ value: k.id, label: k.label() }))}
 		/>
-		<p class="cfd-hint">{hint}</p>
+		<p class="dialog-hint">{hint}</p>
 
-		<label class="cfd-check">
+		<label class="dialog-check">
 			<input type="checkbox" class="check" bind:checked={includeHeaders} disabled={busy} />
 			<span>
-				<span class="cfd-check-t">{m.mail_report_include_headers()}</span>
-				<span class="cfd-check-d">
+				<span class="dialog-check-t">{m.mail_report_include_headers()}</span>
+				<span class="dialog-check-d">
 					{senderAddress
 						? m.mail_report_include_headers_detail_sender({ sender: senderAddress })
 						: m.mail_report_include_headers_detail()}

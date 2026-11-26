@@ -109,7 +109,7 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">
+		<p class="dialog-p">
 			{#if method.kind === 'one-click'}
 				<Rich text={m.mail_unsub_body_one_click({ domain: hostOf(method.url) })} tags={{ mono }} />
 			{:else if method.kind === 'mailto'}
@@ -124,4 +124,4 @@
 	{/snippet}
 </ConfirmDialog>
 
-{#snippet mono(t: string)}<span class="cfd-mono">{t}</span>{/snippet}
+{#snippet mono(t: string)}<span class="dialog-mono">{t}</span>{/snippet}

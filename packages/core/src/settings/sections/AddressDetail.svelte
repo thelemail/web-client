@@ -363,11 +363,11 @@
 	{#snippet mono(t: string)}<span class="mono">{t}</span>{/snippet}
 
 	{#snippet removalBody()}
-		<p class="cfd-p">
+		<p class="dialog-p">
 			<Rich text={m.settings_address_remove_confirm_body({ email: row.email })} tags={{ mono }} />
 		</p>
 		{#if row.kind === 'shared' && row.people.length}
-			<p class="cfd-p">
+			<p class="dialog-p">
 				{m.settings_address_remove_confirm_people({ count: row.people.length })}
 			</p>
 		{/if}

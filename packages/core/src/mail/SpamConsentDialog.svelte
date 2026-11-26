@@ -25,7 +25,7 @@
 	{onClose}
 >
 	{#snippet body()}
-		<p class="cfd-p">{m.mail_spam_consent_body()}</p>
-		<p class="cfd-p">{m.mail_spam_consent_remember()}</p>
+		<p class="dialog-p">{m.mail_spam_consent_body()}</p>
+		<p class="dialog-p">{m.mail_spam_consent_remember()}</p>
 	{/snippet}
 </ConfirmDialog>

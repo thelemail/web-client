@@ -1918,7 +1918,7 @@
 	</button>
 {/if}
 {#snippet deleteBody()}
-	<p class="cfd-p">
+	<p class="dialog-p">
 		{pendingDelete && pendingDelete.ids.length > 1
 			? msg.mail_delete_body_many()
 			: msg.mail_delete_body_one()}

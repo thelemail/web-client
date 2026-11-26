@@ -183,7 +183,7 @@
 	{/if}
 </Card>
 
-{#snippet revokeAllBody()}<p class="cfd-p">{m.settings_security_revoke_all_desc()}</p>{/snippet}
+{#snippet revokeAllBody()}<p class="dialog-p">{m.settings_security_revoke_all_desc()}</p>{/snippet}
 
 {#if confirmAll}
 	<ConfirmDialog

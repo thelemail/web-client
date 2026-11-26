@@ -38,7 +38,7 @@
 		{#if showCloseButton}
 			<DialogPrimitive.Close data-slot="dialog-close">
 				{#snippet child({ props })}
-					<Button variant="ghost" size="icon-sm" class="dialog-close" aria-label={m.common_close()} {...props}>
+					<Button variant="ghost" size="icon-sm" class="dialog-close" aria-label={m.common_close()} {...props} data-state={undefined}>
 						<Icon icon={faXmark} />
 					</Button>
 				{/snippet}

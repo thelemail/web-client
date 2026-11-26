@@ -1390,7 +1390,7 @@
 </div>
 
 {#snippet discardBody()}
-	<p class="cfd-p">{m.mail_compose_discard_body()}</p>
+	<p class="dialog-p">{m.mail_compose_discard_body()}</p>
 {/snippet}
 
 {#if confirmDiscard}

@@ -1204,16 +1204,16 @@
 .mail-app .new-strip:hover { background: var(--primary-hover); }
 .mail-app .new-strip svg { flex: 0 0 auto; }
 
-.cfd-scrim .sch-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-.cfd-scrim .sch-opt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font-family: inherit; font-size: 13.5px; color: var(--fg); background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 9px 12px; cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast); }
-.cfd-scrim .sch-opt svg { width: 16px; height: 16px; color: var(--fg-muted); flex: 0 0 auto; }
-.cfd-scrim .sch-opt:hover { background: var(--bg-sunken); }
-.cfd-scrim .sch-opt.on { background: var(--pine-100); border-color: var(--pine-500); color: var(--pine-700); font-weight: 600; }
-.cfd-scrim .sch-opt.on svg { color: var(--pine-600); }
-.cfd-scrim .sch-opt:disabled { opacity: .55; pointer-events: none; }
-.cfd-scrim .sch-name { flex: 1; }
-.cfd-scrim .sch-when { font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--fg-faint); }
-.cfd-scrim .sch-input { margin-bottom: 10px; }
+.dialog .sch-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.dialog .sch-opt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; font-family: inherit; font-size: 13.5px; color: var(--fg); background: var(--bg-raised); border: 1px solid var(--border); border-radius: var(--radius-control); padding: 9px 12px; cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast); }
+.dialog .sch-opt svg { width: 16px; height: 16px; color: var(--fg-muted); flex: 0 0 auto; }
+.dialog .sch-opt:hover { background: var(--bg-sunken); }
+.dialog .sch-opt.on { background: var(--pine-100); border-color: var(--pine-500); color: var(--pine-700); font-weight: 600; }
+.dialog .sch-opt.on svg { color: var(--pine-600); }
+.dialog .sch-opt:disabled { opacity: .55; pointer-events: none; }
+.dialog .sch-name { flex: 1; }
+.dialog .sch-when { font-family: var(--font-mono); font-size: 11px; font-weight: 400; color: var(--fg-faint); }
+.dialog .sch-input { margin-bottom: 10px; }
 
 @media (prefers-reduced-motion: reduce) {
 	.mail-app .lh-btn.refreshing svg { animation: none; opacity: .5; }

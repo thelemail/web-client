@@ -37,12 +37,12 @@
 	{onClose}
 >
 	{#snippet body()}
-		<label class="cfd-field">
-			<span class="cfd-label">{m.mail_link_address()}</span>
+		<label class="dialog-field">
+			<span class="dialog-label">{m.mail_link_address()}</span>
 			<input
 				{@attach focusInput}
 				bind:value
-				class="field-input cfd-input"
+				class="field-input"
 				type="url"
 				inputmode="url"
 				autocomplete="off"

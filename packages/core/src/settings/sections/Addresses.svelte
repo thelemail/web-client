@@ -350,7 +350,7 @@
 {/if}
 
 {#snippet removalBody()}
-	<p class="cfd-p">{m.settings_address_remove_body()}</p>
+	<p class="dialog-p">{m.settings_address_remove_body()}</p>
 {/snippet}
 
 {#if pendingRemoval}
