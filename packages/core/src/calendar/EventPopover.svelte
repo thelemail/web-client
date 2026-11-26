@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faCalendarDays,
 		faCheck,
@@ -78,19 +79,19 @@
 	<div class="evpop-top">
 		<div class="grow"></div>
 		{#if selection.canEdit}
-			<button type="button" class="evpop-ic" aria-label={m.common_edit()} onclick={edit}>
+			<Button variant="ghost" size="icon-sm" aria-label={m.common_edit()} onclick={edit}>
 				<Icon icon={faPenLine} size={17} />
-			</button>
-			<button type="button" class="evpop-ic" aria-label={m.cal_pop_duplicate_aria()} onclick={duplicate}>
+			</Button>
+			<Button variant="ghost" size="icon-sm" aria-label={m.cal_pop_duplicate_aria()} onclick={duplicate}>
 				<Icon icon={faCopy} size={17} />
-			</button>
-			<button type="button" class="evpop-ic danger" aria-label={m.common_delete()} onclick={remove}>
+			</Button>
+			<Button variant="ghostDanger" size="icon-sm" aria-label={m.common_delete()} onclick={remove}>
 				<Icon icon={faTrashCan} size={17} />
-			</button>
+			</Button>
 		{/if}
-		<button type="button" class="evpop-ic" aria-label={m.common_close()} onclick={onClose}>
+		<Button variant="ghost" size="icon-sm" aria-label={m.common_close()} onclick={onClose}>
 			<Icon icon={faXmark} size={17} />
-		</button>
+		</Button>
 	</div>
 	<div class="evpop-body">
 		<div class="evpop-h">

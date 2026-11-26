@@ -72,8 +72,9 @@
 	position: relative;
 	display: flex;
 	align-items: stretch;
+	height: var(--control-h-md);
 	margin: 0 2px 8px;
-	border-radius: var(--radius-control);
+	border-radius: var(--radius-h40);
 	box-shadow: var(--shadow-sm);
 	flex: 0 0 auto;
 }
@@ -84,6 +85,10 @@ button.create {
 	cursor: pointer;
 	width: 100%;
 }
+.cal-app .create:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
+}
 .cal-app .cr-main {
 	flex: 1 1 auto;
 	display: inline-flex;
@@ -93,30 +98,31 @@ button.create {
 	border: none;
 	background: var(--primary);
 	color: var(--primary-fg);
-	font-size: 14px;
-	font-weight: 550;
-	letter-spacing: var(--track-snug);
-	border-radius: var(--radius-control) 0 0 var(--radius-control);
-	padding: 10px 14px;
+	font-size: 14.5px;
+	font-weight: 600;
+	border-radius: var(--radius-h40) 0 0 var(--radius-h40);
+	padding: 0 16px;
 	cursor: pointer;
-	transition: background var(--dur);
+	transition: background-color var(--dur) var(--ease);
 }
 .cal-app .cr-caret {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
+	width: 36px;
 	border: none;
 	background: var(--primary);
 	color: var(--primary-fg);
-	border-left: 1px solid color-mix(in oklab, var(--primary-fg) 18%, transparent);
-	border-radius: 0 var(--radius-control) var(--radius-control) 0;
+	border-left: 1px solid color-mix(in oklab, var(--primary-fg) 22%, transparent);
+	border-radius: 0 var(--radius-h40) var(--radius-h40) 0;
 	cursor: pointer;
-	transition: background var(--dur);
+	transition: background-color var(--dur) var(--ease);
 }
-.cal-app .cr-main:hover,
-.cal-app .cr-caret:hover { background: var(--primary-hover); }
-.cal-app .create:active { transform: translateY(1px); }
+@media (hover: hover) {
+	.cal-app .cr-main:hover,
+	.cal-app .cr-caret:hover { background: var(--primary-hover); }
+}
+.cal-app .create:active :is(.cr-main, .cr-caret) { background: var(--primary-press); }
 
 .cal-app .rail-scroll {
 	flex: 1;
@@ -137,19 +143,6 @@ button.create {
 	color: var(--fg-strong);
 	letter-spacing: 0.01em;
 }
-.cal-app .mini-h button {
-	width: 26px;
-	height: 26px;
-	border-radius: var(--radius-control-compact);
-	border: none;
-	background: none;
-	color: var(--fg-faint);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-}
-.cal-app .mini-h button:hover { background: var(--bg-sunken); color: var(--fg-strong); }
 .cal-app .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; }
 .cal-app .mini-dow {
 	font-size: 9.5px;
@@ -205,19 +198,6 @@ button.create {
 	padding: 14px 9px 7px;
 }
 .cal-app .cal-group .gh span { flex: 1; }
-.cal-app .cal-group .gh .addbtn {
-	width: 20px;
-	height: 20px;
-	border-radius: var(--radius-control-compact);
-	border: none;
-	background: none;
-	color: var(--fg-faint);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-}
-.cal-app .cal-group .gh .addbtn:hover { background: var(--bg-sunken); color: var(--fg-strong); }
 .cal-app .cal-item { cursor: default; }
 
 .cal-app .cal-item,
@@ -343,27 +323,7 @@ button.create {
 	border-bottom: 1px solid var(--border);
 	z-index: 30;
 }
-.cal-app .icon-btn {
-	width: 34px;
-	height: 34px;
-	border-radius: var(--radius-control-compact);
-	border: 1px solid transparent;
-	background: transparent;
-	color: var(--fg-muted);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	position: relative;
-	cursor: pointer;
-	transition: background var(--dur);
-}
-.cal-app .icon-btn:hover { background: var(--bg-sunken); }
-.cal-app .icon-btn.on {
-	background: var(--pine-100);
-	color: var(--pine-700);
-	border-color: color-mix(in oklch, var(--pine-500) 24%, transparent);
-}
-.cal-app .icon-btn .nd {
+.cal-app .tb-actions .nd {
 	position: absolute;
 	top: 6px;
 	right: 7px;
@@ -374,19 +334,6 @@ button.create {
 	border: 2px solid var(--surface);
 }
 .cal-app .nav-arrows { display: flex; align-items: center; gap: 2px; }
-.cal-app .nav-arrows button {
-	width: 32px;
-	height: 32px;
-	border-radius: var(--radius-control-compact);
-	border: none;
-	background: none;
-	color: var(--fg-muted);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-}
-.cal-app .nav-arrows button:hover { background: var(--bg-sunken); color: var(--fg); }
 .cal-app .cal-title {
 	font-size: 21px;
 	font-weight: 500;
@@ -426,22 +373,7 @@ button.create {
 }
 .cal-app .tb-actions { display: flex; align-items: center; gap: 4px; }
 .cal-app .menu-btn { display: none; }
-.cal-app .viewdrop {
-	display: none;
-	align-items: center;
-	gap: 8px;
-	height: 34px;
-	padding: 0 13px;
-	border: 1px solid var(--border-strong);
-	background: var(--surface);
-	border-radius: var(--radius-control-compact);
-	font-size: 13.5px;
-	font-weight: 600;
-	color: var(--fg);
-	box-shadow: var(--shadow-xs);
-	cursor: pointer;
-}
-.cal-app .viewdrop svg { color: var(--fg-muted); }
+.cal-app .viewdrop { display: none; }
 .cal-app .rail-scrim { display: none; }
 
 .cal-app .cal-body { flex: 1; display: flex; min-height: 0; background: var(--surface); }
@@ -465,19 +397,6 @@ button.create {
 .cal-app .sysbar.info { background: var(--info-100); color: var(--info-700); }
 .cal-app .sysbar svg { flex: 0 0 auto; }
 .cal-app .sysbar b { font-weight: 600; }
-.cal-app .sysbar .sb-a {
-	border: 1px solid currentColor;
-	background: none;
-	border-radius: var(--radius-control-compact);
-	height: 26px;
-	padding: 0 11px;
-	font-size: 12px;
-	font-weight: 600;
-	color: inherit;
-	opacity: 0.9;
-	cursor: pointer;
-}
-.cal-app .sysbar .sb-a:hover { opacity: 1; background: color-mix(in srgb, currentColor 10%, transparent); }
 .cal-app .sysbar .sb-count {
 	font-family: var(--font-mono);
 	font-size: 11px;
@@ -611,25 +530,8 @@ button.create {
 	border: 1.5px dashed var(--brass-500);
 }
 .cal-app .lg-spacer { flex: 1 1 40px; }
-.cal-app .ackbtn {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	height: 28px;
-	padding: 0 11px;
-	border-radius: var(--radius-control-compact);
-	border: 1px solid var(--border-strong);
-	background: var(--surface);
-	font-size: 11.5px;
-	font-weight: 600;
-	color: var(--fg-muted);
-	white-space: nowrap;
-	cursor: pointer;
-}
-.cal-app .ackbtn:hover { background: var(--bg-sunken); }
 .cal-app .ackbtn.done {
 	background: var(--success-100);
-	border-color: color-mix(in oklch, var(--success-500) 34%, transparent);
 	color: var(--success-700);
 }
 
@@ -1515,7 +1417,6 @@ button.create {
 }
 .cal-app .tkpane-h .tt { font-size: 14px; font-weight: 560; color: var(--fg-strong); flex: 1; }
 .cal-app .tkpane-h .cnt { font-family: var(--font-mono); font-size: 11px; color: var(--brass-600); }
-.cal-app .tk-x { width: 30px; height: 30px; }
 .cal-app .tkr-t { cursor: pointer; }
 .cal-app .tkpane-scroll {
 	padding: 10px;
@@ -1958,37 +1859,12 @@ button.create {
 }
 .cal-surface .sysbar.warn { background: var(--warning-100); color: var(--warning-700); }
 .cal-surface .sysbar.info { background: var(--info-100); color: var(--info-700); }
-.cal-surface .sysbar .sb-a {
-	border: 1px solid currentColor;
-	background: none;
-	border-radius: var(--radius-control-compact);
-	height: 26px;
-	padding: 0 11px;
-	font-size: 12px;
-	font-weight: 600;
-	color: inherit;
-	cursor: pointer;
-}
 .cal-surface .mtable-wrap { padding: 16px; }
 .cal-surface .mtable-wrap .card { margin: 0; }
 
 /* event popover */
 .cal-pop { width: 368px; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); overflow-y: auto; padding: 0; }
 .cal-pop .evpop-top { display: flex; align-items: center; gap: 4px; padding: 9px 10px 0; }
-.cal-pop .evpop-ic {
-	width: 32px;
-	height: 32px;
-	border-radius: var(--radius-control-compact);
-	border: none;
-	background: none;
-	color: var(--fg-muted);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-}
-.cal-pop .evpop-ic:hover { background: var(--bg-sunken); color: var(--fg); }
-.cal-pop .evpop-ic.danger:hover { background: var(--danger-100); color: var(--danger-700); }
 .cal-pop .evpop-body { padding: 6px 20px 22px; }
 .cal-pop .evpop-h { display: flex; gap: 13px; align-items: flex-start; }
 .cal-pop .evpop-swatch {
@@ -2048,7 +1924,7 @@ button.create {
 }
 @media (max-width: 1180px) {
 	.cal-app .viewseg { display: none; }
-	.cal-app .viewdrop { display: flex; }
+	.cal-app .viewdrop { display: inline-flex; }
 }
 @media (max-width: 1100px) {
 	.cal-app .bkwrap { grid-template-columns: 1fr; }
@@ -2058,7 +1934,7 @@ button.create {
 	.cal-app .tkpane { position: fixed; right: 0; top: 0; bottom: 0; z-index: 80; box-shadow: var(--shadow-lg); }
 }
 @media (max-width: 1040px) {
-	.cal-app .menu-btn { display: flex; }
+	.cal-app .menu-btn { display: inline-flex; }
 	.cal-app .rail {
 		position: fixed;
 		left: 0;

@@ -86,7 +86,7 @@
 			{#if !calendarStore.online}<Icon icon={faCloudSlash} size={16} />{:else}<Icon icon={faArrowsRotate} size={16} />{/if}
 			<span>{cal.systemBarText}</span>
 			<div class="grow"></div>
-			<button type="button" class="sb-a" onclick={() => calendarStore.flush()}>{m.cal_queue_send_now()}</button>
+			<Button variant="neutral" size="sm" onclick={() => calendarStore.flush()}>{m.cal_queue_send_now()}</Button>
 		</div>
 
 		{#if !calendarStore.queue.length}

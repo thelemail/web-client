@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faChevronDown } from '@fortawesome/pro-regular-svg-icons';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import * as ToggleGroup from '$core/components/ui/toggle-group';
@@ -36,8 +37,12 @@
 </ToggleGroup.Root>
 
 <DropdownMenu.Root>
-	<DropdownMenu.Trigger class="viewdrop">
-		{current?.label() ?? m.cal_view_fallback()}<Icon icon={faChevronDown} size={15} />
+	<DropdownMenu.Trigger>
+		{#snippet child({ props })}
+			<Button {...props} variant="neutral" size="sm" class="viewdrop">
+				{current?.label() ?? m.cal_view_fallback()}<Icon icon={faChevronDown} size={15} />
+			</Button>
+		{/snippet}
 	</DropdownMenu.Trigger>
 	<DropdownMenu.Content class="cal-surface cal-menu w-40" align="end">
 		{#each VIEWS as view (view.value)}

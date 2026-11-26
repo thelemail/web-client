@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Popover from '$core/components/ui/popover';
@@ -84,14 +85,14 @@
 										<Avatar initials={row.ownerInit} size={20} />
 									{/if}{row.ownerLabel}
 								</span>
-								<button
-									type="button"
-									class="ackbtn"
-									class:done={row.seen}
+								<Button
+									variant="neutral"
+									size="sm"
+									class={['ackbtn', row.seen && 'done']}
 									onclick={() => cal.toggleAck(row.occ.item.id, row.seen)}
 								>
 									<Icon icon={faCheck} size={13} />{row.seenLabel}
-								</button>
+								</Button>
 							</div>
 						</div>
 					{/each}

@@ -31,6 +31,7 @@
 						icon: faInbox,
 						dot: true,
 						on: false,
+						toggle: false,
 						run: () => (cal.dialog = 'mail')
 					}
 				]
@@ -41,6 +42,7 @@
 			icon: faListCheck,
 			dot: false,
 			on: cal.tasksOpen,
+			toggle: true,
 			run: () => (cal.tasksOpen = !cal.tasksOpen)
 		},
 		{
@@ -49,6 +51,7 @@
 			icon: faArrowsRotate,
 			dot: calendarStore.pendingCount > 0 || calendarStore.blockedCount > 0,
 			on: calendarStore.syncing,
+			toggle: false,
 			run: () => (cal.dialog = 'sync')
 		},
 		{
@@ -57,32 +60,34 @@
 			icon: faGear,
 			dot: false,
 			on: false,
+			toggle: false,
 			run: () => void goto(`/u/${slot}/settings/region`)
 		}
 	]);
 </script>
 
 <div class="topbar">
-	<button
-		type="button"
-		class="icon-btn menu-btn"
+	<Button
+		variant="ghost"
+		size="icon-sm"
+		class="menu-btn"
 		aria-label={m.cal_topbar_menu_aria()}
 		onclick={() => (cal.navOpen = true)}
 	>
 		<Icon icon={faBars} size={18} />
-	</button>
+	</Button>
 
 	{#if cal.isDated}
 		<Button variant="neutral" size="sm" onclick={() => cal.goToday()}>
 			<Icon icon={faCalendarClock} size={15} />{m.cal_topbar_today()}
 		</Button>
 		<div class="nav-arrows">
-			<button type="button" aria-label={m.cal_topbar_prev_aria()} onclick={() => cal.prev()}>
+			<Button variant="ghost" size="icon-sm" aria-label={m.cal_topbar_prev_aria()} onclick={() => cal.prev()}>
 				<Icon icon={faChevronLeft} size={19} />
-			</button>
-			<button type="button" aria-label={m.cal_topbar_next_aria()} onclick={() => cal.next()}>
+			</Button>
+			<Button variant="ghost" size="icon-sm" aria-label={m.cal_topbar_next_aria()} onclick={() => cal.next()}>
 				<Icon icon={faChevronRight} size={19} />
-			</button>
+			</Button>
 		</div>
 	{/if}
 
@@ -105,13 +110,13 @@
 		{#each actions as action (action.key)}
 			<Tooltip.Provider delayDuration={300}>
 				<Tooltip.Root>
-					<Tooltip.Trigger
-						class="icon-btn {action.on ? 'on' : ''}"
-						aria-label={action.label}
-						onclick={action.run}
-					>
-						<Icon icon={action.icon} size={18} />
-						{#if action.dot}<i class="nd"></i>{/if}
+					<Tooltip.Trigger onclick={action.run}>
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm" aria-label={action.label} aria-pressed={action.toggle ? action.on : action.on || undefined}>
+								<Icon icon={action.icon} size={18} />
+								{#if action.dot}<i class="nd"></i>{/if}
+							</Button>
+						{/snippet}
 					</Tooltip.Trigger>
 					<Tooltip.Content>{action.label}</Tooltip.Content>
 				</Tooltip.Root>
