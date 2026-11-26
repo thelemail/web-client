@@ -313,7 +313,10 @@
 	function closeCreate(restore = true) {
 		const anchor = creating?.anchor;
 		creating = null;
-		if (restore && anchor?.isConnected) anchor.focus();
+		if (!restore || !anchor) return;
+		void tick().then(() => {
+			if (anchor.isConnected) anchor.focus();
+		});
 	}
 
 	function created(entry: CollectionEntry) {
