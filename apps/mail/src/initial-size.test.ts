@@ -63,6 +63,24 @@ describe('initialClosure', () => {
 		expect(initialClosure(graph([], modules)).forbidden).toEqual([...modules].sort());
 	});
 
+	it('reports the editor, parser, sanitizer, OpenPGP and calendar parser reachable at load', () => {
+		const modules = [
+			'node_modules/.pnpm/@tiptap+core@3/node_modules/@tiptap/core/dist/index.js',
+			'node_modules/.pnpm/prosemirror-view@1/node_modules/prosemirror-view/dist/index.js',
+			'node_modules/.pnpm/linkifyjs@4/node_modules/linkifyjs/dist/linkify.mjs',
+			'node_modules/.pnpm/postal-mime@2/node_modules/postal-mime/src/postal-mime.js',
+			'node_modules/.pnpm/dompurify@3/node_modules/dompurify/dist/purify.es.mjs',
+			'node_modules/.pnpm/openpgp@6/node_modules/openpgp/dist/openpgp.min.mjs',
+			'node_modules/.pnpm/ical.js@2/node_modules/ical.js/dist/ical.js'
+		];
+		expect(initialClosure(graph([], modules)).forbidden).toEqual([...modules].sort());
+	});
+
+	it('allows the encoded-word decoder from postal-mime', () => {
+		const modules = ['node_modules/.pnpm/postal-mime@2/node_modules/postal-mime/src/decode-strings.js'];
+		expect(initialClosure(graph([], modules)).forbidden).toEqual([]);
+	});
+
 	it('fails loudly when the build layout changes', () => {
 		expect(() => initialClosure(graph().filter((c) => !c.file.includes('entry/app')))).toThrow('entry chunks not found');
 		expect(() => initialClosure(graph().filter((c) => !c.file.includes('nodes/3')))).toThrow('no chunk holds');
