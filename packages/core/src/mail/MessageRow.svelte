@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatNumber } from '$core/i18n/intl';
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -367,7 +368,7 @@
 			{#if hit}
 				<span class="stxt" id="{uid}-subj" dir="auto"><Marked text={m.subj} spans={hit.subjectSpans} /></span>
 				{#if hit.matches > 1}
-					<span class="hit-ct">{msg.mail_search_row_matches({ count: hit.matches, shown: new Intl.NumberFormat().format(hit.matches) })}</span>
+					<span class="hit-ct">{msg.mail_search_row_matches({ count: hit.matches, shown: formatNumber(hit.matches) })}</span>
 				{/if}
 				<span class="prev" id="{uid}-prev" dir="auto">
 					{#if matchedIn}<span class="hit-in">{matchedIn}</span>{/if}

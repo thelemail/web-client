@@ -1,5 +1,28 @@
 import { i18n } from './locale.svelte';
 
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
+export function dateFormat(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+	const key = `${locale}|${JSON.stringify(options)}`;
+	let format = dateFormats.get(key);
+	if (!format) {
+		format = new Intl.DateTimeFormat(locale, options);
+		dateFormats.set(key, format);
+	}
+	return format;
+}
+
+export function formatNumber(n: number, options: Intl.NumberFormatOptions = {}): string {
+	const key = JSON.stringify(options);
+	let format = numberFormats.get(key);
+	if (!format) {
+		format = new Intl.NumberFormat(undefined, options);
+		numberFormats.set(key, format);
+	}
+	return format.format(n);
+}
+
 export function intlLocale(english = 'en'): string {
 	return i18n.locale === 'en' ? english : i18n.tag;
 }
@@ -9,14 +32,14 @@ export function dateParts(
 	options: Intl.DateTimeFormatOptions
 ): Partial<Record<Intl.DateTimeFormatPartTypes, string>> {
 	const parts: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {};
-	for (const part of new Intl.DateTimeFormat(i18n.tag, options).formatToParts(date)) {
+	for (const part of dateFormat(i18n.tag, options).formatToParts(date)) {
 		if (part.type !== 'literal') parts[part.type] = part.value;
 	}
 	return parts;
 }
 
 export function weekdayName(sundayIndex: number, style: 'long' | 'short' | 'narrow'): string {
-	return new Intl.DateTimeFormat(intlLocale('en-GB'), { weekday: style, timeZone: 'UTC' }).format(
+	return dateFormat(intlLocale('en-GB'), { weekday: style, timeZone: 'UTC' }).format(
 		new Date(Date.UTC(2024, 0, 7 + sundayIndex))
 	);
 }

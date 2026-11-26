@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatNumber } from '$core/i18n/intl';
 	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import { untrack } from 'svelte';
@@ -177,7 +178,7 @@
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
-	const fmt = (n: number) => new Intl.NumberFormat().format(n);
+	const fmt = (n: number) => formatNumber(n);
 	const activeFilters = $derived(countActiveFilters(filters));
 
 	const searchEmpty = $derived.by<{ title: string; detail: string; retry: boolean; finish?: boolean } | null>(() => {

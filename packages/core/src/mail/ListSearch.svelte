@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatNumber } from '$core/i18n/intl';
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import { Chip } from '$core/components/ui/chip';
@@ -120,10 +121,10 @@
 	const open = $derived(focused && !dismissed && !composing && (options.length > 0 || indexing !== null));
 
 	function fmt(n: number): string {
-		return new Intl.NumberFormat().format(n);
+		return formatNumber(n);
 	}
 	function mb(bytes: number): string {
-		return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(bytes / 1_000_000);
+		return formatNumber(bytes / 1_000_000, { maximumFractionDigits: 0 });
 	}
 	const activeId = $derived(open && highlight >= 0 && highlight < options.length ? `${uid}-${options[highlight].key}` : undefined);
 	const showLooking = $derived(typed.length > 0 && mailSearch.previewing && mailSearch.preview.length === 0);
