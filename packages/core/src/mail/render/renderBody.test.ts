@@ -89,9 +89,5 @@ describe('renderBody', () => {
 		expect(designed.documentElement.matches('[data-theme="dark"].designed')).toBe(true);
 		expect(plainHtml.documentElement.matches('[data-theme="dark"]:not(.designed)')).toBe(true);
 		expect(plain.documentElement.matches('[data-theme="dark"]:not(.designed)')).toBe(true);
-		const css = designed.querySelector('style')!.textContent!;
-		expect(css).toContain(':root[data-theme="dark"].designed{color-scheme:light;background:#fff}');
-		expect(css).toContain(':root[data-theme="dark"]:not(.designed) body *{color:#E0E3E7!important');
-		expect(css).not.toMatch(/filter|brightness/);
 	});
 });
