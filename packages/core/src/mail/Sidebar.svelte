@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Wordmark from '$core/components/Wordmark.svelte';
+	import Logo from '$core/components/Logo.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -437,7 +437,7 @@
 {/snippet}
 
 <aside class="rail" bind:this={rail} aria-label={m.mail_sidebar_navigation()}>
-	<a class="brand" href="/" aria-label="Thelemail"><Wordmark /></a>
+	<a class="brand" href="/" aria-label="Thelemail"><Logo /></a>
 
 	<button class="compose" onclick={onCompose}>
 		<Icon icon={faPenLine} size={17} />{m.mail_sidebar_compose()}

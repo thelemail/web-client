@@ -12,6 +12,8 @@
 	--fg-faint:       #7A7976;
 	--fg-on-pine:     #F0F7F3;
 	--brass-on-inverse: var(--brass-100);
+	--logo-mark:      #005C3B;
+	--logo-type:      #131312;
 
 	--border-soft:    #D4D3D1;
 	--border-strong:  #C5C4C1;
@@ -84,6 +86,8 @@
 	--fg-faint:       #9A9FA5;
 	--fg-on-pine:     #F0F7F3;
 	--brass-on-inverse: var(--brass-700);
+	--logo-mark:      #FBFAF8;
+	--logo-type:      #FBFAF8;
 
 	--border-soft:    #393C3F;
 	--border-strong:  #505356;
