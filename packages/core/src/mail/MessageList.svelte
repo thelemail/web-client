@@ -253,6 +253,41 @@
 		return [{ g: null as string | null, items: list }];
 	});
 
+	const FIRST_ROWS = 40;
+	const MORE_ROWS = 40;
+	let rowCapState = $state({ view: '', count: FIRST_ROWS });
+	const rowCap = $derived.by(() => {
+		const base = rowCapState.view === viewKey ? rowCapState.count : FIRST_ROWS;
+		const open = activeId ? list.findIndex((m) => m.id === activeId) + 1 : 0;
+		return Math.max(base, open);
+	});
+	const allRowsShown = $derived(rowCap >= list.length);
+	const shownGroups = $derived.by(() => {
+		if (allRowsShown) return groups;
+		let left = rowCap;
+		const out: typeof groups = [];
+		for (const group of groups) {
+			if (left <= 0) break;
+			const items = group.items.length > left ? group.items.slice(0, left) : group.items;
+			out.push({ g: group.g, items });
+			left -= items.length;
+		}
+		return out;
+	});
+
+	$effect(() => {
+		if (allRowsShown) return;
+		const next = { view: viewKey, count: rowCap + MORE_ROWS };
+		let timer: ReturnType<typeof setTimeout> | undefined;
+		const frame = requestAnimationFrame(() => {
+			timer = setTimeout(() => (rowCapState = next), 0);
+		});
+		return () => {
+			cancelAnimationFrame(frame);
+			clearTimeout(timer);
+		};
+	});
+
 	let sortOpen = $state(false);
 	let filterOpen = $state(false);
 
@@ -396,10 +431,15 @@
 
 	$effect(() => {
 		const view = viewKey;
+		const complete = allRowsShown;
 		void rowIds;
 		untrack(() => {
 			if (!scrollEl) return;
 			if (pendingRestore && pendingRestore.view === view && list.length > 0) {
+				if (!complete) {
+					rowCapState = { view, count: list.length };
+					return;
+				}
 				scrollEl.scrollTop = pendingRestore.top;
 				lastTop = pendingRestore.top;
 				pendingRestore = null;
@@ -417,6 +457,10 @@
 
 	export function restoreScroll(position: { view: string; top: number }) {
 		pendingRestore = position;
+		if (!allRowsShown && position.view === viewKey) {
+			rowCapState = { view: viewKey, count: list.length };
+			return;
+		}
 		if (scrollEl && position.view === viewKey && list.length > 0) {
 			scrollEl.scrollTop = position.top;
 			lastTop = position.top;
@@ -848,7 +892,7 @@
 				{/snippet}
 			</EmptyState>
 		{:else}
-			{#each groups as { g, items } (g ?? 'all')}
+			{#each shownGroups as { g, items } (g ?? 'all')}
 				{#if g}
 					<div class="daygrp"><span class="l">{dayBucketLabel(g)}</span><span class="rule"></span></div>
 				{/if}
@@ -878,7 +922,7 @@
 			{/each}
 			<Tooltip.Shared tether={rowTips} />
 		{/if}
-		{#if !searchActive || list.length > 0}
+		{#if (!searchActive || list.length > 0) && allRowsShown}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>
