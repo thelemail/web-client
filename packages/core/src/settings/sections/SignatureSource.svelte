@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import { signatures } from '$core/stores/signatures.svelte';
-	import { SIGNATURE_IMAGE_ATTR } from '$core/mail/editor/signatureImage';
+	import { SIGNATURE_IMAGE_ATTR } from '$core/mail/editor/signatureAttrs';
 	import { sanitizeSignatureHtml } from '$core/mail/render/sanitizeSignature';
 
 	interface Props {

@@ -1,6 +1,6 @@
 import DOMPurify from 'dompurify';
 import { scrubCss } from './sanitizeHtml';
-import { SIGNATURE_IMAGE_ATTR } from '../editor/signatureImage';
+import { SIGNATURE_IMAGE_ATTR } from '../editor/signatureAttrs';
 
 const ALLOWED_URI_REGEXP = /^(?:(?:https?|mailto|tel|cid):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
 
