@@ -301,7 +301,7 @@ export class QueryEngine {
 		};
 		this.#sessions.set(id, session);
 		try {
-			const summary = await this.#meaning(id, session, compiled.plan, { ...lexical.plan, suggestible: [] }, excluded?.prefix ?? null, options);
+			const summary = await this.#meaning(id, session, compiled.plan, { ...lexical.plan, suggestible: [] }, compiled.plan.leaves.length, excluded?.prefix ?? null, options);
 			session.summary = { id, matches: summary.groups, groups: summary.groups, pages: summary.pages, incomplete: summary.incomplete, excluded: 0, suggestions: [], generation: summary.generation, dims: [Dimension.semantic], resolved: summary.resolved };
 			return { ok: true, summary };
 		} catch (err) {
@@ -667,7 +667,7 @@ export class QueryEngine {
 		};
 	}
 
-	async #meaning(id: number, session: Session, plan: Plan, lexicalPlan: Plan, excluded: string | null, options: MeaningOptions): Promise<MeaningSummary> {
+	async #meaning(id: number, session: Session, plan: Plan, lexicalPlan: Plan, firstWord: number, excluded: string | null, options: MeaningOptions): Promise<MeaningSummary> {
 		const signal = options.signal;
 		const checkpoint = async () => {
 			signal?.throwIfAborted();
@@ -848,9 +848,18 @@ export class QueryEngine {
 			try {
 				await this.#execute(id, words, lexicalPlan, { sort: 'relevance', group: options.group, signal });
 				await checkpoint();
-				const notExcluded = excluded ? `WHERE grp NOT IN (SELECT grp FROM ${excluded}_g)` : '';
+				const wordTables = lexicalPlan.leaves.slice(firstWord).map((_, k) => `${words.prefix}_l${firstWord + k}`);
+				const need = wordTables.length <= 2 ? 1 : Math.ceil(wordTables.length / 2);
+				const matched = wordTables.length ? wordTables.map((t) => `EXISTS (SELECT 1 FROM ${t} WHERE source = m.source)`).join(' + ') : '0';
+				const notExcluded = excluded ? `AND g.grp NOT IN (SELECT grp FROM ${excluded}_g)` : '';
 				const lexical: Ranked[] = (
-					this.#db.selectArrays(`SELECT grp, date, tier FROM ${words.prefix}_g ${notExcluded} ORDER BY ${order} LIMIT ?`, [MEANING_GROUPS]) as [string, number, number][]
+					this.#db.selectArrays(
+						`SELECT grp, date, tier FROM (
+							SELECT g.grp, g.date, g.tier, g.score, g.kind, g.sid, (SELECT max(${matched}) FROM ${words.prefix}_m m WHERE m.grp = g.grp) AS words
+							FROM ${words.prefix}_g g WHERE 1 ${notExcluded}
+						) WHERE words >= ? ORDER BY words DESC, ${order} LIMIT ?`,
+						[need, MEANING_GROUPS]
+					) as [string, number, number][]
 				).map(([key, date, tier]) => ({ key, date, tier }));
 				const semantic: Ranked[] = finals.map((f) => ({ key: keyOf(f.group, f.source), date: dates.get(f.source)!, tier: 0 }));
 				const result = fuse(lexical, semantic, MEANING_GROUPS);

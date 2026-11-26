@@ -321,6 +321,22 @@ describe('related results beside exact matches', () => {
 		expect(ids).not.toContain('old');
 	});
 
+	it('counts a word match only when at least half of the words occur', async () => {
+		const h = await mailbox();
+		const parsed = parseQuery('flight refund pending delayed', SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		const words = await h.call<QueryOutcome>({ op: 'query', token: 0, query: parsed.query, ctx: CTX, options: { sort: 'relevance', group: 'message' } });
+		if (!words.ok) throw new Error('query');
+		expect(words.summary.matches).toBe(0);
+		const outcome = await h.call<MeaningOutcome>({ op: 'meaning', token: 0, query: parsed.query, ctx: CTX, group: 'message', vector: q, epoch: ACTIVE, exclude: words.summary.id });
+		const by = Object.fromEntries((await rows(h, outcome)).map((r) => [r.best.sourceId, r.channel]));
+		expect(by.partial).toBe('both');
+		expect(by.unembedded).toBe('words');
+		expect(by.bob).toBe('both');
+		expect(by.old).toBe('meaning');
+		expect(by.sibling).toBe('meaning');
+	});
+
 	it('refuses an exclusion from another grouping or a closed query', async () => {
 		const h = await mailbox();
 		const words = await exact(h, 'message');
