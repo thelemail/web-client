@@ -77,15 +77,14 @@
 	}
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		<Icon icon={faClockRotateLeft} size={18} color="var(--brass-600)" />
-		<Dialog.Title class="dt">{m.cal_history_title()}</Dialog.Title>
+<Dialog.Content size="lg" class="cal-surface">
+	<Dialog.Header icon={faClockRotateLeft}>
+		<Dialog.Title>{m.cal_history_title()}</Dialog.Title>
 	</Dialog.Header>
 
-	<div class="cal-dlg-body">
+	<div>
 		{#if current}
-			<p class="cal-dlg-lead">{m.cal_history_lead({ title: current.item.title })}</p>
+			<p class="dialog-p">{m.cal_history_lead({ title: current.item.title })}</p>
 		{/if}
 
 		{#if loading}
@@ -140,7 +139,7 @@
 		{/if}
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
+	<Dialog.Footer>
 		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.common_close()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

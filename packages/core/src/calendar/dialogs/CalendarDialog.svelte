@@ -238,21 +238,17 @@
 	}
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		{#if request.mode === 'delete'}
-			<Icon icon={faTrashCan} size={18} color="var(--danger-500)" />
-		{:else if request.mode === 'share'}
-			<Icon icon={faKey} size={18} color="var(--brass-600)" />
-		{:else}
-			<Icon icon={faCalendarPlus} size={18} color="var(--brass-600)" />
-		{/if}
-		<Dialog.Title class="dt">{title}</Dialog.Title>
+<Dialog.Content size="lg" class="cal-surface">
+	<Dialog.Header
+		icon={request.mode === 'delete' ? faTrashCan : request.mode === 'share' ? faKey : faCalendarPlus}
+		tone={request.mode === 'delete' ? 'danger' : 'brand'}
+	>
+		<Dialog.Title>{title}</Dialog.Title>
 	</Dialog.Header>
 
-	<div class="cal-dlg-body cal-form">
+	<div class="cal-form">
 		{#if request.mode === 'delete'}
-			<p class="cal-dlg-lead">{m.cal_caldlg_delete_lead({ name: existing?.name ?? '' })}</p>
+			<p class="dialog-p">{m.cal_caldlg_delete_lead({ name: existing?.name ?? '' })}</p>
 		{:else}
 			{#if request.mode === 'create' || request.mode === 'edit'}
 				<label class="cal-field">
@@ -358,8 +354,7 @@
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<div class="grow"></div>
+	<Dialog.Footer>
 		<Button variant="neutral" disabled={busy} onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 		<Button variant={request.mode === 'delete' ? 'dangerSolid' : 'primary'} disabled={busy} onclick={submit}>
 			{request.mode === 'delete' ? m.common_delete() : request.mode === 'share' ? m.cal_caldlg_save_members() : request.mode === 'edit' ? m.common_save() : m.cal_caldlg_create()}

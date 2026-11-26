@@ -1442,43 +1442,23 @@
 	font-size: 14px;
 	color: var(--fg);
 }
-.cal-dlg { width: 640px; max-width: calc(100vw - 32px); padding: 0; gap: 0; overflow: hidden; }
-.cal-dlg.wide { width: 940px; }
-.cal-dlg-h {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	text-align: left;
-	gap: 10px;
-	padding: 13px 52px 13px 20px;
-	border-bottom: 1px solid var(--border);
-}
-.cal-dlg-h .dt { font-size: 16px; font-weight: 600; color: var(--fg-strong); flex: 1; }
-.cal-dlg-foot {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 10px;
-	padding: 14px 20px;
-	border-top: 1px solid var(--border);
-	background: var(--bg-raised);
-	flex-wrap: wrap;
-}
-.cal-dlg-foot .note { font-size: 12px; color: var(--fg-muted); }
-.cal-dlg-body { max-height: calc(100vh - 220px); overflow-y: auto; }
 
-.cal-surface .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+.cal-surface .split { display: grid; grid-template-columns: 1fr 1fr; min-height: 0; border: 1px solid var(--border-soft); border-radius: var(--radius-surface); overflow: hidden; }
 .cal-surface .split > * { min-width: 0; }
+@media (max-width: 700px) {
+	.cal-surface .split { grid-template-columns: 1fr; }
+	.cal-surface .sp-l { border-right: 0; border-bottom: 1px solid var(--border); }
+}
 .cal-surface .sp-l {
 	border-right: 1px solid var(--border);
 	background: var(--bg-raised);
 	padding: 20px;
-	max-height: calc(100vh - 260px);
+	max-height: calc(100dvh - 280px);
 	overflow-y: auto;
 }
 .cal-surface .sp-r {
 	padding: 20px;
-	max-height: calc(100vh - 260px);
+	max-height: calc(100dvh - 280px);
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
@@ -1803,9 +1783,7 @@
 
 .cal-app .cal-badge svg { display: inline-block; vertical-align: middle; }
 
-.cal-dlg.cal-dlg-narrow { width: 460px; }
-.cal-surface .cal-dlg-lead { padding: 18px 20px 6px; font-size: 14px; line-height: 1.5; color: var(--fg); }
-.cal-surface .cal-form { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+.cal-surface .cal-form { display: flex; flex-direction: column; gap: 14px; }
 .cal-surface .cal-form > * { flex: 0 0 auto; }
 .cal-surface .cal-field { display: flex; flex-direction: column; gap: 6px; }
 .cal-surface .cal-field > span,
@@ -1843,7 +1821,7 @@
 .cal-surface .member-name { flex: 1; display: flex; flex-direction: column; font-size: 13px; color: var(--fg-strong); cursor: pointer; }
 .cal-surface .member-mail { font-size: 11.5px; color: var(--fg-muted); }
 .cal-surface .member-row select { width: auto; padding: 4px 8px; font-size: 12.5px; }
-.cal-surface .scope-options { display: flex; flex-direction: column; gap: 8px; padding: 6px 20px 16px; }
+.cal-surface .scope-options { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
 .cal-surface .cal-progress { font-size: 12.5px; color: var(--fg-muted); font-family: var(--font-mono); }
 .cal-surface .cal-error { font-size: 12.5px; color: var(--danger-700); }
 .cal-surface .qactions { display: flex; gap: 6px; margin-top: 6px; }

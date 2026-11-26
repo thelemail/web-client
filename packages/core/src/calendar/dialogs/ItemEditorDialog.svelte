@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Icon from '$core/components/Icon.svelte';
 	import {
 		faCalendarDays,
 		faListCheck,
@@ -337,15 +336,14 @@
 	}
 </script>
 
-<Dialog.Content class="cal-surface cal-dlg" showCloseButton>
-	<Dialog.Header class="cal-dlg-h">
-		{#if kind === 'task'}<Icon icon={faListCheck} size={18} color="var(--brass-600)" />{:else if kind === 'hold'}<Icon icon={faLock} size={18} color="var(--brass-600)" />{:else}<Icon icon={faCalendarDays} size={18} color="var(--brass-600)" />{/if}
-		<Dialog.Title class="dt">
+<Dialog.Content size="lg" class="cal-surface">
+	<Dialog.Header icon={kind === 'task' ? faListCheck : kind === 'hold' ? faLock : faCalendarDays}>
+		<Dialog.Title>
 			{thisOnly ? m.cal_editor_title_this_only({ title: dialogTitle }) : dialogTitle}
 		</Dialog.Title>
 	</Dialog.Header>
 
-	<div class="cal-dlg-body cal-form">
+	<div class="cal-form">
 		{#if !isEdit}
 			<Segmented
 				value={kind}
@@ -511,9 +509,8 @@
 		{#if error}<div class="cal-error" role="alert">{error}</div>{/if}
 	</div>
 
-	<Dialog.Footer class="cal-dlg-foot">
-		<span class="note">{calendarStore.online ? m.cal_editor_note_online() : m.cal_editor_note_offline()}</span>
-		<div class="grow"></div>
+	<Dialog.Footer>
+		<span class="dialog-note">{calendarStore.online ? m.cal_editor_note_online() : m.cal_editor_note_offline()}</span>
 		<Button variant="neutral" disabled={busy} onclick={() => cal.closeEditor()}>{m.common_cancel()}</Button>
 		<Button variant="primary" disabled={busy} onclick={save}>{isEdit ? m.common_save() : m.common_add()}</Button>
 	</Dialog.Footer>
