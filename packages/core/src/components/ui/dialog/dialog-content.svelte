@@ -22,7 +22,7 @@
 		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DialogPortal>>;
 		children: Snippet;
 		showCloseButton?: boolean;
-		size?: "md" | "wide";
+		size?: "sm" | "md" | "wide" | "lg" | "xl";
 	} = $props();
 </script>
 
@@ -31,7 +31,7 @@
 	<DialogPrimitive.Content
 		bind:ref
 		data-slot="dialog-content"
-		class={cn("dialog", size === "wide" && "dialog-wide", className)}
+		class={cn("dialog", size !== "md" && `dialog-${size}`, className)}
 		{...restProps}
 	>
 		{@render children?.()}
