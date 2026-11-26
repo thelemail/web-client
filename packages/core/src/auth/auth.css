@@ -101,7 +101,7 @@
 	font-size: 10px;
 	letter-spacing: var(--track-caps);
 	text-transform: uppercase;
-	color: var(--accent-quiet);
+	color: var(--brass-600);
 	margin: 0 0 10px;
 }
 .auth .card-head h1 {
@@ -222,9 +222,9 @@
 	padding: 12px 16px;
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-md);
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	font-size: var(--text-sm);
-	color: var(--ink-700);
+	color: var(--fg);
 }
 .auth .billing-notice svg {
 	flex-shrink: 0;
@@ -253,7 +253,7 @@
 	height: 32px;
 	border: none;
 	background: none;
-	color: var(--ink-400);
+	color: var(--fg-faint);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -261,8 +261,8 @@
 	cursor: pointer;
 }
 .auth .pw .reveal:hover {
-	background: var(--paper-100);
-	color: var(--ink-700);
+	background: var(--bg-sunken);
+	color: var(--fg);
 }
 .auth .pw .reveal svg {
 	width: 17px;
@@ -273,7 +273,7 @@
 	display: flex;
 	align-items: center;
 	gap: 13px;
-	background: var(--pine-50);
+	background: var(--pine-100);
 	border: 1px solid var(--pine-100);
 	border-radius: var(--radius-control);
 	padding: 13px 15px;
@@ -289,9 +289,8 @@
 	justify-content: center;
 	font-weight: 600;
 	font-size: 13.5px;
-	color: #fff;
-	background: radial-gradient(circle at 34% 30%, #2C5340, var(--pine-800));
-	box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.18);
+	color: var(--primary-fg);
+	background: var(--primary);
 }
 .auth .invite .itext {
 	display: flex;
@@ -307,7 +306,7 @@
 }
 .auth .invite .itext .isub {
 	font-size: 12.5px;
-	color: var(--ink-600);
+	color: var(--fg-muted);
 }
 .auth .invite .itext .isub b {
 	font-weight: 600;
@@ -321,7 +320,7 @@
 	width: 100%;
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	box-shadow: var(--shadow-xs);
 	padding: 11px 13px;
 }
@@ -343,7 +342,7 @@
 	font-weight: 600;
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
-	color: var(--ink-500);
+	color: var(--fg-muted);
 	font-family: var(--font-sans);
 	flex: 0 0 auto;
 	white-space: nowrap;
@@ -427,32 +426,32 @@
 	transition: color var(--dur);
 }
 .auth .stepper .node.cur .dot {
-	border-color: var(--pine-600);
-	background: var(--pine-700);
-	color: var(--on-fill);
-	box-shadow: 0 0 0 4px var(--pine-50);
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-fg);
+	box-shadow: 0 0 0 4px var(--pine-100);
 }
 .auth .stepper .node.cur .lbl {
 	color: var(--pine-700);
 }
 .auth .stepper .node.done .dot {
-	border-color: var(--pine-600);
-	background: var(--pine-600);
-	color: var(--on-fill);
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-fg);
 }
 .auth .stepper .node.done .lbl {
-	color: var(--ink-600);
+	color: var(--fg-muted);
 }
 .auth .stepper .seg {
 	width: 34px;
 	height: 2px;
-	background: var(--paper-200);
+	background: var(--border-strong);
 	margin: 0 10px;
 	border-radius: 2px;
 	transition: background var(--dur);
 }
 .auth .stepper .seg.done {
-	background: var(--pine-600);
+	background: var(--primary);
 }
 
 .auth .reqs {
@@ -473,8 +472,8 @@
 	width: 16px;
 	height: 16px;
 	border-radius: 50%;
-	background: var(--paper-100);
-	color: var(--ink-300);
+	background: var(--bg-sunken);
+	color: var(--fg-faint);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -488,7 +487,7 @@
 	height: 11px;
 }
 .auth .req.met {
-	color: var(--ink-700);
+	color: var(--fg);
 }
 .auth .req.met .rk {
 	background: var(--success-100);
@@ -519,7 +518,7 @@
 	max-width: 48ch;
 }
 .auth .legal a {
-	color: var(--ink-500);
+	color: var(--fg-muted);
 	text-decoration: underline;
 	text-underline-offset: 2px;
 }
@@ -540,7 +539,7 @@
 .auth .cardnote svg {
 	width: 14px;
 	height: 14px;
-	color: var(--ink-400);
+	color: var(--fg-faint);
 }
 
 .auth .accept {
@@ -549,7 +548,7 @@
 	gap: 10px;
 	font-size: 13px;
 	line-height: 1.5;
-	color: var(--ink-700);
+	color: var(--fg);
 	cursor: pointer;
 	margin-top: 4px;
 }
@@ -558,7 +557,7 @@
 	margin-top: 3px;
 	width: 16px;
 	height: 16px;
-	accent-color: var(--pine-700);
+	accent-color: var(--primary);
 	cursor: pointer;
 }
 .auth .accept a {
@@ -567,10 +566,7 @@
 	text-underline-offset: 2px;
 }
 .auth .accept a:hover {
-	color: var(--pine-900);
-}
-[data-theme='dark'] .auth .accept a:hover {
-	color: var(--pine-300);
+	color: var(--pine-600);
 }
 
 .auth .welcome {
@@ -588,7 +584,7 @@
 .auth .welcome p {
 	font-size: 14.5px;
 	line-height: 1.55;
-	color: var(--ink-600);
+	color: var(--fg-muted);
 	margin: 12px auto 0;
 	max-width: 36ch;
 }
@@ -597,7 +593,7 @@
 	align-items: center;
 	gap: 12px;
 	justify-content: center;
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
 	padding: 13px 16px;
@@ -719,9 +715,9 @@
 	color: var(--fg-strong);
 }
 .auth .periodtab.cur {
-	background: var(--pine-600);
-	border-color: var(--pine-600);
-	color: var(--on-fill);
+	background: var(--primary);
+	border-color: var(--primary);
+	color: var(--primary-fg);
 }
 .auth .periodtab:focus-visible {
 	outline: 2px solid var(--focus-ring);
@@ -752,7 +748,7 @@
 	box-shadow:
 		0 0 0 1px var(--pine-600),
 		var(--shadow-xs);
-	background: var(--pine-50);
+	background: var(--pine-100);
 }
 .auth .prodtab .pt-top {
 	display: flex;
@@ -763,7 +759,7 @@
 	color: var(--fg-strong);
 }
 .auth .prodtab .pt-top svg {
-	color: var(--ink-500);
+	color: var(--fg-muted);
 }
 .auth .prodtab.cur .pt-top svg {
 	color: var(--pine-700);
@@ -787,13 +783,10 @@
 	font-weight: 700;
 	letter-spacing: 0.07em;
 	text-transform: uppercase;
-	color: #fff;
+	color: var(--primary-fg);
 	padding: 3px 9px;
 	border-radius: var(--radius-pill);
-	background: linear-gradient(180deg, var(--brass-500), var(--brass-600));
-	box-shadow:
-		inset 0 1px 1px rgba(255, 255, 255, 0.35),
-		0 1px 2px rgba(0, 0, 0, 0.2);
+	background: var(--brass-600);
 	white-space: nowrap;
 }
 
@@ -801,7 +794,7 @@
 	display: flex;
 	align-items: center;
 	gap: 14px;
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
 	padding: 9px 14px;
@@ -826,7 +819,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--ink-600);
+	color: var(--fg-muted);
 	box-shadow: var(--shadow-xs);
 	cursor: pointer;
 	transition:
@@ -834,7 +827,7 @@
 		color var(--dur);
 }
 .auth .seats .seatbtn:hover {
-	background: var(--paper-100);
+	background: var(--bg-sunken);
 	color: var(--fg-strong);
 }
 .auth .seats .seatbtn[disabled] {
@@ -908,9 +901,9 @@
 	transition: all var(--dur);
 }
 .auth .tiercard.sel .tc-pick {
-	border-color: var(--pine-600);
-	background: var(--pine-700);
-	color: var(--on-fill);
+	border-color: var(--primary);
+	background: var(--primary);
+	color: var(--primary-fg);
 }
 .auth .tiercard .tc-name {
 	font-size: 14px;
@@ -921,7 +914,7 @@
 .auth .tiercard .tc-framing {
 	font-style: italic;
 	font-size: 13px;
-	color: var(--ink-600);
+	color: var(--fg-muted);
 	margin-top: 2px;
 	min-height: 18px;
 }
@@ -959,7 +952,7 @@
 	margin-top: 7px;
 	padding: 3px 8px;
 	border-radius: var(--radius-sm);
-	background: var(--paper-100);
+	background: var(--bg-sunken);
 	width: fit-content;
 	white-space: nowrap;
 	transition:
@@ -967,7 +960,7 @@
 		color var(--dur);
 }
 .auth .tiercard .tc-total.on {
-	background: var(--pine-50);
+	background: var(--pine-100);
 	color: var(--pine-700);
 	font-weight: 600;
 }
@@ -986,7 +979,7 @@
 	font-size: 12.5px;
 }
 .auth .tiercard .trow .tk {
-	color: var(--ink-600);
+	color: var(--fg-muted);
 }
 .auth .tiercard .trow .tv {
 	color: var(--fg-strong);
@@ -1016,7 +1009,7 @@
 	display: flex;
 	align-items: center;
 	gap: 12px;
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
 	padding: 13px 15px;
@@ -1122,7 +1115,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--on-fill);
+	color: var(--primary-fg);
 	flex: 0 0 auto;
 	transition:
 		background var(--dur),
@@ -1138,8 +1131,8 @@
 		transform var(--dur);
 }
 .remember input:checked + .box {
-	background: var(--pine-700);
-	border-color: var(--pine-700);
+	background: var(--primary);
+	border-color: var(--primary);
 }
 .remember input:checked + .box svg {
 	opacity: 1;
@@ -1156,13 +1149,13 @@
 	display: flex;
 	gap: 11px;
 	align-items: flex-start;
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
 	padding: 12px 14px;
 	font-size: 12.5px;
 	line-height: 1.55;
-	color: var(--ink-600);
+	color: var(--fg-muted);
 }
 .auth .keynote svg {
 	flex: 0 0 auto;
@@ -1223,7 +1216,7 @@
 }
 .auth .altopt:hover {
 	border-color: var(--pine-500);
-	background: var(--paper-50);
+	background: var(--bg-raised);
 }
 .auth .altopt:focus-visible {
 	outline: none;
@@ -1233,7 +1226,7 @@
 	width: 34px;
 	height: 34px;
 	border-radius: 50%;
-	background: var(--pine-50);
+	background: var(--pine-100);
 	color: var(--pine-700);
 	display: flex;
 	align-items: center;
@@ -1257,7 +1250,7 @@
 	color: var(--fg-muted);
 }
 .auth .altopt .alt-chev {
-	color: var(--ink-400);
+	color: var(--fg-faint);
 	flex: 0 0 auto;
 	display: flex;
 }
@@ -1285,7 +1278,7 @@
 	padding: 11px 13px;
 	border: 1px solid var(--border-strong);
 	border-radius: var(--radius-control);
-	background: var(--paper-50);
+	background: var(--bg-raised);
 	box-shadow: var(--shadow-xs);
 	cursor: pointer;
 	transition:
@@ -1293,8 +1286,8 @@
 		border-color var(--dur);
 }
 .auth .apick-row:hover:not(:disabled) {
-	background: var(--pine-50);
-	border-color: var(--pine-300);
+	background: var(--pine-100);
+	border-color: var(--pine-500);
 }
 .auth .apick-row:focus-visible {
 	outline: 2px solid var(--pine-600);
@@ -1323,7 +1316,7 @@
 .auth .apick-row .ap-em {
 	font-family: var(--font-mono);
 	font-size: 12.5px;
-	color: var(--ink-600);
+	color: var(--fg-muted);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -1342,7 +1335,7 @@
 	margin-top: 2px;
 }
 .auth .apick-row .ap-state.ap-locked {
-	color: var(--ink-500);
+	color: var(--fg-muted);
 }
 .auth .apick-row .ap-go {
 	flex: 0 0 auto;
@@ -1368,7 +1361,7 @@
 	border: none;
 	background: none;
 	border-radius: var(--radius-control-compact);
-	color: var(--ink-400);
+	color: var(--fg-faint);
 	cursor: pointer;
 	opacity: 0;
 	transition:
@@ -1414,7 +1407,7 @@
 	transition: background var(--dur);
 }
 .auth .apick-link:hover {
-	background: var(--pine-50);
+	background: var(--pine-100);
 }
 .auth .apick-link svg {
 	flex: 0 0 auto;
