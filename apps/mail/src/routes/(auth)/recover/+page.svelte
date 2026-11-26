@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import RecoverFlow from '$core/auth/RecoverFlow.svelte';
-	import Status from '$core/auth/sentence/Status.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { signInMovedToAuth } from '$core/custody/unlock';
 	import { productTarget } from '$core/products';
@@ -25,7 +25,7 @@
 {#if mode === 'here'}
 	<RecoverFlow />
 {:else}
-	<div class="sp" aria-busy="true">
+	<div class="af-wait" aria-busy="true">
 		<Status tone={checking.visible ? 'busy' : 'hint'}>{checking.visible ? m.common_loading() : ''}</Status>
 	</div>
 {/if}

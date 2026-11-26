@@ -3,12 +3,11 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { passwordReqs } from '$core/auth/password-policy';
-	import Blank from '$core/auth/sentence/Blank.svelte';
-	import Clause from '$core/auth/sentence/Clause.svelte';
-	import Done from '$core/auth/sentence/Done.svelte';
-	import Trail from '$core/auth/sentence/Trail.svelte';
-	import PasswordChecks from '$core/auth/sentence/PasswordChecks.svelte';
-	import WorkSteps from '$core/auth/sentence/WorkSteps.svelte';
+	import { untrack } from 'svelte';
+	import TextField from '$core/auth/form/TextField.svelte';
+	import PasswordField from '$core/auth/PasswordField.svelte';
+	import PasswordChecks from '$core/auth/form/PasswordChecks.svelte';
+	import WorkSteps from '$core/auth/form/WorkSteps.svelte';
 	import {
 		completeRecoveryReset,
 		discardRecovery,
@@ -27,25 +26,13 @@
 	import { validateMnemonic } from '@scure/bip39';
 	import { wordlist } from '@scure/bip39/wordlists/english.js';
 	import Icon from '$core/components/Icon.svelte';
-	import { faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
-	import Status from '$core/auth/sentence/Status.svelte';
-	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
-	import Seal from '$core/auth/sentence/Seal.svelte';
+	import { faCheck, faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
+	import Status from '$core/auth/form/Status.svelte';
+	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 
-	const recLabelsBase = $derived([
-		m.auth_recover_step_account(),
-		m.auth_recover_step_phrase(),
-		m.auth_step_password()
-	]);
-	const recLabels2fa = $derived([
-		m.auth_recover_step_account(),
-		m.auth_recover_step_phrase(),
-		m.auth_recover_step_2fa(),
-		m.auth_step_password()
-	]);
 	const workLines = $derived([
 		m.auth_recover_work_open(),
 		m.auth_recover_work_derive(),
@@ -53,23 +40,14 @@
 		m.auth_recover_work_retire()
 	]);
 
-	type Step =
-		| 'account'
-		| 'phrase'
-		| 'nophrase'
-		| 'twofa'
-		| 'password'
-		| 'working'
-		| 'done';
-	let step = $state<Step>('account');
+	type Step = 'phrase' | 'nophrase' | 'twofa' | 'password' | 'working' | 'done';
+	let step = $state<Step>('phrase');
 
 	let pendingTwoFactor = $state.raw<PendingTwoFactorRecovery | null>(null);
 	let twoFaBusy = $state(false);
 	let twoFaError = $state<string | null>(null);
 	let twoFaKeyNotice = $state<string | null>(null);
 	let twoFaFailures = $state(0);
-	let hadTwoFa = $state(false);
-	const recLabels = $derived(hadTwoFa ? recLabels2fa : recLabelsBase);
 
 	let email = $state(page.url.searchParams.get('email') ?? '');
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
@@ -95,17 +73,11 @@
 
 	let pw = $state('');
 	let confirm = $state('');
-	let pwPart = $state<'new' | 'again'>('new');
 	let workIdx = $state(0);
 	let workError = $state('');
 
 	function exitToLogin() {
 		void goto('/login');
-	}
-
-	function continueAccount() {
-		if (!emailValid) return;
-		step = 'phrase';
 	}
 
 	function setWord(i: number, v: string) {
@@ -143,7 +115,7 @@
 	}
 
 	async function verifyPhrase() {
-		if (!allFilled || phraseStatus === 'checking') return;
+		if (!emailValid || !allFilled || phraseStatus === 'checking') return;
 		if (!validateMnemonic(phrase, wordlist)) {
 			phraseStatus = 'bad';
 			phraseError = m.auth_s_recover_phrase_invalid();
@@ -170,7 +142,6 @@
 				twoFaError = null;
 				twoFaKeyNotice = null;
 				twoFaFailures = 0;
-				hadTwoFa = true;
 				step = 'twofa';
 				return;
 			}
@@ -253,8 +224,10 @@
 		}
 	}
 
+	const emailFirst = untrack(() => !emailValid);
+
 	$effect(() => {
-		if (step === 'phrase') inputs[0]?.focus();
+		if (step === 'phrase') untrack(() => emailValid && inputs[0]?.focus());
 	});
 
 	$effect(() => {
@@ -295,7 +268,6 @@
 		recoveredAccountId = undefined;
 		pw = '';
 		confirm = '';
-		pwPart = 'new';
 		workError = '';
 		workIdx = 0;
 		phraseStatus = 'idle';
@@ -303,18 +275,14 @@
 		step = 'phrase';
 	}
 
-	function submitAccount(e: SubmitEvent) {
+	function submitPhrase(e: SubmitEvent) {
 		e.preventDefault();
-		continueAccount();
+		void verifyPhrase();
 	}
 
 	function submitPassword(e: SubmitEvent) {
 		e.preventDefault();
-		if (pwPart === 'new') {
-			if (allMet) pwPart = 'again';
-		} else {
-			startRekey();
-		}
+		startRekey();
 	}
 
 	function startRekey() {
@@ -353,58 +321,10 @@
 		}
 	}
 
-	const trailAt = $derived(
-		step === 'account' ? 0 : step === 'phrase' || step === 'nophrase' ? 1 : step === 'twofa' ? 2 : recLabels.length - 1
-	);
 </script>
 
 {#snippet signInLink(t: string)}<a href="/login">{t}</a>{/snippet}
-{#snippet emailBlank(_: string)}<Blank
-		id="rec-email"
-		bind:value={email}
-		label={m.common_email_address()}
-		placeholder="you@yourdomain.com"
-		size={36}
-		mono
-		autocomplete="username"
-		focus
-		normalize={(raw) => raw.trim()}
-	/>{/snippet}
-{#snippet emailDone(_: string)}<Done
-		text={email}
-		mono
-		disabled={phraseStatus === 'checking'}
-		onedit={step === 'phrase' ? () => (step = 'account') : undefined}
-	/>{/snippet}
-{#snippet passwordBlank(_: string)}<Blank
-		id="rec-password"
-		bind:value={pw}
-		label={m.auth_recover_new_password_label()}
-		placeholder={m.auth_s_new_password_placeholder()}
-		size={14}
-		mono
-		secret
-		autocomplete="new-password"
-		focus
-	/>{/snippet}
-{#snippet passwordDone(_: string)}<Done text="" secret onedit={() => (pwPart = 'new')} />{/snippet}
-{#snippet confirmBlank(_: string)}<Blank
-		id="rec-confirm"
-		bind:value={confirm}
-		label={m.auth_recover_confirm_label()}
-		placeholder={m.auth_s_confirm_placeholder()}
-		size={14}
-		mono
-		secret
-		autocomplete="new-password"
-		invalid={confirmBad}
-		describedby="recover-confirm-msg"
-		focus
-	/>{/snippet}
-{#snippet pastProof()}<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
-		text={m.auth_s_recover_phrase_ok()}
-		past
-	/>{/snippet}
+{#snippet addr(t: string)}<span class="mono">{t}</span>{/snippet}
 
 <svelte:head>
 	<title>{m.auth_recover_page_title()}</title>
@@ -419,43 +339,39 @@
 			error={twoFaError}
 			keyNotice={twoFaKeyNotice}
 			backLabel={m.common_back()}
-			before={pastProof}
 			onTotp={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorTotp(p, code))}
 			onBackupCode={(code) => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorBackupCode(p, code))}
 			onWebauthn={() => runRecoveryTwoFactor((p) => submitRecoveryTwoFactorWebauthn(p))}
 			onBack={() => resetToPhraseStep('')}
 		>
-			{#snippet top()}
-				<Trail items={recLabels2fa} current={2} />
-			{/snippet}
+			{#snippet lede()}{m.auth_recover_2fa_lede()}{/snippet}
 		</TwoFactorChallenge>
 	{/if}
-{:else}
-	<div class="sp">
-		{#if step !== 'done' && step !== 'nophrase'}
-			<Trail items={recLabels} current={step === 'working' ? recLabels.length : trailAt} />
-		{/if}
-		{#if step === 'account'}
-			<form class="sp-form" novalidate onsubmit={submitAccount}>
-				<p class="sent"><Clause text={m.auth_s_recover_account()} slots={{ email: emailBlank }} /></p>
-				<div class="sp-under">
-					<Status>{m.auth_s_recover_email_hint()}</Status>
-					<div class="sp-acts">
-						<Button type="submit" variant="primary" size="lg" disabled={!emailValid}>{m.auth_sentence_next()}</Button>
-					</div>
-				</div>
-			</form>
-		{:else if step === 'phrase'}
-			<p class="sent">
-				<Clause text={m.auth_s_recover_account()} past slots={{ email: emailDone }} /><Clause lead
-					text={m.auth_s_recover_phrase()}
-				/>
-			</p>
-			<div class="sp-under wide">
-				<div class="sp-words">
+{:else if step === 'phrase'}
+	<form class="card-surface" novalidate onsubmit={submitPhrase}>
+		<div class="card-head">
+			<h1>{m.auth_recover_title()}</h1>
+			<p>{m.auth_recover_sub()}</p>
+		</div>
+		<div class="form">
+			<TextField
+				id="rec-email"
+				bind:value={email}
+				type="email"
+				label={m.common_email_address()}
+				placeholder="you@yourdomain.com"
+				mono
+				autocomplete="username"
+				disabled={phraseStatus === 'checking'}
+				focus={emailFirst}
+				normalize={(raw) => raw.trim()}
+			/>
+			<div class="field">
+				<div class="lab"><span class="lbl" id="rec-phrase-label">{m.auth_recover_phrase_label()}</span></div>
+				<div class="af-words" role="group" aria-labelledby="rec-phrase-label">
 					{#each words as w, i (i)}
 						{@const wrong = phraseStatus === 'bad' && badWord(w)}
-						<label class="sp-word" class:bad={wrong} style:--i={i}>
+						<label class="af-word" class:bad={wrong}>
 							<span class="n">{i + 1}</span>
 							<input
 								value={w}
@@ -463,6 +379,7 @@
 								spellcheck="false"
 								autocomplete="off"
 								autocapitalize="none"
+								disabled={phraseStatus === 'checking'}
 								aria-label={m.auth_s_word_label({ n: i + 1, total: 12 })}
 								oninput={(e) => setWord(i, e.currentTarget.value)}
 								onpaste={(e) => onPhrasePaste(i, e)}
@@ -476,92 +393,90 @@
 				<Status id="recover-phrase-err" tone={phraseStatus === 'bad' ? 'bad' : 'hint'}>
 					{phraseStatus === 'bad' ? phraseError : m.auth_recover_phrase_tip()}
 				</Status>
-				<div class="sp-acts">
-					<Button variant="primary" size="lg" disabled={!allFilled || phraseStatus === 'checking'} onclick={verifyPhrase}>
-						<BusyLabel
-							busy={phraseStatus === 'checking'}
-							label={m.auth_recover_phrase_unlock()}
-							pending={m.auth_recover_phrase_checking()}
-						/>
-					</Button>
-					<button type="button" class="sp-quiet" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>
-						{m.auth_recover_no_phrase()}
-					</button>
-				</div>
 			</div>
-		{:else if step === 'nophrase'}
-			<p class="sent sm">{m.auth_s_recover_nophrase()}</p>
-			<div class="sp-under">
-				<div class="sp-ways">
-					<div><b>{m.auth_recover_way_device_title()}</b><span>{m.auth_recover_way_device_body()}</span></div>
-					<div><b>{m.auth_recover_way_retry_title()}</b><span>{m.auth_recover_way_retry_body()}</span></div>
-					<div><b>{m.auth_recover_way_reset_title()}</b><span>{m.auth_recover_way_reset_body()}</span></div>
-				</div>
-				<div class="sp-acts">
-					<Button variant="secondary" size="lg" onclick={() => (step = 'phrase')}>{m.auth_recover_look_for_phrase()}</Button>
-					<button type="button" class="sp-quiet" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button>
-				</div>
+		</div>
+		<Button type="submit" variant="primary" size="lg" block disabled={!emailValid || !allFilled || phraseStatus === 'checking'}>
+			<BusyLabel
+				busy={phraseStatus === 'checking'}
+				label={m.auth_recover_phrase_unlock()}
+				pending={m.auth_recover_phrase_checking()}
+			/>
+		</Button>
+		<p class="af-row split">
+			<button type="button" class="af-link muted" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>
+				{m.auth_recover_no_phrase()}
+			</button>
+			<span><Rich text={m.auth_recover_remembered()} tags={{ link: signInLink }} /></span>
+		</p>
+	</form>
+{:else if step === 'nophrase'}
+	<div class="card-surface">
+		<div class="card-head">
+			<h1>{m.auth_recover_nophrase_title()}</h1>
+			<p>{m.auth_s_recover_nophrase()}</p>
+		</div>
+		<div class="af-options">
+			<div class="af-option" role="presentation"><span class="tx"><b>{m.auth_recover_way_device_title()}</b><span>{m.auth_recover_way_device_body()}</span></span></div>
+			<div class="af-option" role="presentation"><span class="tx"><b>{m.auth_recover_way_retry_title()}</b><span>{m.auth_recover_way_retry_body()}</span></span></div>
+			<div class="af-option" role="presentation"><span class="tx"><b>{m.auth_recover_way_reset_title()}</b><span>{m.auth_recover_way_reset_body()}</span></span></div>
+		</div>
+		<Button variant="primary" size="lg" block onclick={() => (step = 'phrase')}>{m.auth_recover_look_for_phrase()}</Button>
+		<p class="af-row"><button type="button" class="af-link muted" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button></p>
+	</div>
+{:else if step === 'password'}
+	<form class="card-surface" novalidate onsubmit={submitPassword}>
+		<input class="af-hidden-user" type="email" value={email} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+		<div class="card-head">
+			<h1>{m.auth_recover_password_title()}</h1>
+			<p><Rich text={m.auth_recover_password_sub({ email })} tags={{ addr }} /></p>
+		</div>
+		<div class="form">
+			<div class="field">
+				<PasswordField id="rec-password" label={m.auth_recover_new_password_label()} bind:value={pw} autocomplete="new-password" focus />
+				<PasswordChecks {pw} />
 			</div>
-		{:else if step === 'password'}
-			<form class="sp-form" novalidate onsubmit={submitPassword}>
-				<input class="sp-user" type="email" value={email} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
-				<p class="sent sm">
-					{@render pastProof()}{#if pwPart === 'new'}<Clause lead
-							text={m.auth_s_recover_password()}
-							slots={{ password: passwordBlank }}
-						/>{:else}<Clause
-							lead
-							text={m.auth_s_recover_password_again()}
-							slots={{ password: passwordDone, confirm: confirmBlank }}
-						/>{/if}
-				</p>
-				<div class="sp-under">
-					{#if pwPart === 'new'}
-						<div class="sp-status-box"><PasswordChecks {pw} /></div>
-						<div class="sp-acts">
-							<Button type="submit" variant="primary" size="lg" disabled={!allMet}>{m.auth_sentence_next()}</Button>
-							<button type="button" class="sp-quiet" onclick={() => (step = 'phrase')}>{m.common_back()}</button>
-						</div>
-					{:else}
-						<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'}>
-							{confirmBad ? m.auth_register_passwords_mismatch() : matches ? m.auth_register_passwords_match() : m.auth_s_confirm_hint()}
-						</Status>
-						<p class="sp-msg">{m.auth_s_recover_rewrap_note()}</p>
-						<div class="sp-acts">
-							<Button type="submit" variant="primary" size="lg" disabled={!passwordReady}>{m.auth_recover_reset_password()}</Button>
-						</div>
-					{/if}
-				</div>
-			</form>
-		{:else if step === 'working'}
-			<p class="sent sm">{m.auth_s_recover_working()}</p>
-			<div class="sp-under">
-				<WorkSteps lines={workLines} at={workIdx} failed={!!workError} />
-				{#if workError}
-					<p class="sp-err" role="alert"><Icon icon={faCircleExclamation} size={15} /><span>{workError}</span></p>
-					<div class="sp-acts">
-						<Button variant="secondary" size="lg" onclick={startOver}>{m.auth_recover_start_over()}</Button>
-						<button type="button" class="sp-quiet" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button>
-					</div>
-				{:else}
-					<p class="sp-fine">{m.auth_s_recover_working_note()}</p>
-				{/if}
+			<div class="field">
+				<PasswordField
+					id="rec-confirm"
+					label={m.auth_recover_confirm_label()}
+					bind:value={confirm}
+					autocomplete="new-password"
+					invalid={confirmBad}
+					describedby="recover-confirm-msg"
+				/>
+				<Status id="recover-confirm-msg" tone={confirmBad ? 'bad' : matches ? 'ok' : 'hint'}>
+					{confirmBad ? m.auth_register_passwords_mismatch() : matches ? m.auth_register_passwords_match() : m.auth_s_confirm_hint()}
+				</Status>
 			</div>
-		{:else}
-			<p class="sent sm">{m.auth_s_recover_done()}</p>
-			<div class="sp-under">
-				<Seal label={m.auth_s_seal_reset()} reserve={false} />
-				<p class="sp-msg ok"><Icon icon={faCircleCheck} size={14} /><span>{m.auth_recover_done_signed_out()}</span></p>
-				<p class="sp-msg ok"><Icon icon={faCircleCheck} size={14} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
-				<div class="sp-acts">
-					<Button variant="primary" size="lg" onclick={exitToLogin}>{m.auth_recover_done_sign_in()}</Button>
-				</div>
-			</div>
+		</div>
+		<p class="af-note">{m.auth_s_recover_rewrap_note()}</p>
+		<Button type="submit" variant="primary" size="lg" block disabled={!passwordReady}>{m.auth_recover_reset_password()}</Button>
+		<p class="af-row"><button type="button" class="af-link muted" onclick={() => (step = 'phrase')}>{m.common_back()}</button></p>
+	</form>
+{:else if step === 'working'}
+	<div class="card-surface" aria-live="polite">
+		<div class="card-head">
+			<h1>{m.auth_recover_working_title()}</h1>
+			<p>{m.auth_s_recover_working_note()}</p>
+		</div>
+		<WorkSteps lines={workLines} at={workIdx} failed={!!workError} />
+		{#if workError}
+			<p class="af-error" role="alert"><Icon icon={faCircleExclamation} size={16} /><span>{workError}</span></p>
+			<Button variant="primary" size="lg" block onclick={startOver}>{m.auth_recover_start_over()}</Button>
+			<p class="af-row"><button type="button" class="af-link muted" onclick={exitToLogin}>{m.auth_2fa_back_to_sign_in()}</button></p>
 		{/if}
-		{#if step === 'account' || step === 'phrase'}
-			<div class="sp-foot">
-				<span><Rich text={m.auth_recover_remembered()} tags={{ link: signInLink }} /></span>
+	</div>
+{:else}
+	<div class="card-surface">
+		<div class="af-done">
+			<span class="af-mark"><Icon icon={faCheck} size={28} /></span>
+			<div class="card-head">
+				<h1>{m.auth_recover_done_title()}</h1>
+				<p>{m.auth_s_recover_done()}</p>
 			</div>
-		{/if}
+		</div>
+		<p class="af-note ok"><Icon icon={faCircleCheck} size={15} /><span>{m.auth_recover_done_signed_out()}</span></p>
+		<p class="af-note ok"><Icon icon={faCircleCheck} size={15} /><span>{m.auth_recover_done_phrase_retired()}</span></p>
+		<Button variant="primary" size="lg" block onclick={exitToLogin}>{m.auth_recover_done_sign_in()}</Button>
 	</div>
 {/if}
