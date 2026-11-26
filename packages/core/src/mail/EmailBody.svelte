@@ -86,7 +86,7 @@
 	function ready() {
 		const doc = frame?.contentDocument;
 		if (!doc) return;
-		paper = doc.documentElement.classList.contains('html');
+		paper = doc.documentElement.classList.contains('designed');
 		fittedWidth = -1;
 		applyTheme();
 		fit();

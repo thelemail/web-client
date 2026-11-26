@@ -3,6 +3,7 @@ import { sanitizeHtml } from './sanitizeHtml';
 import { plainToHtml } from './plainToHtml';
 import { splitQuotedHtml, splitQuotedText } from './quoteSplit';
 import type { CalendarEvent } from './icalParse';
+import { looksDesigned } from './looksDesigned';
 
 export interface RenderInput {
 	mime?: string;
@@ -21,21 +22,24 @@ export interface RenderResult {
 	forwarded?: boolean;
 }
 
+const PLAIN_DARK = ':root[data-theme="dark"]:not(.designed)';
+
 const BASE_STYLE = [
 	'html,body{margin:0;padding:0;background:transparent}',
-	'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#222;word-wrap:break-word}',
+	'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:15px;line-height:1.65;color:#21201F;word-wrap:break-word}',
 	'.plain{padding:2px}',
 	'.plain p{margin:0 0 16px}',
+	'.empty{color:#7A7976;font-style:italic}',
 	'img{max-width:100%;height:auto}',
-	'a{color:#234132}',
-	'blockquote{margin:0 0 16px;padding-left:14px;border-left:2px solid #DCD4BE;color:#515845}',
+	'a{color:#0E6240}',
+	'blockquote{margin:0 0 16px;padding-left:14px;border-left:2px solid #D4D3D1;color:#62605D}',
 	'pre{white-space:pre-wrap;word-wrap:break-word;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}',
-	':root[data-theme="dark"]:not(.html){color-scheme:dark}',
-	':root[data-theme="dark"]:not(.html) body{color:#DDE0D2}',
-	':root[data-theme="dark"]:not(.html) a{color:#9EC4AC}',
-	':root[data-theme="dark"]:not(.html) blockquote{border-left-color:#3E4A3C;color:#A9B09D}',
-	':root[data-theme="dark"].html{color-scheme:light;background:#fff}',
-	':root[data-theme="dark"].html body{padding:16px 18px}'
+	`${PLAIN_DARK}{color-scheme:dark}`,
+	`${PLAIN_DARK} body,${PLAIN_DARK} body *{color:#E0E3E7!important;background-color:transparent!important;border-color:#393C3F!important}`,
+	`${PLAIN_DARK} blockquote,${PLAIN_DARK} blockquote *{color:#B8BDC2!important}`,
+	`${PLAIN_DARK} a,${PLAIN_DARK} a *{color:#93CDAD!important}`,
+	':root[data-theme="dark"].designed{color-scheme:light;background:#fff}',
+	':root[data-theme="dark"].designed body{padding:16px 18px}'
 ].join('');
 
 const CSP =
@@ -57,7 +61,7 @@ function escapeForAttribute(s: string): string {
 export function buildSrcDoc(bodyHtml: string, wrapPlain: boolean): string {
 	const content = wrapPlain ? `<div class="plain">${bodyHtml}</div>` : bodyHtml;
 	return (
-		`<!doctype html><html${wrapPlain ? '' : ' class="html"'}><head><meta charset="utf-8">` +
+		`<!doctype html><html${!wrapPlain && looksDesigned(bodyHtml) ? ' class="designed"' : ''}><head><meta charset="utf-8">` +
 		`<meta http-equiv="Content-Security-Policy" content="${escapeForAttribute(CSP)}">` +
 		'<base target="_blank">' +
 		`<style>${BASE_STYLE}</style></head><body>${content}</body></html>`
@@ -121,7 +125,7 @@ export async function renderBody(input: RenderInput): Promise<RenderResult> {
 			if (split.kind === 'forwarded') forwarded = true;
 		}
 	} else {
-		body = '<p style="color:#9a9a90;font-style:italic">(no body)</p>';
+		body = '<p class="empty">(no body)</p>';
 		wrapPlain = true;
 	}
 
