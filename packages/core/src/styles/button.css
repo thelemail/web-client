@@ -1,0 +1,213 @@
+.btn {
+	--btn-h: var(--control-h-md);
+	--btn-r: var(--radius-h40);
+	--btn-fs: 14.5px;
+	--btn-px: 16px;
+	--btn-gap: 8px;
+	--btn-icon: 17px;
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--btn-gap);
+	height: var(--btn-h);
+	min-width: var(--btn-h);
+	padding: 0 var(--btn-px);
+	border: 1px solid transparent;
+	border-radius: var(--btn-r);
+	background: transparent;
+	color: var(--fg);
+	font-family: var(--font-sans);
+	font-size: var(--btn-fs);
+	font-weight: 600;
+	line-height: 1;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	transition:
+		background-color var(--dur) var(--ease),
+		border-color var(--dur) var(--ease),
+		color var(--dur) var(--ease),
+		transform var(--dur-fast) var(--ease);
+}
+.btn svg {
+	width: var(--btn-icon);
+	height: var(--btn-icon);
+	flex: 0 0 auto;
+}
+.btn:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
+}
+
+.btn-sm {
+	--btn-h: var(--control-h-sm);
+	--btn-r: var(--radius-h32);
+	--btn-fs: 13px;
+	--btn-px: 12px;
+	--btn-gap: 6px;
+	--btn-icon: 15px;
+}
+.btn-lg {
+	--btn-h: var(--control-h-lg);
+	--btn-r: var(--radius-h48);
+	--btn-fs: 15.5px;
+	--btn-icon: 18px;
+}
+.btn-icon {
+	width: var(--btn-h);
+	padding: 0;
+}
+.btn-block {
+	width: 100%;
+}
+
+.btn-primary {
+	background: var(--primary);
+	color: var(--primary-fg);
+}
+.btn-tonal {
+	background: var(--pine-100);
+	color: var(--pine-700);
+}
+.btn-neutral {
+	background: var(--surface-muted);
+	color: var(--fg);
+}
+.btn-ghost {
+	color: var(--fg-muted);
+}
+.btn-danger {
+	background: var(--danger-100);
+	color: var(--danger-700);
+}
+.btn-danger-solid {
+	background: var(--danger-500);
+	color: var(--primary-fg);
+}
+.btn-caution {
+	background: var(--brass-600);
+	color: var(--primary-fg);
+}
+
+@media (hover: hover) {
+	.btn-primary:hover {
+		background: var(--primary-hover);
+	}
+	.btn-tonal:hover {
+		background: var(--tonal-hover);
+	}
+	.btn-neutral:hover {
+		background: var(--neutral-hover);
+		color: var(--fg-strong);
+	}
+	.btn-ghost:hover {
+		background: var(--ghost-hover);
+		color: var(--fg-strong);
+	}
+	.btn-danger:hover {
+		background: var(--danger-soft-hover);
+	}
+	.btn-danger-solid:hover {
+		background: var(--danger-hover);
+	}
+	.btn-caution:hover {
+		background: var(--brass-500);
+	}
+}
+.btn-primary:active {
+	background: var(--primary-press);
+}
+
+.btn:is(:disabled, [aria-disabled='true']) {
+	background: var(--disabled-fill);
+	color: var(--fg-faint);
+	cursor: not-allowed;
+}
+.btn-ghost:is(:disabled, [aria-disabled='true']) {
+	background: transparent;
+}
+
+.btn[aria-busy='true'] {
+	cursor: progress;
+}
+.btn-primary[aria-busy='true'] {
+	background: color-mix(in oklab, var(--primary) 85%, transparent);
+	color: var(--primary-fg);
+}
+.btn-tonal[aria-busy='true'] {
+	background: var(--pine-100);
+	color: var(--pine-700);
+}
+.btn-neutral[aria-busy='true'] {
+	background: var(--surface-muted);
+	color: var(--fg);
+}
+.btn-danger-solid[aria-busy='true'] {
+	background: color-mix(in oklab, var(--danger-500) 85%, transparent);
+	color: var(--primary-fg);
+}
+
+.btn-stack {
+	display: inline-grid;
+}
+.btn-stack > span {
+	grid-area: 1 / 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--btn-gap);
+	transition:
+		opacity var(--dur-fast) var(--ease),
+		transform var(--dur-fast) var(--ease);
+}
+.btn-stack > .btn-busy,
+.btn[aria-busy='true'] .btn-stack > .btn-idle {
+	visibility: hidden;
+	opacity: 0;
+}
+.btn[aria-busy='true'] .btn-stack > .btn-busy {
+	visibility: visible;
+	opacity: 1;
+}
+.btn-spin {
+	width: 1em;
+	height: 1em;
+	border-radius: 50%;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	animation: btn-spin 0.8s linear infinite;
+}
+@keyframes btn-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.btn:active:not(:disabled, [aria-disabled='true']) {
+		transform: translateY(1px);
+	}
+	.btn-stack > .btn-busy {
+		transform: translateY(4px);
+	}
+	.btn[aria-busy='true'] .btn-stack > .btn-idle {
+		transform: translateY(-4px);
+	}
+	.btn[aria-busy='true'] .btn-stack > .btn-busy {
+		transform: none;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.btn-spin {
+		animation-duration: 2.4s;
+	}
+}
+
+@media (pointer: coarse) {
+	.btn:not(.btn-lg) {
+		--btn-h: var(--control-h-touch);
+		--btn-r: var(--radius-h44);
+	}
+}

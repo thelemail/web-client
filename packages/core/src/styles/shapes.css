@@ -14,6 +14,15 @@
 	--radius-panel: var(--radius-xl);
 	--radius-avatar: 22%;
 	--radius: var(--radius-control);
+
+	--control-h-sm: 32px;
+	--control-h-md: 40px;
+	--control-h-touch: 44px;
+	--control-h-lg: 48px;
+	--radius-h32: 7px;
+	--radius-h40: 9px;
+	--radius-h44: 10px;
+	--radius-h48: 10.5px;
 }
 
 @theme inline {

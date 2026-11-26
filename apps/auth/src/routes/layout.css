@@ -4,6 +4,7 @@
 @import "shadcn-svelte/tailwind.css";
 @import '../../../../packages/core/src/styles/tokens.css';
 @import '../../../../packages/core/src/styles/shapes.css';
+@import '../../../../packages/core/src/styles/button.css';
 
 @custom-variant dark (&:is([data-theme='dark'] *));
 @plugin '@tailwindcss/forms';
@@ -218,125 +219,6 @@
 		font-size: var(--text-xs); line-height: var(--lh-xs); color: var(--fg-muted); }
 }
 
-.btn {
-	font-family: var(--font-sans);
-	font-weight: 600;
-	font-size: 13.5px;
-	line-height: 1;
-	border-radius: var(--radius-control);
-	padding: 9px 15px;
-	border: 1px solid transparent;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 7px;
-	white-space: nowrap;
-	cursor: pointer;
-	color: inherit;
-	text-decoration: none;
-	transition:
-		background var(--dur),
-		border-color var(--dur),
-		color var(--dur);
-}
-.btn svg {
-	width: 15px;
-	height: 15px;
-	flex: 0 0 auto;
-}
-.btn:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px var(--focus-ring);
-}
-.btn:disabled,
-.btn[aria-disabled='true'] {
-	cursor: not-allowed;
-	pointer-events: none;
-}
-.btn:disabled:not(.btn-primary),
-.btn[aria-disabled='true']:not(.btn-primary) {
-	opacity: 0.5;
-}
-.btn-lg {
-	font-size: 14.5px;
-	padding: 12px 16px;
-	gap: 9px;
-}
-.btn-lg svg {
-	width: 17px;
-	height: 17px;
-}
-.btn-sm {
-	border-radius: var(--radius-control-compact);
-	font-size: 12.5px;
-	padding: 7px 11px;
-}
-.btn-block {
-	width: 100%;
-}
-.btn.btn-primary {
-	background: var(--primary);
-	color: var(--primary-fg);
-	box-shadow: var(--shadow-xs);
-}
-.btn.btn-primary:hover {
-	background: var(--primary-hover);
-}
-.btn.btn-primary:active {
-	background: var(--primary-press);
-}
-.btn.btn-primary:disabled,
-.btn.btn-primary[aria-disabled='true'] {
-	background: var(--bg-sunken);
-	color: var(--fg-faint);
-	border-color: var(--border);
-	box-shadow: none;
-}
-.btn.btn-secondary {
-	background: var(--surface);
-	color: var(--fg);
-	border-color: var(--border-strong);
-	box-shadow: var(--shadow-xs);
-}
-.btn.btn-secondary:hover {
-	background: var(--bg-raised);
-}
-.btn.btn-ghost {
-	background: transparent;
-	color: var(--fg-muted);
-}
-.btn.btn-ghost:hover {
-	background: var(--bg-sunken);
-	color: var(--fg-strong);
-}
-.btn.btn-danger {
-	background: var(--surface);
-	color: var(--danger-700);
-	border-color: var(--danger-100);
-}
-.btn.btn-danger:hover {
-	background: var(--danger-100);
-}
-.btn.btn-danger-solid {
-	background: var(--danger-700);
-	color: var(--primary-fg);
-	border-color: var(--danger-700);
-}
-.btn.btn-danger-solid:hover {
-	background: var(--danger-500);
-	border-color: var(--danger-500);
-}
-.btn.btn-danger-solid:active {
-	background: var(--danger-700);
-}
-.btn.btn-caution {
-	background: var(--brass-600);
-	color: var(--primary-fg);
-}
-.btn.btn-caution:hover {
-	background: var(--brass-500);
-}
-
 .errtext {
 	font-size: 12px;
 	color: var(--danger-700);
@@ -403,11 +285,5 @@
 	textarea,
 	[contenteditable='true'] {
 		font-size: max(16px, 1em) !important;
-	}
-	.btn {
-		min-height: 44px;
-	}
-	.btn-sm {
-		min-height: 36px;
 	}
 }

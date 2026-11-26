@@ -8,23 +8,27 @@
 		variants: {
 			variant: {
 				primary: "btn-primary",
-				secondary: "btn-secondary",
+				tonal: "btn-tonal",
+				neutral: "btn-neutral",
 				ghost: "btn-ghost",
 				danger: "btn-danger",
 				dangerSolid: "btn-danger-solid",
 				caution: "btn-caution"
 			},
 			size: {
-				lg: "btn-lg",
+				sm: "btn-sm",
 				md: "",
-				sm: "btn-sm"
+				lg: "btn-lg",
+				"icon-sm": "btn-sm btn-icon",
+				icon: "btn-icon",
+				"icon-lg": "btn-lg btn-icon"
 			},
 			block: {
 				true: "btn-block"
 			}
 		},
 		defaultVariants: {
-			variant: "secondary",
+			variant: "neutral",
 			size: "md",
 			block: false
 		}
@@ -38,6 +42,8 @@
 			variant?: ButtonVariant;
 			size?: ButtonSize;
 			block?: boolean;
+			busy?: boolean;
+			busyLabel?: string;
 		};
 </script>
 
@@ -45,16 +51,40 @@
 	let {
 		ref = $bindable(null),
 		class: className,
-		variant = "secondary",
+		variant = "neutral",
 		size = "md",
 		block = false,
+		busy = false,
+		busyLabel = undefined,
 		href = undefined,
 		type = "button",
 		disabled = false,
+		onclick,
 		children,
 		...restProps
 	}: ButtonProps = $props();
+
+	const stacked = $derived(busyLabel !== undefined);
+
+	function guard(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) {
+		if (busy) {
+			e.preventDefault();
+			return;
+		}
+		(onclick as ((e: MouseEvent) => void) | null | undefined)?.(e);
+	}
 </script>
+
+{#snippet content()}
+	{#if stacked}
+		<span class="btn-stack">
+			<span class="btn-idle" aria-hidden={busy || undefined}>{@render children?.()}</span>
+			<span class="btn-busy" aria-hidden={!busy || undefined}><span class="btn-spin"></span>{busyLabel}</span>
+		</span>
+	{:else}
+		{@render children?.()}
+	{/if}
+{/snippet}
 
 {#if href}
 	<a
@@ -62,12 +92,14 @@
 		data-slot="button"
 		class={cn(buttonVariants({ variant, size, block }), className)}
 		href={disabled ? undefined : href}
-		aria-disabled={disabled || undefined}
+		aria-disabled={disabled || busy || undefined}
+		aria-busy={busy || undefined}
 		role={disabled ? "link" : undefined}
 		tabindex={disabled ? -1 : undefined}
+		onclick={guard}
 		{...restProps}
 	>
-		{@render children?.()}
+		{@render content()}
 	</a>
 {:else}
 	<button
@@ -76,8 +108,14 @@
 		class={cn(buttonVariants({ variant, size, block }), className)}
 		{type}
 		{disabled}
+		aria-disabled={busy || undefined}
+		aria-busy={busy || undefined}
+		onclick={guard}
 		{...restProps}
 	>
-		{@render children?.()}
+		{@render content()}
 	</button>
+{/if}
+{#if stacked}
+	<span class="sr-only" role="status">{busy ? busyLabel : ""}</span>
 {/if}
