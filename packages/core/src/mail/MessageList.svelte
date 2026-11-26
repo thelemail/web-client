@@ -246,9 +246,9 @@
 		if (isDateSort(sort)) {
 			const nowMs = Date.now();
 			const order = sort === 'oldest' ? GROUP_ORDER.slice().reverse() : GROUP_ORDER;
-			return order
-				.map((g) => ({ g, items: list.filter((m) => bucketFromEpoch(m.epoch, nowMs) === g) }))
-				.filter((x) => x.items.length);
+			const buckets = new Map(order.map((g) => [g, [] as typeof list]));
+			for (const m of list) buckets.get(bucketFromEpoch(m.epoch, nowMs))?.push(m);
+			return order.map((g) => ({ g, items: buckets.get(g)! })).filter((x) => x.items.length);
 		}
 		return [{ g: null as string | null, items: list }];
 	});
@@ -301,7 +301,7 @@
 					if (e.isIntersecting && !exhausted && !loadingMore) onLoadMore?.();
 				}
 			},
-			{ root: scrollEl, rootMargin: '320px 0px 0px 0px' }
+			{ root: scrollEl, rootMargin: '0px 0px 320px 0px' }
 		);
 		observer.observe(sentinelEl);
 		return () => observer?.disconnect();
@@ -333,7 +333,16 @@
 	}
 
 	function rowEl(id: string): HTMLElement | undefined {
-		return rowEls().find((r) => r.dataset.id === id);
+		return scrollEl?.querySelector<HTMLElement>(`.mrow[data-id="${CSS.escape(id)}"]`) ?? undefined;
+	}
+
+	function revealRow(id: string) {
+		const row = rowEl(id);
+		if (!row || !scrollEl) return;
+		const box = row.getBoundingClientRect();
+		const view = scrollEl.getBoundingClientRect();
+		if (box.top >= view.top && box.bottom <= view.bottom) return;
+		row.scrollIntoView?.({ block: 'nearest' });
 	}
 
 	function captureAnchor(): Anchor | null {
@@ -431,7 +440,7 @@
 			const prev = lastActive;
 			lastActive = id;
 			if (id) {
-				rowEl(id)?.scrollIntoView?.({ block: 'nearest' });
+				revealRow(id);
 				return;
 			}
 			if (!prev || !scrollEl) return;
