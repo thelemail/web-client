@@ -352,8 +352,8 @@
 				src={auth.avatarUrl}
 				fit="cover"
 				size={64}
-				bg="var(--pine-700)"
-				fg="#EEF2EA"
+				bg="var(--pine-100)"
+				fg="var(--pine-700)"
 				class="pf-av"
 			/>
 			<button

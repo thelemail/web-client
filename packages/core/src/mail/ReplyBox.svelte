@@ -266,8 +266,8 @@
 		name: auth.fullName ?? auth.email ?? 'Me',
 		email: auth.email ?? '',
 		init: initialsFor(auth.fullName, auth.email),
-		bg: 'var(--pine-700)',
-		fg: '#EEF2EA',
+		bg: 'var(--pine-100)',
+		fg: 'var(--pine-700)',
 		org: '',
 		kind: 'Default'
 	});

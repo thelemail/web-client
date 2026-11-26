@@ -35,8 +35,8 @@
 				src={auth.avatarUrlFor(single.accountId)}
 				fit="cover"
 				size={32}
-				bg="var(--pine-700)"
-				fg="#EEF2EA"
+				bg="var(--pine-100)"
+				fg="var(--pine-700)"
 			/>
 			<span class="si-tx" title={single.email}
 				><Rich text={m.auth_signed_in_as({ email: single.email })} tags={{ b: strong }} /></span

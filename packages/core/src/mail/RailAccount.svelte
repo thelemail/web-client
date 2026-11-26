@@ -319,7 +319,7 @@
 		aria-controls={open ? menuId : undefined}
 	>
 		<span class="av-wrap">
-			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-700)" fg="#EEF2EA" />
+			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-100)" fg="var(--pine-700)" />
 			{#if hasBackgroundUnread}<span class="acct-dot" aria-hidden="true"></span>{/if}
 		</span>
 		<span class="acct-tx">

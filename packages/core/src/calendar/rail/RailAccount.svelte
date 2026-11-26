@@ -18,7 +18,7 @@
 <div class="rail-acct">
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class="acct-btn">
-			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-700)" fg="#EEF2EA" />
+			<Avatar {initials} src={auth.avatarUrl} fit="cover" size={28} bg="var(--pine-100)" fg="var(--pine-700)" />
 			<span class="acct-tx">
 				<span class="acct-nm" title={displayName}>{displayName}</span>
 				<span class="acct-em" title={displayEmail}>{displayEmail}</span>

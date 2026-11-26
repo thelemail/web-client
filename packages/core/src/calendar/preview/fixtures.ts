@@ -52,8 +52,8 @@ export const PEOPLE: Record<PreviewPersonId, PreviewPerson> = {
 		name: 'François',
 		full: 'François Rabelais',
 		email: 'you@meudon.fr',
-		bg: '#234132',
-		fg: '#EEF2EA'
+		bg: 'var(--pine-100)',
+		fg: 'var(--pine-700)'
 	},
 	marie: {
 		init: 'MT',

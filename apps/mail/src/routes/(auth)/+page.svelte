@@ -95,8 +95,8 @@
 						src={row.avatarUrl}
 						fit="cover"
 						size={38}
-						bg={row.unlocked ? 'var(--pine-700)' : 'var(--pine-100)'}
-						fg={row.unlocked ? '#EEF2EA' : 'var(--pine-700)'}
+						bg={row.unlocked ? 'var(--primary)' : 'var(--pine-100)'}
+						fg={row.unlocked ? 'var(--primary-fg)' : 'var(--pine-700)'}
 					/>
 					<span class="ap-tx">
 						{#if row.name}
