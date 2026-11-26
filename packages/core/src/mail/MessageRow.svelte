@@ -16,6 +16,7 @@
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
 	import StateIcon from '$core/components/StateIcon.svelte';
+	import type { TipTether } from '$core/components/ui/tooltip/shared';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
@@ -58,6 +59,7 @@
 		onDelete?: (id: string) => void;
 		onSpam?: (id: string) => void;
 		onToggleRead: (id: string) => void;
+		tips?: TipTether;
 	}
 
 	let {
@@ -78,7 +80,8 @@
 		onRestore,
 		onDelete,
 		onSpam,
-		onToggleRead
+		onToggleRead,
+		tips
 	}: Props = $props();
 
 	const uid = $props.id();
@@ -423,6 +426,7 @@
 		size="icon-sm"
 		class={opts.star ? 'btn-star' : undefined}
 		tooltip={label}
+		tooltipTether={tips}
 		aria-pressed={opts.pressed}
 		data-mutates={opts.mutates ? '' : undefined}
 		onclick={(e: MouseEvent) => {

@@ -6,6 +6,8 @@
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import * as Tooltip from '$core/components/ui/tooltip';
+	import { createTipTether } from '$core/components/ui/tooltip/shared';
 	import { Chip } from '$core/components/ui/chip';
 	import { EmptyState } from '$core/components/ui/empty-state';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
@@ -169,6 +171,7 @@
 		showScope = false
 	}: Props = $props();
 
+	const rowTips = createTipTether();
 	const viewName = $derived(folderLabel ?? '');
 	const searchActive = $derived(search !== null);
 	let SearchStrip = $state.raw<SearchStripComponent | null>(loadedSearchStrip());
@@ -860,9 +863,11 @@
 						{onDelete}
 						{onSpam}
 						{onToggleRead}
+						tips={rowTips}
 					/>
 				{/each}
 			{/each}
+			<Tooltip.Shared tether={rowTips} />
 		{/if}
 		{#if !searchActive || list.length > 0}
 			<div class="list-foot" bind:this={sentinelEl}>
