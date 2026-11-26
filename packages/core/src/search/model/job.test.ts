@@ -27,6 +27,7 @@ function setup(f: Fakes) {
 		setUnavailable: vi.fn(),
 		adopt: vi.fn((epoch: number) => epoch > 0),
 		seed: vi.fn(() => 0),
+		promote: vi.fn(() => false),
 		pending: vi.fn(() => f.pending.shift() ?? []),
 		input: vi.fn(() => ({ subject: null, parts: [] })),
 		put: vi.fn((...args: unknown[]) => {
@@ -65,7 +66,8 @@ describe('embeddingsJob', () => {
 	it('embeds pending sources newest first and stores them under the current epoch', async () => {
 		const { job, puts, store } = setup({ pending: [[{ id: 1, contentRev: 3, body: Coverage.complete }], []] });
 		expect(await job.step(step)).toBe('idle');
-		expect(store.adopt).toHaveBeenCalledWith(expect.any(Number));
+		expect(store.adopt).toHaveBeenCalledWith(expect.any(Number), expect.any(Number));
+		expect(store.promote).toHaveBeenCalled();
 		expect(puts).toEqual([[1, 3, store.adopt.mock.calls[0][0], (embedded as Extract<Embedded, { ok: true }>).passages]]);
 	});
 

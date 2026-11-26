@@ -12,14 +12,18 @@ import type { SyncProgress } from '../sync/jobs';
 import { SyncStore } from '../sync/store';
 import { ArtifactStore } from '../artifacts/store';
 import { attachGeneration, type SyncSession } from '../artifacts/jobs';
+import { MODEL_ID } from '../model/job';
 import { ModelLink } from '../model/link';
 import { PassageStore } from '../model/store';
+import { meaningSplit } from '../query/classify';
+import { VectorCache } from '../vectors/cache';
 import {
 	directoryFor,
 	fileFor,
 	type ClientRequest,
 	type ControlRequest,
 	type InitResult,
+	type MeaningReply,
 	type Mode,
 	type Persistence,
 	type ProgressEvent,
@@ -94,6 +98,7 @@ interface Open {
 	sync: SyncStatus | null;
 	model: ModelLink | null;
 	passages: PassageStore;
+	vectors: VectorCache;
 }
 
 type SyncSlot = { state: 'off' } | { state: 'pending' } | { state: 'on'; session: SyncSession; port: MessagePort };
@@ -213,7 +218,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 			sources: 0,
 			sync: null,
 			model: null,
-			passages: new PassageStore(db, writer)
+			passages: new PassageStore(db, writer),
+			vectors: new VectorCache(db, writer)
 		};
 		open = o;
 		if (semantic && mode === 'saved') o.model = new ModelLink(modelHost(o));
@@ -357,6 +363,7 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		o.extractor.close();
 		await Promise.all(inflight);
 		await o.scheduler.stop();
+		o.vectors.dispose();
 		o.engine.dispose();
 		o.writer.close();
 		o.db.close();
@@ -439,11 +446,53 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		}
 	}
 
+	async function meaning(client: Client, r: Extract<ClientRequest, { op: 'meaning' }>): Promise<MeaningReply> {
+		const o = open!;
+		const model = o.model;
+		if (!model) return { ok: false, unavailable: 'off' };
+		const split = meaningSplit(r.query.root);
+		if (!split) return { ok: false, unavailable: 'words' };
+		const controller = new AbortController();
+		const signal = controller.signal;
+		client.running.set(r.token, controller);
+		try {
+			const running = o.scheduler.foreground(async (): Promise<MeaningReply> => {
+				const epoch = o.passages.scanEpoch(MODEL_ID);
+				if (!epoch) return { ok: false, unavailable: 'empty' };
+				const queried = await model.query(split.text, signal);
+				signal.throwIfAborted();
+				if (open !== o) throw new Error('closed');
+				if (!queried.ok) return { ok: false, unavailable: queried.reason === 'tooLong' ? 'tooLong' : queried.reason === 'busy' ? 'busy' : 'model' };
+				const outcome = await o.engine.meaning(r.query, r.ctx, { group: r.options.group, vector: queried.vector, epoch, cache: o.vectors, signal });
+				if (!outcome.ok) return 'reason' in outcome ? { ok: false, unavailable: 'words' } : outcome;
+				return outcome;
+			});
+			const settled: Promise<boolean> = running.then(
+				() => inflight.delete(settled),
+				() => inflight.delete(settled)
+			);
+			inflight.add(settled);
+			const outcome = await running;
+			if (outcome.ok) {
+				client.sessions.push(outcome.summary.id);
+				while (client.sessions.length > MAX_SESSIONS_PER_CLIENT) o.engine.close(client.sessions.shift()!);
+			}
+			return outcome;
+		} catch (error) {
+			if (signal.aborted) return { ok: false, cancelled: true };
+			throw error;
+		} finally {
+			client.running.delete(r.token);
+		}
+	}
+
 	async function answer(port: MessagePort, client: Client, r: ClientRequest): Promise<unknown> {
 		if (!open) throw new Error('closed');
 		switch (r.op) {
 			case 'query':
 				return query(port, client, r);
+			case 'meaning':
+				return meaning(client, r);
 			case 'cancel':
 				client.running.get(r.token)?.abort();
 				return null;

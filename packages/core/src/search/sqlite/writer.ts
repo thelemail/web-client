@@ -52,6 +52,7 @@ const STATEMENTS = {
 	deleteDimension: 'DELETE FROM coverage WHERE source = ? AND dimension = ?',
 	deletePassages: 'DELETE FROM passages WHERE source = ?',
 	deletePassageRefs: 'DELETE FROM passage_refs WHERE source = ?',
+	deleteVectorUpload: 'DELETE FROM vector_uploads WHERE source = ?',
 	deleteOtherCoverage: 'DELETE FROM coverage WHERE source = ? AND dimension != ?',
 	readCheckpoint: 'SELECT cursor FROM checkpoints WHERE job = ?',
 	writeCheckpoint: 'INSERT OR REPLACE INTO checkpoints (job, cursor) VALUES (?, ?)',
@@ -104,6 +105,8 @@ export class SearchWriter {
 	#statements = new Map<StatementName, PreparedStatement>();
 	#deleted = new Set<(source: number) => void>();
 	#inserted = new Set<() => void>();
+	#vectors = new Set<(sources: ReadonlySet<number>) => void>();
+	#touched = new Set<number>();
 
 	constructor(db: Database) {
 		this.#db = db;
@@ -118,11 +121,30 @@ export class SearchWriter {
 	#atomic<T>(fn: () => T): T {
 		if (this.#depth > 0) return fn();
 		this.#depth++;
+		let value: T;
 		try {
-			return this.#db.transaction('IMMEDIATE', fn);
+			value = this.#db.transaction('IMMEDIATE', fn);
+		} catch (err) {
+			this.#touched.clear();
+			throw err;
 		} finally {
 			this.#depth--;
 		}
+		if (this.#touched.size) {
+			const touched = this.#touched;
+			this.#touched = new Set();
+			for (const listener of this.#vectors) listener(touched);
+		}
+		return value;
+	}
+
+	touchVectors(source: number): void {
+		this.#touched.add(source);
+	}
+
+	onVectors(listener: (sources: ReadonlySet<number>) => void): () => void {
+		this.#vectors.add(listener);
+		return () => this.#vectors.delete(listener);
 	}
 
 	#stmt(name: StatementName): PreparedStatement {
@@ -212,7 +234,9 @@ export class SearchWriter {
 	#clearPassages(id: number): void {
 		this.#run('deletePassageRefs', [id]);
 		this.#run('deletePassages', [id]);
+		this.#run('deleteVectorUpload', [id]);
 		this.#run('deleteDimension', [id, Dimension.semantic]);
+		this.#touched.add(id);
 	}
 
 	#deletePart(part: number): void {

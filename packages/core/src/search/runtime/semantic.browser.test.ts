@@ -1,11 +1,23 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import { commands } from 'vitest/browser';
 import type { SearchSessionRequest } from '$core/keystore/protocol';
+import { parseQuery } from '../query';
+import type { QueryContext } from '../sqlite/compile';
+import { SNAPSHOT } from '../sqlite/harness';
 import { Coverage, Dimension } from '../sqlite/types';
 import { SearchClient, type ClientDeps, type ClientState } from './client';
 import { directoryFor } from './protocol';
 import { memoryPrefs, memoryRecords } from './records';
 
+declare module 'vitest/browser' {
+	interface BrowserCommands {
+		watchNetwork: () => Promise<null>;
+		networkSeen: () => Promise<string[]>;
+	}
+}
+
 const WAIT_MS = 120_000;
+const CTX: QueryContext = { identities: [], folders: [], labels: [], attachmentText: true };
 
 interface Rig {
 	accountId: string;
@@ -143,6 +155,28 @@ describe('search by meaning in the search runtime', () => {
 		expect(r.models).toHaveLength(1);
 	}, WAIT_MS);
 
+	it('answers a meaning query from local vectors without a network request', async () => {
+		const r = rig();
+		const a = await r.client(true);
+		a.start();
+		await until(a, (s) => s.phase === 'ready');
+		await a.tell('mail', { total: 30 });
+		await until(a, (s) => semantic(s, Coverage.complete) === 30 && s.status?.working === null);
+		const parsed = parseQuery('ferry crossing to the island', SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		await commands.watchNetwork();
+		const reply = await a.meaning(parsed.query, CTX, { group: 'message' });
+		const seen = await commands.networkSeen();
+		expect(seen).toEqual([]);
+		if (!reply.ok || !('summary' in reply)) throw new Error(JSON.stringify(reply));
+		expect(reply.summary).toMatchObject({ groups: 30, eligible: 30, incomplete: 0, rebuilding: false });
+		const page = await a.page(reply.summary.id, 0);
+		if (!page.ok) throw new Error(page.reason);
+		const top = page.groups.slice(0, 10).map((g) => Number(g.best.sourceId.slice(1)));
+		expect(top.every((id) => id % 2 === 1)).toBe(true);
+		expect(page.groups[0].passage?.text).toContain('ferry');
+	}, WAIT_MS);
+
 	it('loads no model and keeps no passages while search by meaning is off', async () => {
 		const r = rig();
 		const a = await r.client(false);
@@ -154,5 +188,8 @@ describe('search by meaning in the search runtime', () => {
 		expect(r.models).toHaveLength(0);
 		expect(a.state.status?.semantic).toBeNull();
 		expect(semantic(a.state, Coverage.complete) + semantic(a.state, Coverage.pending)).toBe(0);
+		const parsed = parseQuery('ferry island', SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		expect(await a.meaning(parsed.query, CTX, { group: 'message' })).toEqual({ ok: false, unavailable: 'off' });
 	}, WAIT_MS);
 });

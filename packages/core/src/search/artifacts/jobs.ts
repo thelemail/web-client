@@ -14,11 +14,13 @@ import { IndexState, type Listed } from './store';
 
 export const HYDRATE_JOB = 'hydrate';
 export const UPLOAD_JOB = 'upload';
+export const VECTOR_HYDRATE_JOB = 'hydrate-vectors';
+export const VECTOR_UPLOAD_JOB = 'upload-vectors';
 
 const CURSOR = 'artifacts';
 const HYDRATE_BATCH = 'hydrate-docs';
 const RELIST_MS = 60_000;
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type SealOutcome = { ok: true; artifact: Uint8Array } | { ok: false; code: 'too_large' | 'unavailable' };
 export type OpenOutcome = { ok: true; payload: Uint8Array } | { ok: false; code: 'invalid' | 'unavailable' };
@@ -61,7 +63,7 @@ function saveCursor(writer: SearchWriter, c: Cursor): void {
 	writer.setCheckpoint({ job: CURSOR, cursor: JSON.stringify(c) });
 }
 
-function retryAfter(f: BridgeFailure): number | null {
+export function retryAfter(f: BridgeFailure): number | null {
 	return f.code === 'pending' || f.code === 'retry' ? f.retryAfterSeconds : null;
 }
 
@@ -73,7 +75,7 @@ function documentKey(sourceId: string, contentRevision: number, componentEpoch: 
 	return { kind: 'document', sourceKind: 'message', sourceId, contentRevision, componentEpoch };
 }
 
-async function sha256(bytes: Uint8Array): Promise<string> {
+export async function sha256(bytes: Uint8Array): Promise<string> {
 	const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as BufferSource));
 	return Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('');
 }
@@ -133,8 +135,14 @@ export const hydrateJob: JobFactory = (ctx) => {
 		if (!r.ok) return wait(r.failure);
 		attempt = 0;
 		const rows: Listed[] = [];
+		const vectors: Listed[] = [];
 		for (const i of r.value.items) {
-			if (i.kind !== 'document' || i.sourceKind !== 'message' || !UUID_RE.test(i.sourceId)) continue;
+			if (i.sourceKind !== 'message' || !UUID_RE.test(i.sourceId)) continue;
+			if (i.kind === 'vectors') {
+				vectors.push({ sourceId: i.sourceId, contentRev: i.contentRevision, componentEpoch: i.componentEpoch, extractionRev: i.extractionRevision, seq: i.seq, state: IndexState.listed });
+				continue;
+			}
+			if (i.kind !== 'document') continue;
 			rows.push({
 				sourceId: i.sourceId,
 				contentRev: i.contentRevision,
@@ -147,11 +155,14 @@ export const hydrateJob: JobFactory = (ctx) => {
 		const next: Cursor = { generationId: s.generationId, afterSeq: Math.max(c.afterSeq, r.value.throughSeq), complete: c.complete || r.value.complete };
 		ctx.writer.atomic(() => {
 			ctx.artifacts.list(rows);
+			ctx.artifacts.listVectors(vectors);
 			saveCursor(ctx.writer, next);
 		});
 		if (r.value.complete) {
 			s.listed = true;
 			ctx.wake(BODY_JOB);
+			ctx.wake(VECTOR_HYDRATE_JOB);
+			ctx.wake(VECTOR_UPLOAD_JOB);
 			return null;
 		}
 		return 'more';

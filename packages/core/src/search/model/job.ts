@@ -1,13 +1,16 @@
 /// <reference path="./virtual.d.ts" />
 import manifest from 'virtual:model-assets';
+import { VECTOR_HYDRATE_JOB, VECTOR_UPLOAD_JOB } from '../artifacts/jobs';
 import type { JobFactory } from '../runtime/host';
 import { Coverage } from '../sqlite/types';
 import { semanticEpoch } from './epoch';
+import { modelId } from './store';
 import { VECTOR_BYTES } from './pool';
 
 export const UNAVAILABLE_RETRY_MS = 7 * 24 * 60 * 60_000;
+export const MODEL_ID = modelId(manifest.hash);
 const PICK = 8;
-const RECORD_BYTES = VECTOR_BYTES + 32;
+export const RECORD_BYTES = VECTOR_BYTES + 32;
 const EMBEDDABLE: readonly Coverage[] = [Coverage.complete, Coverage.partial];
 
 export const embeddingsJob: JobFactory = (ctx) => {
@@ -32,11 +35,12 @@ export const embeddingsJob: JobFactory = (ctx) => {
 				return 'idle';
 			}
 			epoch ??= await semanticEpoch(manifest.hash);
-			store.adopt(epoch);
-			store.seed();
+			const adopted = store.adopt(epoch, MODEL_ID);
+			if (store.seed() > 0 || adopted) ctx.wake(VECTOR_HYDRATE_JOB);
 			while (!step.shouldYield()) {
 				const batch = store.pending(PICK);
 				if (batch.length === 0) {
+					store.promote();
 					link.idleSoon();
 					return 'idle';
 				}
@@ -80,7 +84,7 @@ export const embeddingsJob: JobFactory = (ctx) => {
 					if (!(await link.check(fence))) return 'more';
 					const admitted = await ctx.admit(embedded.passages.length * RECORD_BYTES);
 					if (!admitted.ok) return 'blocked';
-					store.put(s.id, s.contentRev, epoch, embedded.passages);
+					if (store.put(s.id, s.contentRev, epoch, embedded.passages)) ctx.wake(VECTOR_UPLOAD_JOB);
 				}
 			}
 			return 'more';

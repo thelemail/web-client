@@ -9,7 +9,7 @@ export interface EmbedderLike {
 }
 
 export interface ServeModelDeps {
-	load(progress: (bytes: number) => void): Promise<EmbedderLike>;
+	load(progress: (bytes: number) => void, offline: boolean): Promise<EmbedderLike>;
 	total: number;
 	failureOf(error: unknown): ModelFailure;
 }
@@ -49,14 +49,25 @@ export function serveModel(port: MessagePort, deps: ServeModelDeps): void {
 	const post = (message: ModelMessage, transfer: Transferable[] = []) => port.postMessage(message, transfer);
 	const fail = (id: number, error: unknown) => post({ type: 'reply', id, ok: false, reason: deps.failureOf(error) });
 
-	const load = () =>
-		(loading ??= deps.load((bytes) => {
+	const load = (offline = false) => {
+		if (loading) return loading;
+		const started = deps.load((bytes) => {
 			loaded += bytes;
 			if (loaded - reported >= PROGRESS_STEP || loaded >= deps.total) {
 				reported = loaded;
 				post({ type: 'progress', loaded: Math.min(loaded, deps.total), total: deps.total });
 			}
-		}));
+		}, offline);
+		loading = offline
+			? started.catch((error: unknown) => {
+					loading = null;
+					loaded = 0;
+					reported = 0;
+					throw error;
+				})
+			: started;
+		return loading;
+	};
 
 	async function embed(id: number, input: EmbedInput): Promise<void> {
 		try {
@@ -95,7 +106,7 @@ export function serveModel(port: MessagePort, deps: ServeModelDeps): void {
 		if (!r || typeof r !== 'object' || !Number.isSafeInteger(r.id)) return;
 		switch (r.op) {
 			case 'load':
-				load().then(
+				load(r.offline === true).then(
 					() => post({ type: 'reply', id: r.id, ok: true, value: null }),
 					(error: unknown) => fail(r.id, error)
 				);

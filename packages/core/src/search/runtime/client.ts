@@ -16,6 +16,8 @@ import {
 	type CloudState,
 	type InitResult,
 	type Mode,
+	type MeaningReply,
+	type MeaningRequestOptions,
 	type QueryReply,
 	type QueryRequestOptions,
 	type Reply,
@@ -150,6 +152,17 @@ class Link {
 		}
 	}
 
+	async meaning(query: ParsedQuery, ctx: QueryContext, options: MeaningRequestOptions, signal?: AbortSignal): Promise<MeaningReply> {
+		const token = this.#token++;
+		const cancel = () => void this.call({ op: 'cancel', token }).catch(() => undefined);
+		signal?.addEventListener('abort', cancel, { once: true });
+		try {
+			return await this.call<MeaningReply>({ op: 'meaning', token, query, ctx, options });
+		} finally {
+			signal?.removeEventListener('abort', cancel);
+		}
+	}
+
 	close(bye: boolean): void {
 		if (bye) this.#port.postMessage({ op: 'bye', id: -1 });
 		this.#rpc.fail('disconnected');
@@ -243,6 +256,10 @@ export class SearchClient {
 		onProgress?: (progress: Provisional) => void
 	): Promise<QueryReply> {
 		return this.#ready().query(query, ctx, options, signal, onProgress);
+	}
+
+	meaning(query: ParsedQuery, ctx: QueryContext, options: MeaningRequestOptions, signal?: AbortSignal): Promise<MeaningReply> {
+		return this.#ready().meaning(query, ctx, options, signal);
 	}
 
 	complete(prefix: string): Promise<Completions> {
