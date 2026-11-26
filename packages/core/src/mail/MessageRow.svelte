@@ -183,6 +183,7 @@
 	const hiddenChips = $derived(labelChips.slice(CHIP_LIMIT));
 	const location = $derived(locationFor(m.folder, viewFolder, searching));
 	const hit = $derived(m.match ?? null);
+	const CHANNEL_LABEL = { words: msg.mail_search_channel_words, meaning: msg.mail_search_channel_meaning, both: msg.mail_search_channel_both } as const;
 	function attachmentPlace(name: string, place: string | null): string {
 		const page = place?.match(/^page:(\d+)$/);
 		if (page) return msg.mail_search_in_attachment_page({ name, page: page[1] });
@@ -381,7 +382,9 @@
 			{/if}
 			{#if hit}
 				<span class="stxt" id="{uid}-subj" dir="auto"><Marked text={m.subj} spans={hit.subjectSpans} /></span>
-				{#if hit.matches > 1}
+				{#if hit.channel}
+					<span class="kind-chip chan">{CHANNEL_LABEL[hit.channel]()}</span>
+				{:else if hit.matches > 1}
 					<span class="hit-ct">{msg.mail_search_row_matches({ count: hit.matches, shown: formatNumber(hit.matches) })}</span>
 				{/if}
 				<span class="prev" id="{uid}-prev" dir="auto">

@@ -57,6 +57,7 @@
 		if (search.phase === 'failed') return search.error ? msg.mail_search_query_invalid() : msg.mail_search_failed();
 		if (search.phase === 'starting') return msg.mail_search_starting();
 		if (search.phase === 'searching') return search.matches !== null ? msg.mail_search_counting({ shown: fmt(search.groups ?? 0) }) : msg.mail_list_searching();
+		if (search.related?.main && search.groups === 0) return msg.mail_no_matches();
 		if (search.groups !== null) return msg.mail_search_count({ count: search.groups, shown: fmt(search.groups) });
 		return msg.mail_list_searching();
 	});
@@ -98,7 +99,7 @@
 				<button type="button" class="ss-link" onclick={search.onEnable}>{msg.mail_search_turn_on()}</button>
 			{/if}
 		{/if}
-		{#if search.mode !== 'desktop'}
+		{#if search.mode !== 'desktop' && !search.related?.main}
 			<Segmented
 				class="ss-sort"
 				aria-label={msg.mail_search_sort_label()}

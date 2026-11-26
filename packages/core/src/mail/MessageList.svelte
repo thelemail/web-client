@@ -42,7 +42,7 @@
 		faXmark
 	} from '@fortawesome/pro-regular-svg-icons';
 	import MessageRow from './MessageRow.svelte';
-	import { loadSearchStrip, loadedSearchStrip, type SearchStripComponent } from './searchStrip';
+	import { loadSearchRelated, loadSearchStrip, loadedSearchRelated, loadedSearchStrip, type SearchRelatedComponent, type SearchStripComponent } from './searchStrip';
 	import type { SearchView } from './searchView';
 	import ListSkeleton from './ListSkeleton.svelte';
 	import LoadState from '$core/components/LoadState.svelte';
@@ -178,6 +178,12 @@
 	$effect(() => {
 		if (search && !SearchStrip) void loadSearchStrip().then((c) => (SearchStrip = c));
 	});
+	let SearchRelated = $state.raw<SearchRelatedComponent | null>(loadedSearchRelated());
+	$effect(() => {
+		if (search?.related && !SearchRelated) void loadSearchRelated().then((c) => (SearchRelated = c));
+	});
+	const related = $derived(search?.related ?? null);
+	const relatedMain = $derived(!!related?.main && list.length === 0 && !(related.status === 'ready' && related.rows.length === 0));
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
@@ -262,6 +268,7 @@
 		return Math.max(base, open);
 	});
 	const allRowsShown = $derived(rowCap >= list.length);
+	const relatedAfter = $derived(!!related && !related.main && list.length > 0 && exhausted && allRowsShown);
 	const shownGroups = $derived.by(() => {
 		if (allRowsShown) return groups;
 		let left = rowCap;
@@ -523,6 +530,29 @@
 	}
 </script>
 
+{#snippet row(m: Message)}
+	<MessageRow
+		{m}
+		active={activeId === m.id}
+		fresh={arrived.has(m.id)}
+		checked={inQuery || checked.has(m.id)}
+		{anyChecked}
+		{caps}
+		{viewFolder}
+		searching={searchActive}
+		{onOpen}
+		{onSelect}
+		{onToggleStar}
+		{onToggleCheck}
+		{onArchive}
+		{onTrash}
+		{onRestore}
+		{onDelete}
+		{onSpam}
+		{onToggleRead}
+		tips={rowTips}
+	/>
+{/snippet}
 
 <section class="list">
 	{#if anyChecked}
@@ -869,6 +899,14 @@
 			{#if firstLoad.visible}
 				<ListSkeleton />
 			{/if}
+		{:else if relatedMain && related && SearchRelated}
+			<SearchRelated {related} onMore={search!.onMoreRelated} onRetry={search!.onRetryRelated}>
+				{#each related.rows as m (m.id)}
+					{@render row(m)}
+				{/each}
+			</SearchRelated>
+		{:else if relatedMain}
+			<div class="list-state" aria-busy="true"></div>
 		{:else if list.length === 0}
 			<EmptyState
 				class="empty-list"
@@ -897,38 +935,25 @@
 					<div class="daygrp"><span class="l">{dayBucketLabel(g)}</span><span class="rule"></span></div>
 				{/if}
 				{#each items as m (m.id)}
-					<MessageRow
-						{m}
-						active={activeId === m.id}
-						fresh={arrived.has(m.id)}
-						checked={inQuery || checked.has(m.id)}
-						{anyChecked}
-						{caps}
-						{viewFolder}
-						searching={searchActive}
-						{onOpen}
-						{onSelect}
-						{onToggleStar}
-						{onToggleCheck}
-						{onArchive}
-						{onTrash}
-						{onRestore}
-						{onDelete}
-						{onSpam}
-						{onToggleRead}
-						tips={rowTips}
-					/>
+					{@render row(m)}
 				{/each}
 			{/each}
 			<Tooltip.Shared tether={rowTips} />
 		{/if}
-		{#if (!searchActive || list.length > 0) && allRowsShown}
+		{#if relatedAfter && related && SearchRelated}
+			<SearchRelated {related} onMore={search!.onMoreRelated} onRetry={search!.onRetryRelated}>
+				{#each related.rows as m (m.id)}
+					{@render row(m)}
+				{/each}
+			</SearchRelated>
+		{/if}
+		{#if ((!searchActive || list.length > 0) && allRowsShown) || (relatedMain && related?.status === 'ready')}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
-				{:else if exhausted && list.length > 0 && !offline}
+				{:else if exhausted && list.length > 0 && !offline && !relatedAfter}
 					<span class="lf-hair"></span>
 					<span class="lf-text">{msg.mail_list_end()}</span>
 					<span class="lf-hair"></span>

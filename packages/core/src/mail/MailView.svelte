@@ -1666,6 +1666,19 @@
 			paused: status?.paused ?? false,
 			limited: status?.limited ?? null,
 			settingsHref: `/u/${page.params.slot ?? '0'}/settings/search`,
+			related: mailSearch.related
+				? {
+						status: mailSearch.related.status,
+						main: mailSearch.related.main,
+						rows: mailSearch.relatedShown,
+						more: mailSearch.relatedMore,
+						incomplete: mailSearch.related.summary?.incomplete ?? 0,
+						capped: mailSearch.related.summary?.capped ?? 0,
+						rebuilding: mailSearch.related.summary?.rebuilding ?? false
+					}
+				: null,
+			onMoreRelated: () => mailSearch.expandRelated(),
+			onRetryRelated: () => mailSearch.retryRelated(),
 			onSort: (sort) => mailSearch.setSort(sort),
 			onExactFolders: (exact) => mailSearch.setExactFolders(exact),
 			onRemoveChip: (chip) => mailSearch.removeChip(chip),
