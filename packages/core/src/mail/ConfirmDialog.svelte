@@ -43,6 +43,7 @@
 
 	let cancelRef = $state<HTMLElement | null>(null);
 	let confirmRef = $state<HTMLElement | null>(null);
+	let contentRef = $state<HTMLElement | null>(null);
 
 	function cancel() {
 		if (busy) return;
@@ -51,10 +52,9 @@
 
 	function autoFocus(e: Event) {
 		e.preventDefault();
-		const content = (e.currentTarget ?? e.target) as HTMLElement | null;
-		if (content?.contains(document.activeElement)) return;
-		const field = content?.querySelector<HTMLElement>(
-			'[data-autofocus], input:not([type="hidden"]):not(:disabled), textarea:not(:disabled), select:not(:disabled)'
+		if (contentRef?.contains(document.activeElement)) return;
+		const field = contentRef?.querySelector<HTMLElement>(
+			'[data-autofocus], [autofocus], input:not([type="hidden"]):not(:disabled), textarea:not(:disabled), select:not(:disabled)'
 		);
 		(field ?? (tone === 'danger' ? cancelRef : confirmRef) ?? cancelRef)?.focus();
 	}
@@ -69,6 +69,7 @@
 	}
 >
 	<Dialog.Content
+		bind:ref={contentRef}
 		size={wide ? 'wide' : 'md'}
 		alert={tone === 'danger'}
 		class={extraClass}
