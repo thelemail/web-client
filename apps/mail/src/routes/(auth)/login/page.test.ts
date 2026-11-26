@@ -87,7 +87,7 @@ function plain(text: string) {
 }
 
 function changeEmail() {
-	return document.querySelector<HTMLButtonElement>('button.sp-filled');
+	return document.querySelector<HTMLButtonElement>('.field .lab button.aux');
 }
 
 async function enterEmail(value = 'r@thelemail.com') {
@@ -318,7 +318,7 @@ describe('login page identifier step', () => {
 	it('renders the same password step for any address', async () => {
 		const markup = (address: string) =>
 			document
-				.querySelector('.sp')!
+				.querySelector('.card-surface')!
 				.innerHTML.replaceAll('<wbr>', '')
 				.replaceAll(encodeURIComponent(address), 'ADDR')
 				.replaceAll(address, 'ADDR')
@@ -484,7 +484,7 @@ describe('login page identifier step', () => {
 		leaving.resolve();
 	});
 
-	it('stamps the sign-in in place of the status line while the mailbox opens', async () => {
+	it('says it is signed in while the mailbox opens', async () => {
 		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 		const leaving = Promise.withResolvers<void>();
 		nav.goto.mockReturnValue(leaving.promise);
@@ -493,19 +493,19 @@ describe('login page identifier step', () => {
 		await submitCredentials();
 		await vi.waitFor(() => expect(nav.goto).toHaveBeenCalled());
 
-		expect(document.querySelector('.sp-seal')?.textContent).toContain('Signed in');
+		expect(document.querySelector('.af-status[data-tone="ok"]')?.textContent).toContain(m.auth_login_signed_in());
 		expect(document.querySelector('#login-err')).toBeNull();
 		leaving.resolve();
 	});
 
-	it('takes the stamp back when the mailbox cannot open', async () => {
+	it('drops the signed-in line when the mailbox cannot open', async () => {
 		login.performLogin.mockResolvedValue({ status: 'complete', result: { slot: 0 } });
 		nav.goto.mockRejectedValue(new Error('navigation failed'));
 		render(LoginPage);
 
 		await submitCredentials();
 		await vi.waitFor(() => expect(document.querySelector('#login-err')?.textContent).toContain('navigation failed'));
-		expect(document.querySelector('.sp-seal')).toBeNull();
+		expect(document.querySelector('.af-status[data-tone="ok"]')).toBeNull();
 	});
 });
 

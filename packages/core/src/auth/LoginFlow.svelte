@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
-	import Blank from '$core/auth/sentence/Blank.svelte';
-	import Clause from '$core/auth/sentence/Clause.svelte';
-	import Done from '$core/auth/sentence/Done.svelte';
-	import Status from '$core/auth/sentence/Status.svelte';
-	import BusyLabel from '$core/auth/sentence/BusyLabel.svelte';
-	import Seal from '$core/auth/sentence/Seal.svelte';
+	import TextField from '$core/auth/form/TextField.svelte';
+	import PasswordField from '$core/auth/PasswordField.svelte';
+	import Status from '$core/auth/form/Status.svelte';
+	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
+	import Icon from '$core/components/Icon.svelte';
+	import { faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import { ApiCallError } from '$core/api/types';
 	import {
 		abandonTwoFactorLogin,
@@ -92,6 +92,13 @@
 	});
 
 	const canSignIn = $derived(isLoginIdentifier(identifier) && pw.length >= 1);
+	const unlocking = $derived(!addMode && !!resumeEmail && identifier === loginIdentifier(resumeEmail));
+	const heading = $derived(
+		addMode ? m.auth_login_add_title() : unlocking && step === 'password' ? m.auth_login_unlock_title() : m.auth_login_title()
+	);
+	const lede = $derived(
+		addMode ? m.auth_s_add_note() : unlocking && step === 'password' ? m.auth_login_unlock_sub() : m.auth_login_sub()
+	);
 
 	function continueToPassword(e?: SubmitEvent) {
 		e?.preventDefault();
@@ -283,45 +290,8 @@
 
 {#snippet addr(t: string)}<span class="mono">{t}</span>{/snippet}
 {#snippet registerLink(t: string)}<a href={registerHref}>{t}</a>{/snippet}
-{#snippet emailBlank(_: string)}<Blank
-		id="login-email"
-		bind:value={email}
-		label={m.common_email_address()}
-		placeholder="you@yourdomain.com"
-		size={36}
-		mono
-		autocomplete="username"
-		invalid={!!identifyError}
-		describedby="login-email-err"
-		focus
-		normalize={(raw) => {
-			touched = true;
-			identifyError = null;
-			return raw.trim();
-		}}
-	/>{/snippet}
-{#snippet emailDone(_: string)}<Done text={identifier} mono disabled={busy} onedit={changeEmail} />{/snippet}
-{#snippet emailFixed(_: string)}<Done text={identifier} mono />{/snippet}
-{#snippet passwordBlank(_: string)}<Blank
-		id="login-password"
-		bind:value={pw}
-		label={m.common_password()}
-		placeholder={m.auth_s_password_placeholder()}
-		size={14}
-		mono
-		secret
-		autocomplete="current-password"
-		invalid={!!loginError}
-		describedby="login-err"
-		disabled={busy}
-		focus
-	/>{/snippet}
-{#snippet passwordDone(_: string)}<Done text="" secret />{/snippet}
-{#snippet pastSignIn()}<Clause
-		text={addMode ? m.auth_s_add_password() : m.auth_s_signin_password()}
-		past
-		slots={{ email: emailFixed, password: passwordDone }}
-	/>{/snippet}
+{#snippet changeLink()}<button type="button" class="aux" disabled={busy} onclick={changeEmail}>{m.auth_login_change_email()}</button>{/snippet}
+{#snippet forgotLink()}<a class="aux" href={`/recover?email=${encodeURIComponent(identifier)}`}>{m.auth_login_forgot_password()}</a>{/snippet}
 
 <svelte:head>
 	<title>{m.auth_login_page_title()}</title>
@@ -336,7 +306,6 @@
 			{sealed}
 			error={twoFaError}
 			keyNotice={twoFaKeyNotice}
-			before={pastSignIn}
 			onTotp={(code) => runTwoFactor((p) => submitTwoFactorTotp(p, code))}
 			onBackupCode={(code) => runTwoFactor((p) => submitTwoFactorBackupCode(p, code))}
 			onWebauthn={() => runTwoFactor((p) => submitTwoFactorWebauthn(p))}
@@ -350,66 +319,75 @@
 		</TwoFactorChallenge>
 	{/key}
 {:else}
-	<div class="sp">
-		{#if step === 'identify'}
-			<form class="sp-form" novalidate onsubmit={continueToPassword}>
-				<p class="sent">
-					<Clause
-						text={addMode ? m.auth_s_add_identify() : m.auth_s_signin_identify()}
-						slots={{ email: emailBlank }}
-					/>
-				</p>
-				<div class="sp-under">
-					<Status id="login-email-err" tone={identifyError ? 'bad' : 'hint'}>
-						{identifyError ?? (addMode ? m.auth_s_add_note() : '')}
-					</Status>
-					<div class="sp-acts">
-						<Button type="submit" variant="primary" size="lg" disabled={email.trim().length === 0}>
-							{m.auth_sentence_next()}
-						</Button>
-					</div>
-				</div>
-			</form>
-		{:else}
-			<form class="sp-form" novalidate onsubmit={submit}>
-				<input id="login-identifier" class="sp-user" type="email" value={identifier} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
-				<p class="sent">
-					<Clause
-						text={addMode
-							? m.auth_s_add_password()
-							: resumeEmail && identifier === loginIdentifier(resumeEmail)
-								? m.auth_s_unlock_password()
-								: m.auth_s_signin_password()}
-						slots={{ email: emailDone, password: passwordBlank }}
-					/>
-				</p>
-				<div class="sp-under">
-					{#if sealed}
-						<Seal label={m.auth_s_seal_signed_in()} />
-					{:else}
-						<Status id="login-err" tone={loginError ? 'bad' : 'hint'}>{loginError ?? ''}</Status>
-					{/if}
-					<div class="sp-acts">
-						<Button type="submit" variant="primary" size="lg" disabled={!canSignIn || busy}>
-							<BusyLabel
-								busy={busy && !sealed}
-								label={m.auth_sign_in()}
-								pending={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
-							/>
-						</Button>
-						<a class="sp-quiet" href={`/recover?email=${encodeURIComponent(identifier)}`}>
-							{m.auth_login_forgot_password()}
-						</a>
-					</div>
-					<label class="sp-tick small">
-						<input type="checkbox" bind:checked={rememberMe} disabled={busy} />
-						<span>{m.auth_login_remember_me()}</span>
-					</label>
-				</div>
-			</form>
-		{/if}
-		<div class="sp-foot">
-			<span><Rich text={m.auth_login_new_to()} tags={{ link: registerLink }} /></span>
+	<form class="card-surface" novalidate onsubmit={step === 'identify' ? continueToPassword : submit}>
+		<div class="card-head">
+			<h1>{heading}</h1>
+			<p>{lede}</p>
 		</div>
-	</div>
+		{#if loginError}
+			<p class="af-error" id="login-err" role="alert"><Icon icon={faCircleExclamation} size={16} /><span>{loginError}</span></p>
+		{/if}
+		{#if step === 'identify'}
+			<TextField
+				id="login-email"
+				bind:value={email}
+				type="email"
+				label={m.common_email_address()}
+				placeholder="you@yourdomain.com"
+				mono
+				autocomplete="username"
+				invalid={!!identifyError}
+				describedby="login-email-err"
+				focus
+				normalize={(raw) => {
+					touched = true;
+					identifyError = null;
+					return raw.trim();
+				}}
+			/>
+			{#if identifyError}
+				<Status id="login-email-err" tone="bad">{identifyError}</Status>
+			{/if}
+			<Button type="submit" variant="primary" size="lg" block disabled={email.trim().length === 0}>
+				{m.common_continue()}
+			</Button>
+		{:else}
+			<TextField
+				id="login-identifier"
+				value={identifier}
+				type="email"
+				label={m.common_email_address()}
+				mono
+				autocomplete="username"
+				readonly
+				aux={changeLink}
+			/>
+			<PasswordField
+				id="login-password"
+				label={m.common_password()}
+				bind:value={pw}
+				autocomplete="current-password"
+				invalid={!!loginError}
+				describedby="login-err"
+				disabled={busy}
+				focus
+				aux={forgotLink}
+			/>
+			<label class="af-tick">
+				<input type="checkbox" bind:checked={rememberMe} disabled={busy} />
+				<span>{m.auth_login_remember_me()}<small>{m.auth_login_remember_hint()}</small></span>
+			</label>
+			{#if sealed}
+				<Status tone="ok">{m.auth_login_signed_in()}</Status>
+			{/if}
+			<Button type="submit" variant="primary" size="lg" block disabled={!canSignIn || busy}>
+				<BusyLabel
+					busy={busy && !sealed}
+					label={m.auth_sign_in()}
+					pending={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
+				/>
+			</Button>
+		{/if}
+		<p class="af-row"><Rich text={m.auth_login_new_to()} tags={{ link: registerLink }} /></p>
+	</form>
 {/if}
