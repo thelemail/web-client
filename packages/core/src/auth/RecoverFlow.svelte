@@ -31,7 +31,6 @@
 	import Icon from '$core/components/Icon.svelte';
 	import { faCircleCheck, faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import Status from '$core/auth/form/Status.svelte';
-	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -403,12 +402,16 @@
 				</Status>
 			</div>
 		</div>
-		<Button type="submit" variant="primary" size="lg" block disabled={!emailValid || !allFilled || phraseStatus === 'checking'}>
-			<BusyLabel
-				busy={phraseStatus === 'checking'}
-				label={m.auth_recover_phrase_unlock()}
-				pending={m.auth_recover_phrase_checking()}
-			/>
+		<Button
+			type="submit"
+			variant="primary"
+			size="lg"
+			block
+			disabled={!emailValid || !allFilled}
+			busy={phraseStatus === 'checking'}
+			busyLabel={m.auth_recover_phrase_checking()}
+		>
+			{m.auth_recover_phrase_unlock()}
 		</Button>
 		<p class="af-row split">
 			<button type="button" class="af-link muted" disabled={phraseStatus === 'checking'} onclick={() => (step = 'nophrase')}>

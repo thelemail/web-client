@@ -4,7 +4,6 @@
 	import TextField from '$core/auth/form/TextField.svelte';
 	import PasswordField from '$core/auth/PasswordField.svelte';
 	import Status from '$core/auth/form/Status.svelte';
-	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import { faCircleExclamation } from '@fortawesome/pro-regular-svg-icons';
 	import { ApiCallError } from '$core/api/types';
@@ -381,12 +380,16 @@
 			{#if sealed}
 				<div transition:unfold><Status tone="ok">{m.auth_login_signed_in()}</Status></div>
 			{/if}
-			<Button type="submit" variant="primary" size="lg" block disabled={!canSignIn || busy}>
-				<BusyLabel
-					busy={busy && !sealed}
-					label={m.auth_sign_in()}
-					pending={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
-				/>
+			<Button
+				type="submit"
+				variant="primary"
+				size="lg"
+				block
+				disabled={!canSignIn || sealed}
+				busy={busy && !sealed}
+				busyLabel={verifying ? m.auth_login_verifying() : m.auth_login_signing_in()}
+			>
+				{m.auth_sign_in()}
 			</Button>
 		{/if}
 		<p class="af-row"><Rich text={m.auth_login_new_to()} tags={{ link: registerLink }} /></p>

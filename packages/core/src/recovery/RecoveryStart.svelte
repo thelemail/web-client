@@ -14,7 +14,6 @@
 	} from '@fortawesome/pro-regular-svg-icons';
 	import AuthShell from '$core/auth/AuthShell.svelte';
 	import Status from '$core/auth/form/Status.svelte';
-	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { auth } from '$core/stores/session.svelte';
@@ -185,13 +184,13 @@
 				{#if !revealed}
 					<div class="rk-cover">
 						{#if material}
-							<Button variant="secondary" size="lg" onclick={() => (revealed = true)}>
+							<Button variant="tonal" size="lg" onclick={() => (revealed = true)}>
 								<Icon icon={faEye} size={17} />{m.settings_ceremony_recovery_reveal()}
 							</Button>
 						{:else if generateError}
 							<div class="rk-failed">
 								<Status tone="bad">{generateError}</Status>
-								<Button variant="secondary" size="lg" disabled={generating} onclick={generate}>
+								<Button variant="neutral" size="lg" disabled={generating} onclick={generate}>
 									<Icon icon={faRotateRight} size={15} />{m.recovery_start_retry()}
 								</Button>
 							</div>
@@ -224,8 +223,8 @@
 				{:else if revealed && !anySaved}{m.recovery_start_hint_save()}
 				{:else if revealed && !ack}{m.recovery_start_hint_ack()}{/if}
 			</Status>
-			<Button variant="primary" size="lg" block disabled={!canFinish} onclick={finish}>
-				<BusyLabel busy={submitting} label={m.recovery_start_open_mailbox()} pending={m.settings_ceremony_recovery_saving()} />
+			<Button variant="primary" size="lg" block disabled={!canFinish && !submitting} busy={submitting} busyLabel={m.settings_ceremony_recovery_saving()} onclick={finish}>
+				{m.recovery_start_open_mailbox()}
 			</Button>
 			<p class="af-fine center">{m.recovery_start_footer()}</p>
 		</div>

@@ -13,7 +13,6 @@
 	import CodeCells from '$core/auth/form/CodeCells.svelte';
 	import TextField from '$core/auth/form/TextField.svelte';
 	import Status from '$core/auth/form/Status.svelte';
-	import BusyLabel from '$core/auth/form/BusyLabel.svelte';
 	import { unfold } from '$core/auth/form/unfold';
 	import { Button } from '$core/components/ui/button';
 	import Rich from '$core/i18n/Rich.svelte';
@@ -185,8 +184,8 @@
 					{showBad ? m.auth_2fa_code_mismatch() : m.auth_2fa_code_refresh()}
 				</Status>
 			{/if}
-			<Button type="submit" variant="primary" size="lg" block disabled={code.length < 6 || busy}>
-				<BusyLabel busy={busy && !sealed} label={m.auth_2fa_verify_code()} pending={m.auth_2fa_checking()} />
+			<Button type="submit" variant="primary" size="lg" block disabled={code.length < 6 || sealed} busy={busy && !sealed} busyLabel={m.auth_2fa_checking()}>
+				{m.auth_2fa_verify_code()}
 			</Button>
 		{:else if method === 'key'}
 			{#if sealed}
@@ -204,8 +203,8 @@
 					{/if}
 				</Status>
 			{/if}
-			<Button type="button" variant="primary" size="lg" block disabled={busy} onclick={retryKey}>
-				<BusyLabel busy={busy && !sealed} label={m.auth_2fa_key_start()} pending={m.auth_2fa_checking()} />
+			<Button type="button" variant="primary" size="lg" block disabled={sealed} busy={busy && !sealed} busyLabel={m.auth_2fa_checking()} onclick={retryKey}>
+				{m.auth_2fa_key_start()}
 			</Button>
 		{:else}
 			<TextField
@@ -226,8 +225,8 @@
 			{:else}
 				<Status id="twofa-msg" tone={showBad ? 'bad' : 'hint'} reserve>{showBad ? m.auth_2fa_backup_invalid() : ''}</Status>
 			{/if}
-			<Button type="submit" variant="primary" size="lg" block disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || busy}>
-				<BusyLabel busy={busy && !sealed} label={m.auth_2fa_use_backup()} pending={m.auth_2fa_checking()} />
+			<Button type="submit" variant="primary" size="lg" block disabled={bcode.trim().length < BACKUP_CODE_MIN_LENGTH || sealed} busy={busy && !sealed} busyLabel={m.auth_2fa_checking()}>
+				{m.auth_2fa_use_backup()}
 			</Button>
 		{/if}
 		<p class="af-row">
