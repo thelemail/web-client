@@ -165,7 +165,7 @@ describe('search by meaning in the search runtime', () => {
 		const parsed = parseQuery('ferry crossing to the island', SNAPSHOT);
 		if (!parsed.ok) throw new Error('parse');
 		await commands.watchNetwork();
-		const reply = await a.meaning(parsed.query, CTX, { group: 'message' });
+		const reply = await a.meaning(parsed.query, CTX, { group: 'message', exclude: null });
 		const seen = await commands.networkSeen();
 		expect(seen).toEqual([]);
 		if (!reply.ok || !('summary' in reply)) throw new Error(JSON.stringify(reply));
@@ -190,6 +190,6 @@ describe('search by meaning in the search runtime', () => {
 		expect(semantic(a.state, Coverage.complete) + semantic(a.state, Coverage.pending)).toBe(0);
 		const parsed = parseQuery('ferry island', SNAPSHOT);
 		if (!parsed.ok) throw new Error('parse');
-		expect(await a.meaning(parsed.query, CTX, { group: 'message' })).toEqual({ ok: false, unavailable: 'off' });
+		expect(await a.meaning(parsed.query, CTX, { group: 'message', exclude: null })).toEqual({ ok: false, unavailable: 'off' });
 	}, WAIT_MS);
 });

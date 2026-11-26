@@ -46,7 +46,7 @@ export type HarnessRequest =
 	| { op: 'historyList'; now: number }
 	| { op: 'historyClear' }
 	| { op: 'passages'; method: PassageMethod; args: unknown[] }
-	| { op: 'meaning'; token: number; query: ParsedQuery; ctx: QueryContext; group: Grouping; vector: Float32Array; epoch: MeaningEpoch }
+	| { op: 'meaning'; token: number; query: ParsedQuery; ctx: QueryContext; group: Grouping; vector: Float32Array; epoch: MeaningEpoch; exclude?: number }
 	| { op: 'vectorCache'; capacity: number }
 	| { op: 'vectorStats' }
 	| { op: 'synthetic'; shape: CorpusShape; epoch: number; model: number }
@@ -303,7 +303,7 @@ async function handle(r: HarnessRequest): Promise<unknown> {
 			const controller = new AbortController();
 			running.set(r.token, controller);
 			try {
-				return await engine!.meaning(r.query, r.ctx, { group: r.group, vector: r.vector, epoch: r.epoch, cache: cache!, signal: controller.signal });
+				return await engine!.meaning(r.query, r.ctx, { group: r.group, vector: r.vector, epoch: r.epoch, cache: cache!, exclude: r.exclude, signal: controller.signal });
 			} catch (err) {
 				if (controller.signal.aborted) return { cancelled: true };
 				throw err;
