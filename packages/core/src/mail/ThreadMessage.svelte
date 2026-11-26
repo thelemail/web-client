@@ -4,6 +4,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { replyToSummary } from './replyRecipients';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowTurnDownLeft,
 		faEllipsis,
@@ -206,10 +207,9 @@
 					{#if e.id && onPicker && (canMove || canLabel)}
 						<span class="entry-acts">
 							{#if canMove}
-								<button
-									type="button"
-									class="entry-act"
-									class:on={openPicker === moveKey}
+								<Button
+									variant="ghost"
+									size="icon-sm"
 									data-picker={moveKey}
 									title={m.mail_entry_move()}
 									aria-label={m.mail_entry_move()}
@@ -222,13 +222,12 @@
 									onkeydown={(ev) => ev.stopPropagation()}
 								>
 									<Icon icon={faFolderArrowDown} size={14} />
-								</button>
+								</Button>
 							{/if}
 							{#if canLabel}
-								<button
-									type="button"
-									class="entry-act"
-									class:on={openPicker === labelsKey}
+								<Button
+									variant="ghost"
+									size="icon-sm"
 									data-picker={labelsKey}
 									title={m.mail_entry_labels()}
 									aria-label={m.mail_entry_labels()}
@@ -241,7 +240,7 @@
 									onkeydown={(ev) => ev.stopPropagation()}
 								>
 									<Icon icon={faTag} size={14} />
-								</button>
+								</Button>
 							{/if}
 						</span>
 					{/if}

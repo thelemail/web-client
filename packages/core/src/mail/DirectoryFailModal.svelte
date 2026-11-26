@@ -185,7 +185,7 @@
 	tabindex="-1"
 	onmousedown={scrimMouseDown}
 >
-	<div class="dv-modal" role="presentation" onmousedown={(e) => e.stopPropagation()}>
+	<div class="dv-modal on-inverse" role="presentation" onmousedown={(e) => e.stopPropagation()}>
 		<div class="dv-crest">
 			<span class="dv-seal"><Icon icon={faShieldExclamation} size={26} /></span>
 			<span class="dv-eyebrow">{m.mail_dirfail_eyebrow()}</span>

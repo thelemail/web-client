@@ -4,6 +4,7 @@
 	import { untrack } from 'svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faAlarmClock,
 		faArrowDown,
@@ -495,62 +496,112 @@
 			</span>
 			<div class="grow"></div>
 			{#if caps.showMarkRead && !inQuery}
-				<button class="lh-btn" title={msg.mail_list_mark_read()} onclick={() => onBulk('read')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					aria-label={msg.mail_list_mark_read()}
+					title={msg.mail_list_mark_read()}
+					onclick={() => onBulk('read')}
+				>
 					<Icon icon={faEnvelopeOpen} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showRestore && !inQuery}
-				<button class="lh-btn" data-mutates title={msg.mail_action_restore()} onclick={() => onBulk('restore')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					aria-label={msg.mail_action_restore()}
+					title={msg.mail_action_restore()}
+					onclick={() => onBulk('restore')}
+				>
 					<Icon icon={faArrowRotateLeft} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showArchive}
-				<button class="lh-btn" data-mutates title={msg.mail_action_archive()} onclick={() => onBulk('archive')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					aria-label={msg.mail_action_archive()}
+					title={msg.mail_action_archive()}
+					onclick={() => onBulk('archive')}
+				>
 					<Icon icon={faBoxArchive} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showMove && onPicker}
-				<button
+				<Button
+					variant="ghost"
+					size="icon-sm"
 					class="lh-btn"
-					class:on={openPicker === 'bulk-move'}
 					data-mutates
 					data-picker="bulk-move"
+					aria-label={msg.mail_reader_move_to()}
 					title={msg.mail_reader_move_to()}
 					aria-haspopup="dialog"
 					aria-expanded={openPicker === 'bulk-move'}
 					onclick={(e) => onPicker('move', e.currentTarget)}
 				>
 					<Icon icon={faFolderArrowDown} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showLabels && onPicker}
-				<button
+				<Button
+					variant="ghost"
+					size="icon-sm"
 					class="lh-btn"
-					class:on={openPicker === 'bulk-labels'}
 					data-mutates
 					data-picker="bulk-labels"
+					aria-label={msg.mail_list_labels()}
 					title={msg.mail_list_labels()}
 					aria-haspopup="dialog"
 					aria-expanded={openPicker === 'bulk-labels'}
 					onclick={(e) => onPicker('labels', e.currentTarget)}
 				>
 					<Icon icon={faTag} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showSpam && !inQuery}
-				<button class="lh-btn" title={msg.mail_action_report_spam()} onclick={() => onBulk('spam')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					aria-label={msg.mail_action_report_spam()}
+					title={msg.mail_action_report_spam()}
+					onclick={() => onBulk('spam')}
+				>
 					<Icon icon={faShieldExclamation} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showTrash && !inQuery}
-				<button class="lh-btn" data-mutates title={msg.mail_action_trash()} onclick={() => onBulk('trash')}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					aria-label={msg.mail_action_trash()}
+					title={msg.mail_action_trash()}
+					onclick={() => onBulk('trash')}
+				>
 					<Icon icon={faTrashCan} size={16} />
-				</button>
+				</Button>
 			{/if}
 			{#if caps.showDelete && !inQuery}
-				<button class="lh-btn lh-btn-danger" data-mutates title={msg.mail_action_delete_forever()} onclick={() => onBulk('delete')}>
+				<Button
+					variant="ghostDanger"
+					size="icon-sm"
+					class="lh-btn"
+					data-mutates
+					aria-label={msg.mail_action_delete_forever()}
+					title={msg.mail_action_delete_forever()}
+					onclick={() => onBulk('delete')}
+				>
 					<Icon icon={faTrashCan} size={16} />
-				</button>
+				</Button>
 			{/if}
 		</div>
 	{:else}
@@ -578,24 +629,41 @@
 			</div>
 			<div class="lh-actions">
 				{#if onRefresh}
-					<button class="lh-btn" class:refreshing title={msg.mail_refresh()} disabled={refreshing} onclick={doRefresh}>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						class={['lh-btn', { refreshing }]}
+						aria-label={msg.mail_refresh()}
+						title={msg.mail_refresh()}
+						disabled={refreshing}
+						onclick={doRefresh}
+					>
 						<Icon icon={faArrowsRotate} size={16} />
-					</button>
+					</Button>
 				{/if}
-				<button class="lh-btn" title={msg.mail_list_select_all()} onclick={onToggleAll}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					aria-label={msg.mail_list_select_all()}
+					title={msg.mail_list_select_all()}
+					onclick={onToggleAll}
+				>
 					<Icon icon={faSquareCheck} size={16} />
-				</button>
+				</Button>
 				<div class="lh-sort" bind:this={sortRef}>
-					<button
+					<Button
+						variant="ghost"
+						size="icon-sm"
 						class="lh-btn"
-						class:on={sortOpen}
+						aria-label={msg.mail_list_sort()}
 						title={msg.mail_list_sort()}
 						aria-haspopup="menu"
 						aria-expanded={sortOpen}
 						onclick={() => (sortOpen = !sortOpen)}
 					>
 						<Icon icon={faArrowDownArrowUp} size={16} />
-					</button>
+					</Button>
 					{#if sortOpen}
 						<div class="menu sort-menu" role="menu">
 							<div class="menu-lbl">{msg.mail_list_sort_by()}</div>
@@ -618,9 +686,11 @@
 					{/if}
 				</div>
 				<div class="lh-filter" bind:this={filterRef}>
-					<button
+					<Button
+						variant="ghost"
+						size="icon-sm"
 						class="lh-btn"
-						class:on={filterOpen || activeFilters > 0}
+						aria-label={msg.mail_list_filter()}
 						title={msg.mail_list_filter()}
 						aria-haspopup="dialog"
 						aria-expanded={filterOpen}
@@ -630,7 +700,7 @@
 						{#if activeFilters > 0}
 							<span class="fbadge">{activeFilters}</span>
 						{/if}
-					</button>
+					</Button>
 					{#if filterOpen}
 						<div class="menu filter-menu" role="dialog" aria-label={msg.mail_list_filter_aria()}>
 							<div class="fm-head">
@@ -777,9 +847,16 @@
 				<Icon icon={faAlarmClock} size={15} />
 				<span>{msg.mail_list_snooze_returned({ count: returnedCount })}</span>
 				{#if onDismissReturned}
-					<button type="button" class="snz-x" title={msg.mail_list_dismiss()} onclick={onDismissReturned}>
+					<Button
+						variant="ghost"
+						size="icon-xs"
+						class="snz-x"
+						aria-label={msg.mail_list_dismiss()}
+						title={msg.mail_list_dismiss()}
+						onclick={onDismissReturned}
+					>
 						<Icon icon={faXmark} size={13} />
-					</button>
+					</Button>
 				{/if}
 			</div>
 		{/if}
@@ -817,13 +894,13 @@
 					<code class="q-err" dir="auto">{errorParts.before}<mark>{errorParts.bad}</mark>{errorParts.after}</code>
 				{/if}
 				{#if search && searchEmpty?.finish}
-					<button class="empty-clear" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</button>
+					<Button variant="neutral" size="sm" class="empty-clear" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</Button>
 				{:else if search && searchEmpty?.retry}
-					<button class="empty-clear" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</button>
+					<Button variant="neutral" size="sm" class="empty-clear" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</Button>
 				{:else if search}
-					<button class="empty-clear" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</button>
+					<Button variant="neutral" size="sm" class="empty-clear" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</Button>
 				{:else if activeFilters > 0}
-					<button class="empty-clear" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</button>
+					<Button variant="neutral" size="sm" class="empty-clear" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</Button>
 				{/if}
 			</div>
 		{:else}
@@ -858,7 +935,7 @@
 		{#if !searchActive || list.length > 0}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
-					<button class="lf-retry" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</button>
+					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
 				{:else if exhausted && list.length > 0 && !offline}

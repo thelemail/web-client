@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faMinus, faPlus } from '@fortawesome/pro-regular-svg-icons';
 	import { tick } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
@@ -184,23 +185,27 @@
 	</div>
 	{#if doc}
 		<div class="apx-pdf-bar">
-			<button
-				type="button"
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				aria-label={m.mail_preview_zoom_out()}
 				title={m.mail_preview_zoom_out()}
 				disabled={zoomIndex === 0}
 				onclick={() => setZoom(zoomIndex - 1)}
 			>
 				<Icon icon={faMinus} size={15} />
-			</button>
+			</Button>
 			<span class="apx-pdf-pos">{m.mail_preview_page({ page: current, total: doc.numPages })}</span>
-			<button
-				type="button"
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				aria-label={m.mail_preview_zoom_in()}
 				title={m.mail_preview_zoom_in()}
 				disabled={zoomIndex === ZOOMS.length - 1}
 				onclick={() => setZoom(zoomIndex + 1)}
 			>
 				<Icon icon={faPlus} size={15} />
-			</button>
+			</Button>
 		</div>
 	{/if}
 </div>

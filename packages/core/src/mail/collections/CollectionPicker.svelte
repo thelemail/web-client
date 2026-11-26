@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { onMount, tick, type Snippet } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowLeft,
 		faCheck,
@@ -170,9 +171,9 @@
 	<div class="pk" onkeydown={onPanelKey}>
 		{#if creating}
 			<div class="pk-create-head">
-				<button type="button" class="pk-back" aria-label={m.mail_picker_back()} onclick={backToList}>
+				<Button variant="ghost" size="icon-sm" aria-label={m.mail_picker_back()} onclick={backToList}>
 					<Icon icon={faArrowLeft} size={15} />
-				</button>
+				</Button>
 				<span>{createKind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}</span>
 			</div>
 			<CollectionCreate kind={createKind} name={creating.name} parent={creating.parent} onCreated={created} />

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faArrowLeft, faLock } from '@fortawesome/pro-regular-svg-icons';
 
 	interface Props {
@@ -27,9 +28,16 @@
 
 <section class="reader" aria-busy="true">
 	<div class="reader-bar sk-bar">
-		<button class="rb-ico rb-back" title={m.mail_skeleton_back()} onclick={() => onBack?.()}>
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			class="rb-back"
+			aria-label={m.mail_skeleton_back()}
+			title={m.mail_skeleton_back()}
+			onclick={() => onBack?.()}
+		>
 			<Icon icon={faArrowLeft} size={17} />
-		</button>
+		</Button>
 		<span class="sk sk-pill" style="width:86px"></span>
 		<span class="sk sk-pill" style="width:94px"></span>
 		<span class="sk sk-pill" style="width:90px"></span>
@@ -99,7 +107,7 @@
 	.reader-bar.sk-bar {
 		pointer-events: none;
 	}
-	.sk-bar .rb-back {
+	.sk-bar :global(.rb-back) {
 		pointer-events: auto;
 	}
 	.sk-bar .sk-pill {

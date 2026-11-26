@@ -18,6 +18,7 @@
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Tooltip from '$core/components/ui/tooltip';
+	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
 	import { swipe, swipeThreshold, type SwipeDirection } from '$core/actions/swipe';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
@@ -386,8 +387,8 @@
 		<Tooltip.Provider delayDuration={150} disableHoverableContent>
 			{#if caps.showStar}
 				{@render qaButton(m.starred ? msg.mail_action_unstar() : msg.mail_action_star(), () => onToggleStar(m.id), star, {
-					cls: m.starred ? 'star on' : 'star',
-					pressed: m.starred
+					pressed: m.starred,
+					star: true
 				})}
 			{/if}
 			{#if caps.showMarkRead}
@@ -407,10 +408,10 @@
 				{@render qaButton(msg.mail_action_report_spam(), () => onSpam?.(m.id), spam)}
 			{/if}
 			{#if caps.showTrash}
-				{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true })}
+				{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true, danger: true })}
 			{/if}
 			{#if caps.showDelete}
-				{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true })}
+				{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true, danger: true })}
 			{/if}
 		</Tooltip.Provider>
 	</div>
@@ -420,11 +421,10 @@
 	label: string,
 	run: () => void,
 	icon: Snippet,
-	opts: { cls?: string; pressed?: boolean; mutates?: boolean } = {}
+	opts: { pressed?: boolean; mutates?: boolean; danger?: boolean; star?: boolean } = {}
 )}
 	<Tooltip.Root>
 		<Tooltip.Trigger
-			class={opts.cls}
 			aria-label={label}
 			aria-pressed={opts.pressed}
 			data-mutates={opts.mutates ? '' : undefined}
@@ -433,7 +433,11 @@
 				run();
 			}}
 		>
-			{@render icon()}
+			{#snippet child({ props })}
+				<Button {...props} variant={opts.danger ? 'ghostDanger' : 'ghost'} size="icon-sm" class={opts.star ? 'btn-star' : undefined}>
+					{@render icon()}
+				</Button>
+			{/snippet}
 		</Tooltip.Trigger>
 		<Tooltip.Content side="top" sideOffset={6}>{label}</Tooltip.Content>
 	</Tooltip.Root>

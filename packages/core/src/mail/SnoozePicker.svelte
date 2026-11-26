@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faCalendarClock, faClock } from '@fortawesome/pro-regular-svg-icons';
 	import AnchoredMenu from '$core/components/AnchoredMenu.svelte';
 	import { formatClock, formatWeekday, formatWhenLong } from './data';
@@ -100,14 +101,9 @@
 			{:else}
 				<div class="sp-hint bad">{RANGE_MESSAGES[customError ?? 'invalid']()}</div>
 			{/if}
-			<button
-				type="button"
-				class="sp-go"
-				disabled={!customWhen || !!customError}
-				onclick={confirmCustom}
-			>
+			<Button variant="primary" size="sm" disabled={!customWhen || !!customError} onclick={confirmCustom}>
 				{m.mail_snooze_confirm()}
-			</button>
+			</Button>
 		</div>
 	{:else}
 		<button type="button" class="mitem" onclick={() => (custom = true)}>

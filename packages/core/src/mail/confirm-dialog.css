@@ -7,9 +7,6 @@
 .cfd-scrim .cfd-tx { flex: 1 1 auto; min-width: 0; }
 .cfd-scrim .cfd-title { font-family: var(--font-sans); font-feature-settings: normal; font-weight: 500; font-size: 19px; line-height: 1.25; color: var(--fg-strong); margin: 0; }
 .cfd-scrim .cfd-sub { font-size: 12.5px; color: var(--fg-muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cfd-scrim .cfd-x { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; background: none; border-radius: var(--radius-control-compact); color: var(--fg-muted); cursor: pointer; flex: 0 0 auto; }
-.cfd-scrim .cfd-x:hover { background: var(--bg-sunken); color: var(--fg); }
-.cfd-scrim .cfd-x:disabled { opacity: .4; pointer-events: none; }
 .cfd-scrim .cfd-body { flex: 1 1 auto; overflow-y: auto; margin-top: 14px; }
 .cfd-scrim .cfd-p { font-size: 13px; line-height: 1.6; color: var(--fg-muted); margin: 0 0 10px; }
 .cfd-scrim .cfd-p:last-child { margin-bottom: 0; }

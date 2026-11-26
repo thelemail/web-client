@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { i18n } from '$core/i18n/locale.svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faCalendar,
 		faCalendarPlus,
@@ -263,9 +264,15 @@
 					<a class="evt-change" href="/u/{slot}/calendar">{m.common_open()}</a>
 				</span>
 			{:else}
-				<button type="button" class="evt-opt add" disabled={adding} onclick={addToCalendar}>
-					<Icon icon={faCalendarPlus} size={15} />{adding ? m.cal_card_adding() : m.cal_card_add()}
-				</button>
+				<Button
+					variant="neutral"
+					size="sm"
+					busy={adding}
+					busyLabel={m.cal_card_adding()}
+					onclick={addToCalendar}
+				>
+					<Icon icon={faCalendarPlus} size={15} />{m.cal_card_add()}
+				</Button>
 			{/if}
 		</div>
 	{/if}
@@ -455,10 +462,6 @@
 		align-items: center;
 		gap: 11px;
 		padding: 11px 18px 0;
-	}
-	.evt-cal-row .evt-opt.add {
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-control);
 	}
 	.evt-rsvp {
 		display: flex;

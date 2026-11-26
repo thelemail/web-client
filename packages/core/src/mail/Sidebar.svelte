@@ -23,6 +23,7 @@
 	import Toast from '$core/components/Toast.svelte';
 	import RailAccount from './RailAccount.svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faBoxArchive,
 		faChevronDown,
@@ -389,15 +390,15 @@
 			<span>{title}</span>
 		</button>
 		{#if kind}
-			<button
-				type="button"
-				class="addbtn"
+			<Button
+				variant="ghost"
+				size="icon-xs"
 				aria-label={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
 				title={kind === 'folder' ? m.mail_collection_new_folder() : m.mail_collection_new_label()}
 				onclick={(e) => startCreate(kind, null, e.currentTarget)}
 			>
 				<Icon icon={faPlus} size={14} />
-			</button>
+			</Button>
 		{/if}
 	</div>
 {/snippet}
@@ -439,9 +440,9 @@
 <aside class="rail" bind:this={rail} aria-label={m.mail_sidebar_navigation()}>
 	<a class="brand" href="/" aria-label="Thelemail"><Logo /></a>
 
-	<button class="compose" onclick={onCompose}>
+	<Button variant="primary" block class="compose" onclick={onCompose}>
 		<Icon icon={faPenLine} size={17} />{m.mail_sidebar_compose()}
-	</button>
+	</Button>
 
 	<nav class="rail-nav" aria-label={m.mail_sidebar_navigation()}>
 		<div class="nav-list">

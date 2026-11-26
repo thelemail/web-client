@@ -109,9 +109,9 @@
 					<div class="oh-sub" title={subject}>{subject}</div>
 				{/if}
 			</div>
-			<button type="button" class="oh-x" title={m.common_close()} onclick={onClose}>
+			<Button variant="ghost" size="icon-sm" aria-label={m.common_close()} title={m.common_close()} onclick={onClose}>
 				<Icon icon={faXmark} size={16} />
-			</button>
+			</Button>
 		</div>
 
 		{#if view.status === 'loading'}

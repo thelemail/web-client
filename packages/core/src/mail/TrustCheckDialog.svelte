@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import { faCheck, faMinus, faXmark } from '@fortawesome/pro-regular-svg-icons';
 	import { portal } from '$core/actions/portal';
 	import type { TrustCheck } from './trust';
@@ -55,7 +56,7 @@
 				{/each}
 			</dl>
 		{/if}
-		<button class="tcd-close" onclick={onClose}>{m.common_close()}</button>
+		<Button variant="neutral" size="sm" block class="tcd-close" onclick={onClose}>{m.common_close()}</Button>
 	</div>
 </div>
 
@@ -160,19 +161,7 @@
 		word-break: break-word;
 	}
 
-	.tcd-close {
+	.tcd :global(.tcd-close) {
 		margin-top: 18px;
-		width: 100%;
-		padding: 8px 12px;
-		font-size: 13px;
-		font-weight: 560;
-		color: var(--fg-strong);
-		background: var(--surface-muted);
-		border: 1px solid var(--border);
-		border-radius: var(--radius-control);
-		cursor: pointer;
-	}
-	.tcd-close:hover {
-		border-color: var(--border-strong);
 	}
 </style>

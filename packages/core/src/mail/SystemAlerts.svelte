@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowRight,
 		faCreditCard,
@@ -56,7 +57,7 @@
 						{m.mail_alerts_payment_detail()}
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_payment_action()}<Icon icon={faArrowRight} size={13} /></a>
+				<Button variant="neutral" size="sm" class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_payment_action()}<Icon icon={faArrowRight} size={13} /></Button>
 			</div>
 		{/if}
 		{#each lapsing as d (d.id)}
@@ -75,9 +76,9 @@
 					</span>
 				</span>
 				{#if manage}
-					<a class="sa-act" href={`${settingsBase}/domains/${d.id}?step=ownership`}>
+					<Button variant="neutral" size="sm" class="sa-act" href={`${settingsBase}/domains/${d.id}?step=ownership`}>
 						{m.mail_alerts_domain_lapse_action()}<Icon icon={faArrowRight} size={13} />
-					</a>
+					</Button>
 				{/if}
 			</div>
 		{/each}
@@ -98,9 +99,9 @@
 						/>
 					</span>
 				</span>
-				<a class="sa-act" href={`${settingsBase}/domains/${failedDomains[0].id}?step=${resumeStep(failedDomains[0])}`}>
+				<Button variant="neutral" size="sm" class="sa-act" href={`${settingsBase}/domains/${failedDomains[0].id}?step=${resumeStep(failedDomains[0])}`}>
 					{m.mail_alerts_dns_action()}<Icon icon={faArrowRight} size={13} />
-				</a>
+				</Button>
 			</div>
 		{/if}
 		{#if storageAlmostFull}
@@ -116,9 +117,9 @@
 					</span>
 				</span>
 				{#if billing.isFree}
-					<a class="sa-act solid" href={`/u/${slot}/billing/choose`}>{m.mail_alerts_storage_upgrade()}<Icon icon={faArrowRight} size={13} /></a>
+					<Button variant="primary" size="sm" class="sa-act" href={`/u/${slot}/billing/choose`}>{m.mail_alerts_storage_upgrade()}<Icon icon={faArrowRight} size={13} /></Button>
 				{:else}
-					<a class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_storage_manage()}<Icon icon={faArrowRight} size={13} /></a>
+					<Button variant="neutral" size="sm" class="sa-act" href={`${settingsBase}/account`}>{m.mail_alerts_storage_manage()}<Icon icon={faArrowRight} size={13} /></Button>
 				{/if}
 			</div>
 		{/if}

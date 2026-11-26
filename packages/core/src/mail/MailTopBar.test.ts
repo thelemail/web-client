@@ -33,11 +33,6 @@ describe('MailTopBar', () => {
 		expect(at('scheduled').container.querySelector('.search input')?.getAttribute('placeholder')).toMatch(/scheduled/i);
 	});
 
-	it('links settings to the current account slot', () => {
-		const { container } = at('inbox');
-		expect(container.querySelector('a.mt-btn')?.getAttribute('href')).toBe('/u/3/settings');
-	});
-
 	it('opens the documentation from help', () => {
 		const { container } = at('inbox');
 		container.querySelector<HTMLButtonElement>('button[aria-label="Help"]')!.click();

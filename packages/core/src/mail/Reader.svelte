@@ -36,6 +36,7 @@
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import { platform } from '$platform';
 	import * as Tooltip from '$core/components/ui/tooltip';
+	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
 	import Avatar from '$core/components/Avatar.svelte';
 	import EmailBody from './EmailBody.svelte';
@@ -170,7 +171,7 @@
 
 	let moreOpen = $state(false);
 	let moreRef: HTMLDivElement | undefined = $state();
-	let snoozeRef: HTMLButtonElement | undefined = $state();
+	let snoozeRef = $state<HTMLElement | null>(null);
 	let headingEl: HTMLHeadingElement | undefined = $state();
 	let headingFocusedFor: string | null = null;
 
@@ -717,31 +718,43 @@
 		</div>
 	{:else}
 		<div class="reader-bar">
-			<button class="rb-ico rb-back" title={msg.mail_skeleton_back()} onclick={() => onBack?.()}>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				class="rb-back"
+				aria-label={msg.mail_skeleton_back()}
+				title={msg.mail_skeleton_back()}
+				onclick={() => onBack?.()}
+			>
 				<Icon icon={faArrowLeft} size={17} />
-			</button>
+			</Button>
 			<Tooltip.Provider delayDuration={150} disableHoverableContent>
 			{#if caps.showReply}
 				{#each replyButtons as m (m)}
 					{@const label = m === 'all' ? msg.mail_reader_reply_all() : msg.mail_reader_reply()}
 					<Tooltip.Root>
 						<Tooltip.Trigger
-							class={`rb-btn${m === replyButtons[0] ? ' primary' : ''}${replyMode === m ? ' on' : ''}`}
 							aria-label={label}
+							aria-pressed={replyMode === m}
+							data-mutates
 							onclick={() => toggleReplyMode(m)}
 						>
-							{#if m === 'all'}<Icon icon={faReplyAll} size={15} />{:else}<Icon icon={faReply} size={15} />{/if}<span class="rb-t">{label}</span>
+							{#snippet child({ props })}
+								<Button {...props} variant={m === replyButtons[0] ? 'primary' : 'neutral'} size="sm" class="rb-reply">
+									{#if m === 'all'}<Icon icon={faReplyAll} size={15} />{:else}<Icon icon={faReply} size={15} />{/if}<span class="rb-t">{label}</span>
+								</Button>
+							{/snippet}
 						</Tooltip.Trigger>
 						<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
 					</Tooltip.Root>
 				{/each}
 				<Tooltip.Root>
-					<Tooltip.Trigger
-						class="rb-btn"
-						aria-label={msg.mail_reader_forward()}
-						onclick={forward}
-					>
-						<Icon icon={faShare} size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
+					<Tooltip.Trigger aria-label={msg.mail_reader_forward()} data-mutates onclick={forward}>
+						{#snippet child({ props })}
+							<Button {...props} variant="neutral" size="sm" class="rb-reply">
+								<Icon icon={faShare} size={15} /><span class="rb-t">{msg.mail_reader_forward()}</span>
+							</Button>
+						{/snippet}
 					</Tooltip.Trigger>
 					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_forward()}</Tooltip.Content>
 				</Tooltip.Root>
@@ -750,29 +763,36 @@
 				<span class="rb-sep" aria-hidden="true"></span>
 			{/if}
 				{#if caps.showArchive}
-					<button type="button" class="rb-txt" data-mutates aria-label={msg.mail_action_archive()} onclick={() => onArchive(m.id)}>
+					<Button
+						variant="ghost"
+						size="sm"
+						class="rb-txt"
+						data-mutates
+						aria-label={msg.mail_action_archive()}
+						onclick={() => onArchive(m.id)}
+					>
 						<Icon icon={faBoxArchive} size={16} /><span class="rb-t">{msg.mail_action_archive()}</span>
-					</button>
+					</Button>
 				{/if}
 				{#if caps.showSnooze && onSnooze}
-					<button
-						bind:this={snoozeRef}
-						type="button"
+					<Button
+						bind:ref={snoozeRef}
+						variant="ghost"
+						size="sm"
 						class="rb-txt"
-						class:on={snoozePickerOpen}
 						aria-label={msg.mail_reader_snooze()}
 						aria-haspopup="dialog"
 						aria-expanded={snoozePickerOpen}
 						onclick={() => (snoozePickerOpen = !snoozePickerOpen)}
 					>
 						<Icon icon={faClock} size={16} /><span class="rb-t">{msg.mail_reader_snooze()}</span>
-					</button>
+					</Button>
 				{/if}
 				{#if caps.showMove && onPicker}
-					<button
-						type="button"
+					<Button
+						variant="ghost"
+						size="sm"
 						class="rb-txt"
-						class:on={openPicker === 'reader-move'}
 						data-mutates
 						data-picker="reader-move"
 						aria-label={msg.mail_reader_move_to()}
@@ -781,13 +801,13 @@
 						onclick={(e) => onPicker('move', m.id, e.currentTarget)}
 					>
 						<Icon icon={faFolderArrowDown} size={16} /><span class="rb-t">{msg.mail_reader_move()}</span>
-					</button>
+					</Button>
 				{/if}
 				{#if caps.showLabels && onPicker}
-					<button
-						type="button"
+					<Button
+						variant="ghost"
+						size="sm"
 						class="rb-txt"
-						class:on={openPicker === 'reader-labels'}
 						data-mutates
 						data-picker="reader-labels"
 						aria-label={msg.mail_list_labels()}
@@ -796,13 +816,13 @@
 						onclick={(e) => onPicker('labels', m.id, e.currentTarget)}
 					>
 						<Icon icon={faTag} size={16} /><span class="rb-t">{msg.mail_list_labels()}</span>
-					</button>
+					</Button>
 				{/if}
 				{#if caps.showRestore}
 					{@render barIcon(msg.mail_action_restore(), () => onRestore?.(m.id), undoIcon, { mutates: true })}
 				{/if}
 				{#if caps.showTrash}
-					{@render barIcon(msg.common_delete(), () => onTrash(m.id), trashIcon, { mutates: true })}
+					{@render barIcon(msg.common_delete(), () => onTrash(m.id), trashIcon, { mutates: true, danger: true })}
 				{/if}
 				{#if caps.showDelete}
 					{@render barIcon(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trashIcon, { mutates: true, danger: true })}
@@ -810,13 +830,16 @@
 			<div class="rb-more" bind:this={moreRef}>
 				<Tooltip.Root>
 					<Tooltip.Trigger
-						class={moreOpen ? 'rb-ico on' : 'rb-ico'}
 						aria-label={msg.mail_reader_more()}
 						aria-haspopup="menu"
 						aria-expanded={moreOpen}
 						onclick={() => (moreOpen = !moreOpen)}
 					>
-						<Icon icon={faEllipsis} size={17} />
+						{#snippet child({ props })}
+							<Button {...props} variant="ghost" size="icon-sm">
+								<Icon icon={faEllipsis} size={17} />
+							</Button>
+						{/snippet}
 					</Tooltip.Trigger>
 					<Tooltip.Content side="bottom" sideOffset={6}>{msg.mail_reader_more()}</Tooltip.Content>
 				</Tooltip.Root>
@@ -951,7 +974,7 @@
 			</div>
 			{#if snoozePickerOpen && m}
 				<SnoozePicker
-					anchor={snoozeRef}
+					anchor={snoozeRef ?? undefined}
 					onPick={snoozeUntil}
 					onClose={() => (snoozePickerOpen = false)}
 				/>
@@ -1160,21 +1183,17 @@
 				{#if caps.showReply && !replyMode && !threadPending}
 					<div class="reply-row">
 						{#each replyButtons as mode (mode)}
-							<button
-								type="button"
-								class={mode === replyButtons[0] ? 'rr-btn primary' : 'rr-btn'}
-								onclick={() => toggleReplyMode(mode)}
-							>
+							<Button variant={mode === replyButtons[0] ? 'primary' : 'neutral'} onclick={() => toggleReplyMode(mode)}>
 								{#if mode === 'all'}
 									<Icon icon={faReplyAll} size={16} />{msg.mail_reader_reply_all()}
 								{:else}
 									<Icon icon={faReply} size={16} />{msg.mail_reader_reply()}
 								{/if}
-							</button>
+							</Button>
 						{/each}
-						<button type="button" class="rr-btn" onclick={forward}>
+						<Button variant="neutral" onclick={forward}>
 							<Icon icon={faShare} size={16} />{msg.mail_reader_forward()}
-						</button>
+						</Button>
 					</div>
 				{/if}
 
@@ -1260,13 +1279,16 @@
 )}
 	<Tooltip.Root>
 		<Tooltip.Trigger
-			class={opts.danger ? 'rb-ico rb-ico-danger' : 'rb-ico'}
 			aria-label={label}
 			disabled={opts.disabled}
 			data-mutates={opts.mutates ? '' : undefined}
 			onclick={run}
 		>
-			{@render icon()}
+			{#snippet child({ props })}
+				<Button {...props} variant={opts.danger ? 'ghostDanger' : 'ghost'} size="icon-sm">
+					{@render icon()}
+				</Button>
+			{/snippet}
 		</Tooltip.Trigger>
 		<Tooltip.Content side="bottom" sideOffset={6}>{label}</Tooltip.Content>
 	</Tooltip.Root>

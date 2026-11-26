@@ -6,6 +6,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faChevronRight,
 		faEllipsis,
@@ -391,10 +392,11 @@
 				<span class="lbl">{e.name}</span>
 				{#if b}<span class="ct" aria-hidden="true">{b.count}</span>{/if}
 			</a>
-			<button
-				type="button"
+			<Button
+				variant="ghost"
+				size="icon-xs"
 				class="ctree-more"
-				tabindex="-1"
+				tabindex={-1}
 				aria-haspopup="menu"
 				aria-label={m.mail_sidebar_actions({ name: e.path })}
 				onclick={(ev) => {
@@ -403,7 +405,7 @@
 				}}
 			>
 				<Icon icon={faEllipsis} />
-			</button>
+			</Button>
 		</li>
 	{/each}
 </ul>

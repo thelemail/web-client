@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowsRotate,
 		faFileLines,
@@ -83,9 +84,16 @@
 				{/if}
 			</h1>
 			<div class="lh-actions">
-				<button class="lh-btn" title={m.mail_refresh()} onclick={() => drafts.refresh()}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					aria-label={m.mail_refresh()}
+					title={m.mail_refresh()}
+					onclick={() => drafts.refresh()}
+				>
 					<Icon icon={faArrowsRotate} size={16} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<div class="scroll">
@@ -95,7 +103,7 @@
 				<div class="drafts-empty">
 					<div class="t">{m.mail_drafts_load_failed()}</div>
 					<div class="d">{drafts.loadError}</div>
-					<button class="dretry" onclick={() => drafts.refresh()}>{m.mail_retry()}</button>
+					<Button variant="neutral" size="sm" class="dretry" onclick={() => drafts.refresh()}>{m.mail_retry()}</Button>
 				</div>
 			{:else if list.length === 0}
 				<div class="drafts-empty">
@@ -138,22 +146,30 @@
 							{#if d.attachmentCount > 0}
 								<span class="datt"><Icon icon={faPaperclip} size={14} />{d.attachmentCount}</span>
 							{/if}
-							<button
-								type="button"
+							<Button
+								variant="ghostDanger"
+								size="icon-sm"
 								class="ddel"
+								aria-label={m.mail_drafts_discard()}
 								title={m.mail_drafts_discard()}
 								onclick={(e) => discardRow(e, d)}
 							>
 								<Icon icon={faTrashCan} size={16} />
-							</button>
+							</Button>
 						</div>
 					</div>
 				{/each}
 				{#if !drafts.exhausted}
 					<div class="dmore">
-						<button onclick={() => drafts.loadMore()} disabled={drafts.loadingMore}>
-							{drafts.loadingMore ? m.common_loading() : m.mail_load_more()}
-						</button>
+						<Button
+							variant="neutral"
+							size="sm"
+							busy={drafts.loadingMore}
+							busyLabel={m.common_loading()}
+							onclick={() => drafts.loadMore()}
+						>
+							{m.mail_load_more()}
+						</Button>
 					</div>
 				{/if}
 			{/if}
@@ -252,25 +268,12 @@
 		font-size: 11px;
 		color: var(--fg-faint);
 	}
-	.ddel {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 28px;
-		height: 28px;
-		border: none;
-		background: none;
-		border-radius: var(--radius-control-compact);
-		color: var(--fg-faint);
-		cursor: pointer;
+	.dmeta :global(.ddel) {
 		opacity: 0;
 	}
-	.drow:hover .ddel {
+	.drow:hover :global(.ddel),
+	.dmeta :global(.ddel:focus-visible) {
 		opacity: 1;
-	}
-	.ddel:hover {
-		background: var(--danger-100);
-		color: var(--danger-700);
 	}
 	.drafts-empty {
 		display: flex;
@@ -303,23 +306,13 @@
 		color: var(--fg-faint);
 		max-width: 280px;
 	}
-	.dretry,
-	.drafts-empty .dretry {
+	.drafts-empty :global(.dretry) {
 		margin-top: 10px;
 	}
 	.dmore {
 		display: flex;
 		justify-content: center;
 		padding: 14px;
-	}
-	.dmore button {
-		font-size: 12.5px;
-		color: var(--pine-700);
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-control-compact);
-		padding: 6px 14px;
-		cursor: pointer;
 	}
 	.drafts-side {
 		flex: 1;

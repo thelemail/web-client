@@ -88,9 +88,16 @@
 					<div class="cfd-sub" title={sub}>{sub}</div>
 				{/if}
 			</div>
-			<button type="button" class="cfd-x" title={m.common_close()} disabled={busy} onclick={close}>
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				aria-label={m.common_close()}
+				title={m.common_close()}
+				disabled={busy}
+				onclick={close}
+			>
 				<Icon icon={faXmark} size={16} />
-			</button>
+			</Button>
 		</div>
 
 		{#if body}

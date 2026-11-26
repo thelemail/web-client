@@ -2,6 +2,7 @@
 	import { m } from '$paraglide/messages.js';
 	import { onMount } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faArrowsRotate,
 		faClock,
@@ -85,9 +86,16 @@
 				{/if}
 			</h1>
 			<div class="lh-actions">
-				<button class="lh-btn" title={m.mail_refresh()} onclick={() => scheduled.refresh()}>
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					class="lh-btn"
+					aria-label={m.mail_refresh()}
+					title={m.mail_refresh()}
+					onclick={() => scheduled.refresh()}
+				>
 					<Icon icon={faArrowsRotate} size={16} />
-				</button>
+				</Button>
 			</div>
 		</div>
 		<div class="scroll">
@@ -97,7 +105,7 @@
 				<div class="sch-empty">
 					<div class="t">{m.mail_scheduled_load_failed()}</div>
 					<div class="d">{scheduled.loadError}</div>
-					<button class="sch-retry" onclick={() => scheduled.refresh()}>{m.mail_retry()}</button>
+					<Button variant="neutral" size="sm" class="sch-retry" onclick={() => scheduled.refresh()}>{m.mail_retry()}</Button>
 				</div>
 			{:else if list.length === 0}
 				<div class="sch-empty">
@@ -124,8 +132,9 @@
 							</div>
 							<div class="sch-prev">{r.snippet || m.mail_scheduled_no_preview()}</div>
 						</div>
-						<button
-							type="button"
+						<Button
+							variant="danger"
+							size="sm"
 							class="sch-cancel"
 							disabled={lifecycle.readOnly}
 							onclick={() => {
@@ -134,14 +143,20 @@
 							}}
 						>
 							{m.common_cancel()}
-						</button>
+						</Button>
 					</div>
 				{/each}
 				{#if !scheduled.exhausted}
 					<div class="sch-more">
-						<button onclick={() => scheduled.loadMore()} disabled={scheduled.loadingMore}>
-							{scheduled.loadingMore ? m.common_loading() : m.mail_load_more()}
-						</button>
+						<Button
+							variant="neutral"
+							size="sm"
+							busy={scheduled.loadingMore}
+							busyLabel={m.common_loading()}
+							onclick={() => scheduled.loadMore()}
+						>
+							{m.mail_load_more()}
+						</Button>
 					</div>
 				{/if}
 			{/if}
@@ -244,26 +259,8 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	.sch-cancel {
+	.sch-row :global(.sch-cancel) {
 		flex: 0 0 auto;
-		font-family: inherit;
-		font-size: 12.5px;
-		font-weight: 600;
-		color: var(--fg-muted);
-		background: none;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--radius-control-compact);
-		padding: 5px 11px;
-		cursor: pointer;
-	}
-	.sch-cancel:hover {
-		background: var(--danger-100);
-		border-color: var(--danger-500);
-		color: var(--danger-700);
-	}
-	.sch-cancel:disabled {
-		opacity: 0.5;
-		pointer-events: none;
 	}
 	.sch-empty {
 		display: flex;
@@ -297,22 +294,13 @@
 		color: var(--fg-faint);
 		max-width: 300px;
 	}
-	.sch-retry {
+	.sch-empty :global(.sch-retry) {
 		margin-top: 10px;
 	}
 	.sch-more {
 		display: flex;
 		justify-content: center;
 		padding: 14px;
-	}
-	.sch-more button {
-		font-size: 12.5px;
-		color: var(--pine-700);
-		background: none;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-control-compact);
-		padding: 6px 14px;
-		cursor: pointer;
 	}
 	.sch-side {
 		flex: 1;

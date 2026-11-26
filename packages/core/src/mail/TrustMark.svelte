@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faBadgeCheck,
 		faCheck,
@@ -158,9 +159,17 @@
 			<p class="tpop-foot">{trust.footnote}</p>
 		{/if}
 		{#if trust.action === 'confirm_key_change' && onConfirmKeyChange}
-			<button class="tpop-act" onclick={confirm} disabled={busy}>
-				{busy ? m.mail_trust_confirming() : m.mail_trust_accept_key()}
-			</button>
+			<Button
+				variant="caution"
+				size="sm"
+				block
+				class="tpop-act"
+				{busy}
+				busyLabel={m.mail_trust_confirming()}
+				onclick={confirm}
+			>
+				{m.mail_trust_accept_key()}
+			</Button>
 		{/if}
 	</div>
 {/if}
@@ -417,21 +426,8 @@
 		color: var(--fg-faint);
 	}
 
-	.tpop-act {
+	.tpop :global(.tpop-act) {
 		margin-top: 12px;
-		width: 100%;
-		border: 1px solid color-mix(in oklab, var(--warning-500) 40%, transparent);
-		background: var(--warning-100);
-		color: var(--warning-700);
-		font-size: 12.5px;
-		font-weight: 560;
-		padding: 7px 10px;
-		border-radius: var(--radius-control);
-		cursor: pointer;
-	}
-	.tpop-act:disabled {
-		opacity: 0.6;
-		cursor: default;
 	}
 
 </style>
