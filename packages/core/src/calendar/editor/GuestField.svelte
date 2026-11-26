@@ -1,6 +1,8 @@
 <script lang="ts">
-	import Icon from '$core/components/Icon.svelte';
-	import { faXmark } from '@fortawesome/pro-regular-svg-icons';
+	import Avatar from '$core/components/Avatar.svelte';
+	import { Chip } from '$core/components/ui/chip';
+	import { paletteFor } from '$core/mail/avatarPalette';
+	import { initialsFor } from '$core/mail/initials';
 	import { contacts } from '$core/stores/contacts.svelte';
 	import { workspaces } from '$core/stores/workspaces.svelte';
 	import { m } from '$paraglide/messages.js';
@@ -73,12 +75,13 @@
 <div class="guests">
 	<div class="guest-chips">
 		{#each value as a (a.email)}
-			<span class="guest-chip" class:external={!a.internal}>
+			{@const pal = paletteFor(a.email.toLowerCase())}
+			<Chip size="sm" title={a.email} onremove={() => remove(a.email)} removeLabel={m.cal_guest_remove_aria({ email: a.email })}>
+				{#snippet leading()}
+					<Avatar initials={initialsFor(a.name ?? null, a.email)} size={18} bg={pal.bg} fg={pal.fg} />
+				{/snippet}
 				{a.name || a.email}
-				<button type="button" aria-label={m.cal_guest_remove_aria({ email: a.email })} onclick={() => remove(a.email)}>
-					<Icon icon={faXmark} size={12} />
-				</button>
-			</span>
+			</Chip>
 		{/each}
 		<input
 			type="text"

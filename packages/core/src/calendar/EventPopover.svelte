@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { IconDefinition } from '@fortawesome/fontawesome-common-types';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
 	import {
@@ -34,11 +33,11 @@
 
 	let { selection, onClose }: Props = $props();
 
-	const RSVP: { value: Partstat; label: () => string; icon: IconDefinition; cls: string }[] = [
-		{ value: 'accepted', label: () => m.cal_rsvp_yes(), icon: faCheck, cls: 'yes' },
-		{ value: 'tentative', label: () => m.cal_rsvp_maybe(), icon: faCircleExclamation, cls: 'maybe' },
-		{ value: 'declined', label: () => m.cal_rsvp_no(), icon: faXmark, cls: 'no' }
-	];
+	const RSVP = $derived<{ value: Partstat; label: string; icon: typeof faCheck }[]>([
+		{ value: 'accepted', label: m.cal_rsvp_yes(), icon: faCheck },
+		{ value: 'tentative', label: m.cal_rsvp_maybe(), icon: faCircleExclamation },
+		{ value: 'declined', label: m.cal_rsvp_no(), icon: faXmark }
+	]);
 
 	function edit() {
 		onClose();
@@ -175,16 +174,16 @@
 			</div>
 		</div>
 		{#if selection.rsvp}
-			<div class="evpop-rsvp">
+			<div class="evpop-rsvp" role="group" aria-label={m.cal_card_going()}>
 				{#each RSVP as option (option.value)}
-					<button
-						type="button"
-						class={option.cls}
-						class:on={selection.myPartstat === option.value}
+					<Button
+						size="sm"
+						variant={selection.myPartstat === option.value ? 'tonal' : 'neutral'}
+						aria-pressed={selection.myPartstat === option.value}
 						onclick={() => respond(option.value)}
 					>
-						<Icon icon={option.icon} size={14} />{option.label()}
-					</button>
+						<Icon icon={option.icon} size={14} />{option.label}
+					</Button>
 				{/each}
 			</div>
 		{/if}

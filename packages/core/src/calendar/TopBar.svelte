@@ -10,10 +10,10 @@
 		faChevronRight,
 		faGear,
 		faInbox,
-		faListCheck,
-		faMagnifyingGlass
+		faListCheck
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { SearchField } from '$core/components/ui/search-field';
 	import * as Tooltip from '$core/components/ui/tooltip';
 	import { m } from '$paraglide/messages.js';
 	import ViewSwitch from './ViewSwitch.svelte';
@@ -94,15 +94,13 @@
 	<div class="cal-title">{cal.title}<span class="yr">{cal.titleYear}</span></div>
 	<div class="topspace"></div>
 
-	<div class="cal-search">
-		<Icon icon={faMagnifyingGlass} size={16} />
-		<input
-			type="search"
-			placeholder={m.cal_topbar_search_placeholder()}
-			aria-label={m.cal_topbar_search_aria()}
-			bind:value={cal.query}
-		/>
-	</div>
+	<SearchField
+		class="cal-search"
+		size="sm"
+		placeholder={m.cal_topbar_search_placeholder()}
+		aria-label={m.cal_topbar_search_aria()}
+		bind:value={cal.query}
+	/>
 
 	<ViewSwitch />
 

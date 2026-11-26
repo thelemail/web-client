@@ -11,6 +11,7 @@
 	import { Button } from '$core/components/ui/button';
 	import { Checkbox } from '$core/components/ui/checkbox';
 	import * as Dialog from '$core/components/ui/dialog';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { keystore } from '$core/keystore/keystore-client';
 	import { bytesToB64 } from '$core/crypto';
 	import { addresses } from '$core/stores/addresses.svelte';
@@ -279,28 +280,32 @@
 				</label>
 				<div class="cal-field">
 					<span>{m.cal_caldlg_default_privacy()}</span>
-					<div class="seg">
-						{#each [['private', m.cal_privacy_private()], ['busy', m.cal_privacy_busy()], ['shared', m.cal_privacy_shared()]] as [value, label] (value)}
-							<button
-								type="button"
-								class:on={defaultPrivacy === value}
-								onclick={() => (defaultPrivacy = value as Privacy)}
-							>
-								{label}
-							</button>
-						{/each}
-					</div>
+					<Segmented
+						bind:value={defaultPrivacy}
+						options={[
+							{ value: 'private', label: m.cal_privacy_private() },
+							{ value: 'busy', label: m.cal_privacy_busy() },
+							{ value: 'shared', label: m.cal_privacy_shared() }
+						]}
+						aria-label={m.cal_caldlg_default_privacy()}
+						block
+					/>
 				</div>
 			{/if}
 
 			{#if request.mode === 'create'}
 				<div class="cal-field">
 					<span>{m.cal_caldlg_who()}</span>
-					<div class="seg">
-						<button type="button" class:on={kind === 'personal'} onclick={() => (kind = 'personal')}>{m.cal_caldlg_who_me()}</button>
-						<button type="button" class:on={kind === 'shared'} disabled={!canShare} onclick={() => (kind = 'shared')}>{m.cal_caldlg_who_members()}</button>
-						<button type="button" class:on={kind === 'role'} disabled={!isAdmin || !sharedAddresses.length} onclick={() => (kind = 'role')}>{m.cal_caldlg_who_address()}</button>
-					</div>
+					<Segmented
+						bind:value={kind}
+						options={[
+							{ value: 'personal', label: m.cal_caldlg_who_me() },
+							{ value: 'shared', label: m.cal_caldlg_who_members(), disabled: !canShare },
+							{ value: 'role', label: m.cal_caldlg_who_address(), disabled: !isAdmin || !sharedAddresses.length }
+						]}
+						aria-label={m.cal_caldlg_who()}
+						block
+					/>
 				</div>
 			{/if}
 

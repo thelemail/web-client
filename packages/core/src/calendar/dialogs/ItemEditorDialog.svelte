@@ -7,7 +7,9 @@
 		faShieldCheck
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { Chip } from '$core/components/ui/chip';
 	import * as Dialog from '$core/components/ui/dialog';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { accountSettings } from '$core/stores/accountSettings.svelte';
 	import { auth } from '$core/stores/auth.svelte';
 	import { domainOf, platformDomains } from '$core/stores/platformDomains.svelte';
@@ -215,6 +217,18 @@
 		reminderPick = '';
 	}
 
+	const visibilityOptions = $derived([
+		{ value: 'private' as const, label: m.cal_privacy_private() },
+		{ value: 'busy' as const, label: m.cal_privacy_busy() },
+		...(kind === 'hold' ? [] : [{ value: 'shared' as const, label: m.cal_privacy_shared() }])
+	]);
+
+	function pickKind(next: ItemKind) {
+		kind = next;
+		if (next === 'task') scheduled = false;
+		if (next === 'hold' && privacy === 'shared') privacy = 'busy';
+	}
+
 	function reminderLabel(minutes: number): string {
 		if (minutes === 0) return m.cal_reminder_at_time();
 		if (minutes === 1440) return m.cal_reminder_days_before({ count: 1 });
@@ -333,11 +347,16 @@
 
 	<div class="cal-dlg-body cal-form">
 		{#if !isEdit}
-			<div class="seg kind-seg">
-				<button type="button" class:on={kind === 'event'} onclick={() => (kind = 'event')}>{m.cal_editor_kind_event()}</button>
-				<button type="button" class:on={kind === 'task'} onclick={() => ((kind = 'task'), (scheduled = false))}>{m.cal_editor_kind_task()}</button>
-				<button type="button" class:on={kind === 'hold'} onclick={() => ((kind = 'hold'), (privacy = privacy === 'shared' ? 'busy' : privacy))}>{m.cal_editor_kind_hold()}</button>
-			</div>
+			<Segmented
+				value={kind}
+				options={[
+					{ value: 'event', label: m.cal_editor_kind_event() },
+					{ value: 'task', label: m.cal_editor_kind_task() },
+					{ value: 'hold', label: m.cal_editor_kind_hold() }
+				]}
+				onValueChange={pickKind}
+				class="kind-seg"
+			/>
 		{/if}
 
 		<label class="cal-field">
@@ -381,7 +400,7 @@
 				</label>
 			</div>
 			<label class="cal-check">
-				<input type="checkbox" bind:checked={scheduled} />
+				<input type="checkbox" class="check" bind:checked={scheduled} />
 				{m.cal_editor_timebox()}
 			</label>
 		{/if}
@@ -412,9 +431,9 @@
 				{/if}
 			</div>
 			<div class="cal-inline">
-				<label class="cal-check"><input type="checkbox" bind:checked={allDay} />{m.cal_editor_all_day()}</label>
+				<label class="cal-check"><input type="checkbox" class="check" bind:checked={allDay} />{m.cal_editor_all_day()}</label>
 				{#if !allDay}
-					<label class="cal-check"><input type="checkbox" bind:checked={floating} />{m.cal_editor_floating()}</label>
+					<label class="cal-check"><input type="checkbox" class="check" bind:checked={floating} />{m.cal_editor_floating()}</label>
 					{#if !floating}
 						<select class="field-input tz" bind:value={timeZone} aria-label={m.cal_editor_time_zone_aria()}>
 							{#each zones as z (z)}
@@ -460,10 +479,13 @@
 			<span>{m.cal_editor_reminders()}</span>
 			<div class="reminders">
 				{#each reminders as minutes (minutes)}
-					<span class="guest-chip">
+					<Chip
+						size="sm"
+						onremove={() => (reminders = reminders.filter((x) => x !== minutes))}
+						removeLabel={m.cal_editor_remove_reminder_aria()}
+					>
 						{reminderLabel(minutes)}
-						<button type="button" aria-label={m.cal_editor_remove_reminder_aria()} onclick={() => (reminders = reminders.filter((x) => x !== minutes))}>×</button>
-					</span>
+					</Chip>
 				{/each}
 				<select class="field-input" bind:value={reminderPick} onchange={addReminder} aria-label={m.cal_editor_add_reminder_aria()}>
 					<option value="">{m.cal_editor_add_reminder()}</option>
@@ -476,13 +498,12 @@
 
 		<div class="cal-field">
 			<span>{m.cal_editor_visibility()}</span>
-			<div class="seg">
-				<button type="button" class:on={privacy === 'private'} onclick={() => (privacy = 'private')}>{m.cal_privacy_private()}</button>
-				<button type="button" class:on={privacy === 'busy'} onclick={() => (privacy = 'busy')}>{m.cal_privacy_busy()}</button>
-				{#if kind !== 'hold'}
-					<button type="button" class:on={privacy === 'shared'} onclick={() => (privacy = 'shared')}>{m.cal_privacy_shared()}</button>
-				{/if}
-			</div>
+			<Segmented
+				bind:value={privacy}
+				options={visibilityOptions}
+				aria-label={m.cal_editor_visibility()}
+				block
+			/>
 		</div>
 
 		<DisclosureBoundary heading={m.cal_boundary_heading_device()} headingIcon={faShieldCheck} lines={boundary} />
