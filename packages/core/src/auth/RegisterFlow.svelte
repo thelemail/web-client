@@ -35,6 +35,7 @@
 	import { auth } from '$core/stores/session.svelte';
 	import { platformDomains } from '$core/stores/platformDomains.svelte';
 	import { Button } from '$core/components/ui/button';
+	import { Chip } from '$core/components/ui/chip';
 	import Rich from '$core/i18n/Rich.svelte';
 	import { m } from '$paraglide/messages.js';
 	import type { RegisterCheckout } from './register-checkout';
@@ -437,7 +438,7 @@
 				{#if status === 'taken' && suggestions.length > 0}
 					<div class="af-chips" transition:unfold>
 						{#each suggestions as s (s)}
-							<button type="button" class="af-chip" onclick={() => (handle = s)}>{s}@{mailDomain}</button>
+							<Chip class="af-chip" onclick={() => (handle = s)}>{s}@{mailDomain}</Chip>
 						{/each}
 					</div>
 				{/if}
@@ -491,7 +492,7 @@
 				</div>
 				{#if !paid}
 					<label class="af-tick">
-						<input type="checkbox" bind:checked={terms} />
+						<input type="checkbox" class="check" bind:checked={terms} />
 						<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms: terms_, privacy }} /></span>
 					</label>
 				{/if}

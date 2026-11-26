@@ -536,42 +536,9 @@
 .auth .accept a:hover {
 	text-decoration: underline;
 }
-.auth .accept input[type='checkbox'],
-.auth .af-tick input[type='checkbox'] {
-	appearance: none;
-	flex: 0 0 auto;
-	display: grid;
-	place-items: center;
-	width: 20px;
-	height: 20px;
-	margin: 1px 0 0;
-	border-radius: 5px;
-	border: 1.5px solid var(--border-control);
-	background: var(--surface);
-	cursor: pointer;
-	transition:
-		background var(--dur-fast) var(--ease-out),
-		border-color var(--dur-fast) var(--ease-out);
-}
-.auth .accept input[type='checkbox']:checked,
-.auth .af-tick input[type='checkbox']:checked {
-	background: var(--primary);
-	border-color: var(--primary);
-}
-.auth .accept input[type='checkbox']:checked::after,
-.auth .af-tick input[type='checkbox']:checked::after {
-	content: '';
-	width: 10px;
-	height: 5px;
-	border: 2px solid var(--primary-fg);
-	border-top: 0;
-	border-right: 0;
-	transform: rotate(-45deg) translate(1px, -1px);
-}
-.auth .accept input[type='checkbox']:focus-visible,
-.auth .af-tick input[type='checkbox']:focus-visible {
-	outline: 2px solid var(--focus-ring);
-	outline-offset: 2px;
+.auth .accept .check,
+.auth .af-tick .check {
+	margin-top: 2px;
 }
 
 .auth .welcome {
@@ -668,38 +635,10 @@
 	gap: 12px;
 	margin-bottom: 16px;
 }
-.auth .periodtabs {
-	display: flex;
-	justify-content: center;
-	gap: 8px;
-	margin-bottom: 18px;
-}
-.auth .periodtab {
-	font-size: 13px;
-	font-weight: 500;
-	color: var(--fg-muted);
-	background: transparent;
-	border: 1px solid var(--border-strong);
-	border-radius: var(--radius-control-compact);
-	padding: 6px 16px;
-	cursor: pointer;
-	transition:
-		border-color var(--dur),
-		background var(--dur),
-		color var(--dur);
-}
-.auth .periodtab:hover {
-	border-color: var(--pine-500);
-	color: var(--fg-strong);
-}
-.auth .periodtab.cur {
-	background: var(--primary);
-	border-color: var(--primary);
-	color: var(--primary-fg);
-}
-.auth .periodtab:focus-visible {
-	outline: 2px solid var(--focus-ring);
-	outline-offset: 2px;
+.auth .periodseg {
+	display: grid;
+	width: fit-content;
+	margin: 0 auto 18px;
 }
 .auth .prodtab {
 	position: relative;

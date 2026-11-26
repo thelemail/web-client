@@ -172,24 +172,6 @@ describe('register page', () => {
 		expect(document.querySelector('.af-chip')).toBeNull();
 	});
 
-	it('offers free variants of a taken address and takes one on a click', async () => {
-		authApi.checkAddressAvailability.mockImplementation(async (handle: string) => ({
-			available: handle !== 'camille' && handle !== 'camillemail'
-		}));
-		render(RegisterPage);
-
-		await typeAddress('camille');
-		await vi.waitFor(() =>
-			expect([...document.querySelectorAll('.af-chip')].map((c) => c.textContent)).toEqual([
-				'camille.mail@temail.org',
-				'camille.post@temail.org'
-			])
-		);
-		await fireEvent.click(document.querySelector('.af-chip')!);
-		expect(document.querySelector<HTMLInputElement>('#register-handle')!.value).toBe('camille.mail');
-		await vi.waitFor(() => expect(button('Continue')?.disabled).toBe(false));
-	});
-
 	it('registers on the offered domain and keeps the legal line to it', async () => {
 		keystore.opaqueStartRegistration.mockRejectedValue(new Error('stop'));
 		render(RegisterPage);

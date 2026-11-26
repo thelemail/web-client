@@ -291,35 +291,8 @@
 	display: none;
 }
 .auth .af-chip {
-	all: unset;
 	flex: 0 0 auto;
-	box-sizing: border-box;
-	height: 32px;
-	padding: 0 12px;
-	display: inline-flex;
-	align-items: center;
-	border-radius: 999px;
-	border: 1px solid var(--border);
-	background: var(--surface);
-	font-family: var(--font-mono);
-	font-size: 12.5px;
-	font-weight: 500;
-	color: var(--fg-strong);
-	cursor: pointer;
-	transition:
-		border-color var(--dur-fast) var(--ease-out),
-		background var(--dur-fast) var(--ease-out);
 }
-.auth .af-chip:hover {
-	border-color: var(--primary);
-	background: var(--pine-100);
-	color: var(--pine-700);
-}
-.auth .af-chip:focus-visible {
-	outline: 2px solid var(--focus-ring);
-	outline-offset: 2px;
-}
-
 .auth .af-work {
 	list-style: none;
 	margin: 0;
@@ -721,10 +694,6 @@
 	}
 	.auth .af-mark {
 		animation: af-pop 320ms var(--ease-out) backwards;
-	}
-	.auth .af-tick input[type='checkbox']:checked::after,
-	.auth .accept input[type='checkbox']:checked::after {
-		animation: af-tick var(--dur) var(--ease-out);
 	}
 }
 @keyframes af-card-in {

@@ -28,6 +28,7 @@
 		faUserGroup
 	} from '@fortawesome/pro-regular-svg-icons';
 	import { Button } from '$core/components/ui/button';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { m } from '$paraglide/messages.js';
 
 	let {
@@ -138,28 +139,16 @@
 		{/each}
 	</div>
 
-	<div class="periodtabs" role="radiogroup" aria-label={m.auth_plan_period_group()}>
-		<button
-			type="button"
-			role="radio"
-			aria-checked={!monthly}
-			class="periodtab"
-			class:cur={!monthly}
-			onclick={() => pickPeriod('year')}
-		>
-			{m.auth_plan_period_annual()}
-		</button>
-		<button
-			type="button"
-			role="radio"
-			aria-checked={monthly}
-			class="periodtab"
-			class:cur={monthly}
-			onclick={() => pickPeriod('month')}
-		>
-			{m.auth_plan_period_monthly()}
-		</button>
-	</div>
+	<Segmented
+		value={sel.period}
+		options={[
+			{ value: 'year', label: m.auth_plan_period_annual() },
+			{ value: 'month', label: m.auth_plan_period_monthly() }
+		]}
+		onValueChange={pickPeriod}
+		aria-label={m.auth_plan_period_group()}
+		class="periodseg"
+	/>
 
 	{#if product.perMailbox}
 		<div class="seats">

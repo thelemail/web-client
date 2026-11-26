@@ -213,7 +213,7 @@
 				</div>
 			</div>
 			<label class="af-tick">
-				<input type="checkbox" bind:checked={ack} />
+				<input type="checkbox" class="check" bind:checked={ack} />
 				<span>{m.recovery_start_ack()}</span>
 			</label>
 			<Status tone={submitError || saveError ? 'bad' : 'hint'} reserve>

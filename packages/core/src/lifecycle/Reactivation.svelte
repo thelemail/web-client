@@ -32,6 +32,7 @@
 	import { fmt } from './dates';
 	import type { LifecycleContext, ReactivationPlan } from './types';
 	import { Button } from '$core/components/ui/button';
+	import { Segmented } from '$core/components/ui/segmented';
 	import { m } from '$paraglide/messages.js';
 	import Rich from '$core/i18n/Rich.svelte';
 
@@ -187,28 +188,15 @@
 				</span>
 			</div>
 			<div class="tiers">
-				<div class="periodtabs" role="radiogroup" aria-label={m.lc_restore_period_label()}>
-					<button
-						type="button"
-						role="radio"
-						aria-checked={!monthly}
-						class="periodtab"
-						class:cur={!monthly}
-						onclick={() => (period = 'year')}
-					>
-						{m.lc_restore_period_annual()}
-					</button>
-					<button
-						type="button"
-						role="radio"
-						aria-checked={monthly}
-						class="periodtab"
-						class:cur={monthly}
-						onclick={() => (period = 'month')}
-					>
-						{m.lc_restore_period_monthly()}
-					</button>
-				</div>
+				<Segmented
+					bind:value={period}
+					options={[
+						{ value: 'year', label: m.lc_restore_period_annual() },
+						{ value: 'month', label: m.lc_restore_period_monthly() }
+					]}
+					aria-label={m.lc_restore_period_label()}
+					class="periodseg"
+				/>
 				{#each RE_PLANS as p (p.id)}
 					{@const lk = locked(p)}
 					<button

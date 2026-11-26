@@ -103,7 +103,7 @@
 		{/if}
 
 		<label class="accept">
-			<input type="checkbox" bind:checked={accepted} required />
+			<input type="checkbox" class="check" bind:checked={accepted} required />
 			<span><Rich text={m.auth_payment_accept_terms()} tags={{ terms, privacy }} /></span>
 		</label>
 

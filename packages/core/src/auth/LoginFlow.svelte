@@ -373,7 +373,7 @@
 				aux={forgotLink}
 			/>
 			<label class="af-tick">
-				<input type="checkbox" bind:checked={rememberMe} disabled={busy} />
+				<input type="checkbox" class="check" bind:checked={rememberMe} disabled={busy} />
 				<span>{m.auth_login_remember_me()}<small>{m.auth_login_remember_hint()}</small></span>
 			</label>
 			</div>
