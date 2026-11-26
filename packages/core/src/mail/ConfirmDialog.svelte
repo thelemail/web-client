@@ -61,10 +61,12 @@
 </script>
 
 <Dialog.Root
-	open
-	onOpenChange={(open) => {
-		if (!open && !busy) onClose();
-	}}
+	bind:open={
+		() => true,
+		(open) => {
+			if (!open && !busy) onClose();
+		}
+	}
 >
 	<Dialog.Content
 		size={wide ? 'wide' : 'md'}
