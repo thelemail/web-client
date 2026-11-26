@@ -109,6 +109,10 @@
 	background: var(--pine-100);
 	color: var(--pine-700);
 }
+.btn.btn-star[aria-pressed='true'] {
+	background: var(--brass-100);
+	color: var(--brass-700);
+}
 .btn-danger-solid {
 	background: var(--danger-500);
 	color: var(--primary-fg);
@@ -213,6 +217,27 @@
 @keyframes btn-spin {
 	to {
 		transform: rotate(360deg);
+	}
+}
+
+.on-inverse .btn-primary {
+	background: var(--fg-on-pine);
+	color: var(--bg-inverse);
+}
+.on-inverse .btn-neutral {
+	background: color-mix(in oklab, var(--fg-on-pine) 12%, transparent);
+	color: var(--fg-on-pine);
+}
+.on-inverse .btn-ghost {
+	color: color-mix(in oklab, var(--fg-on-pine) 72%, transparent);
+}
+@media (hover: hover) {
+	.on-inverse .btn-primary:hover {
+		background: color-mix(in oklab, var(--fg-on-pine) 88%, transparent);
+	}
+	.on-inverse :is(.btn-neutral, .btn-ghost):hover {
+		background: color-mix(in oklab, var(--fg-on-pine) 18%, transparent);
+		color: var(--fg-on-pine);
 	}
 }
 
