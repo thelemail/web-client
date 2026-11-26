@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { signInAtAuth, unlockAtAuth } from '$core/custody/unlock';
 	import { localForkPath } from '$core/fork';
@@ -42,24 +43,17 @@
 </script>
 
 <AuthShell>
-	<div class="card handoffcard" aria-live="polite">
+	<div class="card" aria-live="polite">
 		{#if error}
-			<h1>{m.handoff_title()}</h1>
-			<p class="handoffmsg">{error}</p>
-			<Button variant="primary" size="lg" href={appOrigin()}>{m.cal_fork_back()}</Button>
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.handoff_title()}</h1>
+					<p>{error}</p>
+				</div>
+				<Button variant="primary" size="lg" block href={appOrigin()}>{m.cal_fork_back()}</Button>
+			</div>
 		{:else}
-			<p class="handoffmsg">{m.handoff_opening()}</p>
+			<div class="af-wait"><Status tone="busy">{m.handoff_opening()}</Status></div>
 		{/if}
 	</div>
 </AuthShell>
-
-<style>
-	.handoffcard {
-		display: grid;
-		gap: 0.75rem;
-		justify-items: start;
-	}
-	.handoffmsg {
-		color: var(--muted-foreground);
-	}
-</style>

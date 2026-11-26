@@ -10,13 +10,15 @@
 </script>
 
 <AuthShell>
-	<div class="card errcard">
-		<p class="errcode">{status}</p>
-		<h1>{heading}</h1>
-		<p class="errmsg">{message}</p>
-		<div class="erracts">
-			<Button variant="primary" size="lg" href="/">{m.app_error_go_to_mailbox()}</Button>
-			<Button variant="ghost" size="lg" href="https://thelemail.com">thelemail.com</Button>
+	<div class="card">
+		<div class="card-surface">
+			<div class="card-head">
+				<p class="eyebrow">{status}</p>
+				<h1>{heading}</h1>
+				<p>{message}</p>
+			</div>
+			<Button variant="primary" size="lg" block href="/">{m.app_error_go_to_mailbox()}</Button>
+			<p class="af-row"><a href="https://thelemail.com">thelemail.com</a></p>
 		</div>
 	</div>
 </AuthShell>

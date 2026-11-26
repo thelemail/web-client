@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AuthShell from '$core/auth/AuthShell.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import ReauthDialog from '$core/auth/ReauthDialog.svelte';
 	import { ApiCallError } from '$core/api/types';
 	import { ensureConverted } from '$core/auth/product-keys';
@@ -90,25 +91,18 @@
 </script>
 
 <AuthShell>
-	<div class="card handoffcard" aria-live="polite">
+	<div class="card" aria-live="polite">
 		{#if error}
-			<h1>{m.handoff_title()}</h1>
-			<p class="handoffmsg">{error}</p>
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.handoff_title()}</h1>
+					<p>{error}</p>
+				</div>
+			</div>
 		{:else}
-			<p class="handoffmsg">{m.handoff_auth_returning()}</p>
+			<div class="af-wait"><Status tone="busy">{m.handoff_auth_returning()}</Status></div>
 		{/if}
 	</div>
 </AuthShell>
 
 <ReauthDialog />
-
-<style>
-	.handoffcard {
-		display: grid;
-		gap: 0.75rem;
-		justify-items: start;
-	}
-	.handoffmsg {
-		color: var(--muted-foreground);
-	}
-</style>

@@ -53,21 +53,14 @@
 
 {#if error}
 	<AuthShell>
-		<div class="card forkcard">
-			<h1>{m.cal_fork_title()}</h1>
-			<p class="forkmsg">{error}</p>
-			<Button variant="primary" size="lg" href={appOrigin()}>{m.cal_fork_back()}</Button>
+		<div class="card">
+			<div class="card-surface">
+				<div class="card-head">
+					<h1>{m.cal_fork_title()}</h1>
+					<p>{error}</p>
+				</div>
+				<Button variant="primary" size="lg" block href={appOrigin()}>{m.cal_fork_back()}</Button>
+			</div>
 		</div>
 	</AuthShell>
 {/if}
-
-<style>
-	.forkcard {
-		display: grid;
-		gap: 0.75rem;
-		justify-items: start;
-	}
-	.forkmsg {
-		color: var(--muted-foreground);
-	}
-</style>

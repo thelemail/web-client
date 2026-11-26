@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Status from '$core/auth/sentence/Status.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import { orderFromQuery, startCheckout } from '$core/auth/register-checkout';
 	import { m } from '$paraglide/messages.js';
 
@@ -15,6 +15,6 @@
 	});
 </script>
 
-<div class="sp" aria-busy="true">
+<div class="af-wait" aria-busy="true">
 	<Status tone="busy">{m.common_loading()}</Status>
 </div>

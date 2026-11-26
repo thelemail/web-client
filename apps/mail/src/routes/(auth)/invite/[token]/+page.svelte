@@ -296,7 +296,7 @@
 				void submitRegistration();
 			}}
 		>
-			<input class="sp-user" type="email" value={invite.inviteeEmail} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
+			<input class="af-hidden-user" type="email" value={invite.inviteeEmail} autocomplete="username" readonly tabindex="-1" aria-hidden="true" />
 			<PasswordField
 				label={m.common_password()}
 				bind:value={pw}

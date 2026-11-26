@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import Status from '$core/auth/sentence/Status.svelte';
+	import Status from '$core/auth/form/Status.svelte';
 	import { hasPendingAuthorize } from '$core/producthandoff/pending';
 	import { mailStartUrl } from '$core/products';
 	import { m } from '$paraglide/messages.js';
@@ -14,6 +14,6 @@
 	});
 </script>
 
-<div class="sp" aria-busy="true">
+<div class="af-wait" aria-busy="true">
 	<Status tone="busy">{m.handoff_opening()}</Status>
 </div>

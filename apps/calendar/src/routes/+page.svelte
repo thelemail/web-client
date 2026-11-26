@@ -7,8 +7,12 @@
 
 <AuthShell>
 	<div class="card">
-		<h1>{m.cal_app_open_title()}</h1>
-		<p>{m.cal_app_open_desc()}</p>
-		<Button variant="primary" size="lg" href={appOrigin()}>{m.cal_app_go_to_thelemail()}</Button>
+		<div class="card-surface">
+			<div class="card-head">
+				<h1>{m.cal_app_open_title()}</h1>
+				<p>{m.cal_app_open_desc()}</p>
+			</div>
+			<Button variant="primary" size="lg" block href={appOrigin()}>{m.cal_app_go_to_thelemail()}</Button>
+		</div>
 	</div>
 </AuthShell>
