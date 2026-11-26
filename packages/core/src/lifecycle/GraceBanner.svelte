@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
+	import { Button } from '$core/components/ui/button';
 	import {
 		faCircleArrowDown,
 		faDownload,
@@ -45,13 +46,13 @@
 			{/if}
 		</span>
 		<span class="sa-acts">
-			<button class="sa-act solid" onclick={onRestore}><Icon icon={faRotateLeft} size={13} />{m.lc_grace_restore()}</button>
+			<Button variant="primary" size="sm" class="sa-act" onclick={onRestore}><Icon icon={faRotateLeft} size={13} />{m.lc_grace_restore()}</Button>
 			{#if onDowngrade}
-				<button class="sa-act ghost" onclick={onDowngrade}>
+				<Button variant="neutral" size="sm" class="sa-act" onclick={onDowngrade}>
 					<Icon icon={faCircleArrowDown} size={13} />{m.lc_grace_move_to_free()}
-				</button>
+				</Button>
 			{/if}
-			<button class="sa-act ghost" onclick={onExport}><Icon icon={faDownload} size={13} />{m.lc_grace_export()}</button>
+			<Button variant="neutral" size="sm" class="sa-act" onclick={onExport}><Icon icon={faDownload} size={13} />{m.lc_grace_export()}</Button>
 		</span>
 	</div>
 </div>

@@ -808,34 +808,6 @@
 	align-items: center;
 	gap: 2px;
 }
-.auth .seats .seatbtn {
-	width: 30px;
-	height: 30px;
-	border: 1px solid var(--border-strong);
-	background: var(--surface);
-	border-radius: var(--radius-control-compact);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--fg-muted);
-	box-shadow: var(--shadow-xs);
-	cursor: pointer;
-	transition:
-		background var(--dur),
-		color var(--dur);
-}
-.auth .seats .seatbtn:hover {
-	background: var(--bg-sunken);
-	color: var(--fg-strong);
-}
-.auth .seats .seatbtn[disabled] {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-.auth .seats .seatbtn:focus-visible {
-	outline: none;
-	box-shadow: 0 0 0 3px var(--focus-ring);
-}
 .auth .seats .seats-n {
 	min-width: 36px;
 	text-align: center;

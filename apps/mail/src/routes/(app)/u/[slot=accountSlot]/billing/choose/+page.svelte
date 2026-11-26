@@ -176,13 +176,14 @@
 					<p>
 						{m.billing_choose_handoff_body()}
 					</p>
-					<button
-						type="button"
-						class="primary"
+					<Button
+						variant="primary"
+						size="lg"
+						block
 						onclick={() => platform.openExternal(`${platform.returnOrigin()}/u/${slot}/billing/choose`)}
 					>
 						{m.billing_choose_handoff_open()}
-					</button>
+					</Button>
 					<button type="button" class="linklike" onclick={() => billing.refresh()}>
 						{m.billing_choose_handoff_done()}
 					</button>

@@ -113,12 +113,15 @@
 				<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} disabled={submitting} onclick={onBack}>
 					<Icon icon={faArrowLeft} size={17} />
 				</Button>
-				<Button variant="primary" size="lg" disabled={submitting || !accepted} onclick={pay}>
-					{#if submitting}
-						<span class="spinner"></span>{m.auth_preparing_checkout()}
-					{:else}
-						<Icon icon={faLock} size={17} />{m.auth_payment_pay({ price: eur(total) })}
-					{/if}
+				<Button
+					variant="primary"
+					size="lg"
+					disabled={!accepted}
+					busy={submitting}
+					busyLabel={m.auth_preparing_checkout()}
+					onclick={pay}
+				>
+					<Icon icon={faLock} size={17} />{m.auth_payment_pay({ price: eur(total) })}
 				</Button>
 			</div>
 		</div>

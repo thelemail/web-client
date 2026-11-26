@@ -22,7 +22,6 @@
 		const btn = node.closest<HTMLElement>('button, a');
 		if (!btn) return null;
 		if (btn.classList.contains('compose') || btn.classList.contains('fab')) return btn;
-		if (btn.classList.contains('rb-btn')) return btn;
 		return btn.hasAttribute('data-mutates') ? btn : null;
 	}
 

@@ -166,25 +166,25 @@
 		<div class="seats">
 			<span class="seats-lab">{m.auth_plan_seats_label()}</span>
 			<span class="seats-ctl">
-				<button
-					type="button"
-					class="seatbtn"
+				<Button
+					variant="neutral"
+					size="icon-sm"
 					aria-label={m.auth_plan_seats_fewer()}
 					disabled={sel.seats <= MIN_SEATS}
 					onclick={() => setSeats(sel.seats - 1)}
 				>
 					<Icon icon={faMinus} size={15} />
-				</button>
+				</Button>
 				<span class="seats-n mono">{sel.seats}</span>
-				<button
-					type="button"
-					class="seatbtn"
+				<Button
+					variant="neutral"
+					size="icon-sm"
 					aria-label={m.auth_plan_seats_more()}
 					disabled={sel.seats >= MAX_SEATS}
 					onclick={() => setSeats(sel.seats + 1)}
 				>
 					<Icon icon={faPlus} size={15} />
-				</button>
+				</Button>
 			</span>
 			<span class="seats-note">{m.auth_plan_seats_note({ min: MIN_SEATS })}</span>
 		</div>
@@ -248,10 +248,8 @@
 					<Icon icon={faArrowLeft} size={17} />
 				</Button>
 			{/if}
-			<Button variant="primary" size="lg" disabled={!tier || busy} onclick={onNext}>
-				{#if busy}
-					<span class="spinner"></span>{busyText}
-				{:else if tier}
+			<Button variant="primary" size="lg" disabled={!tier} {busy} busyLabel={busyText} onclick={onNext}>
+				{#if tier}
 					{m.auth_plan_cta({
 						verb: ctaText,
 						plan: tier.name,

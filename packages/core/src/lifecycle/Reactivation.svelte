@@ -295,10 +295,8 @@
 					<Button variant="neutral" size="icon-lg" aria-label={m.common_back()} onclick={() => (step = 0)} disabled={busy}>
 						<Icon icon={faArrowLeft} />
 					</Button>
-					<Button variant="primary" size="lg" disabled={busy} onclick={pay}>
-						{#if busy}<span class="spinner"></span>{m.lc_restore_busy()}{:else}<Icon icon={faRotateLeft} />{m.lc_restore_pay(
-								{ price: eur(selPrice) }
-							)}{/if}
+					<Button variant="primary" size="lg" {busy} busyLabel={m.lc_restore_busy()} onclick={pay}>
+						<Icon icon={faRotateLeft} />{m.lc_restore_pay({ price: eur(selPrice) })}
 					</Button>
 				</div>
 			</div>
