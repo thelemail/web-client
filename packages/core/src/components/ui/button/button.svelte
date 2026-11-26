@@ -46,10 +46,14 @@
 			block?: boolean;
 			busy?: boolean;
 			busyLabel?: string;
+			tooltip?: string;
+			shortcut?: string;
 		};
 </script>
 
 <script lang="ts">
+	import * as Tooltip from "$core/components/ui/tooltip/index.js";
+
 	let {
 		ref = $bindable(null),
 		class: className,
@@ -62,6 +66,8 @@
 		type = "button",
 		disabled = false,
 		onclick,
+		tooltip,
+		shortcut,
 		children,
 		...restProps
 	}: ButtonProps = $props();
@@ -88,35 +94,58 @@
 	{/if}
 {/snippet}
 
-{#if href}
-	<a
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size, block }), className)}
-		href={disabled ? undefined : href}
-		aria-disabled={disabled || busy || undefined}
-		aria-busy={busy || undefined}
-		role={disabled ? "link" : undefined}
-		tabindex={disabled ? -1 : undefined}
-		onclick={guard}
-		{...restProps}
-	>
-		{@render content()}
-	</a>
+{#snippet element(extra: Record<string, unknown>)}
+	{#if href}
+		<a
+			bind:this={ref}
+			data-slot="button"
+			class={cn(buttonVariants({ variant, size, block }), className)}
+			href={disabled ? undefined : href}
+			aria-disabled={disabled || busy || undefined}
+			aria-busy={busy || undefined}
+			role={disabled ? "link" : undefined}
+			tabindex={disabled ? -1 : undefined}
+			{...restProps}
+			{...extra}
+			onclick={(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) => {
+				(extra.onclick as ((e: MouseEvent) => void) | undefined)?.(e);
+				guard(e);
+			}}
+		>
+			{@render content()}
+		</a>
+	{:else}
+		<button
+			bind:this={ref}
+			data-slot="button"
+			class={cn(buttonVariants({ variant, size, block }), className)}
+			{type}
+			{disabled}
+			aria-disabled={busy || undefined}
+			aria-busy={busy || undefined}
+			{...restProps}
+			{...extra}
+			onclick={(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) => {
+				(extra.onclick as ((e: MouseEvent) => void) | undefined)?.(e);
+				guard(e);
+			}}
+		>
+			{@render content()}
+		</button>
+	{/if}
+{/snippet}
+
+{#if tooltip}
+	<Tooltip.Root>
+		<Tooltip.Trigger>
+			{#snippet child({ props })}
+				{@render element({ ...props, "aria-label": restProps["aria-label"] ?? tooltip })}
+			{/snippet}
+		</Tooltip.Trigger>
+		<Tooltip.Content>{tooltip}{#if shortcut}<kbd>{shortcut}</kbd>{/if}</Tooltip.Content>
+	</Tooltip.Root>
 {:else}
-	<button
-		bind:this={ref}
-		data-slot="button"
-		class={cn(buttonVariants({ variant, size, block }), className)}
-		{type}
-		{disabled}
-		aria-disabled={busy || undefined}
-		aria-busy={busy || undefined}
-		onclick={guard}
-		{...restProps}
-	>
-		{@render content()}
-	</button>
+	{@render element({})}
 {/if}
 {#if stacked}
 	<span class="sr-only" role="status">{busy ? busyLabel : ""}</span>

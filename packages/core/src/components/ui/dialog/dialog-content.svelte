@@ -16,11 +16,13 @@
 		portalProps,
 		children,
 		showCloseButton = true,
+		size = "md",
 		...restProps
 	}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
 		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DialogPortal>>;
 		children: Snippet;
 		showCloseButton?: boolean;
+		size?: "md" | "wide";
 	} = $props();
 </script>
 
@@ -29,19 +31,15 @@
 	<DialogPrimitive.Content
 		bind:ref
 		data-slot="dialog-content"
-		class={cn(
-			"grid max-w-[calc(100%-2rem)] gap-6 rounded-panel bg-popover p-6 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 sm:max-w-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 outline-none",
-			className
-		)}
+		class={cn("dialog", size === "wide" && "dialog-wide", className)}
 		{...restProps}
 	>
 		{@render children?.()}
 		{#if showCloseButton}
 			<DialogPrimitive.Close data-slot="dialog-close">
 				{#snippet child({ props })}
-					<Button variant="ghost" size="sm" class="absolute top-3 right-3 size-8 !px-0" {...props}>
-						<Icon icon={faXmark}  />
-						<span class="sr-only">{m.common_close()}</span>
+					<Button variant="ghost" size="icon-sm" class="dialog-close" aria-label={m.common_close()} {...props}>
+						<Icon icon={faXmark} />
 					</Button>
 				{/snippet}
 			</DialogPrimitive.Close>
