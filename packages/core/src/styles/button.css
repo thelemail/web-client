@@ -92,7 +92,7 @@
 	color: var(--pine-700);
 }
 .btn-neutral {
-	background: var(--surface-muted);
+	background: var(--neutral-fill);
 	color: var(--fg);
 }
 .btn-ghost {
@@ -176,7 +176,7 @@
 	color: var(--pine-700);
 }
 .btn-neutral[aria-busy='true'] {
-	background: var(--surface-muted);
+	background: var(--neutral-fill);
 	color: var(--fg);
 }
 .btn-danger-solid[aria-busy='true'] {

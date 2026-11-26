@@ -39,11 +39,12 @@
 	--skeleton:       var(--bg-sunken);
 
 	--tonal-hover:       color-mix(in oklab, var(--pine-100) 82%, var(--pine-700));
-	--neutral-hover:     color-mix(in oklab, var(--surface-muted) 90%, var(--fg));
+	--neutral-fill:      color-mix(in oklab, var(--fg) 7%, transparent);
+	--neutral-hover:     color-mix(in oklab, var(--fg) 12%, transparent);
 	--ghost-hover:       color-mix(in oklab, var(--fg) 6%, transparent);
 	--danger-soft-hover: color-mix(in oklab, var(--danger-100) 85%, var(--danger-700));
 	--danger-hover:      color-mix(in oklab, var(--danger-500) 88%, var(--fg-strong));
-	--disabled-fill:     color-mix(in oklab, var(--fg) 7%, transparent);
+	--disabled-fill:     color-mix(in oklab, var(--fg) 4%, transparent);
 
 	--shadow-xs:    0 1px 1px rgba(16, 18, 20, 0.04);
 	--shadow-sm:    0 1px 2px rgba(16, 18, 20, 0.06), 0 1px 1px rgba(16, 18, 20, 0.04);
