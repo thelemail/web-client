@@ -17,6 +17,7 @@
 	import { faStar as faStarSolid } from '@fortawesome/pro-solid-svg-icons';
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import type { TipTether } from '$core/components/ui/tooltip/shared';
+	import { afterRowsPaint } from './rowActions';
 	import Avatar from '$core/components/Avatar.svelte';
 	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
@@ -211,6 +212,10 @@
 		const t = Date.parse(m.snoozedUntil);
 		return Number.isFinite(t) ? new Date(t) : null;
 	});
+
+	let actions = $state(false);
+	$effect(() => afterRowsPaint(() => (actions = true)));
+	const showActions = () => (actions = true);
 </script>
 
 <div
@@ -218,6 +223,8 @@
 	class="mrow"
 	data-id={m.id}
 	onfocusout={onFocusOut}
+	onfocusin={showActions}
+	onpointerenter={showActions}
 	class:unread={m.unread}
 	class:active
 	class:fresh
@@ -384,33 +391,35 @@
 		</div>
 	</div>
 	<div class="qa">
-		{#if caps.showStar}
-			{@render qaButton(m.starred ? msg.mail_action_unstar() : msg.mail_action_star(), () => onToggleStar(m.id), star, {
-				pressed: m.starred,
-				star: true
-			})}
-		{/if}
-		{#if caps.showMarkRead}
-			{@render qaButton(
-				m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread(),
-				() => onToggleRead(m.id),
-				m.unread ? mailOpen : mail
-			)}
-		{/if}
-		{#if caps.showRestore}
-			{@render qaButton(msg.mail_action_restore(), () => onRestore?.(m.id), undo, { mutates: true })}
-		{/if}
-		{#if caps.showArchive}
-			{@render qaButton(msg.mail_action_archive(), () => onArchive(m.id), archive, { mutates: true })}
-		{/if}
-		{#if caps.showSpam && onSpam}
-			{@render qaButton(msg.mail_action_report_spam(), () => onSpam?.(m.id), spam)}
-		{/if}
-		{#if caps.showTrash}
-			{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true, danger: true })}
-		{/if}
-		{#if caps.showDelete}
-			{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true, danger: true })}
+		{#if actions}
+			{#if caps.showStar}
+				{@render qaButton(m.starred ? msg.mail_action_unstar() : msg.mail_action_star(), () => onToggleStar(m.id), star, {
+					pressed: m.starred,
+					star: true
+				})}
+			{/if}
+			{#if caps.showMarkRead}
+				{@render qaButton(
+					m.unread ? msg.mail_action_mark_read() : msg.mail_action_mark_unread(),
+					() => onToggleRead(m.id),
+					m.unread ? mailOpen : mail
+				)}
+			{/if}
+			{#if caps.showRestore}
+				{@render qaButton(msg.mail_action_restore(), () => onRestore?.(m.id), undo, { mutates: true })}
+			{/if}
+			{#if caps.showArchive}
+				{@render qaButton(msg.mail_action_archive(), () => onArchive(m.id), archive, { mutates: true })}
+			{/if}
+			{#if caps.showSpam && onSpam}
+				{@render qaButton(msg.mail_action_report_spam(), () => onSpam?.(m.id), spam)}
+			{/if}
+			{#if caps.showTrash}
+				{@render qaButton(msg.mail_action_trash(), () => onTrash(m.id), trash, { mutates: true, danger: true })}
+			{/if}
+			{#if caps.showDelete}
+				{@render qaButton(msg.mail_action_delete_forever(), () => onDelete?.(m.id), trash, { mutates: true, danger: true })}
+			{/if}
 		{/if}
 	</div>
 </div>
