@@ -54,26 +54,6 @@
 	font-size: 14px;
 	color: var(--fg-muted);
 }
-.auth .topswitch a {
-	display: inline-flex;
-	align-items: center;
-	height: 40px;
-	padding: 0 16px;
-	border-radius: var(--radius-control);
-	border: 1px solid var(--border-strong);
-	background: var(--surface);
-	font-weight: 600;
-	color: var(--fg-strong);
-	text-decoration: none;
-	transition: border-color var(--dur-fast) var(--ease-out);
-}
-.auth .topswitch a:hover {
-	border-color: var(--primary);
-}
-.auth .topswitch a:focus-visible {
-	outline: 2px solid var(--focus-ring);
-	outline-offset: 2px;
-}
 
 .auth .stagebody {
 	flex: 1;

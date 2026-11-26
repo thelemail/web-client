@@ -4,6 +4,7 @@
 	import type { Snippet } from 'svelte';
 	import { page } from '$app/state';
 	import Logo from '$core/components/Logo.svelte';
+	import { Button } from '$core/components/ui/button';
 	import SignedInStrip from './SignedInStrip.svelte';
 	import StorageNotice from './StorageNotice.svelte';
 	import LanguagePicker from '$core/i18n/LanguagePicker.svelte';
@@ -23,7 +24,7 @@
 		{#if swap}
 			<div class="topswitch">
 				<span>{swap.lead}</span>
-				<a href={swap.href}>{swap.label}</a>
+				<Button variant="tonal" href={swap.href}>{swap.label}</Button>
 			</div>
 		{/if}
 	</header>
