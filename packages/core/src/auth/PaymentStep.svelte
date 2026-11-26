@@ -59,7 +59,6 @@
 <div class="card-surface">
 	<StepPills total={labels.length} current={3} />
 	<div class="card-head">
-		<p class="eyebrow">{m.auth_step_of({ step: 4, total: 4 })}</p>
 		<h1>{m.auth_payment_heading()}</h1>
 		<p><Rich text={m.auth_payment_for({ address })} tags={{ addr }} /></p>
 	</div>

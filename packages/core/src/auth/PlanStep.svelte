@@ -56,7 +56,6 @@
 		footer?: Snippet | null;
 	} = $props();
 
-	const eyebrowText = $derived(eyebrow ?? m.auth_step_of({ step: 3, total: 4 }));
 	const headingText = $derived(heading ?? m.auth_plan_heading());
 	const ctaText = $derived(ctaVerb ?? m.auth_plan_cta_continue_payment());
 	const busyText = $derived(busyLabel ?? m.auth_preparing_checkout());
@@ -105,8 +104,8 @@
 		<StepPills total={labels.length} current={2} />
 	{/if}
 	<div class="card-head">
-		{#if eyebrowText}
-			<p class="eyebrow">{eyebrowText}</p>
+		{#if eyebrow}
+			<p class="eyebrow">{eyebrow}</p>
 		{/if}
 		<h1>{headingText}</h1>
 		<p>{product.tagline}</p>
