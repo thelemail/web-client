@@ -27,7 +27,7 @@
 		<span class="lg"><i class="lg-sw {kind.key}"></i><b>{kind.name()}</b> {kind.note()}</span>
 	{/each}
 	<span class="lg-spacer"></span>
-	<Button variant="neutral" size="sm" onclick={() => (cal.fullDay = !cal.fullDay)}>
+	<Button variant="ghost" size="sm" onclick={() => (cal.fullDay = !cal.fullDay)}>
 		<Icon icon={faClock} size={13} />{cal.fullDay ? m.cal_legend_hide_early() : m.cal_legend_show_midnight()}
 	</Button>
 	<PrivacyChip tone={chip.tone} label={chip.label} />

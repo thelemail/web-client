@@ -377,7 +377,7 @@
 
 	{#snippet footer()}
 		{#if blocked && step < 3}
-			<Button variant="ghost" onclick={onClose}>{m.common_close()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_close()}</Button>
 			<Button variant="primary" onclick={openMembers}>{m.settings_ceremony_delete_open_settings()}</Button>
 		{:else if step === 0}
 			<Button variant="ghost" onclick={onClose}>{m.settings_ceremony_delete_keep()}</Button>
@@ -385,14 +385,14 @@
 				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 1}
-			<Button variant="ghost" onclick={() => (step = 0)}>
+			<Button variant="neutral" onclick={() => (step = 0)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={!canContinue} onclick={() => (step = 2)}>
 				{m.common_continue()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 2}
-			<Button variant="ghost" disabled={busy} onclick={() => (step = 1)}>
+			<Button variant="neutral" disabled={busy} onclick={() => (step = 1)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="danger" disabled={busy || !canSubmit} onclick={submit}>

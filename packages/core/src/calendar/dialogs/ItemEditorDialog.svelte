@@ -493,7 +493,7 @@
 	<Dialog.Footer class="cal-dlg-foot">
 		<span class="note">{calendarStore.online ? m.cal_editor_note_online() : m.cal_editor_note_offline()}</span>
 		<div class="grow"></div>
-		<Button variant="ghost" disabled={busy} onclick={() => cal.closeEditor()}>{m.common_cancel()}</Button>
+		<Button variant="neutral" disabled={busy} onclick={() => cal.closeEditor()}>{m.common_cancel()}</Button>
 		<Button variant="primary" disabled={busy} onclick={save}>{isEdit ? m.common_save() : m.common_add()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

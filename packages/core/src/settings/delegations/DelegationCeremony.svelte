@@ -188,7 +188,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button disabled={!canCreate} onclick={create}>
 				{busy ? m.settings_delegation_generating() : m.settings_delegation_generate()}
 			</Button>

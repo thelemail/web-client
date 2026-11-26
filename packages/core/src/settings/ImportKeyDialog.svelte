@@ -186,12 +186,12 @@
 		{#if imported}
 			<Button variant="primary" onclick={onClose}>{m.common_done()}</Button>
 		{:else if review}
-			<Button variant="ghost" disabled={busy} onclick={back}>{m.common_back()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={back}>{m.common_back()}</Button>
 			<Button variant="primary" disabled={busy} onclick={pin}>
 				{busy ? m.settings_import_key_pinning() : m.settings_import_key_pin()}
 			</Button>
 		{:else}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!canReview} onclick={inspect}>
 				{m.settings_import_key_review()}
 			</Button>

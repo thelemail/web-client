@@ -294,7 +294,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" disabled={busy} onclick={onClose}>{m.common_cancel()}</Button>
 			<Button disabled={!canContinue} onclick={create}>
 				{busy
 					? m.settings_forwarding_setting_up()

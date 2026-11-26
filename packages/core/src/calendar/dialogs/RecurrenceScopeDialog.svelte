@@ -93,6 +93,6 @@
 	<Dialog.Footer class="cal-dlg-foot">
 		<span class="note">{m.cal_scope_guests_note()}</span>
 		<div class="grow"></div>
-		<Button variant="ghost" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
+		<Button variant="neutral" onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 	</Dialog.Footer>
 </Dialog.Content>

@@ -602,7 +602,7 @@
 
 	{#snippet footer()}
 		{#if phase === 'verify'}
-			<Button variant="ghost" onclick={close}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={close}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={cur.length === 0 || verifying} onclick={() => void verifyCurrent()}>
 				{#if verifying}
 					{m.settings_ceremony_password_checking()}
@@ -622,7 +622,7 @@
 				{/if}
 			</Button>
 		{:else if phase === 'newpw'}
-			<Button variant="ghost" onclick={close}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={close}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!pwReady} onclick={() => void changePassword()}>
 				{m.settings_ceremony_password_submit()}<Icon icon={faArrowRight} size={15} />
 			</Button>

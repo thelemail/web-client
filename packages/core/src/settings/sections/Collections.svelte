@@ -170,7 +170,7 @@
 				{#key c.key}
 					<CollectionCreate kind={c.kind} parent={c.parent} onCreated={created} />
 				{/key}
-				<Button variant="ghost" size="sm" onclick={() => (creating = null)}>{m.common_cancel()}</Button>
+				<Button variant="neutral" size="sm" onclick={() => (creating = null)}>{m.common_cancel()}</Button>
 			</div>
 		{:else}
 			<AddRow

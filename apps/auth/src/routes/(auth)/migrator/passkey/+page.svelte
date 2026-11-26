@@ -155,7 +155,7 @@
 					{working ? m.auth_migrator_passkey_working() : problem ? m.common_retry() : m.auth_migrator_passkey_button()}
 				</Button>
 			{/if}
-			<Button variant="ghost" size="lg" block disabled={leaving} onclick={cancel}>
+			<Button variant="neutral" size="lg" block disabled={leaving} onclick={cancel}>
 				{m.auth_migrator_passkey_cancel()}
 			</Button>
 		</div>

@@ -250,7 +250,7 @@
 
 	<div class="dw-foot">
 		{#if step !== 'ownership'}
-			<Button variant="ghost" onclick={() => onStep(previousStep(step))}>
+			<Button variant="neutral" onclick={() => onStep(previousStep(step))}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 		{/if}

@@ -99,7 +99,7 @@
 	</div>
 
 	{#snippet footer()}
-		<Button variant="ghost" onclick={onClose} disabled={busy}>{m.common_cancel()}</Button>
+		<Button variant="neutral" onclick={onClose} disabled={busy}>{m.common_cancel()}</Button>
 		<Button variant="primary" disabled={!ready} onclick={submit}>
 			{busy
 				? m.settings_ceremony_family_start_creating()

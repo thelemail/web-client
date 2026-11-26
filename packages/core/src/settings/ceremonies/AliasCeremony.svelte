@@ -471,10 +471,10 @@
 
 	{#snippet footer()}
 		{#if mode === 'create' && step === 0}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!localOk || !nameOk || !selectedDomainName} onclick={() => (step = 1)}>{m.common_continue()}</Button>
 		{:else if step === peopleStep}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!canSubmit || submitting} onclick={submit}>
 				{#if mode === 'members'}<Icon icon={faCheck} size={15} />{:else}<Icon icon={faPlus} size={15} />{/if}
 				{submitting

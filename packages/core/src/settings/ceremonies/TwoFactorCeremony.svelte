@@ -666,7 +666,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={busy} onclick={beginSetup}>
 				{#if busy}
 					{m.settings_ceremony_twofa_preparing()}

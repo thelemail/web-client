@@ -186,7 +186,7 @@
 			<Button variant="tonal" size="sm" disabled={addBusy} onclick={() => void add()}>
 				{m.settings_blocked_block()}
 			</Button>
-			<Button variant="ghost" size="sm" disabled={addBusy} onclick={() => {
+			<Button variant="neutral" size="sm" disabled={addBusy} onclick={() => {
 					adding = false;
 					newAddress = '';
 					addError = null;

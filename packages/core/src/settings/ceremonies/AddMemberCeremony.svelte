@@ -311,7 +311,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose} disabled={submitting}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ready || submitting} onclick={submit}>
 				{submitting
 					? m.settings_ceremony_member_creating()

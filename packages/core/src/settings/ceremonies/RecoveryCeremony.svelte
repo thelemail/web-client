@@ -275,7 +275,7 @@
 
 	{#snippet footer()}
 		{#if step === 0}
-			<Button variant="ghost" onclick={onClose}>{m.common_cancel()}</Button>
+			<Button variant="neutral" onclick={onClose}>{m.common_cancel()}</Button>
 			<Button variant="primary" disabled={!ack || generating} onclick={generate}>
 				{#if generating}
 					{m.settings_ceremony_recovery_generating()}
@@ -284,14 +284,14 @@
 				{/if}
 			</Button>
 		{:else if step === 1}
-			<Button variant="ghost" onclick={() => (step = 0)}>
+			<Button variant="neutral" onclick={() => (step = 0)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!revealed} onclick={() => (step = 2)}>
 				{m.settings_ceremony_recovery_written_down()}<Icon icon={faArrowRight} size={15} />
 			</Button>
 		{:else if step === 2}
-			<Button variant="ghost" onclick={() => (step = 1)}>
+			<Button variant="neutral" onclick={() => (step = 1)}>
 				<Icon icon={faArrowLeft} size={15} />{m.common_back()}
 			</Button>
 			<Button variant="primary" disabled={!allCorrect || submitting} onclick={confirmAndStore}>

@@ -355,7 +355,7 @@
 
 	<Dialog.Footer class="cal-dlg-foot">
 		<div class="grow"></div>
-		<Button variant="ghost" disabled={busy} onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
+		<Button variant="neutral" disabled={busy} onclick={() => (cal.dialog = null)}>{m.common_cancel()}</Button>
 		<Button variant={request.mode === 'delete' ? 'dangerSolid' : 'primary'} disabled={busy} onclick={submit}>
 			{request.mode === 'delete' ? m.common_delete() : request.mode === 'share' ? m.cal_caldlg_save_members() : request.mode === 'edit' ? m.common_save() : m.cal_caldlg_create()}
 		</Button>
