@@ -40,7 +40,7 @@ const OPERATION = 'op-rec';
 const PHRASE = [...Array(11).fill('abandon'), 'about'];
 
 function button(label: string) {
-	return screen.queryByRole('button', { name: label }) ?? undefined;
+	return (screen.queryByRole('button', { name: label }) as HTMLButtonElement | null) ?? undefined;
 }
 
 async function enterPhrase() {

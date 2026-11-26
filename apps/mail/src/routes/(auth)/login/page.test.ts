@@ -79,7 +79,7 @@ let pending: {
 };
 
 function button(label: string) {
-	return screen.queryByRole('button', { name: label }) ?? undefined;
+	return (screen.queryByRole('button', { name: label }) as HTMLButtonElement | null) ?? undefined;
 }
 
 function plain(text: string) {
