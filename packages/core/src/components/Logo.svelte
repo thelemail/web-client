@@ -12,7 +12,7 @@
 	.logo {
 		display: block;
 		width: auto;
-		height: 22px;
+		height: 16px;
 	}
 
 	.mark {
