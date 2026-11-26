@@ -6,6 +6,7 @@
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
 	import { Chip } from '$core/components/ui/chip';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
 	import * as Popover from '$core/components/ui/popover';
 	import { Segmented } from '$core/components/ui/segmented';
@@ -20,9 +21,12 @@
 		faCircleExclamation,
 		faEnvelope,
 		faEnvelopeOpen,
+		faFilter,
 		faFolder,
 		faFolderArrowDown,
 		faFont,
+		faInbox,
+		faMagnifyingGlass,
 		faPaperclip,
 		faShieldExclamation,
 		faSliders,
@@ -809,23 +813,27 @@
 				<ListSkeleton />
 			{/if}
 		{:else if list.length === 0}
-			<div class="empty-list">
-				<span class="el-rule"></span>
-				<div class="t">{emptyTitle}</div>
-				<div class="d">{emptyDetail}</div>
+			<EmptyState
+				class="empty-list"
+				icon={search ? faMagnifyingGlass : activeFilters > 0 ? faFilter : faInbox}
+				title={emptyTitle}
+				description={emptyDetail}
+			>
 				{#if errorParts}
 					<code class="q-err" dir="auto">{errorParts.before}<mark>{errorParts.bad}</mark>{errorParts.after}</code>
 				{/if}
-				{#if search && searchEmpty?.finish}
-					<Button variant="neutral" size="sm" class="empty-clear" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</Button>
-				{:else if search && searchEmpty?.retry}
-					<Button variant="neutral" size="sm" class="empty-clear" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</Button>
-				{:else if search}
-					<Button variant="neutral" size="sm" class="empty-clear" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</Button>
-				{:else if activeFilters > 0}
-					<Button variant="neutral" size="sm" class="empty-clear" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</Button>
-				{/if}
-			</div>
+				{#snippet action()}
+					{#if search && searchEmpty?.finish}
+						<Button variant="neutral" size="sm" onclick={finishSearchSetup}>{msg.mail_search_unconverted_action()}</Button>
+					{:else if search && searchEmpty?.retry}
+						<Button variant="neutral" size="sm" onclick={search.onRetry}><Icon icon={faArrowsRotate} size={14} />{msg.common_retry()}</Button>
+					{:else if search}
+						<Button variant="neutral" size="sm" onclick={search.onClear}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_search()}</Button>
+					{:else if activeFilters > 0}
+						<Button variant="neutral" size="sm" onclick={clearFilters}><Icon icon={faXmark} size={14} />{msg.mail_list_clear_filters()}</Button>
+					{/if}
+				{/snippet}
+			</EmptyState>
 		{:else}
 			{#each groups as { g, items } (g ?? 'all')}
 				{#if g}

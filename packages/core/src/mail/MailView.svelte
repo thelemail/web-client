@@ -2,6 +2,7 @@
 	import ReaderSkeleton from './ReaderSkeleton.svelte';
 	import { trackOpenRow, withOpenRow, type StickyRow } from './stickyRow';
 	import LoadState from '$core/components/LoadState.svelte';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import { delayed } from '$core/async/delayed.svelte';
 	import { m as msg } from '$paraglide/messages.js';
 	import { goto, snapshot as navSnapshot } from '$app/navigation';
@@ -10,6 +11,7 @@
 	import Icon from '$core/components/Icon.svelte';
 	import {
 		faBoxArchive,
+		faFolderXmark,
 		faInbox,
 		faPenLine,
 		faShieldExclamation,
@@ -1751,10 +1753,11 @@
 					<span class="ttl">{viewName}</span>
 				</div>
 			</div>
-			<div class="empty-folder">
-				<p>{msg.mail_folder_unavailable({ folder: viewName })}</p>
-				<p class="sub">{msg.mail_folder_unavailable_detail()}</p>
-			</div>
+			<EmptyState
+				icon={faFolderXmark}
+				title={msg.mail_folder_unavailable({ folder: viewName })}
+				description={msg.mail_folder_unavailable_detail()}
+			/>
 		</section>
 		<Reader
 			m={null}
@@ -1954,16 +1957,6 @@
 {/if}
 
 <style>
-	.empty-folder {
-		padding: 48px 24px;
-		text-align: center;
-		color: var(--fg-muted);
-	}
-	.empty-folder .sub {
-		margin-top: 6px;
-		color: var(--fg-faint);
-		font-size: 13px;
-	}
 	.reader-missing {
 		display: flex;
 		flex-direction: column;

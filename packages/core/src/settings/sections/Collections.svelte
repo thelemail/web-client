@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import LoadState from '$core/components/LoadState.svelte';
 	import { m } from '$paraglide/messages.js';
 	import { tick } from 'svelte';
@@ -123,9 +124,11 @@
 				onRetry={() => void mailCollections.load()}
 			/>
 		{:else if entries.length === 0}
-			<div class="coll-set-empty">
-				{folder ? m.settings_collections_no_folders() : m.settings_collections_no_labels()}
-			</div>
+			<EmptyState
+				compact
+				icon={folder ? faFolder : faTag}
+				title={folder ? m.settings_collections_no_folders() : m.settings_collections_no_labels()}
+			/>
 		{/if}
 
 		<ul class="coll-set-list" aria-label={folder ? m.mail_collection_folders() : m.mail_collection_labels()}>

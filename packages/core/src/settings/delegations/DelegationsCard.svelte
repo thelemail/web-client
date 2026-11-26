@@ -1,8 +1,15 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import { formatKeyId } from '$core/directory/format';
 	import { i18n } from '$core/i18n/locale.svelte';
 	import Icon from '$core/components/Icon.svelte';
-	import { faCheck, faCircleInfo, faKey, faPlus } from '@fortawesome/pro-regular-svg-icons';
+	import {
+		faCheck,
+		faCircleInfo,
+		faKey,
+		faPlus,
+		faUserPen
+	} from '@fortawesome/pro-regular-svg-icons';
 
 	import { m } from '$paraglide/messages.js';
 	import { Badge } from '$core/components/ui/badge';
@@ -106,7 +113,7 @@
 	{/each}
 
 	{#if items.length === 0 && !delegations.loading}
-		<div class="card-empty">{m.settings_delegation_empty()}</div>
+		<EmptyState compact icon={faUserPen} title={m.settings_delegation_empty()} />
 	{/if}
 
 	{#if delegations.error}

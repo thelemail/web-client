@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import LoadState from '$core/components/LoadState.svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -6,6 +7,7 @@
 		faCircleExclamation,
 		faEarthEurope,
 		faEllipsisVertical,
+		faGlobe,
 		faPlus,
 		faTrashCan
 	} from '@fortawesome/pro-regular-svg-icons';
@@ -123,7 +125,7 @@
 	{:else if !store.loaded}
 		<LoadState kind="loading" label={m.settings_domains_loading()} />
 	{:else if empty}
-		<div class="cd-empty">{m.settings_domains_empty()}</div>
+		<EmptyState compact icon={faGlobe} title={m.settings_domains_empty()} />
 	{:else}
 		<div class="cd-list">
 			{#each items as d (d.id)}
@@ -294,12 +296,6 @@
 		margin-left: auto;
 	}
 
-	.cd-empty {
-		padding: 18px;
-		text-align: center;
-		color: var(--fg-muted);
-		font-size: 13px;
-	}
 	.cd-err {
 		display: flex;
 		gap: 7px;

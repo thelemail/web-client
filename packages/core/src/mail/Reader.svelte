@@ -37,6 +37,7 @@
 	import StateIcon from '$core/components/StateIcon.svelte';
 	import { platform } from '$platform';
 	import * as DropdownMenu from '$core/components/ui/dropdown-menu';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import { Button } from '$core/components/ui/button';
 	import type { Snippet } from 'svelte';
 	import Avatar from '$core/components/Avatar.svelte';
@@ -689,15 +690,18 @@
 
 <section class="reader" class:ws={wsOn} class:ws-pane={wsOn && replyWorkspace.pane}>
 	{#if !m}
-		<div class="reader-empty">
-			<div class="t">{msg.mail_reader_empty_title()}</div>
-			<div class="d">{msg.mail_reader_empty_detail()}</div>
+		<EmptyState
+			class="reader-empty"
+			icon={faEnvelopeOpen}
+			title={msg.mail_reader_empty_title()}
+			description={msg.mail_reader_empty_detail()}
+		>
 			<div class="re-hints">
 				<span><kbd>↑</kbd><kbd>↓</kbd> {msg.mail_reader_hint_move()}</span>
 				<span><kbd>↵</kbd> {msg.mail_reader_hint_open()}</span>
 				<span><kbd>C</kbd> {msg.mail_reader_hint_compose()}</span>
 			</div>
-		</div>
+		</EmptyState>
 	{:else}
 		<div class="reader-bar">
 			<Button

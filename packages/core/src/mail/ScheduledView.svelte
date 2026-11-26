@@ -3,9 +3,13 @@
 	import { onMount } from 'svelte';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import {
 		faArrowsRotate,
+		faCircleExclamation,
 		faClock,
+		faMagnifyingGlass,
 		faPaperPlaneTop,
 		faPenLine
 	} from '@fortawesome/pro-regular-svg-icons';
@@ -99,23 +103,19 @@
 		</div>
 		<div class="scroll">
 			{#if scheduled.loading && list.length === 0}
-				<div class="sch-empty"><div class="t">{m.common_loading()}</div></div>
+				<LoadState kind="loading" label={m.common_loading()} rows={4} />
 			{:else if scheduled.loadError && list.length === 0}
-				<div class="sch-empty">
-					<div class="t">{m.mail_scheduled_load_failed()}</div>
-					<div class="d">{scheduled.loadError}</div>
-					<Button variant="neutral" size="sm" class="sch-retry" onclick={() => scheduled.refresh()}>{m.mail_retry()}</Button>
-				</div>
+				<EmptyState tone="error" icon={faCircleExclamation} title={m.mail_scheduled_load_failed()} description={scheduled.loadError}>
+					{#snippet action()}
+						<Button variant="neutral" size="sm" onclick={() => scheduled.refresh()}>{m.mail_retry()}</Button>
+					{/snippet}
+				</EmptyState>
 			{:else if list.length === 0}
-				<div class="sch-empty">
-					<div class="ring"><Icon icon={faClock} size={28} /></div>
-					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_scheduled_empty()}</div>
-					<div class="d">
-						{mailSearch.text.trim()
-							? m.mail_scheduled_no_matches()
-							: m.mail_scheduled_empty_detail()}
-					</div>
-				</div>
+				<EmptyState
+					icon={mailSearch.text.trim() ? faMagnifyingGlass : faClock}
+					title={mailSearch.text.trim() ? m.mail_no_matches() : m.mail_scheduled_empty()}
+					description={mailSearch.text.trim() ? m.mail_scheduled_no_matches() : m.mail_scheduled_empty_detail()}
+				/>
 			{:else}
 				{#each list as r (r.id)}
 					<div class="sch-row">
@@ -260,41 +260,6 @@
 	}
 	.sch-row :global(.sch-cancel) {
 		flex: 0 0 auto;
-	}
-	.sch-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		padding: 56px 24px;
-		gap: 6px;
-		color: var(--fg-muted);
-	}
-	.sch-empty .ring {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		background: var(--bg-sunken);
-		color: var(--brass-600);
-		margin-bottom: 8px;
-	}
-	.sch-empty .t {
-		font-family: var(--font-sans);
-		font-feature-settings: normal;
-		font-size: 17px;
-		color: var(--fg-strong);
-	}
-	.sch-empty .d {
-		font-size: 13px;
-		color: var(--fg-faint);
-		max-width: 300px;
-	}
-	.sch-empty :global(.sch-retry) {
-		margin-top: 10px;
 	}
 	.sch-more {
 		display: flex;

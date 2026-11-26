@@ -2,9 +2,13 @@
 	import { m } from '$paraglide/messages.js';
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
+	import LoadState from '$core/components/LoadState.svelte';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import {
 		faArrowsRotate,
+		faCircleExclamation,
 		faFileLines,
+		faMagnifyingGlass,
 		faPaperclip,
 		faPenLine,
 		faTrashCan
@@ -97,23 +101,19 @@
 		</div>
 		<div class="scroll">
 			{#if drafts.loading && list.length === 0}
-				<div class="drafts-empty"><div class="t">{m.common_loading()}</div></div>
+				<LoadState kind="loading" label={m.common_loading()} rows={4} />
 			{:else if drafts.loadError && list.length === 0}
-				<div class="drafts-empty">
-					<div class="t">{m.mail_drafts_load_failed()}</div>
-					<div class="d">{drafts.loadError}</div>
-					<Button variant="neutral" size="sm" class="dretry" onclick={() => drafts.refresh()}>{m.mail_retry()}</Button>
-				</div>
+				<EmptyState tone="error" icon={faCircleExclamation} title={m.mail_drafts_load_failed()} description={drafts.loadError}>
+					{#snippet action()}
+						<Button variant="neutral" size="sm" onclick={() => drafts.refresh()}>{m.mail_retry()}</Button>
+					{/snippet}
+				</EmptyState>
 			{:else if list.length === 0}
-				<div class="drafts-empty">
-					<div class="ring"><Icon icon={faFileLines} size={28} /></div>
-					<div class="t">{mailSearch.text.trim() ? m.mail_no_matches() : m.mail_drafts_empty()}</div>
-					<div class="d">
-						{mailSearch.text.trim()
-							? m.mail_drafts_no_matches()
-							: m.mail_drafts_empty_detail()}
-					</div>
-				</div>
+				<EmptyState
+					icon={mailSearch.text.trim() ? faMagnifyingGlass : faFileLines}
+					title={mailSearch.text.trim() ? m.mail_no_matches() : m.mail_drafts_empty()}
+					description={mailSearch.text.trim() ? m.mail_drafts_no_matches() : m.mail_drafts_empty_detail()}
+				/>
 			{:else}
 				{#each list as d (d.id)}
 					<div
@@ -272,40 +272,6 @@
 	.drow:hover :global(.ddel),
 	.dmeta :global(.ddel:focus-visible) {
 		opacity: 1;
-	}
-	.drafts-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
-		padding: 56px 24px;
-		gap: 6px;
-		color: var(--fg-muted);
-	}
-	.drafts-empty .ring {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 64px;
-		height: 64px;
-		border-radius: 50%;
-		background: var(--bg-sunken);
-		color: var(--brass-600);
-		margin-bottom: 8px;
-	}
-	.drafts-empty .t {
-		font-family: var(--font-sans); font-feature-settings: normal;
-		font-size: 17px;
-		color: var(--fg-strong);
-	}
-	.drafts-empty .d {
-		font-size: 13px;
-		color: var(--fg-faint);
-		max-width: 280px;
-	}
-	.drafts-empty :global(.dretry) {
-		margin-top: 10px;
 	}
 	.dmore {
 		display: flex;

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import { formatKeyId } from '$core/directory/format';
 	import Icon from '$core/components/Icon.svelte';
 	import {
@@ -12,6 +13,7 @@
 		faPlus,
 		faRotateRight,
 		faShare,
+		faShareFromSquare,
 		faTrashCan
 	} from '@fortawesome/pro-regular-svg-icons';
 
@@ -224,7 +226,7 @@
 	{/each}
 
 	{#if items.length === 0 && !readDelegations.loading}
-		<div class="card-empty">{m.settings_forwarding_empty()}</div>
+		<EmptyState compact icon={faShareFromSquare} title={m.settings_forwarding_empty()} />
 	{/if}
 
 	{#if readDelegations.error}

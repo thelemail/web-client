@@ -1,7 +1,8 @@
 <script lang="ts">
 	import Icon from '$core/components/Icon.svelte';
 	import { Button } from '$core/components/ui/button';
-	import { faCheck } from '@fortawesome/pro-regular-svg-icons';
+	import { faCalendarDays, faCheck } from '@fortawesome/pro-regular-svg-icons';
+	import { EmptyState } from '$core/components/ui/empty-state';
 	import Avatar from '$core/components/Avatar.svelte';
 	import * as Popover from '$core/components/ui/popover';
 	import { auth } from '$core/stores/auth.svelte';
@@ -51,7 +52,7 @@
 		{:else if !calendarStore.loaded}
 			<LoadState kind="loading" label={m.common_loading()} rows={3} />
 		{:else if !cal.agendaDays.length}
-			<div class="ag-empty">{m.cal_agenda_empty({ period: cal.title.toLowerCase() })}</div>
+			<EmptyState icon={faCalendarDays} title={m.cal_agenda_empty({ period: cal.title.toLowerCase() })} />
 		{/if}
 
 		{#each cal.agendaDays as day (day.date)}
