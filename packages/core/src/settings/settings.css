@@ -362,7 +362,7 @@
 .settings-app .plan-card { overflow: hidden; }
 .settings-app .plan-top { display: flex; align-items: flex-start; gap: 16px; padding: 20px 18px; background: var(--bg-inverse); color: var(--fg-on-pine); }
 .settings-app .plan-id { flex: 1; min-width: 0; }
-.settings-app .plan-eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-500); }
+.settings-app .plan-eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-on-inverse); }
 .settings-app .plan-name { font-family: var(--font-sans); font-feature-settings: normal; font-size: 24px; font-weight: 500; margin-top: 6px; line-height: 1.1; }
 .settings-app .plan-name .plan-cycle { color: color-mix(in oklab, var(--fg-on-pine) 72%, transparent); font-size: 18px; }
 .settings-app .plan-price { font-size: 12.5px; color: color-mix(in oklab, var(--fg-on-pine) 72%, transparent); margin-top: 6px; font-family: var(--font-mono); }
@@ -410,10 +410,10 @@
 .settings-app .recovery-hero { display: flex; gap: 18px; align-items: flex-start; padding: 22px; border-radius: var(--radius-surface); background: var(--bg-inverse); color: var(--fg-on-pine); box-shadow: var(--shadow-md); position: relative; overflow: hidden; margin-bottom: 16px; }
 .settings-app .recovery-hero::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .03) 0, rgba(255, 255, 255, .03) 1px, transparent 1px, transparent 7px); pointer-events: none; }
 .settings-app .settings-app .rh-left { flex: 0 0 auto; }
-.settings-app .rh-ic { width: 52px; height: 52px; border-radius: var(--radius-control); background: color-mix(in oklab, var(--brass-500) 18%, transparent); color: var(--brass-500); display: flex; align-items: center; justify-content: center; border: 1px solid color-mix(in oklab, var(--brass-500) 40%, transparent); }
+.settings-app .rh-ic { width: 52px; height: 52px; border-radius: var(--radius-control); background: color-mix(in oklab, var(--brass-on-inverse) 18%, transparent); color: var(--brass-on-inverse); display: flex; align-items: center; justify-content: center; border: 1px solid color-mix(in oklab, var(--brass-on-inverse) 40%, transparent); }
 .settings-app .recovery-hero.done .rh-ic { background: color-mix(in oklab, var(--pine-500) 15%, transparent); color: color-mix(in oklab, var(--pine-500) 45%, var(--fg-on-pine)); border-color: color-mix(in oklab, var(--pine-500) 35%, transparent); }
 .settings-app .rh-body { flex: 1; min-width: 0; position: relative; z-index: 1; }
-.settings-app .rh-eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-500); }
+.settings-app .rh-eyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--brass-on-inverse); }
 .settings-app .recovery-hero.done .rh-eyebrow { color: color-mix(in oklab, var(--pine-500) 45%, var(--fg-on-pine)); }
 .settings-app .rh-title { font-family: var(--font-sans); font-feature-settings: normal; font-size: 21px; font-weight: 500; margin: 6px 0 8px; color: var(--fg-on-pine); }
 .settings-app .rh-desc { font-size: 13px; line-height: 1.6; color: color-mix(in oklab, var(--fg-on-pine) 72%, transparent); margin: 0 0 16px; max-width: 62ch; }

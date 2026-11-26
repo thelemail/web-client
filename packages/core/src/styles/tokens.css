@@ -11,6 +11,7 @@
 	--fg-muted:       #62605D;
 	--fg-faint:       #7A7976;
 	--fg-on-pine:     #F0F7F3;
+	--brass-on-inverse: var(--brass-100);
 
 	--border-soft:    #D4D3D1;
 	--border-strong:  #C5C4C1;
@@ -81,6 +82,7 @@
 	--fg-muted:       #B8BDC2;
 	--fg-faint:       #9A9FA5;
 	--fg-on-pine:     #F0F7F3;
+	--brass-on-inverse: var(--brass-700);
 
 	--border-soft:    #393C3F;
 	--border-strong:  #505356;
