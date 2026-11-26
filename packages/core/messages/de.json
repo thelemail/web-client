@@ -1618,6 +1618,7 @@
 	"mail_sidebar_storage": "SPEICHERPLATZ",
 	"mail_editor_placeholder": "Schreiben Sie Ihre Nachricht…",
 	"mail_editor_aria": "Nachrichteninhalt",
+	"mail_editor_load_failed": "Der Editor wurde nicht geladen.",
 	"mail_thread_you": "Sie",
 	"mail_thread_cc": "Cc: {list}",
 	"mail_thread_to": "An: {list}",

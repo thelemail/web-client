@@ -17,6 +17,7 @@
 	import '$core/lifecycle/lifecycle.css';
 	import { lifecycle } from '$core/lifecycle/lifecycle.svelte';
 	import ReadOnlyGuard from '$core/lifecycle/ReadOnlyGuard.svelte';
+	import { preloadMailModules } from '$core/mail/preload';
 
 	let { children, data } = $props();
 
@@ -31,6 +32,8 @@
 			else void goto(target);
 		});
 	});
+
+	$effect(() => preloadMailModules());
 
 	const NARROW = '(max-width: 1000px)';
 	let narrow = $state(false);

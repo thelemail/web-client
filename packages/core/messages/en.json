@@ -1618,6 +1618,7 @@
 	"mail_sidebar_storage": "STORAGE",
 	"mail_editor_placeholder": "Write your message…",
 	"mail_editor_aria": "Message body",
+	"mail_editor_load_failed": "The editor didn’t load.",
 	"mail_thread_you": "You",
 	"mail_thread_cc": "Cc: {list}",
 	"mail_thread_to": "To: {list}",

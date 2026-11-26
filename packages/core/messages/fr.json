@@ -1618,6 +1618,7 @@
   "mail_sidebar_storage": "STOCKAGE",
   "mail_editor_placeholder": "Rédigez votre message…",
   "mail_editor_aria": "Corps du message",
+  "mail_editor_load_failed": "L’éditeur ne s’est pas chargé.",
   "mail_thread_you": "Vous",
   "mail_thread_cc": "Cc : {list}",
   "mail_thread_to": "À : {list}",
