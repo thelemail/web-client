@@ -10,7 +10,6 @@ import { workspaceAddresses } from './workspaceAddresses.svelte';
 import { aliasKeys } from './aliasKeys.svelte';
 import { calendarKeys } from './calendarKeys.svelte';
 import { billing } from './billing.svelte';
-import { calendarStore } from '$core/calendar/store.svelte';
 import { currentProduct } from '$core/products';
 
 let loadedFor: string | null = null;
@@ -43,6 +42,7 @@ export async function reloadWorkspaceData(accountId: string): Promise<void> {
 	aliases.clear();
 	workspaceAddresses.clear();
 	customDomains.clear();
+	const { calendarStore } = await import('$core/calendar/store.svelte');
 	calendarStore.setAccount(null);
 	await billing.refresh();
 	ensureAccountData(accountId);
