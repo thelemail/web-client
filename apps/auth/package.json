@@ -4,7 +4,7 @@
   "version": "0.11.1",
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
+    "dev": "PUBLIC_THELEMAIL_PRODUCT=auth PUBLIC_API_BASE_URL=http://localhost:5177 PUBLIC_SUBMISSION_BASE_URL=http://localhost:5177 vite dev",
     "build": "rm -rf build-meta && vite build && node ../../scripts/auth-headers.ts",
     "preview": "vite preview",
     "prepare": "pnpm i18n:compile && svelte-kit sync || echo ''",

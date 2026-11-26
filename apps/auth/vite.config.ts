@@ -7,6 +7,7 @@ import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { inlineScriptHashes, loadBuildEnv } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
 import { moduleInventory } from '../../scripts/module-inventory.ts';
+import { devEdge } from '../../scripts/dev-edge.ts';
 import { defineConfig } from 'vite';
 
 const workspaceRoot = '../..';
@@ -30,7 +31,6 @@ if (building && (!authOrigin || new URL(authOrigin).origin !== apiOrigin)) {
 	);
 }
 const secure = apiOrigin.startsWith('https://');
-const devApi = process.env.THELEMAIL_DEV_API ?? 'http://127.0.0.1:8080';
 
 const scriptHashes = inlineScriptHashes(readFileSync('src/app.html', 'utf8')).map(
 	(source): `sha256-${string}` => `sha256-${createHash('sha256').update(source, 'utf8').digest('base64')}`
@@ -95,13 +95,7 @@ export default defineConfig({
 		fs: {
 			allow: [workspaceRoot]
 		},
-		proxy: {
-			'/v1': {
-				target: devApi,
-				changeOrigin: false,
-				xfwd: false
-			}
-		}
+		proxy: devEdge()
 	},
 	resolve: {
 		alias: [

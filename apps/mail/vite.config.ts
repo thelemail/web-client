@@ -6,6 +6,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { inlineScriptHashes, loadBuildEnv, parserOriginOf, resolveOrigins } from '../../scripts/csp.ts';
 import { i18nOptions } from '../../scripts/i18n.ts';
+import { devEdge } from '../../scripts/dev-edge.ts';
 import { chunkGraph } from '../../scripts/chunk-graph.ts';
 import { modelAssets, modelWorkerModules, ortRuntimeUrl } from '../../scripts/model-assets.ts';
 import { pdfjsAssets } from '../../scripts/pdfjs-assets.ts';
@@ -82,7 +83,8 @@ export default defineConfig({
 	server: {
 		fs: {
 			allow: [workspaceRoot]
-		}
+		},
+		proxy: devEdge()
 	},
 	optimizeDeps: {
 		exclude: ['@thelemail/sqlite-wasm']
