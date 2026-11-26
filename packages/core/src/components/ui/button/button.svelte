@@ -73,6 +73,7 @@
 	}: ButtonProps = $props();
 
 	const stacked = $derived(busyLabel !== undefined);
+	const passthrough = $derived(restProps as Record<string, unknown>);
 
 	function guard(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) {
 		if (busy) {
@@ -94,7 +95,7 @@
 	{/if}
 {/snippet}
 
-{#snippet element(extra: Record<string, unknown>)}
+{#snippet element(attrs: Record<string, unknown>)}
 	{#if href}
 		<a
 			bind:this={ref}
@@ -105,12 +106,7 @@
 			aria-busy={busy || undefined}
 			role={disabled ? "link" : undefined}
 			tabindex={disabled ? -1 : undefined}
-			{...restProps}
-			{...extra}
-			onclick={(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) => {
-				(extra.onclick as ((e: MouseEvent) => void) | undefined)?.(e);
-				guard(e);
-			}}
+			{...attrs}
 		>
 			{@render content()}
 		</a>
@@ -123,12 +119,7 @@
 			{disabled}
 			aria-disabled={busy || undefined}
 			aria-busy={busy || undefined}
-			{...restProps}
-			{...extra}
-			onclick={(e: MouseEvent & { currentTarget: EventTarget & (HTMLButtonElement | HTMLAnchorElement) }) => {
-				(extra.onclick as ((e: MouseEvent) => void) | undefined)?.(e);
-				guard(e);
-			}}
+			{...attrs}
 		>
 			{@render content()}
 		</button>
@@ -137,15 +128,15 @@
 
 {#if tooltip}
 	<Tooltip.Root>
-		<Tooltip.Trigger>
+		<Tooltip.Trigger {...passthrough} aria-label={(passthrough["aria-label"] as string | undefined) ?? tooltip} onclick={guard}>
 			{#snippet child({ props })}
-				{@render element({ ...props, "aria-label": restProps["aria-label"] ?? tooltip })}
+				{@render element(props)}
 			{/snippet}
 		</Tooltip.Trigger>
 		<Tooltip.Content>{tooltip}{#if shortcut}<kbd>{shortcut}</kbd>{/if}</Tooltip.Content>
 	</Tooltip.Root>
 {:else}
-	{@render element({})}
+	{@render element({ ...restProps, onclick: guard })}
 {/if}
 {#if stacked}
 	<span class="sr-only" role="status">{busy ? busyLabel : ""}</span>
