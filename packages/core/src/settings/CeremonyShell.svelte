@@ -46,8 +46,7 @@
 	}
 >
 	<Dialog.Content class={'cer-panel' + (tone ? ' tone-' + tone : '')}>
-		<Dialog.Header {icon} tone={tone ?? 'brand'}>
-			<p class="cer-eyebrow">{eyebrow}</p>
+		<Dialog.Header {icon} {eyebrow} tone={tone ?? 'brand'}>
 			<Dialog.Title>{title}</Dialog.Title>
 		</Dialog.Header>
 

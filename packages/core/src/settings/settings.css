@@ -429,8 +429,6 @@
 .dialog.cer-panel { --dialog-w: 600px; }
 .dialog.cer-panel > .cer-steps { flex: none; margin: 0; padding: 0; overflow: visible; }
 
-.cer-panel .cer-eyebrow { margin: 0; font-family: var(--font-mono); font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--brass-700); }
-.cer-panel.tone-danger .cer-eyebrow { color: var(--danger-700); }
 
 .cer-panel .cer-steps { display: flex; align-items: center; gap: 0; }
 .cer-panel .cer-step { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }

@@ -17,12 +17,14 @@
 		children,
 		showCloseButton = true,
 		size = "md",
+		alert = false,
 		...restProps
 	}: WithoutChildrenOrChild<DialogPrimitive.ContentProps> & {
 		portalProps?: WithoutChildrenOrChild<ComponentProps<typeof DialogPortal>>;
 		children: Snippet;
 		showCloseButton?: boolean;
 		size?: "sm" | "md" | "wide" | "lg" | "xl";
+		alert?: boolean;
 	} = $props();
 </script>
 
@@ -34,15 +36,19 @@
 		class={cn("dialog", size !== "md" && `dialog-${size}`, className)}
 		{...restProps}
 	>
-		{@render children?.()}
-		{#if showCloseButton}
-			<DialogPrimitive.Close data-slot="dialog-close">
-				{#snippet child({ props })}
-					<Button variant="ghost" size="icon-sm" class="dialog-close" aria-label={m.common_close()} {...props} data-state={undefined}>
-						<Icon icon={faXmark} />
-					</Button>
-				{/snippet}
-			</DialogPrimitive.Close>
-		{/if}
+		{#snippet child({ props })}
+			<div {...props} role={alert ? "alertdialog" : "dialog"}>
+				{@render children?.()}
+				{#if showCloseButton}
+					<DialogPrimitive.Close data-slot="dialog-close">
+						{#snippet child({ props: closeProps })}
+							<Button variant="ghost" size="icon-sm" class="dialog-close" aria-label={m.common_close()} {...closeProps} data-state={undefined}>
+								<Icon icon={faXmark} />
+							</Button>
+						{/snippet}
+					</DialogPrimitive.Close>
+				{/if}
+			</div>
+		{/snippet}
 	</DialogPrimitive.Content>
 </DialogPortal>

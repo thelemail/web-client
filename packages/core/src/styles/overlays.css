@@ -61,6 +61,16 @@
 	gap: 6px;
 	min-width: 0;
 }
+.dialog-eyebrow {
+	margin: 0 0 -2px;
+	color: var(--brass-700);
+	font: 600 10.5px/1.2 var(--font-mono);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.dialog-header[data-tone='danger'] .dialog-eyebrow {
+	color: var(--danger-700);
+}
 .dialog-title {
 	margin: 0;
 	color: var(--fg-strong);
@@ -94,6 +104,14 @@
 .dialog-icon[data-tone='warning'] {
 	background: var(--warning-100);
 	color: var(--warning-700);
+}
+.dialog-icon[data-tone='success'] {
+	background: var(--success-100);
+	color: var(--success-700);
+}
+.dialog-icon[data-tone='neutral'] {
+	background: color-mix(in oklab, var(--fg) 7%, transparent);
+	color: var(--fg-muted);
 }
 .dialog-footer {
 	display: flex;

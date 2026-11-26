@@ -8,16 +8,21 @@
 		ref = $bindable(null),
 		class: className,
 		icon,
+		eyebrow,
 		tone = "brand",
 		children,
 		...restProps
 	}: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
 		icon?: IconDefinition;
-		tone?: "brand" | "danger" | "warning";
+		eyebrow?: string;
+		tone?: "brand" | "danger" | "warning" | "success" | "neutral";
 	} = $props();
 </script>
 
-<div bind:this={ref} data-slot="dialog-header" class={cn("dialog-header", className)} {...restProps}>
+<div bind:this={ref} data-slot="dialog-header" data-tone={tone} class={cn("dialog-header", className)} {...restProps}>
 	{#if icon}<span class="dialog-icon" data-tone={tone} aria-hidden="true"><Icon {icon} size={18} /></span>{/if}
-	<div class="dialog-header-text">{@render children?.()}</div>
+	<div class="dialog-header-text">
+		{#if eyebrow}<p class="dialog-eyebrow">{eyebrow}</p>{/if}
+		{@render children?.()}
+	</div>
 </div>
