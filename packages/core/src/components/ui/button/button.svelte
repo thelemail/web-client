@@ -47,6 +47,7 @@
 			busy?: boolean;
 			busyLabel?: string;
 			tooltip?: string;
+			tooltipSide?: "top" | "bottom" | "left" | "right";
 			shortcut?: string;
 		};
 </script>
@@ -67,6 +68,7 @@
 		disabled = false,
 		onclick,
 		tooltip,
+		tooltipSide = "top",
 		shortcut,
 		children,
 		...restProps
@@ -133,7 +135,7 @@
 				{@render element(props)}
 			{/snippet}
 		</Tooltip.Trigger>
-		<Tooltip.Content>{tooltip}{#if shortcut}<kbd>{shortcut}</kbd>{/if}</Tooltip.Content>
+		<Tooltip.Content side={tooltipSide}>{tooltip}{#if shortcut}<kbd>{shortcut}</kbd>{/if}</Tooltip.Content>
 	</Tooltip.Root>
 {:else}
 	{@render element({ ...restProps, onclick: guard })}

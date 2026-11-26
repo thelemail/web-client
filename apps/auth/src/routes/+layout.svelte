@@ -13,6 +13,6 @@
 	<link rel="icon" href={favicon} />
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 </svelte:head>
-<Tooltip.Provider delayDuration={350}>
+<Tooltip.Provider delayDuration={350} disableHoverableContent>
 	<div data-app-ready style="display: contents">{@render children()}</div>
 </Tooltip.Provider>
