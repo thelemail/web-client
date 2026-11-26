@@ -158,4 +158,44 @@ describe('ModelLink', () => {
 		const embed = r.model!.requests.find((q) => q.op === 'embed')!;
 		expect(r.model!.requests.find((q) => q.op === 'cancel')!.id).toBe(embed.id);
 	});
+
+	it('loads a cold model for a query from cache only and answers with the vector', async () => {
+		const r = rig({ claim: () => ({ ok: true, fence: 10 }), renew: () => ({ ok: true, live: true }) });
+		const answer = r.link.query('flight refund');
+		await r.spawned;
+		await until(() => r.model!.requests.length > 0);
+		expect(r.model!.requests[0]).toMatchObject({ op: 'load', offline: true });
+		r.model!.reply({ type: 'reply', id: r.model!.requests[0].id, ok: true, value: null });
+		await until(() => r.model!.requests.some((q) => q.op === 'query'));
+		const q = r.model!.requests.find((x) => x.op === 'query')!;
+		expect(q).toMatchObject({ text: 'flight refund' });
+		const vector = new Float32Array(384).fill(0.05);
+		r.model!.reply({ type: 'reply', id: q.id, ok: true, value: vector });
+		expect(await answer).toEqual({ ok: true, vector });
+	});
+
+	it('gives up on a query instead of downloading when the model files are not cached', async () => {
+		const r = rig({ claim: () => ({ ok: true, fence: 11 }), renew: () => ({ ok: true, live: true }) });
+		const answer = r.link.query('flight refund');
+		await r.spawned;
+		await until(() => r.model!.requests.length > 0);
+		r.model!.reply({ type: 'reply', id: r.model!.requests[0].id, ok: false, reason: 'assets' });
+		expect(await answer).toEqual({ ok: false, reason: 'unavailable' });
+		expect(r.link.state).toEqual({ state: 'idle' });
+		expect(r.stops).toBe(1);
+	});
+
+	it('discards a query answer that arrives after the lease is fenced', async () => {
+		const r = rig({ claim: () => ({ ok: true, fence: 12 }), renew: () => ({ ok: true, live: true }) });
+		await ready(r);
+		const answer = r.link.query('budget');
+		await until(() => r.model!.requests.some((q) => q.op === 'query'));
+		r.fence(12);
+		expect(await answer).toEqual({ ok: false, reason: 'closed' });
+	});
+
+	it('reports a busy model when another account holds the lease', async () => {
+		const r = rig({ claim: () => ({ ok: false, code: 'busy', retryMs: 500 }), renew: () => ({ ok: true, live: false }) });
+		expect(await r.link.query('budget')).toEqual({ ok: false, reason: 'busy' });
+	});
 });

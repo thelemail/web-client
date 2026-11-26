@@ -16,6 +16,8 @@ export type Acquired = { ok: true } | { ok: false; retryMs: number } | { ok: fal
 
 export type Embedded = { ok: true; passages: EmbeddedPassage[] } | { ok: false; reason: ModelFailure };
 
+export type Queried = { ok: true; vector: Float32Array } | { ok: false; reason: ModelFailure | 'busy' | 'unavailable' };
+
 export interface ModelHost {
 	keystore(): MessagePort | null;
 	spawn(): Promise<MessagePort | null>;
@@ -76,7 +78,7 @@ export class ModelLink {
 		this.#set({ state: 'unavailable', reason });
 	}
 
-	async acquire(): Promise<Acquired> {
+	async acquire(offline = false): Promise<Acquired> {
 		if (this.#idle !== null) clearTimeout(this.#idle);
 		this.#idle = null;
 		const keystore = this.#host.keystore();
@@ -109,13 +111,17 @@ export class ModelLink {
 			this.#attach(port);
 		}
 		this.#set({ state: 'loading' });
-		const reply = await this.#call({ op: 'load' });
+		const reply = await this.#call(offline ? { op: 'load', offline } : { op: 'load' });
 		if (this.#state.state === 'unavailable') return { ok: false, unavailable: this.#state.reason };
 		if (this.#fence !== claim.fence) return { ok: false, retryMs: LEASE_RETRY_MS };
 		if (reply.ok) {
 			this.#loaded = true;
 			this.#set({ state: 'ready' });
 			return { ok: true };
+		}
+		if (offline && reply.reason === 'assets') {
+			await this.release();
+			return { ok: false, unavailable: 'assets' };
 		}
 		if (reply.reason === 'assets') {
 			this.unavailable('assets');
@@ -176,6 +182,25 @@ export class ModelLink {
 			return { ok: false, reason: reply.reason };
 		}
 		return { ok: true, passages: reply.value as EmbeddedPassage[] };
+	}
+
+	async query(text: string, signal?: AbortSignal): Promise<Queried> {
+		if (this.#state.state === 'unavailable') return { ok: false, reason: 'unavailable' };
+		if (!this.#port || !this.#loaded || this.#fence === null) {
+			const acquired = await this.acquire(true);
+			if (!acquired.ok) return { ok: false, reason: 'unavailable' in acquired ? 'unavailable' : 'busy' };
+		}
+		if (signal?.aborted) return { ok: false, reason: 'cancelled' };
+		const fence = this.#fence;
+		const reply = await this.#call({ op: 'query', text }, signal);
+		if (fence === null || fence !== this.#fence) return { ok: false, reason: 'closed' };
+		if (signal?.aborted) return { ok: false, reason: 'cancelled' };
+		if (!reply.ok) {
+			if (PERMANENT.includes(reply.reason)) this.unavailable(reply.reason === 'wasm' ? 'wasm' : 'memory');
+			return { ok: false, reason: reply.reason };
+		}
+		this.idleSoon();
+		return { ok: true, vector: reply.value as Float32Array };
 	}
 
 	async check(fence: number | null = this.#fence): Promise<boolean> {

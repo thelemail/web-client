@@ -17,7 +17,7 @@ export interface EmbeddedPassage {
 }
 
 export type ModelRequest =
-	| { op: 'load'; id: number }
+	| { op: 'load'; id: number; offline?: boolean }
 	| { op: 'embed'; id: number; input: EmbedInput }
 	| { op: 'query'; id: number; text: string }
 	| { op: 'cancel'; id: number };
