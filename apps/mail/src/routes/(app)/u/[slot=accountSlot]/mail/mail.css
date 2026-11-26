@@ -314,7 +314,8 @@
 .mail-app .mrow:has(:focus-visible) .qa { opacity: 1; pointer-events: auto; transform: translate(0, -50%); }
 .mail-app .mrow.checking .qa { opacity: 0; pointer-events: none; }
 
-.mail-app .empty-list { box-sizing: border-box; height: 100%; align-content: center; padding-bottom: 90px; }
+.mail-app .scroll:has(> .empty-list) { display: flex; flex-direction: column; }
+.mail-app .empty-list { flex: 1 0 auto; align-content: center; padding-bottom: 90px; }
 
 .mail-app .reader { flex: 1; background: var(--bg); min-width: 0; display: flex; flex-direction: column; }
 .mail-app .reader-bar { height: 54px; flex: 0 0 auto; display: flex; align-items: center; gap: 6px; padding: 0 14px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); }
@@ -1040,6 +1041,7 @@
 }
 
 .mail-app .snooze-picker { --popover-w: 268px; padding: 6px; }
+.mail-app :is(.snooze-picker, .coll-create) .popover-label { padding: 6px 10px 2px; }
 .mail-app .snooze-picker .sp-row { display: flex; align-items: center; gap: 11px; width: 100%; }
 .mail-app .snooze-picker .sp-name { flex: 1; text-align: left; }
 .mail-app .snooze-picker .sp-when { font-family: var(--font-mono); font-size: 11px; color: var(--fg-faint); }

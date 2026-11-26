@@ -867,6 +867,7 @@
 .settings-app .addr-plan { margin: 8px 0 0; font-size: 12.5px; color: var(--fg-faint); line-height: 1.5; }
 
 .settings-app .addr-group > .scard { overflow: visible; }
+.settings-app .addr-group > .scard > :first-child { border-radius: calc(var(--radius-surface) - 1px) calc(var(--radius-surface) - 1px) 0 0; }
 .settings-app .addr-menu-wrap { display: flex; justify-content: flex-end; }
 .settings-app .addr-group-h .addr-domain { font-family: var(--font-mono); font-size: 12.5px; font-weight: 500; color: var(--fg-muted); margin: 0; }
 .settings-app .addr-group-h .badge { margin-left: 0; }
@@ -962,6 +963,7 @@
 
 
 .settings-app .scard.menus { overflow: visible; }
+.settings-app .scard.menus > :first-child { border-radius: calc(var(--radius-surface) - 1px) calc(var(--radius-surface) - 1px) 0 0; }
 .settings-app .scard.menus .rec-row:last-child { border-radius: 0 0 var(--radius-surface) var(--radius-surface); }
 
 
