@@ -2,6 +2,7 @@ import type { Json } from './canonical';
 import { MAX_SAFE } from './canonical';
 import { b64decode, compareBytes, requireUuid } from './encoding';
 import { fail } from './errors';
+import { isLegacyImportFormat, isProfileId } from '../profileIds';
 
 export type Obj = { [key: string]: Json };
 
@@ -82,7 +83,7 @@ export function chainLink(o: Obj, key: string, revision: number): Uint8Array | n
 
 export function profileId(o: Obj, key: string): string {
 	const s = str(o, key);
-	if (s.length < 1 || s.length > 128) fail('malformed', `${key} length`);
+	if (!isProfileId(s) && !isLegacyImportFormat(s)) fail('malformed', `${key} is not a registered profile`);
 	return s;
 }
 

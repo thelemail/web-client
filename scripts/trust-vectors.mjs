@@ -3,31 +3,58 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync, copyFile
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const VECTORS = 'packages/core/src/interop/vectors';
 const LOCK = 'packages/core/src/interop/trust.lock';
 const REPO = 'thelemail/trust';
+const SETS = [
+	{ upstream: join('interop', 'vectors'), local: 'packages/core/src/interop/vectors', ext: '.json' },
+	{ upstream: join('interop', 'ts'), local: 'packages/core/src/interop/generated', ext: '.ts' }
+];
 
-function jsonFiles(dir) {
+function files(dir, ext) {
 	return readdirSync(dir)
-		.filter((f) => f.endsWith('.json'))
+		.filter((f) => f.endsWith(ext))
 		.sort();
 }
 
 function update(source) {
-	const from = join(source, 'interop', 'vectors');
-	if (!existsSync(from)) {
-		throw new Error(`${from} does not exist`);
-	}
-	rmSync(VECTORS, { recursive: true, force: true });
-	mkdirSync(VECTORS, { recursive: true });
-	for (const f of jsonFiles(from)) {
-		copyFileSync(join(from, f), join(VECTORS, f));
+	for (const set of SETS) {
+		const from = join(source, set.upstream);
+		if (!existsSync(from)) {
+			throw new Error(`${from} does not exist`);
+		}
+		rmSync(set.local, { recursive: true, force: true });
+		mkdirSync(set.local, { recursive: true });
+		for (const f of files(from, set.ext)) {
+			copyFileSync(join(from, f), join(set.local, f));
+		}
+		console.log(`copied ${files(set.local, set.ext).length} files from ${from}`);
 	}
 	const tag = process.argv[4];
 	if (tag) {
 		writeFileSync(LOCK, `${tag}\n`);
 	}
-	console.log(`copied ${jsonFiles(VECTORS).length} vector files from ${from}`);
+}
+
+function compare(upstream, local, ext, tag) {
+	if (!existsSync(upstream)) {
+		return [`${REPO}@${tag} has no ${upstream}`];
+	}
+	const want = files(upstream, ext);
+	const have = existsSync(local) ? files(local, ext) : [];
+	const failures = [];
+	for (const f of want) {
+		if (!have.includes(f)) {
+			failures.push(`${f} is missing`);
+		} else if (!readFileSync(join(upstream, f)).equals(readFileSync(join(local, f)))) {
+			failures.push(`${f} differs from ${tag}`);
+		}
+	}
+	for (const f of have) {
+		if (!want.includes(f)) {
+			failures.push(`${f} is not in ${tag}`);
+		}
+	}
+	return failures;
 }
 
 async function check() {
@@ -47,29 +74,11 @@ async function check() {
 		const archive = join(dir, 'trust.tar.gz');
 		writeFileSync(archive, Buffer.from(await res.arrayBuffer()));
 		execFileSync('tar', ['-xzf', archive, '-C', dir, '--strip-components=1']);
-		const upstream = join(dir, 'interop', 'vectors');
-		if (!existsSync(upstream)) {
-			throw new Error(`${REPO}@${tag} has no interop/vectors`);
-		}
-		const want = jsonFiles(upstream);
-		const have = jsonFiles(VECTORS);
-		const failures = [];
-		for (const f of want) {
-			if (!have.includes(f)) {
-				failures.push(`${f} is missing`);
-			} else if (!readFileSync(join(upstream, f)).equals(readFileSync(join(VECTORS, f)))) {
-				failures.push(`${f} differs from ${tag}`);
-			}
-		}
-		for (const f of have) {
-			if (!want.includes(f)) {
-				failures.push(`${f} is not in ${tag}`);
-			}
-		}
+		const failures = SETS.flatMap((set) => compare(join(dir, set.upstream), set.local, set.ext, tag));
 		if (failures.length > 0) {
 			throw new Error(failures.join('\n'));
 		}
-		console.log(`${have.length} vector files match ${REPO}@${tag}`);
+		console.log(`vectors and generated sources match ${REPO}@${tag}`);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}

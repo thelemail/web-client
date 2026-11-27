@@ -1,3 +1,7 @@
+import type { ProfileId } from '../../interop/generated/profile-ids';
+import { LEGACY_IMPORT_PREFIX } from '../../interop/generated/profile-ids';
+import { isLegacyImportFormat } from '../profileIds';
+
 export const PROFILE = {
 	secretWrapV2: 'secret-wrap-v2',
 	productBundleV1: 'product-bundle-v1',
@@ -7,9 +11,9 @@ export const PROFILE = {
 	mailSearchIndex: 'mail-search-index-v1',
 	mailSearchRoot: 'mail-search-root-v1',
 	mailClassic: 'mail-classic-v1',
-	legacyImportPrefix: 'legacy-import-'
-} as const;
+	legacyImportPrefix: LEGACY_IMPORT_PREFIX
+} as const satisfies Record<string, ProfileId | typeof LEGACY_IMPORT_PREFIX>;
 
 export function isMailKeyProfile(p: string): boolean {
-	return p === PROFILE.mailClassic || (p.startsWith(PROFILE.legacyImportPrefix) && p.length > PROFILE.legacyImportPrefix.length);
+	return p === PROFILE.mailClassic || isLegacyImportFormat(p);
 }
