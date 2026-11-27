@@ -16,7 +16,7 @@ import { openProductBundle, sealProductBundle } from './productBundle';
 import { PROFILE } from './profiles';
 import { openAuthority, openRootDescriptor } from './secretBundle';
 
-const DIGEST = '8586cb12681b77f101eff0ec79ab802c7afe88f45ba0b1cae68ecca867024086';
+const DIGEST = '16d9cb471d4541a514ca2baa44998fef1c35628adc0420c695fce471f24ea39d';
 
 interface Header {
 	accountId: string;

@@ -1,0 +1,295 @@
+{
+  "schema": "thelemail-vectors/jcs/v1",
+  "maxSafeInteger": 9007199254740991,
+  "maxDepth": 32,
+  "cases": [
+    {
+      "name": "rfc 8785 literals and strings",
+      "input": "eyJsaXRlcmFscyI6W251bGwsIHRydWUsIGZhbHNlXSwic3RyaW5nIjoiXHUyMGFjJFx1MDAwRlx1MDAwYUEnXHUwMDQyXHUwMDIyXHUwMDVjXFxcIlwvIn0=",
+      "output": "{\"literals\":[null,true,false],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}",
+      "canonical": false
+    },
+    {
+      "name": "rfc 8785 utf-16 key order",
+      "input": "eyJcdTIwYWMiOiJFdXJvIFNpZ24iLCJcciI6IkNhcnJpYWdlIFJldHVybiIsIlx1ZmIzMyI6IkhlYnJldyBMZXR0ZXIgRGFsZXQgV2l0aCBEYWdlc2giLCIxIjoiT25lIiwiXHVkODNkXHVkZTAwIjoiRW1vamk6IEdyaW5uaW5nIEZhY2UiLCJcdTAwODAiOiJDb250cm9sIiwiXHUwMGY2IjoiTGF0aW4gU21hbGwgTGV0dGVyIE8gV2l0aCBEaWFlcmVzaXMifQ==",
+      "output": "{\"\\r\":\"Carriage Return\",\"1\":\"One\",\"\":\"Control\",\"ö\":\"Latin Small Letter O With Diaeresis\",\"€\":\"Euro Sign\",\"😀\":\"Emoji: Grinning Face\",\"דּ\":\"Hebrew Letter Dalet With Dagesh\"}",
+      "canonical": false
+    },
+    {
+      "name": "astral key sorts by surrogates",
+      "input": "eyJcdWQ4M2RcdWRlMDAiOjEsIlx1ZmZmZiI6MiwiXHVlMDAwIjozfQ==",
+      "output": "{\"😀\":1,\"\":3,\"￿\":2}",
+      "canonical": false
+    },
+    {
+      "name": "nested and whitespace",
+      "input": "IHsgImIiIDogWyAxICwgeyAiZCI6MiwiYyI6MyB9IF0gLCAiYSIgOiB7fSB9IA==",
+      "output": "{\"a\":{},\"b\":[1,{\"c\":3,\"d\":2}]}",
+      "canonical": false
+    },
+    {
+      "name": "integer bounds",
+      "input": "WzkwMDcxOTkyNTQ3NDA5OTEsLTkwMDcxOTkyNTQ3NDA5OTEsMCwtMF0=",
+      "output": "[9007199254740991,-9007199254740991,0,0]",
+      "canonical": false
+    },
+    {
+      "name": "control characters escape lowercase",
+      "input": "WyJcdTAwMWZcdTAwMDBcYlxmXHRcblxyIl0=",
+      "output": "[\"\\u001f\\u0000\\b\\f\\t\\n\\r\"]",
+      "canonical": true
+    },
+    {
+      "name": "slash and del stay literal",
+      "input": "WyJcL1x1MDA3ZiJd",
+      "output": "[\"/\"]",
+      "canonical": false
+    },
+    {
+      "name": "html is not escaped",
+      "input": "eyJhIjoiPCY+In0=",
+      "output": "{\"a\":\"<&>\"}",
+      "canonical": true
+    },
+    {
+      "name": "empty containers",
+      "input": "W3t9LFtdLCIiXQ==",
+      "output": "[{},[],\"\"]",
+      "canonical": true
+    },
+    {
+      "name": "canonical object",
+      "input": "eyJhIjoxLCJiIjpbdHJ1ZSxmYWxzZSxudWxsXSwiYyI6IngifQ==",
+      "output": "{\"a\":1,\"b\":[true,false,null],\"c\":\"x\"}",
+      "canonical": true
+    },
+    {
+      "name": "deepest nesting",
+      "input": "W1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1d",
+      "output": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "canonical": true
+    },
+    {
+      "name": "duplicate key",
+      "input": "eyJhIjoxLCJhIjoyfQ==",
+      "canonical": false,
+      "error": "duplicate-key"
+    },
+    {
+      "name": "duplicate key through escape",
+      "input": "eyJhIjoxLCJcdTAwNjEiOjJ9",
+      "canonical": false,
+      "error": "duplicate-key"
+    },
+    {
+      "name": "nested duplicate key",
+      "input": "eyJ4Ijp7ImsiOjEsImsiOjF9fQ==",
+      "canonical": false,
+      "error": "duplicate-key"
+    },
+    {
+      "name": "fraction",
+      "input": "WzEuNV0=",
+      "canonical": false,
+      "error": "invalid-number"
+    },
+    {
+      "name": "fractional counter",
+      "input": "eyJhbWtFcG9jaCI6MS4wfQ==",
+      "canonical": false,
+      "error": "invalid-number"
+    },
+    {
+      "name": "exponent",
+      "input": "WzFlM10=",
+      "canonical": false,
+      "error": "invalid-number"
+    },
+    {
+      "name": "negative exponent",
+      "input": "WzEwRS0xXQ==",
+      "canonical": false,
+      "error": "invalid-number"
+    },
+    {
+      "name": "beyond safe range",
+      "input": "WzkwMDcxOTkyNTQ3NDA5OTJd",
+      "canonical": false,
+      "error": "invalid-number"
+    },
+    {
+      "name": "below safe range",
+      "input": "Wy05MDA3MTk5MjU0NzQwOTkyXQ==",
+      "canonical": false,
+      "error": "invalid-number"
+    },
+    {
+      "name": "lone high surrogate",
+      "input": "WyJcdWQ4M2QiXQ==",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "lone low surrogate",
+      "input": "WyJcdWRlMDAiXQ==",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "bad surrogate pair",
+      "input": "WyJcdWQ4M2RBIl0=",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "lone surrogate in key",
+      "input": "eyJcdWRmZmYiOjF9",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "invalid utf-8",
+      "input": "WyL/Il0=",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "overlong utf-8",
+      "input": "WyLAryJd",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "encoded surrogate in utf-8",
+      "input": "WyLtoIAiXQ==",
+      "canonical": false,
+      "error": "invalid-unicode"
+    },
+    {
+      "name": "trailing data",
+      "input": "e30ge30=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "leading zero",
+      "input": "WzAxXQ==",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "negative leading zero",
+      "input": "Wy0wMV0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "bare minus",
+      "input": "Wy1d",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "plus sign",
+      "input": "WysxXQ==",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "raw control",
+      "input": "WyIBIl0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "raw tab in string",
+      "input": "WyIJIl0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "trailing comma",
+      "input": "WzEsXQ==",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "trailing comma in object",
+      "input": "eyJhIjoxLH0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "single quotes",
+      "input": "WydhJ10=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "unknown escape",
+      "input": "WyJceCJd",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "short unicode escape",
+      "input": "WyJcdTEyIl0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "unquoted key",
+      "input": "e2E6MX0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "nan",
+      "input": "W05hTl0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "infinity",
+      "input": "W0luZmluaXR5XQ==",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "bad literal",
+      "input": "W251bF0=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "unterminated string",
+      "input": "WyJh",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "unterminated array",
+      "input": "WzE=",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "empty",
+      "input": "",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "whitespace only",
+      "input": "IA==",
+      "canonical": false,
+      "error": "invalid"
+    },
+    {
+      "name": "too deep",
+      "input": "W1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW1tbW11dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV1dXV0=",
+      "canonical": false,
+      "error": "too-deep"
+    }
+  ]
+}
