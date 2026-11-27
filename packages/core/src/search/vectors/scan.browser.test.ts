@@ -3,7 +3,7 @@ import { parseQuery } from '../query';
 import type { EmbeddedPassage } from '../model/protocol';
 import type { QueryContext } from '../sqlite/compile';
 import { Harness, SNAPSHOT, document } from '../sqlite/harness';
-import type { MeaningEpoch, MeaningOutcome, PageResult, ResultRow } from '../sqlite/run';
+import type { MeaningEpoch, MeaningOutcome, PageResult, QueryOutcome, ResultRow } from '../sqlite/run';
 import { Coverage, Dimension, Field, Flag, Role, SourceKind, type SearchDocument } from '../sqlite/types';
 import { Corpus, type CorpusShape } from './corpus';
 
@@ -137,7 +137,7 @@ describe('meaning scan over a small mailbox', () => {
 		await h.call({ op: 'put', doc: message('late', { threadId: 'T9', parts: [{ field: Field.body, text: 'Late refund.' }] }) });
 		await h.call({ op: 'passages', method: 'seed', args: [] });
 		const missing = await meaning(h, 'refund', q);
-		expect(ids(missing.rows)).not.toContain('late');
+		expect(missing.rows.find((r) => r.best.sourceId === 'late')?.channel).toBe('words');
 		expect(missing.outcome.summary.incomplete).toBe(1);
 		const [[id]] = await h.select<[number]>("SELECT id FROM sources WHERE source_id = 'late'");
 		await h.call({ op: 'passages', method: 'put', args: [id, 1, EPOCH, [{ field: Field.body, attachmentId: null, place: null, refs: [], vector: q }]] });
@@ -223,5 +223,139 @@ describe('meaning scan coverage rows', () => {
 		const { outcome, rows } = await meaning(h, 'refund', new Corpus({ seed: 1, sources: 0, per: 1 }).query(0), 'message', { epoch: EPOCH, current: true, rebuilding: true });
 		expect(rows).toEqual([]);
 		expect(outcome.summary).toMatchObject({ eligible: 1, incomplete: 1, rebuilding: true });
+	});
+});
+
+describe('related results beside exact matches', () => {
+	const corpus = new Corpus({ seed: 5, sources: 0, per: 1, clusters: 4 });
+	const q = corpus.query(2);
+	const message = (sourceId: string, threadId: string, text: string, overrides: Partial<SearchDocument> = {}) =>
+		document(sourceId, { knownFlags: ALL, threadId, date: Date.UTC(2026, 2, 1), parts: [{ field: Field.body, text }], ...overrides });
+	const docs: SearchDocument[] = [
+		message('exact', 'R1', 'The flight refund was requested.'),
+		message('sibling', 'R1', 'O voo foi cancelado.'),
+		message('partial', 'R2', 'The refund is pending.'),
+		message('similar', 'R3', 'O voo foi cancelado e o reembolso ainda não chegou.'),
+		message('bob', 'R4', 'Flight refund from Bob.', { participants: [{ role: Role.from, name: 'Bob', address: 'bob@elsewhere.test' }] }),
+		message('old', 'R5', 'An old refund.', { date: Date.UTC(2024, 0, 1) }),
+		message('unembedded', 'R6', 'The flight was delayed.')
+	];
+	const input = 'flight refund after:2025-01-01 -from:bob@elsewhere.test';
+
+	async function mailbox(): Promise<Harness> {
+		const h = await harness();
+		await h.call({ op: 'putBatch', docs });
+		await h.call({ op: 'passages', method: 'adopt', args: [EPOCH, MODEL] });
+		await h.call({ op: 'passages', method: 'seed', args: [] });
+		for (const [i, d] of docs.entries()) {
+			const [[id, part]] = await h.select<[number, number]>(
+				'SELECT s.id, p.id FROM sources s JOIN parts p ON p.source = s.id AND p.field = ? WHERE s.source_id = ?',
+				[Field.body, d.sourceId]
+			);
+			if (d.sourceId === 'unembedded') {
+				expect(await h.call({ op: 'passages', method: 'mark', args: [id, 1, Coverage.failed] })).toBe(true);
+				continue;
+			}
+			const vector = d.sourceId === 'similar' ? q : corpus.vector(i, 0);
+			const passage: EmbeddedPassage = { field: Field.body, attachmentId: null, place: null, refs: [{ part, start: 0, end: 200 }], vector };
+			expect(await h.call({ op: 'passages', method: 'put', args: [id, 1, EPOCH, [passage]] })).toBe(true);
+		}
+		expect(await h.call({ op: 'passages', method: 'promote', args: [] })).toBe(true);
+		return h;
+	}
+
+	async function exact(h: Harness, group: 'thread' | 'message' = 'thread'): Promise<Extract<QueryOutcome, { ok: true }>> {
+		const parsed = parseQuery(input, SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		const outcome = await h.call<QueryOutcome>({ op: 'query', token: 0, query: parsed.query, ctx: CTX, options: { sort: 'relevance', group } });
+		if (!outcome.ok) throw new Error('query');
+		return outcome;
+	}
+
+	async function related(h: Harness, exclude: number, group: 'thread' | 'message' = 'thread'): Promise<MeaningOutcome> {
+		const parsed = parseQuery(input, SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		return h.call<MeaningOutcome>({ op: 'meaning', token: 0, query: parsed.query, ctx: CTX, group, vector: q, epoch: ACTIVE, exclude });
+	}
+
+	async function rows(h: Harness, outcome: MeaningOutcome): Promise<ResultRow[]> {
+		if (!outcome.ok) throw new Error(JSON.stringify(outcome));
+		const out: ResultRow[] = [];
+		for (let i = 0; i < outcome.summary.pages; i++) {
+			const page = await h.call<PageResult>({ op: 'page', session: outcome.summary.id, index: i });
+			if (!page.ok) throw new Error(page.reason);
+			out.push(...page.groups);
+		}
+		return out;
+	}
+
+	it('leaves out every conversation with an exact match, siblings included', async () => {
+		const h = await mailbox();
+		const words = await exact(h);
+		expect(words.summary.matches).toBe(1);
+		const list = await rows(h, await related(h, words.summary.id));
+		const keys = list.map((r) => r.key);
+		expect(keys).not.toContain('tR1');
+		expect(list.flatMap((r) => r.sources.map((s) => s.sourceId))).not.toContain('sibling');
+		expect(keys.sort()).toEqual(['tR2', 'tR3', 'tR6']);
+	});
+
+	it('labels each row by the channel that found it and shows the stored passage', async () => {
+		const h = await mailbox();
+		const list = await rows(h, await related(h, (await exact(h)).summary.id));
+		const by = Object.fromEntries(list.map((r) => [r.key, r]));
+		expect(by.tR2.channel).toBe('both');
+		expect(by.tR3.channel).toBe('meaning');
+		expect(by.tR6.channel).toBe('words');
+		expect(by.tR3.passage?.text).toBe('O voo foi cancelado e o reembolso ainda não chegou.');
+		expect(by.tR6.passage).toBeUndefined();
+		expect(by.tR6.excerpt).not.toBeNull();
+		expect(list[0].key).toBe('tR2');
+	});
+
+	it('never lets a hard filter through on either channel', async () => {
+		const h = await mailbox();
+		const list = await rows(h, await related(h, (await exact(h, 'message')).summary.id, 'message'));
+		const ids = list.map((r) => r.best.sourceId);
+		expect(ids).not.toContain('bob');
+		expect(ids).not.toContain('old');
+	});
+
+	it('counts a word match only when at least half of the words occur', async () => {
+		const h = await mailbox();
+		const parsed = parseQuery('flight refund pending delayed', SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		const words = await h.call<QueryOutcome>({ op: 'query', token: 0, query: parsed.query, ctx: CTX, options: { sort: 'relevance', group: 'message' } });
+		if (!words.ok) throw new Error('query');
+		expect(words.summary.matches).toBe(0);
+		const outcome = await h.call<MeaningOutcome>({ op: 'meaning', token: 0, query: parsed.query, ctx: CTX, group: 'message', vector: q, epoch: ACTIVE, exclude: words.summary.id });
+		const by = Object.fromEntries((await rows(h, outcome)).map((r) => [r.best.sourceId, r.channel]));
+		expect(by.partial).toBe('both');
+		expect(by.unembedded).toBe('words');
+		expect(by.bob).toBe('both');
+		expect(by.old).toBe('meaning');
+		expect(by.sibling).toBe('meaning');
+	});
+
+	it('refuses an exclusion from another grouping or a closed query', async () => {
+		const h = await mailbox();
+		const words = await exact(h, 'message');
+		expect(await related(h, words.summary.id, 'thread')).toEqual({ ok: false, reason: 'stale' });
+		await h.call({ op: 'closeQuery', session: words.summary.id });
+		expect(await related(h, words.summary.id, 'message')).toEqual({ ok: false, reason: 'stale' });
+	});
+
+	it('goes stale with its exact result and closes with it', async () => {
+		const h = await mailbox();
+		const words = await exact(h);
+		const outcome = await related(h, words.summary.id);
+		if (!outcome.ok) throw new Error('related');
+		await h.call({ op: 'delete', key: { kind: SourceKind.message, sourceId: 'exact' } });
+		expect(await h.call<PageResult>({ op: 'page', session: outcome.summary.id, index: 0 })).toEqual({ ok: false, reason: 'invalidated' });
+		const again = await exact(h);
+		const next = await related(h, again.summary.id);
+		if (!next.ok) throw new Error('related');
+		await h.call({ op: 'closeQuery', session: again.summary.id });
+		expect(await h.call<PageResult>({ op: 'page', session: next.summary.id, index: 0 })).toEqual({ ok: false, reason: 'closed' });
 	});
 });

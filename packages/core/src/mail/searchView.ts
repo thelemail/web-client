@@ -4,7 +4,18 @@ import type { Range } from '$core/search/query/ast';
 import type { Consent } from '$core/search/runtime/records';
 import type { Sort } from '$core/search/sqlite/compile';
 import type { Suggestion } from '$core/search/sqlite/suggest';
+import type { RelatedStatus } from '$core/search/related.svelte';
 import type { SearchPhase } from '$core/stores/search.svelte';
+import type { Message } from './data';
+
+export interface RelatedView {
+	status: RelatedStatus;
+	main: boolean;
+	rows: Message[];
+	incomplete: number;
+	capped: number;
+	rebuilding: boolean;
+}
 
 export interface SearchView {
 	phase: SearchPhase;
@@ -26,6 +37,8 @@ export interface SearchView {
 	paused: boolean;
 	limited: 'session' | 'quota' | null;
 	settingsHref: string;
+	related: RelatedView | null;
+	onRetryRelated: () => void;
 	onSort: (sort: Sort) => void;
 	onExactFolders: (exact: boolean) => void;
 	onRemoveChip: (chip: Chip) => void;

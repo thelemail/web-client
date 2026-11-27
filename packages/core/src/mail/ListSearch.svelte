@@ -341,7 +341,10 @@
 							>
 								<span class="sm-from" dir="auto">{option.msg.from}</span>
 								<span class="sm-subj" dir="auto">{option.msg.subj}</span>
-								<span class="sm-when">{formatRowTime(new Date(option.msg.epoch))}</span>
+								<span class="sm-when">
+									{#if option.msg.match?.channelLabel}<span class="sm-chan">{option.msg.match.channelLabel}</span>{/if}
+									{formatRowTime(new Date(option.msg.epoch))}
+								</span>
 							</div>
 						{:else if option.kind === 'op'}
 							<div

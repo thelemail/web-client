@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { meaningSplit } from './classify';
+import { meaningSplit, relatedAllowed } from './classify';
 import { parseQuery } from './index';
 import type { ParsedQuery, QueryError, QueryErrorCode, QuerySnapshot } from './ast';
 
@@ -292,7 +292,9 @@ describe('meaningSplit', () => {
 	});
 
 	it('leaves nothing to filter on a plain query and refuses a Words-only one', () => {
-		expect(meaningSplit(ok('hotel invoice').root)).toEqual({ text: 'hotel invoice', rest: null });
+		const plain = meaningSplit(ok('hotel invoice').root);
+		expect(plain?.text).toBe('hotel invoice');
+		expect(plain?.rest).toBeNull();
 		expect(meaningSplit(ok('budget is:unread').root)?.rest?.kind).toBe('state');
 		expect(meaningSplit(ok('a OR b').root)).toBeNull();
 		expect(meaningSplit(ok('"just a phrase"').root)).toBeNull();
@@ -431,5 +433,38 @@ describe('parseQuery errors', () => {
 	it.each(cases)('%s → %s', (input, code, start, end, extra = {}) => {
 		const error = err(input);
 		expect(error).toMatchObject({ code, range: { start, end }, ...extra });
+	});
+});
+
+describe('meaningSplit lexical channel', () => {
+	it('matches any ordinary word under every hard part', () => {
+		const split = meaningSplit(ok('flight refund -label:personal after:2026-01-01').root);
+		expect(split?.lexical.kind).toBe('and');
+		const children = split?.lexical.kind === 'and' ? split.lexical.children : [];
+		expect(children.map((c) => c.kind)).toEqual(['not', 'date', 'or']);
+		const any = children[2];
+		expect(any.kind === 'or' ? any.children.map((c) => (c.kind === 'term' ? c.text : '')) : []).toEqual(['flight', 'refund']);
+	});
+
+	it('uses the single word directly', () => {
+		expect(meaningSplit(ok('refund').root)?.lexical.kind).toBe('term');
+	});
+});
+
+describe('relatedAllowed', () => {
+	it.each([
+		['related', 12, true],
+		['related', 0, true],
+		['meaning', 0, true],
+		['meaning', 3, false],
+		['words', 0, false]
+	] as const)('%s with %i exact matches', (eligibility, matches, expected) => {
+		expect(relatedAllowed(eligibility, matches)).toBe(expected);
+	});
+
+	it.each(['+AB-19/007', '"AB-1047"', 'INV-2026-0042', 'alice@example.com', '"service agreement"'])('never expands %s', (input) => {
+		const query = ok(input);
+		expect(relatedAllowed(query.eligibility, 0)).toBe(false);
+		expect(meaningSplit(query.root)).toBeNull();
 	});
 });

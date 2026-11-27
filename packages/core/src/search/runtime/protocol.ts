@@ -76,6 +76,7 @@ export interface QueryRequestOptions {
 
 export interface MeaningRequestOptions {
 	group: Grouping;
+	exclude: number | null;
 }
 
 export type ClientRequest =
@@ -97,7 +98,7 @@ export type ClientRequest =
 
 export type QueryReply = QueryOutcome | { ok: false; cancelled: true };
 
-export type MeaningUnavailable = 'off' | 'words' | 'empty' | 'model' | 'busy' | 'tooLong';
+export type MeaningUnavailable = 'off' | 'words' | 'empty' | 'model' | 'busy' | 'tooLong' | 'stale';
 
 export type MeaningReply =
 	| { ok: true; summary: MeaningSummary }

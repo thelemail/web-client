@@ -3,7 +3,7 @@ import type { Broadcast } from '$core/keystore/protocol';
 import type { ClientState } from '$core/search/runtime/client';
 import type { SearchStatus } from '$core/search/runtime/protocol';
 import type { SearchPrefs } from '$core/search/runtime/records';
-import type { PageResult, Provisional, QuerySummary, ResultRow } from '$core/search/sqlite/run';
+import type { MeaningSummary, PageResult, Provisional, QuerySummary, ResultRow } from '$core/search/sqlite/run';
 
 const platformState = vi.hoisted(() => ({ mirror: undefined as unknown, keystoreChannel: undefined as unknown }));
 vi.mock('$platform', () => ({ platform: platformState }));
@@ -33,6 +33,7 @@ interface Fake {
 	state: ClientState;
 	listeners: Set<(s: ClientState) => void>;
 	query: ReturnType<typeof vi.fn>;
+	meaning: ReturnType<typeof vi.fn>;
 	page: ReturnType<typeof vi.fn>;
 	closeQuery: ReturnType<typeof vi.fn>;
 	complete: ReturnType<typeof vi.fn>;
@@ -46,12 +47,16 @@ const runtime = vi.hoisted(() => ({
 	prefListeners: new Set<(p: SearchPrefs | null) => void>(),
 	clientListeners: new Set<() => void>(),
 	client: null as unknown,
-	focus: null as unknown as ReturnType<typeof vi.fn>
+	focus: null as unknown as ReturnType<typeof vi.fn>,
+	full: false
 }));
 
 vi.mock('$core/search/lazy', () => ({
 	searchSupported: () => !platformState.mirror,
 	searchRuntime: {
+		get fullSearch() {
+			return runtime.full;
+		},
 		focus: (...a: unknown[]) => runtime.focus(...a),
 		client: () => (runtime.client ? Promise.resolve(runtime.client) : null),
 		subscribeAttach: () => () => {},
@@ -79,6 +84,7 @@ function fake(): Fake {
 		state: { phase: 'ready', role: 'owner', status: status() },
 		listeners: new Set(),
 		query: vi.fn(),
+		meaning: vi.fn(),
 		page: vi.fn(),
 		closeQuery: vi.fn(async () => {}),
 		complete: vi.fn(async () => ({ terms: [], people: [] })),
@@ -102,6 +108,7 @@ function asClient(f: Fake) {
 			return () => f.listeners.delete(l);
 		},
 		query: (...a: unknown[]) => f.query(...a),
+		meaning: (...a: unknown[]) => f.meaning(...a),
 		page: (...a: unknown[]) => f.page(...a),
 		closeQuery: (...a: unknown[]) => f.closeQuery(...a),
 		complete: (...a: unknown[]) => f.complete(...a),
@@ -164,6 +171,7 @@ beforeEach(() => {
 	client = fake();
 	runtime.client = asClient(client);
 	runtime.focus = vi.fn(async () => {});
+	runtime.full = false;
 	runtime.prefs = { accountId: 'acc-1', consent: 'saved', paused: false, history: false };
 	vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('network'))));
 	stop = mailSearch.start('acc-1');
@@ -447,5 +455,150 @@ describe('mailSearch on the desktop build', () => {
 		expect(mailSearch.results[0]).toMatchObject({ id: 'deep', folder: 'archive', direction: 'sent' });
 		expect(client.query).not.toHaveBeenCalled();
 		expect(mailSearch.mode).toBe('desktop');
+	});
+});
+
+describe('mailSearch related results', () => {
+	function meaningSummary(over: Partial<MeaningSummary> = {}): MeaningSummary {
+		return { id: 7, groups: 1, pages: 1, eligible: 10, incomplete: 0, capped: 0, scanned: 10, rebuilding: false, generation: 0, resolved: [], ...over };
+	}
+
+	function exactThenRelated(exact: ResultRow[], related: ResultRow[]) {
+		client.query.mockResolvedValue({ ok: true, summary: summary({ id: 1, matches: exact.length, groups: exact.length, pages: exact.length ? 1 : 0 }) });
+		client.page.mockImplementation(async (id: number) => ({ ok: true, groups: id === 7 ? related : exact }));
+	}
+
+	beforeEach(() => {
+		runtime.full = true;
+		prefs({ semantic: true });
+	});
+
+	it('shows exact results while the model is still working, then related ones below', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'meaning', passage: { field: 3, attachmentId: null, place: null, text: 'O voo foi cancelado' } })]);
+		const pending = Promise.withResolvers<unknown>();
+		client.meaning.mockReturnValue(pending.promise);
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.results.map((r) => r.id)).toEqual(['e1']));
+		expect(mailSearch.searching).toBe(false);
+		expect(mailSearch.related?.status).toBe('loading');
+		expect(client.meaning.mock.calls[0][2]).toEqual({ group: 'thread', exclude: 1 });
+		pending.resolve({ ok: true, summary: meaningSummary() });
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
+		const hit = mailSearch.related!.rows[0];
+		expect(hit.match).toMatchObject({ channel: 'meaning', channelLabel: 'Similar meaning', excerpt: 'O voo foi cancelado', excerptSpans: [] });
+		expect(mailSearch.related?.main).toBe(false);
+		expect(mailSearch.matches).toBe(1);
+		expect(mailSearch.findResult('r1')?.id).toBe('r1');
+	});
+
+	it('pages related rows in after the last exact page', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'both' })]);
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary({ groups: 60, pages: 2 }) });
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
+		expect(mailSearch.relatedView?.rows.map((r) => r.id)).toEqual(['r1']);
+		expect(mailSearch.related?.rows.map((r) => r.id)).toEqual(['r1']);
+		expect(mailSearch.exhausted).toBe(false);
+		await mailSearch.loadMore();
+		expect(client.page).toHaveBeenLastCalledWith(7, 1);
+		expect(mailSearch.exhausted).toBe(true);
+	});
+
+	it('fills the popup with similar mail after the exact previews', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'meaning' }), row('r2', { channel: 'meaning' })]);
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary() });
+		mailSearch.setDraft('flight refund');
+		await vi.waitFor(() => expect(mailSearch.preview.map((r) => r.id)).toEqual(['e1', 'r1', 'r2']));
+		expect(mailSearch.previewing).toBe(false);
+		expect(mailSearch.preview[1].match?.channel).toBe('meaning');
+		await vi.waitFor(() => expect(client.closeQuery).toHaveBeenCalledWith(1));
+		expect(client.closeQuery).toHaveBeenCalledWith(7);
+	});
+
+	it('makes related results the main list when nothing matches exactly, and pages them', async () => {
+		exactThenRelated([], [row('r1', { channel: 'meaning' })]);
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary({ groups: 60, pages: 2 }) });
+		mailSearch.commit('refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
+		expect(mailSearch.related?.main).toBe(true);
+		expect(mailSearch.exhausted).toBe(false);
+		await mailSearch.loadMore();
+		expect(client.page).toHaveBeenLastCalledWith(7, 1);
+		expect(mailSearch.related?.rows).toHaveLength(2);
+		expect(mailSearch.exhausted).toBe(true);
+	});
+
+	it('does not expand a single word that already matches', async () => {
+		exactThenRelated([row('e1')], []);
+		mailSearch.commit('refund');
+		await vi.waitFor(() => expect(mailSearch.results).toHaveLength(1));
+		expect(client.meaning).not.toHaveBeenCalled();
+		expect(mailSearch.related).toBeNull();
+	});
+
+	it.each(['"AB-1047"', '+INV-2026-0042', 'alice@example.com', 'a OR b'])('never expands %s', async (input) => {
+		exactThenRelated([], []);
+		mailSearch.commit(input);
+		await vi.waitFor(() => expect(mailSearch.phase).toBe('ready'));
+		expect(client.meaning).not.toHaveBeenCalled();
+	});
+
+	it('stays off until meaning search is turned on', async () => {
+		prefs({ semantic: false });
+		exactThenRelated([], []);
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.phase).toBe('ready'));
+		expect(client.meaning).not.toHaveBeenCalled();
+	});
+
+	it('cancels related work on a new search and drops its late answer', async () => {
+		exactThenRelated([row('e1')], [row('late', { channel: 'meaning' })]);
+		const pending = Promise.withResolvers<unknown>();
+		client.meaning.mockReturnValueOnce(pending.promise);
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('loading'));
+		const signal = client.meaning.mock.calls[0][3] as AbortSignal;
+		client.meaning.mockResolvedValue({ ok: false, unavailable: 'busy' });
+		mailSearch.commit('hotel invoice');
+		expect(signal.aborted).toBe(true);
+		pending.resolve({ ok: true, summary: meaningSummary({ id: 9 }) });
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('busy'));
+		expect(client.closeQuery).toHaveBeenCalledWith(9);
+	});
+
+	it.each([
+		['tooLong', 'tooLong'],
+		['model', 'preparing'],
+		['empty', 'preparing'],
+		['busy', 'busy']
+	] as const)('shows %s from the worker as %s and leaves exact results alone', async (unavailable, shown) => {
+		exactThenRelated([row('e1')], []);
+		client.meaning.mockResolvedValue({ ok: false, unavailable });
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe(shown));
+		expect(mailSearch.results.map((r) => r.id)).toEqual(['e1']);
+		expect(mailSearch.phase).toBe('ready');
+	});
+
+	it('tries again once the model is ready', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'meaning' })]);
+		client.meaning.mockResolvedValueOnce({ ok: false, unavailable: 'model' });
+		client.set({ status: status({ semantic: { state: 'loading' } }) });
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('preparing'));
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary() });
+		client.set({ status: status({ semantic: { state: 'ready' } }) });
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
+		expect(client.meaning).toHaveBeenCalledTimes(2);
+	});
+
+	it('retries after a failure', async () => {
+		exactThenRelated([row('e1')], [row('r1', { channel: 'words' })]);
+		client.meaning.mockRejectedValueOnce(new Error('boom'));
+		mailSearch.commit('flight refund');
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('failed'));
+		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary() });
+		mailSearch.retryRelated();
+		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
 	});
 });

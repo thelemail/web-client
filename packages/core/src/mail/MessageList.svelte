@@ -178,6 +178,8 @@
 	$effect(() => {
 		if (search && !SearchStrip) void loadSearchStrip().then((c) => (SearchStrip = c));
 	});
+	const relatedRows = $derived(search?.related?.status === 'ready' ? search.related.rows : []);
+	const relatedPending = $derived(list.length === 0 && search?.related?.status === 'loading');
 	const firstLoad = delayed(() => !searchActive && !loaded && !loadError);
 	const inQuery = $derived(querySelected !== null);
 	const anyChecked = $derived(checked.size > 0 || inQuery);
@@ -523,6 +525,29 @@
 	}
 </script>
 
+{#snippet row(m: Message)}
+	<MessageRow
+		{m}
+		active={activeId === m.id}
+		fresh={arrived.has(m.id)}
+		checked={inQuery || checked.has(m.id)}
+		{anyChecked}
+		{caps}
+		{viewFolder}
+		searching={searchActive}
+		{onOpen}
+		{onSelect}
+		{onToggleStar}
+		{onToggleCheck}
+		{onArchive}
+		{onTrash}
+		{onRestore}
+		{onDelete}
+		{onSpam}
+		{onToggleRead}
+		tips={rowTips}
+	/>
+{/snippet}
 
 <section class="list">
 	{#if anyChecked}
@@ -869,7 +894,9 @@
 			{#if firstLoad.visible}
 				<ListSkeleton />
 			{/if}
-		{:else if list.length === 0}
+		{:else if list.length === 0 && relatedRows.length === 0 && relatedPending}
+			<div class="list-state" aria-busy="true"></div>
+		{:else if list.length === 0 && relatedRows.length === 0}
 			<EmptyState
 				class="empty-list"
 				icon={search ? faMagnifyingGlass : activeFilters > 0 ? faFilter : faInbox}
@@ -897,38 +924,23 @@
 					<div class="daygrp"><span class="l">{dayBucketLabel(g)}</span><span class="rule"></span></div>
 				{/if}
 				{#each items as m (m.id)}
-					<MessageRow
-						{m}
-						active={activeId === m.id}
-						fresh={arrived.has(m.id)}
-						checked={inQuery || checked.has(m.id)}
-						{anyChecked}
-						{caps}
-						{viewFolder}
-						searching={searchActive}
-						{onOpen}
-						{onSelect}
-						{onToggleStar}
-						{onToggleCheck}
-						{onArchive}
-						{onTrash}
-						{onRestore}
-						{onDelete}
-						{onSpam}
-						{onToggleRead}
-						tips={rowTips}
-					/>
+					{@render row(m)}
 				{/each}
 			{/each}
+			{#if allRowsShown}
+				{#each relatedRows as m (m.id)}
+					{@render row(m)}
+				{/each}
+			{/if}
 			<Tooltip.Shared tether={rowTips} />
 		{/if}
-		{#if (!searchActive || list.length > 0) && allRowsShown}
+		{#if (!searchActive || list.length > 0 || relatedRows.length > 0) && allRowsShown}
 			<div class="list-foot" bind:this={sentinelEl}>
 				{#if loadMoreError}
 					<Button variant="neutral" size="sm" onclick={onLoadMore}>{msg.mail_list_load_more_failed()}</Button>
 				{:else if loadingMore}
 					<span class="lf-spin"></span><span class="lf-text">{msg.mail_list_loading_more()}</span>
-				{:else if exhausted && list.length > 0 && !offline}
+				{:else if exhausted && (list.length > 0 || relatedRows.length > 0) && !offline}
 					<span class="lf-hair"></span>
 					<span class="lf-text">{msg.mail_list_end()}</span>
 					<span class="lf-hair"></span>

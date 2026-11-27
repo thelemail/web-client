@@ -1,6 +1,7 @@
 import type { BindValue, CApi, Database, SqlValue } from '@thelemail/sqlite-wasm';
 import type { ParsedQuery, QueryError } from '../query/ast';
 import { meaningSplit } from '../query/classify';
+import { fuse, type Channel, type Ranked } from '../fusion/fuse';
 import { DIMENSIONS } from '../model/pool';
 import { decoded, type VectorCache } from '../vectors/cache';
 import { quantize } from '../vectors/matrix';
@@ -93,6 +94,7 @@ export interface MeaningOptions {
 	vector: Float32Array;
 	epoch: MeaningEpoch;
 	cache: VectorCache;
+	exclude?: number;
 	signal?: AbortSignal;
 }
 
@@ -109,7 +111,7 @@ export interface MeaningSummary {
 	resolved: Resolution[];
 }
 
-export type MeaningOutcome = { ok: true; summary: MeaningSummary } | { ok: false; error: QueryError } | { ok: false; reason: 'words' };
+export type MeaningOutcome = { ok: true; summary: MeaningSummary } | { ok: false; error: QueryError } | { ok: false; reason: 'words' | 'stale' };
 
 export interface MatchedPassage {
 	field: Field;
@@ -148,6 +150,7 @@ export interface ResultRow extends ResultGroup {
 	filename: string | null;
 	fields: Field[];
 	passage?: MatchedPassage;
+	channel?: Channel;
 }
 
 export type PageResult = { ok: true; groups: ResultRow[] } | { ok: false; reason: 'invalidated' | 'closed' };
@@ -160,6 +163,9 @@ export interface Completions {
 interface Session {
 	prefix: string;
 	sort: Sort;
+	group: Grouping;
+	parent?: number;
+	channels?: Map<string, Channel>;
 	tables: string[];
 	invalid: boolean;
 	summary: QuerySummary | null;
@@ -258,7 +264,7 @@ export class QueryEngine {
 		const compiled = compile(query, ctx);
 		if (!compiled.ok) return compiled;
 		const id = ++this.#next;
-		const session: Session = { prefix: `temp.q${id}`, sort: options.sort, tables: [], invalid: false, summary: null, highlights: compiled.plan.highlights, generation: this.generation };
+		const session: Session = { prefix: `temp.q${id}`, sort: options.sort, group: options.group, tables: [], invalid: false, summary: null, highlights: compiled.plan.highlights, generation: this.generation };
 		this.#sessions.set(id, session);
 		try {
 			const summary = await this.#execute(id, session, compiled.plan, options);
@@ -273,22 +279,29 @@ export class QueryEngine {
 	async meaning(query: ParsedQuery, ctx: QueryContext, options: MeaningOptions): Promise<MeaningOutcome> {
 		const split = meaningSplit(query.root);
 		if (!split) return { ok: false, reason: 'words' };
+		const excluded = options.exclude === undefined ? null : this.#sessions.get(options.exclude);
+		if (excluded !== null && (!excluded?.summary || excluded.invalid || excluded.group !== options.group)) return { ok: false, reason: 'stale' };
 		const compiled = compile({ ...query, root: split.rest }, ctx);
 		if (!compiled.ok) return compiled;
+		const lexical = compile({ ...query, root: split.lexical }, ctx);
+		if (!lexical.ok) return lexical;
 		const id = ++this.#next;
 		const session: Session = {
 			prefix: `temp.q${id}`,
 			sort: 'relevance',
+			group: options.group,
+			parent: options.exclude,
 			tables: [],
 			invalid: false,
 			summary: null,
-			highlights: [],
+			highlights: lexical.plan.highlights,
 			generation: this.generation,
-			passages: new Map()
+			passages: new Map(),
+			channels: new Map()
 		};
 		this.#sessions.set(id, session);
 		try {
-			const summary = await this.#meaning(id, session, compiled.plan, options);
+			const summary = await this.#meaning(id, session, compiled.plan, { ...lexical.plan, suggestible: [] }, compiled.plan.leaves.length, excluded?.prefix ?? null, options);
 			session.summary = { id, matches: summary.groups, groups: summary.groups, pages: summary.pages, incomplete: summary.incomplete, excluded: 0, suggestions: [], generation: summary.generation, dims: [Dimension.semantic], resolved: summary.resolved };
 			return { ok: true, summary };
 		} catch (err) {
@@ -340,7 +353,8 @@ export class QueryEngine {
 		).map((row) => {
 			const at = session.passages?.get(row.key);
 			const passage = at ? this.#passage(at.epoch, at.source, at.ordinal) : null;
-			return passage ? { ...row, passage } : row;
+			const channel = session.channels?.get(row.key);
+			return { ...row, ...(passage ? { passage } : {}), ...(channel ? { channel } : {}) };
 		});
 	}
 
@@ -454,12 +468,16 @@ export class QueryEngine {
 		if (!session) return;
 		this.#sessions.delete(id);
 		this.#drop(session);
+		for (const [child, s] of [...this.#sessions]) if (s.parent === id) this.close(child);
 	}
 
 	invalidate(source: number): void {
 		for (const session of this.#sessions.values()) {
 			if (session.invalid || !session.tables.includes(`${session.prefix}_m`)) continue;
 			if (this.#db.selectValue(`SELECT 1 FROM ${session.prefix}_m WHERE source = ?`, [source])) session.invalid = true;
+		}
+		for (const session of this.#sessions.values()) {
+			if (session.parent !== undefined && this.#sessions.get(session.parent)?.invalid) session.invalid = true;
 		}
 	}
 
@@ -649,7 +667,7 @@ export class QueryEngine {
 		};
 	}
 
-	async #meaning(id: number, session: Session, plan: Plan, options: MeaningOptions): Promise<MeaningSummary> {
+	async #meaning(id: number, session: Session, plan: Plan, lexicalPlan: Plan, firstWord: number, excluded: string | null, options: MeaningOptions): Promise<MeaningSummary> {
 		const signal = options.signal;
 		const checkpoint = async () => {
 			signal?.throwIfAborted();
@@ -679,7 +697,8 @@ export class QueryEngine {
 		let eligible = 0;
 		let incomplete = 0;
 		const ids = byThread ? `group_concat(s.id || char(31) || ifnull(CASE WHEN s.kind = ${SourceKind.message} THEN s.thread_id END, ''), char(30))` : 'group_concat(s.id)';
-		const select = this.#db.prepare(`SELECT ${ids}, coalesce(sum(NOT ${covered.sql}), 0) FROM sources s WHERE s.id BETWEEN ? AND ? AND ${universe.sql} AND ${expr.sql}`);
+		const outside = excluded ? ` AND NOT EXISTS (SELECT 1 FROM ${excluded}_g x WHERE x.grp = ${GROUP_KEY[options.group]})` : '';
+		const select = this.#db.prepare(`SELECT ${ids}, coalesce(sum(NOT ${covered.sql}), 0) FROM sources s WHERE s.id BETWEEN ? AND ? AND ${universe.sql} AND ${expr.sql}${outside}`);
 		try {
 			await this.#sliced('sources', sources, checkpoint, (lo, hi) => {
 				let list: string | null = null;
@@ -823,35 +842,71 @@ export class QueryEngine {
 		finals.sort(rank);
 		finals.length = Math.min(finals.length, MEANING_GROUPS);
 
+		const words: Session = { prefix: `${session.prefix}w`, sort: 'relevance', group: options.group, tables: [], invalid: false, summary: null, highlights: [], generation: session.generation };
 		const order = orderBy('relevance');
-		const matches = this.#table(session, 'm', 'source INTEGER PRIMARY KEY, grp TEXT NOT NULL, thread TEXT, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [`grp, ${order}`]);
-		const groups = this.#table(session, 'g', 'grp TEXT PRIMARY KEY, thread TEXT, n INTEGER NOT NULL, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [order]);
-		const kept = new Set(finals.map((f) => f.group));
-		const counts = new Map<number, number>();
-		this.#atomic(() => {
-			const insertMember = this.#db.prepare(`INSERT INTO ${matches} (source, grp, thread, tier, score, date, kind, sid) VALUES (?, ?, ?, 0, ?, ?, ?, ?)`);
-			const insertGroup = this.#db.prepare(`INSERT INTO ${groups} (grp, thread, n, tier, score, date, kind, sid) VALUES (?, ?, ?, 0, ?, ?, ?, ?)`);
+		const fused = await (async () => {
 			try {
-				for (const [source, score] of memberScores) {
-					const group = groupOf[source];
-					if (!kept.has(group)) continue;
-					counts.set(group, (counts.get(group) ?? 0) + 1);
-					insertMember.bind([source, keyOf(group, source), threads.get(source) ?? null, score, dates.get(source)!, kinds.get(source)!, sids.get(source)!]).stepReset();
-				}
-				for (const f of finals) {
-					const key = keyOf(f.group, f.source);
-					insertGroup.bind([key, threads.get(f.source) ?? null, counts.get(f.group) ?? 1, f.score, dates.get(f.source)!, kinds.get(f.source)!, sids.get(f.source)!]).stepReset();
-					session.passages!.set(key, { epoch, source: f.source, ordinal: f.ordinal });
-				}
+				await this.#execute(id, words, lexicalPlan, { sort: 'relevance', group: options.group, signal });
+				await checkpoint();
+				const wordTables = lexicalPlan.leaves.slice(firstWord).map((_, k) => `${words.prefix}_l${firstWord + k}`);
+				const need = wordTables.length <= 2 ? 1 : Math.ceil(wordTables.length / 2);
+				const matched = wordTables.length ? wordTables.map((t) => `EXISTS (SELECT 1 FROM ${t} WHERE source = m.source)`).join(' + ') : '0';
+				const notExcluded = excluded ? `AND g.grp NOT IN (SELECT grp FROM ${excluded}_g)` : '';
+				const lexical: Ranked[] = (
+					this.#db.selectArrays(
+						`SELECT grp, date, tier FROM (
+							SELECT g.grp, g.date, g.tier, g.score, g.kind, g.sid, (SELECT max(${matched}) FROM ${words.prefix}_m m WHERE m.grp = g.grp) AS words
+							FROM ${words.prefix}_g g WHERE 1 ${notExcluded}
+						) WHERE words >= ? ORDER BY words DESC, ${order} LIMIT ?`,
+						[need, MEANING_GROUPS]
+					) as [string, number, number][]
+				).map(([key, date, tier]) => ({ key, date, tier }));
+				const semantic: Ranked[] = finals.map((f) => ({ key: keyOf(f.group, f.source), date: dates.get(f.source)!, tier: 0 }));
+				const result = fuse(lexical, semantic, MEANING_GROUPS);
+				const best = new Map(finals.map((f) => [keyOf(f.group, f.source), f]));
+				const matches = this.#table(session, 'm', 'source INTEGER PRIMARY KEY, grp TEXT NOT NULL, thread TEXT, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [`grp, ${order}`]);
+				const groups = this.#table(session, 'g', 'grp TEXT PRIMARY KEY, thread TEXT, n INTEGER NOT NULL, tier INTEGER NOT NULL, score REAL NOT NULL, date INTEGER NOT NULL, kind INTEGER NOT NULL, sid TEXT NOT NULL', [order]);
+				this.#atomic(() => {
+					const insertMember = this.#db.prepare(`INSERT OR IGNORE INTO ${matches} (source, grp, thread, tier, score, date, kind, sid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+					const insertGroup = this.#db.prepare(`INSERT INTO ${groups} (grp, thread, n, tier, score, date, kind, sid) VALUES (?, ?, 0, ?, ?, ?, ?, ?)`);
+					const copyGroup = this.#db.prepare(`INSERT INTO ${groups} (grp, thread, n, tier, score, date, kind, sid) SELECT grp, thread, 0, ?, ?, date, kind, sid FROM ${words.prefix}_g WHERE grp = ?`);
+					const copyMembers = this.#db.prepare(`INSERT OR IGNORE INTO ${matches} (source, grp, thread, tier, score, date, kind, sid) SELECT source, grp, thread, tier, score, date, kind, sid FROM ${words.prefix}_m WHERE grp = ?`);
+					try {
+						const kept = new Map(result.map((f) => [f.key, f]));
+						for (const [source, score] of memberScores) {
+							const key = keyOf(groupOf[source], source);
+							const f = kept.get(key);
+							if (!f || f.semantic === null) continue;
+							insertMember.bind([source, key, threads.get(source) ?? null, f.tier, score, dates.get(source)!, kinds.get(source)!, sids.get(source)!]).stepReset();
+						}
+						for (const f of result) {
+							session.channels!.set(f.key, f.channel);
+							if (f.lexical !== null) copyMembers.bind([f.key]).stepReset();
+							const top = best.get(f.key);
+							if (f.semantic !== null && top) {
+								insertGroup.bind([f.key, threads.get(top.source) ?? null, f.tier, f.score, dates.get(top.source)!, kinds.get(top.source)!, sids.get(top.source)!]).stepReset();
+								session.passages!.set(f.key, { epoch, source: top.source, ordinal: top.ordinal });
+							} else {
+								copyGroup.bind([f.tier, f.score, f.key]).stepReset();
+							}
+						}
+					} finally {
+						insertMember.finalize();
+						insertGroup.finalize();
+						copyGroup.finalize();
+						copyMembers.finalize();
+					}
+					this.#db.exec(`UPDATE ${groups} SET n = (SELECT count(*) FROM ${matches} m WHERE m.grp = ${groups}.grp)`);
+				});
+				return result;
 			} finally {
-				insertMember.finalize();
-				insertGroup.finalize();
+				this.#drop(words);
 			}
-		});
+		})();
 		return {
 			id,
-			groups: finals.length,
-			pages: Math.ceil(finals.length / PAGE_SIZE),
+			groups: fused.length,
+			pages: Math.ceil(fused.length / PAGE_SIZE),
 			eligible,
 			incomplete,
 			capped,

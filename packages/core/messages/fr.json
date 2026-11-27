@@ -5161,5 +5161,20 @@
   "handoff_checkout_title": "Vers le paiement",
   "handoff_checkout_lede": "Vous paierez sur la page sécurisée de notre prestataire de paiement, puis reviendrez à votre boîte.",
   "handoff_checkout_host": "Paiement sécurisé",
-  "cal_create_more": "Créer autre chose"
+  "cal_create_more": "Créer autre chose",
+  "mail_search_related_note": "Des messages proches suivent les résultats exacts. Les mots peuvent différer.",
+  "mail_search_related_no_exact": "Aucun résultat exact",
+  "mail_search_related_similar": "Voici des messages au sens proche. Les mots peuvent différer.",
+  "mail_search_related_loading": "Recherche de messages proches…",
+  "mail_search_related_empty": "Rien de proche trouvé.",
+  "mail_search_related_too_long": "Cette recherche est trop longue pour trouver des messages proches. Raccourcissez-la pour voir des résultats proches.",
+  "mail_search_related_preparing": "Les résultats proches se préparent sur cet appareil.",
+  "mail_search_related_busy": "Les résultats proches sont utilisés dans un autre onglet.",
+  "mail_search_related_failed": "Impossible de rechercher des messages proches.",
+  "mail_search_related_incomplete": "Certains anciens messages ne sont pas encore prêts pour les résultats proches.",
+  "mail_search_related_capped": "Les résultats proches portent sur vos messages les plus récents.",
+  "mail_search_related_rebuilding": "Les résultats proches sont en cours de mise à jour et peuvent être incomplets.",
+  "mail_search_channel_words": "Mots trouvés",
+  "mail_search_channel_meaning": "Sens proche",
+  "mail_search_channel_both": "Les deux"
 }

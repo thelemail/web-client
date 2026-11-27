@@ -15,6 +15,8 @@ import { Field, Flag, SourceKind } from './sqlite/types';
 
 export { chipsOf, replaceRange, type Chip } from './chips';
 export { coverageOf, progressOf } from './coverage';
+export { relatedAllowed } from './query/classify';
+export { RelatedRun } from './related.svelte';
 
 export function parse(text: string): ReturnType<typeof parseQuery> {
 	return parseQuery(text, { now: Date.now(), timeZone: locale.timeZone });
@@ -58,6 +60,8 @@ function folderOf(row: ResultRow, kind: SearchMatch['kind']): string {
 	return folderFromServer('inbox', f & Flag.sent ? 'sent' : 'received');
 }
 
+const CHANNEL = { words: m.mail_search_channel_words, meaning: m.mail_search_channel_meaning, both: m.mail_search_channel_both } as const;
+
 export function messageFromRow(row: ResultRow): Message {
 	const kind = KIND_NAME[row.best.kind] ?? 'message';
 	const person = kind === 'message' ? row.from : (row.to[0] ?? row.from);
@@ -65,6 +69,7 @@ export function messageFromRow(row: ResultRow): Message {
 	const display = person?.name || address || m.mailbox_unknown_sender();
 	const palette = paletteFor(address.toLowerCase());
 	const known = (bit: number) => (row.knownFlags & bit) !== 0;
+	const passage = row.channel && row.channel !== 'words' ? (row.passage ?? null) : null;
 	return {
 		id: row.best.sourceId,
 		folder: folderOf(row, kind),
@@ -83,22 +88,40 @@ export function messageFromRow(row: ResultRow): Message {
 		unread: kind === 'message' && known(Flag.read) && (row.flags & Flag.read) === 0,
 		starred: kind === 'message' && (row.flags & Flag.starred) !== 0,
 		snoozedUntil: null,
-		prev: row.excerpt?.text ?? '',
+		prev: passage?.text ?? row.excerpt?.text ?? '',
 		body: [],
 		threadRootId: row.threadId ?? undefined,
 		attachments: row.attachments > 0 ? new Array(row.attachments).fill({ name: row.filename ?? '', size: '' }) : undefined,
-		match: {
-			kind,
-			matches: row.matches,
-			subjectSpans: row.subject ? row.subjectSpans : [],
-			excerpt: row.excerpt?.text ?? null,
-			excerptSpans: row.excerpt?.spans ?? [],
-			clippedStart: row.excerpt?.clippedStart ?? false,
-			clippedEnd: row.excerpt?.clippedEnd ?? false,
-			fields: row.fields,
-			quoted: row.excerpt?.field === Field.quoted,
-			filename: row.filename,
-			place: row.excerpt?.place ?? null
-		}
+		match: passage
+			? {
+					kind,
+					matches: row.matches,
+					subjectSpans: [],
+					excerpt: passage.text,
+					excerptSpans: [],
+					clippedStart: false,
+					clippedEnd: false,
+					fields: [passage.field],
+					quoted: passage.field === Field.quoted,
+					filename: passage.attachmentId && passage.attachmentId === row.excerpt?.attachmentId ? row.filename : null,
+					place: passage.place,
+					channel: row.channel ?? null,
+					channelLabel: row.channel ? CHANNEL[row.channel]() : null
+				}
+			: {
+					kind,
+					matches: row.matches,
+					subjectSpans: row.subject ? row.subjectSpans : [],
+					excerpt: row.excerpt?.text ?? null,
+					excerptSpans: row.excerpt?.spans ?? [],
+					clippedStart: row.excerpt?.clippedStart ?? false,
+					clippedEnd: row.excerpt?.clippedEnd ?? false,
+					fields: row.fields,
+					quoted: row.excerpt?.field === Field.quoted,
+					filename: row.filename,
+					place: row.excerpt?.place ?? null,
+					channel: row.channel ?? null,
+					channelLabel: row.channel ? CHANNEL[row.channel]() : null
+				}
 	};
 }

@@ -1,4 +1,4 @@
-import type { Eligibility, QueryNode } from './ast';
+import type { Eligibility, QueryNode, TermNode } from './ast';
 import { childrenOf, conjuncts } from './walk';
 
 const MANDATORY_TEXT = new Set<QueryNode['kind']>(['phrase', 'literal']);
@@ -47,15 +47,26 @@ export function eligibilityOf(root: QueryNode | null): Eligibility {
 export interface MeaningSplit {
 	text: string;
 	rest: QueryNode | null;
+	lexical: QueryNode;
+}
+
+export function relatedAllowed(eligibility: Eligibility, exactMatches: number): boolean {
+	if (eligibility === 'related') return true;
+	return eligibility === 'meaning' && exactMatches === 0;
 }
 
 export function meaningSplit(root: QueryNode | null): MeaningSplit | null {
 	if (!root || eligibilityOf(root) === 'words') return null;
-	const words: string[] = [];
+	const words: TermNode[] = [];
 	const rest: QueryNode[] = [];
 	for (const part of conjuncts(root)) {
-		if (part.kind === 'term' && part.lane === 'word') words.push(part.text);
+		if (part.kind === 'term' && part.lane === 'word') words.push(part);
 		else rest.push(part);
 	}
-	return { text: words.join(' '), rest: rest.length === 0 ? null : rest.length === 1 ? rest[0] : { kind: 'and', children: rest, range: root.range } };
+	const any: QueryNode = words.length === 1 ? words[0] : { kind: 'or', children: words, range: root.range };
+	return {
+		text: words.map((w) => w.text).join(' '),
+		rest: rest.length === 0 ? null : rest.length === 1 ? rest[0] : { kind: 'and', children: rest, range: root.range },
+		lexical: rest.length === 0 ? any : { kind: 'and', children: [...rest, any], range: root.range }
+	};
 }

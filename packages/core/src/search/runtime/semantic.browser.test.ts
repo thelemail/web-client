@@ -165,7 +165,7 @@ describe('search by meaning in the search runtime', () => {
 		const parsed = parseQuery('ferry crossing to the island', SNAPSHOT);
 		if (!parsed.ok) throw new Error('parse');
 		await commands.watchNetwork();
-		const reply = await a.meaning(parsed.query, CTX, { group: 'message' });
+		const reply = await a.meaning(parsed.query, CTX, { group: 'message', exclude: null });
 		const seen = await commands.networkSeen();
 		expect(seen).toEqual([]);
 		if (!reply.ok || !('summary' in reply)) throw new Error(JSON.stringify(reply));
@@ -175,6 +175,53 @@ describe('search by meaning in the search runtime', () => {
 		const top = page.groups.slice(0, 10).map((g) => Number(g.best.sourceId.slice(1)));
 		expect(top.every((id) => id % 2 === 1)).toBe(true);
 		expect(page.groups[0].passage?.text).toContain('ferry');
+	}, WAIT_MS);
+
+	it('finds a Portuguese passage for an English query beside the exact matches', async () => {
+		const texts = [
+			'O voo para Lisboa foi cancelado e o reembolso ainda não chegou.',
+			'The flight was cancelled, please send the refund.',
+			'Die Rechnung für die Bürostühle ist überfällig.',
+			'La réunion de jeudi est déplacée à vendredi.',
+			'Invoice for the office chairs is overdue.',
+			'Our team lunch is moved to Friday.'
+		];
+		const r = rig();
+		const a = await r.client(true);
+		a.start();
+		await until(a, (s) => s.phase === 'ready');
+		await a.tell('mail', { total: texts.length, texts });
+		await until(a, (s) => semantic(s, Coverage.complete) === texts.length && s.status?.working === null);
+		const parsed = parseQuery('my cancelled flight refund', SNAPSHOT);
+		if (!parsed.ok) throw new Error('parse');
+		const exact = await a.query(parsed.query, CTX, { sort: 'relevance', group: 'message' });
+		if (!exact.ok || !('summary' in exact)) throw new Error(JSON.stringify(exact));
+		expect(exact.summary.matches).toBe(0);
+		await commands.watchNetwork();
+		const reply = await a.meaning(parsed.query, CTX, { group: 'message', exclude: exact.summary.id });
+		expect(await commands.networkSeen()).toEqual([]);
+		if (!reply.ok || !('summary' in reply)) throw new Error(JSON.stringify(reply));
+		const page = await a.page(reply.summary.id, 0);
+		if (!page.ok) throw new Error(page.reason);
+		const top = page.groups.slice(0, 2).map((g) => g.best.sourceId).sort();
+		expect(top).toEqual(['m0', 'm1']);
+		const portuguese = page.groups.find((g) => g.best.sourceId === 'm0')!;
+		expect(portuguese.channel).toBe('meaning');
+		expect(portuguese.passage?.text).toBe(texts[0]);
+		expect(page.groups.find((g) => g.best.sourceId === 'm1')!.channel).toBe('both');
+	}, WAIT_MS);
+
+	it('refuses an over-length meaning query instead of cutting it', async () => {
+		const r = rig();
+		const a = await r.client(true);
+		a.start();
+		await until(a, (s) => s.phase === 'ready');
+		await a.tell('mail', { total: 2 });
+		await until(a, (s) => semantic(s, Coverage.complete) === 2 && s.status?.working === null);
+		const word = (i: number) => Array.from({ length: 28 }, (_, k) => String.fromCharCode(97 + ((i * 7 + k * 11) % 26))).join('');
+		const parsed = parseQuery(Array.from({ length: 120 }, (_, i) => word(i)).join(' '), SNAPSHOT);
+		if (!parsed.ok) throw new Error(JSON.stringify(parsed.error));
+		expect(await a.meaning(parsed.query, CTX, { group: 'message', exclude: null })).toEqual({ ok: false, unavailable: 'tooLong' });
 	}, WAIT_MS);
 
 	it('loads no model and keeps no passages while search by meaning is off', async () => {
@@ -190,6 +237,6 @@ describe('search by meaning in the search runtime', () => {
 		expect(semantic(a.state, Coverage.complete) + semantic(a.state, Coverage.pending)).toBe(0);
 		const parsed = parseQuery('ferry island', SNAPSHOT);
 		if (!parsed.ok) throw new Error('parse');
-		expect(await a.meaning(parsed.query, CTX, { group: 'message' })).toEqual({ ok: false, unavailable: 'off' });
+		expect(await a.meaning(parsed.query, CTX, { group: 'message', exclude: null })).toEqual({ ok: false, unavailable: 'off' });
 	}, WAIT_MS);
 });

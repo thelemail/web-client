@@ -5161,5 +5161,20 @@
 	"handoff_checkout_title": "A seguir para o pagamento",
 	"handoff_checkout_lede": "Vai pagar na página segura do nosso fornecedor de pagamentos e depois volta à sua caixa de correio.",
 	"handoff_checkout_host": "Pagamento seguro",
-	"cal_create_more": "Criar outro tipo"
+	"cal_create_more": "Criar outro tipo",
+	"mail_search_related_note": "Depois das correspondências exatas vêm mensagens semelhantes. As palavras podem ser diferentes.",
+	"mail_search_related_no_exact": "Sem correspondências exatas",
+	"mail_search_related_similar": "Eis mensagens com um significado semelhante. As palavras podem ser diferentes.",
+	"mail_search_related_loading": "A procurar mensagens semelhantes…",
+	"mail_search_related_empty": "Nada semelhante encontrado.",
+	"mail_search_related_too_long": "Esta pesquisa é demasiado longa para procurar mensagens semelhantes. Encurte-a para ver resultados relacionados.",
+	"mail_search_related_preparing": "Os resultados semelhantes estão a ser preparados neste dispositivo.",
+	"mail_search_related_busy": "Os resultados semelhantes estão a ser usados noutro separador.",
+	"mail_search_related_failed": "Não foi possível procurar mensagens semelhantes.",
+	"mail_search_related_incomplete": "Algumas mensagens antigas ainda não estão prontas para resultados semelhantes.",
+	"mail_search_related_capped": "Os resultados semelhantes abrangem as suas mensagens mais recentes.",
+	"mail_search_related_rebuilding": "Os resultados semelhantes estão a ser atualizados e podem estar incompletos.",
+	"mail_search_channel_words": "Palavras encontradas",
+	"mail_search_channel_meaning": "Significado semelhante",
+	"mail_search_channel_both": "Ambos"
 }

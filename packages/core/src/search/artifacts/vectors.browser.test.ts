@@ -147,7 +147,7 @@ function message(id: string, i: number): FakeMessage {
 async function meaning(client: SearchClient, input: string): Promise<string[]> {
 	const parsed = parseQuery(input, SNAPSHOT);
 	if (!parsed.ok) throw new Error(parsed.error.code);
-	const reply = await client.meaning(parsed.query, CTX, { group: 'message' });
+	const reply = await client.meaning(parsed.query, CTX, { group: 'message', exclude: null });
 	if (!reply.ok || !('summary' in reply)) throw new Error(JSON.stringify(reply));
 	const page = await client.page(reply.summary.id, 0);
 	await client.closeQuery(reply.summary.id);

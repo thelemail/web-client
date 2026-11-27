@@ -1666,6 +1666,8 @@
 			paused: status?.paused ?? false,
 			limited: status?.limited ?? null,
 			settingsHref: `/u/${page.params.slot ?? '0'}/settings/search`,
+			related: mailSearch.relatedView,
+			onRetryRelated: () => mailSearch.retryRelated(),
 			onSort: (sort) => mailSearch.setSort(sort),
 			onExactFolders: (exact) => mailSearch.setExactFolders(exact),
 			onRemoveChip: (chip) => mailSearch.removeChip(chip),

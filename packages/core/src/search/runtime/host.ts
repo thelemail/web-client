@@ -41,7 +41,7 @@ import { admit, requestPersistence, type Admission } from './quota';
 import { Scheduler, type Job, type JobClass } from './scheduler';
 import { sessionCall } from './session';
 
-const MAX_SESSIONS_PER_CLIENT = 4;
+const MAX_SESSIONS_PER_CLIENT = 8;
 const HEAVY: readonly JobClass[] = ['body', 'attachments', 'embeddings', 'artifacts'];
 
 export interface JobContext {
@@ -452,6 +452,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 		if (!model) return { ok: false, unavailable: 'off' };
 		const split = meaningSplit(r.query.root);
 		if (!split) return { ok: false, unavailable: 'words' };
+		const exclude = r.options.exclude;
+		if (exclude !== null && !client.sessions.includes(exclude)) return { ok: false, unavailable: 'stale' };
 		const controller = new AbortController();
 		const signal = controller.signal;
 		client.running.set(r.token, controller);
@@ -463,8 +465,8 @@ export function serve(scope: DedicatedWorkerGlobalScope, factories: readonly Job
 				signal.throwIfAborted();
 				if (open !== o) throw new Error('closed');
 				if (!queried.ok) return { ok: false, unavailable: queried.reason === 'tooLong' ? 'tooLong' : queried.reason === 'busy' ? 'busy' : 'model' };
-				const outcome = await o.engine.meaning(r.query, r.ctx, { group: r.options.group, vector: queried.vector, epoch, cache: o.vectors, signal });
-				if (!outcome.ok) return 'reason' in outcome ? { ok: false, unavailable: 'words' } : outcome;
+				const outcome = await o.engine.meaning(r.query, r.ctx, { group: r.options.group, vector: queried.vector, epoch, cache: o.vectors, exclude: exclude ?? undefined, signal });
+				if (!outcome.ok) return 'reason' in outcome ? { ok: false, unavailable: outcome.reason } : outcome;
 				return outcome;
 			});
 			const settled: Promise<boolean> = running.then(

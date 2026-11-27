@@ -14,6 +14,7 @@
 	import { canFinishSearchSetup, finishSearchSetup } from '$core/custody/search-setup';
 	import type { DimensionCoverage, Gap } from '$core/search/coverage';
 	import type { Sort } from '$core/search/sqlite/compile';
+	import { delayed } from '$core/async/delayed.svelte';
 	import { formatWhenLong } from './data';
 	import type { SearchView } from './searchView';
 
@@ -57,6 +58,7 @@
 		if (search.phase === 'failed') return search.error ? msg.mail_search_query_invalid() : msg.mail_search_failed();
 		if (search.phase === 'starting') return msg.mail_search_starting();
 		if (search.phase === 'searching') return search.matches !== null ? msg.mail_search_counting({ shown: fmt(search.groups ?? 0) }) : msg.mail_list_searching();
+		if (search.related?.main && search.groups === 0) return msg.mail_search_related_no_exact();
 		if (search.groups !== null) return msg.mail_search_count({ count: search.groups, shown: fmt(search.groups) });
 		return msg.mail_list_searching();
 	});
@@ -82,6 +84,29 @@
 		return null;
 	});
 	const gaps = (d: DimensionCoverage) => (Object.entries(d.gaps) as [Gap, number][]).filter(([, n]) => n > 0);
+	const relatedSlow = delayed(() => search.related?.status === 'loading');
+	const relatedLine = $derived.by(() => {
+		const r = search.related;
+		if (!r) return null;
+		switch (r.status) {
+			case 'loading':
+				return relatedSlow.visible ? msg.mail_search_related_loading() : null;
+			case 'tooLong':
+				return msg.mail_search_related_too_long();
+			case 'preparing':
+				return msg.mail_search_related_preparing();
+			case 'busy':
+				return msg.mail_search_related_busy();
+			case 'failed':
+				return msg.mail_search_related_failed();
+		}
+		if (r.rebuilding) return msg.mail_search_related_rebuilding();
+		if (r.capped > 0) return msg.mail_search_related_capped();
+		if (r.incomplete > 0) return msg.mail_search_related_incomplete();
+		if (r.main) return r.rows.length ? msg.mail_search_related_similar() : msg.mail_search_related_empty();
+		return r.rows.length ? msg.mail_search_related_note() : null;
+	});
+	const relatedRetry = $derived(search.related?.status === 'failed' || search.related?.status === 'busy' || search.related?.status === 'preparing');
 	const announce = $derived(search.phase === 'ready' && search.groups !== null ? status : '');
 </script>
 
@@ -98,7 +123,7 @@
 				<button type="button" class="ss-link" onclick={search.onEnable}>{msg.mail_search_turn_on()}</button>
 			{/if}
 		{/if}
-		{#if search.mode !== 'desktop'}
+		{#if search.mode !== 'desktop' && !search.related?.main}
 			<Segmented
 				class="ss-sort"
 				aria-label={msg.mail_search_sort_label()}
@@ -162,6 +187,15 @@
 		{/if}
 	{:else if search.limited === 'session' && search.mode === 'saved'}
 		<div class="ss-row ss-cover"><span>{msg.mail_search_session()}</span></div>
+	{/if}
+	{#if relatedLine}
+		<div class={['ss-row', 'ss-cover', { 'ss-warn': search.related?.status === 'failed' || search.related?.status === 'tooLong' }]} role={search.related?.status === 'failed' ? 'alert' : undefined}>
+			<Icon icon={faMagnifyingGlass} size={13} aria-hidden="true" />
+			<span>{relatedLine}</span>
+			{#if relatedRetry}
+				<button type="button" class="ss-link" onclick={search.onRetryRelated}>{msg.common_retry()}</button>
+			{/if}
+		</div>
 	{/if}
 	{#if search.newAvailable}
 		<button type="button" class="new-strip ss-new" onclick={search.onRefresh}>
