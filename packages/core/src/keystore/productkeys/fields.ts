@@ -2,7 +2,7 @@ import type { Json } from './canonical';
 import { MAX_SAFE } from './canonical';
 import { b64decode, compareBytes, requireUuid } from './encoding';
 import { fail } from './errors';
-import { isLegacyImportFormat, isProfileId } from '../registry';
+import { isLegacyImportFormat, isProfileId } from '../profileIds';
 
 export type Obj = { [key: string]: Json };
 

@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import raw from '../interop/vectors/profile-registry.json?raw';
-import { COUNTERS, LEGACY_IMPORT_PREFIX, LIMITS, MAX_COUNTER, PROFILE_IDS, PROFILES, SECRET_WRAP } from '../interop/generated/profiles';
+import { COUNTERS, LEGACY_IMPORT_PREFIX, LIMITS, MAX_COUNTER, PROFILE_IDS, SECRET_WRAP } from '../interop/generated/profile-ids';
+import { PROFILES } from '../interop/generated/profiles';
 import { utf8 } from './productkeys/canonical';
 import { sha256 } from './productkeys/encoding';
 import { canCreate, canDecrypt, canVerify, checkCounter, convertsTo, CounterError, isLegacyImport, isLegacyImportFormat, nextCounter } from './registry';

@@ -1,6 +1,6 @@
-import type { ProfileId } from '../../interop/generated/profiles';
-import { LEGACY_IMPORT_PREFIX } from '../../interop/generated/profiles';
-import { isLegacyImportFormat } from '../registry';
+import type { ProfileId } from '../../interop/generated/profile-ids';
+import { LEGACY_IMPORT_PREFIX } from '../../interop/generated/profile-ids';
+import { isLegacyImportFormat } from '../profileIds';
 
 export const PROFILE = {
 	secretWrapV2: 'secret-wrap-v2',

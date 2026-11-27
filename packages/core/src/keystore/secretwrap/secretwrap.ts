@@ -1,5 +1,5 @@
-import type { SlotPurpose } from '../../interop/generated/profiles';
-import { SECRET_WRAP } from '../../interop/generated/profiles';
+import type { SlotPurpose } from '../../interop/generated/profile-ids';
+import { SECRET_WRAP } from '../../interop/generated/profile-ids';
 import { decodeCanonical, encodeCanonical } from '../productkeys/canonical';
 import { b64encode, bytesEqual, requireUuid } from '../productkeys/encoding';
 import { checkCipher, open, randomBytes, seal } from '../productkeys/envelope';
