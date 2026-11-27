@@ -136,6 +136,7 @@ export interface SearchMatch {
 	filename: string | null;
 	place: string | null;
 	channel: 'words' | 'meaning' | 'both' | null;
+	channelLabel: string | null;
 }
 
 export function plainSubject(s: unknown): string {

@@ -60,6 +60,8 @@ function folderOf(row: ResultRow, kind: SearchMatch['kind']): string {
 	return folderFromServer('inbox', f & Flag.sent ? 'sent' : 'received');
 }
 
+const CHANNEL = { words: m.mail_search_channel_words, meaning: m.mail_search_channel_meaning, both: m.mail_search_channel_both } as const;
+
 export function messageFromRow(row: ResultRow): Message {
 	const kind = KIND_NAME[row.best.kind] ?? 'message';
 	const person = kind === 'message' ? row.from : (row.to[0] ?? row.from);
@@ -103,7 +105,8 @@ export function messageFromRow(row: ResultRow): Message {
 					quoted: passage.field === Field.quoted,
 					filename: passage.attachmentId && passage.attachmentId === row.excerpt?.attachmentId ? row.filename : null,
 					place: passage.place,
-					channel: row.channel ?? null
+					channel: row.channel ?? null,
+					channelLabel: row.channel ? CHANNEL[row.channel]() : null
 				}
 			: {
 					kind,
@@ -117,7 +120,8 @@ export function messageFromRow(row: ResultRow): Message {
 					quoted: row.excerpt?.field === Field.quoted,
 					filename: row.filename,
 					place: row.excerpt?.place ?? null,
-					channel: row.channel ?? null
+					channel: row.channel ?? null,
+					channelLabel: row.channel ? CHANNEL[row.channel]() : null
 				}
 	};
 }

@@ -484,8 +484,8 @@ describe('mailSearch related results', () => {
 		expect(client.meaning.mock.calls[0][2]).toEqual({ group: 'thread', exclude: 1 });
 		pending.resolve({ ok: true, summary: meaningSummary() });
 		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
-		const hit = mailSearch.relatedShown[0];
-		expect(hit.match).toMatchObject({ channel: 'meaning', excerpt: 'O voo foi cancelado', excerptSpans: [] });
+		const hit = mailSearch.related!.rows[0];
+		expect(hit.match).toMatchObject({ channel: 'meaning', channelLabel: 'Similar meaning', excerpt: 'O voo foi cancelado', excerptSpans: [] });
 		expect(mailSearch.related?.main).toBe(false);
 		expect(mailSearch.matches).toBe(1);
 		expect(mailSearch.findResult('r1')?.id).toBe('r1');
@@ -496,8 +496,8 @@ describe('mailSearch related results', () => {
 		client.meaning.mockResolvedValue({ ok: true, summary: meaningSummary({ groups: 60, pages: 2 }) });
 		mailSearch.commit('flight refund');
 		await vi.waitFor(() => expect(mailSearch.related?.status).toBe('ready'));
-		expect(mailSearch.exactExhausted).toBe(true);
-		expect(mailSearch.relatedShown.map((r) => r.id)).toEqual(['r1']);
+		expect(mailSearch.relatedView?.rows.map((r) => r.id)).toEqual(['r1']);
+		expect(mailSearch.related?.rows.map((r) => r.id)).toEqual(['r1']);
 		expect(mailSearch.exhausted).toBe(false);
 		await mailSearch.loadMore();
 		expect(client.page).toHaveBeenLastCalledWith(7, 1);

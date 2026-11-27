@@ -6,7 +6,6 @@
 		faArrowUp,
 		faChevronDown,
 		faMagnifyingGlass,
-		faMagnifyingGlassPlus,
 		faShieldCheck,
 		faXmark
 	} from '@fortawesome/pro-regular-svg-icons';
@@ -191,7 +190,7 @@
 	{/if}
 	{#if relatedLine}
 		<div class={['ss-row', 'ss-cover', { 'ss-warn': search.related?.status === 'failed' || search.related?.status === 'tooLong' }]} role={search.related?.status === 'failed' ? 'alert' : undefined}>
-			<Icon icon={faMagnifyingGlassPlus} size={13} aria-hidden="true" />
+			<Icon icon={faMagnifyingGlass} size={13} aria-hidden="true" />
 			<span>{relatedLine}</span>
 			{#if relatedRetry}
 				<button type="button" class="ss-link" onclick={search.onRetryRelated}>{msg.common_retry()}</button>
